@@ -1,0 +1,1143 @@
+Compiled from "RouterTimestamper.java"
+public class net.i2p.router.time.RouterTimestamper extends net.i2p.time.Timestamper {
+  private final net.i2p.I2PAppContext _context;
+
+  private net.i2p.util.Log _log;
+
+  private final java.util.List<java.lang.String> _servers;
+
+  private java.util.List<java.util.List<java.lang.String>> _priorityServers;
+
+  private final java.util.List<net.i2p.time.Timestamper$UpdateListener> _listeners;
+
+  private int _queryFrequency;
+
+  private int _concurringServers;
+
+  private int _consecutiveFails;
+
+  private volatile boolean _disabled;
+
+  private final boolean _daemon;
+
+  private volatile boolean _initialized;
+
+  private boolean _wellSynced;
+
+  private volatile boolean _isRunning;
+
+  private java.lang.Thread _timestamperThread;
+
+  private final net.i2p.router.time.Zones _zones;
+
+  private static final int MIN_QUERY_FREQUENCY = 300000;
+
+  private static final int DEFAULT_QUERY_FREQUENCY = 660000;
+
+  private static final java.lang.String DEFAULT_SERVER_LIST = "0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org";
+
+  private static final boolean DEFAULT_DISABLED = true;
+
+  private static final int DEFAULT_CONCURRING_SERVERS = 3;
+
+  private static final int MAX_CONSECUTIVE_FAILS = 10;
+
+  private static final int DEFAULT_TIMEOUT = 10000;
+
+  private static final int SHORT_TIMEOUT = 5000;
+
+  private static final long MAX_WAIT_INITIALIZATION = 45000l;
+
+  public static final java.lang.String PROP_QUERY_FREQUENCY = "time.queryFrequencyMs";
+
+  public static final java.lang.String PROP_SERVER_LIST = "time.sntpServerList";
+
+  public static final java.lang.String PROP_DISABLED = "time.disabled";
+
+  public static final java.lang.String PROP_CONCURRING_SERVERS = "time.concurringServers";
+
+  public static final java.lang.String PROP_IP_COUNTRY = "i2np.lastCountry";
+
+  private static final int MAX_VARIANCE = 10000;
+
+  public net.i2p.router.time.RouterTimestamper(net.i2p.I2PAppContext);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: aconst_null
+         3: iconst_1
+         4: invokespecial #73                 // Method "<init>":(Lnet/i2p/I2PAppContext;Lnet/i2p/time/Timestamper$UpdateListener;Z)V
+         7: return
+
+  public net.i2p.router.time.RouterTimestamper(net.i2p.I2PAppContext, net.i2p.time.Timestamper$UpdateListener);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: aload_2
+         3: iconst_1
+         4: invokespecial #73                 // Method "<init>":(Lnet/i2p/I2PAppContext;Lnet/i2p/time/Timestamper$UpdateListener;Z)V
+         7: return
+
+  public net.i2p.router.time.RouterTimestamper(net.i2p.I2PAppContext, net.i2p.time.Timestamper$UpdateListener, boolean);
+    Code:
+         0: aload_0
+         1: invokespecial #84                 // Method net/i2p/time/Timestamper."<init>":()V
+         4: aload_0
+         5: new           #87                 // class java/util/ArrayList
+         8: dup
+         9: iconst_3
+        10: invokespecial #89                 // Method java/util/ArrayList."<init>":(I)V
+        13: putfield      #92                 // Field _servers:Ljava/util/List;
+        16: aload_0
+        17: new           #94                 // class java/util/concurrent/CopyOnWriteArrayList
+        20: dup
+        21: invokespecial #96                 // Method java/util/concurrent/CopyOnWriteArrayList."<init>":()V
+        24: putfield      #97                 // Field _listeners:Ljava/util/List;
+        27: aload_0
+        28: aload_1
+        29: putfield      #99                 // Field _context:Lnet/i2p/I2PAppContext;
+        32: aload_0
+        33: iload_3
+        34: putfield      #101                // Field _daemon:Z
+        37: aload_0
+        38: aload_1
+        39: ldc           #61                 // String time.disabled
+        41: iconst_1
+        42: invokevirtual #103                // Method net/i2p/I2PAppContext.getProperty:(Ljava/lang/String;Z)Z
+        45: ifne          61
+        48: aload_1
+        49: ldc           #109                // String i2p.vmCommSystem
+        51: invokevirtual #111                // Method net/i2p/I2PAppContext.getBooleanProperty:(Ljava/lang/String;)Z
+        54: ifne          61
+        57: iconst_0
+        58: goto          62
+        61: iconst_1
+        62: putfield      #115                // Field _disabled:Z
+        65: aload_0
+        66: getfield      #115                // Field _disabled:Z
+        69: ifeq          91
+        72: aload_0
+        73: iconst_1
+        74: putfield      #117                // Field _initialized:Z
+        77: aload_0
+        78: aconst_null
+        79: putfield      #119                // Field _zones:Lnet/i2p/router/time/Zones;
+        82: getstatic     #121                // Field java/lang/System.out:Ljava/io/PrintStream;
+        85: ldc           #127                // String Warning: NTP is disabled
+        87: invokevirtual #129                // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        90: return
+        91: aload_2
+        92: ifnull        106
+        95: aload_0
+        96: getfield      #97                 // Field _listeners:Ljava/util/List;
+        99: aload_2
+       100: invokeinterface #135,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+       105: pop
+       106: aload_0
+       107: new           #141                // class net/i2p/router/time/Zones
+       110: dup
+       111: aload_1
+       112: invokespecial #143                // Method net/i2p/router/time/Zones."<init>":(Lnet/i2p/I2PAppContext;)V
+       115: putfield      #119                // Field _zones:Lnet/i2p/router/time/Zones;
+       118: aload_0
+       119: invokespecial #145                // Method updateConfig:()V
+       122: return
+
+  public int getServerCount();
+    Code:
+         0: aload_0
+         1: getfield      #92                 // Field _servers:Ljava/util/List;
+         4: dup
+         5: astore_1
+         6: monitorenter
+         7: aload_0
+         8: getfield      #92                 // Field _servers:Ljava/util/List;
+        11: invokeinterface #154,  1          // InterfaceMethod java/util/List.size:()I
+        16: aload_1
+        17: monitorexit
+        18: ireturn
+        19: aload_1
+        20: monitorexit
+        21: athrow
+      Exception table:
+         from    to  target type
+             7    18    19   any
+            19    21    19   any
+
+  public java.lang.String getServer(int);
+    Code:
+         0: aload_0
+         1: getfield      #92                 // Field _servers:Ljava/util/List;
+         4: dup
+         5: astore_2
+         6: monitorenter
+         7: aload_0
+         8: getfield      #92                 // Field _servers:Ljava/util/List;
+        11: iload_1
+        12: invokeinterface #161,  2          // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
+        17: checkcast     #165                // class java/lang/String
+        20: aload_2
+        21: monitorexit
+        22: areturn
+        23: aload_2
+        24: monitorexit
+        25: athrow
+      Exception table:
+         from    to  target type
+             7    22    23   any
+            23    25    23   any
+
+  public int getQueryFrequencyMs();
+    Code:
+         0: aload_0
+         1: getfield      #169                // Field _queryFrequency:I
+         4: ireturn
+
+  public boolean getIsDisabled();
+    Code:
+         0: aload_0
+         1: getfield      #115                // Field _disabled:Z
+         4: ireturn
+
+  public void addListener(net.i2p.time.Timestamper$UpdateListener);
+    Code:
+         0: aload_0
+         1: getfield      #97                 // Field _listeners:Ljava/util/List;
+         4: aload_1
+         5: invokeinterface #135,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+        10: pop
+        11: return
+
+  public void removeListener(net.i2p.time.Timestamper$UpdateListener);
+    Code:
+         0: aload_0
+         1: getfield      #97                 // Field _listeners:Ljava/util/List;
+         4: aload_1
+         5: invokeinterface #176,  2          // InterfaceMethod java/util/List.remove:(Ljava/lang/Object;)Z
+        10: pop
+        11: return
+
+  public int getListenerCount();
+    Code:
+         0: aload_0
+         1: getfield      #97                 // Field _listeners:Ljava/util/List;
+         4: invokeinterface #154,  1          // InterfaceMethod java/util/List.size:()I
+         9: ireturn
+
+  public net.i2p.time.Timestamper$UpdateListener getListener(int);
+    Code:
+         0: aload_0
+         1: getfield      #97                 // Field _listeners:Ljava/util/List;
+         4: iload_1
+         5: invokeinterface #161,  2          // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
+        10: checkcast     #150                // class net/i2p/time/Timestamper$UpdateListener
+        13: areturn
+
+  public void startTimestamper();
+    Code:
+         0: aload_0
+         1: getfield      #115                // Field _disabled:Z
+         4: ifne          14
+         7: aload_0
+         8: getfield      #117                // Field _initialized:Z
+        11: ifeq          15
+        14: return
+        15: aload_0
+        16: new           #183                // class net/i2p/util/I2PThread
+        19: dup
+        20: aload_0
+        21: ldc           #185                // String Timestamper
+        23: aload_0
+        24: getfield      #101                // Field _daemon:Z
+        27: invokespecial #187                // Method net/i2p/util/I2PThread."<init>":(Ljava/lang/Runnable;Ljava/lang/String;Z)V
+        30: putfield      #190                // Field _timestamperThread:Ljava/lang/Thread;
+        33: aload_0
+        34: getfield      #190                // Field _timestamperThread:Ljava/lang/Thread;
+        37: iconst_1
+        38: invokevirtual #194                // Method java/lang/Thread.setPriority:(I)V
+        41: aload_0
+        42: iconst_1
+        43: putfield      #197                // Field _isRunning:Z
+        46: aload_0
+        47: getfield      #190                // Field _timestamperThread:Ljava/lang/Thread;
+        50: invokevirtual #199                // Method java/lang/Thread.start:()V
+        53: aload_0
+        54: getfield      #99                 // Field _context:Lnet/i2p/I2PAppContext;
+        57: new           #202                // class net/i2p/router/time/RouterTimestamper$Shutdown
+        60: dup
+        61: aload_0
+        62: aconst_null
+        63: invokespecial #204                // Method net/i2p/router/time/RouterTimestamper$Shutdown."<init>":(Lnet/i2p/router/time/RouterTimestamper;Lnet/i2p/router/time/RouterTimestamper$Shutdown;)V
+        66: invokevirtual #207                // Method net/i2p/I2PAppContext.addShutdownTask:(Ljava/lang/Runnable;)V
+        69: return
+
+  public void waitForInitialization();
+    Code:
+         0: aload_0
+         1: dup
+         2: astore_1
+         3: monitorenter
+         4: aload_0
+         5: getfield      #117                // Field _initialized:Z
+         8: ifne          18
+        11: aload_0
+        12: ldc2_w        #52                 // long 45000l
+        15: invokevirtual #212                // Method java/lang/Object.wait:(J)V
+        18: aload_1
+        19: monitorexit
+        20: goto          27
+        23: aload_1
+        24: monitorexit
+        25: athrow
+        26: astore_1
+        27: return
+      Exception table:
+         from    to  target type
+             4    20    23   any
+            23    25    23   any
+             0    26    26   Class java/lang/InterruptedException
+
+  public void timestampNow();
+    Code:
+         0: aload_0
+         1: getfield      #117                // Field _initialized:Z
+         4: ifeq          35
+         7: aload_0
+         8: getfield      #197                // Field _isRunning:Z
+        11: ifeq          35
+        14: aload_0
+        15: getfield      #115                // Field _disabled:Z
+        18: ifne          35
+        21: aload_0
+        22: getfield      #190                // Field _timestamperThread:Ljava/lang/Thread;
+        25: ifnull        35
+        28: aload_0
+        29: getfield      #190                // Field _timestamperThread:Ljava/lang/Thread;
+        32: invokevirtual #221                // Method java/lang/Thread.interrupt:()V
+        35: return
+
+  public void run();
+    Code:
+         0: iconst_0
+         1: istore_1
+         2: goto          773
+         5: aload_0
+         6: invokespecial #145                // Method updateConfig:()V
+         9: invokestatic  #225                // Method net/i2p/util/Addresses.isConnectedIPv6:()Z
+        12: istore_2
+        13: aload_0
+        14: getfield      #115                // Field _disabled:Z
+        17: ifne          332
+        20: aload_0
+        21: getfield      #230                // Field _priorityServers:Ljava/util/List;
+        24: ifnull        196
+        27: aload_0
+        28: getfield      #230                // Field _priorityServers:Ljava/util/List;
+        31: invokeinterface #232,  1          // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+        36: astore        4
+        38: goto          186
+        41: aload         4
+        43: invokeinterface #236,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        48: checkcast     #136                // class java/util/List
+        51: astore_3
+        52: aload_0
+        53: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+        56: ifnull        92
+        59: aload_0
+        60: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+        63: invokevirtual #244                // Method net/i2p/util/Log.shouldDebug:()Z
+        66: ifeq          92
+        69: aload_0
+        70: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+        73: new           #249                // class java/lang/StringBuilder
+        76: dup
+        77: ldc           #251                // String Querying servers
+        79: invokespecial #253                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        82: aload_3
+        83: invokevirtual #255                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+        86: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        89: invokevirtual #263                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+        92: aload_0
+        93: aload_3
+        94: aload_3
+        95: invokeinterface #154,  1          // InterfaceMethod java/util/List.size:()I
+       100: anewarray     #165                // class java/lang/String
+       103: invokeinterface #266,  2          // InterfaceMethod java/util/List.toArray:([Ljava/lang/Object;)[Ljava/lang/Object;
+       108: checkcast     #270                // class "[Ljava/lang/String;"
+       111: sipush        5000
+       114: iload_2
+       115: invokespecial #272                // Method queryTime:([Ljava/lang/String;IZ)Z
+       118: ifeq          125
+       121: iconst_0
+       122: goto          126
+       125: iconst_1
+       126: istore_1
+       127: goto          179
+       130: astore        5
+       132: iload_1
+       133: ifne          177
+       136: aload_0
+       137: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       140: ifnull        177
+       143: aload_0
+       144: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       147: invokevirtual #276                // Method net/i2p/util/Log.shouldWarn:()Z
+       150: ifeq          177
+       153: aload_0
+       154: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       157: new           #249                // class java/lang/StringBuilder
+       160: dup
+       161: ldc_w         #279                // String Unable to reach any regional NTP servers:
+       164: invokespecial #253                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       167: aload_3
+       168: invokevirtual #255                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       171: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       174: invokevirtual #281                // Method net/i2p/util/Log.warn:(Ljava/lang/String;)V
+       177: iconst_1
+       178: istore_1
+       179: iload_1
+       180: ifne          186
+       183: goto          196
+       186: aload         4
+       188: invokeinterface #284,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+       193: ifne          41
+       196: aload_0
+       197: getfield      #230                // Field _priorityServers:Ljava/util/List;
+       200: ifnull        207
+       203: iload_1
+       204: ifeq          332
+       207: aload_0
+       208: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       211: ifnull        250
+       214: aload_0
+       215: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       218: invokevirtual #244                // Method net/i2p/util/Log.shouldDebug:()Z
+       221: ifeq          250
+       224: aload_0
+       225: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       228: new           #249                // class java/lang/StringBuilder
+       231: dup
+       232: ldc           #251                // String Querying servers
+       234: invokespecial #253                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       237: aload_0
+       238: getfield      #92                 // Field _servers:Ljava/util/List;
+       241: invokevirtual #255                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       244: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       247: invokevirtual #263                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       250: iload_2
+       251: ifeq          283
+       254: iload_1
+       255: ifne          283
+       258: aload_0
+       259: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       262: ifnull        283
+       265: aload_0
+       266: getfield      #99                 // Field _context:Lnet/i2p/I2PAppContext;
+       269: invokevirtual #287                // Method net/i2p/I2PAppContext.random:()Lnet/i2p/util/RandomSource;
+       272: iconst_4
+       273: invokevirtual #291                // Method net/i2p/util/RandomSource.nextInt:(I)I
+       276: ifeq          283
+       279: iconst_1
+       280: goto          284
+       283: iconst_0
+       284: istore_3
+       285: aload_0
+       286: aload_0
+       287: getfield      #92                 // Field _servers:Ljava/util/List;
+       290: aload_0
+       291: getfield      #92                 // Field _servers:Ljava/util/List;
+       294: invokeinterface #154,  1          // InterfaceMethod java/util/List.size:()I
+       299: anewarray     #165                // class java/lang/String
+       302: invokeinterface #266,  2          // InterfaceMethod java/util/List.toArray:([Ljava/lang/Object;)[Ljava/lang/Object;
+       307: checkcast     #270                // class "[Ljava/lang/String;"
+       310: sipush        10000
+       313: iload_3
+       314: invokespecial #272                // Method queryTime:([Ljava/lang/String;IZ)Z
+       317: ifeq          324
+       320: iconst_0
+       321: goto          325
+       324: iconst_1
+       325: istore_1
+       326: goto          332
+       329: astore_3
+       330: iconst_1
+       331: istore_1
+       332: aload_0
+       333: dup
+       334: astore        4
+       336: monitorenter
+       337: aload_0
+       338: getfield      #117                // Field _initialized:Z
+       341: istore_3
+       342: iload_3
+       343: ifne          351
+       346: aload_0
+       347: iconst_1
+       348: putfield      #117                // Field _initialized:Z
+       351: aload_0
+       352: invokevirtual #297                // Method java/lang/Object.notifyAll:()V
+       355: aload         4
+       357: monitorexit
+       358: goto          365
+       361: aload         4
+       363: monitorexit
+       364: athrow
+       365: iload_3
+       366: ifne          683
+       369: ldc2_w        #300                // long 10000l
+       372: invokestatic  #302                // Method java/lang/Thread.sleep:(J)V
+       375: goto          380
+       378: astore        4
+       380: aload_0
+       381: aload_0
+       382: getfield      #99                 // Field _context:Lnet/i2p/I2PAppContext;
+       385: invokevirtual #305                // Method net/i2p/I2PAppContext.logManager:()Lnet/i2p/util/LogManager;
+       388: ldc           #1                  // class net/i2p/router/time/RouterTimestamper
+       390: invokevirtual #309                // Method net/i2p/util/LogManager.getLog:(Ljava/lang/Class;)Lnet/i2p/util/Log;
+       393: putfield      #242                // Field _log:Lnet/i2p/util/Log;
+       396: iload_1
+       397: ifeq          540
+       400: new           #87                 // class java/util/ArrayList
+       403: dup
+       404: bipush        9
+       406: invokespecial #89                 // Method java/util/ArrayList."<init>":(I)V
+       409: astore        4
+       411: aload_0
+       412: getfield      #230                // Field _priorityServers:Ljava/util/List;
+       415: ifnull        464
+       418: aload_0
+       419: getfield      #230                // Field _priorityServers:Ljava/util/List;
+       422: invokeinterface #232,  1          // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+       427: astore        6
+       429: goto          454
+       432: aload         6
+       434: invokeinterface #236,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+       439: checkcast     #136                // class java/util/List
+       442: astore        5
+       444: aload         4
+       446: aload         5
+       448: invokeinterface #315,  2          // InterfaceMethod java/util/List.addAll:(Ljava/util/Collection;)Z
+       453: pop
+       454: aload         6
+       456: invokeinterface #284,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+       461: ifne          432
+       464: aload         4
+       466: aload_0
+       467: getfield      #92                 // Field _servers:Ljava/util/List;
+       470: invokeinterface #315,  2          // InterfaceMethod java/util/List.addAll:(Ljava/util/Collection;)Z
+       475: pop
+       476: new           #249                // class java/lang/StringBuilder
+       479: dup
+       480: ldc_w         #319                // String Unable to reach any of the NTP servers
+       483: invokespecial #253                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       486: aload         4
+       488: invokevirtual #255                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       491: ldc_w         #321                // String  - network disconnected? Or set time.sntpServerList=myserver1.com,myserver2.com in advanced configuration.
+       494: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       497: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       500: astore        5
+       502: aload_0
+       503: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       506: bipush        30
+       508: aload         5
+       510: invokevirtual #326                // Method net/i2p/util/Log.logAlways:(ILjava/lang/String;)V
+       513: getstatic     #121                // Field java/lang/System.out:Ljava/io/PrintStream;
+       516: new           #249                // class java/lang/StringBuilder
+       519: dup
+       520: ldc_w         #330                // String Warning:
+       523: invokespecial #253                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       526: aload         5
+       528: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       531: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       534: invokevirtual #129                // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+       537: goto          683
+       540: aload_0
+       541: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       544: invokevirtual #244                // Method net/i2p/util/Log.shouldDebug:()Z
+       547: ifeq          683
+       550: aload_0
+       551: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       554: ldc_w         #332                // String NTP initialization successful
+       557: invokevirtual #263                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       560: iconst_1
+       561: istore        4
+       563: aload_0
+       564: getfield      #230                // Field _priorityServers:Ljava/util/List;
+       567: ifnull        645
+       570: aload_0
+       571: getfield      #230                // Field _priorityServers:Ljava/util/List;
+       574: invokeinterface #232,  1          // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+       579: astore        6
+       581: goto          635
+       584: aload         6
+       586: invokeinterface #236,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+       591: checkcast     #136                // class java/util/List
+       594: astore        5
+       596: aload_0
+       597: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       600: new           #249                // class java/lang/StringBuilder
+       603: dup
+       604: ldc_w         #334                // String NTP Server list
+       607: invokespecial #253                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       610: iload         4
+       612: iinc          4, 1
+       615: invokevirtual #336                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       618: ldc_w         #339                // String :
+       621: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       624: aload         5
+       626: invokevirtual #255                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       629: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       632: invokevirtual #263                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       635: aload         6
+       637: invokeinterface #284,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+       642: ifne          584
+       645: aload_0
+       646: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       649: new           #249                // class java/lang/StringBuilder
+       652: dup
+       653: ldc_w         #334                // String NTP Server list
+       656: invokespecial #253                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       659: iload         4
+       661: invokevirtual #336                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       664: ldc_w         #339                // String :
+       667: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       670: aload_0
+       671: getfield      #92                 // Field _servers:Ljava/util/List;
+       674: invokevirtual #255                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       677: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       680: invokevirtual #263                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       683: iload_1
+       684: ifeq          719
+       687: aload_0
+       688: dup
+       689: getfield      #341                // Field _consecutiveFails:I
+       692: iconst_1
+       693: iadd
+       694: dup_x1
+       695: putfield      #341                // Field _consecutiveFails:I
+       698: bipush        10
+       700: if_icmplt     711
+       703: ldc2_w        #343                // long 1800000l
+       706: lstore        4
+       708: goto          763
+       711: ldc2_w        #345                // long 30000l
+       714: lstore        4
+       716: goto          763
+       719: aload_0
+       720: iconst_0
+       721: putfield      #341                // Field _consecutiveFails:I
+       724: aload_0
+       725: getfield      #99                 // Field _context:Lnet/i2p/I2PAppContext;
+       728: invokevirtual #287                // Method net/i2p/I2PAppContext.random:()Lnet/i2p/util/RandomSource;
+       731: aload_0
+       732: getfield      #169                // Field _queryFrequency:I
+       735: iconst_2
+       736: idiv
+       737: invokevirtual #291                // Method net/i2p/util/RandomSource.nextInt:(I)I
+       740: aload_0
+       741: getfield      #169                // Field _queryFrequency:I
+       744: iadd
+       745: i2l
+       746: lstore        4
+       748: aload_0
+       749: getfield      #347                // Field _wellSynced:Z
+       752: ifeq          763
+       755: lload         4
+       757: ldc2_w        #349                // long 3l
+       760: lmul
+       761: lstore        4
+       763: lload         4
+       765: invokestatic  #302                // Method java/lang/Thread.sleep:(J)V
+       768: goto          773
+       771: astore        6
+       773: aload_0
+       774: getfield      #197                // Field _isRunning:Z
+       777: ifne          5
+       780: goto          824
+       783: astore_2
+       784: aload_0
+       785: dup
+       786: astore_3
+       787: monitorenter
+       788: aload_0
+       789: invokevirtual #297                // Method java/lang/Object.notifyAll:()V
+       792: aload_3
+       793: monitorexit
+       794: goto          800
+       797: aload_3
+       798: monitorexit
+       799: athrow
+       800: aload_0
+       801: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       804: ifnull        820
+       807: aload_0
+       808: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       811: bipush        50
+       813: ldc_w         #351                // String Timestamper died!
+       816: aload_2
+       817: invokevirtual #353                // Method net/i2p/util/Log.log:(ILjava/lang/String;Ljava/lang/Throwable;)V
+       820: aload_2
+       821: invokevirtual #357                // Method java/lang/Throwable.printStackTrace:()V
+       824: return
+      Exception table:
+         from    to  target type
+            92   127   130   Class java/lang/IllegalArgumentException
+           250   326   329   Class java/lang/IllegalArgumentException
+           337   358   361   any
+           361   364   361   any
+           369   375   378   Class java/lang/InterruptedException
+           763   768   771   Class java/lang/InterruptedException
+             2   780   783   Class java/lang/Throwable
+           788   794   797   any
+           797   799   797   any
+
+  private boolean queryTime(java.lang.String[], int, boolean) throws java.lang.IllegalArgumentException;
+    Code:
+         0: aload_0
+         1: getfield      #377                // Field _concurringServers:I
+         4: newarray       long
+         6: astore        4
+         8: ldc2_w        #379                // long -1l
+        11: lstore        5
+        13: iconst_m1
+        14: istore        7
+        16: lconst_0
+        17: lstore        8
+        19: aload_0
+        20: iconst_0
+        21: putfield      #347                // Field _wellSynced:Z
+        24: iconst_0
+        25: istore        10
+        27: goto          323
+        30: aload_1
+        31: iload_2
+        32: iload_3
+        33: aload_0
+        34: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+        37: invokestatic  #381                // Method net/i2p/router/time/NtpClient.currentTimeAndStratum:([Ljava/lang/String;IZLnet/i2p/util/Log;)[J
+        40: astore        11
+        42: aload         11
+        44: iconst_0
+        45: laload
+        46: lstore        5
+        48: aload         11
+        50: iconst_1
+        51: laload
+        52: l2i
+        53: istore        7
+        55: lload         5
+        57: aload_0
+        58: getfield      #99                 // Field _context:Lnet/i2p/I2PAppContext;
+        61: invokevirtual #387                // Method net/i2p/I2PAppContext.clock:()Lnet/i2p/util/Clock;
+        64: invokevirtual #391                // Method net/i2p/util/Clock.now:()J
+        67: lsub
+        68: lstore        12
+        70: aload         4
+        72: iload         10
+        74: lload         12
+        76: lastore
+        77: iload         10
+        79: ifne          173
+        82: lload         12
+        84: invokestatic  #397                // Method java/lang/Math.abs:(J)J
+        87: ldc2_w        #300                // long 10000l
+        90: lcmp
+        91: ifge          166
+        94: aload_0
+        95: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+        98: ifnull        142
+       101: aload_0
+       102: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       105: invokevirtual #403                // Method net/i2p/util/Log.shouldInfo:()Z
+       108: ifeq          142
+       111: aload_0
+       112: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       115: new           #249                // class java/lang/StringBuilder
+       118: dup
+       119: ldc_w         #406                // String a single SNTP query was within the tolerance (
+       122: invokespecial #253                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       125: lload         12
+       127: invokevirtual #408                // Method java/lang/StringBuilder.append:(J)Ljava/lang/StringBuilder;
+       130: ldc_w         #411                // String ms)
+       133: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       136: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       139: invokevirtual #413                // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       142: aload_0
+       143: lload         12
+       145: invokestatic  #397                // Method java/lang/Math.abs:(J)J
+       148: ldc2_w        #416                // long 500l
+       151: lcmp
+       152: ifge          159
+       155: iconst_1
+       156: goto          160
+       159: iconst_0
+       160: putfield      #347                // Field _wellSynced:Z
+       163: goto          332
+       166: lload         12
+       168: lstore        8
+       170: goto          320
+       173: lload         12
+       175: lload         8
+       177: lsub
+       178: invokestatic  #397                // Method java/lang/Math.abs:(J)J
+       181: ldc2_w        #300                // long 10000l
+       184: lcmp
+       185: ifle          320
+       188: aload_0
+       189: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       192: ifnull        318
+       195: aload_0
+       196: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       199: invokevirtual #418                // Method net/i2p/util/Log.shouldError:()Z
+       202: ifeq          318
+       205: new           #249                // class java/lang/StringBuilder
+       208: dup
+       209: bipush        96
+       211: invokespecial #421                // Method java/lang/StringBuilder."<init>":(I)V
+       214: astore        14
+       216: aload         14
+       218: ldc_w         #422                // String SNTP client variance exceeded at query
+       221: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       224: iload         10
+       226: invokevirtual #336                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       229: pop
+       230: aload         14
+       232: ldc_w         #424                // String .  expected =
+       235: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       238: pop
+       239: aload         14
+       241: lload         8
+       243: invokevirtual #408                // Method java/lang/StringBuilder.append:(J)Ljava/lang/StringBuilder;
+       246: pop
+       247: aload         14
+       249: ldc_w         #426                // String , found =
+       252: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       255: pop
+       256: aload         14
+       258: lload         12
+       260: invokevirtual #408                // Method java/lang/StringBuilder.append:(J)Ljava/lang/StringBuilder;
+       263: pop
+       264: aload         14
+       266: ldc_w         #428                // String  all deltas:
+       269: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       272: pop
+       273: iconst_0
+       274: istore        15
+       276: goto          298
+       279: aload         14
+       281: aload         4
+       283: iload         15
+       285: laload
+       286: invokevirtual #408                // Method java/lang/StringBuilder.append:(J)Ljava/lang/StringBuilder;
+       289: bipush        32
+       291: invokevirtual #430                // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+       294: pop
+       295: iinc          15, 1
+       298: iload         15
+       300: aload         4
+       302: arraylength
+       303: if_icmplt     279
+       306: aload_0
+       307: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       310: aload         14
+       312: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       315: invokevirtual #433                // Method net/i2p/util/Log.error:(Ljava/lang/String;)V
+       318: iconst_0
+       319: ireturn
+       320: iinc          10, 1
+       323: iload         10
+       325: aload_0
+       326: getfield      #377                // Field _concurringServers:I
+       329: if_icmplt     30
+       332: aload_0
+       333: lload         5
+       335: iload         7
+       337: invokespecial #436                // Method stampTime:(JI)V
+       340: aload_0
+       341: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       344: ifnull        422
+       347: aload_0
+       348: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       351: invokevirtual #244                // Method net/i2p/util/Log.shouldDebug:()Z
+       354: ifeq          422
+       357: new           #249                // class java/lang/StringBuilder
+       360: dup
+       361: bipush        64
+       363: invokespecial #421                // Method java/lang/StringBuilder."<init>":(I)V
+       366: astore        10
+       368: aload         10
+       370: ldc_w         #440                // String Deltas:
+       373: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       376: pop
+       377: iconst_0
+       378: istore        11
+       380: goto          402
+       383: aload         10
+       385: aload         4
+       387: iload         11
+       389: laload
+       390: invokevirtual #408                // Method java/lang/StringBuilder.append:(J)Ljava/lang/StringBuilder;
+       393: bipush        32
+       395: invokevirtual #430                // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+       398: pop
+       399: iinc          11, 1
+       402: iload         11
+       404: aload         4
+       406: arraylength
+       407: if_icmplt     383
+       410: aload_0
+       411: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+       414: aload         10
+       416: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       419: invokevirtual #263                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       422: iconst_1
+       423: ireturn
+
+  private void stampTime(long, int);
+    Code:
+         0: aload_0
+         1: getfield      #99                 // Field _context:Lnet/i2p/I2PAppContext;
+         4: invokevirtual #387                // Method net/i2p/I2PAppContext.clock:()Lnet/i2p/util/Clock;
+         7: invokevirtual #391                // Method net/i2p/util/Clock.now:()J
+        10: lstore        4
+        12: aload_0
+        13: getfield      #97                 // Field _listeners:Ljava/util/List;
+        16: invokeinterface #232,  1          // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+        21: astore        7
+        23: goto          47
+        26: aload         7
+        28: invokeinterface #236,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        33: checkcast     #150                // class net/i2p/time/Timestamper$UpdateListener
+        36: astore        6
+        38: aload         6
+        40: lload_1
+        41: iload_3
+        42: invokeinterface #455,  4          // InterfaceMethod net/i2p/time/Timestamper$UpdateListener.setNow:(JI)V
+        47: aload         7
+        49: invokeinterface #284,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+        54: ifne          26
+        57: aload_0
+        58: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+        61: ifnull        117
+        64: aload_0
+        65: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+        68: invokevirtual #244                // Method net/i2p/util/Log.shouldDebug:()Z
+        71: ifeq          117
+        74: aload_0
+        75: getfield      #242                // Field _log:Lnet/i2p/util/Log;
+        78: new           #249                // class java/lang/StringBuilder
+        81: dup
+        82: ldc_w         #458                // String Stamped the time as
+        85: invokespecial #253                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        88: lload_1
+        89: invokevirtual #408                // Method java/lang/StringBuilder.append:(J)Ljava/lang/StringBuilder;
+        92: ldc_w         #460                // String  (delta=
+        95: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        98: lload_1
+        99: lload         4
+       101: lsub
+       102: invokevirtual #408                // Method java/lang/StringBuilder.append:(J)Ljava/lang/StringBuilder;
+       105: ldc_w         #462                // String )
+       108: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       111: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       114: invokevirtual #263                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       117: return
+
+  private void updateConfig();
+    Code:
+         0: aload_0
+         1: getfield      #99                 // Field _context:Lnet/i2p/I2PAppContext;
+         4: ldc           #58                 // String time.sntpServerList
+         6: invokevirtual #465                // Method net/i2p/I2PAppContext.getProperty:(Ljava/lang/String;)Ljava/lang/String;
+         9: astore_1
+        10: aload_1
+        11: ifnull        24
+        14: aload_1
+        15: invokevirtual #468                // Method java/lang/String.trim:()Ljava/lang/String;
+        18: invokevirtual #471                // Method java/lang/String.length:()I
+        21: ifgt          279
+        24: ldc           #38                 // String 0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org
+        26: astore_1
+        27: aload_0
+        28: getfield      #99                 // Field _context:Lnet/i2p/I2PAppContext;
+        31: ldc           #67                 // String i2np.lastCountry
+        33: invokevirtual #465                // Method net/i2p/I2PAppContext.getProperty:(Ljava/lang/String;)Ljava/lang/String;
+        36: astore_2
+        37: aload_2
+        38: ifnonnull     60
+        41: invokestatic  #474                // Method java/util/Locale.getDefault:()Ljava/util/Locale;
+        44: invokevirtual #480                // Method java/util/Locale.getCountry:()Ljava/lang/String;
+        47: astore_2
+        48: aload_2
+        49: ifnull        60
+        52: aload_2
+        53: getstatic     #483                // Field java/util/Locale.US:Ljava/util/Locale;
+        56: invokevirtual #487                // Method java/lang/String.toLowerCase:(Ljava/util/Locale;)Ljava/lang/String;
+        59: astore_2
+        60: aload_2
+        61: ifnull        271
+        64: aload_2
+        65: invokevirtual #471                // Method java/lang/String.length:()I
+        68: ifle          271
+        71: aload_2
+        72: ldc_w         #491                // String a1
+        75: invokevirtual #493                // Method java/lang/String.equals:(Ljava/lang/Object;)Z
+        78: ifne          271
+        81: aload_2
+        82: ldc_w         #496                // String a2
+        85: invokevirtual #493                // Method java/lang/String.equals:(Ljava/lang/Object;)Z
+        88: ifne          271
+        91: aload_0
+        92: new           #87                 // class java/util/ArrayList
+        95: dup
+        96: iconst_2
+        97: invokespecial #89                 // Method java/util/ArrayList."<init>":(I)V
+       100: putfield      #230                // Field _priorityServers:Ljava/util/List;
+       103: new           #87                 // class java/util/ArrayList
+       106: dup
+       107: iconst_3
+       108: invokespecial #89                 // Method java/util/ArrayList."<init>":(I)V
+       111: astore_3
+       112: iconst_0
+       113: istore        4
+       115: goto          159
+       118: aload_3
+       119: new           #249                // class java/lang/StringBuilder
+       122: dup
+       123: iload         4
+       125: invokestatic  #498                // Method java/lang/String.valueOf:(I)Ljava/lang/String;
+       128: invokespecial #253                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       131: ldc_w         #501                // String .
+       134: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       137: aload_2
+       138: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       141: ldc_w         #503                // String .pool.ntp.org
+       144: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       147: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       150: invokeinterface #135,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+       155: pop
+       156: iinc          4, 1
+       159: iload         4
+       161: iconst_3
+       162: if_icmplt     118
+       165: aload_0
+       166: getfield      #230                // Field _priorityServers:Ljava/util/List;
+       169: aload_3
+       170: invokeinterface #135,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+       175: pop
+       176: aload_0
+       177: getfield      #119                // Field _zones:Lnet/i2p/router/time/Zones;
+       180: aload_2
+       181: invokevirtual #505                // Method net/i2p/router/time/Zones.getZone:(Ljava/lang/String;)Ljava/lang/String;
+       184: astore        4
+       186: aload         4
+       188: ifnull        284
+       191: new           #87                 // class java/util/ArrayList
+       194: dup
+       195: iconst_3
+       196: invokespecial #89                 // Method java/util/ArrayList."<init>":(I)V
+       199: astore        5
+       201: iconst_0
+       202: istore        6
+       204: goto          250
+       207: aload         5
+       209: new           #249                // class java/lang/StringBuilder
+       212: dup
+       213: iload         6
+       215: invokestatic  #498                // Method java/lang/String.valueOf:(I)Ljava/lang/String;
+       218: invokespecial #253                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       221: ldc_w         #501                // String .
+       224: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       227: aload         4
+       229: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       232: ldc_w         #503                // String .pool.ntp.org
+       235: invokevirtual #323                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       238: invokevirtual #259                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       241: invokeinterface #135,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+       246: pop
+       247: iinc          6, 1
+       250: iload         6
+       252: iconst_3
+       253: if_icmplt     207
+       256: aload_0
+       257: getfield      #230                // Field _priorityServers:Ljava/util/List;
+       260: aload         5
+       262: invokeinterface #135,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+       267: pop
+       268: goto          284
+       271: aload_0
+       272: aconst_null
+       273: putfield      #230                // Field _priorityServers:Ljava/util/List;
+       276: goto          284
+       279: aload_0
+       280: aconst_null
+       281: putfield      #230                // Field _priorityServers:Ljava/util/List;
+       284: aload_0
+       285: getfield      #92                 // Field _servers:Ljava/util/List;
+       288: invokeinterface #508,  1          // InterfaceMethod java/util/List.clear:()V
+       293: new           #511                // class java/util/StringTokenizer
+       296: dup
+       297: aload_1
+       298: ldc_w         #513                // String ,
+       301: invokespecial #515                // Method java/util/StringTokenizer."<init>":(Ljava/lang/String;Ljava/lang/String;)V
+       304: astore_2
+       305: goto          336
+       308: aload_2
+       309: invokevirtual #518                // Method java/util/StringTokenizer.nextToken:()Ljava/lang/String;
+       312: astore_3
+       313: aload_3
+       314: invokevirtual #468                // Method java/lang/String.trim:()Ljava/lang/String;
+       317: astore_3
+       318: aload_3
+       319: invokevirtual #471                // Method java/lang/String.length:()I
+       322: ifle          336
+       325: aload_0
+       326: getfield      #92                 // Field _servers:Ljava/util/List;
+       329: aload_3
+       330: invokeinterface #135,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+       335: pop
+       336: aload_2
+       337: invokevirtual #521                // Method java/util/StringTokenizer.hasMoreTokens:()Z
+       340: ifne          308
+       343: aload_0
+       344: ldc           #33                 // int 300000
+       346: aload_0
+       347: getfield      #99                 // Field _context:Lnet/i2p/I2PAppContext;
+       350: ldc           #55                 // String time.queryFrequencyMs
+       352: ldc           #35                 // int 660000
+       354: invokevirtual #524                // Method net/i2p/I2PAppContext.getProperty:(Ljava/lang/String;I)I
+       357: invokestatic  #527                // Method java/lang/Math.max:(II)I
+       360: putfield      #169                // Field _queryFrequency:I
+       363: aload_0
+       364: aload_0
+       365: getfield      #99                 // Field _context:Lnet/i2p/I2PAppContext;
+       368: ldc           #61                 // String time.disabled
+       370: iconst_1
+       371: invokevirtual #103                // Method net/i2p/I2PAppContext.getProperty:(Ljava/lang/String;Z)Z
+       374: putfield      #115                // Field _disabled:Z
+       377: aload_0
+       378: iconst_4
+       379: iconst_1
+       380: aload_0
+       381: getfield      #99                 // Field _context:Lnet/i2p/I2PAppContext;
+       384: ldc           #64                 // String time.concurringServers
+       386: iconst_3
+       387: invokevirtual #524                // Method net/i2p/I2PAppContext.getProperty:(Ljava/lang/String;I)I
+       390: invokestatic  #527                // Method java/lang/Math.max:(II)I
+       393: invokestatic  #531                // Method java/lang/Math.min:(II)I
+       396: putfield      #377                // Field _concurringServers:I
+       399: return
+
+  static void access$0(net.i2p.router.time.RouterTimestamper, boolean);
+    Code:
+         0: aload_0
+         1: iload_1
+         2: putfield      #197                // Field _isRunning:Z
+         5: return
+
+  static java.lang.Thread access$1(net.i2p.router.time.RouterTimestamper);
+    Code:
+         0: aload_0
+         1: getfield      #190                // Field _timestamperThread:Ljava/lang/Thread;
+         4: areturn
+}

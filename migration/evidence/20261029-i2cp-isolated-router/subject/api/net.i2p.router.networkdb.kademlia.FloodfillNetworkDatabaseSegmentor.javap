@@ -1,0 +1,117 @@
+Compiled from "FloodfillNetworkDatabaseSegmentor.java"
+public class net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseSegmentor extends net.i2p.router.networkdb.kademlia.SegmentedNetworkDatabaseFacade {
+  private final net.i2p.util.Log _log;
+
+  private final net.i2p.router.RouterContext _context;
+
+  public static final net.i2p.data.Hash MAIN_DBID;
+
+  private final net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseFacade _mainDbid;
+
+  static {};
+    Code:
+         0: aconst_null
+         1: putstatic     #16                 // Field MAIN_DBID:Lnet/i2p/data/Hash;
+         4: return
+
+  public net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseSegmentor(net.i2p.router.RouterContext);
+    Code:
+         0: aload_0
+         1: invokespecial #22                 // Method net/i2p/router/networkdb/kademlia/SegmentedNetworkDatabaseFacade."<init>":()V
+         4: aload_0
+         5: aload_1
+         6: invokevirtual #24                 // Method net/i2p/router/RouterContext.logManager:()Lnet/i2p/util/LogManager;
+         9: aload_0
+        10: invokevirtual #30                 // Method java/lang/Object.getClass:()Ljava/lang/Class;
+        13: invokevirtual #36                 // Method net/i2p/util/LogManager.getLog:(Ljava/lang/Class;)Lnet/i2p/util/Log;
+        16: putfield      #42                 // Field _log:Lnet/i2p/util/Log;
+        19: aload_0
+        20: aload_1
+        21: putfield      #44                 // Field _context:Lnet/i2p/router/RouterContext;
+        24: aload_0
+        25: new           #46                 // class net/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseFacade
+        28: dup
+        29: aload_0
+        30: getfield      #44                 // Field _context:Lnet/i2p/router/RouterContext;
+        33: getstatic     #16                 // Field MAIN_DBID:Lnet/i2p/data/Hash;
+        36: invokespecial #48                 // Method net/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseFacade."<init>":(Lnet/i2p/router/RouterContext;Lnet/i2p/data/Hash;)V
+        39: putfield      #51                 // Field _mainDbid:Lnet/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseFacade;
+        42: return
+
+  private net.i2p.router.NetworkDatabaseFacade getSubNetDB(net.i2p.data.Hash);
+    Code:
+         0: aload_0
+         1: getfield      #44                 // Field _context:Lnet/i2p/router/RouterContext;
+         4: invokevirtual #58                 // Method net/i2p/router/RouterContext.clientManager:()Lnet/i2p/router/ClientManagerFacade;
+         7: aload_1
+         8: invokevirtual #62                 // Method net/i2p/router/ClientManagerFacade.getClientFloodfillNetworkDatabaseFacade:(Lnet/i2p/data/Hash;)Lnet/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseFacade;
+        11: areturn
+
+  public synchronized void shutdown();
+    Code:
+         0: aload_0
+         1: getfield      #42                 // Field _log:Lnet/i2p/util/Log;
+         4: bipush        10
+         6: invokevirtual #72                 // Method net/i2p/util/Log.shouldLog:(I)Z
+         9: ifeq          21
+        12: aload_0
+        13: getfield      #42                 // Field _log:Lnet/i2p/util/Log;
+        16: ldc           #76                 // String shutdown called from FNDS, shutting down main and multihome db
+        18: invokevirtual #78                 // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+        21: aload_0
+        22: getfield      #51                 // Field _mainDbid:Lnet/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseFacade;
+        25: invokevirtual #82                 // Method net/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseFacade.shutdown:()V
+        28: return
+
+  public synchronized void startup();
+    Code:
+         0: aload_0
+         1: getfield      #42                 // Field _log:Lnet/i2p/util/Log;
+         4: bipush        10
+         6: invokevirtual #72                 // Method net/i2p/util/Log.shouldLog:(I)Z
+         9: ifeq          21
+        12: aload_0
+        13: getfield      #42                 // Field _log:Lnet/i2p/util/Log;
+        16: ldc           #86                 // String startup called from FNDS, starting up main and multihome db
+        18: invokevirtual #78                 // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+        21: aload_0
+        22: getfield      #51                 // Field _mainDbid:Lnet/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseFacade;
+        25: invokevirtual #88                 // Method net/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseFacade.startup:()V
+        28: return
+
+  public net.i2p.router.NetworkDatabaseFacade mainNetDB();
+    Code:
+         0: aload_0
+         1: getfield      #51                 // Field _mainDbid:Lnet/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseFacade;
+         4: areturn
+
+  public net.i2p.router.NetworkDatabaseFacade clientNetDB(net.i2p.data.Hash);
+    Code:
+         0: aload_0
+         1: getfield      #42                 // Field _log:Lnet/i2p/util/Log;
+         4: invokevirtual #93                 // Method net/i2p/util/Log.shouldDebug:()Z
+         7: ifeq          33
+        10: aload_0
+        11: getfield      #42                 // Field _log:Lnet/i2p/util/Log;
+        14: new           #97                 // class java/lang/StringBuilder
+        17: dup
+        18: ldc           #99                 // String looked up clientNetDB:
+        20: invokespecial #101                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        23: aload_1
+        24: invokevirtual #103                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+        27: invokevirtual #107                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        30: invokevirtual #78                 // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+        33: aload_1
+        34: ifnull        49
+        37: aload_0
+        38: aload_1
+        39: invokespecial #111                // Method getSubNetDB:(Lnet/i2p/data/Hash;)Lnet/i2p/router/NetworkDatabaseFacade;
+        42: astore_2
+        43: aload_2
+        44: ifnull        49
+        47: aload_2
+        48: areturn
+        49: aload_0
+        50: invokevirtual #113                // Method mainNetDB:()Lnet/i2p/router/NetworkDatabaseFacade;
+        53: areturn
+}

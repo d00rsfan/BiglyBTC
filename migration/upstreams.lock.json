@@ -8868,7 +8868,8 @@
         "migration/evidence/20261029-normal-dht-leaseset2/REVIEW.md",
         "migration/evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md",
         "migration/evidence/20261029-i2cp-bounded-receiver/REVIEW.md",
-        "migration/evidence/20261029-profile-io-i2cp-tracker/REVIEW.md"
+        "migration/evidence/20261029-profile-io-i2cp-tracker/REVIEW.md",
+        "migration/evidence/20261029-i2cp-isolated-router/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
@@ -8877,7 +8878,8 @@
         "migration/evidence/20261029-normal-dht-leaseset2/verification.json",
         "migration/evidence/20261029-saved-ratings-i2cp-datagrams/verification.json",
         "migration/evidence/20261029-i2cp-bounded-receiver/verification.json",
-        "migration/evidence/20261029-profile-io-i2cp-tracker/verification.json"
+        "migration/evidence/20261029-profile-io-i2cp-tracker/verification.json",
+        "migration/evidence/20261029-i2cp-isolated-router/verification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     }

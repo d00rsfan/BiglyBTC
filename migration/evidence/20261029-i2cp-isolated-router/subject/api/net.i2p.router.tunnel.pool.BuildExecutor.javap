@@ -1,0 +1,1596 @@
+Compiled from "BuildExecutor.java"
+class net.i2p.router.tunnel.pool.BuildExecutor implements java.lang.Runnable {
+  private final java.util.ArrayList<java.lang.Long> _recentBuildIds;
+
+  private final net.i2p.router.RouterContext _context;
+
+  private final net.i2p.util.Log _log;
+
+  private final net.i2p.router.tunnel.pool.TunnelPoolManager _manager;
+
+  private final java.lang.Object _currentlyBuilding;
+
+  private final java.util.concurrent.ConcurrentHashMap<java.lang.Long, net.i2p.router.tunnel.pool.PooledTunnelCreatorConfig> _currentlyBuildingMap;
+
+  private final java.util.concurrent.ConcurrentHashMap<java.lang.Long, net.i2p.router.tunnel.pool.PooledTunnelCreatorConfig> _recentlyBuildingMap;
+
+  private volatile boolean _isRunning;
+
+  private boolean _repoll;
+
+  private static final int MAX_CONCURRENT_BUILDS = 13;
+
+  private static final long GRACE_PERIOD = 60000l;
+
+  private static final int LOOP_TIME;
+
+  static {};
+    Code:
+         0: invokestatic  #38                 // Method net/i2p/util/SystemVersion.isSlow:()Z
+         3: ifeq          12
+         6: sipush        1000
+         9: goto          15
+        12: sipush        800
+        15: putstatic     #44                 // Field LOOP_TIME:I
+        18: return
+
+  public net.i2p.router.tunnel.pool.BuildExecutor(net.i2p.router.RouterContext, net.i2p.router.tunnel.pool.TunnelPoolManager);
+    Code:
+         0: aload_0
+         1: invokespecial #51                 // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: new           #53                 // class java/util/ArrayList
+         8: dup
+         9: bipush        100
+        11: invokespecial #55                 // Method java/util/ArrayList."<init>":(I)V
+        14: putfield      #58                 // Field _recentBuildIds:Ljava/util/ArrayList;
+        17: aload_0
+        18: aload_1
+        19: putfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+        22: aload_0
+        23: aload_1
+        24: invokevirtual #62                 // Method net/i2p/router/RouterContext.logManager:()Lnet/i2p/util/LogManager;
+        27: aload_0
+        28: invokevirtual #68                 // Method java/lang/Object.getClass:()Ljava/lang/Class;
+        31: invokevirtual #72                 // Method net/i2p/util/LogManager.getLog:(Ljava/lang/Class;)Lnet/i2p/util/Log;
+        34: putfield      #78                 // Field _log:Lnet/i2p/util/Log;
+        37: aload_0
+        38: aload_2
+        39: putfield      #80                 // Field _manager:Lnet/i2p/router/tunnel/pool/TunnelPoolManager;
+        42: aload_0
+        43: new           #3                  // class java/lang/Object
+        46: dup
+        47: invokespecial #51                 // Method java/lang/Object."<init>":()V
+        50: putfield      #82                 // Field _currentlyBuilding:Ljava/lang/Object;
+        53: aload_0
+        54: new           #84                 // class java/util/concurrent/ConcurrentHashMap
+        57: dup
+        58: bipush        13
+        60: invokespecial #86                 // Method java/util/concurrent/ConcurrentHashMap."<init>":(I)V
+        63: putfield      #87                 // Field _currentlyBuildingMap:Ljava/util/concurrent/ConcurrentHashMap;
+        66: aload_0
+        67: new           #84                 // class java/util/concurrent/ConcurrentHashMap
+        70: dup
+        71: bipush        52
+        73: invokespecial #86                 // Method java/util/concurrent/ConcurrentHashMap."<init>":(I)V
+        76: putfield      #89                 // Field _recentlyBuildingMap:Ljava/util/concurrent/ConcurrentHashMap;
+        79: aload_0
+        80: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+        83: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+        86: ldc           #95                 // String tunnel.concurrentBuilds
+        88: ldc           #97                 // String How many builds are going at once
+        90: ldc           #99                 // String Tunnels
+        92: iconst_3
+        93: newarray       long
+        95: dup
+        96: iconst_0
+        97: ldc2_w        #32                 // long 60000l
+       100: lastore
+       101: dup
+       102: iconst_1
+       103: ldc2_w        #101                // long 300000l
+       106: lastore
+       107: dup
+       108: iconst_2
+       109: ldc2_w        #103                // long 3600000l
+       112: lastore
+       113: invokevirtual #105                // Method net/i2p/stat/StatManager.createRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       116: aload_0
+       117: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       120: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       123: ldc           #111                // String tunnel.concurrentBuildsLagged
+       125: ldc           #113                // String How many builds are going at once when we reject further builds, due to job lag (period is lag)
+       127: ldc           #99                 // String Tunnels
+       129: iconst_3
+       130: newarray       long
+       132: dup
+       133: iconst_0
+       134: ldc2_w        #32                 // long 60000l
+       137: lastore
+       138: dup
+       139: iconst_1
+       140: ldc2_w        #101                // long 300000l
+       143: lastore
+       144: dup
+       145: iconst_2
+       146: ldc2_w        #103                // long 3600000l
+       149: lastore
+       150: invokevirtual #105                // Method net/i2p/stat/StatManager.createRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       153: aload_0
+       154: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       157: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       160: ldc           #115                // String tunnel.buildExploratoryExpire
+       162: ldc           #117                // String No response to our build request
+       164: ldc           #99                 // String Tunnels
+       166: iconst_2
+       167: newarray       long
+       169: dup
+       170: iconst_0
+       171: ldc2_w        #119                // long 600000l
+       174: lastore
+       175: dup
+       176: iconst_1
+       177: ldc2_w        #103                // long 3600000l
+       180: lastore
+       181: invokevirtual #121                // Method net/i2p/stat/StatManager.createRequiredRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       184: aload_0
+       185: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       188: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       191: ldc           #124                // String tunnel.buildClientExpire
+       193: ldc           #117                // String No response to our build request
+       195: ldc           #99                 // String Tunnels
+       197: iconst_2
+       198: newarray       long
+       200: dup
+       201: iconst_0
+       202: ldc2_w        #119                // long 600000l
+       205: lastore
+       206: dup
+       207: iconst_1
+       208: ldc2_w        #103                // long 3600000l
+       211: lastore
+       212: invokevirtual #121                // Method net/i2p/stat/StatManager.createRequiredRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       215: aload_0
+       216: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       219: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       222: ldc           #126                // String tunnel.buildExploratorySuccess
+       224: ldc           #128                // String Response time for success (ms)
+       226: ldc           #99                 // String Tunnels
+       228: iconst_2
+       229: newarray       long
+       231: dup
+       232: iconst_0
+       233: ldc2_w        #119                // long 600000l
+       236: lastore
+       237: dup
+       238: iconst_1
+       239: ldc2_w        #103                // long 3600000l
+       242: lastore
+       243: invokevirtual #121                // Method net/i2p/stat/StatManager.createRequiredRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       246: aload_0
+       247: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       250: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       253: ldc           #130                // String tunnel.buildClientSuccess
+       255: ldc           #128                // String Response time for success (ms)
+       257: ldc           #99                 // String Tunnels
+       259: iconst_2
+       260: newarray       long
+       262: dup
+       263: iconst_0
+       264: ldc2_w        #119                // long 600000l
+       267: lastore
+       268: dup
+       269: iconst_1
+       270: ldc2_w        #103                // long 3600000l
+       273: lastore
+       274: invokevirtual #121                // Method net/i2p/stat/StatManager.createRequiredRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       277: aload_0
+       278: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       281: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       284: ldc           #132                // String tunnel.buildExploratoryReject
+       286: ldc           #134                // String Response time for rejection (ms)
+       288: ldc           #99                 // String Tunnels
+       290: iconst_2
+       291: newarray       long
+       293: dup
+       294: iconst_0
+       295: ldc2_w        #119                // long 600000l
+       298: lastore
+       299: dup
+       300: iconst_1
+       301: ldc2_w        #103                // long 3600000l
+       304: lastore
+       305: invokevirtual #121                // Method net/i2p/stat/StatManager.createRequiredRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       308: aload_0
+       309: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       312: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       315: ldc           #136                // String tunnel.buildClientReject
+       317: ldc           #134                // String Response time for rejection (ms)
+       319: ldc           #99                 // String Tunnels
+       321: iconst_2
+       322: newarray       long
+       324: dup
+       325: iconst_0
+       326: ldc2_w        #119                // long 600000l
+       329: lastore
+       330: dup
+       331: iconst_1
+       332: ldc2_w        #103                // long 3600000l
+       335: lastore
+       336: invokevirtual #121                // Method net/i2p/stat/StatManager.createRequiredRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       339: aload_0
+       340: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       343: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       346: ldc           #138                // String tunnel.buildRequestTime
+       348: ldc           #140                // String Time to build a tunnel request (ms)
+       350: ldc           #99                 // String Tunnels
+       352: iconst_2
+       353: newarray       long
+       355: dup
+       356: iconst_0
+       357: ldc2_w        #32                 // long 60000l
+       360: lastore
+       361: dup
+       362: iconst_1
+       363: ldc2_w        #119                // long 600000l
+       366: lastore
+       367: invokevirtual #121                // Method net/i2p/stat/StatManager.createRequiredRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       370: aload_0
+       371: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       374: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       377: ldc           #142                // String tunnel.buildConfigTime
+       379: ldc           #140                // String Time to build a tunnel request (ms)
+       381: ldc           #99                 // String Tunnels
+       383: iconst_2
+       384: newarray       long
+       386: dup
+       387: iconst_0
+       388: ldc2_w        #32                 // long 60000l
+       391: lastore
+       392: dup
+       393: iconst_1
+       394: ldc2_w        #119                // long 600000l
+       397: lastore
+       398: invokevirtual #105                // Method net/i2p/stat/StatManager.createRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       401: aload_0
+       402: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       405: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       408: ldc           #144                // String tunnel.buildFailFirstHop
+       410: ldc           #146                // String How often we fail to build a OB tunnel because we can\'t contact the first hop
+       412: ldc           #99                 // String Tunnels
+       414: iconst_2
+       415: newarray       long
+       417: dup
+       418: iconst_0
+       419: ldc2_w        #32                 // long 60000l
+       422: lastore
+       423: dup
+       424: iconst_1
+       425: ldc2_w        #119                // long 600000l
+       428: lastore
+       429: invokevirtual #105                // Method net/i2p/stat/StatManager.createRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       432: aload_0
+       433: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       436: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       439: ldc           #148                // String tunnel.buildReplySlow
+       441: ldc           #150                // String Build reply late, but not too late
+       443: ldc           #99                 // String Tunnels
+       445: iconst_1
+       446: newarray       long
+       448: dup
+       449: iconst_0
+       450: ldc2_w        #119                // long 600000l
+       453: lastore
+       454: invokevirtual #105                // Method net/i2p/stat/StatManager.createRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       457: aload_0
+       458: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       461: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       464: astore_3
+       465: ldc           #154                // String XPONMLK
+       467: astore        4
+       469: iconst_1
+       470: newarray       long
+       472: dup
+       473: iconst_0
+       474: ldc2_w        #103                // long 3600000l
+       477: lastore
+       478: astore        5
+       480: iconst_0
+       481: istore        6
+       483: goto          627
+       486: aload         4
+       488: iload         6
+       490: invokevirtual #156                // Method java/lang/String.charAt:(I)C
+       493: invokestatic  #162                // Method java/lang/String.valueOf:(C)Ljava/lang/String;
+       496: astore        7
+       498: aload_3
+       499: new           #166                // class java/lang/StringBuilder
+       502: dup
+       503: ldc           #168                // String tunnel.tierAgree
+       505: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       508: aload         7
+       510: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       513: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       516: new           #166                // class java/lang/StringBuilder
+       519: dup
+       520: ldc           #181                // String Agreed joins from
+       522: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       525: aload         7
+       527: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       530: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       533: ldc           #99                 // String Tunnels
+       535: aload         5
+       537: invokevirtual #105                // Method net/i2p/stat/StatManager.createRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       540: aload_3
+       541: new           #166                // class java/lang/StringBuilder
+       544: dup
+       545: ldc           #183                // String tunnel.tierReject
+       547: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       550: aload         7
+       552: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       555: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       558: new           #166                // class java/lang/StringBuilder
+       561: dup
+       562: ldc           #185                // String Rejected joins from
+       564: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       567: aload         7
+       569: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       572: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       575: ldc           #99                 // String Tunnels
+       577: aload         5
+       579: invokevirtual #105                // Method net/i2p/stat/StatManager.createRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       582: aload_3
+       583: new           #166                // class java/lang/StringBuilder
+       586: dup
+       587: ldc           #187                // String tunnel.tierExpire
+       589: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       592: aload         7
+       594: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       597: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       600: new           #166                // class java/lang/StringBuilder
+       603: dup
+       604: ldc           #189                // String Expired joins from
+       606: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       609: aload         7
+       611: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       614: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       617: ldc           #99                 // String Tunnels
+       619: aload         5
+       621: invokevirtual #105                // Method net/i2p/stat/StatManager.createRateStat:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[J)V
+       624: iinc          6, 1
+       627: iload         6
+       629: aload         4
+       631: invokevirtual #191                // Method java/lang/String.length:()I
+       634: if_icmplt     486
+       637: return
+
+  public synchronized void restart();
+    Code:
+         0: aload_0
+         1: getfield      #58                 // Field _recentBuildIds:Ljava/util/ArrayList;
+         4: dup
+         5: astore_1
+         6: monitorenter
+         7: aload_0
+         8: getfield      #58                 // Field _recentBuildIds:Ljava/util/ArrayList;
+        11: invokevirtual #211                // Method java/util/ArrayList.clear:()V
+        14: aload_1
+        15: monitorexit
+        16: goto          22
+        19: aload_1
+        20: monitorexit
+        21: athrow
+        22: aload_0
+        23: getfield      #87                 // Field _currentlyBuildingMap:Ljava/util/concurrent/ConcurrentHashMap;
+        26: invokevirtual #214                // Method java/util/concurrent/ConcurrentHashMap.clear:()V
+        29: aload_0
+        30: getfield      #89                 // Field _recentlyBuildingMap:Ljava/util/concurrent/ConcurrentHashMap;
+        33: invokevirtual #214                // Method java/util/concurrent/ConcurrentHashMap.clear:()V
+        36: return
+      Exception table:
+         from    to  target type
+             7    16    19   any
+            19    21    19   any
+
+  public synchronized void shutdown();
+    Code:
+         0: aload_0
+         1: iconst_0
+         2: putfield      #218                // Field _isRunning:Z
+         5: aload_0
+         6: invokevirtual #220                // Method restart:()V
+         9: return
+
+  private int allowed();
+    Code:
+         0: aload_0
+         1: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+         4: invokevirtual #223                // Method net/i2p/router/RouterContext.commSystem:()Lnet/i2p/router/CommSystemFacade;
+         7: astore_1
+         8: aload_1
+         9: invokevirtual #227                // Method net/i2p/router/CommSystemFacade.getStatus:()Lnet/i2p/router/CommSystemFacade$Status;
+        12: getstatic     #233                // Field net/i2p/router/CommSystemFacade$Status.DISCONNECTED:Lnet/i2p/router/CommSystemFacade$Status;
+        15: if_acmpne     20
+        18: iconst_0
+        19: ireturn
+        20: aload_1
+        21: invokevirtual #239                // Method net/i2p/router/CommSystemFacade.isDummy:()Z
+        24: ifeq          36
+        27: aload_1
+        28: invokevirtual #242                // Method net/i2p/router/CommSystemFacade.countActivePeers:()I
+        31: ifgt          36
+        34: iconst_0
+        35: ireturn
+        36: aload_0
+        37: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+        40: invokevirtual #245                // Method net/i2p/router/RouterContext.bandwidthLimiter:()Lnet/i2p/router/transport/FIFOBandwidthLimiter;
+        43: invokevirtual #249                // Method net/i2p/router/transport/FIFOBandwidthLimiter.getOutboundKBytesPerSecond:()I
+        46: istore_2
+        47: iload_2
+        48: bipush        6
+        50: idiv
+        51: istore_3
+        52: aload_0
+        53: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+        56: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+        59: ldc           #138                // String tunnel.buildRequestTime
+        61: invokevirtual #254                // Method net/i2p/stat/StatManager.getRate:(Ljava/lang/String;)Lnet/i2p/stat/RateStat;
+        64: astore        4
+        66: aload         4
+        68: ifnull        195
+        71: aload         4
+        73: ldc2_w        #32                 // long 60000l
+        76: invokevirtual #258                // Method net/i2p/stat/RateStat.getRate:(J)Lnet/i2p/stat/Rate;
+        79: astore        5
+        81: dconst_0
+        82: dstore        6
+        84: aload         5
+        86: ifnull        96
+        89: aload         5
+        91: invokevirtual #263                // Method net/i2p/stat/Rate.getAverageValue:()D
+        94: dstore        6
+        96: dload         6
+        98: dconst_0
+        99: dcmpg
+       100: ifgt          110
+       103: aload         4
+       105: invokevirtual #269                // Method net/i2p/stat/RateStat.getLifetimeAverageValue:()D
+       108: dstore        6
+       110: dload         6
+       112: dconst_1
+       113: dcmpl
+       114: ifle          195
+       117: ldc2_w        #272                // double 975.0d
+       120: dload         6
+       122: ddiv
+       123: d2i
+       124: istore        8
+       126: iload         8
+       128: iload_3
+       129: if_icmpge     195
+       132: iload         8
+       134: istore_3
+       135: iload_3
+       136: bipush        13
+       138: if_icmpge     195
+       141: aload_0
+       142: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       145: bipush        20
+       147: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+       150: ifeq          195
+       153: aload_0
+       154: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       157: new           #166                // class java/lang/StringBuilder
+       160: dup
+       161: ldc_w         #280                // String Throttling max builds to
+       164: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       167: iload_3
+       168: invokevirtual #282                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       171: ldc_w         #285                // String  due to avg build time of
+       174: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       177: dload         6
+       179: d2i
+       180: invokevirtual #282                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       183: ldc_w         #287                // String  ms
+       186: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       189: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       192: invokevirtual #289                // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       195: iload_3
+       196: iconst_2
+       197: if_icmpge     205
+       200: iconst_2
+       201: istore_3
+       202: goto          214
+       205: iload_3
+       206: bipush        13
+       208: if_icmple     214
+       211: bipush        13
+       213: istore_3
+       214: aload_0
+       215: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       218: ldc_w         #292                // String router.tunnelConcurrentBuilds
+       221: iload_3
+       222: invokevirtual #294                // Method net/i2p/router/RouterContext.getProperty:(Ljava/lang/String;I)I
+       225: istore_3
+       226: aload_0
+       227: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       230: invokevirtual #298                // Method net/i2p/router/RouterContext.clock:()Lnet/i2p/util/Clock;
+       233: invokevirtual #302                // Method net/i2p/util/Clock.now:()J
+       236: lstore        5
+       238: lload         5
+       240: ldc2_w        #119                // long 600000l
+       243: ladd
+       244: getstatic     #308                // Field net/i2p/router/tunnel/pool/BuildRequestor.REQUEST_TIMEOUT:I
+       247: i2l
+       248: lsub
+       249: ldc2_w        #32                 // long 60000l
+       252: lsub
+       253: lstore        7
+       255: aload_0
+       256: getfield      #89                 // Field _recentlyBuildingMap:Ljava/util/concurrent/ConcurrentHashMap;
+       259: invokevirtual #313                // Method java/util/concurrent/ConcurrentHashMap.values:()Ljava/util/Collection;
+       262: invokeinterface #317,  1          // InterfaceMethod java/util/Collection.iterator:()Ljava/util/Iterator;
+       267: astore        9
+       269: goto          302
+       272: aload         9
+       274: invokeinterface #323,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+       279: checkcast     #329                // class net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig
+       282: astore        10
+       284: aload         10
+       286: invokevirtual #331                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getExpiration:()J
+       289: lload         7
+       291: lcmp
+       292: ifgt          302
+       295: aload         9
+       297: invokeinterface #334,  1          // InterfaceMethod java/util/Iterator.remove:()V
+       302: aload         9
+       304: invokeinterface #337,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+       309: ifne          272
+       312: aconst_null
+       313: astore        9
+       315: iconst_0
+       316: istore        10
+       318: lload         5
+       320: ldc2_w        #119                // long 600000l
+       323: ladd
+       324: getstatic     #308                // Field net/i2p/router/tunnel/pool/BuildRequestor.REQUEST_TIMEOUT:I
+       327: i2l
+       328: lsub
+       329: lstore        7
+       331: aload_0
+       332: getfield      #87                 // Field _currentlyBuildingMap:Ljava/util/concurrent/ConcurrentHashMap;
+       335: invokevirtual #313                // Method java/util/concurrent/ConcurrentHashMap.values:()Ljava/util/Collection;
+       338: invokeinterface #317,  1          // InterfaceMethod java/util/Collection.iterator:()Ljava/util/Iterator;
+       343: astore        11
+       345: goto          420
+       348: aload         11
+       350: invokeinterface #323,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+       355: checkcast     #329                // class net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig
+       358: astore        12
+       360: aload         12
+       362: invokevirtual #331                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getExpiration:()J
+       365: lload         7
+       367: lcmp
+       368: ifgt          420
+       371: aload_0
+       372: getfield      #89                 // Field _recentlyBuildingMap:Ljava/util/concurrent/ConcurrentHashMap;
+       375: aload         12
+       377: invokevirtual #340                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getReplyMessageId:()J
+       380: invokestatic  #343                // Method java/lang/Long.valueOf:(J)Ljava/lang/Long;
+       383: aload         12
+       385: invokevirtual #348                // Method java/util/concurrent/ConcurrentHashMap.putIfAbsent:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+       388: pop
+       389: aload         11
+       391: invokeinterface #334,  1          // InterfaceMethod java/util/Iterator.remove:()V
+       396: aload         9
+       398: ifnonnull     410
+       401: new           #53                 // class java/util/ArrayList
+       404: dup
+       405: invokespecial #352                // Method java/util/ArrayList."<init>":()V
+       408: astore        9
+       410: aload         9
+       412: aload         12
+       414: invokeinterface #353,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+       419: pop
+       420: aload         11
+       422: invokeinterface #337,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+       427: ifne          348
+       430: aload_0
+       431: getfield      #87                 // Field _currentlyBuildingMap:Ljava/util/concurrent/ConcurrentHashMap;
+       434: invokevirtual #359                // Method java/util/concurrent/ConcurrentHashMap.size:()I
+       437: istore        10
+       439: iload_3
+       440: iload         10
+       442: isub
+       443: istore_3
+       444: aload         9
+       446: ifnull        710
+       449: iconst_0
+       450: istore        11
+       452: goto          698
+       455: aload         9
+       457: iload         11
+       459: invokeinterface #362,  2          // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
+       464: checkcast     #329                // class net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig
+       467: astore        12
+       469: aload_0
+       470: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       473: bipush        20
+       475: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+       478: ifeq          506
+       481: aload_0
+       482: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       485: new           #166                // class java/lang/StringBuilder
+       488: dup
+       489: ldc_w         #366                // String Timed out waiting for reply asking for
+       492: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       495: aload         12
+       497: invokevirtual #368                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       500: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       503: invokevirtual #289                // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       506: iconst_0
+       507: istore        13
+       509: goto          626
+       512: aload         12
+       514: iload         13
+       516: invokevirtual #371                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getPeer:(I)Lnet/i2p/data/Hash;
+       519: astore        14
+       521: aload         14
+       523: aload_0
+       524: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       527: invokevirtual #375                // Method net/i2p/router/RouterContext.routerHash:()Lnet/i2p/data/Hash;
+       530: invokevirtual #379                // Method net/i2p/data/Hash.equals:(Ljava/lang/Object;)Z
+       533: ifeq          539
+       536: goto          623
+       539: aload_0
+       540: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       543: invokevirtual #384                // Method net/i2p/router/RouterContext.netDb:()Lnet/i2p/router/NetworkDatabaseFacade;
+       546: aload         14
+       548: invokevirtual #388                // Method net/i2p/router/NetworkDatabaseFacade.lookupRouterInfoLocally:(Lnet/i2p/data/Hash;)Lnet/i2p/data/router/RouterInfo;
+       551: astore        15
+       553: ldc_w         #394                // String Unknown
+       556: astore        16
+       558: aload         15
+       560: ifnull        570
+       563: aload         15
+       565: invokevirtual #396                // Method net/i2p/data/router/RouterInfo.getBandwidthTier:()Ljava/lang/String;
+       568: astore        16
+       570: aload_0
+       571: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       574: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       577: new           #166                // class java/lang/StringBuilder
+       580: dup
+       581: ldc           #187                // String tunnel.tierExpire
+       583: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       586: aload         16
+       588: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       591: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       594: lconst_1
+       595: invokevirtual #399                // Method net/i2p/stat/StatManager.addRateData:(Ljava/lang/String;J)V
+       598: aload_0
+       599: aload         12
+       601: invokevirtual #340                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getReplyMessageId:()J
+       604: aload         14
+       606: invokespecial #403                // Method didNotReply:(JLnet/i2p/data/Hash;)V
+       609: aload_0
+       610: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       613: invokevirtual #407                // Method net/i2p/router/RouterContext.profileManager:()Lnet/i2p/router/ProfileManager;
+       616: aload         14
+       618: invokeinterface #411,  2          // InterfaceMethod net/i2p/router/ProfileManager.tunnelTimedOut:(Lnet/i2p/data/Hash;)V
+       623: iinc          13, 1
+       626: iload         13
+       628: aload         12
+       630: invokevirtual #417                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getLength:()I
+       633: if_icmplt     512
+       636: aload         12
+       638: invokevirtual #420                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getTunnelPool:()Lnet/i2p/router/tunnel/pool/TunnelPool;
+       641: astore        13
+       643: aload         13
+       645: ifnull        658
+       648: aload         13
+       650: aload         12
+       652: getstatic     #424                // Field net/i2p/router/tunnel/pool/BuildExecutor$Result.TIMEOUT:Lnet/i2p/router/tunnel/pool/BuildExecutor$Result;
+       655: invokevirtual #430                // Method net/i2p/router/tunnel/pool/TunnelPool.buildComplete:(Lnet/i2p/router/tunnel/pool/PooledTunnelCreatorConfig;Lnet/i2p/router/tunnel/pool/BuildExecutor$Result;)V
+       658: aload         12
+       660: invokevirtual #436                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getDestination:()Lnet/i2p/data/Hash;
+       663: ifnonnull     682
+       666: aload_0
+       667: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       670: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       673: ldc           #115                // String tunnel.buildExploratoryExpire
+       675: lconst_1
+       676: invokevirtual #399                // Method net/i2p/stat/StatManager.addRateData:(Ljava/lang/String;J)V
+       679: goto          695
+       682: aload_0
+       683: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       686: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       689: ldc           #124                // String tunnel.buildClientExpire
+       691: lconst_1
+       692: invokevirtual #399                // Method net/i2p/stat/StatManager.addRateData:(Ljava/lang/String;J)V
+       695: iinc          11, 1
+       698: iload         11
+       700: aload         9
+       702: invokeinterface #439,  1          // InterfaceMethod java/util/List.size:()I
+       707: if_icmplt     455
+       710: aload_0
+       711: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       714: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       717: ldc           #95                 // String tunnel.concurrentBuilds
+       719: iload         10
+       721: i2l
+       722: invokevirtual #399                // Method net/i2p/stat/StatManager.addRateData:(Ljava/lang/String;J)V
+       725: aload_0
+       726: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       729: invokevirtual #440                // Method net/i2p/router/RouterContext.jobQueue:()Lnet/i2p/router/JobQueue;
+       732: invokevirtual #444                // Method net/i2p/router/JobQueue.getMaxLag:()J
+       735: lstore        11
+       737: lload         11
+       739: ldc2_w        #449                // long 2000l
+       742: lcmp
+       743: ifle          825
+       746: aload_0
+       747: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       750: invokevirtual #451                // Method net/i2p/router/RouterContext.router:()Lnet/i2p/router/Router;
+       753: invokevirtual #455                // Method net/i2p/router/Router.getUptime:()J
+       756: ldc2_w        #101                // long 300000l
+       759: lcmp
+       760: ifle          825
+       763: aload_0
+       764: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       767: bipush        30
+       769: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+       772: ifeq          806
+       775: aload_0
+       776: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       779: new           #166                // class java/lang/StringBuilder
+       782: dup
+       783: ldc_w         #460                // String Too lagged [
+       786: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       789: lload         11
+       791: invokevirtual #462                // Method java/lang/StringBuilder.append:(J)Ljava/lang/StringBuilder;
+       794: ldc_w         #465                // String ], don\'t allow building
+       797: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       800: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       803: invokevirtual #467                // Method net/i2p/util/Log.warn:(Ljava/lang/String;)V
+       806: aload_0
+       807: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       810: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       813: ldc           #111                // String tunnel.concurrentBuildsLagged
+       815: iload         10
+       817: i2l
+       818: lload         11
+       820: invokevirtual #470                // Method net/i2p/stat/StatManager.addRateData:(Ljava/lang/String;JJ)V
+       823: iconst_0
+       824: ireturn
+       825: iload_3
+       826: ireturn
+
+  public void run();
+    Code:
+         0: aload_0
+         1: iconst_1
+         2: putfield      #218                // Field _isRunning:Z
+         5: aload_0
+         6: invokespecial #503                // Method run2:()V
+         9: goto          82
+        12: astore_1
+        13: new           #166                // class java/lang/StringBuilder
+        16: dup
+        17: ldc_w         #506                // String Fatal error:\nJava 8 compiler used with JRE version
+        20: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        23: ldc_w         #508                // String java.version
+        26: invokestatic  #510                // Method java/lang/System.getProperty:(Ljava/lang/String;)Ljava/lang/String;
+        29: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        32: ldc_w         #515                // String  and no bootclasspath specified.
+        35: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        38: ldc_w         #517                // String \nUpdate to Java 8 or contact packager.
+        41: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        44: ldc_w         #519                // String \nStop I2P now, it will not build tunnels.
+        47: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        50: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        53: astore_2
+        54: aload_0
+        55: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+        58: bipush        50
+        60: aload_2
+        61: aload_1
+        62: invokevirtual #521                // Method net/i2p/util/Log.log:(ILjava/lang/String;Ljava/lang/Throwable;)V
+        65: getstatic     #525                // Field java/lang/System.out:Ljava/io/PrintStream;
+        68: aload_2
+        69: invokevirtual #529                // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        72: aload_1
+        73: athrow
+        74: astore_3
+        75: aload_0
+        76: iconst_0
+        77: putfield      #218                // Field _isRunning:Z
+        80: aload_3
+        81: athrow
+        82: aload_0
+        83: iconst_0
+        84: putfield      #218                // Field _isRunning:Z
+        87: return
+      Exception table:
+         from    to  target type
+             5     9    12   Class java/lang/NoSuchMethodError
+             5    74    74   any
+
+  private void run2();
+    Code:
+         0: new           #53                 // class java/util/ArrayList
+         3: dup
+         4: bipush        13
+         6: invokespecial #55                 // Method java/util/ArrayList."<init>":(I)V
+         9: astore_1
+        10: new           #53                 // class java/util/ArrayList
+        13: dup
+        14: bipush        8
+        16: invokespecial #55                 // Method java/util/ArrayList."<init>":(I)V
+        19: astore_2
+        20: goto          694
+        23: aload_0
+        24: iconst_0
+        25: putfield      #539                // Field _repoll:Z
+        28: aload_0
+        29: getfield      #80                 // Field _manager:Lnet/i2p/router/tunnel/pool/TunnelPoolManager;
+        32: aload_2
+        33: invokevirtual #541                // Method net/i2p/router/tunnel/pool/TunnelPoolManager.listPools:(Ljava/util/List;)V
+        36: iconst_0
+        37: istore_3
+        38: goto          99
+        41: aload_2
+        42: iload_3
+        43: invokeinterface #362,  2          // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
+        48: checkcast     #431                // class net/i2p/router/tunnel/pool/TunnelPool
+        51: astore        4
+        53: aload         4
+        55: invokevirtual #545                // Method net/i2p/router/tunnel/pool/TunnelPool.isAlive:()Z
+        58: ifne          64
+        61: goto          96
+        64: aload         4
+        66: invokevirtual #548                // Method net/i2p/router/tunnel/pool/TunnelPool.countHowManyToBuild:()I
+        69: istore        5
+        71: iconst_0
+        72: istore        6
+        74: goto          89
+        77: aload_1
+        78: aload         4
+        80: invokeinterface #353,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+        85: pop
+        86: iinc          6, 1
+        89: iload         6
+        91: iload         5
+        93: if_icmplt     77
+        96: iinc          3, 1
+        99: iload_3
+       100: aload_2
+       101: invokeinterface #439,  1          // InterfaceMethod java/util/List.size:()I
+       106: if_icmplt     41
+       109: aload_0
+       110: invokespecial #551                // Method allowed:()I
+       113: istore_3
+       114: aload_0
+       115: aload_1
+       116: iload_3
+       117: invokespecial #553                // Method buildZeroHopTunnels:(Ljava/util/List;I)I
+       120: istore_3
+       121: aload_0
+       122: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       125: invokevirtual #557                // Method net/i2p/router/RouterContext.tunnelManager:()Lnet/i2p/router/TunnelManagerFacade;
+       128: astore        4
+       130: aload         4
+       132: ifnull        155
+       135: aload         4
+       137: invokeinterface #561,  1          // InterfaceMethod net/i2p/router/TunnelManagerFacade.getFreeTunnelCount:()I
+       142: ifle          155
+       145: aload         4
+       147: invokeinterface #566,  1          // InterfaceMethod net/i2p/router/TunnelManagerFacade.getOutboundTunnelCount:()I
+       152: ifgt          308
+       155: aload         4
+       157: ifnull        196
+       160: aload         4
+       162: invokeinterface #561,  1          // InterfaceMethod net/i2p/router/TunnelManagerFacade.getFreeTunnelCount:()I
+       167: ifgt          178
+       170: aload         4
+       172: invokeinterface #569,  1          // InterfaceMethod net/i2p/router/TunnelManagerFacade.selectInboundTunnel:()Lnet/i2p/router/TunnelInfo;
+       177: pop
+       178: aload         4
+       180: invokeinterface #566,  1          // InterfaceMethod net/i2p/router/TunnelManagerFacade.getOutboundTunnelCount:()I
+       185: ifgt          196
+       188: aload         4
+       190: invokeinterface #573,  1          // InterfaceMethod net/i2p/router/TunnelManagerFacade.selectOutboundTunnel:()Lnet/i2p/router/TunnelInfo;
+       195: pop
+       196: aload_0
+       197: getfield      #82                 // Field _currentlyBuilding:Ljava/lang/Object;
+       200: dup
+       201: astore        5
+       203: monitorenter
+       204: aload_0
+       205: getfield      #539                // Field _repoll:Z
+       208: ifne          298
+       211: aload_0
+       212: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       215: bipush        10
+       217: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+       220: ifeq          268
+       223: aload_0
+       224: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       227: new           #166                // class java/lang/StringBuilder
+       230: dup
+       231: ldc_w         #576                // String No tunnel to build with (allowed=
+       234: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       237: iload_3
+       238: invokevirtual #282                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       241: ldc_w         #578                // String , wanted=
+       244: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       247: aload_1
+       248: invokeinterface #439,  1          // InterfaceMethod java/util/List.size:()I
+       253: invokevirtual #282                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       256: ldc_w         #580                // String ), wait for a while
+       259: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       262: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       265: invokevirtual #582                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       268: aload_0
+       269: getfield      #82                 // Field _currentlyBuilding:Ljava/lang/Object;
+       272: sipush        1000
+       275: aload_0
+       276: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       279: invokevirtual #585                // Method net/i2p/router/RouterContext.random:()Lnet/i2p/util/RandomSource;
+       282: sipush        1000
+       285: invokevirtual #589                // Method net/i2p/util/RandomSource.nextInt:(I)I
+       288: iadd
+       289: i2l
+       290: invokevirtual #595                // Method java/lang/Object.wait:(J)V
+       293: goto          298
+       296: astore        6
+       298: aload         5
+       300: monitorexit
+       301: goto          682
+       304: aload         5
+       306: monitorexit
+       307: athrow
+       308: iload_3
+       309: ifle          599
+       312: aload_1
+       313: invokeinterface #599,  1          // InterfaceMethod java/util/List.isEmpty:()Z
+       318: ifne          599
+       321: aload_1
+       322: invokeinterface #439,  1          // InterfaceMethod java/util/List.size:()I
+       327: iconst_1
+       328: if_icmple     376
+       331: aload_1
+       332: aload_0
+       333: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       336: invokevirtual #585                // Method net/i2p/router/RouterContext.random:()Lnet/i2p/util/RandomSource;
+       339: invokestatic  #602                // Method java/util/Collections.shuffle:(Ljava/util/List;Ljava/util/Random;)V
+       342: aload_0
+       343: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       346: invokevirtual #585                // Method net/i2p/router/RouterContext.random:()Lnet/i2p/util/RandomSource;
+       349: iconst_4
+       350: invokevirtual #589                // Method net/i2p/util/RandomSource.nextInt:(I)I
+       353: ifeq          360
+       356: iconst_1
+       357: goto          361
+       360: iconst_0
+       361: istore        5
+       363: aload_1
+       364: new           #608                // class net/i2p/router/tunnel/pool/BuildExecutor$TunnelPoolComparator
+       367: dup
+       368: iload         5
+       370: invokespecial #610                // Method net/i2p/router/tunnel/pool/BuildExecutor$TunnelPoolComparator."<init>":(Z)V
+       373: invokestatic  #613                // Method net/i2p/data/DataHelper.sort:(Ljava/util/List;Ljava/util/Comparator;)V
+       376: iload_3
+       377: iconst_2
+       378: if_icmple     383
+       381: iconst_2
+       382: istore_3
+       383: iconst_0
+       384: istore        5
+       386: goto          584
+       389: aload_1
+       390: iconst_0
+       391: invokeinterface #619,  2          // InterfaceMethod java/util/List.remove:(I)Ljava/lang/Object;
+       396: checkcast     #431                // class net/i2p/router/tunnel/pool/TunnelPool
+       399: astore        6
+       401: invokestatic  #621                // Method java/lang/System.currentTimeMillis:()J
+       404: lstore        7
+       406: aload         6
+       408: invokevirtual #624                // Method net/i2p/router/tunnel/pool/TunnelPool.configureNewTunnel:()Lnet/i2p/router/tunnel/pool/PooledTunnelCreatorConfig;
+       411: astore        9
+       413: aload         9
+       415: ifnull        578
+       418: aload         9
+       420: invokevirtual #417                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getLength:()I
+       423: iconst_1
+       424: if_icmpgt     488
+       427: aload         6
+       429: invokevirtual #628                // Method net/i2p/router/tunnel/pool/TunnelPool.needFallback:()Z
+       432: ifne          488
+       435: aload_0
+       436: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       439: bipush        10
+       441: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+       444: ifeq          472
+       447: aload_0
+       448: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       451: new           #166                // class java/lang/StringBuilder
+       454: dup
+       455: ldc_w         #631                // String We don\'t need more fallbacks for
+       458: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       461: aload         6
+       463: invokevirtual #368                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       466: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       469: invokevirtual #582                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       472: iinc          5, -1
+       475: aload         6
+       477: aload         9
+       479: getstatic     #633                // Field net/i2p/router/tunnel/pool/BuildExecutor$Result.OTHER_FAILURE:Lnet/i2p/router/tunnel/pool/BuildExecutor$Result;
+       482: invokevirtual #430                // Method net/i2p/router/tunnel/pool/TunnelPool.buildComplete:(Lnet/i2p/router/tunnel/pool/PooledTunnelCreatorConfig;Lnet/i2p/router/tunnel/pool/BuildExecutor$Result;)V
+       485: goto          581
+       488: invokestatic  #621                // Method java/lang/System.currentTimeMillis:()J
+       491: lload         7
+       493: lsub
+       494: lstore        10
+       496: aload_0
+       497: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       500: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+       503: ldc           #142                // String tunnel.buildConfigTime
+       505: lload         10
+       507: invokevirtual #399                // Method net/i2p/stat/StatManager.addRateData:(Ljava/lang/String;J)V
+       510: aload_0
+       511: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       514: bipush        10
+       516: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+       519: ifeq          569
+       522: aload_0
+       523: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       526: new           #166                // class java/lang/StringBuilder
+       529: dup
+       530: ldc_w         #636                // String Configuring new tunnel
+       533: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       536: iload         5
+       538: invokevirtual #282                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       541: ldc_w         #638                // String  for
+       544: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       547: aload         6
+       549: invokevirtual #368                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       552: ldc_w         #640                // String :
+       555: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       558: aload         9
+       560: invokevirtual #368                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       563: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       566: invokevirtual #582                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       569: aload_0
+       570: aload         9
+       572: invokevirtual #642                // Method buildTunnel:(Lnet/i2p/router/tunnel/pool/PooledTunnelCreatorConfig;)V
+       575: goto          581
+       578: iinc          5, -1
+       581: iinc          5, 1
+       584: iload         5
+       586: iload_3
+       587: if_icmpge     599
+       590: aload_1
+       591: invokeinterface #599,  1          // InterfaceMethod java/util/List.isEmpty:()Z
+       596: ifeq          389
+       599: aload_0
+       600: getfield      #82                 // Field _currentlyBuilding:Ljava/lang/Object;
+       603: dup
+       604: astore        5
+       606: monitorenter
+       607: aload_0
+       608: getfield      #539                // Field _repoll:Z
+       611: ifne          641
+       614: aload_0
+       615: getfield      #82                 // Field _currentlyBuilding:Ljava/lang/Object;
+       618: getstatic     #44                 // Field LOOP_TIME:I
+       621: iconst_2
+       622: idiv
+       623: aload_0
+       624: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       627: invokevirtual #585                // Method net/i2p/router/RouterContext.random:()Lnet/i2p/util/RandomSource;
+       630: getstatic     #44                 // Field LOOP_TIME:I
+       633: invokevirtual #589                // Method net/i2p/util/RandomSource.nextInt:(I)I
+       636: iadd
+       637: i2l
+       638: invokevirtual #595                // Method java/lang/Object.wait:(J)V
+       641: aload         5
+       643: monitorexit
+       644: goto          682
+       647: aload         5
+       649: monitorexit
+       650: athrow
+       651: astore        5
+       653: goto          682
+       656: astore_3
+       657: aload_0
+       658: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       661: bipush        50
+       663: ldc_w         #646                // String B0rked in the tunnel builder
+       666: aload_3
+       667: invokevirtual #521                // Method net/i2p/util/Log.log:(ILjava/lang/String;Ljava/lang/Throwable;)V
+       670: getstatic     #44                 // Field LOOP_TIME:I
+       673: i2l
+       674: invokestatic  #648                // Method java/lang/Thread.sleep:(J)V
+       677: goto          682
+       680: astore        4
+       682: aload_1
+       683: invokeinterface #653,  1          // InterfaceMethod java/util/List.clear:()V
+       688: aload_2
+       689: invokeinterface #653,  1          // InterfaceMethod java/util/List.clear:()V
+       694: aload_0
+       695: getfield      #218                // Field _isRunning:Z
+       698: ifeq          711
+       701: aload_0
+       702: getfield      #80                 // Field _manager:Lnet/i2p/router/tunnel/pool/TunnelPoolManager;
+       705: invokevirtual #654                // Method net/i2p/router/tunnel/pool/TunnelPoolManager.isShutdown:()Z
+       708: ifeq          23
+       711: aload_0
+       712: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       715: bipush        30
+       717: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+       720: ifeq          733
+       723: aload_0
+       724: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       727: ldc_w         #657                // String Done building
+       730: invokevirtual #467                // Method net/i2p/util/Log.warn:(Ljava/lang/String;)V
+       733: return
+      Exception table:
+         from    to  target type
+           268   293   296   Class java/lang/InterruptedException
+           204   301   304   any
+           304   307   304   any
+           607   644   647   any
+           647   650   647   any
+           599   651   651   Class java/lang/InterruptedException
+            23   653   656   Class java/lang/RuntimeException
+           670   677   680   Class java/lang/InterruptedException
+
+  private int buildZeroHopTunnels(java.util.List<net.i2p.router.tunnel.pool.TunnelPool>, int);
+    Code:
+         0: aload_1
+         1: invokeinterface #675,  1          // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+         6: astore_3
+         7: goto          141
+        10: aload_3
+        11: invokeinterface #323,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        16: checkcast     #431                // class net/i2p/router/tunnel/pool/TunnelPool
+        19: astore        4
+        21: aload         4
+        23: invokevirtual #676                // Method net/i2p/router/tunnel/pool/TunnelPool.getSettings:()Lnet/i2p/router/TunnelPoolSettings;
+        26: invokevirtual #680                // Method net/i2p/router/TunnelPoolSettings.getLength:()I
+        29: ifne          141
+        32: aload         4
+        34: invokevirtual #624                // Method net/i2p/router/tunnel/pool/TunnelPool.configureNewTunnel:()Lnet/i2p/router/tunnel/pool/PooledTunnelCreatorConfig;
+        37: astore        5
+        39: aload         5
+        41: ifnull        119
+        44: aload_0
+        45: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+        48: bipush        10
+        50: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+        53: ifeq          92
+        56: aload_0
+        57: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+        60: new           #166                // class java/lang/StringBuilder
+        63: dup
+        64: ldc_w         #683                // String Configuring short tunnel for
+        67: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        70: aload         4
+        72: invokevirtual #368                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+        75: ldc_w         #640                // String :
+        78: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        81: aload         5
+        83: invokevirtual #368                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+        86: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        89: invokevirtual #582                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+        92: aload_0
+        93: aload         5
+        95: invokevirtual #642                // Method buildTunnel:(Lnet/i2p/router/tunnel/pool/PooledTunnelCreatorConfig;)V
+        98: aload         5
+       100: invokevirtual #417                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getLength:()I
+       103: iconst_1
+       104: if_icmple     110
+       107: iinc          2, -1
+       110: aload_3
+       111: invokeinterface #334,  1          // InterfaceMethod java/util/Iterator.remove:()V
+       116: goto          141
+       119: aload_0
+       120: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       123: bipush        10
+       125: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+       128: ifeq          141
+       131: aload_0
+       132: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       135: ldc_w         #685                // String Configured a null tunnel
+       138: invokevirtual #582                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       141: aload_3
+       142: invokeinterface #337,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+       147: ifne          10
+       150: iload_2
+       151: ireturn
+
+  public boolean isRunning();
+    Code:
+         0: aload_0
+         1: getfield      #218                // Field _isRunning:Z
+         4: ireturn
+
+  void buildTunnel(net.i2p.router.tunnel.pool.PooledTunnelCreatorConfig);
+    Code:
+         0: invokestatic  #621                // Method java/lang/System.currentTimeMillis:()J
+         3: lstore_2
+         4: aload_1
+         5: invokevirtual #417                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getLength:()I
+         8: iconst_1
+         9: if_icmple     37
+        12: aload_1
+        13: aload_0
+        14: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+        17: invokevirtual #585                // Method net/i2p/router/RouterContext.random:()Lnet/i2p/util/RandomSource;
+        20: ldc2_w        #691                // long 4294967295l
+        23: invokevirtual #693                // Method net/i2p/util/RandomSource.nextLong:(J)J
+        26: invokevirtual #697                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.setReplyMessageId:(J)V
+        29: aload_0
+        30: aload_1
+        31: invokespecial #700                // Method addToBuilding:(Lnet/i2p/router/tunnel/pool/PooledTunnelCreatorConfig;)Z
+        34: ifne          12
+        37: aload_0
+        38: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+        41: aload_1
+        42: aload_0
+        43: invokestatic  #704                // Method net/i2p/router/tunnel/pool/BuildRequestor.request:(Lnet/i2p/router/RouterContext;Lnet/i2p/router/tunnel/pool/PooledTunnelCreatorConfig;Lnet/i2p/router/tunnel/pool/BuildExecutor;)Z
+        46: istore        4
+        48: iload         4
+        50: ifne          54
+        53: return
+        54: aload_1
+        55: invokevirtual #417                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getLength:()I
+        58: iconst_1
+        59: if_icmple     83
+        62: invokestatic  #621                // Method java/lang/System.currentTimeMillis:()J
+        65: lload_2
+        66: lsub
+        67: lstore        5
+        69: aload_0
+        70: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+        73: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+        76: ldc           #138                // String tunnel.buildRequestTime
+        78: lload         5
+        80: invokevirtual #399                // Method net/i2p/stat/StatManager.addRateData:(Ljava/lang/String;J)V
+        83: aload_1
+        84: invokevirtual #340                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getReplyMessageId:()J
+        87: lstore        5
+        89: lload         5
+        91: lconst_0
+        92: lcmp
+        93: ifle          164
+        96: aload_0
+        97: getfield      #58                 // Field _recentBuildIds:Ljava/util/ArrayList;
+       100: dup
+       101: astore        7
+       103: monitorenter
+       104: aload_0
+       105: getfield      #58                 // Field _recentBuildIds:Ljava/util/ArrayList;
+       108: invokevirtual #708                // Method java/util/ArrayList.size:()I
+       111: bipush        98
+       113: if_icmple     141
+       116: iconst_0
+       117: istore        8
+       119: goto          134
+       122: aload_0
+       123: getfield      #58                 // Field _recentBuildIds:Ljava/util/ArrayList;
+       126: iconst_0
+       127: invokevirtual #709                // Method java/util/ArrayList.remove:(I)Ljava/lang/Object;
+       130: pop
+       131: iinc          8, 1
+       134: iload         8
+       136: bipush        32
+       138: if_icmplt     122
+       141: aload_0
+       142: getfield      #58                 // Field _recentBuildIds:Ljava/util/ArrayList;
+       145: lload         5
+       147: invokestatic  #343                // Method java/lang/Long.valueOf:(J)Ljava/lang/Long;
+       150: invokevirtual #710                // Method java/util/ArrayList.add:(Ljava/lang/Object;)Z
+       153: pop
+       154: aload         7
+       156: monitorexit
+       157: goto          164
+       160: aload         7
+       162: monitorexit
+       163: athrow
+       164: return
+      Exception table:
+         from    to  target type
+           104   157   160   any
+           160   163   160   any
+
+  public void buildComplete(net.i2p.router.tunnel.pool.PooledTunnelCreatorConfig, net.i2p.router.tunnel.pool.BuildExecutor$Result);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+         4: bipush        10
+         6: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+         9: ifeq          46
+        12: aload_0
+        13: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+        16: new           #166                // class java/lang/StringBuilder
+        19: dup
+        20: ldc_w         #715                // String Build complete (
+        23: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        26: aload_2
+        27: invokevirtual #368                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+        30: ldc_w         #717                // String ) for
+        33: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        36: aload_1
+        37: invokevirtual #368                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+        40: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        43: invokevirtual #582                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+        46: aload_1
+        47: invokevirtual #420                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getTunnelPool:()Lnet/i2p/router/tunnel/pool/TunnelPool;
+        50: aload_1
+        51: aload_2
+        52: invokevirtual #430                // Method net/i2p/router/tunnel/pool/TunnelPool.buildComplete:(Lnet/i2p/router/tunnel/pool/PooledTunnelCreatorConfig;Lnet/i2p/router/tunnel/pool/BuildExecutor$Result;)V
+        55: aload_1
+        56: invokevirtual #417                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getLength:()I
+        59: iconst_1
+        60: if_icmple     72
+        63: aload_0
+        64: aload_1
+        65: invokevirtual #340                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getReplyMessageId:()J
+        68: invokevirtual #719                // Method removeFromBuilding:(J)Lnet/i2p/router/tunnel/pool/PooledTunnelCreatorConfig;
+        71: pop
+        72: aload_0
+        73: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+        76: invokevirtual #298                // Method net/i2p/router/RouterContext.clock:()Lnet/i2p/util/Clock;
+        79: invokevirtual #302                // Method net/i2p/util/Clock.now:()J
+        82: lstore_3
+        83: lload_3
+        84: ldc2_w        #119                // long 600000l
+        87: ladd
+        88: aload_1
+        89: invokevirtual #331                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getExpiration:()J
+        92: lsub
+        93: lstore        5
+        95: lload         5
+        97: ldc2_w        #723                // long 250l
+       100: lcmp
+       101: ifle          129
+       104: aload_0
+       105: getfield      #82                 // Field _currentlyBuilding:Ljava/lang/Object;
+       108: dup
+       109: astore        7
+       111: monitorenter
+       112: aload_0
+       113: getfield      #82                 // Field _currentlyBuilding:Ljava/lang/Object;
+       116: invokevirtual #725                // Method java/lang/Object.notifyAll:()V
+       119: aload         7
+       121: monitorexit
+       122: goto          184
+       125: aload         7
+       127: monitorexit
+       128: athrow
+       129: aload_1
+       130: invokevirtual #417                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getLength:()I
+       133: iconst_1
+       134: if_icmple     184
+       137: aload_0
+       138: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       141: bipush        20
+       143: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+       146: ifeq          184
+       149: aload_0
+       150: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       153: new           #166                // class java/lang/StringBuilder
+       156: dup
+       157: ldc_w         #728                // String Build complete really fast (
+       160: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       163: lload         5
+       165: invokevirtual #462                // Method java/lang/StringBuilder.append:(J)Ljava/lang/StringBuilder;
+       168: ldc_w         #730                // String  ms) for tunnel:
+       171: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       174: aload_1
+       175: invokevirtual #368                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       178: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       181: invokevirtual #289                // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       184: lload_3
+       185: ldc2_w        #119                // long 600000l
+       188: ladd
+       189: getstatic     #308                // Field net/i2p/router/tunnel/pool/BuildRequestor.REQUEST_TIMEOUT:I
+       192: i2l
+       193: lsub
+       194: lstore        7
+       196: aload_1
+       197: invokevirtual #331                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getExpiration:()J
+       200: lload         7
+       202: lcmp
+       203: ifgt          242
+       206: aload_0
+       207: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       210: bipush        20
+       212: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+       215: ifeq          242
+       218: aload_0
+       219: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+       222: new           #166                // class java/lang/StringBuilder
+       225: dup
+       226: ldc_w         #732                // String Build complete for expired tunnel:
+       229: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       232: aload_1
+       233: invokevirtual #368                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       236: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       239: invokevirtual #289                // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       242: aload_2
+       243: getstatic     #734                // Field net/i2p/router/tunnel/pool/BuildExecutor$Result.SUCCESS:Lnet/i2p/router/tunnel/pool/BuildExecutor$Result;
+       246: if_acmpne     283
+       249: aload_0
+       250: getfield      #80                 // Field _manager:Lnet/i2p/router/tunnel/pool/TunnelPoolManager;
+       253: aload_1
+       254: invokevirtual #737                // Method net/i2p/router/tunnel/pool/TunnelPoolManager.buildComplete:(Lnet/i2p/router/tunnel/pool/PooledTunnelCreatorConfig;)V
+       257: new           #739                // class net/i2p/router/tunnel/pool/ExpireJob
+       260: dup
+       261: aload_0
+       262: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       265: aload_1
+       266: invokespecial #741                // Method net/i2p/router/tunnel/pool/ExpireJob."<init>":(Lnet/i2p/router/RouterContext;Lnet/i2p/router/tunnel/pool/PooledTunnelCreatorConfig;)V
+       269: astore        9
+       271: aload_0
+       272: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+       275: invokevirtual #440                // Method net/i2p/router/RouterContext.jobQueue:()Lnet/i2p/router/JobQueue;
+       278: aload         9
+       280: invokevirtual #744                // Method net/i2p/router/JobQueue.addJob:(Lnet/i2p/router/Job;)V
+       283: return
+      Exception table:
+         from    to  target type
+           112   122   125   any
+           125   128   125   any
+
+  public boolean wasRecentlyBuilding(long);
+    Code:
+         0: aload_0
+         1: getfield      #58                 // Field _recentBuildIds:Ljava/util/ArrayList;
+         4: dup
+         5: astore_3
+         6: monitorenter
+         7: aload_0
+         8: getfield      #58                 // Field _recentBuildIds:Ljava/util/ArrayList;
+        11: lload_1
+        12: invokestatic  #343                // Method java/lang/Long.valueOf:(J)Ljava/lang/Long;
+        15: invokevirtual #753                // Method java/util/ArrayList.contains:(Ljava/lang/Object;)Z
+        18: aload_3
+        19: monitorexit
+        20: ireturn
+        21: aload_3
+        22: monitorexit
+        23: athrow
+      Exception table:
+         from    to  target type
+             7    20    21   any
+            21    23    21   any
+
+  public void repoll();
+    Code:
+         0: aload_0
+         1: getfield      #82                 // Field _currentlyBuilding:Ljava/lang/Object;
+         4: dup
+         5: astore_1
+         6: monitorenter
+         7: aload_0
+         8: iconst_1
+         9: putfield      #539                // Field _repoll:Z
+        12: aload_0
+        13: getfield      #82                 // Field _currentlyBuilding:Ljava/lang/Object;
+        16: invokevirtual #725                // Method java/lang/Object.notifyAll:()V
+        19: aload_1
+        20: monitorexit
+        21: goto          27
+        24: aload_1
+        25: monitorexit
+        26: athrow
+        27: return
+      Exception table:
+         from    to  target type
+             7    21    24   any
+            24    26    24   any
+
+  private void didNotReply(long, net.i2p.data.Hash);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+         4: bipush        20
+         6: invokevirtual #276                // Method net/i2p/util/Log.shouldLog:(I)Z
+         9: ifeq          52
+        12: aload_0
+        13: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+        16: new           #166                // class java/lang/StringBuilder
+        19: dup
+        20: lload_1
+        21: invokestatic  #758                // Method java/lang/String.valueOf:(J)Ljava/lang/String;
+        24: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        27: ldc_w         #761                // String : Peer
+        30: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        33: aload_3
+        34: invokevirtual #763                // Method net/i2p/data/Hash.toBase64:()Ljava/lang/String;
+        37: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        40: ldc_w         #766                // String  did not reply to the tunnel join request
+        43: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        46: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        49: invokevirtual #289                // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+        52: return
+
+  private boolean addToBuilding(net.i2p.router.tunnel.pool.PooledTunnelCreatorConfig);
+    Code:
+         0: aload_0
+         1: getfield      #87                 // Field _currentlyBuildingMap:Ljava/util/concurrent/ConcurrentHashMap;
+         4: aload_1
+         5: invokevirtual #340                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getReplyMessageId:()J
+         8: invokestatic  #343                // Method java/lang/Long.valueOf:(J)Ljava/lang/Long;
+        11: aload_1
+        12: invokevirtual #348                // Method java/util/concurrent/ConcurrentHashMap.putIfAbsent:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+        15: ifnull        20
+        18: iconst_1
+        19: ireturn
+        20: iconst_0
+        21: ireturn
+
+  net.i2p.router.tunnel.pool.PooledTunnelCreatorConfig removeFromBuilding(long);
+    Code:
+         0: lload_1
+         1: invokestatic  #343                // Method java/lang/Long.valueOf:(J)Ljava/lang/Long;
+         4: astore_3
+         5: aload_0
+         6: getfield      #87                 // Field _currentlyBuildingMap:Ljava/util/concurrent/ConcurrentHashMap;
+         9: aload_3
+        10: invokevirtual #769                // Method java/util/concurrent/ConcurrentHashMap.remove:(Ljava/lang/Object;)Ljava/lang/Object;
+        13: checkcast     #329                // class net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig
+        16: astore        4
+        18: aload         4
+        20: ifnull        26
+        23: aload         4
+        25: areturn
+        26: aload_0
+        27: getfield      #89                 // Field _recentlyBuildingMap:Ljava/util/concurrent/ConcurrentHashMap;
+        30: aload_3
+        31: invokevirtual #769                // Method java/util/concurrent/ConcurrentHashMap.remove:(Ljava/lang/Object;)Ljava/lang/Object;
+        34: checkcast     #329                // class net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig
+        37: astore        4
+        39: aload         4
+        41: ifnull        130
+        44: aload         4
+        46: invokevirtual #331                // Method net/i2p/router/tunnel/pool/PooledTunnelCreatorConfig.getExpiration:()J
+        49: ldc2_w        #119                // long 600000l
+        52: lsub
+        53: lstore        5
+        55: aload_0
+        56: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+        59: invokevirtual #298                // Method net/i2p/router/RouterContext.clock:()Lnet/i2p/util/Clock;
+        62: invokevirtual #302                // Method net/i2p/util/Clock.now:()J
+        65: lload         5
+        67: lsub
+        68: lstore        7
+        70: aload_0
+        71: getfield      #60                 // Field _context:Lnet/i2p/router/RouterContext;
+        74: invokevirtual #91                 // Method net/i2p/router/RouterContext.statManager:()Lnet/i2p/stat/StatManager;
+        77: ldc           #148                // String tunnel.buildReplySlow
+        79: lload         7
+        81: invokevirtual #399                // Method net/i2p/stat/StatManager.addRateData:(Ljava/lang/String;J)V
+        84: aload_0
+        85: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+        88: invokevirtual #772                // Method net/i2p/util/Log.shouldInfo:()Z
+        91: ifeq          130
+        94: aload_0
+        95: getfield      #78                 // Field _log:Lnet/i2p/util/Log;
+        98: new           #166                // class java/lang/StringBuilder
+       101: dup
+       102: ldc_w         #775                // String Got reply late (rtt =
+       105: invokespecial #170                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       108: lload         7
+       110: invokevirtual #462                // Method java/lang/StringBuilder.append:(J)Ljava/lang/StringBuilder;
+       113: ldc_w         #777                // String ) for:
+       116: invokevirtual #173                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       119: aload         4
+       121: invokevirtual #368                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       124: invokevirtual #177                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       127: invokevirtual #289                // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       130: aload         4
+       132: areturn
+}

@@ -1,0 +1,480 @@
+Compiled from "LoadClientAppsJob.java"
+public class net.i2p.router.startup.LoadClientAppsJob extends net.i2p.router.JobImpl {
+  private final net.i2p.util.Log _log;
+
+  private static boolean _loaded;
+
+  static {};
+    Code:
+         0: iconst_0
+         1: putstatic     #12                 // Field _loaded:Z
+         4: return
+
+  public net.i2p.router.startup.LoadClientAppsJob(net.i2p.router.RouterContext);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: invokespecial #18                 // Method net/i2p/router/JobImpl."<init>":(Lnet/i2p/router/RouterContext;)V
+         5: aload_0
+         6: aload_1
+         7: invokevirtual #20                 // Method net/i2p/router/RouterContext.logManager:()Lnet/i2p/util/LogManager;
+        10: ldc           #1                  // class net/i2p/router/startup/LoadClientAppsJob
+        12: invokevirtual #26                 // Method net/i2p/util/LogManager.getLog:(Ljava/lang/Class;)Lnet/i2p/util/Log;
+        15: putfield      #32                 // Field _log:Lnet/i2p/util/Log;
+        18: return
+
+  public void runJob();
+    Code:
+         0: ldc           #1                  // class net/i2p/router/startup/LoadClientAppsJob
+         2: dup
+         3: astore_1
+         4: monitorenter
+         5: getstatic     #12                 // Field _loaded:Z
+         8: ifeq          14
+        11: aload_1
+        12: monitorexit
+        13: return
+        14: iconst_1
+        15: putstatic     #12                 // Field _loaded:Z
+        18: aload_1
+        19: monitorexit
+        20: goto          26
+        23: aload_1
+        24: monitorexit
+        25: athrow
+        26: aload_0
+        27: invokevirtual #39                 // Method getContext:()Lnet/i2p/router/RouterContext;
+        30: astore_1
+        31: aload_1
+        32: invokestatic  #43                 // Method net/i2p/router/startup/ClientAppConfig.getClientApps:(Lnet/i2p/router/RouterContext;)Ljava/util/List;
+        35: astore_2
+        36: aload_2
+        37: invokeinterface #49,  1           // InterfaceMethod java/util/List.isEmpty:()Z
+        42: ifeq          65
+        45: aload_0
+        46: getfield      #32                 // Field _log:Lnet/i2p/util/Log;
+        49: bipush        30
+        51: ldc           #57                 // String Warning - No client apps or router console configured - we are just a router
+        53: invokevirtual #59                 // Method net/i2p/util/Log.logAlways:(ILjava/lang/String;)V
+        56: getstatic     #63                 // Field java/lang/System.err:Ljava/io/PrintStream;
+        59: ldc           #57                 // String Warning - No client apps or router console configured - we are just a router
+        61: invokevirtual #69                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        64: return
+        65: iconst_0
+        66: istore_3
+        67: goto          318
+        70: aload_2
+        71: iload_3
+        72: invokeinterface #75,  2           // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
+        77: checkcast     #44                 // class net/i2p/router/startup/ClientAppConfig
+        80: astore        4
+        82: aload         4
+        84: getfield      #79                 // Field net/i2p/router/startup/ClientAppConfig.disabled:Z
+        87: ifeq          189
+        90: ldc           #82                 // String net.i2p.router.web.RouterConsoleRunner
+        92: aload         4
+        94: getfield      #84                 // Field net/i2p/router/startup/ClientAppConfig.className:Ljava/lang/String;
+        97: invokevirtual #88                 // Method java/lang/String.equals:(Ljava/lang/Object;)Z
+       100: ifeq          315
+       103: new           #94                 // class java/lang/StringBuilder
+       106: dup
+       107: ldc           #96                 // String Warning - Router console is disabled. To enable,\n edit the file
+       109: invokespecial #98                 // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       112: aload_1
+       113: invokestatic  #100                // Method net/i2p/router/startup/ClientAppConfig.isSplitConfig:(Lnet/i2p/I2PAppContext;)Z
+       116: ifeq          127
+       119: aload         4
+       121: getfield      #104                // Field net/i2p/router/startup/ClientAppConfig.configFile:Ljava/io/File;
+       124: goto          131
+       127: aload_1
+       128: invokestatic  #108                // Method net/i2p/router/startup/ClientAppConfig.configFile:(Lnet/i2p/I2PAppContext;)Ljava/io/File;
+       131: invokevirtual #111                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       134: ldc           #115                // String ,\n change the line \"clientApp.
+       136: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       139: iload_3
+       140: invokevirtual #120                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       143: ldc           #123                // String .startOnLoad=false\"
+       145: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       148: ldc           #125                // String  to \"clientApp.
+       150: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       153: iload_3
+       154: invokevirtual #120                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       157: ldc           #127                // String .startOnLoad=true\",\n and restart.
+       159: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       162: invokevirtual #129                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       165: astore        5
+       167: aload_0
+       168: getfield      #32                 // Field _log:Lnet/i2p/util/Log;
+       171: bipush        30
+       173: aload         5
+       175: invokevirtual #59                 // Method net/i2p/util/Log.logAlways:(ILjava/lang/String;)V
+       178: getstatic     #63                 // Field java/lang/System.err:Ljava/io/PrintStream;
+       181: aload         5
+       183: invokevirtual #69                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+       186: goto          315
+       189: aload         4
+       191: getfield      #133                // Field net/i2p/router/startup/ClientAppConfig.args:Ljava/lang/String;
+       194: invokestatic  #136                // Method parseArgs:(Ljava/lang/String;)[Ljava/lang/String;
+       197: astore        5
+       199: aload         4
+       201: getfield      #140                // Field net/i2p/router/startup/ClientAppConfig.delay:J
+       204: lconst_0
+       205: lcmp
+       206: ifne          232
+       209: aload         4
+       211: getfield      #84                 // Field net/i2p/router/startup/ClientAppConfig.className:Ljava/lang/String;
+       214: aload         4
+       216: getfield      #144                // Field net/i2p/router/startup/ClientAppConfig.clientName:Ljava/lang/String;
+       219: aload         5
+       221: aload_1
+       222: aload_0
+       223: getfield      #32                 // Field _log:Lnet/i2p/util/Log;
+       226: invokestatic  #147                // Method runClient:(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Lnet/i2p/router/RouterContext;Lnet/i2p/util/Log;)V
+       229: goto          315
+       232: aload         4
+       234: getfield      #140                // Field net/i2p/router/startup/ClientAppConfig.delay:J
+       237: lconst_0
+       238: lcmp
+       239: ifle          281
+       242: new           #151                // class net/i2p/router/startup/LoadClientAppsJob$DelayedRunClient
+       245: dup
+       246: aload_1
+       247: invokevirtual #153                // Method net/i2p/router/RouterContext.simpleTimer2:()Lnet/i2p/util/SimpleTimer2;
+       250: aload_1
+       251: aload         4
+       253: getfield      #84                 // Field net/i2p/router/startup/ClientAppConfig.className:Ljava/lang/String;
+       256: aload         4
+       258: getfield      #144                // Field net/i2p/router/startup/ClientAppConfig.clientName:Ljava/lang/String;
+       261: aload         5
+       263: invokespecial #157                // Method net/i2p/router/startup/LoadClientAppsJob$DelayedRunClient."<init>":(Lnet/i2p/util/SimpleTimer2;Lnet/i2p/router/RouterContext;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)V
+       266: astore        6
+       268: aload         6
+       270: aload         4
+       272: getfield      #140                // Field net/i2p/router/startup/ClientAppConfig.delay:J
+       275: invokevirtual #160                // Method net/i2p/router/startup/LoadClientAppsJob$DelayedRunClient.schedule:(J)V
+       278: goto          315
+       281: new           #164                // class net/i2p/router/startup/LoadClientAppsJob$WaitForRunningClient
+       284: dup
+       285: aload_1
+       286: invokevirtual #153                // Method net/i2p/router/RouterContext.simpleTimer2:()Lnet/i2p/util/SimpleTimer2;
+       289: aload_1
+       290: aload         4
+       292: getfield      #84                 // Field net/i2p/router/startup/ClientAppConfig.className:Ljava/lang/String;
+       295: aload         4
+       297: getfield      #144                // Field net/i2p/router/startup/ClientAppConfig.clientName:Ljava/lang/String;
+       300: aload         5
+       302: invokespecial #166                // Method net/i2p/router/startup/LoadClientAppsJob$WaitForRunningClient."<init>":(Lnet/i2p/util/SimpleTimer2;Lnet/i2p/router/RouterContext;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)V
+       305: astore        6
+       307: aload         6
+       309: ldc2_w        #167                // long 1000l
+       312: invokevirtual #169                // Method net/i2p/router/startup/LoadClientAppsJob$WaitForRunningClient.schedule:(J)V
+       315: iinc          3, 1
+       318: iload_3
+       319: aload_2
+       320: invokeinterface #170,  1          // InterfaceMethod java/util/List.size:()I
+       325: if_icmplt     70
+       328: return
+      Exception table:
+         from    to  target type
+             5    13    23   any
+            14    20    23   any
+            23    25    23   any
+
+  public static java.lang.String[] parseArgs(java.lang.String);
+    Code:
+         0: new           #197                // class java/util/ArrayList
+         3: dup
+         4: iconst_4
+         5: invokespecial #199                // Method java/util/ArrayList."<init>":(I)V
+         8: astore_1
+         9: aload_0
+        10: ifnull        232
+        13: new           #94                 // class java/lang/StringBuilder
+        16: dup
+        17: bipush        32
+        19: invokespecial #202                // Method java/lang/StringBuilder."<init>":(I)V
+        22: astore_2
+        23: iconst_0
+        24: istore_3
+        25: iconst_0
+        26: istore        4
+        28: goto          190
+        31: aload_0
+        32: iload         4
+        34: invokevirtual #203                // Method java/lang/String.charAt:(I)C
+        37: istore        5
+        39: iload         5
+        41: lookupswitch  { // 4
+                       9: 132
+                      32: 132
+                      34: 84
+                      39: 84
+                 default: 180
+            }
+        84: iload_3
+        85: ifeq          119
+        88: aload_2
+        89: invokevirtual #129                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        92: invokevirtual #207                // Method java/lang/String.trim:()Ljava/lang/String;
+        95: astore        6
+        97: aload         6
+        99: invokevirtual #210                // Method java/lang/String.length:()I
+       102: ifle          114
+       105: aload_1
+       106: aload         6
+       108: invokeinterface #213,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+       113: pop
+       114: aload_2
+       115: iconst_0
+       116: invokevirtual #216                // Method java/lang/StringBuilder.setLength:(I)V
+       119: iload_3
+       120: ifeq          127
+       123: iconst_0
+       124: goto          128
+       127: iconst_1
+       128: istore_3
+       129: goto          187
+       132: iload_3
+       133: ifeq          146
+       136: aload_2
+       137: iload         5
+       139: invokevirtual #219                // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+       142: pop
+       143: goto          187
+       146: aload_2
+       147: invokevirtual #129                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       150: invokevirtual #207                // Method java/lang/String.trim:()Ljava/lang/String;
+       153: astore        6
+       155: aload         6
+       157: invokevirtual #210                // Method java/lang/String.length:()I
+       160: ifle          172
+       163: aload_1
+       164: aload         6
+       166: invokeinterface #213,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+       171: pop
+       172: aload_2
+       173: iconst_0
+       174: invokevirtual #216                // Method java/lang/StringBuilder.setLength:(I)V
+       177: goto          187
+       180: aload_2
+       181: iload         5
+       183: invokevirtual #219                // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+       186: pop
+       187: iinc          4, 1
+       190: iload         4
+       192: aload_0
+       193: invokevirtual #210                // Method java/lang/String.length:()I
+       196: if_icmplt     31
+       199: aload_2
+       200: invokevirtual #222                // Method java/lang/StringBuilder.length:()I
+       203: ifle          232
+       206: aload_2
+       207: invokevirtual #129                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       210: invokevirtual #207                // Method java/lang/String.trim:()Ljava/lang/String;
+       213: astore        4
+       215: aload         4
+       217: invokevirtual #210                // Method java/lang/String.length:()I
+       220: ifle          232
+       223: aload_1
+       224: aload         4
+       226: invokeinterface #213,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+       231: pop
+       232: aload_1
+       233: invokeinterface #170,  1          // InterfaceMethod java/util/List.size:()I
+       238: anewarray     #89                 // class java/lang/String
+       241: astore_2
+       242: iconst_0
+       243: istore_3
+       244: goto          263
+       247: aload_2
+       248: iload_3
+       249: aload_1
+       250: iload_3
+       251: invokeinterface #75,  2           // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
+       256: checkcast     #89                 // class java/lang/String
+       259: aastore
+       260: iinc          3, 1
+       263: iload_3
+       264: aload_1
+       265: invokeinterface #170,  1          // InterfaceMethod java/util/List.size:()I
+       270: if_icmplt     247
+       273: aload_2
+       274: areturn
+
+  public static void testClient(java.lang.String, java.lang.ClassLoader) throws java.lang.ClassNotFoundException;
+    Code:
+         0: aload_1
+         1: ifnonnull     10
+         4: ldc           #1                  // class net/i2p/router/startup/LoadClientAppsJob
+         6: invokevirtual #237                // Method java/lang/Class.getClassLoader:()Ljava/lang/ClassLoader;
+         9: astore_1
+        10: aload_0
+        11: iconst_0
+        12: aload_1
+        13: invokestatic  #241                // Method java/lang/Class.forName:(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;
+        16: pop
+        17: return
+
+  public static void runClientInline(java.lang.String, java.lang.String, java.lang.String[], net.i2p.util.Log) throws java.lang.Exception;
+    Code:
+         0: aload_0
+         1: aload_1
+         2: aload_2
+         3: aload_3
+         4: aconst_null
+         5: invokestatic  #251                // Method runClientInline:(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Lnet/i2p/util/Log;Ljava/lang/ClassLoader;)V
+         8: return
+
+  public static void runClientInline(java.lang.String, java.lang.String, java.lang.String[], net.i2p.util.Log, java.lang.ClassLoader) throws java.lang.Exception;
+    Code:
+         0: aload_3
+         1: bipush        20
+         3: invokevirtual #255                // Method net/i2p/util/Log.shouldLog:(I)Z
+         6: ifeq          53
+         9: aload_3
+        10: new           #94                 // class java/lang/StringBuilder
+        13: dup
+        14: ldc_w         #259                // String Loading up the client application
+        17: invokespecial #98                 // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        20: aload_1
+        21: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        24: ldc_w         #261                // String :
+        27: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        30: aload_0
+        31: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        34: ldc_w         #263                // String
+        37: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        40: aload_2
+        41: invokestatic  #265                // Method java/util/Arrays.toString:([Ljava/lang/Object;)Ljava/lang/String;
+        44: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        47: invokevirtual #129                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        50: invokevirtual #270                // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+        53: aload_2
+        54: ifnonnull     62
+        57: iconst_0
+        58: anewarray     #89                 // class java/lang/String
+        61: astore_2
+        62: aload_0
+        63: iconst_1
+        64: aload         4
+        66: invokestatic  #241                // Method java/lang/Class.forName:(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;
+        69: astore        5
+        71: aload         5
+        73: ldc_w         #273                // String main
+        76: iconst_1
+        77: anewarray     #190                // class java/lang/Class
+        80: dup
+        81: iconst_0
+        82: ldc           #196                // class "[Ljava/lang/String;"
+        84: aastore
+        85: invokevirtual #275                // Method java/lang/Class.getMethod:(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;
+        88: astore        6
+        90: aload         6
+        92: aload         5
+        94: iconst_1
+        95: anewarray     #279                // class java/lang/Object
+        98: dup
+        99: iconst_0
+       100: aload_2
+       101: aastore
+       102: invokevirtual #281                // Method java/lang/reflect/Method.invoke:(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;
+       105: pop
+       106: return
+
+  public static void runClient(java.lang.String, java.lang.String, java.lang.String[], net.i2p.router.RouterContext, net.i2p.util.Log);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: aload_2
+         3: aload_3
+         4: aload         4
+         6: aconst_null
+         7: aconst_null
+         8: invokestatic  #292                // Method runClient:(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Lnet/i2p/router/RouterContext;Lnet/i2p/util/Log;Ljava/lang/ThreadGroup;Ljava/lang/ClassLoader;)V
+        11: return
+
+  public static void runClient(java.lang.String, java.lang.String, java.lang.String[], net.i2p.router.RouterContext, net.i2p.util.Log, java.lang.ThreadGroup, java.lang.ClassLoader);
+    Code:
+         0: aload         4
+         2: bipush        20
+         4: invokevirtual #255                // Method net/i2p/util/Log.shouldLog:(I)Z
+         7: ifeq          55
+        10: aload         4
+        12: new           #94                 // class java/lang/StringBuilder
+        15: dup
+        16: ldc_w         #259                // String Loading up the client application
+        19: invokespecial #98                 // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        22: aload_1
+        23: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        26: ldc_w         #261                // String :
+        29: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        32: aload_0
+        33: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        36: ldc_w         #263                // String
+        39: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        42: aload_2
+        43: invokestatic  #265                // Method java/util/Arrays.toString:([Ljava/lang/Object;)Ljava/lang/String;
+        46: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        49: invokevirtual #129                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        52: invokevirtual #270                // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+        55: aload         5
+        57: ifnull        89
+        60: new           #295                // class net/i2p/util/I2PThread
+        63: dup
+        64: aload         5
+        66: new           #297                // class net/i2p/router/startup/LoadClientAppsJob$RunApp
+        69: dup
+        70: aload_0
+        71: aload_1
+        72: aload_2
+        73: aload_3
+        74: aload         4
+        76: aload         6
+        78: invokespecial #299                // Method net/i2p/router/startup/LoadClientAppsJob$RunApp."<init>":(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Lnet/i2p/router/RouterContext;Lnet/i2p/util/Log;Ljava/lang/ClassLoader;)V
+        81: invokespecial #302                // Method net/i2p/util/I2PThread."<init>":(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;)V
+        84: astore        7
+        86: goto          113
+        89: new           #295                // class net/i2p/util/I2PThread
+        92: dup
+        93: new           #297                // class net/i2p/router/startup/LoadClientAppsJob$RunApp
+        96: dup
+        97: aload_0
+        98: aload_1
+        99: aload_2
+       100: aload_3
+       101: aload         4
+       103: aload         6
+       105: invokespecial #299                // Method net/i2p/router/startup/LoadClientAppsJob$RunApp."<init>":(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Lnet/i2p/router/RouterContext;Lnet/i2p/util/Log;Ljava/lang/ClassLoader;)V
+       108: invokespecial #305                // Method net/i2p/util/I2PThread."<init>":(Ljava/lang/Runnable;)V
+       111: astore        7
+       113: aload_1
+       114: ifnonnull     138
+       117: new           #94                 // class java/lang/StringBuilder
+       120: dup
+       121: aload_0
+       122: invokestatic  #308                // Method java/lang/String.valueOf:(Ljava/lang/Object;)Ljava/lang/String;
+       125: invokespecial #98                 // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       128: ldc_w         #312                // String  client
+       131: invokevirtual #117                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       134: invokevirtual #129                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       137: astore_1
+       138: aload         7
+       140: aload_1
+       141: invokevirtual #314                // Method net/i2p/util/I2PThread.setName:(Ljava/lang/String;)V
+       144: aload         7
+       146: iconst_1
+       147: invokevirtual #317                // Method net/i2p/util/I2PThread.setDaemon:(Z)V
+       150: aload         6
+       152: ifnull        162
+       155: aload         7
+       157: aload         6
+       159: invokevirtual #321                // Method net/i2p/util/I2PThread.setContextClassLoader:(Ljava/lang/ClassLoader;)V
+       162: aload         7
+       164: invokevirtual #325                // Method net/i2p/util/I2PThread.start:()V
+       167: return
+
+  public java.lang.String getName();
+    Code:
+         0: ldc_w         #333                // String Load up any client applications
+         3: areturn
+}

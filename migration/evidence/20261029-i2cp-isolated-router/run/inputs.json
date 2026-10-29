@@ -1,0 +1,52 @@
+{
+  "source_commit": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+  "native_result": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/runs/gcc-r3/result.json",
+  "native_result_sha256": "534b4f1d8ecc3efd2b173c5a100b64aab44514cf715ca348f23135e215679c96",
+  "native_source": {
+    "preview/native/services/i2cp_channel/channel.cpp": "f96cfadec04e00ccd41b2bcd3a698739a8faa73bf539d7cb4f1572935f8433de",
+    "preview/native/services/i2cp_channel/channel.hpp": "aa6f00e14cfb95b49294c564031d57bcad8d151b05fae824a348f141ba19af65",
+    "preview/native/services/i2cp_channel/receive.inc": "55f23b537873bf20401d7cd022b6490ce8545cfda655df4c0c524ae24e131831",
+    "preview/native/services/i2cp_channel/tracker.inc": "c3fd50c904b79b256a2a817154dc8befc5c58e1b1cc05ac8f43d4cb3fecb5ad4",
+    "preview/native/services/i2cp_tracker/tracker.cpp": "fe18b64fd9c6ae71243e9e8df0abb8e9f44e78f4ad3cd7309340ad19ea2e2ad3",
+    "preview/native/services/i2cp_tracker/tracker.hpp": "3232e23ba0c0557a72031c563348ab85891f86248c8d29e14daadb213346739c",
+    "preview/native/services/i2cp_datagram/messages.cpp": "28081d4181de45add4a3fee6df1061111574c7cd48b6527a5fbacdcd977c5452",
+    "preview/native/services/i2cp_datagram/messages.hpp": "d9f4386e7981bfa0660780a3b23a5ad80deb2cd417d23bf728aaa0bc5541457f",
+    "preview/native/services/i2cp_leaseset/leaseset.cpp": "f4bd1989267d40a306e94a1a76e4e48d4e94d473156170f4cda1bc6cf569489f",
+    "preview/native/services/i2cp_leaseset/leaseset.hpp": "44bcc356a5335d1049fab6f16780e2778e0e3b86b6afb5f3b448d7be9d2a6678",
+    "preview/native/services/i2cp_session/session.cpp": "06202a53e6da512673a88c41cee7938b95c3fb4a121ea09f0974517879649b4e",
+    "preview/native/services/i2cp_session/session.hpp": "4db98f38801fc70df592ad062980f2c911ac47839c1984c310204b4a7aae256f",
+    "preview/native/services/i2p_client/identity.cpp": "99c54025953cc774bf4963aead7c7be4f296c8bac8df7eb715521e5b57899201",
+    "preview/native/services/i2p_client/identity.hpp": "117e2ac9a5ef71339dc04548209092b33af6be351919f13af28f6b64c061a33d",
+    "preview/native/services/i2p_datagram/datagram.cpp": "96eedc04c93f2250c50c4fa78671775547cfef2e464652f3b27a609d56990038",
+    "preview/native/services/i2p_datagram/datagram.hpp": "32c742d8e769f31bd43119f3feca6dd0e04c2a6c77644e57f868d6addcfbecf1",
+    "preview/native/services/i2cp/protocol.cpp": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672",
+    "preview/native/services/i2cp/protocol.hpp": "d88a9b8bb5049c8c458b47598f6627ecf85a1b3b2b10bc97d8b65397da26d9c8",
+    "preview/native/core/include/biglybtc/udp_tracker_wire.hpp": "f8423b6f8cc3b1b81f23175d63a1400b1931dbbff5f3202a79d647a932fd9977"
+  },
+  "archives": {
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2cp_initial_channel.a": "569d64454b7b426aba2bc6e8141e08c160651fd42ae05588bae15e86e406d31d",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2cp_tracker_codec.a": "205978050ae77932218cdcf4d8e06b414d455dd1e5eeb2fb06c777c07b9a3041",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2cp_leaseset2.a": "43a3773d8df72545564c1cd2c5ff076c6f97da15dea5fc08c19572237e4c01d5",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2cp_datagram.a": "1245331ebe46e4342da6ed5c4757280892870bad87f783819cf464e1daa94ee9",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2cp_session_config.a": "15183c4086a01848af51a5693c6b2381cbae9a0fe9fadd862be9c73e0dcb9b0f",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2p_client_identity.a": "23013dd8a0e1b4a151c9dd1197bf111b314862e0345f96e0b232474e5ce230b1",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2p_datagram.a": "98c2da5ba57d3fe5c08a77e08308e0b93cee732f6fba62c31ecce72375b4d0b9",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2cp_protocol.a": "37d8c87f3523cb882b66642bf5c3fb74245c9744d7280ea19c2c715314f6a463"
+  },
+  "probe_sha256": "73df1fcad3bfe29ee4b07e8e035f3f58fd0b0d9189b8282ee2d5733e2fdb622b",
+  "java": "/usr/lib/jvm/java-26-openjdk-amd64/bin/java",
+  "java_sha256": "347282b66d7dfa462f84190f4254b3f5647c791b4250fe84ed0028fc9343f9ae",
+  "jar_sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+  "fence_tool_sha256": "0abea81db798ebf6b4742ac0664802d97521547a353c2a0dbdc21d76cbbfd2c0",
+  "classes": {
+    "RouterTracker$Tracker.class": "d41795af136949b337ba1f99bbd7358171f372d5b40039e556fa722b0c03aac3",
+    "RouterTracker.class": "5544c553ebd2604b30e8a2b0fca04884772af388a49cadb15829109a8d8a5ab9"
+  },
+  "fixture_sources": {
+    "RouterTracker.java": "a9f3b6a01bf8eebd02e7c650856a677d62e1056653e20be97c0b9a6805abea44",
+    "probe.cpp": "2f5f34e1944adcd5c9a863c622f5ab6a46f77b21b23c5dbc88d8f021c1a31380",
+    "run.py": "a3979407947327371dc91142464497db9322e0c361ae328799196304ba471582",
+    "CMakeLists.txt": "59210fd56695f90087e3c2ee64dc5c2e159253591a7b14d4312eab3bc151dd50",
+    "source-pins.json": "19dee0bd6d21f79dca7e141bc8e8eb1125a9805813c685b2bd8c63a431d4fcf2"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "status": "ENFORCED_LOOPBACK_ONLY",
+  "network_namespace": "net:[4026532416]",
+  "host_namespace": "net:[4026531833]",
+  "interfaces": [
+    "lo"
+  ],
+  "effective_capabilities": 0,
+  "no_new_privileges": true,
+  "unreachable_controls_errno": {
+    "2/1": 101,
+    "2/2": 101,
+    "10/1": 101,
+    "10/2": 101
+  }
+}

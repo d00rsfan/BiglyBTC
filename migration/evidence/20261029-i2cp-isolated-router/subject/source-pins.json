@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "status": "SOURCE_INSPECTED_NOT_EXECUTED",
+  "modified_jar": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+    "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+    "classes": {
+      "net/i2p/router/Router.class": "4468801a6b7286c549ea1cafb9871534b59b4814a8cb1f0325c3970926e589e3",
+      "net/i2p/router/client/ClientManager.class": "13c0c5379afc27d09c5e1539be1b6c4073eaa2dc4e722a7f372c12cc75da5fdd",
+      "net/i2p/router/client/ClientConnectionRunner.class": "1c14af4733d164b52a0292f29b7a078c018bb0bc3562f046c1782221a8452a13",
+      "net/i2p/router/client/ClientListenerRunner.class": "18ed32f8c733e1f9f8d2fea00b6d4b97d1514ce6ba3958a8a94be86052d77407",
+      "net/i2p/router/client/LookupDestJob.class": "ee6717998d86ffe60fc6714ec1e65f83cb8ef1aa0bd4cfe0122f0865a0ec5740",
+      "net/i2p/router/networkdb/kademlia/KademliaNetworkDatabaseFacade.class": "a13886b685287ef8397a99fd020225a2acf24824afa326b631ff317967d65bcd",
+      "net/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseFacade.class": "d5af5551602e19b35489e6e31e36316947d7e5ebf6b6af3b065e307c20b468f9",
+      "net/i2p/router/networkdb/kademlia/TransientDataStore.class": "f38441ffa012ec115437fe318bd5a398cef86662aad08e38a603a840e308af76",
+      "net/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseSegmentor.class": "53795deb464e333ba5aa0142035b793410804985c53211f51ab4b660749cafb5",
+      "net/i2p/client/datagram/Datagram2.class": "4f43ef0e1dc434f1d0a673c6ee363e529c56b7901610d87d54691a14e302b524",
+      "net/i2p/client/datagram/Datagram3.class": "75f6f59ec173d37d087e8bdc2cb42c130e2d11e69e94ef69bf9a3a16eb8bfa54",
+      "net/i2p/client/I2PClientFactory.class": "e6210b1d0463f211a09ce66fce9b707d92d530e88f11efc4f8d74a6817075206"
+    }
+  },
+  "official_reference": {
+    "commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+    "source_jar": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/actual-offline-interop/dependencies/i2p-2.13.0-sources.jar",
+    "source_jar_sha256": "b169a9cebb58bee8b9ca2e73743418b1e9a634bdea4faa8ca6e2063d1032f23a",
+    "source_entries": {
+      "net/i2p/client/impl/I2PClientImpl.java": "30ac6a62fbeb2f25fc3c2ce5f934e06dd6beef3c33267ddb825e87002924c2e5",
+      "net/i2p/client/impl/I2PSessionImpl.java": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+      "net/i2p/client/datagram/Datagram2.java": "2934bcaaaeaf977ce917b02c6d99229056ef73b4661b790fc84e7402c939bfdc",
+      "net/i2p/client/datagram/Datagram3.java": "8d618c7b967703cfacf1523de299662f010f0b027877b7d666522e38a5a1d70c",
+      "net/i2p/data/i2cp/HostLookupMessage.java": "fc9bcefadf6c7b908861e4f4b34447aa061945a2e43c8c0731b1d01284f985f0",
+      "net/i2p/client/SendMessageOptions.java": "d63e7d89ac51bdd61667f5345f35d7183487a60bf53b82446b0b11e97e855412",
+      "router/java/src/net/i2p/router/client/ClientManager.java": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/original-source/router/java/src/net/i2p/router/client/ClientManager.java",
+        "sha256": "35985a294e5f02e103ad976843580a3f4fa402c61345a925d69968ade29b8828",
+        "retained_git_exact": true
+      }
+    },
+    "modified_whole_core_equivalence_claimed": false
+  },
+  "plugin": {
+    "commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+    "router_source": "org/parg/azureus/plugins/networks/i2p/router/I2PHelperRouter.java",
+    "sha256": "a11205c5a9d343edc1f2634023317ff8c0b6dd638d7f1b4dab75958cf3bdf2f2"
+  },
+  "reviewed_native_basis": "f02385070badd3318a250b2d8dd4146727964ac4",
+  "native_api_source_sha256": {
+    "preview/native/services/i2cp_channel/channel.cpp": "f96cfadec04e00ccd41b2bcd3a698739a8faa73bf539d7cb4f1572935f8433de",
+    "preview/native/services/i2cp_channel/channel.hpp": "aa6f00e14cfb95b49294c564031d57bcad8d151b05fae824a348f141ba19af65",
+    "preview/native/services/i2cp_channel/receive.inc": "55f23b537873bf20401d7cd022b6490ce8545cfda655df4c0c524ae24e131831",
+    "preview/native/services/i2cp_channel/tracker.inc": "c3fd50c904b79b256a2a817154dc8befc5c58e1b1cc05ac8f43d4cb3fecb5ad4",
+    "preview/native/services/i2cp_tracker/tracker.cpp": "fe18b64fd9c6ae71243e9e8df0abb8e9f44e78f4ad3cd7309340ad19ea2e2ad3",
+    "preview/native/services/i2cp_tracker/tracker.hpp": "3232e23ba0c0557a72031c563348ab85891f86248c8d29e14daadb213346739c",
+    "preview/native/services/i2cp_datagram/messages.cpp": "28081d4181de45add4a3fee6df1061111574c7cd48b6527a5fbacdcd977c5452",
+    "preview/native/services/i2cp_datagram/messages.hpp": "d9f4386e7981bfa0660780a3b23a5ad80deb2cd417d23bf728aaa0bc5541457f",
+    "preview/native/services/i2cp_leaseset/leaseset.cpp": "f4bd1989267d40a306e94a1a76e4e48d4e94d473156170f4cda1bc6cf569489f",
+    "preview/native/services/i2cp_leaseset/leaseset.hpp": "44bcc356a5335d1049fab6f16780e2778e0e3b86b6afb5f3b448d7be9d2a6678",
+    "preview/native/services/i2cp_session/session.cpp": "06202a53e6da512673a88c41cee7938b95c3fb4a121ea09f0974517879649b4e",
+    "preview/native/services/i2cp_session/session.hpp": "4db98f38801fc70df592ad062980f2c911ac47839c1984c310204b4a7aae256f",
+    "preview/native/services/i2p_client/identity.cpp": "99c54025953cc774bf4963aead7c7be4f296c8bac8df7eb715521e5b57899201",
+    "preview/native/services/i2p_client/identity.hpp": "117e2ac9a5ef71339dc04548209092b33af6be351919f13af28f6b64c061a33d",
+    "preview/native/services/i2p_datagram/datagram.cpp": "96eedc04c93f2250c50c4fa78671775547cfef2e464652f3b27a609d56990038",
+    "preview/native/services/i2p_datagram/datagram.hpp": "32c742d8e769f31bd43119f3feca6dd0e04c2a6c77644e57f868d6addcfbecf1",
+    "preview/native/services/i2cp/protocol.cpp": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672",
+    "preview/native/services/i2cp/protocol.hpp": "d88a9b8bb5049c8c458b47598f6627ecf85a1b3b2b10bc97d8b65397da26d9c8"
+  },
+  "api_disassembly": {
+    "api/net.i2p.router.Router.javap": "892da3d5e96fc62faef0d5bbdab372c2b57411083a0674eb280a247ee545c1e3",
+    "api/net.i2p.router.RouterClock.javap": "5faf8c41b8954130ce848ab8570852aa97a3c828948b062a4e3cf9128a190d01",
+    "api/net.i2p.router.TunnelPoolSettings.api": "7838e51e18360e20915815a90c917de4efa8c95e3778816f170578a0265f0a15",
+    "api/net.i2p.router.client.ClientConnectionRunner.javap": "84d544ddee2b9347b8efd47958b5d0bdd2101cc3f716c4dd482136f1235cae7c",
+    "api/net.i2p.router.client.ClientListenerRunner.javap": "b5a6c28bc682c1a22dca2afd0906fdf985a1eac877bc81f3e2d3ec3f148f6531",
+    "api/net.i2p.router.client.ClientManager.javap": "a04b386806f03ff2da46d52a6a92173ff3aec9315bad631f80417a0e1b7391b0",
+    "api/net.i2p.router.client.ClientManagerFacadeImpl.javap": "5a236c3405d58443348d160d05844eeeef9184cb7212cdfe58c99ad4671cd314",
+    "api/net.i2p.router.client.ClientMessageEventListener.javap": "3447ca70718772c9f52ef21dafee290be1168002f8320d6d989f6968cff5eaf9",
+    "api/net.i2p.router.client.LookupDestJob.javap": "f0d18421683bf6a80acc6175cd4765d3e48ca185be7ef89d5ca5da1934455f63",
+    "api/net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseFacade.javap": "4ee4f2e3fe0de9d0fa19889310955fbfee334b872260743e7360c9fa43ba68ab",
+    "api/net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseSegmentor.javap": "f2f9bbc1c499e435b29188b57f0b113a7f32751e70c5757ba2101c444025f7b3",
+    "api/net.i2p.router.networkdb.kademlia.IterativeSearchJob.javap": "30851872bf1f91ff099e50e239bbb9e55403b91698f39a105325dbb764033467",
+    "api/net.i2p.router.networkdb.kademlia.KademliaNetworkDatabaseFacade.javap": "009df6080262452d8ed5fe30a8e5b376942f29b8749aceab009e303da620152a",
+    "api/net.i2p.router.networkdb.kademlia.TransientDataStore.javap": "8ca5ec85bc39108210164238a9ce007b882604b5939ca25e929cf0ad10c2f1b2",
+    "api/net.i2p.router.networkdb.reseed.ReseedChecker.javap": "544398d7dd2343f2e6864163135dd5549bfbe9d3bebfc1488d344f7ef327bfbe",
+    "api/net.i2p.router.startup.ClientAppConfig.javap": "1e5bc7982fed51ba0d6c75e143166360bb55dac3195eb2395224d4814cb6661b",
+    "api/net.i2p.router.startup.LoadClientAppsJob.javap": "828670b9fe93346122cfb5f957f412890ccc0e3b873278289b2c72fa2caa3a62",
+    "api/net.i2p.router.time.RouterTimestamper.javap": "d9d6c5d643416c6368535274d628e360aef936c44cc7aa64f9d977faa426cf21",
+    "api/net.i2p.router.transport.TransportManager.javap": "e09c31b782fe45e246801906be629dfbf5ddeaf20caa73700e9645d03716d10a",
+    "api/net.i2p.router.tunnel.pool.BuildExecutor.javap": "79814a764f4160d4f10e55c0a569391ffbc261fea02e0a4479a7ff79b272a478",
+    "api/net.i2p.router.tunnel.pool.TunnelPool.javap": "d66d233b79267ded0ab02eae0f6ebab84e620a9653f02c0391308a18cbe162c0"
+  },
+  "fence_tool": {
+    "path": "/usr/bin/bwrap",
+    "resolved": "/usr/bin/bwrap",
+    "sha256": "0abea81db798ebf6b4742ac0664802d97521547a353c2a0dbdc21d76cbbfd2c0"
+  },
+  "boundaries": [
+    "Each modified ClientConnectionRunner creates its own FloodfillNetworkDatabaseFacade and transient contact DB. LookupDestJob resolves the calling connection DB; no cross-client local lookup bypass was found.",
+    "ClientManager.distributeMessage sends to a different actual locally registered Destination via DistributeLocal; no public tunnel routing is needed for this bounded exchange.",
+    "Only an actually accepted/current signature-verified tracker LS2 may be copied with the public store into the owned native client DB; this is explicit warmed-cache fixture setup, not discovery.",
+    "Native opaque Destination Enc0 bytes are original format; its current signed LS2 supplies the separately generated genuine independent encryption keypair."
+  ]
+}

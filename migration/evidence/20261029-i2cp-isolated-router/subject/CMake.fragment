@@ -1,0 +1,11 @@
+# Optional future in-tree integration alternative. NOT part of default ALL or
+# CTest. The standalone CMakeLists imports current archives without N edits.
+option(BIGLYBTC_I2CP_ROUTER_ACCEPTANCE "Build explicit isolated acceptance probe" OFF)
+if(BIGLYBTC_I2CP_ROUTER_ACCEPTANCE)
+  add_executable(biglybtc-i2cp-isolated-router-probe EXCLUDE_FROM_ALL
+    i2cp_isolated_router_probe.cpp)
+  target_link_libraries(biglybtc-i2cp-isolated-router-probe PRIVATE
+    biglybtc_i2cp_initial_channel Qt6::Core Qt6::Network OpenSSL::Crypto)
+  target_compile_features(biglybtc-i2cp-isolated-router-probe PRIVATE cxx_std_23)
+  target_compile_options(biglybtc-i2cp-isolated-router-probe PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()

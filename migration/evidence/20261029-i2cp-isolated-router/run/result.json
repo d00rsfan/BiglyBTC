@@ -1,0 +1,34 @@
+{
+  "status": "PASS_WARMED_LOCAL_LOOKUP_AND_REAL_ROUTER_TRACKER",
+  "scope": "warmed-local-lookup-real-router-tracker",
+  "cache_setup": "actual accepted+signature-verified LS2 via public store",
+  "discovery_or_public_tunnels_qualified": false,
+  "port": 53455,
+  "native": {
+    "downloaded": 4,
+    "elapsed_ms": 2221,
+    "general_receiver_enabled": false,
+    "native_destination_sha256": "d5699783c4cdec9f0c0b5ca177a53683e4e0f2bb4fe3ec83a856d444988ca4b0",
+    "operation": "1",
+    "peers": 5,
+    "reason": "Actual original router carried scoped signed2/claimed3 and RAW18 counts; native TCP closed",
+    "rejected_replies": "0",
+    "scope": "actual-router-warmed-local-cache-tracker",
+    "seeds": 3,
+    "status": "PASS",
+    "tracker_destination_sha256": "5be363627dab2dd65ceca914ad34807fd660dcc016743bbb90af9a114725adfb"
+  },
+  "tracker": {
+    "status": "PASS",
+    "signed_connects": 1,
+    "claimed_scrapes": 1,
+    "raw_replies": 2,
+    "external_i2cp": true
+  },
+  "router": {
+    "status": "PASS",
+    "scope": "warmed-local-cache-and-real-local-client-forwarding",
+    "public_transports": 0,
+    "remaining_clients": 0
+  }
+}

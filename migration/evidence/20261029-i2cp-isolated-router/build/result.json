@@ -1,0 +1,8 @@
+{
+  "status": "PASS_PROBE_BUILD_ONLY_NO_SUBJECTS",
+  "source_commit": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+  "gcc_result_sha256": "534b4f1d8ecc3efd2b173c5a100b64aab44514cf715ca348f23135e215679c96",
+  "commands_sha256": "d02fe2730cbf5798ef3a770bd90bd6e17e4b339b2695c245408757d78da9089d",
+  "probe": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/router-build-r1/probe/biglybtc-i2cp-isolated-router-probe",
+  "class_count": 2
+}

@@ -1,0 +1,70 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/i2cp-isolated-router-20261029",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/router-build-r1/probe",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DQt6_DIR=/opt/Qt/6.12.0/gcc_64/lib/cmake/Qt6",
+      "-DBIGLYBTC_NATIVE_SOURCE=/home/yurii/Java/BiglyBTC/preview/native",
+      "-DBIGLYBTC_NATIVE_BUILD=/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "-DZLIB_INCLUDE_DIR=/usr/include",
+      "-DZLIB_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libz.so",
+      "-DOPENSSL_INCLUDE_DIR=/usr/include",
+      "-DOPENSSL_CRYPTO_LIBRARY=/usr/lib/x86_64-linux-gnu/libcrypto.so",
+      "-DOPENSSL_SSL_LIBRARY=/usr/lib/x86_64-linux-gnu/libssl.so"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 1.019,
+    "log": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/router-build-r1/configure.log",
+    "log_sha256": "4b4a7ab48bc68cce0173dd3c039b831b67feb54ad3cf938cf45f9867e6a65e74"
+  },
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/router-build-r1/probe",
+      "--parallel",
+      "1"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 4.988,
+    "log": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/router-build-r1/build.log",
+    "log_sha256": "e17c28a95c555e705cdbcec066e5fd0f4028e9a90095aa06a7d88920efcb27e0"
+  },
+  {
+    "name": "javac",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/bin/javac",
+      "-J-Xmx128m",
+      "-J-XX:ActiveProcessorCount=1",
+      "--release",
+      "17",
+      "-cp",
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-d",
+      "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/router-build-r1/classes",
+      "/home/yurii/Java/BiglyBT/build/i2cp-isolated-router-20261029/RouterTracker.java"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 1.673,
+    "log": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/router-build-r1/javac.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

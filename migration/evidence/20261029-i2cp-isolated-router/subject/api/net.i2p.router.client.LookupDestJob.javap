@@ -1,0 +1,699 @@
+Compiled from "LookupDestJob.java"
+class net.i2p.router.client.LookupDestJob extends net.i2p.router.JobImpl {
+  private final net.i2p.util.Log _log;
+
+  private final net.i2p.router.client.ClientConnectionRunner _runner;
+
+  private final long _reqID;
+
+  private final long _timeout;
+
+  private net.i2p.data.Hash _hash;
+
+  private final java.lang.String _name;
+
+  private net.i2p.data.Destination _dest;
+
+  private final net.i2p.data.i2cp.SessionId _sessID;
+
+  private final net.i2p.data.Hash _fromLocalDest;
+
+  private final net.i2p.data.BlindData _blindData;
+
+  private final boolean _wantsOptions;
+
+  private static final long DEFAULT_TIMEOUT = 15000l;
+
+  public net.i2p.router.client.LookupDestJob(net.i2p.router.RouterContext, net.i2p.router.client.ClientConnectionRunner, net.i2p.data.Hash, net.i2p.data.Hash);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: aload_2
+         3: ldc2_w        #32                 // long -1l
+         6: ldc2_w        #27                 // long 15000l
+         9: aconst_null
+        10: iconst_0
+        11: aload_3
+        12: aconst_null
+        13: aconst_null
+        14: aload         4
+        16: invokespecial #36                 // Method "<init>":(Lnet/i2p/router/RouterContext;Lnet/i2p/router/client/ClientConnectionRunner;JJLnet/i2p/data/i2cp/SessionId;ILnet/i2p/data/Hash;Ljava/lang/String;Lnet/i2p/data/Destination;Lnet/i2p/data/Hash;)V
+        19: return
+
+  public net.i2p.router.client.LookupDestJob(net.i2p.router.RouterContext, net.i2p.router.client.ClientConnectionRunner, long, long, net.i2p.data.i2cp.SessionId, int, net.i2p.data.Hash, java.lang.String, net.i2p.data.Destination, net.i2p.data.Hash);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: invokespecial #48                 // Method net/i2p/router/JobImpl."<init>":(Lnet/i2p/router/RouterContext;)V
+         5: aload_0
+         6: aload_1
+         7: invokevirtual #51                 // Method net/i2p/router/RouterContext.logManager:()Lnet/i2p/util/LogManager;
+        10: ldc           #1                  // class net/i2p/router/client/LookupDestJob
+        12: invokevirtual #57                 // Method net/i2p/util/LogManager.getLog:(Ljava/lang/Class;)Lnet/i2p/util/Log;
+        15: putfield      #63                 // Field _log:Lnet/i2p/util/Log;
+        18: aload         9
+        20: ifnonnull     33
+        23: aload         10
+        25: ifnonnull     33
+        28: aload         11
+        30: ifnull        65
+        33: aload         9
+        35: ifnull        43
+        38: aload         10
+        40: ifnonnull     65
+        43: lload_3
+        44: lconst_0
+        45: lcmp
+        46: iflt          54
+        49: aload         7
+        51: ifnull        65
+        54: lload_3
+        55: lconst_0
+        56: lcmp
+        57: ifge          82
+        60: aload         10
+        62: ifnull        82
+        65: aload_0
+        66: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+        69: ldc           #65                 // String bad args
+        71: invokevirtual #67                 // Method net/i2p/util/Log.warn:(Ljava/lang/String;)V
+        74: new           #73                 // class java/lang/IllegalArgumentException
+        77: dup
+        78: invokespecial #75                 // Method java/lang/IllegalArgumentException."<init>":()V
+        81: athrow
+        82: aload_0
+        83: aload_2
+        84: putfield      #78                 // Field _runner:Lnet/i2p/router/client/ClientConnectionRunner;
+        87: aload_0
+        88: lload_3
+        89: putfield      #80                 // Field _reqID:J
+        92: aload_0
+        93: lload         5
+        95: putfield      #82                 // Field _timeout:J
+        98: aload_0
+        99: aload         7
+       101: putfield      #84                 // Field _sessID:Lnet/i2p/data/i2cp/SessionId;
+       104: aload_0
+       105: aload         12
+       107: putfield      #86                 // Field _fromLocalDest:Lnet/i2p/data/Hash;
+       110: aload_0
+       111: iload         8
+       113: iconst_2
+       114: if_icmplt     121
+       117: iconst_1
+       118: goto          122
+       121: iconst_0
+       122: putfield      #88                 // Field _wantsOptions:Z
+       125: aconst_null
+       126: astore        13
+       128: aload         10
+       130: ifnull        563
+       133: aload         10
+       135: invokevirtual #90                 // Method java/lang/String.length:()I
+       138: bipush        60
+       140: if_icmplt     563
+       143: aload         10
+       145: getstatic     #96                 // Field java/util/Locale.US:Ljava/util/Locale;
+       148: invokevirtual #102                // Method java/lang/String.toLowerCase:(Ljava/util/Locale;)Ljava/lang/String;
+       151: astore        14
+       153: aload         14
+       155: ldc           #106                // String .b32.i2p
+       157: invokevirtual #108                // Method java/lang/String.endsWith:(Ljava/lang/String;)Z
+       160: ifeq          563
+       163: aload         14
+       165: iconst_0
+       166: aload         14
+       168: invokevirtual #90                 // Method java/lang/String.length:()I
+       171: bipush        8
+       173: isub
+       174: invokevirtual #112                // Method java/lang/String.substring:(II)Ljava/lang/String;
+       177: invokestatic  #116                // Method net/i2p/data/Base32.decode:(Ljava/lang/String;)[B
+       180: astore        15
+       182: aload         15
+       184: ifnull        560
+       187: aload         15
+       189: arraylength
+       190: bipush        32
+       192: if_icmpne     252
+       195: aload         15
+       197: invokestatic  #124                // Method net/i2p/data/Hash.create:([B)Lnet/i2p/data/Hash;
+       200: astore        9
+       202: aload_0
+       203: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       206: invokevirtual #128                // Method net/i2p/util/Log.shouldDebug:()Z
+       209: ifeq          246
+       212: aload_0
+       213: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       216: new           #132                // class java/lang/StringBuilder
+       219: dup
+       220: ldc           #134                // String Converting name lookup
+       222: invokespecial #136                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       225: aload         10
+       227: invokevirtual #138                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       230: ldc           #142                // String  to
+       232: invokevirtual #138                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       235: aload         9
+       237: invokevirtual #144                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       240: invokevirtual #147                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       243: invokevirtual #151                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       246: aconst_null
+       247: astore        10
+       249: goto          563
+       252: aload         15
+       254: arraylength
+       255: bipush        35
+       257: if_icmplt     563
+       260: aload_1
+       261: aload         15
+       263: invokestatic  #154                // Method net/i2p/crypto/Blinding.decode:(Lnet/i2p/I2PAppContext;[B)Lnet/i2p/data/BlindData;
+       266: astore        13
+       268: aload         13
+       270: invokevirtual #159                // Method net/i2p/data/BlindData.getUnblindedPubKey:()Lnet/i2p/data/SigningPublicKey;
+       273: astore        16
+       275: aload_0
+       276: invokevirtual #165                // Method getContext:()Lnet/i2p/router/RouterContext;
+       279: invokevirtual #169                // Method net/i2p/router/RouterContext.netDb:()Lnet/i2p/router/NetworkDatabaseFacade;
+       282: aload         16
+       284: invokevirtual #173                // Method net/i2p/router/NetworkDatabaseFacade.getBlindData:(Lnet/i2p/data/SigningPublicKey;)Lnet/i2p/data/BlindData;
+       287: astore        17
+       289: aload         17
+       291: ifnull        381
+       294: aload         13
+       296: invokevirtual #179                // Method net/i2p/data/BlindData.getAuthRequired:()Z
+       299: ifeq          310
+       302: aload         17
+       304: invokevirtual #182                // Method net/i2p/data/BlindData.getAuthPrivKey:()Lnet/i2p/data/PrivateKey;
+       307: ifnull        337
+       310: aload         13
+       312: invokevirtual #186                // Method net/i2p/data/BlindData.getSecretRequired:()Z
+       315: ifeq          374
+       318: aload         17
+       320: invokevirtual #189                // Method net/i2p/data/BlindData.getSecret:()Ljava/lang/String;
+       323: ifnull        337
+       326: aload         17
+       328: invokevirtual #189                // Method net/i2p/data/BlindData.getSecret:()Ljava/lang/String;
+       331: invokevirtual #90                 // Method java/lang/String.length:()I
+       334: ifne          374
+       337: aload_0
+       338: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       341: invokevirtual #128                // Method net/i2p/util/Log.shouldDebug:()Z
+       344: ifeq          449
+       347: aload_0
+       348: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       351: new           #132                // class java/lang/StringBuilder
+       354: dup
+       355: ldc           #192                // String No auth or secret, immediate fail
+       357: invokespecial #136                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       360: aload         13
+       362: invokevirtual #144                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       365: invokevirtual #147                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       368: invokevirtual #151                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       371: goto          449
+       374: aload         17
+       376: astore        13
+       378: goto          449
+       381: aload_0
+       382: invokevirtual #165                // Method getContext:()Lnet/i2p/router/RouterContext;
+       385: invokevirtual #194                // Method net/i2p/router/RouterContext.clock:()Lnet/i2p/util/Clock;
+       388: invokevirtual #198                // Method net/i2p/util/Clock.now:()J
+       391: lstore        18
+       393: aload         13
+       395: lload         18
+       397: invokevirtual #204                // Method net/i2p/data/BlindData.setDate:(J)V
+       400: lload         18
+       402: aload         13
+       404: invokevirtual #179                // Method net/i2p/data/BlindData.getAuthRequired:()Z
+       407: ifne          418
+       410: aload         13
+       412: invokevirtual #186                // Method net/i2p/data/BlindData.getSecretRequired:()Z
+       415: ifeq          424
+       418: ldc2_w        #208                // long 31536000000l
+       421: goto          427
+       424: ldc2_w        #210                // long 8812800000l
+       427: ladd
+       428: lstore        20
+       430: aload         13
+       432: lload         20
+       434: invokevirtual #212                // Method net/i2p/data/BlindData.setExpiration:(J)V
+       437: aload_0
+       438: invokevirtual #165                // Method getContext:()Lnet/i2p/router/RouterContext;
+       441: invokevirtual #169                // Method net/i2p/router/RouterContext.netDb:()Lnet/i2p/router/NetworkDatabaseFacade;
+       444: aload         13
+       446: invokevirtual #215                // Method net/i2p/router/NetworkDatabaseFacade.setBlindData:(Lnet/i2p/data/BlindData;)V
+       449: aload         13
+       451: invokevirtual #219                // Method net/i2p/data/BlindData.getBlindedHash:()Lnet/i2p/data/Hash;
+       454: astore        9
+       456: aload_0
+       457: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       460: invokevirtual #128                // Method net/i2p/util/Log.shouldDebug:()Z
+       463: ifeq          510
+       466: aload_0
+       467: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       470: new           #132                // class java/lang/StringBuilder
+       473: dup
+       474: ldc           #134                // String Converting name lookup
+       476: invokespecial #136                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       479: aload         10
+       481: invokevirtual #138                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       484: ldc           #223                // String  to blinded
+       486: invokevirtual #138                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       489: aload         9
+       491: invokevirtual #144                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       494: ldc           #225                // String  using BlindData:\n
+       496: invokevirtual #138                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       499: aload         13
+       501: invokevirtual #144                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       504: invokevirtual #147                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       507: invokevirtual #151                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       510: aconst_null
+       511: astore        10
+       513: goto          563
+       516: astore        16
+       518: aload_0
+       519: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       522: invokevirtual #227                // Method net/i2p/util/Log.shouldWarn:()Z
+       525: ifeq          554
+       528: aload_0
+       529: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       532: new           #132                // class java/lang/StringBuilder
+       535: dup
+       536: ldc           #230                // String Failed blinding conversion of
+       538: invokespecial #136                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       541: aload         10
+       543: invokevirtual #138                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       546: invokevirtual #147                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       549: aload         16
+       551: invokevirtual #232                // Method net/i2p/util/Log.debug:(Ljava/lang/String;Ljava/lang/Throwable;)V
+       554: aconst_null
+       555: astore        10
+       557: goto          563
+       560: aconst_null
+       561: astore        10
+       563: aload_0
+       564: aload         9
+       566: putfield      #235                // Field _hash:Lnet/i2p/data/Hash;
+       569: aload_0
+       570: aload         10
+       572: putfield      #237                // Field _name:Ljava/lang/String;
+       575: aload_0
+       576: aload         11
+       578: putfield      #239                // Field _dest:Lnet/i2p/data/Destination;
+       581: aload_0
+       582: aload         13
+       584: putfield      #241                // Field _blindData:Lnet/i2p/data/BlindData;
+       587: return
+      Exception table:
+         from    to  target type
+           260   513   516   Class java/lang/RuntimeException
+
+  public java.lang.String getName();
+    Code:
+         0: aload_0
+         1: getfield      #237                // Field _name:Ljava/lang/String;
+         4: ifnull        13
+         7: ldc_w         #273                // String HostName Lookup for Client
+        10: goto          16
+        13: ldc_w         #275                // String LeaseSet Lookup for Client
+        16: areturn
+
+  public void runJob();
+    Code:
+         0: aload_0
+         1: getfield      #241                // Field _blindData:Lnet/i2p/data/BlindData;
+         4: ifnull        228
+         7: aload_0
+         8: getfield      #241                // Field _blindData:Lnet/i2p/data/BlindData;
+        11: invokevirtual #179                // Method net/i2p/data/BlindData.getAuthRequired:()Z
+        14: ifeq          31
+        17: aload_0
+        18: getfield      #241                // Field _blindData:Lnet/i2p/data/BlindData;
+        21: invokevirtual #182                // Method net/i2p/data/BlindData.getAuthPrivKey:()Lnet/i2p/data/PrivateKey;
+        24: ifnonnull     31
+        27: iconst_1
+        28: goto          32
+        31: iconst_0
+        32: istore_1
+        33: aload_0
+        34: getfield      #241                // Field _blindData:Lnet/i2p/data/BlindData;
+        37: invokevirtual #186                // Method net/i2p/data/BlindData.getSecretRequired:()Z
+        40: ifeq          70
+        43: aload_0
+        44: getfield      #241                // Field _blindData:Lnet/i2p/data/BlindData;
+        47: invokevirtual #189                // Method net/i2p/data/BlindData.getSecret:()Ljava/lang/String;
+        50: ifnull        66
+        53: aload_0
+        54: getfield      #241                // Field _blindData:Lnet/i2p/data/BlindData;
+        57: invokevirtual #189                // Method net/i2p/data/BlindData.getSecret:()Ljava/lang/String;
+        60: invokevirtual #90                 // Method java/lang/String.length:()I
+        63: ifne          70
+        66: iconst_1
+        67: goto          71
+        70: iconst_0
+        71: istore_2
+        72: iload_1
+        73: ifne          80
+        76: iload_2
+        77: ifeq          160
+        80: iload_1
+        81: ifeq          93
+        84: iload_2
+        85: ifeq          93
+        88: iconst_4
+        89: istore_3
+        90: goto          104
+        93: iload_1
+        94: ifeq          102
+        97: iconst_3
+        98: istore_3
+        99: goto          104
+       102: iconst_2
+       103: istore_3
+       104: aload_0
+       105: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       108: invokevirtual #128                // Method net/i2p/util/Log.shouldDebug:()Z
+       111: ifeq          154
+       114: aload_0
+       115: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       118: new           #132                // class java/lang/StringBuilder
+       121: dup
+       122: ldc_w         #280                // String Failed b33 lookup
+       125: invokespecial #136                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       128: aload_0
+       129: getfield      #241                // Field _blindData:Lnet/i2p/data/BlindData;
+       132: invokevirtual #159                // Method net/i2p/data/BlindData.getUnblindedPubKey:()Lnet/i2p/data/SigningPublicKey;
+       135: invokevirtual #144                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       138: ldc_w         #282                // String  with code
+       141: invokevirtual #138                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       144: iload_3
+       145: invokevirtual #284                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       148: invokevirtual #147                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       151: invokevirtual #151                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       154: aload_0
+       155: iload_3
+       156: invokespecial #287                // Method returnFail:(I)V
+       159: return
+       160: aload_0
+       161: getfield      #241                // Field _blindData:Lnet/i2p/data/BlindData;
+       164: invokevirtual #291                // Method net/i2p/data/BlindData.getDestination:()Lnet/i2p/data/Destination;
+       167: astore_3
+       168: aload_3
+       169: ifnull        228
+       172: aload_0
+       173: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       176: invokevirtual #128                // Method net/i2p/util/Log.shouldDebug:()Z
+       179: ifeq          221
+       182: aload_0
+       183: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       186: new           #132                // class java/lang/StringBuilder
+       189: dup
+       190: ldc_w         #295                // String Found cached b33 lookup
+       193: invokespecial #136                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       196: aload_0
+       197: getfield      #241                // Field _blindData:Lnet/i2p/data/BlindData;
+       200: invokevirtual #159                // Method net/i2p/data/BlindData.getUnblindedPubKey:()Lnet/i2p/data/SigningPublicKey;
+       203: invokevirtual #144                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       206: ldc           #142                // String  to
+       208: invokevirtual #138                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       211: aload_3
+       212: invokevirtual #144                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       215: invokevirtual #147                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       218: invokevirtual #151                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       221: aload_0
+       222: aload_3
+       223: aconst_null
+       224: invokespecial #297                // Method returnDest:(Lnet/i2p/data/Destination;Ljava/util/Properties;)V
+       227: return
+       228: aload_0
+       229: getfield      #237                // Field _name:Ljava/lang/String;
+       232: ifnull        380
+       235: aload_0
+       236: aload_0
+       237: invokevirtual #165                // Method getContext:()Lnet/i2p/router/RouterContext;
+       240: invokevirtual #301                // Method net/i2p/router/RouterContext.namingService:()Lnet/i2p/client/naming/NamingService;
+       243: aload_0
+       244: getfield      #237                // Field _name:Ljava/lang/String;
+       247: invokevirtual #305                // Method net/i2p/client/naming/NamingService.lookup:(Ljava/lang/String;)Lnet/i2p/data/Destination;
+       250: putfield      #239                // Field _dest:Lnet/i2p/data/Destination;
+       253: aload_0
+       254: getfield      #239                // Field _dest:Lnet/i2p/data/Destination;
+       257: ifnull        339
+       260: aload_0
+       261: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       264: invokevirtual #128                // Method net/i2p/util/Log.shouldDebug:()Z
+       267: ifeq          309
+       270: aload_0
+       271: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       274: new           #132                // class java/lang/StringBuilder
+       277: dup
+       278: ldc_w         #311                // String Found name lookup
+       281: invokespecial #136                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       284: aload_0
+       285: getfield      #237                // Field _name:Ljava/lang/String;
+       288: invokevirtual #138                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       291: ldc           #142                // String  to
+       293: invokevirtual #138                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       296: aload_0
+       297: getfield      #239                // Field _dest:Lnet/i2p/data/Destination;
+       300: invokevirtual #144                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       303: invokevirtual #147                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       306: invokevirtual #151                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       309: aload_0
+       310: getfield      #88                 // Field _wantsOptions:Z
+       313: ifne          325
+       316: aload_0
+       317: aload_0
+       318: getfield      #239                // Field _dest:Lnet/i2p/data/Destination;
+       321: aconst_null
+       322: invokespecial #297                // Method returnDest:(Lnet/i2p/data/Destination;Ljava/util/Properties;)V
+       325: aload_0
+       326: aload_0
+       327: getfield      #239                // Field _dest:Lnet/i2p/data/Destination;
+       330: invokevirtual #313                // Method net/i2p/data/Destination.calculateHash:()Lnet/i2p/data/Hash;
+       333: putfield      #235                // Field _hash:Lnet/i2p/data/Hash;
+       336: goto          380
+       339: aload_0
+       340: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       343: invokevirtual #128                // Method net/i2p/util/Log.shouldDebug:()Z
+       346: ifeq          376
+       349: aload_0
+       350: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+       353: new           #132                // class java/lang/StringBuilder
+       356: dup
+       357: ldc_w         #316                // String Failed name lookup
+       360: invokespecial #136                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       363: aload_0
+       364: getfield      #237                // Field _name:Ljava/lang/String;
+       367: invokevirtual #138                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       370: invokevirtual #147                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       373: invokevirtual #151                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       376: aload_0
+       377: invokespecial #318                // Method returnFail:()V
+       380: aload_0
+       381: getfield      #235                // Field _hash:Lnet/i2p/data/Hash;
+       384: ifnull        467
+       387: new           #320                // class net/i2p/router/client/LookupDestJob$DoneJob
+       390: dup
+       391: aload_0
+       392: aload_0
+       393: invokevirtual #165                // Method getContext:()Lnet/i2p/router/RouterContext;
+       396: invokespecial #322                // Method net/i2p/router/client/LookupDestJob$DoneJob."<init>":(Lnet/i2p/router/client/LookupDestJob;Lnet/i2p/router/RouterContext;)V
+       399: astore_1
+       400: aload_0
+       401: getfield      #82                 // Field _timeout:J
+       404: lstore_2
+       405: lload_2
+       406: ldc2_w        #325                // long 1500l
+       409: lcmp
+       410: ifle          419
+       413: lload_2
+       414: ldc2_w        #327                // long 500l
+       417: lsub
+       418: lstore_2
+       419: aload_0
+       420: getfield      #78                 // Field _runner:Lnet/i2p/router/client/ClientConnectionRunner;
+       423: invokevirtual #329                // Method net/i2p/router/client/ClientConnectionRunner.getFloodfillNetworkDatabaseFacade:()Lnet/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseFacade;
+       426: astore        4
+       428: aload_0
+       429: getfield      #239                // Field _dest:Lnet/i2p/data/Destination;
+       432: ifnonnull     472
+       435: aload         4
+       437: ifnonnull     449
+       440: aload_0
+       441: invokevirtual #165                // Method getContext:()Lnet/i2p/router/RouterContext;
+       444: invokevirtual #169                // Method net/i2p/router/RouterContext.netDb:()Lnet/i2p/router/NetworkDatabaseFacade;
+       447: astore        4
+       449: aload         4
+       451: aload_0
+       452: getfield      #235                // Field _hash:Lnet/i2p/data/Hash;
+       455: aload_1
+       456: lload_2
+       457: aload_0
+       458: getfield      #86                 // Field _fromLocalDest:Lnet/i2p/data/Hash;
+       461: invokevirtual #333                // Method net/i2p/router/NetworkDatabaseFacade.lookupDestination:(Lnet/i2p/data/Hash;Lnet/i2p/router/Job;JLnet/i2p/data/Hash;)V
+       464: goto          472
+       467: aload_0
+       468: iconst_5
+       469: invokespecial #287                // Method returnFail:(I)V
+       472: return
+
+  private void returnDest(net.i2p.data.Destination, java.util.Properties);
+    Code:
+         0: aload_0
+         1: getfield      #80                 // Field _reqID:J
+         4: lconst_0
+         5: lcmp
+         6: iflt          65
+         9: aload_0
+        10: getfield      #88                 // Field _wantsOptions:Z
+        13: ifeq          45
+        16: aload_2
+        17: ifnonnull     24
+        20: getstatic     #345                // Field net/i2p/data/EmptyProperties.INSTANCE:Lnet/i2p/data/EmptyProperties;
+        23: astore_2
+        24: new           #278                // class net/i2p/data/i2cp/HostReplyMessage
+        27: dup
+        28: aload_0
+        29: getfield      #84                 // Field _sessID:Lnet/i2p/data/i2cp/SessionId;
+        32: aload_1
+        33: aload_0
+        34: getfield      #80                 // Field _reqID:J
+        37: aload_2
+        38: invokespecial #351                // Method net/i2p/data/i2cp/HostReplyMessage."<init>":(Lnet/i2p/data/i2cp/SessionId;Lnet/i2p/data/Destination;JLjava/util/Properties;)V
+        41: astore_3
+        42: goto          74
+        45: new           #278                // class net/i2p/data/i2cp/HostReplyMessage
+        48: dup
+        49: aload_0
+        50: getfield      #84                 // Field _sessID:Lnet/i2p/data/i2cp/SessionId;
+        53: aload_1
+        54: aload_0
+        55: getfield      #80                 // Field _reqID:J
+        58: invokespecial #354                // Method net/i2p/data/i2cp/HostReplyMessage."<init>":(Lnet/i2p/data/i2cp/SessionId;Lnet/i2p/data/Destination;J)V
+        61: astore_3
+        62: goto          74
+        65: new           #357                // class net/i2p/data/i2cp/DestReplyMessage
+        68: dup
+        69: aload_1
+        70: invokespecial #359                // Method net/i2p/data/i2cp/DestReplyMessage."<init>":(Lnet/i2p/data/Destination;)V
+        73: astore_3
+        74: aload_0
+        75: getfield      #78                 // Field _runner:Lnet/i2p/router/client/ClientConnectionRunner;
+        78: aload_3
+        79: invokevirtual #362                // Method net/i2p/router/client/ClientConnectionRunner.doSend:(Lnet/i2p/data/i2cp/I2CPMessage;)V
+        82: goto          87
+        85: astore        4
+        87: return
+      Exception table:
+         from    to  target type
+            74    82    85   Class net/i2p/data/i2cp/I2CPMessageException
+
+  private void returnFail();
+    Code:
+         0: aload_0
+         1: iconst_1
+         2: invokespecial #287                // Method returnFail:(I)V
+         5: return
+
+  private void returnFail(int);
+    Code:
+         0: aload_0
+         1: getfield      #80                 // Field _reqID:J
+         4: lconst_0
+         5: lcmp
+         6: iflt          29
+         9: new           #278                // class net/i2p/data/i2cp/HostReplyMessage
+        12: dup
+        13: aload_0
+        14: getfield      #84                 // Field _sessID:Lnet/i2p/data/i2cp/SessionId;
+        17: iload_1
+        18: aload_0
+        19: getfield      #80                 // Field _reqID:J
+        22: invokespecial #374                // Method net/i2p/data/i2cp/HostReplyMessage."<init>":(Lnet/i2p/data/i2cp/SessionId;IJ)V
+        25: astore_2
+        26: goto          52
+        29: aload_0
+        30: getfield      #235                // Field _hash:Lnet/i2p/data/Hash;
+        33: ifnull        51
+        36: new           #357                // class net/i2p/data/i2cp/DestReplyMessage
+        39: dup
+        40: aload_0
+        41: getfield      #235                // Field _hash:Lnet/i2p/data/Hash;
+        44: invokespecial #377                // Method net/i2p/data/i2cp/DestReplyMessage."<init>":(Lnet/i2p/data/Hash;)V
+        47: astore_2
+        48: goto          52
+        51: return
+        52: aload_0
+        53: getfield      #78                 // Field _runner:Lnet/i2p/router/client/ClientConnectionRunner;
+        56: aload_2
+        57: invokevirtual #362                // Method net/i2p/router/client/ClientConnectionRunner.doSend:(Lnet/i2p/data/i2cp/I2CPMessage;)V
+        60: goto          64
+        63: astore_3
+        64: return
+      Exception table:
+         from    to  target type
+            52    60    63   Class net/i2p/data/i2cp/I2CPMessageException
+
+  static net.i2p.router.client.ClientConnectionRunner access$0(net.i2p.router.client.LookupDestJob);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _runner:Lnet/i2p/router/client/ClientConnectionRunner;
+         4: areturn
+
+  static boolean access$1(net.i2p.router.client.LookupDestJob);
+    Code:
+         0: aload_0
+         1: getfield      #88                 // Field _wantsOptions:Z
+         4: ireturn
+
+  static net.i2p.data.Hash access$2(net.i2p.router.client.LookupDestJob);
+    Code:
+         0: aload_0
+         1: getfield      #235                // Field _hash:Lnet/i2p/data/Hash;
+         4: areturn
+
+  static net.i2p.data.Destination access$3(net.i2p.router.client.LookupDestJob);
+    Code:
+         0: aload_0
+         1: getfield      #239                // Field _dest:Lnet/i2p/data/Destination;
+         4: areturn
+
+  static void access$4(net.i2p.router.client.LookupDestJob, net.i2p.data.Destination);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: putfield      #239                // Field _dest:Lnet/i2p/data/Destination;
+         5: return
+
+  static net.i2p.data.BlindData access$5(net.i2p.router.client.LookupDestJob);
+    Code:
+         0: aload_0
+         1: getfield      #241                // Field _blindData:Lnet/i2p/data/BlindData;
+         4: areturn
+
+  static net.i2p.util.Log access$6(net.i2p.router.client.LookupDestJob);
+    Code:
+         0: aload_0
+         1: getfield      #63                 // Field _log:Lnet/i2p/util/Log;
+         4: areturn
+
+  static void access$7(net.i2p.router.client.LookupDestJob, net.i2p.data.Destination, java.util.Properties);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: aload_2
+         3: invokespecial #297                // Method returnDest:(Lnet/i2p/data/Destination;Ljava/util/Properties;)V
+         6: return
+
+  static void access$8(net.i2p.router.client.LookupDestJob, int);
+    Code:
+         0: aload_0
+         1: iload_1
+         2: invokespecial #287                // Method returnFail:(I)V
+         5: return
+
+  static void access$9(net.i2p.router.client.LookupDestJob);
+    Code:
+         0: aload_0
+         1: invokespecial #318                // Method returnFail:()V
+         4: return
+}

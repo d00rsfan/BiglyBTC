@@ -1,0 +1,496 @@
+Compiled from "ClientListenerRunner.java"
+class net.i2p.router.client.ClientListenerRunner implements java.lang.Runnable {
+  protected final net.i2p.util.Log _log;
+
+  protected final net.i2p.router.RouterContext _context;
+
+  protected final net.i2p.router.client.ClientManager _manager;
+
+  protected java.net.ServerSocket _socket;
+
+  protected final int _port;
+
+  protected final boolean _bindAllInterfaces;
+
+  protected volatile boolean _running;
+
+  protected volatile boolean _listening;
+
+  public static final java.lang.String BIND_ALL_INTERFACES = "i2cp.tcp.bindAllInterfaces";
+
+  protected static final int CONNECT_TIMEOUT = 5000;
+
+  public net.i2p.router.client.ClientListenerRunner(net.i2p.router.RouterContext, net.i2p.router.client.ClientManager, int);
+    Code:
+         0: aload_0
+         1: invokespecial #31                 // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: aload_1
+         6: putfield      #34                 // Field _context:Lnet/i2p/router/RouterContext;
+         9: aload_0
+        10: aload_0
+        11: getfield      #34                 // Field _context:Lnet/i2p/router/RouterContext;
+        14: invokevirtual #36                 // Method net/i2p/router/RouterContext.logManager:()Lnet/i2p/util/LogManager;
+        17: aload_0
+        18: invokevirtual #42                 // Method java/lang/Object.getClass:()Ljava/lang/Class;
+        21: invokevirtual #46                 // Method net/i2p/util/LogManager.getLog:(Ljava/lang/Class;)Lnet/i2p/util/Log;
+        24: putfield      #52                 // Field _log:Lnet/i2p/util/Log;
+        27: aload_0
+        28: aload_2
+        29: putfield      #54                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        32: aload_0
+        33: iload_3
+        34: putfield      #56                 // Field _port:I
+        37: aload_0
+        38: aload_1
+        39: ldc           #24                 // String i2cp.tcp.bindAllInterfaces
+        41: invokevirtual #58                 // Method net/i2p/router/RouterContext.getBooleanProperty:(Ljava/lang/String;)Z
+        44: putfield      #62                 // Field _bindAllInterfaces:Z
+        47: return
+
+  public boolean isListening();
+    Code:
+         0: aload_0
+         1: getfield      #73                 // Field _running:Z
+         4: ifeq          16
+         7: aload_0
+         8: getfield      #75                 // Field _listening:Z
+        11: ifeq          16
+        14: iconst_1
+        15: ireturn
+        16: iconst_0
+        17: ireturn
+
+  protected java.net.ServerSocket getServerSocket() throws java.io.IOException;
+    Code:
+         0: aload_0
+         1: getfield      #62                 // Field _bindAllInterfaces:Z
+         4: ifeq          62
+         7: aload_0
+         8: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+        11: bipush        20
+        13: invokevirtual #85                 // Method net/i2p/util/Log.shouldLog:(I)Z
+        16: ifeq          50
+        19: aload_0
+        20: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+        23: new           #89                 // class java/lang/StringBuilder
+        26: dup
+        27: ldc           #91                 // String Listening on port
+        29: invokespecial #93                 // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        32: aload_0
+        33: getfield      #56                 // Field _port:I
+        36: invokevirtual #96                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+        39: ldc           #100                // String  on all interfaces
+        41: invokevirtual #102                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        44: invokevirtual #105                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        47: invokevirtual #109                // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+        50: new           #112                // class java/net/ServerSocket
+        53: dup
+        54: aload_0
+        55: getfield      #56                 // Field _port:I
+        58: invokespecial #114                // Method java/net/ServerSocket."<init>":(I)V
+        61: areturn
+        62: aload_0
+        63: getfield      #34                 // Field _context:Lnet/i2p/router/RouterContext;
+        66: ldc           #119                // String i2cp.hostname
+        68: ldc           #121                // String 127.0.0.1
+        70: invokevirtual #123                // Method net/i2p/router/RouterContext.getProperty:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        73: astore_1
+        74: aload_0
+        75: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+        78: bipush        20
+        80: invokevirtual #85                 // Method net/i2p/util/Log.shouldLog:(I)Z
+        83: ifeq          121
+        86: aload_0
+        87: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+        90: new           #89                 // class java/lang/StringBuilder
+        93: dup
+        94: ldc           #91                 // String Listening on port
+        96: invokespecial #93                 // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        99: aload_0
+       100: getfield      #56                 // Field _port:I
+       103: invokevirtual #96                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       106: ldc           #127                // String  of the specific interface:
+       108: invokevirtual #102                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       111: aload_1
+       112: invokevirtual #102                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       115: invokevirtual #105                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       118: invokevirtual #109                // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       121: new           #112                // class java/net/ServerSocket
+       124: dup
+       125: aload_0
+       126: getfield      #56                 // Field _port:I
+       129: iconst_0
+       130: aload_1
+       131: invokestatic  #129                // Method java/net/InetAddress.getByName:(Ljava/lang/String;)Ljava/net/InetAddress;
+       134: invokespecial #135                // Method java/net/ServerSocket."<init>":(IILjava/net/InetAddress;)V
+       137: areturn
+
+  public void run();
+    Code:
+         0: aload_0
+         1: invokevirtual #142                // Method runServer:()V
+         4: return
+
+  protected void runServer();
+    Code:
+         0: aload_0
+         1: iconst_1
+         2: putfield      #73                 // Field _running:Z
+         5: sipush        1000
+         8: istore_1
+         9: aload_0
+        10: instanceof    #145                // class net/i2p/router/client/SSLClientListenerRunner
+        13: ifeq          21
+        16: ldc           #149                // String I2CP-SSL
+        18: goto          23
+        21: ldc           #151                // String I2CP
+        23: astore_2
+        24: goto          518
+        27: aload_0
+        28: aload_0
+        29: invokevirtual #153                // Method getServerSocket:()Ljava/net/ServerSocket;
+        32: putfield      #155                // Field _socket:Ljava/net/ServerSocket;
+        35: aload_0
+        36: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+        39: bipush        10
+        41: invokevirtual #85                 // Method net/i2p/util/Log.shouldLog:(I)Z
+        44: ifeq          73
+        47: aload_0
+        48: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+        51: new           #89                 // class java/lang/StringBuilder
+        54: dup
+        55: ldc           #157                // String ServerSocket created, before accept:
+        57: invokespecial #93                 // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        60: aload_0
+        61: getfield      #155                // Field _socket:Ljava/net/ServerSocket;
+        64: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+        67: invokevirtual #105                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        70: invokevirtual #162                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+        73: aload_0
+        74: getfield      #56                 // Field _port:I
+        77: ifle          106
+        80: aload_0
+        81: getfield      #34                 // Field _context:Lnet/i2p/router/RouterContext;
+        84: invokevirtual #165                // Method net/i2p/router/RouterContext.portMapper:()Lnet/i2p/util/PortMapper;
+        87: aload_2
+        88: aload_0
+        89: getfield      #155                // Field _socket:Ljava/net/ServerSocket;
+        92: invokevirtual #169                // Method java/net/ServerSocket.getInetAddress:()Ljava/net/InetAddress;
+        95: invokevirtual #173                // Method java/net/InetAddress.getHostAddress:()Ljava/lang/String;
+        98: aload_0
+        99: getfield      #56                 // Field _port:I
+       102: invokevirtual #176                // Method net/i2p/util/PortMapper.register:(Ljava/lang/String;Ljava/lang/String;I)Z
+       105: pop
+       106: sipush        1000
+       109: istore_1
+       110: aload_0
+       111: iconst_1
+       112: putfield      #75                 // Field _listening:Z
+       115: goto          281
+       118: aload_0
+       119: getfield      #155                // Field _socket:Ljava/net/ServerSocket;
+       122: invokevirtual #180                // Method java/net/ServerSocket.accept:()Ljava/net/Socket;
+       125: astore_3
+       126: aload_0
+       127: aload_3
+       128: invokevirtual #184                // Method validate:(Ljava/net/Socket;)Z
+       131: ifeq          168
+       134: aload_0
+       135: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+       138: bipush        10
+       140: invokevirtual #85                 // Method net/i2p/util/Log.shouldLog:(I)Z
+       143: ifeq          155
+       146: aload_0
+       147: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+       150: ldc           #188                // String Connection received
+       152: invokevirtual #162                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       155: aload_3
+       156: iconst_1
+       157: invokevirtual #190                // Method java/net/Socket.setKeepAlive:(Z)V
+       160: aload_0
+       161: aload_3
+       162: invokevirtual #196                // Method runConnection:(Ljava/net/Socket;)V
+       165: goto          281
+       168: aload_0
+       169: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+       172: bipush        30
+       174: invokevirtual #85                 // Method net/i2p/util/Log.shouldLog:(I)Z
+       177: ifeq          206
+       180: aload_0
+       181: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+       184: new           #89                 // class java/lang/StringBuilder
+       187: dup
+       188: ldc           #200                // String Refused connection from
+       190: invokespecial #93                 // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       193: aload_3
+       194: invokevirtual #202                // Method java/net/Socket.getInetAddress:()Ljava/net/InetAddress;
+       197: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       200: invokevirtual #105                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       203: invokevirtual #203                // Method net/i2p/util/Log.warn:(Ljava/lang/String;)V
+       206: aload_3
+       207: invokevirtual #206                // Method java/net/Socket.close:()V
+       210: goto          281
+       213: astore        4
+       215: goto          281
+       218: astore_3
+       219: aload_0
+       220: invokespecial #209                // Method isAlive:()Z
+       223: ifeq          281
+       226: aload_0
+       227: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+       230: ldc           #212                // String Server error accepting
+       232: aload_3
+       233: invokevirtual #214                // Method net/i2p/util/Log.error:(Ljava/lang/String;Ljava/lang/Throwable;)V
+       236: goto          281
+       239: astore_3
+       240: aload_0
+       241: invokespecial #209                // Method isAlive:()Z
+       244: ifeq          257
+       247: aload_0
+       248: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+       251: ldc           #218                // String Fatal error running client listener - killing the thread!
+       253: aload_3
+       254: invokevirtual #214                // Method net/i2p/util/Log.error:(Ljava/lang/String;Ljava/lang/Throwable;)V
+       257: aload_0
+       258: iconst_0
+       259: putfield      #75                 // Field _listening:Z
+       262: aload_0
+       263: getfield      #56                 // Field _port:I
+       266: ifle          280
+       269: aload_0
+       270: getfield      #34                 // Field _context:Lnet/i2p/router/RouterContext;
+       273: invokevirtual #165                // Method net/i2p/router/RouterContext.portMapper:()Lnet/i2p/util/PortMapper;
+       276: aload_2
+       277: invokevirtual #220                // Method net/i2p/util/PortMapper.unregister:(Ljava/lang/String;)V
+       280: return
+       281: aload_0
+       282: getfield      #73                 // Field _running:Z
+       285: ifne          118
+       288: goto          370
+       291: astore_3
+       292: aload_0
+       293: invokespecial #209                // Method isAlive:()Z
+       296: ifeq          326
+       299: aload_0
+       300: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+       303: new           #89                 // class java/lang/StringBuilder
+       306: dup
+       307: ldc           #223                // String Error listening on port
+       309: invokespecial #93                 // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       312: aload_0
+       313: getfield      #56                 // Field _port:I
+       316: invokevirtual #96                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       319: invokevirtual #105                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       322: aload_3
+       323: invokevirtual #214                // Method net/i2p/util/Log.error:(Ljava/lang/String;Ljava/lang/Throwable;)V
+       326: aload_0
+       327: getfield      #56                 // Field _port:I
+       330: ifle          388
+       333: aload_0
+       334: getfield      #34                 // Field _context:Lnet/i2p/router/RouterContext;
+       337: invokevirtual #165                // Method net/i2p/router/RouterContext.portMapper:()Lnet/i2p/util/PortMapper;
+       340: aload_2
+       341: invokevirtual #220                // Method net/i2p/util/PortMapper.unregister:(Ljava/lang/String;)V
+       344: goto          388
+       347: astore        5
+       349: aload_0
+       350: getfield      #56                 // Field _port:I
+       353: ifle          367
+       356: aload_0
+       357: getfield      #34                 // Field _context:Lnet/i2p/router/RouterContext;
+       360: invokevirtual #165                // Method net/i2p/router/RouterContext.portMapper:()Lnet/i2p/util/PortMapper;
+       363: aload_2
+       364: invokevirtual #220                // Method net/i2p/util/PortMapper.unregister:(Ljava/lang/String;)V
+       367: aload         5
+       369: athrow
+       370: aload_0
+       371: getfield      #56                 // Field _port:I
+       374: ifle          388
+       377: aload_0
+       378: getfield      #34                 // Field _context:Lnet/i2p/router/RouterContext;
+       381: invokevirtual #165                // Method net/i2p/router/RouterContext.portMapper:()Lnet/i2p/util/PortMapper;
+       384: aload_2
+       385: invokevirtual #220                // Method net/i2p/util/PortMapper.unregister:(Ljava/lang/String;)V
+       388: aload_0
+       389: iconst_0
+       390: putfield      #75                 // Field _listening:Z
+       393: aload_0
+       394: getfield      #155                // Field _socket:Ljava/net/ServerSocket;
+       397: ifnull        416
+       400: aload_0
+       401: getfield      #155                // Field _socket:Ljava/net/ServerSocket;
+       404: invokevirtual #225                // Method java/net/ServerSocket.close:()V
+       407: goto          411
+       410: astore_3
+       411: aload_0
+       412: aconst_null
+       413: putfield      #155                // Field _socket:Ljava/net/ServerSocket;
+       416: aload_0
+       417: invokespecial #209                // Method isAlive:()Z
+       420: ifne          426
+       423: goto          525
+       426: iload_1
+       427: ldc           #226                // int 60000
+       429: if_icmpge     467
+       432: aload_0
+       433: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+       436: new           #89                 // class java/lang/StringBuilder
+       439: dup
+       440: ldc           #227                // String Error listening, waiting
+       442: invokespecial #93                 // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       445: iload_1
+       446: sipush        1000
+       449: idiv
+       450: invokevirtual #96                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       453: ldc           #229                // String s before we try again
+       455: invokevirtual #102                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       458: invokevirtual #105                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       461: invokevirtual #231                // Method net/i2p/util/Log.error:(Ljava/lang/String;)V
+       464: goto          500
+       467: aload_0
+       468: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+       471: bipush        50
+       473: new           #89                 // class java/lang/StringBuilder
+       476: dup
+       477: ldc           #233                // String I2CP error listening to port
+       479: invokespecial #93                 // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       482: aload_0
+       483: getfield      #56                 // Field _port:I
+       486: invokevirtual #96                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       489: ldc           #235                // String  - is another I2P instance running? Resolve conflicts and restart
+       491: invokevirtual #102                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       494: invokevirtual #105                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       497: invokevirtual #237                // Method net/i2p/util/Log.log:(ILjava/lang/String;)V
+       500: iload_1
+       501: i2l
+       502: invokestatic  #241                // Method java/lang/Thread.sleep:(J)V
+       505: goto          509
+       508: astore_3
+       509: iload_1
+       510: iconst_3
+       511: imul
+       512: ldc           #226                // int 60000
+       514: invokestatic  #247                // Method java/lang/Math.min:(II)I
+       517: istore_1
+       518: aload_0
+       519: getfield      #73                 // Field _running:Z
+       522: ifne          27
+       525: aload_0
+       526: invokespecial #209                // Method isAlive:()Z
+       529: ifeq          551
+       532: aload_0
+       533: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+       536: ldc           #253                // String CANCELING I2CP LISTEN
+       538: new           #255                // class java/lang/Exception
+       541: dup
+       542: ldc_w         #257                // String I2CP Listen cancelled!!!
+       545: invokespecial #259                // Method java/lang/Exception."<init>":(Ljava/lang/String;)V
+       548: invokevirtual #214                // Method net/i2p/util/Log.error:(Ljava/lang/String;Ljava/lang/Throwable;)V
+       551: aload_0
+       552: iconst_0
+       553: putfield      #73                 // Field _running:Z
+       556: return
+      Exception table:
+         from    to  target type
+           206   210   213   Class java/io/IOException
+           118   215   218   Class java/io/IOException
+           118   215   239   Class java/lang/Throwable
+            27   262   291   Class java/io/IOException
+           281   288   291   Class java/io/IOException
+            27   262   347   any
+           281   326   347   any
+           400   407   410   Class java/io/IOException
+           500   505   508   Class java/lang/InterruptedException
+
+  private boolean isAlive();
+    Code:
+         0: aload_0
+         1: getfield      #34                 // Field _context:Lnet/i2p/router/RouterContext;
+         4: invokevirtual #272                // Method net/i2p/router/RouterContext.router:()Lnet/i2p/router/Router;
+         7: astore_1
+         8: aload_1
+         9: ifnull        21
+        12: aload_1
+        13: invokevirtual #276                // Method net/i2p/router/Router.isAlive:()Z
+        16: ifne          21
+        19: iconst_0
+        20: ireturn
+        21: iconst_1
+        22: ireturn
+
+  protected boolean validate(java.net.Socket);
+    Code:
+         0: aload_1
+         1: invokevirtual #281                // Method java/net/Socket.getInputStream:()Ljava/io/InputStream;
+         4: astore_2
+         5: aload_1
+         6: sipush        5000
+         9: invokevirtual #285                // Method java/net/Socket.setSoTimeout:(I)V
+        12: aload_2
+        13: invokevirtual #288                // Method java/io/InputStream.read:()I
+        16: bipush        42
+        18: if_icmpne     25
+        21: iconst_1
+        22: goto          26
+        25: iconst_0
+        26: istore_3
+        27: aload_1
+        28: iconst_0
+        29: invokevirtual #285                // Method java/net/Socket.setSoTimeout:(I)V
+        32: iload_3
+        33: ireturn
+        34: astore_2
+        35: aload_0
+        36: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+        39: bipush        30
+        41: invokevirtual #85                 // Method net/i2p/util/Log.shouldLog:(I)Z
+        44: ifeq          57
+        47: aload_0
+        48: getfield      #52                 // Field _log:Lnet/i2p/util/Log;
+        51: ldc_w         #296                // String Peer did not authenticate themselves as I2CP quickly enough, dropping
+        54: invokevirtual #203                // Method net/i2p/util/Log.warn:(Ljava/lang/String;)V
+        57: iconst_0
+        58: ireturn
+      Exception table:
+         from    to  target type
+             0    33    34   Class java/io/IOException
+
+  protected void runConnection(java.net.Socket);
+    Code:
+         0: new           #301                // class net/i2p/router/client/ClientConnectionRunner
+         3: dup
+         4: aload_0
+         5: getfield      #34                 // Field _context:Lnet/i2p/router/RouterContext;
+         8: aload_0
+         9: getfield      #54                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        12: aload_1
+        13: invokespecial #303                // Method net/i2p/router/client/ClientConnectionRunner."<init>":(Lnet/i2p/router/RouterContext;Lnet/i2p/router/client/ClientManager;Ljava/net/Socket;)V
+        16: astore_2
+        17: aload_0
+        18: getfield      #54                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        21: aload_2
+        22: invokevirtual #306                // Method net/i2p/router/client/ClientManager.registerConnection:(Lnet/i2p/router/client/ClientConnectionRunner;)V
+        25: return
+
+  public void stopListening();
+    Code:
+         0: aload_0
+         1: iconst_0
+         2: putfield      #73                 // Field _running:Z
+         5: aload_0
+         6: getfield      #155                // Field _socket:Ljava/net/ServerSocket;
+         9: ifnull        28
+        12: aload_0
+        13: getfield      #155                // Field _socket:Ljava/net/ServerSocket;
+        16: invokevirtual #225                // Method java/net/ServerSocket.close:()V
+        19: aload_0
+        20: aconst_null
+        21: putfield      #155                // Field _socket:Ljava/net/ServerSocket;
+        24: goto          28
+        27: astore_1
+        28: return
+      Exception table:
+         from    to  target type
+            12    24    27   Class java/io/IOException
+}

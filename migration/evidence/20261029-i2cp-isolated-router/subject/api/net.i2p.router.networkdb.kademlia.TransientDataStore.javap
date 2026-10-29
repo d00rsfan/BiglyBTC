@@ -1,0 +1,615 @@
+Compiled from "TransientDataStore.java"
+class net.i2p.router.networkdb.kademlia.TransientDataStore implements net.i2p.router.networkdb.kademlia.DataStore {
+  protected final net.i2p.util.Log _log;
+
+  private final java.util.concurrent.ConcurrentHashMap<net.i2p.data.Hash, net.i2p.data.DatabaseEntry> _data;
+
+  protected final net.i2p.router.RouterContext _context;
+
+  public net.i2p.router.networkdb.kademlia.TransientDataStore(net.i2p.router.RouterContext);
+    Code:
+         0: aload_0
+         1: invokespecial #18                 // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: aload_1
+         6: putfield      #21                 // Field _context:Lnet/i2p/router/RouterContext;
+         9: aload_0
+        10: aload_1
+        11: invokevirtual #23                 // Method net/i2p/router/RouterContext.logManager:()Lnet/i2p/util/LogManager;
+        14: aload_0
+        15: invokevirtual #29                 // Method java/lang/Object.getClass:()Ljava/lang/Class;
+        18: invokevirtual #33                 // Method net/i2p/util/LogManager.getLog:(Ljava/lang/Class;)Lnet/i2p/util/Log;
+        21: putfield      #39                 // Field _log:Lnet/i2p/util/Log;
+        24: aload_0
+        25: new           #41                 // class java/util/concurrent/ConcurrentHashMap
+        28: dup
+        29: sipush        1024
+        32: invokespecial #43                 // Method java/util/concurrent/ConcurrentHashMap."<init>":(I)V
+        35: putfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+        38: aload_0
+        39: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+        42: bipush        20
+        44: invokevirtual #50                 // Method net/i2p/util/Log.shouldLog:(I)Z
+        47: ifeq          59
+        50: aload_0
+        51: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+        54: ldc           #54                 // String Data Store initialized
+        56: invokevirtual #56                 // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+        59: return
+
+  public boolean isInitialized();
+    Code:
+         0: iconst_1
+         1: ireturn
+
+  public void stop();
+    Code:
+         0: aload_0
+         1: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+         4: invokevirtual #69                 // Method java/util/concurrent/ConcurrentHashMap.clear:()V
+         7: return
+
+  public void rescan();
+    Code:
+         0: return
+
+  public int size();
+    Code:
+         0: aload_0
+         1: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+         4: invokevirtual #75                 // Method java/util/concurrent/ConcurrentHashMap.size:()I
+         7: ireturn
+
+  public java.util.Set<net.i2p.data.Hash> getKeys();
+    Code:
+         0: aload_0
+         1: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+         4: invokevirtual #80                 // Method java/util/concurrent/ConcurrentHashMap.keySet:()Ljava/util/concurrent/ConcurrentHashMap$KeySetView;
+         7: invokestatic  #84                 // Method java/util/Collections.unmodifiableSet:(Ljava/util/Set;)Ljava/util/Set;
+        10: areturn
+
+  public java.util.Collection<net.i2p.data.DatabaseEntry> getEntries();
+    Code:
+         0: aload_0
+         1: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+         4: invokevirtual #93                 // Method java/util/concurrent/ConcurrentHashMap.values:()Ljava/util/Collection;
+         7: invokestatic  #96                 // Method java/util/Collections.unmodifiableCollection:(Ljava/util/Collection;)Ljava/util/Collection;
+        10: areturn
+
+  public java.util.Set<java.util.Map$Entry<net.i2p.data.Hash, net.i2p.data.DatabaseEntry>> getMapEntries();
+    Code:
+         0: aload_0
+         1: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+         4: invokevirtual #102                // Method java/util/concurrent/ConcurrentHashMap.entrySet:()Ljava/util/Set;
+         7: invokestatic  #84                 // Method java/util/Collections.unmodifiableSet:(Ljava/util/Set;)Ljava/util/Set;
+        10: areturn
+
+  public net.i2p.data.DatabaseEntry get(net.i2p.data.Hash, boolean);
+    Code:
+         0: new           #107                // class java/lang/UnsupportedOperationException
+         3: dup
+         4: invokespecial #109                // Method java/lang/UnsupportedOperationException."<init>":()V
+         7: athrow
+
+  public net.i2p.data.DatabaseEntry get(net.i2p.data.Hash);
+    Code:
+         0: aload_0
+         1: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+         4: aload_1
+         5: invokevirtual #115                // Method java/util/concurrent/ConcurrentHashMap.get:(Ljava/lang/Object;)Ljava/lang/Object;
+         8: checkcast     #118                // class net/i2p/data/DatabaseEntry
+        11: areturn
+
+  public boolean isKnown(net.i2p.data.Hash);
+    Code:
+         0: aload_0
+         1: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+         4: aload_1
+         5: invokevirtual #122                // Method java/util/concurrent/ConcurrentHashMap.containsKey:(Ljava/lang/Object;)Z
+         8: ireturn
+
+  public int countLeaseSets();
+    Code:
+         0: iconst_0
+         1: istore_1
+         2: aload_0
+         3: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+         6: invokevirtual #93                 // Method java/util/concurrent/ConcurrentHashMap.values:()Ljava/util/Collection;
+         9: invokeinterface #127,  1          // InterfaceMethod java/util/Collection.iterator:()Ljava/util/Iterator;
+        14: astore_3
+        15: goto          38
+        18: aload_3
+        19: invokeinterface #133,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        24: checkcast     #118                // class net/i2p/data/DatabaseEntry
+        27: astore_2
+        28: aload_2
+        29: invokevirtual #139                // Method net/i2p/data/DatabaseEntry.isLeaseSet:()Z
+        32: ifeq          38
+        35: iinc          1, 1
+        38: aload_3
+        39: invokeinterface #142,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+        44: ifne          18
+        47: iload_1
+        48: ireturn
+
+  public boolean put(net.i2p.data.Hash, net.i2p.data.DatabaseEntry, boolean);
+    Code:
+         0: new           #107                // class java/lang/UnsupportedOperationException
+         3: dup
+         4: invokespecial #109                // Method java/lang/UnsupportedOperationException."<init>":()V
+         7: athrow
+
+  public boolean put(net.i2p.data.Hash, net.i2p.data.DatabaseEntry);
+    Code:
+         0: aload_2
+         1: ifnonnull     6
+         4: iconst_0
+         5: ireturn
+         6: aload_0
+         7: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+        10: bipush        10
+        12: invokevirtual #50                 // Method net/i2p/util/Log.shouldLog:(I)Z
+        15: ifeq          41
+        18: aload_0
+        19: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+        22: new           #153                // class java/lang/StringBuilder
+        25: dup
+        26: ldc           #155                // String Storing key
+        28: invokespecial #157                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        31: aload_1
+        32: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+        35: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        38: invokevirtual #167                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+        41: aload_0
+        42: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+        45: aload_1
+        46: aload_2
+        47: invokevirtual #170                // Method java/util/concurrent/ConcurrentHashMap.putIfAbsent:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+        50: checkcast     #118                // class net/i2p/data/DatabaseEntry
+        53: astore_3
+        54: iconst_0
+        55: istore        4
+        57: aload_2
+        58: invokevirtual #174                // Method net/i2p/data/DatabaseEntry.getType:()I
+        61: istore        5
+        63: iload         5
+        65: ifne          388
+        68: aload_2
+        69: checkcast     #177                // class net/i2p/data/router/RouterInfo
+        72: astore        6
+        74: aload_3
+        75: ifnull        327
+        78: aload_3
+        79: checkcast     #177                // class net/i2p/data/router/RouterInfo
+        82: astore        7
+        84: aload         6
+        86: invokevirtual #179                // Method net/i2p/data/router/RouterInfo.getPublished:()J
+        89: aload         7
+        91: invokevirtual #179                // Method net/i2p/data/router/RouterInfo.getPublished:()J
+        94: lcmp
+        95: ifge          181
+        98: aload_0
+        99: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       102: bipush        20
+       104: invokevirtual #50                 // Method net/i2p/util/Log.shouldLog:(I)Z
+       107: ifeq          855
+       110: aload_0
+       111: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       114: new           #153                // class java/lang/StringBuilder
+       117: dup
+       118: ldc           #183                // String Almost clobbered an old router!
+       120: invokespecial #157                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       123: aload_1
+       124: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       127: ldc           #185                // String : [old published on
+       129: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       132: new           #190                // class java/util/Date
+       135: dup
+       136: aload         7
+       138: invokevirtual #179                // Method net/i2p/data/router/RouterInfo.getPublished:()J
+       141: invokespecial #192                // Method java/util/Date."<init>":(J)V
+       144: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       147: ldc           #195                // String  new on
+       149: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       152: new           #190                // class java/util/Date
+       155: dup
+       156: aload         6
+       158: invokevirtual #179                // Method net/i2p/data/router/RouterInfo.getPublished:()J
+       161: invokespecial #192                // Method java/util/Date."<init>":(J)V
+       164: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       167: bipush        93
+       169: invokevirtual #197                // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+       172: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       175: invokevirtual #56                 // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       178: goto          855
+       181: aload         6
+       183: invokevirtual #179                // Method net/i2p/data/router/RouterInfo.getPublished:()J
+       186: aload         7
+       188: invokevirtual #179                // Method net/i2p/data/router/RouterInfo.getPublished:()J
+       191: lcmp
+       192: ifne          231
+       195: aload_0
+       196: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       199: invokevirtual #200                // Method net/i2p/util/Log.shouldDebug:()Z
+       202: ifeq          855
+       205: aload_0
+       206: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       209: new           #153                // class java/lang/StringBuilder
+       212: dup
+       213: ldc           #203                // String Duplicate
+       215: invokespecial #157                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       218: aload_1
+       219: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       222: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       225: invokevirtual #167                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       228: goto          855
+       231: aload_0
+       232: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       235: bipush        20
+       237: invokevirtual #50                 // Method net/i2p/util/Log.shouldLog:(I)Z
+       240: ifeq          311
+       243: aload_0
+       244: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       247: new           #153                // class java/lang/StringBuilder
+       250: dup
+       251: ldc           #205                // String Updated the old router for
+       253: invokespecial #157                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       256: aload_1
+       257: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       260: ldc           #185                // String : [old published on
+       262: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       265: new           #190                // class java/util/Date
+       268: dup
+       269: aload         7
+       271: invokevirtual #179                // Method net/i2p/data/router/RouterInfo.getPublished:()J
+       274: invokespecial #192                // Method java/util/Date."<init>":(J)V
+       277: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       280: ldc           #195                // String  new on
+       282: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       285: new           #190                // class java/util/Date
+       288: dup
+       289: aload         6
+       291: invokevirtual #179                // Method net/i2p/data/router/RouterInfo.getPublished:()J
+       294: invokespecial #192                // Method java/util/Date."<init>":(J)V
+       297: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       300: bipush        93
+       302: invokevirtual #197                // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+       305: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       308: invokevirtual #56                 // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       311: aload_0
+       312: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+       315: aload_1
+       316: aload_2
+       317: invokevirtual #207                // Method java/util/concurrent/ConcurrentHashMap.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+       320: pop
+       321: iconst_1
+       322: istore        4
+       324: goto          855
+       327: aload_0
+       328: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       331: bipush        20
+       333: invokevirtual #50                 // Method net/i2p/util/Log.shouldLog:(I)Z
+       336: ifeq          382
+       339: aload_0
+       340: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       343: new           #153                // class java/lang/StringBuilder
+       346: dup
+       347: ldc           #209                // String New router for
+       349: invokespecial #157                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       352: aload_1
+       353: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       356: ldc           #211                // String : published on
+       358: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       361: new           #190                // class java/util/Date
+       364: dup
+       365: aload         6
+       367: invokevirtual #179                // Method net/i2p/data/router/RouterInfo.getPublished:()J
+       370: invokespecial #192                // Method java/util/Date."<init>":(J)V
+       373: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       376: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       379: invokevirtual #56                 // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       382: iconst_1
+       383: istore        4
+       385: goto          855
+       388: iload         5
+       390: invokestatic  #213                // Method net/i2p/data/DatabaseEntry.isLeaseSet:(I)Z
+       393: ifeq          855
+       396: aload_2
+       397: checkcast     #215                // class net/i2p/data/LeaseSet
+       400: astore        6
+       402: aload_3
+       403: ifnull        745
+       406: aload_3
+       407: checkcast     #215                // class net/i2p/data/LeaseSet
+       410: astore        7
+       412: iload         5
+       414: iconst_1
+       415: if_icmpeq     458
+       418: aload         7
+       420: invokevirtual #217                // Method net/i2p/data/LeaseSet.getType:()I
+       423: iconst_1
+       424: if_icmpeq     458
+       427: aload         6
+       429: checkcast     #218                // class net/i2p/data/LeaseSet2
+       432: astore        12
+       434: aload         7
+       436: checkcast     #218                // class net/i2p/data/LeaseSet2
+       439: astore        13
+       441: aload         13
+       443: invokevirtual #220                // Method net/i2p/data/LeaseSet2.getPublished:()J
+       446: lstore        8
+       448: aload         12
+       450: invokevirtual #220                // Method net/i2p/data/LeaseSet2.getPublished:()J
+       453: lstore        10
+       455: goto          472
+       458: aload         7
+       460: invokevirtual #221                // Method net/i2p/data/LeaseSet.getEarliestLeaseDate:()J
+       463: lstore        8
+       465: aload         6
+       467: invokevirtual #221                // Method net/i2p/data/LeaseSet.getEarliestLeaseDate:()J
+       470: lstore        10
+       472: lload         10
+       474: lload         8
+       476: lcmp
+       477: ifge          557
+       480: aload_0
+       481: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       484: bipush        20
+       486: invokevirtual #50                 // Method net/i2p/util/Log.shouldLog:(I)Z
+       489: ifeq          855
+       492: aload_0
+       493: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       496: new           #153                // class java/lang/StringBuilder
+       499: dup
+       500: ldc           #224                // String Almost clobbered an old leaseSet!
+       502: invokespecial #157                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       505: aload_1
+       506: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       509: ldc           #226                // String : [old
+       511: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       514: new           #190                // class java/util/Date
+       517: dup
+       518: lload         8
+       520: invokespecial #192                // Method java/util/Date."<init>":(J)V
+       523: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       526: ldc           #228                // String  new
+       528: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       531: new           #190                // class java/util/Date
+       534: dup
+       535: lload         10
+       537: invokespecial #192                // Method java/util/Date."<init>":(J)V
+       540: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       543: bipush        93
+       545: invokevirtual #197                // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+       548: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       551: invokevirtual #56                 // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       554: goto          855
+       557: lload         10
+       559: lload         8
+       561: lcmp
+       562: ifne          603
+       565: aload_0
+       566: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       569: bipush        20
+       571: invokevirtual #50                 // Method net/i2p/util/Log.shouldLog:(I)Z
+       574: ifeq          855
+       577: aload_0
+       578: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       581: new           #153                // class java/lang/StringBuilder
+       584: dup
+       585: ldc           #203                // String Duplicate
+       587: invokespecial #157                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       590: aload_1
+       591: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       594: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       597: invokevirtual #56                 // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       600: goto          855
+       603: aload_0
+       604: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       607: bipush        20
+       609: invokevirtual #50                 // Method net/i2p/util/Log.shouldLog:(I)Z
+       612: ifeq          729
+       615: aload_0
+       616: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       619: new           #153                // class java/lang/StringBuilder
+       622: dup
+       623: ldc           #230                // String Updated old leaseSet
+       625: invokespecial #157                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       628: aload_1
+       629: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       632: ldc           #226                // String : [old
+       634: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       637: new           #190                // class java/util/Date
+       640: dup
+       641: lload         8
+       643: invokespecial #192                // Method java/util/Date."<init>":(J)V
+       646: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       649: ldc           #228                // String  new
+       651: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       654: new           #190                // class java/util/Date
+       657: dup
+       658: lload         10
+       660: invokespecial #192                // Method java/util/Date."<init>":(J)V
+       663: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       666: bipush        93
+       668: invokevirtual #197                // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+       671: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       674: invokevirtual #56                 // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       677: aload_0
+       678: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       681: bipush        10
+       683: invokevirtual #50                 // Method net/i2p/util/Log.shouldLog:(I)Z
+       686: ifeq          729
+       689: aload_0
+       690: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       693: new           #153                // class java/lang/StringBuilder
+       696: dup
+       697: ldc           #232                // String RAP?
+       699: invokespecial #157                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       702: aload         6
+       704: invokevirtual #234                // Method net/i2p/data/LeaseSet.getReceivedAsPublished:()Z
+       707: invokevirtual #237                // Method java/lang/StringBuilder.append:(Z)Ljava/lang/StringBuilder;
+       710: ldc           #240                // String  RAR?
+       712: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       715: aload         6
+       717: invokevirtual #242                // Method net/i2p/data/LeaseSet.getReceivedAsReply:()Z
+       720: invokevirtual #237                // Method java/lang/StringBuilder.append:(Z)Ljava/lang/StringBuilder;
+       723: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       726: invokevirtual #167                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       729: aload_0
+       730: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+       733: aload_1
+       734: aload_2
+       735: invokevirtual #207                // Method java/util/concurrent/ConcurrentHashMap.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+       738: pop
+       739: iconst_1
+       740: istore        4
+       742: goto          855
+       745: aload_0
+       746: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       749: bipush        20
+       751: invokevirtual #50                 // Method net/i2p/util/Log.shouldLog:(I)Z
+       754: ifeq          852
+       757: aload_0
+       758: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       761: new           #153                // class java/lang/StringBuilder
+       764: dup
+       765: ldc           #245                // String New leaseset for
+       767: invokespecial #157                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       770: aload_1
+       771: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       774: ldc           #247                // String : expires
+       776: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       779: new           #190                // class java/util/Date
+       782: dup
+       783: aload         6
+       785: invokevirtual #221                // Method net/i2p/data/LeaseSet.getEarliestLeaseDate:()J
+       788: invokespecial #192                // Method java/util/Date."<init>":(J)V
+       791: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+       794: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       797: invokevirtual #56                 // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+       800: aload_0
+       801: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       804: bipush        10
+       806: invokevirtual #50                 // Method net/i2p/util/Log.shouldLog:(I)Z
+       809: ifeq          852
+       812: aload_0
+       813: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+       816: new           #153                // class java/lang/StringBuilder
+       819: dup
+       820: ldc           #232                // String RAP?
+       822: invokespecial #157                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       825: aload         6
+       827: invokevirtual #234                // Method net/i2p/data/LeaseSet.getReceivedAsPublished:()Z
+       830: invokevirtual #237                // Method java/lang/StringBuilder.append:(Z)Ljava/lang/StringBuilder;
+       833: ldc           #240                // String  RAR?
+       835: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       838: aload         6
+       840: invokevirtual #242                // Method net/i2p/data/LeaseSet.getReceivedAsReply:()Z
+       843: invokevirtual #237                // Method java/lang/StringBuilder.append:(Z)Ljava/lang/StringBuilder;
+       846: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       849: invokevirtual #167                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+       852: iconst_1
+       853: istore        4
+       855: iload         4
+       857: ireturn
+
+  public boolean forcePut(net.i2p.data.Hash, net.i2p.data.DatabaseEntry);
+    Code:
+         0: aload_0
+         1: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+         4: aload_1
+         5: aload_2
+         6: invokevirtual #207                // Method java/util/concurrent/ConcurrentHashMap.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+         9: pop
+        10: iconst_1
+        11: ireturn
+
+  public java.lang.String toString();
+    Code:
+         0: new           #153                // class java/lang/StringBuilder
+         3: dup
+         4: invokespecial #267                // Method java/lang/StringBuilder."<init>":()V
+         7: astore_1
+         8: aload_1
+         9: ldc_w         #268                // String Transient DataStore:
+        12: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        15: aload_0
+        16: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+        19: invokevirtual #75                 // Method java/util/concurrent/ConcurrentHashMap.size:()I
+        22: invokevirtual #270                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+        25: ldc_w         #273                // String \nKeys:
+        28: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        31: pop
+        32: aload_0
+        33: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+        36: invokevirtual #102                // Method java/util/concurrent/ConcurrentHashMap.entrySet:()Ljava/util/Set;
+        39: invokeinterface #275,  1          // InterfaceMethod java/util/Set.iterator:()Ljava/util/Iterator;
+        44: astore_3
+        45: goto          110
+        48: aload_3
+        49: invokeinterface #133,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        54: checkcast     #278                // class java/util/Map$Entry
+        57: astore_2
+        58: aload_2
+        59: invokeinterface #280,  1          // InterfaceMethod java/util/Map$Entry.getKey:()Ljava/lang/Object;
+        64: checkcast     #264                // class net/i2p/data/Hash
+        67: astore        4
+        69: aload_2
+        70: invokeinterface #283,  1          // InterfaceMethod java/util/Map$Entry.getValue:()Ljava/lang/Object;
+        75: checkcast     #118                // class net/i2p/data/DatabaseEntry
+        78: astore        5
+        80: aload_1
+        81: ldc_w         #286                // String \n\t*Key:
+        84: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        87: aload         4
+        89: invokevirtual #288                // Method net/i2p/data/Hash.toString:()Ljava/lang/String;
+        92: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        95: ldc_w         #289                // String \n\tContent:
+        98: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       101: aload         5
+       103: invokevirtual #291                // Method java/lang/Object.toString:()Ljava/lang/String;
+       106: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       109: pop
+       110: aload_3
+       111: invokeinterface #142,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+       116: ifne          48
+       119: aload_1
+       120: ldc_w         #292                // String \n
+       123: invokevirtual #187                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       126: pop
+       127: aload_1
+       128: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       131: areturn
+
+  public net.i2p.data.DatabaseEntry remove(net.i2p.data.Hash, boolean);
+    Code:
+         0: new           #107                // class java/lang/UnsupportedOperationException
+         3: dup
+         4: invokespecial #109                // Method java/lang/UnsupportedOperationException."<init>":()V
+         7: athrow
+
+  public net.i2p.data.DatabaseEntry remove(net.i2p.data.Hash);
+    Code:
+         0: aload_0
+         1: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+         4: bipush        10
+         6: invokevirtual #50                 // Method net/i2p/util/Log.shouldLog:(I)Z
+         9: ifeq          36
+        12: aload_0
+        13: getfield      #39                 // Field _log:Lnet/i2p/util/Log;
+        16: new           #153                // class java/lang/StringBuilder
+        19: dup
+        20: ldc_w         #302                // String Removing key
+        23: invokespecial #157                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        26: aload_1
+        27: invokevirtual #159                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+        30: invokevirtual #163                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        33: invokevirtual #167                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+        36: aload_0
+        37: getfield      #46                 // Field _data:Ljava/util/concurrent/ConcurrentHashMap;
+        40: aload_1
+        41: invokevirtual #304                // Method java/util/concurrent/ConcurrentHashMap.remove:(Ljava/lang/Object;)Ljava/lang/Object;
+        44: checkcast     #118                // class net/i2p/data/DatabaseEntry
+        47: areturn
+}

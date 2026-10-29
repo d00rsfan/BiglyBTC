@@ -1,0 +1,431 @@
+Compiled from "ClientManagerFacadeImpl.java"
+public class net.i2p.router.client.ClientManagerFacadeImpl extends net.i2p.router.ClientManagerFacade implements net.i2p.internal.InternalClientManager {
+  private final net.i2p.util.Log _log;
+
+  private net.i2p.router.client.ClientManager _manager;
+
+  private final net.i2p.router.RouterContext _context;
+
+  public static final java.lang.String PROP_CLIENT_PORT = "i2cp.port";
+
+  public static final int DEFAULT_PORT = 7654;
+
+  public static final java.lang.String PROP_CLIENT_HOST = "i2cp.hostname";
+
+  public static final java.lang.String DEFAULT_HOST = "127.0.0.1";
+
+  private static final long MAX_TIME_TO_REBUILD = 600000l;
+
+  public net.i2p.router.client.ClientManagerFacadeImpl(net.i2p.router.RouterContext);
+    Code:
+         0: aload_0
+         1: invokespecial #36                 // Method net/i2p/router/ClientManagerFacade."<init>":()V
+         4: aload_0
+         5: aload_1
+         6: putfield      #39                 // Field _context:Lnet/i2p/router/RouterContext;
+         9: aload_0
+        10: aload_0
+        11: getfield      #39                 // Field _context:Lnet/i2p/router/RouterContext;
+        14: invokevirtual #41                 // Method net/i2p/router/RouterContext.logManager:()Lnet/i2p/util/LogManager;
+        17: ldc           #1                  // class net/i2p/router/client/ClientManagerFacadeImpl
+        19: invokevirtual #47                 // Method net/i2p/util/LogManager.getLog:(Ljava/lang/Class;)Lnet/i2p/util/Log;
+        22: putfield      #53                 // Field _log:Lnet/i2p/util/Log;
+        25: return
+
+  public synchronized void startup();
+    Code:
+         0: aload_0
+         1: getfield      #53                 // Field _log:Lnet/i2p/util/Log;
+         4: ldc           #61                 // String Starting up the client subsystem
+         6: invokevirtual #63                 // Method net/i2p/util/Log.info:(Ljava/lang/String;)V
+         9: aload_0
+        10: getfield      #39                 // Field _context:Lnet/i2p/router/RouterContext;
+        13: ldc           #16                 // String i2cp.port
+        15: sipush        7654
+        18: invokevirtual #69                 // Method net/i2p/router/RouterContext.getProperty:(Ljava/lang/String;I)I
+        21: istore_1
+        22: aload_0
+        23: new           #73                 // class net/i2p/router/client/ClientManager
+        26: dup
+        27: aload_0
+        28: getfield      #39                 // Field _context:Lnet/i2p/router/RouterContext;
+        31: iload_1
+        32: invokespecial #75                 // Method net/i2p/router/client/ClientManager."<init>":(Lnet/i2p/router/RouterContext;I)V
+        35: putfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        38: aload_0
+        39: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        42: invokevirtual #80                 // Method net/i2p/router/client/ClientManager.start:()V
+        45: return
+
+  public synchronized void shutdown();
+    Code:
+         0: aload_0
+         1: ldc           #85                 // String Router shutdown
+         3: invokevirtual #87                 // Method shutdown:(Ljava/lang/String;)V
+         6: return
+
+  public synchronized void shutdown(java.lang.String);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        15
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: invokevirtual #89                 // Method net/i2p/router/client/ClientManager.shutdown:(Ljava/lang/String;)V
+        15: return
+
+  public synchronized void restart();
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        17
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: invokevirtual #93                 // Method net/i2p/router/client/ClientManager.restart:()V
+        14: goto          21
+        17: aload_0
+        18: invokevirtual #95                 // Method startup:()V
+        21: return
+
+  public boolean isAlive();
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        19
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: invokevirtual #99                 // Method net/i2p/router/client/ClientManager.isAlive:()Z
+        14: ifeq          19
+        17: iconst_1
+        18: ireturn
+        19: iconst_0
+        20: ireturn
+
+  public boolean verifyClientLiveliness();
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnonnull     9
+         7: iconst_1
+         8: ireturn
+         9: iconst_1
+        10: istore_1
+        11: aload_0
+        12: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        15: invokevirtual #102                // Method net/i2p/router/client/ClientManager.getRunnerDestinations:()Ljava/util/Set;
+        18: invokeinterface #106,  1          // InterfaceMethod java/util/Set.iterator:()Ljava/util/Iterator;
+        23: astore_3
+        24: goto          167
+        27: aload_3
+        28: invokeinterface #112,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        33: checkcast     #118                // class net/i2p/data/Destination
+        36: astore_2
+        37: aload_0
+        38: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        41: aload_2
+        42: invokevirtual #120                // Method net/i2p/router/client/ClientManager.getRunner:(Lnet/i2p/data/Destination;)Lnet/i2p/router/client/ClientConnectionRunner;
+        45: astore        4
+        47: aload         4
+        49: ifnull        167
+        52: aload         4
+        54: invokevirtual #124                // Method net/i2p/router/client/ClientConnectionRunner.getIsDead:()Z
+        57: ifeq          63
+        60: goto          167
+        63: aload         4
+        65: aload_2
+        66: invokevirtual #129                // Method net/i2p/data/Destination.calculateHash:()Lnet/i2p/data/Hash;
+        69: invokevirtual #133                // Method net/i2p/router/client/ClientConnectionRunner.getLeaseSet:(Lnet/i2p/data/Hash;)Lnet/i2p/data/LeaseSet;
+        72: astore        5
+        74: aload         5
+        76: ifnonnull     82
+        79: goto          167
+        82: aload_0
+        83: getfield      #39                 // Field _context:Lnet/i2p/router/RouterContext;
+        86: invokevirtual #137                // Method net/i2p/router/RouterContext.clock:()Lnet/i2p/util/Clock;
+        89: invokevirtual #141                // Method net/i2p/util/Clock.now:()J
+        92: aload         5
+        94: invokevirtual #147                // Method net/i2p/data/LeaseSet.getEarliestLeaseDate:()J
+        97: lsub
+        98: lstore        6
+       100: lload         6
+       102: ldc2_w        #29                 // long 600000l
+       105: lcmp
+       106: ifle          167
+       109: aload_0
+       110: getfield      #53                 // Field _log:Lnet/i2p/util/Log;
+       113: bipush        40
+       115: invokevirtual #152                // Method net/i2p/util/Log.shouldLog:(I)Z
+       118: ifeq          165
+       121: aload_0
+       122: getfield      #53                 // Field _log:Lnet/i2p/util/Log;
+       125: new           #156                // class java/lang/StringBuilder
+       128: dup
+       129: ldc           #158                // String Client
+       131: invokespecial #160                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+       134: aload_2
+       135: invokevirtual #162                // Method net/i2p/data/Destination.toBase32:()Ljava/lang/String;
+       138: invokevirtual #166                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       141: ldc           #170                // String  has a leaseSet that expired
+       143: invokevirtual #166                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       146: lload         6
+       148: invokestatic  #172                // Method net/i2p/data/DataHelper.formatDuration:(J)Ljava/lang/String;
+       151: invokevirtual #166                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       154: ldc           #178                // String  ago
+       156: invokevirtual #166                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       159: invokevirtual #180                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       162: invokevirtual #183                // Method net/i2p/util/Log.error:(Ljava/lang/String;)V
+       165: iconst_0
+       166: istore_1
+       167: aload_3
+       168: invokeinterface #186,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+       173: ifne          27
+       176: iload_1
+       177: ireturn
+
+  public void requestLeaseSet(net.i2p.data.Destination, net.i2p.data.LeaseSet, long, net.i2p.router.Job, net.i2p.router.Job);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        24
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: aload_2
+        13: lload_3
+        14: aload         5
+        16: aload         6
+        18: invokevirtual #200                // Method net/i2p/router/client/ClientManager.requestLeaseSet:(Lnet/i2p/data/Destination;Lnet/i2p/data/LeaseSet;JLnet/i2p/router/Job;Lnet/i2p/router/Job;)V
+        21: goto          33
+        24: aload_0
+        25: getfield      #53                 // Field _log:Lnet/i2p/util/Log;
+        28: ldc           #202                // String Null manager on requestLeaseSet!
+        30: invokevirtual #183                // Method net/i2p/util/Log.error:(Ljava/lang/String;)V
+        33: return
+
+  public void requestLeaseSet(net.i2p.data.Hash, net.i2p.data.LeaseSet);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        16
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: aload_2
+        13: invokevirtual #210                // Method net/i2p/router/client/ClientManager.requestLeaseSet:(Lnet/i2p/data/Hash;Lnet/i2p/data/LeaseSet;)V
+        16: return
+
+  public void reportAbuse(net.i2p.data.Destination, java.lang.String, int);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        20
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: aload_2
+        13: iload_3
+        14: invokevirtual #215                // Method net/i2p/router/client/ClientManager.reportAbuse:(Lnet/i2p/data/Destination;Ljava/lang/String;I)V
+        17: goto          29
+        20: aload_0
+        21: getfield      #53                 // Field _log:Lnet/i2p/util/Log;
+        24: ldc           #217                // String Null manager on reportAbuse!
+        26: invokevirtual #183                // Method net/i2p/util/Log.error:(Ljava/lang/String;)V
+        29: return
+
+  public boolean isLocal(net.i2p.data.Destination);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        16
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: invokevirtual #223                // Method net/i2p/router/client/ClientManager.isLocal:(Lnet/i2p/data/Destination;)Z
+        15: ireturn
+        16: aload_0
+        17: getfield      #53                 // Field _log:Lnet/i2p/util/Log;
+        20: ldc           #225                // String Null manager on isLocal(dest)!
+        22: invokevirtual #227                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+        25: iconst_0
+        26: ireturn
+
+  public boolean isLocal(net.i2p.data.Hash);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        16
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: invokevirtual #231                // Method net/i2p/router/client/ClientManager.isLocal:(Lnet/i2p/data/Hash;)Z
+        15: ireturn
+        16: aload_0
+        17: getfield      #53                 // Field _log:Lnet/i2p/util/Log;
+        20: ldc           #233                // String Null manager on isLocal(hash)!
+        22: invokevirtual #227                // Method net/i2p/util/Log.debug:(Ljava/lang/String;)V
+        25: iconst_0
+        26: ireturn
+
+  public boolean shouldPublishLeaseSet(net.i2p.data.Hash);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: aload_1
+         5: invokevirtual #237                // Method net/i2p/router/client/ClientManager.shouldPublishLeaseSet:(Lnet/i2p/data/Hash;)Z
+         8: ireturn
+
+  public void messageDeliveryStatusUpdate(net.i2p.data.Destination, net.i2p.data.i2cp.MessageId, long, int);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        22
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: aload_2
+        13: lload_3
+        14: iload         5
+        16: invokevirtual #242                // Method net/i2p/router/client/ClientManager.messageDeliveryStatusUpdate:(Lnet/i2p/data/Destination;Lnet/i2p/data/i2cp/MessageId;JI)V
+        19: goto          31
+        22: aload_0
+        23: getfield      #53                 // Field _log:Lnet/i2p/util/Log;
+        26: ldc           #244                // String Null manager on messageDeliveryStatusUpdate!
+        28: invokevirtual #183                // Method net/i2p/util/Log.error:(Ljava/lang/String;)V
+        31: return
+
+  public void messageReceived(net.i2p.router.ClientMessage);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        18
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: invokevirtual #253                // Method net/i2p/router/client/ClientManager.messageReceived:(Lnet/i2p/router/ClientMessage;)V
+        15: goto          27
+        18: aload_0
+        19: getfield      #53                 // Field _log:Lnet/i2p/util/Log;
+        22: ldc           #255                // String Null manager on messageReceived!
+        24: invokevirtual #183                // Method net/i2p/util/Log.error:(Ljava/lang/String;)V
+        27: return
+
+  public net.i2p.data.i2cp.SessionConfig getClientSessionConfig(net.i2p.data.Destination);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        16
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: invokevirtual #260                // Method net/i2p/router/client/ClientManager.getClientSessionConfig:(Lnet/i2p/data/Destination;)Lnet/i2p/data/i2cp/SessionConfig;
+        15: areturn
+        16: aload_0
+        17: getfield      #53                 // Field _log:Lnet/i2p/util/Log;
+        20: ldc_w         #262                // String Null manager on getClientSessionConfig!
+        23: invokevirtual #183                // Method net/i2p/util/Log.error:(Ljava/lang/String;)V
+        26: aconst_null
+        27: areturn
+
+  public net.i2p.crypto.SessionKeyManager getClientSessionKeyManager(net.i2p.data.Hash);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        16
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: invokevirtual #266                // Method net/i2p/router/client/ClientManager.getClientSessionKeyManager:(Lnet/i2p/data/Hash;)Lnet/i2p/crypto/SessionKeyManager;
+        15: areturn
+        16: aload_0
+        17: getfield      #53                 // Field _log:Lnet/i2p/util/Log;
+        20: ldc_w         #268                // String Null manager on getClientSessionKeyManager!
+        23: invokevirtual #183                // Method net/i2p/util/Log.error:(Ljava/lang/String;)V
+        26: aconst_null
+        27: areturn
+
+  public void renderStatusHTML(java.io.Writer) throws java.io.IOException;
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        15
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: invokevirtual #278                // Method net/i2p/router/client/ClientManager.renderStatusHTML:(Ljava/io/Writer;)V
+        15: return
+
+  public java.util.Set<net.i2p.data.Destination> listClients();
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        15
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: invokevirtual #285                // Method net/i2p/router/client/ClientManager.listClients:()Ljava/util/Set;
+        14: areturn
+        15: invokestatic  #287                // Method java/util/Collections.emptySet:()Ljava/util/Set;
+        18: areturn
+
+  public net.i2p.internal.I2CPMessageQueue connect() throws net.i2p.client.I2PSessionException;
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        15
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: invokevirtual #296                // Method net/i2p/router/client/ClientManager.internalConnect:()Lnet/i2p/internal/I2CPMessageQueue;
+        14: areturn
+        15: new           #294                // class net/i2p/client/I2PSessionException
+        18: dup
+        19: ldc_w         #299                // String No manager yet
+        22: invokespecial #301                // Method net/i2p/client/I2PSessionException."<init>":(Ljava/lang/String;)V
+        25: athrow
+
+  public void registerMetaDest(net.i2p.data.Destination) throws net.i2p.client.I2PSessionException;
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        15
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: invokevirtual #304                // Method net/i2p/router/client/ClientManager.registerMetaDest:(Lnet/i2p/data/Destination;)V
+        15: return
+
+  public void unregisterMetaDest(net.i2p.data.Destination);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        15
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: invokevirtual #307                // Method net/i2p/router/client/ClientManager.unregisterMetaDest:(Lnet/i2p/data/Destination;)V
+        15: return
+
+  public net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseFacade getClientFloodfillNetworkDatabaseFacade(net.i2p.data.Hash);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        16
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: aload_1
+        12: invokevirtual #311                // Method net/i2p/router/client/ClientManager.getClientFloodfillNetworkDatabaseFacade:(Lnet/i2p/data/Hash;)Lnet/i2p/router/networkdb/kademlia/FloodfillNetworkDatabaseFacade;
+        15: areturn
+        16: aconst_null
+        17: areturn
+
+  public java.util.Set<net.i2p.data.Hash> getPrimaryHashes();
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+         4: ifnull        15
+         7: aload_0
+         8: getfield      #78                 // Field _manager:Lnet/i2p/router/client/ClientManager;
+        11: invokevirtual #315                // Method net/i2p/router/client/ClientManager.getPrimaryHashes:()Ljava/util/Set;
+        14: areturn
+        15: invokestatic  #287                // Method java/util/Collections.emptySet:()Ljava/util/Set;
+        18: areturn
+}
