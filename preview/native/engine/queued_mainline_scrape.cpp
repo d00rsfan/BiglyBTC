@@ -138,7 +138,8 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     std::span<const ManagedMainlineScrapeObservation> observations,bool configuredCandidates,
     std::vector<std::string>* authenticatedInventoryHashes,SavedTrackerPurpose purpose){
   try{
-    const bool regular=purpose==SavedTrackerPurpose::RegularHttp;
+    if(purpose!=SavedTrackerPurpose::MainlineBackup&&purpose!=SavedTrackerPurpose::RegularHttp&&purpose!=SavedTrackerPurpose::RegularUdp){return error(Code::InvalidFormat,"Invalid saved tracker purpose");}
+    const bool regular=purpose!=SavedTrackerPurpose::MainlineBackup;
     if(observations.size()>256){return error(Code::Unsupported,"Active Mainline scrape target bound");}
     std::map<std::string,const ManagedMainlineScrapeObservation*> active;
     std::set<std::uint64_t> admissions;
@@ -231,7 +232,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
         const auto params=files.parameters();if(!params.ti){continue;}
         if(regular){const auto url=detail::singleEffectiveTracker(params);
           if(!configured||configured->size()!=1||!url||*url!=configured->front().url
-              ||(!url->starts_with("http://")&&!url->starts_with("https://"))){continue;}}
+              ||(purpose==SavedTrackerPurpose::RegularUdp?!url->starts_with("udp://"):(!url->starts_with("http://")&&!url->starts_with("https://")))){continue;}}
         const auto subject=storage::originalTorrentInfoSubject(doc);if(!subject){return std::unexpected(subject.error());}
         const auto section=params.ti->info_section();
         if(captured.hash!=row.saved.hash||!captured.persistent
@@ -273,6 +274,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
         }
       }
       if(observation){append(scope,regular?"active-regular-http":"active-mldht-scrape");append(scope,std::to_string(observation->admission));append(scope,mapping);}
+      if(purpose==SavedTrackerPurpose::RegularUdp){append(scope,"regular-udp-v1");}
       auto hashed=digest(scope);if(!hashed){return error(Code::Io,observation?"Cannot authenticate managed Mainline scope":"Cannot authenticate saved Mainline scope");}
       std::string responseKey;std::vector<SavedMainlineTracker> trackers;
       if(configured){

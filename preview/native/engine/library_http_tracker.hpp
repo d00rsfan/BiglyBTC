@@ -38,6 +38,8 @@ std::optional<QHostAddress> libraryHttpProxyTarget(const LibraryHttpRoute&,const
 // Exact BTAnnouncer count update + calcScrapeIntervalSecs(0,seeds). Uses the
 // same process-lifetime original scrape jitter as this HTTP transport.
 std::optional<std::int64_t> libraryHttpAnnounceScrapeDeadline(const core::QueueTrackerTerminal&);
+// Original successful scrape interval, shared by HTTP and the regular UDP owner.
+std::optional<std::int64_t> libraryTrackerScrapeDelay(std::int32_t seeds);
 namespace http_tracker_wire {
 std::optional<std::int64_t> announceDeadline(const core::QueueTrackerTerminal&,unsigned fuzzSeconds);
 struct Body {bool complete=false,unsupported=false;QByteArray bytes;bool failed=false;QByteArray location={};

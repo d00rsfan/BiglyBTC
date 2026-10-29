@@ -20,10 +20,14 @@ bool libraryHttpRegularMode()const noexcept {
   return network&&network->mode==NetworkMode::Normal&&network->httpTrackers
       &&(network->proxy.kind==NetworkProxyKind::None||(network->proxy.kind==NetworkProxyKind::Socks5&&network->proxy.trackers));
 }
+bool libraryUdpRegularMode()const noexcept {
+  return network&&network->mode==NetworkMode::Normal&&network->udpTrackers&&network->proxy.kind==NetworkProxyKind::None;
+}
+bool libraryRegularTrackerMode()const noexcept {return libraryHttpRegularMode()||libraryUdpRegularMode();}
 // Current normal admissions are borrowed for metadata authentication only.
 // Their actual ring is the sole LT terminal producer; no status sampling or
 // hidden handle is introduced by this regular HTTP consumer.
-std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularHttpTargets(std::vector<std::string>* inventory=nullptr){
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTrackerTargets(SavedTrackerPurpose purpose,std::vector<std::string>* inventory=nullptr){
   std::vector<ManagedMainlineScrapeObservation> active;
   for(const auto& [key,entry]:managed){(void)key;const auto& value=*entry;
     if(!sameMainlineProfileLease()||!value.token||!value.status.admission||value.token->number!=value.status.admission
@@ -35,7 +39,7 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularHttp
     const auto handle=managedByHandle.find(value.handle);if(handle==managedByHandle.end()||handle->second!=&value){continue;}
     active.push_back({&value.storage,value.status.admission,value.status.complete});
   }
-  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,inventory,SavedTrackerPurpose::RegularHttp);
+  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,inventory,purpose);
   if(!targets){return targets;}
   // The live Mainline path keeps its existing scope/producer. Only genuine
   // permission-excluded rows, or a policy with no Mainline service, enter this
@@ -44,10 +48,26 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularHttp
     auto owned=readCurrentMainlineScrapeTargets(*mainlineLease,active,true);if(!owned){return std::unexpected(owned.error());}
     std::erase_if(*targets,[&](const auto& target){return std::ranges::any_of(*owned,[&](const auto& item){return item.hash==target.hash&&item.admission==target.admission;});});
   }
+  return targets;
+}
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularHttpTargets(std::vector<std::string>* inventory=nullptr){
+  auto targets=regularTrackerTargets(SavedTrackerPurpose::RegularHttp,inventory);if(!targets){return targets;}
   // This transport owns HTTP(S), never silently tries a mixed UDP tier.
   std::erase_if(*targets,[](const auto& target){const auto http=[](const auto& url){return url.starts_with("http://")||url.starts_with("https://");};
     return !http(target.configuredTracker)||std::ranges::any_of(target.configuredTrackers,[&](const auto& item){return !http(item.url);});});
   return targets;
+}
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularUdpTargets(std::vector<std::string>* inventory=nullptr){
+  auto targets=regularTrackerTargets(SavedTrackerPurpose::RegularUdp,inventory);if(!targets){return targets;}
+  // Initial UDP regular slice owns one numeric URL, never mixed/UDP tiers.
+  std::erase_if(*targets,[](const auto& target){return !target.configuredTrackers.empty()||!target.configuredTracker.starts_with("udp://");});
+  return targets;
+}
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTrackerTargets(std::vector<std::string>* inventory=nullptr){
+  std::vector<SavedMainlineScrapeTarget> result;
+  if(libraryHttpRegularMode()){auto rows=regularHttpTargets(inventory);if(!rows){return rows;}result=std::move(*rows);}
+  if(libraryUdpRegularMode()){auto rows=regularUdpTargets(inventory);if(!rows){return rows;}result.insert(result.end(),std::make_move_iterator(rows->begin()),std::make_move_iterator(rows->end()));}
+  return result;
 }
 bool libraryHttpAdmissionCurrent(const SavedMainlineScrapeTarget& target)const noexcept{
   if(!target.admission){return libraryUdpUnadmitted(target.hash);}

@@ -97,7 +97,7 @@ void retireMainlinePorts() noexcept {
 }
 void silenceMainlinePorts() noexcept {
   mainlineStatus.admittedScrapeCandidates.clear();
-  cancelLibraryUdp();
+  if(const auto* request=libraryUdp.active();!request||!request->regularAuthority){cancelLibraryUdp();}
   // An optional discovery failure does not revoke separately authenticated
   // Public+Tracker HTTP authority. Whole-owner retirement still joins both.
   if(const auto* request=libraryHttp.active();!request||!request->regularAuthority){cancelLibraryHttp();libraryHttp.close();}
@@ -307,7 +307,7 @@ bool prepareLibraryTrackerTiers(SavedMainlineScrapeTarget& target,std::int64_t n
       return prepareLibraryHttp(member,now,pending,true,dispatch,regularAuthority);
     }
     if(regularAuthority){return false;}
-    if(!udpConfig){udpConfig=detail::libraryUdpConfiguration(*mainlineLease);}
+    if(!udpConfig){udpConfig=detail::libraryUdpConfiguration(*mainlineLease,&networkBinding->effective);}
     return *udpConfig&&prepareLibraryUdp(member,now,**udpConfig,pending,true,dispatch);
   };
   // Authenticate every transport/configuration without IO first. A later
@@ -407,7 +407,7 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrape
       }else if(target.configuredTracker.starts_with("http://")||target.configuredTracker.starts_with("https://")){
         if(!prepareLibraryHttp(target,now,pendingEligibility)){return true;}
       }else{
-        if(!udpConfiguration){udpConfiguration=detail::libraryUdpConfiguration(*mainlineLease);}
+        if(!udpConfiguration){udpConfiguration=detail::libraryUdpConfiguration(*mainlineLease,&networkBinding->effective);}
         if(!*udpConfiguration||!prepareLibraryUdp(target,now,**udpConfiguration,pendingEligibility)){return true;}
       }
     }
@@ -497,19 +497,20 @@ void advanceMainlineScrapes(Clock::time_point now) noexcept {
   }
 }
 
-// Saved and genuinely admitted regular HTTP scraping is independent of optional Mainline
+// Saved and genuinely admitted regular tracker scraping is independent of optional Mainline
 // service. It uses only this existing worker tick and the same per-URL response
 // reducer; no DHT, lookup, PORT, announce or hidden torrent can be started here.
 std::map<std::uint64_t,std::uint64_t> regularTrackerSequences;
-void advanceRegularHttpTrackers(Clock::time_point now)noexcept {
-  if(!libraryHttpRegularMode()){regularTrackerViews.clear();return;}
+void advanceRegularTrackers(Clock::time_point now)noexcept {
+  if(!libraryRegularTrackerMode()){regularTrackerViews.clear();return;}
   try{
-    advanceLibraryHttp(now);if(now<regularTrackerRefresh){return;}regularTrackerRefresh=now+10s;
-    if(!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){cancelLibraryHttp();regularTrackerViews.clear();return;}
+    advanceLibraryUdp(now);advanceLibraryHttp(now);if(now<regularTrackerRefresh){return;}regularTrackerRefresh=now+10s;
+    if(!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();return;}
     std::vector<std::string> inventory;
-    auto targets=regularHttpTargets(&inventory);
-    if(!targets){cancelLibraryHttp();regularTrackerViews.clear();return;}
+    auto targets=regularTrackerTargets(&inventory);
+    if(!targets){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();return;}
     if(const auto* request=libraryHttp.active();request&&!libraryHttpAuthorise(*request)){cancelLibraryHttp();}
+    if(const auto* request=libraryUdp.active();request&&!libraryUdpAuthorise(*request)){cancelLibraryUdp();}
     std::erase_if(trackerSelectionSeeds,[&](const auto& row){return std::ranges::find(inventory,row.first)==inventory.end();});
     std::erase_if(regularTrackerSequences,[&](const auto& row){return std::ranges::none_of(managed,[&](const auto& item){return item.second->status.admission==row.first;});});
     std::vector<LibraryTrackerResponse> next;
@@ -527,6 +528,9 @@ void advanceRegularHttpTrackers(Clock::time_point now)noexcept {
       bool pending=false;
       if(!target.configuredTrackers.empty()){
         if(!prepareLibraryTrackerTiers(target,std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count(),pending,true)){continue;}
+      }else if(target.configuredTracker.starts_with("udp://")){
+        auto configuration=detail::libraryUdpConfiguration(*mainlineLease,&networkBinding->effective);
+        if(!configuration||!prepareLibraryUdp(target,std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count(),*configuration,pending,true,true,true)){continue;}
       }else{
         if(!prepareLibraryHttp(target,std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count(),pending,true,true,true)){continue;}
       }
@@ -536,7 +540,7 @@ void advanceRegularHttpTrackers(Clock::time_point now)noexcept {
       if(content.type!=core::QueueOriginalScrapeType::Unknown&&content.content){next.push_back({target.hash,content,observed->second,target.admission});}
     }
     regularTrackerViews=std::move(next);
-  }catch(...){cancelLibraryHttp();regularTrackerViews.clear();}
+  }catch(...){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();}
 }
 
 static lt::sha1_hash discoveryHash(const core::TorrentHash& hash) {
@@ -631,7 +635,7 @@ bool discoverable(const Magnet& value) const {
 }
 void advanceMainline() noexcept {
   if(closingAdmission||poisoned||closed){return;}
-  advanceRegularHttpTrackers(Clock::now());
+  advanceRegularTrackers(Clock::now());
   if (!mainline) { return; }
   try {
     if(!checkMainlineBind()){return;}

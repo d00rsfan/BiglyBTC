@@ -276,6 +276,9 @@ std::optional<std::int64_t> http_tracker_wire::announceDeadline(const core::Queu
   if(delay<0&&value.observedMillis<INT64_MIN-delay){return INT64_MIN;}
   return value.observedMillis+delay; // Negative Java-int interval never shortens an existing deadline.
 }
+std::optional<std::int64_t> libraryTrackerScrapeDelay(std::int32_t seeds){
+  const auto fuzz=scrapeFuzz();return fuzz?std::optional{http_tracker_wire::interval(0,seeds,*fuzz)}:std::nullopt;
+}
 std::optional<std::int64_t> libraryHttpAnnounceScrapeDeadline(const core::QueueTrackerTerminal& value){
   const auto fuzz=scrapeFuzz();return fuzz?http_tracker_wire::announceDeadline(value,*fuzz):std::nullopt;
 }

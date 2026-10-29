@@ -9,6 +9,7 @@
 #include <array>
 #include <bit>
 #include <charconv>
+#include <chrono>
 #include <cerrno>
 #include <expected>
 #include <optional>
@@ -52,9 +53,9 @@ struct LibraryUdpRoute {
   libtorrent::udp::endpoint remote,local;
   bool operator==(const LibraryUdpRoute&)const=default;
 };
-inline std::expected<LibraryUdpRoute,storage::Error> libraryUdpRoute(const NetworkPolicy& p,std::string_view url){
+inline std::expected<LibraryUdpRoute,storage::Error> libraryUdpRoute(const NetworkPolicy& p,std::string_view url,bool regularAuthority=false){
   const auto unsupported=[](){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Standalone tracker scrape requires one numeric direct UDP route"});};
-  if(p.mode!=NetworkMode::Normal||!p.dht||!p.udpTrackers||p.proxy.kind!=NetworkProxyKind::None||!url.starts_with("udp://")||url.size()>2048){return unsupported();}
+  if(p.mode!=NetworkMode::Normal||(!regularAuthority&&!p.dht)||!p.udpTrackers||p.proxy.kind!=NetworkProxyKind::None||!url.starts_with("udp://")||url.size()>2048){return unsupported();}
   const auto end=url.find('/',6);if(end==url.npos||url.substr(end)!="/announce"){return unsupported();}
   const auto authority=url.substr(6,end-6);std::string_view host,port;
   if(authority.starts_with("[")){const auto close=authority.find(']');if(close==authority.npos||close+1>=authority.size()||authority[close+1]!=':'){return unsupported();}host=authority.substr(1,close-1);port=authority.substr(close+2);}
@@ -81,8 +82,8 @@ inline std::expected<LibraryUdpRoute,storage::Error> libraryUdpRoute(const Netwo
 
 class LibraryUdpTracker final {
 public:
-  struct Request {core::TorrentHash hash;std::string responseKey,scope,configuration;std::uint64_t nonce=0;};
-  struct Result {Request request;core::QueueTrackerTerminal terminal;};
+  struct Request {core::TorrentHash hash;std::string responseKey,scope,configuration;std::uint64_t nonce=0;bool regularAuthority=false;};
+  struct Result {Request request;core::QueueTrackerTerminal terminal;std::int64_t observedNanos=0;};
   static constexpr std::int64_t StageTimeoutMillis=30000; // Original DEFAULT_UDP_TIMEOUT, one retry-count1.
   LibraryUdpTracker()=default;LibraryUdpTracker(const LibraryUdpTracker&)=delete;LibraryUdpTracker& operator=(const LibraryUdpTracker&)=delete;
   ~LibraryUdpTracker()=default;
@@ -108,8 +109,11 @@ public:
     if(std::this_thread::get_id()!=worker_){return fail(storage::ErrorCode::Conflict,"Tracker worker changed");}
     if(!round_){return std::optional<Result>{};}if(now<round_->started||now>INT64_MAX-StageTimeoutMillis){cancel();return fail(storage::ErrorCode::Conflict,"Tracker monotonic clock changed");}
     const auto terminal=[&](bool success,std::int32_t seeds=0,std::int32_t peers=0,std::int32_t downloaded=0)->std::optional<Result>{
+      // Capture the actual consumed terminal before fresh profile authority IO;
+      // a later provider event during that IO must keep its true chronology.
+      const auto observed=std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
       if(!authorise(round_->request)){cancel();return {};}
-      return finish(now,wall,success,seeds,peers,downloaded);
+      return finish(now,wall,observed,success,seeds,peers,downloaded);
     };
     if(now>=round_->deadline){return terminal(false);}
     for(unsigned count=0;count<16&&round_;++count){std::array<char,1025> packet{};const auto got=::recv(round_->socket.fd,packet.data(),packet.size(),0);
@@ -131,11 +135,11 @@ private:
   struct Round {Request request;LibraryUdpRoute route;std::array<std::uint32_t,2> transactions;std::int64_t started,wall,deadline;Socket socket{};bool connecting=true,unknown=false;};
   const std::thread::id worker_=std::this_thread::get_id();std::optional<Round> round_;
   static std::unexpected<storage::Error> fail(storage::ErrorCode code,const char* text){return std::unexpected(storage::Error{code,text});}
-  std::optional<Result> finish(std::int64_t now,std::int64_t wall,bool success,std::int32_t seeds=0,std::int32_t peers=0,std::int32_t downloaded=0){
+  std::optional<Result> finish(std::int64_t now,std::int64_t wall,std::int64_t observed,bool success,std::int32_t seeds=0,std::int32_t peers=0,std::int32_t downloaded=0){
     core::QueueTrackerTerminal terminal;terminal.kind=success?core::QueueTrackerTerminalKind::Scrape:core::QueueTrackerTerminalKind::ScrapeFailed;
     terminal.complete=seeds;terminal.incomplete=peers;terminal.downloaded=downloaded;terminal.present=success?7u:0u;terminal.comparable=success&&!round_->unknown;terminal.definitiveFailure=!success&&!round_->unknown;
     terminal.observedMillis=now;terminal.observedWallMillis=wall;terminal.requestStartedWallMillis=round_->wall;
-    Result result{std::move(round_->request),terminal};cancel();return result;
+    Result result{std::move(round_->request),terminal,observed};cancel();return result;
   }
 };
 } // namespace biglybtc::engine::detail

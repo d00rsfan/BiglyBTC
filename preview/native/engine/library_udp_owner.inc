@@ -14,13 +14,14 @@ bool libraryUdpUnadmitted(const core::TorrentHash& hash)const {
 }
 bool libraryUdpAuthorise(const detail::LibraryUdpTracker::Request& request) noexcept {
   try{
-    if(!mainlineLease||!networkBinding||!network||network->mode!=NetworkMode::Normal||!network->dht||!network->udpTrackers||network->proxy.kind!=NetworkProxyKind::None||!networkBindingCurrent(*networkBinding)||mainlineScrapes.revoked(request.hash)||!libraryUdpUnadmitted(request.hash)){return false;}
-    auto fresh=readCurrentMainlineScrapeTargets(*mainlineLease,{},true);if(!fresh){return false;}
+    if(!mainlineLease||!networkBinding||!network||network->mode!=NetworkMode::Normal||!network->udpTrackers||network->proxy.kind!=NetworkProxyKind::None
+        ||(request.regularAuthority?!libraryUdpRegularMode():(!mainline||!network->dht))||!networkBindingCurrent(*networkBinding)||mainlineScrapes.revoked(request.hash)){return false;}
+    auto fresh=request.regularAuthority?regularUdpTargets():readCurrentMainlineScrapeTargets(*mainlineLease,{},true);if(!fresh){return false;}
     const auto row=std::ranges::find(*fresh,request.hash,&SavedMainlineScrapeTarget::hash);
     const auto target=row==fresh->end()?std::nullopt:selectConfiguredMainlineTracker(*row,request.responseKey);
-    if(!target||target->admission||target->scope!=request.scope){return false;}
-    auto route=detail::libraryUdpRoute(networkBinding->effective,target->configuredTracker);if(!route){return false;}
-    auto config=detail::libraryUdpConfiguration(*mainlineLease);if(!config){return false;}
+    if(!target||target->scope!=request.scope||(request.regularAuthority?!libraryHttpAdmissionCurrent(*target):(target->admission||!libraryUdpUnadmitted(request.hash)))){return false;}
+    auto route=detail::libraryUdpRoute(networkBinding->effective,target->configuredTracker,request.regularAuthority);if(!route){return false;}
+    auto config=detail::libraryUdpConfiguration(*mainlineLease,&networkBinding->effective);if(!config){return false;}
     return detail::libraryUdpRouteScope(*route,*config)==request.configuration;
   }catch(...){return false;}
 }
@@ -32,13 +33,21 @@ void advanceLibraryUdp(Clock::time_point now){
   auto result=libraryUdp.poll(millis,wall,[&](const auto& request){return libraryUdpAuthorise(request);});
   const auto response=trackerResponses.find(responseKey);
   if(!result){if(response!=trackerResponses.end()){response->second->cancelRequest();}libraryUdp.cancel();mainlineScrapeFailure=result.error();return;}
-  if(*result){if(response!=trackerResponses.end()){response->second->observe((**result).terminal);}}
+  if(*result){if(response!=trackerResponses.end()){
+    auto terminal=(**result).terminal;
+    if(terminal.kind==core::QueueTrackerTerminalKind::Scrape&&terminal.comparable&&terminal.complete>=0&&terminal.incomplete>=0&&terminal.downloaded>=-1){
+      const auto delay=detail::libraryTrackerScrapeDelay(static_cast<std::int32_t>(terminal.complete));
+      if(!delay){response->second->unavailable();return;}terminal.regularDelayMillis=*delay;
+    }
+    const bool accepted=response->second->observeChronological(terminal,(**result).observedNanos);response->second->cancelRequest();
+    if(accepted&&(terminal.comparable||terminal.definitiveFailure)){
+      observeLibraryHttpTime(responseKey,terminal,(**result).observedNanos);}}}
   else if(!libraryUdp.active()&&response!=trackerResponses.end()){response->second->cancelRequest();}
 }
-bool prepareLibraryUdp(SavedMainlineScrapeTarget& target,std::int64_t now,std::string_view config,bool& pendingEligibility,bool regularPoll=false,bool dispatch=true){
+bool prepareLibraryUdp(SavedMainlineScrapeTarget& target,std::int64_t now,std::string_view config,bool& pendingEligibility,bool regularPoll=false,bool dispatch=true,bool regularAuthority=false){
   pendingEligibility=false;
-  if(!mainlineLease||!networkBinding||!network||!network->udpTrackers||!networkBindingCurrent(*networkBinding)||!libraryUdpUnadmitted(target.hash)){return false;}
-  auto route=detail::libraryUdpRoute(networkBinding->effective,target.configuredTracker);if(!route){return false;}
+  if(!mainlineLease||!networkBinding||!network||!network->udpTrackers||!networkBindingCurrent(*networkBinding)||(regularAuthority?!libraryHttpAdmissionCurrent(target):!libraryUdpUnadmitted(target.hash))){return false;}
+  auto route=detail::libraryUdpRoute(networkBinding->effective,target.configuredTracker,regularAuthority);if(!route){return false;}
   const auto configuration=detail::libraryUdpRouteScope(*route,config);
   auto found=trackerResponses.find(target.trackerResponseKey);
   if(found==trackerResponses.end()){
@@ -47,8 +56,9 @@ bool prepareLibraryUdp(SavedMainlineScrapeTarget& target,std::int64_t now,std::s
   }
   if(dispatch&&(regularPoll?found->second->regularPollDue(now):found->second->regularDue(now))&&!libraryUdp.active()&&!libraryHttp.active()){
     if(libraryUdpNonce==UINT64_MAX){return false;}
-    detail::LibraryUdpTracker::Request request{target.hash,target.trackerResponseKey,target.scope,configuration,++libraryUdpNonce};
+    detail::LibraryUdpTracker::Request request{target.hash,target.trackerResponseKey,target.scope,configuration,++libraryUdpNonce,regularAuthority};
     const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    if(!libraryUdpAuthorise(request)){return false;} // Fresh authority before socket/bind/first CONNECT.
     auto sent=libraryUdp.start(std::move(request),*route,now,wall);
     if(!sent){mainlineScrapeFailure=sent.error();return false;}found->second->requested();
   }

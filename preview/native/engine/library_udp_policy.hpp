@@ -1,6 +1,7 @@
 #pragma once
 #include "library_udp_tracker.hpp"
 #include <set>
+#include <openssl/evp.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 namespace biglybtc::engine::detail {
@@ -24,7 +25,7 @@ inline bool udpUnique(const core::Node& root){
 // Actual original VERSION2 and enabled default scheduler subset. Nondefault
 // per-tracker overrides stay explicitly unavailable rather than guessed from
 // the saved tracker-count cache. Unknown configuration fields remain untouched.
-inline std::expected<std::string,storage::Error> libraryUdpConfiguration(const storage::ProfileLease& lease){
+inline std::expected<std::string,storage::Error> libraryUdpConfiguration(const storage::ProfileLease& lease,const NetworkPolicy* routing=nullptr){
   const auto unsupported=[](){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Standalone UDP scrape requires enabled original VERSION2 defaults without tracker overrides"});};
   auto config=udpTrackerConfig(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}
   if(*config){const auto& root=(**config).document().root();if(!udpUnique(root)){return unsupported();}
@@ -40,7 +41,23 @@ inline std::expected<std::string,storage::Error> libraryUdpConfiguration(const s
       }}
     }
   }
-  return std::string("original-udp-v2:enabled:retry1:stage30000:default-tracker-options");
+  std::string source;
+  if(routing){
+    const auto current=readNetworkPolicy(*config?&(**config).document():nullptr,{.mode=NetworkMode::Normal,.socks4Capability=routing->socks4Capability});
+    if(!current||!current->udpTrackers||current->proxy.kind!=NetworkProxyKind::None||routing->proxy.kind!=NetworkProxyKind::None){return unsupported();}
+    // A selected DIRECT route cannot survive saved proxy/credential changes.
+    // Snapshot exact absence/type/bytes, without retaining secrets in scope.
+    for(const auto key:{"Enable.Proxy","Enable.SOCKS","Proxy.Host","Proxy.Port","Proxy.Username","Proxy.Password","Proxy.SOCKS.Tracker.DNS.Disable",
+        "Proxy.Data.Enable","Proxy.Data.Same","Proxy.Data.SOCKS.version","Proxy.Data.Host","Proxy.Data.Port","Proxy.Data.Username","Proxy.Data.Password"}){
+      source+=key;source+=':';const auto* value=*config?(**config).document().find(key):nullptr;
+      if(value){const auto bytes=core::encodeValue(*value,storage::compatibleConfigLimits());if(!bytes||bytes->size()>4096){return unsupported();}source+=*bytes;}else{source+="absent";}source+=';';
+    }
+  }
+  std::string result="original-udp-v2:enabled:retry1:stage30000:default-tracker-options";
+  if(routing){std::array<unsigned char,32> digest{};unsigned size=0;
+    if(EVP_Digest(source.data(),source.size(),digest.data(),&size,EVP_sha256(),nullptr)!=1||size!=digest.size()){return unsupported();}
+    constexpr char hex[]="0123456789abcdef";result+=":proxy=";for(const auto byte:digest){result+=hex[byte>>4];result+=hex[byte&15];}}
+  return result;
 }
 inline std::string libraryUdpRouteScope(const LibraryUdpRoute& route,std::string_view config){
   return std::string(config)+":"+route.local.address().to_string()+":"+route.remote.address().to_string()+":"+std::to_string(route.remote.port());
