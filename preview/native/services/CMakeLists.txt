@@ -162,3 +162,9 @@ endif()
 
 # Public endpoint predicate is declared in Core; UDP includes it directly.
 target_link_libraries(biglybtc_azureus_owned_udp PRIVATE BiglyBTC::Core)
+
+# Append once after the reviewed window services fragment.
+if(TARGET biglybtc_i2p_streaming)
+  target_sources(biglybtc_i2p_streaming PRIVATE i2p_streaming/manager.cpp)
+  target_sources(biglybtc_i2cp_initial_channel PRIVATE i2cp_channel/managed_streams.inc)
+endif()

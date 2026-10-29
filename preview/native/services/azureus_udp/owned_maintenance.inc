@@ -14,7 +14,7 @@ std::expected<std::vector<SavedRoutingContact>,Failure> OwnedPingTransport::expo
   for(unsigned pass=0;pass<4;++pass){for(std::size_t i=0;i<best->count&&out.size()<32;++i){if(used[i]){continue;}const auto& entry=best->values[i];const auto& state=entry.contact;const bool imported=std::ranges::find(importedRouting_,state.id)!=importedRouting_.end();
     if((pass==0&&!(imported&&state.alive()))||(pass==1&&!state.alive())||(pass==2&&!(imported&&!state.failing()))){continue;}
     find::nodes::Snapshot value;value.udp=true;
-    if(state.local){value.protocol=config_.version;value.address=originator(endpoint());}else{const auto attached=std::ranges::find(normalContacts_,state.id,&find::nodes::Contact::id);if(attached==normalContacts_.end()||!routingPeer(*attached)){continue;}value.protocol=attached->protocol;value.address=attached->address;}
+    if(state.local){value.protocol=config_.version;value.address=originator(endpoint());}else{const auto attached=std::ranges::find(normalContacts_,state.id,&find::nodes::Contact::id);if(attached==normalContacts_.end()||attached->protocolSource==RoutingProtocolSource::ProbeHint||!routingPeer(*attached)){continue;}value.protocol=attached->protocol;value.address=attached->address;}
     out.push_back({value,entry.timeAlive});used[i]=true;
   }}return out;
 }

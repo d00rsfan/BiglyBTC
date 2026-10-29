@@ -27,12 +27,14 @@ struct Packet {
 // Offline signatures, ECHO and unknown flags/options are explicitly unsupported.
 Result<Bytes> encode(const Packet&,const ClientIdentity& signer);
 Result<Packet> decode(View,const Destination& expectedPeer);
+// Strict explicit listener subset: signed FROM plus recipient-hash-bound SYN.
+Result<Packet> decodeInitialSyn(View,const Destination& recipient);
 struct Mux {std::uint16_t fromPort=0,toPort=0;Bytes packet;};
 // Separate protocol6 entry points; existing datagram/RAW18 decoders stay strict.
 Result<Bytes> encodeMux(const Mux&);
 Result<Mux> decodeMux(View);
 
-enum class Phase {Connecting,Established,ReadEof,Closed,Cancelled,Timeout,LeaseExpired,RemoteReset,Failed};
+enum class Phase {Connecting,Established,ReadEof,Closed,Cancelled,Timeout,LeaseExpired,RemoteReset,Failed,IdleTimeout};
 struct Observation {
   std::uint64_t operation=0;Phase phase=Phase::Connecting;
   std::size_t queuedTx=0,queuedRx=0;
@@ -65,7 +67,14 @@ public:
   using Entropy=std::function<unsigned(unsigned)>;
   Connection(std::uint64_t operation,std::uint32_t localId,Destination local,Destination peer,
       unsigned maximumWindow=MaximumWindow,std::uint64_t startedMilliseconds=0,Entropy={});
+  static Result<Connection> accept(std::uint64_t operation,std::uint32_t localId,Destination local,Destination peer,const Packet& signedSyn,
+      unsigned maximumWindow=MaximumWindow,std::uint64_t now=0,Entropy={});
   const Destination& peer()const noexcept{return peer_;}
+  std::uint32_t remoteId()const noexcept{return remoteId_;}
+  std::size_t readableBytes()const noexcept{return rx_.size();}
+  bool outputOpen()const noexcept{return active()&&!finish_;}
+  bool drained()const noexcept{return !active()&&flight()==0&&!ackWanted_&&rx_.empty()&&reorder_.empty();}
+  bool keepalive()noexcept;
   bool active()const noexcept;
   Observation observation()const noexcept;
   Result<void> write(View);
@@ -74,6 +83,7 @@ public:
   void terminate(Phase)noexcept;
   void rejectPacket()noexcept{reject();}
   void receive(Packet,std::uint64_t now);
+  bool lastReceiveAccepted()const noexcept{return lastReceiveAccepted_;}
   std::optional<Packet> next(std::uint64_t now);
   void dispatched(const Packet&,std::uint64_t now);
   std::optional<unsigned> transmitTimeout(const Packet&)const noexcept;
@@ -107,7 +117,7 @@ private:
   std::int64_t congestionWindowEnd_=2;
   unsigned maximumWindow_=MaximumWindow,window_=3,ssthresh_=64;
   bool ackSinceCongestion_=true;
-  bool timeoutArmPending_=false;
+  bool timeoutArmPending_=false,inbound_=false,keepaliveWanted_=false,lastReceiveAccepted_=false;
   Entropy entropy_;
   BandwidthEstimator bandwidth_;
   unsigned samples_=0,rtt_=0,deviation_=0,rto_=9000,minimumRtt_=0x7fffffffU;

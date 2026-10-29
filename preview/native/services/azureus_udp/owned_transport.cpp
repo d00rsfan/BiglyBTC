@@ -327,7 +327,7 @@ std::expected<void,Failure> OwnedPingTransport::serveDatabase(std::shared_ptr<az
   }catch(...){return std::unexpected(Failure::Authority);}
 }
 bool OwnedPingTransport::normalCurrent()noexcept{
-  if(!owner()||state_!=State::Bound||!normalRouter_||!normalDatabase_||!normalCurrent_){return false;}
+  if(!owner()||state_!=State::Bound||!normalRouter_||!normalDatabase_||!normalCurrent_||(knownDeadline_&&Clock::now()>=*knownDeadline_)){return false;}
   try{return normalCurrent_();}catch(...){return false;}
 }
 bool OwnedPingTransport::normalAlive(const find::nodes::Contact& contact)noexcept{
@@ -348,7 +348,7 @@ std::expected<std::vector<find::nodes::Snapshot>,Failure> OwnedPingTransport::no
   std::vector<find::nodes::Contact> contacts;contacts.reserve(closest->count);
   for(std::size_t i=0;i<closest->count;++i){const auto& node=closest->values[i];
     if(node.local){const auto local=normalDatabase_->localContact();if(!local||!*local){return std::unexpected(Failure::State);}contacts.push_back(**local);}
-    else{const auto found=std::ranges::find(normalContacts_,node.id,&find::nodes::Contact::id);if(found!=normalContacts_.end()){contacts.push_back(*found);}}
+    else{const auto found=std::ranges::find(normalContacts_,node.id,&find::nodes::Contact::id);if(found!=normalContacts_.end()&&found->protocolSource!=RoutingProtocolSource::ProbeHint){contacts.push_back(*found);}}
   }
   std::ranges::sort(contacts,[&](const auto& a,const auto& b){for(std::size_t i=0;i<target.size();++i){const auto x=a.id[i]^target[i],y=b.id[i]^target[i];if(x!=y){return x<y;}}return false;});
   std::vector<find::nodes::Snapshot> result;result.reserve(std::min<std::size_t>(state->config().k,contacts.size()));
@@ -394,6 +394,12 @@ std::expected<Ticket,Failure> OwnedPingTransport::store(Peer peer,std::int8_t re
   });
 }
 std::expected<qint64,Failure> OwnedPingTransport::writePacket(std::string_view wire,const Peer& peer,Clock::time_point end){
+  // The Known preparation permit is finite also for OwnedLoopback. Recheck
+  // after PING RNG/encoding, immediately before the one physical socket write.
+  if(knownDeadline_){
+    if(Clock::now()>=*knownDeadline_){++statistics_.authorityErrors;return std::unexpected(Failure::Deadline);}
+    if(!normalCurrent()){++statistics_.authorityErrors;return std::unexpected(Failure::Authority);}
+  }
   if(config_.routingScope==RoutingScope::PublicBound){
     bool current=false;try{current=state_==State::Bound&&allowed(peer)&&publicPermit_&&publicPermit_();}catch(...){}
     // This is after all RNG/encoding/allocation and before this physical write,

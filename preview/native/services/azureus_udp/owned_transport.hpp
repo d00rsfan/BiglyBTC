@@ -113,6 +113,10 @@ struct GeneratedServiceState {
 };
 enum class RoutingScope {ExactPeers,OwnedLoopback,PublicBound};
 inline constexpr bool dynamicRoutingScope(RoutingScope scope)noexcept{return scope==RoutingScope::OwnedLoopback||scope==RoutingScope::PublicBound;}
+// Packet means this endpoint's matched packet; ContactRecord retains the
+// existing cache/NODE supplied-version provenance. ProbeHint grants neither.
+enum class RoutingProtocolSource {ProbeHint,ContactRecord,Packet};
+struct RoutingContactSnapshot {find::nodes::Contact contact;RoutingProtocolSource protocolSource=RoutingProtocolSource::ProbeHint;};
 struct RoutingSnapshot {
   std::uint64_t generation=0,operation=0,revision=0;
   bool finished=false;
@@ -120,6 +124,9 @@ struct RoutingSnapshot {
   std::shared_ptr<const azureus_control::LookupSnapshot> lookup;
   std::optional<Failure> failure;
   std::uint64_t learned=0,rejected=0,pings=0;
+  // Passive actor attachments; existing raw actor cap256, normal service cap32.
+  // Hints are labelled, not endpoint observations.
+  std::array<RoutingContactSnapshot,256> contacts{};std::size_t contactCount=0;
 };
 struct SavedRoutingContact {find::nodes::Snapshot contact;std::int64_t timeAlive=0;};
 struct MaintenanceFacts {std::uint64_t ticks=0,refreshes=0;std::size_t pending=0;std::optional<Failure> failure;};
@@ -148,6 +155,9 @@ public:
   ~OwnedPingTransport() override;
   std::expected<void,Failure> start(const QHostAddress& bindAddress=QHostAddress::LocalHost,quint16 bindPort=0,std::function<bool()> publicPermit={});
   std::expected<void,Failure> allowPeer(Peer);
+  // Normal dynamic scope only, under the existing worker source permit.
+  // A supplied version is an unobserved probe hint; this never grants Alive.
+  std::expected<void,Failure> attachKnownPeer(Peer,std::int8_t protocolHint,std::chrono::steady_clock::time_point absoluteEnd);
   std::expected<Ticket,Failure> ping(Peer,std::int8_t remoteVersion,QObject* receiver,Callback,
       std::chrono::nanoseconds deadline=std::chrono::seconds(30));
   std::expected<Ticket,Failure> findNode(Peer,std::int8_t remoteVersion,find::nodes::NodeId target,
@@ -277,7 +287,7 @@ private:
   std::deque<azureus_router::RouterIntent> routingIntents_;
   bool ownedRoutingPeer(const Peer&)const noexcept;
   std::optional<Peer> routingPeer(const find::nodes::Contact&)const;
-  bool learnRoutingContact(const find::nodes::Contact&,bool alive);
+  bool learnRoutingContact(const find::nodes::Contact&,bool alive,RoutingProtocolSource=RoutingProtocolSource::ContactRecord);
   void answerRoutingPing(const Peer&,packet::Decoded,std::int64_t);
   void routingReply(const std::shared_ptr<Routing>&,std::uint64_t,FindNodeOutcome);
   void pumpRouting(const std::shared_ptr<Routing>&);
@@ -297,7 +307,12 @@ private:
   std::function<bool()> normalCurrent_;
   std::function<bool(std::move_only_function<void(bool)>)> normalPreflight_;
   bool normalResuming_=false;
-  std::vector<find::nodes::Contact> normalContacts_; // Actual request sources or explicitly scoped reply candidates.
+  struct NormalContact:find::nodes::Contact {
+    RoutingProtocolSource protocolSource=RoutingProtocolSource::Packet;
+    NormalContact(const find::nodes::Contact& value,RoutingProtocolSource source=RoutingProtocolSource::Packet)noexcept:find::nodes::Contact(value),protocolSource(source){}
+  };
+  std::vector<NormalContact> normalContacts_; // One existing combined peer envelope. No parallel hint map.
+  std::optional<Clock::time_point> knownDeadline_; // Tightens only the executing Known command; never a grant.
   std::function<bool()> publicPermit_; // Existing owner one-shot source permit, PublicBound only.
   Config config_;
   std::unique_ptr<find::nodes::NodeCache> nodeCache_;

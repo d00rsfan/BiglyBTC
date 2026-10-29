@@ -7,13 +7,14 @@
   std::array<std::uint32_t,1024> streamIds{};std::size_t streamIdCount=0;
   bool streamNotificationQueued=false,streamFlushing=false;
   static std::uint64_t streamNow(){return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count());}
-  void clearStream(){streamTimer.stop();stream.reset();streamNotificationQueued=false;streamFlushing=false;}
+  void clearStream(){clearManagedStreams();streamTimer.stop();stream.reset();streamNotificationQueued=false;streamFlushing=false;}
   void notifyStream(){
     if(streamNotificationQueued){return;}streamNotificationQueued=true;bool queued=false;
-    try{const QPointer<InitialChannel> owner(q);const auto at=generation;queued=QMetaObject::invokeMethod(q,[owner,at]{if(!owner){return;}auto* self=owner->impl_.get();if(self->generation!=at){return;}self->streamNotificationQueued=false;if(self->session&&self->stream&&self->active()&&self->socket.state()==QAbstractSocket::ConnectedState){emit owner->streamChanged();}},Qt::QueuedConnection);}catch(...){queued=false;}
+    try{const QPointer<InitialChannel> owner(q);const auto at=generation;queued=QMetaObject::invokeMethod(q,[owner,at]{if(!owner){return;}auto* self=owner->impl_.get();if(self->generation!=at){return;}self->streamNotificationQueued=false;if(self->session&&(self->stream||self->managedStreams)&&self->active()&&self->socket.state()==QAbstractSocket::ConnectedState){emit owner->streamChanged();}},Qt::QueuedConnection);}catch(...){queued=false;}
     if(!queued){streamNotificationQueued=false;fail(Failure::Resources);}
   }
   bool streamReceives()const{
+    if(managedStreams){return managedReceives();}
     if(!stream||streamGeneration!=generation||state!=State::SessionCreated||!leaseCurrent()||Clock::now()>=streamEnd){return false;}
     const auto observation=stream->observation();return (stream->active()||observation.phase==streaming::Phase::Closed)&&observation.transmittedPackets>0;
   }
@@ -31,6 +32,7 @@
     streamTimer.start(static_cast<int>(std::max<std::int64_t>(1,wait)));
   }catch(...){fail(Failure::Resources);}}
   void flushStream(){
+    if(managedStreams){flushManagedStreams();return;}
     if(streamFlushing||!stream){return;}if(socket.bytesToWrite()!=0){armStream(true);return;}streamFlushing=true;
     try{
       if(!streamCurrent()){streamFlushing=false;return;}const auto at=generation,operation=stream->observation().operation;
@@ -51,6 +53,7 @@
     }catch(...){streamFlushing=false;fail(Failure::Resources);}
   }
   void observeStreamPayload(View payload,std::optional<Clock::time_point> receiveEnd){
+    if(managedStreams){observeManagedStream(payload,receiveEnd);return;}
     if(!streamCurrent()||!streamReceives()){return;}auto mux=streaming::decodeMux(payload);
     if(!mux||mux->fromPort!=streamOptions.toPort||mux->toPort!=streamOptions.fromPort){stream->rejectPacket();notifyStream();return;}
     auto packet=streaming::decode(mux->packet,stream->peer());if(!packet){stream->rejectPacket();notifyStream();return;}

@@ -14,6 +14,7 @@
 #include <cstring>
 #include <deque>
 #include <limits>
+#include <stdexcept>
 #include <type_traits>
 
 namespace biglybtc::services::i2p::i2cp {
@@ -176,7 +177,7 @@ struct InitialChannel::Impl {
     if(!identity.valid()||!identity.destination()){return reject(Code::KeyMismatch,"No live client identity");}
     if(consume&&!ls2Router()){return reject(Code::Unsupported,"Explicit LeaseSet2 requires a supported numeric router version");}
     if(update&&waitingFirstLease){return reject(Code::Unsupported,"Initial LeaseSet request is still outstanding");}
-    if(update&&stream&&stream->active()){return reject(Code::Unsupported,"Streaming operation is still outstanding");}
+    if(update&&streamsOutstanding()){return reject(Code::Unsupported,"Streaming operation is still outstanding");}
     if(update&&tracker){return reject(Code::Unsupported,"Explicit tracker operation is still outstanding");}
     if(update&&statusPending){return reject(Code::Unsupported,"Datagram status request is still outstanding");}
     if(update&&(!session||identity.destination()->wire!=acceptedDestination||revision==std::numeric_limits<std::uint64_t>::max())){
@@ -222,9 +223,22 @@ struct InitialChannel::Impl {
     }catch(...){if(state==State::Creating||state==State::Reconfiguring){fail(Failure::Resources);}return reject(Code::CryptoFailure,"I2CP request resources unavailable");}
   }
   void answerLease(Frame frame){
+    const auto end=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);
+    if(managedStreams&&socket.bytesToWrite()!=0){
+      auto request=decodeLeaseRequest(frame);
+      if(managedLease||!managedCurrent()||!request||request->sessionId!=*session){fail(Failure::InvalidLeaseSet);return;}
+      managedLease.emplace(DeferredLease{std::move(frame),end,generation});armManagedStreams(true);return;
+    }
+    answerLeaseWithin(std::move(frame),end);
+  }
+  void answerLeaseWithin(Frame frame,Clock::time_point end){
     if(!leaseSigner||!session||(state!=State::SessionCreated&&state!=State::Reconfiguring)){fail(Failure::UnsupportedMessage);return;}
     if(expired()){return;}
-    const auto end=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);const auto at=generation;
+    if(Clock::now()>=end){fail(Failure::Deadline);return;}const auto at=generation;
+    // A late renewal may update the router submission, but cannot restore
+    // streams/listening authority whose previous actual LS2 already expired.
+    if(managedStreams&&leaseSubmission&&!leaseCurrent()){(void)managedCurrent();}
+    if(!current(at)){return;}
     auto requested=decodeLeaseRequest(frame);
     if(!requested||requested->sessionId!=*session||!leaseSigner->valid()||!leaseSigner->destination()||leaseSigner->destination()->wire!=acceptedDestination){fail(Failure::InvalidLeaseSet);return;}
     auto policy=leaseSetPolicy(acceptedOptions);if(!policy){fail(Failure::InvalidLeaseSet);return;}
@@ -240,6 +254,8 @@ struct InitialChannel::Impl {
     auto signedLs=signLeaseSet2(*leaseSigner,*leaseKey,*requested,*policy,now,lastRawLeasePublished);
     if(!signedLs){fail(Failure::InvalidLeaseSet);return;}
     auto encoded=encodeCreateLeaseSet2(*session,*signedLs,*leaseKey);if(!encoded){fail(Failure::InvalidLeaseSet);return;}
+    // Signing/encoding may cross the old lease boundary before its Qt timer.
+    if(managedStreams&&leaseSubmission&&!leaseCurrent()){(void)managedCurrent();}
     if(!current(at)||Clock::now()>=end||expired()){if(current(at)){fail(Failure::Deadline);}return;}
     // Signed local submission is the same original client-side completion
     // boundary as setLeaseSet(), not a fabricated router response/OPEN claim.
@@ -250,6 +266,7 @@ struct InitialChannel::Impl {
     leaseSubmission=LeaseSubmission{next,signedLs->publishedMilliseconds,signedLs->expiresMilliseconds,signedLs->leases.size(),signedLs->unpublished};
     waitingFirstLease=false;if(state==State::SessionCreated){timer.stop();}notifyLease();
     if(statusPending){armStatusDeadline();} // Only lease fence changes; original statusExpires is immutable.
+    if(managedStreams){armManagedStreams(socket.bytesToWrite()!=0);}
   }
   ConfigResult<std::uint64_t> observedNow()const{
     using Code=::biglybtc::services::i2p::ErrorCode;
@@ -295,7 +312,7 @@ struct InitialChannel::Impl {
   ConfigResult<std::uint32_t> submit(View recipient,View payload,const DatagramOptions& opts,bool claimed){
     using Code=::biglybtc::services::i2p::ErrorCode;auto reject=[](Code code,const char* text)->ConfigResult<std::uint32_t>{return std::unexpected(::biglybtc::services::i2p::Error{code,text});};
     if(!onThread()){return reject(Code::InvalidFormat,"Datagram request belongs to channel thread");}
-    if(state!=State::SessionCreated||waitingFirstLease||statusPending||tracker||(stream&&stream->active())||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Current unexpired owned LS2 and idle datagram/write state required");}
+    if(state!=State::SessionCreated||waitingFirstLease||statusPending||tracker||streamsOutstanding()||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Current unexpired owned LS2 and idle datagram/write state required");}
     if(!statusReplies){return reject(Code::Unsupported,"Initial reliability none cannot request tracked statuses");}
     if(nextDatagramNonce>std::numeric_limits<std::uint32_t>::max()){return reject(Code::TooLarge,"Datagram nonce lifetime exhausted; never reuse");}
     try{
@@ -315,6 +332,7 @@ struct InitialChannel::Impl {
     }catch(...){if(statusPending){fail(Failure::Resources);}return reject(Code::CryptoFailure,"Datagram resources unavailable");}
   }
 #include "streaming.inc"
+#include "managed_streams.inc"
 #include "tracker.inc"
 #include "receive.inc"
   void drain(){
@@ -399,7 +417,7 @@ struct InitialChannel::Impl {
     QObject::connect(&receiveTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{receiveDeadline();}catch(...){fail(Failure::Resources);}}});
     QObject::connect(&trackerTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{trackerDeadline();}catch(...){fail(Failure::Resources);}}});
     QObject::connect(&streamTimer,&QTimer::timeout,q,[this,at]{if(current(at)){flushStream();}});
-    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){flushReceiveControls();flushTrackerWrite();flushStream();}});
+    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){if(managedLease){(void)flushManagedLease();}if(current(at)){flushReceiveControls();flushTrackerWrite();flushStream();}}});
     state=State::Connecting;expires=Clock::now()+std::chrono::milliseconds(next.deadlineMilliseconds);
     timer.start(next.deadlineMilliseconds);notify();
     if(!current(at)||state!=State::Connecting){return false;}
@@ -443,18 +461,29 @@ InitialChannel::ReceiverObservation InitialChannel::receiverObservation()const n
 ConfigResult<std::uint64_t> InitialChannel::scrapeTracker(const TrackerRequest& input){return impl_->startTracker(input);}
 bool InitialChannel::cancelTracker(std::uint64_t operation){if(!impl_->onThread()||!impl_->tracker||impl_->tracker->operation!=operation){return false;}impl_->finishTracker(TrackerPhase::LocalCancelled);return true;}
 std::optional<TrackerObservation> InitialChannel::trackerObservation()const{return sessionId()?impl_->trackerResult:std::nullopt;}
-ConfigResult<std::uint64_t> InitialChannel::connectStream(View destination,const StreamOptions& options){return impl_->startStream(destination,options);}
-ConfigResult<void> InitialChannel::writeStream(std::uint64_t operation,View bytes){return impl_->streamWrite(operation,bytes);}
-ConfigResult<Bytes> InitialChannel::takeStreamBytes(std::uint64_t operation,std::size_t maximum){return impl_->streamRead(operation,maximum);}
+ConfigResult<std::uint64_t> InitialChannel::connectStream(View destination,const StreamOptions& options){return impl_->managedStreams?impl_->startManagedStream(destination,options):impl_->startStream(destination,options);}
+ConfigResult<void> InitialChannel::writeStream(std::uint64_t operation,View bytes){return impl_->managedStreams?impl_->writeManagedStream(operation,bytes):impl_->streamWrite(operation,bytes);}
+ConfigResult<Bytes> InitialChannel::takeStreamBytes(std::uint64_t operation,std::size_t maximum){return impl_->managedStreams?impl_->readManagedStream(operation,maximum):impl_->streamRead(operation,maximum);}
 bool InitialChannel::finishStreamWrite(std::uint64_t operation){
+  if(impl_->managedStreams){if(!impl_->onThread()||!impl_->managedCurrent()){return false;}try{const bool ok=impl_->managedStreams->finishWrite(operation,impl_->streamNow());impl_->flushManagedStreams();impl_->armManagedStreams();impl_->notifyStream();return ok&&impl_->active();}catch(...){impl_->fail(Failure::Resources);return false;}}
   if(!impl_->onThread()||!impl_->stream||impl_->stream->observation().operation!=operation||!impl_->streamCurrent()||!impl_->stream->active()){return false;}
   impl_->stream->finishWrite();impl_->flushStream();return impl_->stream.has_value()&&(impl_->stream->active()||impl_->stream->observation().phase==streaming::Phase::Closed)&&impl_->current(impl_->streamGeneration);
 }
 bool InitialChannel::cancelStream(std::uint64_t operation){
+  if(impl_->managedStreams){if(!impl_->onThread()){return false;}const bool ok=impl_->managedStreams->cancel(operation);impl_->flushManagedStreams();impl_->armManagedStreams();impl_->notifyStream();return ok;}
   if(!impl_->onThread()||!impl_->stream||impl_->stream->observation().operation!=operation||!impl_->stream->active()){return false;}
   impl_->stream->terminate(streaming::Phase::Cancelled);impl_->streamTimer.stop();if(!impl_->receiverEnabled&&!impl_->trackerReceives()&&impl_->fetch){impl_->cancelFetch(ReceiveDrop::Cancelled);}impl_->notifyStream();return true;
 }
-std::optional<streaming::Observation> InitialChannel::streamObservation()const noexcept{return sessionId()&&impl_->stream?std::optional(impl_->stream->observation()):std::nullopt;}
+std::optional<streaming::Observation> InitialChannel::streamObservation()const noexcept{if(impl_->managedStreams){const auto value=managedStreamObservation(impl_->managedLastOperation);return value?std::optional(value->stream):std::nullopt;}return sessionId()&&impl_->stream?std::optional(impl_->stream->observation()):std::nullopt;}
+bool InitialChannel::enableStreamManager(const streaming::ManagerOptions& options){return impl_->enableManagedStreams(options);}
+bool InitialChannel::listenStreams(const streaming::ListenOptions& options){return impl_->listenManagedStreams(options);}
+void InitialChannel::closeStreamListener(){if(!impl_->onThread()||!impl_->managedStreams){return;}try{impl_->managedStreams->stopListening();if(!impl_->receiverEnabled&&!impl_->trackerReceives()&&!impl_->streamReceives()&&impl_->fetch){impl_->cancelFetch(ReceiveDrop::Cancelled);}impl_->armManagedStreams();impl_->notifyStream();}catch(...){impl_->fail(Failure::Resources);}}
+ConfigResult<std::uint64_t> InitialChannel::acceptStream(){return impl_->startManagedStream({},StreamOptions{},true);}
+std::optional<streaming::ManagedObservation> InitialChannel::managedStreamObservation(std::uint64_t operation)const noexcept{return sessionId()&&impl_->managedStreams?impl_->managedStreams->observation(operation):std::nullopt;}
+streaming::ManagerObservation InitialChannel::streamManagerObservation()const noexcept{return impl_->managedStreams?impl_->managedStreams->observation():streaming::ManagerObservation{};}
+bool InitialChannel::waitStream(std::uint64_t operation,streaming::WaitFor kind,std::size_t minimum,unsigned period){if(!impl_->onThread()||!impl_->managedCurrent()){return false;}try{const bool ok=impl_->managedStreams->wait(operation,kind,minimum,period,impl_->streamNow());impl_->armManagedStreams();impl_->notifyStream();return ok&&impl_->active();}catch(...){impl_->fail(Failure::Resources);return false;}}
+bool InitialChannel::releaseStream(std::uint64_t operation){if(!impl_->onThread()||!impl_->managedStreams){return false;}const bool ok=impl_->managedStreams->release(operation);impl_->armManagedStreams();impl_->notifyStream();return ok;}
+
 InitialChannel::State InitialChannel::state()const noexcept{return impl_->state;}
 InitialChannel::Failure InitialChannel::failure()const noexcept{return impl_->failure;}
 bool InitialChannel::socketActive()const noexcept{return impl_->socket.state()!=QAbstractSocket::UnconnectedState;}

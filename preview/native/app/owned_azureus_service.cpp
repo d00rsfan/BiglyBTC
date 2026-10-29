@@ -29,6 +29,7 @@ struct OwnedAzureusService::Command {
   azureus::Peer peer;
   azureus::find::nodes::NodeId node{};
   std::int32_t flags=0,maximumValues=0;
+  std::optional<std::int8_t> protocolHint;
   std::chrono::nanoseconds timeout=std::chrono::seconds(2);
   std::chrono::steady_clock::time_point deadline{};
   std::string applicationKey,payload;
@@ -131,8 +132,12 @@ struct OwnedAzureusService::Impl {
       if(value.deadline==std::chrono::steady_clock::time_point{}){value.deadline=std::chrono::steady_clock::now()+value.timeout;}
       {std::lock_guard lock(state_->mutex);if(state_->stop){releaseLocked();state_->advance();return;}}
       try{
-        if(publiclyBound()&&!profilePermit_&&value.kind!=AzureusServiceCommand::Cancel){beginPublicCommand(std::move(value));return;}
-        if(value.kind==AzureusServiceCommand::AllowPeer){auto allowed=actor_.allowPeer(value.peer);if(allowed){rememberOwned(value.peer);routerKnown(value.peer);}complete(value,allowed);return;}
+        if((publiclyBound()||(value.kind==AzureusServiceCommand::AllowPeer&&azureus::dynamicRoutingScope(options_.routingScope)))&&!profilePermit_&&value.kind!=AzureusServiceCommand::Cancel){beginPermittedCommand(std::move(value));return;}
+        if(value.kind==AzureusServiceCommand::AllowPeer){
+          const bool normal=azureus::dynamicRoutingScope(options_.routingScope);
+          auto allowed=normal?actor_.attachKnownPeer(value.peer,value.protocolHint.value_or(options_.version),value.deadline):actor_.allowPeer(value.peer);
+          if(allowed){rememberOwned(value.peer);if(!normal){routerKnown(value.peer);}}complete(value,allowed);return;
+        }
         if(value.kind==AzureusServiceCommand::LookupValue){beginLookup(value);return;}
         if(value.kind==AzureusServiceCommand::PublishValue||value.kind==AzureusServiceCommand::ForwardCached){beginPublish(value);return;}
         if(value.kind==AzureusServiceCommand::IntegrateRouting){beginRouting(value);return;}
@@ -524,6 +529,7 @@ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::submit(Com
   if(state.stop||state.value.state!=AzureusServiceState::Running||!state.owner){return std::unexpected(AzureusServiceError::Closed);}
   const bool contactCommand=value.kind==AzureusServiceCommand::BootstrapSaved||value.kind==AzureusServiceCommand::FlushContacts;
   if(value.kind!=AzureusServiceCommand::Cancel&&!contactCommand&&!validPeer(value.peer,state.endpoint.address,impl_->options.routingScope)){return std::unexpected(AzureusServiceError::Invalid);}
+  if(value.protocolHint&&(value.kind!=AzureusServiceCommand::AllowPeer||*value.protocolHint<51||*value.protocolHint>55)){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind==AzureusServiceCommand::Cancel&&!value.target){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind!=AzureusServiceCommand::AllowPeer&&value.kind!=AzureusServiceCommand::Cancel&&(value.timeout<=std::chrono::nanoseconds::zero()||value.timeout>std::chrono::seconds(30))){return std::unexpected(AzureusServiceError::Invalid);}
   if((value.kind==AzureusServiceCommand::PublishRating||value.kind==AzureusServiceCommand::ReadRatings)
@@ -544,6 +550,7 @@ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::submit(Com
   catch(...){--state.value.outstandingCommands;return std::unexpected(AzureusServiceError::Memory);}state.advance();return value.id;
 }
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::allowPeer(azureus::Peer peer){Command value;value.kind=AzureusServiceCommand::AllowPeer;value.peer=std::move(peer);return submit(value);}
+std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::allowPeer(azureus::Peer peer,std::int8_t hint){Command value;value.kind=AzureusServiceCommand::AllowPeer;value.peer=std::move(peer);value.protocolHint=hint;return submit(std::move(value));}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::ping(azureus::Peer peer,std::chrono::nanoseconds timeout){Command value;value.peer=std::move(peer);value.timeout=timeout;return submit(value);}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::findNode(azureus::Peer peer,azureus::find::nodes::NodeId target,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::FindNode;value.peer=std::move(peer);value.node=target;value.timeout=timeout;return submit(value);}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::findValue(azureus::Peer peer,azureus::lookup::nodes::NodeId target,std::int32_t flags,std::int32_t maximumValues,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::FindValue;value.peer=std::move(peer);value.node=target;value.flags=flags;value.maximumValues=maximumValues;value.timeout=timeout;return submit(value);}

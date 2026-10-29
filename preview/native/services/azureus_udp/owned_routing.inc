@@ -26,24 +26,53 @@ std::optional<Peer> OwnedPingTransport::routingPeer(const find::nodes::Contact& 
   else{return {};}
   return ownedRoutingPeer(peer)?std::optional{peer}:std::nullopt;
 }
-bool OwnedPingTransport::learnRoutingContact(const find::nodes::Contact& contact,bool alive){
-  if(!normalCurrent()||!localId_||contact.id==*localId_){return false;}
-  const auto peer=routingPeer(contact);if(!peer){return false;}
-  const auto id=nodeCache_->lookup(find::nodes::ResolvedEndpoint{contact.address,{}},contact.protocol);
-  if(!id||id->id!=contact.id){return false;}
-  // A restricted source ID can alias multiple endpoints. This finite scope
-  // refuses ambiguity instead of substituting an attachment for an old node.
-  for(const auto& old:normalContacts_){if(old.id==contact.id&&old.address!=contact.address){return false;}}
-  auto previous=std::ranges::find(normalContacts_,contact.address,&find::nodes::Contact::address);
-  if(previous==normalContacts_.end()&&normalContacts_.size()==config_.maximumPeers){return false;}
-  if(!allowPeer(*peer)){return false;}
-  if(alive){if(!normalAlive(contact)){return false;}}
+std::expected<void,Failure> OwnedPingTransport::attachKnownPeer(Peer peer,std::int8_t protocolHint,Clock::time_point absoluteEnd){
+  if(!owner()){return std::unexpected(Failure::Thread);}
+  if(protocolHint<51||protocolHint>55){return std::unexpected(Failure::Version);}
+  if(Clock::now()>=absoluteEnd){return std::unexpected(Failure::Deadline);}
+  const auto prior=knownDeadline_;knownDeadline_=absoluteEnd;const auto restore=qScopeGuard([&]{knownDeadline_=prior;});
+  if(!normalCurrent()||!ownedRoutingPeer(peer)){return std::unexpected(Failure::Authority);}
+  find::nodes::Contact contact;contact.address=originator(peer);contact.protocol=protocolHint;
+  const auto id=nodeCache_->lookup({contact.address,{}},protocolHint);if(!id){return std::unexpected(Failure::Authority);}contact.id=id->id;
+  if(!localId_||contact.id==*localId_){return std::unexpected(Failure::Authority);}
+  if(std::ranges::any_of(normalContacts_,[&](const auto& old){return old.id==contact.id&&old.address!=contact.address;})){return std::unexpected(Failure::Authority);}
+  if((!allowed(peer)&&peers_.size()==config_.maximumPeers)||(std::ranges::find(normalContacts_,contact.address,&find::nodes::Contact::address)==normalContacts_.end()&&normalContacts_.size()==config_.maximumPeers)){return std::unexpected(Failure::Capacity);}
+  if(!learnRoutingContact(contact,false,RoutingProtocolSource::ProbeHint)){return std::unexpected(Failure::Authority);}
+  dispatchRoutingPings();captureRouting();return {};
+}
+bool OwnedPingTransport::learnRoutingContact(const find::nodes::Contact& supplied,bool alive,RoutingProtocolSource source){
+  if(!normalCurrent()||!localId_||supplied.id==*localId_||learnedRouting_==UINT64_MAX){return false;}
+  const auto peer=routingPeer(supplied);if(!peer){return false;}
+  const auto id=nodeCache_->lookup(find::nodes::ResolvedEndpoint{supplied.address,{}},supplied.protocol);
+  if(!id||id->id!=supplied.id){return false;}
+  // Restricted IDs can alias endpoints. Never replace a different attachment.
+  for(const auto& old:normalContacts_){if(old.id==supplied.id&&old.address!=supplied.address){return false;}}
+  const auto previous=std::ranges::find(normalContacts_,supplied.address,&find::nodes::Contact::address);
+  const bool inserted=previous==normalContacts_.end(),alreadyAllowed=allowed(*peer);
+  if((inserted&&normalContacts_.size()==config_.maximumPeers)||(!alreadyAllowed&&peers_.size()==config_.maximumPeers)){return false;}
+  // Finish allocations BEFORE permission/router mutation. The attachment is in
+  // place before contactKnown can enqueue NodeAdded, including replacement IDs.
+  const auto index=inserted?normalContacts_.size():static_cast<std::size_t>(previous-normalContacts_.begin());
+  normalContacts_.reserve(config_.maximumPeers);peers_.reserve(config_.maximumPeers);
+  const auto old=inserted?std::optional<NormalContact>{}:std::optional<NormalContact>{normalContacts_[index]};
+  NormalContact contact(supplied,alive?RoutingProtocolSource::Packet:source);
+  // A repeated hint/third-party record cannot downgrade an endpoint observation.
+  if(old&&!alive&&static_cast<unsigned>(old->protocolSource)>static_cast<unsigned>(contact.protocolSource)){contact=*old;}
+  // NodeCache/allocations can outlive the permit or an external close. This
+  // is the final preparation fence BEFORE its first attachment/permission effect.
+  if(!normalCurrent()){return false;}
+  if(inserted){normalContacts_.push_back(contact);}else{normalContacts_[index]=contact;}
+  const auto rollback=[&]{if(inserted){normalContacts_.pop_back();}else{normalContacts_[index]=*old;}if(!alreadyAllowed){peers_.pop_back();}};
+  if(!allowPeer(*peer)){if(inserted){normalContacts_.pop_back();}else{normalContacts_[index]=*old;}return false;}
+  if(!normalCurrent()){rollback();return false;}
+  if(alive){if(!normalAlive(contact)){rollback();return false;}}
   else{
     const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
-    if(!normalRouter_->contactKnown({.id=contact.id,.instance=contact.instance,.sleeping=(static_cast<std::uint8_t>(contact.flags)&1U)!=0},now)){return false;}
-    if(previous==normalContacts_.end()){normalContacts_.push_back(contact);}else{*previous=contact;}
+    const auto known=normalRouter_->contactKnown({.id=contact.id,.instance=contact.instance,.sleeping=(static_cast<std::uint8_t>(contact.flags)&1U)!=0},now);
+    const auto retained=normalRouter_->find(contact.id);
+    if(!known||*known==azureus_router::RouterChange::Dropped||!retained||!*retained){rollback();return false;}
   }
-  if(learnedRouting_==UINT64_MAX){return false;}++learnedRouting_;return true;
+  ++learnedRouting_;return true;
 }
 void OwnedPingTransport::captureRouting()noexcept{
   const auto failed=[&]()noexcept{
@@ -55,6 +84,7 @@ void OwnedPingTransport::captureRouting()noexcept{
     if(!dynamicRoutingScope(config_.routingScope)){routingSnapshot_.reset();return;}
     if(routingRevision_==UINT64_MAX){failed();return;}
     auto snapshot=std::make_shared<RoutingSnapshot>();snapshot->generation=statisticsGeneration_;snapshot->operation=routing_?routing_->id:0;snapshot->revision=++routingRevision_;
+    for(const auto& contact:normalContacts_){if(snapshot->contactCount==snapshot->contacts.size()){failed();return;}snapshot->contacts[snapshot->contactCount++]={contact,contact.protocolSource};}
     snapshot->finished=routing_&&routing_->finished;snapshot->seeded=normalSeeded_;snapshot->learned=learnedRouting_;snapshot->rejected=rejectedRouting_;snapshot->pings=routingPings_;
     if(routing_){auto lookup=routing_->controller.snapshot();if(!lookup){failed();return;}snapshot->lookup=std::make_shared<const azureus_control::LookupSnapshot>(std::move(*lookup));snapshot->failure=routing_->failure;}
     routingSnapshot_=std::move(snapshot);
@@ -90,7 +120,7 @@ std::expected<std::uint64_t,Failure> OwnedPingTransport::integrateRouting(Peer s
   find::nodes::Contact first;first.address=originator(seed);first.protocol=config_.version;
   const auto derived=nodeCache_->lookup(find::nodes::ResolvedEndpoint{first.address,{}},first.protocol);if(!derived){return std::unexpected(Failure::Authority);}first.id=derived->id;
   if(Clock::now()>=end){return std::unexpected(Failure::Deadline);}
-  if(first.id==*localId_||!learnRoutingContact(first,false)){return std::unexpected(Failure::Authority);}
+  if(first.id==*localId_||!learnRoutingContact(first,false,RoutingProtocolSource::ProbeHint)){return std::unexpected(Failure::Authority);}
   return startRouting(*localId_,end,true);
 }
 std::expected<std::uint64_t,Failure> OwnedPingTransport::startRouting(find::nodes::NodeId target,Clock::time_point end,bool integration){
@@ -205,12 +235,12 @@ void OwnedPingTransport::dispatchRoutingPings(){
     if(std::ranges::any_of(routingPingsPending_,[&](const auto& old){return old&&old->id==intent.id;})){continue;}
     const auto found=std::ranges::find(normalContacts_,intent.id,&find::nodes::Contact::id);if(found==normalContacts_.end()){routingFailed(Failure::Authority);return;}const auto peer=routingPeer(*found);if(!peer){routingFailed(Failure::Authority);return;}
     const auto index=static_cast<std::size_t>(free-routingPingsPending_.begin());const auto protocol=found->protocol;
-    auto sent=ping(*peer,protocol,this,[this,index,id=intent.id,peer=*peer,protocol](Outcome outcome){
+    auto sent=ping(*peer,protocol,this,[this,index,id=intent.id,peer=*peer](Outcome outcome){
       routingPingsPending_[index].reset();if(state_!=State::Bound||!normalPreflight_){return;}
-      if(!normalPreflight_([this,id,peer,protocol,outcome=std::move(outcome)](bool accepted)mutable{
+      if(!normalPreflight_([this,id,peer,outcome=std::move(outcome)](bool accepted)mutable{
         if(state_!=State::Bound){return;}if(!accepted||!normalCurrent()){routingFailed(Failure::Authority);return;}
         const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
-        if(outcome){find::nodes::Contact contact;contact.id=id;contact.address=originator(peer);contact.protocol=protocol;contact.instance=outcome->header().fields().instance;contact.flags=outcome->header().fields().flags;if(!learnRoutingContact(contact,true)){routingFailed(Failure::Authority);return;}}
+        if(outcome){find::nodes::Contact contact;contact.id=id;contact.address=originator(peer);contact.protocol=outcome->header().fields().version;contact.instance=outcome->header().fields().instance;contact.flags=outcome->header().fields().flags;if(!learnRoutingContact(contact,true)){routingFailed(Failure::Authority);return;}}
         else if(outcome.error()==Failure::Timeout){static_cast<void>(normalRouter_->contactDead(id,now));}
         dispatchRoutingPings();captureRouting();
       })){routingFailed(Failure::Capacity);}

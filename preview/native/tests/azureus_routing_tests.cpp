@@ -9,6 +9,9 @@
 #include <QCoreApplication>
 #include <algorithm>
 #include <array>
+#include <future>
+#include <memory>
+#include <QScopeGuard>
 #include <cerrno>
 #include <sys/stat.h>
 
@@ -37,12 +40,12 @@ services::azureus_nodes::Contact contact(const udp::Peer& peer,std::int8_t proto
 }
 struct Normal {
   QTemporaryDir root;std::optional<storage::ProfileLease> lease;std::shared_ptr<storage::AzureusValueVersions> versions;std::unique_ptr<app::OwnedAzureusService> owner;
-  QString address;udp::RoutingScope scope;std::size_t maximumPeers;
-  explicit Normal(const char* ip,udp::RoutingScope policy=udp::RoutingScope::OwnedLoopback,std::size_t peers=32):address(QString::fromLatin1(ip)),scope(policy),maximumPeers(peers){
+  QString address;udp::RoutingScope scope;std::size_t maximumPeers;std::int8_t version;
+  explicit Normal(const char* ip,udp::RoutingScope policy=udp::RoutingScope::OwnedLoopback,std::size_t peers=32,std::int8_t protocol=55):address(QString::fromLatin1(ip)),scope(policy),maximumPeers(peers),version(protocol){
     if(!root.isValid()){throw std::runtime_error("Owned routing profile");}auto acquired=storage::ProfileLease::acquire(root.path().toStdString());if(!acquired){throw std::runtime_error(acquired.error().message);}lease.emplace(std::move(*acquired));
     auto config=storage::ConfigFile::createMissing(*lease,"biglybt.config","d22:Plugin.DHT.dht.enabledi1ee");if(!config){throw std::runtime_error(config.error().message);}start();
   }
-  void start(){auto opened=storage::AzureusValueVersions::open(*lease,0);if(!opened){throw std::runtime_error(opened.error().message);}versions=*opened;app::AzureusServiceOptions options;options.enabled=true;options.servePings=true;options.serveValues=true;options.network=0;options.bindAddress=QHostAddress(address);options.routingScope=scope;options.maximumPeers=maximumPeers;options.valueVersions=versions;auto made=app::OwnedAzureusService::create(options);if(!made){throw std::runtime_error("Cannot start normal routing owner");}owner=std::move(*made);}
+  void start(){auto opened=storage::AzureusValueVersions::open(*lease,0);if(!opened){throw std::runtime_error(opened.error().message);}versions=*opened;app::AzureusServiceOptions options;options.enabled=true;options.servePings=true;options.serveValues=true;options.network=0;options.bindAddress=QHostAddress(address);options.routingScope=scope;options.maximumPeers=maximumPeers;options.version=version;options.valueVersions=versions;auto made=app::OwnedAzureusService::create(options);if(!made){throw std::runtime_error("Cannot start normal routing owner");}owner=std::move(*made);}
   void stop(){if(owner&&!owner->close()){throw std::runtime_error("Cannot close normal routing owner");}owner.reset();versions.reset();}
   QString versionPath()const{return root.path()+"/dht/version.dat";}
 };
@@ -64,6 +67,41 @@ void send(QUdpSocket& server,const QNetworkDatagram& datagram,const QByteArray& 
 class AzureusRoutingTests final:public QObject {
   Q_OBJECT
 private slots:
+  void explicitKnownAttachmentUsesActualPingAndReplacesOnlyItsProtocolHint_data(){
+    QTest::addColumn<int>("hint");QTest::addColumn<int>("actual");QTest::newRow("hint51-actual55")<<51<<55;QTest::newRow("hint55-actual51")<<55<<51;
+  }
+  void explicitKnownAttachmentUsesActualPingAndReplacesOnlyItsProtocolHint(){
+    QFETCH(int,hint);QFETCH(int,actual);Normal a("127.71.0.1"),b("127.72.0.1",udp::RoutingScope::OwnedLoopback,32,static_cast<std::int8_t>(actual));
+    const auto beforeA=versionSource(a.versionPath()),beforeB=versionSource(b.versionPath());auto access=b.lease->sourceAccess();QVERIFY(access);auto blocked=std::make_unique<storage::ProfileSourceAccess>(std::move(*access));const auto release=qScopeGuard([&]{blocked.reset();});
+    const auto request=a.owner->allowPeer(b.owner->endpoint(),static_cast<std::int8_t>(hint));QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(success(*a.owner,*request),3000);
+    QTRY_VERIFY_WITH_TIMEOUT(b.owner->observation().snapshot->transport().counters().requests>0&&b.owner->observation().profileIoRunning==1,3000);
+    const auto held=a.owner->observation();QVERIFY(held.routingSnapshot&&held.routerSnapshot);QCOMPARE(held.routingSnapshot->contactCount,std::size_t{1});QCOMPARE(held.routingSnapshot->contacts[0].protocolSource,udp::RoutingProtocolSource::ProbeHint);QCOMPARE(held.routingSnapshot->contacts[0].contact.protocol,static_cast<std::int8_t>(hint));QCOMPARE(held.routerSnapshot->counts()[4],std::uint64_t{1});QCOMPARE(held.routerSnapshot->counts()[5],std::uint64_t{1});QVERIFY(held.routingSnapshot->pings>0&&!held.routingSnapshot->seeded);QCOMPARE(held.snapshot->transport().allowedPeers(),std::size_t{1});
+    blocked.reset();QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().routingSnapshot&&a.owner->observation().routingSnapshot->contacts[0].protocolSource==udp::RoutingProtocolSource::Packet,3000);const auto answered=a.owner->observation();QCOMPARE(answered.routingSnapshot->contacts[0].contact.protocol,static_cast<std::int8_t>(actual));QCOMPARE(answered.routerSnapshot->counts()[4],std::uint64_t{2});QVERIFY(!answered.routingSnapshot->seeded);
+    const auto repeated=a.owner->allowPeer(b.owner->endpoint(),static_cast<std::int8_t>(hint));QVERIFY(repeated);QTRY_VERIFY_WITH_TIMEOUT(success(*a.owner,*repeated),3000);const auto duplicate=a.owner->observation();QCOMPARE(duplicate.routingSnapshot->contactCount,std::size_t{1});QCOMPARE(duplicate.routingSnapshot->contacts[0].protocolSource,udp::RoutingProtocolSource::Packet);QCOMPARE(duplicate.routingSnapshot->contacts[0].contact.protocol,static_cast<std::int8_t>(actual));QCOMPARE(duplicate.routingSnapshot->pings,answered.routingSnapshot->pings);
+    const auto integration=a.owner->integrateRouting(b.owner->endpoint());QVERIFY(integration);QTRY_VERIFY_WITH_TIMEOUT(success(*a.owner,*integration),10000);const auto integrated=a.owner->observation().routingSnapshot;QVERIFY(integrated&&integrated->seeded&&!integrated->failure&&integrated->lookup);QVERIFY(std::ranges::any_of(integrated->lookup->nodes,[](const auto& node){return node.state==control::LookupNodeState::Replied;}));QCOMPARE(versionSource(a.versionPath()),beforeA);QCOMPARE(versionSource(b.versionPath()),beforeB);QVERIFY(a.owner->close());QVERIFY(b.owner->close());
+  }
+  void knownPreparationRefusesAliasInvalidHintAndFullCombinedPeerEnvelope(){
+    Normal a("127.73.0.1");QUdpSocket first,alias;const QHostAddress address(QStringLiteral("127.74.0.1"));QVERIFY(first.bind(address,0,QUdpSocket::DontShareAddress));const udp::Peer peer{first.localAddress(),first.localPort()};const auto otherPort=static_cast<quint16>(peer.port<=65530?peer.port+5:peer.port-5);QVERIFY(alias.bind(address,otherPort,QUdpSocket::DontShareAddress));QVERIFY(contact(peer).id==contact({address,otherPort}).id);
+    const auto accepted=a.owner->allowPeer(peer,51);QVERIFY(accepted);QTRY_VERIFY_WITH_TIMEOUT(success(*a.owner,*accepted),3000);QTRY_VERIFY_WITH_TIMEOUT(first.hasPendingDatagrams(),3000);const auto before=a.owner->observation();QVERIFY(before.routingSnapshot&&before.routerSnapshot);const auto refused=a.owner->allowPeer({address,otherPort},55);QVERIFY(refused);QTRY_VERIFY_WITH_TIMEOUT(terminal(*a.owner,*refused),3000);QCOMPARE(a.owner->observation().lastResult->transportFailure,std::optional{udp::Failure::Authority});const auto after=a.owner->observation();QCOMPARE(after.routingSnapshot->contactCount,before.routingSnapshot->contactCount);QCOMPARE(after.routerSnapshot->counts(),before.routerSnapshot->counts());QCOMPARE(after.snapshot->transport().allowedPeers(),before.snapshot->transport().allowedPeers());QVERIFY(!alias.hasPendingDatagrams());
+    QVERIFY(!a.owner->allowPeer(peer,50));QVERIFY(!a.owner->allowPeer(peer,56));QVERIFY(!a.owner->allowPeer({QHostAddress::LocalHostIPv6,32001},55));QVERIFY(!a.owner->allowPeer({QHostAddress(QStringLiteral("203.0.113.1")),32001},55));QVERIFY(a.owner->close());
+    Normal full("127.75.0.1");std::vector<std::unique_ptr<QUdpSocket>> sockets;
+    // Select16 genuinely bound IDs on each root half before admission: the
+    // default k20 router then retains all32, independently of random UDP ports.
+    std::array<unsigned,2> halves{};std::vector<services::azureus_nodes::NodeId> ids;
+    for(int n=1;n<=128&&sockets.size()<32;++n){auto socket=std::make_unique<QUdpSocket>();QVERIFY(socket->bind(QHostAddress(QString("127.150.%1.1").arg(n)),0,QUdpSocket::DontShareAddress));const udp::Peer selected{socket->localAddress(),socket->localPort()};const auto selectedId=contact(selected).id;const auto half=static_cast<unsigned>(selectedId[0]>>7);if(halves[half]==16||std::ranges::find(ids,selectedId)!=ids.end()){continue;}const auto command=full.owner->allowPeer(selected,55);QVERIFY(command);QTRY_VERIFY_WITH_TIMEOUT(success(*full.owner,*command),3000);++halves[half];ids.push_back(selectedId);sockets.push_back(std::move(socket));}QCOMPARE(sockets.size(),std::size_t{32});
+    const auto saturated=full.owner->observation();QVERIFY(saturated.routingSnapshot&&saturated.routerSnapshot);QCOMPARE(saturated.routingSnapshot->contactCount,std::size_t{32});QCOMPARE(saturated.snapshot->transport().allowedPeers(),std::size_t{32});QUdpSocket overflow;QVERIFY(overflow.bind(QHostAddress(QStringLiteral("127.182.0.1")),0,QUdpSocket::DontShareAddress));const auto over=full.owner->allowPeer({overflow.localAddress(),overflow.localPort()},55);QVERIFY(over);QTRY_VERIFY_WITH_TIMEOUT(terminal(*full.owner,*over),3000);QCOMPARE(full.owner->observation().lastResult->transportFailure,std::optional{udp::Failure::Capacity});const auto unchanged=full.owner->observation();QCOMPARE(unchanged.routingSnapshot->contactCount,saturated.routingSnapshot->contactCount);QCOMPARE(unchanged.routerSnapshot->counts()[2]+unchanged.routerSnapshot->counts()[3],saturated.routerSnapshot->counts()[2]+saturated.routerSnapshot->counts()[3]);QCOMPARE(unchanged.snapshot->transport().allowedPeers(),std::size_t{32});QVERIFY(!overflow.hasPendingDatagrams());QVERIFY(!unchanged.routingSnapshot->seeded);QVERIFY(full.owner->close());
+  }
+  void knownAttachmentCannotCommitAfterSourceDisableCancelOrClose_data(){QTest::addColumn<int>("change");QTest::newRow("disable")<<0;QTest::newRow("cancel")<<1;QTest::newRow("close")<<2;}
+  void knownAttachmentCannotCommitAfterSourceDisableCancelOrClose(){
+    QFETCH(int,change);Normal a("127.76.0.1");QUdpSocket peer;QVERIFY(peer.bind(QHostAddress(QStringLiteral("127.77.0.1")),0,QUdpSocket::DontShareAddress));const auto before=a.owner->observation();auto access=a.lease->sourceAccess();QVERIFY(access);auto blocked=std::make_unique<storage::ProfileSourceAccess>(std::move(*access));const auto release=qScopeGuard([&]{blocked.reset();});const auto command=a.owner->allowPeer({peer.localAddress(),peer.localPort()},51);QVERIFY(command);QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().profileIoRunning==1,3000);
+    std::future<std::expected<void,app::AzureusServiceError>> closed;
+    const auto join=qScopeGuard([&]{blocked.reset();if(closed.valid()){closed.wait();}});
+    if(change==0){auto config=storage::ConfigFile::load(*a.lease,"biglybt.config");QVERIFY(config);QVERIFY(config->document().setInteger("Plugin.DHT.dht.enabled",0));QVERIFY(config->save(*a.lease));}
+    else if(change==1){const auto cancelled=a.owner->cancel(*command);QVERIFY(cancelled);QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().outstandingCommands==0,3000);}
+    else{closed=std::async(std::launch::async,[&]{return a.owner->close();});QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().state==app::AzureusServiceState::Closed,3000);QVERIFY(closed.wait_for(0ms)!=std::future_status::ready);}
+    blocked.reset();if(change==2){QVERIFY(closed.get());}else{QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().outstandingCommands==0,3000);const auto result=a.owner->observation().lastResult;QVERIFY(result);if(change==0){QVERIFY(result->error);}else{QCOMPARE(result->command,app::AzureusServiceCommand::Cancel);QVERIFY(!result->error);}}
+    const auto after=a.owner->observation();QCOMPARE(after.snapshot->transport().counters().sent,before.snapshot->transport().counters().sent);QCOMPARE(after.snapshot->transport().allowedPeers(),std::size_t{0});QVERIFY(!after.routingSnapshot||after.routingSnapshot->contactCount==0);QVERIFY(!after.routingSnapshot||!after.routingSnapshot->seeded);QVERIFY(!peer.hasPendingDatagrams());QCOMPARE(after.routerSnapshot->counts()[2],std::uint64_t{1});QVERIFY(a.owner->close());
+  }
   void realSelfLookupDiscoversThirdNormalOwnerThenAuthorisesActualCachedForward(){
     Normal origin("127.51.0.1"),cache("127.52.0.1"),receiver("127.53.0.1");
     auto pair=[&](Normal& a,Normal& b){const auto first=a.owner->allowPeer(b.owner->endpoint()),second=b.owner->allowPeer(a.owner->endpoint());if(!first||!second){return false;}QElapsedTimer wait;wait.start();while(wait.elapsed()<3000&&(!success(*a.owner,*first)||!success(*b.owner,*second))){QCoreApplication::processEvents(QEventLoop::AllEvents,10);}return success(*a.owner,*first)&&success(*b.owner,*second);};

@@ -14,14 +14,14 @@
       loop_.quit();
     }
     bool rpcCurrent(std::uint64_t id)const noexcept{return std::ranges::any_of(active_,[&](const auto& value){return value.id==id;});}
-    void beginPublicCommand(Command command){
+    void beginPermittedCommand(Command command){
       auto pending=std::make_shared<bool>(true);
-      const auto current=[this,pending]{return *pending&&serviceCurrent()&&options_.publicPolicy->current();};
+      const auto current=[this,pending]{return *pending&&serviceCurrent()&&(!publiclyBound()||options_.publicPolicy->current());};
       const auto finish=[this,command,pending](std::optional<azureus::Failure> failure){if(!*pending){return;}*pending=false;reply(command,failure,true);};
       if(!deferProfile(command,false,command.deadline,current,
         [this,command,pending](const ProfileIo::Data&)mutable{
           if(!*pending){return;}*pending=false;
-          const auto remaining=command.deadline-Clock::now();if(remaining<=Clock::duration::zero()||!publicPacketPermit()){reply(command,azureus::Failure::Timeout,true);return;}
+          const auto remaining=command.deadline-Clock::now();if(remaining<=Clock::duration::zero()||!profilePermit_||(publiclyBound()&&!publicPacketPermit())){reply(command,azureus::Failure::Timeout,true);return;}
           command.timeout=std::chrono::duration_cast<std::chrono::nanoseconds>(remaining);this->command(std::move(command));
         },[finish](storage::Error){finish(azureus::Failure::Authority);},false,
         [finish]{finish(azureus::Failure::Timeout);},[finish]{finish(azureus::Failure::Cancelled);})){finish(azureus::Failure::Capacity);}

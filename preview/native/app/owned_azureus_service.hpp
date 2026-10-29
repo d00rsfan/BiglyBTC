@@ -137,6 +137,9 @@ public:
   // peer on this owner. Recursive GET requires prior allowPeer admission.
   // The remote owner must independently allow this endpoint.
   std::expected<std::uint64_t,AzureusServiceError> allowPeer(azureus::Peer);
+  // Dynamic normal scopes attach Known under a fresh worker permit and start
+  // the original NodeAdded PING. The hint is not an observed remote version.
+  std::expected<std::uint64_t,AzureusServiceError> allowPeer(azureus::Peer,std::int8_t protocolHint);
   std::expected<std::uint64_t,AzureusServiceError> ping(azureus::Peer,
       std::chrono::nanoseconds timeout=std::chrono::seconds(2));
   std::expected<std::uint64_t,AzureusServiceError> findNode(azureus::Peer,

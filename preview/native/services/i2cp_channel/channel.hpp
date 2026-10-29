@@ -6,6 +6,7 @@
 #include "messages.hpp"
 #include "tracker.hpp"
 #include "stream.hpp"
+#include "manager.hpp"
 #include <QHostAddress>
 #include <QObject>
 #include <memory>
@@ -102,6 +103,18 @@ public:
   bool finishStreamWrite(std::uint64_t operation);
   bool cancelStream(std::uint64_t operation); // Local withdrawal, no remote ACK claim.
   [[nodiscard]] std::optional<streaming::Observation> streamObservation()const noexcept;
+  // Explicit four-stream mode, requiring a current retained identity/session/LS2.
+  // Default single-stream behavior and its total deadline remain unchanged.
+  bool enableStreamManager(const streaming::ManagerOptions&);
+  bool listenStreams(const streaming::ListenOptions&); // Full allowed peers + exact ports.
+  void closeStreamListener();
+  [[nodiscard]] ConfigResult<std::uint64_t> acceptStream();
+  [[nodiscard]] std::optional<streaming::ManagedObservation> managedStreamObservation(std::uint64_t)const noexcept;
+  [[nodiscard]] streaming::ManagerObservation streamManagerObservation()const noexcept;
+  // A finite wait reports Ready/TimedOut locally; timeout does not close a stream.
+  // Replaces only a settled prior wait. It grants no socket/session authority.
+  bool waitStream(std::uint64_t,streaming::WaitFor,std::size_t minimumBytes,unsigned timeoutMilliseconds);
+  bool releaseStream(std::uint64_t); // Terminal+drained; live operations refuse.
   [[nodiscard]] State state()const noexcept;
   [[nodiscard]] Failure failure()const noexcept;
   [[nodiscard]] bool socketActive()const noexcept;
