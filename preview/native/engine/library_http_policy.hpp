@@ -1,16 +1,31 @@
 #pragma once
 #include "library_http_tracker.hpp"
 #include "library_udp_policy.hpp"
+#include "library_http_trust.hpp"
+#include <QCryptographicHash>
+#include <algorithm>
 namespace biglybtc::engine::detail {
-struct LibraryHttpConfiguration {std::string scope;bool singleOnly=false;};
-inline std::expected<LibraryHttpConfiguration,storage::Error> libraryHttpConfiguration(const storage::ProfileLease& lease){
+struct LibraryHttpConfiguration {std::string scope;bool singleOnly=false;std::optional<QList<QSslCertificate>> trustAnchors=std::nullopt;};
+inline std::expected<LibraryHttpConfiguration,storage::Error> libraryHttpConfiguration(const storage::ProfileLease& lease,bool https=false,
+    std::optional<storage::ConfigFile>* authenticationSnapshot=nullptr){
   const auto unsupported=[](){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Standalone HTTP scrape requires enabled TCP scrape settings and default tracker overrides"});};
   auto settings=udpTrackerConfig(lease,"biglybt.config");if(!settings){return std::unexpected(settings.error());}
-  bool single=false;std::uint32_t probe=1,udp=1;
+  bool single=false;std::uint32_t probe=1,udp=1;std::string authScope="absent",internalScope="absent";
   if(*settings){const auto& root=(**settings).document().root();if(!udpUnique(root)){return unsupported();}
     const auto number=[&](const char* name,std::uint32_t fallback)->std::optional<std::uint32_t>{const auto* value=root.find(name);if(!value){return fallback;}if(value->type!=core::Node::Type::Integer){return {};}return static_cast<std::uint32_t>(value->integer);};
     const auto enabled=number("Tracker Client Scrape Enable",1),disabled=number("Tracker Client Scrape Total Disable",0),tcp=number("Tracker Client Enable TCP",1),one=number("Tracker Client Scrape Single Only",0),p=number("Tracker UDP Probe Enable",1),u=number("Server Enable UDP",1);
     if(!enabled||!*enabled||!disabled||*disabled||!tcp||!*tcp||!one||!p||!u){return unsupported();}single=*one!=0;probe=*p;udp=*u;
+    // This original branch chooses <internal> credentials ahead of the saved
+    // cache. Bind its exact absence/type/value to every approval and delivery.
+    if(const auto* self=root.find("Tracker IP")){
+      const auto raw=core::encodeValue(*self,storage::compatibleConfigLimits());if(!raw||raw->size()>2048){return unsupported();}
+      internalScope=QCryptographicHash::hash(QByteArray::fromStdString(*raw),QCryptographicHash::Sha256).toHex().toStdString();
+    }
+    if(const auto* cache=root.find("swt.auth.persistent.cache")){
+      if(!udpUnique(*cache)||cache->children.size()>256){return unsupported();}
+      const auto raw=core::encodeValue(*cache,storage::compatibleConfigLimits());if(!raw||raw->size()>128*1024){return unsupported();}
+      authScope=QCryptographicHash::hash(QByteArray::fromStdString(*raw),QCryptographicHash::Sha256).toHex().toStdString();
+    }
   }
   auto trackers=udpTrackerConfig(lease,"alltrackers.config");if(!trackers){return std::unexpected(trackers.error());}
   if(*trackers){const auto& root=(**trackers).document().root();if(!udpUnique(root)){return unsupported();}
@@ -20,6 +35,28 @@ inline std::expected<LibraryHttpConfiguration,storage::Error> libraryHttpConfigu
       }}
     }
   }
-  return LibraryHttpConfiguration{"original-http-single-request:tcp:single="+std::to_string(single)+":udp-probe="+std::to_string(probe)+":udp="+std::to_string(udp),single};
+  LibraryHttpConfiguration result{"original-http-single-request:tcp:single="+std::to_string(single)+":udp-probe="+std::to_string(probe)+":udp="+std::to_string(udp)+":auth="+authScope+":internal="+internalScope,single};
+  if(https){auto trust=libraryHttpTrust(lease);if(!trust){return std::unexpected(trust.error());}result.scope+=":"+trust->scope;result.trustAnchors=std::move(trust->anchors);}
+  if(authenticationSnapshot){*authenticationSnapshot=std::move(*settings);}
+  return result;
+}
+inline std::expected<std::optional<QByteArray>,storage::Error> libraryHttpSavedBasic(
+    const core::Document* config,const LibraryHttpRoute& route,const QByteArray& realm){
+  const auto unsupported=[](){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Saved Basic tracker credentials are outside the supported exact realm/origin ASCII scope"});};
+  if(!config){return std::optional<QByteArray>{};}if(!udpUnique(config->root())){return unsupported();}const auto* cache=config->find("swt.auth.persistent.cache");
+  if(!cache){return std::optional<QByteArray>{};}if(!udpUnique(*cache)||cache->children.size()>256||realm.size()>128){return unsupported();}
+  const auto host=route.scrape.host();QHostAddress numeric(host);
+  // Original AuthenticatorWindow has a separate <internal>/Tracker Password
+  // branch for local addresses. This first saved-cache branch is hostname-only.
+  if(!numeric.isNull()){return unsupported();}
+  if(const auto* self=config->find("Tracker IP");self&&(self->type!=core::Node::Type::Bytes||self->bytes==host.toStdString())){return unsupported();}
+  const auto key=realm.toStdString()+":"+route.scrape.scheme().toStdString()+"://"+host.toStdString()+":"+std::to_string(route.scrape.port(route.scrape.scheme()=="https"?443:80))+"/";
+  const auto* row=cache->find(key);if(!row){return std::optional<QByteArray>{};}if(!udpUnique(*row)){return unsupported();}
+  const auto* user=row->find("user");const auto* password=row->find("pw");
+  const auto ascii=[](const core::Node* value){return value&&value->type==core::Node::Type::Bytes&&value->bytes.size()<=512
+      &&std::ranges::all_of(value->bytes,[](unsigned char c){return c>=32&&c<=126;});};
+  if(!ascii(user)||!ascii(password)||user->bytes.find(':')!=std::string::npos){return unsupported();}
+  const auto raw=QByteArray::fromStdString(user->bytes+":"+password->bytes);
+  return std::optional<QByteArray>{"Basic "+raw.toBase64()};
 }
 }

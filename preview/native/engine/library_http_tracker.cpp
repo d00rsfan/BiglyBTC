@@ -7,13 +7,14 @@
 #include <QTcpSocket>
 #include <QTimer>
 #include <atomic>
+#include <algorithm>
 #include <condition_variable>
 #include <mutex>
 #include <thread>
 
 namespace biglybtc::engine::detail {
 namespace {
-enum class Proposal {None,Address,Redirect};
+enum class Proposal {None,Address,Redirect,Authentication};
 struct Mailbox {
   std::mutex mutex;
   std::atomic<bool> cancelled=false;
@@ -21,7 +22,7 @@ struct Mailbox {
   LibraryHttpRoute proposedRoute;
   std::uint64_t generation=0;
   Proposal kind=Proposal::None;
-  QByteArray body;
+  QByteArray body,realm;
   bool proposal=false,approved=false,done=false,unknown=false,hasBody=false;
 };
 // All QObject/socket operations run only on this reusable private event loop.
@@ -35,7 +36,7 @@ public:
   QTimer deadline;QElapsedTimer age;
   int lookup=-1;
   std::uint64_t generation=1;
-  bool finished=false,authorised=false,awaitingRedirect=false;
+  bool finished=false,authorised=false,awaitingRedirect=false,awaitingAuthentication=false;
   explicit Operation(std::shared_ptr<Mailbox> value,LibraryHttpRoute r,QByteArray q,QSslConfiguration t,QObject* parent)
       :QObject(parent),box(std::move(value)),route(std::move(r)),query(std::move(q)),tls(std::move(t)){
     visited.push_back(route.scrape.toEncoded());age.start();deadline.setSingleShot(true);
@@ -45,8 +46,14 @@ public:
   void resumeRedirect(std::uint64_t expected){
     if(!current(expected)||!awaitingRedirect){return;}awaitingRedirect=false;resolve();
   }
+  void declineAuthentication(std::uint64_t expected,bool unknown){
+    if(current(expected)&&awaitingAuthentication){finish(unknown);}
+  }
+  void resumeAuthentication(std::uint64_t expected,QByteArray value){
+    if(!current(expected)||!awaitingAuthentication){return;}awaitingAuthentication=false;authorization=std::move(value);resolve();
+  }
   void approve(std::uint64_t expected,const QHostAddress& remote,const QHostAddress& local){
-    if(!current(expected)||awaitingRedirect||socket){return;}
+    if(!current(expected)||awaitingRedirect||awaitingAuthentication||socket){return;}
     if(!arm()){return;}authorised=true;const auto hop=generation;
     const bool encrypted=route.scrape.scheme()=="https";
     if(encrypted){auto* ssl=new QSslSocket(this);ssl->setSslConfiguration(tls);ssl->setPeerVerifyMode(QSslSocket::VerifyPeer);
@@ -66,7 +73,7 @@ public:
     else{socket->connectToHost(remote,port);}
   }
 private:
-  QByteArray received;QList<QByteArray> visited;std::size_t transferred=0;
+  QByteArray received,authorization;QList<QByteArray> visited;std::size_t transferred=0;unsigned authentications=0;
   bool current(std::uint64_t hop)const noexcept{return !finished&&!box->cancelled&&generation==hop;}
   template<class F>void guarded(F&& action)noexcept{try{action();}catch(...){finish(true);}}
   bool arm(){const auto left=60000-age.elapsed();if(left<=0){finish(!authorised);return false;}deadline.start(static_cast<int>(std::min<qint64>(30000,left)));return true;}
@@ -83,11 +90,21 @@ private:
     std::lock_guard lock(box->mutex);box->resolved=addresses;box->proposedRoute=route;box->kind=Proposal::Address;
     box->generation=generation;box->proposal=true;box->approved=false;
   }
+  void challenge(const QByteArray& realm){
+    if(!authorization.isEmpty()){finish(false);return;} // Actual supplied credentials were rejected.
+    if(authentications==2){finish(true);return;} // Local origin budget is not a tracker failure.
+    ++authentications;
+    ++generation;authorised=false;awaitingAuthentication=true;clearSocket();received.clear();if(!arm()){return;}
+    std::lock_guard lock(box->mutex);box->realm=realm;box->resolved.clear();box->proposedRoute=route;box->kind=Proposal::Authentication;
+    box->generation=generation;box->proposal=true;box->approved=false;
+  }
   void redirect(const QByteArray& location){
     const auto raw=QByteArray::fromPercentEncoding(query);if(raw.size()!=20||visited.size()>=6){finish(true);return;}
     const auto next=libraryHttpRedirectRoute(route,location,std::span<const std::byte,20>{reinterpret_cast<const std::byte*>(raw.constData()),20});
     if(!next||visited.contains(next->scrape.toEncoded())){finish(true);return;}
     // Invalidate all old socket/DNS callbacks before dropping the old transport.
+    const auto effectivePort=[](const QUrl& url){return url.port(url.scheme()=="https"?443:80);};
+    if(next->scrape.scheme()!=route.scrape.scheme()||next->scrape.host()!=route.scrape.host()||effectivePort(next->scrape)!=effectivePort(route.scrape)){authorization.clear();}
     ++generation;authorised=false;awaitingRedirect=true;clearSocket();received.clear();route=*next;
     visited.push_back(route.scrape.toEncoded());if(!arm()){return;}
     // No redirected DNS is submitted until the real owner acknowledges this
@@ -101,7 +118,8 @@ private:
     const auto existing=route.scrape.query(QUrl::FullyEncoded).toUtf8();path+=(route.scrape.hasQuery()?"?"+existing+"&":"?");path+="info_hash="+query;
     auto host=route.scrape.host().contains(':')?route.scrape.host().toUtf8():QUrl::toAce(route.scrape.host());if(host.contains(':')){host='['+host+']';}
     const auto port=route.scrape.port();if(port!=-1){host+=':'+QByteArray::number(port);}
-    const auto packet="GET "+path+" HTTP/1.1\r\nHost: "+host+"\r\nUser-Agent: BiglyBTC\r\nAccept-Encoding: gzip\r\nConnection: close\r\n\r\n";
+    const auto auth=authorization.isEmpty()?QByteArray{}:"Authorization: "+authorization+"\r\n";
+    const auto packet="GET "+path+" HTTP/1.1\r\nHost: "+host+"\r\nUser-Agent: BiglyBTC\r\nAccept-Encoding: gzip\r\n"+auth+"Connection: close\r\n\r\n";
     if(socket->write(packet)!=packet.size()){finish(false);}
   }
   void read(bool eof){
@@ -113,6 +131,7 @@ private:
     const auto decoded=http_tracker_wire::response(received,eof);
     if(decoded.unsupported){finish(true);return;}if(!decoded.complete){return;}
     if(!decoded.location.isEmpty()){redirect(decoded.location);return;}
+    if(decoded.basicAuthentication){challenge(decoded.basicRealm);return;}
     {std::lock_guard lock(box->mutex);box->body=decoded.bytes;}
     finish(false,!decoded.failed);
   }
@@ -167,35 +186,55 @@ bool LibraryHttpTracker::resolvedProposalPending()const{
   if(std::this_thread::get_id()!=impl_->worker||!impl_->round){return false;}
   std::lock_guard lock(impl_->round->box->mutex);return impl_->round->box->proposal&&impl_->round->box->kind==Proposal::Address&&!impl_->round->box->approved&&!impl_->round->box->done;
 }
+bool LibraryHttpTracker::authenticationProposalPending()const{
+  if(std::this_thread::get_id()!=impl_->worker||!impl_->round){return false;}
+  std::lock_guard lock(impl_->round->box->mutex);return impl_->round->box->proposal&&impl_->round->box->kind==Proposal::Authentication&&!impl_->round->box->approved&&!impl_->round->box->done;
+}
 bool LibraryHttpTracker::redirectProposalPending()const{
   if(std::this_thread::get_id()!=impl_->worker||!impl_->round){return false;}
   std::lock_guard lock(impl_->round->box->mutex);return impl_->round->box->proposal&&impl_->round->box->kind==Proposal::Redirect&&!impl_->round->box->approved&&!impl_->round->box->done;
 }
 bool LibraryHttpTracker::testTlsConfiguration(const QSslConfiguration& config){if(std::this_thread::get_id()!=impl_->worker||impl_->network||impl_->round){return false;}impl_->tls=config;return true;}
-std::expected<void,storage::Error> LibraryHttpTracker::start(Request request,const LibraryHttpRoute& route,std::int64_t now,std::int64_t wall,bool singleOnly){
+std::expected<void,storage::Error> LibraryHttpTracker::start(Request request,const LibraryHttpRoute& route,std::int64_t now,std::int64_t wall,bool singleOnly,const std::optional<QList<QSslCertificate>>& trustAnchors){
   if(std::this_thread::get_id()!=impl_->worker||impl_->round||request.hash.bytes().size()!=20||!request.nonce||request.responseKey.empty()||request.responseKey.size()>256||request.scope.empty()||request.scope.size()>256||request.configuration.size()>8192||now<0){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"HTTP scrape worker or request changed"});}
   if(!impl_->fuzzReady){static const auto jitter=[]()->std::optional<unsigned>{std::uint32_t entropy=0;for(unsigned i=0;i<8;++i){if(RAND_bytes(reinterpret_cast<unsigned char*>(&entropy),sizeof(entropy))!=1){return {};}if(entropy<UINT32_MAX-UINT32_MAX%180){return entropy%180;}}return {};}();
     if(!jitter){return std::unexpected(storage::Error{storage::ErrorCode::Io,"HTTP scrape entropy unavailable"});}impl_->fuzz=*jitter;impl_->fuzzReady=true;}
+  auto tls=impl_->tls;if(trustAnchors){tls.setCaCertificates(*trustAnchors);}
   if(!impl_->network){impl_->network=std::make_unique<NetworkThread>();}
   auto box=std::make_shared<Mailbox>();const auto encoded=escaped(request.hash.bytes());
   impl_->round.emplace(Impl::Round{std::move(request),route,box,now,wall,singleOnly});
-  if(!impl_->network->post([box,route,encoded,tls=impl_->tls](auto& c){c.operation.reset();if(!box->cancelled){c.operation=std::make_unique<Operation>(box,route,encoded,tls,&c);}})){
+  if(!impl_->network->post([box,route,encoded,tls=std::move(tls)](auto& c){c.operation.reset();if(!box->cancelled){c.operation=std::make_unique<Operation>(box,route,encoded,tls,&c);}})){
     cancel();return std::unexpected(storage::Error{storage::ErrorCode::Io,"HTTP scrape event loop unavailable"});
   }return {};
 }
-std::expected<std::optional<LibraryHttpTracker::Result>,storage::Error> LibraryHttpTracker::poll(std::int64_t now,std::int64_t wall,const std::function<bool(const Request&)>& authorise){
+std::expected<std::optional<LibraryHttpTracker::Result>,storage::Error> LibraryHttpTracker::poll(std::int64_t now,std::int64_t wall,const std::function<bool(const Request&)>& authorise,const Authentication& authenticate){
   if(std::this_thread::get_id()!=impl_->worker){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"HTTP scrape worker changed"});}
   if(!impl_->round){return std::optional<Result>{};}auto& r=*impl_->round;
   if(now<r.started){cancel();return std::optional<Result>{};}
-  QList<QHostAddress> proposal;QByteArray body;bool done=false,unknown=false,hasBody=false;
+  QList<QHostAddress> proposal;QByteArray body,realm;bool done=false,unknown=false,hasBody=false;
   Proposal kind=Proposal::None;std::uint64_t generation=0;LibraryHttpRoute proposedRoute;
-  {std::lock_guard lock(r.box->mutex);if(r.box->proposal&&!r.box->approved){proposal=r.box->resolved;kind=r.box->kind;generation=r.box->generation;proposedRoute=r.box->proposedRoute;r.box->approved=true;}done=r.box->done;unknown=r.box->unknown;hasBody=r.box->hasBody;if(done){body=r.box->body;}}
+  {std::lock_guard lock(r.box->mutex);if(r.box->proposal&&!r.box->approved){proposal=r.box->resolved;kind=r.box->kind;generation=r.box->generation;proposedRoute=r.box->proposedRoute;realm=r.box->realm;r.box->approved=true;}done=r.box->done;unknown=r.box->unknown;hasBody=r.box->hasBody;if(done){body=r.box->body;}}
   if((kind!=Proposal::None||done)&&!authorise(r.request)){cancel();return std::optional<Result>{};}
   if(kind!=Proposal::None&&!done){
     const auto checked=libraryHttpRedirectRoute(r.route,proposedRoute.scrape.toEncoded(),std::span<const std::byte,20>{r.request.hash.bytes().data(),20});
     if(!checked||*checked!=proposedRoute){cancel();return std::optional<Result>{};}
     const auto box=r.box;bool posted=false;
-    if(kind==Proposal::Redirect){posted=impl_->network->post([box,generation](auto& c){if(c.operation&&c.operation->box==box&&!box->cancelled){c.operation->resumeRedirect(generation);}});}
+    if(kind==Proposal::Authentication){
+      std::expected<std::optional<QByteArray>,storage::Error> credential;
+      try{if(authenticate){credential=authenticate(r.request,proposedRoute,realm);}}catch(...){cancel();return std::unexpected(storage::Error{storage::ErrorCode::Io,"Saved tracker authentication could not be read"});}
+      if(!credential&&credential.error().code!=storage::ErrorCode::Unsupported){cancel();return std::unexpected(credential.error());}
+      if(!credential||!*credential){
+        // An actual401 with no stored credential retains the existing network
+        // failure semantics. Unsupported credential dialect stays Unknown.
+        const bool unknown=!credential;
+        posted=impl_->network->post([box,generation,unknown](auto& c){if(c.operation&&c.operation->box==box&&!box->cancelled){c.operation->declineAuthentication(generation,unknown);}});
+      }else{
+        auto header=std::move(**credential);
+        if(header.size()>2048||!header.startsWith("Basic ")||!std::ranges::all_of(header,[](unsigned char c){return c>=32&&c<=126;})){cancel();return std::optional<Result>{};}
+        posted=impl_->network->post([box,generation,header=std::move(header)](auto& c)mutable{if(c.operation&&c.operation->box==box&&!box->cancelled){c.operation->resumeAuthentication(generation,std::move(header));}});
+      }
+    }
+    else if(kind==Proposal::Redirect){posted=impl_->network->post([box,generation](auto& c){if(c.operation&&c.operation->box==box&&!box->cancelled){c.operation->resumeRedirect(generation);}});}
     else{const auto endpoint=libraryHttpEndpoint(proposedRoute,proposal);if(!endpoint){cancel();return std::optional<Result>{};}
       posted=impl_->network->post([box,generation,endpoint](auto& c){if(c.operation&&c.operation->box==box&&!box->cancelled){c.operation->approve(generation,endpoint->first,endpoint->second);}});
     }

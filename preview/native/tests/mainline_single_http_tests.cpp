@@ -3,6 +3,9 @@
 #include "library_commands.hpp"
 #include "persistent_session.hpp"
 #include <QPointer>
+#include <QDataStream>
+#include <QCryptographicHash>
+#include <QDir>
 #include <QSslCertificate>
 #include <QSslKey>
 #include <QSslSocket>
@@ -56,12 +59,27 @@ struct Certificate {
     test::require(!certificate.isNull()&&!key.isNull(),"Qt cannot load owned TLS identity");
   }
 };
+struct JksEntry {QByteArray alias;QList<QByteArray> certificates;bool key=false;};
+QByteArray jksStore(const QList<JksEntry>& entries,quint32 version=2){
+  QByteArray body;QDataStream stream(&body,QIODevice::WriteOnly);stream.setByteOrder(QDataStream::BigEndian);
+  const auto utf=[&](const QByteArray& value){stream<<static_cast<quint16>(value.size());test::require(stream.writeRawData(value.constData(),static_cast<int>(value.size()))==value.size(),"Cannot encode generated JKS string");};
+  stream<<quint32{0xfeedfeed}<<version<<static_cast<quint32>(entries.size());
+  for(const auto& entry:entries){stream<<quint32(entry.key?1:2);utf(entry.alias);stream<<quint64{1700000000000};
+    if(entry.key){stream<<quint32{3};test::require(stream.writeRawData("key",3)==3,"Cannot encode opaque JKS key fixture");stream<<static_cast<quint32>(entry.certificates.size());}
+    else{test::require(entry.certificates.size()==1,"Trusted JKS fixture requires one certificate");}
+    for(const auto& cert:entry.certificates){if(version==2){utf("X.509");}stream<<static_cast<quint32>(cert.size());test::require(stream.writeRawData(cert.constData(),static_cast<int>(cert.size()))==cert.size(),"Cannot encode generated JKS certificate");}
+  }
+  // Independent fixture encoder: DataOutputStream layout and JavaKeyStore's
+  // documented UTF-16BE password + whitening string + body SHA-1.
+  return body+QCryptographicHash::hash(QByteArray::fromHex("006300680061006e0067006500690074")+"Mighty Aphrodite"+body,QCryptographicHash::Sha1);
+}
 class HttpServer final:public QTcpServer {
 public:
   QByteArray body=counts(hash()),lastRequest;QString failure;bool hold=false,chunked=false;
   int connections=0,requests=0;QHostAddress actualPeer;
   int redirectStatus=302;QByteArray location,encoding;
   QByteArray expectedHash=QByteArray(20,'\x11');
+  QByteArray basicRealm,requiredAuthorization;QList<QByteArray> authorizations;int challenges=0;
   const Certificate* tls=nullptr;
   QList<QPointer<QTcpSocket>> held;
   explicit HttpServer(const Certificate* c=nullptr):tls(c){test::require(listen(QHostAddress::LocalHost,0),"Cannot bind owned HTTP server");}
@@ -77,6 +95,12 @@ protected:
     QObject::connect(socket,&QTcpSocket::readyRead,this,[this,socket,bytes,done]{*bytes+=socket->readAll();if(bytes->size()>8192){failure="Unbounded HTTP request";socket->abort();return;}if(*done||!bytes->contains("\r\n\r\n")){return;}*done=true;++requests;lastRequest=*bytes;
       const auto first=bytes->left(bytes->indexOf("\r\n"));const auto at=first.indexOf("info_hash=");const auto end=first.lastIndexOf(' ');
       if(at<0||end<=at+10||QByteArray::fromPercentEncoding(first.mid(at+10,end-at-10))!=expectedHash){failure="Actual HTTP info_hash did not match the selected saved hash";socket->abort();return;}
+      QByteArray authorization;unsigned authFields=0;
+      for(const auto& line:bytes->split('\n')){if(line.toLower().startsWith("authorization:")){++authFields;authorization=line.mid(14).trimmed();}}
+      if(authFields>1){failure="Duplicate owned Authorization header";socket->abort();return;}authorizations.push_back(authorization);
+      if(!basicRealm.isEmpty()&&authorization!=requiredAuthorization){++challenges;
+        const auto denied="HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\""+basicRealm+"\"\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+        if(socket->write(denied)!=denied.size()){failure="Owned authentication challenge write failed";}socket->disconnectFromHost();return;}
       if(hold){held.push_back(socket);}else{reply(socket);}});
     QObject::connect(socket,&QTcpSocket::disconnected,socket,&QObject::deleteLater);
     if(tls){static_cast<QSslSocket*>(socket)->startServerEncryption();}
@@ -109,6 +133,10 @@ struct PayloadWatch {
 QByteArray originalCache(unsigned short port){
   const auto node=krpc::dictionary({{"addr",krpc::string(krpc::compact(port))},{"id",krpc::string(QByteArray(20,'K'))},{"created","i800e"},{"lastSeen","i995e"},{"failedCount","i0e"},{"verified","i1e"}});
   return krpc::dictionary({{"mainEntries",krpc::list({node})},{"replacements",krpc::list({})},{"oldKey",krpc::string(QByteArray(20,'R'))},{"timestamp","i1000e"},{"opaque",krpc::string(QByteArray::fromHex("00ff51"))}});
+}
+QByteArray savedAuthentication(const QUrl& url,const QByteArray& realm,const QByteArray& user="owned-user",const QByteArray& password="owned-password"){
+  const auto key=realm+':'+url.scheme().toUtf8()+"://"+url.host().toUtf8()+':'+QByteArray::number(url.port(url.scheme()=="https"?443:80))+"/";
+  return krpc::dictionary({{"swt.auth.persistent.cache",krpc::dictionary({{key,krpc::dictionary({{"user",krpc::string(user)},{"pw",krpc::string(password)}})}})}});
 }
 class MainlineSingleHttpTests final:public QObject {
   Q_OBJECT
@@ -172,6 +200,90 @@ private slots:
     const auto current=owner->mainlineDiscovery();QCOMPARE(current.lookups,std::uint64_t{0});QCOMPARE(current.announces,std::uint64_t{0});QCOMPARE(current.deliveredPeers,std::uint64_t{0});QVERIFY(!peer.hasPendingConnections());
     QVERIFY(inventory.unchanged());QVERIFY(state.unchanged());QVERIFY(statistics.unchanged());QVERIFY(tables.unchanged());QVERIFY(original.unchanged());
     const auto closed=owner->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(watch.untouched());watch.stop();QCOMPARE(test::read(saved.payload+"/sample.bin"),payload);QVERIFY(saved.intact(false));
+  }
+  void savedBasicChallengeAndCacheAreExactRealmOriginAndSecretFreeScope(){
+    const auto envelope=[](const QByteArray& value){return "HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: "+value+"\r\nContent-Length: 0\r\n\r\n";};
+    auto challenge=wire::response(envelope("Basic realm=\"owned\", charset=\"UTF-8\""),false);QVERIFY(challenge.complete&&challenge.basicAuthentication);QCOMPARE(challenge.basicRealm,QByteArray("owned"));
+    for(const auto& field:{QByteArray("Basic realm=\"a\", realm=\"b\""),QByteArray("Digest realm=\"owned\""),QByteArray("Basic realm=\"unfinished"),QByteArray("B"),QByteArray("Basic realm=\"a\\b\""),QByteArray("Basic realm=unquoted text")}){QVERIFY(wire::response(envelope(field),false).unsupported);}
+    QVERIFY(wire::response("HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"a\"\r\nWWW-Authenticate: Basic realm=\"b\"\r\n\r\n",false).unsupported);
+    auto route=detail::libraryHttpRoute(policy(),"http://localhost:23456/announce");QVERIFY(route);
+    auto doc=core::Document::parse(savedAuthentication(route->scrape,"owned").toStdString());QVERIFY(doc);
+    auto auth=detail::libraryHttpSavedBasic(&*doc,*route,"owned");QVERIFY(auth&&*auth);QCOMPARE(**auth,"Basic "+QByteArray("owned-user:owned-password").toBase64());
+    auth=detail::libraryHttpSavedBasic(&*doc,*route,"other");QVERIFY(auth&&!*auth);
+    auto other=detail::libraryHttpRoute(policy(),"http://localhost:23457/announce");QVERIFY(other);auth=detail::libraryHttpSavedBasic(&*doc,*other,"owned");QVERIFY(auth&&!*auth);
+    auto numeric=detail::libraryHttpRoute(policy(),"http://127.0.0.1:23456/announce");QVERIFY(numeric);QVERIFY(!detail::libraryHttpSavedBasic(&*doc,*numeric,"owned"));
+    auto invalid=core::Document::parse(savedAuthentication(route->scrape,"owned","name:ambiguous").toStdString());QVERIFY(invalid);QVERIFY(!detail::libraryHttpSavedBasic(&*invalid,*route,"owned"));
+    QTemporaryDir dir;QVERIFY(dir.isValid());auto lease=storage::ProfileLease::acquire(dir.path().toStdString());QVERIFY(lease);test::write(dir.filePath("biglybt.config"),QByteArray::fromStdString(doc->serialize()));
+    auto old=detail::libraryHttpConfiguration(*lease);QVERIFY(old);QVERIFY(old->scope.find("owned-password")==std::string::npos);
+    test::write(dir.filePath("biglybt.config"),savedAuthentication(route->scrape,"owned","owned-user","changed"));auto fresh=detail::libraryHttpConfiguration(*lease);QVERIFY(fresh);QVERIFY(fresh->scope!=old->scope);
+  }
+  void actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls_data(){
+    QTest::addColumn<bool>("encrypted");QTest::newRow("http")<<false;QTest::newRow("verified-https")<<true;
+  }
+  void actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls(){
+    QFETCH(bool,encrypted);Certificate certificate;HttpServer server(encrypted?&certificate:nullptr);server.basicRealm="owned";server.requiredAuthorization="Basic "+QByteArray("owned-user:owned-password").toBase64();
+    detail::LibraryHttpTracker client;if(encrypted){QVERIFY(QSslSocket::supportsSsl());auto trust=QSslConfiguration::defaultConfiguration();trust.setCaCertificates({certificate.certificate});QVERIFY(client.testTlsConfiguration(trust));}
+    auto route=detail::libraryHttpRoute(policy(),server.url());QVERIFY(route);auto doc=core::Document::parse(savedAuthentication(route->scrape,server.basicRealm).toStdString());QVERIFY(doc);
+    std::optional<detail::LibraryHttpTracker::Result> result;QString failure;int credentialReads=0,approvals=0;
+    const auto pump=[&]{auto value=client.poll(millis(),wallMillis(),[&](const auto&){++approvals;return true;},[&](const auto&,const auto& actual,const auto& realm){++credentialReads;return detail::libraryHttpSavedBasic(&*doc,actual,realm);});if(!value){failure=QString::fromStdString(value.error().message);return false;}if(*value){result=std::move(**value);}return true;};
+    QVERIFY(client.start(request(),*route,millis(),wallMillis()));QTRY_VERIFY_WITH_TIMEOUT(!pump()||result.has_value(),15000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QVERIFY(result&&result->terminal.comparable);QCOMPARE(result->terminal.complete,std::int64_t{5});
+    QCOMPARE(server.requests,2);QCOMPARE(server.challenges,1);QCOMPARE(credentialReads,1);QVERIFY(approvals>=4);QCOMPARE(server.authorizations.size(),qsizetype{2});QVERIFY(server.authorizations[0].isEmpty());QCOMPARE(server.authorizations[1],server.requiredAuthorization);QVERIFY(server.failure.isEmpty());client.close();
+  }
+  void basicAuthorizationNeverCrossesRedirectOriginAndWrongPasswordStops(){
+    HttpServer first,second;first.basicRealm="owned";first.requiredAuthorization="Basic "+QByteArray("owned-user:owned-password").toBase64();first.location="http://localhost:"+QByteArray::number(second.serverPort())+"/target";
+    auto route=detail::libraryHttpRoute(policy(),first.url());QVERIFY(route);auto doc=core::Document::parse(savedAuthentication(route->scrape,first.basicRealm).toStdString());QVERIFY(doc);detail::LibraryHttpTracker client;std::optional<detail::LibraryHttpTracker::Result> result;
+    const auto pump=[&]{auto value=client.poll(millis(),wallMillis(),[](const auto&){return true;},[&](const auto&,const auto& actual,const auto& realm){return detail::libraryHttpSavedBasic(&*doc,actual,realm);});if(!value){return false;}if(*value){result=std::move(**value);}return true;};
+    QVERIFY(client.start(request(),*route,millis(),wallMillis()));QTRY_VERIFY_WITH_TIMEOUT(!pump()||result.has_value(),15000);QVERIFY(result&&result->terminal.comparable);QCOMPARE(first.requests,2);QCOMPARE(second.requests,1);QVERIFY(second.authorizations[0].isEmpty());QVERIFY(first.failure.isEmpty()&&second.failure.isEmpty());
+    first.location.clear();doc=core::Document::parse(savedAuthentication(route->scrape,first.basicRealm,"owned-user","wrong").toStdString());QVERIFY(doc);result.reset();QVERIFY(client.start(request(2),*route,millis(),wallMillis()));
+    QTRY_VERIFY_WITH_TIMEOUT(!pump()||result.has_value(),15000);QVERIFY(result);QVERIFY(result->terminal.definitiveFailure&&!result->terminal.comparable);QCOMPARE(first.requests,4);QCOMPARE(first.challenges,3);
+    doc=core::Document::parse(savedAuthentication(route->scrape,"different-realm").toStdString());QVERIFY(doc);result.reset();QVERIFY(client.start(request(3),*route,millis(),wallMillis()));QTRY_VERIFY_WITH_TIMEOUT(!pump()||result.has_value(),15000);QVERIFY(result&&result->terminal.definitiveFailure);QCOMPARE(first.requests,5);QCOMPARE(first.challenges,4);client.close();
+  }
+  void changedSavedCredentialsAndCancellationRevokeBeforeRetrySocket(){
+    HttpServer server;server.basicRealm="owned";server.requiredAuthorization="Basic "+QByteArray("owned-user:owned-password").toBase64();auto route=detail::libraryHttpRoute(policy(),server.url());QVERIFY(route);
+    QTemporaryDir dir;QVERIFY(dir.isValid());auto lease=storage::ProfileLease::acquire(dir.path().toStdString());QVERIFY(lease);const auto path=dir.filePath("biglybt.config");test::write(path,savedAuthentication(route->scrape,server.basicRealm));
+    auto config=detail::libraryHttpConfiguration(*lease);QVERIFY(config);detail::LibraryHttpTracker client;QVERIFY(client.start(request(),*route,millis(),wallMillis()));
+    QTRY_VERIFY_WITH_TIMEOUT(client.resolvedProposalPending(),10000);QVERIFY(client.poll(millis(),wallMillis(),[](const auto&){return true;}));
+    QTRY_VERIFY_WITH_TIMEOUT(client.authenticationProposalPending(),10000);QCOMPARE(server.requests,1);int reads=0;
+    test::write(path,savedAuthentication(route->scrape,server.basicRealm,"owned-user","changed"));
+    auto withdrawn=client.poll(millis(),wallMillis(),[&](const auto&){auto current=detail::libraryHttpConfiguration(*lease);return current&&current->scope==config->scope;},[&](const auto&,const auto& actual,const auto& realm){++reads;auto doc=core::Document::parse(savedAuthentication(actual.scrape,realm).toStdString());return detail::libraryHttpSavedBasic(&*doc,actual,realm);});
+    QVERIFY(withdrawn&&!*withdrawn);QVERIFY(!client.active());QCOMPARE(reads,0);QCOMPARE(server.requests,1);
+    QVERIFY(client.start(request(2),*route,millis(),wallMillis()));QTRY_VERIFY_WITH_TIMEOUT(client.resolvedProposalPending(),10000);QVERIFY(client.poll(millis(),wallMillis(),[](const auto&){return true;}));QTRY_VERIFY_WITH_TIMEOUT(client.authenticationProposalPending(),10000);client.cancel();QVERIFY(!client.active());client.close();QCOMPARE(server.requests,2);QVERIFY(server.authorizations[0].isEmpty()&&server.authorizations[1].isEmpty());QVERIFY(server.failure.isEmpty());
+  }
+  void unchangedCacheCannotSurviveInternalTrackerPolicyChangeBeforeRetry(){
+    HttpServer server;server.basicRealm="owned";server.requiredAuthorization="Basic "+QByteArray("owned-user:owned-password").toBase64();auto route=detail::libraryHttpRoute(policy(),server.url());QVERIFY(route);
+    QTemporaryDir dir;QVERIFY(dir.isValid());auto lease=storage::ProfileLease::acquire(dir.path().toStdString());QVERIFY(lease);const auto path=dir.filePath("biglybt.config");test::write(path,savedAuthentication(route->scrape,server.basicRealm));
+    auto doc=core::Document::parse(test::read(path).toStdString());QVERIFY(doc);const auto cached=core::encodeValue(*doc->find("swt.auth.persistent.cache"),storage::compatibleConfigLimits());QVERIFY(cached);
+    auto approved=detail::libraryHttpConfiguration(*lease);QVERIFY(approved);detail::LibraryHttpTracker client;QVERIFY(client.start(request(),*route,millis(),wallMillis()));
+    QTRY_VERIFY_WITH_TIMEOUT(client.resolvedProposalPending(),10000);QVERIFY(client.poll(millis(),wallMillis(),[](const auto&){return true;}));QTRY_VERIFY_WITH_TIMEOUT(client.authenticationProposalPending(),10000);int reads=0;
+    auto selecting=client.poll(millis(),wallMillis(),[](const auto&){return true;},[&](const auto&,const auto& actual,const auto& realm){++reads;return detail::libraryHttpSavedBasic(&*doc,actual,realm);});QVERIFY(selecting);QCOMPARE(reads,1);
+    // Credential is selected, but its second DNS result has no socket approval.
+    QTRY_VERIFY_WITH_TIMEOUT(client.resolvedProposalPending(),10000);QCOMPARE(server.requests,1);
+    QVERIFY(doc->replaceValue("Tracker IP",krpc::string("localhost").toStdString()));test::write(path,QByteArray::fromStdString(doc->serialize()));
+    const auto stillCached=core::encodeValue(*doc->find("swt.auth.persistent.cache"),storage::compatibleConfigLimits());QVERIFY(stillCached);QCOMPARE(*stillCached,*cached);
+    auto changed=detail::libraryHttpConfiguration(*lease);QVERIFY(changed);QVERIFY(changed->scope!=approved->scope);QVERIFY(!detail::libraryHttpSavedBasic(&*doc,*route,server.basicRealm));
+    auto withdrawn=client.poll(millis(),wallMillis(),[&](const auto&){auto fresh=detail::libraryHttpConfiguration(*lease);return fresh&&fresh->scope==approved->scope;});QVERIFY(withdrawn&&!*withdrawn);QVERIFY(!client.active());client.close();QCOMPARE(server.requests,1);QVERIFY(server.authorizations[0].isEmpty());QVERIFY(server.failure.isEmpty());
+    QVERIFY(doc->replaceValue("Tracker IP","i1e"));test::write(path,QByteArray::fromStdString(doc->serialize()));auto typed=detail::libraryHttpConfiguration(*lease);QVERIFY(typed);QVERIFY(typed->scope!=changed->scope&&typed->scope!=approved->scope);
+    QVERIFY(doc->replaceValue("Tracker IP",krpc::string("other.example").toStdString()));test::write(path,QByteArray::fromStdString(doc->serialize()));auto other=detail::libraryHttpConfiguration(*lease);QVERIFY(other);QVERIFY(other->scope!=typed->scope&&other->scope!=changed->scope);
+  }
+  void thirdAuthenticationOriginExhaustionIsUnknownWithoutAThirdCredential(){
+    HttpServer first,second,third;const auto header="Basic "+QByteArray("owned-user:owned-password").toBase64();for(auto* server:{&first,&second,&third}){server->basicRealm="owned";server->requiredAuthorization=header;}
+    first.location="http://localhost:"+QByteArray::number(second.serverPort())+"/second";second.location="http://localhost:"+QByteArray::number(third.serverPort())+"/third";
+    auto route=detail::libraryHttpRoute(policy(),first.url());QVERIFY(route);detail::LibraryHttpTracker client;std::optional<detail::LibraryHttpTracker::Result> result;QString failure;int reads=0;
+    const auto pump=[&]{auto value=client.poll(millis(),wallMillis(),[](const auto&){return true;},[&](const auto&,const auto& actual,const auto& realm){++reads;auto doc=core::Document::parse(savedAuthentication(actual.scrape,realm).toStdString());return detail::libraryHttpSavedBasic(&*doc,actual,realm);});if(!value){failure=QString::fromStdString(value.error().message);return false;}if(*value){result=std::move(**value);}return true;};
+    QVERIFY(client.start(request(),*route,millis(),wallMillis()));QTRY_VERIFY_WITH_TIMEOUT(!pump()||result.has_value(),15000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QVERIFY(result);QVERIFY(!result->terminal.comparable&&!result->terminal.definitiveFailure);QCOMPARE(reads,2);QCOMPARE(first.requests,2);QCOMPARE(second.requests,2);QCOMPARE(third.requests,1);QCOMPARE(third.challenges,1);QVERIFY(third.authorizations[0].isEmpty());QVERIFY(first.failure.isEmpty()&&second.failure.isEmpty()&&third.failure.isEmpty());client.close();
+  }
+  void genuineNeverAdmittedOwnerUsesSavedBasicWithoutPayloadOrHiddenTorrent(){
+    test::OwnedEngineFixture saved(false);HttpServer tracker;tracker.expectedHash=QByteArray(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);tracker.basicRealm="owned";tracker.requiredAuthorization="Basic "+QByteArray("owned-user:owned-password").toBase64();tracker.body=counts(*saved.hash);
+    auto metadata=core::Document::parse(test::read(saved.stateFile).toStdString());QVERIFY(metadata);QVERIFY(metadata->replaceValue("announce",test::encoded(libtorrent::entry(tracker.url()))));test::write(saved.stateFile,QByteArray::fromStdString(metadata->serialize()));
+    auto route=detail::libraryHttpRoute(policy(),tracker.url());QVERIFY(route);test::write(saved.profile+"/biglybt.config",savedAuthentication(route->scrape,tracker.basicRealm));
+    const SavedBytes inventory(saved.profile+"/downloads.config"),state(saved.stateFile),statistics(saved.profile+"/BiglyBT.statistics"),tables(saved.profile+"/tables.config"),configuration(saved.profile+"/biglybt.config");
+    const auto bytes=test::read(saved.payload+"/sample.bin");auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);PayloadWatch watch(saved);
+    auto p=policy();p.mainlineIpv4=true;p.mainlineIpv6=false;p.mainlinePeerBootstrapOnly=true;QTcpServer transfer,discovery;QVERIFY(transfer.listen(QHostAddress::LocalHost,0));QVERIFY(discovery.listen(QHostAddress::LocalHost,0));QUdpSocket reserve;QVERIFY(reserve.bind(QHostAddress::LocalHost,discovery.serverPort(),QUdpSocket::DontShareAddress));p.listenPort=transfer.serverPort();p.mainlinePort=discovery.serverPort();transfer.close();discovery.close();reserve.close();
+    auto created=engine::PersistentSession::create({7981,7982,7983});QVERIFY(created);auto owner=std::move(*created);QVERIFY(owner->configureNetwork(p));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*lease));QString failure;
+    const auto pump=[&]{if(!owner->poll()){failure="Saved Basic owner poll failed";return false;}const auto status=owner->mainlineDiscovery();if(status.failure||status.queuedScrapeFailure){failure=QString::fromStdString(status.failure?status.failure->message:status.queuedScrapeFailure->message);return false;}if(!owner->managedDownloads().empty()||!owner->pendingMagnets().empty()||!watch.untouched()){failure="Saved Basic acquired payload authority";return false;}return true;};
+    QTRY_VERIFY_WITH_TIMEOUT(!pump()||tracker.requests==2,25000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QCOMPARE(tracker.requests,2);QCOMPARE(tracker.challenges,1);QCOMPARE(tracker.authorizations.size(),qsizetype{2});QVERIFY(tracker.authorizations[0].isEmpty());QCOMPARE(tracker.authorizations[1],tracker.requiredAuthorization);QVERIFY(tracker.failure.isEmpty());
+    QCOMPARE(owner->mainlineDiscovery().lookups,std::uint64_t{0});QCOMPARE(owner->mainlineDiscovery().announces,std::uint64_t{0});QCOMPARE(owner->mainlineDiscovery().deliveredPeers,std::uint64_t{0});
+    const auto closed=owner->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(watch.untouched());watch.stop();QCOMPARE(test::read(saved.payload+"/sample.bin"),bytes);QVERIFY(inventory.unchanged()&&state.unchanged()&&statistics.unchanged()&&tables.unchanged()&&configuration.unchanged());QVERIFY(saved.intact(false));
   }
   void originalMinimumFailureAndSingleOnlyDialectAreSourceDerived(){
     const auto key=hash();const std::span<const std::byte,20> bytes{key.bytes().data(),20};
@@ -241,6 +353,54 @@ private slots:
     const auto pump=[&]{auto result=client.poll(millis(),wallMillis(),[](const auto&){return true;});if(!result){return false;}if(*result){actual=std::move(**result);}return true;};
     QTRY_VERIFY_WITH_TIMEOUT(!pump()||actual.has_value(),15000);QVERIFY(actual);QVERIFY(actual->terminal.definitiveFailure&&!actual->terminal.comparable);QCOMPARE(first.requests,1);QCOMPARE(second.requests,0);QCOMPARE(second.connections,1);
     actual.reset();first.location="https://localhost:"+QByteArray::number(second.serverPort())+"/moved";QVERIFY(client.start(request(2),*route,millis(),wallMillis()));QTRY_VERIFY_WITH_TIMEOUT(!pump()||actual.has_value(),15000);QVERIFY(actual);QVERIFY(actual->terminal.comparable);QCOMPARE(first.requests,2);QCOMPARE(second.requests,1);QVERIFY(first.failure.isEmpty()&&second.failure.isEmpty());client.close();
+  }
+  void originalJksTrustUsesLastAliasAndFirstKeyCertificateAndChecksIntegrity(){
+    Certificate first,second;const auto a=first.certificate.toDer(),b=second.certificate.toDer();
+    for(const quint32 version:{1,2}){
+      const auto encoded=jksStore({{"localhost:443",{a},false}},version);auto decoded=detail::http_trust::decode(encoded.toStdString());QVERIFY(decoded);QCOMPARE(decoded->size(),1);QCOMPARE(decoded->front().toDer(),a);
+      auto duplicate=detail::http_trust::decode(jksStore({{"same",{a},false},{"same",{b},false}},version).toStdString());QVERIFY(duplicate);QCOMPARE(duplicate->size(),1);QCOMPARE(duplicate->front().toDer(),b);
+      auto unreachable=detail::http_trust::decode(jksStore({{"UPPER",{a},false}},version).toStdString());QVERIFY(unreachable&&unreachable->isEmpty());
+      auto canonical=detail::http_trust::decode(jksStore({{"UPPER",{a},false},{"upper",{b},false}},version).toStdString());QVERIFY(canonical);QCOMPARE(canonical->size(),1);QCOMPARE(canonical->front().toDer(),b);
+      auto chain=detail::http_trust::decode(jksStore({{"private",{a,b},true}},version).toStdString());QVERIFY(chain);QCOMPARE(chain->size(),1);QCOMPARE(chain->front().toDer(),a);
+    }
+    auto empty=detail::http_trust::decode(jksStore({}).toStdString());QVERIFY(empty&&empty->isEmpty());
+    auto damaged=jksStore({{"one",{a},false}});damaged[damaged.size()-1]^=1;QVERIFY(!detail::http_trust::decode(damaged.toStdString()));
+    const auto malformed=jksStore({{"one",{QByteArray("not DER")},false}});QVERIFY(!detail::http_trust::decode(malformed.toStdString()));
+    auto trailing=jksStore({});trailing.insert(trailing.size()-20,'x');auto body=trailing.left(trailing.size()-20);trailing=body+QCryptographicHash::hash(QByteArray::fromHex("006300680061006e0067006500690074")+"Mighty Aphrodite"+body,QCryptographicHash::Sha1);QVERIFY(!detail::http_trust::decode(trailing.toStdString()));
+    QByteArray excessive=QByteArray::fromHex("feedfeed0000000200001001");excessive+=QCryptographicHash::hash(QByteArray::fromHex("006300680061006e0067006500690074")+"Mighty Aphrodite"+excessive,QCryptographicHash::Sha1);QVERIFY(!detail::http_trust::decode(excessive.toStdString()));
+    QVERIFY(!detail::http_trust::decode(jksStore({{"bad-utf-\xff",{a},false}}).toStdString()));
+    const auto unicode=detail::http_trust::decode(jksStore({{QByteArray::fromHex("c3a9"),{a},false}}).toStdString());QVERIFY(!unicode);QCOMPARE(unicode.error().code,storage::ErrorCode::Unsupported);
+  }
+  void savedHttpsTrustIsProfileBoundReadOnlyAndCannotDisableOrdinaryHttp(){
+    QTemporaryDir first,second;QVERIFY(first.isValid()&&second.isValid());auto a=storage::ProfileLease::acquire(first.path().toStdString()),b=storage::ProfileLease::acquire(second.path().toStdString());QVERIFY(a&&b);
+    Certificate identity;const auto encoded=jksStore({{"localhost:443",{identity.certificate.toDer()},false}});const auto leaf=first.path()+"/.certs";
+    auto http=detail::libraryHttpConfiguration(*a);QVERIFY(http);test::write(leaf,encoded);const SavedBytes saved(leaf);
+    auto trusted=detail::libraryHttpConfiguration(*a,true),absent=detail::libraryHttpConfiguration(*b,true);QVERIFY(trusted&&absent);QVERIFY(trusted->trustAnchors);QCOMPARE(trusted->trustAnchors->size(),1);QVERIFY(!absent->trustAnchors);QVERIFY(trusted->scope!=absent->scope);QVERIFY(saved.unchanged());
+    auto plain=detail::libraryHttpConfiguration(*a);QVERIFY(plain);QCOMPARE(plain->scope,http->scope);QVERIFY(!plain->trustAnchors);
+    QVERIFY(QFile::rename(leaf,leaf+".old"));test::write(leaf,encoded);auto replaced=detail::libraryHttpConfiguration(*a,true);QVERIFY(replaced);QVERIFY(replaced->scope!=trusted->scope);QCOMPARE(test::read(leaf+".old"),encoded);
+    test::write(leaf,"broken saved store");const SavedBytes bad(leaf);QVERIFY(!detail::libraryHttpConfiguration(*a,true));QVERIFY(detail::libraryHttpConfiguration(*a));QVERIFY(bad.unchanged());
+    QVERIFY(QFile::remove(leaf));const auto external=second.path()+"/.certs";test::write(external,encoded);const SavedBytes foreign(external);
+    QVERIFY(::symlink(external.toStdString().c_str(),leaf.toStdString().c_str())==0);auto link=detail::libraryHttpConfiguration(*a,true);QVERIFY(!link);QCOMPARE(link.error().code,storage::ErrorCode::UnsafePath);QVERIFY(foreign.unchanged());QVERIFY(QFile::remove(leaf));
+    QVERIFY(::link(external.toStdString().c_str(),leaf.toStdString().c_str())==0);QVERIFY(!detail::libraryHttpConfiguration(*a,true));QVERIFY(QFile::remove(leaf));QVERIFY(QDir().mkdir(leaf));QVERIFY(!detail::libraryHttpConfiguration(*a,true));
+    QVERIFY(QDir().rmdir(leaf));auto missing=detail::libraryHttpConfiguration(*a,true);QVERIFY(missing&&!missing->trustAnchors);
+  }
+  void savedJksAnchorsDriveActualTlsAndFreshGatesRevokeReplacedTrust(){
+    QVERIFY(QSslSocket::supportsSsl());QTemporaryDir profile;QVERIFY(profile.isValid());auto lease=storage::ProfileLease::acquire(profile.path().toStdString());QVERIFY(lease);
+    Certificate identity,other;HttpServer server(&identity);const auto leaf=profile.path()+"/.certs";const auto encoded=jksStore({{"localhost",{identity.certificate.toDer()},false}});
+    test::write(leaf,encoded);const auto route=detail::libraryHttpRoute(policy(),server.url());QVERIFY(route);detail::LibraryHttpTracker client;
+    const auto global=QSslConfiguration::defaultConfiguration().caCertificates();std::optional<detail::LibraryHttpTracker::Result> result;QString failure;
+    const auto issue=[&](std::uint64_t nonce,const detail::LibraryHttpRoute& r){auto config=detail::libraryHttpConfiguration(*lease,true);if(!config){return false;}auto next=request(nonce);next.configuration=detail::libraryHttpRouteScope(r,config->scope);return client.start(std::move(next),r,millis(),wallMillis(),config->singleOnly,config->trustAnchors).has_value();};
+    const auto pump=[&](const detail::LibraryHttpRoute& r){auto value=client.poll(millis(),wallMillis(),[&](const auto& current){auto fresh=detail::libraryHttpConfiguration(*lease,true);return fresh&&current.configuration==detail::libraryHttpRouteScope(r,fresh->scope);});if(!value){failure=QString::fromStdString(value.error().message);return false;}if(*value){result=std::move(**value);}return true;};
+    QVERIFY(issue(1,*route));QTRY_VERIFY_WITH_TIMEOUT(client.resolvedProposalPending(),10000);QCOMPARE(server.connections,0);
+    QVERIFY(QFile::rename(leaf,leaf+".old"));test::write(leaf,encoded);QVERIFY(pump(*route));QVERIFY(!client.active()&&!result);QCOMPARE(server.connections,0);
+    const SavedBytes saved(leaf);QVERIFY(issue(2,*route));QTRY_VERIFY_WITH_TIMEOUT(!pump(*route)||result.has_value(),10000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QVERIFY(result&&result->terminal.comparable);QCOMPARE(server.requests,1);QVERIFY(saved.unchanged());result.reset();
+    const auto wrong=detail::libraryHttpRoute(policy(),server.url(true));QVERIFY(wrong);QVERIFY(issue(3,*wrong));QTRY_VERIFY_WITH_TIMEOUT(!pump(*wrong)||result.has_value(),10000);QVERIFY(failure.isEmpty());QVERIFY(result&&result->terminal.definitiveFailure&&!result->terminal.comparable);QCOMPARE(server.requests,1);result.reset();
+    test::write(leaf,jksStore({{"different-root",{other.certificate.toDer()},false}}));QVERIFY(issue(4,*route));QTRY_VERIFY_WITH_TIMEOUT(!pump(*route)||result.has_value(),10000);QVERIFY(failure.isEmpty());QVERIFY(result&&result->terminal.definitiveFailure&&!result->terminal.comparable);QCOMPARE(server.requests,1);result.reset();
+    test::write(leaf,encoded);server.hold=true;QVERIFY(issue(5,*route));QTRY_VERIFY_WITH_TIMEOUT(!pump(*route)||server.requests==2,10000);QVERIFY(failure.isEmpty());QCOMPARE(server.requests,2);QVERIFY(!result);
+    test::write(leaf,jksStore({}));server.release();QTRY_VERIFY_WITH_TIMEOUT(!pump(*route)||!client.active(),10000);QVERIFY(failure.isEmpty());QVERIFY(!result);QVERIFY(!client.active());QCOMPARE(server.requests,2);
+    client.close();auto baseline=QSslConfiguration::defaultConfiguration();baseline.setCaCertificates({identity.certificate});QVERIFY(client.testTlsConfiguration(baseline));
+    QVERIFY(issue(6,*route));QTRY_VERIFY_WITH_TIMEOUT(!pump(*route)||result.has_value(),10000);QVERIFY(failure.isEmpty());QVERIFY(result&&result->terminal.definitiveFailure&&!result->terminal.comparable);QCOMPARE(server.requests,2);
+    client.close();QVERIFY(server.failure.isEmpty());QCOMPARE(QSslConfiguration::defaultConfiguration().caCertificates(),global);QCOMPARE(test::read(leaf+".old"),encoded);
   }
   void actualTlsRequiresRootAndHostnameAndSupportsTrustedOwnedRoot(){
     QVERIFY(QSslSocket::supportsSsl());Certificate identity;HttpServer server(&identity);auto route=detail::libraryHttpRoute(policy(),server.url());QVERIFY(route);

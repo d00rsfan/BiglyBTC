@@ -2,6 +2,7 @@
 #include "library_udp_tracker.hpp"
 #include <QHostAddress>
 #include <QSslConfiguration>
+#include <QSslCertificate>
 #include <QUrl>
 #include <functional>
 #include <memory>
@@ -22,7 +23,8 @@ std::string libraryHttpRouteScope(const LibraryHttpRoute&,std::string_view);
 std::optional<std::pair<QHostAddress,QHostAddress>> libraryHttpEndpoint(
     const LibraryHttpRoute&,const QList<QHostAddress>&);
 namespace http_tracker_wire {
-struct Body {bool complete=false,unsupported=false;QByteArray bytes;bool failed=false;QByteArray location={};};
+struct Body {bool complete=false,unsupported=false;QByteArray bytes;bool failed=false;QByteArray location={};
+  QByteArray basicRealm={};bool basicAuthentication=false;};
 Body response(const QByteArray&,bool eof);
 core::QueueTrackerTerminal scrape(std::string_view,std::span<const std::byte,20>,
     std::int64_t now,std::int64_t wall,std::int64_t started,bool singleOnly,unsigned fuzzSeconds);
@@ -34,17 +36,21 @@ class LibraryHttpTracker final {
 public:
   using Request=LibraryUdpTracker::Request;
   using Result=LibraryUdpTracker::Result;
+  using Authentication=std::function<std::expected<std::optional<QByteArray>,storage::Error>(
+      const Request&,const LibraryHttpRoute&,const QByteArray& realm)>;
   LibraryHttpTracker();
   ~LibraryHttpTracker();
   LibraryHttpTracker(const LibraryHttpTracker&)=delete;
   LibraryHttpTracker& operator=(const LibraryHttpTracker&)=delete;
   const Request* active()const noexcept;
+  bool authenticationProposalPending() const; // Passive; never reads credentials or approves.
   bool redirectProposalPending() const; // Passive; never resolves/approves.
   bool resolvedProposalPending() const; // Passive internal diagnostic, no DNS/pump/authority.
   std::expected<void,storage::Error> start(Request,const LibraryHttpRoute&,std::int64_t now,
-      std::int64_t wall,bool singleOnly=false);
+      std::int64_t wall,bool singleOnly=false,
+      const std::optional<QList<QSslCertificate>>& trustAnchors=std::nullopt);
   std::expected<std::optional<Result>,storage::Error> poll(std::int64_t now,std::int64_t wall,
-      const std::function<bool(const Request&)>& authorise);
+      const std::function<bool(const Request&)>& authorise,const Authentication& authenticate={});
   void cancel() noexcept;
   void close() noexcept;
   // Internal transport test seam: caller-created trust anchors, never persisted
