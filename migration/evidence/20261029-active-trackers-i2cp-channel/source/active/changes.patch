@@ -1,0 +1,735 @@
+--- a/preview/native/engine/managed_tracker_responses.hpp
++++ b/preview/native/engine/managed_tracker_responses.hpp
+@@ -5,6 +5,7 @@
+ #include <libtorrent/add_torrent_params.hpp>
+ #include <libtorrent/torrent_info.hpp>
+ #include <openssl/evp.h>
++#include <algorithm>
+ #include <array>
+ #include <atomic>
+ #include <map>
+@@ -12,6 +13,7 @@
+ #include <optional>
+ #include <string>
+ #include <thread>
++#include <vector>
+ #include <sys/stat.h>
+ #if defined(__linux__) && __has_include(<libtorrent/biglybtc_tracker_response.hpp>) && !defined(TORRENT_DISABLE_EXTENSIONS)
+ #include <libtorrent/biglybtc_tracker_response.hpp>
+@@ -49,10 +51,37 @@
+   if(params.ti&&!bool(params.flags&libtorrent::torrent_flags::override_trackers)){for(const auto& tracker:params.ti->trackers()){take(tracker.url);}}
+   return valid?one:std::nullopt;
+ }
++// An immutable before-activation inventory. This binds callback URLs only;
++// it does not identify the announcer's current/best URL or grant scrape rights.
++inline std::optional<std::vector<std::string>> effectiveTrackerResponseUrls(const libtorrent::add_torrent_params& params){
++  std::vector<std::string> urls;bool valid=true;
++  const auto take=[&](std::string_view url){
++    if(url.empty()){return;}
++    if(url.size()>2048||(!url.starts_with("http://")&&!url.starts_with("https://")&&!url.starts_with("udp://"))){valid=false;return;}
++    if(std::ranges::find(urls,url)==urls.end()){
++      if(urls.size()==8){valid=false;return;}urls.emplace_back(url);
++    }
++  };
++  for(const auto& url:params.trackers){take(url);}
++  if(params.ti&&!bool(params.flags&libtorrent::torrent_flags::override_trackers)){for(const auto& tracker:params.ti->trackers()){take(tracker.url);}}
++  return valid&&!urls.empty()?std::optional{std::move(urls)}:std::nullopt;
++}
++inline std::optional<std::vector<std::string>> singleTierUdpResponseUrls(const libtorrent::add_torrent_params& params){
++  auto urls=effectiveTrackerResponseUrls(params);
++  if(!urls||urls->size()<2||std::ranges::any_of(*urls,[](const auto& url){return !url.starts_with("udp://");})
++      ||(!params.tracker_tiers.empty()&&params.tracker_tiers.size()!=params.trackers.size())
++      ||std::ranges::any_of(params.tracker_tiers,[](int tier){return tier!=0;})){return {};}
++  if(params.ti&&!bool(params.flags&libtorrent::torrent_flags::override_trackers)
++      &&std::ranges::any_of(params.ti->trackers(),[](const auto& tracker){return tracker.tier!=0;})){return {};}
++  return urls;
++}
+ class ManagedTrackerResponse final {
+ public:
+   struct Value {std::uint64_t admission=0,sequence=0,request=0;unsigned protocol=0;
+     std::array<unsigned char,32> tracker{};std::int64_t requestStartedNanos=0,observedNanos=0;core::QueueTrackerTerminal terminal;};
++  struct Binding {std::string url,responseKey;std::array<unsigned char,32> tracker{};
++    std::shared_ptr<core::QueueOriginalTrackerResponse> response;std::optional<Value> latest;};
++  struct UrlTerminal {std::string url;core::QueueOriginalScrapeResponse response;Value terminal;};
+   using AnnounceDeadline=std::optional<std::int64_t>(*)(const core::QueueTrackerTerminal&);
+   static constexpr std::uint64_t Capacity=256;
+   static_assert(std::atomic<std::uint64_t>::is_always_lock_free&&std::atomic_bool::is_always_lock_free);
+@@ -62,36 +91,92 @@
+   ManagedTrackerResponse(std::uint64_t id,unsigned version,std::array<unsigned char,32> url,
+       std::shared_ptr<core::QueueOriginalTrackerResponse> value,AnnounceDeadline deadline=nullptr)
+       :admission(id),protocol(version),tracker(url),response(std::move(value)),deadline_(deadline),worker_(std::this_thread::get_id()){}
++  ManagedTrackerResponse(std::uint64_t id,unsigned version,std::vector<Binding> bindings,AnnounceDeadline deadline=nullptr)
++      :admission(id),protocol(version),tracker(bindings.empty()?std::array<unsigned char,32>{}:bindings.front().tracker),
++       response(bindings.empty()?nullptr:bindings.front().response),deadline_(deadline),worker_(std::this_thread::get_id()),bindings_(std::move(bindings)){
++    if(bindings_.empty()||bindings_.size()>8||!response){lost=true;return;}
++    for(std::size_t i=0;i<bindings_.size();++i){const auto& value=bindings_[i];
++      if(value.url.empty()||value.responseKey.empty()||!value.response){lost=true;return;}
++      for(std::size_t j=0;j<i;++j){if(bindings_[j].tracker==value.tracker||bindings_[j].responseKey==value.responseKey){lost=true;return;}}
++    }
++  }
++  bool sole()const noexcept{return bindings_.size()<=1;}
++  // Collected BEFORE the sole pop_alerts call. A callback written after this
++  // cut cannot be selected until a later collection has delivered its dispatch.
++  void beginDispatchCollection()noexcept{
++    if(std::this_thread::get_id()!=worker_){return;}dispatchCut_=written_.load(std::memory_order_acquire);
++  }
++  void loseDispatch()noexcept{dispatchLost_=true;currentDispatch_.reset();}
++  void observeUdpDispatch(std::string_view url,unsigned version,std::int64_t alertStamp)noexcept{
++    if(std::this_thread::get_id()!=worker_||sole()||dispatchLost_||version!=protocol){return;}
++    if(alertStamp<=0||alertStamp<lastDispatchStamp_||dispatchGeneration_==UINT64_MAX){loseDispatch();return;}
++    const auto found=std::ranges::find(bindings_,url,&Binding::url);
++    if(found==bindings_.end()||!url.starts_with("udp://")){loseDispatch();return;}
++    lastDispatchStamp_=alertStamp;++dispatchGeneration_;currentDispatch_=found->tracker;
++  }
++  // The sole original helper's current URL comes ONLY from dispatch alerts,
++  // never from the newest response. History for a different URL stays separate.
++  std::optional<UrlTerminal> currentUdpTerminal()const{
++    if(std::this_thread::get_id()!=worker_||sole()||dispatchLost_||!currentDispatch_
++        ||!installed.load(std::memory_order_acquire)||lost.load(std::memory_order_acquire)
++        ||read_.load(std::memory_order_acquire)!=dispatchCut_||written_.load(std::memory_order_acquire)!=dispatchCut_){return {};}
++    const auto found=std::ranges::find(bindings_,*currentDispatch_,&Binding::tracker);
++    if(found==bindings_.end()||!found->latest){return {};}
++    return UrlTerminal{found->url,found->response->response(),*found->latest};
++  }
++  void cancelRequests()noexcept{
++    if(bindings_.empty()){if(response){response->cancelRequest();}return;}
++    for(auto& value:bindings_){if(value.response){value.response->cancelRequest();}}
++  }
++  // Worker-only owned copies of actual response-changing terminals. There is
++  // deliberately no selected/best response in this multi-URL observation API.
++  std::vector<UrlTerminal> urlTerminals()const{
++    if(std::this_thread::get_id()!=worker_||!installed.load(std::memory_order_acquire)||lost.load(std::memory_order_acquire)){return {};}
++    std::vector<UrlTerminal> result;
++    for(const auto& value:bindings_){if(value.latest){result.push_back({value.url,value.response->response(),*value.latest});}}
++    return result;
++  }
+   void observe(const Value& value)noexcept{
+     if(lost.load(std::memory_order_acquire)){return;}const auto end=written_.load(std::memory_order_relaxed),begin=read_.load(std::memory_order_acquire);
+     if(end==UINT64_MAX||end-begin>=Capacity){lost.store(true,std::memory_order_release);return;}events_[end%Capacity]=value;written_.store(end+1,std::memory_order_release);
+   }
+   bool drain()noexcept{
+     if(std::this_thread::get_id()!=worker_||!installed.load(std::memory_order_acquire)){return false;}
+-    if(lost.load(std::memory_order_acquire)){response->unavailable();return false;}
++    if(lost.load(std::memory_order_acquire)){unavailable();return false;}
+     auto begin=read_.load(std::memory_order_relaxed);const auto end=written_.load(std::memory_order_acquire);
+     while(begin<end){const auto& value=events_[begin%Capacity];++begin;
+       if(previous_==UINT64_MAX||value.sequence!=previous_+1||value.admission!=admission
+           ||!value.request||value.observedNanos<lastNanos_||value.requestStartedNanos<=0||value.requestStartedNanos>value.observedNanos){lost=true;break;}
+       previous_=value.sequence;lastNanos_=value.observedNanos;
+       if(value.protocol!=protocol){continue;}
+-      if(value.tracker!=tracker){lost=true;break;}
+-      const bool accepted=deadline_?response->observeChronological(value.terminal,value.observedNanos):(response->observe(value.terminal),true);
++      auto* destination=response.get();auto* latest=&latest_;
++      if(!bindings_.empty()){
++        const auto found=std::ranges::find(bindings_,value.tracker,&Binding::tracker);
++        if(found==bindings_.end()){lost=true;break;}destination=found->response.get();latest=&found->latest;
++      }else if(value.tracker!=tracker){lost=true;break;}
++      const bool accepted=(deadline_||!sole())?destination->observeChronological(value.terminal,value.observedNanos):(destination->observe(value.terminal),true);
+       // Projection runs only on the existing worker drain, for every accepted
+       // terminal in order. It cannot supply counts, epochs or network rights.
+-      if(deadline_){try{if(const auto due=deadline_(value.terminal)){if(response->announceTimingCurrent(value.observedNanos)&&!response->deferRegularUntil(*due,value.observedNanos)){lost=true;break;}if(accepted){latest_=value;}}}
++      if(deadline_){try{if(const auto due=deadline_(value.terminal)){if(destination->announceTimingCurrent(value.observedNanos)&&!destination->deferRegularUntil(*due,value.observedNanos)){lost=true;break;}if(accepted){*latest=value;}}}
+         catch(...){lost=true;break;}}
+       if(accepted&&(value.terminal.kind==core::QueueTrackerTerminalKind::Scrape||value.terminal.kind==core::QueueTrackerTerminalKind::ScrapeFailed)
+-          &&(value.terminal.comparable||value.terminal.definitiveFailure)){latest_=value;}
+-    }
+-    read_.store(begin,std::memory_order_release);if(lost.load(std::memory_order_acquire)){response->unavailable();return false;}return true;
++          &&(value.terminal.comparable||value.terminal.definitiveFailure)){*latest=value;}
++      if(!sole()&&accepted&&value.terminal.kind==core::QueueTrackerTerminalKind::Announce){*latest=value;}
++    }
++    read_.store(begin,std::memory_order_release);if(lost.load(std::memory_order_acquire)){unavailable();return false;}return true;
+   }
+   // Last actual response-changing selected terminal; never drains or samples.
+   std::optional<Value> latestTerminal()const noexcept{
+-    if(std::this_thread::get_id()!=worker_||!installed.load(std::memory_order_acquire)||lost.load(std::memory_order_acquire)){return {};}return latest_;
++    if(std::this_thread::get_id()!=worker_||!sole()||!installed.load(std::memory_order_acquire)||lost.load(std::memory_order_acquire)){return {};}return bindings_.empty()?latest_:bindings_.front().latest;
+   }
+ private:
++  void unavailable()noexcept{
++    if(bindings_.empty()){if(response){response->unavailable();}return;}
++    for(auto& value:bindings_){if(value.response){value.response->unavailable();}}
++  }
+   std::optional<Value> latest_;const AnnounceDeadline deadline_;const std::thread::id worker_;std::array<Value,Capacity> events_{};std::atomic<std::uint64_t> written_{0},read_{0};
++  std::vector<Binding> bindings_;std::uint64_t dispatchCut_=0,dispatchGeneration_=0;
++  std::int64_t lastDispatchStamp_=0;bool dispatchLost_=false;std::optional<std::array<unsigned char,32>> currentDispatch_;
+   std::uint64_t previous_=0;std::int64_t lastNanos_=0;
+ };
+ using LibraryTrackerResponses=std::map<std::string,std::shared_ptr<core::QueueOriginalTrackerResponse>>;
+@@ -100,18 +185,25 @@
+ #if BIGLYBTC_TRACKER_RESPONSE_BRIDGE
+   namespace lt=libtorrent;
+   try{
+-    const auto url=singleEffectiveTracker(params);if(!url||!params.ti||!admission){return {};}
+-    const auto section=params.ti->info_section();const auto key=originalTrackerResponseKey(lease,identity,{section.data(),static_cast<std::size_t>(section.size())},*url);
+-    const auto digest=originalTrackerUrlDigest(*url);if(!key||!digest){return {};}
++    const auto urls=effectiveTrackerResponseUrls(params);if(!urls||!params.ti||!admission){return {};}
++    const auto section=params.ti->info_section();std::vector<ManagedTrackerResponse::Binding> bindings;
++    LibraryTrackerResponses additions;
++    for(const auto& url:*urls){
++      const auto key=originalTrackerResponseKey(lease,identity,{section.data(),static_cast<std::size_t>(section.size())},url);
++      const auto digest=originalTrackerUrlDigest(url);if(!key||!digest){return {};}
++      const auto found=library.find(*key);auto response=found==library.end()?std::make_shared<core::QueueOriginalTrackerResponse>():found->second;
++      if(found==library.end()){additions.emplace(*key,response);}
++      bindings.push_back({url,*key,*digest,std::move(response),{}});
++    }
++    if(additions.size()>256||library.size()>256-additions.size()){return {};}
+     auto pin=managedTrackerResponseRuntimePin();if(!pin){return {};}
+     const auto abi=reinterpret_cast<decltype(&lt::biglybtc_tracker_response_abi_v1)>(::dlsym(pin.get(),"biglybtc_tracker_response_abi_v1"));
+     const auto attach=reinterpret_cast<decltype(&lt::biglybtc_attach_tracker_response_observer_v1)>(::dlsym(pin.get(),"biglybtc_attach_tracker_response_observer_v1"));
+     if(!abi||!attach||reinterpret_cast<void*>(abi)!=::dlsym(RTLD_DEFAULT,"biglybtc_tracker_response_abi_v1")
+         ||reinterpret_cast<void*>(attach)!=::dlsym(RTLD_DEFAULT,"biglybtc_attach_tracker_response_observer_v1")||abi()!=1){return {};}
+-    auto row=library.find(*key);if(row==library.end()){
+-      if(library.size()==256){return {};}row=library.emplace(*key,std::make_shared<core::QueueOriginalTrackerResponse>()).first;
+-    }
+-    auto ring=std::make_shared<ManagedTrackerResponse>(admission,identity.selected==storage::OriginalSelectedHash::V1?1u:2u,*digest,row->second,deadline);
++    auto ring=std::make_shared<ManagedTrackerResponse>(admission,identity.selected==storage::OriginalSelectedHash::V1?1u:2u,std::move(bindings),deadline);
++    if(ring->lost.load(std::memory_order_acquire)){return {};}
++    library.merge(additions);
+     struct Sink final:lt::BiglybtcTrackerResponseObserverV1 {
+       std::shared_ptr<void> pin;std::shared_ptr<ManagedTrackerResponse> ring;
+       Sink(std::shared_ptr<void> p,std::shared_ptr<ManagedTrackerResponse> r):pin(std::move(p)),ring(std::move(r)){}
+--- a/preview/native/engine/persistent_session.hpp
++++ b/preview/native/engine/persistent_session.hpp
+@@ -54,6 +54,14 @@
+   core::QueueOriginalScrapeResponse response;
+   std::int64_t observedWallMillis=0;
+   std::uint64_t admission=0; // Zero is saved-only; nonzero requires this exact live owner.
++};
++// Actual retained per-URL tracker observation for one live managed admission.
++// It is not a best-active selection, regular scrape/queue permission or rank.
++struct ManagedTrackerUrlResponse {
++  std::string url;
++  core::QueueOriginalScrapeResponse response;
++  std::int64_t observedWallMillis=0;
++  std::uint64_t sequence=0;
+ };
+ struct MainlineScrapeCandidateStatus {
+   core::TorrentHash hash;
+@@ -180,6 +188,15 @@
+   // callback draining, status query or new permission; exact admission required.
+   std::optional<core::QueueOriginalScrapeResponse> managedTrackerResponse(
+       const core::TorrentHash&, std::uint64_t admission) const;
++  // Passive worker-only URL-labelled observations from the same rich provider
++  // ring. No drain, RPC, current-announcer inference or additional IO.
++  std::vector<ManagedTrackerUrlResponse> managedTrackerUrlResponses(
++      const core::TorrentHash&, std::uint64_t admission) const;
++  // Narrow original single-helper selection: one saved tier of numeric UDP
++  // URLs, current URL from actual dispatch alerts, same retained response.
++  // Passive counts only; this does not enable a regular/Mainline scrape.
++  std::optional<ManagedTrackerUrlResponse> managedActiveUdpTrackerResponse(
++      const core::TorrentHash&, std::uint64_t admission) const;
+   // Last accepted bits for diagnostics only; copies never grant release.
+   std::vector<std::uint8_t> verifiedSeedPieces(const core::TorrentHash&) const;
+   bool managedAvailable() const noexcept;
+--- a/preview/native/engine/persistent_session.cpp
++++ b/preview/native/engine/persistent_session.cpp
+@@ -118,6 +118,7 @@
+     std::uint64_t targetStatisticsSequence=0;
+     std::shared_ptr<detail::ManagedQueueObservations> queueObservations;
+     std::shared_ptr<detail::ManagedTrackerResponse> trackerResponse;
++    std::optional<std::string> activeUdpTrackerScope;
+     std::shared_ptr<detail::MmapDiskLatency> mmapLatency;
+     std::optional<Clock::time_point> runningSince, seedingSince;
+     std::optional<lt::time_point> trackerRunningSince, trackerSeedingSince;
+@@ -380,8 +381,10 @@
+   std::vector<lt::alert*> pop() {
+     detail::require(bindingHealthy(), "Explicit network binding was lost; owner joined without a final certificate", storage::ErrorCode::Io);
+     std::vector<lt::alert*> pending;
++    for(auto& [key,value]:managed){(void)key;if(value->trackerResponse){value->trackerResponse->beginDispatchCollection();}}
+     session->pop_alerts(&pending); // The ONLY pop_alerts consumer for this owner.
+     if (pending.size() > 4096) {
++      for(auto& [key,value]:managed){(void)key;if(value->trackerResponse){value->trackerResponse->loseDispatch();}value->activeUdpTrackerScope.reset();}
+       removalLost = true; transferError = true;
+       counterError(AccountingError::CounterResponseLost);
+       return pending;
+@@ -391,10 +394,14 @@
+     // active weak ownership identity or its operation token.
+     for (auto* alert : pending) {
+       if (!alert) {
++        for(auto& [key,value]:managed){(void)key;if(value->trackerResponse){value->trackerResponse->loseDispatch();}value->activeUdpTrackerScope.reset();}
+         removalLost = true; transferError = true;
+         counterError(AccountingError::CounterResponseLost); continue;
+       }
+       if (auto* dropped = lt::alert_cast<lt::alerts_dropped_alert>(alert)) {
++        if(dropped->dropped_alerts.test(lt::tracker_announce_alert::alert_type)){
++          for(auto& [key,value]:managed){(void)key;if(value->trackerResponse){value->trackerResponse->loseDispatch();}value->activeUdpTrackerScope.reset();}
++        }
+         if (dropped->dropped_alerts.test(lt::session_stats_alert::alert_type)) {
+           counterError(AccountingError::CounterResponseLost);
+         }
+@@ -443,6 +450,17 @@
+       const auto owned = managedByHandle.find(torrentAlert->handle);
+       if (owned == managedByHandle.end()) { continue; }
+       auto& value = *owned->second;
++      if(const auto* dispatched=lt::alert_cast<lt::tracker_announce_alert>(alert);dispatched&&value.trackerResponse&&!value.trackerResponse->sole()){
++        auto& ring=*value.trackerResponse;
++        const bool token=value.token&&value.token->number==value.status.admission&&ring.admission==value.status.admission;
++        const auto& endpoint=dispatched->local_endpoint;
++        const bool bound=networkBinding&&networkBindingCurrent(*networkBinding)&&networkBinding->effective.bindAddresses.size()==1
++            &&networkBinding->effective.listenPort>0&&endpoint.port()==networkBinding->effective.listenPort
++            &&endpoint.address().to_string()==networkBinding->effective.bindAddresses.front();
++        if(!token||!bound||value.stop||value.removing){ring.loseDispatch();value.activeUdpTrackerScope.reset();}
++        else{ring.observeUdpDispatch(dispatched->tracker_url(),dispatched->version==lt::protocol_version::V1?1u:2u,
++            std::chrono::duration_cast<std::chrono::nanoseconds>(dispatched->timestamp().time_since_epoch()).count());}
++      }
+       if (lt::alert_cast<lt::tracker_reply_alert>(alert)) { value.mainlineTrackerHealthy=true; }
+       if (lt::alert_cast<lt::tracker_error_alert>(alert)) { value.mainlineTrackerHealthy=false; }
+       if (const auto* state = lt::alert_cast<lt::state_changed_alert>(alert)) {
+@@ -593,7 +611,7 @@
+           }
+           settings.set_bool(lt::settings_pack::dont_count_slow_torrents, false);
+         }
+-        if (queuePolicy || (network && network->dht)) {
++        if (queuePolicy || libraryUdpRegularMode() || (network && network->dht)) {
+           settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::tracker
+               | lt::alert_category::error | lt::alert_category::status | lt::alert_category::storage));
+         } else settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
+@@ -1159,7 +1177,7 @@
+       if (value.removing && value.removed && !value.handle.is_valid()) {
+         // Actual weak expiry is the last callback fence: drain final terminal
+         // updates before the admission may disappear, retain library response.
+-        if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());value.trackerResponse->response->cancelRequest();} // Actual weak-expiry: no later torrent callback can own this pending regular request.
++        if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());value.trackerResponse->cancelRequests();} // Actual weak-expiry: no later torrent callback can own this pending regular request.
+         if(value.timelineLost && !value.status.failure) {
+           value.status.failure=storage::Error{storage::ErrorCode::Io,"Original active-time observations were lost; saved state requires recheck"};
+         }
+@@ -1208,7 +1226,7 @@
+         if (settings) {
+           settings->set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
+               | lt::alert_category::status | lt::alert_category::storage
+-              | (queuePolicy ? lt::alert_category::tracker : lt::alert_category_t{})));
++              | ((queuePolicy || libraryUdpRegularMode() || (network&&network->dht)) ? lt::alert_category::tracker : lt::alert_category_t{})));
+           session->apply_settings(*settings);
+           rateLimits = detail::readEffectiveRateLimits(*session);
+           appliedSeedingOnly = seedingOnly;
+@@ -2043,10 +2061,37 @@
+   const auto& value=*found->second;
+   if(value.status.admission!=admission||!value.token||value.token->number!=admission||(value.trackerResponse&&value.trackerResponse->admission!=admission)
+       ||!value.status.retained||value.status.failure||value.stop||value.removing
+-      ||!value.handle.is_valid()||!value.trackerResponse
++      ||!value.handle.is_valid()||!value.trackerResponse||!value.trackerResponse->sole()
+       ||!value.trackerResponse->installed.load(std::memory_order_acquire)
+       ||value.trackerResponse->lost.load(std::memory_order_acquire)){return {};}
+   return value.trackerResponse->response->response(); // Existing poll owns every terminal drain.
++}
++std::optional<ManagedTrackerUrlResponse> PersistentSession::managedActiveUdpTrackerResponse(
++    const core::TorrentHash& hash,std::uint64_t admission)const {
++  if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission||!admission||impl_->mainlineScrapes.revoked(hash)){return {};}
++  const auto found=impl_->managed.find(hash.hex());if(found==impl_->managed.end()){return {};}
++  const auto& value=*found->second;
++  if(!value.activeUdpTrackerScope||!value.token||value.token->number!=admission||value.status.admission!=admission
++      ||!value.status.checked||!value.status.retained||value.status.failure||value.stop||value.removing||value.manualPaused||value.policyHeld
++      ||value.status.verificationHeld||value.seedIntent||value.allocationIntent||!value.handle.is_valid()||!value.trackerResponse
++      ||value.trackerResponse->admission!=admission||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){return {};}
++  auto current=value.trackerResponse->currentUdpTerminal();if(!current){return {};}
++  return ManagedTrackerUrlResponse{std::move(current->url),std::move(current->response),current->terminal.terminal.observedWallMillis,current->terminal.sequence};
++}
++std::vector<ManagedTrackerUrlResponse> PersistentSession::managedTrackerUrlResponses(
++    const core::TorrentHash& hash,std::uint64_t admission)const {
++  if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission||!admission){return {};}
++  const auto found=impl_->managed.find(hash.hex());if(found==impl_->managed.end()){return {};}
++  const auto& value=*found->second;
++  if(!value.token||value.token->number!=admission||value.status.admission!=admission||!value.status.retained||!value.status.checked
++      ||value.status.failure||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld
++      ||value.seedIntent||value.allocationIntent||!value.handle.is_valid()||!value.trackerResponse||value.trackerResponse->admission!=admission
++      ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){return {};}
++  std::vector<ManagedTrackerUrlResponse> result;
++  for(auto& row:value.trackerResponse->urlTerminals()){
++    result.push_back({std::move(row.url),std::move(row.response),row.terminal.terminal.observedWallMillis,row.terminal.sequence});
++  }
++  return result;
+ }
+ std::expected<void, AccountingError> PersistentSession::setObservationSink(ApplicationObservationSink sink) {
+   if (!impl_->onWorker()) { return std::unexpected(AccountingError::WrongThread); }
+@@ -2075,10 +2120,17 @@
+     const auto entry=impl_->managed.find(row.hash.hex());if(entry==impl_->managed.end()){return true;}const auto& value=*entry->second;
+     return !value.token||value.token->number!=row.admission||value.status.admission!=row.admission||!value.status.retained||!value.status.checked
+         ||value.status.failure||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld
+-        ||value.seedIntent||value.allocationIntent||!value.handle.is_valid()||!value.trackerResponse
++        ||value.seedIntent||value.allocationIntent||!value.handle.is_valid()||!value.trackerResponse||!value.trackerResponse->sole()
+         ||!value.trackerResponse->installed.load(std::memory_order_acquire)||value.trackerResponse->lost.load(std::memory_order_acquire)
+         ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding);
+   });
++  for(const auto& [key,value]:impl_->managed){(void)key;
++    if(impl_->mainlineScrapes.revoked(value->status.hash)){continue;}
++    const auto selected=managedActiveUdpTrackerResponse(value->status.hash,value->status.admission);
++    if(selected&&selected->response.type!=core::QueueOriginalScrapeType::Unknown&&selected->response.content){
++      result.push_back({value->status.hash,selected->response,selected->observedWallMillis,value->status.admission});
++    }
++  }
+   return result;
+ }
+ void PersistentSession::revokeMainlineScrape(const core::TorrentHash& hash) noexcept {
+--- a/preview/native/engine/library_http_owner.inc
++++ b/preview/native/engine/library_http_owner.inc
+@@ -33,7 +33,7 @@
+     if(!sameMainlineProfileLease()||!value.token||!value.status.admission||value.token->number!=value.status.admission
+         ||value.storage.identity().originalKey!=value.status.hash||!value.status.retained||!value.status.checked||value.status.failure
+         ||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld||value.seedIntent||value.allocationIntent
+-        ||!value.handle.is_valid()||!value.trackerResponse||value.trackerResponse->admission!=value.status.admission
++        ||!value.handle.is_valid()||!value.trackerResponse||!value.trackerResponse->sole()||value.trackerResponse->admission!=value.status.admission
+         ||!value.trackerResponse->installed.load(std::memory_order_acquire)||value.trackerResponse->lost.load(std::memory_order_acquire)
+         ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){continue;}
+     const auto handle=managedByHandle.find(value.handle);if(handle==managedByHandle.end()||handle->second!=&value){continue;}
+@@ -92,10 +92,35 @@
+   const auto response=trackerResponses.find(target.trackerResponseKey);
+   return value.token&&value.token->number==target.admission&&value.status.admission==target.admission&&value.status.retained&&value.status.checked
+       &&!value.status.failure&&!value.stop&&!value.removing&&!value.manualPaused&&!value.policyHeld&&!value.status.verificationHeld
+-      &&!value.seedIntent&&!value.allocationIntent&&value.handle.is_valid()&&value.trackerResponse
++      &&!value.seedIntent&&!value.allocationIntent&&value.handle.is_valid()&&value.trackerResponse&&value.trackerResponse->sole()
+       &&value.trackerResponse->admission==target.admission&&value.trackerResponse->installed.load(std::memory_order_acquire)
+       &&!value.trackerResponse->lost.load(std::memory_order_acquire)&&response!=trackerResponses.end()&&value.trackerResponse->response==response->second
+       &&(value.status.phase==ManagedPhase::Downloading||value.status.phase==ManagedPhase::Seeding);
++}
++// No transport is invoked: this source proof enables passive counts for the
++// sole original BT helper only. General active helper selection remains absent.
++void refreshActiveUdpTrackerCounts(){
++  for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}
++  if(!libraryUdpRegularMode()||!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){return;}
++  const auto config=detail::libraryUdpConfiguration(*mainlineLease,&networkBinding->effective);if(!config){return;}
++  std::vector<ManagedMainlineScrapeObservation> active;
++  for(const auto& [key,entry]:managed){(void)key;const auto& value=*entry;
++    if(!sameMainlineProfileLease()||!value.token||value.token->number!=value.status.admission||!value.status.admission
++        ||!value.status.retained||!value.status.checked||value.status.failure||value.stop||value.removing||value.manualPaused||value.policyHeld
++        ||value.status.verificationHeld||value.seedIntent||value.allocationIntent||!value.handle.is_valid()||!value.trackerResponse
++        ||value.trackerResponse->sole()||value.trackerResponse->admission!=value.status.admission
++        ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){continue;}
++    const auto handle=managedByHandle.find(value.handle);if(handle==managedByHandle.end()||handle->second!=&value){continue;}
++    active.push_back({&value.storage,value.status.admission,value.status.complete});
++  }
++  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,nullptr,SavedTrackerPurpose::ActiveSingleUdpTier);if(!targets){return;}
++  for(const auto& target:*targets){
++    if(!target.admission||mainlineScrapes.revoked(target.hash)
++        ||std::ranges::any_of(target.configuredTrackers,[&](const auto& member){return !detail::libraryUdpRoute(networkBinding->effective,member.url,true);})){continue;}
++    const auto at=managed.find(target.hash.hex());if(at==managed.end()){continue;}auto& value=*at->second;
++    if(value.status.admission!=target.admission||!value.trackerResponse||!value.trackerResponse->drain()){continue;}
++    value.activeUdpTrackerScope=target.scope+*config;
++  }
+ }
+ std::uint64_t libraryHttpNonce=0;
+ void cancelLibraryHttp(const core::TorrentHash* hash=nullptr) noexcept {
+--- a/preview/native/tests/managed_queue_tests.cpp
++++ b/preview/native/tests/managed_queue_tests.cpp
+@@ -6,11 +6,14 @@
+ #include "verified_seeding_fixture.hpp"
+ #include "managed_queue_observations.hpp"
+ #include "managed_tracker_responses.hpp"
++#include "queued_mainline_scrape.hpp"
++#include <QNetworkDatagram>
+ #include "managed_payload_counters.hpp"
+ #include <libtorrent/alert_types.hpp>
+ #include <libtorrent/hasher.hpp>
+ #include <QTcpServer>
+ #include <QTcpSocket>
++#include <QUdpSocket>
+ #include <thread>
+ 
+ #include <QtTest>
+@@ -171,6 +174,38 @@
+   }
+   std::string url()const{return "http://127.0.0.1:"+std::to_string(server_.serverPort())+"/announce";}
+ };
++// Two owned numeric UDP trackers. The first actual announce is held and
++// explicitly failed; only the other endpoint can succeed. Any SCRAPE exposes
++// an accidental new producer and fails, independent of count assertions.
++class ActiveUdpPair final {
++  std::array<std::unique_ptr<QUdpSocket>,2> sockets;
++  struct Held {QByteArray request;QHostAddress host;quint16 port=0;int index=-1;};
++  std::optional<Held> pending;
++  static std::uint32_t word(const QByteArray& p,int at){std::uint32_t v=0;for(int i=0;i<4;++i){v=(v<<8)|static_cast<unsigned char>(p[at+i]);}return v;}
++  static std::uint64_t wide(const QByteArray& p,int at){return (static_cast<std::uint64_t>(word(p,at))<<32)|word(p,at+4);}
++  static QByteArray number(std::uint32_t v){QByteArray p(4,'\0');for(int i=3;i>=0;--i){p[i]=static_cast<char>(v&255);v>>=8;}return p;}
++  void send(int index,const QHostAddress& host,quint16 port,const QByteArray& data){if(sockets[static_cast<std::size_t>(index)]->writeDatagram(data,host,port)!=data.size()){failure="Owned active UDP reply failed";}}
++  void receive(int index){auto& socket=*sockets[static_cast<std::size_t>(index)];while(socket.hasPendingDatagrams()){
++    const auto d=socket.receiveDatagram();const auto p=d.data();const auto port=d.senderPort();
++    if(!d.senderAddress().isLoopback()||port<1||port>65535||p.size()<16){failure="Owned active UDP source/shape";continue;}const auto sourcePort=static_cast<quint16>(port);const auto action=word(p,8);
++    if(action==0){if(p.size()!=16||wide(p,0)!=0x41727101980ULL){failure="Owned active UDP CONNECT";continue;}++connects;send(index,d.senderAddress(),sourcePort,number(0)+p.mid(12,4)+number(0x11335577)+number(0x99aabbcc));continue;}
++    if(action==2){++scrapes;failure="Active count selection emitted a forbidden SCRAPE";continue;}
++    if(action!=1||p.size()!=98||wide(p,0)!=0x1133557799aabbccULL||p.mid(16,20)!=expectedHash){failure="Owned active UDP announce identity";continue;}
++    const auto advertised=(static_cast<unsigned char>(p[96])<<8)|static_cast<unsigned char>(p[97]);if(advertised!=peerPort){failure="Owned active UDP advertised peer port";continue;}
++    if(word(p,80)==3){++stops;send(index,d.senderAddress(),sourcePort,number(1)+p.mid(12,4)+number(3600)+number(8)+number(7));continue;}
++    ++announces;
++    if(first<0){first=index;pending=Held{p,d.senderAddress(),sourcePort,index};continue;}
++    if(index==first){failure="Owned failed endpoint was reused before the other active URL";continue;}
++    second=index;send(index,d.senderAddress(),sourcePort,number(1)+p.mid(12,4)+number(3600)+number(8)+number(7));
++  }}
++public:
++  QByteArray expectedHash;int peerPort=0,first=-1,second=-1,connects=0,announces=0,scrapes=0,stops=0;QString failure;
++  ActiveUdpPair(){for(int i=0;i<2;++i){auto& socket=sockets[static_cast<std::size_t>(i)];socket=std::make_unique<QUdpSocket>();test::require(socket->bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress),"Cannot bind owned active UDP tracker");QObject::connect(socket.get(),&QUdpSocket::readyRead,socket.get(),[this,i]{receive(i);});}}
++  std::string url(int i)const{return "udp://127.0.0.1:"+std::to_string(sockets[static_cast<std::size_t>(i)]->localPort())+"/announce";}
++  bool held()const{return pending.has_value();}
++  void failFirst(){if(!pending){return;}auto value=std::move(*pending);pending.reset();send(value.index,value.host,value.port,number(3)+value.request.mid(12,4)+"owned active failover");}
++};
++struct ActiveUdpCleanup {engine::PersistentSession& owner;ActiveUdpPair& trackers;~ActiveUdpCleanup(){trackers.failFirst();static_cast<void>(owner.close(std::chrono::steady_clock::now()+10s));}};
+ } // namespace
+ 
+ class ManagedQueueTests final:public QObject {
+@@ -262,6 +297,138 @@
+     QVERIFY2(tracker.failure.isEmpty(),qPrintable(tracker.failure));QVERIFY(failed);QCOMPARE(tracker.scrapes,2);QCOMPARE(failed->kind,core::QueueScrapeTerminalKind::Reply);QCOMPARE(failed->tracker,key);QVERIFY(failed->request>first->request);QCOMPARE(failed->seeds,3);QCOMPARE(failed->peers,4);
+     const auto historical=observations->facts(now());QVERIFY(historical.singleTrackerResponse);QCOMPARE(historical.singleTrackerResponse->response.type,core::QueueOriginalScrapeType::Success);QVERIFY(!historical.singleTrackerResponse->response.content);QVERIFY(!core::sourceQueueQueuedScrapeEligible(historical.singleTrackerResponse->response,{})); // ABI omits downloaded validity: exact scrape content remains unavailable.
+     session.reset();QVERIFY(fixture.intact(false));
++  }
++  void activeUrlInventoryIsBoundedDeduplicatedAndNeverInventsASelection(){
++    libtorrent::add_torrent_params params;params.trackers={"http://127.0.0.1:1/announce","udp://127.0.0.1:2/announce","http://127.0.0.1:1/announce"};
++    const auto urls=engine::detail::effectiveTrackerResponseUrls(params);QVERIFY(urls);QCOMPARE(urls->size(),std::size_t{2});QVERIFY(!engine::detail::singleEffectiveTracker(params));
++    params.trackers.push_back("wss://127.0.0.1:3/announce");QVERIFY(!engine::detail::effectiveTrackerResponseUrls(params));params.trackers.clear();
++    for(int i=0;i<8;++i){params.trackers.push_back("http://127.0.0.1:"+std::to_string(i+1)+"/announce");}QVERIFY(engine::detail::effectiveTrackerResponseUrls(params));
++    params.trackers.push_back("http://127.0.0.1:9/announce");QVERIFY(!engine::detail::effectiveTrackerResponseUrls(params));
++    params.trackers={"udp://127.0.0.1:1/announce","udp://127.0.0.1:2/announce"};params.tracker_tiers={0,0};QVERIFY(engine::detail::singleTierUdpResponseUrls(params));params.tracker_tiers={0,1};QVERIFY(!engine::detail::singleTierUdpResponseUrls(params));
++  }
++  void perUrlActiveRingKeepsCountsSeparateAndLossWithdrawsEveryBinding(){
++    using Ring=engine::detail::ManagedTrackerResponse;
++    auto a=std::make_shared<core::QueueOriginalTrackerResponse>(),b=std::make_shared<core::QueueOriginalTrackerResponse>();
++    std::array<unsigned char,32> ad{},bd{};ad[0]=1;bd[0]=2;
++    const std::vector<Ring::Binding> bindings{{"http://127.0.0.1:1/announce","a",ad,a,{}},{"udp://127.0.0.1:2/announce","b",bd,b,{}}};
++    Ring ring(71,1,bindings);ring.installed=true;QVERIFY(!ring.sole());QVERIFY(!ring.latestTerminal());QVERIFY(ring.urlTerminals().empty());
++    Ring::Value value;value.admission=71;value.sequence=1;value.request=1;value.protocol=1;value.tracker=ad;value.requestStartedNanos=1;value.observedNanos=1000000000;value.terminal.kind=core::QueueTrackerTerminalKind::Announce;value.terminal.comparable=true;value.terminal.present=3;value.terminal.complete=5;value.terminal.incomplete=6;value.terminal.observedMillis=1000;value.terminal.observedWallMillis=10000;
++    ring.observe(value);QVERIFY(ring.drain());auto rows=ring.urlTerminals();QCOMPARE(rows.size(),std::size_t{1});QCOMPARE(rows[0].url,bindings[0].url);QCOMPARE(rows[0].response.content->seeds,5);QVERIFY(!b->response().content);
++    value.sequence=2;value.request=2;value.tracker=bd;value.observedNanos=2000000000;value.terminal.observedMillis=2000;value.terminal.observedWallMillis=20000;value.terminal.complete=7;value.terminal.incomplete=8;ring.observe(value);QVERIFY(ring.drain());
++    rows=ring.urlTerminals();QCOMPARE(rows.size(),std::size_t{2});QCOMPARE(rows[0].response.content->seeds,5);QCOMPARE(rows[1].response.content->seeds,7);QVERIFY(!ring.latestTerminal());
++    // An ignored failed announce neither replaces that URL's response nor
++    // supplies a selected-active URL or a newer scrape timestamp.
++    value.sequence=3;value.request=3;value.observedNanos=3000000000;value.terminal.kind=core::QueueTrackerTerminalKind::AnnounceFailed;value.terminal.comparable=false;ring.observe(value);QVERIFY(ring.drain());
++    rows=ring.urlTerminals();QCOMPARE(rows[1].terminal.sequence,std::uint64_t{2});QCOMPARE(rows[1].response.content->seeds,7);
++    // Actual retirement can replace the ring without resetting shared URL
++    // history. A new admission still has no fabricated terminal observation.
++    Ring next(72,1,bindings);next.installed=true;QVERIFY(next.urlTerminals().empty());QCOMPARE(b->response().content->seeds,7);
++    std::vector<Ring::UrlTerminal> foreign;std::thread reader([&]{foreign=ring.urlTerminals();});reader.join();QVERIFY(foreign.empty());QCOMPARE(ring.urlTerminals().size(),std::size_t{2});
++    value.sequence=4;value.request=4;value.tracker[0]=9;value.observedNanos=4000000000;ring.observe(value);QVERIFY(!ring.drain());QVERIFY(ring.urlTerminals().empty());QCOMPARE(a->response().type,core::QueueOriginalScrapeType::Unknown);QCOMPARE(b->response().type,core::QueueOriginalScrapeType::Unknown);
++    auto c=std::make_shared<core::QueueOriginalTrackerResponse>(),d=std::make_shared<core::QueueOriginalTrackerResponse>();auto bounded=bindings;bounded[0].response=c;bounded[1].response=d;Ring overflow(73,1,bounded);overflow.installed=true;
++    for(std::uint64_t i=0;i<=Ring::Capacity;++i){value.admission=73;value.sequence=i+1;value.request=i+1;value.tracker=ad;value.observedNanos=static_cast<std::int64_t>(i+1);overflow.observe(value);}QVERIFY(!overflow.drain());QVERIFY(overflow.urlTerminals().empty());
++    Ring stale(74,1,bounded);stale.installed=true;value.admission=73;value.sequence=1;stale.observe(value);QVERIFY(!stale.drain());QVERIFY(stale.urlTerminals().empty());
++  }
++  void actualMultiUrlProviderRoutesEachTerminalWithoutSelectingAnAnnouncer(){
++    namespace lt=libtorrent;test::OwnedEngineFixture fixture(false);auto lease=held(fixture);
++    RawScrapeTracker first(hashBytes(*fixture.hash)),second(hashBytes(*fixture.hash));first.announceCounts=true;
++    auto files=engine::detail::ManagedStorage::prepare(lease,*fixture.hash,engine::NetworkPolicy{});QVERIFY(files);
++    auto settings=test::localSettings();settings.set_bool(lt::settings_pack::ssrf_mitigation,false); // Exact owned local /scrape only.
++    settings.set_bool(lt::settings_pack::announce_to_all_tiers,true);settings.set_bool(lt::settings_pack::announce_to_all_trackers,true);
++    auto session=std::make_unique<lt::session>(settings);const auto encodedMetadata=test::read(fixture.stateFile);lt::error_code error;
++    lt::add_torrent_params params;params.ti=std::make_shared<lt::torrent_info>(lt::span<const char>(encodedMetadata.constData(),encodedMetadata.size()),error,lt::from_span);QVERIFY(!error);
++    params.ti->clear_trackers();params.trackers={first.url(),second.url()};params.tracker_tiers={0,1};params.save_path=fixture.payload.toStdString();params.flags|=lt::torrent_flags::paused|lt::torrent_flags::disable_dht|lt::torrent_flags::disable_lsd|lt::torrent_flags::disable_pex;params.flags&=~lt::torrent_flags::auto_managed;
++    engine::detail::LibraryTrackerResponses library;auto ring=engine::detail::attachManagedTrackerResponse(params,lease,files->identity(),81,library);QVERIFY(ring);QVERIFY(!ring->sole());QCOMPARE(library.size(),std::size_t{2});
++    auto handle=session->add_torrent(std::move(params),error);QVERIFY(!error&&handle.is_valid());handle.resume();
++    const auto pump=[&]{std::vector<lt::alert*> alerts;session->pop_alerts(&alerts);return ring->drain()&&first.failure.isEmpty()&&second.failure.isEmpty();};
++    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!pump()){return !first.failure.isEmpty()||!second.failure.isEmpty()||ring->lost.load();}return first.announces==1&&second.announces==1&&ring->urlTerminals().size()==1;})(),15000);
++    QVERIFY2(first.failure.isEmpty(),qPrintable(first.failure));QVERIFY2(second.failure.isEmpty(),qPrintable(second.failure));QVERIFY(!ring->lost.load());auto rows=ring->urlTerminals();QCOMPARE(rows.size(),std::size_t{1});QCOMPARE(rows[0].url,first.url());QCOMPARE(rows[0].response.content->seeds,5);QCOMPARE(rows[0].response.content->peers,6);QVERIFY(!ring->latestTerminal());QCOMPARE(first.scrapes,0);QCOMPARE(second.scrapes,0);
++    const auto trackers=handle.trackers();const auto at=std::ranges::find(trackers,second.url(),&lt::announce_entry::url);QVERIFY(at!=trackers.end());const auto index=std::distance(trackers.begin(),at);QVERIFY(index>=0&&index<8);
++    handle.scrape_tracker(static_cast<int>(index)); // Test-only actual RPC; production never issues one here.
++    QTRY_VERIFY_WITH_TIMEOUT(([&]{return pump()&&second.scrapes==1&&ring->urlTerminals().size()==2;})(),15000);
++    rows=ring->urlTerminals();const auto a=std::ranges::find(rows,first.url(),&engine::detail::ManagedTrackerResponse::UrlTerminal::url),b=std::ranges::find(rows,second.url(),&engine::detail::ManagedTrackerResponse::UrlTerminal::url);
++    QVERIFY(a!=rows.end()&&b!=rows.end());QVERIFY(a->response.content&&b->response.content);QCOMPARE(a->response.content->seeds,5);QCOMPARE(b->response.content->seeds,3);QCOMPARE(b->response.content->peers,4);QVERIFY(a->terminal.sequence!=b->terminal.sequence);QVERIFY(!ring->latestTerminal());
++    session.reset();QVERIFY(fixture.intact(false));QVERIFY(first.failure.isEmpty()&&second.failure.isEmpty());
++  }
++  void realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse_data(){
++    QTest::addColumn<bool>("dhtEnabled");QTest::newRow("no-DHT-service")<<false;QTest::newRow("live-DHT-no-active-selection")<<true;
++  }
++  void realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse(){
++    QFETCH(bool,dhtEnabled);
++    test::OwnedEngineFixture fixture(false);RawScrapeTracker first(hashBytes(*fixture.hash)),second(hashBytes(*fixture.hash));first.announceCounts=true;second.announceCounts=true;
++    auto source=parsed(test::read(fixture.stateFile));QVERIFY(source.replaceValue("announce",test::encoded(libtorrent::entry(first.url()))));
++    const libtorrent::entry::list_type tiers{libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(first.url())}),libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(second.url())})};
++    QVERIFY(source.replaceValue("announce-list",test::encoded(libtorrent::entry(tiers))));
++    auto attrs=parsed(QByteArray::fromStdString(encoded(*source.find("attributes"))));QVERIFY(attrs.replaceValue("pluginoptions","d5:mldhtd14:enableannouncei0eee"));QVERIFY(source.replaceValue("attributes",attrs.serialize()));
++    const auto raw=source.find("info");QVERIFY(raw);const auto rawInfo=encoded(*raw);test::write(fixture.stateFile,QByteArray::fromStdString(source.serialize()));
++    auto lease=held(fixture);auto service=owner();engine::NetworkPolicy p;p.mode=engine::NetworkMode::Normal;p.httpTrackers=true;p.dht=dhtEnabled;p.mainlineIpv4=true;p.mainlineIpv6=false;p.mainlinePeerBootstrapOnly=true;p.bindAddresses={"127.0.0.1"};QUdpSocket discovery;QVERIFY(discovery.bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress));p.mainlinePort=discovery.localPort();discovery.close();QTcpServer reserved;QVERIFY(reserved.listen(QHostAddress::LocalHost,0));p.listenPort=reserved.serverPort();reserved.close();
++    QVERIFY(service->configureNetwork(p));QVERIFY(service->configureMainlineBootstrap({}));QVERIFY(service->startIdle(lease));QVERIFY(service->startManaged(lease,{.hash=*fixture.hash,.queued=false}));
++    const auto pump=[&]{const auto result=service->poll();const auto rows=service->managedDownloads();return result&&rows.size()==1&&!rows[0].failure&&first.failure.isEmpty()&&second.failure.isEmpty();};
++    std::vector<engine::ManagedTrackerUrlResponse> facts;std::uint64_t admission=0;
++    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!pump()){return false;}const auto rows=service->managedDownloads();admission=rows[0].admission;facts=service->managedTrackerUrlResponses(*fixture.hash,admission);return rows[0].checked&&!facts.empty();})(),15000);
++    QVERIFY(admission);QVERIFY(!facts.empty());for(const auto& row:facts){QVERIFY(row.url==first.url()||row.url==second.url());QVERIFY(row.response.content);QCOMPARE(row.response.content->seeds,5);QCOMPARE(row.response.content->peers,6);QVERIFY(row.sequence&&row.observedWallMillis>0);}
++    QVERIFY(!service->managedTrackerResponse(*fixture.hash,admission));QVERIFY(service->managedTrackerUrlResponses(*fixture.hash,admission+1).empty());QVERIFY(service->libraryTrackerResponses().empty());QCOMPARE(first.scrapes,0);QCOMPARE(second.scrapes,0);QVERIFY(service->mainlineScrapeEstimates().empty());
++    if(dhtEnabled){QTRY_VERIFY_WITH_TIMEOUT(pump()&&service->mainlineDiscovery().state==engine::MainlineDiscoveryStatus::State::Running,15000);}
++    auto discoveryStatus=service->mainlineDiscovery();QVERIFY(discoveryStatus.admittedScrapeCandidates.empty());QCOMPARE(discoveryStatus.lookups,std::uint64_t{0});QCOMPARE(discoveryStatus.announces,std::uint64_t{0});QCOMPARE(discoveryStatus.deliveredPeers,std::uint64_t{0});
++    // A saved edit to one URL is not a new sole-response admission. Public
++    // rearm forces fresh owner reconciliation without inventing a clock hook.
++    auto changed=parsed(test::read(fixture.stateFile));QVERIFY(changed.replaceValue("announce-list",test::encoded(libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(first.url())})}))));test::write(fixture.stateFile,QByteArray::fromStdString(changed.serialize()));
++    QVERIFY(service->rearmMainlineScrape(*fixture.hash));QVERIFY(pump());QVERIFY(!service->managedTrackerResponse(*fixture.hash,admission));QVERIFY(service->libraryTrackerResponses().empty());QVERIFY(service->mainlineScrapeEstimates().empty());
++    discoveryStatus=service->mainlineDiscovery();QVERIFY(discoveryStatus.admittedScrapeCandidates.empty());QCOMPARE(discoveryStatus.lookups,std::uint64_t{0});QCOMPARE(discoveryStatus.announces,std::uint64_t{0});QCOMPARE(discoveryStatus.deliveredPeers,std::uint64_t{0});QCOMPARE(first.scrapes,0);QCOMPARE(second.scrapes,0);
++    QVERIFY(service->pauseManaged(*fixture.hash,true));QVERIFY(service->managedTrackerUrlResponses(*fixture.hash,admission).empty());
++    const auto closed=service->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(service->managedTrackerUrlResponses(*fixture.hash,admission).empty());
++    const auto after=parsed(test::read(fixture.stateFile));QCOMPARE(encoded(*after.find("info")),rawInfo);QVERIFY(first.failure.isEmpty()&&second.failure.isEmpty());QVERIFY(fixture.accountingIntact(false));
++  }
++  void singleHelperDispatchCutOrdersResponseAndAlertDeliveryWithoutClockTranslation(){
++    using Ring=engine::detail::ManagedTrackerResponse;std::array<unsigned char,32> a{},b{};a[0]=1;b[0]=2;
++    auto first=std::make_shared<core::QueueOriginalTrackerResponse>(),second=std::make_shared<core::QueueOriginalTrackerResponse>();
++    Ring ring(91,1,std::vector<Ring::Binding>{{"udp://127.0.0.1:1/announce","a",a,first,{}},{"udp://127.0.0.1:2/announce","b",b,second,{}}});ring.installed=true;
++    Ring::Value value;value.admission=91;value.protocol=1;value.sequence=1;value.request=1;value.requestStartedNanos=1;value.observedNanos=1000000000;value.tracker=a;value.terminal.kind=core::QueueTrackerTerminalKind::Announce;value.terminal.present=3;value.terminal.comparable=true;value.terminal.complete=5;value.terminal.incomplete=6;value.terminal.observedMillis=1000;
++    // Terminal already written at the cut: the actual dispatch is delivered
++    // in the same collection before drain. Only that explicit URL is selected.
++    ring.observe(value);ring.beginDispatchCollection();ring.observeUdpDispatch("udp://127.0.0.1:1/announce",1,100);QVERIFY(ring.drain());auto selected=ring.currentUdpTerminal();QVERIFY(selected&&selected->response.content);QCOMPARE(selected->url,std::string("udp://127.0.0.1:1/announce"));QCOMPARE(selected->response.content->seeds,5);
++    // A callback arriving AFTER collection began cannot select even when its
++    // newer response is drained. The next collection supplies its dispatch.
++    ring.beginDispatchCollection();value.sequence=2;value.request=2;value.tracker=b;value.observedNanos=2000000000;value.terminal.complete=7;value.terminal.incomplete=8;value.terminal.observedMillis=2000;ring.observe(value);QVERIFY(ring.drain());QVERIFY(!ring.currentUdpTerminal());
++    ring.beginDispatchCollection();ring.observeUdpDispatch("udp://127.0.0.1:2/announce",1,200);QVERIFY(ring.drain());selected=ring.currentUdpTerminal();QVERIFY(selected&&selected->response.content);QCOMPARE(selected->response.content->seeds,7);
++    // A later terminal for another URL never changes the dispatch-selected
++    // URL. Both histories survive, but current getTrackerURL remains explicit.
++    value.sequence=3;value.request=3;value.tracker=a;value.observedNanos=3000000000;value.terminal.complete=9;value.terminal.observedMillis=3000;ring.observe(value);ring.beginDispatchCollection();QVERIFY(ring.drain());selected=ring.currentUdpTerminal();QVERIFY(selected&&selected->response.content);QCOMPARE(selected->url,std::string("udp://127.0.0.1:2/announce"));QCOMPARE(selected->response.content->seeds,7);
++    ring.observeUdpDispatch("udp://127.0.0.1:2/announce",2,300);QVERIFY(ring.currentUdpTerminal()); // Unselected protocol is not this helper's URL.
++    ring.observeUdpDispatch("udp://127.0.0.1:2/announce",1,199);QVERIFY(!ring.currentUdpTerminal()); // Actual alert clock regression withdraws until retirement.
++    Ring unknown(92,1,std::vector<Ring::Binding>{{"udp://127.0.0.1:1/announce","a",a,first,{}},{"udp://127.0.0.1:2/announce","b",b,second,{}}});unknown.installed=true;unknown.observeUdpDispatch("udp://127.0.0.1:3/announce",1,100);QVERIFY(!unknown.currentUdpTerminal());
++    ring.loseDispatch();ring.observeUdpDispatch("udp://127.0.0.1:2/announce",1,400);QVERIFY(!ring.currentUdpTerminal()); // Drop never silently regains selection.
++  }
++  void singleOriginalUdpTierCountsRequireAnActualCapturedAdmissionAndExactGroup(){
++    test::OwnedEngineFixture fixture(false);const std::string a="udp://127.0.0.1:12345/announce",b="udp://127.0.0.1:12346/announce";
++    auto source=parsed(test::read(fixture.stateFile));QVERIFY(source.replaceValue("announce",test::encoded(libtorrent::entry(a))));
++    const auto tier=[](const std::string& one,const std::string& two){return test::encoded(libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(one),libtorrent::entry(two)})}));};
++    QVERIFY(source.replaceValue("announce-list",tier(a,b)));test::write(fixture.stateFile,QByteArray::fromStdString(source.serialize()));auto lease=held(fixture);engine::NetworkPolicy p;p.mode=engine::NetworkMode::Normal;p.udpTrackers=true;
++    auto storage=engine::detail::ManagedStorage::prepare(lease,*fixture.hash,p);QVERIFY(storage);const std::vector<engine::ManagedMainlineScrapeObservation> active{{&*storage,92,false}};
++    const auto read=[&]{return engine::readCurrentMainlineScrapeTargets(lease,active,true,nullptr,engine::SavedTrackerPurpose::ActiveSingleUdpTier);};
++    auto accepted=read();QVERIFY(accepted&&accepted->size()==1);QCOMPARE(accepted->front().admission,std::uint64_t{92});QCOMPARE(accepted->front().configuredTrackers.size(),std::size_t{2});
++    auto noAdmission=engine::readCurrentMainlineScrapeTargets(lease,{},true,nullptr,engine::SavedTrackerPurpose::ActiveSingleUdpTier);QVERIFY(noAdmission&&noAdmission->empty());
++    auto two=source;QVERIFY(two.replaceValue("announce-list",test::encoded(libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(a)}),libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(b)})}))));test::write(fixture.stateFile,QByteArray::fromStdString(two.serialize()));auto grouped=read();QVERIFY(grouped&&grouped->empty());
++    auto different=source;QVERIFY(different.replaceValue("announce-list",tier(a,"udp://127.0.0.1:12347/announce")));test::write(fixture.stateFile,QByteArray::fromStdString(different.serialize()));auto rebound=read();QVERIFY(rebound&&rebound->empty());
++    test::write(fixture.stateFile,QByteArray::fromStdString(source.serialize()));const auto restored=read();QVERIFY(restored&&restored->size()==1);
++  }
++  void actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape_data(){QTest::addColumn<bool>("dhtEnabled");QTest::newRow("DHT-disabled")<<false;QTest::newRow("DHT-live-passive-only")<<true;}
++  void actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape(){
++    QFETCH(bool,dhtEnabled);test::OwnedEngineFixture fixture(false);ActiveUdpPair trackers;trackers.expectedHash=QByteArray::fromStdString(hashBytes(*fixture.hash));
++    auto source=parsed(test::read(fixture.stateFile));QVERIFY(source.replaceValue("announce",test::encoded(libtorrent::entry(trackers.url(0)))));
++    const libtorrent::entry::list_type urls{libtorrent::entry(trackers.url(0)),libtorrent::entry(trackers.url(1))};QVERIFY(source.replaceValue("announce-list",test::encoded(libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(urls)}))));
++    auto attrs=parsed(QByteArray::fromStdString(encoded(*source.find("attributes"))));QVERIFY(attrs.replaceValue("pluginoptions","d5:mldhtd14:enableannouncei0eee"));QVERIFY(source.replaceValue("attributes",attrs.serialize()));test::write(fixture.stateFile,QByteArray::fromStdString(source.serialize()));const auto info=encoded(*source.find("info"));const auto payload=test::read(fixture.payload+"/sample.bin");
++    auto lease=held(fixture);auto service=owner();engine::NetworkPolicy p;p.mode=engine::NetworkMode::Normal;p.udpTrackers=true;p.dht=dhtEnabled;p.bindAddresses={"127.0.0.1"};p.mainlineIpv4=true;p.mainlineIpv6=false;p.mainlinePeerBootstrapOnly=true;
++    QTcpServer reserved;QVERIFY(reserved.listen(QHostAddress::LocalHost,0));p.listenPort=reserved.serverPort();reserved.close();trackers.peerPort=p.listenPort;QUdpSocket discovery;QVERIFY(discovery.bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress));p.mainlinePort=discovery.localPort();discovery.close();
++    QVERIFY(service->configureNetwork(p));QVERIFY(service->configureMainlineBootstrap({}));QVERIFY(service->startIdle(lease));QVERIFY(service->startManaged(lease,{.hash=*fixture.hash,.queued=false}));ActiveUdpCleanup cleanup{*service,trackers};
++    const auto pump=[&]{const auto result=service->poll();const auto rows=service->managedDownloads();return result&&rows.size()==1&&!rows[0].failure&&trackers.failure.isEmpty();};
++    QTRY_VERIFY_WITH_TIMEOUT(pump()&&trackers.held()&&service->managedDownloads()[0].checked,15000);QVERIFY2(trackers.failure.isEmpty(),qPrintable(trackers.failure));const auto admission=service->managedDownloads()[0].admission;QVERIFY(admission);QCOMPARE(trackers.announces,1);QCOMPARE(trackers.scrapes,0);QVERIFY(!service->managedActiveUdpTrackerResponse(*fixture.hash,admission));
++    trackers.failFirst();std::optional<engine::ManagedTrackerUrlResponse> current;
++    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!pump()){return false;}current=service->managedActiveUdpTrackerResponse(*fixture.hash,admission);return trackers.second>=0&&current&&current->response.content;})(),25000);
++    QVERIFY2(trackers.failure.isEmpty(),qPrintable(trackers.failure));QVERIFY(current&&current->response.content);QCOMPARE(current->url,trackers.url(trackers.second));QVERIFY(trackers.second!=trackers.first);QCOMPARE(current->response.content->seeds,7);QCOMPARE(current->response.content->peers,8);QVERIFY(!service->managedTrackerResponse(*fixture.hash,admission));QVERIFY(!service->managedActiveUdpTrackerResponse(*fixture.hash,admission+1));
++    const auto views=service->libraryTrackerResponses();QCOMPARE(views.size(),std::size_t{1});QCOMPARE(views[0].admission,admission);QVERIFY(views[0].response.content);QCOMPARE(views[0].response.content->seeds,7);QCOMPARE(trackers.scrapes,0);QCOMPARE(trackers.announces,2);QVERIFY(service->mainlineScrapeEstimates().empty());const auto mainline=service->mainlineDiscovery();QVERIFY(mainline.admittedScrapeCandidates.empty());QCOMPARE(mainline.lookups,std::uint64_t{0});QCOMPARE(mainline.announces,std::uint64_t{0});QCOMPARE(mainline.deliveredPeers,std::uint64_t{0});
++    auto changed=source;QVERIFY(changed.replaceValue("announce-list",test::encoded(libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(trackers.url(0))}),libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(trackers.url(1))})}))));test::write(fixture.stateFile,QByteArray::fromStdString(changed.serialize()));QVERIFY(service->rearmMainlineScrape(*fixture.hash));QVERIFY(pump());QVERIFY(!service->managedActiveUdpTrackerResponse(*fixture.hash,admission));QVERIFY(service->libraryTrackerResponses().empty());QCOMPARE(trackers.scrapes,0);
++    QVERIFY(service->pauseManaged(*fixture.hash,true));QVERIFY(!service->managedActiveUdpTrackerResponse(*fixture.hash,admission));const auto closed=service->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);const auto after=parsed(test::read(fixture.stateFile));QCOMPARE(encoded(*after.find("info")),info);QVERIFY(fixture.accountingIntact(false));QVERIFY2(trackers.failure.isEmpty(),qPrintable(trackers.failure));
+   }
+   void trackerResponseLifetimeRetainsAcrossAdmissionsAndLossCannotResetToInitialError(){
+     test::OwnedEngineFixture fixture(false);auto lease=held(fixture);
+--- a/preview/native/engine/mainline_owner.inc
++++ b/preview/native/engine/mainline_owner.inc
+@@ -378,6 +378,7 @@
+         ||!value.status.retained||!value.status.checked||value.status.failure
+         ||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld
+         ||value.seedIntent||value.allocationIntent||!value.handle.is_valid()
++        ||(value.trackerResponse&&!value.trackerResponse->sole())
+         ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){continue;}
+     const auto handle=managedByHandle.find(value.handle);
+     if(handle==managedByHandle.end()||handle->second!=&value){continue;}
+@@ -415,7 +416,7 @@
+     const auto entry=managed.find(target.hash.hex());
+     if(target.admission){
+       if(entry==managed.end()||entry->second->status.admission!=target.admission||!entry->second->trackerResponse
+-          ||entry->second->trackerResponse->response!=found->second||!entry->second->trackerResponse->drain()){return true;}
++          ||!entry->second->trackerResponse->sole()||entry->second->trackerResponse->response!=found->second||!entry->second->trackerResponse->drain()){return true;}
+       // Exactly one request while outstanding; the existing10s owner cadence
+       // rechecks saved permissions before retrying the original600s failure
+       // interval. No new timer/sampler, tracker/rank result or peer injection.
+@@ -501,10 +502,11 @@
+ // reducer; no DHT, lookup, PORT, announce or hidden torrent can be started here.
+ std::map<std::uint64_t,std::uint64_t> regularTrackerSequences;
+ void advanceRegularTrackers(Clock::time_point now)noexcept {
+-  if(!libraryRegularTrackerMode()){regularTrackerViews.clear();return;}
++  if(!libraryRegularTrackerMode()){regularTrackerViews.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}return;}
+   try{
+     advanceLibraryUdp(now);advanceLibraryHttp(now);if(now<regularTrackerRefresh){return;}regularTrackerRefresh=now+10s;
+-    if(!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();return;}
++    if(!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}return;}
++    refreshActiveUdpTrackerCounts();
+     std::vector<std::string> inventory;
+     auto targets=regularTrackerTargets(&inventory);
+     if(!targets){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();return;}
+@@ -517,7 +519,7 @@
+       if(mainlineScrapes.revoked(target.hash)||!libraryHttpAdmissionCurrent(target)||!trackerSelectionSeed(target.hash)){continue;}
+       if(target.admission){
+         const auto& value=*managed.at(target.hash.hex());auto& ring=*value.trackerResponse;
+-        if(!ring.drain()){continue;}
++        if(!ring.sole()||!ring.drain()){continue;}
+         const auto last=ring.latestTerminal();
+         if(last&&regularTrackerSequences[target.admission]!=last->sequence){
+           regularTrackerSequences[target.admission]=last->sequence;
+@@ -539,7 +541,7 @@
+       if(content.type!=core::QueueOriginalScrapeType::Unknown&&content.content){next.push_back({target.hash,content,observed->second,target.admission});}
+     }
+     regularTrackerViews=std::move(next);
+-  }catch(...){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();}
++  }catch(...){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}}
+ }
+ 
+ static lt::sha1_hash discoveryHash(const core::TorrentHash& hash) {
+--- a/preview/native/engine/queued_mainline_scrape.hpp
++++ b/preview/native/engine/queued_mainline_scrape.hpp
+@@ -19,7 +19,7 @@
+ };
+ // Passive query authority, never a payload claim or transfer permission. Scope
+ // binds selected raw/full identity, current policy and optional actual admission.
+-enum class SavedTrackerPurpose {MainlineBackup,RegularHttp,RegularUdp,RegularSavedTiers};
++enum class SavedTrackerPurpose {MainlineBackup,RegularHttp,RegularUdp,RegularSavedTiers,ActiveSingleUdpTier};
+ struct SavedMainlineTracker {std::string url,responseKey;unsigned tier=0;};
+ struct SavedMainlineScrapeTarget {
+   core::TorrentHash hash;
+@@ -45,6 +45,9 @@
+ // the owner must bind their actual token/handle and sole effective protocol URL.
+ // RegularUdp has the same regular permission contract for a sole UDP URL.
+ // RegularSavedTiers supplies saved queued rows only, with one shared group scope.
++// ActiveSingleUdpTier authenticates actual admissions with exactly one original
++// announce-list tier of2..8 UDP URLs. It supplies passive selection/count scope,
++// never dispatch authority for regular/Mainline scrapes.
+ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
+ readCurrentMainlineScrapeTargets(const storage::ProfileLease&,
+     std::span<const ManagedMainlineScrapeObservation>,bool configuredCandidates=false,
+--- a/preview/native/engine/queued_mainline_scrape.cpp
++++ b/preview/native/engine/queued_mainline_scrape.cpp
+@@ -138,7 +138,7 @@
+     std::span<const ManagedMainlineScrapeObservation> observations,bool configuredCandidates,
+     std::vector<std::string>* authenticatedInventoryHashes,SavedTrackerPurpose purpose){
+   try{
+-    if(purpose!=SavedTrackerPurpose::MainlineBackup&&purpose!=SavedTrackerPurpose::RegularHttp&&purpose!=SavedTrackerPurpose::RegularUdp&&purpose!=SavedTrackerPurpose::RegularSavedTiers){return error(Code::InvalidFormat,"Invalid saved tracker purpose");}
++    if(purpose!=SavedTrackerPurpose::MainlineBackup&&purpose!=SavedTrackerPurpose::RegularHttp&&purpose!=SavedTrackerPurpose::RegularUdp&&purpose!=SavedTrackerPurpose::RegularSavedTiers&&purpose!=SavedTrackerPurpose::ActiveSingleUdpTier){return error(Code::InvalidFormat,"Invalid saved tracker purpose");}
+     const bool regular=purpose!=SavedTrackerPurpose::MainlineBackup;
+     if(observations.size()>256){return error(Code::Unsupported,"Active Mainline scrape target bound");}
+     std::map<std::string,const ManagedMainlineScrapeObservation*> active;
+@@ -168,7 +168,8 @@
+       if(!seen.insert(key.hex()).second){return error(Code::Conflict,"Duplicate saved Mainline identity");}
+       const auto admitted=active.find(key.hex());
+       const auto* observation=admitted==active.end()?nullptr:admitted->second;
+-      if(!row.saved.persistent||paused.contains(key.hex())||(purpose==SavedTrackerPurpose::RegularSavedTiers&&observation)){continue;}
++      if(!row.saved.persistent||paused.contains(key.hex())||(purpose==SavedTrackerPurpose::RegularSavedTiers&&observation)
++          ||(purpose==SavedTrackerPurpose::ActiveSingleUdpTier&&!observation)){continue;}
+       if(observation){
+         // Current checked Downloading/Seeding comes from the owner, not this
+         // persisted number. Stop/error/unknown saved intent still withdraws it.
+@@ -209,7 +210,14 @@
+             ||listIncludes(attrs->find("peersourcesdenied"),"Tracker",false)){continue;}
+       }
+       if(regular&&!configured){continue;}
+-      if(observation&&configured&&configured->size()>1){continue;} // Active announcer selection is separate.
++      if(observation&&configured&&configured->size()>1&&purpose!=SavedTrackerPurpose::ActiveSingleUdpTier){continue;}
++      if(purpose==SavedTrackerPurpose::ActiveSingleUdpTier){
++        const auto* tiers=doc.find("announce-list");
++        if(!configured||configured->size()<2||configured->size()>8||!tiers||tiers->type!=Node::Type::List||tiers->children.size()!=1
++            ||tiers->children.front().type!=Node::Type::List||tiers->children.front().children.size()!=configured->size()
++            ||std::ranges::any_of(*configured,[](const auto& url){return url.tier!=0||!url.url.starts_with("udp://");})){continue;}
++        std::set<std::string> urls;for(const auto& url:*configured){urls.insert(url.url);}if(urls.size()!=configured->size()){continue;}
++      }
+       if(observation&&!regular){
+         const auto permitted=activeScrapeOnly(*attrs);if(!permitted){return std::unexpected(permitted.error());}
+         if(!*permitted){continue;} // Normal active announce mode is not a passive scrape.
+@@ -230,7 +238,11 @@
+         // admission into both consumers. Route changes require normal readmission.
+         if(!regular&&(files.mainlinePolicy().discover||files.mainlinePolicy().announce)){continue;}
+         const auto params=files.parameters();if(!params.ti){continue;}
+-        if(regular){const auto url=detail::singleEffectiveTracker(params);
++        if(purpose==SavedTrackerPurpose::ActiveSingleUdpTier){
++          const auto urls=detail::singleTierUdpResponseUrls(params);
++          if(!configured||!urls||urls->size()!=configured->size()
++              ||std::ranges::any_of(*configured,[&](const auto& member){return std::ranges::find(*urls,member.url)==urls->end();})){continue;}
++        }else if(regular){const auto url=detail::singleEffectiveTracker(params);
+           if(!configured||configured->size()!=1||!url||*url!=configured->front().url
+               ||(purpose==SavedTrackerPurpose::RegularUdp?!url->starts_with("udp://"):(!url->starts_with("http://")&&!url->starts_with("https://")))){continue;}}
+         const auto subject=storage::originalTorrentInfoSubject(doc);if(!subject){return std::unexpected(subject.error());}
+@@ -276,6 +288,7 @@
+       if(observation){append(scope,regular?"active-regular-http":"active-mldht-scrape");append(scope,std::to_string(observation->admission));append(scope,mapping);}
+       if(purpose==SavedTrackerPurpose::RegularUdp){append(scope,"regular-udp-v1");}
+       if(purpose==SavedTrackerPurpose::RegularSavedTiers){append(scope,"regular-saved-tiers-v1");}
++      if(purpose==SavedTrackerPurpose::ActiveSingleUdpTier){append(scope,"active-single-udp-tier-counts-v1");}
+       auto hashed=digest(scope);if(!hashed){return error(Code::Io,observation?"Cannot authenticate managed Mainline scope":"Cannot authenticate saved Mainline scope");}
+       std::string responseKey;std::vector<SavedMainlineTracker> trackers;
+       if(configured){

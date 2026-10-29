@@ -1,0 +1,153 @@
+{
+  "status": "PASS_PRIVATE_ACTIVE_TRACKERS_AND_I2CP_CHANNEL",
+  "source_commit": "82ef47fb32c30f57ebc9e135bcbffb00b4f7660f",
+  "focused_results": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/runs/gcc-r2/result-qualified.json",
+      "sha256": "c8fb7fb74a1c9d8aa6c17a34e0e3564de95ce8ed8aa9c96d26f03036d2b430c8",
+      "images_sha256": "9726477daf8fe03aa853eb309478c47dd5096a6d8219550d96ec441ad8a57f1f",
+      "source_before_sha256": "3c73d53c51169606ef74fb32dd5e36a59cd8e0bd7b057e33f567249b160395ba"
+    },
+    "clang": {
+      "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/runs/clang-r2/result-qualified.json",
+      "sha256": "517dbfdc65bbef4e89c0396ed658f78b0871fb77d8c0cbcdc9de31c53b19e787",
+      "images_sha256": "a837a9aea057e41c79c4c945e18dcaafd653c224234ee04256745a6511144035",
+      "source_before_sha256": "3c73d53c51169606ef74fb32dd5e36a59cd8e0bd7b057e33f567249b160395ba"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/runs/san-r2/result-qualified.json",
+      "sha256": "addd1ea27d4d467446c4dbdc2faece10eb5f1a852d51e5566de66a93d028d982",
+      "images_sha256": "824359aa786ed2916968b9865cd0700f9e9a42ee849c1ef42bc0483d53b64ea8",
+      "source_before_sha256": "3c73d53c51169606ef74fb32dd5e36a59cd8e0bd7b057e33f567249b160395ba"
+    }
+  },
+  "builds_executed": false,
+  "promotion_executed": false,
+  "historical_runtime_passes_pooled": false,
+  "qualification_scope": "fresh three CTest suites plus one separate sole HTTPS row per lane; owner fullsuite compile-only all lanes; no pooled runtime origins",
+  "selection_plan_sha256": "b5850ebf3232249b465efb2d5263611c7f5ffa579c855710a302c283159dcfcf",
+  "candidate": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate",
+  "candidate_manifest_sha256": "94ee9178856a54b67655a28f825b0823fc1125d2ca7016fa59cdca5382e2fd51",
+  "actual_leaf_count": 119,
+  "copied_images": {
+    "biglybtc-i2cp-initial-channel-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2cp-initial-channel-tests",
+      "sha256": "977dada13b0206ad35634a3339003bc7603bf22a1cf5e87dc238f6f2ec77ab02",
+      "bytes": 214096
+    },
+    "biglybtc-mainline-single-http-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests",
+      "sha256": "1f6b6d395617f98fd7f2b1085a8e609e8a31aac007f35207e1c7129284c2931d",
+      "bytes": 6776240
+    },
+    "biglybtc-managed-queue-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-queue-tests",
+      "sha256": "9df49c55ca8ee81c79da7e139eaa304aeb264861e00478ff85e0e700b75dcb86",
+      "bytes": 6388592
+    }
+  },
+  "actual_tests": [
+    {
+      "target": "biglybtc-managed-queue-tests",
+      "selector": "realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse:live-DHT-no-active-selection",
+      "role": "managed_multi",
+      "exit": 0,
+      "xml_sha256": "b8f6069f6f20899078ddf267750376f6b6e65815cf3fac71e7c3911d25f6d355",
+      "case_names": [
+        "initTestCase",
+        "realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse(live-DHT-no-active-selection)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    },
+    {
+      "target": "biglybtc-managed-queue-tests",
+      "selector": "actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape:DHT-disabled",
+      "role": "udp_current",
+      "exit": 0,
+      "xml_sha256": "729805d3aed67e4709562ca298d18ce9e15eb7e932702e6d66631ec93f95bb4f",
+      "case_names": [
+        "initTestCase",
+        "actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape(DHT-disabled)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    },
+    {
+      "target": "biglybtc-i2cp-initial-channel-tests",
+      "selector": null,
+      "role": "channel_full",
+      "exit": 0,
+      "xml_sha256": "38b7f3e6da3b1d88eb9e6d17b4bd4aafe8ce90b88a198c3f5496182c3150d2f0",
+      "case_names": [
+        "initTestCase",
+        "actualJavaDateOverOwnedTcp(ipv4)",
+        "actualJavaDateOverOwnedTcp(ipv6)",
+        "invalidRepliesWithdrawAllObservation(oversize-header)",
+        "invalidRepliesWithdrawAllObservation(unknown-type)",
+        "invalidRepliesWithdrawAllObservation(maximum-bounded-opaque-frame)",
+        "invalidRepliesWithdrawAllObservation(unexpected-real-session-status)",
+        "invalidRepliesWithdrawAllObservation(invalid-date-length)",
+        "invalidRepliesWithdrawAllObservation(real-Java-null-date)",
+        "truncatedFrameAtActualEofRefuses",
+        "realDisconnectRevokesDateAndRetainsOnlyReason",
+        "actualRemoteEofWithdrawsDate",
+        "noDateHitsAbsoluteDeadlineWithoutRetry",
+        "cancelPartialThenExplicitRestartUsesNewStream",
+        "activeBeginCannotReplaceCurrentAttempt",
+        "stateListenerRestartCannotPublishOldDate",
+        "publicNotificationMayDeleteController(date-state-listener)",
+        "publicNotificationMayDeleteController(date-final-listener)",
+        "publicNotificationMayDeleteController(failure-listener)",
+        "unsupportedOptionsRefuseBeforeAnyTcp",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975"
+      }
+    },
+    {
+      "target": "biglybtc-mainline-single-http-tests",
+      "selector": "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline:private-HTTPS-saved-JKS-regular-scrape",
+      "role": "sole_https",
+      "exit": 0,
+      "xml_sha256": "458f3045e0dca1bd23891d572f8fa420ee5c61d87da0dabdd8e83814885e4fd3",
+      "case_names": [
+        "initTestCase",
+        "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(private-HTTPS-saved-JKS-regular-scrape)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    }
+  ],
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "old_dist_unchanged": "ac09f0dc9de3527e653e06b86e1c0d55d227f378593b0decc5233470f1cd2e69",
+  "source_unchanged": true,
+  "commands_sha256": "c889f7b5ba268e149187b05c9831ea8086b00e1c7ffb0e81f4a061b20065a262"
+}

@@ -7925,7 +7925,10 @@
         "preview/native/engine/queued_mainline_scrape.cpp",
         "preview/native/engine/mainline_scrape_runtime.inc",
         "preview/native/services/mainline_scrape.cpp",
-        "preview/native/ui/library_model.cpp"
+        "preview/native/ui/library_model.cpp",
+        "preview/native/engine/managed_tracker_responses.hpp",
+        "preview/native/engine/persistent_session.hpp",
+        "preview/native/engine/persistent_session.cpp"
       ],
       "source_coverage": [
         {
@@ -7971,7 +7974,9 @@
             "core/src/com/biglybt/core/config/impl/ConfigurationChecker.java",
             "core/src/com/biglybt/core/util/spi/AENameServiceJava12.java",
             "core/src/com/biglybt/core/proxy/impl/AEProxySelectorImpl.java",
-            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java"
+            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+            "core/src/com/biglybt/core/tracker/client/impl/TRTrackerAnnouncerMuxer.java",
+            "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerChecker.java"
           ],
           "source_symbols": [
             "AuthenticatorWindow",
@@ -8059,6 +8064,16 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b998d3076cd34513ae5459adb7de03553c0b1844",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "82ef47fb32c30f57ebc9e135bcbffb00b4f7660f",
+          "purpose": "tests"
         }
       ],
       "review_records": [
@@ -8071,7 +8086,8 @@
         "migration/evidence/20261029-proxy-i2p/REVIEW.md",
         "migration/evidence/20261029-direct-i2p-identity/REVIEW.md",
         "migration/evidence/20261029-direct-udp/REVIEW.md",
-        "migration/evidence/20261029-mixed-i2cp/REVIEW.md"
+        "migration/evidence/20261029-mixed-i2cp/REVIEW.md",
+        "migration/evidence/20261029-active-trackers-i2cp-channel/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-scrape-storage-stats/verification.json",
@@ -8085,7 +8101,8 @@
         "migration/evidence/20261029-proxy-i2p/verification.json",
         "migration/evidence/20261029-direct-i2p-identity/verification.json",
         "migration/evidence/20261029-direct-udp/verification.json",
-        "migration/evidence/20261029-mixed-i2cp/verification.json"
+        "migration/evidence/20261029-mixed-i2cp/verification.json",
+        "migration/evidence/20261029-active-trackers-i2cp-channel/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8168,7 +8185,10 @@
       ],
       "target_paths": [
         "preview/native/core/include/biglybtc/queue_observations.hpp",
-        "preview/native/core/src/queue_observations.cpp"
+        "preview/native/core/src/queue_observations.cpp",
+        "preview/native/engine/managed_tracker_responses.hpp",
+        "preview/native/engine/persistent_session.hpp",
+        "preview/native/engine/persistent_session.cpp"
       ],
       "source_coverage": [
         {
@@ -8187,7 +8207,9 @@
             "core/src/com/biglybt/core/config/impl/ConfigurationChecker.java",
             "core/src/com/biglybt/core/util/spi/AENameServiceJava12.java",
             "core/src/com/biglybt/core/proxy/impl/AEProxySelectorImpl.java",
-            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java"
+            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+            "core/src/com/biglybt/core/tracker/client/impl/TRTrackerAnnouncerMuxer.java",
+            "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerChecker.java"
           ],
           "source_symbols": [
             "DownloadImpl.getLastScrapeResult",
@@ -8255,6 +8277,16 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b998d3076cd34513ae5459adb7de03553c0b1844",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "82ef47fb32c30f57ebc9e135bcbffb00b4f7660f",
+          "purpose": "tests"
         }
       ],
       "review_records": [
@@ -8265,7 +8297,8 @@
         "migration/evidence/20261029-proxy-i2p/REVIEW.md",
         "migration/evidence/20261029-direct-i2p-identity/REVIEW.md",
         "migration/evidence/20261029-direct-udp/REVIEW.md",
-        "migration/evidence/20261029-mixed-i2cp/REVIEW.md"
+        "migration/evidence/20261029-mixed-i2cp/REVIEW.md",
+        "migration/evidence/20261029-active-trackers-i2cp-channel/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-active-scrape/verification.json",
@@ -8276,7 +8309,8 @@
         "migration/evidence/20261029-proxy-i2p/verification.json",
         "migration/evidence/20261029-direct-i2p-identity/verification.json",
         "migration/evidence/20261029-direct-udp/verification.json",
-        "migration/evidence/20261029-mixed-i2cp/verification.json"
+        "migration/evidence/20261029-mixed-i2cp/verification.json",
+        "migration/evidence/20261029-active-trackers-i2cp-channel/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8542,7 +8576,10 @@
         "preview/native/services/i2cp/protocol.cpp",
         "preview/native/tests/i2cp_protocol_tests.cpp",
         "preview/native/services/CMakeLists.txt",
-        "preview/native/tests/CMakeLists.txt"
+        "preview/native/tests/CMakeLists.txt",
+        "preview/native/services/i2cp_channel/channel.hpp",
+        "preview/native/services/i2cp_channel/channel.cpp",
+        "preview/native/tests/i2cp_initial_channel_tests.cpp"
       ],
       "source_coverage": [
         {
@@ -8560,7 +8597,9 @@
             "core/java/src/net/i2p/data/DataHelper.java",
             "core/java/src/net/i2p/client/I2PClient.java",
             "core/java/src/net/i2p/client/impl/I2PSessionImpl.java",
-            "core/java/src/net/i2p/util/Clock.java"
+            "core/java/src/net/i2p/util/Clock.java",
+            "core/java/src/net/i2p/client/impl/SetDateMessageHandler.java",
+            "core/java/src/net/i2p/client/impl/DisconnectMessageHandler.java"
           ],
           "source_symbols": [
             "I2CPMessageImpl.readMessage/writeMessage",
@@ -8585,13 +8624,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b998d3076cd34513ae5459adb7de03553c0b1844",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "82ef47fb32c30f57ebc9e135bcbffb00b4f7660f",
+          "purpose": "tests"
         }
       ],
       "review_records": [
-        "migration/evidence/20261029-mixed-i2cp/REVIEW.md"
+        "migration/evidence/20261029-mixed-i2cp/REVIEW.md",
+        "migration/evidence/20261029-active-trackers-i2cp-channel/REVIEW.md"
       ],
       "evidence": [
-        "migration/evidence/20261029-mixed-i2cp/verification.json"
+        "migration/evidence/20261029-mixed-i2cp/verification.json",
+        "migration/evidence/20261029-active-trackers-i2cp-channel/verification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     }

@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_REVIEW_AND_RUNTIME",
+  "component": "services.i2cp_initial_session",
+  "feature": "F06.i2cp_initial_session",
+  "native_base_commit": "0dabfff4c0f91a9ee750af41b645673353082836",
+  "implementation_source_basis": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
+  "source_sha256": {
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before": null,
+      "after_sha256": "375f81a1b1d46c102af6787bdf00c592344e4d305362e186bfc692f8a2c3d03c",
+      "bytes": 9798
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before": null,
+      "after_sha256": "f09a0944ac12a2429491431d4b190c1aa501f37cc6b2244457edacdf59dbc280",
+      "bytes": 2294
+    },
+    "preview/native/tests/fixtures/i2cp-channel/disconnect-control.frame": {
+      "before": null,
+      "after_sha256": "8b3943f8afaad6700ffe27c4fb7dd2f13ee48017d0a650055bf8ae5dc3bad6ab",
+      "bytes": 10
+    },
+    "preview/native/tests/fixtures/i2cp-channel/get-date-version.frame": {
+      "before": null,
+      "after_sha256": "94d5883ad183e2a229db95231cfd94b341552f58d8dbe67138f7b8a06ecc7b5f",
+      "bytes": 12
+    },
+    "preview/native/tests/fixtures/i2cp-channel/greeting.frame": {
+      "before": null,
+      "after_sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
+      "bytes": 1
+    },
+    "preview/native/tests/fixtures/i2cp-channel/set-date-legacy.frame": {
+      "before": null,
+      "after_sha256": "ca50fcb11d8caf39c8b14d3deeb8e406776cd227c6d10f8b7062305de262f292",
+      "bytes": 13
+    },
+    "preview/native/tests/fixtures/i2cp-channel/set-date-version.frame": {
+      "before": null,
+      "after_sha256": "25b1006e1e14b1cdbb14208ddca2211f6b1f8ee30b8ef9dad41bc0f7b41f4ea3",
+      "bytes": 20
+    },
+    "preview/native/tests/fixtures/i2cp-channel/set-date-zero.frame": {
+      "before": null,
+      "after_sha256": "4da1b064774f9150773f879a7329c39726faed64b7ab08f70fd2e66ee42a84b7",
+      "bytes": 14
+    },
+    "preview/native/tests/fixtures/i2cp-channel/status-created.frame": {
+      "before": null,
+      "after_sha256": "dc2fbbf3f0dabbde1e80910c6681bc6a862c800f376fce995484e8c4de5e4112",
+      "bytes": 8
+    },
+    "preview/native/tests/i2cp_initial_channel_tests.cpp": {
+      "before": null,
+      "after_sha256": "73966fd58953800239c4f071b7bb04d23bb1bf4657c20fd3d9c84bd58d160025",
+      "bytes": 13429
+    }
+  },
+  "composition_input_sha256": {
+    "preview/native/services/CMakeLists.txt": "603fdb5a321c18da639c9a7e1df4a299fc104c21864bd48810cd09b9d8eeb92b",
+    "preview/native/tests/CMakeLists.txt": "3f24a19efd15c858b282bde281c1b8243930671b191cb304be0399ef16bfa70d",
+    "preview/native/services/i2cp/protocol.hpp": "d88a9b8bb5049c8c458b47598f6627ecf85a1b3b2b10bc97d8b65397da26d9c8",
+    "preview/native/services/i2cp/protocol.cpp": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672"
+  },
+  "artifacts_sha256": {
+    "ADOPTION.md": "9fa05375e9f20644c270234038867ee46cdaef7dda5233faed4291a98ea69bd2",
+    "CMake.fragment": "9cf37d5158cb33c169bc09f9be9861bae1a3dd25e29d1ed471e3a42bf4dd53f5",
+    "changes.patch": "f560313fd099323e183563984c1bdde9e61063d690ec9323fef0caef9099361a",
+    "fixture-origins.json": "5f599aec9b941c06a79e4106a3240f9149f9f99093c8d370c8fe49d9a44485ad",
+    "original-source/core/java/src/net/i2p/client/impl/DisconnectMessageHandler.java": "983b980071abfaa44e42a733877f24135128552420118f70c5fa0d4635e4302c",
+    "original-source/core/java/src/net/i2p/client/impl/I2PSessionImpl.java": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+    "original-source/core/java/src/net/i2p/client/impl/SetDateMessageHandler.java": "3f7b28bc1dd0aa1775636251258095149fe86c081252979138e8e49120d4de5f",
+    "source-pins.json": "d8d07a445a4b03a14133a4f2b6b9f0596eed0503b6914d79fe9066b25455c781"
+  },
+  "cmake_fragment": "CMake.fragment",
+  "test": {
+    "target": "biglybtc-i2cp-initial-channel-tests",
+    "suite": "i2cp-initial-channel",
+    "timeout_seconds": 60,
+    "execution": "pending root qualification; no author compile/test/Java/endpoint execution"
+  },
+  "bounds": {
+    "loopback_numeric_only": true,
+    "automatic_activation": false,
+    "authentication": false,
+    "deadline_milliseconds_default": 30000,
+    "read_buffer_bytes": 131077,
+    "drain_budget_bytes": 16384,
+    "chunk_bytes": 4096,
+    "queued_public_notifications_maximum": 1,
+    "queued_drain_wakeups_maximum": 1
+  },
+  "retained_actual_java_vectors": {
+    "count": 7,
+    "bytes": 78,
+    "provenance": "fixture-origins.json"
+  },
+  "native_mutations": false
+}

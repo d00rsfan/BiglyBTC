@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "review_sha256": "e964460288b87dc9d347fca28e1a36b8984004457562b19d77e03143333476b0",
+  "review": "review.json",
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029/manifest.json": "6548f61e84f636d1fe487414f19c1024ce2ee002c0c92e13a2305f07e7a129a4",
+    "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029/amendments/date-commit-deadline/manifest.json": "451f00d89949320c7b45723b4747e5e0f59f0a08ffc43823264d3eba3fde33b1",
+    "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029/amendments/date-commit-deadline/parent-delta.patch": "05f0e964123f9511ae1de938819c25f9ed741c52ce4a6dca1d06ad67ca923dae",
+    "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029/source-pins.json": "d8d07a445a4b03a14133a4f2b6b9f0596eed0503b6914d79fe9066b25455c781",
+    "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029/fixture-origins.json": "5f599aec9b941c06a79e4106a3240f9149f9f99093c8d370c8fe49d9a44485ad"
+  }
+}

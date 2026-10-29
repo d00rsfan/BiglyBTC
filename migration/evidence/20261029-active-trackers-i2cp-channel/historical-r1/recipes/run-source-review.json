@@ -1,0 +1,21 @@
+{
+  "status": "PASS_SOURCE_REVIEW",
+  "script": {
+    "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/run.py",
+    "sha256": "954e54a067f540387ae56331ab84170e67f541dd2f177416f695f08789ec9ed9"
+  },
+  "reviewed_parent_sha256": "0517f07467ff410e812e048bc56855655555008d93d3e1139ac0e97a02953722",
+  "findings": [],
+  "resolved_note": "Text logger now explicitly uses ,txt beside explicit junitxml; exact one-argument edit reconstructs reviewed parent. No actual parser/test failure was claimed or reproduced.",
+  "scope": "Eight affected products built once per lane; actual queue-policy/managed-queue/i2cp-initial-channel CTest suite set is exactly3, with separate one-method HTTPS/JKS XML1. Owner full suite compile-only; no full HTTP/oldI2CP/Tor/Java/provider replay credit.",
+  "checks": [
+    "Root-adoption intentionally absent until final combined source: fullcommit/pathmap required before out creation; current working source HEAD/clean map/hash gates before+after. No future source identity guessed.",
+    "M receipt schema PASS_MIXED_I2CP_COHORT supplies only known cache/image paths and prior-reference hash; no prior successes pooled. New target falls back to cache/tests path, all8 current image hashes/bytes retained.",
+    "Four actual commands are build/http-loader/tests/sole-https-regression. Runner stores actual argv/exits/log hashes; provider exact f746/355 and current dist before/after gates retained.",
+    "CTest exact3 named XML with no failure/error/skip; actual run statuses enforced. Qt selector syntax matches current method:data tag; explicit txt+junitxml outputs, exact init/cleanup/data case3 XML rows, no failed/skipped Qt text and180s bounded process. actual_suites remains3 with separate sole_https fields, not an invented4-suite aggregate.",
+    "Same frozen support Runner converts Path args to strings; source_snapshot/images/passed_xml APIs align. Per-lane one compiler job and serial CTest; SAN leak/UBSan settings match M. No I/O pump/provider calls added by recipe."
+  ],
+  "pending": "Final adopted root-adoption.json/current code/CMake/new channel capsule are separate source-authority inputs, not reviewed or qualified by this recipe-only receipt.",
+  "compiler_or_subject_executed": false,
+  "native_cache_dist_modified": false
+}

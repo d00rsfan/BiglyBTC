@@ -1,0 +1,121 @@
+{
+  "parent_commit": "0dabfff4c0f91a9ee750af41b645673353082836",
+  "source_path_count": 20,
+  "source_paths": {
+    "preview/native/engine/managed_tracker_responses.hpp": {
+      "before_sha256": "937f71e1bf5cee5905564c4d3b6f4f23bb3dc10fa9adc740a8123131577dbe89",
+      "after_sha256": "33039ba2a04731afe63f71d0bf5db1ec4e58f354281852dd007bed108536fe19"
+    },
+    "preview/native/engine/persistent_session.hpp": {
+      "before_sha256": "e3bd40c5d11ff5f716be3bf32124644af12997e446ae87831c9a97a36830fbdf",
+      "after_sha256": "fccc17ac484c71bf44c7acc3ec84b0927cce9abc65f900de5da4111f8f876d0d"
+    },
+    "preview/native/engine/persistent_session.cpp": {
+      "before_sha256": "86979280ff71e5c3e992f7b1d11d4b199fcc50bbae4785d0db079859ae90821e",
+      "after_sha256": "66d5ec23bf2a719a43e6587cbfe8844366c6373150e918aeaf53674262279654"
+    },
+    "preview/native/engine/library_http_owner.inc": {
+      "before_sha256": "0f5fba45380f8da048ac119c0e4b58ab5f87e55772958ca440c990e26d1ea30e",
+      "after_sha256": "b432243bb656447aa62e1f77934fc74c499a896657e3f954f2bd38adbcb3202b"
+    },
+    "preview/native/tests/managed_queue_tests.cpp": {
+      "before_sha256": "f7f760ab2f7f1bfe350a8611c0dddffcbabfd7bf0e1f9a3f6575b735a54d0a95",
+      "after_sha256": "671a88c28030bcc276b4a1923b45517c9950a69cc49f3b13bc173ec563d399aa"
+    },
+    "preview/native/engine/mainline_owner.inc": {
+      "before_sha256": "57661676dbb276eaccc74d71e98ee5b1487796d174a10a8150ca0c2d9a9e95db",
+      "after_sha256": "b7716a616925bd9c64119bacf120b65c75fa8031a8bd6cd4f4f62277d69c7f4b"
+    },
+    "preview/native/engine/queued_mainline_scrape.hpp": {
+      "before_sha256": "81f4c65f08767efe953818dbb14b007782f8b3b9451449c724e86d823a952dd5",
+      "after_sha256": "73d2b42077f24c60483c34b82fc1e6702a7ee51f9ad113a3aef8479ad426a959"
+    },
+    "preview/native/engine/queued_mainline_scrape.cpp": {
+      "before_sha256": "9ac57c6489c94f1f3da2b4c49d5c4c369c63828bccb8d234dacaa9870ce7b5d9",
+      "after_sha256": "f889b7340df6d7ad59aacfd6dc854d50379f982a05a33be6fa1a8c85a62b12f6"
+    },
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before_sha256": null,
+      "after_sha256": "719cf38dd6d9a799791b66e3fb31a691b8c55e75401b9630a8c2fd2d422cb0dc"
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before_sha256": null,
+      "after_sha256": "f09a0944ac12a2429491431d4b190c1aa501f37cc6b2244457edacdf59dbc280"
+    },
+    "preview/native/tests/fixtures/i2cp-channel/disconnect-control.frame": {
+      "before_sha256": null,
+      "after_sha256": "8b3943f8afaad6700ffe27c4fb7dd2f13ee48017d0a650055bf8ae5dc3bad6ab"
+    },
+    "preview/native/tests/fixtures/i2cp-channel/get-date-version.frame": {
+      "before_sha256": null,
+      "after_sha256": "94d5883ad183e2a229db95231cfd94b341552f58d8dbe67138f7b8a06ecc7b5f"
+    },
+    "preview/native/tests/fixtures/i2cp-channel/greeting.frame": {
+      "before_sha256": null,
+      "after_sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1"
+    },
+    "preview/native/tests/fixtures/i2cp-channel/set-date-legacy.frame": {
+      "before_sha256": null,
+      "after_sha256": "ca50fcb11d8caf39c8b14d3deeb8e406776cd227c6d10f8b7062305de262f292"
+    },
+    "preview/native/tests/fixtures/i2cp-channel/set-date-version.frame": {
+      "before_sha256": null,
+      "after_sha256": "25b1006e1e14b1cdbb14208ddca2211f6b1f8ee30b8ef9dad41bc0f7b41f4ea3"
+    },
+    "preview/native/tests/fixtures/i2cp-channel/set-date-zero.frame": {
+      "before_sha256": null,
+      "after_sha256": "4da1b064774f9150773f879a7329c39726faed64b7ab08f70fd2e66ee42a84b7"
+    },
+    "preview/native/tests/fixtures/i2cp-channel/status-created.frame": {
+      "before_sha256": null,
+      "after_sha256": "dc2fbbf3f0dabbde1e80910c6681bc6a862c800f376fce995484e8c4de5e4112"
+    },
+    "preview/native/tests/i2cp_initial_channel_tests.cpp": {
+      "before_sha256": null,
+      "after_sha256": "73966fd58953800239c4f071b7bb04d23bb1bf4657c20fd3d9c84bd58d160025"
+    },
+    "preview/native/services/CMakeLists.txt": {
+      "before_sha256": "603fdb5a321c18da639c9a7e1df4a299fc104c21864bd48810cd09b9d8eeb92b",
+      "after_sha256": "1c77fd0d38bc3ccf3e50bece87ab37782cc2a953e0ba905e0825194cdcf8d40b"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_sha256": "3f24a19efd15c858b282bde281c1b8243930671b191cb304be0399ef16bfa70d",
+      "after_sha256": "54561b7d1f9889940f70573d825c7b459744716a3d22849bab83dceac2f2ebe8"
+    }
+  },
+  "source_inputs": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/manifest.json",
+      "sha256": "7c5f28c2908b2566554097cdd69861557ceef64d399e32d200341fbff19b85e8"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029/amendments/date-commit-deadline/manifest.json",
+      "sha256": "451f00d89949320c7b45723b4747e5e0f59f0a08ffc43823264d3eba3fde33b1"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029/manifest.json",
+      "sha256": "6548f61e84f636d1fe487414f19c1024ce2ee002c0c92e13a2305f07e7a129a4"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029-review/manifest.json",
+      "sha256": "339d2154c910fbce670b637a6b96241d87581fb3c43b5ad64d23ca31ec20406b"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029-review/single-tier-udp-review.json",
+      "sha256": "36fc38659d74265b7e7a1ca072040c2c076f3d522fe4d5619a7bb639b799b314"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/run.py",
+      "sha256": "954e54a067f540387ae56331ab84170e67f541dd2f177416f695f08789ec9ed9"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/run-source-review.json",
+      "sha256": "337700dfd881403dc9652ebb4a2ed20b582096813c0d13123f1e17240ca4a4cc"
+    }
+  ],
+  "cmake_fragment_sha256": "9cf37d5158cb33c169bc09f9be9861bae1a3dd25e29d1ed471e3a42bf4dd53f5",
+  "provider_rebuilt": false,
+  "runtime_qualification": "pending",
+  "source_commit": "b998d3076cd34513ae5459adb7de03553c0b1844",
+  "all_twenty_working_and_git_afterimages_verified": true
+}

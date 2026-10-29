@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "manifest": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/amendments/actual-fixture-boundaries/manifest.json",
+  "manifest_sha256": "310e90c3374362304c0bcff1c0278e6b7dfce392d4166132585b21130bceb184",
+  "source_sha256": {
+    "preview/native/tests/managed_queue_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/amendments/actual-fixture-boundaries/before/preview/native/tests/managed_queue_tests.cpp",
+      "before_sha256": "671a88c28030bcc276b4a1923b45517c9950a69cc49f3b13bc173ec563d399aa",
+      "after_path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/amendments/actual-fixture-boundaries/staging/preview/native/tests/managed_queue_tests.cpp",
+      "after_sha256": "13429a75399ccaa419c7863de630745e64dbce4f4cb9ca285fdb3ede774368a2"
+    }
+  },
+  "conclusion": "No concrete blocker. This one test-only leaf corrects fixture assumptions while retaining production/provider source and all permission, identity, freshness and count predicates. No runtime success is inferred.",
+  "findings": [
+    {
+      "scope": "ActiveUdpPair announce parser",
+      "evidence": "Pinned provider udp_tracker_connection.cpp734-748 appends URLData type2, length9 and /announce to the98-byte BEP15 header.",
+      "assessment": "Exact109-byte length plus exact11-byte option suffix are now required; existing connection cookie, infohash, loopback source, peer port, failover and no-SCRAPE assertions remain."
+    },
+    {
+      "scope": "singleOriginalUdpTierCountsRequireAnActualCapturedAdmissionAndExactGroup",
+      "evidence": "ManagedStorage preparation saves canonical storage defaults/filelinks/resume, then captures originalQueueMappingScope; queue reader compares this exact accepted map.",
+      "assessment": "The restored state is now the actual post-prepare accepted snapshot. Different group, different endpoint and missing admission still refuse."
+    },
+    {
+      "scope": "Both deliberate external .dat-edit owner methods",
+      "evidence": "TorrentState replace performs exact original-byte CAS and returns Conflict/Saved state changed since loading when external bytes differ.",
+      "assessment": "Close now requires join and storage release, the exact expected Conflict code/message, and byte-for-byte preservation of external metadata; raw info, payload/accounting, view revocation, admission and no-new-scrape guards remain."
+    },
+    {
+      "scope": "UDP initial wait diagnostics",
+      "assessment": "Only bounded phase/admission/failure/owned wire facts added; original15s wait and all subsequent count/time limits remain unchanged."
+    }
+  ],
+  "pin_checks": {
+    "source_paths": 1,
+    "capsule_artifacts": 6,
+    "source_proofs": 5,
+    "retained_failed_invocations": 3,
+    "exact_patch_matches": true,
+    "current_native_preimage_matches": true
+  },
+  "minimum_qualification": {
+    "target": "biglybtc-managed-queue-tests",
+    "suite": "managed-queue",
+    "scope": "Root actual r2 runs; no changes needed in production, provider, channel or CMake. The five failed r1 rows remain failed historical observations."
+  },
+  "review_execution": "Read source/excerpts, hashes, exact diff and retained failure lines only. No C++/CTest/Java/network/subjects, N or cache mutations."
+}

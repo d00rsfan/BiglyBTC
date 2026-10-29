@@ -1,0 +1,10 @@
+SOURCE ONLY. One test-leaf child of actual b998, production/provider unchanged.
+Three source-backed corrections: exact BEP41 URLData /announce bytes; restore
+POST-prepare accepted mapping state; retain external .dat tracker edits and
+expect the exact checkpoint CAS conflict while requiring joined/released.
+Initial UDP wait now prints bounded managed/owned wire facts; same 15s deadline.
+No new permission, count, routing or source freshness assertions weakened.
+All five failed actual rows in three r1 invocations remain failures. No rerun.
+Root can build only biglybtc-managed-queue-tests; execute the three affected
+methods (five data rows), then the full managed suite as root schedules.
+Current unrelated queue/channel passes are historical actual b998 origins.

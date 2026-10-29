@@ -1,0 +1,14 @@
+{
+  "status": "PASS_ROOT_EXACT_RECIPE_DERIVATION_SOURCE_ONLY",
+  "source_commit": "82ef47fb32c30f57ebc9e135bcbffb00b4f7660f",
+  "run_r2_sha256": "dd7b6766b07cf060a5e04967b8b5af070a5abc71984a5a5b1cbfea9a50aab754",
+  "private_r2_sha256": "f783bed161c50aba03f7bebb333ec1f83b79f216374bd54b1c7b3a3b584b6fac",
+  "changes": [
+    "runner adoption filename only",
+    "private runner pin and adoption filename only"
+  ],
+  "test_amendment_manifest_sha256": "310e90c3374362304c0bcff1c0278e6b7dfce392d4166132585b21130bceb184",
+  "independent_review_sha256": "db5f4276e5a7dbdb1b3d289bf4cc578435cddffe936a1003fe065c3359789515",
+  "production_source_unchanged": true,
+  "actual_r1_failures_preserved": true
+}

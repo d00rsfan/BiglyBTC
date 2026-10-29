@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "review_scope": "Delta only from root-reviewed finish-r2.py; no promotion/helper execution.",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/finish-r2.py",
+    "sha256": "b46a59d7a39fe3ad360e1363c5686bab5fde6fba62f1ee18a8197f4a733d9f34"
+  },
+  "child": {
+    "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/finish-qualified.py",
+    "sha256": "d17aa1c71a26a315eab13e6782eb13c600c08f7263371c3a2c963d6db14a705b"
+  },
+  "static_input_pins_checked": 23,
+  "conclusion": "No concrete blocker in the derivative. It binds result-qualified.json to unchanged raw r2 FAIL and the reviewed qualifier, requires commands_reexecuted=false, uses the reviewed private helper, keeps CTest status mandatory while permitting absent direct Qt status, and preserves raw plus qualified receipts and correction review in evidence.",
+  "checks": [
+    "Python AST valid; all static PINS exist and match current bytes.",
+    "Qualified receipt raw SHA and verifier SHA are checked; private focused_results must point to the exact qualified receipt, not raw FAIL.",
+    "Original case failure/error/skip/name/ELF/command/source checks remain; optional status is confined to direct Qt JUnit.",
+    "Both raw result.json and result-qualified.json are archived with original producer/private recipes and the corrected verifier/review; README and verification.json state the verification-only correction and no rerun.",
+    "Promotion, metadata scope, original baselines and cleanup logic outside the requested delta remain inherited from the reviewed parent."
+  ],
+  "limits": "Source/AST/diff/static-pin checks only. No compiler, test, Java, runtime, helper, staging, promotion or N/cache/dist mutation."
+}

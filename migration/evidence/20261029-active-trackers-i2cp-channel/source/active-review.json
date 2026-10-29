@@ -1,0 +1,20 @@
+{
+  "status": "PASS_ROOT_SOURCE_REVIEW_RUNTIME_PENDING",
+  "manifest": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/manifest.json",
+  "manifest_sha256": "7c5f28c2908b2566554097cdd69861557ceef64d399e32d200341fbff19b85e8",
+  "source_path_count": 8,
+  "checks": [
+    "complete frozen8 afterimages/currentbeforeimages/artifacts verified",
+    "retains explicit sole guards and unchanged callback/ring producer",
+    "new numeric single-original-tier scope authenticates actual storage/admission and immutable captured URL/tier inventory",
+    "current URL comes only from actual typed dispatch handle/protocol/bound endpoint alerts; drop/overflow/unknown/regression withdraws",
+    "pre-pop ring cut and matching read/written prevent publishing post-collection terminal before later dispatch collection",
+    "passive managed current getter and actual library presentation consumer; no queue facts or Mainline/scrape RPC authority",
+    "owned two-UDP failover forbids SCRAPE; sourcegroup edit/rearm/pause/retirement and DHT-disabled/live tests authored"
+  ],
+  "limits": [
+    "general multihelper statuses/HTTP redirects remain unsupported",
+    "runtime endpoint/ordering assumptions still need actual root tests",
+    "only fresh controlled numeric routes supported; no public/performance/phase-completion claim"
+  ]
+}

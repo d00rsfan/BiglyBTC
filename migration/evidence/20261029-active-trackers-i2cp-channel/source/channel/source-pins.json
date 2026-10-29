@@ -1,0 +1,42 @@
+{
+  "official_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "tree": "b38c70fbf3f7ce6f33ca95bedaa001e1458a4c9b",
+  "plugin_context_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+  "source_jar": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/actual-offline-interop/dependencies/i2p-2.13.0-sources.jar",
+  "source_jar_sha256": "b169a9cebb58bee8b9ca2e73743418b1e9a634bdea4faa8ca6e2063d1032f23a",
+  "previous_protocol_source_pins": "/home/yurii/Java/BiglyBT/build/i2cp-session-codec-20261029/source-pins.json",
+  "previous_protocol_source_pins_sha256": "e111a8a822e6b897f80f78e8bce1e614774bb8deb46f4c3c7badb9bfe6663996",
+  "sources": [
+    {
+      "path": "core/java/src/net/i2p/client/impl/I2PSessionImpl.java",
+      "source_jar_entry": "net/i2p/client/impl/I2PSessionImpl.java",
+      "git_blob": "44123f7c26d4218902e1492e975f0a30e3ffc174",
+      "sha256": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+      "bytes": 88133,
+      "source_jar_git_tree_equal": true,
+      "git_blob_already_retained": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/SetDateMessageHandler.java",
+      "source_jar_entry": "net/i2p/client/impl/SetDateMessageHandler.java",
+      "git_blob": "c15e0f3a966d4ed6122c10d8f4998f4c4bce1957",
+      "sha256": "3f7b28bc1dd0aa1775636251258095149fe86c081252979138e8e49120d4de5f",
+      "bytes": 1725,
+      "source_jar_git_tree_equal": true,
+      "git_blob_already_retained": false,
+      "matching_blob_materialized_from_pinned_source_jar": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/DisconnectMessageHandler.java",
+      "source_jar_entry": "net/i2p/client/impl/DisconnectMessageHandler.java",
+      "git_blob": "525916e490c4c55c654b2ff066130704a8126a99",
+      "sha256": "983b980071abfaa44e42a733877f24135128552420118f70c5fa0d4635e4302c",
+      "bytes": 1348,
+      "source_jar_git_tree_equal": true,
+      "git_blob_already_retained": false,
+      "matching_blob_materialized_from_pinned_source_jar": true
+    }
+  ],
+  "modified_source_equivalence": false,
+  "network_fetch": false
+}

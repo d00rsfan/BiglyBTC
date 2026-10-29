@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_ACTUAL_FIXTURE_BOUNDARIES_PENDING_REVIEW",
+  "native_source_basis": "b998d3076cd34513ae5459adb7de03553c0b1844",
+  "source_paths": {
+    "preview/native/tests/managed_queue_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/amendments/actual-fixture-boundaries/before/preview/native/tests/managed_queue_tests.cpp",
+      "before_sha256": "671a88c28030bcc276b4a1923b45517c9950a69cc49f3b13bc173ec563d399aa",
+      "after_path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/amendments/actual-fixture-boundaries/staging/preview/native/tests/managed_queue_tests.cpp",
+      "after_sha256": "13429a75399ccaa419c7863de630745e64dbce4f4cb9ca285fdb3ede774368a2"
+    }
+  },
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/manifest.json",
+  "parent_manifest_sha256": "7c5f28c2908b2566554097cdd69861557ceef64d399e32d200341fbff19b85e8",
+  "artifacts": {
+    "ADOPTION.txt": "16f060aebcd0b09754793435e61d8021cb12dfda0c18a5f1090ff3d9edfa3018",
+    "before/preview/native/tests/managed_queue_tests.cpp": "671a88c28030bcc276b4a1923b45517c9950a69cc49f3b13bc173ec563d399aa",
+    "changes.patch": "7ccf34ea53916daf246c85ed0ceed4aec86d599cdf3e0e46361b336a88896b35",
+    "failed-inputs.json": "0605704b79843ef1bd1f961c9295dedb37af5aef4a36fbc737a2da43ed257ba7",
+    "source-proof.json": "2d475792f45b378655571cb35f744eb05bc61a45e1c493c2f8d66f6ba16e35dd",
+    "staging/preview/native/tests/managed_queue_tests.cpp": "13429a75399ccaa419c7863de630745e64dbce4f4cb9ca285fdb3ede774368a2"
+  },
+  "production_changed": false,
+  "author_execution": false
+}

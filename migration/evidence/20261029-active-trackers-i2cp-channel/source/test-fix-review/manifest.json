@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "review": "review.json",
+  "review_sha256": "76dff9117d1fc797c193fd30f8531c7f7ae30ec176687e24ffe90136ae59f225",
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/amendments/actual-fixture-boundaries/manifest.json": "310e90c3374362304c0bcff1c0278e6b7dfce392d4166132585b21130bceb184",
+    "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/amendments/actual-fixture-boundaries/changes.patch": "7ccf34ea53916daf246c85ed0ceed4aec86d599cdf3e0e46361b336a88896b35",
+    "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/amendments/actual-fixture-boundaries/source-proof.json": "2d475792f45b378655571cb35f744eb05bc61a45e1c493c2f8d66f6ba16e35dd",
+    "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/amendments/actual-fixture-boundaries/failed-inputs.json": "0605704b79843ef1bd1f961c9295dedb37af5aef4a36fbc737a2da43ed257ba7"
+  }
+}

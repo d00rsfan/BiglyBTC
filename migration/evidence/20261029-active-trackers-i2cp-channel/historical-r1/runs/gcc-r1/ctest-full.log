@@ -1,0 +1,124 @@
+Start testing: Oct 29 14:33 IST
+----------------------------------------------------------
+218/285 Testing: queue-policy
+218/285 Test: queue-policy
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-queue-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"queue-policy" start time: Oct 29 14:33 IST
+Output:
+----------------------------------------------------------
+43 queue-policy families, 8794 assertions passed
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"queue-policy" end time: Oct 29 14:33 IST
+"queue-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+221/285 Testing: managed-queue
+221/285 Test: managed-queue
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-queue-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"managed-queue" start time: Oct 29 14:33 IST
+Output:
+----------------------------------------------------------
+********* Start testing of ManagedQueueTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedQueueTests::initTestCase()
+PASS   : ManagedQueueTests::ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(single)
+PASS   : ManagedQueueTests::ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(multi)
+PASS   : ManagedQueueTests::rawScrapeTerminalUsesSameAdmissionRingAndWithdrawsOnLoss()
+PASS   : ManagedQueueTests::actualOwnedTrackerScrapeReplyAndErrorReachRetainedRawSource()
+PASS   : ManagedQueueTests::actualAnnounceResponseSurvivesScrapeErrorWithoutGrantingConfiguredPermission()
+PASS   : ManagedQueueTests::activeUrlInventoryIsBoundedDeduplicatedAndNeverInventsASelection()
+PASS   : ManagedQueueTests::perUrlActiveRingKeepsCountsSeparateAndLossWithdrawsEveryBinding()
+PASS   : ManagedQueueTests::actualMultiUrlProviderRoutesEachTerminalWithoutSelectingAnAnnouncer()
+FAIL!  : ManagedQueueTests::realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse(no-DHT-service) 'closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_queue_tests.cpp(379)]
+FAIL!  : ManagedQueueTests::realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse(live-DHT-no-active-selection) 'closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_queue_tests.cpp(379)]
+PASS   : ManagedQueueTests::singleHelperDispatchCutOrdersResponseAndAlertDeliveryWithoutClockTranslation()
+FAIL!  : ManagedQueueTests::singleOriginalUdpTierCountsRequireAnActualCapturedAdmissionAndExactGroup() 'restored&&restored->size()==1' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_queue_tests.cpp(413)]
+FAIL!  : ManagedQueueTests::actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape(DHT-disabled) 'pump()&&trackers.held()&&service->managedDownloads()[0].checked' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_queue_tests.cpp(425)]
+FAIL!  : ManagedQueueTests::actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape(DHT-live-passive-only) 'pump()&&trackers.held()&&service->managedDownloads()[0].checked' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_queue_tests.cpp(425)]
+PASS   : ManagedQueueTests::trackerResponseLifetimeRetainsAcrossAdmissionsAndLossCannotResetToInitialError()
+PASS   : ManagedQueueTests::actualObserverQueueHasBoundedNonblockingProducerAndWorkerOnlyDrain()
+PASS   : ManagedQueueTests::actualProviderLifecycleAndPayloadSendSmoothingRetireAndReopenIndependently(single)
+PASS   : ManagedQueueTests::actualProviderLifecycleAndPayloadSendSmoothingRetireAndReopenIndependently(multi)
+PASS   : ManagedQueueTests::verifiedSeedActualPostPrimaryFailureCannotReleaseOrReplay()
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(download-cap)
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(active-cap)
+PASS   : ManagedQueueTests::completionRatioQueuesAndClearsOnlyForceBeforeActualCheckpoint()
+PASS   : ManagedQueueTests::actualNewSeedNormalizesBothSavedGroups(new-seed-top)
+PASS   : ManagedQueueTests::actualNewSeedNormalizesBothSavedGroups(new-seed-end)
+PASS   : ManagedQueueTests::laterAdmissionRestoresCompletePositionAuthorityWithoutReopening()
+PASS   : ManagedQueueTests::uncertainPublishedGroupTransitionNeverReplaysInSameOwner()
+PASS   : ManagedQueueTests::actualTargetEtaIsAdmissionOwnedAndPauseClearsCurrentAuthority()
+PASS   : ManagedQueueTests::actualOriginalFilePriorityProviderPreservesStartupAndManualHold()
+PASS   : ManagedQueueTests::cleanupTestCase()
+Totals: 25 passed, 5 failed, 0 skipped, 0 blacklisted, 172100ms
+********* Finished testing of ManagedQueueTests *********
+<end of output>
+Test time = 172.15 sec
+----------------------------------------------------------
+Test Failed.
+"managed-queue" end time: Oct 29 14:36 IST
+"managed-queue" time elapsed: 00:02:52
+----------------------------------------------------------
+
+285/285 Testing: i2cp-initial-channel
+285/285 Test: i2cp-initial-channel
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2cp-initial-channel-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"i2cp-initial-channel" start time: Oct 29 14:36 IST
+Output:
+----------------------------------------------------------
+********* Start testing of InitialChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : InitialChannelTests::initTestCase()
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv4)
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv6)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(oversize-header)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unknown-type)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(maximum-bounded-opaque-frame)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unexpected-real-session-status)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(invalid-date-length)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(real-Java-null-date)
+PASS   : InitialChannelTests::truncatedFrameAtActualEofRefuses()
+PASS   : InitialChannelTests::realDisconnectRevokesDateAndRetainsOnlyReason()
+PASS   : InitialChannelTests::actualRemoteEofWithdrawsDate()
+PASS   : InitialChannelTests::noDateHitsAbsoluteDeadlineWithoutRetry()
+PASS   : InitialChannelTests::cancelPartialThenExplicitRestartUsesNewStream()
+PASS   : InitialChannelTests::activeBeginCannotReplaceCurrentAttempt()
+PASS   : InitialChannelTests::stateListenerRestartCannotPublishOldDate()
+PASS   : InitialChannelTests::publicNotificationMayDeleteController(date-state-listener)
+PASS   : InitialChannelTests::publicNotificationMayDeleteController(date-final-listener)
+PASS   : InitialChannelTests::publicNotificationMayDeleteController(failure-listener)
+PASS   : InitialChannelTests::unsupportedOptionsRefuseBeforeAnyTcp()
+PASS   : InitialChannelTests::cleanupTestCase()
+Totals: 21 passed, 0 failed, 0 skipped, 0 blacklisted, 3101ms
+********* Finished testing of InitialChannelTests *********
+<end of output>
+Test time =   3.11 sec
+----------------------------------------------------------
+Test Passed.
+"i2cp-initial-channel" end time: Oct 29 14:36 IST
+"i2cp-initial-channel" time elapsed: 00:00:03
+----------------------------------------------------------
+
+End testing: Oct 29 14:36 IST
+
+i2p =   3.11 sec*proc
+
+owned-loopback =   3.11 sec*proc
+
+queue = 172.19 sec*proc
+
+runtime-bound = 172.15 sec*proc
+
+unit = 175.30 sec*proc
+

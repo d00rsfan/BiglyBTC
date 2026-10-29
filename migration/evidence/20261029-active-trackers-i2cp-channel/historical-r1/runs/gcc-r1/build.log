@@ -1,0 +1,41 @@
+[0/1] Re-running CMake...
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable exact version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Configuring done (12.5s)
+-- Generating done (2.1s)
+-- Build files have been written to: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+[1/33] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/local_session.cpp.o
+[2/33] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/multifile_session.cpp.o
+[3/33] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_session.cpp.o
+[4/33] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[5/33] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/queued_mainline_scrape.cpp.o
+[6/33] Linking CXX static library engine/libbiglybtc_local_engine.a
+[7/33] Automatic MOC for target biglybtc_i2cp_initial_channel
+[8/33] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/biglybtc_i2cp_initial_channel_autogen/mocs_compilation.cpp.o
+[9/33] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/i2cp_channel/channel.cpp.o
+[10/33] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/session_bridge.cpp.o
+[11/33] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/live_speed_mapper_binding.cpp.o
+[12/33] Linking CXX static library services/libbiglybtc_i2cp_initial_channel.a
+[13/33] Linking CXX static library app/libbiglybtc_desktop_host.a
+[14/33] Automatic MOC for target biglybtc-managed-queue-tests
+[15/32] Automatic MOC for target biglybtc-mainline-single-tracker-owner-tests
+[16/31] Automatic MOC for target biglybtc-mainline-single-http-tests
+[17/30] Automatic MOC for target biglybtc-i2cp-initial-channel-tests
+[18/30] Building CXX object tests/CMakeFiles/biglybtc-managed-queue-tests.dir/managed_queue_tests.cpp.o
+[19/30] Building CXX object tests/CMakeFiles/biglybtc-mainline-single-tracker-owner-tests.dir/mainline_single_tracker_owner_tests.cpp.o
+[20/30] Building CXX object tests/CMakeFiles/biglybtc-mainline-single-http-tests.dir/mainline_single_http_tests.cpp.o
+[21/30] Building CXX object tests/CMakeFiles/biglybtc-i2cp-initial-channel-tests.dir/biglybtc-i2cp-initial-channel-tests_autogen/mocs_compilation.cpp.o
+[22/30] Building CXX object tests/CMakeFiles/biglybtc-i2cp-initial-channel-tests.dir/i2cp_initial_channel_tests.cpp.o
+[23/30] Linking CXX executable biglybtc-preview-smoke
+[24/30] Linking CXX executable app/BiglyBTC-headless
+[25/30] Linking CXX executable app/BiglyBTC
+[26/30] Linking CXX executable tests/biglybtc-managed-queue-tests
+[27/30] Linking CXX executable tests/biglybtc-mainline-single-tracker-owner-tests
+[28/30] Linking CXX executable tests/biglybtc-mainline-single-http-tests
+[29/30] Linking CXX executable tests/biglybtc-i2cp-initial-channel-tests

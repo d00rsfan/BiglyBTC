@@ -1,0 +1,45 @@
+{
+  "status": "PASS_ACTIVE_CHANNEL_COHORT",
+  "source_commit": "82ef47fb32c30f57ebc9e135bcbffb00b4f7660f",
+  "lane": "clang",
+  "cache": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+  "compiled_targets": [
+    "biglybtc-managed-queue-tests",
+    "biglybtc-queue-policy-tests",
+    "biglybtc-mainline-single-tracker-owner-tests",
+    "biglybtc-mainline-single-http-tests",
+    "biglybtc-i2cp-initial-channel-tests",
+    "BiglyBTC",
+    "BiglyBTC-headless",
+    "biglybtc-preview-smoke"
+  ],
+  "compile_only_suites": [
+    "mainline-single-tracker-owner"
+  ],
+  "historical_passes_pooled": false,
+  "provider_rebuilt": false,
+  "prior_qualification_sha256": "e9356ff30faf96ac683e2e5d6698196f4938f377361b741a83ce745e9ec20395",
+  "runner_sha256": "dd7b6766b07cf060a5e04967b8b5af070a5abc71984a5a5b1cbfea9a50aab754",
+  "source_receipt_sha256": "916cc110ce0653a23593068680cc560866e50a49894765119ec748e70055e345",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "dist_manifest_before": "ac09f0dc9de3527e653e06b86e1c0d55d227f378593b0decc5233470f1cd2e69",
+  "commands_sha256": "053082fe5c0b2718f394921430426cb41994e315e2d9b0c44f529e9cc282343d",
+  "suite_names": [
+    "queue-policy",
+    "managed-queue",
+    "i2cp-initial-channel"
+  ],
+  "actual_suites": 3,
+  "full_ctest_log_sha256": "71347027ab148b6536e0f35949f1d75cebf0c9b082055d0f083c7fa561f11f21",
+  "tests_xml_sha256": "ba9376c9aef7b3ed46022020d9c0c42cb7e15b213e9801b5fbd43a9057ee4b99",
+  "sole_https_selector": "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline:private-HTTPS-saved-JKS-regular-scrape",
+  "sole_https_xml_sha256": "66fd2fd4c124e6e9384c596ac49ae63fe02e0ac321823041a453884169472ea0",
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "sanitizer_environment": {},
+  "sanitizer_configuration_basis": "Executed immutable runner source; no separate process-environment capture claimed",
+  "original_verification_result_sha256": "c7076b641a21528999526429592b2dec1f6721928d0d126de0b3c7df51856d65",
+  "qualification_verifier_sha256": "d19745bf45082ed2abd76abbb15576a4f4ae34385ef7a364e2df6dbf77ae37c8",
+  "verification_correction": "CTest requires status=run; direct Qt JUnit permits absent status, with exact cases and zero summary/child failures/errors/skips",
+  "commands_reexecuted": false
+}

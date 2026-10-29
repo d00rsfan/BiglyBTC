@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "component": "services.i2cp_initial_session",
+  "reviewer": "error_codec",
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029/manifest.json",
+  "parent_manifest_sha256": "6548f61e84f636d1fe487414f19c1024ce2ee002c0c92e13a2305f07e7a129a4",
+  "final_manifest": "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029/amendments/date-commit-deadline/manifest.json",
+  "final_manifest_sha256": "451f00d89949320c7b45723b4747e5e0f59f0a08ffc43823264d3eba3fde33b1",
+  "findings_resolved": [
+    {
+      "parent_issue": "SetDate decode could cross the absolute deadline before committing the date and stopping its timer.",
+      "correction": "Fresh expired() gate immediately before SetDate commit; no deadline expansion."
+    },
+    {
+      "parent_issue": "QPointer/queued invocation setup allocation could escape callback failure paths or retain queued flags; failed initial notification could be followed by a TCP connect.",
+      "correction": "Queued setup is caught centrally with reset flags and fail-closed state; begin checks its current Connecting generation before guarded connect."
+    }
+  ],
+  "review_conclusion": "No remaining concrete source blocker in the bounded initial channel. Socket/timer work and synchronous internal failures never directly deliver public callbacks. Queued current-state delivery uses QPointer and generation/state checks around the reentrant state signal, with no access after final signals. EOF, malformed/bounded frames, cancellation and explicit restart withdraw date observation. No automatic router or payload authority is added.",
+  "verified_pins": {
+    "source_paths": 10,
+    "changed_parent_source_paths": [
+      "preview/native/services/i2cp_channel/channel.cpp"
+    ],
+    "unchanged_parent_source_paths": 9,
+    "parent_artifacts": 8,
+    "child_artifacts": 3,
+    "current_composition_inputs": 4,
+    "retained_original_source_files": 3,
+    "actual_java_vectors": 7,
+    "actual_java_vector_bytes": 78,
+    "both_retained_reference_outputs_equal": true,
+    "parent_delta_patch_exact": true
+  },
+  "source_compatibility": {
+    "official_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+    "plugin_context_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+    "official_source_jar_sha256": "b169a9cebb58bee8b9ca2e73743418b1e9a634bdea4faa8ca6e2063d1032f23a",
+    "original_files": "Parent source-pins.json files match the retained source JAR bytes and recorded Git blob hashes; no Git lazy fetch or network used."
+  },
+  "retained_actual_vector_receipt": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-wrapper-r1/result.json",
+    "sha256": "2ce6033daf639a4b0ece0e52ba84baca495ed35366bb7ef3d3af1b23e348891f",
+    "scope": "Prior original message-object serialization only; not channel runtime qualification or a rerun."
+  },
+  "minimum_qualification": {
+    "target": "biglybtc-i2cp-initial-channel-tests",
+    "suite": "i2cp-initial-channel",
+    "declared_timeout_seconds": 60,
+    "dependencies": "Existing pure I2CP codec, Qt6 Core/Network/Test; no provider/TLS requirement for this channel test. Exact runnable private case inventory must come from actual root qualification XML."
+  },
+  "limits": [
+    "Source review and hash/byte checks only; no C++ compile, CTest, Java, sockets or router execution by reviewer.",
+    "Explicit no-auth numeric-loopback initial GetDate/SetDate channel only; not SessionCreate/SessionStatus acceptance, router startup, I2P backend, identity or payload transport.",
+    "No injected allocation-failure runtime proof; no full modified-core equivalence claim.",
+    "Existing retained original vectors are finite prior observations; all new channel runtime results remain pending root qualification."
+  ],
+  "native_mutations": false,
+  "runtime_executed": false
+}

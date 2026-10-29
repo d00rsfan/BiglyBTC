@@ -1,0 +1,27 @@
+{
+  "status": "PROMOTED_ONE_CHECKED_DEVELOPMENT_DIST",
+  "source_commit": "82ef47fb32c30f57ebc9e135bcbffb00b4f7660f",
+  "manifest_sha256": "94ee9178856a54b67655a28f825b0823fc1125d2ca7016fa59cdca5382e2fd51",
+  "leaf_count": 119,
+  "private_result_sha256": "164d9996159d963b8d1f0b49d688e5932791d1e12b70b944683b8881ebfd59cd",
+  "previous_dist_manifest_sha256": "ac09f0dc9de3527e653e06b86e1c0d55d227f378593b0decc5233470f1cd2e69",
+  "previous_dist_removed": true,
+  "previous_dist_retained": false,
+  "atomic_exchange": true,
+  "copied_test_images_removed": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/biglybtc-i2cp-initial-channel-tests",
+      "sha256": "977dada13b0206ad35634a3339003bc7603bf22a1cf5e87dc238f6f2ec77ab02"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/biglybtc-mainline-single-http-tests",
+      "sha256": "1f6b6d395617f98fd7f2b1085a8e609e8a31aac007f35207e1c7129284c2931d"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/biglybtc-managed-queue-tests",
+      "sha256": "9df49c55ca8ee81c79da7e139eaa304aeb264861e00478ff85e0e700b75dcb86"
+    }
+  ],
+  "test_support_removed": true,
+  "created_utc": "2026-10-29T13:03:34.964453+00:00"
+}

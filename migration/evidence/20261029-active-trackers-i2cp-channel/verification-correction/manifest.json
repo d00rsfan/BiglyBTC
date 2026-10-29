@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "review": "review.json",
+  "review_sha256": "c554aaf6bea8a18dc6e565f0935f76d2b57d8ec783951a7b59f4caa7aaeabd01",
+  "recipe_sha256": {
+    "qualify-r2.py": "d19745bf45082ed2abd76abbb15576a4f4ae34385ef7a364e2df6dbf77ae37c8",
+    "private-focused/run-qualified.py": "437b01790b3227a69d1ed4886a528143b4326f7362c72f3cd77aed0dbaf7671b"
+  }
+}

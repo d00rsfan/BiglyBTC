@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_ROOT_FINISH_RECIPE_UNEXECUTED",
+  "source_commit": "b998d3076cd34513ae5459adb7de03553c0b1844",
+  "files_sha256": {
+    "finish.py": "e94fd7435133cc37a03777690bdde4efae32fbdfb150c21345001c18581306f3",
+    "finish-source-notes.json": "034555b9490a44a260ac2718f394236ffa2a4ab986d1de5be3c95dddfe53e1ab"
+  },
+  "frozen_source_inputs_sha256": {
+    "root-adoption.json": "0ab9e6e2daecdc2708112d4c461ca15aaf7fee9cb8fe0e46dfbb3f9d4312da42",
+    "run.py": "954e54a067f540387ae56331ab84170e67f541dd2f177416f695f08789ec9ed9",
+    "run-source-review.json": "337700dfd881403dc9652ebb4a2ed20b582096813c0d13123f1e17240ca4a4cc",
+    "private-focused/run.py": "19979009119fcb691144224be4602aee070094a0695cb24daa01d93c76af2875"
+  },
+  "future_required_inputs": "Three actual lanePASS results/private4 actual PASS/final root selection plan, verified at root execution; no current successes asserted."
+}

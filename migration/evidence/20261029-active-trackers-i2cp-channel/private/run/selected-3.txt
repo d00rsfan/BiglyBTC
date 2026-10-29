@@ -1,0 +1,25 @@
+********* Start testing of InitialChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : InitialChannelTests::initTestCase()
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv4)
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv6)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(oversize-header)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unknown-type)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(maximum-bounded-opaque-frame)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unexpected-real-session-status)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(invalid-date-length)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(real-Java-null-date)
+PASS   : InitialChannelTests::truncatedFrameAtActualEofRefuses()
+PASS   : InitialChannelTests::realDisconnectRevokesDateAndRetainsOnlyReason()
+PASS   : InitialChannelTests::actualRemoteEofWithdrawsDate()
+PASS   : InitialChannelTests::noDateHitsAbsoluteDeadlineWithoutRetry()
+PASS   : InitialChannelTests::cancelPartialThenExplicitRestartUsesNewStream()
+PASS   : InitialChannelTests::activeBeginCannotReplaceCurrentAttempt()
+PASS   : InitialChannelTests::stateListenerRestartCannotPublishOldDate()
+PASS   : InitialChannelTests::publicNotificationMayDeleteController(date-state-listener)
+PASS   : InitialChannelTests::publicNotificationMayDeleteController(date-final-listener)
+PASS   : InitialChannelTests::publicNotificationMayDeleteController(failure-listener)
+PASS   : InitialChannelTests::unsupportedOptionsRefuseBeforeAnyTcp()
+PASS   : InitialChannelTests::cleanupTestCase()
+Totals: 21 passed, 0 failed, 0 skipped, 0 blacklisted, 3055ms
+********* Finished testing of InitialChannelTests *********

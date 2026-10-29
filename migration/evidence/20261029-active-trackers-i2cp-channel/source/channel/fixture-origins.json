@@ -1,0 +1,135 @@
+{
+  "source": "actual original message-object serialization; official and modified outputs byte-equal for these finite vectors",
+  "receipt": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-wrapper-r1/result.json",
+  "receipt_sha256": "2ce6033daf639a4b0ece0e52ba84baca495ed35366bb7ef3d3af1b23e348891f",
+  "source_commit": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
+  "cases_per_reference": 12,
+  "reference_origins": {
+    "official": {
+      "produce": {
+        "classes": 39,
+        "i2cp_classes": [
+          "net.i2p.data.i2cp.DestroySessionMessage",
+          "net.i2p.data.i2cp.DisconnectMessage",
+          "net.i2p.data.i2cp.GetDateMessage",
+          "net.i2p.data.i2cp.I2CPMessage",
+          "net.i2p.data.i2cp.I2CPMessageException",
+          "net.i2p.data.i2cp.I2CPMessageHandler",
+          "net.i2p.data.i2cp.I2CPMessageImpl",
+          "net.i2p.data.i2cp.SessionId",
+          "net.i2p.data.i2cp.SessionStatusMessage",
+          "net.i2p.data.i2cp.SetDateMessage"
+        ],
+        "jar_sha256": "d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896",
+        "class_log_sha256": "14b4d349ec8158287d076989aecadcfb2f170e02be12dc5a3dbfcf955de13fd1"
+      },
+      "verify": {
+        "classes": 34,
+        "i2cp_classes": [
+          "net.i2p.data.i2cp.DestroySessionMessage",
+          "net.i2p.data.i2cp.DisconnectMessage",
+          "net.i2p.data.i2cp.GetDateMessage",
+          "net.i2p.data.i2cp.I2CPMessage",
+          "net.i2p.data.i2cp.I2CPMessageException",
+          "net.i2p.data.i2cp.I2CPMessageHandler",
+          "net.i2p.data.i2cp.I2CPMessageImpl",
+          "net.i2p.data.i2cp.SessionId",
+          "net.i2p.data.i2cp.SessionStatusMessage",
+          "net.i2p.data.i2cp.SetDateMessage"
+        ],
+        "jar_sha256": "d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896",
+        "class_log_sha256": "458ba9da97f1d542b5590443b138df264b86636419ab4217ef2a96eb2a2600f3"
+      }
+    },
+    "modified": {
+      "produce": {
+        "classes": 39,
+        "i2cp_classes": [
+          "net.i2p.data.i2cp.DestroySessionMessage",
+          "net.i2p.data.i2cp.DisconnectMessage",
+          "net.i2p.data.i2cp.GetDateMessage",
+          "net.i2p.data.i2cp.I2CPMessage",
+          "net.i2p.data.i2cp.I2CPMessageException",
+          "net.i2p.data.i2cp.I2CPMessageHandler",
+          "net.i2p.data.i2cp.I2CPMessageImpl",
+          "net.i2p.data.i2cp.SessionId",
+          "net.i2p.data.i2cp.SessionStatusMessage",
+          "net.i2p.data.i2cp.SetDateMessage"
+        ],
+        "jar_sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+        "class_log_sha256": "6f9b3642ca383b8f2b25e9654fb6bf27122d27f9130ec8c25dec58e98c3708a4"
+      },
+      "verify": {
+        "classes": 34,
+        "i2cp_classes": [
+          "net.i2p.data.i2cp.DestroySessionMessage",
+          "net.i2p.data.i2cp.DisconnectMessage",
+          "net.i2p.data.i2cp.GetDateMessage",
+          "net.i2p.data.i2cp.I2CPMessage",
+          "net.i2p.data.i2cp.I2CPMessageException",
+          "net.i2p.data.i2cp.I2CPMessageHandler",
+          "net.i2p.data.i2cp.I2CPMessageImpl",
+          "net.i2p.data.i2cp.SessionId",
+          "net.i2p.data.i2cp.SessionStatusMessage",
+          "net.i2p.data.i2cp.SetDateMessage"
+        ],
+        "jar_sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+        "class_log_sha256": "dc91be6613b93d31000323db71ede0296df91154fe96c265965befc1520b9321"
+      }
+    }
+  },
+  "vectors": [
+    {
+      "path": "preview/native/tests/fixtures/i2cp-channel/greeting.frame",
+      "sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
+      "bytes": 1,
+      "official_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/official/greeting.java",
+      "modified_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/modified/greeting.java"
+    },
+    {
+      "path": "preview/native/tests/fixtures/i2cp-channel/get-date-version.frame",
+      "sha256": "94d5883ad183e2a229db95231cfd94b341552f58d8dbe67138f7b8a06ecc7b5f",
+      "bytes": 12,
+      "official_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/official/get-date-version.java",
+      "modified_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/modified/get-date-version.java"
+    },
+    {
+      "path": "preview/native/tests/fixtures/i2cp-channel/set-date-version.frame",
+      "sha256": "25b1006e1e14b1cdbb14208ddca2211f6b1f8ee30b8ef9dad41bc0f7b41f4ea3",
+      "bytes": 20,
+      "official_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/official/set-date-version.java",
+      "modified_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/modified/set-date-version.java"
+    },
+    {
+      "path": "preview/native/tests/fixtures/i2cp-channel/set-date-legacy.frame",
+      "sha256": "ca50fcb11d8caf39c8b14d3deeb8e406776cd227c6d10f8b7062305de262f292",
+      "bytes": 13,
+      "official_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/official/set-date-legacy.java",
+      "modified_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/modified/set-date-legacy.java"
+    },
+    {
+      "path": "preview/native/tests/fixtures/i2cp-channel/set-date-zero.frame",
+      "sha256": "4da1b064774f9150773f879a7329c39726faed64b7ab08f70fd2e66ee42a84b7",
+      "bytes": 14,
+      "official_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/official/set-date-zero.java",
+      "modified_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/modified/set-date-zero.java"
+    },
+    {
+      "path": "preview/native/tests/fixtures/i2cp-channel/disconnect-control.frame",
+      "sha256": "8b3943f8afaad6700ffe27c4fb7dd2f13ee48017d0a650055bf8ae5dc3bad6ab",
+      "bytes": 10,
+      "official_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/official/disconnect-control.java",
+      "modified_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/modified/disconnect-control.java"
+    },
+    {
+      "path": "preview/native/tests/fixtures/i2cp-channel/status-created.frame",
+      "sha256": "dc2fbbf3f0dabbde1e80910c6681bc6a862c800f376fce995484e8c4de5e4112",
+      "bytes": 8,
+      "official_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/official/status-created.java",
+      "modified_origin": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline-r1/modified/status-created.java"
+    }
+  ],
+  "keys": "none",
+  "router_activated": false,
+  "whole_modified_core_equivalence": false
+}

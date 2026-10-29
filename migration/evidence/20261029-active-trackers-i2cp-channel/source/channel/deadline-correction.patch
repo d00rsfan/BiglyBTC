@@ -1,0 +1,61 @@
+--- a/preview/native/services/i2cp_channel/channel.cpp
++++ b/preview/native/services/i2cp_channel/channel.cpp
+@@ -44,8 +44,10 @@
+     QObject::disconnect(&socket,nullptr,q,nullptr);socket.abort();
+   }
+   void notify(){
+-    if(notificationQueued){return;}notificationQueued=true;const QPointer<InitialChannel> owner(q);
+-    const bool queued=QMetaObject::invokeMethod(q,[owner]{
++    if(notificationQueued){return;}notificationQueued=true;bool queued=false;
++    try{
++    const QPointer<InitialChannel> owner(q);
++    queued=QMetaObject::invokeMethod(q,[owner]{
+       if(!owner){return;}auto* self=owner->impl_.get();self->notificationQueued=false;
+       const auto at=self->generation;const auto next=self->state;const auto error=self->failure;
+       emit owner->stateChanged(next);
+@@ -55,6 +57,7 @@
+       else if(next==State::Failed){emit owner->failed(error);}
+       else if(next==State::Closed){emit owner->closed();}
+     },Qt::QueuedConnection);
++    }catch(...){queued=false;}
+     if(!queued){notificationQueued=false;date.reset();failure=Failure::Resources;state=State::Failed;stopIo();}
+   }
+   void fail(Failure error){
+@@ -65,12 +68,15 @@
+     if(datedPhase()&&Clock::now()>=expires){fail(Failure::Deadline);return true;}return false;
+   }
+   void scheduleDrain(){
+-    if(drainQueued){return;}drainQueued=true;const QPointer<InitialChannel> owner(q);
+-    const bool queued=QMetaObject::invokeMethod(q,[owner]{
++    if(drainQueued){return;}drainQueued=true;bool queued=false;
++    try{
++    const QPointer<InitialChannel> owner(q);
++    queued=QMetaObject::invokeMethod(q,[owner]{
+       if(!owner){return;}auto* self=owner->impl_.get();self->drainQueued=false;
+       // This is only a coalesced wakeup, carrying no old data/token/authority.
+       if(self->active()){self->drain();}
+     },Qt::QueuedConnection);
++    }catch(...){queued=false;}
+     if(!queued){drainQueued=false;fail(Failure::Resources);}
+   }
+   void message(Frame frame){
+@@ -82,6 +88,7 @@
+     auto* reply=std::get_if<SetDate>(&*decoded);
+     if(!reply||state!=State::WaitingDate){fail(Failure::UnexpectedMessage);return;}
+     if(reply->milliseconds==0){fail(Failure::InvalidDate);return;}
++    if(expired()){return;} // Decode/allocation may have crossed the absolute budget.
+     date=std::move(*reply);state=State::DateReceived;timer.stop();notify();
+   }
+   void drain(){
+@@ -162,7 +169,10 @@
+       }
+     });
+     state=State::Connecting;expires=Clock::now()+std::chrono::milliseconds(next.deadlineMilliseconds);
+-    timer.start(next.deadlineMilliseconds);notify();socket.connectToHost(next.address,next.port);return true;
++    timer.start(next.deadlineMilliseconds);notify();
++    if(!current(at)||state!=State::Connecting){return false;}
++    try{socket.connectToHost(next.address,next.port);}catch(...){fail(Failure::Resources);return false;}
++    return true;
+   }
+   void close(){
+     if(!onThread()||state==State::Closed){return;}

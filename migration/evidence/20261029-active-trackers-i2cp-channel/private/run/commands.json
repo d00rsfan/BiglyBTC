@@ -1,0 +1,124 @@
+[
+  {
+    "name": "stage",
+    "command": [
+      "python3",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--output",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/candidate",
+      "--libtorrent-package",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+      "--source-libtorrent",
+      "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--private-mainline-routing-provider-manifest",
+      "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-runtime.json"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 9.242,
+    "log": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/stage.log",
+    "log_sha256": "bff0e5bc354cf3f3c200ceb7280c65d6ec7a3cf7fe8a7a813df88ab2be693704"
+  },
+  {
+    "name": "loader-biglybtc-i2cp-initial-channel-tests",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/biglybtc-i2cp-initial-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/loader-biglybtc-i2cp-initial-channel-tests.log",
+    "log_sha256": "2ab7fbeb811ebbb58dbbe751b3e2d5162e1392716fda0f2e4c2d626233251c60"
+  },
+  {
+    "name": "loader-biglybtc-mainline-single-http-tests",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.017,
+    "log": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/loader-biglybtc-mainline-single-http-tests.log",
+    "log_sha256": "ef4af3401404e692b59f9ccd396ec484fbd5d64a2b11f49a1ec88d9c9a81868a"
+  },
+  {
+    "name": "loader-biglybtc-managed-queue-tests",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/biglybtc-managed-queue-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/loader-biglybtc-managed-queue-tests.log",
+    "log_sha256": "a19040706fb21c261245f67ea8c845ce9d2ba1946647e54dd04ef284d7bdcbd9"
+  },
+  {
+    "name": "selected-1",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/biglybtc-managed-queue-tests",
+      "realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse:live-DHT-no-active-selection",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/selected-1.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/selected-1.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 5.437,
+    "log": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/selected-1.log",
+    "log_sha256": "309a0a735cd34fd40f8ba0f300bf17a012a5b259e50959d586daf5bc9eb03a9d"
+  },
+  {
+    "name": "selected-2",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/biglybtc-managed-queue-tests",
+      "actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape:DHT-disabled",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/selected-2.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/selected-2.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 15.316,
+    "log": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/selected-2.log",
+    "log_sha256": "1cac4a3fc195fb90d9e8f47c9d3ef79707f9f843b021ea09a24879c7b535a02a"
+  },
+  {
+    "name": "selected-3",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/biglybtc-i2cp-initial-channel-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/selected-3.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/selected-3.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 3.074,
+    "log": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/selected-3.log",
+    "log_sha256": "58f98ed5f8b47f9528b161e8732620a7e86eb8876f78d282c4886472357d744c"
+  },
+  {
+    "name": "selected-4",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/biglybtc-mainline-single-http-tests",
+      "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline:private-HTTPS-saved-JKS-regular-scrape",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/selected-4.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/selected-4.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 20.442,
+    "log": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/runs/qualified/selected-4.log",
+    "log_sha256": "626adb0ff71c4583240d2135ca9250f49ba6a97580c5535920d1e0c88170f55e"
+  }
+]

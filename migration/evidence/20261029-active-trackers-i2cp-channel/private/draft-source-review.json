@@ -1,0 +1,10 @@
+{
+  "status": "DRAFT_REQUIRES_ROOT_FINAL_SELECTION_PINS",
+  "script_sha256": "19979009119fcb691144224be4602aee070094a0695cb24daa01d93c76af2875",
+  "parent_sha256": "f7fd607b4934574c42a7db6a3a0a866f1c0f477ca31b0d778cb83e84af13f536",
+  "source_only": true,
+  "scope": "Fixed4roles: managed liveDHT multiURL, actual selected UDP response, full short channel, soleHTTPS. Three fresh CTest suites plus separately exact soleHTTPS XML per lane,4commands/8images. Onecandidate/3copiedtestELFs. Channel requires mapped privateQtCore/Network only; tracker rows require provider and HTTPS additionallyTLS/OSOpenSSL. No channel provider/TLS requirement.",
+  "TODO": "Final source/adoption/review manifests and full channel names deliberately absent. Root must create new frozen selection plan; helper rejects TODO status before any candidate/output staging. Method names for UDP supplied by author pending freeze, not runtime claims.",
+  "author_checks": "AST only; no import/execution, subjects, N/cache/dist/shared writes/build.",
+  "invocation_after_freeze": "python3 -B /home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/run.py --source-commit ACTUAL_CID --selection-plan FINAL_PLAN --selection-plan-sha256 ACTUAL_PLAN_SHA --attempt r1 --gcc-result ACTUAL_GCC_RESULT --gcc-sha256 ACTUAL_SHA --clang-result ACTUAL_CLANG_RESULT --clang-sha256 ACTUAL_SHA --san-result ACTUAL_SAN_RESULT --san-sha256 ACTUAL_SHA"
+}

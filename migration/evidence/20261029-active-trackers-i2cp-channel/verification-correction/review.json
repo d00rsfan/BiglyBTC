@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "reviewer": "error_codec",
+  "source_commit": "82ef47fb32c30f57ebc9e135bcbffb00b4f7660f",
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/qualify-r2.py": "d19745bf45082ed2abd76abbb15576a4f4ae34385ef7a364e2df6dbf77ae37c8",
+    "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/run-qualified.py": "437b01790b3227a69d1ed4886a528143b4326f7362c72f3cd77aed0dbaf7671b",
+    "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/private-focused/run-r2.py": "f783bed161c50aba03f7bebb333ec1f83b79f216374bd54b1c7b3a3b584b6fac",
+    "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/run-r2.py": "dd7b6766b07cf060a5e04967b8b5af070a5abc71984a5a5b1cbfea9a50aab754",
+    "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/root-adoption-r2.json": "916cc110ce0653a23593068680cc560866e50a49894765119ec748e70055e345"
+  },
+  "conclusion": "No concrete script blocker. Missing status is permitted only for direct Qt JUnit; CTest still requires status=run. Original failed producer receipts and commands are preserved. The verifier authenticates actual completed executions without rerunning build, test, loader or stager commands.",
+  "checks": [
+    "Both helper sources parse as Python; neither was imported or executed by reviewer.",
+    "Private derivative differs only in a direct Qt optional-status check and restriction of the existing mandatory-status check to CTest. All prior case-failure/skip/name/command/image/source/provider/private dependency gates remain unchanged.",
+    "Qualifier checks raw FAIL/AssertionError and runner/adoption/source maps; exact eight current images; exact four zero-exit commands/logs; exact three CTest cases with strict run status; direct Qt tests3/failures0/errors0/skipped0 plus exact three names and child checks.",
+    "Qualifier validates all lanes and final clean source before writing new result-qualified.json; refuses existing output and never modifies original result.json. Provider/current dist manifest and current images must match retained execution inputs.",
+    "Actual read-only XML/JSON inspection confirms all three r2 lanes exhibit the exact format defect: four commands exit0, three strict run CTest cases, and three passing direct Qt cases without a status attribute."
+  ],
+  "execution_limits": "Read-only source, AST, diff and XML/JSON checks only. No helper, compiler, tests, Java, network, GUI or staging execution; N/cache/dist unchanged. Actual root qualification and private execution are separate pending steps."
+}

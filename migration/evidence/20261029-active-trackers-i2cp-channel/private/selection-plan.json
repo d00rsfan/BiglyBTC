@@ -1,0 +1,96 @@
+{
+  "status": "ROOT_FROZEN_PRIVATE_SELECTIONS",
+  "source_commit": "82ef47fb32c30f57ebc9e135bcbffb00b4f7660f",
+  "source_receipt_sha256": "916cc110ce0653a23593068680cc560866e50a49894765119ec748e70055e345",
+  "source_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/manifest.json",
+      "sha256": "7c5f28c2908b2566554097cdd69861557ceef64d399e32d200341fbff19b85e8"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029-review/single-tier-udp-review.json",
+      "sha256": "36fc38659d74265b7e7a1ca072040c2c076f3d522fe4d5619a7bb639b799b314"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029/amendments/date-commit-deadline/manifest.json",
+      "sha256": "451f00d89949320c7b45723b4747e5e0f59f0a08ffc43823264d3eba3fde33b1"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029-review/manifest.json",
+      "sha256": "339d2154c910fbce670b637a6b96241d87581fb3c43b5ad64d23ca31ec20406b"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029-review/review.json",
+      "sha256": "e964460288b87dc9d347fca28e1a36b8984004457562b19d77e03143333476b0"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/amendments/actual-fixture-boundaries/manifest.json",
+      "sha256": "310e90c3374362304c0bcff1c0278e6b7dfce392d4166132585b21130bceb184"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/amendments/actual-fixture-boundaries-review/manifest.json",
+      "sha256": "db5f4276e5a7dbdb1b3d289bf4cc578435cddffe936a1003fe065c3359789515"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/amendments/qt-junit-verifier-review/manifest.json",
+      "sha256": "33316f4cbb4be82e9ef1bfc2538a196338dd7d7ab1f8e4169a5a3fee59fe2397"
+    }
+  ],
+  "selections": [
+    {
+      "role": "managed_multi",
+      "target": "biglybtc-managed-queue-tests",
+      "selector": "realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse:live-DHT-no-active-selection",
+      "expected_names": [
+        "realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse(live-DHT-no-active-selection)"
+      ]
+    },
+    {
+      "role": "udp_current",
+      "target": "biglybtc-managed-queue-tests",
+      "selector": "actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape:DHT-disabled",
+      "expected_names": [
+        "actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape(DHT-disabled)"
+      ]
+    },
+    {
+      "role": "channel_full",
+      "target": "biglybtc-i2cp-initial-channel-tests",
+      "selector": null,
+      "expected_names": [
+        "actualJavaDateOverOwnedTcp(ipv4)",
+        "actualJavaDateOverOwnedTcp(ipv6)",
+        "invalidRepliesWithdrawAllObservation(oversize-header)",
+        "invalidRepliesWithdrawAllObservation(unknown-type)",
+        "invalidRepliesWithdrawAllObservation(maximum-bounded-opaque-frame)",
+        "invalidRepliesWithdrawAllObservation(unexpected-real-session-status)",
+        "invalidRepliesWithdrawAllObservation(invalid-date-length)",
+        "invalidRepliesWithdrawAllObservation(real-Java-null-date)",
+        "truncatedFrameAtActualEofRefuses",
+        "realDisconnectRevokesDateAndRetainsOnlyReason",
+        "actualRemoteEofWithdrawsDate",
+        "noDateHitsAbsoluteDeadlineWithoutRetry",
+        "cancelPartialThenExplicitRestartUsesNewStream",
+        "activeBeginCannotReplaceCurrentAttempt",
+        "stateListenerRestartCannotPublishOldDate",
+        "publicNotificationMayDeleteController(date-state-listener)",
+        "publicNotificationMayDeleteController(date-final-listener)",
+        "publicNotificationMayDeleteController(failure-listener)",
+        "unsupportedOptionsRefuseBeforeAnyTcp"
+      ]
+    },
+    {
+      "role": "sole_https",
+      "target": "biglybtc-mainline-single-http-tests",
+      "selector": "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline:private-HTTPS-saved-JKS-regular-scrape",
+      "expected_names": [
+        "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(private-HTTPS-saved-JKS-regular-scrape)"
+      ]
+    }
+  ],
+  "channel_inventory_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/runs/gcc-r2/ctest-full.log",
+    "sha256": "66266232fee381c5ab65b2837365dbe5802be4b55a45f39f844936a8dd36a0c0",
+    "actual_runnable_case_count": 19
+  }
+}

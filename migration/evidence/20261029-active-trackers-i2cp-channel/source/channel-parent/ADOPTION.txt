@@ -1,0 +1,55 @@
+The channel is an explicit, initial external-router TCP prerequisite for
+`services.i2cp_initial_session` / `F06.i2cp_initial_session` and existing task
+`migration/tasks/P07-02b-i2cp-initial-session.md`. It sends the original 0x2a
+greeting and no-auth GetDate, then observes one valid SetDate. It never creates
+or accepts a session, changes the clock, selects/starts a router, reads a
+profile, reconnects, or activates an application backend.
+
+Apply the ten new staged files and append the two sections of CMake.fragment
+once. Existing source remains untouched. The production dependency is the
+adopted pure `biglybtc_i2cp_protocol`; Qt Core/Network are already present in
+services. The new test target is `biglybtc-i2cp-initial-channel-tests`, CTest
+`i2cp-initial-channel`, explicit timeout 60 seconds. No SDK, Java or fixture
+generation is needed to run it. This capsule has no build/runtime credit.
+
+Callers must explicitly supply a numeric IPv4/IPv6 loopback endpoint, nonzero
+port and nonempty ASCII version (at most 255 bytes). There is no DNS, proxy,
+default-port or remote plaintext fallback. Authentication-required requests
+refuse before TCP; TLS, credentials/options, non-ASCII version, CreateSession,
+lease sets, identity use, delivery and router startup remain unsupported.
+The absolute connection-plus-date deadline is 30 seconds by default, with a
+caller-selectable 1..30000 ms finite budget. This is a conservative subset:
+the original separately blocks in TCP connect and waits roughly 31 seconds
+for date. Original SetDate also updates Clock; this prerequisite deliberately
+exposes only a passive millisecond/version observation. Raw zero/null dates
+are rejected before observation. Original Disconnect closes the attempt and
+leaves reconnection to higher layers; the native channel does the same.
+
+All calls and destruction belong to the QObject thread. The socket and timer
+have stable lifetime until controller destruction. No public signal is emitted
+inside a socket/timer callback: one coalesced queued CURRENT-state notification
+checks QPointer, generation and state before its final signal. A signal listener
+can synchronously close/restart/delete. Intermediate state notifications may
+coalesce. Fail/close withdraw date, abort the socket, stop the timer, and invalidate
+old callbacks before an explicit restart; observation never grants session rights.
+Greeting allocation occurs in begin before TCP, and private read/connected/EOF
+paths catch resource exceptions. This is not a global allocation-fault guarantee.
+
+The socket read buffer is capped at 131077 bytes, matching the adopted 128 KiB
+payload frame limit plus header. A drain reads at most 16 KiB into 4 KiB stack
+chunks, then schedules one coalesced wakeup. Frame ownership moves directly to
+the decoder; there is no per-packet readAll or unbounded output/notification
+queue. Unknown, unexpected, malformed, oversized or truncated input withdraws
+the date and closes the attempt. There is no timer-driven idle sampling after
+the date; actual disconnect/unsupported traffic remains terminal.
+
+Seven retained binary vectors total 78 bytes. They are the actual Java outputs
+from the separately qualified official and modified cores in M/offline-r1,
+equal for this finite selection. `fixture-origins.json` pins both origins and
+the actual result; `source-pins.json` pins the original handshake/handlers.
+Synthetic/control data contains no identity, secret or real profile. No claim
+of whole modified-core equivalence is made. Tests add actual owned IPv4/IPv6
+TCP, fragmented date, real Disconnect, EOF/oversize/unknown/status/null-date
+refusals, timeout, cancellation/restart, active-begin refusal, stale queued
+notification suppression and reentrant deletion. Parent codec/interop receipts
+remain unchanged; new channel runtime qualification is pending root execution.

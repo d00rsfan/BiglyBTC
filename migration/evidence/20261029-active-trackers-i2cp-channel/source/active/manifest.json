@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_ACTIVE_URL_RETENTION_AND_SINGLE_TIER_UDP_CURRENT_COUNTS_PENDING_REVIEW",
+  "native_source_basis": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
+  "current_source_file_equivalence": "0dabfff4c0f91a9ee750af41b645673353082836",
+  "effective_complete_overlay": true,
+  "source_path_count": 8,
+  "source_paths": {
+    "preview/native/engine/managed_tracker_responses.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/before/preview/native/engine/managed_tracker_responses.hpp",
+      "before_sha256": "937f71e1bf5cee5905564c4d3b6f4f23bb3dc10fa9adc740a8123131577dbe89",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/staging/preview/native/engine/managed_tracker_responses.hpp",
+      "after_sha256": "33039ba2a04731afe63f71d0bf5db1ec4e58f354281852dd007bed108536fe19"
+    },
+    "preview/native/engine/persistent_session.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/before/preview/native/engine/persistent_session.hpp",
+      "before_sha256": "e3bd40c5d11ff5f716be3bf32124644af12997e446ae87831c9a97a36830fbdf",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/staging/preview/native/engine/persistent_session.hpp",
+      "after_sha256": "fccc17ac484c71bf44c7acc3ec84b0927cce9abc65f900de5da4111f8f876d0d"
+    },
+    "preview/native/engine/persistent_session.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/before/preview/native/engine/persistent_session.cpp",
+      "before_sha256": "86979280ff71e5c3e992f7b1d11d4b199fcc50bbae4785d0db079859ae90821e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/staging/preview/native/engine/persistent_session.cpp",
+      "after_sha256": "66d5ec23bf2a719a43e6587cbfe8844366c6373150e918aeaf53674262279654"
+    },
+    "preview/native/engine/library_http_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/before/preview/native/engine/library_http_owner.inc",
+      "before_sha256": "0f5fba45380f8da048ac119c0e4b58ab5f87e55772958ca440c990e26d1ea30e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/staging/preview/native/engine/library_http_owner.inc",
+      "after_sha256": "b432243bb656447aa62e1f77934fc74c499a896657e3f954f2bd38adbcb3202b"
+    },
+    "preview/native/tests/managed_queue_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/before/preview/native/tests/managed_queue_tests.cpp",
+      "before_sha256": "f7f760ab2f7f1bfe350a8611c0dddffcbabfd7bf0e1f9a3f6575b735a54d0a95",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/staging/preview/native/tests/managed_queue_tests.cpp",
+      "after_sha256": "671a88c28030bcc276b4a1923b45517c9950a69cc49f3b13bc173ec563d399aa"
+    },
+    "preview/native/engine/mainline_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/before/preview/native/engine/mainline_owner.inc",
+      "before_sha256": "57661676dbb276eaccc74d71e98ee5b1487796d174a10a8150ca0c2d9a9e95db",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/staging/preview/native/engine/mainline_owner.inc",
+      "after_sha256": "b7716a616925bd9c64119bacf120b65c75fa8031a8bd6cd4f4f62277d69c7f4b"
+    },
+    "preview/native/engine/queued_mainline_scrape.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/before/preview/native/engine/queued_mainline_scrape.hpp",
+      "before_sha256": "81f4c65f08767efe953818dbb14b007782f8b3b9451449c724e86d823a952dd5",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/staging/preview/native/engine/queued_mainline_scrape.hpp",
+      "after_sha256": "73d2b42077f24c60483c34b82fc1e6702a7ee51f9ad113a3aef8479ad426a959"
+    },
+    "preview/native/engine/queued_mainline_scrape.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/before/preview/native/engine/queued_mainline_scrape.cpp",
+      "before_sha256": "9ac57c6489c94f1f3da2b4c49d5c4c369c63828bccb8d234dacaa9870ce7b5d9",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/amendments/single-tier-udp/staging/preview/native/engine/queued_mainline_scrape.cpp",
+      "after_sha256": "f889b7340df6d7ad59aacfd6dc854d50379f982a05a33be6fa1a8c85a62b12f6"
+    }
+  },
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/manifest.json",
+  "parent_manifest_sha256": "cf41bcd09e6ca2adf240ebac4872a960ff70ceb2b34501c1983cd0d28eee74a8",
+  "source_inputs": {
+    "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/manifest.json": "47f39cddbc1998dbe4f19768d09552fb03f7a49773a422123712b13467598818",
+    "/home/yurii/Java/BiglyBT/build/mainline-regular-mixed-tiers-20261029/manifest.json": "c6d1e367a21e1e3f912caa711857c38d8d1ec9af5d5efc92d996c8f8ebc07eb1",
+    "/home/yurii/Java/BiglyBT/build/mainline-regular-mixed-tiers-20261029-review/manifest.json": "b3dff9e86f5d054a20a9e6eba23a257674aba611725a8d14ae4fc854ffabd3e2",
+    "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-source-build-record.json": "623778fc3a5b25144e842a39154dab4cd107e4f115bc6474dd973f67888582d3",
+    "/home/yurii/Java/BiglyBT/build/mainline-active-tracker-urls-20261029/amendments/sole-authority/manifest.json": "cf41bcd09e6ca2adf240ebac4872a960ff70ceb2b34501c1983cd0d28eee74a8"
+  },
+  "artifacts": {
+    "ADOPTION.txt": "2e698a3750480bfd706b4698cc5296fe6596f6fdd214946329c6e16b63ff4287",
+    "before/preview/native/engine/library_http_owner.inc": "0f5fba45380f8da048ac119c0e4b58ab5f87e55772958ca440c990e26d1ea30e",
+    "before/preview/native/engine/mainline_owner.inc": "57661676dbb276eaccc74d71e98ee5b1487796d174a10a8150ca0c2d9a9e95db",
+    "before/preview/native/engine/managed_tracker_responses.hpp": "937f71e1bf5cee5905564c4d3b6f4f23bb3dc10fa9adc740a8123131577dbe89",
+    "before/preview/native/engine/persistent_session.cpp": "86979280ff71e5c3e992f7b1d11d4b199fcc50bbae4785d0db079859ae90821e",
+    "before/preview/native/engine/persistent_session.hpp": "e3bd40c5d11ff5f716be3bf32124644af12997e446ae87831c9a97a36830fbdf",
+    "before/preview/native/engine/queued_mainline_scrape.cpp": "9ac57c6489c94f1f3da2b4c49d5c4c369c63828bccb8d234dacaa9870ce7b5d9",
+    "before/preview/native/engine/queued_mainline_scrape.hpp": "81f4c65f08767efe953818dbb14b007782f8b3b9451449c724e86d823a952dd5",
+    "before/preview/native/tests/managed_queue_tests.cpp": "f7f760ab2f7f1bfe350a8611c0dddffcbabfd7bf0e1f9a3f6575b735a54d0a95",
+    "changes.patch": "c6a3ceda99c983c0bcf1485cc8a2f0831fe7e98d688dfe9c6d925f552d8329c4",
+    "original-source-pins.json": "90ae6229eab2635e4625f1140c7517aca018b900ce4f65c8b9e4189d794fe7f5",
+    "parent-delta.patch": "31702a174e84e65991d914e5587481fa3cde1e24d2231ee17239be90ee2373ee",
+    "retention.json": "481618206e3a2aa8f6c24a0500215f49cfbbc9a9d78f52230a2dc14027e7d6f5",
+    "source-paths.json": "bf474accf1afaa1f0b1151758d31674c9c43453e8f5611a92d460a63e0845e4b",
+    "staging/preview/native/engine/library_http_owner.inc": "b432243bb656447aa62e1f77934fc74c499a896657e3f954f2bd38adbcb3202b",
+    "staging/preview/native/engine/mainline_owner.inc": "b7716a616925bd9c64119bacf120b65c75fa8031a8bd6cd4f4f62277d69c7f4b",
+    "staging/preview/native/engine/managed_tracker_responses.hpp": "33039ba2a04731afe63f71d0bf5db1ec4e58f354281852dd007bed108536fe19",
+    "staging/preview/native/engine/persistent_session.cpp": "66d5ec23bf2a719a43e6587cbfe8844366c6373150e918aeaf53674262279654",
+    "staging/preview/native/engine/persistent_session.hpp": "fccc17ac484c71bf44c7acc3ec84b0927cce9abc65f900de5da4111f8f876d0d",
+    "staging/preview/native/engine/queued_mainline_scrape.cpp": "f889b7340df6d7ad59aacfd6dc854d50379f982a05a33be6fa1a8c85a62b12f6",
+    "staging/preview/native/engine/queued_mainline_scrape.hpp": "73d2b42077f24c60483c34b82fc1e6702a7ee51f9ad113a3aef8479ad426a959",
+    "staging/preview/native/tests/managed_queue_tests.cpp": "671a88c28030bcc276b4a1923b45517c9950a69cc49f3b13bc173ec563d399aa"
+  },
+  "scope": {
+    "active_single_original_udp_tier_current_counts": true,
+    "general_active_best_helper_selection": false,
+    "provider_change": false,
+    "new_tracker_requests_or_network_authority": false,
+    "new_queue_epoch_or_facts": false,
+    "existing_passive_presentation_consumer": true
+  },
+  "author_execution": false
+}

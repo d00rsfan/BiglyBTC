@@ -1,0 +1,22 @@
+{
+  "/home/yurii/Java/BiglyBTC/preview/native/adapters/queue_positions.cpp": {
+    "sha256": "e30dabcf52afa0a668fabe0e087718c0202f6a131cc234b13bef74748323e9f4",
+    "lines": "31-49 captures filelinks2/storetypes/etc"
+  },
+  "/home/yurii/Java/BiglyBTC/preview/native/engine/queued_mainline_scrape.cpp": {
+    "sha256": "f889b7340df6d7ad59aacfd6dc854d50379f982a05a33be6fa1a8c85a62b12f6",
+    "lines": "250-259 current mapping must equal captured"
+  },
+  "/home/yurii/Java/BiglyBTC/preview/native/engine/managed_storage.cpp": {
+    "sha256": "55c52e4c38d4ebbf2538a7998585b6d4d7f67145ee9b69bba6fa190b634de786",
+    "lines": "917-923,1013 canonical state save before captured mapping"
+  },
+  "/home/yurii/Java/BiglyBTC/preview/native/adapters/torrent_state.cpp": {
+    "sha256": "aa251a5b25de3353d446f5f0e4530956027b7abffd241c2b2b2b0152404f3ac7",
+    "lines": "88-90 exact original bytes CAS"
+  },
+  "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/source/src/udp_tracker_connection.cpp": {
+    "sha256": "e1efbed38ff98520ab6fa2502bf2f240fbfcee12cef5720eb4362da9ce4544b9",
+    "lines": "734-748 actual URLData type2+length+/announce appended"
+  }
+}

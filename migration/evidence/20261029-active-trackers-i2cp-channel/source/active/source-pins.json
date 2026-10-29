@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "original": {
+    "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "lines": "3894-3910",
+      "rule": "Active path calls scraper.scrape(actual announcer), then saved random tiers only if that returns null."
+    },
+    "core/src/com/biglybt/core/tracker/client/impl/TRTrackerAnnouncerMuxer.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "ad06eaa96cd93ac2b20e0c86cf365409914264d53b81c0284fdbb477092b3c3d",
+      "lines": "290-296,320-358,503-538,1027-1106",
+      "rule": "One announce set yields exactly one helper. General multi-set pairing/activation/best status stays unsupported."
+    },
+    "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerChecker.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "13a4b94cc22beba41ebbfb6adc852a8065d4d1495b1120b3b9e223487c416999",
+      "lines": "86-103,125-198",
+      "rule": "Announcer scrape key is actual tracker_client.getTrackerURL plus torrent hash. Per-URL retained object creation is separate from active selection."
+    },
+    "core/src/com/biglybt/core/tracker/client/impl/bt/TRTrackerBTAnnouncerImpl.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "fa6258a6a28d88fa296eb938d5031e4d54b34e658757e4849cdc01bef721bc96",
+      "lines": "1287-1343,3060-3063,4184-4232,4338",
+      "rule": "lastUsedUrl assigned before request and returned by getTrackerURL; count branch alone mutates retained scrape; initial helper URL/response absence does not justify fabricated counts."
+    }
+  },
+  "current_provider": {
+    "include/libtorrent/biglybtc_tracker_response.hpp": {
+      "source_root": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/source",
+      "sha256": "f4621ce7883b757fe1466a723337d03ea6b815264f0a8e248e0b948f68593d4c",
+      "lines": "15-45",
+      "rule": "Exact fixed128-byte terminal: actual URL SHA256/admission/global sequence/protocol/request and times/count validity. No helper group, current/best URL or pending-announcer state."
+    },
+    "src/torrent.cpp": {
+      "source_root": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/source",
+      "sha256": "79dc7e41311846a895b3a75a24addd5cc0134910b8b2cb53882b6c69c51eb0bd",
+      "lines": "3339-3361,3689-3701,12480-12597",
+      "rule": "Dispatch event is posted after actual tracker request queueing on torrent executor. Actual UDP success callbacks are later packet-receive turns. Error triggers next tier member itself. No extra request needed."
+    },
+    "src/udp_tracker_connection.cpp": {
+      "source_root": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/source",
+      "sha256": "e1efbed38ff98520ab6fa2502bf2f240fbfcee12cef5720eb4362da9ce4544b9",
+      "lines": "261-279,357-400,571-638",
+      "rule": "Actual packet handler dispatches announce success with real count fields; no source clock is inferred from alerts. Immediate errors do not create successful count facts."
+    },
+    "src/alert_manager.cpp": {
+      "source_root": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/source",
+      "sha256": "12cbdf6af1712802598d14697dfe20aa331b8913e231be1538ad3dc529900505",
+      "lines": "110-131",
+      "rule": "get_all appends pending dropped-type notification under same mutex before handing all queued pointers to owner."
+    },
+    "include/libtorrent/alert_types.hpp": {
+      "source_root": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/source",
+      "sha256": "15ce77c102b456465db6c119d15bbb6b74792ba684aa386669b3d6d748442897",
+      "lines": "719-736",
+      "rule": "Typed tracker_announce_alert supplies actual handle, inherited local_endpoint/URL, selected protocol and event."
+    },
+    "include/libtorrent/time.hpp": {
+      "source_root": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/source",
+      "sha256": "a21e3756ecc26f662ccf7889234d971dd9490cff60c6ff5bdade2ec2f9972749",
+      "lines": "46-56",
+      "rule": "LT high_resolution clock is not assumed identical to provider steady clock; no cross-domain timestamp comparison."
+    }
+  },
+  "native_core_reducer": {
+    "path": "/home/yurii/Java/BiglyBTC/preview/native/core/src/queue_observations.cpp",
+    "commit": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
+    "sha256": "700174f509b4f3d234e5c8972d9b972f2c74d603ad9fd59c8dede5ce98e8da91"
+  },
+  "no_original_or_native_execution": true
+}

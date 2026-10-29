@@ -1,0 +1,7 @@
+********* Start testing of ManagedQueueTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedQueueTests::initTestCase()
+PASS   : ManagedQueueTests::realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse(live-DHT-no-active-selection)
+PASS   : ManagedQueueTests::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 5371ms
+********* Finished testing of ManagedQueueTests *********

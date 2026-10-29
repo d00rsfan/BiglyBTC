@@ -1,0 +1,64 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-managed-queue-tests",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-mainline-single-tracker-owner-tests",
+      "biglybtc-mainline-single-http-tests",
+      "biglybtc-i2cp-initial-channel-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 855.937,
+    "log": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/runs/san-r1/build.log",
+    "log_sha256": "28075e78a69ede97bb59f02aaacdbfde4a0c634158ed1e1baef7b6047068aa69"
+  },
+  {
+    "name": "http-loader",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/runs/san-r1/http-loader.log",
+    "log_sha256": "3289efb703f27aee36e0b3c5cd280416763938afe4380510689f670ef14e1232"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "-R",
+      "^(queue-policy|managed-queue|i2cp-initial-channel)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/runs/san-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 8,
+    "seconds": 177.362,
+    "log": "/home/yurii/Java/BiglyBT/build/active-i2cp-channel-followup-20261029/runs/san-r1/tests.log",
+    "log_sha256": "44704a92dc5f2f9fbe2e25bc81dced87336d64b6924590349b50b4a7a79a33b5"
+  }
+]
