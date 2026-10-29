@@ -33,7 +33,7 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTrac
     if(!sameMainlineProfileLease()||!value.token||!value.status.admission||value.token->number!=value.status.admission
         ||value.storage.identity().originalKey!=value.status.hash||!value.status.retained||!value.status.checked||value.status.failure
         ||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld||value.seedIntent||value.allocationIntent
-        ||!value.handle.is_valid()||!value.trackerResponse||value.trackerResponse->admission!=value.status.admission
+        ||!value.handle.is_valid()||!value.trackerResponse||!value.trackerResponse->sole()||value.trackerResponse->admission!=value.status.admission
         ||!value.trackerResponse->installed.load(std::memory_order_acquire)||value.trackerResponse->lost.load(std::memory_order_acquire)
         ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){continue;}
     const auto handle=managedByHandle.find(value.handle);if(handle==managedByHandle.end()||handle->second!=&value){continue;}
@@ -92,10 +92,35 @@ bool libraryHttpAdmissionCurrent(const SavedMainlineScrapeTarget& target)const n
   const auto response=trackerResponses.find(target.trackerResponseKey);
   return value.token&&value.token->number==target.admission&&value.status.admission==target.admission&&value.status.retained&&value.status.checked
       &&!value.status.failure&&!value.stop&&!value.removing&&!value.manualPaused&&!value.policyHeld&&!value.status.verificationHeld
-      &&!value.seedIntent&&!value.allocationIntent&&value.handle.is_valid()&&value.trackerResponse
+      &&!value.seedIntent&&!value.allocationIntent&&value.handle.is_valid()&&value.trackerResponse&&value.trackerResponse->sole()
       &&value.trackerResponse->admission==target.admission&&value.trackerResponse->installed.load(std::memory_order_acquire)
       &&!value.trackerResponse->lost.load(std::memory_order_acquire)&&response!=trackerResponses.end()&&value.trackerResponse->response==response->second
       &&(value.status.phase==ManagedPhase::Downloading||value.status.phase==ManagedPhase::Seeding);
+}
+// No transport is invoked: this source proof enables passive counts for the
+// sole original BT helper only. General active helper selection remains absent.
+void refreshActiveUdpTrackerCounts(){
+  for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}
+  if(!libraryUdpRegularMode()||!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){return;}
+  const auto config=detail::libraryUdpConfiguration(*mainlineLease,&networkBinding->effective);if(!config){return;}
+  std::vector<ManagedMainlineScrapeObservation> active;
+  for(const auto& [key,entry]:managed){(void)key;const auto& value=*entry;
+    if(!sameMainlineProfileLease()||!value.token||value.token->number!=value.status.admission||!value.status.admission
+        ||!value.status.retained||!value.status.checked||value.status.failure||value.stop||value.removing||value.manualPaused||value.policyHeld
+        ||value.status.verificationHeld||value.seedIntent||value.allocationIntent||!value.handle.is_valid()||!value.trackerResponse
+        ||value.trackerResponse->sole()||value.trackerResponse->admission!=value.status.admission
+        ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){continue;}
+    const auto handle=managedByHandle.find(value.handle);if(handle==managedByHandle.end()||handle->second!=&value){continue;}
+    active.push_back({&value.storage,value.status.admission,value.status.complete});
+  }
+  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,active,true,nullptr,SavedTrackerPurpose::ActiveSingleUdpTier);if(!targets){return;}
+  for(const auto& target:*targets){
+    if(!target.admission||mainlineScrapes.revoked(target.hash)
+        ||std::ranges::any_of(target.configuredTrackers,[&](const auto& member){return !detail::libraryUdpRoute(networkBinding->effective,member.url,true);})){continue;}
+    const auto at=managed.find(target.hash.hex());if(at==managed.end()){continue;}auto& value=*at->second;
+    if(value.status.admission!=target.admission||!value.trackerResponse||!value.trackerResponse->drain()){continue;}
+    value.activeUdpTrackerScope=target.scope+*config;
+  }
 }
 std::uint64_t libraryHttpNonce=0;
 void cancelLibraryHttp(const core::TorrentHash* hash=nullptr) noexcept {

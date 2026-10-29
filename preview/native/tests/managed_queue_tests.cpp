@@ -6,11 +6,14 @@
 #include "verified_seeding_fixture.hpp"
 #include "managed_queue_observations.hpp"
 #include "managed_tracker_responses.hpp"
+#include "queued_mainline_scrape.hpp"
+#include <QNetworkDatagram>
 #include "managed_payload_counters.hpp"
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/hasher.hpp>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QUdpSocket>
 #include <thread>
 
 #include <QtTest>
@@ -171,6 +174,38 @@ public:
   }
   std::string url()const{return "http://127.0.0.1:"+std::to_string(server_.serverPort())+"/announce";}
 };
+// Two owned numeric UDP trackers. The first actual announce is held and
+// explicitly failed; only the other endpoint can succeed. Any SCRAPE exposes
+// an accidental new producer and fails, independent of count assertions.
+class ActiveUdpPair final {
+  std::array<std::unique_ptr<QUdpSocket>,2> sockets;
+  struct Held {QByteArray request;QHostAddress host;quint16 port=0;int index=-1;};
+  std::optional<Held> pending;
+  static std::uint32_t word(const QByteArray& p,int at){std::uint32_t v=0;for(int i=0;i<4;++i){v=(v<<8)|static_cast<unsigned char>(p[at+i]);}return v;}
+  static std::uint64_t wide(const QByteArray& p,int at){return (static_cast<std::uint64_t>(word(p,at))<<32)|word(p,at+4);}
+  static QByteArray number(std::uint32_t v){QByteArray p(4,'\0');for(int i=3;i>=0;--i){p[i]=static_cast<char>(v&255);v>>=8;}return p;}
+  void send(int index,const QHostAddress& host,quint16 port,const QByteArray& data){if(sockets[static_cast<std::size_t>(index)]->writeDatagram(data,host,port)!=data.size()){failure="Owned active UDP reply failed";}}
+  void receive(int index){auto& socket=*sockets[static_cast<std::size_t>(index)];while(socket.hasPendingDatagrams()){
+    const auto d=socket.receiveDatagram();const auto p=d.data();const auto port=d.senderPort();
+    if(!d.senderAddress().isLoopback()||port<1||port>65535||p.size()<16){failure="Owned active UDP source/shape";continue;}const auto sourcePort=static_cast<quint16>(port);const auto action=word(p,8);
+    if(action==0){if(p.size()!=16||wide(p,0)!=0x41727101980ULL){failure="Owned active UDP CONNECT";continue;}++connects;send(index,d.senderAddress(),sourcePort,number(0)+p.mid(12,4)+number(0x11335577)+number(0x99aabbcc));continue;}
+    if(action==2){++scrapes;failure="Active count selection emitted a forbidden SCRAPE";continue;}
+    if(action!=1||p.size()!=98||wide(p,0)!=0x1133557799aabbccULL||p.mid(16,20)!=expectedHash){failure="Owned active UDP announce identity";continue;}
+    const auto advertised=(static_cast<unsigned char>(p[96])<<8)|static_cast<unsigned char>(p[97]);if(advertised!=peerPort){failure="Owned active UDP advertised peer port";continue;}
+    if(word(p,80)==3){++stops;send(index,d.senderAddress(),sourcePort,number(1)+p.mid(12,4)+number(3600)+number(8)+number(7));continue;}
+    ++announces;
+    if(first<0){first=index;pending=Held{p,d.senderAddress(),sourcePort,index};continue;}
+    if(index==first){failure="Owned failed endpoint was reused before the other active URL";continue;}
+    second=index;send(index,d.senderAddress(),sourcePort,number(1)+p.mid(12,4)+number(3600)+number(8)+number(7));
+  }}
+public:
+  QByteArray expectedHash;int peerPort=0,first=-1,second=-1,connects=0,announces=0,scrapes=0,stops=0;QString failure;
+  ActiveUdpPair(){for(int i=0;i<2;++i){auto& socket=sockets[static_cast<std::size_t>(i)];socket=std::make_unique<QUdpSocket>();test::require(socket->bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress),"Cannot bind owned active UDP tracker");QObject::connect(socket.get(),&QUdpSocket::readyRead,socket.get(),[this,i]{receive(i);});}}
+  std::string url(int i)const{return "udp://127.0.0.1:"+std::to_string(sockets[static_cast<std::size_t>(i)]->localPort())+"/announce";}
+  bool held()const{return pending.has_value();}
+  void failFirst(){if(!pending){return;}auto value=std::move(*pending);pending.reset();send(value.index,value.host,value.port,number(3)+value.request.mid(12,4)+"owned active failover");}
+};
+struct ActiveUdpCleanup {engine::PersistentSession& owner;ActiveUdpPair& trackers;~ActiveUdpCleanup(){trackers.failFirst();static_cast<void>(owner.close(std::chrono::steady_clock::now()+10s));}};
 } // namespace
 
 class ManagedQueueTests final:public QObject {
@@ -262,6 +297,138 @@ private slots:
     QVERIFY2(tracker.failure.isEmpty(),qPrintable(tracker.failure));QVERIFY(failed);QCOMPARE(tracker.scrapes,2);QCOMPARE(failed->kind,core::QueueScrapeTerminalKind::Reply);QCOMPARE(failed->tracker,key);QVERIFY(failed->request>first->request);QCOMPARE(failed->seeds,3);QCOMPARE(failed->peers,4);
     const auto historical=observations->facts(now());QVERIFY(historical.singleTrackerResponse);QCOMPARE(historical.singleTrackerResponse->response.type,core::QueueOriginalScrapeType::Success);QVERIFY(!historical.singleTrackerResponse->response.content);QVERIFY(!core::sourceQueueQueuedScrapeEligible(historical.singleTrackerResponse->response,{})); // ABI omits downloaded validity: exact scrape content remains unavailable.
     session.reset();QVERIFY(fixture.intact(false));
+  }
+  void activeUrlInventoryIsBoundedDeduplicatedAndNeverInventsASelection(){
+    libtorrent::add_torrent_params params;params.trackers={"http://127.0.0.1:1/announce","udp://127.0.0.1:2/announce","http://127.0.0.1:1/announce"};
+    const auto urls=engine::detail::effectiveTrackerResponseUrls(params);QVERIFY(urls);QCOMPARE(urls->size(),std::size_t{2});QVERIFY(!engine::detail::singleEffectiveTracker(params));
+    params.trackers.push_back("wss://127.0.0.1:3/announce");QVERIFY(!engine::detail::effectiveTrackerResponseUrls(params));params.trackers.clear();
+    for(int i=0;i<8;++i){params.trackers.push_back("http://127.0.0.1:"+std::to_string(i+1)+"/announce");}QVERIFY(engine::detail::effectiveTrackerResponseUrls(params));
+    params.trackers.push_back("http://127.0.0.1:9/announce");QVERIFY(!engine::detail::effectiveTrackerResponseUrls(params));
+    params.trackers={"udp://127.0.0.1:1/announce","udp://127.0.0.1:2/announce"};params.tracker_tiers={0,0};QVERIFY(engine::detail::singleTierUdpResponseUrls(params));params.tracker_tiers={0,1};QVERIFY(!engine::detail::singleTierUdpResponseUrls(params));
+  }
+  void perUrlActiveRingKeepsCountsSeparateAndLossWithdrawsEveryBinding(){
+    using Ring=engine::detail::ManagedTrackerResponse;
+    auto a=std::make_shared<core::QueueOriginalTrackerResponse>(),b=std::make_shared<core::QueueOriginalTrackerResponse>();
+    std::array<unsigned char,32> ad{},bd{};ad[0]=1;bd[0]=2;
+    const std::vector<Ring::Binding> bindings{{"http://127.0.0.1:1/announce","a",ad,a,{}},{"udp://127.0.0.1:2/announce","b",bd,b,{}}};
+    Ring ring(71,1,bindings);ring.installed=true;QVERIFY(!ring.sole());QVERIFY(!ring.latestTerminal());QVERIFY(ring.urlTerminals().empty());
+    Ring::Value value;value.admission=71;value.sequence=1;value.request=1;value.protocol=1;value.tracker=ad;value.requestStartedNanos=1;value.observedNanos=1000000000;value.terminal.kind=core::QueueTrackerTerminalKind::Announce;value.terminal.comparable=true;value.terminal.present=3;value.terminal.complete=5;value.terminal.incomplete=6;value.terminal.observedMillis=1000;value.terminal.observedWallMillis=10000;
+    ring.observe(value);QVERIFY(ring.drain());auto rows=ring.urlTerminals();QCOMPARE(rows.size(),std::size_t{1});QCOMPARE(rows[0].url,bindings[0].url);QCOMPARE(rows[0].response.content->seeds,5);QVERIFY(!b->response().content);
+    value.sequence=2;value.request=2;value.tracker=bd;value.observedNanos=2000000000;value.terminal.observedMillis=2000;value.terminal.observedWallMillis=20000;value.terminal.complete=7;value.terminal.incomplete=8;ring.observe(value);QVERIFY(ring.drain());
+    rows=ring.urlTerminals();QCOMPARE(rows.size(),std::size_t{2});QCOMPARE(rows[0].response.content->seeds,5);QCOMPARE(rows[1].response.content->seeds,7);QVERIFY(!ring.latestTerminal());
+    // An ignored failed announce neither replaces that URL's response nor
+    // supplies a selected-active URL or a newer scrape timestamp.
+    value.sequence=3;value.request=3;value.observedNanos=3000000000;value.terminal.kind=core::QueueTrackerTerminalKind::AnnounceFailed;value.terminal.comparable=false;ring.observe(value);QVERIFY(ring.drain());
+    rows=ring.urlTerminals();QCOMPARE(rows[1].terminal.sequence,std::uint64_t{2});QCOMPARE(rows[1].response.content->seeds,7);
+    // Actual retirement can replace the ring without resetting shared URL
+    // history. A new admission still has no fabricated terminal observation.
+    Ring next(72,1,bindings);next.installed=true;QVERIFY(next.urlTerminals().empty());QCOMPARE(b->response().content->seeds,7);
+    std::vector<Ring::UrlTerminal> foreign;std::thread reader([&]{foreign=ring.urlTerminals();});reader.join();QVERIFY(foreign.empty());QCOMPARE(ring.urlTerminals().size(),std::size_t{2});
+    value.sequence=4;value.request=4;value.tracker[0]=9;value.observedNanos=4000000000;ring.observe(value);QVERIFY(!ring.drain());QVERIFY(ring.urlTerminals().empty());QCOMPARE(a->response().type,core::QueueOriginalScrapeType::Unknown);QCOMPARE(b->response().type,core::QueueOriginalScrapeType::Unknown);
+    auto c=std::make_shared<core::QueueOriginalTrackerResponse>(),d=std::make_shared<core::QueueOriginalTrackerResponse>();auto bounded=bindings;bounded[0].response=c;bounded[1].response=d;Ring overflow(73,1,bounded);overflow.installed=true;
+    for(std::uint64_t i=0;i<=Ring::Capacity;++i){value.admission=73;value.sequence=i+1;value.request=i+1;value.tracker=ad;value.observedNanos=static_cast<std::int64_t>(i+1);overflow.observe(value);}QVERIFY(!overflow.drain());QVERIFY(overflow.urlTerminals().empty());
+    Ring stale(74,1,bounded);stale.installed=true;value.admission=73;value.sequence=1;stale.observe(value);QVERIFY(!stale.drain());QVERIFY(stale.urlTerminals().empty());
+  }
+  void actualMultiUrlProviderRoutesEachTerminalWithoutSelectingAnAnnouncer(){
+    namespace lt=libtorrent;test::OwnedEngineFixture fixture(false);auto lease=held(fixture);
+    RawScrapeTracker first(hashBytes(*fixture.hash)),second(hashBytes(*fixture.hash));first.announceCounts=true;
+    auto files=engine::detail::ManagedStorage::prepare(lease,*fixture.hash,engine::NetworkPolicy{});QVERIFY(files);
+    auto settings=test::localSettings();settings.set_bool(lt::settings_pack::ssrf_mitigation,false); // Exact owned local /scrape only.
+    settings.set_bool(lt::settings_pack::announce_to_all_tiers,true);settings.set_bool(lt::settings_pack::announce_to_all_trackers,true);
+    auto session=std::make_unique<lt::session>(settings);const auto encodedMetadata=test::read(fixture.stateFile);lt::error_code error;
+    lt::add_torrent_params params;params.ti=std::make_shared<lt::torrent_info>(lt::span<const char>(encodedMetadata.constData(),encodedMetadata.size()),error,lt::from_span);QVERIFY(!error);
+    params.ti->clear_trackers();params.trackers={first.url(),second.url()};params.tracker_tiers={0,1};params.save_path=fixture.payload.toStdString();params.flags|=lt::torrent_flags::paused|lt::torrent_flags::disable_dht|lt::torrent_flags::disable_lsd|lt::torrent_flags::disable_pex;params.flags&=~lt::torrent_flags::auto_managed;
+    engine::detail::LibraryTrackerResponses library;auto ring=engine::detail::attachManagedTrackerResponse(params,lease,files->identity(),81,library);QVERIFY(ring);QVERIFY(!ring->sole());QCOMPARE(library.size(),std::size_t{2});
+    auto handle=session->add_torrent(std::move(params),error);QVERIFY(!error&&handle.is_valid());handle.resume();
+    const auto pump=[&]{std::vector<lt::alert*> alerts;session->pop_alerts(&alerts);return ring->drain()&&first.failure.isEmpty()&&second.failure.isEmpty();};
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!pump()){return !first.failure.isEmpty()||!second.failure.isEmpty()||ring->lost.load();}return first.announces==1&&second.announces==1&&ring->urlTerminals().size()==1;})(),15000);
+    QVERIFY2(first.failure.isEmpty(),qPrintable(first.failure));QVERIFY2(second.failure.isEmpty(),qPrintable(second.failure));QVERIFY(!ring->lost.load());auto rows=ring->urlTerminals();QCOMPARE(rows.size(),std::size_t{1});QCOMPARE(rows[0].url,first.url());QCOMPARE(rows[0].response.content->seeds,5);QCOMPARE(rows[0].response.content->peers,6);QVERIFY(!ring->latestTerminal());QCOMPARE(first.scrapes,0);QCOMPARE(second.scrapes,0);
+    const auto trackers=handle.trackers();const auto at=std::ranges::find(trackers,second.url(),&lt::announce_entry::url);QVERIFY(at!=trackers.end());const auto index=std::distance(trackers.begin(),at);QVERIFY(index>=0&&index<8);
+    handle.scrape_tracker(static_cast<int>(index)); // Test-only actual RPC; production never issues one here.
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{return pump()&&second.scrapes==1&&ring->urlTerminals().size()==2;})(),15000);
+    rows=ring->urlTerminals();const auto a=std::ranges::find(rows,first.url(),&engine::detail::ManagedTrackerResponse::UrlTerminal::url),b=std::ranges::find(rows,second.url(),&engine::detail::ManagedTrackerResponse::UrlTerminal::url);
+    QVERIFY(a!=rows.end()&&b!=rows.end());QVERIFY(a->response.content&&b->response.content);QCOMPARE(a->response.content->seeds,5);QCOMPARE(b->response.content->seeds,3);QCOMPARE(b->response.content->peers,4);QVERIFY(a->terminal.sequence!=b->terminal.sequence);QVERIFY(!ring->latestTerminal());
+    session.reset();QVERIFY(fixture.intact(false));QVERIFY(first.failure.isEmpty()&&second.failure.isEmpty());
+  }
+  void realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse_data(){
+    QTest::addColumn<bool>("dhtEnabled");QTest::newRow("no-DHT-service")<<false;QTest::newRow("live-DHT-no-active-selection")<<true;
+  }
+  void realManagedOwnerExposesUrlFactsButNeverClaimsAMultiUrlBestResponse(){
+    QFETCH(bool,dhtEnabled);
+    test::OwnedEngineFixture fixture(false);RawScrapeTracker first(hashBytes(*fixture.hash)),second(hashBytes(*fixture.hash));first.announceCounts=true;second.announceCounts=true;
+    auto source=parsed(test::read(fixture.stateFile));QVERIFY(source.replaceValue("announce",test::encoded(libtorrent::entry(first.url()))));
+    const libtorrent::entry::list_type tiers{libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(first.url())}),libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(second.url())})};
+    QVERIFY(source.replaceValue("announce-list",test::encoded(libtorrent::entry(tiers))));
+    auto attrs=parsed(QByteArray::fromStdString(encoded(*source.find("attributes"))));QVERIFY(attrs.replaceValue("pluginoptions","d5:mldhtd14:enableannouncei0eee"));QVERIFY(source.replaceValue("attributes",attrs.serialize()));
+    const auto raw=source.find("info");QVERIFY(raw);const auto rawInfo=encoded(*raw);test::write(fixture.stateFile,QByteArray::fromStdString(source.serialize()));
+    auto lease=held(fixture);auto service=owner();engine::NetworkPolicy p;p.mode=engine::NetworkMode::Normal;p.httpTrackers=true;p.dht=dhtEnabled;p.mainlineIpv4=true;p.mainlineIpv6=false;p.mainlinePeerBootstrapOnly=true;p.bindAddresses={"127.0.0.1"};QUdpSocket discovery;QVERIFY(discovery.bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress));p.mainlinePort=discovery.localPort();discovery.close();QTcpServer reserved;QVERIFY(reserved.listen(QHostAddress::LocalHost,0));p.listenPort=reserved.serverPort();reserved.close();
+    QVERIFY(service->configureNetwork(p));QVERIFY(service->configureMainlineBootstrap({}));QVERIFY(service->startIdle(lease));QVERIFY(service->startManaged(lease,{.hash=*fixture.hash,.queued=false}));
+    const auto pump=[&]{const auto result=service->poll();const auto rows=service->managedDownloads();return result&&rows.size()==1&&!rows[0].failure&&first.failure.isEmpty()&&second.failure.isEmpty();};
+    std::vector<engine::ManagedTrackerUrlResponse> facts;std::uint64_t admission=0;
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!pump()){return false;}const auto rows=service->managedDownloads();admission=rows[0].admission;facts=service->managedTrackerUrlResponses(*fixture.hash,admission);return rows[0].checked&&!facts.empty();})(),15000);
+    QVERIFY(admission);QVERIFY(!facts.empty());for(const auto& row:facts){QVERIFY(row.url==first.url()||row.url==second.url());QVERIFY(row.response.content);QCOMPARE(row.response.content->seeds,5);QCOMPARE(row.response.content->peers,6);QVERIFY(row.sequence&&row.observedWallMillis>0);}
+    QVERIFY(!service->managedTrackerResponse(*fixture.hash,admission));QVERIFY(service->managedTrackerUrlResponses(*fixture.hash,admission+1).empty());QVERIFY(service->libraryTrackerResponses().empty());QCOMPARE(first.scrapes,0);QCOMPARE(second.scrapes,0);QVERIFY(service->mainlineScrapeEstimates().empty());
+    if(dhtEnabled){QTRY_VERIFY_WITH_TIMEOUT(pump()&&service->mainlineDiscovery().state==engine::MainlineDiscoveryStatus::State::Running,15000);}
+    auto discoveryStatus=service->mainlineDiscovery();QVERIFY(discoveryStatus.admittedScrapeCandidates.empty());QCOMPARE(discoveryStatus.lookups,std::uint64_t{0});QCOMPARE(discoveryStatus.announces,std::uint64_t{0});QCOMPARE(discoveryStatus.deliveredPeers,std::uint64_t{0});
+    // A saved edit to one URL is not a new sole-response admission. Public
+    // rearm forces fresh owner reconciliation without inventing a clock hook.
+    auto changed=parsed(test::read(fixture.stateFile));QVERIFY(changed.replaceValue("announce-list",test::encoded(libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(first.url())})}))));test::write(fixture.stateFile,QByteArray::fromStdString(changed.serialize()));
+    QVERIFY(service->rearmMainlineScrape(*fixture.hash));QVERIFY(pump());QVERIFY(!service->managedTrackerResponse(*fixture.hash,admission));QVERIFY(service->libraryTrackerResponses().empty());QVERIFY(service->mainlineScrapeEstimates().empty());
+    discoveryStatus=service->mainlineDiscovery();QVERIFY(discoveryStatus.admittedScrapeCandidates.empty());QCOMPARE(discoveryStatus.lookups,std::uint64_t{0});QCOMPARE(discoveryStatus.announces,std::uint64_t{0});QCOMPARE(discoveryStatus.deliveredPeers,std::uint64_t{0});QCOMPARE(first.scrapes,0);QCOMPARE(second.scrapes,0);
+    QVERIFY(service->pauseManaged(*fixture.hash,true));QVERIFY(service->managedTrackerUrlResponses(*fixture.hash,admission).empty());
+    const auto closed=service->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(service->managedTrackerUrlResponses(*fixture.hash,admission).empty());
+    const auto after=parsed(test::read(fixture.stateFile));QCOMPARE(encoded(*after.find("info")),rawInfo);QVERIFY(first.failure.isEmpty()&&second.failure.isEmpty());QVERIFY(fixture.accountingIntact(false));
+  }
+  void singleHelperDispatchCutOrdersResponseAndAlertDeliveryWithoutClockTranslation(){
+    using Ring=engine::detail::ManagedTrackerResponse;std::array<unsigned char,32> a{},b{};a[0]=1;b[0]=2;
+    auto first=std::make_shared<core::QueueOriginalTrackerResponse>(),second=std::make_shared<core::QueueOriginalTrackerResponse>();
+    Ring ring(91,1,std::vector<Ring::Binding>{{"udp://127.0.0.1:1/announce","a",a,first,{}},{"udp://127.0.0.1:2/announce","b",b,second,{}}});ring.installed=true;
+    Ring::Value value;value.admission=91;value.protocol=1;value.sequence=1;value.request=1;value.requestStartedNanos=1;value.observedNanos=1000000000;value.tracker=a;value.terminal.kind=core::QueueTrackerTerminalKind::Announce;value.terminal.present=3;value.terminal.comparable=true;value.terminal.complete=5;value.terminal.incomplete=6;value.terminal.observedMillis=1000;
+    // Terminal already written at the cut: the actual dispatch is delivered
+    // in the same collection before drain. Only that explicit URL is selected.
+    ring.observe(value);ring.beginDispatchCollection();ring.observeUdpDispatch("udp://127.0.0.1:1/announce",1,100);QVERIFY(ring.drain());auto selected=ring.currentUdpTerminal();QVERIFY(selected&&selected->response.content);QCOMPARE(selected->url,std::string("udp://127.0.0.1:1/announce"));QCOMPARE(selected->response.content->seeds,5);
+    // A callback arriving AFTER collection began cannot select even when its
+    // newer response is drained. The next collection supplies its dispatch.
+    ring.beginDispatchCollection();value.sequence=2;value.request=2;value.tracker=b;value.observedNanos=2000000000;value.terminal.complete=7;value.terminal.incomplete=8;value.terminal.observedMillis=2000;ring.observe(value);QVERIFY(ring.drain());QVERIFY(!ring.currentUdpTerminal());
+    ring.beginDispatchCollection();ring.observeUdpDispatch("udp://127.0.0.1:2/announce",1,200);QVERIFY(ring.drain());selected=ring.currentUdpTerminal();QVERIFY(selected&&selected->response.content);QCOMPARE(selected->response.content->seeds,7);
+    // A later terminal for another URL never changes the dispatch-selected
+    // URL. Both histories survive, but current getTrackerURL remains explicit.
+    value.sequence=3;value.request=3;value.tracker=a;value.observedNanos=3000000000;value.terminal.complete=9;value.terminal.observedMillis=3000;ring.observe(value);ring.beginDispatchCollection();QVERIFY(ring.drain());selected=ring.currentUdpTerminal();QVERIFY(selected&&selected->response.content);QCOMPARE(selected->url,std::string("udp://127.0.0.1:2/announce"));QCOMPARE(selected->response.content->seeds,7);
+    ring.observeUdpDispatch("udp://127.0.0.1:2/announce",2,300);QVERIFY(ring.currentUdpTerminal()); // Unselected protocol is not this helper's URL.
+    ring.observeUdpDispatch("udp://127.0.0.1:2/announce",1,199);QVERIFY(!ring.currentUdpTerminal()); // Actual alert clock regression withdraws until retirement.
+    Ring unknown(92,1,std::vector<Ring::Binding>{{"udp://127.0.0.1:1/announce","a",a,first,{}},{"udp://127.0.0.1:2/announce","b",b,second,{}}});unknown.installed=true;unknown.observeUdpDispatch("udp://127.0.0.1:3/announce",1,100);QVERIFY(!unknown.currentUdpTerminal());
+    ring.loseDispatch();ring.observeUdpDispatch("udp://127.0.0.1:2/announce",1,400);QVERIFY(!ring.currentUdpTerminal()); // Drop never silently regains selection.
+  }
+  void singleOriginalUdpTierCountsRequireAnActualCapturedAdmissionAndExactGroup(){
+    test::OwnedEngineFixture fixture(false);const std::string a="udp://127.0.0.1:12345/announce",b="udp://127.0.0.1:12346/announce";
+    auto source=parsed(test::read(fixture.stateFile));QVERIFY(source.replaceValue("announce",test::encoded(libtorrent::entry(a))));
+    const auto tier=[](const std::string& one,const std::string& two){return test::encoded(libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(one),libtorrent::entry(two)})}));};
+    QVERIFY(source.replaceValue("announce-list",tier(a,b)));test::write(fixture.stateFile,QByteArray::fromStdString(source.serialize()));auto lease=held(fixture);engine::NetworkPolicy p;p.mode=engine::NetworkMode::Normal;p.udpTrackers=true;
+    auto storage=engine::detail::ManagedStorage::prepare(lease,*fixture.hash,p);QVERIFY(storage);const std::vector<engine::ManagedMainlineScrapeObservation> active{{&*storage,92,false}};
+    const auto read=[&]{return engine::readCurrentMainlineScrapeTargets(lease,active,true,nullptr,engine::SavedTrackerPurpose::ActiveSingleUdpTier);};
+    auto accepted=read();QVERIFY(accepted&&accepted->size()==1);QCOMPARE(accepted->front().admission,std::uint64_t{92});QCOMPARE(accepted->front().configuredTrackers.size(),std::size_t{2});
+    auto noAdmission=engine::readCurrentMainlineScrapeTargets(lease,{},true,nullptr,engine::SavedTrackerPurpose::ActiveSingleUdpTier);QVERIFY(noAdmission&&noAdmission->empty());
+    auto two=source;QVERIFY(two.replaceValue("announce-list",test::encoded(libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(a)}),libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(b)})}))));test::write(fixture.stateFile,QByteArray::fromStdString(two.serialize()));auto grouped=read();QVERIFY(grouped&&grouped->empty());
+    auto different=source;QVERIFY(different.replaceValue("announce-list",tier(a,"udp://127.0.0.1:12347/announce")));test::write(fixture.stateFile,QByteArray::fromStdString(different.serialize()));auto rebound=read();QVERIFY(rebound&&rebound->empty());
+    test::write(fixture.stateFile,QByteArray::fromStdString(source.serialize()));const auto restored=read();QVERIFY(restored&&restored->size()==1);
+  }
+  void actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape_data(){QTest::addColumn<bool>("dhtEnabled");QTest::newRow("DHT-disabled")<<false;QTest::newRow("DHT-live-passive-only")<<true;}
+  void actualSingleTierUdpFailoverPublishesCurrentCountsWithoutANewScrape(){
+    QFETCH(bool,dhtEnabled);test::OwnedEngineFixture fixture(false);ActiveUdpPair trackers;trackers.expectedHash=QByteArray::fromStdString(hashBytes(*fixture.hash));
+    auto source=parsed(test::read(fixture.stateFile));QVERIFY(source.replaceValue("announce",test::encoded(libtorrent::entry(trackers.url(0)))));
+    const libtorrent::entry::list_type urls{libtorrent::entry(trackers.url(0)),libtorrent::entry(trackers.url(1))};QVERIFY(source.replaceValue("announce-list",test::encoded(libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(urls)}))));
+    auto attrs=parsed(QByteArray::fromStdString(encoded(*source.find("attributes"))));QVERIFY(attrs.replaceValue("pluginoptions","d5:mldhtd14:enableannouncei0eee"));QVERIFY(source.replaceValue("attributes",attrs.serialize()));test::write(fixture.stateFile,QByteArray::fromStdString(source.serialize()));const auto info=encoded(*source.find("info"));const auto payload=test::read(fixture.payload+"/sample.bin");
+    auto lease=held(fixture);auto service=owner();engine::NetworkPolicy p;p.mode=engine::NetworkMode::Normal;p.udpTrackers=true;p.dht=dhtEnabled;p.bindAddresses={"127.0.0.1"};p.mainlineIpv4=true;p.mainlineIpv6=false;p.mainlinePeerBootstrapOnly=true;
+    QTcpServer reserved;QVERIFY(reserved.listen(QHostAddress::LocalHost,0));p.listenPort=reserved.serverPort();reserved.close();trackers.peerPort=p.listenPort;QUdpSocket discovery;QVERIFY(discovery.bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress));p.mainlinePort=discovery.localPort();discovery.close();
+    QVERIFY(service->configureNetwork(p));QVERIFY(service->configureMainlineBootstrap({}));QVERIFY(service->startIdle(lease));QVERIFY(service->startManaged(lease,{.hash=*fixture.hash,.queued=false}));ActiveUdpCleanup cleanup{*service,trackers};
+    const auto pump=[&]{const auto result=service->poll();const auto rows=service->managedDownloads();return result&&rows.size()==1&&!rows[0].failure&&trackers.failure.isEmpty();};
+    QTRY_VERIFY_WITH_TIMEOUT(pump()&&trackers.held()&&service->managedDownloads()[0].checked,15000);QVERIFY2(trackers.failure.isEmpty(),qPrintable(trackers.failure));const auto admission=service->managedDownloads()[0].admission;QVERIFY(admission);QCOMPARE(trackers.announces,1);QCOMPARE(trackers.scrapes,0);QVERIFY(!service->managedActiveUdpTrackerResponse(*fixture.hash,admission));
+    trackers.failFirst();std::optional<engine::ManagedTrackerUrlResponse> current;
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!pump()){return false;}current=service->managedActiveUdpTrackerResponse(*fixture.hash,admission);return trackers.second>=0&&current&&current->response.content;})(),25000);
+    QVERIFY2(trackers.failure.isEmpty(),qPrintable(trackers.failure));QVERIFY(current&&current->response.content);QCOMPARE(current->url,trackers.url(trackers.second));QVERIFY(trackers.second!=trackers.first);QCOMPARE(current->response.content->seeds,7);QCOMPARE(current->response.content->peers,8);QVERIFY(!service->managedTrackerResponse(*fixture.hash,admission));QVERIFY(!service->managedActiveUdpTrackerResponse(*fixture.hash,admission+1));
+    const auto views=service->libraryTrackerResponses();QCOMPARE(views.size(),std::size_t{1});QCOMPARE(views[0].admission,admission);QVERIFY(views[0].response.content);QCOMPARE(views[0].response.content->seeds,7);QCOMPARE(trackers.scrapes,0);QCOMPARE(trackers.announces,2);QVERIFY(service->mainlineScrapeEstimates().empty());const auto mainline=service->mainlineDiscovery();QVERIFY(mainline.admittedScrapeCandidates.empty());QCOMPARE(mainline.lookups,std::uint64_t{0});QCOMPARE(mainline.announces,std::uint64_t{0});QCOMPARE(mainline.deliveredPeers,std::uint64_t{0});
+    auto changed=source;QVERIFY(changed.replaceValue("announce-list",test::encoded(libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(trackers.url(0))}),libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(trackers.url(1))})}))));test::write(fixture.stateFile,QByteArray::fromStdString(changed.serialize()));QVERIFY(service->rearmMainlineScrape(*fixture.hash));QVERIFY(pump());QVERIFY(!service->managedActiveUdpTrackerResponse(*fixture.hash,admission));QVERIFY(service->libraryTrackerResponses().empty());QCOMPARE(trackers.scrapes,0);
+    QVERIFY(service->pauseManaged(*fixture.hash,true));QVERIFY(!service->managedActiveUdpTrackerResponse(*fixture.hash,admission));const auto closed=service->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);const auto after=parsed(test::read(fixture.stateFile));QCOMPARE(encoded(*after.find("info")),info);QVERIFY(fixture.accountingIntact(false));QVERIFY2(trackers.failure.isEmpty(),qPrintable(trackers.failure));
   }
   void trackerResponseLifetimeRetainsAcrossAdmissionsAndLossCannotResetToInitialError(){
     test::OwnedEngineFixture fixture(false);auto lease=held(fixture);

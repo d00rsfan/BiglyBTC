@@ -88,3 +88,12 @@ add_library(biglybtc_i2cp_protocol STATIC i2cp/protocol.cpp)
 target_include_directories(biglybtc_i2cp_protocol PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2cp")
 target_compile_features(biglybtc_i2cp_protocol PUBLIC cxx_std_23)
 target_compile_options(biglybtc_i2cp_protocol PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+# This explicit channel has no router selection/startup or automatic activation.
+add_library(biglybtc_i2cp_initial_channel STATIC
+  i2cp_channel/channel.hpp i2cp_channel/channel.cpp)
+set_target_properties(biglybtc_i2cp_initial_channel PROPERTIES AUTOMOC ON)
+target_include_directories(biglybtc_i2cp_initial_channel PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2cp_channel")
+target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2cp_protocol Qt6::Core Qt6::Network)
+target_compile_features(biglybtc_i2cp_initial_channel PUBLIC cxx_std_23)
+target_compile_options(biglybtc_i2cp_initial_channel PRIVATE -Wall -Wextra -Wpedantic -Werror)

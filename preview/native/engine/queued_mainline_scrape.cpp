@@ -138,7 +138,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     std::span<const ManagedMainlineScrapeObservation> observations,bool configuredCandidates,
     std::vector<std::string>* authenticatedInventoryHashes,SavedTrackerPurpose purpose){
   try{
-    if(purpose!=SavedTrackerPurpose::MainlineBackup&&purpose!=SavedTrackerPurpose::RegularHttp&&purpose!=SavedTrackerPurpose::RegularUdp&&purpose!=SavedTrackerPurpose::RegularSavedTiers){return error(Code::InvalidFormat,"Invalid saved tracker purpose");}
+    if(purpose!=SavedTrackerPurpose::MainlineBackup&&purpose!=SavedTrackerPurpose::RegularHttp&&purpose!=SavedTrackerPurpose::RegularUdp&&purpose!=SavedTrackerPurpose::RegularSavedTiers&&purpose!=SavedTrackerPurpose::ActiveSingleUdpTier){return error(Code::InvalidFormat,"Invalid saved tracker purpose");}
     const bool regular=purpose!=SavedTrackerPurpose::MainlineBackup;
     if(observations.size()>256){return error(Code::Unsupported,"Active Mainline scrape target bound");}
     std::map<std::string,const ManagedMainlineScrapeObservation*> active;
@@ -168,7 +168,8 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       if(!seen.insert(key.hex()).second){return error(Code::Conflict,"Duplicate saved Mainline identity");}
       const auto admitted=active.find(key.hex());
       const auto* observation=admitted==active.end()?nullptr:admitted->second;
-      if(!row.saved.persistent||paused.contains(key.hex())||(purpose==SavedTrackerPurpose::RegularSavedTiers&&observation)){continue;}
+      if(!row.saved.persistent||paused.contains(key.hex())||(purpose==SavedTrackerPurpose::RegularSavedTiers&&observation)
+          ||(purpose==SavedTrackerPurpose::ActiveSingleUdpTier&&!observation)){continue;}
       if(observation){
         // Current checked Downloading/Seeding comes from the owner, not this
         // persisted number. Stop/error/unknown saved intent still withdraws it.
@@ -209,7 +210,14 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
             ||listIncludes(attrs->find("peersourcesdenied"),"Tracker",false)){continue;}
       }
       if(regular&&!configured){continue;}
-      if(observation&&configured&&configured->size()>1){continue;} // Active announcer selection is separate.
+      if(observation&&configured&&configured->size()>1&&purpose!=SavedTrackerPurpose::ActiveSingleUdpTier){continue;}
+      if(purpose==SavedTrackerPurpose::ActiveSingleUdpTier){
+        const auto* tiers=doc.find("announce-list");
+        if(!configured||configured->size()<2||configured->size()>8||!tiers||tiers->type!=Node::Type::List||tiers->children.size()!=1
+            ||tiers->children.front().type!=Node::Type::List||tiers->children.front().children.size()!=configured->size()
+            ||std::ranges::any_of(*configured,[](const auto& url){return url.tier!=0||!url.url.starts_with("udp://");})){continue;}
+        std::set<std::string> urls;for(const auto& url:*configured){urls.insert(url.url);}if(urls.size()!=configured->size()){continue;}
+      }
       if(observation&&!regular){
         const auto permitted=activeScrapeOnly(*attrs);if(!permitted){return std::unexpected(permitted.error());}
         if(!*permitted){continue;} // Normal active announce mode is not a passive scrape.
@@ -230,7 +238,11 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
         // admission into both consumers. Route changes require normal readmission.
         if(!regular&&(files.mainlinePolicy().discover||files.mainlinePolicy().announce)){continue;}
         const auto params=files.parameters();if(!params.ti){continue;}
-        if(regular){const auto url=detail::singleEffectiveTracker(params);
+        if(purpose==SavedTrackerPurpose::ActiveSingleUdpTier){
+          const auto urls=detail::singleTierUdpResponseUrls(params);
+          if(!configured||!urls||urls->size()!=configured->size()
+              ||std::ranges::any_of(*configured,[&](const auto& member){return std::ranges::find(*urls,member.url)==urls->end();})){continue;}
+        }else if(regular){const auto url=detail::singleEffectiveTracker(params);
           if(!configured||configured->size()!=1||!url||*url!=configured->front().url
               ||(purpose==SavedTrackerPurpose::RegularUdp?!url->starts_with("udp://"):(!url->starts_with("http://")&&!url->starts_with("https://")))){continue;}}
         const auto subject=storage::originalTorrentInfoSubject(doc);if(!subject){return std::unexpected(subject.error());}
@@ -276,6 +288,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       if(observation){append(scope,regular?"active-regular-http":"active-mldht-scrape");append(scope,std::to_string(observation->admission));append(scope,mapping);}
       if(purpose==SavedTrackerPurpose::RegularUdp){append(scope,"regular-udp-v1");}
       if(purpose==SavedTrackerPurpose::RegularSavedTiers){append(scope,"regular-saved-tiers-v1");}
+      if(purpose==SavedTrackerPurpose::ActiveSingleUdpTier){append(scope,"active-single-udp-tier-counts-v1");}
       auto hashed=digest(scope);if(!hashed){return error(Code::Io,observation?"Cannot authenticate managed Mainline scope":"Cannot authenticate saved Mainline scope");}
       std::string responseKey;std::vector<SavedMainlineTracker> trackers;
       if(configured){

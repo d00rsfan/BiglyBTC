@@ -118,6 +118,7 @@ struct PersistentSession::Impl {
     std::uint64_t targetStatisticsSequence=0;
     std::shared_ptr<detail::ManagedQueueObservations> queueObservations;
     std::shared_ptr<detail::ManagedTrackerResponse> trackerResponse;
+    std::optional<std::string> activeUdpTrackerScope;
     std::shared_ptr<detail::MmapDiskLatency> mmapLatency;
     std::optional<Clock::time_point> runningSince, seedingSince;
     std::optional<lt::time_point> trackerRunningSince, trackerSeedingSince;
@@ -380,8 +381,10 @@ struct PersistentSession::Impl {
   std::vector<lt::alert*> pop() {
     detail::require(bindingHealthy(), "Explicit network binding was lost; owner joined without a final certificate", storage::ErrorCode::Io);
     std::vector<lt::alert*> pending;
+    for(auto& [key,value]:managed){(void)key;if(value->trackerResponse){value->trackerResponse->beginDispatchCollection();}}
     session->pop_alerts(&pending); // The ONLY pop_alerts consumer for this owner.
     if (pending.size() > 4096) {
+      for(auto& [key,value]:managed){(void)key;if(value->trackerResponse){value->trackerResponse->loseDispatch();}value->activeUdpTrackerScope.reset();}
       removalLost = true; transferError = true;
       counterError(AccountingError::CounterResponseLost);
       return pending;
@@ -391,10 +394,14 @@ struct PersistentSession::Impl {
     // active weak ownership identity or its operation token.
     for (auto* alert : pending) {
       if (!alert) {
+        for(auto& [key,value]:managed){(void)key;if(value->trackerResponse){value->trackerResponse->loseDispatch();}value->activeUdpTrackerScope.reset();}
         removalLost = true; transferError = true;
         counterError(AccountingError::CounterResponseLost); continue;
       }
       if (auto* dropped = lt::alert_cast<lt::alerts_dropped_alert>(alert)) {
+        if(dropped->dropped_alerts.test(lt::tracker_announce_alert::alert_type)){
+          for(auto& [key,value]:managed){(void)key;if(value->trackerResponse){value->trackerResponse->loseDispatch();}value->activeUdpTrackerScope.reset();}
+        }
         if (dropped->dropped_alerts.test(lt::session_stats_alert::alert_type)) {
           counterError(AccountingError::CounterResponseLost);
         }
@@ -443,6 +450,17 @@ struct PersistentSession::Impl {
       const auto owned = managedByHandle.find(torrentAlert->handle);
       if (owned == managedByHandle.end()) { continue; }
       auto& value = *owned->second;
+      if(const auto* dispatched=lt::alert_cast<lt::tracker_announce_alert>(alert);dispatched&&value.trackerResponse&&!value.trackerResponse->sole()){
+        auto& ring=*value.trackerResponse;
+        const bool token=value.token&&value.token->number==value.status.admission&&ring.admission==value.status.admission;
+        const auto& endpoint=dispatched->local_endpoint;
+        const bool bound=networkBinding&&networkBindingCurrent(*networkBinding)&&networkBinding->effective.bindAddresses.size()==1
+            &&networkBinding->effective.listenPort>0&&endpoint.port()==networkBinding->effective.listenPort
+            &&endpoint.address().to_string()==networkBinding->effective.bindAddresses.front();
+        if(!token||!bound||value.stop||value.removing){ring.loseDispatch();value.activeUdpTrackerScope.reset();}
+        else{ring.observeUdpDispatch(dispatched->tracker_url(),dispatched->version==lt::protocol_version::V1?1u:2u,
+            std::chrono::duration_cast<std::chrono::nanoseconds>(dispatched->timestamp().time_since_epoch()).count());}
+      }
       if (lt::alert_cast<lt::tracker_reply_alert>(alert)) { value.mainlineTrackerHealthy=true; }
       if (lt::alert_cast<lt::tracker_error_alert>(alert)) { value.mainlineTrackerHealthy=false; }
       if (const auto* state = lt::alert_cast<lt::state_changed_alert>(alert)) {
@@ -593,7 +611,7 @@ struct PersistentSession::Impl {
           }
           settings.set_bool(lt::settings_pack::dont_count_slow_torrents, false);
         }
-        if (queuePolicy || (network && network->dht)) {
+        if (queuePolicy || libraryUdpRegularMode() || (network && network->dht)) {
           settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::tracker
               | lt::alert_category::error | lt::alert_category::status | lt::alert_category::storage));
         } else settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
@@ -1159,7 +1177,7 @@ struct PersistentSession::Impl {
       if (value.removing && value.removed && !value.handle.is_valid()) {
         // Actual weak expiry is the last callback fence: drain final terminal
         // updates before the admission may disappear, retain library response.
-        if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());value.trackerResponse->response->cancelRequest();} // Actual weak-expiry: no later torrent callback can own this pending regular request.
+        if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());value.trackerResponse->cancelRequests();} // Actual weak-expiry: no later torrent callback can own this pending regular request.
         if(value.timelineLost && !value.status.failure) {
           value.status.failure=storage::Error{storage::ErrorCode::Io,"Original active-time observations were lost; saved state requires recheck"};
         }
@@ -1208,7 +1226,7 @@ struct PersistentSession::Impl {
         if (settings) {
           settings->set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
               | lt::alert_category::status | lt::alert_category::storage
-              | (queuePolicy ? lt::alert_category::tracker : lt::alert_category_t{})));
+              | ((queuePolicy || libraryUdpRegularMode() || (network&&network->dht)) ? lt::alert_category::tracker : lt::alert_category_t{})));
           session->apply_settings(*settings);
           rateLimits = detail::readEffectiveRateLimits(*session);
           appliedSeedingOnly = seedingOnly;
@@ -2043,10 +2061,37 @@ std::optional<core::QueueOriginalScrapeResponse> PersistentSession::managedTrack
   const auto& value=*found->second;
   if(value.status.admission!=admission||!value.token||value.token->number!=admission||(value.trackerResponse&&value.trackerResponse->admission!=admission)
       ||!value.status.retained||value.status.failure||value.stop||value.removing
-      ||!value.handle.is_valid()||!value.trackerResponse
+      ||!value.handle.is_valid()||!value.trackerResponse||!value.trackerResponse->sole()
       ||!value.trackerResponse->installed.load(std::memory_order_acquire)
       ||value.trackerResponse->lost.load(std::memory_order_acquire)){return {};}
   return value.trackerResponse->response->response(); // Existing poll owns every terminal drain.
+}
+std::optional<ManagedTrackerUrlResponse> PersistentSession::managedActiveUdpTrackerResponse(
+    const core::TorrentHash& hash,std::uint64_t admission)const {
+  if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission||!admission||impl_->mainlineScrapes.revoked(hash)){return {};}
+  const auto found=impl_->managed.find(hash.hex());if(found==impl_->managed.end()){return {};}
+  const auto& value=*found->second;
+  if(!value.activeUdpTrackerScope||!value.token||value.token->number!=admission||value.status.admission!=admission
+      ||!value.status.checked||!value.status.retained||value.status.failure||value.stop||value.removing||value.manualPaused||value.policyHeld
+      ||value.status.verificationHeld||value.seedIntent||value.allocationIntent||!value.handle.is_valid()||!value.trackerResponse
+      ||value.trackerResponse->admission!=admission||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){return {};}
+  auto current=value.trackerResponse->currentUdpTerminal();if(!current){return {};}
+  return ManagedTrackerUrlResponse{std::move(current->url),std::move(current->response),current->terminal.terminal.observedWallMillis,current->terminal.sequence};
+}
+std::vector<ManagedTrackerUrlResponse> PersistentSession::managedTrackerUrlResponses(
+    const core::TorrentHash& hash,std::uint64_t admission)const {
+  if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission||!admission){return {};}
+  const auto found=impl_->managed.find(hash.hex());if(found==impl_->managed.end()){return {};}
+  const auto& value=*found->second;
+  if(!value.token||value.token->number!=admission||value.status.admission!=admission||!value.status.retained||!value.status.checked
+      ||value.status.failure||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld
+      ||value.seedIntent||value.allocationIntent||!value.handle.is_valid()||!value.trackerResponse||value.trackerResponse->admission!=admission
+      ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){return {};}
+  std::vector<ManagedTrackerUrlResponse> result;
+  for(auto& row:value.trackerResponse->urlTerminals()){
+    result.push_back({std::move(row.url),std::move(row.response),row.terminal.terminal.observedWallMillis,row.terminal.sequence});
+  }
+  return result;
 }
 std::expected<void, AccountingError> PersistentSession::setObservationSink(ApplicationObservationSink sink) {
   if (!impl_->onWorker()) { return std::unexpected(AccountingError::WrongThread); }
@@ -2075,10 +2120,17 @@ std::vector<LibraryTrackerResponse> PersistentSession::libraryTrackerResponses()
     const auto entry=impl_->managed.find(row.hash.hex());if(entry==impl_->managed.end()){return true;}const auto& value=*entry->second;
     return !value.token||value.token->number!=row.admission||value.status.admission!=row.admission||!value.status.retained||!value.status.checked
         ||value.status.failure||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld
-        ||value.seedIntent||value.allocationIntent||!value.handle.is_valid()||!value.trackerResponse
+        ||value.seedIntent||value.allocationIntent||!value.handle.is_valid()||!value.trackerResponse||!value.trackerResponse->sole()
         ||!value.trackerResponse->installed.load(std::memory_order_acquire)||value.trackerResponse->lost.load(std::memory_order_acquire)
         ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding);
   });
+  for(const auto& [key,value]:impl_->managed){(void)key;
+    if(impl_->mainlineScrapes.revoked(value->status.hash)){continue;}
+    const auto selected=managedActiveUdpTrackerResponse(value->status.hash,value->status.admission);
+    if(selected&&selected->response.type!=core::QueueOriginalScrapeType::Unknown&&selected->response.content){
+      result.push_back({value->status.hash,selected->response,selected->observedWallMillis,value->status.admission});
+    }
+  }
   return result;
 }
 void PersistentSession::revokeMainlineScrape(const core::TorrentHash& hash) noexcept {

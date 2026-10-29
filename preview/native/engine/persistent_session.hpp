@@ -55,6 +55,14 @@ struct LibraryTrackerResponse {
   std::int64_t observedWallMillis=0;
   std::uint64_t admission=0; // Zero is saved-only; nonzero requires this exact live owner.
 };
+// Actual retained per-URL tracker observation for one live managed admission.
+// It is not a best-active selection, regular scrape/queue permission or rank.
+struct ManagedTrackerUrlResponse {
+  std::string url;
+  core::QueueOriginalScrapeResponse response;
+  std::int64_t observedWallMillis=0;
+  std::uint64_t sequence=0;
+};
 struct MainlineScrapeCandidateStatus {
   core::TorrentHash hash;
   std::uint64_t admission;
@@ -179,6 +187,15 @@ public:
   // Passive worker-only copy of the current rich library response. No RPC,
   // callback draining, status query or new permission; exact admission required.
   std::optional<core::QueueOriginalScrapeResponse> managedTrackerResponse(
+      const core::TorrentHash&, std::uint64_t admission) const;
+  // Passive worker-only URL-labelled observations from the same rich provider
+  // ring. No drain, RPC, current-announcer inference or additional IO.
+  std::vector<ManagedTrackerUrlResponse> managedTrackerUrlResponses(
+      const core::TorrentHash&, std::uint64_t admission) const;
+  // Narrow original single-helper selection: one saved tier of numeric UDP
+  // URLs, current URL from actual dispatch alerts, same retained response.
+  // Passive counts only; this does not enable a regular/Mainline scrape.
+  std::optional<ManagedTrackerUrlResponse> managedActiveUdpTrackerResponse(
       const core::TorrentHash&, std::uint64_t admission) const;
   // Last accepted bits for diagnostics only; copies never grant release.
   std::vector<std::uint8_t> verifiedSeedPieces(const core::TorrentHash&) const;

@@ -378,6 +378,7 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrape
         ||!value.status.retained||!value.status.checked||value.status.failure
         ||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld
         ||value.seedIntent||value.allocationIntent||!value.handle.is_valid()
+        ||(value.trackerResponse&&!value.trackerResponse->sole())
         ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){continue;}
     const auto handle=managedByHandle.find(value.handle);
     if(handle==managedByHandle.end()||handle->second!=&value){continue;}
@@ -415,7 +416,7 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrape
     const auto entry=managed.find(target.hash.hex());
     if(target.admission){
       if(entry==managed.end()||entry->second->status.admission!=target.admission||!entry->second->trackerResponse
-          ||entry->second->trackerResponse->response!=found->second||!entry->second->trackerResponse->drain()){return true;}
+          ||!entry->second->trackerResponse->sole()||entry->second->trackerResponse->response!=found->second||!entry->second->trackerResponse->drain()){return true;}
       // Exactly one request while outstanding; the existing10s owner cadence
       // rechecks saved permissions before retrying the original600s failure
       // interval. No new timer/sampler, tracker/rank result or peer injection.
@@ -501,10 +502,11 @@ void advanceMainlineScrapes(Clock::time_point now) noexcept {
 // reducer; no DHT, lookup, PORT, announce or hidden torrent can be started here.
 std::map<std::uint64_t,std::uint64_t> regularTrackerSequences;
 void advanceRegularTrackers(Clock::time_point now)noexcept {
-  if(!libraryRegularTrackerMode()){regularTrackerViews.clear();return;}
+  if(!libraryRegularTrackerMode()){regularTrackerViews.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}return;}
   try{
     advanceLibraryUdp(now);advanceLibraryHttp(now);if(now<regularTrackerRefresh){return;}regularTrackerRefresh=now+10s;
-    if(!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();return;}
+    if(!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}return;}
+    refreshActiveUdpTrackerCounts();
     std::vector<std::string> inventory;
     auto targets=regularTrackerTargets(&inventory);
     if(!targets){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();return;}
@@ -517,7 +519,7 @@ void advanceRegularTrackers(Clock::time_point now)noexcept {
       if(mainlineScrapes.revoked(target.hash)||!libraryHttpAdmissionCurrent(target)||!trackerSelectionSeed(target.hash)){continue;}
       if(target.admission){
         const auto& value=*managed.at(target.hash.hex());auto& ring=*value.trackerResponse;
-        if(!ring.drain()){continue;}
+        if(!ring.sole()||!ring.drain()){continue;}
         const auto last=ring.latestTerminal();
         if(last&&regularTrackerSequences[target.admission]!=last->sequence){
           regularTrackerSequences[target.admission]=last->sequence;
@@ -539,7 +541,7 @@ void advanceRegularTrackers(Clock::time_point now)noexcept {
       if(content.type!=core::QueueOriginalScrapeType::Unknown&&content.content){next.push_back({target.hash,content,observed->second,target.admission});}
     }
     regularTrackerViews=std::move(next);
-  }catch(...){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();}
+  }catch(...){cancelLibraryUdp();cancelLibraryHttp();regularTrackerViews.clear();for(auto& [key,value]:managed){(void)key;value->activeUdpTrackerScope.reset();}}
 }
 
 static lt::sha1_hash discoveryHash(const core::TorrentHash& hash) {
