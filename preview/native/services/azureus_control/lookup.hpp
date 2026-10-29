@@ -15,10 +15,12 @@ enum class LookupError {Invalid,Limit,State,Stale,Clock,Overflow,Memory,Unsuppor
 enum class LookupState {Idle,Running,Stopping,Complete,TimedOut,Cancelled,Closed,Failed};
 enum class LookupStop {Exhausted,Closest,ValueLimit,TwoValueReplies,Deadline,Cancelled,Closed,Capacity,Unsupported,Clock,Memory,Overflow};
 enum class LookupNodeState {Candidate,Reserved,Sent,Partial,Replied,Timeout,Cancelled,Closed,Failed,Rejected,Skipped};
+enum class LookupKind {Value,Node};
 struct LookupOptions {
   NodeId target{},localId{};
   std::size_t parallelism=3,accuracy=20,maximumContacts=128,maximumValues=32;
   std::int64_t timeoutMillis=30000;
+  LookupKind kind=LookupKind::Value;
   std::uint8_t flags=0; // Normal0 or source FLAG_STATS8; no obfuscation/diversification.
 };
 // Explicit adapter policy decision; discovering a contact NEVER grants admission.
@@ -71,6 +73,7 @@ public:
   std::expected<void,LookupError> close(std::int64_t now);
   std::expected<std::vector<CancelIntent>,LookupError> cancellationIntents()const;
   std::expected<LookupSnapshot,LookupError> snapshot()const;
+  LookupState state()const noexcept{return data_.state;}
 private:
   std::expected<void,LookupError> clock(std::int64_t now);
   std::expected<void,LookupError> offer(std::span<const AdmittedContact>,std::uint64_t parent,std::int64_t now);

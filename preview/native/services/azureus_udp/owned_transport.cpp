@@ -77,18 +77,20 @@ ServiceReceipt& ServiceReceipt::operator=(const ServiceReceipt& other) {
   if (this!=&other) { auto copy=other;*this=std::move(copy); }return *this;
 }
 OwnedPingTransport::OwnedPingTransport(Config config,QObject* parent)
-    :QObject(parent),config_(std::move(config)),socket_(this),deadline_(this),statisticsGeneration_(reserveStatisticsGeneration()) {
+    :QObject(parent),config_(std::move(config)),socket_(this),deadline_(this),routingDeadline_(this),statisticsGeneration_(reserveStatisticsGeneration()) {
   socket_.setProxy(QNetworkProxy::NoProxy);deadline_.setSingleShot(true);deadline_.setTimerType(Qt::PreciseTimer);
   connect(&socket_,&QUdpSocket::readyRead,this,[this] { consume(); });
   connect(&socket_,&QUdpSocket::errorOccurred,this,[this] { ++statistics_.ioErrors; });
   deadline_.callOnTimeout(this,[this] { expire(); });
+  routingDeadline_.setSingleShot(true);routingDeadline_.setTimerType(Qt::PreciseTimer);routingDeadline_.callOnTimeout(this,[this]{try{if(routing_){pumpRouting(routing_);}}catch(...){routingFailed(Failure::Capacity);}});
 }
 OwnedPingTransport::~OwnedPingTransport() {
-  deadline_.stop();socket_.close();
+  deadline_.stop();routingDeadline_.stop();socket_.close();
   for (auto& [transaction,pending]:pending_) { (void)transaction;disconnect(pending.death); }
   pending_.clear();completions_.clear(); // Destruction never invokes a callback.
 }
 bool OwnedPingTransport::owner() const { return QThread::currentThread()==thread(); }
+#include "owned_routing.inc"
 std::expected<TransportStatisticsSnapshot,Failure> OwnedPingTransport::statisticsSnapshot() const noexcept {
   if(!owner()){return std::unexpected(Failure::Thread);}
   if(!statisticsGeneration_ || statisticsPublication_==std::numeric_limits<std::uint64_t>::max()) {
@@ -205,6 +207,8 @@ std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAd
   if (!bindAddress.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
   const auto address=normalize({bindAddress,0}).address;
   if (!address.isLoopback() || !address.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
+  if(config_.routingScope!=RoutingScope::ExactPeers&&config_.routingScope!=RoutingScope::OwnedLoopback){return std::unexpected(Failure::State);}
+  if(config_.routingScope==RoutingScope::OwnedLoopback&&(config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply)){return std::unexpected(Failure::State);}
   if (config_.version<51 || config_.version>55) { return std::unexpected(Failure::Version); }
   if (config_.maximumPending==0 || config_.maximumPending>256 || config_.maximumPeers==0 || config_.maximumPeers>256) { return std::unexpected(Failure::Capacity); }
   if (config_.generatedStoreService) {
@@ -467,10 +471,12 @@ void OwnedPingTransport::deliver() {
 }
 void OwnedPingTransport::close() {
   if (!owner() || state_==State::Closed) { return; }
+  routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
   normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
   if(database_){database_->close();database_.reset();}
   state_=State::Closed;socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
   while (!pending_.empty()) { finish(pending_.begin()->first,std::unexpected(Failure::Closed)); }
+  if(routing_&&!routing_->finished){const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();static_cast<void>(routing_->controller.close(now));for(auto& rpc:routing_->rpcs){if(rpc.node){static_cast<void>(routing_->controller.finish(rpc.node,azureus_control::LookupNodeState::Closed,now));rpc={};}}routing_->failure=Failure::Closed;routing_->finished=true;}captureRouting();
 }
 void OwnedPingTransport::answer(const Peer& peer,const packet::Decoded& request,std::int64_t receivedAt) {
   if (!config_.servePings) { return; }
@@ -556,8 +562,9 @@ void OwnedPingTransport::sendServiceReply(ServiceReceipt& receipt,std::expected<
 void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,std::int64_t receivedAt) {
   if(normalRouter_&&normalPreflight_&&!normalResuming_){
     auto resumed=[this,peer,request=std::move(request),receivedAt](bool accepted)mutable{
-      if(state_!=State::Bound||!normalRouter_||!allowed(peer)){return;}
-      if(!accepted){++statistics_.authorityErrors;return;}normalResuming_=true;
+      if(state_!=State::Bound||!normalRouter_){return;}
+      if(!accepted){++statistics_.authorityErrors;return;}
+      if(!allowed(peer)&&!ownedRoutingPeer(peer)){return;}normalResuming_=true;
       const auto reset=qScopeGuard([&]{normalResuming_=false;});answerService(peer,std::move(request),receivedAt);
     };
     if(!normalPreflight_(std::move(resumed))){++statistics_.serviceCapacityDrops;}return;
@@ -590,7 +597,8 @@ void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,s
   receipt.sender=sender;receipt.transportAlive=true;
   // The normal owned subset does not grant a returned routing endpoint from a
   // different claimed port. Generated original-IP projection stays unchanged.
-  if(!service&&(sender.address!=originator(peer)||!normalAlive(sender))){++statistics_.authorityErrors;return;}
+  if(!service&&(sender.address!=originator(peer)||(config_.routingScope==RoutingScope::OwnedLoopback?!learnRoutingContact(sender,true):!normalAlive(sender)))){++statistics_.authorityErrors;return;}
+  if(!service&&config_.routingScope==RoutingScope::OwnedLoopback){dispatchRoutingPings();captureRouting();}
   if (const auto* findRequest=std::get_if<find::Decoded>(&receipt.request)) {
     receipt.findNodeAlive=true;
     std::span<const find::nodes::Snapshot> contacts;std::vector<find::nodes::Snapshot> actualContacts;
@@ -616,10 +624,14 @@ void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,s
   if(service){input.seeded=service->seeded;input.k=service->k;input.storageNetwork=service->storageNetwork;input.furthest=service->furthest;}
   else{
     const auto state=normalRouter_->snapshot();if(!state||state->limited()){++statistics_.policyErrors;return;}
-    // No normal seed-completion machinery exists yet. Original direct values
-    // do not require seeded; every forwarded originator still fails the real
-    // Admission seeded branch. Neither options nor caller facts can bypass it.
-    input.seeded=false;input.k=state->config().k;input.storageNetwork=config_.network;
+    input.seeded=normalSeeded_;input.k=state->config().k;input.storageNetwork=config_.network;
+    if(normalSeeded_){
+      const auto factor=static_cast<std::size_t>(input.k+(config_.network==0?input.k/2:0));
+      const auto group=normalRouter_->closest(*localId_,factor,true);if(!group||!group->count){++statistics_.policyErrors;return;}
+      std::vector<find::nodes::NodeId> ids;ids.reserve(group->count);for(std::size_t i=0;i<group->count;++i){ids.push_back(group->values[i].id);}
+      std::ranges::sort(ids,[&](const auto& a,const auto& b){for(std::size_t i=0;i<a.size();++i){const auto x=a[i]^(*localId_)[i],y=b[i]^(*localId_)[i];if(x!=y){return x<y;}}return false;});
+      input.furthest=ids[std::min(factor,ids.size())-1];
+    }
   }
   auto* const db=activeDatabase();
   input.keys.reserve(storeRequest.keys.size());input.valueOriginators.reserve(storeRequest.valueSets.size());
@@ -760,7 +772,8 @@ void OwnedPingTransport::consume() {
     observeSocketPayloadBytes(statistics_.receivedPayloadBytes,data.size());
     if (datagram.senderPort()<=0 || datagram.senderPort()>65535) { ++statistics_.malformed;continue; }
     const auto peer=normalize({datagram.senderAddress(),static_cast<quint16>(datagram.senderPort())});
-    if (!allowed(peer)) { ++statistics_.unowned;continue; }
+    const bool unknown=!allowed(peer);
+    if(unknown&&(!normalRouter_||!ownedRoutingPeer(peer))){++statistics_.unowned;continue;}
     if (data.isEmpty()) { ++statistics_.malformed;continue; }
     const auto kind=(static_cast<unsigned char>(data.front())&128)?packet::udp::Kind::Request:packet::udp::Kind::Reply;
     std::string bytes(data.constData(),static_cast<std::size_t>(data.size()));
@@ -768,6 +781,7 @@ void OwnedPingTransport::consume() {
     // contact bodies, so foreign replies cannot warm the node cache.
     if (bytes.size()<16) { ++statistics_.malformed;continue; }
     const auto action=readInt(bytes,kind==packet::udp::Kind::Request?8:0);
+    if(unknown&&(kind!=packet::udp::Kind::Request||(action!=1024&&action!=1028))){++statistics_.unowned;continue;}
     if ((kind==packet::udp::Kind::Request && action!=1024 && action!=1026 && action!=1028 && action!=1030)
         || (kind==packet::udp::Kind::Reply && action!=1025 && action!=1027 && action!=1029 && action!=1031 && action!=1032)) { ++statistics_.malformed;continue; }
     if (kind==packet::udp::Kind::Reply) {
@@ -780,7 +794,7 @@ void OwnedPingTransport::consume() {
     if (action==1024 || action==1025) {
       packet::Context context;context.header=headerContext;context.monotonicNow=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
       auto decoded=packet::decode(kind,std::move(bytes),context);if (!decoded) { ++statistics_.malformed;continue; }
-      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;answer(peer,*decoded,headerContext.now);continue; }
+      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;if(normalRouter_&&config_.routingScope==RoutingScope::OwnedLoopback){answerRoutingPing(peer,std::move(*decoded),headerContext.now);}else{answer(peer,*decoded,headerContext.now);}continue; }
       const auto transaction=decoded->header().fields().transaction;
       if (pending_.at(transaction).expires<=Clock::now()) { ++statistics_.timeouts;finish(transaction,std::unexpected(Failure::Timeout));continue; }
       observeVivaldi(pending_.at(transaction),*decoded);

@@ -19,7 +19,7 @@ enum class AzureusServiceError {
   Disabled,Invalid,NoApplication,Start,Closed,Capacity,Dispatch,Memory,Thread,UnknownRequest,Transport,Profile,Readback
 };
 enum class AzureusServiceState { Starting,Running,Closing,Closed,Failed };
-enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue,PublishRating,ReadRatings };
+enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue,PublishRating,ReadRatings,IntegrateRouting,ForwardCached };
 struct AzureusServiceOptions {
   bool enabled=false;
   QHostAddress bindAddress{QHostAddress::LocalHost};
@@ -33,6 +33,7 @@ struct AzureusServiceOptions {
   // Explicit normal receiving STORE/GET using this actor's real router + DB.
   // Requires valueVersions; direct values only until genuine seeded support.
   bool serveValues=false;
+  azureus::RoutingScope routingScope=azureus::RoutingScope::ExactPeers;
 
 };
 struct AzureusServiceResult {
@@ -94,6 +95,7 @@ struct AzureusServiceObservation {
   std::shared_ptr<const AzureusPublishSnapshot> publishSnapshot;
   std::shared_ptr<const services::azureus_db_runtime::Snapshot> databaseSnapshot;
   std::shared_ptr<const AzureusRatingReadSnapshot> ratingReadSnapshot;
+  std::shared_ptr<const azureus::RoutingSnapshot> routingSnapshot;
   // Passive bounded IO progress only; no source/packet permission is exposed.
   std::size_t profileIoPending=0,profileIoRunning=0,profileIoReady=0,profileIoHighWater=0;
 };
@@ -154,6 +156,15 @@ public:
   std::expected<std::uint64_t,AzureusServiceError> readSavedRatings(azureus::Peer,
       core::TorrentHash,std::array<std::uint8_t,32> sourceRevision,
       std::chrono::nanoseconds timeout=std::chrono::seconds(20));
+  // Opt-in owned-loopback normal service only. One explicit self-ID NODE
+  // integration; response contacts need no individual allowPeer grant.
+  std::expected<std::uint64_t,AzureusServiceError> integrateRouting(azureus::Peer seed,
+      std::chrono::nanoseconds timeout=std::chrono::seconds(10));
+  // Select exactly one existing nonlocal value at SHA1(applicationKey), keep
+  // its original origin/version/flags, and prove actual final remote readback.
+  // No local version reservation, automatic republish or supplied value facts.
+  std::expected<std::uint64_t,AzureusServiceError> forwardCachedValue(azureus::Peer,
+      std::string applicationKey,std::chrono::nanoseconds timeout=std::chrono::seconds(5));
   std::expected<std::uint64_t,AzureusServiceError> cancel(std::uint64_t request);
   // Seals admission and joins even with queued/active work; idempotent. No forced
   // termination or detached actor. Call/destruction must not race object lifetime.

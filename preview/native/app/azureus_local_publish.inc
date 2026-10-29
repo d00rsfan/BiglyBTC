@@ -137,10 +137,21 @@
       auto value=std::make_shared<Publishing>();value->command=command;value->deadline=command.deadline;value->snapshot.request=command.id;
       const auto digest=QCryptographicHash::hash(QByteArray(command.applicationKey.data(),static_cast<qsizetype>(command.applicationKey.size())),QCryptographicHash::Sha1);
       std::copy_n(reinterpret_cast<const std::uint8_t*>(digest.constData()),value->snapshot.key.size(),value->snapshot.key.begin());publishing_=value;
-      withPublish(value,true,[this,value,command](const ProfileIo::Data& data){
-      if(!data.version){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return;}PublicationClock clock;const auto version=*data.version;
-      const auto key=std::string_view(reinterpret_cast<const char*>(value->snapshot.key.data()),value->snapshot.key.size());
-      auto local=localDatabase_->putLocal(key,command.payload,version,clock,command.publicationFlags);if(!local){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}value->snapshot.localValue=std::move(*local);
+      withPublish(value,command.kind!=AzureusServiceCommand::ForwardCached,[this,value,command](const ProfileIo::Data& data){
+      PublicationClock clock;const auto key=std::string_view(reinterpret_cast<const char*>(value->snapshot.key.data()),value->snapshot.key.size());
+      if(command.kind==AzureusServiceCommand::ForwardCached){
+        const auto self=localDatabase_->localContact();if(!self||!*self){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}
+        auto found=localDatabase_->read(key,**self,64,0,clock);if(!found||!*found){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}
+        const services::azureus_values::Value* selected=nullptr;
+        for(const auto& candidate:(**found).values){if(candidate.originator.id!=(**self).id){if(selected){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}selected=&candidate;}}
+        if(!selected){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}
+        auto payload=services::azureus_db_value::Payload::copy(selected->bytes);if(!payload){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Memory);return;}
+        services::azureus_db_value::Fields fields{selected->created,std::move(*payload),selected->version,services::azureus_db_value::ContactHandle::copy(selected->originator),services::azureus_db_value::ContactHandle::copy(**self),false,selected->flags,selected->lifeHours,selected->replication};
+        value->snapshot.localValue=services::azureus_db_value::DbValue::create(std::move(fields),clock);
+      }else{
+        if(!data.version){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return;}
+        auto local=localDatabase_->putLocal(key,command.payload,*data.version,clock,command.publicationFlags);if(!local){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}value->snapshot.localValue=std::move(*local);
+      }
       if(!validatePublish(value)){return;}value->snapshot.state=AzureusPublishState::Token;capturePublish(value);
       auto sent=actor_.requestStoreToken(command.peer,options_.version,this,[this,value](azureus::DetailedFindNodeOutcome outcome){try{withPublish(value,false,[this,value,outcome=std::move(outcome)](const auto&)mutable{
         if(!validatePublish(value)){return;}

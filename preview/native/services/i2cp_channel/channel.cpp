@@ -25,6 +25,7 @@ struct InitialChannel::Impl {
   QTimer statusTimer;
   QTimer receiveTimer;
   QTimer trackerTimer;
+  QTimer streamTimer;
   FrameDecoder decoder;
   Options options;
   QByteArray hello;
@@ -51,13 +52,14 @@ struct InitialChannel::Impl {
   Clock::time_point dateObserved{};
   bool notificationQueued=false,drainQueued=false,reading=false,lostPending=false;
 
-  explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner),statusTimer(owner),receiveTimer(owner),trackerTimer(owner){
+  explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner),statusTimer(owner),receiveTimer(owner),trackerTimer(owner),streamTimer(owner){
     socket.setProxy(QNetworkProxy::NoProxy); // Local I2CP control, never app proxy.
     socket.setReadBufferSize(static_cast<qint64>(MaximumFrameBytes));
     timer.setSingleShot(true);
     statusTimer.setSingleShot(true);
     receiveTimer.setSingleShot(true);
     trackerTimer.setSingleShot(true);
+    streamTimer.setSingleShot(true);
   }
   ~Impl(){stopIo();}
   bool active()const{return state==State::Connecting||state==State::WaitingDate||state==State::DateReceived||state==State::Creating||state==State::SessionCreated||state==State::Reconfiguring;}
@@ -69,12 +71,13 @@ struct InitialChannel::Impl {
     for(std::size_t i=0;i<3;++i){const auto dot=value.find('.');const auto part=value.substr(0,dot);if(part.empty()){return false;}const auto parsed=std::from_chars(part.data(),part.data()+part.size(),version[i]);if(parsed.ec!=std::errc{}||parsed.ptr!=part.data()+part.size()){return false;}if(i<2){if(dot==std::string_view::npos){return false;}value.remove_prefix(dot+1);}}
     return version[0]>0||version[1]>9||(version[1]==9&&version[2]>=38);
   }
-  void clearSession(){clearTracker();clearReceive();session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;statusPending=false;datagram.reset();datagramMessageId.reset();statusReplies=true;pendingStatusReplies=true;statusTimer.stop();}
+  void clearSession(){clearStream();clearTracker();clearReceive();session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;statusPending=false;datagram.reset();datagramMessageId.reset();statusReplies=true;pendingStatusReplies=true;statusTimer.stop();}
   void stopIo(){
     timer.stop();QObject::disconnect(&timer,nullptr,q,nullptr);
     statusTimer.stop();QObject::disconnect(&statusTimer,nullptr,q,nullptr);
     receiveTimer.stop();QObject::disconnect(&receiveTimer,nullptr,q,nullptr);
     trackerTimer.stop();QObject::disconnect(&trackerTimer,nullptr,q,nullptr);
+    streamTimer.stop();QObject::disconnect(&streamTimer,nullptr,q,nullptr);
     QObject::disconnect(&socket,nullptr,q,nullptr);socket.abort();
   }
   void notify(){
@@ -173,6 +176,7 @@ struct InitialChannel::Impl {
     if(!identity.valid()||!identity.destination()){return reject(Code::KeyMismatch,"No live client identity");}
     if(consume&&!ls2Router()){return reject(Code::Unsupported,"Explicit LeaseSet2 requires a supported numeric router version");}
     if(update&&waitingFirstLease){return reject(Code::Unsupported,"Initial LeaseSet request is still outstanding");}
+    if(update&&stream&&stream->active()){return reject(Code::Unsupported,"Streaming operation is still outstanding");}
     if(update&&tracker){return reject(Code::Unsupported,"Explicit tracker operation is still outstanding");}
     if(update&&statusPending){return reject(Code::Unsupported,"Datagram status request is still outstanding");}
     if(update&&(!session||identity.destination()->wire!=acceptedDestination||revision==std::numeric_limits<std::uint64_t>::max())){
@@ -288,7 +292,7 @@ struct InitialChannel::Impl {
   ConfigResult<std::uint32_t> submit(View recipient,View payload,const DatagramOptions& opts,bool claimed){
     using Code=::biglybtc::services::i2p::ErrorCode;auto reject=[](Code code,const char* text)->ConfigResult<std::uint32_t>{return std::unexpected(::biglybtc::services::i2p::Error{code,text});};
     if(!onThread()){return reject(Code::InvalidFormat,"Datagram request belongs to channel thread");}
-    if(state!=State::SessionCreated||waitingFirstLease||statusPending||tracker||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Current unexpired owned LS2 and idle datagram/write state required");}
+    if(state!=State::SessionCreated||waitingFirstLease||statusPending||tracker||(stream&&stream->active())||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Current unexpired owned LS2 and idle datagram/write state required");}
     if(!statusReplies){return reject(Code::Unsupported,"Initial reliability none cannot request tracked statuses");}
     if(nextDatagramNonce>std::numeric_limits<std::uint32_t>::max()){return reject(Code::TooLarge,"Datagram nonce lifetime exhausted; never reuse");}
     try{
@@ -307,6 +311,7 @@ struct InitialChannel::Impl {
       notifyDatagram();if(!current(at)){return reject(Code::CryptoFailure,"Datagram notification failed");}return nonce;
     }catch(...){if(statusPending){fail(Failure::Resources);}return reject(Code::CryptoFailure,"Datagram resources unavailable");}
   }
+#include "streaming.inc"
 #include "tracker.inc"
 #include "receive.inc"
   void drain(){
@@ -390,7 +395,8 @@ struct InitialChannel::Impl {
     QObject::connect(&statusTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{armStatusDeadline();}catch(...){fail(Failure::Resources);}}});
     QObject::connect(&receiveTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{receiveDeadline();}catch(...){fail(Failure::Resources);}}});
     QObject::connect(&trackerTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{trackerDeadline();}catch(...){fail(Failure::Resources);}}});
-    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){flushReceiveControls();flushTrackerWrite();}});
+    QObject::connect(&streamTimer,&QTimer::timeout,q,[this,at]{if(current(at)){flushStream();}});
+    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){flushReceiveControls();flushTrackerWrite();flushStream();}});
     state=State::Connecting;expires=Clock::now()+std::chrono::milliseconds(next.deadlineMilliseconds);
     timer.start(next.deadlineMilliseconds);notify();
     if(!current(at)||state!=State::Connecting){return false;}
@@ -434,6 +440,18 @@ InitialChannel::ReceiverObservation InitialChannel::receiverObservation()const n
 ConfigResult<std::uint64_t> InitialChannel::scrapeTracker(const TrackerRequest& input){return impl_->startTracker(input);}
 bool InitialChannel::cancelTracker(std::uint64_t operation){if(!impl_->onThread()||!impl_->tracker||impl_->tracker->operation!=operation){return false;}impl_->finishTracker(TrackerPhase::LocalCancelled);return true;}
 std::optional<TrackerObservation> InitialChannel::trackerObservation()const{return sessionId()?impl_->trackerResult:std::nullopt;}
+ConfigResult<std::uint64_t> InitialChannel::connectStream(View destination,const StreamOptions& options){return impl_->startStream(destination,options);}
+ConfigResult<void> InitialChannel::writeStream(std::uint64_t operation,View bytes){return impl_->streamWrite(operation,bytes);}
+ConfigResult<Bytes> InitialChannel::takeStreamBytes(std::uint64_t operation,std::size_t maximum){return impl_->streamRead(operation,maximum);}
+bool InitialChannel::finishStreamWrite(std::uint64_t operation){
+  if(!impl_->onThread()||!impl_->stream||impl_->stream->observation().operation!=operation||!impl_->streamCurrent()||!impl_->stream->active()){return false;}
+  impl_->stream->finishWrite();impl_->flushStream();return impl_->stream.has_value()&&(impl_->stream->active()||impl_->stream->observation().phase==streaming::Phase::Closed)&&impl_->current(impl_->streamGeneration);
+}
+bool InitialChannel::cancelStream(std::uint64_t operation){
+  if(!impl_->onThread()||!impl_->stream||impl_->stream->observation().operation!=operation||!impl_->stream->active()){return false;}
+  impl_->stream->terminate(streaming::Phase::Cancelled);impl_->streamTimer.stop();if(!impl_->receiverEnabled&&!impl_->trackerReceives()&&impl_->fetch){impl_->cancelFetch(ReceiveDrop::Cancelled);}impl_->notifyStream();return true;
+}
+std::optional<streaming::Observation> InitialChannel::streamObservation()const noexcept{return sessionId()&&impl_->stream?std::optional(impl_->stream->observation()):std::nullopt;}
 InitialChannel::State InitialChannel::state()const noexcept{return impl_->state;}
 InitialChannel::Failure InitialChannel::failure()const noexcept{return impl_->failure;}
 bool InitialChannel::socketActive()const noexcept{return impl_->socket.state()!=QAbstractSocket::UnconnectedState;}

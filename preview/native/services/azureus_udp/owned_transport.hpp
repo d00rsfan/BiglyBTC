@@ -21,6 +21,7 @@
 #include <functional>
 #include <unordered_map>
 #include <utility>
+#include "../azureus_control/lookup.hpp"
 namespace biglybtc::services::azureus_udp {
 namespace packet=biglybtc::services::azureus_packets;
 namespace find=biglybtc::services::azureus_find_node;
@@ -110,10 +111,20 @@ struct GeneratedServiceState {
   policy::State admission{};
   std::size_t receiptCount=0;
 };
+enum class RoutingScope {ExactPeers,OwnedLoopback};
+struct RoutingSnapshot {
+  std::uint64_t generation=0,operation=0,revision=0;
+  bool finished=false;
+  bool seeded=false; // Last successful self-ID integration on this actor, never authority by itself.
+  std::shared_ptr<const azureus_control::LookupSnapshot> lookup;
+  std::optional<Failure> failure;
+  std::uint64_t learned=0,rejected=0,pings=0;
+};
 struct Config {
   std::int32_t network=4,instance=0;
   std::int8_t version=55,flags=0,flags2=0;
   bool servePings=false;
+  RoutingScope routingScope=RoutingScope::ExactPeers;
   std::optional<FindNodeReply> findNodeReply; // Supplied inert snapshot, no nonce authorization/routing.
   std::optional<std::vector<FindValueSlice>> findValueReply; // Inert owned test pieces only.
   std::optional<std::string> storeReply; // Inert diversification, including an empty array.
@@ -124,9 +135,10 @@ struct Config {
   bool observeOperations=false,enableVivaldi=false; // Explicit owner policy; never enabled by a view.
 };
 
-// Development transport: fresh ephemeral numeric-loopback sockets and supplied
-// owned peer allowlist only. Every API/destruction belongs to its Qt owner.
-// No profile, DNS, proxy, discovery, router mapping or public-route switch.
+// Development transport: fresh numeric-loopback sockets, exact peers by default.
+// Explicit normal OwnedLoopback scope can discover bounded same-family peers;
+// every API/destruction still belongs to its Qt owner. No DNS, proxy or public
+// route exists; profile validation is the bound owner's asynchronous preflight.
 class OwnedPingTransport final : public QObject {
 public:
   explicit OwnedPingTransport(Config,QObject* parent=nullptr);
@@ -157,11 +169,18 @@ public:
   // on THIS Qt thread to THIS socket identity. No caller-supplied closest,
   // seeded, token or value facts. Shared ownership lasts through close/join.
   // current checks the owner's held profile and stop state before each effect.
-  // Async preflight completes true to resume, false on actual source rejection.
-  // The completion is returned on this actor thread after the source gate releases.
+  // Async completion stays on this actor: true resumes inside the one-shot
+  // worker-held permit until actor acknowledgement; false reports actual
+  // source rejection only after that worker has released its source gate.
   std::expected<void,Failure> serveDatabase(std::shared_ptr<azureus_router::RouterOwner>,
       std::shared_ptr<database::Owner>,std::function<bool()> current,
       std::function<bool(std::move_only_function<void(bool)>)> preflight={});
+  // Explicit normal-owner self-ID FIND_NODE. Completion and seeded lineage
+  // arise only inside this actor from its own actual requests/replies.
+  std::expected<std::uint64_t,Failure> integrateRouting(Peer,std::chrono::nanoseconds);
+  bool cancelRouting(std::uint64_t);
+  bool isRoutingPeer(const Peer&)const noexcept;
+  std::shared_ptr<const RoutingSnapshot> routingSnapshot()const noexcept;
   std::expected<GeneratedServiceState,Failure> generatedServiceState() const;
   std::expected<database::Snapshot,Failure> databaseState() const;
   // Owner-only pull. Moved receipts own the request referenced by policy indices.
@@ -237,13 +256,31 @@ private:
   bool normalCurrent()noexcept;
   bool normalAlive(const find::nodes::Contact&)noexcept;
   std::expected<std::vector<find::nodes::Snapshot>,Failure> normalClosest(const find::nodes::NodeId&);
+  struct Routing;
+  std::shared_ptr<Routing> routing_;
+  std::shared_ptr<const RoutingSnapshot> routingSnapshot_;
+  std::uint64_t nextRouting_=0,routingRevision_=0,learnedRouting_=0,rejectedRouting_=0,routingPings_=0;
+  bool normalSeeded_=false;
+  struct RoutingPing {Ticket ticket;find::nodes::NodeId id;};
+  std::array<std::optional<RoutingPing>,8> routingPingsPending_{};
+  std::deque<azureus_router::RouterIntent> routingIntents_;
+  bool ownedRoutingPeer(const Peer&)const noexcept;
+  std::optional<Peer> routingPeer(const find::nodes::Contact&)const;
+  bool learnRoutingContact(const find::nodes::Contact&,bool alive);
+  void answerRoutingPing(const Peer&,packet::Decoded,std::int64_t);
+  void routingReply(const std::shared_ptr<Routing>&,std::uint64_t,FindNodeOutcome);
+  void pumpRouting(const std::shared_ptr<Routing>&);
+  void finishRouting(const std::shared_ptr<Routing>&);
+  void captureRouting()noexcept;
+  void routingFailed(Failure)noexcept;
+  void dispatchRoutingPings();
   database::Owner* activeDatabase()const noexcept{return normalDatabase_?normalDatabase_.get():database_.get();}
   std::shared_ptr<azureus_router::RouterOwner> normalRouter_;
   std::shared_ptr<database::Owner> normalDatabase_;
   std::function<bool()> normalCurrent_;
   std::function<bool(std::move_only_function<void(bool)>)> normalPreflight_;
   bool normalResuming_=false;
-  std::vector<find::nodes::Contact> normalContacts_; // Only actually admitted request sources.
+  std::vector<find::nodes::Contact> normalContacts_; // Actual request sources or explicitly scoped reply candidates.
   Config config_;
   std::unique_ptr<find::nodes::NodeCache> nodeCache_;
   std::unique_ptr<auth::Authority> authority_;
@@ -253,6 +290,7 @@ private:
   std::deque<ServiceReceipt> serviceReceipts_;
   QUdpSocket socket_;
   QChronoTimer deadline_;
+  QChronoTimer routingDeadline_;
   State state_=State::Idle;
   std::vector<Peer> peers_;
   std::unordered_map<std::int32_t,Pending> pending_;

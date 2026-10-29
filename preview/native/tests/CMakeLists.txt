@@ -2144,3 +2144,58 @@ add_test(NAME native-torrent-state-writer-guards COMMAND Python3::Interpreter
   --driver "$<TARGET_FILE:biglybtc-torrent-state-driver>")
 set_tests_properties(native-torrent-state-writer-guards PROPERTIES
   TIMEOUT 120 LABELS "unit;storage;locking;faults")
+
+# Append to current tests/CMakeLists.txt; preserve accepted I2CP/profile targets.
+if(BIGLYBTC_DESKTOP)
+  add_executable(biglybtc-azureus-routing-tests azureus_routing_tests.cpp)
+  set_target_properties(biglybtc-azureus-routing-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-azureus-routing-tests PRIVATE biglybtc_owned_azureus_service Qt6::Test)
+  target_compile_features(biglybtc-azureus-routing-tests PRIVATE cxx_std_23)
+  target_compile_options(biglybtc-azureus-routing-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME azureus-routing COMMAND biglybtc-azureus-routing-tests)
+  set_tests_properties(azureus-routing PROPERTIES TIMEOUT 90 LABELS "unit;loopback;profile;routing" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
+# Tests: append once. Actual-Java acceptance has its separate explicit opt-in.
+if(TARGET biglybtc_i2p_streaming)
+  add_executable(biglybtc-i2p-streaming-tests i2p_streaming_tests.cpp)
+  target_link_libraries(biglybtc-i2p-streaming-tests PRIVATE biglybtc_i2p_streaming biglybtc_i2cp_datagram)
+  target_compile_definitions(biglybtc-i2p-streaming-tests PRIVATE BIGLYBTC_I2P_TEST_KEYS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
+  target_compile_options(biglybtc-i2p-streaming-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME pure-i2p-streaming COMMAND biglybtc-i2p-streaming-tests)
+  set_tests_properties(pure-i2p-streaming PROPERTIES TIMEOUT 30 LABELS "unit;i2p;no-network")
+endif()
+
+# Append to tests/CMakeLists only after the Streaming/channel source is adopted.
+# Explicit reference acceptance, not part of default builds/tests. Compile the
+# one frozen Java helper serially first; no automatic javac/download/router.
+option(BIGLYBTC_I2P_STREAMING_JAVA_ACCEPTANCE "Build actual modified-JAR Streaming acceptance" OFF)
+if(BIGLYBTC_I2P_STREAMING_JAVA_ACCEPTANCE)
+  foreach(input IN ITEMS BIGLYBTC_I2P_STREAMING_JAVA BIGLYBTC_I2P_STREAMING_JAR
+      BIGLYBTC_I2P_STREAMING_CLASSES)
+    if(NOT IS_ABSOLUTE "${${input}}" OR NOT EXISTS "${${input}}")
+      message(FATAL_ERROR "Explicit existing absolute ${input} required")
+    endif()
+  endforeach()
+  file(SHA256 "${BIGLYBTC_I2P_STREAMING_JAR}" reference_sha256)
+  if(NOT reference_sha256 STREQUAL "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5")
+    message(FATAL_ERROR "Wrong modified-core reference artifact")
+  endif()
+  if(NOT EXISTS "${BIGLYBTC_I2P_STREAMING_CLASSES}/StreamingPeer.class" OR
+      NOT EXISTS "${BIGLYBTC_I2P_STREAMING_CLASSES}/StreamingPeer$Adapter.class")
+    message(FATAL_ERROR "Actual compiled peer fixture required; no skip credit")
+  endif()
+  add_executable(biglybtc-i2p-streaming-interop-tests i2p_streaming_interop_tests.cpp)
+  set_target_properties(biglybtc-i2p-streaming-interop-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-i2p-streaming-interop-tests PRIVATE
+    biglybtc_i2cp_initial_channel biglybtc_i2p_streaming Qt6::Test Qt6::Network)
+  target_compile_features(biglybtc-i2p-streaming-interop-tests PRIVATE cxx_std_23)
+  target_compile_options(biglybtc-i2p-streaming-interop-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_compile_definitions(biglybtc-i2p-streaming-interop-tests PRIVATE
+    BIGLYBTC_I2P_STREAMING_JAVA="${BIGLYBTC_I2P_STREAMING_JAVA}"
+    BIGLYBTC_I2P_STREAMING_JAR="${BIGLYBTC_I2P_STREAMING_JAR}"
+    BIGLYBTC_I2P_STREAMING_CLASSES="${BIGLYBTC_I2P_STREAMING_CLASSES}"
+    BIGLYBTC_I2P_STREAMING_KEYS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
+  add_test(NAME i2p-original-streaming-peer COMMAND biglybtc-i2p-streaming-interop-tests)
+  set_tests_properties(i2p-original-streaming-peer PROPERTIES TIMEOUT 480 LABELS "reference;explicit-i2p")
+endif()

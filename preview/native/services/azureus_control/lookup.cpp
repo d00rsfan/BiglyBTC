@@ -16,7 +16,7 @@ bool loopback(const Contact& c)noexcept{
   for(unsigned i=0;i<15;++i){if(c.address.bytes[i]){return false;}}return true;
 }
 bool validOptions(const LookupOptions& o)noexcept{
-  return o.parallelism>0&&o.parallelism<=LookupController::MaximumParallelism&&o.accuracy>0&&o.accuracy<=20&&o.maximumContacts>=o.parallelism&&o.maximumContacts<=LookupController::MaximumContacts&&o.maximumValues>0&&o.maximumValues<=LookupController::MaximumValues&&o.timeoutMillis>0&&o.timeoutMillis<=300000&&(o.flags==0||o.flags==8);
+  return (o.kind==LookupKind::Value||o.kind==LookupKind::Node)&&(o.kind!=LookupKind::Node||o.flags==0)&&o.parallelism>0&&o.parallelism<=LookupController::MaximumParallelism&&o.accuracy>0&&o.accuracy<=20&&o.maximumContacts>=o.parallelism&&o.maximumContacts<=LookupController::MaximumContacts&&o.maximumValues>0&&o.maximumValues<=LookupController::MaximumValues&&o.timeoutMillis>0&&o.timeoutMillis<=300000&&(o.flags==0||o.flags==8);
 }
 int distance(const NodeId& a,const NodeId& b,const NodeId& target)noexcept{
   for(std::size_t i=0;i<a.size();++i){const auto x=a[i]^target[i],y=b[i]^target[i];if(x<y){return -1;}if(x>y){return 1;}}return 0;
@@ -26,6 +26,7 @@ bool rpc(LookupNodeState state)noexcept{return state==LookupNodeState::Sent||sta
 bool same(const Contact& a,const Contact& b)noexcept{return a.id==b.id||a.address==b.address;}
 }
 bool validLookupSnapshot(const LookupSnapshot& s)noexcept{
+  if(s.options.kind==LookupKind::Node&&(!s.results.empty()||s.valueReplies)){return false;}
   if(!s.generation||!s.lookup||!s.revision||!validOptions(s.options)||s.startedMillis<0||s.updatedMillis<s.startedMillis||s.nodes.size()>s.options.maximumContacts||s.results.size()>s.options.maximumValues||s.valueReplies>s.nodes.size()||s.state==LookupState::Idle){return false;}
   if(s.state!=LookupState::Running&&s.state!=LookupState::Stopping&&!lookupTerminal(s.state)){return false;}
   if(s.stop){switch(*s.stop){
@@ -165,6 +166,7 @@ std::expected<void,LookupError> LookupController::contacts(std::uint64_t id,std:
   settle(now);bump();return {};
 }
 std::expected<void,LookupError> LookupController::values(std::uint64_t id,std::span<const Value> values,bool continuation,std::int8_t diversification,std::int64_t now){try{
+  if(data_.options.kind==LookupKind::Node){return std::unexpected(LookupError::Unsupported);}
   auto* value=node(id);if(!value||!rpc(value->state)){return std::unexpected(LookupError::Stale);}
   if(const auto result=clock(now);!result){return result;}
   const bool sliceLimit=value->slices==MaximumSlices;if(!sliceLimit){++value->slices;}

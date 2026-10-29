@@ -137,3 +137,18 @@ target_compile_features(biglybtc_i2cp_tracker_codec PUBLIC cxx_std_23)
 target_compile_options(biglybtc_i2cp_tracker_codec PRIVATE -Wall -Wextra -Wpedantic -Werror)
 target_sources(biglybtc_i2cp_initial_channel PRIVATE i2cp_channel/tracker.inc)
 target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2cp_tracker_codec PRIVATE OpenSSL::Crypto)
+
+# Append after both existing service libraries are defined. No cyclic dependency:
+# control remains a pure policy library; owned UDP now executes its NODE mode.
+target_link_libraries(biglybtc_azureus_owned_udp PUBLIC biglybtc_azureus_control)
+
+# Services: append once after the existing I2CP channel/datagram targets.
+if(TARGET biglybtc_i2cp_initial_channel)
+  add_library(biglybtc_i2p_streaming STATIC i2p_streaming/stream.cpp)
+  target_include_directories(biglybtc_i2p_streaming PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2p_streaming")
+  target_link_libraries(biglybtc_i2p_streaming PUBLIC biglybtc_i2p_client_identity PRIVATE ZLIB::ZLIB)
+  target_compile_features(biglybtc_i2p_streaming PUBLIC cxx_std_23)
+  target_compile_options(biglybtc_i2p_streaming PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_sources(biglybtc_i2cp_initial_channel PRIVATE i2cp_channel/streaming.inc)
+  target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2p_streaming)
+endif()

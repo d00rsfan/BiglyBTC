@@ -5,6 +5,7 @@
 #include "leaseset.hpp"
 #include "messages.hpp"
 #include "tracker.hpp"
+#include "stream.hpp"
 #include <QHostAddress>
 #include <QObject>
 #include <memory>
@@ -92,6 +93,15 @@ public:
   [[nodiscard]] ConfigResult<std::uint64_t> scrapeTracker(const TrackerRequest&);
   bool cancelTracker(std::uint64_t operation);
   [[nodiscard]] std::optional<TrackerObservation> trackerObservation()const;
+  struct StreamOptions {std::uint16_t fromPort=0,toPort=0;int deadlineMilliseconds=120000;};
+  // Explicit full resolved peer only; no DNS, default router or Host activation.
+  // Requires retained owned signer/current LS2; one bounded outbound stream.
+  [[nodiscard]] ConfigResult<std::uint64_t> connectStream(View destination,const StreamOptions&);
+  [[nodiscard]] ConfigResult<void> writeStream(std::uint64_t operation,View);
+  [[nodiscard]] ConfigResult<Bytes> takeStreamBytes(std::uint64_t operation,std::size_t maximum);
+  bool finishStreamWrite(std::uint64_t operation);
+  bool cancelStream(std::uint64_t operation); // Local withdrawal, no remote ACK claim.
+  [[nodiscard]] std::optional<streaming::Observation> streamObservation()const noexcept;
   [[nodiscard]] State state()const noexcept;
   [[nodiscard]] Failure failure()const noexcept;
   [[nodiscard]] bool socketActive()const noexcept;
@@ -110,6 +120,7 @@ signals:
   void datagramChanged(); // Coalesced latest observation, not a result queue.
   void receiverChanged(); // Queued current bounded queue/drop observation.
   void trackerChanged(); // Queued latest same-generation operation observation.
+  void streamChanged(); // Queued latest current operation; deletion/restart safe.
   void failed(Failure);
   void closed();
 private:

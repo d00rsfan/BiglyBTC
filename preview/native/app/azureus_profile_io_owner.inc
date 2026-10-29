@@ -76,11 +76,16 @@
         std::move_only_function<void()> expired={},std::move_only_function<void()> cancelled={}){
       if(!state_->profileIo){return false;}
       IoSlot* slot=nullptr;for(auto& item:ioSlots_){if(!item.job){slot=&item;break;}}if(!slot){return false;}
-      auto versions=options_.valueVersions;auto lease=state_->profileIo->lease();
-      auto submitted=state_->profileIo->submit([versions,lease,command,reserve,deadline,allowExpired](std::stop_token stop)->ProfileIo::Result{
+      auto versions=options_.valueVersions;auto lease=state_->profileIo->lease();const bool routingPolicy=options_.routingScope==azureus::RoutingScope::OwnedLoopback;
+      auto submitted=state_->profileIo->submit([versions,lease,command,reserve,deadline,allowExpired,routingPolicy](std::stop_token stop)->ProfileIo::Result{
         const auto cancelled=[&]{return stop.stop_requested()||(!allowExpired&&std::chrono::steady_clock::now()>=deadline);};
         if(cancelled()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO expired"});}
         auto valid=versions->validate();if(!valid){return std::unexpected(valid.error());}
+        if(routingPolicy){
+          auto config=storage::ConfigFile::load(*lease,"biglybt.config");if(!config&&config.error().code!=storage::ErrorCode::Missing){return std::unexpected(config.error());}
+          if(config){if(config->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Resolve routing configuration recovery first"});}
+            if(const auto* enabled=config->document().find("Plugin.DHT.dht.enabled")){if(enabled->type!=core::Node::Type::Integer){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Invalid original DHT availability"});}if(static_cast<std::uint32_t>(enabled->integer)==0){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Original Azureus DHT is disabled"});}}}
+        }
         ProfileIo::Data result;
         const auto rating=[&]()->std::expected<void,storage::Error>{
           if(!command.ratingHash){return {};}
