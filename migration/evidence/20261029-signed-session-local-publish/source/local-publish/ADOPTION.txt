@@ -1,0 +1,62 @@
+SOURCE ONLY; no native build/test/Java/subject/public traffic executed.
+
+11 paths against actual82ef (all original beforeimages verified byte-exact):
+profile adapter2, existing DB2, existing owner2+small class-scope implementation,
+existing tests2, app/adapters CMake2. No provider/Host/default activation changes.
+
+Explicit optional SAME-OFD version owner reserves original128 signed32 values
+before returning a version, preserves unknown version.dat entries, original
+network directory, canonical missing-primary .saving recovery, named directory/
+lock and exact byte/stat preimages. Retains actual temp/recovery FDs, fsyncs file
+and directory, no version returned on indeterminate publication. A primary plus
+uncertain .saving refuses unchanged; no automatic deletion or arbitrary recovery.
+Like existing ConfigFile publication, last check+rename is not an atomic CAS
+against noncooperating hostile pathname swaps. Cooperative profile lock required.
+No new persistent volatile-value snapshot, contacts/private identity invention.
+
+DB putLocal creates local=true normal value at actual bound contact/time with
+externally reserved version. Remote store/quota logic stays unchanged. Local
+capacity remains explicit32keys; only normal flags0/life0/replication-1 and one
+nonempty payload1..512 are exposed by this slice. No remove/republish/diversify.
+
+Owner optional valueVersions keeps old create/defaults unchanged. One command
+SHA1-hashes unencoded application key1..1024, locally stores, then actual empty
+FIND_NODE token -> STORE -> FIND_VALUE on an ALREADY-admitted loopback endpoint.
+Every continuation checks same owner/request/peer, absolute deadline, cancellation
+and fresh profile snapshot; stale callbacks cannot advance new work. Matched
+readback (bytes/version/origin/flags/life/replication) is required for success.
+A failed/cancelled publication retains its local value and consumed reservation;
+there is no automatic replay. Close actually closes actor and joins its thread.
+Callback exceptions seal service, without fabricated terminal/count authority.
+
+The receiver in the actual-wire authored test is the EXISTING GENERATED volatile
+DB fixture with explicit test-only closest facts. It is NOT normal two-owner
+receiving/routing admission. No public activation, bootstrap, routing maintenance,
+normal STORE server, full DDB, ratings publication UI or chat completion claim.
+Next prerequisites: original contact/profile startup, real close-list/seeded
+receiving authority, republish/maintenance and plugin consumers.
+
+Retained-original helper is an unexecuted four-line field/version projection.
+Actual retained methods; explicit no-op persistent callback/fixed contact adapter.
+Original SystemTime/AEMonitor warmup is declared; no Core/profile/network claim.
+Native filesystem/UDP tests stay separate. Root executes only after matching
+source build; its --build-receipt/source-map/driver association is mandatory.
+
+Minimal future root targets: biglybtc-azureus-owned-service-tests,
+biglybtc-azureus-database-runtime-tests and app/headless affected link products.
+CTest selectors: ^(azureus-owned-service|azureus-database-runtime)$. Both
+existing test suites have every old slot body byte-exact; new tests appended.
+No new generic framework, timer, public router, SDK capability or queue authority.
+
+REVIEW CORRECTIONS (parent960f retained unchanged): pending recovery open is
+O_NONBLOCK and still verifies actual held/named regular inode; final publication
+snapshot+lastResult+error+one outstanding release commit atomically under the
+mailbox mutex; Complete is checked against the absolute deadline INSIDE that
+lock after all fallible copy/profile work. No transient error-free Profile/Invalid/
+Readback result; no success after budget expiration. Existing tests/32-bit math/
+root profile/public scope and every other source leaf remain exact parent.
+
+Final commit child: concurrent close() sets stop under the SAME state mutex.
+At the final Complete commit, stop takes precedence over the deadline/success
+branches, retaining Closed/Closed rather than success after joining was requested.
+No new API/test hook/timer or widened scope. All other source bytes exact75f.

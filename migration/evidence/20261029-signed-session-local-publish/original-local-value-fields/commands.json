@@ -1,0 +1,53 @@
+[
+  {
+    "name": "javac",
+    "command": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-proc:none",
+      "-implicit:none",
+      "-sourcepath",
+      "/tmp/biglybtc-queue-oracle-2wtkl3m_/empty-sourcepath",
+      "-cp",
+      "/tmp/biglybtc-oracle/classes",
+      "-d",
+      "/tmp/biglybtc-queue-oracle-2wtkl3m_/classes",
+      "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/amendments/local-rsa-warmup/oracle/source/LocalPublishLauncher.java",
+      "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/amendments/local-rsa-warmup/oracle/source/LocalPublishProjection.java",
+      "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/amendments/local-rsa-warmup/oracle/source/QueueOracleFence.java"
+    ],
+    "exit": 0
+  },
+  {
+    "name": "original",
+    "command": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Xmx128m",
+      "-Djava.security.manager=allow",
+      "-Dqueue.oracle.root=/tmp/biglybtc-queue-oracle-2wtkl3m_",
+      "-Dqueue.oracle.cohort=/tmp/biglybtc-oracle/classes",
+      "-Djava.io.tmpdir=/tmp/biglybtc-queue-oracle-2wtkl3m_/tmp",
+      "-Duser.home=/tmp/biglybtc-queue-oracle-2wtkl3m_/forbidden-home",
+      "-Dazureus.config.path=/tmp/biglybtc-queue-oracle-2wtkl3m_/forbidden-profile",
+      "-cp",
+      "/tmp/biglybtc-queue-oracle-2wtkl3m_/classes",
+      "LocalPublishLauncher",
+      "/tmp/biglybtc-queue-oracle-2wtkl3m_/classes",
+      "/tmp/biglybtc-oracle/classes"
+    ],
+    "exit": 0
+  },
+  {
+    "name": "native",
+    "command": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-database-runtime-tests",
+      "--project-original-local-values"
+    ],
+    "exit": 0
+  }
+]

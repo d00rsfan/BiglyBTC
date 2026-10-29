@@ -1,0 +1,164 @@
+{
+  "source_commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+  "parent_commit": "a8f9de09e31949c21e658827698cd540524b892a",
+  "source_path_count": 21,
+  "source_paths": {
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/before/preview/native/services/i2cp_channel/channel.cpp",
+      "before_sha256": "719cf38dd6d9a799791b66e3fb31a691b8c55e75401b9630a8c2fd2d422cb0dc",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/staging/preview/native/services/i2cp_channel/channel.cpp",
+      "after_sha256": "1a80c61b513f8d87901e492542d441ffbec8ed5eebdfc729707ba93909e173c7"
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/before/preview/native/services/i2cp_channel/channel.hpp",
+      "before_sha256": "f09a0944ac12a2429491431d4b190c1aa501f37cc6b2244457edacdf59dbc280",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/staging/preview/native/services/i2cp_channel/channel.hpp",
+      "after_sha256": "86b74bcb7cbe36bab380c6a52fa53a83f725c3fc7cb6f243748e2452631d9ce1"
+    },
+    "preview/native/services/i2cp_session/session.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/staging/preview/native/services/i2cp_session/session.cpp",
+      "after_sha256": "06202a53e6da512673a88c41cee7938b95c3fb4a121ea09f0974517879649b4e"
+    },
+    "preview/native/services/i2cp_session/session.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/staging/preview/native/services/i2cp_session/session.hpp",
+      "after_sha256": "4db98f38801fc70df592ad062980f2c911ac47839c1984c310204b4a7aae256f"
+    },
+    "preview/native/services/i2p_datagram/datagram.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/before/preview/native/services/i2p_datagram/datagram.cpp",
+      "before_sha256": "d27493f3b26722f21022ceb2bff7eb02a5a8c152e8d73eae6c878bea8f41051f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/staging/preview/native/services/i2p_datagram/datagram.cpp",
+      "after_sha256": "96eedc04c93f2250c50c4fa78671775547cfef2e464652f3b27a609d56990038"
+    },
+    "preview/native/services/i2p_datagram/datagram.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/before/preview/native/services/i2p_datagram/datagram.hpp",
+      "before_sha256": "2d0ff0ccb1e3cb23e0439b6a902f58eda88b5e40ab27b3aa79530d57a856c584",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/staging/preview/native/services/i2p_datagram/datagram.hpp",
+      "after_sha256": "32c742d8e769f31bd43119f3feca6dd0e04c2a6c77644e57f868d6addcfbecf1"
+    },
+    "preview/native/tests/i2cp_initial_channel_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/before/preview/native/tests/i2cp_initial_channel_tests.cpp",
+      "before_sha256": "73966fd58953800239c4f071b7bb04d23bb1bf4657c20fd3d9c84bd58d160025",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/staging/preview/native/tests/i2cp_initial_channel_tests.cpp",
+      "after_sha256": "d368948bfbeaf4350972d92f3e71369c4e84678c4a0cdfac8439fd6f3fea093d"
+    },
+    "preview/native/tests/i2cp_session_config_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/staging/preview/native/tests/i2cp_session_config_tests.cpp",
+      "after_sha256": "a603946936cecde938980693872063a219a973cbf1c3727d05b90662f9b2a656"
+    },
+    "preview/native/adapters/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/adapters/CMakeLists.txt",
+      "before_sha256": "7e23ce6d5a87758800883928d99ec5a9728a300a09b10ffd4e6d2bc9c779da13",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/adapters/CMakeLists.txt",
+      "after_sha256": "d4a631d722b1dc10d66cbf15dc9635fc6b9037e186048bdc29caf671f2d4e4f2"
+    },
+    "preview/native/adapters/azureus_value_versions.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/adapters/azureus_value_versions.cpp",
+      "after_sha256": "221dae34a09259a5377bb106d7e5ceb24591d0b20e8488392ec935c0fd619c75"
+    },
+    "preview/native/adapters/azureus_value_versions.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/adapters/azureus_value_versions.hpp",
+      "after_sha256": "64b7a12d0699ee4696e86084e83699e01b354374141c6a9bb1c4bb1084fede66"
+    },
+    "preview/native/app/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/app/CMakeLists.txt",
+      "before_sha256": "40668b3ce4291dbf0727354608b1a71d5d338f2ad9a019099118ab2ed7a5fa1d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/app/CMakeLists.txt",
+      "after_sha256": "062a39b4fcbbb08a74b3a8a2e7ec37562b8c3ebb34a26b30962389f092546b27"
+    },
+    "preview/native/app/azureus_local_publish.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/app/azureus_local_publish.inc",
+      "after_sha256": "9f3ddf4e086b3f84a597878ffc06ac3622b5d929a7c3e7fdef2a9f29e8e2d3f8"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "a97f23d3eff7a11c923060631a5bf77ee964c2ed7466c4fc450b54ca62aed460",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "092a333dade812e7c0a0a123ddfe5477cab59223176c70b167e504d90f8946a7"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "cf245a7d4c14c27cc05245213f0f527d512e68552c48a44aa5814581acc7daed",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "cbf876fc19f4487f663a08d73a05967951922571e32ee15551741479df40e5c2"
+    },
+    "preview/native/services/azureus_db_runtime/database.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/services/azureus_db_runtime/database.cpp",
+      "before_sha256": "52251f4ca7715060c18d8b7414edacb0648e23dc0b8a7e5b5d088909d1e00d4f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/services/azureus_db_runtime/database.cpp",
+      "after_sha256": "5d4afaf5c4b4d7fddb4435e9c4ea46fb04ab1fadc475183adf8af8b2a17bc261"
+    },
+    "preview/native/services/azureus_db_runtime/database.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/services/azureus_db_runtime/database.hpp",
+      "before_sha256": "6835f68c02677bf14e0f4f56bcf4c46281f24d713497cde4d2ffe531f4354440",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/services/azureus_db_runtime/database.hpp",
+      "after_sha256": "6f6a4272e7cc15da2f3c65362e1172db1a54e4ddbc80937db9675edd89a805e6"
+    },
+    "preview/native/tests/azureus_database_runtime_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/tests/azureus_database_runtime_tests.cpp",
+      "before_sha256": "657a2abe8ade23c6893b704ee5124ca9513ebbe0d49ff0fff4c7fdac4dc11917",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/tests/azureus_database_runtime_tests.cpp",
+      "after_sha256": "a28fc4d0c4669010948fd7a649cadfb405370e9a590a857ee63746647ed78cb3"
+    },
+    "preview/native/tests/owned_azureus_service_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/tests/owned_azureus_service_tests.cpp",
+      "before_sha256": "3f80898a892451b383f6e4ecf7eab1a987403c68c0704123028e59f06316ce89",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/tests/owned_azureus_service_tests.cpp",
+      "after_sha256": "e5c43e7286b32fe47c56ff7413b9ccedf298f466e0600cad530b56b6f871338e"
+    },
+    "preview/native/services/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/before/preview/native/services/CMakeLists.txt",
+      "before_sha256": "1c77fd0d38bc3ccf3e50bece87ab37782cc2a953e0ba905e0825194cdcf8d40b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/composed/preview/native/services/CMakeLists.txt",
+      "after_sha256": "25a683c77b98b7be3855d92c8429f0c8955349eef1c007bee0c80b6be631ecfa"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/before/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "54561b7d1f9889940f70573d825c7b459744716a3d22849bab83dceac2f2ebe8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/composed/preview/native/tests/CMakeLists.txt",
+      "after_sha256": "e3a8c3f3b3914183f16a16823c68af7c49035bb95e0c5e291448e886ae8fada7"
+    }
+  },
+  "source_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/manifest.json",
+      "sha256": "1eb701f7e3c341d49a170153c39ba4150c819b92de1833183b2894b08af4a2d7"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/manifest.json",
+      "sha256": "be4571a28ea8312ac12b32490e2838a9cc8aab0d42b619ec441d609fabe9ed3d"
+    }
+  ],
+  "source_reviews": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/i2cp-source-review.json",
+      "sha256": "cd373ca64cad68d136fa059e0a92971024498b311182a006cdaf7ecf87d7888b"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029-review/manifest.json",
+      "sha256": "992c7a2912105ad4a6e5737c3d33a374903623c4013ab41735fa78a342a0ac24"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/run-source-review.json",
+      "sha256": "9a9f673909007dbb8c5cd68ca9e6e1449258a993bfe2294705030430a1561f70"
+    }
+  ],
+  "cmake_fragment": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/CMake.fragment",
+    "sha256": "1b2f07c5bf9d76c5b99d37307bffbdeac1ce544a6d5605595f44ade1bbaa18ce"
+  },
+  "adopter_sha256": "bc2f0bd66c0f41d4d5030606909c0de9012c7f3bf8404ca878838fe8aa59d5d5",
+  "approved_inputs_sha256": "af087d72108dd5b005c69936b2a3310a4e512166543d9dde5439bf5cdae49abe",
+  "adoption_correction": "Initial diff-check rejected fragment trailing blank line before any stage/commit/build; composed CMake whitespace normalised then committed unchanged source leaves."
+}

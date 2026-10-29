@@ -2,7 +2,7 @@
 
 Continue the entire plan autonomously without chapter or milestone stops, as requested on 2026-10-28. Preserve the running Java application and real profile/payload. Read [the compact active state](migration/ACTIVE.md) first; batch related implementation and focused validation, retain build logs and inspect failures/status only.
 
-Published main `2dd372785251a457c830baba2a0eb72e04ea573f` is locally qualified and both hosted application/SDK jobs passed. Current source `5809ac611bb5d49b8de1c5eab0c7dca3ef8cbe9a` is undergoing coherent GCC/Clang/ASan-UBSan qualification; it is not yet published or runtime-qualified. The whole migration, full compatibility parents and release/performance gates remain open.
+Latest qualified native source `e124abb90ab846c4b057a6b868004c0acb737118` passed the focused seven-suite GCC/Clang/sanitizer batch, private runtime and original-object compatibility checks; see [current state](migration/STATE.md). The whole migration and release/performance gates remain open.
 
 Earlier progress and stop-boundary notes are preserved verbatim in [the historical status archive](migration/history/plan-status-prefix-through-20261028.md); those stops are superseded. The objective, phase definitions and acceptance requirements below are unchanged.
 
@@ -313,6 +313,12 @@ Cover existing simple APIs, console/headless operation, and legacy remote interf
 ## P11 User Migration and Platform Delivery
 
 **Work packages:** P11-01 complete import/export; P11-02 desktop integration; P11-03 native updater; P11-04 packages and rollback.
+
+Early development previews replace the current `dist` after their relevant checks;
+do not retain previous preview trees for rollback. Keep source history and concise
+test results. Retained release builds and updater rollback qualification become
+useful when there is a usable release candidate, rather than an offline sample
+preview (user clarification, 2026-10-29).
 
 Extend P02 compatibility to settings, torrent inventory, file locations, schedules, tags/categories, subscriptions, histories, identities, and plugin data. The acceptance workflow is close Java BiglyBT and open BiglyBTC against the same files, then switch back without conversion. Preserve unknown data and use recoverable backups for writes. A read-only compatibility report may diagnose unsupported or ambiguous state, but an import ceremony or new native-only profile does not satisfy the final requirement. Never open the same writable profile from Java and native clients simultaneously. Test only isolated generated/copied fixtures; do not deserialize arbitrary legacy objects as executable Java code.
 
@@ -1621,6 +1627,47 @@ Evidence: migration/evidence/20261028-mainline-scrape-storage-stats/verification
 ## 2026-10-28 bounded active Mainline scrape and passive readers
 
 Native implementation `91a1bb98ca1464eec871cb066107c2cf845d8e56`, final test integration `36bb5613aea66cf6e10ec20f51c4f5dfba03a612`: actual per-suite origins GCC9/Clang4/SAN7; only GCC/SAN managed-queue reran after an owned HTTP fixture correction. Three private full QtTest binaries and actual118-leaf private development promotion are retained. Configured/never-admitted/public/dual-family activation, the BF-only original caller gate and full P05/P06 remain open. No upstream baselines advance. Evidence: `migration/evidence/20261028-mainline-active-scrape/verification.json` and `migration/evidence/20261028-mainline-active-scrape/REVIEW.md`.
+
+
+## 2026-10-29 original identities and owned tracker transports
+
+Native source `210148e403a9e3b0b539d0c195a44e5bb661ba6c` passed fresh
+GCC/Clang/ASan+UBSan 19/16/19 selected suites and 103/80/103 Qt method rows.
+Original root creation/retained Host lineage, IPv4/IPv6 wire/routing separation,
+default-interface planning and saved-only UDP/HTTP(S) scrapes now have executed
+integration evidence. A real cold IPv6 socket-selection defect was corrected
+in the native provider; the fresh provider passed 28 controls. Current-source
+extracted offline Tor passed GCC and sanitizers. Three private runtime checks
+passed with the packaged Qt TLS backend. The 119-leaf dist replaced the prior
+preview, which was deleted; no rollback preview is retained.
+
+The normal application was launched with a fresh, genuine empty `.bitlybtc`
+profile and separate loopback TCP/UDP port 60481. It contains no sample torrents.
+The running Java client and real profile/payload remain untouched. See
+[milestone evidence](migration/evidence/20261029-mainline-owned-trackers/REVIEW.md).
+
+Continue the whole plan: the reviewed seven-path saved HTTP Basic credentials
+and saved JKS trust batch is next, with focused HTTP/queue/network tests rather
+than another unrelated Tor/provider/full-cohort replay. P05–P13 remain open;
+this checkpoint is not a chapter stop or release-completion claim.
+
+
+## 2026-10-29 saved tracker credentials and trust
+
+Native source `c7a6ab6700666b86cbf2a0a265cb95addb57a660` passed focused
+GCC/Clang/sanitizer 3/2/3 suites; Clang HTTP is compile-only. Each executed
+HTTP suite passed 28 Qt rows covering 25 methods, including saved Basic
+credential isolation and JKS trust/revocation. Two focused HTTPS selectors
+passed with relocated private Qt/TLS/provider images. The 119-leaf dist was
+replaced and its predecessor deleted. See
+[evidence](migration/evidence/20261029-http-auth-trust/REVIEW.md).
+
+No unrelated Tor/Mainline suites were replayed or credited as current. Next
+batch combines reviewed Tor control-loss cleanup, narrow proven Qt Wayland
+console handling and original tracker tier selection/failover. An actual
+JDK-produced truststore fixture will join that build rather than trigger an
+extra compile. Whole-plan work continues; remaining compatibility limits stay
+open in the evidence and QUESTIONS.md.
 
 ## 2026-10-29 saved mixed tracker tiers and initial I2CP messages
 

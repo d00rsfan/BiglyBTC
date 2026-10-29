@@ -1,0 +1,11 @@
+{
+  "status": "ROOT_REVIEWED_METADATA_ONLY_FINAL_CLOSEOUT_DELTA",
+  "prior_source_review_sha256": "6a60c6654bf0ddb88df7e65592aabd25bae6b779375bed63b0146f605dd22a09",
+  "final_finisher_sha256": "df028a11bc7577a0142bc2e6f6016f588c68194d7a8ce1bc43807ab30d340f28",
+  "changes": [
+    "Accept successful offline-r3 which revalidates completed same-source session objects from r2 without replay and runs only corrected failed local-field helper",
+    "Archive raw combined-r2FAIL and initialJava compile-failure outputs, both helper corrections, exact originalfield-failure logs",
+    "No promotion/registry/source scope changes"
+  ],
+  "native_source_changed": false
+}

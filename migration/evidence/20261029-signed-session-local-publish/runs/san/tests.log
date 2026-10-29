@@ -1,0 +1,29 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop
+    Start 178: azureus-owned-service
+1/7 Test #178: azureus-owned-service .............   Passed    1.39 sec
+    Start 263: azureus-database-runtime
+2/7 Test #263: azureus-database-runtime ..........   Passed    2.19 sec
+    Start 282: pure-i2p-datagram-codec
+3/7 Test #282: pure-i2p-datagram-codec ...........   Passed    0.08 sec
+    Start 283: pure-i2p-client-identity
+4/7 Test #283: pure-i2p-client-identity ..........   Passed    0.06 sec
+    Start 284: pure-i2cp-initial-session-codec
+5/7 Test #284: pure-i2cp-initial-session-codec ...   Passed    0.03 sec
+    Start 285: i2cp-initial-channel
+6/7 Test #285: i2cp-initial-channel ..............   Passed    8.74 sec
+    Start 286: pure-i2cp-signed-session-config
+7/7 Test #286: pure-i2cp-signed-session-config ...   Passed    0.93 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+crypto            =   1.07 sec*proc (3 tests)
+database          =   2.19 sec*proc (1 test)
+i2p               =   9.84 sec*proc (5 tests)
+loopback          =   3.58 sec*proc (2 tests)
+no-network        =   1.10 sec*proc (4 tests)
+owned-loopback    =   8.74 sec*proc (1 test)
+statistics        =   1.39 sec*proc (1 test)
+unit              =  13.41 sec*proc (7 tests)
+
+Total Test time (real) =  13.42 sec

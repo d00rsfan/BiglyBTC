@@ -20,3 +20,8 @@ continuations, binary lifetime and accounting. Qualified DbValue/Mapping remain
 unchanged. No storage adapters, flood/bloom/survey/republish/local PUT, persistence,
 Host/public activation or whole P06 parity is claimed. Both components stay
 in_progress. No source-only test was counted as execution.
+
+
+## Qualified local publication prerequisite
+
+Source e124abb90ab846c4b057a6b868004c0acb737118 adds original dht[/netN]/version.dat reservation of128 signed32 versions under the held profile lock/OFD, local=true values at the actual contact/time, and one explicit admitted-peer token→STORE→readback command. All7 affected suites passed each of three lanes and private runtime; original retained3version/1value field projections matched with explicit stub persistence. See ../evidence/20261029-signed-session-local-publish/REVIEW.md. Receiver remains a generated fixture; next source work is two normal owned services with real router/DB admission and original direct-vs-forwarded seeded semantics. No default/public/Host activation or full DDB/chat/ratings completion.

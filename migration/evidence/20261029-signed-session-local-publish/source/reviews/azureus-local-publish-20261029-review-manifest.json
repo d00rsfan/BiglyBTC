@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "review": "review.json",
+  "review_sha256": "c31a7b97a9864f9569a3fc7d92dbbca88aaab89b934b9654c18c01affd05734f",
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/manifest.json": "960fe280704d3361d849672eacde8947bad2795caf207f8c98881f8afeeb0c23",
+    "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/manifest.json": "75f54360de2019246cb46f88cfd0d15f2d36eef574feb654c3939fd2ebeb0f2c",
+    "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/manifest.json": "be4571a28ea8312ac12b32490e2838a9cc8aab0d42b619ec441d609fabe9ed3d"
+  }
+}

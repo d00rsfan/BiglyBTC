@@ -1,0 +1,1374 @@
+[0.047s][info][class,load] java.lang.Object source: shared objects file
+[0.048s][info][class,load] java.io.Serializable source: shared objects file
+[0.048s][info][class,load] java.lang.Comparable source: shared objects file
+[0.048s][info][class,load] java.lang.CharSequence source: shared objects file
+[0.048s][info][class,load] java.lang.constant.Constable source: shared objects file
+[0.048s][info][class,load] java.lang.constant.ConstantDesc source: shared objects file
+[0.048s][info][class,load] java.lang.String source: shared objects file
+[0.048s][info][class,load] java.lang.reflect.AnnotatedElement source: shared objects file
+[0.048s][info][class,load] java.lang.reflect.GenericDeclaration source: shared objects file
+[0.048s][info][class,load] java.lang.reflect.Type source: shared objects file
+[0.048s][info][class,load] java.lang.invoke.TypeDescriptor source: shared objects file
+[0.048s][info][class,load] java.lang.invoke.TypeDescriptor$OfField source: shared objects file
+[0.048s][info][class,load] java.lang.Class source: shared objects file
+[0.048s][info][class,load] java.lang.Cloneable source: shared objects file
+[0.048s][info][class,load] java.lang.ClassLoader source: shared objects file
+[0.048s][info][class,load] java.lang.System source: shared objects file
+[0.048s][info][class,load] java.lang.Throwable source: shared objects file
+[0.048s][info][class,load] java.lang.Error source: shared objects file
+[0.048s][info][class,load] java.lang.ThreadDeath source: shared objects file
+[0.048s][info][class,load] java.lang.Exception source: shared objects file
+[0.048s][info][class,load] java.lang.RuntimeException source: shared objects file
+[0.048s][info][class,load] java.lang.SecurityManager source: shared objects file
+[0.048s][info][class,load] java.security.ProtectionDomain source: shared objects file
+[0.048s][info][class,load] java.security.AccessControlContext source: shared objects file
+[0.048s][info][class,load] java.security.AccessController source: shared objects file
+[0.048s][info][class,load] java.security.SecureClassLoader source: shared objects file
+[0.048s][info][class,load] java.lang.ReflectiveOperationException source: shared objects file
+[0.048s][info][class,load] java.lang.ClassNotFoundException source: shared objects file
+[0.048s][info][class,load] java.lang.Record source: shared objects file
+[0.048s][info][class,load] java.lang.LinkageError source: shared objects file
+[0.048s][info][class,load] java.lang.NoClassDefFoundError source: shared objects file
+[0.048s][info][class,load] java.lang.ClassCastException source: shared objects file
+[0.048s][info][class,load] java.lang.ArrayStoreException source: shared objects file
+[0.049s][info][class,load] java.lang.VirtualMachineError source: shared objects file
+[0.049s][info][class,load] java.lang.InternalError source: shared objects file
+[0.049s][info][class,load] java.lang.OutOfMemoryError source: shared objects file
+[0.049s][info][class,load] java.lang.StackOverflowError source: shared objects file
+[0.049s][info][class,load] java.lang.IllegalMonitorStateException source: shared objects file
+[0.049s][info][class,load] java.lang.ref.Reference source: shared objects file
+[0.049s][info][class,load] java.lang.ref.SoftReference source: shared objects file
+[0.049s][info][class,load] java.lang.ref.WeakReference source: shared objects file
+[0.049s][info][class,load] java.lang.ref.FinalReference source: shared objects file
+[0.049s][info][class,load] java.lang.ref.PhantomReference source: shared objects file
+[0.049s][info][class,load] java.lang.ref.Finalizer source: shared objects file
+[0.049s][info][class,load] java.lang.Runnable source: shared objects file
+[0.049s][info][class,load] java.lang.Thread source: shared objects file
+[0.049s][info][class,load] java.lang.Thread$UncaughtExceptionHandler source: shared objects file
+[0.049s][info][class,load] java.lang.ThreadGroup source: shared objects file
+[0.049s][info][class,load] java.util.Dictionary source: shared objects file
+[0.049s][info][class,load] java.util.Map source: shared objects file
+[0.049s][info][class,load] java.util.Hashtable source: shared objects file
+[0.049s][info][class,load] java.util.Properties source: shared objects file
+[0.049s][info][class,load] java.lang.Module source: shared objects file
+[0.049s][info][class,load] java.lang.reflect.AccessibleObject source: shared objects file
+[0.049s][info][class,load] java.lang.reflect.Member source: shared objects file
+[0.049s][info][class,load] java.lang.reflect.Field source: shared objects file
+[0.049s][info][class,load] java.lang.reflect.Parameter source: shared objects file
+[0.049s][info][class,load] java.lang.reflect.Executable source: shared objects file
+[0.049s][info][class,load] java.lang.reflect.Method source: shared objects file
+[0.049s][info][class,load] java.lang.reflect.Constructor source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.MagicAccessorImpl source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.MethodAccessor source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.MethodAccessorImpl source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.ConstructorAccessor source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.ConstructorAccessorImpl source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.DelegatingClassLoader source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.ConstantPool source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.FieldAccessor source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.FieldAccessorImpl source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.UnsafeFieldAccessorImpl source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.UnsafeStaticFieldAccessorImpl source: shared objects file
+[0.049s][info][class,load] java.lang.annotation.Annotation source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.CallerSensitive source: shared objects file
+[0.049s][info][class,load] jdk.internal.reflect.NativeConstructorAccessorImpl source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.MethodHandle source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.DirectMethodHandle source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.VarHandle source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.MemberName source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.ResolvedMethodName source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.MethodHandleNatives source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.LambdaForm source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.TypeDescriptor$OfMethod source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.MethodType source: shared objects file
+[0.049s][info][class,load] java.lang.BootstrapMethodError source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.CallSite source: shared objects file
+[0.049s][info][class,load] jdk.internal.invoke.NativeEntryPoint source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.MethodHandleNatives$CallSiteContext source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.ConstantCallSite source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.MutableCallSite source: shared objects file
+[0.049s][info][class,load] java.lang.invoke.VolatileCallSite source: shared objects file
+[0.049s][info][class,load] java.lang.AssertionStatusDirectives source: shared objects file
+[0.049s][info][class,load] java.lang.Appendable source: shared objects file
+[0.049s][info][class,load] java.lang.AbstractStringBuilder source: shared objects file
+[0.049s][info][class,load] java.lang.StringBuffer source: shared objects file
+[0.049s][info][class,load] java.lang.StringBuilder source: shared objects file
+[0.050s][info][class,load] jdk.internal.misc.UnsafeConstants source: shared objects file
+[0.050s][info][class,load] jdk.internal.misc.Unsafe source: shared objects file
+[0.050s][info][class,load] jdk.internal.module.Modules source: shared objects file
+[0.050s][info][class,load] java.lang.AutoCloseable source: shared objects file
+[0.050s][info][class,load] java.io.Closeable source: shared objects file
+[0.050s][info][class,load] java.io.InputStream source: shared objects file
+[0.050s][info][class,load] java.io.ByteArrayInputStream source: shared objects file
+[0.050s][info][class,load] java.net.URL source: shared objects file
+[0.050s][info][class,load] java.util.jar.Manifest source: shared objects file
+[0.050s][info][class,load] jdk.internal.loader.BuiltinClassLoader source: shared objects file
+[0.050s][info][class,load] jdk.internal.loader.ClassLoaders source: shared objects file
+[0.050s][info][class,load] jdk.internal.loader.ClassLoaders$AppClassLoader source: shared objects file
+[0.050s][info][class,load] jdk.internal.loader.ClassLoaders$PlatformClassLoader source: shared objects file
+[0.050s][info][class,load] java.security.CodeSource source: shared objects file
+[0.050s][info][class,load] java.util.AbstractMap source: shared objects file
+[0.050s][info][class,load] java.util.concurrent.ConcurrentMap source: shared objects file
+[0.050s][info][class,load] java.util.concurrent.ConcurrentHashMap source: shared objects file
+[0.050s][info][class,load] java.lang.Iterable source: shared objects file
+[0.050s][info][class,load] java.util.Collection source: shared objects file
+[0.050s][info][class,load] java.util.AbstractCollection source: shared objects file
+[0.050s][info][class,load] java.util.List source: shared objects file
+[0.050s][info][class,load] java.util.AbstractList source: shared objects file
+[0.050s][info][class,load] java.util.RandomAccess source: shared objects file
+[0.050s][info][class,load] java.util.ArrayList source: shared objects file
+[0.050s][info][class,load] java.lang.StackTraceElement source: shared objects file
+[0.050s][info][class,load] java.nio.Buffer source: shared objects file
+[0.050s][info][class,load] java.lang.StackWalker source: shared objects file
+[0.050s][info][class,load] java.lang.StackStreamFactory$AbstractStackWalker source: shared objects file
+[0.050s][info][class,load] java.lang.StackWalker$StackFrame source: shared objects file
+[0.050s][info][class,load] java.lang.StackFrameInfo source: shared objects file
+[0.050s][info][class,load] java.lang.LiveStackFrame source: shared objects file
+[0.050s][info][class,load] java.lang.LiveStackFrameInfo source: shared objects file
+[0.050s][info][class,load] java.util.concurrent.locks.AbstractOwnableSynchronizer source: shared objects file
+[0.050s][info][class,load] java.lang.Boolean source: shared objects file
+[0.050s][info][class,load] java.lang.Character source: shared objects file
+[0.050s][info][class,load] java.lang.Number source: shared objects file
+[0.050s][info][class,load] java.lang.Float source: shared objects file
+[0.050s][info][class,load] java.lang.Double source: shared objects file
+[0.050s][info][class,load] java.lang.Byte source: shared objects file
+[0.050s][info][class,load] java.lang.Short source: shared objects file
+[0.050s][info][class,load] java.lang.Integer source: shared objects file
+[0.050s][info][class,load] java.lang.Long source: shared objects file
+[0.050s][info][class,load] java.util.Iterator source: shared objects file
+[0.050s][info][class,load] java.lang.reflect.RecordComponent source: shared objects file
+[0.050s][info][class,load] jdk.internal.vm.vector.VectorSupport source: shared objects file
+[0.050s][info][class,load] jdk.internal.vm.vector.VectorSupport$VectorPayload source: shared objects file
+[0.050s][info][class,load] jdk.internal.vm.vector.VectorSupport$Vector source: shared objects file
+[0.050s][info][class,load] jdk.internal.vm.vector.VectorSupport$VectorMask source: shared objects file
+[0.050s][info][class,load] jdk.internal.vm.vector.VectorSupport$VectorShuffle source: shared objects file
+[0.050s][info][class,load] java.lang.Integer$IntegerCache source: shared objects file
+[0.050s][info][class,load] java.lang.Long$LongCache source: shared objects file
+[0.050s][info][class,load] java.lang.Byte$ByteCache source: shared objects file
+[0.050s][info][class,load] java.lang.Short$ShortCache source: shared objects file
+[0.050s][info][class,load] java.lang.Character$CharacterCache source: shared objects file
+[0.050s][info][class,load] java.util.jar.Attributes$Name source: shared objects file
+[0.050s][info][class,load] java.util.ImmutableCollections$AbstractImmutableMap source: shared objects file
+[0.050s][info][class,load] java.util.ImmutableCollections$MapN source: shared objects file
+[0.050s][info][class,load] sun.util.locale.BaseLocale source: shared objects file
+[0.050s][info][class,load] jdk.internal.module.ArchivedModuleGraph source: shared objects file
+[0.050s][info][class,load] java.lang.module.ModuleFinder source: shared objects file
+[0.050s][info][class,load] jdk.internal.module.SystemModuleFinders$SystemModuleFinder source: shared objects file
+[0.050s][info][class,load] java.util.ImmutableCollections$AbstractImmutableCollection source: shared objects file
+[0.050s][info][class,load] java.util.Set source: shared objects file
+[0.050s][info][class,load] java.util.ImmutableCollections$AbstractImmutableSet source: shared objects file
+[0.050s][info][class,load] java.util.ImmutableCollections$SetN source: shared objects file
+[0.050s][info][class,load] java.lang.module.ModuleReference source: shared objects file
+[0.050s][info][class,load] jdk.internal.module.ModuleReferenceImpl source: shared objects file
+[0.050s][info][class,load] java.lang.module.ModuleDescriptor source: shared objects file
+[0.050s][info][class,load] java.lang.module.ModuleDescriptor$Version source: shared objects file
+[0.050s][info][class,load] java.lang.module.ModuleDescriptor$Requires source: shared objects file
+[0.050s][info][class,load] java.util.ImmutableCollections$Set12 source: shared objects file
+[0.050s][info][class,load] java.lang.Enum source: shared objects file
+[0.050s][info][class,load] java.lang.module.ModuleDescriptor$Requires$Modifier source: shared objects file
+[0.050s][info][class,load] java.lang.module.ModuleDescriptor$Exports source: shared objects file
+[0.050s][info][class,load] java.lang.module.ModuleDescriptor$Provides source: shared objects file
+[0.050s][info][class,load] java.util.ImmutableCollections$AbstractImmutableList source: shared objects file
+[0.050s][info][class,load] java.util.ImmutableCollections$List12 source: shared objects file
+[0.050s][info][class,load] java.net.URI source: shared objects file
+[0.050s][info][class,load] java.util.function.Supplier source: shared objects file
+[0.050s][info][class,load] jdk.internal.module.SystemModuleFinders$2 source: shared objects file
+[0.050s][info][class,load] jdk.internal.module.ModuleHashes$HashSupplier source: shared objects file
+[0.050s][info][class,load] jdk.internal.module.SystemModuleFinders$3 source: shared objects file
+[0.050s][info][class,load] java.lang.module.ModuleDescriptor$Opens source: shared objects file
+[0.051s][info][class,load] java.util.ImmutableCollections$ListN source: shared objects file
+[0.051s][info][class,load] jdk.internal.module.ModuleTarget source: shared objects file
+[0.051s][info][class,load] jdk.internal.module.ModuleHashes source: shared objects file
+[0.051s][info][class,load] java.util.Collections$UnmodifiableMap source: shared objects file
+[0.051s][info][class,load] java.util.HashMap source: shared objects file
+[0.051s][info][class,load] java.util.Map$Entry source: shared objects file
+[0.051s][info][class,load] java.util.HashMap$Node source: shared objects file
+[0.051s][info][class,load] java.lang.module.Configuration source: shared objects file
+[0.051s][info][class,load] java.lang.module.ResolvedModule source: shared objects file
+[0.051s][info][class,load] java.util.function.Function source: shared objects file
+[0.051s][info][class,load] jdk.internal.module.ModuleLoaderMap$Mapper source: shared objects file
+[0.051s][info][class,load] java.util.ImmutableCollections source: shared objects file
+[0.051s][info][class,load] java.lang.ModuleLayer source: shared objects file
+[0.051s][info][class,load] jdk.internal.math.FDBigInteger source: shared objects file
+[0.051s][info][class,load] jdk.internal.loader.ArchivedClassLoaders source: shared objects file
+[0.051s][info][class,load] jdk.internal.loader.ClassLoaders$BootClassLoader source: shared objects file
+[0.051s][info][class,load] java.security.Principal source: shared objects file
+[0.051s][info][class,load] java.security.ProtectionDomain$Key source: shared objects file
+[0.051s][info][class,load] jdk.internal.loader.NativeLibraries source: shared objects file
+[0.051s][info][class,load] java.util.concurrent.ConcurrentHashMap$Node source: shared objects file
+[0.051s][info][class,load] jdk.internal.loader.AbstractClassLoaderValue source: shared objects file
+[0.051s][info][class,load] jdk.internal.loader.ClassLoaderValue source: shared objects file
+[0.051s][info][class,load] jdk.internal.module.ServicesCatalog source: shared objects file
+[0.051s][info][class,load] java.util.concurrent.CopyOnWriteArrayList source: shared objects file
+[0.051s][info][class,load] jdk.internal.module.ServicesCatalog$ServiceProvider source: shared objects file
+[0.051s][info][class,load] java.util.AbstractSet source: shared objects file
+[0.051s][info][class,load] java.util.HashSet source: shared objects file
+[0.051s][info][class,load] jdk.internal.loader.BuiltinClassLoader$LoadedModule source: shared objects file
+[0.051s][info][class,load] jdk.internal.module.ArchivedBootLayer source: shared objects file
+[0.051s][info][class,load] java.lang.Module$ArchivedData source: shared objects file
+[0.053s][info][class,load] java.lang.NullPointerException source: shared objects file
+[0.053s][info][class,load] java.lang.ArithmeticException source: shared objects file
+[0.055s][info][class,load] java.io.ObjectStreamField source: shared objects file
+[0.055s][info][class,load] java.util.Comparator source: shared objects file
+[0.055s][info][class,load] java.lang.String$CaseInsensitiveComparator source: shared objects file
+[0.056s][info][class,load] jdk.internal.misc.CDS source: shared objects file
+[0.056s][info][class,load] jdk.internal.access.JavaLangReflectAccess source: shared objects file
+[0.057s][info][class,load] java.lang.reflect.ReflectAccess source: shared objects file
+[0.057s][info][class,load] jdk.internal.access.SharedSecrets source: shared objects file
+[0.057s][info][class,load] java.lang.invoke.MethodHandles source: shared objects file
+[0.057s][info][class,load] java.lang.invoke.MemberName$Factory source: shared objects file
+[0.057s][info][class,load] java.security.Guard source: shared objects file
+[0.057s][info][class,load] java.security.Permission source: shared objects file
+[0.057s][info][class,load] java.security.BasicPermission source: shared objects file
+[0.057s][info][class,load] java.lang.reflect.ReflectPermission source: shared objects file
+[0.057s][info][class,load] java.lang.StringLatin1 source: shared objects file
+[0.057s][info][class,load] java.lang.invoke.MethodHandles$Lookup source: shared objects file
+[0.057s][info][class,load] java.util.Objects source: shared objects file
+[0.057s][info][class,load] jdk.internal.reflect.Reflection source: shared objects file
+[0.058s][info][class,load] java.lang.Math source: shared objects file
+[0.058s][info][class,load] java.util.ImmutableCollections$MapN$1 source: shared objects file
+[0.058s][info][class,load] java.util.ImmutableCollections$MapN$MapNIterator source: shared objects file
+[0.058s][info][class,load] java.util.KeyValueHolder source: shared objects file
+[0.058s][info][class,load] java.util.LinkedHashMap$Entry source: shared objects file
+[0.058s][info][class,load] java.util.HashMap$TreeNode source: shared objects file
+[0.058s][info][class,load] java.lang.Runtime source: shared objects file
+[0.059s][info][class,load] java.util.concurrent.locks.Lock source: shared objects file
+[0.059s][info][class,load] java.util.concurrent.locks.ReentrantLock source: shared objects file
+[0.059s][info][class,load] java.util.concurrent.ConcurrentHashMap$Segment source: shared objects file
+[0.059s][info][class,load] java.util.concurrent.ConcurrentHashMap$CounterCell source: shared objects file
+[0.059s][info][class,load] java.util.concurrent.locks.LockSupport source: shared objects file
+[0.059s][info][class,load] java.util.concurrent.ConcurrentHashMap$ReservationNode source: shared objects file
+[0.059s][info][class,load] java.security.PrivilegedAction source: shared objects file
+[0.059s][info][class,load] jdk.internal.reflect.ReflectionFactory$GetReflectionFactoryAction source: shared objects file
+[0.059s][info][class,load] jdk.internal.reflect.ReflectionFactory source: shared objects file
+[0.059s][info][class,load] java.lang.ref.Reference$ReferenceHandler source: shared objects file
+[0.059s][info][class,load] jdk.internal.ref.Cleaner source: shared objects file
+[0.059s][info][class,load] java.lang.ref.ReferenceQueue source: shared objects file
+[0.059s][info][class,load] java.lang.ref.ReferenceQueue$Null source: shared objects file
+[0.059s][info][class,load] java.lang.ref.ReferenceQueue$Lock source: shared objects file
+[0.059s][info][class,load] jdk.internal.access.JavaLangRefAccess source: shared objects file
+[0.059s][info][class,load] java.lang.ref.Reference$1 source: shared objects file
+[0.059s][info][class,load] java.lang.ref.Finalizer$FinalizerThread source: shared objects file
+[0.060s][info][class,load] jdk.internal.access.JavaLangAccess source: shared objects file
+[0.060s][info][class,load] java.lang.System$2 source: shared objects file
+[0.060s][info][class,load] jdk.internal.misc.VM source: shared objects file
+[0.060s][info][class,load] jdk.internal.util.SystemProps source: shared objects file
+[0.060s][info][class,load] jdk.internal.util.SystemProps$Raw source: shared objects file
+[0.061s][info][class,load] java.lang.StringConcatHelper source: shared objects file
+[0.061s][info][class,load] java.lang.VersionProps source: shared objects file
+[0.061s][info][class,load] java.util.Arrays source: shared objects file
+[0.061s][info][class,load] java.lang.CharacterData source: shared objects file
+[0.061s][info][class,load] java.lang.CharacterDataLatin1 source: shared objects file
+[0.061s][info][class,load] java.util.HashMap$EntrySet source: shared objects file
+[0.062s][info][class,load] java.util.HashMap$HashIterator source: shared objects file
+[0.062s][info][class,load] java.util.HashMap$EntryIterator source: shared objects file
+[0.062s][info][class,load] jdk.internal.util.StaticProperty source: shared objects file
+[0.062s][info][class,load] java.io.FileInputStream source: shared objects file
+[0.062s][info][class,load] java.io.FileDescriptor source: shared objects file
+[0.062s][info][class,load] jdk.internal.access.JavaIOFileDescriptorAccess source: shared objects file
+[0.062s][info][class,load] java.io.FileDescriptor$1 source: shared objects file
+[0.062s][info][class,load] java.io.Flushable source: shared objects file
+[0.062s][info][class,load] java.io.OutputStream source: shared objects file
+[0.062s][info][class,load] java.io.FileOutputStream source: shared objects file
+[0.062s][info][class,load] java.io.FilterInputStream source: shared objects file
+[0.062s][info][class,load] java.io.BufferedInputStream source: shared objects file
+[0.062s][info][class,load] java.io.FilterOutputStream source: shared objects file
+[0.062s][info][class,load] java.io.PrintStream source: shared objects file
+[0.062s][info][class,load] java.io.BufferedOutputStream source: shared objects file
+[0.062s][info][class,load] java.io.Writer source: shared objects file
+[0.062s][info][class,load] java.io.OutputStreamWriter source: shared objects file
+[0.062s][info][class,load] java.nio.charset.Charset source: shared objects file
+[0.062s][info][class,load] java.nio.charset.spi.CharsetProvider source: shared objects file
+[0.062s][info][class,load] sun.nio.cs.StandardCharsets source: shared objects file
+[0.062s][info][class,load] java.lang.ThreadLocal source: shared objects file
+[0.062s][info][class,load] java.util.concurrent.atomic.AtomicInteger source: shared objects file
+[0.062s][info][class,load] sun.security.action.GetPropertyAction source: shared objects file
+[0.062s][info][class,load] sun.nio.cs.HistoricallyNamedCharset source: shared objects file
+[0.063s][info][class,load] sun.nio.cs.Unicode source: shared objects file
+[0.063s][info][class,load] sun.nio.cs.UTF_8 source: shared objects file
+[0.063s][info][class,load] sun.nio.cs.StreamEncoder source: shared objects file
+[0.063s][info][class,load] java.nio.charset.CharsetEncoder source: shared objects file
+[0.063s][info][class,load] sun.nio.cs.UTF_8$Encoder source: jrt:/java.base
+[0.063s][info][class,load] java.nio.charset.CodingErrorAction source: shared objects file
+[0.063s][info][class,load] java.nio.ByteBuffer source: shared objects file
+[0.063s][info][class,load] jdk.internal.misc.ScopedMemoryAccess source: shared objects file
+[0.064s][info][class,load] jdk.internal.access.JavaNioAccess source: shared objects file
+[0.064s][info][class,load] java.nio.Buffer$1 source: shared objects file
+[0.064s][info][class,load] java.nio.HeapByteBuffer source: shared objects file
+[0.064s][info][class,load] java.nio.ByteOrder source: shared objects file
+[0.064s][info][class,load] java.io.BufferedWriter source: shared objects file
+[0.064s][info][class,load] java.lang.Terminator source: shared objects file
+[0.064s][info][class,load] jdk.internal.misc.Signal$Handler source: shared objects file
+[0.064s][info][class,load] java.lang.Terminator$1 source: shared objects file
+[0.064s][info][class,load] jdk.internal.misc.Signal source: shared objects file
+[0.064s][info][class,load] java.util.Hashtable$Entry source: shared objects file
+[0.064s][info][class,load] jdk.internal.misc.Signal$NativeHandler source: shared objects file
+[0.064s][info][class,load] jdk.internal.misc.OSEnvironment source: shared objects file
+[0.064s][info][class,load] java.util.Collections source: shared objects file
+[0.064s][info][class,load] java.util.Collections$EmptySet source: shared objects file
+[0.064s][info][class,load] java.util.Collections$EmptyList source: shared objects file
+[0.064s][info][class,load] java.util.Collections$EmptyMap source: shared objects file
+[0.064s][info][class,load] java.lang.IllegalArgumentException source: shared objects file
+[0.067s][info][class,load] java.lang.invoke.MethodHandleStatics source: shared objects file
+[0.067s][info][class,load] jdk.internal.module.ModuleBootstrap source: shared objects file
+[0.067s][info][class,load] sun.invoke.util.VerifyAccess source: shared objects file
+[0.068s][info][class,load] java.lang.reflect.Modifier source: shared objects file
+[0.068s][info][class,load] jdk.internal.access.JavaLangModuleAccess source: shared objects file
+[0.068s][info][class,load] java.lang.module.ModuleDescriptor$1 source: shared objects file
+[0.068s][info][class,load] java.io.File source: shared objects file
+[0.068s][info][class,load] java.io.DefaultFileSystem source: shared objects file
+[0.068s][info][class,load] java.io.FileSystem source: shared objects file
+[0.068s][info][class,load] java.io.UnixFileSystem source: shared objects file
+[0.068s][info][class,load] jdk.internal.util.ArraysSupport source: shared objects file
+[0.068s][info][class,load] jdk.internal.module.ModulePatcher source: shared objects file
+[0.068s][info][class,load] jdk.internal.module.ModuleBootstrap$Counters source: shared objects file
+[0.068s][info][class,load] jdk.internal.access.JavaNetUriAccess source: shared objects file
+[0.069s][info][class,load] java.net.URI$1 source: shared objects file
+[0.069s][info][class,load] java.security.cert.Certificate source: shared objects file
+[0.069s][info][class,load] java.lang.ClassLoader$ParallelLoaders source: shared objects file
+[0.069s][info][class,load] java.util.WeakHashMap source: shared objects file
+[0.069s][info][class,load] java.util.WeakHashMap$Entry source: shared objects file
+[0.069s][info][class,load] java.util.Collections$SetFromMap source: shared objects file
+[0.069s][info][class,load] java.util.WeakHashMap$KeySet source: shared objects file
+[0.069s][info][class,load] jdk.internal.access.JavaSecurityAccess source: shared objects file
+[0.069s][info][class,load] java.security.ProtectionDomain$JavaSecurityAccessImpl source: shared objects file
+[0.069s][info][class,load] jdk.internal.loader.ClassLoaderHelper source: shared objects file
+[0.069s][info][class,load] java.util.Queue source: shared objects file
+[0.069s][info][class,load] java.util.Deque source: shared objects file
+[0.069s][info][class,load] java.util.ArrayDeque source: shared objects file
+[0.069s][info][class,load] jdk.internal.loader.BootLoader source: shared objects file
+[0.070s][info][class,load] jdk.internal.loader.URLClassPath source: shared objects file
+[0.070s][info][class,load] java.net.URLStreamHandlerFactory source: shared objects file
+[0.070s][info][class,load] java.net.URL$DefaultFactory source: shared objects file
+[0.070s][info][class,load] jdk.internal.access.JavaNetURLAccess source: shared objects file
+[0.070s][info][class,load] java.net.URL$3 source: shared objects file
+[0.070s][info][class,load] java.io.File$PathStatus source: shared objects file
+[0.070s][info][class,load] sun.net.www.ParseUtil source: shared objects file
+[0.070s][info][class,load] java.util.HexFormat source: shared objects file
+[0.070s][info][class,load] java.net.URLStreamHandler source: shared objects file
+[0.070s][info][class,load] sun.net.www.protocol.file.Handler source: shared objects file
+[0.070s][info][class,load] sun.net.util.IPAddressUtil source: shared objects file
+[0.071s][info][class,load] jdk.internal.util.Preconditions source: shared objects file
+[0.071s][info][class,load] sun.net.www.protocol.jar.Handler source: shared objects file
+[0.071s][info][class,load] java.lang.invoke.StringConcatFactory source: shared objects file
+[0.071s][info][class,load] java.lang.invoke.StringConcatFactory$1 source: shared objects file
+[0.071s][info][class,load] java.lang.invoke.StringConcatFactory$2 source: shared objects file
+[0.071s][info][class,load] java.lang.invoke.StringConcatFactory$3 source: shared objects file
+[0.074s][info][class,load] sun.launcher.LauncherHelper source: shared objects file
+[0.074s][info][class,load] java.lang.StringCoding source: shared objects file
+[0.075s][info][class,load] sun.net.util.URLUtil source: shared objects file
+[0.075s][info][class,load] java.util.Locale source: shared objects file
+[0.075s][info][class,load] sun.util.locale.LocaleUtils source: shared objects file
+[0.075s][info][class,load] java.util.Optional source: shared objects file
+[0.075s][info][class,load] java.security.PrivilegedExceptionAction source: shared objects file
+[0.075s][info][class,load] jdk.internal.loader.URLClassPath$3 source: shared objects file
+[0.075s][info][class,load] jdk.internal.loader.URLClassPath$Loader source: shared objects file
+[0.075s][info][class,load] jdk.internal.loader.URLClassPath$FileLoader source: jrt:/java.base
+[0.075s][info][class,load] jdk.internal.loader.Resource source: shared objects file
+[0.075s][info][class,load] jdk.internal.loader.URLClassPath$FileLoader$1 source: jrt:/java.base
+[0.076s][info][class,load] java.lang.ref.Cleaner$Cleanable source: shared objects file
+[0.076s][info][class,load] jdk.internal.ref.PhantomCleanable source: shared objects file
+[0.076s][info][class,load] java.io.FileCleanable source: shared objects file
+[0.076s][info][class,load] jdk.internal.ref.CleanerFactory source: shared objects file
+[0.076s][info][class,load] java.util.concurrent.ThreadFactory source: shared objects file
+[0.076s][info][class,load] jdk.internal.ref.CleanerFactory$1 source: shared objects file
+[0.076s][info][class,load] java.lang.ref.Cleaner source: shared objects file
+[0.076s][info][class,load] java.lang.ref.Cleaner$1 source: shared objects file
+[0.076s][info][class,load] jdk.internal.ref.CleanerImpl source: shared objects file
+[0.076s][info][class,load] jdk.internal.ref.CleanerImpl$PhantomCleanableRef source: shared objects file
+[0.076s][info][class,load] jdk.internal.ref.CleanerImpl$CleanerCleanable source: shared objects file
+[0.076s][info][class,load] jdk.internal.misc.InnocuousThread source: shared objects file
+[0.076s][info][class,load] sun.nio.ByteBuffered source: shared objects file
+[0.076s][info][class,load] java.io.FileInputStream$1 source: shared objects file
+[0.076s][info][class,load] java.security.SecureClassLoader$CodeSourceKey source: shared objects file
+[0.076s][info][class,load] java.security.SecureClassLoader$1 source: shared objects file
+[0.076s][info][class,load] java.security.PermissionCollection source: shared objects file
+[0.076s][info][class,load] sun.security.util.LazyCodeSourcePermissionCollection source: shared objects file
+[0.076s][info][class,load] java.security.Permissions source: shared objects file
+[0.076s][info][class,load] java.lang.RuntimePermission source: shared objects file
+[0.076s][info][class,load] java.security.BasicPermissionCollection source: shared objects file
+[0.076s][info][class,load] java.security.AllPermission source: shared objects file
+[0.076s][info][class,load] java.security.UnresolvedPermission source: shared objects file
+[0.076s][info][class,load] java.security.SecureClassLoader$DebugHolder source: shared objects file
+[0.076s][info][class,load] sun.security.util.Debug source: shared objects file
+[0.077s][info][class,load] SessionConfigVectors source: file:/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/offline-runs/r2/session-vectors/classes/
+[0.077s][info][class,load] java.lang.NamedPackage source: shared objects file
+[0.077s][info][class,load] java.lang.Class$ReflectionData source: shared objects file
+[0.077s][info][class,load] java.lang.Class$Atomic source: shared objects file
+[0.077s][info][class,load] java.io.ByteArrayOutputStream source: shared objects file
+[0.077s][info][class,load] java.lang.IllegalStateException source: jrt:/java.base
+[0.077s][info][class,load] jdk.internal.loader.URLClassPath$JarLoader source: shared objects file
+[0.078s][info][class,load] java.util.zip.ZipConstants source: shared objects file
+[0.078s][info][class,load] java.util.zip.ZipFile source: shared objects file
+[0.078s][info][class,load] jdk.internal.access.JavaUtilZipFileAccess source: shared objects file
+[0.078s][info][class,load] java.util.zip.ZipFile$1 source: shared objects file
+[0.078s][info][class,load] jdk.internal.loader.URLClassPath$JarLoader$1 source: shared objects file
+[0.078s][info][class,load] jdk.internal.loader.FileURLMapper source: shared objects file
+[0.078s][info][class,load] java.util.jar.JarFile source: shared objects file
+[0.078s][info][class,load] jdk.internal.access.JavaUtilJarAccess source: shared objects file
+[0.078s][info][class,load] java.util.jar.JavaUtilJarAccessImpl source: shared objects file
+[0.078s][info][class,load] java.lang.Runtime$Version source: shared objects file
+[0.078s][info][class,load] java.util.zip.ZipFile$CleanableResource source: shared objects file
+[0.078s][info][class,load] java.util.zip.ZipCoder source: shared objects file
+[0.078s][info][class,load] java.util.zip.ZipCoder$UTF8ZipCoder source: shared objects file
+[0.078s][info][class,load] java.util.zip.ZipFile$Source source: shared objects file
+[0.078s][info][class,load] sun.nio.fs.DefaultFileSystemProvider source: shared objects file
+[0.078s][info][class,load] java.nio.file.spi.FileSystemProvider source: shared objects file
+[0.078s][info][class,load] sun.nio.fs.AbstractFileSystemProvider source: shared objects file
+[0.078s][info][class,load] sun.nio.fs.UnixFileSystemProvider source: shared objects file
+[0.078s][info][class,load] sun.nio.fs.LinuxFileSystemProvider source: shared objects file
+[0.078s][info][class,load] java.nio.file.OpenOption source: shared objects file
+[0.078s][info][class,load] java.nio.file.StandardOpenOption source: shared objects file
+[0.079s][info][class,load] java.nio.file.FileSystem source: shared objects file
+[0.079s][info][class,load] sun.nio.fs.UnixFileSystem source: shared objects file
+[0.079s][info][class,load] sun.nio.fs.LinuxFileSystem source: shared objects file
+[0.079s][info][class,load] java.nio.file.Watchable source: shared objects file
+[0.079s][info][class,load] java.nio.file.Path source: shared objects file
+[0.079s][info][class,load] sun.nio.fs.UnixPath source: shared objects file
+[0.079s][info][class,load] sun.nio.fs.Util source: shared objects file
+[0.079s][info][class,load] sun.nio.fs.UnixNativeDispatcher source: shared objects file
+[0.079s][info][class,load] jdk.internal.loader.NativeLibraries$LibraryPaths source: shared objects file
+[0.079s][info][class,load] jdk.internal.loader.NativeLibraries$1 source: shared objects file
+[0.079s][info][class,load] java.util.ArrayDeque$DeqIterator source: shared objects file
+[0.079s][info][class,load] jdk.internal.loader.NativeLibrary source: shared objects file
+[0.079s][info][class,load] jdk.internal.loader.NativeLibraries$NativeLibraryImpl source: shared objects file
+[0.079s][info][class,load] java.util.concurrent.ConcurrentHashMap$CollectionView source: shared objects file
+[0.079s][info][class,load] java.util.concurrent.ConcurrentHashMap$ValuesView source: shared objects file
+[0.080s][info][class,load] java.util.concurrent.ConcurrentHashMap$Traverser source: shared objects file
+[0.080s][info][class,load] java.util.concurrent.ConcurrentHashMap$BaseIterator source: shared objects file
+[0.080s][info][class,load] java.util.Enumeration source: shared objects file
+[0.080s][info][class,load] java.util.concurrent.ConcurrentHashMap$ValueIterator source: shared objects file
+[0.080s][info][class,load] java.nio.file.attribute.BasicFileAttributes source: shared objects file
+[0.080s][info][class,load] java.nio.file.attribute.PosixFileAttributes source: shared objects file
+[0.080s][info][class,load] sun.nio.fs.UnixFileAttributes source: shared objects file
+[0.080s][info][class,load] sun.nio.fs.UnixFileStoreAttributes source: shared objects file
+[0.080s][info][class,load] sun.nio.fs.UnixMountEntry source: shared objects file
+[0.080s][info][class,load] java.util.zip.ZipFile$Source$Key source: shared objects file
+[0.080s][info][class,load] java.nio.file.CopyOption source: shared objects file
+[0.080s][info][class,load] java.nio.file.LinkOption source: shared objects file
+[0.080s][info][class,load] java.nio.file.Files source: shared objects file
+[0.080s][info][class,load] java.nio.file.attribute.DosFileAttributes source: shared objects file
+[0.080s][info][class,load] java.nio.file.attribute.AttributeView source: shared objects file
+[0.080s][info][class,load] java.nio.file.attribute.FileAttributeView source: shared objects file
+[0.080s][info][class,load] java.nio.file.attribute.BasicFileAttributeView source: shared objects file
+[0.080s][info][class,load] java.nio.file.attribute.DosFileAttributeView source: shared objects file
+[0.080s][info][class,load] java.nio.file.attribute.UserDefinedFileAttributeView source: shared objects file
+[0.080s][info][class,load] sun.nio.fs.UnixFileAttributeViews source: shared objects file
+[0.080s][info][class,load] sun.nio.fs.DynamicFileAttributeView source: shared objects file
+[0.080s][info][class,load] sun.nio.fs.AbstractBasicFileAttributeView source: shared objects file
+[0.080s][info][class,load] sun.nio.fs.UnixFileAttributeViews$Basic source: shared objects file
+[0.080s][info][class,load] sun.nio.fs.NativeBuffers source: shared objects file
+[0.080s][info][class,load] jdk.internal.misc.TerminatingThreadLocal source: shared objects file
+[0.080s][info][class,load] sun.nio.fs.NativeBuffers$1 source: shared objects file
+[0.080s][info][class,load] jdk.internal.misc.TerminatingThreadLocal$1 source: shared objects file
+[0.080s][info][class,load] java.lang.ThreadLocal$ThreadLocalMap source: shared objects file
+[0.080s][info][class,load] java.lang.ThreadLocal$ThreadLocalMap$Entry source: shared objects file
+[0.080s][info][class,load] java.util.IdentityHashMap source: shared objects file
+[0.080s][info][class,load] java.util.IdentityHashMap$KeySet source: shared objects file
+[0.080s][info][class,load] sun.nio.fs.NativeBuffer source: shared objects file
+[0.080s][info][class,load] sun.nio.fs.NativeBuffer$Deallocator source: shared objects file
+[0.080s][info][class,load] sun.nio.fs.UnixFileAttributes$UnixAsBasicFileAttributes source: shared objects file
+[0.081s][info][class,load] java.io.DataOutput source: shared objects file
+[0.081s][info][class,load] java.io.DataInput source: shared objects file
+[0.081s][info][class,load] java.io.RandomAccessFile source: shared objects file
+[0.081s][info][class,load] jdk.internal.access.JavaIORandomAccessFileAccess source: shared objects file
+[0.081s][info][class,load] java.io.RandomAccessFile$2 source: shared objects file
+[0.081s][info][class,load] java.util.zip.ZipFile$Source$End source: shared objects file
+[0.081s][info][class,load] java.util.zip.ZipUtils source: shared objects file
+[0.084s][info][class,load] java.util.concurrent.TimeUnit source: shared objects file
+[0.084s][info][class,load] java.nio.file.attribute.FileTime source: shared objects file
+[0.084s][info][class,load] jdk.internal.perf.PerfCounter source: shared objects file
+[0.084s][info][class,load] jdk.internal.perf.Perf$GetPerfAction source: shared objects file
+[0.084s][info][class,load] jdk.internal.perf.Perf source: shared objects file
+[0.084s][info][class,load] jdk.internal.perf.PerfCounter$CoreCounters source: shared objects file
+[0.084s][info][class,load] sun.nio.ch.DirectBuffer source: shared objects file
+[0.084s][info][class,load] java.nio.MappedByteBuffer source: shared objects file
+[0.084s][info][class,load] java.nio.DirectByteBuffer source: shared objects file
+[0.084s][info][class,load] java.nio.Bits source: shared objects file
+[0.084s][info][class,load] java.util.concurrent.atomic.AtomicLong source: shared objects file
+[0.084s][info][class,load] jdk.internal.misc.VM$BufferPool source: shared objects file
+[0.084s][info][class,load] java.nio.Bits$1 source: shared objects file
+[0.084s][info][class,load] java.nio.LongBuffer source: shared objects file
+[0.084s][info][class,load] java.nio.DirectLongBufferU source: shared objects file
+[0.088s][info][class,load] jdk.internal.util.jar.JarIndex source: shared objects file
+[0.088s][info][class,load] java.util.zip.ZipEntry source: shared objects file
+[0.088s][info][class,load] java.util.jar.JarEntry source: shared objects file
+[0.088s][info][class,load] java.util.jar.JarFile$JarFileEntry source: shared objects file
+[0.088s][info][class,load] java.util.zip.ZipFile$ZipFileInputStream source: shared objects file
+[0.088s][info][class,load] java.util.zip.InflaterInputStream source: shared objects file
+[0.088s][info][class,load] java.util.zip.ZipFile$ZipFileInflaterInputStream source: shared objects file
+[0.088s][info][class,load] java.util.zip.Inflater source: shared objects file
+[0.088s][info][class,load] java.util.zip.Inflater$InflaterZStreamRef source: shared objects file
+[0.089s][info][class,load] java.util.zip.ZipFile$InflaterCleanupAction source: shared objects file
+[0.089s][info][class,load] sun.security.util.SignatureFileVerifier source: shared objects file
+[0.089s][info][class,load] sun.security.action.GetIntegerAction source: shared objects file
+[0.089s][info][class,load] jdk.internal.loader.URLClassPath$JarLoader$2 source: shared objects file
+[0.091s][info][class,load] java.util.jar.Attributes source: shared objects file
+[0.091s][info][class,load] java.util.LinkedHashMap source: shared objects file
+[0.091s][info][class,load] java.util.jar.Manifest$FastInputStream source: shared objects file
+[0.092s][info][class,load] java.lang.Package source: shared objects file
+[0.092s][info][class,load] java.lang.Package$VersionInfo source: shared objects file
+[0.092s][info][class,load] java.util.zip.Checksum source: shared objects file
+[0.092s][info][class,load] java.util.zip.CRC32 source: shared objects file
+[0.092s][info][class,load] java.util.zip.Checksum$1 source: shared objects file
+[0.092s][info][class,load] net.i2p.data.i2cp.I2CPMessage source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.093s][info][class,load] java.lang.PublicMethods$MethodList source: shared objects file
+[0.093s][info][class,load] java.lang.PublicMethods$Key source: shared objects file
+[0.093s][info][class,load] java.lang.Void source: shared objects file
+[0.093s][info][class,load] java.nio.file.Paths source: shared objects file
+[0.093s][info][class,load] java.nio.file.FileSystems source: shared objects file
+[0.093s][info][class,load] java.nio.file.FileSystems$DefaultFileSystemHolder source: shared objects file
+[0.093s][info][class,load] java.nio.file.FileSystems$DefaultFileSystemHolder$1 source: shared objects file
+[0.093s][info][class,load] java.net.URI$Parser source: shared objects file
+[0.093s][info][class,load] java.nio.file.attribute.FileAttribute source: jrt:/java.base
+[0.093s][info][class,load] sun.nio.fs.UnixFileModeAttribute source: jrt:/java.base
+[0.094s][info][class,load] sun.nio.fs.UnixChannelFactory source: jrt:/java.base
+[0.094s][info][class,load] sun.nio.fs.UnixChannelFactory$Flags source: jrt:/java.base
+[0.094s][info][class,load] java.util.Collections$EmptyIterator source: shared objects file
+[0.094s][info][class,load] java.nio.channels.Channel source: jrt:/java.base
+[0.094s][info][class,load] java.nio.channels.ReadableByteChannel source: jrt:/java.base
+[0.095s][info][class,load] java.nio.channels.WritableByteChannel source: jrt:/java.base
+[0.095s][info][class,load] java.nio.channels.ByteChannel source: jrt:/java.base
+[0.095s][info][class,load] java.nio.channels.SeekableByteChannel source: jrt:/java.base
+[0.095s][info][class,load] java.nio.channels.GatheringByteChannel source: jrt:/java.base
+[0.095s][info][class,load] java.nio.channels.ScatteringByteChannel source: jrt:/java.base
+[0.096s][info][class,load] java.nio.channels.InterruptibleChannel source: jrt:/java.base
+[0.096s][info][class,load] java.nio.channels.spi.AbstractInterruptibleChannel source: jrt:/java.base
+[0.096s][info][class,load] java.nio.channels.FileChannel source: jrt:/java.base
+[0.096s][info][class,load] sun.nio.ch.FileChannelImpl source: jrt:/java.base
+[0.096s][info][class,load] sun.nio.ch.IOUtil source: jrt:/java.base
+[0.096s][info][class,load] sun.nio.ch.NativeThreadSet source: jrt:/java.base
+[0.097s][info][class,load] sun.nio.ch.NativeDispatcher source: jrt:/java.base
+[0.097s][info][class,load] sun.nio.ch.FileDispatcher source: jrt:/java.base
+[0.097s][info][class,load] sun.nio.ch.FileDispatcherImpl source: jrt:/java.base
+[0.097s][info][class,load] sun.nio.ch.NativeThread source: jrt:/java.base
+[0.097s][info][class,load] sun.nio.ch.FileChannelImpl$Closer source: jrt:/java.base
+[0.097s][info][class,load] java.nio.channels.Channels source: jrt:/java.base
+[0.097s][info][class,load] sun.nio.ch.ChannelInputStream source: jrt:/java.base
+[0.097s][info][class,load] sun.nio.ch.IOStatus source: jrt:/java.base
+[0.097s][info][class,load] java.nio.channels.SelectableChannel source: jrt:/java.base
+[0.097s][info][class,load] sun.nio.ch.Util source: jrt:/java.base
+[0.098s][info][class,load] sun.nio.ch.Util$1 source: jrt:/java.base
+[0.098s][info][class,load] sun.nio.ch.Util$BufferCache source: jrt:/java.base
+[0.098s][info][class,load] java.nio.DirectByteBuffer$Deallocator source: jrt:/java.base
+[0.100s][info][class,load] net.i2p.data.DataStructure source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.100s][info][class,load] net.i2p.data.DataStructureImpl source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.100s][info][class,load] net.i2p.data.KeysAndCert source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.100s][info][class,load] net.i2p.data.Destination source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.101s][info][class,load] java.io.IOException source: jrt:/java.base
+[0.101s][info][class,load] net.i2p.I2PException source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.101s][info][class,load] net.i2p.data.DataFormatException source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.102s][info][class,load] net.i2p.data.Certificate source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.102s][info][class,load] net.i2p.data.KeyCertificate source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.103s][info][class,load] net.i2p.util.ByteArrayStream source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.104s][info][class,load] java.util.concurrent.ConcurrentHashMap$ForwardingNode source: shared objects file
+[0.105s][info][class,load] net.i2p.util.SystemVersion source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.106s][info][class,load] net.i2p.util.VersionComparator source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.107s][info][class,load] net.i2p.util.LHMCache source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.108s][info][class,load] net.i2p.data.SimpleDataStructure source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.109s][info][class,load] net.i2p.data.PublicKey source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.109s][info][class,load] net.i2p.crypto.EncType source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.109s][info][class,load] java.security.spec.AlgorithmParameterSpec source: jrt:/java.base
+[0.109s][info][class,load] java.security.GeneralSecurityException source: jrt:/java.base
+[0.109s][info][class,load] java.security.spec.InvalidParameterSpecException source: jrt:/java.base
+[0.109s][info][class,load] java.lang.NumberFormatException source: jrt:/java.base
+[0.110s][info][class,load] java.lang.IncompatibleClassChangeError source: shared objects file
+[0.110s][info][class,load] java.lang.NoSuchFieldError source: jrt:/java.base
+[0.110s][info][class,load] net.i2p.crypto.EncAlgo source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.110s][info][class,load] net.i2p.crypto.CryptoConstants source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.110s][info][class,load] java.math.BigInteger source: shared objects file
+[0.111s][info][class,load] net.i2p.util.NativeBigInteger source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.112s][info][class,load] net.i2p.util.NativeBigInteger$1 source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.112s][info][class,load] net.i2p.util.NativeBigInteger$ModPowLimiter source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.113s][info][class,load] java.util.random.RandomGenerator source: shared objects file
+[0.113s][info][class,load] java.util.Random source: shared objects file
+[0.113s][info][class,load] java.security.SecureRandom source: jrt:/java.base
+[0.113s][info][class,load] net.i2p.crypto.EntropyHarvester source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.113s][info][class,load] net.i2p.util.RandomSource source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.114s][info][class,load] freenet.support.CPUInformation.UnknownCPUException source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.114s][info][class,load] java.lang.Readable source: shared objects file
+[0.114s][info][class,load] java.io.Reader source: jrt:/java.base
+[0.114s][info][class,load] java.io.InputStreamReader source: jrt:/java.base
+[0.114s][info][class,load] java.lang.UnsatisfiedLinkError source: jrt:/java.base
+[0.115s][info][class,load] net.i2p.I2PAppContext source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.116s][info][class,load] net.i2p.app.ClientAppManager source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.116s][info][class,load] net.i2p.util.SecureDirectory source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.117s][info][class,load] net.i2p.crypto.AESEngine source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.117s][info][class,load] net.i2p.crypto.CryptixAESEngine source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.118s][info][class,load] net.i2p.util.FortunaRandomSource source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.119s][info][class,load] freenet.support.CPUInformation.CPUID source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.120s][info][class,load] freenet.support.CPUInformation.CPUInfo source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.121s][info][class,load] net.i2p.util.I2PProperties source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.121s][info][class,load] net.i2p.util.ConcurrentHashSet source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.122s][info][class,load] net.i2p.util.PortMapper source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.122s][info][class,load] net.i2p.app.ClientAppManagerImpl source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.123s][info][class,load] jdk.internal.module.Resources source: shared objects file
+[0.123s][info][class,load] jdk.internal.loader.BuiltinClassLoader$2 source: shared objects file
+[0.123s][info][class,load] jdk.internal.loader.BuiltinClassLoader$5 source: shared objects file
+[0.123s][info][class,load] java.lang.module.ModuleReader source: shared objects file
+[0.123s][info][class,load] jdk.internal.module.SystemModuleFinders$SystemModuleReader source: shared objects file
+[0.123s][info][class,load] jdk.internal.module.SystemModuleFinders$SystemImage source: shared objects file
+[0.123s][info][class,load] jdk.internal.jimage.ImageReaderFactory source: shared objects file
+[0.123s][info][class,load] jdk.internal.jimage.ImageReaderFactory$1 source: shared objects file
+[0.123s][info][class,load] jdk.internal.jimage.ImageReader source: shared objects file
+[0.123s][info][class,load] jdk.internal.jimage.BasicImageReader source: shared objects file
+[0.123s][info][class,load] jdk.internal.jimage.ImageReader$SharedImageReader source: shared objects file
+[0.123s][info][class,load] jdk.internal.jimage.BasicImageReader$1 source: shared objects file
+[0.123s][info][class,load] jdk.internal.jimage.NativeImageBuffer source: shared objects file
+[0.123s][info][class,load] jdk.internal.jimage.NativeImageBuffer$1 source: shared objects file
+[0.124s][info][class,load] jdk.internal.jimage.ImageHeader source: shared objects file
+[0.124s][info][class,load] java.nio.IntBuffer source: shared objects file
+[0.124s][info][class,load] java.nio.DirectIntBufferU source: shared objects file
+[0.124s][info][class,load] java.nio.DirectByteBufferR source: shared objects file
+[0.124s][info][class,load] java.nio.DirectIntBufferRU source: shared objects file
+[0.124s][info][class,load] jdk.internal.jimage.ImageStrings source: shared objects file
+[0.124s][info][class,load] jdk.internal.jimage.ImageStringsReader source: shared objects file
+[0.124s][info][class,load] jdk.internal.jimage.decompressor.Decompressor source: shared objects file
+[0.124s][info][class,load] jdk.internal.jimage.ImageLocation source: shared objects file
+[0.128s][info][class,load] net.i2p.util.LogManager source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.129s][info][class,load] net.i2p.util.I2PThread source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.129s][info][class,load] net.i2p.util.I2PAppThread source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.129s][info][class,load] net.i2p.util.LogManager$ShutdownHook source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.129s][info][class,load] java.lang.InterruptedException source: jrt:/java.base
+[0.129s][info][class,load] java.lang.InstantiationException source: jrt:/java.base
+[0.130s][info][class,load] java.lang.IllegalAccessException source: jrt:/java.base
+[0.130s][info][class,load] java.lang.reflect.InvocationTargetException source: jrt:/java.base
+[0.130s][info][class,load] java.lang.NoSuchMethodException source: shared objects file
+[0.130s][info][class,load] net.i2p.util.LogWriter source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.131s][info][class,load] net.i2p.util.FileLogWriter source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.132s][info][class,load] net.i2p.util.OrderedProperties source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.132s][info][class,load] net.i2p.util.Log source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.133s][info][class,load] net.i2p.util.Log$LogScope source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.133s][info][class,load] java.util.concurrent.ConcurrentHashMap$KeySetView source: shared objects file
+[0.133s][info][class,load] java.util.concurrent.ConcurrentHashMap$KeyIterator source: shared objects file
+[0.133s][info][class,load] java.text.Format source: shared objects file
+[0.133s][info][class,load] java.text.DateFormat source: shared objects file
+[0.133s][info][class,load] java.util.Locale$Category source: shared objects file
+[0.133s][info][class,load] java.util.spi.LocaleServiceProvider source: shared objects file
+[0.133s][info][class,load] java.text.spi.DateFormatProvider source: shared objects file
+[0.133s][info][class,load] sun.util.locale.provider.LocaleProviderAdapter source: shared objects file
+[0.133s][info][class,load] sun.util.locale.provider.LocaleProviderAdapter$Type source: shared objects file
+[0.133s][info][class,load] java.util.Collections$UnmodifiableCollection source: shared objects file
+[0.133s][info][class,load] java.util.Collections$UnmodifiableList source: shared objects file
+[0.133s][info][class,load] java.util.Collections$UnmodifiableRandomAccessList source: shared objects file
+[0.133s][info][class,load] java.util.Collections$UnmodifiableCollection$1 source: shared objects file
+[0.133s][info][class,load] java.util.ArrayList$Itr source: shared objects file
+[0.133s][info][class,load] sun.util.locale.provider.LocaleProviderAdapter$1 source: shared objects file
+[0.134s][info][class,load] sun.util.locale.provider.ResourceBundleBasedAdapter source: shared objects file
+[0.134s][info][class,load] sun.util.locale.provider.JRELocaleProviderAdapter source: shared objects file
+[0.134s][info][class,load] sun.util.cldr.CLDRLocaleProviderAdapter source: shared objects file
+[0.134s][info][class,load] sun.util.locale.provider.LocaleDataMetaInfo source: shared objects file
+[0.134s][info][class,load] sun.util.cldr.CLDRBaseLocaleDataMetaInfo source: shared objects file
+[0.134s][info][class,load] sun.util.locale.LanguageTag source: shared objects file
+[0.134s][info][class,load] java.lang.StringUTF16 source: shared objects file
+[0.134s][info][class,load] sun.util.locale.ParseStatus source: shared objects file
+[0.134s][info][class,load] sun.util.locale.StringTokenIterator source: shared objects file
+[0.134s][info][class,load] sun.util.locale.InternalLocaleBuilder source: shared objects file
+[0.134s][info][class,load] sun.util.locale.InternalLocaleBuilder$CaseInsensitiveChar source: shared objects file
+[0.134s][info][class,load] sun.util.locale.BaseLocale$Key source: shared objects file
+[0.134s][info][class,load] sun.util.locale.LocaleObjectCache source: shared objects file
+[0.134s][info][class,load] sun.util.locale.BaseLocale$Cache source: shared objects file
+[0.134s][info][class,load] sun.util.locale.LocaleObjectCache$CacheEntry source: shared objects file
+[0.134s][info][class,load] java.util.Locale$Cache source: shared objects file
+[0.135s][info][class,load] jdk.internal.reflect.DelegatingConstructorAccessorImpl source: shared objects file
+[0.135s][info][class,load] java.lang.invoke.LambdaMetafactory source: shared objects file
+[0.135s][info][class,load] java.lang.invoke.MethodType$ConcurrentWeakInternSet source: shared objects file
+[0.135s][info][class,load] java.lang.invoke.MethodTypeForm source: shared objects file
+[0.135s][info][class,load] java.lang.invoke.MethodType$ConcurrentWeakInternSet$WeakEntry source: shared objects file
+[0.136s][info][class,load] sun.invoke.util.Wrapper source: shared objects file
+[0.136s][info][class,load] sun.invoke.util.Wrapper$Format source: shared objects file
+[0.136s][info][class,load] java.lang.invoke.LambdaForm$NamedFunction source: shared objects file
+[0.136s][info][class,load] java.lang.invoke.DirectMethodHandle$Holder source: shared objects file
+[0.136s][info][class,load] sun.invoke.util.ValueConversions source: shared objects file
+[0.136s][info][class,load] java.lang.invoke.MethodHandleImpl source: shared objects file
+[0.136s][info][class,load] java.lang.invoke.Invokers source: shared objects file
+[0.136s][info][class,load] java.lang.invoke.LambdaForm$Kind source: shared objects file
+[0.136s][info][class,load] java.lang.invoke.LambdaForm$BasicType source: shared objects file
+[0.137s][info][class,load] java.lang.reflect.Array source: shared objects file
+[0.137s][info][class,load] java.lang.invoke.LambdaForm$Name source: shared objects file
+[0.137s][info][class,load] java.lang.invoke.LambdaForm$Holder source: shared objects file
+[0.137s][info][class,load] java.lang.invoke.InvokerBytecodeGenerator source: shared objects file
+[0.137s][info][class,load] java.lang.invoke.InvokerBytecodeGenerator$2 source: shared objects file
+[0.137s][info][class,load] java.lang.invoke.MethodHandleImpl$Intrinsic source: shared objects file
+[0.137s][info][class,load] java.lang.invoke.BootstrapMethodInvoker source: shared objects file
+[0.137s][info][class,load] java.lang.invoke.VarHandle$AccessMode source: shared objects file
+[0.137s][info][class,load] java.lang.invoke.VarHandle$AccessType source: shared objects file
+[0.137s][info][class,load] java.lang.invoke.Invokers$Holder source: shared objects file
+[0.138s][info][class,load] jdk.internal.access.JavaLangInvokeAccess source: shared objects file
+[0.138s][info][class,load] java.lang.invoke.MethodHandleImpl$1 source: shared objects file
+[0.138s][info][class,load] java.lang.invoke.AbstractValidatingLambdaMetafactory source: shared objects file
+[0.138s][info][class,load] java.lang.invoke.InnerClassLambdaMetafactory source: shared objects file
+[0.138s][info][class,load] jdk.internal.org.objectweb.asm.Type source: shared objects file
+[0.138s][info][class,load] sun.security.action.GetBooleanAction source: shared objects file
+[0.138s][info][class,load] jdk.internal.org.objectweb.asm.Handle source: shared objects file
+[0.138s][info][class,load] sun.invoke.util.BytecodeDescriptor source: shared objects file
+[0.138s][info][class,load] jdk.internal.org.objectweb.asm.ConstantDynamic source: shared objects file
+[0.138s][info][class,load] java.lang.invoke.MethodHandleInfo source: shared objects file
+[0.138s][info][class,load] java.lang.invoke.InfoFromMemberName source: shared objects file
+[0.138s][info][class,load] jdk.internal.org.objectweb.asm.ClassVisitor source: shared objects file
+[0.138s][info][class,load] jdk.internal.org.objectweb.asm.ClassWriter source: shared objects file
+[0.138s][info][class,load] jdk.internal.org.objectweb.asm.SymbolTable source: shared objects file
+[0.138s][info][class,load] jdk.internal.org.objectweb.asm.Symbol source: shared objects file
+[0.138s][info][class,load] jdk.internal.org.objectweb.asm.SymbolTable$Entry source: shared objects file
+[0.139s][info][class,load] jdk.internal.org.objectweb.asm.ByteVector source: shared objects file
+[0.139s][info][class,load] java.lang.invoke.LambdaProxyClassArchive source: shared objects file
+[0.139s][info][class,load] sun.util.cldr.CLDRLocaleProviderAdapter$$Lambda$57/0x80000005e source: shared objects file
+[0.139s][info][class,load] java.lang.invoke.InnerClassLambdaMetafactory$1 source: shared objects file
+[0.139s][info][class,load] java.lang.invoke.BoundMethodHandle source: shared objects file
+[0.139s][info][class,load] java.lang.invoke.ClassSpecializer source: shared objects file
+[0.139s][info][class,load] java.lang.invoke.BoundMethodHandle$Specializer source: shared objects file
+[0.139s][info][class,load] java.lang.invoke.ClassSpecializer$1 source: shared objects file
+[0.139s][info][class,load] java.lang.invoke.ClassSpecializer$SpeciesData source: shared objects file
+[0.139s][info][class,load] java.lang.invoke.BoundMethodHandle$SpeciesData source: shared objects file
+[0.139s][info][class,load] java.lang.invoke.ClassSpecializer$Factory source: shared objects file
+[0.139s][info][class,load] java.lang.invoke.BoundMethodHandle$Specializer$Factory source: shared objects file
+[0.139s][info][class,load] java.lang.invoke.SimpleMethodHandle source: shared objects file
+[0.139s][info][class,load] java.lang.NoSuchFieldException source: shared objects file
+[0.140s][info][class,load] java.lang.invoke.BoundMethodHandle$Species_L source: shared objects file
+[0.140s][info][class,load] sun.invoke.util.VerifyType source: shared objects file
+[0.140s][info][class,load] sun.invoke.empty.Empty source: shared objects file
+[0.140s][info][class,load] java.lang.invoke.DirectMethodHandle$2 source: shared objects file
+[0.140s][info][class,load] java.lang.invoke.DirectMethodHandle$Accessor source: shared objects file
+[0.140s][info][class,load] java.lang.invoke.DelegatingMethodHandle source: shared objects file
+[0.140s][info][class,load] java.lang.invoke.MethodHandleImpl$IntrinsicMethodHandle source: shared objects file
+[0.141s][info][class,load] java.lang.invoke.DelegatingMethodHandle$Holder source: shared objects file
+[0.141s][info][class,load] sun.invoke.util.Wrapper$1 source: shared objects file
+[0.141s][info][class,load] java.lang.invoke.LambdaFormEditor source: shared objects file
+[0.141s][info][class,load] java.lang.invoke.LambdaFormEditor$TransformKey source: shared objects file
+[0.141s][info][class,load] java.lang.invoke.LambdaFormBuffer source: shared objects file
+[0.141s][info][class,load] java.lang.invoke.LambdaFormEditor$Transform source: shared objects file
+[0.141s][info][class,load] jdk.internal.org.objectweb.asm.MethodVisitor source: shared objects file
+[0.141s][info][class,load] jdk.internal.org.objectweb.asm.MethodWriter source: shared objects file
+[0.141s][info][class,load] jdk.internal.org.objectweb.asm.Label source: shared objects file
+[0.141s][info][class,load] jdk.internal.org.objectweb.asm.Frame source: shared objects file
+[0.141s][info][class,load] jdk.internal.org.objectweb.asm.AnnotationVisitor source: shared objects file
+[0.141s][info][class,load] jdk.internal.org.objectweb.asm.AnnotationWriter source: shared objects file
+[0.141s][info][class,load] java.lang.invoke.InvokerBytecodeGenerator$ClassData source: shared objects file
+[0.142s][info][class,load] jdk.internal.org.objectweb.asm.FieldVisitor source: shared objects file
+[0.142s][info][class,load] jdk.internal.org.objectweb.asm.FieldWriter source: shared objects file
+[0.142s][info][class,load] jdk.internal.org.objectweb.asm.Attribute source: shared objects file
+[0.142s][info][class,load] jdk.internal.org.objectweb.asm.Handler source: shared objects file
+[0.142s][info][class,load] java.lang.invoke.MethodHandles$Lookup$ClassFile source: shared objects file
+[0.142s][info][class,load] java.lang.invoke.MethodHandles$Lookup$ClassOption source: shared objects file
+[0.142s][info][class,load] java.util.ImmutableCollections$SetN$SetNIterator source: shared objects file
+[0.142s][info][class,load] java.lang.invoke.MethodHandles$Lookup$ClassDefiner source: shared objects file
+[0.142s][info][class,load] java.lang.invoke.LambdaForm$MH/0x000075b1ac00c000 source: __JVM_LookupDefineClass__
+[0.142s][info][class,load] java.util.ServiceLoader source: shared objects file
+[0.143s][info][class,load] java.util.ServiceLoader$ModuleServicesLookupIterator source: shared objects file
+[0.143s][info][class,load] jdk.internal.loader.AbstractClassLoaderValue$Memoizer source: shared objects file
+[0.143s][info][class,load] java.util.ListIterator source: shared objects file
+[0.143s][info][class,load] java.util.concurrent.CopyOnWriteArrayList$COWIterator source: shared objects file
+[0.143s][info][class,load] java.util.ServiceLoader$LazyClassPathLookupIterator source: shared objects file
+[0.143s][info][class,load] java.util.ServiceLoader$2 source: shared objects file
+[0.143s][info][class,load] java.util.ServiceLoader$3 source: shared objects file
+[0.143s][info][class,load] jdk.internal.module.ModulePatcher$PatchedModuleReader source: jrt:/java.base
+[0.143s][info][class,load] sun.net.www.protocol.jrt.Handler source: jrt:/java.base
+[0.143s][info][class,load] sun.util.resources.cldr.provider.CLDRLocaleDataMetaInfo source: jrt:/jdk.localedata
+[0.143s][info][class,load] java.util.ServiceLoader$1 source: shared objects file
+[0.144s][info][class,load] java.util.ServiceLoader$Provider source: shared objects file
+[0.144s][info][class,load] java.util.ServiceLoader$ProviderImpl source: shared objects file
+[0.144s][info][class,load] sun.util.locale.provider.JRELocaleProviderAdapter$$Lambda$60/0x800000061 source: shared objects file
+[0.144s][info][class,load] java.lang.invoke.DirectMethodHandle$Constructor source: shared objects file
+[0.145s][info][class,load] sun.util.locale.provider.AvailableLanguageTags source: shared objects file
+[0.145s][info][class,load] sun.util.locale.provider.DateFormatProviderImpl source: shared objects file
+[0.145s][info][class,load] java.util.StringTokenizer source: shared objects file
+[0.148s][info][class,load] sun.util.locale.provider.CalendarDataUtility source: shared objects file
+[0.148s][info][class,load] java.util.Locale$Builder source: shared objects file
+[0.148s][info][class,load] java.text.SimpleDateFormat source: shared objects file
+[0.148s][info][class,load] java.text.AttributedCharacterIterator$Attribute source: shared objects file
+[0.148s][info][class,load] java.text.Format$Field source: shared objects file
+[0.148s][info][class,load] java.text.DateFormat$Field source: shared objects file
+[0.148s][info][class,load] java.util.Calendar source: shared objects file
+[0.148s][info][class,load] java.util.TimeZone source: shared objects file
+[0.148s][info][class,load] sun.util.calendar.ZoneInfo source: shared objects file
+[0.148s][info][class,load] sun.util.calendar.ZoneInfoFile source: shared objects file
+[0.148s][info][class,load] sun.util.calendar.ZoneInfoFile$1 source: shared objects file
+[0.149s][info][class,load] java.io.DataInputStream source: shared objects file
+[0.153s][info][class,load] sun.util.calendar.ZoneInfoFile$ZoneOffsetTransitionRule source: shared objects file
+[0.153s][info][class,load] sun.util.calendar.ZoneInfoFile$Checksum source: jrt:/java.base
+[0.154s][info][class,load] sun.util.spi.CalendarProvider source: shared objects file
+[0.154s][info][class,load] sun.util.locale.provider.JRELocaleProviderAdapter$$Lambda$59/0x800000060 source: shared objects file
+[0.155s][info][class,load] sun.util.locale.provider.CalendarProviderImpl source: shared objects file
+[0.156s][info][class,load] java.util.Calendar$Builder source: shared objects file
+[0.156s][info][class,load] java.util.GregorianCalendar source: shared objects file
+[0.156s][info][class,load] sun.util.calendar.CalendarSystem source: shared objects file
+[0.156s][info][class,load] sun.util.calendar.CalendarSystem$GregorianHolder source: shared objects file
+[0.156s][info][class,load] sun.util.calendar.AbstractCalendar source: shared objects file
+[0.156s][info][class,load] sun.util.calendar.BaseCalendar source: shared objects file
+[0.156s][info][class,load] sun.util.calendar.Gregorian source: shared objects file
+[0.157s][info][class,load] java.util.spi.CalendarDataProvider source: shared objects file
+[0.157s][info][class,load] sun.util.locale.provider.LocaleServiceProviderPool source: shared objects file
+[0.157s][info][class,load] java.text.spi.BreakIteratorProvider source: shared objects file
+[0.157s][info][class,load] java.text.spi.CollatorProvider source: shared objects file
+[0.157s][info][class,load] java.text.spi.DateFormatSymbolsProvider source: shared objects file
+[0.157s][info][class,load] java.text.spi.DecimalFormatSymbolsProvider source: shared objects file
+[0.157s][info][class,load] java.text.spi.NumberFormatProvider source: shared objects file
+[0.157s][info][class,load] java.util.spi.CurrencyNameProvider source: shared objects file
+[0.157s][info][class,load] java.util.spi.LocaleNameProvider source: shared objects file
+[0.157s][info][class,load] java.util.spi.TimeZoneNameProvider source: shared objects file
+[0.157s][info][class,load] sun.util.locale.provider.LocaleServiceProviderPool$LocalizedObjectGetter source: shared objects file
+[0.157s][info][class,load] sun.util.locale.provider.CalendarDataUtility$CalendarWeekParameterGetter source: shared objects file
+[0.157s][info][class,load] java.util.ResourceBundle$Control source: shared objects file
+[0.157s][info][class,load] java.util.ResourceBundle source: shared objects file
+[0.157s][info][class,load] java.util.ResourceBundle$Control$CandidateListCache source: shared objects file
+[0.157s][info][class,load] java.util.ResourceBundle$SingleFormatControl source: shared objects file
+[0.157s][info][class,load] java.util.ResourceBundle$NoFallbackControl source: shared objects file
+[0.157s][info][class,load] java.util.AbstractSequentialList source: shared objects file
+[0.157s][info][class,load] java.util.LinkedList source: shared objects file
+[0.157s][info][class,load] java.util.LinkedList$Node source: shared objects file
+[0.158s][info][class,load] sun.util.cldr.CLDRLocaleProviderAdapter$$Lambda$58/0x80000005f source: shared objects file
+[0.158s][info][class,load] sun.util.locale.provider.CalendarDataProviderImpl source: shared objects file
+[0.158s][info][class,load] sun.util.cldr.CLDRCalendarDataProviderImpl source: shared objects file
+[0.158s][info][class,load] java.util.HashMap$KeySet source: shared objects file
+[0.159s][info][class,load] java.util.HashMap$KeyIterator source: shared objects file
+[0.191s][info][class,load] sun.util.locale.provider.LocaleResources source: shared objects file
+[0.191s][info][class,load] sun.util.resources.LocaleData source: shared objects file
+[0.191s][info][class,load] java.util.ImmutableCollections$ListItr source: shared objects file
+[0.191s][info][class,load] sun.util.resources.LocaleData$1 source: shared objects file
+[0.191s][info][class,load] sun.util.resources.Bundles$Strategy source: shared objects file
+[0.191s][info][class,load] sun.util.resources.LocaleData$LocaleDataStrategy source: shared objects file
+[0.192s][info][class,load] sun.util.resources.Bundles source: shared objects file
+[0.192s][info][class,load] sun.util.resources.Bundles$1 source: shared objects file
+[0.192s][info][class,load] jdk.internal.access.JavaUtilResourceBundleAccess source: shared objects file
+[0.192s][info][class,load] java.util.ResourceBundle$1 source: shared objects file
+[0.192s][info][class,load] java.util.ResourceBundle$2 source: shared objects file
+[0.192s][info][class,load] sun.util.resources.Bundles$CacheKey source: shared objects file
+[0.192s][info][class,load] java.util.ListResourceBundle source: shared objects file
+[0.192s][info][class,load] sun.util.resources.cldr.CalendarData source: shared objects file
+[0.192s][info][class,load] java.util.ResourceBundle$ResourceBundleProviderHelper source: shared objects file
+[0.193s][info][class,load] java.util.ResourceBundle$ResourceBundleProviderHelper$$Lambda$11/0x80000000f source: shared objects file
+[0.193s][info][class,load] sun.util.resources.Bundles$CacheKeyReference source: shared objects file
+[0.193s][info][class,load] sun.util.resources.Bundles$BundleReference source: shared objects file
+[0.193s][info][class,load] sun.util.locale.provider.LocaleResources$ResourceReference source: shared objects file
+[0.193s][info][class,load] sun.util.calendar.CalendarDate source: shared objects file
+[0.193s][info][class,load] sun.util.calendar.BaseCalendar$Date source: shared objects file
+[0.193s][info][class,load] sun.util.calendar.Gregorian$Date source: shared objects file
+[0.193s][info][class,load] sun.util.calendar.CalendarUtils source: shared objects file
+[0.193s][info][class,load] java.text.DateFormatSymbols source: shared objects file
+[0.194s][info][class,load] sun.util.locale.provider.JRELocaleProviderAdapter$$Lambda$61/0x800000062 source: shared objects file
+[0.194s][info][class,load] sun.util.locale.provider.DateFormatSymbolsProviderImpl source: shared objects file
+[0.194s][info][class,load] sun.text.resources.cldr.FormatData source: shared objects file
+[0.195s][info][class,load] sun.text.resources.cldr.FormatData_en source: jrt:/java.base
+[0.196s][info][class,load] java.text.NumberFormat source: shared objects file
+[0.198s][info][class,load] sun.util.locale.provider.JRELocaleProviderAdapter$$Lambda$63/0x800000064 source: shared objects file
+[0.198s][info][class,load] sun.util.locale.provider.NumberFormatProviderImpl source: shared objects file
+[0.198s][info][class,load] java.text.DecimalFormatSymbols source: shared objects file
+[0.198s][info][class,load] sun.util.locale.provider.JRELocaleProviderAdapter$$Lambda$62/0x800000063 source: shared objects file
+[0.199s][info][class,load] sun.util.locale.provider.DecimalFormatSymbolsProviderImpl source: shared objects file
+[0.199s][info][class,load] java.util.Spliterator source: shared objects file
+[0.199s][info][class,load] java.util.Spliterator$OfPrimitive source: shared objects file
+[0.199s][info][class,load] java.util.Spliterator$OfInt source: shared objects file
+[0.199s][info][class,load] java.lang.StringLatin1$CharsSpliterator source: shared objects file
+[0.199s][info][class,load] java.util.stream.StreamSupport source: shared objects file
+[0.199s][info][class,load] java.util.stream.PipelineHelper source: shared objects file
+[0.199s][info][class,load] java.util.stream.BaseStream source: shared objects file
+[0.199s][info][class,load] java.util.stream.AbstractPipeline source: shared objects file
+[0.199s][info][class,load] java.util.stream.IntStream source: shared objects file
+[0.199s][info][class,load] java.util.stream.IntPipeline source: shared objects file
+[0.199s][info][class,load] java.util.stream.IntPipeline$Head source: shared objects file
+[0.199s][info][class,load] java.util.stream.StreamOpFlag source: shared objects file
+[0.199s][info][class,load] java.util.stream.StreamOpFlag$Type source: shared objects file
+[0.199s][info][class,load] java.util.stream.StreamOpFlag$MaskBuilder source: shared objects file
+[0.199s][info][class,load] java.util.EnumMap source: shared objects file
+[0.199s][info][class,load] java.util.EnumMap$1 source: shared objects file
+[0.199s][info][class,load] java.lang.Class$3 source: shared objects file
+[0.199s][info][class,load] sun.reflect.annotation.AnnotationParser source: shared objects file
+[0.199s][info][class,load] jdk.internal.reflect.NativeMethodAccessorImpl source: shared objects file
+[0.199s][info][class,load] jdk.internal.reflect.DelegatingMethodAccessorImpl source: shared objects file
+[0.200s][info][class,load] java.util.function.IntPredicate source: shared objects file
+[0.200s][info][class,load] java.text.DecimalFormatSymbols$$Lambda$7/0x80000000b source: shared objects file
+[0.200s][info][class,load] java.util.stream.IntPipeline$StatelessOp source: shared objects file
+[0.200s][info][class,load] java.util.stream.IntPipeline$10 source: shared objects file
+[0.200s][info][class,load] java.util.stream.StreamShape source: shared objects file
+[0.200s][info][class,load] java.util.stream.FindOps source: shared objects file
+[0.200s][info][class,load] java.util.function.Consumer source: shared objects file
+[0.201s][info][class,load] java.util.stream.Sink source: shared objects file
+[0.201s][info][class,load] java.util.stream.TerminalSink source: shared objects file
+[0.201s][info][class,load] java.util.stream.FindOps$FindSink source: shared objects file
+[0.201s][info][class,load] java.util.function.IntConsumer source: shared objects file
+[0.201s][info][class,load] java.util.stream.Sink$OfInt source: shared objects file
+[0.201s][info][class,load] java.util.stream.FindOps$FindSink$OfInt source: shared objects file
+[0.201s][info][class,load] java.util.stream.TerminalOp source: shared objects file
+[0.201s][info][class,load] java.util.stream.FindOps$FindOp source: shared objects file
+[0.201s][info][class,load] java.util.OptionalInt source: shared objects file
+[0.201s][info][class,load] java.util.function.Predicate source: shared objects file
+[0.201s][info][class,load] java.util.stream.FindOps$FindSink$OfInt$$Lambda$36/0x800000047 source: shared objects file
+[0.202s][info][class,load] java.util.stream.FindOps$FindSink$OfInt$$Lambda$34/0x800000045 source: shared objects file
+[0.202s][info][class,load] java.util.stream.FindOps$FindSink$OfInt$$Lambda$35/0x800000046 source: shared objects file
+[0.202s][info][class,load] java.util.stream.FindOps$FindSink$OfInt$$Lambda$33/0x800000044 source: shared objects file
+[0.203s][info][class,load] java.util.stream.Sink$ChainedInt source: shared objects file
+[0.203s][info][class,load] java.util.stream.IntPipeline$10$1 source: shared objects file
+[0.203s][info][class,load] java.lang.StringUTF16$CharsSpliterator source: shared objects file
+[0.203s][info][class,load] java.lang.CharacterData00 source: shared objects file
+[0.204s][info][class,load] java.text.DecimalFormat source: shared objects file
+[0.204s][info][class,load] java.text.FieldPosition source: shared objects file
+[0.204s][info][class,load] java.text.DigitList source: shared objects file
+[0.204s][info][class,load] java.math.RoundingMode source: shared objects file
+[0.204s][info][class,load] java.util.Date source: shared objects file
+[0.204s][info][class,load] java.util.regex.Pattern source: shared objects file
+[0.204s][info][class,load] java.util.regex.Pattern$Node source: shared objects file
+[0.204s][info][class,load] java.util.regex.Pattern$LastNode source: shared objects file
+[0.204s][info][class,load] java.util.regex.Pattern$GroupHead source: shared objects file
+[0.204s][info][class,load] java.util.regex.Pattern$CharPredicate source: shared objects file
+[0.204s][info][class,load] java.util.regex.Pattern$BmpCharPredicate source: shared objects file
+[0.205s][info][class,load] java.util.regex.Pattern$$Lambda$18/0x800000028 source: shared objects file
+[0.205s][info][class,load] java.util.regex.Pattern$CharProperty source: shared objects file
+[0.205s][info][class,load] java.util.regex.Pattern$BmpCharProperty source: shared objects file
+[0.205s][info][class,load] java.util.regex.Pattern$SliceNode source: shared objects file
+[0.205s][info][class,load] java.util.regex.Pattern$Slice source: shared objects file
+[0.205s][info][class,load] java.util.regex.Pattern$Begin source: shared objects file
+[0.205s][info][class,load] java.util.regex.Pattern$First source: shared objects file
+[0.205s][info][class,load] java.util.regex.Pattern$Start source: shared objects file
+[0.205s][info][class,load] java.util.regex.Pattern$TreeInfo source: shared objects file
+[0.205s][info][class,load] java.util.regex.MatchResult source: shared objects file
+[0.205s][info][class,load] java.util.regex.Matcher source: shared objects file
+[0.205s][info][class,load] java.util.regex.IntHashSet source: shared objects file
+[0.205s][info][class,load] java.text.MessageFormat source: jrt:/java.base
+[0.206s][info][class,load] java.text.MessageFormat$Field source: jrt:/java.base
+[0.206s][info][class,load] java.text.ParsePosition source: jrt:/java.base
+[0.206s][info][class,load] java.util.Properties$EntrySet source: shared objects file
+[0.206s][info][class,load] java.util.concurrent.ConcurrentHashMap$EntrySetView source: shared objects file
+[0.206s][info][class,load] java.util.Collections$SynchronizedCollection source: shared objects file
+[0.206s][info][class,load] java.util.Collections$SynchronizedSet source: shared objects file
+[0.206s][info][class,load] java.util.concurrent.ConcurrentHashMap$EntryIterator source: shared objects file
+[0.207s][info][class,load] java.util.concurrent.BlockingQueue source: jrt:/java.base
+[0.207s][info][class,load] java.util.AbstractQueue source: jrt:/java.base
+[0.207s][info][class,load] java.util.concurrent.LinkedBlockingQueue source: jrt:/java.base
+[0.207s][info][class,load] java.util.concurrent.locks.AbstractQueuedSynchronizer source: shared objects file
+[0.207s][info][class,load] java.util.concurrent.locks.ReentrantLock$Sync source: shared objects file
+[0.207s][info][class,load] java.util.concurrent.locks.ReentrantLock$NonfairSync source: shared objects file
+[0.207s][info][class,load] java.util.concurrent.locks.Condition source: jrt:/java.base
+[0.207s][info][class,load] java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject source: jrt:/java.base
+[0.207s][info][class,load] java.util.concurrent.LinkedBlockingQueue$Node source: jrt:/java.base
+[0.207s][info][class,load] net.i2p.util.LogConsoleBuffer source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.208s][info][class,load] net.i2p.util.UIMessages source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.208s][info][class,load] java.util.concurrent.CopyOnWriteArraySet source: jrt:/java.base
+[0.209s][info][class,load] java.lang.ApplicationShutdownHooks source: shared objects file
+[0.209s][info][class,load] java.lang.ApplicationShutdownHooks$1 source: shared objects file
+[0.209s][info][class,load] java.lang.Shutdown source: shared objects file
+[0.209s][info][class,load] java.lang.Shutdown$Lock source: shared objects file
+[0.211s][info][class,load] net.i2p.util.NativeBigInteger$2 source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.213s][info][class,load] java.security.interfaces.DSAParams source: jrt:/java.base
+[0.213s][info][class,load] java.security.spec.DSAParameterSpec source: jrt:/java.base
+[0.213s][info][class,load] net.i2p.crypto.elgamal.spec.ElGamalParameterSpec source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.214s][info][class,load] net.i2p.crypto.ECConstants source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.214s][info][class,load] java.security.Security source: shared objects file
+[0.214s][info][class,load] java.security.Security$1 source: shared objects file
+[0.214s][info][class,load] java.util.Properties$LineReader source: shared objects file
+[0.216s][info][class,load] java.util.concurrent.ConcurrentHashMap$MapEntry source: shared objects file
+[0.216s][info][class,load] jdk.internal.access.JavaSecurityPropertiesAccess source: shared objects file
+[0.216s][info][class,load] java.security.Security$2 source: shared objects file
+[0.216s][info][class,load] sun.security.jca.Providers source: jrt:/java.base
+[0.217s][info][class,load] sun.security.jca.ProviderList source: jrt:/java.base
+[0.217s][info][class,load] sun.security.jca.ProviderConfig source: jrt:/java.base
+[0.217s][info][class,load] java.security.Provider source: jrt:/java.base
+[0.217s][info][class,load] sun.security.jca.ProviderList$3 source: jrt:/java.base
+[0.217s][info][class,load] sun.security.jca.ProviderList$1 source: jrt:/java.base
+[0.217s][info][class,load] java.security.Provider$ServiceKey source: jrt:/java.base
+[0.218s][info][class,load] java.security.Provider$EngineDescription source: jrt:/java.base
+[0.218s][info][class,load] java.security.SecureRandomParameters source: jrt:/java.base
+[0.218s][info][class,load] java.security.cert.CertStoreParameters source: jrt:/java.base
+[0.218s][info][class,load] java.security.Policy$Parameters source: jrt:/java.base
+[0.218s][info][class,load] javax.security.auth.login.Configuration$Parameters source: jrt:/java.base
+[0.218s][info][class,load] jdk.internal.math.FloatingDecimal source: shared objects file
+[0.218s][info][class,load] jdk.internal.math.FloatingDecimal$BinaryToASCIIConverter source: shared objects file
+[0.218s][info][class,load] jdk.internal.math.FloatingDecimal$ExceptionalBinaryToASCIIBuffer source: shared objects file
+[0.218s][info][class,load] jdk.internal.math.FloatingDecimal$BinaryToASCIIBuffer source: shared objects file
+[0.218s][info][class,load] jdk.internal.math.FloatingDecimal$1 source: shared objects file
+[0.218s][info][class,load] jdk.internal.math.FloatingDecimal$ASCIIToBinaryConverter source: shared objects file
+[0.218s][info][class,load] jdk.internal.math.FloatingDecimal$PreparedASCIIToBinaryBuffer source: shared objects file
+[0.218s][info][class,load] jdk.internal.math.FloatingDecimal$ASCIIToBinaryBuffer source: jrt:/java.base
+[0.218s][info][class,load] java.util.LinkedHashSet source: shared objects file
+[0.219s][info][class,load] sun.security.jca.ProviderList$2 source: jrt:/java.base
+[0.219s][info][class,load] sun.security.provider.Sun source: jrt:/java.base
+[0.219s][info][class,load] sun.security.util.SecurityConstants source: jrt:/java.base
+[0.219s][info][class,load] java.net.NetPermission source: jrt:/java.base
+[0.220s][info][class,load] java.security.SecurityPermission source: jrt:/java.base
+[0.220s][info][class,load] java.net.SocketPermission source: jrt:/java.base
+[0.220s][info][class,load] sun.security.provider.SunEntries source: jrt:/java.base
+[0.220s][info][class,load] sun.security.provider.SunEntries$1 source: jrt:/java.base
+[0.220s][info][class,load] java.security.SecureRandomSpi source: jrt:/java.base
+[0.220s][info][class,load] sun.security.provider.NativePRNG source: jrt:/java.base
+[0.220s][info][class,load] sun.security.provider.NativePRNG$Variant source: jrt:/java.base
+[0.220s][info][class,load] sun.security.provider.NativePRNG$1 source: jrt:/java.base
+[0.221s][info][class,load] sun.security.provider.NativePRNG$2 source: jrt:/java.base
+[0.221s][info][class,load] sun.security.provider.NativePRNG$RandomIO source: jrt:/java.base
+[0.221s][info][class,load] sun.security.provider.FileInputStreamPool source: jrt:/java.base
+[0.221s][info][class,load] sun.security.provider.FileInputStreamPool$UnclosableInputStream source: jrt:/java.base
+[0.221s][info][class,load] sun.security.provider.FileInputStreamPool$StreamRef source: jrt:/java.base
+[0.221s][info][class,load] java.security.Provider$Service source: jrt:/java.base
+[0.221s][info][class,load] java.security.Provider$UString source: jrt:/java.base
+[0.221s][info][class,load] sun.security.provider.NativePRNG$Blocking source: jrt:/java.base
+[0.222s][info][class,load] sun.security.provider.NativePRNG$NonBlocking source: jrt:/java.base
+[0.222s][info][class,load] sun.security.util.SecurityProviderConstants source: jrt:/java.base
+[0.222s][info][class,load] sun.security.util.KnownOIDs source: jrt:/java.base
+[0.222s][info][class,load] sun.security.util.KnownOIDs$1 source: jrt:/java.base
+[0.223s][info][class,load] sun.security.util.KnownOIDs$2 source: jrt:/java.base
+[0.223s][info][class,load] sun.security.util.KnownOIDs$3 source: jrt:/java.base
+[0.223s][info][class,load] sun.security.util.KnownOIDs$4 source: jrt:/java.base
+[0.223s][info][class,load] sun.security.util.KnownOIDs$5 source: jrt:/java.base
+[0.223s][info][class,load] sun.security.util.KnownOIDs$6 source: jrt:/java.base
+[0.223s][info][class,load] sun.security.util.KnownOIDs$7 source: jrt:/java.base
+[0.223s][info][class,load] sun.security.util.KnownOIDs$8 source: jrt:/java.base
+[0.223s][info][class,load] sun.security.util.KnownOIDs$9 source: jrt:/java.base
+[0.224s][info][class,load] sun.security.util.KnownOIDs$10 source: jrt:/java.base
+[0.228s][info][class,load] java.util.LinkedHashMap$LinkedKeySet source: jrt:/java.base
+[0.228s][info][class,load] java.util.LinkedHashMap$LinkedHashIterator source: shared objects file
+[0.228s][info][class,load] java.util.LinkedHashMap$LinkedKeyIterator source: jrt:/java.base
+[0.230s][info][class,load] sun.security.rsa.SunRsaSign source: jrt:/java.base
+[0.230s][info][class,load] sun.security.rsa.SunRsaSignEntries source: jrt:/java.base
+[0.231s][info][class,load] sun.security.jca.ProviderConfig$3 source: jrt:/java.base
+[0.231s][info][class,load] sun.security.jca.ProviderConfig$ProviderLoader source: jrt:/java.base
+[0.231s][info][class,load] java.util.Spliterators source: shared objects file
+[0.231s][info][class,load] java.util.Spliterators$EmptySpliterator source: shared objects file
+[0.231s][info][class,load] java.util.Spliterators$EmptySpliterator$OfRef source: shared objects file
+[0.231s][info][class,load] java.util.Spliterators$EmptySpliterator$OfInt source: shared objects file
+[0.231s][info][class,load] java.util.Spliterator$OfLong source: shared objects file
+[0.231s][info][class,load] java.util.Spliterators$EmptySpliterator$OfLong source: shared objects file
+[0.231s][info][class,load] java.util.Spliterator$OfDouble source: shared objects file
+[0.231s][info][class,load] java.util.Spliterators$EmptySpliterator$OfDouble source: shared objects file
+[0.231s][info][class,load] java.util.Spliterators$ArraySpliterator source: shared objects file
+[0.231s][info][class,load] java.util.stream.Stream source: shared objects file
+[0.231s][info][class,load] java.util.stream.ReferencePipeline source: shared objects file
+[0.231s][info][class,load] java.util.stream.ReferencePipeline$Head source: shared objects file
+[0.231s][info][class,load] java.util.Spliterators$1Adapter source: shared objects file
+[0.231s][info][class,load] java.util.HashMap$Values source: shared objects file
+[0.231s][info][class,load] java.util.HashMap$ValueIterator source: shared objects file
+[0.231s][info][class,load] java.util.ImmutableCollections$Set12$1 source: shared objects file
+[0.231s][info][class,load] java.util.Arrays$ArrayList source: shared objects file
+[0.232s][info][class,load] sun.security.jgss.SunProvider source: jrt:/java.security.jgss
+[0.232s][info][class,load] sun.security.jgss.SunProvider$1 source: jrt:/java.security.jgss
+[0.233s][info][class,load] sun.security.jgss.SunProvider$ProviderService source: jrt:/java.security.jgss
+[0.233s][info][class,load] java.security.InvalidParameterException source: jrt:/java.base
+[0.233s][info][class,load] java.security.NoSuchAlgorithmException source: jrt:/java.base
+[0.233s][info][class,load] java.security.ProviderException source: jrt:/java.base
+[0.233s][info][class,load] com.sun.security.sasl.gsskerb.JdkSASL source: jrt:/jdk.security.jgss
+[0.234s][info][class,load] com.sun.security.sasl.gsskerb.JdkSASL$1 source: jrt:/jdk.security.jgss
+[0.234s][info][class,load] com.sun.security.sasl.gsskerb.JdkSASL$ProviderService source: jrt:/jdk.security.jgss
+[0.235s][info][class,load] java.security.AuthProvider source: jrt:/java.base
+[0.235s][info][class,load] sun.security.pkcs11.SunPKCS11 source: jrt:/jdk.crypto.cryptoki
+[0.235s][info][class,load] sun.security.pkcs11.wrapper.PKCS11Exception source: jrt:/jdk.crypto.cryptoki
+[0.235s][info][class,load] java.lang.UnsupportedOperationException source: jrt:/java.base
+[0.236s][info][class,load] java.io.ObjectStreamException source: jrt:/java.base
+[0.236s][info][class,load] java.io.InvalidObjectException source: jrt:/java.base
+[0.236s][info][class,load] java.security.PrivilegedActionException source: jrt:/java.base
+[0.236s][info][class,load] java.lang.AssertionError source: jrt:/java.base
+[0.236s][info][class,load] javax.security.auth.login.LoginException source: jrt:/java.base
+[0.236s][info][class,load] javax.security.auth.login.FailedLoginException source: jrt:/java.base
+[0.236s][info][class,load] javax.security.auth.Subject source: jrt:/java.base
+[0.236s][info][class,load] javax.security.auth.callback.CallbackHandler source: jrt:/java.base
+[0.237s][info][class,load] sun.security.pkcs11.SunPKCS11$Descriptor source: jrt:/jdk.crypto.cryptoki
+[0.238s][info][class,load] org.jcp.xml.dsig.internal.dom.XMLDSigRI source: jrt:/java.xml.crypto
+[0.238s][info][class,load] org.jcp.xml.dsig.internal.dom.XMLDSigRI$1 source: jrt:/java.xml.crypto
+[0.239s][info][class,load] org.jcp.xml.dsig.internal.dom.XMLDSigRI$2 source: jrt:/java.xml.crypto
+[0.239s][info][class,load] org.jcp.xml.dsig.internal.dom.XMLDSigRI$ProviderService source: jrt:/java.xml.crypto
+[0.240s][info][class,load] sun.security.ec.SunEC source: jrt:/jdk.crypto.ec
+[0.240s][info][class,load] sun.security.ec.SunEC$ProviderService source: jrt:/jdk.crypto.ec
+[0.240s][info][class,load] sun.security.ec.SunEC$ProviderServiceA source: jrt:/jdk.crypto.ec
+[0.241s][info][class,load] sun.security.ec.SunEC$1 source: jrt:/jdk.crypto.ec
+[0.241s][info][class,load] sun.security.util.CurveDB source: jrt:/java.base
+[0.241s][info][class,load] java.security.spec.ECField source: jrt:/java.base
+[0.241s][info][class,load] java.security.spec.ECFieldFp source: jrt:/java.base
+[0.241s][info][class,load] java.security.spec.EllipticCurve source: jrt:/java.base
+[0.241s][info][class,load] java.security.spec.ECPoint source: jrt:/java.base
+[0.241s][info][class,load] java.security.spec.ECParameterSpec source: jrt:/java.base
+[0.241s][info][class,load] sun.security.util.NamedCurve source: jrt:/java.base
+[0.241s][info][class,load] sun.security.util.DerEncoder source: jrt:/java.base
+[0.242s][info][class,load] sun.security.util.DerOutputStream source: jrt:/java.base
+[0.242s][info][class,load] sun.security.util.ByteArrayLexOrder source: jrt:/java.base
+[0.242s][info][class,load] sun.security.util.ByteArrayTagOrder source: jrt:/java.base
+[0.242s][info][class,load] sun.security.util.ObjectIdentifier source: jrt:/java.base
+[0.246s][info][class,load] java.security.spec.ECFieldF2m source: jrt:/java.base
+[0.254s][info][class,load] java.util.LinkedHashMap$LinkedValues source: jrt:/java.base
+[0.256s][info][class,load] sun.security.ssl.SunJSSE source: jrt:/java.base
+[0.257s][info][class,load] java.lang.invoke.TypeConvertingMethodAdapter source: shared objects file
+[0.257s][info][class,load] java.lang.invoke.InnerClassLambdaMetafactory$ForwardingMethodGenerator source: shared objects file
+[0.257s][info][class,load] jdk.internal.org.objectweb.asm.ClassReader source: shared objects file
+[0.257s][info][class,load] sun.security.ssl.SunJSSE$$Lambda$15/0x000075b1ac05cd88 source: sun.security.ssl.SunJSSE
+[0.258s][info][class,load] com.sun.crypto.provider.SunJCE source: jrt:/java.base
+[0.264s][info][class,load] sun.security.smartcardio.SunPCSC source: jrt:/java.smartcardio
+[0.264s][info][class,load] sun.security.smartcardio.SunPCSC$1 source: jrt:/java.smartcardio
+[0.265s][info][class,load] sun.security.smartcardio.SunPCSC$ProviderService source: jrt:/java.smartcardio
+[0.265s][info][class,load] com.sun.security.sasl.Provider source: jrt:/java.security.sasl
+[0.266s][info][class,load] com.sun.security.sasl.Provider$1 source: jrt:/java.security.sasl
+[0.266s][info][class,load] com.sun.security.sasl.Provider$ProviderService source: jrt:/java.security.sasl
+[0.266s][info][class,load] sun.security.provider.certpath.ldap.JdkLDAP source: jrt:/java.naming
+[0.267s][info][class,load] sun.security.provider.certpath.ldap.JdkLDAP$$Lambda$16/0x000075b1ac05e258 source: sun.security.provider.certpath.ldap.JdkLDAP
+[0.267s][info][class,load] sun.security.provider.certpath.ldap.JdkLDAP$ProviderService source: jrt:/java.naming
+[0.268s][info][class,load] net.i2p.crypto.ECConstants$ECParms source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.268s][info][class,load] java.security.AlgorithmParameters source: jrt:/java.base
+[0.269s][info][class,load] java.security.AlgorithmParametersSpi source: jrt:/java.base
+[0.269s][info][class,load] sun.security.jca.GetInstance source: jrt:/java.base
+[0.269s][info][class,load] jdk.internal.event.Event source: jrt:/java.base
+[0.269s][info][class,load] jdk.internal.event.SecurityProviderServiceEvent source: jrt:/java.base
+[0.269s][info][class,load] sun.security.util.ECParameters source: jrt:/java.base
+[0.269s][info][class,load] sun.security.jca.GetInstance$Instance source: jrt:/java.base
+[0.269s][info][class,load] java.security.spec.NamedParameterSpec source: jrt:/java.base
+[0.269s][info][class,load] java.security.spec.ECGenParameterSpec source: jrt:/java.base
+[0.270s][info][class,load] net.i2p.crypto.x25519.spec.X25519Spec source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.271s][info][class,load] net.i2p.data.SDSCache source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.271s][info][class,load] java.io.EOFException source: jrt:/java.base
+[0.272s][info][class,load] net.i2p.stat.StatManager source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.272s][info][class,load] java.util.SortedSet source: shared objects file
+[0.273s][info][class,load] net.i2p.stat.RateStat source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.274s][info][class,load] java.util.DualPivotQuicksort source: jrt:/java.base
+[0.274s][info][class,load] net.i2p.stat.Rate source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.275s][info][class,load] net.i2p.data.SDSCache$Shutdown source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.276s][info][class,load] net.i2p.util.SimpleByteCache source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.278s][info][class,load] net.i2p.util.TryCache$ObjectFactory source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.279s][info][class,load] net.i2p.util.TryCache source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.279s][info][class,load] net.i2p.util.SimpleByteCache$ByteArrayFactory source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.281s][info][class,load] net.i2p.data.DataHelper source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.281s][info][class,load] java.io.UnsupportedEncodingException source: jrt:/java.base
+[0.282s][info][class,load] net.i2p.util.SecureFileOutputStream source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.282s][info][class,load] net.i2p.data.EmptyProperties source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.283s][info][class,load] java.lang.IndexOutOfBoundsException source: jrt:/java.base
+[0.283s][info][class,load] java.lang.ArrayIndexOutOfBoundsException source: jrt:/java.base
+[0.283s][info][class,load] java.util.regex.Pattern$BitClass source: shared objects file
+[0.285s][info][class,load] net.i2p.data.SigningPublicKey source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.286s][info][class,load] net.i2p.crypto.SigType source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.286s][info][class,load] java.security.Key source: jrt:/java.base
+[0.286s][info][class,load] javax.security.auth.Destroyable source: jrt:/java.base
+[0.286s][info][class,load] java.security.PrivateKey source: jrt:/java.base
+[0.286s][info][class,load] net.i2p.crypto.SHA1Hash source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.287s][info][class,load] net.i2p.data.Hash source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.287s][info][class,load] net.i2p.crypto.Hash384 source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.287s][info][class,load] net.i2p.crypto.Hash512 source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.288s][info][class,load] net.i2p.crypto.SigAlgo source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.288s][info][class,load] java.security.SignatureSpi source: jrt:/java.base
+[0.288s][info][class,load] java.security.Signature source: jrt:/java.base
+[0.288s][info][class,load] jdk.internal.access.JavaSecuritySignatureAccess source: jrt:/java.base
+[0.288s][info][class,load] java.security.Signature$1 source: jrt:/java.base
+[0.288s][info][class,load] java.security.AlgorithmConstraints source: jrt:/java.base
+[0.288s][info][class,load] sun.security.util.AbstractAlgorithmConstraints source: jrt:/java.base
+[0.288s][info][class,load] sun.security.util.CryptoAlgorithmConstraints source: jrt:/java.base
+[0.289s][info][class,load] sun.security.util.CryptoAlgorithmConstraints$CryptoHolder source: jrt:/java.base
+[0.289s][info][class,load] sun.security.util.SecurityProperties source: shared objects file
+[0.289s][info][class,load] sun.security.jca.ProviderList$ServiceList source: jrt:/java.base
+[0.289s][info][class,load] sun.security.jca.ProviderList$ServiceList$1 source: jrt:/java.base
+[0.289s][info][class,load] java.security.Signature$Delegate source: jrt:/java.base
+[0.290s][info][class,load] java.security.MessageDigestSpi source: jrt:/java.base
+[0.290s][info][class,load] java.security.MessageDigest source: jrt:/java.base
+[0.290s][info][class,load] net.i2p.crypto.SHA1 source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.290s][info][class,load] java.security.DigestException source: jrt:/java.base
+[0.290s][info][class,load] sun.security.ec.ECDSASignature source: jrt:/jdk.crypto.ec
+[0.290s][info][class,load] sun.security.ec.ECDSASignature$SHA256 source: jrt:/jdk.crypto.ec
+[0.290s][info][class,load] java.security.KeyException source: jrt:/java.base
+[0.290s][info][class,load] java.security.InvalidKeyException source: jrt:/java.base
+[0.290s][info][class,load] java.security.SignatureException source: jrt:/java.base
+[0.291s][info][class,load] java.security.InvalidAlgorithmParameterException source: jrt:/java.base
+[0.291s][info][class,load] java.security.interfaces.ECKey source: jrt:/java.base
+[0.291s][info][class,load] sun.security.ec.ECOperations$IntermediateValueException source: jrt:/jdk.crypto.ec
+[0.291s][info][class,load] sun.security.provider.DigestBase source: jrt:/java.base
+[0.291s][info][class,load] sun.security.provider.SHA2 source: jrt:/java.base
+[0.291s][info][class,load] sun.security.provider.SHA2$SHA256 source: jrt:/java.base
+[0.291s][info][class,load] sun.security.util.MessageDigestSpi2 source: jrt:/java.base
+[0.291s][info][class,load] java.security.MessageDigest$Delegate source: jrt:/java.base
+[0.291s][info][class,load] java.security.MessageDigest$Delegate$CloneableDelegate source: jrt:/java.base
+[0.292s][info][class,load] net.i2p.crypto.SHA256Generator source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.292s][info][class,load] sun.security.ec.ECDSASignature$SHA384 source: jrt:/jdk.crypto.ec
+[0.292s][info][class,load] sun.security.provider.SHA5 source: jrt:/java.base
+[0.292s][info][class,load] sun.security.provider.SHA5$SHA384 source: jrt:/java.base
+[0.292s][info][class,load] sun.security.ec.ECDSASignature$SHA512 source: jrt:/jdk.crypto.ec
+[0.292s][info][class,load] sun.security.provider.SHA5$SHA512 source: jrt:/java.base
+[0.293s][info][class,load] net.i2p.crypto.RSAConstants source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.293s][info][class,load] java.security.spec.RSAKeyGenParameterSpec source: jrt:/java.base
+[0.294s][info][class,load] net.i2p.crypto.eddsa.spec.EdDSANamedCurveTable source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.295s][info][class,load] net.i2p.crypto.eddsa.math.Encoding source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.295s][info][class,load] net.i2p.crypto.eddsa.math.ed25519.Ed25519LittleEndianEncoding source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.296s][info][class,load] net.i2p.crypto.eddsa.math.ScalarOps source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.296s][info][class,load] net.i2p.crypto.eddsa.math.Field source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.297s][info][class,load] net.i2p.crypto.eddsa.Utils source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.297s][info][class,load] net.i2p.crypto.eddsa.math.FieldElement source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.298s][info][class,load] net.i2p.crypto.eddsa.math.ed25519.Ed25519FieldElement source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.299s][info][class,load] net.i2p.crypto.eddsa.math.Constants source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.300s][info][class,load] net.i2p.crypto.eddsa.math.Curve source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.300s][info][class,load] net.i2p.crypto.eddsa.math.GroupElement source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.301s][info][class,load] net.i2p.crypto.eddsa.math.GroupElement$Representation source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.304s][info][class,load] net.i2p.crypto.eddsa.spec.EdDSAParameterSpec source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.304s][info][class,load] net.i2p.crypto.eddsa.spec.EdDSANamedCurveSpec source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.304s][info][class,load] net.i2p.crypto.eddsa.math.ed25519.Ed25519ScalarOps source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.332s][info][class,load] net.i2p.data.Certificate$NullCert source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.332s][info][class,load] net.i2p.data.Signature source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.333s][info][class,load] net.i2p.data.i2cp.I2CPMessageHandler source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.333s][info][class,load] net.i2p.data.i2cp.I2CPMessageException source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.334s][info][class,load] net.i2p.data.i2cp.I2CPMessageImpl source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.334s][info][class,load] net.i2p.data.i2cp.CreateSessionMessage source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.335s][info][class,load] net.i2p.data.i2cp.SessionConfig source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.336s][info][class,load] net.i2p.time.Timestamper$UpdateListener source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.336s][info][class,load] net.i2p.util.Clock source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.336s][info][class,load] net.i2p.time.BuildTime source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.336s][info][class,load] java.text.ParseException source: jrt:/java.base
+[0.343s][info][class,load] java.text.CalendarBuilder source: jrt:/java.base
+[0.344s][info][class,load] sun.util.locale.provider.TimeZoneNameUtility source: jrt:/java.base
+[0.344s][info][class,load] sun.util.cldr.CLDRLocaleProviderAdapter$$Lambda$17/0x000075b1ac065d98 source: sun.util.cldr.CLDRLocaleProviderAdapter
+[0.344s][info][class,load] sun.util.locale.provider.TimeZoneNameProviderImpl source: jrt:/java.base
+[0.344s][info][class,load] sun.util.cldr.CLDRTimeZoneNameProviderImpl source: jrt:/java.base
+[0.345s][info][class,load] sun.util.resources.OpenListResourceBundle source: jrt:/java.base
+[0.345s][info][class,load] sun.util.resources.TimeZoneNamesBundle source: jrt:/java.base
+[0.345s][info][class,load] sun.util.resources.cldr.TimeZoneNames source: jrt:/java.base
+[0.346s][info][class,load] sun.util.resources.cldr.TimeZoneNames_en source: jrt:/java.base
+[0.348s][info][class,load] java.util.Arrays$ArrayItr source: shared objects file
+[0.351s][info][class,load] java.util.HashMap$HashMapSpliterator source: shared objects file
+[0.351s][info][class,load] java.util.HashMap$KeySpliterator source: shared objects file
+[0.352s][info][class,load] sun.util.locale.provider.LocaleResources$$Lambda$18/0x000075b1ac066e00 source: sun.util.locale.provider.LocaleResources
+[0.352s][info][class,load] java.util.stream.ReferencePipeline$StatelessOp source: shared objects file
+[0.352s][info][class,load] java.util.stream.ReferencePipeline$2 source: shared objects file
+[0.353s][info][class,load] sun.util.locale.provider.LocaleResources$$Lambda$19/0x000075b1ac067050 source: sun.util.locale.provider.LocaleResources
+[0.354s][info][class,load] java.util.stream.ForEachOps source: shared objects file
+[0.354s][info][class,load] java.util.stream.ForEachOps$ForEachOp source: shared objects file
+[0.354s][info][class,load] java.util.stream.ForEachOps$ForEachOp$OfRef source: shared objects file
+[0.354s][info][class,load] java.util.stream.Sink$ChainedReference source: shared objects file
+[0.354s][info][class,load] java.util.stream.ReferencePipeline$2$1 source: shared objects file
+[0.355s][info][class,load] sun.util.cldr.CLDRBaseLocaleDataMetaInfo$TZCanonicalIDMapHolder source: jrt:/java.base
+[0.359s][info][class,load] java.time.ZoneId source: shared objects file
+[0.359s][info][class,load] java.time.ZoneRegion source: shared objects file
+[0.359s][info][class,load] java.time.zone.ZoneRulesProvider source: jrt:/java.base
+[0.359s][info][class,load] java.time.zone.ZoneRulesProvider$1 source: jrt:/java.base
+[0.360s][info][class,load] java.time.zone.TzdbZoneRulesProvider source: jrt:/java.base
+[0.366s][info][class,load] java.util.Collections$UnmodifiableSet source: shared objects file
+[0.366s][info][class,load] java.util.Collections$EmptyEnumeration source: shared objects file
+[0.366s][info][class,load] jdk.internal.loader.BuiltinClassLoader$1 source: shared objects file
+[0.366s][info][class,load] java.lang.CompoundEnumeration source: shared objects file
+[0.366s][info][class,load] jdk.internal.loader.URLClassPath$1 source: shared objects file
+[0.367s][info][class,load] java.io.Externalizable source: jrt:/java.base
+[0.367s][info][class,load] java.time.zone.Ser source: jrt:/java.base
+[0.367s][info][class,load] java.time.zone.ZoneRules source: shared objects file
+[0.367s][info][class,load] java.time.zone.ZoneOffsetTransitionRule source: shared objects file
+[0.367s][info][class,load] java.time.temporal.TemporalAccessor source: shared objects file
+[0.367s][info][class,load] java.time.temporal.Temporal source: shared objects file
+[0.367s][info][class,load] java.time.temporal.TemporalAdjuster source: shared objects file
+[0.367s][info][class,load] java.time.chrono.ChronoLocalDateTime source: shared objects file
+[0.367s][info][class,load] java.time.LocalDateTime source: shared objects file
+[0.367s][info][class,load] java.time.ZoneOffset source: shared objects file
+[0.368s][info][class,load] java.time.Month source: jrt:/java.base
+[0.368s][info][class,load] java.time.DayOfWeek source: jrt:/java.base
+[0.368s][info][class,load] java.time.zone.ZoneOffsetTransitionRule$TimeDefinition source: jrt:/java.base
+[0.368s][info][class,load] java.time.LocalTime source: shared objects file
+[0.368s][info][class,load] java.time.temporal.TemporalField source: shared objects file
+[0.368s][info][class,load] java.time.temporal.ChronoField source: shared objects file
+[0.368s][info][class,load] java.time.temporal.TemporalUnit source: shared objects file
+[0.368s][info][class,load] java.time.temporal.ChronoUnit source: shared objects file
+[0.368s][info][class,load] java.time.temporal.TemporalAmount source: shared objects file
+[0.368s][info][class,load] java.time.Duration source: shared objects file
+[0.368s][info][class,load] java.time.temporal.ValueRange source: shared objects file
+[0.369s][info][class,load] java.time.zone.ZoneOffsetTransition source: jrt:/java.base
+[0.369s][info][class,load] java.time.chrono.ChronoLocalDate source: shared objects file
+[0.369s][info][class,load] java.time.LocalDate source: shared objects file
+[0.374s][info][class,load] java.time.chrono.Chronology source: shared objects file
+[0.374s][info][class,load] java.time.chrono.AbstractChronology source: shared objects file
+[0.374s][info][class,load] java.time.chrono.IsoChronology source: shared objects file
+[0.384s][info][class,load] sun.util.locale.provider.BaseLocaleDataMetaInfo source: jrt:/java.base
+[0.384s][info][class,load] sun.util.locale.provider.JRELocaleProviderAdapter$$Lambda$20/0x000075b1ac06acc0 source: sun.util.locale.provider.JRELocaleProviderAdapter
+[0.385s][info][class,load] sun.util.resources.provider.NonBaseLocaleDataMetaInfo source: jrt:/jdk.localedata
+[0.386s][info][class,load] sun.util.resources.TimeZoneNames source: jrt:/java.base
+[0.388s][info][class,load] sun.util.resources.TimeZoneNames_en source: jrt:/java.base
+[0.398s][info][class,load] sun.util.resources.ParallelListResourceBundle source: jrt:/java.base
+[0.413s][info][class,load] java.util.regex.Pattern$Qtype source: shared objects file
+[0.413s][info][class,load] java.util.regex.Pattern$CharPropertyGreedy source: shared objects file
+[0.413s][info][class,load] java.util.regex.Pattern$BmpCharPropertyGreedy source: shared objects file
+[0.413s][info][class,load] java.util.Formatter source: shared objects file
+[0.413s][info][class,load] java.util.regex.Pattern$GroupTail source: shared objects file
+[0.413s][info][class,load] java.util.regex.CharPredicates source: shared objects file
+[0.414s][info][class,load] java.util.regex.CharPredicates$$Lambda$16/0x800000024 source: shared objects file
+[0.414s][info][class,load] java.util.regex.Pattern$Ques source: shared objects file
+[0.414s][info][class,load] java.util.regex.Pattern$BranchConn source: shared objects file
+[0.414s][info][class,load] java.util.regex.Pattern$Branch source: shared objects file
+[0.414s][info][class,load] java.util.regex.Pattern$$Lambda$19/0x800000029 source: shared objects file
+[0.415s][info][class,load] java.lang.invoke.DirectMethodHandle$Interface source: shared objects file
+[0.415s][info][class,load] java.util.regex.Pattern$BmpCharPredicate$$Lambda$20/0x80000002b source: shared objects file
+[0.416s][info][class,load] java.util.Formatter$FormatString source: shared objects file
+[0.416s][info][class,load] java.util.Formatter$FixedString source: jrt:/java.base
+[0.416s][info][class,load] java.util.Formatter$Conversion source: shared objects file
+[0.416s][info][class,load] java.util.regex.ASCII source: shared objects file
+[0.416s][info][class,load] java.util.Formatter$FormatSpecifier source: shared objects file
+[0.417s][info][class,load] java.util.Formatter$Flags source: shared objects file
+[0.555s][info][class,load] java.net.URLConnection source: jrt:/java.base
+[0.555s][info][class,load] java.net.JarURLConnection source: jrt:/java.base
+[0.555s][info][class,load] sun.net.www.protocol.jar.JarURLConnection source: jrt:/java.base
+[0.555s][info][class,load] sun.net.www.protocol.jar.URLJarFile$URLJarFileCloseController source: jrt:/java.base
+[0.555s][info][class,load] sun.net.www.protocol.jar.JarFileFactory source: jrt:/java.base
+[0.556s][info][class,load] sun.net.www.URLConnection source: jrt:/java.base
+[0.556s][info][class,load] sun.net.www.protocol.file.FileURLConnection source: jrt:/java.base
+[0.556s][info][class,load] sun.net.www.MessageHeader source: jrt:/java.base
+[0.556s][info][class,load] sun.net.www.protocol.jar.URLJarFile source: jrt:/java.base
+[0.557s][info][class,load] sun.nio.fs.UnixException source: jrt:/java.base
+[0.557s][info][class,load] java.nio.file.FileSystemException source: jrt:/java.base
+[0.557s][info][class,load] java.nio.file.NoSuchFileException source: jrt:/java.base
+[0.558s][info][class,load] java.nio.file.InvalidPathException source: jrt:/java.base
+[0.558s][info][class,load] net.i2p.util.OrderedProperties$EntryComparator source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.560s][info][class,load] net.i2p.crypto.DSAEngine source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.561s][info][class,load] net.i2p.crypto.eddsa.EdDSAEngine source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.561s][info][class,load] net.i2p.crypto.eddsa.RedDSAEngine source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.562s][info][class,load] java.security.PublicKey source: jrt:/java.base
+[0.563s][info][class,load] java.math.MutableBigInteger source: jrt:/java.base
+[0.563s][info][class,load] java.math.SignedMutableBigInteger source: jrt:/java.base
+[0.586s][info][class,load] net.i2p.data.i2cp.ReconfigureSessionMessage source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.586s][info][class,load] java.nio.CharBuffer source: shared objects file
+[0.586s][info][class,load] java.nio.HeapCharBuffer source: shared objects file
+[0.586s][info][class,load] java.nio.charset.CoderResult source: shared objects file
+[0.587s][info][class,load] net.i2p.data.i2cp.SessionId source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.597s][info][class,load] net.i2p.util.ArraySet source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.597s][info][class,load] net.i2p.util.UnmodifiableSortedSet source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.597s][info][class,load] net.i2p.util.ArraySet$SetFullException source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.597s][info][class,load] java.util.NoSuchElementException source: jrt:/java.base
+[0.598s][info][class,load] java.util.Arrays$LegacyMergeSort source: shared objects file
+[0.598s][info][class,load] java.util.TimSort source: shared objects file
+[0.598s][info][class,load] net.i2p.util.ArraySet$ASIterator source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.598s][info][class,load] java.util.ConcurrentModificationException source: jrt:/java.base
+[0.661s][info][class,load] net.i2p.data.KeyCertificate$ECDSA256Cert source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.662s][info][class,load] net.i2p.data.KeyCertificate$Ed25519Cert source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.662s][info][class,load] net.i2p.data.KeyCertificate$X25519_Ed25519Cert source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.664s][info][class,load] net.i2p.crypto.SigUtil source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.664s][info][class,load] java.security.spec.KeySpec source: jrt:/java.base
+[0.665s][info][class,load] net.i2p.data.SigningPrivateKey source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.665s][info][class,load] net.i2p.crypto.RSASigningPrivateCrtKey source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.665s][info][class,load] java.security.interfaces.RSAKey source: jrt:/java.base
+[0.665s][info][class,load] java.security.interfaces.RSAPrivateKey source: jrt:/java.base
+[0.666s][info][class,load] net.i2p.crypto.eddsa.EdDSAKey source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.666s][info][class,load] net.i2p.crypto.eddsa.EdDSAPublicKey source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.666s][info][class,load] java.security.spec.InvalidKeySpecException source: jrt:/java.base
+[0.668s][info][class,load] net.i2p.crypto.eddsa.spec.EdDSAPublicKeySpec source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.669s][info][class,load] net.i2p.crypto.eddsa.EdDSAEngine$OneShotSpec source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.674s][info][class,load] sun.security.provider.ByteArrayAccess source: jrt:/java.base
+[0.674s][info][class,load] sun.security.provider.ByteArrayAccess$BE source: jrt:/java.base
+[0.674s][info][class,load] java.lang.invoke.VarHandles source: shared objects file
+[0.674s][info][class,load] java.lang.invoke.VarHandleByteArrayAsInts$ByteArrayViewVarHandle source: jrt:/java.base
+[0.674s][info][class,load] java.lang.invoke.VarHandleByteArrayAsInts$ArrayHandle source: jrt:/java.base
+[0.674s][info][class,load] java.lang.invoke.VarHandle$1 source: shared objects file
+[0.675s][info][class,load] java.util.function.BiFunction source: shared objects file
+[0.675s][info][class,load] jdk.internal.util.Preconditions$1 source: shared objects file
+[0.675s][info][class,load] java.lang.invoke.VarHandleGuards source: shared objects file
+[0.675s][info][class,load] java.lang.invoke.VarHandleByteArrayBase source: jrt:/java.base
+[0.676s][info][class,load] java.lang.invoke.VarHandleByteArrayAsInts source: jrt:/java.base
+[0.676s][info][class,load] java.lang.invoke.VarHandleByteArrayAsInts$ArrayHandle$$Lambda$24/0x000075b1ac070570 source: java.lang.invoke.VarHandleByteArrayAsInts
+[0.676s][info][class,load] java.lang.invoke.VarForm source: shared objects file
+[0.677s][info][class,load] java.lang.invoke.VarHandleByteArrayAsLongs$ByteArrayViewVarHandle source: jrt:/java.base
+[0.677s][info][class,load] java.lang.invoke.VarHandleByteArrayAsLongs$ArrayHandle source: jrt:/java.base
+[0.678s][info][class,load] java.lang.invoke.VarHandleByteArrayAsLongs source: jrt:/java.base
+[0.678s][info][class,load] java.lang.invoke.VarHandleByteArrayAsLongs$ArrayHandle$$Lambda$25/0x000075b1ac0710d0 source: java.lang.invoke.VarHandleByteArrayAsLongs
+[0.678s][info][class,load] java.lang.invoke.VarHandle$AccessDescriptor source: shared objects file
+[0.679s][info][class,load] java.lang.invoke.VarHandle$TypesAndInvokers source: jrt:/java.base
+[0.679s][info][class,load] java.lang.invoke.VarHandle$2 source: jrt:/java.base
+[0.679s][info][class,load] java.lang.invoke.VarHandle$VarHandleDesc$Kind source: jrt:/java.base
+[0.679s][info][class,load] java.lang.constant.ConstantDescs source: jrt:/java.base
+[0.679s][info][class,load] java.lang.constant.ClassDesc source: jrt:/java.base
+[0.679s][info][class,load] java.lang.constant.ConstantUtils source: jrt:/java.base
+[0.680s][info][class,load] java.lang.constant.ReferenceClassDescImpl source: jrt:/java.base
+[0.681s][info][class,load] java.lang.constant.DirectMethodHandleDesc$Kind source: jrt:/java.base
+[0.681s][info][class,load] java.lang.constant.MethodTypeDesc source: jrt:/java.base
+[0.681s][info][class,load] java.lang.constant.MethodTypeDescImpl source: jrt:/java.base
+[0.681s][info][class,load] java.lang.constant.MethodHandleDesc source: jrt:/java.base
+[0.681s][info][class,load] java.lang.constant.MethodHandleDesc$1 source: jrt:/java.base
+[0.681s][info][class,load] java.lang.constant.DirectMethodHandleDesc source: jrt:/java.base
+[0.681s][info][class,load] java.lang.constant.DirectMethodHandleDescImpl source: jrt:/java.base
+[0.681s][info][class,load] java.lang.constant.DirectMethodHandleDescImpl$1 source: jrt:/java.base
+[0.681s][info][class,load] java.lang.constant.DirectMethodHandleDesc$1 source: jrt:/java.base
+[0.681s][info][class,load] java.lang.constant.DynamicConstantDesc source: jrt:/java.base
+[0.681s][info][class,load] java.lang.constant.PrimitiveClassDescImpl source: jrt:/java.base
+[0.682s][info][class,load] java.lang.constant.DynamicConstantDesc$AnonymousDynamicConstantDesc source: jrt:/java.base
+[0.684s][info][class,load] net.i2p.crypto.eddsa.math.bigint.BigIntegerLittleEndianEncoding source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.685s][info][class,load] net.i2p.crypto.eddsa.math.bigint.BigIntegerFieldElement source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.685s][info][class,load] net.i2p.crypto.eddsa.EdDSABlinding source: file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+[0.754s][info][class,load] java.util.IdentityHashMap$IdentityHashMapIterator source: shared objects file
+[0.755s][info][class,load] java.util.IdentityHashMap$KeyIterator source: shared objects file

@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "reviewed_script": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/private.py",
+  "script_sha256": "a547362eeb3b1d86a31b3825b82eb81b1406bdc9c96198f8328a7d766bd4cd60",
+  "initial_sha256": "5e9f286e0020b1cc81b2c38142d7a98e8e1a340a81d185f58e4e52102a76e287",
+  "resolved_finding": "Each actual result now explicitly requires d[lane]==the verified lane; exact one-line correction verified by reconstructing the original source hash.",
+  "conclusion": "No remaining concrete blocker in this focused private helper. It requires actual completed same-source seven-suite results, copies current GCC images and runs precisely their LastTest command arguments against one private candidate.",
+  "checks": [
+    "Python AST valid; helper not imported or executed.",
+    "CTest remains exact seven-case inventory with mandatory status=run and child failure/error/skips rejected.",
+    "For actual Qt suites, expected names come from full GCC LastTest PASS lines; private exact normalized case set/count, tests summary and zero failures/errors/skipped are required. Missing direct Qt status is permitted; explicit non-run is refused.",
+    "Captured original CTest argv preserves codec/key/vector fixture parameters. Qt output uses explicit txt and junitxml formats; pure executable suites use their existing arguments and actual exit/logs.",
+    "ldd must resolve without missing or /opt/Qt images. LD_DEBUG initialized-image evidence must include every linked Qt/provider basename, and every actually initialized Qt/provider path must be inside candidate or the copied QtTest support.",
+    "One candidate only; same provider, full source/image/distribution invariants are checked before completion. No compile, historical pooling or promotion is added."
+  ],
+  "limits": "Source/AST/exact one-line delta review only. All three current build lanes and private executions remain root-owned; no builds/tests/Java/profile/network/N/cache/dist mutation by reviewer."
+}

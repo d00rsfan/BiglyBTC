@@ -1,0 +1,40 @@
+{
+  "status": "PASS_SIGNED_SESSION_LOCAL_PUBLISH_COHORT",
+  "source_commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+  "lane": "gcc",
+  "cache": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "compiled_targets": [
+    "biglybtc-azureus-owned-service-tests",
+    "biglybtc-azureus-database-runtime-tests",
+    "biglybtc-i2p-datagram-tests",
+    "biglybtc-i2p-client-identity-tests",
+    "biglybtc-i2cp-protocol-tests",
+    "biglybtc-i2cp-initial-channel-tests",
+    "biglybtc-i2cp-session-config-tests",
+    "BiglyBTC",
+    "BiglyBTC-headless",
+    "biglybtc-preview-smoke"
+  ],
+  "provider_rebuilt": false,
+  "historical_passes_pooled": false,
+  "runner_sha256": "b4bea4738769a9aeb14e05fbccfcaf74bdd19f9f71940444f1efad9facfd1ef7",
+  "source_receipt_sha256": "d049a392936f5ee5f60cbd8431d1c642f996272fd7c31c4bcdad5a4905b58cf6",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "dist_manifest_before": "94ee9178856a54b67655a28f825b0823fc1125d2ca7016fa59cdca5382e2fd51",
+  "suite_names": [
+    "azureus-owned-service",
+    "azureus-database-runtime",
+    "pure-i2p-datagram-codec",
+    "pure-i2p-client-identity",
+    "pure-i2cp-initial-session-codec",
+    "i2cp-initial-channel",
+    "pure-i2cp-signed-session-config"
+  ],
+  "actual_suites": 7,
+  "full_ctest_log_sha256": "a7016adb4a3131774f2b1be34698ef5faced5d3b5455154c10f10593c54a92c1",
+  "tests_xml_sha256": "2f1d1793d4651cf70631cda06f745894f31fe74699717bf2be06ce597d8c1a5f",
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "sanitizer_environment": {},
+  "commands_sha256": "af9b706db00656dc03ede97ea1bc5502a117cfbb0c84b1431e433e717866ddc3"
+}

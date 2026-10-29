@@ -1,0 +1,30 @@
+{
+  "name": "build",
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "cmake",
+    "--build",
+    "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+    "--parallel",
+    "1",
+    "--target",
+    "biglybtc-azureus-owned-service-tests",
+    "biglybtc-azureus-database-runtime-tests",
+    "biglybtc-i2p-datagram-tests",
+    "biglybtc-i2p-client-identity-tests",
+    "biglybtc-i2cp-protocol-tests",
+    "biglybtc-i2cp-initial-channel-tests",
+    "biglybtc-i2cp-session-config-tests",
+    "BiglyBTC",
+    "BiglyBTC-headless",
+    "biglybtc-preview-smoke"
+  ],
+  "expected_exit": 0,
+  "exit": 0,
+  "seconds": 405.88,
+  "log": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/runs/clang-r1/build.log",
+  "log_sha256": "2d5b51ad775512c09601479a8e17fa3fc41453a0f65dbaa8f376d2445309bada",
+  "source_manifest_sha256": "8246185bd5e355e07d80ff609bafa116b73bea4e82986a4882a91f68608b4e6c"
+}

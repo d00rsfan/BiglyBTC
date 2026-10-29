@@ -1,0 +1,24 @@
+{
+  "commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "sources": [
+    {
+      "path": "router/java/src/net/i2p/router/client/ClientMessageEventListener.java",
+      "url": "https://raw.githubusercontent.com/i2p/i2p.i2p/9134f808337b401e8e53c73734c81fab04280c9d/router/java/src/net/i2p/router/client/ClientMessageEventListener.java",
+      "git_blob": "8960157856bc79df37d39ab6115e48c6fc450802",
+      "sha256": "58df866c1edd70e1220fe9bf92508ede3bb1c230c17bb2b3e01ce6724681a674",
+      "bytes": 40632,
+      "git_blob_already_retained": false,
+      "matching_tree_blob_materialized": true
+    },
+    {
+      "path": "router/java/src/net/i2p/router/client/ClientManager.java",
+      "url": "https://raw.githubusercontent.com/i2p/i2p.i2p/9134f808337b401e8e53c73734c81fab04280c9d/router/java/src/net/i2p/router/client/ClientManager.java",
+      "git_blob": "1e74b8361f2f8ba7b27b9332e892297832dd7409",
+      "sha256": "35985a294e5f02e103ad976843580a3f4fa402c61345a925d69968ade29b8828",
+      "bytes": 36431,
+      "git_blob_already_retained": false,
+      "matching_tree_blob_materialized": true
+    }
+  ],
+  "fetch": "two exact pinned public source blobs only; Git tree OIDs matched; no router/runtime"
+}

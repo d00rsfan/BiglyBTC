@@ -1,0 +1,14 @@
+ROOT-ONLY FUTURE REFERENCE; NOT EXECUTED.
+One javac of three tiny new helpers against unchanged retained cb8 5432-class
+cohort; one fenced original JVM and one matching-source native existing DB test
+binary --project-original-local-values. Compare exact four TSV lines.
+The subject getNextValueVersions and DB value constructor/getters are original
+retained classes. Only version persistence is a no-op override, plus an explicit
+fixed contact adapter. Original SystemTime/AEMonitor warmup occurs before the
+read-only/no-thread/no-network fence; no Core, profile or router initialization.
+This is a FIELD/VERSION projection, not original storage/fsync or public-network
+interoperability proof. Native actual file/UDP/lifetime tests are separate.
+Root must verify retention.json SHA7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd,
+all class hashes, original source pins, passed matching-source build/ELF before
+execution; full original/native logs/exit status retained. Never execute during
+current compiler batch. No Java old-subject replay.

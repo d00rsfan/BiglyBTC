@@ -1,0 +1,141 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_COMPLETE_LOCAL_PUBLISH_CLOSE_COMMIT_CORRECTION_PENDING_REVIEW",
+  "native_source_basis": "82ef47fb32c30f57ebc9e135bcbffb00b4f7660f",
+  "source_path_count": 11,
+  "source_paths": {
+    "preview/native/adapters/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/adapters/CMakeLists.txt",
+      "before_sha256": "7e23ce6d5a87758800883928d99ec5a9728a300a09b10ffd4e6d2bc9c779da13",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/adapters/CMakeLists.txt",
+      "after_sha256": "d4a631d722b1dc10d66cbf15dc9635fc6b9037e186048bdc29caf671f2d4e4f2"
+    },
+    "preview/native/adapters/azureus_value_versions.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/adapters/azureus_value_versions.cpp",
+      "after_sha256": "221dae34a09259a5377bb106d7e5ceb24591d0b20e8488392ec935c0fd619c75"
+    },
+    "preview/native/adapters/azureus_value_versions.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/adapters/azureus_value_versions.hpp",
+      "after_sha256": "64b7a12d0699ee4696e86084e83699e01b354374141c6a9bb1c4bb1084fede66"
+    },
+    "preview/native/app/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/app/CMakeLists.txt",
+      "before_sha256": "40668b3ce4291dbf0727354608b1a71d5d338f2ad9a019099118ab2ed7a5fa1d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/app/CMakeLists.txt",
+      "after_sha256": "062a39b4fcbbb08a74b3a8a2e7ec37562b8c3ebb34a26b30962389f092546b27"
+    },
+    "preview/native/app/azureus_local_publish.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/app/azureus_local_publish.inc",
+      "after_sha256": "9f3ddf4e086b3f84a597878ffc06ac3622b5d929a7c3e7fdef2a9f29e8e2d3f8"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "a97f23d3eff7a11c923060631a5bf77ee964c2ed7466c4fc450b54ca62aed460",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "092a333dade812e7c0a0a123ddfe5477cab59223176c70b167e504d90f8946a7"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "cf245a7d4c14c27cc05245213f0f527d512e68552c48a44aa5814581acc7daed",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "cbf876fc19f4487f663a08d73a05967951922571e32ee15551741479df40e5c2"
+    },
+    "preview/native/services/azureus_db_runtime/database.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/services/azureus_db_runtime/database.cpp",
+      "before_sha256": "52251f4ca7715060c18d8b7414edacb0648e23dc0b8a7e5b5d088909d1e00d4f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/services/azureus_db_runtime/database.cpp",
+      "after_sha256": "5d4afaf5c4b4d7fddb4435e9c4ea46fb04ab1fadc475183adf8af8b2a17bc261"
+    },
+    "preview/native/services/azureus_db_runtime/database.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/services/azureus_db_runtime/database.hpp",
+      "before_sha256": "6835f68c02677bf14e0f4f56bcf4c46281f24d713497cde4d2ffe531f4354440",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/services/azureus_db_runtime/database.hpp",
+      "after_sha256": "6f6a4272e7cc15da2f3c65362e1172db1a54e4ddbc80937db9675edd89a805e6"
+    },
+    "preview/native/tests/azureus_database_runtime_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/tests/azureus_database_runtime_tests.cpp",
+      "before_sha256": "657a2abe8ade23c6893b704ee5124ca9513ebbe0d49ff0fff4c7fdac4dc11917",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/tests/azureus_database_runtime_tests.cpp",
+      "after_sha256": "a28fc4d0c4669010948fd7a649cadfb405370e9a590a857ee63746647ed78cb3"
+    },
+    "preview/native/tests/owned_azureus_service_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/tests/owned_azureus_service_tests.cpp",
+      "before_sha256": "3f80898a892451b383f6e4ecf7eab1a987403c68c0704123028e59f06316ce89",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/tests/owned_azureus_service_tests.cpp",
+      "after_sha256": "e5c43e7286b32fe47c56ff7413b9ccedf298f466e0600cad530b56b6f871338e"
+    }
+  },
+  "artifacts": {
+    "ADOPTION.txt": "c5aae36e1e32b5ff320b689255c210f723272a0f882227aa410ed6510ea2b278",
+    "oracle/ADOPTION.txt": "298a8efa451cda50cbd7e82f2063ed15f11075c051e93bfa96de3d454e7b6514",
+    "oracle/run.py": "9ea343f2f9e4f3b749482601b0916a6bf8335afdb5f0c3c5213a43fcdb3b27f9",
+    "oracle/source/LocalPublishLauncher.java": "721c6e25d54a9add5efa314d997562c8eef874aa1b132c58a85ce65b9fb5efc4",
+    "oracle/source/LocalPublishProjection.java": "caa006e1f4a16c8a7fa742e7c8b4527097597bdb15ae5c36645e93edabac59db",
+    "oracle/source/QueueOracleFence.java": "5cf7342644823e4f6dbc67aa9de6c21761b9de43c52797719da03ffc7a66e9e7",
+    "parent-delta.patch": "74334a393b500e07cde69fdc4f5933cc543530f851d10e5b5f7c83d416c72770",
+    "retention.json": "9fbbc49104d62c1bde02290ed1731e146022da6a59c12656fe450469fe72bcba",
+    "source-pins-final.json": "cd35c809faf13bb293833d6e41cad960b08e747da06c75b74fd29ad1500789ae",
+    "staging/preview/native/adapters/CMakeLists.txt": "d4a631d722b1dc10d66cbf15dc9635fc6b9037e186048bdc29caf671f2d4e4f2",
+    "staging/preview/native/adapters/azureus_value_versions.cpp": "221dae34a09259a5377bb106d7e5ceb24591d0b20e8488392ec935c0fd619c75",
+    "staging/preview/native/adapters/azureus_value_versions.hpp": "64b7a12d0699ee4696e86084e83699e01b354374141c6a9bb1c4bb1084fede66",
+    "staging/preview/native/app/CMakeLists.txt": "062a39b4fcbbb08a74b3a8a2e7ec37562b8c3ebb34a26b30962389f092546b27",
+    "staging/preview/native/app/azureus_local_publish.inc": "9f3ddf4e086b3f84a597878ffc06ac3622b5d929a7c3e7fdef2a9f29e8e2d3f8",
+    "staging/preview/native/app/owned_azureus_service.cpp": "092a333dade812e7c0a0a123ddfe5477cab59223176c70b167e504d90f8946a7",
+    "staging/preview/native/app/owned_azureus_service.hpp": "cbf876fc19f4487f663a08d73a05967951922571e32ee15551741479df40e5c2",
+    "staging/preview/native/services/azureus_db_runtime/database.cpp": "5d4afaf5c4b4d7fddb4435e9c4ea46fb04ab1fadc475183adf8af8b2a17bc261",
+    "staging/preview/native/services/azureus_db_runtime/database.hpp": "6f6a4272e7cc15da2f3c65362e1172db1a54e4ddbc80937db9675edd89a805e6",
+    "staging/preview/native/tests/azureus_database_runtime_tests.cpp": "a28fc4d0c4669010948fd7a649cadfb405370e9a590a857ee63746647ed78cb3",
+    "staging/preview/native/tests/owned_azureus_service_tests.cpp": "e5c43e7286b32fe47c56ff7413b9ccedf298f466e0600cad530b56b6f871338e"
+  },
+  "scope": {
+    "original_version_reservation": true,
+    "local_value_origination": true,
+    "actual_already_admitted_token_store_readback": true,
+    "normal_receiving_owner": false,
+    "public_activation": false,
+    "provider_changed": false,
+    "author_execution": false
+  },
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "planned_original_projection": {
+    "version_cases": 3,
+    "value_cases": 1,
+    "persistence_callback": "explicit noop adapter",
+    "profile_or_network_proof": false
+  },
+  "author_execution": false,
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/manifest.json",
+  "parent_manifest_sha256": "75f54360de2019246cb46f88cfd0d15f2d36eef574feb654c3939fd2ebeb0f2c",
+  "effective_complete_overlay": true,
+  "changed_source_paths": [
+    "preview/native/app/azureus_local_publish.inc"
+  ],
+  "inherited_parent_artifacts_sha256": {
+    "ADOPTION.txt": "d5626b7c25e01a4e8a1003fcd62c86a3f79a17fec3009fdd35e0fd037956c818",
+    "oracle/ADOPTION.txt": "298a8efa451cda50cbd7e82f2063ed15f11075c051e93bfa96de3d454e7b6514",
+    "oracle/run.py": "9ea343f2f9e4f3b749482601b0916a6bf8335afdb5f0c3c5213a43fcdb3b27f9",
+    "oracle/source/LocalPublishLauncher.java": "721c6e25d54a9add5efa314d997562c8eef874aa1b132c58a85ce65b9fb5efc4",
+    "oracle/source/LocalPublishProjection.java": "caa006e1f4a16c8a7fa742e7c8b4527097597bdb15ae5c36645e93edabac59db",
+    "oracle/source/QueueOracleFence.java": "5cf7342644823e4f6dbc67aa9de6c21761b9de43c52797719da03ffc7a66e9e7",
+    "parent-delta.patch": "82290d62f21260dfda9878e715ad778fcd1eeec2ceaf436eaac567bdf760e75f",
+    "retention.json": "9fbbc49104d62c1bde02290ed1731e146022da6a59c12656fe450469fe72bcba",
+    "source-pins-final.json": "cd35c809faf13bb293833d6e41cad960b08e747da06c75b74fd29ad1500789ae",
+    "staging/preview/native/adapters/CMakeLists.txt": "d4a631d722b1dc10d66cbf15dc9635fc6b9037e186048bdc29caf671f2d4e4f2",
+    "staging/preview/native/adapters/azureus_value_versions.cpp": "221dae34a09259a5377bb106d7e5ceb24591d0b20e8488392ec935c0fd619c75",
+    "staging/preview/native/adapters/azureus_value_versions.hpp": "64b7a12d0699ee4696e86084e83699e01b354374141c6a9bb1c4bb1084fede66",
+    "staging/preview/native/app/CMakeLists.txt": "062a39b4fcbbb08a74b3a8a2e7ec37562b8c3ebb34a26b30962389f092546b27",
+    "staging/preview/native/app/azureus_local_publish.inc": "52baddff02ad93d4079ffa4db1975d0a2db553fa0d00bc9272a897334802fd01",
+    "staging/preview/native/app/owned_azureus_service.cpp": "092a333dade812e7c0a0a123ddfe5477cab59223176c70b167e504d90f8946a7",
+    "staging/preview/native/app/owned_azureus_service.hpp": "cbf876fc19f4487f663a08d73a05967951922571e32ee15551741479df40e5c2",
+    "staging/preview/native/services/azureus_db_runtime/database.cpp": "5d4afaf5c4b4d7fddb4435e9c4ea46fb04ab1fadc475183adf8af8b2a17bc261",
+    "staging/preview/native/services/azureus_db_runtime/database.hpp": "6f6a4272e7cc15da2f3c65362e1172db1a54e4ddbc80937db9675edd89a805e6",
+    "staging/preview/native/tests/azureus_database_runtime_tests.cpp": "a28fc4d0c4669010948fd7a649cadfb405370e9a590a857ee63746647ed78cb3",
+    "staging/preview/native/tests/owned_azureus_service_tests.cpp": "e5c43e7286b32fe47c56ff7413b9ccedf298f466e0600cad530b56b6f871338e"
+  }
+}

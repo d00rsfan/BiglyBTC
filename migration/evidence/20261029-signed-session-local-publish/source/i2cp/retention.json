@@ -1,0 +1,108 @@
+{
+  "source_only": true,
+  "existing_channel_test_methods_byte_exact": [
+    {
+      "method": "collect",
+      "sha256": "870c00b5c45417e66c962c42119443a183e83de7df643b44fa3d033bd7bbed7f"
+    },
+    {
+      "method": "initTestCase",
+      "sha256": "c3ec92db481ffc9a4e5b3be9ed4a09479af8d2d103f9b1608c05d75132c14cd3"
+    },
+    {
+      "method": "actualJavaDateOverOwnedTcp_data",
+      "sha256": "dbad095cfbeac73b0f82e9c81681a0d2a8b745bcc0b64c3170aec42dd6314fb1"
+    },
+    {
+      "method": "actualJavaDateOverOwnedTcp",
+      "sha256": "c9c890ee8104669536a43b2d9cf1ec22d84e8b46508f81086ec7a5717ee8c97b"
+    },
+    {
+      "method": "invalidRepliesWithdrawAllObservation_data",
+      "sha256": "e5558c3482e33fd27de3f5cd48d8e2b752df15afebccb09a188ce24441b25ffe"
+    },
+    {
+      "method": "invalidRepliesWithdrawAllObservation",
+      "sha256": "e3d3a894e12ecf9348082a66a27d74d5da6484ca32bddf17e216da6762c23bf0"
+    },
+    {
+      "method": "truncatedFrameAtActualEofRefuses",
+      "sha256": "82a032049efbe6674ff13c1da46ea5ea4cd7b26f4216222df5877ace7f411e06"
+    },
+    {
+      "method": "realDisconnectRevokesDateAndRetainsOnlyReason",
+      "sha256": "6ccd84608a0dc6f0a9384e82732bc52f4f7aa9b6e4bdb5254f07d596b4d129ae"
+    },
+    {
+      "method": "actualRemoteEofWithdrawsDate",
+      "sha256": "65ec0c3c5609cf54b17651bfeb9f35bf751bddee96ed421a4aff7fb7e7fd7315"
+    },
+    {
+      "method": "noDateHitsAbsoluteDeadlineWithoutRetry",
+      "sha256": "13b4be41dc28aba661387406b467b2a89b364ecf3f63fa08becbd9bba7065f22"
+    },
+    {
+      "method": "cancelPartialThenExplicitRestartUsesNewStream",
+      "sha256": "e5d0ab60429f283b41a7321aaae185bc3332d027696a7688f7cacb7b61ec677c"
+    },
+    {
+      "method": "activeBeginCannotReplaceCurrentAttempt",
+      "sha256": "0b08dd4d664d6a0db2064e96fc7018447ba91e23798c30560005b57f4ba002bf"
+    },
+    {
+      "method": "stateListenerRestartCannotPublishOldDate",
+      "sha256": "02b298d4b736943dedb6bdfc2a18d87d4e3b80852eae2f3a54dc95b5239a7ecf"
+    },
+    {
+      "method": "publicNotificationMayDeleteController_data",
+      "sha256": "b42d21b5da9215c8e6275a3598c975215913770bbcc3aabc348752c09f31ab33"
+    },
+    {
+      "method": "publicNotificationMayDeleteController",
+      "sha256": "8afa97a7b2f87f9bd30317b6cb0df3d68489a53d741ab8bb8177a2e0397afd76"
+    },
+    {
+      "method": "unsupportedOptionsRefuseBeforeAnyTcp",
+      "sha256": "0e1cf4620590cb7f35036ebb17e57944ab7fad4bf96fa1c431ae131ae07402e2"
+    }
+  ],
+  "existing_datagram_crypto_and_format_functions_byte_exact": [
+    {
+      "function": "key",
+      "sha256": "e04334b64083d712825f83dcab1807f8d599e46346b77a8d9a2534f80d95dc7c"
+    },
+    {
+      "function": "sign",
+      "sha256": "7f1309df08d7dddcd7eba02995d4de6f0ffe68b7d55238ef0ffe45549ac1177f"
+    },
+    {
+      "function": "verify",
+      "sha256": "269882c3fb8247f85ca6dd5f1833969e1900c95fd664c1eb6176d25f286ff4c4"
+    },
+    {
+      "function": "decodeDestination",
+      "sha256": "cd0cf2eba626174833c0d4144b2e955fe8e55f2c5c9c0e20a359f6ed511711bd"
+    },
+    {
+      "function": "signingPublicKey",
+      "sha256": "f2a766f8d7e54eee37988fb82871c9d789771227330e0807e93618e76113afe5"
+    },
+    {
+      "function": "encode2",
+      "sha256": "592af0d0136b3e78d17d0ce1bdc754c14f750f14a9d4f2607620c51fee85726f"
+    },
+    {
+      "function": "decode2",
+      "sha256": "1ed885f38946528f29b1223c7514ebe09ca844b70472f0260e6437a9eab8ecc4"
+    },
+    {
+      "function": "encode3",
+      "sha256": "d0d50ea4566cb3470ae68c10718b554178987736f2eb2e32042a8129d227f830"
+    },
+    {
+      "function": "decode3",
+      "sha256": "79bc6c3e988bf24fdd4248bae840ca7d27e129b214216058715ed211e202a6a6"
+    }
+  ],
+  "not_runtime_credit": true
+}

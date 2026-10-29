@@ -1,0 +1,99 @@
+[
+  {
+    "repository": "/home/yurii/Java/BiglyBT",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "path": "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java",
+    "git_blob": "a895f11be8bf2e7e00d15a841a8de975e63663d6",
+    "sha256": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+    "lines": "1008-1047 local store then PUT;1415 onward STORE control;4150-4167 key SHA1"
+  },
+  {
+    "repository": "/home/yurii/Java/BiglyBT",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "path": "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java",
+    "git_blob": "b6a0e762e1ee0693637f36b3f7d5ba479f1087a7",
+    "sha256": "c3ccf59ce89df24426ff9a8a61ea71c8a4ac055d5aa885593129b459b21b36c3",
+    "lines": "79-81 chunks128;347-428 local true/value version/lifetime;3705-3734 version consumption"
+  },
+  {
+    "repository": "/home/yurii/Java/BiglyBT",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "path": "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java",
+    "git_blob": "29db1ebdd5430071ee82d60f0c8f81145f189e73",
+    "sha256": "b1a1f2b73ee650d89be69cc4dc595f7a30e6fe49e70b467a6c380d59888469f4",
+    "lines": "183-261 contacts persistence;392-477 map publication;507-546 signed32 version allocation"
+  },
+  {
+    "repository": "/home/yurii/Java/BiglyBT",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "path": "core/src/com/biglybt/plugin/dht/impl/DHTPluginImpl.java",
+    "git_blob": "fcee4bc9d73c31cfd2e42b2bba9c345604eecd5c",
+    "sha256": "5e3912a67bfa09f1998601322a48f6624e9b20963b789ceb536bddd6dc088135",
+    "lines": "134-154 storage before transport;221-269 DHT+contact import/export;485-497 dht[/netN] directory"
+  },
+  {
+    "repository": "/home/yurii/Java/BiglyBT",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "path": "core/src/com/biglybt/pifimpl/local/ddb/DDBaseImpl.java",
+    "git_blob": "469fffdf16f7a86a2b96359a94b2d772a91d52a7",
+    "sha256": "c7611a5ac0b5a8add4bbdda80f789a3cd1f8ad6fa8041720ce150de9cd333bc8",
+    "lines": "601-644 ordinary one-value write;753-780 read"
+  },
+  {
+    "repository": "/home/yurii/Java/BiglyBTC",
+    "commit": "b998d3076cd34513ae5459adb7de03553c0b1844",
+    "path": "preview/native/app/owned_azureus_service.hpp",
+    "sha256": "cf245a7d4c14c27cc05245213f0f527d512e68552c48a44aa5814581acc7daed",
+    "lines": "20-40 commands/options; no local PUT/STORE API"
+  },
+  {
+    "repository": "/home/yurii/Java/BiglyBTC",
+    "commit": "b998d3076cd34513ae5459adb7de03553c0b1844",
+    "path": "preview/native/app/owned_azureus_service.cpp",
+    "sha256": "a97f23d3eff7a11c923060631a5bf77ee964c2ed7466c4fc450b54ca62aed460",
+    "lines": "326-327 config leaves generated DB unset; all peers require explicit loopback admission"
+  },
+  {
+    "repository": "/home/yurii/Java/BiglyBTC",
+    "commit": "b998d3076cd34513ae5459adb7de03553c0b1844",
+    "path": "preview/native/services/azureus_db_runtime/database.cpp",
+    "sha256": "52251f4ca7715060c18d8b7414edacb0648e23dc0b8a7e5b5d088909d1e00d4f",
+    "lines": "128-160 store remote/local=false only"
+  },
+  {
+    "repository": "/home/yurii/Java/BiglyBTC",
+    "commit": "b998d3076cd34513ae5459adb7de03553c0b1844",
+    "path": "preview/native/services/azureus_db_runtime/database.hpp",
+    "sha256": "6835f68c02677bf14e0f4f56bcf4c46281f24d713497cde4d2ffe531f4354440",
+    "lines": "32-48 public owner API lacks localPut/version source"
+  },
+  {
+    "repository": "/home/yurii/Java/BiglyBTC",
+    "commit": "b998d3076cd34513ae5459adb7de03553c0b1844",
+    "path": "preview/native/services/azureus_udp/owned_transport.hpp",
+    "sha256": "728c6f70399a1e7d6ae50afcbeced7ba5994fa707c96a3d0ef49c42640cc5644",
+    "lines": "76-84 generated-only database activation;150-158 actual STORE/token API"
+  },
+  {
+    "repository": "/home/yurii/Java/BiglyBTC",
+    "commit": "b998d3076cd34513ae5459adb7de03553c0b1844",
+    "path": "preview/native/services/azureus_router/router.hpp",
+    "sha256": "cf216f75a79976baaa4287cbbb3461516847a1005e4289c37c174ba313e19d64",
+    "lines": "bounded inert routing policy, no public bootstrap runtime"
+  },
+  {
+    "repository": "/home/yurii/Java/BiglyBTC",
+    "commit": "b998d3076cd34513ae5459adb7de03553c0b1844",
+    "path": "preview/native/app/local_rating_bridge.inc",
+    "sha256": "57bd089a68c4ff43785d44eb9cf28a2b122fd4b906d52af56d4f43c7fe2b6fd9",
+    "lines": "local durable score only, explicitly no DDB publication"
+  },
+  {
+    "repository": "/home/yurii/Java/BiglyBT",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "path": "core/src/com/biglybt/core/dht/db/impl/DHTDBValueImpl.java",
+    "git_blob": "282d5fed31f8dabec48ac700e38560e3dc7491f6",
+    "sha256": "1e4facb3b8b6672d7252c9a593398b01ebfbd0eb4eb59dc39465114ceb0bda13",
+    "lines": "60-143 constructor/reset;160-218 local/version/flags/lifetime/replication getters"
+  }
+]

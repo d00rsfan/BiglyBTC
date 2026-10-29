@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "reviewed_script": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/finish.py",
+  "script_sha256": "14de0844b0fddc6e9e191b1c35aba400953446efab086e55a9c15c1fc89c0cb6",
+  "source_commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+  "conclusion": "No concrete blocker found in this one-time finisher. Runtime acceptance remains conditional on all three actual lanes, all seven private suite invocations and the corrected offline/field comparison receipts.",
+  "checks": [
+    "Python AST valid; reviewed only, never imported or executed.",
+    "Requires same-source fresh seven-suite PASS receipts for gcc/clang/san, source snapshots, unchanged image hashes, command/log/XML hashes, actual seven-suite private PASS and successful corrected offline r2 plus retained-original field PASS.",
+    "Candidate must remain under the fixed private attempt; its bundle/hash and old dist manifest must match recorded private results. Proc mappings must be clear before atomic exchange. Only old tree now at candidate plus the private test copies/QtTest support are deleted; no cache/provider/source directory is deleted.",
+    "Registry updates only append native/evidence/review/target/source-path references to the three existing in_progress records. All existing states, upstream/dependency entries and baseline/first/integrated/last-reviewed hashes are explicitly preserved.",
+    "Copies raw lane/private/offline receipts and logs, immutable source/review material, initial failed Java helper history and corrected helper evidence; excludes ordinary compiled classes from successful offline evidence. It performs no test/Java replay.",
+    "Both R/N lock files must share the exact original bytes; each replacement checks its preimage and each registry validator must return zero."
+  ],
+  "current_static_inputs": {
+    "adopted_source_path_count": 21,
+    "source_reviews_pins_checked": 3,
+    "source_capsule_pins_checked": 2,
+    "existing_affected_records": [
+      "services.i2cp_initial_session",
+      "services.i2p_datagram",
+      "transport.azureus_volatile_database"
+    ],
+    "corrected_offline_attempt": "offline-runs/r2"
+  },
+  "limits": "Source/AST/static-pin inspection only. Actual SAN/private/offline terminal statuses are not asserted by this review; root executes only after all passed and joined. No promotion, deletion, registry mutation, compiler/test/Java/profile/network/N/cache/dist execution by reviewer."
+}

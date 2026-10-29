@@ -1,0 +1,30 @@
+{
+  "capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/manifest.json",
+      "sha256": "1eb701f7e3c341d49a170153c39ba4150c819b92de1833183b2894b08af4a2d7"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/manifest.json",
+      "sha256": "be4571a28ea8312ac12b32490e2838a9cc8aab0d42b619ec441d609fabe9ed3d"
+    }
+  ],
+  "reviews": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/i2cp-source-review.json",
+      "sha256": "cd373ca64cad68d136fa059e0a92971024498b311182a006cdaf7ecf87d7888b"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029-review/manifest.json",
+      "sha256": "992c7a2912105ad4a6e5737c3d33a374903623c4013ab41735fa78a342a0ac24"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/run-source-review.json",
+      "sha256": "9a9f673909007dbb8c5cd68ca9e6e1449258a993bfe2294705030430a1561f70"
+    }
+  ],
+  "cmake_fragment": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/CMake.fragment",
+    "sha256": "1b2f07c5bf9d76c5b99d37307bffbdeac1ce544a6d5605595f44ade1bbaa18ce"
+  }
+}

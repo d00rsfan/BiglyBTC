@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "reviewed_runner": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/run.py",
+  "runner_sha256": "b4bea4738769a9aeb14e05fbccfcaf74bdd19f9f71940444f1efad9facfd1ef7",
+  "scope": "Root focused build runner only; no source-capsule/qualification result substituted.",
+  "conclusion": "No concrete runner blocker. Existing targets, paths and retained-Java build receipt contract align; the new target/suite names match the staged Oracle CMake fragment pending its final frozen adoption.",
+  "suite_names": [
+    "azureus-owned-service",
+    "azureus-database-runtime",
+    "pure-i2p-datagram-codec",
+    "pure-i2p-client-identity",
+    "pure-i2cp-initial-session-codec",
+    "i2cp-initial-channel",
+    "pure-i2cp-signed-session-config"
+  ],
+  "compiled_target_count": 10,
+  "checks": [
+    "Six existing suite/test-image names resolve from current native CMake, including foreach-generated azureus-owned-service; three product paths match existing qualified images.",
+    "New biglybtc-i2cp-session-config-tests / pure-i2cp-signed-session-config names match the current staged CMake contract. Final frozen source adoption must register it before execution.",
+    "All seven suite results are CTest JUnit with exact inventory and mandatory status=run; no direct Qt JUnit status field is assumed. Child failure/error/skips and full-log FAIL/SKIP are rejected.",
+    "One compiler job and serial CTest per lane; isolated HOME/XDG roots, optional sanitizer environment, immutable unchanged provider and distribution-manifest checks.",
+    "Ten images and complete source snapshot are rechecked unchanged after execution. No historical runtime passes are pooled.",
+    "native-source-map.json is a flat preview/native tracked-file SHA map. build-receipt.json includes the actual zero-exit build command and source_manifest_sha256. This matches the final local-publish original-method oracle runner, whose DB driver must be cache/tests/biglybtc-azureus-database-runtime-tests."
+  ],
+  "java_receipt_consumer": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/oracle/run.py",
+    "sha256": "9ea343f2f9e4f3b749482601b0916a6bf8335afdb5f0c3c5213a43fcdb3b27f9",
+    "scope": "Compatibility inspection only; no Java execution."
+  },
+  "required_before_execution": "Root final root-adoption.json must bind actual clean source and the frozen combined capsules/CMake afterimages. Its absence at this source-review stage is intentional.",
+  "limits": "Python AST/source, CMake and prior image-path inspection only. No helper, configure, compiler, test, Java, socket, profile, N/cache/dist execution or mutation."
+}

@@ -1,0 +1,4 @@
+WARNING: A terminally deprecated method in java.lang.System has been called
+WARNING: System::setSecurityManager has been called by LocalPublishLauncher (file:/tmp/biglybtc-queue-oracle-2wtkl3m_/classes/)
+WARNING: Please consider reporting this to the maintainers of LocalPublishLauncher
+WARNING: System::setSecurityManager will be removed in a future release

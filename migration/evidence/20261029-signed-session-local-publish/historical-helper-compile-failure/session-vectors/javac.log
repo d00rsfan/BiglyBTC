@@ -1,0 +1,7 @@
+Picked up JAVA_TOOL_OPTIONS: -XX:ActiveProcessorCount=2
+/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/interop/SessionConfigVectors.java:54: error: cannot find symbol
+  private static byte[] frame(I2CPMessage message)throws Exception{ByteArrayOutputStream out=new ByteArrayOutputStream();message.writeBytes(out);return out.toByteArray();}
+                                                                                                                                ^
+  symbol:   method writeBytes(ByteArrayOutputStream)
+  location: variable message of type I2CPMessage
+1 error

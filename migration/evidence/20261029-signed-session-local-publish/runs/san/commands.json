@@ -1,0 +1,54 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-azureus-owned-service-tests",
+      "biglybtc-azureus-database-runtime-tests",
+      "biglybtc-i2p-datagram-tests",
+      "biglybtc-i2p-client-identity-tests",
+      "biglybtc-i2cp-protocol-tests",
+      "biglybtc-i2cp-initial-channel-tests",
+      "biglybtc-i2cp-session-config-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 578.577,
+    "log": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/runs/san-r1/build.log",
+    "log_sha256": "80e606be5a2c7362ef0391172fe0e08c6cdb8665b7ece00c81ceb96c9a88da22"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "-R",
+      "^(azureus-owned-service|azureus-database-runtime|pure-i2p-datagram-codec|pure-i2p-client-identity|pure-i2cp-initial-session-codec|i2cp-initial-channel|pure-i2cp-signed-session-config)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/runs/san-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 13.523,
+    "log": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/runs/san-r1/tests.log",
+    "log_sha256": "e7adb779965dd2930048a750f37cff4fde5526f8a80b09f16b3a9d27a29ac7e0"
+  }
+]

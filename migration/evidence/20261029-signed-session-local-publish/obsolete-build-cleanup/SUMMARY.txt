@@ -1,0 +1,33 @@
+Read-only cleanup audit. No deletions or source/cache/provider/oracle mutation.
+
+Ten obsolete full packaged trees: 1,059,139,789 bytes; allocated1,062,240,256.
+All regular files have link-count1. Copy of each small BUILD_MANIFEST retained
+here in bundle-manifests; original source maps/commands/frozen inputs and logs
+remain in each sibling verification directory (exact paths/hash in candidates).
+
+Under /home/yurii/Java/BiglyBT/build/:
+- compatibility-20261026/webseed-portable-r1/{candidate,previous-dist}:210,506,086B
+- compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/{candidate,previous-dist}:213,770,673B
+- compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/{candidate,previous-dist}:213,770,673B
+- compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/{candidate,previous-dist}:211,122,731B
+- storage-20261025/next-portable/run-r2/candidate:104,787,350B
+- storage-20261025/chapter-private-portable-r3/run-r1/candidate:105,182,276B
+
+Further84copied test ELF leaves in the six sibling verification/test-bin dirs:
+307,976,528B. Exact individual list is in candidates.json. Remove only listed
+ELFs, preserve Python test drivers/manifests/commands/Qt captures/source/logs.
+Those historic binary images would be retired, not relabelled as currently
+replayable or pooled into new-source qualification. No whole verification dirs.
+Total proposed regular-file bytes:1,367,116,317 (about1.37GB /1.27GiB).
+
+No visible same-UID maps/cwd/exe/fd references to the six runtime roots. One
+transient /proc/3/fd vanished during the scan; recheck at root before deletion.
+No process was stopped. None of these roots is an active compiler cache or
+provider/install/dependency/reference cohort.
+
+Recovery: the largest item is mixed generated-state-20261017T191107Z.tar.zst,
+2,949,103,662B. Do not remove it as if it were an old preview; its adjacent index
+and recovery trees contain source, retained helpers and original observations.
+Generated-runtime's65ELF signatures total only28.9MB and include qualified input
+drivers; excluded along with all generated profiles/payloads/reference classes.
+No large binary or archive hashing/unpacking was needed for this audit.

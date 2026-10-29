@@ -1,0 +1,20 @@
+********* Start testing of AzureusDatabaseRuntimeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusDatabaseRuntimeTests::initTestCase()
+PASS   : AzureusDatabaseRuntimeTests::localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData()
+PASS   : AzureusDatabaseRuntimeTests::qualifiedMappingOwnsVersionsForwardingAndUnknownBinaryBytes()
+PASS   : AzureusDatabaseRuntimeTests::normalFindFlagsReturnUnfilteredValuesLikeOriginalMapping()
+PASS   : AzureusDatabaseRuntimeTests::actualFindFlagsReachTheDatabaseWithoutSeedFiltering()
+PASS   : AzureusDatabaseRuntimeTests::statsValueRequiresRealAdapterAndLocalIdentity()
+PASS   : AzureusDatabaseRuntimeTests::actualStatsReadIsBoundToSocketAndRealMappingEvents()
+PASS   : AzureusDatabaseRuntimeTests::originalDiversificationRequiresExplicitControlAndRealMappingEvents()
+PASS   : AzureusDatabaseRuntimeTests::originalFrequencyUsesActualIpBloomAndSuspensionSamples()
+PASS   : AzureusDatabaseRuntimeTests::borrowedClockCannotReenterFacadeMutation()
+PASS   : AzureusDatabaseRuntimeTests::strictExpiryBoundaryThrottleAndDelayedEmptyMappingRemoval()
+PASS   : AzureusDatabaseRuntimeTests::quotaChecksExistingFourByteOverheadAndCapacityNeverClobbers()
+PASS   : AzureusDatabaseRuntimeTests::actualTokenStoreAndRecursiveGetReadMutatedDatabase()
+PASS   : AzureusDatabaseRuntimeTests::malformedAndWrongNetworkNeverReachTheDatabase()
+PASS   : AzureusDatabaseRuntimeTests::legacyModeRemainsNonDatabaseAndUnsafeBindCannotActivateIt()
+PASS   : AzureusDatabaseRuntimeTests::cleanupTestCase()
+Totals: 16 passed, 0 failed, 0 skipped, 0 blacklisted, 2040ms
+********* Finished testing of AzureusDatabaseRuntimeTests *********

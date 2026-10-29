@@ -1,0 +1,42 @@
+{
+  "preview/native/tests/owned_azureus_service_tests.cpp": {
+    "retained_methods_sha256": {
+      "defaultAndInvalidPolicyNeverCreateAnOwner": "8ca62206ec0abdbb533ba0f23ea262fd8edd9d29f6a62c6868102048c27ac87c",
+      "stdWorkerCreatesAndJoinsTheDedicatedQtOwner": "36387d3c77030bb61e2f82ab935fe75c336e7d73b2e439cd6c10f4e6beed9d13",
+      "twoActualServiceOwnersExchangeRttCoordinatesAndKeepOldSnapshots": "a19189cbf3a9122c07f052b891f97a98ad298f92b80d38845b6eec7e2bd77149",
+      "existingActualFindNodeAndStreamingFindValueRunOnTheQtOwner": "472b48c6ee00b02a0c085c506d49508e19a53f1b1f3956c8ab5fd9bb409cf59e",
+      "actualTimeoutCancellationAndJoinedCloseRetainTheirOwnEvents": "01690b04b45ba9f3aaa9dc217f6aec957504c356de664df028aa80097a884c9b",
+      "boundedAdmissionAndCloseDoNotDependOnFreeCommandSlots": "0ad5bad1a02d273f50fd6b2cc82ae48d7ab7ae93472a7fb16c86a94718a90688",
+      "invalidPublicPeersAndDeadlinesNeverSendOrChangeTheMailbox": "ac608ddd6b10b03913af88d0322eeed2c6e61063176ea20573abb4ffb61ef462",
+      "passiveReadsNeverQueueCommandsOrRepublishUnchangedFacts": "03e32bf70f7f314c1d33873c40eb40d93b721d1890590340d267a49081ed150f",
+      "concurrentMailboxReadsAndImmediatePendingDestructionJoinSafely": "40be2e836fde174775d42479ce55810d0657c1be7d8837babd922a166682d975"
+    },
+    "added_methods": [
+      "localPublicationCancellationAndChangedProfileNeverSendStore",
+      "localPublicationUsesActualTokenStoreAndReadbackFromGeneratedReceiver",
+      "originalVersionReservationPreservesSignedJavaWidthsAndChunkBoundary",
+      "profileVersionsReserveBeforeUsePreserveUnknownsAndRecoverOnlyCanonicalPending",
+      "versionOwnerRetainsCallerLeaseAndRefusesLockOrDirectoryReplacement"
+    ]
+  },
+  "preview/native/tests/azureus_database_runtime_tests.cpp": {
+    "retained_methods_sha256": {
+      "qualifiedMappingOwnsVersionsForwardingAndUnknownBinaryBytes": "ac74ea778480307e6d5d3d9dc24f93f6623b5d877eeb0bde037d30afdf80932e",
+      "normalFindFlagsReturnUnfilteredValuesLikeOriginalMapping": "9fecea3ea493e35e84bb6df18a990fb03ad86d0a2c9275b227c041485f1bfc30",
+      "actualFindFlagsReachTheDatabaseWithoutSeedFiltering": "8fce3d97553e662cd0e627052e93abcd096d9be1b9620bb097b0a3bff9313e71",
+      "statsValueRequiresRealAdapterAndLocalIdentity": "a6193a4eb3f2d6d51a09c8642c85952365b26d3f75de7429926c11640ac854be",
+      "actualStatsReadIsBoundToSocketAndRealMappingEvents": "1b06316c50eed73f6e07f59d166a25e29a6ce175bd1d0589ce45669c07a2bc16",
+      "originalDiversificationRequiresExplicitControlAndRealMappingEvents": "f4708e6532a1f9c4b112153674517836e46c597da3dbd7720e20f7e2154c2609",
+      "originalFrequencyUsesActualIpBloomAndSuspensionSamples": "96a8e8b2bfdbe34170d5f2839861da6b248443defd124d5da35d017c56d4d76b",
+      "borrowedClockCannotReenterFacadeMutation": "803331cdfb04fd8f183c00bc980a6631cb8d49aeecaa04053e5251c1cbb8a52c",
+      "strictExpiryBoundaryThrottleAndDelayedEmptyMappingRemoval": "0d1ae78bcb66d5e39ac376e7e1ff7fd837ef871d6df8f6a175d1e79c459c7dbf",
+      "quotaChecksExistingFourByteOverheadAndCapacityNeverClobbers": "f97a8cea37cfe1fc52a3f437dd9b37912983cbe59d4aaad96c19ed5e745cf854",
+      "actualTokenStoreAndRecursiveGetReadMutatedDatabase": "a32b9e794918390da3e342aadb051b2cbeb9aadb67aad4c23b6648566044d801",
+      "malformedAndWrongNetworkNeverReachTheDatabase": "dc15aca176425d810ec7710d1b4c59348f5f9731bf65e4722df833bde88d3cdb",
+      "legacyModeRemainsNonDatabaseAndUnsafeBindCannotActivateIt": "88c5154d96ed6901446c843e00e6f560fa986800e8f16712960b434d0af2db75"
+    },
+    "added_methods": [
+      "localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData"
+    ]
+  }
+}

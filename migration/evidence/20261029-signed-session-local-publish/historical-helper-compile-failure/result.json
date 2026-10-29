@@ -1,0 +1,11 @@
+{
+  "status": "FAIL",
+  "source_commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+  "gcc_result_sha256": "871450223a64b4b34524a536299e28b01312666c2f33396bd2eb5a5e4b37ee30",
+  "runner_sha256": "249bb40c1da8e6ce4343ab5b8ac68fc929d2f1c669d67850e4107e2f79cf5ebd",
+  "provider_rebuilt": false,
+  "old_java_replays": false,
+  "router_or_profile_interoperability_claimed": false,
+  "failure": "AssertionError('session-objects')",
+  "commands_sha256": "b8b2bebf66aade69484467c701e0427c8b06a95b22e7737cddbcfc535e95aa0b"
+}

@@ -1,0 +1,83 @@
+{
+  "status": "SOURCE_ONLY_LOCAL_PROJECTION_JDK_RSA_WARMUP",
+  "parent_manifest_sha256": "be4571a28ea8312ac12b32490e2838a9cc8aab0d42b619ec441d609fabe9ed3d",
+  "native_source_changed": false,
+  "fence_changed": false,
+  "retained_original_methods_changed": false,
+  "source_paths": {
+    "preview/native/adapters/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/adapters/CMakeLists.txt",
+      "before_sha256": "7e23ce6d5a87758800883928d99ec5a9728a300a09b10ffd4e6d2bc9c779da13",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/adapters/CMakeLists.txt",
+      "after_sha256": "d4a631d722b1dc10d66cbf15dc9635fc6b9037e186048bdc29caf671f2d4e4f2"
+    },
+    "preview/native/adapters/azureus_value_versions.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/adapters/azureus_value_versions.cpp",
+      "after_sha256": "221dae34a09259a5377bb106d7e5ceb24591d0b20e8488392ec935c0fd619c75"
+    },
+    "preview/native/adapters/azureus_value_versions.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/adapters/azureus_value_versions.hpp",
+      "after_sha256": "64b7a12d0699ee4696e86084e83699e01b354374141c6a9bb1c4bb1084fede66"
+    },
+    "preview/native/app/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/app/CMakeLists.txt",
+      "before_sha256": "40668b3ce4291dbf0727354608b1a71d5d338f2ad9a019099118ab2ed7a5fa1d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/app/CMakeLists.txt",
+      "after_sha256": "062a39b4fcbbb08a74b3a8a2e7ec37562b8c3ebb34a26b30962389f092546b27"
+    },
+    "preview/native/app/azureus_local_publish.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/app/azureus_local_publish.inc",
+      "after_sha256": "9f3ddf4e086b3f84a597878ffc06ac3622b5d929a7c3e7fdef2a9f29e8e2d3f8"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "a97f23d3eff7a11c923060631a5bf77ee964c2ed7466c4fc450b54ca62aed460",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "092a333dade812e7c0a0a123ddfe5477cab59223176c70b167e504d90f8946a7"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "cf245a7d4c14c27cc05245213f0f527d512e68552c48a44aa5814581acc7daed",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "cbf876fc19f4487f663a08d73a05967951922571e32ee15551741479df40e5c2"
+    },
+    "preview/native/services/azureus_db_runtime/database.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/services/azureus_db_runtime/database.cpp",
+      "before_sha256": "52251f4ca7715060c18d8b7414edacb0648e23dc0b8a7e5b5d088909d1e00d4f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/services/azureus_db_runtime/database.cpp",
+      "after_sha256": "5d4afaf5c4b4d7fddb4435e9c4ea46fb04ab1fadc475183adf8af8b2a17bc261"
+    },
+    "preview/native/services/azureus_db_runtime/database.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/services/azureus_db_runtime/database.hpp",
+      "before_sha256": "6835f68c02677bf14e0f4f56bcf4c46281f24d713497cde4d2ffe531f4354440",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/services/azureus_db_runtime/database.hpp",
+      "after_sha256": "6f6a4272e7cc15da2f3c65362e1172db1a54e4ddbc80937db9675edd89a805e6"
+    },
+    "preview/native/tests/azureus_database_runtime_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/tests/azureus_database_runtime_tests.cpp",
+      "before_sha256": "657a2abe8ade23c6893b704ee5124ca9513ebbe0d49ff0fff4c7fdac4dc11917",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/tests/azureus_database_runtime_tests.cpp",
+      "after_sha256": "a28fc4d0c4669010948fd7a649cadfb405370e9a590a857ee63746647ed78cb3"
+    },
+    "preview/native/tests/owned_azureus_service_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/before/preview/native/tests/owned_azureus_service_tests.cpp",
+      "before_sha256": "3f80898a892451b383f6e4ecf7eab1a987403c68c0704123028e59f06316ce89",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/staging/preview/native/tests/owned_azureus_service_tests.cpp",
+      "after_sha256": "e5c43e7286b32fe47c56ff7413b9ccedf298f466e0600cad530b56b6f871338e"
+    }
+  },
+  "artifacts": {
+    "oracle/run.py": "9ea343f2f9e4f3b749482601b0916a6bf8335afdb5f0c3c5213a43fcdb3b27f9",
+    "oracle/source/LocalPublishLauncher.java": "0d5e6f9d3e019bbe0cf015d02652d560098dab9c2681d607b7d4a49044947318",
+    "oracle/source/LocalPublishProjection.java": "caa006e1f4a16c8a7fa742e7c8b4527097597bdb15ae5c36645e93edabac59db",
+    "oracle/source/QueueOracleFence.java": "5cf7342644823e4f6dbc67aa9de6c21761b9de43c52797719da03ffc7a66e9e7"
+  },
+  "failed_attempt": "/home/yurii/Java/BiglyBT/build/azureus-local-publish-20261029/amendments/publication-authority/amendments/close-commit/oracle/runs/run-r2/result.json",
+  "reason": "All4 source-projected fields printed correctly; original utility staticRSA KeyFactory triggered JDKNativePRNG availability probe underfence. Explicit JDK RSA provider warmup before unchanged fence; no subject profile/network activity permitted."
+}

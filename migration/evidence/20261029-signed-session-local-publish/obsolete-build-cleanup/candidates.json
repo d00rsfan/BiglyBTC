@@ -1,0 +1,940 @@
+{
+  "bundles": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/previous-dist",
+      "kind": "obsolete_full_packaged_candidate_or_previous_dist",
+      "bytes": 104787350,
+      "allocated_bytes": 105107456,
+      "files": 114,
+      "hardlinked_regular_files": 0,
+      "manifest_sha256": "deefcbe40681c1cd2d7352869be399d4e75d5d935a691bdc921fba11db71b221",
+      "manifest_path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/previous-dist/BUILD_MANIFEST.json",
+      "external_evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification",
+      "external_evidence_exists": true,
+      "retained_manifest_copy": "/home/yurii/Java/BiglyBT/build/obsolete-preview-cleanup-audit-20261029/bundle-manifests/01-BUILD_MANIFEST.json",
+      "external_evidence": {
+        "result.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/result.json",
+          "bytes": 5627,
+          "sha256": "4946d068cc96515908c6abc2016c7e1f61e185268ad4e59bc77587b5e47e6bc3"
+        },
+        "commands.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/commands.json",
+          "bytes": 46483,
+          "sha256": "13b50446f8591649c0ede280e117c0d1a3080dc5b83734b7744ecae6706b33c2"
+        },
+        "source-map.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/source-map.json",
+          "bytes": 113378,
+          "sha256": "2f1b18201792161014f06486964e00f2399f0be00bfbed878c246121bda327ad"
+        },
+        "frozen-inputs.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/frozen-inputs.json",
+          "bytes": 5777,
+          "sha256": "ed17db6cf363cdb6202d7a8ed6edb7791297870229c5b37f6cef5a93851c5fa7"
+        }
+      }
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/candidate",
+      "kind": "obsolete_full_packaged_candidate_or_previous_dist",
+      "bytes": 105718736,
+      "allocated_bytes": 106029056,
+      "files": 114,
+      "hardlinked_regular_files": 0,
+      "manifest_sha256": "3325b24b4db201d25c83d80cd3a056e5d77bb252c9f7e253da29aa99a9487aae",
+      "manifest_path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/candidate/BUILD_MANIFEST.json",
+      "external_evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification",
+      "external_evidence_exists": true,
+      "retained_manifest_copy": "/home/yurii/Java/BiglyBT/build/obsolete-preview-cleanup-audit-20261029/bundle-manifests/02-BUILD_MANIFEST.json",
+      "external_evidence": {
+        "result.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/result.json",
+          "bytes": 5627,
+          "sha256": "4946d068cc96515908c6abc2016c7e1f61e185268ad4e59bc77587b5e47e6bc3"
+        },
+        "commands.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/commands.json",
+          "bytes": 46483,
+          "sha256": "13b50446f8591649c0ede280e117c0d1a3080dc5b83734b7744ecae6706b33c2"
+        },
+        "source-map.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/source-map.json",
+          "bytes": 113378,
+          "sha256": "2f1b18201792161014f06486964e00f2399f0be00bfbed878c246121bda327ad"
+        },
+        "frozen-inputs.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/frozen-inputs.json",
+          "bytes": 5777,
+          "sha256": "ed17db6cf363cdb6202d7a8ed6edb7791297870229c5b37f6cef5a93851c5fa7"
+        }
+      }
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/previous-dist",
+      "kind": "obsolete_full_packaged_candidate_or_previous_dist",
+      "bytes": 104789025,
+      "allocated_bytes": 105119744,
+      "files": 114,
+      "hardlinked_regular_files": 0,
+      "manifest_sha256": "e34ade281e7c8548c837968f7c095042d93862a4e1312f790feba464de3ba421",
+      "manifest_path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/previous-dist/BUILD_MANIFEST.json",
+      "external_evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification",
+      "external_evidence_exists": true,
+      "retained_manifest_copy": "/home/yurii/Java/BiglyBT/build/obsolete-preview-cleanup-audit-20261029/bundle-manifests/03-BUILD_MANIFEST.json",
+      "external_evidence": {
+        "commands.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/commands.json",
+          "bytes": 50308,
+          "sha256": "52c2403209bdbdad1dc1be37827370c46eea4c1f355400ea27be7746aa11470a"
+        },
+        "source-map.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/source-map.json",
+          "bytes": 119216,
+          "sha256": "60bb83144e06cfdca4c646ac198dce665989e3515d90e77394fee77d1de367c7"
+        },
+        "frozen-inputs.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/frozen-inputs.json",
+          "bytes": 8739,
+          "sha256": "90bed2ce100a716b5fbe2c2c343b8550493418a853be82bee1f8a4aab5d218e8"
+        }
+      }
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/candidate",
+      "kind": "obsolete_full_packaged_candidate_or_previous_dist",
+      "bytes": 106333706,
+      "allocated_bytes": 106663936,
+      "files": 114,
+      "hardlinked_regular_files": 0,
+      "manifest_sha256": "9dcbeb134bdc47369e2942466b22f6fe15a82bd66c914e94442cf3341b75d171",
+      "manifest_path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/candidate/BUILD_MANIFEST.json",
+      "external_evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification",
+      "external_evidence_exists": true,
+      "retained_manifest_copy": "/home/yurii/Java/BiglyBT/build/obsolete-preview-cleanup-audit-20261029/bundle-manifests/04-BUILD_MANIFEST.json",
+      "external_evidence": {
+        "commands.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/commands.json",
+          "bytes": 50308,
+          "sha256": "52c2403209bdbdad1dc1be37827370c46eea4c1f355400ea27be7746aa11470a"
+        },
+        "source-map.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/source-map.json",
+          "bytes": 119216,
+          "sha256": "60bb83144e06cfdca4c646ac198dce665989e3515d90e77394fee77d1de367c7"
+        },
+        "frozen-inputs.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/frozen-inputs.json",
+          "bytes": 8739,
+          "sha256": "90bed2ce100a716b5fbe2c2c343b8550493418a853be82bee1f8a4aab5d218e8"
+        }
+      }
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/previous-dist",
+      "kind": "obsolete_full_packaged_candidate_or_previous_dist",
+      "bytes": 104789025,
+      "allocated_bytes": 105086976,
+      "files": 114,
+      "hardlinked_regular_files": 0,
+      "manifest_sha256": "e34ade281e7c8548c837968f7c095042d93862a4e1312f790feba464de3ba421",
+      "manifest_path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/previous-dist/BUILD_MANIFEST.json",
+      "external_evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification",
+      "external_evidence_exists": true,
+      "retained_manifest_copy": "/home/yurii/Java/BiglyBT/build/obsolete-preview-cleanup-audit-20261029/bundle-manifests/05-BUILD_MANIFEST.json",
+      "external_evidence": {
+        "commands.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/commands.json",
+          "bytes": 19754,
+          "sha256": "98acfb8df9c89af1a301d23e6125ab976885d23adc5f3853f8fce99c7789477f"
+        },
+        "source-map.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/source-map.json",
+          "bytes": 119216,
+          "sha256": "60bb83144e06cfdca4c646ac198dce665989e3515d90e77394fee77d1de367c7"
+        },
+        "frozen-inputs.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/frozen-inputs.json",
+          "bytes": 9009,
+          "sha256": "f203da56b1865be785d0d5b81cb99fe7027bbf45e600e6590e3553f4d0afac60"
+        }
+      }
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/candidate",
+      "kind": "obsolete_full_packaged_candidate_or_previous_dist",
+      "bytes": 108981648,
+      "allocated_bytes": 109277184,
+      "files": 114,
+      "hardlinked_regular_files": 0,
+      "manifest_sha256": "f8404e07e6a77eb53994928ba2bd80bf6e40fb018ce952890c0c8e002070a00a",
+      "manifest_path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/candidate/BUILD_MANIFEST.json",
+      "external_evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification",
+      "external_evidence_exists": true,
+      "retained_manifest_copy": "/home/yurii/Java/BiglyBT/build/obsolete-preview-cleanup-audit-20261029/bundle-manifests/06-BUILD_MANIFEST.json",
+      "external_evidence": {
+        "commands.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/commands.json",
+          "bytes": 19754,
+          "sha256": "98acfb8df9c89af1a301d23e6125ab976885d23adc5f3853f8fce99c7789477f"
+        },
+        "source-map.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/source-map.json",
+          "bytes": 119216,
+          "sha256": "60bb83144e06cfdca4c646ac198dce665989e3515d90e77394fee77d1de367c7"
+        },
+        "frozen-inputs.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/frozen-inputs.json",
+          "bytes": 9009,
+          "sha256": "f203da56b1865be785d0d5b81cb99fe7027bbf45e600e6590e3553f4d0afac60"
+        }
+      }
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/previous-dist",
+      "kind": "obsolete_full_packaged_candidate_or_previous_dist",
+      "bytes": 104789025,
+      "allocated_bytes": 105082880,
+      "files": 114,
+      "hardlinked_regular_files": 0,
+      "manifest_sha256": "e34ade281e7c8548c837968f7c095042d93862a4e1312f790feba464de3ba421",
+      "manifest_path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/previous-dist/BUILD_MANIFEST.json",
+      "external_evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification",
+      "external_evidence_exists": true,
+      "retained_manifest_copy": "/home/yurii/Java/BiglyBT/build/obsolete-preview-cleanup-audit-20261029/bundle-manifests/07-BUILD_MANIFEST.json",
+      "external_evidence": {
+        "commands.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/commands.json",
+          "bytes": 49969,
+          "sha256": "6623c3e74c0d433136ceb3ab2abb9e5c57f1c83c35a8ef1d1d3ad4a3016f14ab"
+        },
+        "source-map.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/source-map.json",
+          "bytes": 119216,
+          "sha256": "60bb83144e06cfdca4c646ac198dce665989e3515d90e77394fee77d1de367c7"
+        },
+        "frozen-inputs.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/frozen-inputs.json",
+          "bytes": 9009,
+          "sha256": "7cc461b089fbeef8c14d759c7dd54a4b47dcc6fc3cd309a6cd1ed80ed2b8db82"
+        }
+      }
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/candidate",
+      "kind": "obsolete_full_packaged_candidate_or_previous_dist",
+      "bytes": 108981648,
+      "allocated_bytes": 109318144,
+      "files": 114,
+      "hardlinked_regular_files": 0,
+      "manifest_sha256": "58902e71cb376c8b78654dc2cbfd95d9b2aa9886618511bceea3120b84603f7d",
+      "manifest_path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/candidate/BUILD_MANIFEST.json",
+      "external_evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification",
+      "external_evidence_exists": true,
+      "retained_manifest_copy": "/home/yurii/Java/BiglyBT/build/obsolete-preview-cleanup-audit-20261029/bundle-manifests/08-BUILD_MANIFEST.json",
+      "external_evidence": {
+        "commands.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/commands.json",
+          "bytes": 49969,
+          "sha256": "6623c3e74c0d433136ceb3ab2abb9e5c57f1c83c35a8ef1d1d3ad4a3016f14ab"
+        },
+        "source-map.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/source-map.json",
+          "bytes": 119216,
+          "sha256": "60bb83144e06cfdca4c646ac198dce665989e3515d90e77394fee77d1de367c7"
+        },
+        "frozen-inputs.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/frozen-inputs.json",
+          "bytes": 9009,
+          "sha256": "7cc461b089fbeef8c14d759c7dd54a4b47dcc6fc3cd309a6cd1ed80ed2b8db82"
+        }
+      }
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/candidate",
+      "kind": "obsolete_full_packaged_candidate_or_previous_dist",
+      "bytes": 104787350,
+      "allocated_bytes": 105082880,
+      "files": 114,
+      "hardlinked_regular_files": 0,
+      "manifest_sha256": "deefcbe40681c1cd2d7352869be399d4e75d5d935a691bdc921fba11db71b221",
+      "manifest_path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/candidate/BUILD_MANIFEST.json",
+      "external_evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification",
+      "external_evidence_exists": true,
+      "retained_manifest_copy": "/home/yurii/Java/BiglyBT/build/obsolete-preview-cleanup-audit-20261029/bundle-manifests/09-BUILD_MANIFEST.json",
+      "external_evidence": {
+        "result.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification/result.json",
+          "bytes": 4689,
+          "sha256": "4d8358c4f6089b950e550494636ddd49b3b59a001964e88f7d38c37fe041b01e"
+        },
+        "commands.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification/commands.json",
+          "bytes": 9814,
+          "sha256": "1f35200dcfbb95aba2e5bfa75057e796b5a94563f8b81056f086a52cc764115f"
+        },
+        "source-map.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification/source-map.json",
+          "bytes": 106302,
+          "sha256": "a5b92727cbc480551929da115e152c325e82c1c852f2c44f36e0ec153639e42b"
+        },
+        "frozen-inputs.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification/frozen-inputs.json",
+          "bytes": 3115,
+          "sha256": "66389e27bc243e7238dc41a9817c4dda2e1a39c341e49ef6cae95780ccd09dfa"
+        }
+      }
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/candidate",
+      "kind": "obsolete_full_packaged_candidate_or_previous_dist",
+      "bytes": 105182276,
+      "allocated_bytes": 105472000,
+      "files": 114,
+      "hardlinked_regular_files": 0,
+      "manifest_sha256": "8425a51b7c7712e767520dc8cdb2eba2e7afa42c8d764d1bc68475674a97b2e5",
+      "manifest_path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/candidate/BUILD_MANIFEST.json",
+      "external_evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification",
+      "external_evidence_exists": true,
+      "retained_manifest_copy": "/home/yurii/Java/BiglyBT/build/obsolete-preview-cleanup-audit-20261029/bundle-manifests/10-BUILD_MANIFEST.json",
+      "external_evidence": {
+        "result.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/result.json",
+          "bytes": 5685,
+          "sha256": "e8095f361603ded6e699c8d468a798344fde5f4aea0012679589bee52bad5075"
+        },
+        "commands.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/commands.json",
+          "bytes": 12032,
+          "sha256": "77f3cd175d0c99ab223ffcf05bbcf971912ecf29babc48f918e96b4dddac7c23"
+        },
+        "source-map.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/source-map.json",
+          "bytes": 110183,
+          "sha256": "645eb683898a15cf1565d5e45a2e0d57a0b486cb5fe1273d32dc3139db89218b"
+        },
+        "frozen-inputs.json": {
+          "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/frozen-inputs.json",
+          "bytes": 3648,
+          "sha256": "4de0960a7b5d28276aa0027b44dc18d7b59a0f22ad76c242eaed73fd6abeaad8"
+        }
+      }
+    }
+  ],
+  "test_elfs": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/libtorrent-rasterbar.so.2.0.12",
+      "bytes": 4913824,
+      "allocated_bytes": 4919296,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/biglybtc-provider-payload-counter-tests",
+      "bytes": 3219960,
+      "allocated_bytes": 3227648,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/biglybtc-persistent-session-tests",
+      "bytes": 3243552,
+      "allocated_bytes": 3248128,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/libbiglybtc-runtime-interposer.so",
+      "bytes": 15264,
+      "allocated_bytes": 16384,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/biglybtc-network-proxy-owner-tests",
+      "bytes": 3333848,
+      "allocated_bytes": 3338240,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/BiglyBTC-headless",
+      "bytes": 3107624,
+      "allocated_bytes": 3112960,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/biglybtc-preview-smoke",
+      "bytes": 8748616,
+      "allocated_bytes": 8753152,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/biglybtc-provider-webseed-runtime-deployment-driver",
+      "bytes": 55600,
+      "allocated_bytes": 57344,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/biglybtc-managed-download-tests",
+      "bytes": 3260664,
+      "allocated_bytes": 3268608,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/BiglyBTC",
+      "bytes": 8440976,
+      "allocated_bytes": 8445952,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/biglybtc-runtime-interposition-driver",
+      "bytes": 3109552,
+      "allocated_bytes": 3117056,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/biglybtc-selected-swarm-admission-tests",
+      "bytes": 3219280,
+      "allocated_bytes": 3223552,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification/test-bin/biglybtc-network-binding-owner-tests",
+      "bytes": 3310088,
+      "allocated_bytes": 3317760,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-20261026/webseed-portable-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/BiglyBTC-plugin-SpeedScheduler.so",
+      "bytes": 62248,
+      "allocated_bytes": 65536,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/libtorrent-rasterbar.so.2.0.12",
+      "bytes": 4913824,
+      "allocated_bytes": 4919296,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/biglybtc-provider-payload-counter-tests",
+      "bytes": 4114120,
+      "allocated_bytes": 4120576,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/biglybtc-persistent-session-tests",
+      "bytes": 4102600,
+      "allocated_bytes": 4108288,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/libbiglybtc-runtime-interposer.so",
+      "bytes": 15440,
+      "allocated_bytes": 16384,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/biglybtc-file-operation-dialog-tests",
+      "bytes": 2440632,
+      "allocated_bytes": 2445312,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/biglybtc-network-proxy-owner-tests",
+      "bytes": 4174144,
+      "allocated_bytes": 4182016,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/biglybtc-provider-traffic-runtime-deployment-driver",
+      "bytes": 52408,
+      "allocated_bytes": 53248,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/BiglyBTC-headless",
+      "bytes": 3968960,
+      "allocated_bytes": 3973120,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/biglybtc-preview-smoke",
+      "bytes": 8519832,
+      "allocated_bytes": 8527872,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/biglybtc-managed-download-tests",
+      "bytes": 4659848,
+      "allocated_bytes": 4665344,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/BiglyBTC-plugin-azlocprov.so",
+      "bytes": 32272,
+      "allocated_bytes": 32768,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/BiglyBTC",
+      "bytes": 8259640,
+      "allocated_bytes": 8265728,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/biglybtc-runtime-interposition-driver",
+      "bytes": 3958976,
+      "allocated_bytes": 3964928,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/biglybtc-torrent-intake-dialog-tests",
+      "bytes": 2589504,
+      "allocated_bytes": 2596864,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/biglybtc-selected-swarm-admission-tests",
+      "bytes": 4068616,
+      "allocated_bytes": 4075520,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/biglybtc-network-binding-owner-tests",
+      "bytes": 4143880,
+      "allocated_bytes": 4149248,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/test-bin/biglybtc-torrent-creation-dialog-tests",
+      "bytes": 2389472,
+      "allocated_bytes": 2396160,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/BiglyBTC-plugin-SpeedScheduler.so",
+      "bytes": 60936,
+      "allocated_bytes": 61440,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/libtorrent-rasterbar.so.2.0.12",
+      "bytes": 4913824,
+      "allocated_bytes": 4919296,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/biglybtc-provider-payload-counter-tests",
+      "bytes": 4866032,
+      "allocated_bytes": 4870144,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/biglybtc-persistent-session-tests",
+      "bytes": 4843336,
+      "allocated_bytes": 4849664,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/libbiglybtc-runtime-interposer.so",
+      "bytes": 15264,
+      "allocated_bytes": 16384,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/biglybtc-file-operation-dialog-tests",
+      "bytes": 3070824,
+      "allocated_bytes": 3076096,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/biglybtc-network-proxy-owner-tests",
+      "bytes": 4937552,
+      "allocated_bytes": 4943872,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/biglybtc-provider-traffic-runtime-deployment-driver",
+      "bytes": 55976,
+      "allocated_bytes": 57344,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/BiglyBTC-headless",
+      "bytes": 4715688,
+      "allocated_bytes": 4722688,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/biglybtc-preview-smoke",
+      "bytes": 10559848,
+      "allocated_bytes": 10567680,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/biglybtc-managed-download-tests",
+      "bytes": 5433200,
+      "allocated_bytes": 5439488,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/BiglyBTC-plugin-azlocprov.so",
+      "bytes": 39456,
+      "allocated_bytes": 40960,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/BiglyBTC",
+      "bytes": 10248528,
+      "allocated_bytes": 10256384,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/biglybtc-runtime-interposition-driver",
+      "bytes": 4705328,
+      "allocated_bytes": 4710400,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/biglybtc-torrent-intake-dialog-tests",
+      "bytes": 3249224,
+      "allocated_bytes": 3256320,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/biglybtc-selected-swarm-admission-tests",
+      "bytes": 4823224,
+      "allocated_bytes": 4829184,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/biglybtc-network-binding-owner-tests",
+      "bytes": 4913096,
+      "allocated_bytes": 4919296,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification/test-bin/biglybtc-torrent-creation-dialog-tests",
+      "bytes": 3040640,
+      "allocated_bytes": 3047424,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r1/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/BiglyBTC-plugin-SpeedScheduler.so",
+      "bytes": 60936,
+      "allocated_bytes": 61440,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/libtorrent-rasterbar.so.2.0.12",
+      "bytes": 4913824,
+      "allocated_bytes": 4919296,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/biglybtc-provider-payload-counter-tests",
+      "bytes": 4866032,
+      "allocated_bytes": 4870144,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/biglybtc-persistent-session-tests",
+      "bytes": 4843336,
+      "allocated_bytes": 4849664,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/libbiglybtc-runtime-interposer.so",
+      "bytes": 15264,
+      "allocated_bytes": 16384,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/biglybtc-file-operation-dialog-tests",
+      "bytes": 3070824,
+      "allocated_bytes": 3076096,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/biglybtc-network-proxy-owner-tests",
+      "bytes": 4937552,
+      "allocated_bytes": 4943872,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/biglybtc-provider-traffic-runtime-deployment-driver",
+      "bytes": 55976,
+      "allocated_bytes": 57344,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/BiglyBTC-headless",
+      "bytes": 4715688,
+      "allocated_bytes": 4722688,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/biglybtc-preview-smoke",
+      "bytes": 10559848,
+      "allocated_bytes": 10567680,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/biglybtc-managed-download-tests",
+      "bytes": 5433200,
+      "allocated_bytes": 5439488,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/BiglyBTC-plugin-azlocprov.so",
+      "bytes": 39456,
+      "allocated_bytes": 40960,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/BiglyBTC",
+      "bytes": 10248528,
+      "allocated_bytes": 10256384,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/biglybtc-runtime-interposition-driver",
+      "bytes": 4705328,
+      "allocated_bytes": 4710400,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/biglybtc-torrent-intake-dialog-tests",
+      "bytes": 3249224,
+      "allocated_bytes": 3256320,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/biglybtc-selected-swarm-admission-tests",
+      "bytes": 4823224,
+      "allocated_bytes": 4829184,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/biglybtc-network-binding-owner-tests",
+      "bytes": 4913096,
+      "allocated_bytes": 4919296,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/test-bin/biglybtc-torrent-creation-dialog-tests",
+      "bytes": 3040640,
+      "allocated_bytes": 3047424,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification/test-bin/biglybtc-runtime-deployment-driver",
+      "bytes": 55504,
+      "allocated_bytes": 57344,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification/test-bin/biglybtc-provider-payload-counter-tests",
+      "bytes": 2868008,
+      "allocated_bytes": 2875392,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification/test-bin/biglybtc-persistent-session-tests",
+      "bytes": 2892072,
+      "allocated_bytes": 2899968,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification/test-bin/libbiglybtc-runtime-interposer.so",
+      "bytes": 15264,
+      "allocated_bytes": 16384,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification/test-bin/biglybtc-preview-smoke",
+      "bytes": 8081696,
+      "allocated_bytes": 8089600,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification/test-bin/biglybtc-managed-download-tests",
+      "bytes": 2908792,
+      "allocated_bytes": 2916352,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification/test-bin/biglybtc-runtime-interposition-driver",
+      "bytes": 2762168,
+      "allocated_bytes": 2768896,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification/test-bin/biglybtc-selected-swarm-admission-tests",
+      "bytes": 2855472,
+      "allocated_bytes": 2859008,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-portable/run-r2/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/test-bin/biglybtc-provider-payload-counter-tests",
+      "bytes": 2948208,
+      "allocated_bytes": 2953216,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/test-bin/biglybtc-persistent-session-tests",
+      "bytes": 2963912,
+      "allocated_bytes": 2969600,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/test-bin/libbiglybtc-runtime-interposer.so",
+      "bytes": 15264,
+      "allocated_bytes": 16384,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/test-bin/biglybtc-preview-smoke",
+      "bytes": 8437384,
+      "allocated_bytes": 8441856,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/test-bin/biglybtc-managed-download-tests",
+      "bytes": 2984888,
+      "allocated_bytes": 2990080,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/test-bin/biglybtc-managed-combined-protocol-tests",
+      "bytes": 2926520,
+      "allocated_bytes": 2932736,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/test-bin/biglybtc-runtime-interposition-driver",
+      "bytes": 2838096,
+      "allocated_bytes": 2842624,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/test-bin/biglybtc-provider-next-runtime-deployment-driver",
+      "bytes": 55600,
+      "allocated_bytes": 57344,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification/test-bin/biglybtc-selected-swarm-admission-tests",
+      "bytes": 2938464,
+      "allocated_bytes": 2945024,
+      "hardlinks": 1,
+      "evidence_directory": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/verification"
+    }
+  ],
+  "visible_process_references": [],
+  "unreadable_process_entries": [
+    {
+      "pid": "3",
+      "kind": "fd",
+      "error": "FileNotFoundError"
+    }
+  ],
+  "status": "READ_ONLY_REMOVAL_CANDIDATES_NO_DELETIONS",
+  "created_utc": "2026-10-29T13:26:50.467064+00:00",
+  "source_and_logs_preserved": true,
+  "delete_entire_evidence_or_source_directories": false,
+  "totals": {
+    "bundle_files_bytes": 1059139789,
+    "bundle_allocated_bytes": 1062240256,
+    "test_elf_files": 84,
+    "test_elf_bytes": 307976528,
+    "test_elf_allocated_bytes": 308404224
+  },
+  "excluded": [
+    "all active caches, provider source/install/builds and dependencies",
+    "all retained Java/native oracle inputs and generated profiles/payloads",
+    "build/recovery/generated-state-20261017T191107Z.tar.zst (2949103662B, mixed source/history archive)",
+    "build/recovery/generated-references and generated-runtime (mixed qualified inputs)"
+  ],
+  "process_scan_scope": "same-UID maps/cwd/exe/fd, no visible references; one transient /proc/3/fd vanished during scan. Root must recheck immediately before deleting; no author deletion."
+}

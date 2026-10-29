@@ -1,0 +1,11 @@
+{
+  "status": "FAIL",
+  "source_commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+  "gcc_result_sha256": "871450223a64b4b34524a536299e28b01312666c2f33396bd2eb5a5e4b37ee30",
+  "runner_sha256": "11c0084b31db88e90c11c520d3e8c13c5d77c89cc43bef19db8f7fcca892bd24",
+  "provider_rebuilt": false,
+  "old_java_replays": false,
+  "router_or_profile_interoperability_claimed": false,
+  "failure": "AssertionError('original-local-value-fields')",
+  "commands_sha256": "b8ce6f600221fa883cfada60ac30728838545b3a13ee6378d8c4ebbc79618dec"
+}

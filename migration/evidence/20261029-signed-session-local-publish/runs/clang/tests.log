@@ -1,0 +1,29 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+    Start 178: azureus-owned-service
+1/7 Test #178: azureus-owned-service .............   Passed    1.32 sec
+    Start 263: azureus-database-runtime
+2/7 Test #263: azureus-database-runtime ..........   Passed    2.08 sec
+    Start 282: pure-i2p-datagram-codec
+3/7 Test #282: pure-i2p-datagram-codec ...........   Passed    0.08 sec
+    Start 283: pure-i2p-client-identity
+4/7 Test #283: pure-i2p-client-identity ..........   Passed    0.02 sec
+    Start 284: pure-i2cp-initial-session-codec
+5/7 Test #284: pure-i2cp-initial-session-codec ...   Passed    0.01 sec
+    Start 285: i2cp-initial-channel
+6/7 Test #285: i2cp-initial-channel ..............   Passed    8.55 sec
+    Start 286: pure-i2cp-signed-session-config
+7/7 Test #286: pure-i2cp-signed-session-config ...   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+crypto            =   0.19 sec*proc (3 tests)
+database          =   2.08 sec*proc (1 test)
+i2p               =   8.75 sec*proc (5 tests)
+loopback          =   3.39 sec*proc (2 tests)
+no-network        =   0.20 sec*proc (4 tests)
+owned-loopback    =   8.55 sec*proc (1 test)
+statistics        =   1.32 sec*proc (1 test)
+unit              =  12.14 sec*proc (7 tests)
+
+Total Test time (real) =  12.19 sec

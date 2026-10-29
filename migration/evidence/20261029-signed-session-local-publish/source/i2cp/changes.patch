@@ -1,0 +1,864 @@
+--- a/preview/native/services/i2cp_channel/channel.cpp
++++ b/preview/native/services/i2cp_channel/channel.cpp
+@@ -25,8 +25,13 @@
+   Failure failure=Failure::None;
+   std::optional<SetDate> date;
+   std::optional<Disconnect> disconnect;
++  std::optional<std::uint16_t> session;
++  SessionOptions acceptedOptions,pendingOptions;
++  Bytes acceptedDestination,pendingDestination;
++  std::uint64_t revision=0;
+   std::uint64_t generation=0;
+   Clock::time_point expires{};
++  Clock::time_point dateObserved{};
+   bool notificationQueued=false,drainQueued=false,reading=false,lostPending=false;
+ 
+   explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner){
+@@ -35,10 +40,11 @@
+     timer.setSingleShot(true);
+   }
+   ~Impl(){stopIo();}
+-  bool active()const{return state==State::Connecting||state==State::WaitingDate||state==State::DateReceived;}
+-  bool datedPhase()const{return state==State::Connecting||state==State::WaitingDate;}
++  bool active()const{return state==State::Connecting||state==State::WaitingDate||state==State::DateReceived||state==State::Creating||state==State::SessionCreated||state==State::Reconfiguring;}
++  bool datedPhase()const{return state==State::Connecting||state==State::WaitingDate||state==State::Creating||state==State::Reconfiguring;}
+   bool current(std::uint64_t at)const{return generation==at&&active();}
+   bool onThread()const{return QThread::currentThread()==q->thread();}
++  void clearSession(){session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;}
+   void stopIo(){
+     timer.stop();QObject::disconnect(&timer,nullptr,q,nullptr);
+     QObject::disconnect(&socket,nullptr,q,nullptr);socket.abort();
+@@ -49,20 +55,22 @@
+     const QPointer<InitialChannel> owner(q);
+     queued=QMetaObject::invokeMethod(q,[owner]{
+       if(!owner){return;}auto* self=owner->impl_.get();self->notificationQueued=false;
+-      const auto at=self->generation;const auto next=self->state;const auto error=self->failure;
++      const auto at=self->generation;const auto version=self->revision;const auto next=self->state;const auto error=self->failure;
+       emit owner->stateChanged(next);
+-      if(!owner||owner->impl_.get()!=self||self->generation!=at||self->state!=next){return;}
++      if(!owner||owner->impl_.get()!=self||self->generation!=at||self->state!=next||self->revision!=version){return;}
+       // No access after the final signal: its listener may delete the controller.
+       if(next==State::DateReceived){emit owner->dateReceived();}
++      else if(next==State::SessionCreated&&version==1){emit owner->sessionCreated();}
++      else if(next==State::SessionCreated&&version>1){emit owner->sessionUpdated();}
+       else if(next==State::Failed){emit owner->failed(error);}
+       else if(next==State::Closed){emit owner->closed();}
+     },Qt::QueuedConnection);
+     }catch(...){queued=false;}
+-    if(!queued){notificationQueued=false;date.reset();failure=Failure::Resources;state=State::Failed;stopIo();}
++    if(!queued){notificationQueued=false;date.reset();clearSession();failure=Failure::Resources;state=State::Failed;stopIo();}
+   }
+   void fail(Failure error){
+     if(state==State::Failed||state==State::Closed){return;}
+-    failure=error;date.reset();hello.clear();state=State::Failed;stopIo();notify();
++    failure=error;date.reset();clearSession();hello.clear();state=State::Failed;stopIo();notify();
+   }
+   bool expired(){
+     if(datedPhase()&&Clock::now()>=expires){fail(Failure::Deadline);return true;}return false;
+@@ -85,11 +93,72 @@
+     if(auto* reason=std::get_if<Disconnect>(&*decoded)){
+       disconnect=std::move(*reason);fail(Failure::RouterDisconnected);return;
+     }
++    if(auto* status=std::get_if<SessionStatus>(&*decoded)){acknowledge(*status);return;}
+     auto* reply=std::get_if<SetDate>(&*decoded);
+     if(!reply||state!=State::WaitingDate){fail(Failure::UnexpectedMessage);return;}
+     if(reply->milliseconds==0){fail(Failure::InvalidDate);return;}
+     if(expired()){return;} // Decode/allocation may have crossed the absolute budget.
+-    date=std::move(*reply);state=State::DateReceived;timer.stop();notify();
++    date=std::move(*reply);dateObserved=Clock::now();state=State::DateReceived;timer.stop();notify();
++  }
++  void acknowledge(const SessionStatus& status){
++    if(state!=State::Creating&&state!=State::SessionCreated&&state!=State::Reconfiguring){fail(Failure::UnexpectedMessage);return;}
++    if(state!=State::Creating&&(!session||status.sessionId!=*session)){fail(Failure::InvalidSessionId);return;}
++    if(status.state==SessionState::Refused||status.state==SessionState::Invalid){fail(Failure::SessionRejected);return;}
++    if(status.state==SessionState::Destroyed){fail(Failure::SessionDestroyed);return;}
++    if(state==State::Creating){
++      if(status.state!=SessionState::Created){fail(Failure::UnexpectedMessage);return;}
++      if(status.sessionId==65535){fail(Failure::InvalidSessionId);return;}
++      if(expired()){return;}
++      session=status.sessionId;acceptedDestination=std::move(pendingDestination);
++      acceptedOptions=std::move(pendingOptions);revision=1;
++    }else if(state==State::Reconfiguring&&status.state==SessionState::Updated){
++      if(expired()){return;}
++      acceptedOptions=std::move(pendingOptions);pendingDestination.clear();++revision;
++    }else{fail(Failure::UnexpectedMessage);return;}
++    state=State::SessionCreated;timer.stop();notify();
++  }
++  ConfigResult<void> request(const ClientIdentity& identity,const SessionOptions& input,std::uint64_t creation,bool update){
++    using Code=::biglybtc::services::i2p::ErrorCode;
++    auto reject=[](Code code,const char* text)->ConfigResult<void>{return std::unexpected(::biglybtc::services::i2p::Error{code,text});};
++    if(!onThread()){return reject(Code::InvalidFormat,"I2CP request belongs to channel thread");}
++    if(state!=(update?State::SessionCreated:State::DateReceived)||!date||socket.state()!=QAbstractSocket::ConnectedState||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){
++      return reject(Code::InvalidFormat,"I2CP channel phase/request/write is not available");
++    }
++    if(!identity.valid()||!identity.destination()){return reject(Code::KeyMismatch,"No live client identity");}
++    if(update&&(!session||identity.destination()->wire!=acceptedDestination||revision==std::numeric_limits<std::uint64_t>::max())){
++      return reject(Code::KeyMismatch,"Reconfigure must use the same accepted identity/id");
++    }
++    try{
++      const auto at=generation;const auto previous=state;const auto requestEnd=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);
++      auto projected=projectRouterOptions(input);if(!projected){return std::unexpected(projected.error());}
++      for(const auto& [key,value]:input){
++        if(key=="i2cp.SSL"&&value.size()==4&&(value[0]=='t'||value[0]=='T')&&(value[1]=='r'||value[1]=='R')&&(value[2]=='u'||value[2]=='U')&&(value[3]=='e'||value[3]=='E')){
++          return reject(Code::Unsupported,"TLS-required I2CP has no plaintext registration fallback");
++        }
++      }
++      auto cfg=signSessionConfig(identity,*projected,creation);if(!cfg){return std::unexpected(cfg.error());}
++      const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now()-dateObserved).count();
++      const auto maximum=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
++      if(elapsed<0||date->milliseconds>maximum-static_cast<std::uint64_t>(elapsed)){return reject(Code::InvalidFormat,"I2CP observed date clock overflow");}
++      auto verified=verifySessionConfig(*cfg,date->milliseconds+static_cast<std::uint64_t>(elapsed));
++      if(!verified){return std::unexpected(verified.error());}
++      auto merged=update?mergeSessionOptions(acceptedOptions,*projected):ConfigResult<SessionOptions>(*projected);
++      if(!merged){return std::unexpected(merged.error());}
++      auto encoded=update?encodeSessionMessage(ReconfigureSession{*session,*cfg}):encodeSessionMessage(CreateSession{*cfg});
++      if(!encoded){return std::unexpected(encoded.error());}Bytes destination=cfg->destination.wire;
++      if(!current(at)||state!=previous){return reject(Code::InvalidFormat,"I2CP channel changed during signing");}
++      if(Clock::now()>=requestEnd){return reject(Code::InvalidFormat,"I2CP request preparation exceeded deadline");}
++      pendingOptions=std::move(*merged);pendingDestination=std::move(destination);state=update?State::Reconfiguring:State::Creating;
++      const auto phase=state;expires=requestEnd;
++      const auto remaining=std::chrono::duration_cast<std::chrono::milliseconds>(expires-Clock::now()).count();
++      timer.start(static_cast<int>(std::max<std::int64_t>(1,remaining)));notify();
++      if(!current(at)||state!=phase){return reject(Code::CryptoFailure,"I2CP request notification failed");}
++      if(expired()){return reject(Code::InvalidFormat,"I2CP request expired before write");}
++      const auto written=socket.write(reinterpret_cast<const char*>(encoded->data()),static_cast<qint64>(encoded->size()));
++      if(!current(at)||state!=phase){return reject(Code::InvalidFormat,"I2CP request lost its transport");}
++      if(written!=static_cast<qint64>(encoded->size())){fail(Failure::WriteFailed);return reject(Code::InvalidFormat,"I2CP request write failed");}
++      return {};
++    }catch(...){if(state==State::Creating||state==State::Reconfiguring){fail(Failure::Resources);}return reject(Code::CryptoFailure,"I2CP request resources unavailable");}
+   }
+   void drain(){
+     if(reading||!active()||state==State::Connecting||expired()){return;}
+@@ -142,8 +211,9 @@
+   }
+   bool begin(const Options& next){
+     if(!onThread()||active()||generation==std::numeric_limits<std::uint64_t>::max()){return false;}
+-    ++generation;stopIo();decoder.reset();lostPending=false;date.reset();disconnect.reset();failure=Failure::None;state=State::Idle;
++    ++generation;stopIo();decoder.reset();lostPending=false;date.reset();disconnect.reset();clearSession();failure=Failure::None;state=State::Idle;
+     if(next.authenticationRequired){fail(Failure::UnsupportedAuthentication);return false;}
++    if(next.tlsRequired){fail(Failure::UnsupportedTransport);return false;}
+     const bool family=next.address.protocol()==QAbstractSocket::IPv4Protocol||next.address.protocol()==QAbstractSocket::IPv6Protocol;
+     if(!family||!next.address.isLoopback()||!next.address.scopeId().isEmpty()||!next.port){fail(Failure::InvalidEndpoint);return false;}
+     if(next.clientVersion.empty()||next.clientVersion.size()>255||std::any_of(next.clientVersion.begin(),next.clientVersion.end(),[](unsigned char byte){return byte>127;})){
+@@ -171,6 +241,7 @@
+     state=State::Connecting;expires=Clock::now()+std::chrono::milliseconds(next.deadlineMilliseconds);
+     timer.start(next.deadlineMilliseconds);notify();
+     if(!current(at)||state!=State::Connecting){return false;}
++    if(expired()){return false;}
+     try{socket.connectToHost(next.address,next.port);}catch(...){fail(Failure::Resources);return false;}
+     return true;
+   }
+@@ -178,19 +249,25 @@
+     if(!onThread()||state==State::Closed){return;}
+     // Invalidates all generation-tagged socket/timer callbacks before abort.
+     if(generation!=std::numeric_limits<std::uint64_t>::max()){++generation;}
+-    date.reset();hello.clear();failure=Failure::None;state=State::Closed;stopIo();decoder.reset();notify();
++    date.reset();clearSession();hello.clear();failure=Failure::None;state=State::Closed;stopIo();decoder.reset();notify();
+   }
+ };
+ InitialChannel::InitialChannel(QObject* parent):QObject(parent),impl_(std::make_unique<Impl>(this)){}
+ InitialChannel::~InitialChannel()=default;
+ bool InitialChannel::begin(const Options& options){return impl_->begin(options);}
+ void InitialChannel::close(){impl_->close();}
++ConfigResult<void> InitialChannel::createSession(const ClientIdentity& identity,const SessionOptions& options,std::uint64_t date){return impl_->request(identity,options,date,false);}
++ConfigResult<void> InitialChannel::reconfigureSession(const ClientIdentity& identity,const SessionOptions& options,std::uint64_t date){return impl_->request(identity,options,date,true);}
++std::optional<std::uint16_t> InitialChannel::sessionId()const noexcept{
++  return impl_->socket.state()==QAbstractSocket::ConnectedState&&(impl_->state==State::SessionCreated||impl_->state==State::Reconfiguring)?impl_->session:std::nullopt;
++}
++SessionOptions InitialChannel::sessionOptions()const{return sessionId()?impl_->acceptedOptions:SessionOptions{};}
+ InitialChannel::State InitialChannel::state()const noexcept{return impl_->state;}
+ InitialChannel::Failure InitialChannel::failure()const noexcept{return impl_->failure;}
+ bool InitialChannel::socketActive()const noexcept{return impl_->socket.state()!=QAbstractSocket::UnconnectedState;}
+ bool InitialChannel::deadlineActive()const noexcept{return impl_->timer.isActive();}
+ std::optional<SetDate> InitialChannel::routerDate()const{
+-  return impl_->state==State::DateReceived&&impl_->socket.state()==QAbstractSocket::ConnectedState?impl_->date:std::nullopt;
++  return impl_->active()&&impl_->state!=State::Connecting&&impl_->state!=State::WaitingDate&&impl_->socket.state()==QAbstractSocket::ConnectedState?impl_->date:std::nullopt;
+ }
+ std::optional<Disconnect> InitialChannel::routerDisconnect()const{return impl_->disconnect;}
+ } // namespace biglybtc::services::i2p::i2cp
+--- a/preview/native/services/i2cp_channel/channel.hpp
++++ b/preview/native/services/i2cp_channel/channel.hpp
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0-or-later
+ #pragma once
+ #include "protocol.hpp"
++#include "session.hpp"
+ #include <QHostAddress>
+ #include <QObject>
+ #include <memory>
+@@ -8,16 +9,16 @@
+ #include <string>
+ 
+ namespace biglybtc::services::i2p::i2cp {
+-// Initial external-router TCP channel, NOT an accepted/connected I2P session.
++// Explicit external-router TCP registration, NOT a usable/tunnel I2P session.
+ // Every call/destruction belongs to this QObject's thread. Nothing auto-starts.
+ class InitialChannel final:public QObject {
+   Q_OBJECT
+ public:
+-  enum class State {Idle,Connecting,WaitingDate,DateReceived,Closed,Failed};
++  enum class State {Idle,Connecting,WaitingDate,DateReceived,Closed,Failed,Creating,SessionCreated,Reconfiguring};
+   Q_ENUM(State)
+   enum class Failure {None,InvalidEndpoint,InvalidVersion,InvalidDeadline,UnsupportedAuthentication,
+     ConnectFailed,WriteFailed,ReadFailed,Deadline,Framing,UnsupportedMessage,UnexpectedMessage,
+-    InvalidDate,RouterDisconnected,TransportClosed,Resources};
++    InvalidDate,RouterDisconnected,TransportClosed,Resources,SessionRejected,SessionDestroyed,InvalidSessionId,UnsupportedTransport};
+   Q_ENUM(Failure)
+   struct Options {
+     QHostAddress address; // Explicit numeric loopback only, no host resolution.
+@@ -25,6 +26,7 @@
+     std::string clientVersion; // Explicit nonempty ASCII, not a claimed core version.
+     bool authenticationRequired=false; // true refuses before connecting.
+     int deadlineMilliseconds=30000; // Absolute connect+date budget,1..30000.
++    bool tlsRequired=false; // true refuses before TCP; no plaintext fallback.
+   };
+   explicit InitialChannel(QObject* parent=nullptr);
+   ~InitialChannel() override;
+@@ -32,6 +34,13 @@
+   // attempts can explicitly restart. No retries or reconnects occur internally.
+   bool begin(const Options&);
+   void close();
++  // No private key is retained. These synchronous signing calls require a
++  // current date/registration, explicit date and no pending write/request.
++  // Completion means only queued I/O; actual CREATED/UPDATED is separate.
++  [[nodiscard]] ConfigResult<void> createSession(const ClientIdentity&,const SessionOptions& clientOptions,std::uint64_t creationMilliseconds);
++  [[nodiscard]] ConfigResult<void> reconfigureSession(const ClientIdentity&,const SessionOptions& clientOptions,std::uint64_t creationMilliseconds);
++  [[nodiscard]] std::optional<std::uint16_t> sessionId()const noexcept;
++  [[nodiscard]] SessionOptions sessionOptions()const; // Last actual ack only.
+   [[nodiscard]] State state()const noexcept;
+   [[nodiscard]] Failure failure()const noexcept;
+   [[nodiscard]] bool socketActive()const noexcept;
+@@ -44,6 +53,8 @@
+   // omitted. A callback may stop/restart/delete this object synchronously.
+   void stateChanged(State);
+   void dateReceived();
++  void sessionCreated();
++  void sessionUpdated();
+   void failed(Failure);
+   void closed();
+ private:
+--- /dev/null
++++ b/preview/native/services/i2cp_session/session.cpp
+@@ -0,0 +1,156 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++// I2P9134 SessionConfig/DataHelper/I2CPMessageProducer and Create/Reconfigure.
++#include "session.hpp"
++#include <algorithm>
++#include <array>
++#include <limits>
++#include <map>
++#include <string_view>
++#include <type_traits>
++
++namespace biglybtc::services::i2p::i2cp {
++namespace {
++using Code=::biglybtc::services::i2p::ErrorCode;
++std::unexpected<::biglybtc::services::i2p::Error> error(Code code,const char* text){return std::unexpected(::biglybtc::services::i2p::Error{code,text});}
++bool unsupported(std::string_view key){
++  return key=="i2cp.username"||key=="i2cp.password"||key=="i2cp.leaseSetOfflineExpiration"||
++    key=="i2cp.leaseSetTransientPublicKey"||key=="i2cp.leaseSetOfflineSignature";
++}
++ConfigResult<std::u16string> utf16(std::string_view bytes){
++  std::u16string out;out.reserve(bytes.size());
++  for(std::size_t i=0;i<bytes.size();){
++    const auto first=static_cast<unsigned char>(bytes[i++]);std::uint32_t cp=first,minimum=0;unsigned count=0;
++    if(first<0x80){}
++    else if(first>=0xc2&&first<=0xdf){cp=first&31;count=1;minimum=0x80;}
++    else if(first>=0xe0&&first<=0xef){cp=first&15;count=2;minimum=0x800;}
++    else if(first>=0xf0&&first<=0xf4){cp=first&7;count=3;minimum=0x10000;}
++    else{return error(Code::Unsupported,"Invalid UTF-8 session option");}
++    if(bytes.size()-i<count){return error(Code::Unsupported,"Truncated UTF-8 session option");}
++    while(count--){const auto next=static_cast<unsigned char>(bytes[i++]);if((next&0xc0)!=0x80){return error(Code::Unsupported,"Invalid UTF-8 session option continuation");}cp=(cp<<6)|(next&63);}
++    if(cp<minimum||cp>0x10ffff||(cp>=0xd800&&cp<=0xdfff)){return error(Code::Unsupported,"Non-scalar/overlong UTF-8 session option");}
++    if(cp<0x10000){out.push_back(static_cast<char16_t>(cp));}
++    else{cp-=0x10000;out.push_back(static_cast<char16_t>(0xd800+(cp>>10)));out.push_back(static_cast<char16_t>(0xdc00+(cp&1023)));}
++  }
++  return out;
++}
++std::uint16_t u16(View bytes,std::size_t offset){return static_cast<std::uint16_t>((std::uint16_t(bytes[offset])<<8)|bytes[offset+1]);}
++void put16(Bytes& bytes,std::size_t value){bytes.push_back(static_cast<Byte>(value>>8));bytes.push_back(static_cast<Byte>(value));}
++bool dateValid(std::uint64_t date){return date&&date<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());}
++ConfigResult<Destination> actualDestination(const SessionConfig& cfg){
++  auto decoded=decodeDestination(cfg.destination.wire);if(!decoded){return std::unexpected(decoded.error());}
++  if(decoded->encryptionType!=0){return error(Code::Unsupported,"Original online I2CP requires EncType0");}return decoded;
++}
++ConfigResult<Bytes> properties(const SessionOptions& options){
++  auto ordered=canonicalSessionOptions(options);if(!ordered){return std::unexpected(ordered.error());}
++  std::size_t size=0;for(const auto& [key,value]:*ordered){size+=4+key.size()+value.size();}
++  Bytes out;out.reserve(size+2);put16(out,size);
++  for(const auto& [key,value]:*ordered){
++    out.push_back(static_cast<Byte>(key.size()));out.insert(out.end(),key.begin(),key.end());out.push_back('=');
++    out.push_back(static_cast<Byte>(value.size()));out.insert(out.end(),value.begin(),value.end());out.push_back(';');
++  }return out;
++}
++ConfigResult<Bytes> frame(Byte type,View body){
++  auto encoded=encodeFrame(type,body);if(!encoded){return error(Code::TooLarge,"Session message exceeds I2CP frame bound");}return std::move(*encoded);
++}
++} // namespace
++ConfigResult<SessionOptions> canonicalSessionOptions(const SessionOptions& input){
++  if(input.size()>MaximumPropertiesBytes/4){return error(Code::TooLarge,"Too many session options");}
++  struct Entry {std::u16string units;std::pair<std::string,std::string> value;};
++  std::vector<Entry> sorted;sorted.reserve(input.size());std::size_t size=0;
++  for(const auto& entry:input){
++    const auto& [key,value]=entry;if(unsupported(key)){return error(Code::Unsupported,"Offline/authentication session options are unsupported");}
++    if(key.size()>255||value.size()>255){return error(Code::TooLarge,"Session option exceeds255 UTF-8 bytes");}
++    if(size>MaximumPropertiesBytes-(4+key.size()+value.size())){return error(Code::TooLarge,"Session properties exceed65535 bytes");}
++    size+=4+key.size()+value.size();auto units=utf16(key);if(!units){return std::unexpected(units.error());}
++    auto checked=utf16(value);if(!checked){return std::unexpected(checked.error());}sorted.push_back({std::move(*units),entry});
++  }
++  std::sort(sorted.begin(),sorted.end(),[](const Entry& a,const Entry& b){return a.units<b.units;});
++  SessionOptions out;out.reserve(sorted.size());
++  for(std::size_t i=0;i<sorted.size();++i){if(i&&sorted[i-1].units==sorted[i].units){return error(Code::InvalidFormat,"Duplicate session option");}out.push_back(std::move(sorted[i].value));}
++  return out;
++}
++ConfigResult<SessionOptions> projectRouterOptions(const SessionOptions& input){
++  if(input.size()>MaximumPropertiesBytes/4){return error(Code::TooLarge,"Too many client options");}
++  constexpr std::array<std::string_view,13> clientOnly{
++    "i2cp.closeIdleTime","i2cp.closeOnIdle","i2cp.encryptLeaseSet","i2cp.gzip","i2cp.leaseSetKey","i2cp.leaseSetPrivateKey",
++    "i2cp.leaseSetSigningPrivateKey","i2cp.reduceIdleTime","i2cp.reduceOnIdle","i2cp.SSL","i2cp.tcp.host","i2cp.tcp.port","i2p.reseedURL"};
++  SessionOptions out;std::size_t encoded=0;
++  for(const auto& [key,value]:input){
++    if(std::find(clientOnly.begin(),clientOnly.end(),key)!=clientOnly.end()){continue;}
++    if(unsupported(key)){return error(Code::Unsupported,"Offline/authentication session options are unsupported");}
++    // No valid UTF-8 string over1020 bytes can fit255 Java UTF-16 units.
++    if(key.size()>1020||value.size()>1020){continue;}
++    auto k=utf16(key),v=utf16(value);if(!k){return std::unexpected(k.error());}if(!v){return std::unexpected(v.error());}
++    if(k->size()>255||v->size()>255){continue;}
++    if(key.size()>255||value.size()>255){return error(Code::TooLarge,"Session option exceeds255 UTF-8 bytes");}
++    if(encoded>MaximumPropertiesBytes-(4+key.size()+value.size())){return error(Code::TooLarge,"Session properties exceed65535 bytes");}
++    encoded+=4+key.size()+value.size();out.emplace_back(key,value);
++  }
++  return canonicalSessionOptions(out);
++}
++ConfigResult<SessionOptions> mergeSessionOptions(const SessionOptions& current,const SessionOptions& update){
++  auto base=canonicalSessionOptions(current),patch=canonicalSessionOptions(update);
++  if(!base){return std::unexpected(base.error());}if(!patch){return std::unexpected(patch.error());}
++  std::map<std::string,std::string> merged;
++  for(auto& [key,value]:*base){merged.emplace(std::move(key),std::move(value));}
++  for(auto& [key,value]:*patch){merged.insert_or_assign(std::move(key),std::move(value));}
++  SessionOptions out;out.reserve(merged.size());for(auto& [key,value]:merged){out.emplace_back(key,std::move(value));}
++  return canonicalSessionOptions(out);
++}
++ConfigResult<Bytes> sessionConfigPreimage(const SessionConfig& cfg){
++  if(!dateValid(cfg.creationMilliseconds)){return error(Code::InvalidFormat,"Session creation date is null/negative/wrapped");}
++  auto dest=actualDestination(cfg);if(!dest){return std::unexpected(dest.error());}auto props=properties(cfg.options);if(!props){return std::unexpected(props.error());}
++  Bytes out=std::move(dest->wire);out.insert(out.end(),props->begin(),props->end());
++  for(int shift=56;shift>=0;shift-=8){out.push_back(static_cast<Byte>(cfg.creationMilliseconds>>shift));}return out;
++}
++ConfigResult<SessionConfig> signSessionConfig(const ClientIdentity& identity,const SessionOptions& options,std::uint64_t creation){
++  if(!identity.valid()||!identity.destination()){return error(Code::KeyMismatch,"No live online client identity");}
++  auto ordered=canonicalSessionOptions(options);if(!ordered){return std::unexpected(ordered.error());}
++  SessionConfig cfg{*identity.destination(),std::move(*ordered),creation,{}};
++  auto data=sessionConfigPreimage(cfg);if(!data){return std::unexpected(data.error());}
++  auto signature=signData(cfg.destination.signingType,identity.signingPrivateKey(),*data);if(!signature){return std::unexpected(signature.error());}
++  cfg.signature=std::move(*signature);auto checked=verifySessionConfigSignature(cfg);if(!checked){return std::unexpected(checked.error());}return cfg;
++}
++ConfigResult<void> verifySessionConfigSignature(const SessionConfig& cfg){
++  auto dest=actualDestination(cfg);if(!dest){return std::unexpected(dest.error());}auto data=sessionConfigPreimage(cfg);if(!data){return std::unexpected(data.error());}
++  return verifyData(dest->signingType,dest->signingPublicKey,cfg.signature,*data);
++}
++ConfigResult<void> verifySessionConfig(const SessionConfig& cfg,std::uint64_t now){
++  if(!dateValid(now)||!dateValid(cfg.creationMilliseconds)){return error(Code::InvalidFormat,"Invalid explicit session clock/date");}
++  if(now>static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())-SessionConfigDateTolerance){return error(Code::InvalidFormat,"Original session clock window overflows signed date");}
++  const auto delta=now>cfg.creationMilliseconds?now-cfg.creationMilliseconds:cfg.creationMilliseconds-now;
++  if(delta>SessionConfigDateTolerance){return error(Code::InvalidFormat,"Session date is outside original three-minute window");}return verifySessionConfigSignature(cfg);
++}
++ConfigResult<Bytes> encodeSessionConfig(const SessionConfig& cfg){
++  auto out=sessionConfigPreimage(cfg);if(!out){return std::unexpected(out.error());}auto dest=actualDestination(cfg);if(!dest){return std::unexpected(dest.error());}
++  const auto expected=dest->signingType==SigningType::DsaSha1?40U:64U;if(cfg.signature.size()!=expected){return error(Code::InvalidFormat,"Session signature width changed");}
++  out->insert(out->end(),cfg.signature.begin(),cfg.signature.end());return out;
++}
++ConfigResult<SessionConfig> decodeSessionConfig(View wire){
++  if(wire.size()>MaximumSessionConfigBytes){return error(Code::TooLarge,"Session configuration exceeds bound");}
++  if(wire.size()<387){return error(Code::InvalidFormat,"Truncated session Destination");}
++  const auto dsize=387+std::size_t(u16(wire,385));if(dsize>wire.size()){return error(Code::InvalidFormat,"Truncated session Destination certificate");}
++  auto dest=decodeDestination(wire.first(dsize));if(!dest){return std::unexpected(dest.error());}if(dest->encryptionType!=0){return error(Code::Unsupported,"Original online I2CP requires EncType0");}
++  std::size_t pos=dsize;if(wire.size()-pos<2){return error(Code::InvalidFormat,"Truncated session properties length");}
++  const auto size=u16(wire,pos);pos+=2;if(wire.size()-pos<size){return error(Code::InvalidFormat,"Truncated session properties");}const auto end=pos+size;
++  SessionOptions options;
++  auto string=[&]()->ConfigResult<std::string>{if(pos>=end){return error(Code::InvalidFormat,"Truncated session property string");}const auto length=wire[pos++];if(end-pos<length){return error(Code::InvalidFormat,"Truncated session property bytes");}std::string text(reinterpret_cast<const char*>(wire.data()+pos),length);pos+=length;return text;};
++  while(pos<end){auto key=string();if(!key){return std::unexpected(key.error());}if(pos>=end||wire[pos++]!='='){return error(Code::InvalidFormat,"Bad session property key delimiter");}auto value=string();if(!value){return std::unexpected(value.error());}if(pos>=end||wire[pos++]!=';'){return error(Code::InvalidFormat,"Bad session property value delimiter");}options.emplace_back(std::move(*key),std::move(*value));}
++  auto ordered=canonicalSessionOptions(options);if(!ordered){return std::unexpected(ordered.error());}
++  const auto siglen=dest->signingType==SigningType::DsaSha1?40U:64U;if(wire.size()-pos!=8+siglen){return error(Code::InvalidFormat,"Session date/signature/trailing size changed");}
++  std::uint64_t date=0;for(unsigned i=0;i<8;++i){date=(date<<8)|wire[pos++];}if(!dateValid(date)){return error(Code::InvalidFormat,"Session creation date is null/negative/wrapped");}
++  return SessionConfig{std::move(*dest),std::move(*ordered),date,Bytes(wire.begin()+static_cast<std::ptrdiff_t>(pos),wire.end())};
++}
++ConfigResult<Bytes> encodeSessionMessage(const SessionMessage& message){
++  return std::visit([](const auto& value)->ConfigResult<Bytes>{
++    auto bytes=encodeSessionConfig(value.config);if(!bytes){return std::unexpected(bytes.error());}
++    if constexpr(std::is_same_v<std::decay_t<decltype(value)>,CreateSession>){return frame(CreateSessionType,*bytes);}
++    else{Bytes body;body.reserve(bytes->size()+2);put16(body,value.sessionId);body.insert(body.end(),bytes->begin(),bytes->end());return frame(ReconfigureSessionType,body);}
++  },message);
++}
++ConfigResult<SessionMessage> decodeSessionMessage(const Frame& message){
++  if(message.type==CreateSessionType){auto cfg=decodeSessionConfig(message.payload);if(!cfg){return std::unexpected(cfg.error());}return SessionMessage{CreateSession{std::move(*cfg)}};}
++  if(message.type==ReconfigureSessionType){if(message.payload.size()<2){return error(Code::InvalidFormat,"Truncated reconfigure session ID");}auto cfg=decodeSessionConfig(View(message.payload).subspan(2));if(!cfg){return std::unexpected(cfg.error());}return SessionMessage{ReconfigureSession{u16(message.payload,0),std::move(*cfg)}};}
++  return error(Code::Unsupported,"Not a CreateSession/ReconfigureSession message");
++}
++} // namespace biglybtc::services::i2p::i2cp
+--- /dev/null
++++ b/preview/native/services/i2cp_session/session.hpp
+@@ -0,0 +1,46 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#pragma once
++#include "identity.hpp"
++#include "protocol.hpp"
++#include <utility>
++
++namespace biglybtc::services::i2p::i2cp {
++template<class T>using ConfigResult=::biglybtc::services::i2p::Result<T>;
++using SessionOptions=std::vector<std::pair<std::string,std::string>>;
++inline constexpr Byte CreateSessionType=1,ReconfigureSessionType=2;
++inline constexpr std::size_t MaximumPropertiesBytes=65535;
++inline constexpr std::size_t MaximumSessionConfigBytes=1024+2+MaximumPropertiesBytes+8+64;
++inline constexpr std::uint64_t SessionConfigDateTolerance=180000;
++struct SessionConfig {
++  Destination destination;
++  SessionOptions options;
++  std::uint64_t creationMilliseconds=0;
++  Bytes signature;
++};
++// Pure DTOs, never channel/admission authority. Reconfigure's sessionId is
++// outside the signed preimage, exactly as in the original wire format.
++struct CreateSession {SessionConfig config;};
++struct ReconfigureSession {std::uint16_t sessionId=0;SessionConfig config;};
++using SessionMessage=std::variant<CreateSession,ReconfigureSession>;
++
++// Valid UTF-8, sorted by original Java UTF-16 String order, with unique keys.
++// Per-string255 encoded bytes, original uint16 properties body limit. Unknown
++// router options preserved; offline/authentication keys explicitly unsupported.
++[[nodiscard]] ConfigResult<SessionOptions> canonicalSessionOptions(const SessionOptions&);
++// Mirrors producer's client-only filtering and >255 Java-char removal before
++// SessionConfig's byte-length validation. No profile lookup/default promotion.
++[[nodiscard]] ConfigResult<SessionOptions> projectRouterOptions(const SessionOptions& clientOptions);
++// Original reconfigure is putAll, never replacement/removal of omitted keys.
++[[nodiscard]] ConfigResult<SessionOptions> mergeSessionOptions(const SessionOptions& current,const SessionOptions& update);
++
++// No clock reads/updates. Caller supplies the creation date and verification
++// clock explicitly; clock freshness and signature checks are separate APIs.
++[[nodiscard]] ConfigResult<Bytes> sessionConfigPreimage(const SessionConfig&);
++[[nodiscard]] ConfigResult<SessionConfig> signSessionConfig(const ClientIdentity&,const SessionOptions&,std::uint64_t creationMilliseconds);
++[[nodiscard]] ConfigResult<void> verifySessionConfigSignature(const SessionConfig&);
++[[nodiscard]] ConfigResult<void> verifySessionConfig(const SessionConfig&,std::uint64_t currentMilliseconds);
++[[nodiscard]] ConfigResult<Bytes> encodeSessionConfig(const SessionConfig&);
++[[nodiscard]] ConfigResult<SessionConfig> decodeSessionConfig(View);
++[[nodiscard]] ConfigResult<Bytes> encodeSessionMessage(const SessionMessage&);
++[[nodiscard]] ConfigResult<SessionMessage> decodeSessionMessage(const Frame&);
++} // namespace biglybtc::services::i2p::i2cp
+--- a/preview/native/services/i2p_datagram/datagram.cpp
++++ b/preview/native/services/i2p_datagram/datagram.cpp
+@@ -104,6 +104,19 @@
+   if(BN_mod_exp_mont_consttime(y.get(),g.get(),x.get(),p.get(),ctx.get(),nullptr)!=1){return error(ErrorCode::CryptoFailure,"I2P DSA public key derivation failed");}Bytes pub(128);
+   if(BN_bn2binpad(y.get(),pub.data(),128)!=128){return error(ErrorCode::CryptoFailure,"I2P DSA public key width changed");}return pub;
+ }
++Result<Bytes> signData(SigningType type,View privateKey,View data){
++  if(data.size()>MaximumSignedDataBytes){return error(ErrorCode::TooLarge,"I2P signing input exceeds protocol bound");}
++  auto pub=signingPublicKey(type,privateKey);if(!pub){return std::unexpected(pub.error());}
++  return sign(type,*pub,privateKey,data);
++}
++Result<void> verifyData(SigningType type,View publicKey,View signature,View data){
++  if(data.size()>MaximumSignedDataBytes){return error(ErrorCode::TooLarge,"I2P signing input exceeds protocol bound");}
++  if(type!=SigningType::DsaSha1&&type!=SigningType::Ed25519){return error(ErrorCode::Unsupported,"I2P signing type is unsupported");}
++  if(publicKey.size()!=(type==SigningType::DsaSha1?128U:32U)||signature.size()!=signatureSize(type)){
++    return error(ErrorCode::InvalidFormat,"I2P public signing key/signature width changed");
++  }
++  return verify(type,publicKey,signature,data);
++}
+ Result<Bytes> encode2(View sender,View privateKey,const Hash& recipient,View payload){
+   auto from=decodeDestination(sender);if(!from){return std::unexpected(from.error());}const auto overhead=sender.size()+2+signatureSize(from->signingType);
+   if(payload.size()>MaximumWireBytes-overhead){return error(ErrorCode::TooLarge,"I2P Datagram2 exceeds maker bound");}
+--- a/preview/native/services/i2p_datagram/datagram.hpp
++++ b/preview/native/services/i2p_datagram/datagram.hpp
+@@ -29,6 +29,12 @@
+ // as a router/client/session authority. No network or persistent identities.
+ Result<Destination> decodeDestination(View);
+ Result<Bytes> signingPublicKey(SigningType,View privateKey);
++// Shared original raw signing format for bounded protocol preimages. DSA0
++// hashes with SHA-1 and returns raw r||s40; Ed7 signs directly and returns64.
++// No session/identity/date authority is conferred by signature verification.
++inline constexpr std::size_t MaximumSignedDataBytes=128*1024;
++Result<Bytes> signData(SigningType,View privateKey,View data);
++Result<void> verifyData(SigningType,View publicKey,View signature,View data);
+ struct Datagram2 {Destination sender;Bytes payload;};
+ // Online/default no-options form. Receiver hash participates in the signature
+ // but is NOT transmitted. Signature proves signing-key possession/recipient
+--- a/preview/native/tests/i2cp_initial_channel_tests.cpp
++++ b/preview/native/tests/i2cp_initial_channel_tests.cpp
+@@ -1,18 +1,42 @@
+ // SPDX-License-Identifier: GPL-2.0-or-later
+ #include "channel.hpp"
+ #include <QFile>
++#include <QEventLoop>
+ #include <QPointer>
+ #include <QSignalSpy>
+ #include <QTcpServer>
+ #include <QTcpSocket>
++#include <QTimer>
+ #include <QtTest>
+ #include <optional>
+ 
+ namespace wire=biglybtc::services::i2p::i2cp;
++namespace i2p=biglybtc::services::i2p;
+ using Channel=wire::InitialChannel;
+ Q_DECLARE_METATYPE(Channel::Failure)
+ 
+ namespace {
++i2p::ClientIdentity signer(const char* name){
++  auto read=[&](const char* suffix){
++    const auto path=QString::fromUtf8(BIGLYBTC_I2P_TEST_KEYS_DIR)+QLatin1Char('/')+QString::fromLatin1(name)+QString::fromLatin1(suffix);
++    QFile file(path);if(!file.open(QIODevice::ReadOnly)||file.size()<1||file.size()>1024){qFatal("Cannot open bounded synthetic signer %s: %s",qPrintable(path),qPrintable(file.errorString()));}
++    const auto bytes=file.readAll();if(file.error()!=QFileDevice::NoError){qFatal("Cannot read synthetic signer %s: %s",qPrintable(path),qPrintable(file.errorString()));}
++    return i2p::Bytes(reinterpret_cast<const i2p::Byte*>(bytes.constData()),reinterpret_cast<const i2p::Byte*>(bytes.constData())+bytes.size());
++  };
++  const auto dest=read(".sender"),secret=read(".known-test-key");auto result=i2p::makeClientIdentity(dest,i2p::Bytes(256,0x51),secret);
++  if(!result){qFatal("Cannot import synthetic signer: %s",result.error().message.c_str());}return std::move(*result);
++}
++QByteArray statusFrame(std::uint16_t id,wire::SessionState state){
++  const auto bytes=wire::encodeMessage(wire::SessionStatus{id,state});if(!bytes){qFatal("Cannot encode original status fixture: %s",bytes.error().message.c_str());}
++  return QByteArray(reinterpret_cast<const char*>(bytes->data()),static_cast<qsizetype>(bytes->size()));
++}
++std::optional<wire::Frame> sentFrame(const QByteArray& bytes,qsizetype offset){
++  if(offset<0||bytes.size()-offset<5){return std::nullopt;}
++  const auto* at=reinterpret_cast<const wire::Byte*>(bytes.constData()+offset);std::uint32_t length=0;
++  for(unsigned i=0;i<4;++i){length=(length<<8)|at[i];}if(length>wire::MaximumPayloadBytes){qFatal("Unbounded client session frame");}
++  if(bytes.size()-offset<5+static_cast<qsizetype>(length)){return std::nullopt;}
++  auto parsed=wire::decodeFrame(wire::View(at,5+length));if(!parsed){qFatal("Client sent invalid session frame: %s",parsed.error().message.c_str());}return std::move(*parsed);
++}
+ // Only generated, owned, random-port loopback endpoints. No real router.
+ struct OwnedRouter {
+   QTcpServer server;
+@@ -180,6 +204,163 @@
+     // rejected option can have left live I/O/deadline behind.
+     QVERIFY(channel.begin(good));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
+   }
++  void actualSignedRegistrationAndMergedReconfigure_data(){
++    QTest::addColumn<QByteArray>("family");QTest::addColumn<bool>("ipv6");
++    QTest::newRow("DSA0-v4")<<QByteArray("dsa")<<false;QTest::newRow("Ed7-v4")<<QByteArray("ed25519")<<false;
++    QTest::newRow("DSA0-v6")<<QByteArray("dsa")<<true;QTest::newRow("Ed7-v6")<<QByteArray("ed25519")<<true;
++  }
++  void actualSignedRegistrationAndMergedReconfigure(){
++    QFETCH(QByteArray,family);QFETCH(bool,ipv6);OwnedRouter router;QVERIFY(router.listen(ipv6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost));
++    Channel channel;auto identity=signer(family.constData());const auto expectedDestination=identity.destination()->wire;
++    QSignalSpy created(&channel,&Channel::sessionCreated),updated(&channel,&Channel::sessionUpdated);
++    QVERIFY(!channel.createSession(identity,{},1761739200123)); // No date/TCP authority.
++    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
++    const wire::SessionOptions initial{{"keep","old"},{"change","old"},{"i2cp.tcp.host","client-only"}};
++    auto requested=channel.createSession(identity,initial,1761739200123);QVERIFY2(requested.has_value(),requested?"":requested.error().message.c_str());
++    QCOMPARE(channel.state(),Channel::State::Creating);QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QVERIFY(channel.deadlineActive());
++    QVERIFY(!channel.createSession(identity,initial,1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
++    const auto first=*sentFrame(router.received,hello().size());auto parsed=wire::decodeSessionMessage(first);QVERIFY(parsed);
++    const auto& config=std::get<wire::CreateSession>(*parsed).config;QVERIFY(config.destination.wire==expectedDestination);
++    QVERIFY(wire::verifySessionConfig(config,1761739200123));QVERIFY(config.options==wire::SessionOptions({{"change","old"},{"keep","old"}}));
++    identity.clear();QVERIFY(!identity.valid()); // Controller retained no borrowed signer.
++    QVERIFY(router.send(status));QTRY_COMPARE(created.count(),1);QCOMPARE(channel.state(),Channel::State::SessionCreated);
++    QVERIFY(channel.sessionId()==std::optional<std::uint16_t>(0xabcd));QVERIFY(channel.sessionOptions()==config.options);QVERIFY(!channel.deadlineActive());
++    identity=signer(family.constData());const auto old=channel.sessionOptions();const wire::SessionOptions patch{{"change","new"},{"added","value"}};
++    requested=channel.reconfigureSession(identity,patch,1761739200123);QVERIFY2(requested.has_value(),requested?"":requested.error().message.c_str());
++    QCOMPARE(channel.state(),Channel::State::Reconfiguring);QVERIFY(channel.sessionOptions()==old);QVERIFY(channel.deadlineActive());
++    const auto offset=hello().size()+5+static_cast<qsizetype>(first.payload.size());QTRY_VERIFY(sentFrame(router.received,offset).has_value());
++    auto update=wire::decodeSessionMessage(*sentFrame(router.received,offset));QVERIFY(update);const auto& changed=std::get<wire::ReconfigureSession>(*update);
++    QCOMPARE(changed.sessionId,std::uint16_t(0xabcd));QVERIFY(changed.config.destination.wire==expectedDestination);QVERIFY(wire::verifySessionConfig(changed.config,1761739200123));
++    QVERIFY(router.send(statusFrame(0xabcd,wire::SessionState::Updated)));QTRY_COMPARE(updated.count(),1);QCOMPARE(created.count(),1);
++    QCOMPARE(channel.state(),Channel::State::SessionCreated);QVERIFY(channel.sessionOptions()==wire::SessionOptions({{"added","value"},{"change","new"},{"keep","old"}}));
++    router.peer->disconnectFromHost();QTRY_COMPARE(channel.state(),Channel::State::Failed);QCOMPARE(channel.failure(),Channel::Failure::TransportClosed);
++    QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QVERIFY(!channel.routerDate());QVERIFY(!channel.deadlineActive());
++  }
++  void terminalRegistrationStatusNeverAdmits_data(){
++    QTest::addColumn<int>("kind");QTest::addColumn<Channel::Failure>("failure");
++    QTest::newRow("refused-UNKNOWN")<<4<<Channel::Failure::SessionRejected;
++    QTest::newRow("invalid")<<3<<Channel::Failure::SessionRejected;
++    QTest::newRow("destroyed")<<0<<Channel::Failure::SessionDestroyed;
++    QTest::newRow("unsolicited-updated")<<2<<Channel::Failure::UnexpectedMessage;
++    QTest::newRow("created-UNKNOWN")<<1<<Channel::Failure::InvalidSessionId;
++  }
++  void terminalRegistrationStatusNeverAdmits(){
++    QFETCH(int,kind);QFETCH(Channel::Failure,failure);OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");QSignalSpy created(&channel,&Channel::sessionCreated);
++    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
++    QVERIFY(channel.createSession(identity,{},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
++    QVERIFY(router.send(statusFrame(kind==1||kind==4?65535:13,static_cast<wire::SessionState>(kind))));QTRY_COMPARE(channel.state(),Channel::State::Failed);
++    QCOMPARE(channel.failure(),failure);QCOMPARE(created.count(),0);QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QVERIFY(!channel.deadlineActive());QVERIFY(!channel.socketActive());
++  }
++  void reconfigureCannotChangeIdentityOrAcceptWrongId(){
++    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");
++    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
++    QVERIFY(channel.createSession(identity,{{"keep","old"}},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
++    const auto first=*sentFrame(router.received,hello().size());QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId().has_value());
++    auto destination=identity.destination()->wire;destination[0]^=1;auto changed=i2p::makeClientIdentity(destination,i2p::Bytes(256),identity.signingPrivateKey());QVERIFY(changed);
++    const auto refused=channel.reconfigureSession(*changed,{{"keep","new"}},1761739200123);QVERIFY(!refused);QCOMPARE(refused.error().code,i2p::ErrorCode::KeyMismatch);
++    QCOMPARE(channel.state(),Channel::State::SessionCreated);QVERIFY(channel.sessionOptions()==wire::SessionOptions({{"keep","old"}}));
++    QSignalSpy updated(&channel,&Channel::sessionUpdated);QVERIFY(channel.reconfigureSession(identity,{{"keep","new"}},1761739200123));
++    const auto offset=hello().size()+5+static_cast<qsizetype>(first.payload.size());QTRY_VERIFY(sentFrame(router.received,offset).has_value());
++    QVERIFY(router.send(statusFrame(0xabce,wire::SessionState::Updated)));QTRY_COMPARE(channel.state(),Channel::State::Failed);QCOMPARE(channel.failure(),Channel::Failure::InvalidSessionId);
++    QCOMPARE(updated.count(),0);QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QVERIFY(!channel.socketActive());
++  }
++  void pendingCreateDeadlineClosesWithoutAdmissionOrRetry(){
++    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");auto options=router.options();options.deadlineMilliseconds=1000;
++    QVERIFY(channel.begin(options));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
++    QVERIFY(channel.createSession(identity,{},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
++    QTRY_COMPARE_WITH_TIMEOUT(channel.state(),Channel::State::Failed,3000);QCOMPARE(channel.failure(),Channel::Failure::Deadline);
++    QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QVERIFY(!channel.deadlineActive());QVERIFY(!channel.socketActive());QCOMPARE(router.accepted,1);
++  }
++  void invalidSigningInputDoesNotReplaceTheDateOrWriteARequest(){
++    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");i2p::ClientIdentity absent;
++    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
++    QVERIFY(!channel.createSession(absent,{},1761739200123));QVERIFY(!channel.createSession(identity,{},0));
++    QVERIFY(!channel.createSession(identity,{},1761739200123+10ULL*24*60*60*1000));
++    QVERIFY(!channel.createSession(identity,{{"a","1"},{"a","2"}},1761739200123));
++    QVERIFY(!channel.createSession(identity,{{"i2cp.username","synthetic-only"}},1761739200123));
++    const auto password=channel.createSession(identity,{{"i2cp.password",""}},1761739200123);QVERIFY(!password);QCOMPARE(password.error().code,i2p::ErrorCode::Unsupported);
++    QVERIFY(!channel.createSession(identity,{{"i2cp.username",""},{"i2cp.password",""}},1761739200123));
++    QCOMPARE(channel.state(),Channel::State::DateReceived);QVERIFY(!channel.sessionId());QVERIFY(!channel.deadlineActive());
++    QVERIFY(channel.createSession(identity,{{"valid","only"}},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
++    const auto parsed=wire::decodeSessionMessage(*sentFrame(router.received,hello().size()));QVERIFY(parsed);
++    const auto& accepted=std::get<wire::CreateSession>(*parsed).config;QVERIFY(accepted.options==wire::SessionOptions({{"valid","only"}}));QVERIFY(wire::verifySessionConfigSignature(accepted));
++    QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId().has_value());QCOMPARE(channel.state(),Channel::State::SessionCreated);
++  }
++  void previouslyReadPartialStatusCannotBecomeANewCreateAcknowledgement(){
++    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");QSignalSpy created(&channel,&Channel::sessionCreated);
++    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
++    // Observe the actual socket readyRead after its earlier-registered private
++    // drain handler. This is an I/O barrier, not a fabricated protocol token.
++    auto* socket=channel.findChild<QTcpSocket*>();QVERIFY(socket);QSignalSpy read(socket,&QTcpSocket::readyRead);
++    QVERIFY(router.send(status.left(4)));QTRY_VERIFY(read.count()>0);
++    QVERIFY(!channel.createSession(identity,{},1761739200123));QCOMPARE(channel.state(),Channel::State::DateReceived);
++    QVERIFY(router.send(status.mid(4)));QTRY_COMPARE(channel.state(),Channel::State::Failed);QCOMPARE(channel.failure(),Channel::Failure::UnexpectedMessage);
++    QCOMPARE(created.count(),0);QVERIFY(!channel.sessionId());QCOMPARE(router.received,hello());
++  }
++  void unsupportedTlsCannotBecomePlaintextRegistration(){
++    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");auto options=router.options();options.tlsRequired=true;
++    QVERIFY(!channel.begin(options));QCOMPARE(channel.failure(),Channel::Failure::UnsupportedTransport);QVERIFY(!channel.socketActive());QVERIFY(!channel.deadlineActive());QCOMPARE(router.accepted,0);
++    options.tlsRequired=false;QVERIFY(channel.begin(options));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
++    const auto refused=channel.createSession(identity,{{"i2cp.SSL","TrUe"}},1761739200123);QVERIFY(!refused);QCOMPARE(refused.error().code,i2p::ErrorCode::Unsupported);
++    QCOMPARE(channel.state(),Channel::State::DateReceived);QVERIFY(!channel.sessionId());
++    QVERIFY(channel.createSession(identity,{{"i2cp.SSL","false"},{"valid","plain-loopback"}},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
++    const auto frame=wire::decodeSessionMessage(*sentFrame(router.received,hello().size()));QVERIFY(frame);QVERIFY(std::get<wire::CreateSession>(*frame).config.options==wire::SessionOptions({{"valid","plain-loopback"}}));
++    QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId().has_value());
++  }
++  void cancelBeforeQueuedOldStatusThenNewRegistrationCannotReuseIt(){
++    OwnedRouter first,second;QVERIFY(first.listen());QVERIFY(second.listen());Channel channel;auto identity=signer("ed25519");QSignalSpy created(&channel,&Channel::sessionCreated);
++    QVERIFY(channel.begin(first.options()));QTRY_COMPARE(first.received,hello());QVERIFY(first.send(date));QTRY_VERIFY(channel.routerDate().has_value());
++    QVERIFY(channel.createSession(identity,{},1761739200123));QTRY_VERIFY(sentFrame(first.received,hello().size()).has_value());
++    QVERIFY(first.send(status));if(first.peer->bytesToWrite()>0){QVERIFY(first.peer->flush());}
++    channel.close();QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QCOMPARE(created.count(),0);
++    QVERIFY(channel.begin(second.options()));QTRY_COMPARE(second.received,hello());QVERIFY(second.send(legacy));QTRY_VERIFY(channel.routerDate().has_value());
++    QCOMPARE(created.count(),0);QVERIFY(channel.createSession(identity,{},0x0102030405060708ULL));QTRY_VERIFY(sentFrame(second.received,hello().size()).has_value());
++    QVERIFY(second.send(statusFrame(0,wire::SessionState::Created)));QTRY_COMPARE(created.count(),1);QVERIFY(channel.sessionId()==std::optional<std::uint16_t>(0));
++    channel.close();QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QVERIFY(!channel.socketActive());
++  }
++  void nestedRealReconfigureCannotPublishTheSupersededCreatedNotification(){
++    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");QSignalSpy created(&channel,&Channel::sessionCreated),updated(&channel,&Channel::sessionUpdated);
++    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
++    QVERIFY(channel.createSession(identity,{{"keep","old"}},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
++    const auto first=*sentFrame(router.received,hello().size());const auto offset=hello().size()+5+static_cast<qsizetype>(first.payload.size());
++    bool nested=false,requestAccepted=false,replyValidated=false,replySent=false,finished=false;
++    QObject::connect(&channel,&Channel::stateChanged,&channel,[&](Channel::State next){
++      if(next!=Channel::State::SessionCreated||nested){return;}nested=true;
++      requestAccepted=channel.reconfigureSession(identity,{{"added","new"}},1761739200123).has_value();if(!requestAccepted){return;}
++      QEventLoop loop;QTimer guard;guard.setSingleShot(true);
++      QObject::connect(&guard,&QTimer::timeout,&loop,&QEventLoop::quit);
++      QObject::connect(&channel,&Channel::sessionUpdated,&loop,[&]{finished=true;loop.quit();});
++      auto reply=[&]{
++        if(replySent){return;}const auto frame=sentFrame(router.received,offset);if(!frame){return;}
++        auto message=wire::decodeSessionMessage(*frame);if(!message||!std::holds_alternative<wire::ReconfigureSession>(*message)){loop.quit();return;}
++        const auto& update=std::get<wire::ReconfigureSession>(*message);
++        replyValidated=update.sessionId==0xabcd&&wire::verifySessionConfigSignature(update.config).has_value()&&update.config.options==wire::SessionOptions({{"added","new"}});
++        if(!replyValidated){loop.quit();return;}replySent=router.send(statusFrame(0xabcd,wire::SessionState::Updated));if(!replySent){loop.quit();}
++      };
++      QObject::connect(router.peer,&QTcpSocket::readyRead,&loop,reply);reply();guard.start(2000);loop.exec();
++    });
++    QVERIFY(router.send(status));QTRY_VERIFY(nested);QVERIFY(requestAccepted);QVERIFY(replyValidated);QVERIFY(replySent);QVERIFY(finished);
++    QCOMPARE(created.count(),0);QCOMPARE(updated.count(),1);QCOMPARE(channel.state(),Channel::State::SessionCreated);
++    QVERIFY(channel.sessionOptions()==wire::SessionOptions({{"added","new"},{"keep","old"}}));
++  }
++  void registrationNotificationMayDeleteController_data(){
++    QTest::addColumn<bool>("onUpdate");QTest::newRow("created")<<false;QTest::newRow("updated")<<true;
++  }
++  void registrationNotificationMayDeleteController(){
++    QFETCH(bool,onUpdate);OwnedRouter router;QVERIFY(router.listen());auto identity=signer("ed25519");QPointer<Channel> channel=new Channel(&router.server);
++    QVERIFY(channel->begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel->routerDate().has_value());
++    QVERIFY(channel->createSession(identity,{},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
++    const auto first=*sentFrame(router.received,hello().size());
++    if(!onUpdate){QObject::connect(channel,&Channel::sessionCreated,&router.server,[&]{delete channel.data();});}
++    QVERIFY(router.send(status));
++    if(onUpdate){
++      QTRY_VERIFY(channel->sessionId().has_value());QObject::connect(channel,&Channel::sessionUpdated,&router.server,[&]{delete channel.data();});
++      QVERIFY(channel->reconfigureSession(identity,{{"new","value"}},1761739200123));
++      const auto offset=hello().size()+5+static_cast<qsizetype>(first.payload.size());QTRY_VERIFY(sentFrame(router.received,offset).has_value());
++      QVERIFY(router.send(statusFrame(0xabcd,wire::SessionState::Updated)));
++    }
++    QTRY_VERIFY(channel.isNull());QTRY_COMPARE(router.peer->state(),QAbstractSocket::UnconnectedState);
++  }
+ };
+ QTEST_GUILESS_MAIN(InitialChannelTests)
+ #include "i2cp_initial_channel_tests.moc"
+--- /dev/null
++++ b/preview/native/tests/i2cp_session_config_tests.cpp
+@@ -0,0 +1,168 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "session.hpp"
++#include <algorithm>
++#include <array>
++#include <cerrno>
++#include <filesystem>
++#include <fcntl.h>
++#include <fstream>
++#include <iostream>
++#include <limits>
++#include <stdexcept>
++#include <string_view>
++#include <sys/stat.h>
++#include <unistd.h>
++
++namespace i2p=biglybtc::services::i2p;
++namespace cp=i2p::i2cp;
++using i2p::Bytes;using i2p::View;
++namespace {
++void require(bool condition,const char* message){if(!condition){throw std::runtime_error(message);}}
++template<class T,class E>T take(std::expected<T,E> value){if(!value){throw std::runtime_error(value.error().message);}return std::move(*value);}
++Bytes read(const std::filesystem::path& path,std::size_t maximum=cp::MaximumFrameBytes){
++  std::ifstream input(path,std::ios::binary|std::ios::ate);if(!input){throw std::runtime_error("Cannot open synthetic I2CP fixture: "+path.string());}
++  const auto size=static_cast<std::streamoff>(input.tellg());require(size>=0&&static_cast<std::uint64_t>(size)<=maximum,"I2CP fixture exceeds bound");
++  Bytes out(static_cast<std::size_t>(size));input.seekg(0);if(!out.empty()){input.read(reinterpret_cast<char*>(out.data()),static_cast<std::streamsize>(out.size()));}
++  if(!input){throw std::runtime_error("Cannot read complete synthetic I2CP fixture: "+path.string());}return out;
++}
++i2p::ClientIdentity identity(const std::filesystem::path& fixtures,const std::string& name){
++  const auto dest=read(fixtures/(name+".sender"),1024),key=read(fixtures/(name+".known-test-key"),32);
++  return take(i2p::makeClientIdentity(dest,Bytes(256,0x51),key));
++}
++cp::SessionOptions utf8Options(){return {{"z","last"},{"\xee\x80\x80","BMP"},{"\xf0\x90\x80\x80","supplementary"},{"inbound.nickname","\xd1\x82\xd1\x83\xd0\xbd\xd0\xbd\xd0\xb5\xd0\xbb\xd1\x8c"},{"a",std::string("\0=;\n",4)}};}
++cp::SessionOptions maximumOptions(){
++  cp::SessionOptions out{{"A",std::string(252,'v')}};
++  for(unsigned i=0;i<127;++i){std::string key(255,'b');key[252]=static_cast<char>('0'+i/100);key[253]=static_cast<char>('0'+(i/10)%10);key[254]=static_cast<char>('0'+i%10);out.emplace_back(std::move(key),std::string(255,'v'));}return out;
++}
++void originalsAndTampering(const std::filesystem::path& fixtures){
++  constexpr std::uint64_t date=1761739200123;
++  for(const std::string family:{"dsa","ed25519"}){
++    auto signer=identity(fixtures,family);
++    for(const auto& options:{cp::SessionOptions{},utf8Options(),maximumOptions()}){
++      auto config=take(cp::signSessionConfig(signer,options,date));const auto bytes=take(cp::encodeSessionConfig(config));
++      auto parsed=take(cp::decodeSessionConfig(bytes));require(cp::verifySessionConfig(parsed,date).has_value(),"Signed session failed verification");
++      require(take(cp::encodeSessionConfig(parsed))==bytes,"Config decode/write changed original bytes");
++      require(parsed.destination.wire==signer.destination()->wire&&parsed.options==take(cp::canonicalSessionOptions(options)),"Destination/options changed");
++      require(config.signature.size()==(family=="dsa"?40U:64U),"Wrong original raw signature width");
++      for(const auto delta:{-180000LL,180000LL}){require(cp::verifySessionConfig(parsed,static_cast<std::uint64_t>(static_cast<std::int64_t>(date)+delta)).has_value(),"Inclusive original date boundary refused");}
++      for(const auto delta:{-180001LL,180001LL}){require(!cp::verifySessionConfig(parsed,static_cast<std::uint64_t>(static_cast<std::int64_t>(date)+delta)),"Stale/future session accepted");}
++      auto changed=parsed;changed.destination.wire[0]^=1;require(!cp::verifySessionConfigSignature(changed),"Session signature did not cover opaque Destination bytes");
++      changed=parsed;changed.signature[0]^=1;require(!cp::verifySessionConfigSignature(changed),"Changed signature accepted");
++      changed=parsed;++changed.creationMilliseconds;require(!cp::verifySessionConfigSignature(changed),"Changed date accepted");
++      changed=parsed;changed.options.emplace_back("unknown.future","preserved");require(!cp::verifySessionConfigSignature(changed),"Changed options accepted");
++      for(const std::uint16_t id:{0,65534,65535}){
++        auto frame=take(cp::decodeFrame(take(cp::encodeSessionMessage(cp::ReconfigureSession{id,parsed}))));
++        auto reconfigured=std::get<cp::ReconfigureSession>(take(cp::decodeSessionMessage(frame)));
++        require(reconfigured.sessionId==id&&cp::verifySessionConfigSignature(reconfigured.config).has_value(),"Reconfigure ID/config changed");
++        frame.payload[1]^=1;auto altered=std::get<cp::ReconfigureSession>(take(cp::decodeSessionMessage(frame)));
++        require(altered.sessionId!=id&&cp::verifySessionConfigSignature(altered.config).has_value(),"Reconfigure ID was wrongly claimed as signed");
++      }
++      const auto created=take(cp::decodeSessionMessage(take(cp::decodeFrame(take(cp::encodeSessionMessage(cp::CreateSession{parsed}))))));
++      require(cp::verifySessionConfigSignature(std::get<cp::CreateSession>(created).config).has_value(),"Create wrapper lost signature");
++      auto extra=bytes;extra.push_back(0);require(!cp::decodeSessionConfig(extra),"Trailing config accepted");
++      auto truncated=bytes;truncated.pop_back();require(!cp::decodeSessionConfig(truncated),"Truncated config accepted");
++    }
++    auto invalid=cp::signSessionConfig(signer,{},0);require(!invalid,"Null creation date accepted");
++    require(!cp::signSessionConfig(signer,{},std::uint64_t(1)<<63),"Wrapped Java date accepted");
++    const auto maximumDate=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
++    const auto extreme=take(cp::signSessionConfig(signer,{},maximumDate));require(!cp::verifySessionConfig(extreme,maximumDate),"Java signed clock-window overflow gained freshness");
++    const Bytes data{0,1,2,0xff};const auto signature=take(i2p::signData(signer.destination()->signingType,signer.signingPrivateKey(),data));
++    require(i2p::verifyData(signer.destination()->signingType,signer.destination()->signingPublicKey,signature,data).has_value(),"Shared raw signer/verifier failed");
++    require(!i2p::signData(signer.destination()->signingType,signer.signingPrivateKey(),Bytes(i2p::MaximumSignedDataBytes+1)),"Shared signer input unbounded");
++    require(!i2p::verifyData(signer.destination()->signingType,{},signature,data),"Invalid public key width accepted");
++    require(!i2p::verifyData(static_cast<i2p::SigningType>(8),signer.destination()->signingPublicKey,signature,data),"Unsupported signing algorithm accepted");
++    std::cout<<"PASS signed original SessionConfig/Create/Reconfigure "<<family<<'\n';
++  }
++}
++void optionRules(const std::filesystem::path& fixtures){
++  auto ordered=take(cp::canonicalSessionOptions(utf8Options()));
++  require(ordered[ordered.size()-2].first=="\xf0\x90\x80\x80"&&ordered.back().first=="\xee\x80\x80","UTF-8 byte sort replaced original UTF-16 ordering");
++  require(!cp::canonicalSessionOptions({{"a","1"},{"a","2"}}),"Duplicate key accepted");
++  require(!cp::canonicalSessionOptions({{std::string(256,'a'),""}}),"Overlong key accepted");
++  require(!cp::canonicalSessionOptions({{"a",std::string(256,'v')}}),"Overlong value accepted");
++  require(!cp::canonicalSessionOptions({{"a","\xc0\x80"}}),"Overlong UTF-8 accepted");
++  require(!cp::canonicalSessionOptions({{"a","\xed\xa0\x80"}}),"UTF-8 surrogate accepted");
++  auto max=maximumOptions();require(cp::canonicalSessionOptions(max).has_value(),"Original65535 properties body refused");max[0].second.push_back('v');require(!cp::canonicalSessionOptions(max),"Original properties size overflow accepted");
++  for(const auto* key:{"i2cp.username","i2cp.password","i2cp.leaseSetOfflineExpiration","i2cp.leaseSetTransientPublicKey","i2cp.leaseSetOfflineSignature"}){
++    const auto unsupported=cp::canonicalSessionOptions({{key,"x"}});require(!unsupported&&unsupported.error().code==i2p::ErrorCode::Unsupported,"Unsupported auth/offline option silently accepted");
++  }
++  const auto projected=take(cp::projectRouterOptions({{"i2cp.tcp.host","must not reach router"},{"i2cp.gzip","true"},{"i2p.reseedURL",std::string(2048,'x')},{"oversize",std::string(256,'x')},{"i2cp.domainSocket","not in original removal list"},{"unknown.future","yes"}}));
++  require(projected==cp::SessionOptions({{"i2cp.domainSocket","not in original removal list"},{"unknown.future","yes"}}),"Original client-only/long option projection changed");
++  require(!cp::projectRouterOptions({{"inbound.nickname",std::string(128,'\xc3')+std::string(128,'\xa9')}}),"Invalid multibyte property accepted");
++  std::string encodedLong;for(unsigned i=0;i<128;++i){encodedLong+="\xc3\xa9";}
++  require(!cp::projectRouterOptions({{"inbound.nickname",encodedLong}}),"UTF-8 byte overflow was silently dropped as a long Java string");
++  const auto merged=take(cp::mergeSessionOptions({{"keep","old"},{"change","old"}},{{"change","new"},{"added","new"}}));
++  require(merged==cp::SessionOptions({{"added","new"},{"change","new"},{"keep","old"}}),"Reconfigure omitted key was removed");
++  // Original readProperties(false) accepts unique unsorted entries, while
++  // verifySignature reserializes them in canonical Java order.
++  auto signer=identity(fixtures,"ed25519");auto cfg=take(cp::signSessionConfig(signer,{{"a","1"},{"b","2"}},1761739200123));
++  auto raw=take(cp::encodeSessionConfig(cfg));const auto start=cfg.destination.wire.size()+2;
++  std::rotate(raw.begin()+static_cast<std::ptrdiff_t>(start),raw.begin()+static_cast<std::ptrdiff_t>(start+6),raw.begin()+static_cast<std::ptrdiff_t>(start+12));
++  auto parsed=take(cp::decodeSessionConfig(raw));require(cp::verifySessionConfigSignature(parsed).has_value(),"Unsorted unique original properties verify with wrong preimage");
++  require(take(cp::encodeSessionConfig(parsed))==take(cp::encodeSessionConfig(cfg)),"Canonical original reserialization changed");
++}
++// Fixed-name offline fixture bridge only; no profile/clock/session/network.
++class Descriptor {
++public:
++  explicit Descriptor(int value):value_(value){}
++  ~Descriptor(){if(value_>=0){::close(value_);}}
++  Descriptor(const Descriptor&)=delete;Descriptor& operator=(const Descriptor&)=delete;
++  int get()const{return value_;}
++private:int value_;
++};
++bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_size==b.st_size&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
++Bytes ownedRead(int root,const std::string& leaf){
++  Descriptor fd(::openat(root,leaf.c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK));struct stat before{},after{},named{};
++  require(fd.get()>=0&&::fstat(fd.get(),&before)==0&&S_ISREG(before.st_mode)&&before.st_uid==::getuid()&&before.st_nlink==1&&before.st_size>=0&&before.st_size<=static_cast<off_t>(cp::MaximumFrameBytes),"Unsafe/missing offline session input");
++  Bytes bytes(static_cast<std::size_t>(before.st_size));std::size_t at=0;
++  while(at<bytes.size()){const auto count=::read(fd.get(),bytes.data()+at,bytes.size()-at);if(count<0&&errno==EINTR){continue;}require(count>0,"Incomplete offline session input");at+=static_cast<std::size_t>(count);}
++  i2p::Byte extra=0;require(::read(fd.get(),&extra,1)==0&&::fstat(fd.get(),&after)==0&&::fstatat(root,leaf.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&same(before,after)&&same(before,named),"Offline session input changed");return bytes;
++}
++void ownedWrite(int root,const std::string& leaf,View bytes){
++  require(bytes.size()<=cp::MaximumFrameBytes,"Unbounded offline session output");Descriptor fd(::openat(root,leaf.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));
++  require(fd.get()>=0,"Offline session output exists/cannot create");std::size_t at=0;
++  while(at<bytes.size()){const auto count=::write(fd.get(),bytes.data()+at,bytes.size()-at);if(count<0&&errno==EINTR){continue;}require(count>0,"Incomplete offline session output");at+=static_cast<std::size_t>(count);}
++  require(::fsync(fd.get())==0,"Cannot sync offline session output");
++}
++void javaInterop(const std::filesystem::path& path){
++  require(path.is_absolute(),"Offline session directory must be absolute");Descriptor root(::open(path.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));struct stat bound{};
++  require(root.get()>=0&&::fstat(root.get(),&bound)==0&&bound.st_uid==::getuid()&&(bound.st_mode&0777)==0700,"Offline session directory must be private/owned");
++  const auto clock=ownedRead(root.get(),"creation.clock");require(clock.size()==8,"Invalid original clock width");std::uint64_t date=0;for(auto byte:clock){date=(date<<8)|byte;}
++  require(date>600000&&date<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),"Invalid original fixture date range");
++  const std::array<const char*,6> labels{"dsa-empty","dsa-utf8","dsa-maximum","ed25519-empty","ed25519-utf8","ed25519-maximum"};
++  unsigned ordinal=0;
++  for(const auto* text:labels){
++    const std::string label(text),family=label.starts_with("dsa-")?"dsa":"ed25519";
++    const auto destination=ownedRead(root.get(),family+".sender"),key=ownedRead(root.get(),family+".sign");auto signer=take(i2p::makeClientIdentity(destination,Bytes(256,0x51),key));
++    const auto options=label.ends_with("-empty")?cp::SessionOptions{}:label.ends_with("-utf8")?utf8Options():maximumOptions();
++    for(const std::string kind:{"create","reconfigure"}){
++      const auto original=ownedRead(root.get(),label+".java."+kind);const auto frame=take(cp::decodeFrame(original));auto message=take(cp::decodeSessionMessage(frame));
++      const auto& cfg=std::visit([](const auto& value)->const cp::SessionConfig&{return value.config;},message);
++      require(cfg.destination.wire==destination&&cfg.creationMilliseconds==date&&cfg.options==take(cp::canonicalSessionOptions(options)),"Java session fields differ");
++      require(cp::verifySessionConfig(cfg,date).has_value(),"Java original session signature/date refused");
++      require(take(cp::sessionConfigPreimage(cfg))==ownedRead(root.get(),label+".java.preimage"),"Original Java canonical signature preimage differs");
++      if(kind=="create"){require(std::holds_alternative<cp::CreateSession>(message),"Java create has wrong type");}
++      else{const auto expectedId=static_cast<std::uint16_t>(ordinal==0?0U:ordinal==5?65534U:ordinal);require(std::holds_alternative<cp::ReconfigureSession>(message)&&std::get<cp::ReconfigureSession>(message).sessionId==expectedId,"Java reconfigure ID differs");}
++      auto native=take(cp::signSessionConfig(signer,cfg.options,date));
++      cp::SessionMessage outgoing=kind=="create"?cp::SessionMessage(cp::CreateSession{native}):cp::SessionMessage(cp::ReconfigureSession{std::get<cp::ReconfigureSession>(message).sessionId,native});
++      auto wire=take(cp::encodeSessionMessage(outgoing));ownedWrite(root.get(),label+".native."+kind,wire);
++      if(ordinal==0&&kind=="create"){
++        wire.back()^=1;ownedWrite(root.get(),"native.bad-signature.create",wire);
++        auto stale=take(cp::signSessionConfig(signer,cfg.options,date-600000));
++        require(cp::verifySessionConfigSignature(stale).has_value()&&!cp::verifySessionConfig(stale,date),"Native stale-date refusal lost");
++        ownedWrite(root.get(),"native.stale.create",take(cp::encodeSessionMessage(cp::CreateSession{stale})));
++      }
++      std::cout<<"PASS NATIVE VERIFIED JAVA "<<label<<' '<<kind<<'\n';
++    }
++    ++ordinal;
++  }
++  auto auth=take(cp::decodeFrame(ownedRead(root.get(),"java.unsupported-auth.create")));const auto refused=cp::decodeSessionMessage(auth);
++  require(!refused&&refused.error().code==i2p::ErrorCode::Unsupported,"Original auth options silently accepted");
++  require(::fsync(root.get())==0,"Cannot sync offline session directory");std::cout<<"PASS NATIVE REFUSED ORIGINAL AUTH OPTIONS\n";
++}
++} // namespace
++int main(int argc,char** argv){
++  try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){javaInterop(std::filesystem::path(argv[2]));return 0;}
++    require(argc==2,"Usage: i2cp-session-config-tests SYNTHETIC_FIXTURE_DIR | --java-interop PRIVATE_DIR");const std::filesystem::path fixtures(argv[1]);originalsAndTampering(fixtures);optionRules(fixtures);std::cout<<"PASS finite signed I2CP session codec\n";return 0;}
++  catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}
++}

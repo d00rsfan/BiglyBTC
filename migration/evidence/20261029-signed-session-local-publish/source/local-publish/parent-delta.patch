@@ -1,0 +1,14 @@
+--- a/preview/native/app/azureus_local_publish.inc
++++ b/preview/native/app/azureus_local_publish.inc
+@@ -43,7 +43,10 @@
+       // Profile validation and readback copying can cross the absolute budget.
+       // Check at the actual locked commit; mutating this not-yet-published copy
+       // requires no allocation and never extends the deadline.
+-      if(state==AzureusPublishState::Complete&&std::chrono::steady_clock::now()>=value->deadline){
++      if(state==AzureusPublishState::Complete&&state_->stop){
++        snapshot->state=AzureusPublishState::Closed;snapshot->error=AzureusServiceError::Closed;snapshot->transportFailure=azureus::Failure::Closed;
++        value->snapshot.state=snapshot->state;value->snapshot.error=snapshot->error;value->snapshot.transportFailure=snapshot->transportFailure;
++      }else if(state==AzureusPublishState::Complete&&std::chrono::steady_clock::now()>=value->deadline){
+         snapshot->state=AzureusPublishState::Failed;snapshot->error=AzureusServiceError::Transport;snapshot->transportFailure=azureus::Failure::Timeout;
+         value->snapshot.state=snapshot->state;value->snapshot.error=snapshot->error;value->snapshot.transportFailure=snapshot->transportFailure;
+       }

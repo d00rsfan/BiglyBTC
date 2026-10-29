@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="7"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="12"
+	timestamp="2026-10-29T15:33:54"
+	>
+	<testcase name="azureus-owned-service" classname="azureus-owned-service" time="1.31572" status="run">
+		<properties>
+			<property name="cmake_labels" value="loopback;statistics;unit"/>
+		</properties>
+		<system-out>********* Start testing of OwnedAzureusServiceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedAzureusServiceTests::initTestCase()
+PASS   : OwnedAzureusServiceTests::originalVersionReservationPreservesSignedJavaWidthsAndChunkBoundary()
+PASS   : OwnedAzureusServiceTests::profileVersionsReserveBeforeUsePreserveUnknownsAndRecoverOnlyCanonicalPending()
+PASS   : OwnedAzureusServiceTests::versionOwnerRetainsCallerLeaseAndRefusesLockOrDirectoryReplacement()
+PASS   : OwnedAzureusServiceTests::localPublicationUsesActualTokenStoreAndReadbackFromGeneratedReceiver()
+PASS   : OwnedAzureusServiceTests::localPublicationCancellationAndChangedProfileNeverSendStore()
+PASS   : OwnedAzureusServiceTests::defaultAndInvalidPolicyNeverCreateAnOwner()
+PASS   : OwnedAzureusServiceTests::stdWorkerCreatesAndJoinsTheDedicatedQtOwner()
+PASS   : OwnedAzureusServiceTests::twoActualServiceOwnersExcha...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="azureus-database-runtime" classname="azureus-database-runtime" time="2.07841" status="run">
+		<properties>
+			<property name="cmake_labels" value="database;loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of AzureusDatabaseRuntimeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusDatabaseRuntimeTests::initTestCase()
+PASS   : AzureusDatabaseRuntimeTests::localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData()
+PASS   : AzureusDatabaseRuntimeTests::qualifiedMappingOwnsVersionsForwardingAndUnknownBinaryBytes()
+PASS   : AzureusDatabaseRuntimeTests::normalFindFlagsReturnUnfilteredValuesLikeOriginalMapping()
+PASS   : AzureusDatabaseRuntimeTests::actualFindFlagsReachTheDatabaseWithoutSeedFiltering()
+PASS   : AzureusDatabaseRuntimeTests::statsValueRequiresRealAdapterAndLocalIdentity()
+PASS   : AzureusDatabaseRuntimeTests::actualStatsReadIsBoundToSocketAndRealMappingEvents()
+PASS   : AzureusDatabaseRuntimeTests::originalDiversificationRequiresExplicitControlAndRealMappingEvents()
+PASS   : AzureusDatabaseRuntimeTests::originalFrequency...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="pure-i2p-datagram-codec" classname="pure-i2p-datagram-codec" time="0.0799659" status="run">
+		<properties>
+			<property name="cmake_labels" value="crypto;i2p;no-network;unit"/>
+		</properties>
+		<system-out>PASS retained official Java Datagram2/3 dsa-empty
+PASS retained official Java Datagram2/3 dsa-binary
+PASS retained official Java Datagram2/3 dsa-1024
+PASS retained official Java Datagram2/3 dsa-maximum
+PASS retained official Java Datagram2/3 ed25519-empty
+PASS retained official Java Datagram2/3 ed25519-binary
+PASS retained official Java Datagram2/3 ed25519-1024
+PASS retained official Java Datagram2/3 ed25519-maximum
+PASS bounded I2P Datagram2/3 default0/7 codec
+</system-out>
+	</testcase>
+	<testcase name="pure-i2p-client-identity" classname="pure-i2p-client-identity" time="0.021421" status="run">
+		<properties>
+			<property name="cmake_labels" value="crypto;i2p;no-network;unit"/>
+		</properties>
+		<system-out>PASS bounded original online client identity dsa
+PASS bounded original online client identity ed25519
+PASS bounded I2P client identity ownership/refusal
+</system-out>
+	</testcase>
+	<testcase name="pure-i2cp-initial-session-codec" classname="pure-i2cp-initial-session-codec" time="0.00571265" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;no-network;unit"/>
+		</properties>
+		<system-out>PASS bounded I2CP framing/initial session subset; no connection
+</system-out>
+	</testcase>
+	<testcase name="i2cp-initial-channel" classname="i2cp-initial-channel" time="8.54675" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;owned-loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of InitialChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : InitialChannelTests::initTestCase()
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv4)
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv6)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(oversize-header)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unknown-type)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(maximum-bounded-opaque-frame)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unexpected-real-session-status)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(invalid-date-length)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(real-Java-null-date)
+PASS   : InitialChannelTests::truncatedFrameAtActualEofRefuses()
+PASS   : InitialChannelTests::r...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="pure-i2cp-signed-session-config" classname="pure-i2cp-signed-session-config" time="0.0929928" status="run">
+		<properties>
+			<property name="cmake_labels" value="crypto;i2p;no-network;unit"/>
+		</properties>
+		<system-out>PASS signed original SessionConfig/Create/Reconfigure dsa
+PASS signed original SessionConfig/Create/Reconfigure ed25519
+PASS finite signed I2CP session codec
+</system-out>
+	</testcase>
+</testsuite>

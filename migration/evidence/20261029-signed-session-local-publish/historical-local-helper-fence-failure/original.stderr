@@ -1,0 +1,73 @@
+WARNING: A terminally deprecated method in java.lang.System has been called
+WARNING: System::setSecurityManager has been called by LocalPublishLauncher (file:/tmp/biglybtc-queue-oracle-rxl1wov4/classes/)
+WARNING: Please consider reporting this to the maintainers of LocalPublishLauncher
+WARNING: System::setSecurityManager will be removed in a future release
+DEBUG::Thu Oct 29 15:37:51 IST 2026::com.biglybt.core.util.AEDiagnostics::startup::279:
+  java.lang.ExceptionInInitializerError
+	at com.biglybt.core.util.AEDiagnostics.startup(AEDiagnostics.java:161)
+	at com.biglybt.core.util.AEDiagnostics.getLogger(AEDiagnostics.java:428)
+	at com.biglybt.core.util.Debug.<clinit>(Debug.java:42)
+	at com.biglybt.plugin.dht.impl.DHTPluginStorageManager.<clinit>(DHTPluginStorageManager.java:104)
+	at java.base/jdk.internal.misc.Unsafe.allocateInstance(Native Method)
+	at jdk.unsupported/sun.misc.Unsafe.allocateInstance(Unsafe.java:864)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at LocalPublishProjection.main(LocalPublishProjection.java:23)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at LocalPublishLauncher.main(LocalPublishLauncher.java:19)
+Caused by: java.lang.SecurityException: No thread creation
+	at QueueOracleFence.denied(QueueOracleFence.java:17)
+	at QueueOracleFence.checkAccess(QueueOracleFence.java:40)
+	at java.base/java.lang.ThreadGroup.checkAccess(ThreadGroup.java:335)
+	at java.base/java.lang.Thread.<init>(Thread.java:429)
+	at java.base/java.lang.Thread.<init>(Thread.java:715)
+	at java.base/java.lang.Thread.<init>(Thread.java:548)
+	at com.biglybt.core.util.AEThread2$threadWrapper.<init>(AEThread2.java:302)
+	at com.biglybt.core.util.AEThread2.start(AEThread2.java:137)
+	at com.biglybt.core.util.AEThread2.createAndStartDaemon(AEThread2.java:61)
+	at com.biglybt.core.util.FileUtil.<clinit>(FileUtil.java:123)
+	... 16 more
+
+DEBUG::Thu Oct 29 15:37:51 IST 2026::com.biglybt.plugin.dht.impl.DHTPluginStorageManager::<clinit>::104:
+  java.lang.ExceptionInInitializerError
+	at java.base/sun.security.provider.SunEntries.<clinit>(SunEntries.java:346)
+	at java.base/sun.security.provider.Sun.<init>(Sun.java:56)
+	at java.base/sun.security.jca.ProviderConfig.getProvider(ProviderConfig.java:182)
+	at java.base/sun.security.jca.ProviderList.getProvider(ProviderList.java:268)
+	at java.base/sun.security.jca.ProviderList$ServiceList.tryGet(ProviderList.java:513)
+	at java.base/sun.security.jca.ProviderList$ServiceList$1.hasNext(ProviderList.java:567)
+	at java.base/java.security.KeyFactory.nextSpi(KeyFactory.java:312)
+	at java.base/java.security.KeyFactory.<init>(KeyFactory.java:137)
+	at java.base/java.security.KeyFactory.getInstance(KeyFactory.java:183)
+	at com.biglybt.plugin.dht.impl.DHTPluginStorageManager.<clinit>(DHTPluginStorageManager.java:95)
+	at java.base/jdk.internal.misc.Unsafe.allocateInstance(Native Method)
+	at jdk.unsupported/sun.misc.Unsafe.allocateInstance(Unsafe.java:864)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at LocalPublishProjection.main(LocalPublishProjection.java:23)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at LocalPublishLauncher.main(LocalPublishLauncher.java:19)
+Caused by: java.lang.SecurityException: Read outside exact class/JDK roots: /dev/random
+	at QueueOracleFence.denied(QueueOracleFence.java:17)
+	at QueueOracleFence.checkRead(QueueOracleFence.java:24)
+	at java.base/java.io.File.canRead(File.java:776)
+	at java.base/sun.security.provider.NativePRNG$1.run(NativePRNG.java:152)
+	at java.base/sun.security.provider.NativePRNG$1.run(NativePRNG.java:131)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:318)
+	at java.base/sun.security.provider.NativePRNG.initIO(NativePRNG.java:130)
+	at java.base/sun.security.provider.NativePRNG.<clinit>(NativePRNG.java:93)
+	... 22 more
+
+Exception in thread "main" java.lang.AssertionError: Latched forbidden fence operation
+	at QueueOracleFence.verify(QueueOracleFence.java:57)
+	at LocalPublishLauncher.main(LocalPublishLauncher.java:20)

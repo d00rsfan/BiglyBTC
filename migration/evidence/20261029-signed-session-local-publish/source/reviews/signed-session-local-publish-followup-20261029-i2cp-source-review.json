@@ -1,0 +1,23 @@
+{
+  "status": "PASS_SOURCE_ONLY",
+  "reviewer": "root",
+  "manifest_sha256": "1eb701f7e3c341d49a170153c39ba4150c819b92de1833183b2894b08af4a2d7",
+  "reviewed_files": [
+    "session.hpp",
+    "session.cpp",
+    "channel.hpp",
+    "channel.cpp",
+    "datagram.cpp delta",
+    "datagram.hpp delta",
+    "session_config_tests.cpp",
+    "initial_channel_tests.cpp delta",
+    "ADOPTION.md",
+    "CMake.fragment",
+    "OFFLINE-COMMANDS.sh",
+    "SessionConfigVectors.java"
+  ],
+  "findings": "No concrete blocker. Exact UTF16 property order, signature/date/option byte bounds, shared raw signer validation, acknowledged-only option merge and channel lifecycle guards reviewed. Auth/TLS refusal explicit. Runtime and actual Java equivalence pending.",
+  "native_execution": false,
+  "upstream_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "adopter_schema_correction": "Oracle manifest uses source_sha256/artifacts_sha256; deterministic source map normalisation added before adoption; no failed native mutation/build/run."
+}

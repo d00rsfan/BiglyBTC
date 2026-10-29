@@ -1,0 +1,11 @@
+{
+  "status": "SOURCE_ONLY_JAVA_HELPER_FRAME_API_CORRECTION",
+  "parent_manifest_sha256": "1eb701f7e3c341d49a170153c39ba4150c819b92de1833183b2894b08af4a2d7",
+  "native_source_changed": false,
+  "failed_attempt": "/home/yurii/Java/BiglyBT/build/signed-session-local-publish-followup-20261029/offline-runs/r1/result.json",
+  "reason": "Original I2CPMessage interface declares writeMessage(OutputStream), not writeBytes; helper compilation refused before any Java object/native interop execution. Exactly one helper call corrected, shell recipe unchanged. No native rebuild/test required.",
+  "artifacts_sha256": {
+    "OFFLINE-COMMANDS.sh": "98465525b0e3980d03af19c577cfc368744b55e993a1463734bb8b82ec2d8431",
+    "interop/SessionConfigVectors.java": "f1d9b5ca08ee260f22d61047b4604e34fb82b49d03ae0281c26071ef090910de"
+  }
+}

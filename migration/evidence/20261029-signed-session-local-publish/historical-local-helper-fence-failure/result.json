@@ -1,0 +1,13 @@
+{
+  "status": "FAIL",
+  "source_commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_driver_sha256": "2396b32a126f0ddfade664ac24704012e6b102d1c4bc91e28f4fc31610511795",
+  "source_manifest_sha256": "8246185bd5e355e07d80ff609bafa116b73bea4e82986a4882a91f68608b4e6c",
+  "build_receipt_sha256": "572a3023c1be0d861e6ada31dc8e66df12ef4dcee02ecaebe9fb9fb9e918d505",
+  "original_recompiled": false,
+  "profile_or_network_interoperability_claimed": false,
+  "persistence_callback": "explicit-noop-adapter",
+  "contact": "explicit-fixed-field-adapter",
+  "failure": "AssertionError('original')"
+}
