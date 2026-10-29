@@ -1,4 +1,5 @@
 #include "library_window.hpp"
+#include "wayland_console.hpp"
 #include "session_bridge.hpp"
 #include "statistics_page.hpp"
 #include "saved_speed_manager_view.hpp"
@@ -33,6 +34,14 @@
 
 namespace {
 using namespace biglybtc;
+
+int consoleForwarded=0;
+QtMsgType consoleType=QtDebugMsg;
+QString consoleText;
+const char* consoleCategory=nullptr;
+void consoleSpy(QtMsgType type,const QMessageLogContext& context,const QString& message){
+  ++consoleForwarded;consoleType=type;consoleText=message;consoleCategory=context.category;
+}
 
 QByteArray bytes(const QString& path) {
   QFile file(path);
@@ -72,6 +81,45 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
 class PreviewSmoke final : public QObject {
   Q_OBJECT
 private slots:
+  void exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler(){
+    const QMessageLogContext wayland(__FILE__,__LINE__,Q_FUNC_INFO,"qt.qpa.wayland.textinput");
+    const QMessageLogContext other(__FILE__,__LINE__,Q_FUNC_INFO,"another.category");
+    const QString warning=QStringLiteral("virtual void QtWaylandClient::QWaylandTextInputv3::disableSurface(wl_surface*) Trying to disable 0x62b29d842ea0 but 0x0 is focused");
+    consoleForwarded=0;
+    app::detail::forwardWaylandConsole(QtWarningMsg,wayland,warning,consoleSpy);
+    QCOMPARE(consoleForwarded,0);
+    for(const auto type:{QtDebugMsg,QtInfoMsg,QtCriticalMsg,QtFatalMsg}){
+      app::detail::forwardWaylandConsole(type,wayland,warning,consoleSpy);
+      QCOMPARE(consoleType,type);QCOMPARE(consoleText,warning);QCOMPARE(consoleCategory,wayland.category);
+    }
+    QCOMPARE(consoleForwarded,4);
+    app::detail::forwardWaylandConsole(QtWarningMsg,other,warning,consoleSpy);
+    QCOMPARE(consoleForwarded,5);QCOMPARE(consoleCategory,other.category);
+    const std::array messages={QString(warning).replace("but 0x0","but 0x1234"),
+      QString(warning).replace("is focused","is enabled"),QString(warning).replace("disableSurface","enableSurface"),
+      QString(warning).replace("0x62b29d842ea0","0x0"),QStringLiteral("custom: ")+warning,warning+QLatin1Char('\n')};
+    for(const auto& message:messages){
+      const auto before=consoleForwarded;app::detail::forwardWaylandConsole(QtWarningMsg,wayland,message,consoleSpy);
+      QCOMPARE(consoleForwarded,before+1);QCOMPARE(consoleText,message);
+    }
+    const auto before=consoleForwarded;
+    app::detail::forwardWaylandConsole(QtWarningMsg,wayland,QString(warning).replace("62b29d842ea0","ABCD"),consoleSpy);
+    QCOMPARE(consoleForwarded,before);
+  }
+  void explicitQtConsoleControlsDisableNativeFiltering(){
+    const std::array names={"BIGLYBTC_WAYLAND_DIAGNOSTICS","QT_FATAL_WARNINGS","QT_MESSAGE_PATTERN","QT_LOGGING_RULES","QT_LOGGING_CONF"};
+    struct Restore {
+      const std::array<const char*,5>& names;
+      std::array<bool,5> present{};std::array<QByteArray,5> values;
+      explicit Restore(const std::array<const char*,5>& keys):names(keys){
+        for(std::size_t i=0;i<names.size();++i){present[i]=qEnvironmentVariableIsSet(names[i]);values[i]=qgetenv(names[i]);qunsetenv(names[i]);}
+      }
+      ~Restore(){for(std::size_t i=0;i<names.size();++i){if(present[i]){qputenv(names[i],values[i]);}else{qunsetenv(names[i]);}}}
+    } restore(names);
+    QCOMPARE(app::detail::waylandConsoleFilterAllowed(),std::string_view(qVersion())=="6.12.0");
+    for(std::size_t i=1;i<names.size();++i){qputenv(names[i],QByteArray{});QVERIFY(!app::detail::waylandConsoleFilterAllowed());qunsetenv(names[i]);}
+    qputenv(names[0],"1");QVERIFY(!app::detail::waylandConsoleFilterAllowed());
+  }
   void generatedSampleLibraryAndFiles() {
     QCOMPARE(QGuiApplication::platformName(), QStringLiteral("offscreen"));
     QApplication::setQuitOnLastWindowClosed(false);

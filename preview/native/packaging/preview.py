@@ -199,7 +199,8 @@ _IDLE_WAYLAND_DISABLE = re.compile(
 def run_preview(command, environment):
     """Keep the offline preview console usable without changing text input."""
     if (environment.get("BIGLYBTC_WAYLAND_DIAGNOSTICS") == "1"
-            or "QT_FATAL_WARNINGS" in environment):
+            or any(name in environment for name in (
+                "QT_FATAL_WARNINGS", "QT_MESSAGE_PATTERN", "QT_LOGGING_RULES", "QT_LOGGING_CONF"))):
         return subprocess.run(command, env=environment, check=False).returncode
     with subprocess.Popen(command, env=environment, stderr=subprocess.PIPE) as child:
         for line in child.stderr:

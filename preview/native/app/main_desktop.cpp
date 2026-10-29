@@ -5,6 +5,7 @@
 #include "country_approval.hpp"
 #include "scheduler_approval.hpp"
 #include "scheduler_service.hpp"
+#include "wayland_console.hpp"
 
 #include <QApplication>
 
@@ -53,6 +54,7 @@ int main(int argc, char** argv) {
   }
   try {
     if (!std::setlocale(LC_CTYPE, "")) { throw std::runtime_error("Unable to initialize the filesystem character locale"); }
+    biglybtc::app::detail::installWaylandConsoleFilter();
     QApplication application(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("BiglyBTC"));
     QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));

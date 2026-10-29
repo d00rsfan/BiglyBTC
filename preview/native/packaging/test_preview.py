@@ -21,7 +21,8 @@ raise SystemExit(preview['run_preview']([sys.executable, '-c', sys.argv[2]], os.
 class PreviewConsoleTests(unittest.TestCase):
     def run_child(self, stderr, *, environment=None, exit_code=7):
         env = os.environ.copy()
-        for key in ("BIGLYBTC_WAYLAND_DIAGNOSTICS", "QT_FATAL_WARNINGS"):
+        for key in ("BIGLYBTC_WAYLAND_DIAGNOSTICS", "QT_FATAL_WARNINGS",
+                    "QT_MESSAGE_PATTERN", "QT_LOGGING_RULES", "QT_LOGGING_CONF"):
             env.pop(key, None)
         env.update(environment or {})
         child = ("import sys; sys.stdout.buffer.write(b'preview stdout\\n'); "
@@ -51,6 +52,11 @@ class PreviewConsoleTests(unittest.TestCase):
 
     def test_fatal_warning_mode_keeps_the_triggering_warning_visible(self):
         self.assertEqual(self.run_child(WARNING, environment={"QT_FATAL_WARNINGS": "1"}), WARNING)
+
+    def test_explicit_qt_logging_controls_preserve_the_diagnostic(self):
+        for name in ("QT_MESSAGE_PATTERN", "QT_LOGGING_RULES", "QT_LOGGING_CONF"):
+            with self.subTest(name=name):
+                self.assertEqual(self.run_child(WARNING, environment={name: ""}), WARNING)
 
     def test_custom_format_and_clean_child_exit_are_preserved(self):
         formatted = b"warning: " + WARNING
