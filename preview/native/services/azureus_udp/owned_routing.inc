@@ -143,7 +143,10 @@ void OwnedPingTransport::pumpRouting(const std::shared_ptr<Routing>& round){
       const auto remaining=round->deadline-Clock::now();if(remaining<=Clock::duration::zero()){static_cast<void>(round->controller.finish(intent.node,azureus_control::LookupNodeState::Rejected,now));continue;}
       free->node=intent.node;free->peer=*peer;
       if(!normalRouter_->recordLookup(intent.target,QDateTime::currentMSecsSinceEpoch(),now)){*free={};round->failure=Failure::State;static_cast<void>(round->controller.finish(intent.node,azureus_control::LookupNodeState::Failed,now));continue;}
-      auto sent=findNode(*peer,intent.contact.protocol,intent.target,this,[this,round,node=intent.node](FindNodeOutcome outcome){routingReply(round,node,std::move(outcome));},remaining);
+      // A refresh has an overall five-minute budget; each actual NODE RPC
+      // retains the transport's independent thirty-second request ceiling.
+      const auto requestBudget=std::min(remaining,std::chrono::duration_cast<Clock::duration>(std::chrono::seconds{30}));
+      auto sent=findNode(*peer,intent.contact.protocol,intent.target,this,[this,round,node=intent.node](FindNodeOutcome outcome){routingReply(round,node,std::move(outcome));},requestBudget);
       if(!sent){*free={};static_cast<void>(round->controller.finish(intent.node,azureus_control::LookupNodeState::Failed,now));round->failure=sent.error();continue;}
       free->ticket=*sent;if(!round->controller.sent(intent.node,sent->value,now)){round->failure=Failure::State;static_cast<void>(round->controller.cancel(now));}
     }}
