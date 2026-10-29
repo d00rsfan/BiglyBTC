@@ -56,7 +56,8 @@ inline std::expected<std::optional<QByteArray>,storage::Error> libraryHttpSavedB
   const auto ascii=[](const core::Node* value){return value&&value->type==core::Node::Type::Bytes&&value->bytes.size()<=512
       &&std::ranges::all_of(value->bytes,[](unsigned char c){return c>=32&&c<=126;});};
   if(!ascii(user)||!ascii(password)||user->bytes.find(':')!=std::string::npos){return unsupported();}
-  const auto raw=QByteArray::fromStdString(user->bytes+":"+password->bytes);
+  QByteArray raw(user->bytes.data(),static_cast<qsizetype>(user->bytes.size()));
+  raw+=':';raw.append(password->bytes.data(),static_cast<qsizetype>(password->bytes.size()));
   return std::optional<QByteArray>{"Basic "+raw.toBase64()};
 }
 }
