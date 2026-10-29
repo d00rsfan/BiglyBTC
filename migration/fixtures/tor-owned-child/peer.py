@@ -59,12 +59,15 @@ finally:
 audit = {'pid': os.getpid(), 'parent': os.getppid(), 'port': port, 'commands': []}
 def record(command):
     audit['commands'].append(command)
-    fd = os.open('child-audit.json', os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    # Proactive ancestor retirement may terminate us during publication. Keep
+    # the last complete command prefix readable; this is diagnostic data only.
+    fd = os.open('child-audit.json.tmp', os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     try:
         os.write(fd, json.dumps(audit).encode('ascii'))
         os.fsync(fd)
     finally:
         os.close(fd)
+    os.replace('child-audit.json.tmp', 'child-audit.json')
 
 client, remote = server.accept()
 assert remote[0] == '127.0.0.1'

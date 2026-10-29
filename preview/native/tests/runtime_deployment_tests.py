@@ -110,8 +110,8 @@ def main():
                 or declared["artifact_sha256"] != original_sha or declared["artifact_bytes"] != provider.stat().st_size):
             raise ValueError("Original identity/tracker relocation differs from the reviewed manifest")
     elif args.mode == "mainline-routing":
-        if (not args.manifest or digest(args.manifest) != "bb84628c0b874c317f7bbd39dc5bd216b8ea9c19b9df5587e9773108b9e9c93f"
-                or original_sha != "35e6d55478547fdae5bce6fbc4c4c5a1bad576e2a943a1341c4df90e7f1da629" or provider.stat().st_size != 9194904
+        if (not args.manifest or digest(args.manifest) != "f746fd279755ea90f31e20b0c9131c46e5f0871c4aab3665f232975f98feb56e"
+                or original_sha != "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443" or provider.stat().st_size != 9198832
                 or not args.alternate or not args.interposition_driver or not args.preload):
             raise ValueError("Original identity/tracker relocation requires exact source/image and all rejection controls")
         declared = json.loads(args.manifest.read_bytes())

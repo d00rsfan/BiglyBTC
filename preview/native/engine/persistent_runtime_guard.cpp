@@ -206,9 +206,9 @@ bool relocatableOriginalIdentityProviderArtifact() {
 }
 bool relocatableMainlineRoutingProviderArtifact() {
   // Exact root-approved socket-qualified27 source/SDK/artifact lane.
-  return std::string_view(runtime_binding::manifest) == "bb84628c0b874c317f7bbd39dc5bd216b8ea9c19b9df5587e9773108b9e9c93f"
-      && std::string_view(runtime_binding::sha256) == "35e6d55478547fdae5bce6fbc4c4c5a1bad576e2a943a1341c4df90e7f1da629"
-      && runtime_binding::bytes == 9194904ULL;
+  return std::string_view(runtime_binding::manifest) == "f746fd279755ea90f31e20b0c9131c46e5f0871c4aab3665f232975f98feb56e"
+      && std::string_view(runtime_binding::sha256) == "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443"
+      && runtime_binding::bytes == 9198832ULL;
 }
 bool hashed(int descriptor) {
   Digest context;

@@ -220,13 +220,42 @@ private slots:
       QVERIFY(QFile::setPermissions(ancestor,QFile::ReadOwner|QFile::WriteOwner|QFile::ExeOwner));
       options.workingDirectory = ancestor+QStringLiteral("/run");
     }
+    struct stat ancestorBefore{};
+    if (mode == "reset-ancestor") {
+      QVERIFY(!::lstat(QFile::encodeName(QFileInfo(options.workingDirectory).absolutePath()).constData(),&ancestorBefore));
+    }
     OwnedTorChild child; QSignalSpy ready(&child,&OwnedTorChild::ready), failed(&child,&OwnedTorChild::failed);
     QVERIFY(child.start(options)); QTRY_COMPARE_WITH_TIMEOUT(failed.count(),1,5000);
     QCOMPARE(ready.count(),0); QVERIFY(child.joined()); QVERIFY(reaped(child.processId()));
     QCOMPARE(child.state(),OwnedTorChild::State::Failed);
-    QCOMPARE(failed.at(0).at(0).toString(),QStringLiteral("Owned Tor authority changed during authentication"));
-    const auto audit = QJsonDocument::fromJson(read(options.workingDirectory+QStringLiteral("/child-audit.json"))).object();
-    QCOMPARE(audit["commands"].toArray(),QJsonArray({"AUTHCHALLENGE","AUTHENTICATE","TAKEOWNERSHIP","RESETCONF __OwningControllerProcess","GETINFO version"}));
+    const auto reason = failed.at(0).at(0).toString();
+    const auto authenticationChanged = QStringLiteral("Owned Tor authority changed during authentication");
+    const auto retainedSourceChanged = QStringLiteral("Owned Tor retained source changed");
+    auto auditPath = options.workingDirectory+QStringLiteral("/child-audit.json");
+    if (mode == "reset-ancestor") {
+      // The retained-inode watcher may retire during RESETCONF, before the
+      // ownership handshake can issue GETINFO or reconcile the changed chain.
+      QVERIFY(reason == retainedSourceChanged || reason == authenticationChanged);
+      const auto retained = QFileInfo(options.workingDirectory).absolutePath()+QStringLiteral(".retained");
+      struct stat ancestorAfter{}; QVERIFY(!::lstat(QFile::encodeName(retained).constData(),&ancestorAfter));
+      QCOMPARE(ancestorAfter.st_dev,ancestorBefore.st_dev); QCOMPARE(ancestorAfter.st_ino,ancestorBefore.st_ino);
+      // SIGTERM can arrive between the fixture's ancestor rename and its final
+      // move of run back to the replacement. The joined child's durable audit
+      // must exist at exactly one of these two generated, owned locations.
+      const auto retainedAudit = retained+QStringLiteral("/run/child-audit.json");
+      QVERIFY(QFileInfo::exists(auditPath) != QFileInfo::exists(retainedAudit));
+      if (!QFileInfo::exists(auditPath)) { auditPath = retainedAudit; }
+    } else {
+      QCOMPARE(reason,authenticationChanged);
+    }
+    const auto commands = QJsonDocument::fromJson(read(auditPath)).object()["commands"].toArray();
+    const QJsonArray complete{"AUTHCHALLENGE","AUTHENTICATE","TAKEOWNERSHIP","RESETCONF __OwningControllerProcess","GETINFO version"};
+    if (mode == "reset-ancestor" && reason == retainedSourceChanged) {
+      const QJsonArray reset{"AUTHCHALLENGE","AUTHENTICATE","TAKEOWNERSHIP","RESETCONF __OwningControllerProcess"};
+      QVERIFY(commands == reset || commands == complete);
+    } else {
+      QCOMPARE(commands,complete);
+    }
     QCOMPARE(read(outsider),QByteArray("unselected-discovery-sentinel\n"));
     struct stat after{}; QVERIFY(!::lstat(QFile::encodeName(outsider).constData(),&after));
     QCOMPARE(after.st_dev,before.st_dev); QCOMPARE(after.st_ino,before.st_ino); QCOMPARE(after.st_size,before.st_size);

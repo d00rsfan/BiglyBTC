@@ -106,7 +106,8 @@ private slots:
     source.identity.reset();QVERIFY(QFile::remove(source.leaf));
     auto created=engine::PersistentSession::create({9911,9912,invalidate?9914U:9913U});QVERIFY(created);auto actual=std::move(*created);
     QVERIFY(actual->configureNetwork(policy));QVERIFY(actual->configureMainlineBootstrap({}));
-    QVERIFY(actual->configureOriginalMainlineIdentity(*source.lease));QVERIFY(actual->startIdle(*source.lease));
+    const auto configured=actual->configureOriginalMainlineIdentity(*source.lease);
+    QVERIFY2(configured,configured?"":configured.error().message.c_str());QVERIFY(actual->startIdle(*source.lease));
     QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&actual->mainlineDiscovery().originalIdentityActive),15000);
     const auto active=actual->mainlineDiscovery();QCOMPARE(active.originalIdentityAdoptions,std::uint64_t{1});
     QVERIFY(active.originalIdentityRequested&&!active.originalIdentityJoined&&!active.failure);
@@ -166,7 +167,8 @@ private slots:
       app::SessionBridge bridge;QSignalSpy ready(&bridge,&app::SessionBridge::columnLayoutSessionReady),samples(&bridge,&app::SessionBridge::nativeSessionReady),
           messages(&bridge,&app::SessionBridge::messageReady),closed(&bridge,&app::SessionBridge::sessionClosed);
       QVERIFY(bridge.openNormal(source.profile.toStdString()));
-      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!ready.empty()&&!samples.empty()&&QFile::exists(source.leaf),10000);
+      QTRY_VERIFY2_WITH_TIMEOUT(!bridge.busy()&&!ready.empty()&&!samples.empty()&&QFile::exists(source.leaf),
+          qPrintable(messages.isEmpty()?QStringLiteral("Host has not published the owned missing root"):messages.last().at(0).toString()),10000);
       QVERIFY(!mainlineFailure(messages));const auto bytes=test::read(source.leaf);
       QCOMPARE(bytes.size(),qsizetype{41});const auto key=QByteArray::fromHex(bytes.first(40));QCOMPARE(key.size(),qsizetype{20});
       QCOMPARE(bytes,key.toHex().toUpper()+'\n');

@@ -940,12 +940,12 @@ def install_private_original_identity_libtorrent(destination, dependency, source
         "package_role": "Original Debian package metadata and notices retained; its shared objects replaced"}
 
 
-PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256 = '35e6d55478547fdae5bce6fbc4c4c5a1bad576e2a943a1341c4df90e7f1da629'
-PRIVATE_MAINLINE_ROUTING_LIBTORRENT_BYTES = 9194904
-PRIVATE_MAINLINE_ROUTING_RUNTIME_MANIFEST_SHA256 = 'bb84628c0b874c317f7bbd39dc5bd216b8ea9c19b9df5587e9773108b9e9c93f'
-PRIVATE_MAINLINE_ROUTING_CANDIDATE = '/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r1'
-PRIVATE_MAINLINE_ROUTING_RECORDS = dict(PRIVATE_ORIGINAL_IDENTITY_RECORDS, **{'provider-mainline-routing-source-build-record.json': 'ac30c3c79d71d35c85475a5dbd3d551b4f8ac2178561b45c8452e16d8994f01b'})
-PRIVATE_MAINLINE_ROUTING_VERIFIERS = dict(PRIVATE_ORIGINAL_IDENTITY_VERIFIERS, **{'verify_runtime_manifest_mainline_routing.py': '5ee7369b7d135ed09620410e22b788c7bd1ee201cf9aea29fb9e55a68582d306'})
+PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256 = '355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443'
+PRIVATE_MAINLINE_ROUTING_LIBTORRENT_BYTES = 9198832
+PRIVATE_MAINLINE_ROUTING_RUNTIME_MANIFEST_SHA256 = 'f746fd279755ea90f31e20b0c9131c46e5f0871c4aab3665f232975f98feb56e'
+PRIVATE_MAINLINE_ROUTING_CANDIDATE = '/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2'
+PRIVATE_MAINLINE_ROUTING_RECORDS = dict(PRIVATE_ORIGINAL_IDENTITY_RECORDS, **{'provider-mainline-routing-source-build-record.json': '623778fc3a5b25144e842a39154dab4cd107e4f115bc6474dd973f67888582d3'})
+PRIVATE_MAINLINE_ROUTING_VERIFIERS = dict(PRIVATE_ORIGINAL_IDENTITY_VERIFIERS, **{'verify_runtime_manifest_mainline_routing.py': 'c0eb639b06411c501a52a4e00bc503f529363d9518eb6b2dd10bffbbb8e4455f'})
 
 def private_mainline_routing_source_libtorrent(path, manifest_path, build):
     """Read-only exact private preflight; no loader/subprocess/target invocation."""
@@ -1015,7 +1015,7 @@ def private_mainline_routing_source_libtorrent(path, manifest_path, build):
         "inline constexpr char artifact[] = " + json.dumps(str(source)) + ";\n"
         "inline constexpr char sha256[] = " + json.dumps(PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256) + ";\n"
         "inline constexpr char manifest[] = " + json.dumps(PRIVATE_MAINLINE_ROUTING_RUNTIME_MANIFEST_SHA256) + ";\n"
-        "inline constexpr unsigned long long bytes = 9194904ULL;\n}\n")
+        "inline constexpr unsigned long long bytes = 9198832ULL;\n}\n")
     if header_path.read_text() != header:
         raise ValueError("Application compiled binding does not select this exact private provider")
     return source, payload
@@ -1055,7 +1055,7 @@ def install_private_mainline_routing_libtorrent(destination, dependency, source,
         "artifact_sha256": PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256, "artifact_bytes": PRIVATE_MAINLINE_ROUTING_LIBTORRENT_BYTES,
         "source_input": str(source), "upstream_commit": SOURCE_LIBTORRENT_COMMIT,
         "source_build_record_sha256": PRIVATE_MAINLINE_ROUTING_RECORDS["provider-mainline-routing-source-build-record.json"],
-        "parent_source_build_record_sha256": PRIVATE_MAINLINE_ROUTING_RECORDS["provider-original-identity-source-build-record.json"],
+        "parent_source_build_record_sha256": 'ac30c3c79d71d35c85475a5dbd3d551b4f8ac2178561b45c8452e16d8994f01b',
         "runtime_manifest_sha256": PRIVATE_MAINLINE_ROUTING_RUNTIME_MANIFEST_SHA256,
         "artifact": canonical.relative_to(destination).as_posix(), "aliases": aliases,
         "instrumented": False, "causal_qualified": False, "shipping_approved": False,

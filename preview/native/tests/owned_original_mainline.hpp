@@ -24,6 +24,11 @@ struct Source {
   explicit Source(const QByteArray& key){
     test::require(root.isValid(),"Owned original-ID directory");profile=root.filePath("profile");
     test::require(QDir().mkpath(profile+"/plugins/mldht"),"Owned original-ID parent");
+    // These generated parents also exercise first creation, which correctly
+    // rejects group/other writers. Do not inherit the caller's umask here.
+    for(const auto& parent:{profile,profile+"/plugins",profile+"/plugins/mldht"}){
+      test::require(QFile::setPermissions(parent,QFile::ReadOwner|QFile::WriteOwner|QFile::ExeOwner),"Private owned original-ID parent");
+    }
     leaf=profile+"/plugins/mldht/baseID.config";bytes="# retained original\r\n"+key.toHex().toUpper()+"\r\n# future\n";
     QFile file(leaf);test::require(file.open(QIODevice::WriteOnly),"Owned original-ID file");
     test::require(file.write(bytes)==bytes.size()&&file.flush(),"Owned original-ID publish");file.close();

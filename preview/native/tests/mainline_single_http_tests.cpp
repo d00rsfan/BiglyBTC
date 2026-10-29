@@ -123,8 +123,12 @@ private slots:
   void sourceBodyMissingFailureNarrowingAndIntervals(){
     const auto key=hash();const std::span<const std::byte,20> bytes{key.bytes().data(),20};
     auto out=wire::scrape(counts(key).toStdString(),bytes,100,1000,900,false,17);QVERIFY(out.comparable);QCOMPARE(out.complete,std::int64_t{5});QCOMPARE(out.incomplete,std::int64_t{6});QCOMPARE(out.regularDelayMillis,std::optional<std::int64_t>{967000});
-    core::QueueOriginalTrackerResponse response;response.requested();response.observe(out);QVERIFY(!response.regularDue(967099));QVERIFY(response.regularDue(967100));
+    // The parsed BT interval is retained, but a healthy regular response
+    // suppresses this configured Mainline fallback even after that interval.
+    core::QueueOriginalTrackerResponse response;response.requested();response.observe(out);QVERIFY(!response.regularDue(967099));QVERIFY(!response.regularDue(967100));
     auto missing=wire::scrape("d5:filesdee",bytes,200,1100,1000,false,0);QVERIFY(missing.definitiveFailure);QCOMPARE(missing.regularDelayMillis,std::optional<std::int64_t>{10800000});response.observe(missing);QCOMPARE(response.response().content->seeds,5);
+    core::QueueOriginalTrackerResponse retry;retry.requested();retry.observe(missing);
+    QVERIFY(!retry.regularDue(10800199));QVERIFY(retry.regularDue(10800200));
     auto failure=wire::scrape("d14:failure reason4:nopee",bytes,200,1100,1000,false,0);QVERIFY(failure.definitiveFailure);
     QVERIFY(!wire::scrape("d5:filesi1ee",bytes,200,1100,1000,false,0).definitiveFailure);
     auto defaults=wire::scrape(krpc::dictionary({{"files",krpc::dictionary({{QByteArray(reinterpret_cast<const char*>(key.bytes().data()),20),"de"}})}}).toStdString(),bytes,100,1000,900,false,0);QVERIFY(defaults.comparable);QCOMPARE(defaults.complete,std::int64_t{0});QCOMPARE(defaults.downloaded,std::int64_t{-1});

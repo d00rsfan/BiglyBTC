@@ -1,7 +1,7 @@
 # Additional exact identity/tracker lane. All prior registrations stay scoped.
 if(BIGLYBTC_LOCAL_ENGINE AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
   file(SHA256 "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" _biglybtc_original_identity_manifest)
-  if(_biglybtc_original_identity_manifest STREQUAL "bb84628c0b874c317f7bbd39dc5bd216b8ea9c19b9df5587e9773108b9e9c93f")
+  if(_biglybtc_original_identity_manifest STREQUAL "f746fd279755ea90f31e20b0c9131c46e5f0871c4aab3665f232975f98feb56e")
     if(NOT TARGET biglybtc-runtime-interposition-driver OR NOT TARGET biglybtc-runtime-interposer
         OR NOT EXISTS "${BIGLYBTC_PERSISTENT_NEGATIVE_LT_LIBRARY}")
       message(FATAL_ERROR "Identity/tracker qualification requires all existing rejection fixtures")
