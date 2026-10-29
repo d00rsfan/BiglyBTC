@@ -1,0 +1,72 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+    Start 218: queue-policy
+1/5 Test #218: queue-policy .....................   Passed    0.03 sec
+    Start 221: managed-queue
+2/5 Test #221: managed-queue ....................   Passed   63.77 sec
+    Start 281: mainline-single-http
+3/5 Test #281: mainline-single-http .............***Timeout 240.11 sec
+********* Start testing of MainlineSingleHttpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleHttpTests::initTestCase()
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(global-DHT-disabled-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(private-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(per-download-DHT-denied-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(DHT-disabled-healthy-announce-no-redundant-scrape)
+PASS   : MainlineSingleHttpTests::directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(private-HTTPS-saved-JKS-regular-scrape)
+PASS   : MainlineSingleHttpTests::directHeldResponseLosesAuthorityWhenCurrentTrackerPermissionChanges()
+PASS   : MainlineSingleHttpTests::actualAnnounceDefersWithoutReplacingRetainedContentOrShorteningScrapeDue()
+PASS   : MainlineSingleHttpTests::chronologicalMergeRejectsOldCountStatusAndPreScrapeAnnounceDeadline()
+PASS   : MainlineSingleHttpTests::pendingQtScrapeCutsOldHeavyAnnounceButRetainsNewerAnnounceCountsAndTiming()
+PASS   : MainlineSingleHttpTests::providerScrapeDoesNotSettleTheSeparatePhysicalQtTimingWindow()
+PASS   : MainlineSingleHttpTests::announceDeadlinePreservesJavaOverflowWithCheckedSignedAddition()
+PASS   : MainlineSingleHttpTests::everyActualAnnouncePostponesInOrderAndLostRingWithdrawsLatestResponse()
+PASS   : MainlineSingleHttpTests::admittedProxyReaderRequiresActualCapturedUrlFullSubjectAndFreshTrackerPermission()
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(HTTP-healthy-announce-no-redundant-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(HTTP-failed-announce-real-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(private-HTTPS-saved-JKS-real-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(private-HTTP-stop-before-held-scrape)
+PASS   : MainlineSingleHttpTests::socks5RoutesKeepExplicitProxyDnsAndSavedConfigurationAuthority()
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(http-no-auth)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(http-proxy-userpass)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(https-no-auth)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(https-proxy-userpass)
+PASS   : MainlineSingleHttpTests::actualSocks5LocalDnsUsesNumericConnectAndCancellationCannotReuseOldReply()
+PASS   : MainlineSingleHttpTests::injectedTrackerLookupHostNotFoundUsesFreshSameProxyDomainProposal()
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(method-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(auth-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(connect-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(malformed-socks-version)
+PASS   : MainlineSingleHttpTests::savedProxyChangesWithdrawResolvedEndpointBeforeAnyConnection()
+PASS   : MainlineSingleHttpTests::genuinePrivateOrDhtDisabledSavedOwnerConsumesProxyResponseWithoutDiscovery(public-DHT-disabled)
+PASS   : MainlineSingleHttpTests::genuinePrivateOrDhtDisabledSavedOwnerConsumesProxyResponseWithoutDiscovery(private-Tracker-only)
+PASS   : MainlineSingleHttpTests::originalUrlMappingAndRoutePermissions()
+PASS   : MainlineSingleHttpTests::sourceBodyMissingFailureNarrowingAndIntervals()
+PASS   : MainlineSingleHttpTests::heldSettingsAreStrictAndLow32OriginalBooleans()
+PASS   : MainlineSingleHttpTests::actualHostnameHttpChunkedAndCancellationReuse()
+PASS   : MainlineSingleHttpTests::dnsProposalRequiresFreshOwnerPermissionBeforeSocket()
+
+    Start 282: pure-i2p-datagram-codec
+4/5 Test #282: pure-i2p-datagram-codec ..........   Passed    0.04 sec
+    Start 283: pure-i2p-client-identity
+5/5 Test #283: pure-i2p-client-identity .........   Passed    0.01 sec
+
+80% tests passed, 1 tests failed out of 5
+
+Label Time Summary:
+crypto           =   0.05 sec*proc (2 tests)
+discovery        = 240.11 sec*proc (1 test)
+i2p              =   0.05 sec*proc (2 tests)
+network          = 240.11 sec*proc (1 test)
+no-network       =   0.05 sec*proc (2 tests)
+owned            = 240.11 sec*proc (1 test)
+queue            =  63.81 sec*proc (2 tests)
+runtime-bound    =  63.77 sec*proc (1 test)
+slow             = 240.11 sec*proc (1 test)
+tls              = 240.11 sec*proc (1 test)
+unit             =  63.85 sec*proc (4 tests)
+
+Total Test time (real) = 303.99 sec
+
+The following tests FAILED:
+	281 - mainline-single-http (Timeout)                    discovery network owned slow tls
+Errors while running CTest

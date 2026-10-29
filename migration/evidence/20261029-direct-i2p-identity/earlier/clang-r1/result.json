@@ -1,0 +1,27 @@
+{
+  "status": "FAIL",
+  "source_commit": "787a3be2d7ac56d9c6ca3a2593af4ee70b2e46ef",
+  "lane": "clang",
+  "prior_qualification_sha256": "eb95dee29f2fca1b1f7620f2ec8864f4d358f765ed3200845a2148c44649e0e2",
+  "historical_passes_pooled": false,
+  "provider_rebuilt": false,
+  "compiled_targets": [
+    "biglybtc-mainline-single-http-tests",
+    "biglybtc-managed-queue-tests",
+    "biglybtc-queue-policy-tests",
+    "biglybtc-mainline-single-tracker-owner-tests",
+    "BiglyBTC",
+    "BiglyBTC-headless",
+    "biglybtc-preview-smoke"
+  ],
+  "compile_only_suites": [
+    "mainline-single-tracker-owner"
+  ],
+  "cache": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+  "runner_sha256": "909c248aa4ef73af5972cae7a87d4293193a1aefebbc2aee3133a55f265123be",
+  "source_receipt_sha256": "90599ec39fa8585ff53a628f883e23d47e8bcd5846aad51aaabc3cecb0beab05",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "dist_manifest_before": "ffaaa3a5b9a0ad7333d3a315b98d296ca99369514d7df6dcef38ae12ff77c826",
+  "failure": "AssertionError('tests')",
+  "commands_sha256": "d0116df0bd293af61e666f6b10f3799bb7574b8d10e8511f5b50e9d8ffe50e70"
+}

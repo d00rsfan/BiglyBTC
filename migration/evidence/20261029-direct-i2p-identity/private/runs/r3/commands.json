@@ -1,0 +1,69 @@
+[
+  {
+    "name": "stage",
+    "command": [
+      "python3",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--output",
+      "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/candidate",
+      "--libtorrent-package",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+      "--source-libtorrent",
+      "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--private-mainline-routing-provider-manifest",
+      "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-runtime.json"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 4.725,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/stage.log",
+    "log_sha256": "4a829147c2d3ef5001f0b665f1f3dffa5db512f86e548995e8953fce79d47d0d"
+  },
+  {
+    "name": "loader-biglybtc-mainline-single-http-tests",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/loader-biglybtc-mainline-single-http-tests.log",
+    "log_sha256": "85cf5b3135d7eaca752b4efc427568c76f64cd0b2835b3ad7d51cd2351a62a6b"
+  },
+  {
+    "name": "selected-1",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/biglybtc-mainline-single-http-tests",
+      "normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery:private-HTTPS-saved-JKS-real-scrape",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/selected-1.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/selected-1.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 20.336,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/selected-1.log",
+    "log_sha256": "b73e860fc3a9e2d937b4ad462338995fb0a58adcfe558e13292c18ce2055f9ab"
+  },
+  {
+    "name": "selected-2",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/biglybtc-mainline-single-http-tests",
+      "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline:private-HTTPS-saved-JKS-regular-scrape",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/selected-2.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/selected-2.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 20.381,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/selected-2.log",
+    "log_sha256": "d0403ff0dfc71ac5231a5a6e1a918a4061bdf90e4fd54ac756330f043d2f6f19"
+  }
+]

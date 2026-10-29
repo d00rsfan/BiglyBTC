@@ -1,0 +1,65 @@
+{
+  "status": "SOURCE_ONLY_PUBLIC_FACTORY_AND_CONCRETE_READER_CLASS_CHECK",
+  "references": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/actual-offline-interop/dependencies/i2p-2.13.0.jar",
+      "sha256": "d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896",
+      "classes": [
+        {
+          "path": "net/i2p/client/impl/I2PClientImpl.class",
+          "sha256": "5599d7e61be73d53275d73d62aa3d8542b28b8964e87c9e95de6d2f0f71a1d55",
+          "public_class": true,
+          "abstract_class": false,
+          "required_public_factory": {
+            "flags": 1,
+            "name": "createSession",
+            "descriptor": "(Lnet/i2p/I2PAppContext;Ljava/io/InputStream;Ljava/util/Properties;)Lnet/i2p/client/I2PSession;"
+          }
+        },
+        {
+          "path": "net/i2p/client/impl/I2PSessionImpl.class",
+          "sha256": "43876b679a75a7f66415d257d61c8d29f22774f41f632bda2e3128173eb49c93",
+          "public_class": true,
+          "abstract_class": true
+        },
+        {
+          "path": "net/i2p/client/impl/I2PSessionMuxedImpl.class",
+          "sha256": "a3b6f589c44efd9014ce318ef2e9fc17efdfec321678c5c515336aa9423f8ab6",
+          "public_class": false,
+          "abstract_class": false
+        }
+      ]
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+      "classes": [
+        {
+          "path": "net/i2p/client/impl/I2PClientImpl.class",
+          "sha256": "19853e2a82b65c9696c16e538bdaf7a90efd6ebc28c084669899f200dda7a56c",
+          "public_class": true,
+          "abstract_class": false,
+          "required_public_factory": {
+            "flags": 1,
+            "name": "createSession",
+            "descriptor": "(Lnet/i2p/I2PAppContext;Ljava/io/InputStream;Ljava/util/Properties;)Lnet/i2p/client/I2PSession;"
+          }
+        },
+        {
+          "path": "net/i2p/client/impl/I2PSessionImpl.class",
+          "sha256": "92a1c766d46185269a24c1d3c7f1b3b14e677c6ace10f53d9751d6c0e585b823",
+          "public_class": true,
+          "abstract_class": true
+        },
+        {
+          "path": "net/i2p/client/impl/I2PSessionMuxedImpl.class",
+          "sha256": "bc32610d168acca4a11b9efac653610cbec78da1a49efb39d5352b3af8ef8936",
+          "public_class": false,
+          "abstract_class": false
+        }
+      ]
+    }
+  ],
+  "javac_or_java_executed": false,
+  "whole_core_equivalence": false
+}

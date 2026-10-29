@@ -1,0 +1,10 @@
+{
+  "immutable_receipt_sha256": "35bd5bcb1b5ec72deb10cb5b3440cd22d16488a1be8367f3bab551c7842aaeca",
+  "path": "preview/native/tests/CMakeLists.txt",
+  "original_staging_path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/staging/preview/native/tests/CMakeLists.txt",
+  "original_staging_scope": "implementation5df before the subsequent CMake-only budget change",
+  "qualified_afterimage_commit": "5abc17533521c881971d4e3f5551ff2963d4c648",
+  "qualified_afterimage_git_blob": "5dd306228d4a8bfb7c414d36bb964a5ff8f93eb2",
+  "qualified_afterimage_sha256": "d18f441f45cb624c8e0f783601c0ea11c8753013cd3405bdedeed7c712d726ce",
+  "association": "The inherited original staging path is superseded by this exact committed timeout afterimage; original receipt and runtime pins remain unchanged."
+}

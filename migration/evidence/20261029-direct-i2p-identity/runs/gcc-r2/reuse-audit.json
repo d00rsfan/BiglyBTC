@@ -1,0 +1,21 @@
+{
+  "prior_source_commit": "5dfbd587e16e86122edd548f861a67430c20586d",
+  "current_source_commit": "5abc17533521c881971d4e3f5551ff2963d4c648",
+  "only_changed_source": "preview/native/tests/CMakeLists.txt",
+  "reused_passed_suites": [
+    "mainline-single-tracker-owner",
+    "managed-queue",
+    "pure-i2p-client-identity",
+    "pure-i2p-datagram-codec",
+    "queue-policy"
+  ],
+  "all_built_images_identical": true,
+  "prior_evidence_sha256": {
+    "result.json": "d495a792a19b628061db9c7ae4120e6c4b5696270d977df7b2223910fee19ff9",
+    "commands.json": "df6a3b79f323c2fd73508760ff33145e84bf4b32564664e41a37dc08d6226e8b",
+    "images-before.json": "6155757c1d2abb4263a9affd3cdfbdae8f62e4b37bb2f1a30ca0f55c85f7f280",
+    "source-before.json": "8d14e194d7b9f0f93beeac62354fc777412767cce2a896d403ab487aad146774",
+    "tests.xml": "f0552ce2475be73b7a30e4b5de85b653a774e027725f026229480209f7af61d7",
+    "ctest-full.log": "e9ef2cb60630dd6845e9b3ee8a96a124dafc805c8b50511816fa4a394fc6c84b"
+  }
+}

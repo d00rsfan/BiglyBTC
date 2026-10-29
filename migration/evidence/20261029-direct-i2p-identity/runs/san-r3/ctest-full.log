@@ -1,0 +1,96 @@
+Start testing: Oct 29 12:51 IST
+----------------------------------------------------------
+281/283 Testing: mainline-single-http
+281/283 Test: mainline-single-http
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-http-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests
+"mainline-single-http" start time: Oct 29 12:51 IST
+Output:
+----------------------------------------------------------
+********* Start testing of MainlineSingleHttpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleHttpTests::initTestCase()
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(global-DHT-disabled-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(private-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(per-download-DHT-denied-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(DHT-disabled-healthy-announce-no-redundant-scrape)
+PASS   : MainlineSingleHttpTests::directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(private-HTTPS-saved-JKS-regular-scrape)
+PASS   : MainlineSingleHttpTests::directHeldResponseLosesAuthorityWhenCurrentTrackerPermissionChanges()
+PASS   : MainlineSingleHttpTests::actualAnnounceDefersWithoutReplacingRetainedContentOrShorteningScrapeDue()
+PASS   : MainlineSingleHttpTests::chronologicalMergeRejectsOldCountStatusAndPreScrapeAnnounceDeadline()
+PASS   : MainlineSingleHttpTests::pendingQtScrapeCutsOldHeavyAnnounceButRetainsNewerAnnounceCountsAndTiming()
+PASS   : MainlineSingleHttpTests::providerScrapeDoesNotSettleTheSeparatePhysicalQtTimingWindow()
+PASS   : MainlineSingleHttpTests::announceDeadlinePreservesJavaOverflowWithCheckedSignedAddition()
+PASS   : MainlineSingleHttpTests::everyActualAnnouncePostponesInOrderAndLostRingWithdrawsLatestResponse()
+PASS   : MainlineSingleHttpTests::admittedProxyReaderRequiresActualCapturedUrlFullSubjectAndFreshTrackerPermission()
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(HTTP-healthy-announce-no-redundant-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(HTTP-failed-announce-real-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(private-HTTPS-saved-JKS-real-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(private-HTTP-stop-before-held-scrape)
+PASS   : MainlineSingleHttpTests::socks5RoutesKeepExplicitProxyDnsAndSavedConfigurationAuthority()
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(http-no-auth)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(http-proxy-userpass)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(https-no-auth)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(https-proxy-userpass)
+PASS   : MainlineSingleHttpTests::actualSocks5LocalDnsUsesNumericConnectAndCancellationCannotReuseOldReply()
+PASS   : MainlineSingleHttpTests::injectedTrackerLookupHostNotFoundUsesFreshSameProxyDomainProposal()
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(method-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(auth-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(connect-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(malformed-socks-version)
+PASS   : MainlineSingleHttpTests::savedProxyChangesWithdrawResolvedEndpointBeforeAnyConnection()
+PASS   : MainlineSingleHttpTests::genuinePrivateOrDhtDisabledSavedOwnerConsumesProxyResponseWithoutDiscovery(public-DHT-disabled)
+PASS   : MainlineSingleHttpTests::genuinePrivateOrDhtDisabledSavedOwnerConsumesProxyResponseWithoutDiscovery(private-Tracker-only)
+PASS   : MainlineSingleHttpTests::originalUrlMappingAndRoutePermissions()
+PASS   : MainlineSingleHttpTests::sourceBodyMissingFailureNarrowingAndIntervals()
+PASS   : MainlineSingleHttpTests::heldSettingsAreStrictAndLow32OriginalBooleans()
+PASS   : MainlineSingleHttpTests::actualHostnameHttpChunkedAndCancellationReuse()
+PASS   : MainlineSingleHttpTests::dnsProposalRequiresFreshOwnerPermissionBeforeSocket()
+PASS   : MainlineSingleHttpTests::neverAdmittedSavedHttpFailureUsesSameMainlineConsumerWithoutPayloadAccess()
+PASS   : MainlineSingleHttpTests::savedTrackerTiersBindAllUrlsAndPreservePrimaryFallbackAndRawIdentity()
+PASS   : MainlineSingleHttpTests::savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply(ordered-tiers)
+PASS   : MainlineSingleHttpTests::savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply(stable-shuffled-tier)
+PASS   : MainlineSingleHttpTests::savedBasicChallengeAndCacheAreExactRealmOriginAndSecretFreeScope()
+PASS   : MainlineSingleHttpTests::actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls(http)
+PASS   : MainlineSingleHttpTests::actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls(verified-https)
+PASS   : MainlineSingleHttpTests::basicAuthorizationNeverCrossesRedirectOriginAndWrongPasswordStops()
+PASS   : MainlineSingleHttpTests::changedSavedCredentialsAndCancellationRevokeBeforeRetrySocket()
+PASS   : MainlineSingleHttpTests::unchangedCacheCannotSurviveInternalTrackerPolicyChangeBeforeRetry()
+PASS   : MainlineSingleHttpTests::thirdAuthenticationOriginExhaustionIsUnknownWithoutAThirdCredential()
+PASS   : MainlineSingleHttpTests::genuineNeverAdmittedOwnerUsesSavedBasicWithoutPayloadOrHiddenTorrent()
+PASS   : MainlineSingleHttpTests::originalMinimumFailureAndSingleOnlyDialectAreSourceDerived()
+PASS   : MainlineSingleHttpTests::awaitingOwnerDeadlineCannotManufactureNetworkFailure()
+PASS   : MainlineSingleHttpTests::gzipMemberBoundsCrcAndRedirectScopeAreExplicit()
+PASS   : MainlineSingleHttpTests::actualSameHostRedirectRequiresFreshAuthorityAndDecodesGzip()
+PASS   : MainlineSingleHttpTests::redirectedProposalRevocationAndLateCompressedReplyCannotGrant()
+PASS   : MainlineSingleHttpTests::actualGzipBombAndRedirectLoopAreUnavailableRatherThanError()
+PASS   : MainlineSingleHttpTests::actualRedirectChainStopsBeforeSeventhRequest()
+PASS   : MainlineSingleHttpTests::redirectedTlsChecksTheNewHostnameBeforeSendingHash()
+PASS   : MainlineSingleHttpTests::originalJksTrustUsesLastAliasAndFirstKeyCertificateAndChecksIntegrity()
+PASS   : MainlineSingleHttpTests::savedHttpsTrustIsProfileBoundReadOnlyAndCannotDisableOrdinaryHttp()
+PASS   : MainlineSingleHttpTests::savedJksAnchorsDriveActualTlsAndFreshGatesRevokeReplacedTrust()
+PASS   : MainlineSingleHttpTests::actualTlsRequiresRootAndHostnameAndSupportsTrustedOwnedRoot()
+PASS   : MainlineSingleHttpTests::actualJdk17KeytoolJksMatchesItsExportedTrustedCertificate()
+PASS   : MainlineSingleHttpTests::cleanupTestCase()
+Totals: 63 passed, 0 failed, 0 skipped, 0 blacklisted, 323889ms
+********* Finished testing of MainlineSingleHttpTests *********
+<end of output>
+Test time = 324.17 sec
+----------------------------------------------------------
+Test Passed.
+"mainline-single-http" end time: Oct 29 12:57 IST
+"mainline-single-http" time elapsed: 00:05:24
+----------------------------------------------------------
+
+End testing: Oct 29 12:57 IST
+
+discovery = 324.17 sec*proc
+
+network = 324.17 sec*proc
+
+owned = 324.17 sec*proc
+
+slow = 324.17 sec*proc
+
+tls = 324.17 sec*proc
+

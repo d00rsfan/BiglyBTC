@@ -1,0 +1,12 @@
+d1fc66f4b71adb1101ac7365cf5255e07444e238c66e656eb7202311fd27932c  /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2p-client-identity-tests
+0e72dac1212b98b6450d1b17d403680be25002d47465dbdb460d24c45cbbde3c  /usr/lib/jvm/java-17-openjdk-amd64/bin/java
+ef60c7cfcdbd1313151738e56754e09a4706f7d822899054281d4def617bce1d  /usr/lib/jvm/java-17-openjdk-amd64/bin/javac
+d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896  /home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/actual-offline-interop/dependencies/i2p-2.13.0.jar
+b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5  /home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+dd5f1f78c8086901467aa22f9d3f0fa96f3301f6e747a6b11dbb94964b561b34  /home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/amendments/offline-fixture-bridge/interop/ClientIdentityVectors.java
+2f0554e07af3496216dd5645d91b1c65711aecfb033fd19109df59f0bd3bc1c7  /home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram/dsa.sender
+10cdba035bd41026a230a4d58981e0122b442d07e8c2f1038e7a5142c6c20a66  /home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram/dsa.recipient
+e9ff0e6e6de95da56ff09f4e3e0f481d67585f0a68aafdeef0f86f7b8533ce17  /home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram/dsa.known-test-key
+0c80bed1687e0f7fcbc915eab269f9b00e5f40f77dd966eb0829b040a8c14db8  /home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram/ed25519.sender
+c439e09b76788b0157a984d060cb0cd462bd38b16f27c1cd45c20df5c4cc9b3a  /home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram/ed25519.recipient
+644d50ab64864c20a12b3c4656d46b4a48f69ef7c47ecdc8415cd28316b22ef5  /home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram/ed25519.known-test-key

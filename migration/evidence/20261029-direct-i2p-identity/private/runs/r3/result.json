@@ -1,0 +1,128 @@
+{
+  "status": "PASS_PRIVATE_DIRECT_AND_SOCKS_HTTPS",
+  "source_commit": "5abc17533521c881971d4e3f5551ff2963d4c648",
+  "focused_results": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/gcc-r3/result.json",
+      "sha256": "b1e4703b4d5aaa1dc2bb1da90f576a437aaa519d3703a836e3813bbe16e2e8f0",
+      "images_sha256": "6155757c1d2abb4263a9affd3cdfbdae8f62e4b37bb2f1a30ca0f55c85f7f280",
+      "source_before_sha256": "d496cce6a6544775bd6461c84fb9356b0718941117e70f970f41e40cf66b8160",
+      "fresh_suites": [
+        "mainline-single-http"
+      ],
+      "reused_passed_suites": [
+        "mainline-single-tracker-owner",
+        "managed-queue",
+        "pure-i2p-client-identity",
+        "pure-i2p-datagram-codec",
+        "queue-policy"
+      ],
+      "prior_result": {
+        "path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/gcc-r1/result.json",
+        "sha256": "d495a792a19b628061db9c7ae4120e6c4b5696270d977df7b2223910fee19ff9"
+      },
+      "reuse_audit_sha256": "19636d012d6950a357ce3dbc034f8bfeda8d7d0b64ef3831dee74e3b9b27ebca"
+    },
+    "clang": {
+      "path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/clang-r3/result.json",
+      "sha256": "9a04aa1959c4ec7a8f6806f6f4d72f5fc7e22df612ac78db03182a272e02e042",
+      "images_sha256": "08b6b5c599bff87d8c40c02964ee9fed147cb4b37815040701f19f9cd95876df",
+      "source_before_sha256": "d496cce6a6544775bd6461c84fb9356b0718941117e70f970f41e40cf66b8160",
+      "fresh_suites": [
+        "mainline-single-http"
+      ],
+      "reused_passed_suites": [
+        "managed-queue",
+        "pure-i2p-client-identity",
+        "pure-i2p-datagram-codec",
+        "queue-policy"
+      ],
+      "prior_result": {
+        "path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/clang-r1/result.json",
+        "sha256": "1047859308167e3e892fee9dddea3386fed52b533ebaf5a29586e7f5c88762cc"
+      },
+      "reuse_audit_sha256": "6c354aafbcbaf8a0dbe68e4b2f83e433251277a6b88bb66ca4df10475e59b0f2"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/san-r3/result.json",
+      "sha256": "30a811fc62b80f8d2d38c05212d064ee1acebbbf0cdb5d02e0514c20e2a9a79f",
+      "images_sha256": "2567f49d24e19b03a0465673a11c60f17eb73be84da1d91600d128fcf8bf7999",
+      "source_before_sha256": "d496cce6a6544775bd6461c84fb9356b0718941117e70f970f41e40cf66b8160",
+      "fresh_suites": [
+        "mainline-single-http"
+      ],
+      "reused_passed_suites": [
+        "mainline-single-tracker-owner",
+        "managed-queue",
+        "pure-i2p-client-identity",
+        "pure-i2p-datagram-codec",
+        "queue-policy"
+      ],
+      "prior_result": {
+        "path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/san-r1/result.json",
+        "sha256": "b6661f3dad2130b384410522477a893cb16fc996d02abdd1f539f596747d4078"
+      },
+      "reuse_audit_sha256": "38da0e8f103561842f54bae844754de5df5c4012714e719cba0c921b1030c7a7"
+    }
+  },
+  "builds_executed": false,
+  "promotion_executed": false,
+  "historical_runtime_passes_pooled": false,
+  "qualification_scope": "fresh HTTP1 per lane; explicit same-image prior 5/4/5 suite origins; no full 6/5/6 rerun",
+  "candidate": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/candidate",
+  "candidate_manifest_sha256": "10ba626352a5cd6cf6bb6263e3e6657084ba978799e65b7a89797ec4f57a2655",
+  "actual_leaf_count": 119,
+  "copied_images": {
+    "biglybtc-mainline-single-http-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests",
+      "sha256": "5deee98eeaa58a29630dd629551addf83550f1be8cfa2b7ff4d5be03e1a590ab",
+      "bytes": 6668832
+    }
+  },
+  "actual_tests": [
+    {
+      "target": "biglybtc-mainline-single-http-tests",
+      "selector": "normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery:private-HTTPS-saved-JKS-real-scrape",
+      "exit": 0,
+      "xml_sha256": "2b044d3ce0b11f9310f404b542b6bf8c2d9defb80f640719b17c6ba78547aadf",
+      "case_names": [
+        "initTestCase",
+        "normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(private-HTTPS-saved-JKS-real-scrape)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    },
+    {
+      "target": "biglybtc-mainline-single-http-tests",
+      "selector": "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline:private-HTTPS-saved-JKS-regular-scrape",
+      "exit": 0,
+      "xml_sha256": "922b65f28bccdc58e1802c506623af4ff86e7e6570f07af0e085a45209037f38",
+      "case_names": [
+        "initTestCase",
+        "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(private-HTTPS-saved-JKS-regular-scrape)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    }
+  ],
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "old_dist_unchanged": "ffaaa3a5b9a0ad7333d3a315b98d296ca99369514d7df6dcef38ae12ff77c826",
+  "source_unchanged": true,
+  "commands_sha256": "ee5c0a189b8ca8252ddc3af78b58f6bf7a844ccfc06c175313ff257d6effe807"
+}

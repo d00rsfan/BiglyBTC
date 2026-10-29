@@ -1,0 +1,20 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBTC/preview/native",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 15.153,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/clang-r2/configure.log",
+    "log_sha256": "340231c2a094e421705e70c7cca514f447a581df77da94ecbdecec81ae7ca918"
+  }
+]

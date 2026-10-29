@@ -1,0 +1,43 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBTC/preview/native",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 15.18,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/clang-r3/configure.log",
+    "log_sha256": "824aeeb8f5b5582e92c09452651d83424f4e5545379d5255fecc08f8c2dd9528"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "-R",
+      "^mainline-single-http$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/clang-r3/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 321.216,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/clang-r3/tests.log",
+    "log_sha256": "d70b82c935f5d57876c1cc29c71d8473f64e2376c0a9aa1291088059b0725e4c"
+  }
+]

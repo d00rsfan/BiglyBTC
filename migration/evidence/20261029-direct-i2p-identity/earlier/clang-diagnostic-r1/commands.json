@@ -1,0 +1,38 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 38.619,
+    "log": "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/runs/clang-diagnostic-r1/build.log",
+    "log_sha256": "af6cf4400fdd0b437a190dd73b48a0d22ae9376cc6c0212553740363b5a8bf65"
+  },
+  {
+    "name": "selected",
+    "command": [
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-mainline-single-http-tests",
+      "normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery:private-HTTPS-saved-JKS-real-scrape",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/runs/clang-diagnostic-r1/selected.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/runs/clang-diagnostic-r1/selected.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 1,
+    "seconds": 61.862,
+    "log": "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/runs/clang-diagnostic-r1/selected.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

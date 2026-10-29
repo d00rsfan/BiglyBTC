@@ -1,0 +1,47 @@
+{
+  "status": "SOURCE_ONLY_CONCRETE_FACTORY_READER_CORRECTION",
+  "official_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "source_jar_sha256": "b169a9cebb58bee8b9ca2e73743418b1e9a634bdea4faa8ca6e2063d1032f23a",
+  "sources": [
+    {
+      "source_path": "core/java/src/net/i2p/client/impl/I2PClientImpl.java",
+      "git_blob": "c9bc25687f162128a3c3a6f0dda17683c998fc82",
+      "source_jar_entry": "net/i2p/client/impl/I2PClientImpl.java",
+      "sha256": "30ac6a62fbeb2f25fc3c2ce5f934e06dd6beef3c33267ddb825e87002924c2e5",
+      "bytes": 7930,
+      "source_jar_git_blob_equal": true
+    },
+    {
+      "source_path": "core/java/src/net/i2p/client/impl/I2PSessionMuxedImpl.java",
+      "git_blob": "42d35c5b01a30b6ba8e5978abd6883f32aac70f6",
+      "source_jar_entry": "net/i2p/client/impl/I2PSessionMuxedImpl.java",
+      "sha256": "aeddb9687caa895dc1d8616444b70f60a84179633c54c84b152c65348aafb4b5",
+      "bytes": 19968,
+      "source_jar_git_blob_equal": true
+    },
+    {
+      "source_path": "core/java/src/net/i2p/client/impl/I2PSessionImpl2.java",
+      "git_blob": "abd47e2de382818d853960bb246782f1c064f2dc",
+      "source_jar_entry": "net/i2p/client/impl/I2PSessionImpl2.java",
+      "sha256": "54df392ad6739fa8fcc35b6b4bffd8dab04c7b4d8352d72ca370bda6438e8fe8",
+      "bytes": 23743,
+      "source_jar_git_blob_equal": true
+    },
+    {
+      "source_path": "core/java/src/net/i2p/client/impl/I2PSessionImpl.java",
+      "git_blob": "44123f7c26d4218902e1492e975f0a30e3ffc174",
+      "source_jar_entry": "net/i2p/client/impl/I2PSessionImpl.java",
+      "sha256": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+      "bytes": 88133,
+      "source_jar_git_blob_equal": true
+    }
+  ],
+  "statements": [
+    "I2PSessionImpl is abstract; its public constructor cannot be directly instantiated",
+    "I2PClientImpl.createSession(context,input,options) constructs package-private concrete I2PSessionMuxedImpl",
+    "Muxed constructor calls I2PSessionImpl2, then I2PSessionImpl.readDestination, and creates not-started availability notifier",
+    "I2PSessionImpl2 constructor allocates message maps/counters and statistics; connect starts transport later",
+    "No connect/send/lookup, router, endpoint, signer or verification change; destroySession(false) remains cleanup only"
+  ],
+  "compiler_or_subject_executed": false
+}

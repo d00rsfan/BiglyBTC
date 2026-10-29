@@ -1,0 +1,15 @@
+{
+  "status": "FAIL",
+  "source_commit": "5abc17533521c881971d4e3f5551ff2963d4c648",
+  "code_build_source_commit": "5dfbd587e16e86122edd548f861a67430c20586d",
+  "lane": "gcc",
+  "cache": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "cpp_builds_executed": false,
+  "provider_rebuilt": false,
+  "runner_sha256": "c18645043e4f606e25cc119542468321fb5bfcd27e2885dde13b975e0a9ffe1a",
+  "source_receipt_sha256": "35bd5bcb1b5ec72deb10cb5b3440cd22d16488a1be8367f3bab551c7842aaeca",
+  "compile_only_suites": [],
+  "historical_passes_pooled": false,
+  "failure": "AssertionError('HTTP CTest budget not applied')",
+  "commands_sha256": "c9a8db816978d6018aef618883ef4af999d16871c67a55c6dc79c50b7e0b83c3"
+}

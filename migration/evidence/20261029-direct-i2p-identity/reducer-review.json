@@ -1,0 +1,11 @@
+{
+  "status": "PASS_SOURCE_ONLY_EXACT_ORIGINAL_ANNOUNCE_APPLICABILITY",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/amendments/failed-announce-preserves-scrape/amendments/ineligible-announces/manifest.json",
+    "sha256": "7fc9e27e7b37c8573579f3b2ec8c5f4a7ed470544422eab24014b4491afc1cf5"
+  },
+  "artifacts_sha256": {
+    "review.json": "9b83a3ac5168aad28e8372ea9a57e716dbf50a7bcd42b7082bfb688b23d06cc8"
+  },
+  "execution": false
+}

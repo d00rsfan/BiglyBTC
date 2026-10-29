@@ -1,0 +1,11 @@
+{
+  "status": "PASS_SOURCE_ONLY_EXACT_EA_REBASE",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/mainline-http-direct-20261029/amendments/adopted-core-and-diagnostics/manifest.json",
+    "sha256": "2395447573dce75a6a487597c4e7cb2f02922f8d70ef4d3a2fa74519cef76069"
+  },
+  "artifacts_sha256": {
+    "review.json": "76ae93d7beef5a3e78ea0d33a6371e9a0b3c90d89af4bb1705b3fc4c86e1ee2a"
+  },
+  "execution": false
+}

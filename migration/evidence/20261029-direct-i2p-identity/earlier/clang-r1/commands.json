@@ -1,0 +1,63 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-mainline-single-http-tests",
+      "biglybtc-managed-queue-tests",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-mainline-single-tracker-owner-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 523.368,
+    "log": "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/runs/clang-r1/build.log",
+    "log_sha256": "113d9594a6f7b503973c573dd81556b781113b00bb508fcd58cb869ea56ff4af"
+  },
+  {
+    "name": "http-loader",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.036,
+    "log": "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/runs/clang-r1/http-loader.log",
+    "log_sha256": "2927adeaa21d08cb01e811c5e63ca6edc0b5605ca3efc6ea6e93256c58108774"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "-R",
+      "^(queue-policy|managed-queue|mainline-single-http)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/runs/clang-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 8,
+    "seconds": 302.877,
+    "log": "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/runs/clang-r1/tests.log",
+    "log_sha256": "b969c26887d250ca2f06ae4c6a4d73f4e26b4b860c09c4ab78615e2f1e7d34ef"
+  }
+]

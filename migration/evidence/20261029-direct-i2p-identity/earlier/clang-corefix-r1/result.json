@@ -1,0 +1,7 @@
+{
+  "status": "PASS_SINGLE_DIAGNOSTIC_ROW",
+  "source_commit": "ea56315f7cd86e0b30e2066f2cca34181b5ea2b1",
+  "qualification_claimed": false,
+  "test_elf_sha256": "2446709addd945fec94c5a5aa489fd3da0fa79fcca0e73cae90a98da87cea8d8",
+  "source_unchanged": true
+}

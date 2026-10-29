@@ -1,0 +1,36 @@
+[0/1] Re-running CMake...
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable exact version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Runtime binding preload tests: selected GCC libasan first: /usr/lib/x86_64-linux-gnu/libasan.so.8.0.0
+-- Configuring done (15.0s)
+-- Generating done (3.3s)
+-- Build files have been written to: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop
+[1/27] Building CXX object core/CMakeFiles/biglybtc_core.dir/src/queue_observations.cpp.o
+[2/27] Linking CXX static library core/libbiglybtc_core.a
+[3/27] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_session.cpp.o
+[4/27] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[5/27] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/library_http_tracker.cpp.o
+[6/27] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/library_http_protocol.cpp.o
+[7/27] Linking CXX static library engine/libbiglybtc_local_engine.a
+[8/27] Building CXX object services/CMakeFiles/biglybtc_i2p_client_identity.dir/i2p_client/identity.cpp.o
+[9/27] Automatic MOC for target biglybtc-managed-queue-tests
+[10/26] Automatic MOC for target biglybtc-mainline-single-tracker-owner-tests
+[11/25] Automatic MOC for target biglybtc-mainline-single-http-tests
+[12/24] Linking CXX static library services/libbiglybtc_i2p_client_identity.a
+[13/24] Building CXX object tests/CMakeFiles/biglybtc-queue-policy-tests.dir/queue_policy_tests.cpp.o
+[14/24] Building CXX object tests/CMakeFiles/biglybtc-i2p-client-identity-tests.dir/i2p_client_identity_tests.cpp.o
+[15/24] Building CXX object tests/CMakeFiles/biglybtc-mainline-single-http-tests.dir/mainline_single_http_tests.cpp.o
+[16/24] Linking CXX executable biglybtc-preview-smoke
+[17/24] Linking CXX executable app/BiglyBTC-headless
+[18/24] Linking CXX executable app/BiglyBTC
+[19/24] Linking CXX executable tests/biglybtc-queue-policy-tests
+[20/24] Linking CXX executable tests/biglybtc-managed-queue-tests
+[21/24] Linking CXX executable tests/biglybtc-mainline-single-tracker-owner-tests
+[22/24] Linking CXX executable tests/biglybtc-mainline-single-http-tests
+[23/24] Linking CXX executable tests/biglybtc-i2p-client-identity-tests

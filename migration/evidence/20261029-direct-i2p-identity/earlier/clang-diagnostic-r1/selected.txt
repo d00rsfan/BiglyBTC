@@ -1,0 +1,8 @@
+********* Start testing of MainlineSingleHttpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleHttpTests::initTestCase()
+FAIL!  : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(private-HTTPS-saved-JKS-real-scrape) '([&]{if(!pump()){return true;}const auto views=owner->libraryTrackerResponses();return views.size()==1&&views[0].admission==admission&&views[0].response.content&&views[0].response.content->seeds==(mode==0?5:7)&&views[0].response.content->peers==(mode==0?6:8);}())' returned FALSE. (owned sockets=3 announce=0 scrape=1 announceClosed=0 socketError=1 tlsError=0 proxyGreeting=4 proxyConnect=3 views=0 managed=1 admission=1 checked=1 retained=1 phase=2 shared=0 mainlineError=6 optionalScrapeError=-1)
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/mainline_single_http_tests.cpp(381)]
+PASS   : MainlineSingleHttpTests::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 61787ms
+********* Finished testing of MainlineSingleHttpTests *********

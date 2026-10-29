@@ -1,0 +1,5 @@
+PASS original online client identity produce dsa-default bytes=663
+PASS original online client identity produce dsa-key-certificate bytes=667
+PASS original online client identity produce ed25519-default bytes=679
+PASS original online client identity produce ed25519-zero-encryption bytes=679
+PASS offline actual original reader/export/signer; no connected session

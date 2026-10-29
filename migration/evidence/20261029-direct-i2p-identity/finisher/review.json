@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_FINISHER_ADAPTED_NOT_EXECUTED",
+  "finisher": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/finish.py",
+  "before_sha256": "1f94434ce435cca8f2f6e350ac89f14a7173a06f005aab1fac10143f63d3fe6b",
+  "after_sha256": "02c400a41af9c8a70ac18385bc800c05d4e9d763e9a0aa679e8d8fa60075293e",
+  "patch_sha256": "06ab9eeef08dadc50a19f34f6927dd68d7e361097ab008ff5bcf50eee12b143f",
+  "source_commit": "5abc17533521c881971d4e3f5551ff2963d4c648",
+  "implementation_commit": "5dfbd587e16e86122edd548f861a67430c20586d",
+  "actual_future_inputs_required": [
+    "root-adoption-r2.json",
+    "timeout-adoption.json",
+    "runs/{gcc,clang,san}-r3/result.json PASS_HTTP_TIMEOUT_REPAIR_IDENTICAL_IMAGES",
+    "private-focused/runs/r3/result.json PASS_PRIVATE_DIRECT_AND_SOCKS_HTTPS",
+    "offline-wrapper-r2/result.json PASS_ACTUAL_I2P_IDENTITY_OFFLINE"
+  ],
+  "qualification_labels": {
+    "fresh_http_suites_per_lane": 1,
+    "explicit_reused_suite_counts": {
+      "gcc": 5,
+      "clang": 4,
+      "san": 5
+    },
+    "qualified_unique_suite_counts": {
+      "gcc": 6,
+      "clang": 5,
+      "san": 6
+    }
+  },
+  "preserves_failed_history": [
+    "earlier admitted tracker runs/diagnostic/corefix",
+    "current B r1 overall HTTP timeout with named passes",
+    "current B r2 configure-only verifier failure",
+    "offline Java r1 abstract-base javac failure"
+  ],
+  "same_identity_elf_and_CMake_only_source_proof_required": true,
+  "new_component_native_commit_is_implementation_not_timeout_commit": true,
+  "promotion_and_immediate_old_deletion_and_copied_test_cleanup_byte_exact": true,
+  "python_ast_parse": "PASS_SOURCE_SYNTAX_ONLY",
+  "finisher_or_build_or_tests_executed": false,
+  "N_or_shared_metadata_changed": false
+}

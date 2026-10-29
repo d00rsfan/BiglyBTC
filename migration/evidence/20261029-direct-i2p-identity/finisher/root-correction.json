@@ -1,0 +1,5 @@
+{
+  "before_sha256": "02c400a41af9c8a70ac18385bc800c05d4e9d763e9a0aa679e8d8fa60075293e",
+  "after_sha256": "7af01c4ca7ad500a9406d1ffe8d93266b7e4426bf7f718275008856599440e4e",
+  "correction": "Bind the offline native ELF to its actual GCC lane only; Clang and SAN images are correctly different builds."
+}

@@ -1,0 +1,12 @@
+{
+  "source_commit": "a4691c68bb49a808bf6cf657326ceb5bfbe1db47",
+  "manifest_sha256": "8c9d32871c91f1c3b9060f7c175f13eae6eb83bc88a3f808c132212ffe490d73",
+  "source_paths": {
+    "preview/native/tests/mainline_single_http_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/mainline_single_http_tests.cpp",
+      "before_sha256": "998658cc20c677b3af9954f8574dc815158be1a7666b7a485069a8f6ce20c783",
+      "after_path": "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/amendments/private-https-diagnostic/staging/preview/native/tests/mainline_single_http_tests.cpp",
+      "after_sha256": "9849059f477d5a942443d69564104a8386f234e36a1770e6a7d8bff4124d8854"
+    }
+  }
+}

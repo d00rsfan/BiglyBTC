@@ -1,0 +1,76 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop
+    Start 218: queue-policy
+1/6 Test #218: queue-policy .....................   Passed    0.12 sec
+    Start 221: managed-queue
+2/6 Test #221: managed-queue ....................   Passed   64.94 sec
+    Start 270: mainline-single-tracker-owner
+3/6 Test #270: mainline-single-tracker-owner ....   Passed  126.75 sec
+    Start 281: mainline-single-http
+4/6 Test #281: mainline-single-http .............***Timeout 240.06 sec
+********* Start testing of MainlineSingleHttpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleHttpTests::initTestCase()
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(global-DHT-disabled-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(private-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(per-download-DHT-denied-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(DHT-disabled-healthy-announce-no-redundant-scrape)
+PASS   : MainlineSingleHttpTests::directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(private-HTTPS-saved-JKS-regular-scrape)
+PASS   : MainlineSingleHttpTests::directHeldResponseLosesAuthorityWhenCurrentTrackerPermissionChanges()
+PASS   : MainlineSingleHttpTests::actualAnnounceDefersWithoutReplacingRetainedContentOrShorteningScrapeDue()
+PASS   : MainlineSingleHttpTests::chronologicalMergeRejectsOldCountStatusAndPreScrapeAnnounceDeadline()
+PASS   : MainlineSingleHttpTests::pendingQtScrapeCutsOldHeavyAnnounceButRetainsNewerAnnounceCountsAndTiming()
+PASS   : MainlineSingleHttpTests::providerScrapeDoesNotSettleTheSeparatePhysicalQtTimingWindow()
+PASS   : MainlineSingleHttpTests::announceDeadlinePreservesJavaOverflowWithCheckedSignedAddition()
+PASS   : MainlineSingleHttpTests::everyActualAnnouncePostponesInOrderAndLostRingWithdrawsLatestResponse()
+PASS   : MainlineSingleHttpTests::admittedProxyReaderRequiresActualCapturedUrlFullSubjectAndFreshTrackerPermission()
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(HTTP-healthy-announce-no-redundant-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(HTTP-failed-announce-real-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(private-HTTPS-saved-JKS-real-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(private-HTTP-stop-before-held-scrape)
+PASS   : MainlineSingleHttpTests::socks5RoutesKeepExplicitProxyDnsAndSavedConfigurationAuthority()
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(http-no-auth)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(http-proxy-userpass)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(https-no-auth)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(https-proxy-userpass)
+PASS   : MainlineSingleHttpTests::actualSocks5LocalDnsUsesNumericConnectAndCancellationCannotReuseOldReply()
+PASS   : MainlineSingleHttpTests::injectedTrackerLookupHostNotFoundUsesFreshSameProxyDomainProposal()
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(method-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(auth-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(connect-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(malformed-socks-version)
+PASS   : MainlineSingleHttpTests::savedProxyChangesWithdrawResolvedEndpointBeforeAnyConnection()
+PASS   : MainlineSingleHttpTests::genuinePrivateOrDhtDisabledSavedOwnerConsumesProxyResponseWithoutDiscovery(public-DHT-disabled)
+PASS   : MainlineSingleHttpTests::genuinePrivateOrDhtDisabledSavedOwnerConsumesProxyResponseWithoutDiscovery(private-Tracker-only)
+PASS   : MainlineSingleHttpTests::originalUrlMappingAndRoutePermissions()
+PASS   : MainlineSingleHttpTests::sourceBodyMissingFailureNarrowingAndIntervals()
+PASS   : MainlineSingleHttpTests::heldSettingsAreStrictAndLow32OriginalBooleans()
+PASS   : MainlineSingleHttpTests::actualHostnameHttpChunkedAndCancellationReuse()
+PASS   : MainlineSingleHttpTests::dnsProposalRequiresFreshOwnerPermissionBeforeSocket()
+PASS   : MainlineSingleHttpTests::neverAdmittedSavedHttpFailureUsesSameMainlineConsumerWithoutPayloadAccess()
+PASS   : MainlineSingleHttpTests::savedTrackerTiersBindAllUrlsAndPreservePrimaryFallbackAndRawIdentity()
+
+    Start 282: pure-i2p-datagram-codec
+5/6 Test #282: pure-i2p-datagram-codec ..........   Passed    0.08 sec
+    Start 283: pure-i2p-client-identity
+6/6 Test #283: pure-i2p-client-identity .........   Passed    0.06 sec
+
+83% tests passed, 1 tests failed out of 6
+
+Label Time Summary:
+crypto           =   0.13 sec*proc (2 tests)
+discovery        = 366.82 sec*proc (2 tests)
+i2p              =   0.13 sec*proc (2 tests)
+network          = 366.82 sec*proc (2 tests)
+no-network       =   0.13 sec*proc (2 tests)
+owned            = 366.82 sec*proc (2 tests)
+queue            =  65.06 sec*proc (2 tests)
+runtime-bound    =  64.94 sec*proc (1 test)
+slow             = 366.82 sec*proc (2 tests)
+tls              = 240.06 sec*proc (1 test)
+unit             =  65.20 sec*proc (4 tests)
+
+Total Test time (real) = 432.03 sec
+
+The following tests FAILED:
+	281 - mainline-single-http (Timeout)                    discovery network owned slow tls
+Errors while running CTest

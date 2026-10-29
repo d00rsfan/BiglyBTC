@@ -1,0 +1,7 @@
+PASS bounded original online client identity dsa
+PASS bounded original online client identity ed25519
+PASS actual Java online identity import/export/signature dsa-default
+PASS actual Java online identity import/export/signature dsa-key-certificate
+PASS actual Java online identity import/export/signature ed25519-default
+PASS actual Java online identity import/export/signature ed25519-zero-encryption
+PASS bounded I2P client identity ownership/refusal

@@ -1,0 +1,14 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+    Start 281: mainline-single-http
+1/1 Test #281: mainline-single-http .............   Passed  291.54 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+discovery    = 291.54 sec*proc (1 test)
+network      = 291.54 sec*proc (1 test)
+owned        = 291.54 sec*proc (1 test)
+slow         = 291.54 sec*proc (1 test)
+tls          = 291.54 sec*proc (1 test)
+
+Total Test time (real) = 291.56 sec

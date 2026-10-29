@@ -1,0 +1,23 @@
+--- parent/interop/ClientIdentityVectors.java
++++ child/interop/ClientIdentityVectors.java
+@@ -14,6 +14,7 @@
+ import net.i2p.I2PAppContext;
+ import net.i2p.client.I2PSession;
+ import net.i2p.client.datagram.Datagram2;
++import net.i2p.client.impl.I2PClientImpl;
+ import net.i2p.client.impl.I2PSessionImpl;
+ import net.i2p.crypto.SigType;
+ import net.i2p.data.Destination;
+@@ -63,9 +64,9 @@
+   }
+   private static I2PSessionImpl imported(I2PAppContext context,byte[] wire,byte[] sender,byte[] encryptionKey,byte[] signingKey) throws Exception {
+     ByteArrayInputStream input=new ByteArrayInputStream(wire);
+-    // This public original constructor invokes readDestination, not connect.
+-    // Direct base-class construction avoids any modified streaming/client factory.
+-    I2PSessionImpl session=new I2PSessionImpl(context,input,new Properties());
++    // The original public factory constructs concrete I2PSessionMuxedImpl;
++    // its superclass constructor invokes readDestination without connecting.
++    I2PSessionImpl session=(I2PSessionImpl)new I2PClientImpl().createSession(context,input,new Properties());
+     try {
+       require(input.available()==0,"Original online identity reader left bytes");
+       require(session.isClosed()&&!session.isOffline(),"Reference fixture unexpectedly connected/offline");

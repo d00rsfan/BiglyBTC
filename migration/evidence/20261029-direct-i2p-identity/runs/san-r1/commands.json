@@ -1,0 +1,65 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-mainline-single-http-tests",
+      "biglybtc-managed-queue-tests",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-mainline-single-tracker-owner-tests",
+      "biglybtc-i2p-datagram-tests",
+      "biglybtc-i2p-client-identity-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 450.183,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/san-r1/build.log",
+    "log_sha256": "6eb2c46de3fbb340a91a1937cfa19d4a0dc0c7aa04c871d4b658b570d561db80"
+  },
+  {
+    "name": "http-loader",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.017,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/san-r1/http-loader.log",
+    "log_sha256": "3e714dd57f14cedd79ff289d8a5ee7e22a3e6f67cfea740d92563efcb93d5668"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "-R",
+      "^(queue-policy|pure-i2p-datagram-codec|pure-i2p-client-identity|managed-queue|mainline-single-http|mainline-single-tracker-owner)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/san-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 8,
+    "seconds": 432.072,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/san-r1/tests.log",
+    "log_sha256": "75cf045ac4bbbaa706724b5c7246077a86b5dbcc099e9bce415a8313c16db3f9"
+  }
+]

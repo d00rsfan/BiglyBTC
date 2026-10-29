@@ -1,0 +1,18 @@
+{
+  "source_commit": "ea56315f7cd86e0b30e2066f2cca34181b5ea2b1",
+  "manifest_sha256": "7fc9e27e7b37c8573579f3b2ec8c5f4a7ed470544422eab24014b4491afc1cf5",
+  "source_paths": {
+    "preview/native/core/src/queue_observations.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/core/src/queue_observations.cpp",
+      "before_sha256": "44185389f5477ae669ab9d1c47f83bd3c89a35a680b198190b6f940dedce4025",
+      "after_path": "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/amendments/failed-announce-preserves-scrape/amendments/ineligible-announces/staging/preview/native/core/src/queue_observations.cpp",
+      "after_sha256": "700174f509b4f3d234e5c8972d9b972f2c74d603ad9fd59c8dede5ce98e8da91"
+    },
+    "preview/native/tests/queue_policy_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/queue_policy_tests.cpp",
+      "before_sha256": "2a645cec6298a677b0950f5276c5730c875a8b4964300c07af2ab20a4d985806",
+      "after_path": "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/amendments/failed-announce-preserves-scrape/amendments/ineligible-announces/staging/preview/native/tests/queue_policy_tests.cpp",
+      "after_sha256": "510a138f4f0574c4331eb3ae43b8e5007a40281601b74372f0871831f6546c51"
+    }
+  }
+}

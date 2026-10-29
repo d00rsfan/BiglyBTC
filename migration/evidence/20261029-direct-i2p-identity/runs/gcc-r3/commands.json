@@ -1,0 +1,43 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBTC/preview/native",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 14.059,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/gcc-r3/configure.log",
+    "log_sha256": "d21bce33932387cdd85ed38a53f5686bfb1df0988b9ffec3faad07265b0cee0d"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "-R",
+      "^mainline-single-http$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/gcc-r3/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 291.621,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/gcc-r3/tests.log",
+    "log_sha256": "29f1e19424f5152822945839fea89cbfe6cda6779b5b685e29da2f5bce5cd393"
+  }
+]

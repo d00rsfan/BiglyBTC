@@ -1,0 +1,178 @@
+Start testing: Oct 29 12:34 IST
+----------------------------------------------------------
+218/283 Testing: queue-policy
+218/283 Test: queue-policy
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-queue-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+"queue-policy" start time: Oct 29 12:34 IST
+Output:
+----------------------------------------------------------
+43 queue-policy families, 8794 assertions passed
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"queue-policy" end time: Oct 29 12:34 IST
+"queue-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+221/283 Testing: managed-queue
+221/283 Test: managed-queue
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-managed-queue-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+"managed-queue" start time: Oct 29 12:34 IST
+Output:
+----------------------------------------------------------
+********* Start testing of ManagedQueueTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedQueueTests::initTestCase()
+PASS   : ManagedQueueTests::ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(single)
+PASS   : ManagedQueueTests::ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(multi)
+PASS   : ManagedQueueTests::rawScrapeTerminalUsesSameAdmissionRingAndWithdrawsOnLoss()
+PASS   : ManagedQueueTests::actualOwnedTrackerScrapeReplyAndErrorReachRetainedRawSource()
+PASS   : ManagedQueueTests::actualAnnounceResponseSurvivesScrapeErrorWithoutGrantingConfiguredPermission()
+PASS   : ManagedQueueTests::trackerResponseLifetimeRetainsAcrossAdmissionsAndLossCannotResetToInitialError()
+PASS   : ManagedQueueTests::actualObserverQueueHasBoundedNonblockingProducerAndWorkerOnlyDrain()
+PASS   : ManagedQueueTests::actualProviderLifecycleAndPayloadSendSmoothingRetireAndReopenIndependently(single)
+PASS   : ManagedQueueTests::actualProviderLifecycleAndPayloadSendSmoothingRetireAndReopenIndependently(multi)
+PASS   : ManagedQueueTests::verifiedSeedActualPostPrimaryFailureCannotReleaseOrReplay()
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(download-cap)
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(active-cap)
+PASS   : ManagedQueueTests::completionRatioQueuesAndClearsOnlyForceBeforeActualCheckpoint()
+PASS   : ManagedQueueTests::actualNewSeedNormalizesBothSavedGroups(new-seed-top)
+PASS   : ManagedQueueTests::actualNewSeedNormalizesBothSavedGroups(new-seed-end)
+PASS   : ManagedQueueTests::laterAdmissionRestoresCompletePositionAuthorityWithoutReopening()
+PASS   : ManagedQueueTests::uncertainPublishedGroupTransitionNeverReplaysInSameOwner()
+PASS   : ManagedQueueTests::actualTargetEtaIsAdmissionOwnedAndPauseClearsCurrentAuthority()
+PASS   : ManagedQueueTests::actualOriginalFilePriorityProviderPreservesStartupAndManualHold()
+PASS   : ManagedQueueTests::cleanupTestCase()
+Totals: 21 passed, 0 failed, 0 skipped, 0 blacklisted, 63749ms
+********* Finished testing of ManagedQueueTests *********
+<end of output>
+Test time =  63.77 sec
+----------------------------------------------------------
+Test Passed.
+"managed-queue" end time: Oct 29 12:36 IST
+"managed-queue" time elapsed: 00:01:03
+----------------------------------------------------------
+
+281/283 Testing: mainline-single-http
+281/283 Test: mainline-single-http
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-mainline-single-http-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+"mainline-single-http" start time: Oct 29 12:36 IST
+Output:
+----------------------------------------------------------
+********* Start testing of MainlineSingleHttpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleHttpTests::initTestCase()
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(global-DHT-disabled-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(private-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(per-download-DHT-denied-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(DHT-disabled-healthy-announce-no-redundant-scrape)
+PASS   : MainlineSingleHttpTests::directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(private-HTTPS-saved-JKS-regular-scrape)
+PASS   : MainlineSingleHttpTests::directHeldResponseLosesAuthorityWhenCurrentTrackerPermissionChanges()
+PASS   : MainlineSingleHttpTests::actualAnnounceDefersWithoutReplacingRetainedContentOrShorteningScrapeDue()
+PASS   : MainlineSingleHttpTests::chronologicalMergeRejectsOldCountStatusAndPreScrapeAnnounceDeadline()
+PASS   : MainlineSingleHttpTests::pendingQtScrapeCutsOldHeavyAnnounceButRetainsNewerAnnounceCountsAndTiming()
+PASS   : MainlineSingleHttpTests::providerScrapeDoesNotSettleTheSeparatePhysicalQtTimingWindow()
+PASS   : MainlineSingleHttpTests::announceDeadlinePreservesJavaOverflowWithCheckedSignedAddition()
+PASS   : MainlineSingleHttpTests::everyActualAnnouncePostponesInOrderAndLostRingWithdrawsLatestResponse()
+PASS   : MainlineSingleHttpTests::admittedProxyReaderRequiresActualCapturedUrlFullSubjectAndFreshTrackerPermission()
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(HTTP-healthy-announce-no-redundant-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(HTTP-failed-announce-real-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(private-HTTPS-saved-JKS-real-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(private-HTTP-stop-before-held-scrape)
+PASS   : MainlineSingleHttpTests::socks5RoutesKeepExplicitProxyDnsAndSavedConfigurationAuthority()
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(http-no-auth)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(http-proxy-userpass)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(https-no-auth)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(https-proxy-userpass)
+PASS   : MainlineSingleHttpTests::actualSocks5LocalDnsUsesNumericConnectAndCancellationCannotReuseOldReply()
+PASS   : MainlineSingleHttpTests::injectedTrackerLookupHostNotFoundUsesFreshSameProxyDomainProposal()
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(method-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(auth-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(connect-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(malformed-socks-version)
+PASS   : MainlineSingleHttpTests::savedProxyChangesWithdrawResolvedEndpointBeforeAnyConnection()
+PASS   : MainlineSingleHttpTests::genuinePrivateOrDhtDisabledSavedOwnerConsumesProxyResponseWithoutDiscovery(public-DHT-disabled)
+PASS   : MainlineSingleHttpTests::genuinePrivateOrDhtDisabledSavedOwnerConsumesProxyResponseWithoutDiscovery(private-Tracker-only)
+PASS   : MainlineSingleHttpTests::originalUrlMappingAndRoutePermissions()
+PASS   : MainlineSingleHttpTests::sourceBodyMissingFailureNarrowingAndIntervals()
+PASS   : MainlineSingleHttpTests::heldSettingsAreStrictAndLow32OriginalBooleans()
+PASS   : MainlineSingleHttpTests::actualHostnameHttpChunkedAndCancellationReuse()
+PASS   : MainlineSingleHttpTests::dnsProposalRequiresFreshOwnerPermissionBeforeSocket()
+<end of output>
+Test time = 240.11 sec
+----------------------------------------------------------
+Test Failed.
+"mainline-single-http" end time: Oct 29 12:40 IST
+"mainline-single-http" time elapsed: 00:04:00
+----------------------------------------------------------
+
+282/283 Testing: pure-i2p-datagram-codec
+282/283 Test: pure-i2p-datagram-codec
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2p-datagram-tests" "--java-fixtures" "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+"pure-i2p-datagram-codec" start time: Oct 29 12:40 IST
+Output:
+----------------------------------------------------------
+PASS retained official Java Datagram2/3 dsa-empty
+PASS retained official Java Datagram2/3 dsa-binary
+PASS retained official Java Datagram2/3 dsa-1024
+PASS retained official Java Datagram2/3 dsa-maximum
+PASS retained official Java Datagram2/3 ed25519-empty
+PASS retained official Java Datagram2/3 ed25519-binary
+PASS retained official Java Datagram2/3 ed25519-1024
+PASS retained official Java Datagram2/3 ed25519-maximum
+PASS bounded I2P Datagram2/3 default0/7 codec
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"pure-i2p-datagram-codec" end time: Oct 29 12:40 IST
+"pure-i2p-datagram-codec" time elapsed: 00:00:00
+----------------------------------------------------------
+
+283/283 Testing: pure-i2p-client-identity
+283/283 Test: pure-i2p-client-identity
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2p-client-identity-tests" "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+"pure-i2p-client-identity" start time: Oct 29 12:40 IST
+Output:
+----------------------------------------------------------
+PASS bounded original online client identity dsa
+PASS bounded original online client identity ed25519
+PASS bounded I2P client identity ownership/refusal
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"pure-i2p-client-identity" end time: Oct 29 12:40 IST
+"pure-i2p-client-identity" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 29 12:40 IST
+
+crypto =   0.05 sec*proc
+
+discovery = 240.11 sec*proc
+
+i2p =   0.05 sec*proc
+
+network = 240.11 sec*proc
+
+no-network =   0.05 sec*proc
+
+owned = 240.11 sec*proc
+
+queue =  63.81 sec*proc
+
+runtime-bound =  63.77 sec*proc
+
+slow = 240.11 sec*proc
+
+tls = 240.11 sec*proc
+
+unit =  63.85 sec*proc
+

@@ -1,0 +1,27 @@
+{
+  "status": "PASS_SOURCE_ONLY_AST_CHECKED",
+  "private_script": {
+    "path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/run.py",
+    "sha256": "bc284eee1de3276e973e62f172325b0a92684874ecbcbf80ba2d4036d8f079c1"
+  },
+  "producer": {
+    "path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/run.py",
+    "sha256": "d75bc5936f1af5bd613239a133e876aeb6dc9ab55f711e6d8251e0d5959eca17"
+  },
+  "adoption": {
+    "path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/root-adoption.json",
+    "sha256": "cb8cb04bf0a5b244358c0ff134073c11daea5fceedc19600233d472e14e9a8f9",
+    "source_commit": "5dfbd587e16e86122edd548f861a67430c20586d",
+    "source_paths": 10
+  },
+  "findings": [],
+  "checks": [
+    "Exact fresh6/5/6 named suites, long owner compile-only on Clang, PASS_DIRECT_I2P_IDENTITY_COHORT status and3 actual commands align with running producer.",
+    "All10 root source leaves/current clean source snapshot, XML/log/command hashes and actual suite-to-ELF maps enforced; pure identity/datagram are CTest suites, not forced QtTest programs.",
+    "Only two admitted HTTPS/JKS selectors, SOCKS and DIRECT; expected exact data-row names/init/cleanup with no skips/errors; one candidate and one copied matching-source HTTP ELF.",
+    "Current provider355/f746/approval, private QtCore/Network/TLSbackend/provider, copied exact QtTest, OS OpenSSL actual initialized images and confinement checks retained.",
+    "No build/promotion in private helper; post-execution source/image/candidate/provider/currentdist checks unchanged. Offline I2P bridge is a separate root observation and is not fabricated by private checks."
+  ],
+  "execution": false,
+  "mutations": "Review receipt only; producer/private/native/cache/dist unchanged."
+}

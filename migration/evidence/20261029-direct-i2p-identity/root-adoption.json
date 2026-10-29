@@ -1,0 +1,73 @@
+{
+  "source_commit": "5dfbd587e16e86122edd548f861a67430c20586d",
+  "source_paths": {
+    "preview/native/engine/library_http_tracker.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/library_http_tracker.hpp",
+      "before_sha256": "63cbf37d5fb51ca9f3179fe948c891b2a5008dcf56e94f0cc7093623088e55d9",
+      "after_path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/staging/preview/native/engine/library_http_tracker.hpp",
+      "after_sha256": "d9ffd1d4074ea2f4f84c5cec99b7d44ff18f424870cce728aff446f46325a6ea",
+      "parent_after_sha256": "d9ffd1d4074ea2f4f84c5cec99b7d44ff18f424870cce728aff446f46325a6ea",
+      "parent_bytes_inherited_exact": true
+    },
+    "preview/native/engine/library_http_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/library_http_owner.inc",
+      "before_sha256": "e0ab858e1f7ca0aa7cd57da1588d2a082c2817acbfc14efd09849d9d0b88ccb9",
+      "after_path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/staging/preview/native/engine/library_http_owner.inc",
+      "after_sha256": "4c60768d53c3d0cabfbdf4fb9b434cdb2ef9d8422a86c79151d9a8a05fdececc",
+      "parent_after_sha256": "4c60768d53c3d0cabfbdf4fb9b434cdb2ef9d8422a86c79151d9a8a05fdececc",
+      "parent_bytes_inherited_exact": true
+    },
+    "preview/native/engine/mainline_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/mainline_owner.inc",
+      "before_sha256": "e6dafcc7108d1754d8f69a7782cc493bbd7dd08981c05955bc964c378f75c907",
+      "after_path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/staging/preview/native/engine/mainline_owner.inc",
+      "after_sha256": "720db139abcd613612d4c7fcc15ce3331fc0df7bd535bfe6f40b182681ebf86e",
+      "parent_after_sha256": "720db139abcd613612d4c7fcc15ce3331fc0df7bd535bfe6f40b182681ebf86e",
+      "parent_bytes_inherited_exact": true
+    },
+    "preview/native/engine/persistent_session.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/persistent_session.cpp",
+      "before_sha256": "69121ec05092bae7cc377fd0168841d46a3dfa35abd7f37591b0f451fa282470",
+      "after_path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/staging/preview/native/engine/persistent_session.cpp",
+      "after_sha256": "dea7162c34a80fe77181c58414874e32f00c08e63702862921b58f07a793f914",
+      "parent_after_sha256": "dea7162c34a80fe77181c58414874e32f00c08e63702862921b58f07a793f914",
+      "parent_bytes_inherited_exact": true
+    },
+    "preview/native/tests/mainline_single_http_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/mainline_single_http_tests.cpp",
+      "before_sha256": "9849059f477d5a942443d69564104a8386f234e36a1770e6a7d8bff4124d8854",
+      "after_path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/staging/preview/native/tests/mainline_single_http_tests.cpp",
+      "after_sha256": "2557654031afde1e03c547001cffce11cf390ccd7ae9e651e2e645345786f263",
+      "parent_after_sha256": "f6a2274ddc1cae32b65f0d10729dc7db689af7de616a2b56b57cb2df83766326",
+      "parent_bytes_inherited_exact": false
+    },
+    "preview/native/services/i2p_client/identity.cpp": {
+      "before_sha256": null,
+      "after_sha256": "99c54025953cc774bf4963aead7c7be4f296c8bac8df7eb715521e5b57899201",
+      "after_path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/staging/preview/native/services/i2p_client/identity.cpp"
+    },
+    "preview/native/services/i2p_client/identity.hpp": {
+      "before_sha256": null,
+      "after_sha256": "117e2ac9a5ef71339dc04548209092b33af6be351919f13af28f6b64c061a33d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/staging/preview/native/services/i2p_client/identity.hpp"
+    },
+    "preview/native/tests/i2p_client_identity_tests.cpp": {
+      "before_sha256": null,
+      "after_sha256": "d721d2dc5c176e11a1450604cd98d20fc19947cdbc7be58340489fdfe415b74c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/staging/preview/native/tests/i2p_client_identity_tests.cpp"
+    },
+    "preview/native/services/CMakeLists.txt": {
+      "before_sha256": "c0444c925af85ddcdf1bb103e4af13a1752e6c92337ccd1fbccd03b700608e0b",
+      "after_sha256": "6dff369d7afc43cf71be6b49f4386f326b61bdf3d619df38a17e954ba8af872a",
+      "after_path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/staging/preview/native/services/CMakeLists.txt"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_sha256": "9f4e7216ed411f40e0cd7b33a6260217c4610b7a20a6abc67c6e0e4bf7a4edfd",
+      "after_sha256": "597547f65b2de679c85a3d27af54af2c674ff347940d12964240d24e686034b5",
+      "after_path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/staging/preview/native/tests/CMakeLists.txt"
+    }
+  },
+  "source_path_count": 10,
+  "manifest_sha256": "fd960c072518f2fc0d2ffdb1500211926b5ad613199cd7e5511b1b403ffb9f40",
+  "working_and_committed_afterimages_verified": true
+}

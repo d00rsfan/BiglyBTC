@@ -1,0 +1,11 @@
+{
+  "status": "PASS_SOURCE_ONLY_IDENTITY_AND_AUTHORED_OFFLINE_BRIDGE",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/amendments/offline-fixture-bridge/manifest.json",
+    "sha256": "1502245f6e23427be40142128906725f88c62589513bc24ecc82fb9557307bfb"
+  },
+  "artifacts_sha256": {
+    "review.json": "834b92e3fd224eedc1dc8c991dd778cf0a065dd3cc779973301139026feebbda"
+  },
+  "execution": false
+}

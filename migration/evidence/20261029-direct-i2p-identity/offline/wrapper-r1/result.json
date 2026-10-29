@@ -1,0 +1,11 @@
+{
+  "status": "FAIL",
+  "source_commit": "5dfbd587e16e86122edd548f861a67430c20586d",
+  "native_test_elf_sha256": "d1fc66f4b71adb1101ac7365cf5255e07444e238c66e656eb7202311fd27932c",
+  "bridge_manifest_sha256": "1502245f6e23427be40142128906725f88c62589513bc24ecc82fb9557307bfb",
+  "gcc_source_before_sha256": "8d14e194d7b9f0f93beeac62354fc777412767cce2a896d403ab487aad146774",
+  "gcc_images_before_sha256": "6155757c1d2abb4263a9affd3cdfbdae8f62e4b37bb2f1a30ca0f55c85f7f280",
+  "gcc_build_log_sha256": "6f660516995d2bae5541c7c7452537dd38a3eaf45a6e91280df92ecb61840c0c",
+  "connected_session": false,
+  "failure": "AssertionError('offline')"
+}

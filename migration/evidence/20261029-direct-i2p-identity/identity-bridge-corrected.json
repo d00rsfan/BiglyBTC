@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_CONCRETE_OFFLINE_READER_BRIDGE_CORRECTION",
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/amendments/offline-fixture-bridge/manifest.json",
+  "parent_manifest_sha256": "1502245f6e23427be40142128906725f88c62589513bc24ecc82fb9557307bfb",
+  "native_source_commit": "5dfbd587e16e86122edd548f861a67430c20586d",
+  "source_paths": {
+    "preview/native/services/i2p_client/identity.cpp": {
+      "before_sha256": null,
+      "after_sha256": "99c54025953cc774bf4963aead7c7be4f296c8bac8df7eb715521e5b57899201",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/amendments/concrete-offline-reader/staging/preview/native/services/i2p_client/identity.cpp"
+    },
+    "preview/native/services/i2p_client/identity.hpp": {
+      "before_sha256": null,
+      "after_sha256": "117e2ac9a5ef71339dc04548209092b33af6be351919f13af28f6b64c061a33d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/amendments/concrete-offline-reader/staging/preview/native/services/i2p_client/identity.hpp"
+    },
+    "preview/native/tests/i2p_client_identity_tests.cpp": {
+      "before_sha256": null,
+      "after_sha256": "d721d2dc5c176e11a1450604cd98d20fc19947cdbc7be58340489fdfe415b74c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/amendments/concrete-offline-reader/staging/preview/native/tests/i2p_client_identity_tests.cpp"
+    }
+  },
+  "changed_runtime_helper": "interop/ClientIdentityVectors.java",
+  "native_rebuild_required": false,
+  "compiler_or_subject_executed": false,
+  "runtime_and_interop": "PENDING_ROOT_ONLY_RERUN",
+  "artifacts_sha256": {
+    "CMake.fragment": "8d0b0597ee9c04738b1e1f890b511556717cdc81e0834f8271520b3d5d88ef70",
+    "IMPLEMENTATION.txt": "e7aeeb72607afd7fd340b9b382fe7c1a865ecd441843ff7e7e3dde28fcef7371",
+    "OFFLINE-COMMANDS.sh": "833b2c1766eb16fad6ed42784685ec4d4a030664657dc2fcc52ff77f4ad4048a",
+    "failed-attempt.json": "eee102996f599a6c5d41d707ac34a340aea2422dfefc204f562c0dc9b93e5cb6",
+    "interop/ClientIdentityVectors.java": "b65112d19e1a4a39e326d824b1b5c0510594d2e4e6e18a19ccf690ed257947cc",
+    "parent-delta.patch": "37ec7a68c820e1da9bfa085a5746fcedb00773c030c16c8df8678633ab710292",
+    "reference-api-check.json": "d970e7426b1ee011046e2c2a7c3f5823986559256b14e52570e3e1baf54fa0db",
+    "source-checks.json": "0f9f36c8b91e6b9ff320d780a2444456b75e7fd8154f53d7a2b1057c399f7deb",
+    "source-proof.json": "659e1b33a22397b0b47e24af8a5c8d321ad75deaa1059ea0ecdd2bdbda44911f",
+    "staging/preview/native/services/i2p_client/identity.cpp": "99c54025953cc774bf4963aead7c7be4f296c8bac8df7eb715521e5b57899201",
+    "staging/preview/native/services/i2p_client/identity.hpp": "117e2ac9a5ef71339dc04548209092b33af6be351919f13af28f6b64c061a33d",
+    "staging/preview/native/tests/i2p_client_identity_tests.cpp": "d721d2dc5c176e11a1450604cd98d20fc19947cdbc7be58340489fdfe415b74c"
+  }
+}

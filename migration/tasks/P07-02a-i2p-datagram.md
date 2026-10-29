@@ -31,3 +31,5 @@ execution passed on all three compiler lanes. All raw command/class-load/input/v
 in their frozen build capsules; no old PASS is relabeled as a new full run.
 
 Root reviewed the actual current six/three/six suite results and three private HTTPS/tooltip rows, with immutable evidence above. Both source integration baselines remain null because broader source behavior is incomplete. Continue offline/options/other algorithms and stream/router/client prerequisites separately; whole P07 remains open.
+
+Online identity prerequisite services.i2p_client_identity, implementation 5dfbd587e16e86122edd548f861a67430c20586d, qualified source 5abc17533521c881971d4e3f5551ff2963d4c648: native identity suite passed at implementation and is explicitly reused with identical images after a CMake-only timeout change on GCC/Clang/SAN; actual offline official and modified Java import/export/signature cases each passed four rows. Evidence: evidence/20261029-direct-i2p-identity/verification.json. Component remains in_progress with null source integration baselines; no connected session, router or profile writer.

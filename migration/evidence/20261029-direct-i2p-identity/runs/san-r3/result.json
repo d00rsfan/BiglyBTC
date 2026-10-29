@@ -1,0 +1,43 @@
+{
+  "status": "PASS_HTTP_TIMEOUT_REPAIR_IDENTICAL_IMAGES",
+  "source_commit": "5abc17533521c881971d4e3f5551ff2963d4c648",
+  "code_build_source_commit": "5dfbd587e16e86122edd548f861a67430c20586d",
+  "lane": "san",
+  "cache": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+  "cpp_builds_executed": false,
+  "provider_rebuilt": false,
+  "runner_sha256": "8a4804b22aae8c32e1ef6d069458a718dd8d1d2ca270a0265a3c285477784c1f",
+  "source_receipt_sha256": "35bd5bcb1b5ec72deb10cb5b3440cd22d16488a1be8367f3bab551c7842aaeca",
+  "compile_only_suites": [],
+  "historical_passes_pooled": false,
+  "actual_suites": 1,
+  "suite_names": [
+    "mainline-single-http"
+  ],
+  "qualified_suites": [
+    "mainline-single-http",
+    "mainline-single-tracker-owner",
+    "managed-queue",
+    "pure-i2p-client-identity",
+    "pure-i2p-datagram-codec",
+    "queue-policy"
+  ],
+  "reused_passed_suites": [
+    "mainline-single-tracker-owner",
+    "managed-queue",
+    "pure-i2p-client-identity",
+    "pure-i2p-datagram-codec",
+    "queue-policy"
+  ],
+  "reuse_audit_sha256": "38da0e8f103561842f54bae844754de5df5c4012714e719cba0c921b1030c7a7",
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "tests_xml_sha256": "a40fc4d69d9535a3caa05fab28db936109eea8606ef31f0be17d1ca92d4f3d88",
+  "full_ctest_log_sha256": "1985ff7bbae7a235411136c8017f99214c8310661af890125ac91c7f543a29b4",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "commands_sha256": "b8dc9a923b29eb5c0529073780b5d4c266b8b5fe5c2ff7fed1a4d758cc28c0be"
+}

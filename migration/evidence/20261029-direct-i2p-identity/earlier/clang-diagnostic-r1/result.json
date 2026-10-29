@@ -1,0 +1,8 @@
+{
+  "status": "FAIL_DIAGNOSTIC",
+  "source_commit": "a4691c68bb49a808bf6cf657326ceb5bfbe1db47",
+  "qualification_claimed": false,
+  "test_elf_sha256": "974b3b122a63ba6e51b91846be43f7dd38a68d7e456197dfa1c10e5df8a84bf1",
+  "failure": "AssertionError('selected')",
+  "source_unchanged": true
+}

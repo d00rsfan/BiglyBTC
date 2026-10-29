@@ -1,0 +1,20 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBTC/preview/native",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 12.121,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/runs/san-r2/configure.log",
+    "log_sha256": "688f923bdc7cfbab3aa699f44d208069fe115f1a4d3f39ae49ac998efa0e0808"
+  }
+]

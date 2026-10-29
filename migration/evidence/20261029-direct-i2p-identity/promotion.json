@@ -1,0 +1,18 @@
+{
+  "status": "PROMOTED_ONE_CHECKED_DEVELOPMENT_DIST",
+  "source_commit": "5abc17533521c881971d4e3f5551ff2963d4c648",
+  "manifest_sha256": "10ba626352a5cd6cf6bb6263e3e6657084ba978799e65b7a89797ec4f57a2655",
+  "leaf_count": 119,
+  "private_result_sha256": "5b476e1791d5aa4ca217276a184ede245998b2e34922b4747b389e73b1402e2b",
+  "previous_dist_removed": true,
+  "previous_dist_retained": false,
+  "atomic_exchange": true,
+  "copied_test_images_removed": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/private-focused/runs/r3/biglybtc-mainline-single-http-tests",
+      "sha256": "5deee98eeaa58a29630dd629551addf83550f1be8cfa2b7ff4d5be03e1a590ab"
+    }
+  ],
+  "test_support_removed": true,
+  "created_utc": "2026-10-29T10:59:24.506989+00:00"
+}

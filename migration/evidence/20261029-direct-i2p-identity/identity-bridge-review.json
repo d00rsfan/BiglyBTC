@@ -1,0 +1,13 @@
+{
+  "status": "PASS_SOURCE_REVIEW",
+  "artifacts_sha256": {
+    "review.json": "418369f46827a546dd735c2833fc9fb438a9871d5b3304035509409bbd98405f"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/amendments/concrete-offline-reader/manifest.json": "bf062ca183b92365632ba046c6402b5695990f5d4f3751fd16fbf9f7b87e57a3",
+    "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/offline.py": "13985946cd59b77b3b75b6587f973696796ce77bb85802fece8aa43c25676033",
+    "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/offline-r2.py": "4fc1b6497724cfe64c4442dccb260e3420a727e3104fba53d7c00e901e7fcab6",
+    "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/offline-wrapper-r2/result.json": "696356aebede3d04daf49b13c6c24341f630708bf4c058cb0c3eb131db3382ff",
+    "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/offline-review/review.json": "27f2ef78ba2026b01d721311c1b2866af4b17f603cf181ef136bd47ca051224f"
+  }
+}

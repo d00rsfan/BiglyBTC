@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "status": "PASS_EXACT_FIVE_IDENTITY_COVERAGE_BLOBS_RETAINED",
+  "repository": "/home/yurii/Java/BiglyBT/build/dependencies/i2p-java-2.13.0",
+  "commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "tree": "b38c70fbf3f7ce6f33ca95bedaa001e1458a4c9b",
+  "lazy_fetch_disabled": true,
+  "network_or_history_fetch": false,
+  "source_jar": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/actual-offline-interop/dependencies/i2p-2.13.0-sources.jar",
+  "source_jar_sha256": "b169a9cebb58bee8b9ca2e73743418b1e9a634bdea4faa8ca6e2063d1032f23a",
+  "coverage_rows": [
+    {
+      "source_path": "core/java/src/net/i2p/client/impl/I2PClientImpl.java",
+      "git_blob": "c9bc25687f162128a3c3a6f0dda17683c998fc82",
+      "source_jar_entry": "net/i2p/client/impl/I2PClientImpl.java",
+      "sha256": "30ac6a62fbeb2f25fc3c2ce5f934e06dd6beef3c33267ddb825e87002924c2e5",
+      "bytes": 7930,
+      "present_before_check": true,
+      "materialized_this_check": false,
+      "git_show_equal_source_jar": true
+    },
+    {
+      "source_path": "core/java/src/net/i2p/client/impl/I2PSessionImpl.java",
+      "git_blob": "44123f7c26d4218902e1492e975f0a30e3ffc174",
+      "source_jar_entry": "net/i2p/client/impl/I2PSessionImpl.java",
+      "sha256": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+      "bytes": 88133,
+      "present_before_check": true,
+      "materialized_this_check": false,
+      "git_show_equal_source_jar": true
+    },
+    {
+      "source_path": "core/java/src/net/i2p/data/PrivateKeyFile.java",
+      "git_blob": "0446445b04a92ec5ca94a202c7b17e173a48943b",
+      "source_jar_entry": "net/i2p/data/PrivateKeyFile.java",
+      "sha256": "9685aaeffcb85f24cb435e59494e7fb7cf872800b0013fdb75dcb2fb902f1ffc",
+      "bytes": 46395,
+      "present_before_check": true,
+      "materialized_this_check": false,
+      "git_show_equal_source_jar": true
+    },
+    {
+      "source_path": "core/java/src/net/i2p/data/PrivateKey.java",
+      "git_blob": "41c544e17207cdf40d1bc0082725daa91ee37991",
+      "source_jar_entry": "net/i2p/data/PrivateKey.java",
+      "sha256": "a00a7ae84f35378084c0678e23604eb01d2ef85ca43bba4abcb1dd10ed9fa204",
+      "bytes": 4851,
+      "present_before_check": true,
+      "materialized_this_check": false,
+      "git_show_equal_source_jar": true
+    },
+    {
+      "source_path": "core/java/src/net/i2p/data/SigningPrivateKey.java",
+      "git_blob": "2104ccdf4ccff70a4220bf15f613f5bfa9b66489",
+      "source_jar_entry": "net/i2p/data/SigningPrivateKey.java",
+      "sha256": "a166789ecb5cb53aac103054244ec25ccbf3466b5f8b3d4327764a581920e486",
+      "bytes": 4663,
+      "present_before_check": true,
+      "materialized_this_check": false,
+      "git_show_equal_source_jar": true
+    }
+  ],
+  "source_blobs_materialized_this_check": 0,
+  "native_or_shared_registry_modified": false,
+  "compiler_or_subject_executed": false
+}

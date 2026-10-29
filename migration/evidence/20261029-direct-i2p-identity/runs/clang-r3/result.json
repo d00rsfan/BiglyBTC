@@ -1,0 +1,40 @@
+{
+  "status": "PASS_HTTP_TIMEOUT_REPAIR_IDENTICAL_IMAGES",
+  "source_commit": "5abc17533521c881971d4e3f5551ff2963d4c648",
+  "code_build_source_commit": "5dfbd587e16e86122edd548f861a67430c20586d",
+  "lane": "clang",
+  "cache": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+  "cpp_builds_executed": false,
+  "provider_rebuilt": false,
+  "runner_sha256": "8a4804b22aae8c32e1ef6d069458a718dd8d1d2ca270a0265a3c285477784c1f",
+  "source_receipt_sha256": "35bd5bcb1b5ec72deb10cb5b3440cd22d16488a1be8367f3bab551c7842aaeca",
+  "compile_only_suites": [
+    "mainline-single-tracker-owner"
+  ],
+  "historical_passes_pooled": false,
+  "actual_suites": 1,
+  "suite_names": [
+    "mainline-single-http"
+  ],
+  "qualified_suites": [
+    "mainline-single-http",
+    "managed-queue",
+    "pure-i2p-client-identity",
+    "pure-i2p-datagram-codec",
+    "queue-policy"
+  ],
+  "reused_passed_suites": [
+    "managed-queue",
+    "pure-i2p-client-identity",
+    "pure-i2p-datagram-codec",
+    "queue-policy"
+  ],
+  "reuse_audit_sha256": "6c354aafbcbaf8a0dbe68e4b2f83e433251277a6b88bb66ca4df10475e59b0f2",
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "tests_xml_sha256": "65b90fe9efcca766bbc1ed4db41390cfd6539905a3d63f155871f0cd29978d9e",
+  "full_ctest_log_sha256": "ced286929a83ac1b5df9214a3854af10ebb374207e4832e23eef04a1a8c21f31",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "sanitizer_environment": {},
+  "commands_sha256": "9270fa4d693075d5fcf83abacac6e6c9255f59517d77e2d00ab1c4ab8bed5cf5"
+}

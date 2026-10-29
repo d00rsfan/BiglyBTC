@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_ORIGINAL_I2P_CLIENT_IDENTITY_WITH_AUTHORED_OFFLINE_BRIDGE",
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/manifest.json",
+  "parent_manifest_sha256": "bc9a2d8a58d221847462e57f41c60008598a4649cc60c978d6804e0206f7d56a",
+  "native_source_basis": "ecd63457da93e7f0c993c1f684e6d50d1c79a48c",
+  "official_source_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "original_plugin_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+  "source_paths": {
+    "preview/native/services/i2p_client/identity.cpp": {
+      "before_sha256": null,
+      "after_sha256": "99c54025953cc774bf4963aead7c7be4f296c8bac8df7eb715521e5b57899201",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/amendments/offline-fixture-bridge/staging/preview/native/services/i2p_client/identity.cpp"
+    },
+    "preview/native/services/i2p_client/identity.hpp": {
+      "before_sha256": null,
+      "after_sha256": "117e2ac9a5ef71339dc04548209092b33af6be351919f13af28f6b64c061a33d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/amendments/offline-fixture-bridge/staging/preview/native/services/i2p_client/identity.hpp"
+    },
+    "preview/native/tests/i2p_client_identity_tests.cpp": {
+      "before_sha256": null,
+      "after_sha256": "d721d2dc5c176e11a1450604cd98d20fc19947cdbc7be58340489fdfe415b74c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/amendments/offline-fixture-bridge/staging/preview/native/tests/i2p_client_identity_tests.cpp"
+    }
+  },
+  "CMake_fragment": "CMake.fragment",
+  "new_target": "biglybtc-i2p-client-identity-tests",
+  "new_suite": "pure-i2p-client-identity",
+  "timeout_seconds": 30,
+  "official_reference_jar_sha256": "d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896",
+  "modified_reference_jar_sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+  "inherited_source_pins": "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/source-pins.json",
+  "inherited_before_anchors": "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/before-anchors.json",
+  "compiler_or_test_or_java_executed": false,
+  "runtime_and_interop": "PENDING_ROOT_QUALIFICATION",
+  "native_or_shared_registry_changed": false,
+  "whole_core_or_router_activation": false,
+  "artifacts_sha256": {
+    "CMake.fragment": "8d0b0597ee9c04738b1e1f890b511556717cdc81e0834f8271520b3d5d88ef70",
+    "IMPLEMENTATION.txt": "49cd68d8db79a410886962d755c915c4c38397a0b0a58f7720c06379300115ed",
+    "OFFLINE-COMMANDS.sh": "833b2c1766eb16fad6ed42784685ec4d4a030664657dc2fcc52ff77f4ad4048a",
+    "changes.patch": "693c139ef46a2a96a07d8d628490472e313384970f82f42c74905a9415acb067",
+    "interop/ClientIdentityVectors.java": "dd5f1f78c8086901467aa22f9d3f0fa96f3301f6e747a6b11dbb94964b561b34",
+    "parent-delta.patch": "cbf83b2706f5625a176bf4ed0682737a8082c5913c51ea067930d8fb0abdf854",
+    "reference-api-check.json": "b47bcbbc01e6b286fc287e710507f1db2f103b68c542edb7bcc6d68495a06177",
+    "source-checks.json": "c37518a81cee6bc5f9a09a0f9fa1202323db18b18dac0a4b8e04ffe51c7560c1",
+    "staging/preview/native/services/i2p_client/identity.cpp": "99c54025953cc774bf4963aead7c7be4f296c8bac8df7eb715521e5b57899201",
+    "staging/preview/native/services/i2p_client/identity.hpp": "117e2ac9a5ef71339dc04548209092b33af6be351919f13af28f6b64c061a33d",
+    "staging/preview/native/tests/i2p_client_identity_tests.cpp": "d721d2dc5c176e11a1450604cd98d20fc19947cdbc7be58340489fdfe415b74c"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "status": "SOURCE_ONLY_ROOT_READY",
+  "parent_sha256": "bc284eee1de3276e973e62f172325b0a92684874ecbcbf80ba2d4036d8f079c1",
+  "child_sha256": "94c66e3e903b292ad6cbb1652afe1661e09d27b9ad2249d467c89a3235ff0fb9",
+  "artifacts_sha256": {
+    "parent-delta.patch": "9e82982fd0a68a57bd3fdb84e889e9f2cf7b6fd37f3febe31bd9a0ff9590fbc9",
+    "RUN.txt": "1ebf5eaf5599aa113ec8b73caf383067e339183848683cb85e9b93598951d95f",
+    "review.json": "5794cc5e4978e8789b8002499858ae8625c90c7c4f052cfc65208ba3ef090a41"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/repair-r3.py": "8a4804b22aae8c32e1ef6d069458a718dd8d1d2ca270a0265a3c285477784c1f",
+    "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/root-adoption-r2.json": "35bd5bcb1b5ec72deb10cb5b3440cd22d16488a1be8367f3bab551c7842aaeca",
+    "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/timeout-adoption.json": "ffee154fec5e1f3b7075c305a5f66624769b2d7909fbda4c39db52993195e2e5"
+  }
+}

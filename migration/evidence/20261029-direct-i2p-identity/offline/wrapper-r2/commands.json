@@ -1,0 +1,16 @@
+[
+  {
+    "name": "offline",
+    "command": [
+      "bash",
+      "/home/yurii/Java/BiglyBT/build/i2p-client-identity-20261029/amendments/concrete-offline-reader/OFFLINE-COMMANDS.sh",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2p-client-identity-tests",
+      "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/offline-r2"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 4.344,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-i2p-identity-followup-20261029/offline-wrapper-r2/offline.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]
