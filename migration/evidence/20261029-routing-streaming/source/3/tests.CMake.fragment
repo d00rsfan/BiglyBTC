@@ -1,0 +1,10 @@
+# Append to current tests/CMakeLists.txt; preserve accepted I2CP/profile targets.
+if(BIGLYBTC_DESKTOP)
+  add_executable(biglybtc-azureus-routing-tests azureus_routing_tests.cpp)
+  set_target_properties(biglybtc-azureus-routing-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-azureus-routing-tests PRIVATE biglybtc_owned_azureus_service Qt6::Test)
+  target_compile_features(biglybtc-azureus-routing-tests PRIVATE cxx_std_23)
+  target_compile_options(biglybtc-azureus-routing-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME azureus-routing COMMAND biglybtc-azureus-routing-tests)
+  set_tests_properties(azureus-routing PROPERTIES TIMEOUT 90 LABELS "unit;loopback;profile;routing" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()

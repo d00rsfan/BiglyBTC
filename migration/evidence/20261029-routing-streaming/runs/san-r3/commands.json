@@ -1,0 +1,116 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBTC/preview/native",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "-DBIGLYBTC_I2P_STREAMING_JAVA_ACCEPTANCE=ON",
+      "-DBIGLYBTC_I2P_STREAMING_JAVA=/usr/bin/java",
+      "-DBIGLYBTC_I2P_STREAMING_JAR=/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-DBIGLYBTC_I2P_STREAMING_CLASSES=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/java-peer-r1/classes"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 10.785,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/san-r3/configure.log",
+    "log_sha256": "ab6e89570f6f4521737a2e74a5f8bebb0ca0311bde6af11ec579c8f2ce1f0446"
+  },
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--target",
+      "biglybtc-azureus-routing-tests",
+      "biglybtc-owned-ddb-control-tests",
+      "biglybtc-azureus-router-owner-tests",
+      "biglybtc-azureus-owned-service-tests",
+      "biglybtc-azureus-profile-io-tests",
+      "biglybtc-i2cp-initial-channel-tests",
+      "biglybtc-i2cp-datagram-tests",
+      "biglybtc-i2cp-datagram-channel-tests",
+      "biglybtc-i2cp-receive-channel-tests",
+      "biglybtc-i2cp-tracker-channel-tests",
+      "biglybtc-i2p-streaming-tests",
+      "biglybtc-i2p-streaming-interop-tests",
+      "--",
+      "-k",
+      "0"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 433.464,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/san-r3/build.log",
+    "log_sha256": "e631a7d0b98038d10014bd479c8cc8d04c21cd55668ef9274af0ce891ced3712"
+  },
+  {
+    "name": "inventory",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--show-only=json-v1"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.169,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/san-r3/inventory.log",
+    "log_sha256": "d72a281039c1ab14529640b17595a09ca32a65ad6378b71b425d0748f3628b5b"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "-R",
+      "^(azureus\\-routing|owned\\-ddb\\-control|azureus\\-router\\-owner|azureus\\-owned\\-service|azureus\\-profile\\-io|i2cp\\-initial\\-channel|pure\\-i2cp\\-datagram\\-messages|i2cp\\-lease\\-backed\\-datagram\\-channel|i2cp\\-bounded\\-datagram\\-receiver|i2cp\\-explicit\\-tracker\\-channel|pure\\-i2p\\-streaming)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/san-r3/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 48.265,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/san-r3/tests.log",
+    "log_sha256": "5a073c75eb46c069c4e728440f28ca0b314677c27fec6f19e279d9d3a9e2f46c"
+  },
+  {
+    "name": "actor-tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "-R",
+      "^i2p-original-streaming-peer$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/san-r3/actor-tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 18.152,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/san-r3/actor-tests.log",
+    "log_sha256": "cb98101308c7a24729b84293efb88cb37985d8c164938d4bc8994aa5e500f0b4"
+  }
+]

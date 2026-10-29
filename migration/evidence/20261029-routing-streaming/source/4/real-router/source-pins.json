@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "status": "PREPARED_SOURCE_ONLY_NOT_EXECUTED",
+  "router_parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-isolated-router-20261029/manifest.json",
+    "sha256": "ea3835eddf67a2a92abe2085723ececd9647fa8a73e42d020505d598c0530cb7"
+  },
+  "router_parent_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-isolated-router-20261029/RouterTracker.java",
+    "sha256": "a9f3b6a01bf8eebd02e7c650856a677d62e1056653e20be97c0b9a6805abea44"
+  },
+  "router_parent_runner": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-isolated-router-20261029/run.py",
+    "sha256": "a3979407947327371dc91142464497db9322e0c361ae328799196304ba471582"
+  },
+  "fence_tool": {
+    "path": "/usr/bin/bwrap",
+    "resolved": "/usr/bin/bwrap",
+    "sha256": "0abea81db798ebf6b4742ac0664802d97521547a353c2a0dbdc21d76cbbfd2c0"
+  },
+  "streaming_source_pins": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/source-pins.json",
+    "sha256": "e305318db9b88096dae6d46e9db727d1030bc1430b9691e3274d352c4294a507"
+  },
+  "parent_actual_run": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-isolated-router-20261029/runs/r1/result.json",
+    "sha256": "d73f06d3abddde3062df7873095277d5d15d0e01cffd76a067bd08dfd6db4571",
+    "status": "PASS_WARMED_LOCAL_LOOKUP_AND_REAL_ROUTER_TRACKER",
+    "credit": "Parent router foundation only; no Streaming run credited"
+  },
+  "future_native_status": "PASS_ROUTING_STREAMING_COHORT"
+}

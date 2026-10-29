@@ -1,0 +1,102 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_inspected_commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+  "files": {
+    "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java": {
+      "repository": "original",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+      "sections": [
+        "60 replicate-on-join disabled",
+        "851\u2013934 self-ID FIND_NODE seed/closest callback",
+        "2373\u20132563 lookup/callback completion",
+        "2743\u20132785 reply\u2192alive/returned\u2192known",
+        "3307\u20133430 forwarded STORE seeded/token/local-group gates",
+        "3608\u20133653 Ping/NodeAdded",
+        "4098\u20134115 sorted/truncated closest list"
+      ]
+    },
+    "core/src/com/biglybt/core/dht/control/DHTControl.java": {
+      "repository": "original",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "6caf8491793107f98c6b83f30449c38a6702556be477673f920f744b20154c64",
+      "sections": [
+        "41\u201349 K20/search concurrency5"
+      ]
+    },
+    "core/src/com/biglybt/core/dht/router/impl/DHTRouterImpl.java": {
+      "repository": "original",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "50b1defa8637bd435960b628c37f7f02f31a2f52c2bb357e1b081eeae637dec4",
+      "sections": [
+        "88\u201397 10s tick/60s seed delay",
+        "724\u2013795 live-only means not failing/whole leaf",
+        "1031\u20131100 delayed seed bucket refresh",
+        "1277\u20131343 failing-contact pinger"
+      ]
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "repository": "native",
+      "commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+      "sha256": "76d4202205ea8bcdbea3071ac35ac430516f959452b4ea2c7314b6287de2be83"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "repository": "native",
+      "commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+      "sha256": "899ae6594404eef19cb30627e5a4312cf2a90b8ff5aba2d19dc366c6f4d0c747"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "repository": "native",
+      "commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+      "sha256": "86c2f75c247aa53a6f8915d30ff0ddae7a48a9a13f79d264ae43fd7ab4bde54b"
+    },
+    "preview/native/app/azureus_local_publish.inc": {
+      "repository": "native",
+      "commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+      "sha256": "5be8f8524c13e42690a55c2216347c18d29cd2918f8210d883490e1d14779122"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "repository": "native",
+      "commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+      "sha256": "f9a7f228e6a883960ca176125aab95c396b3d24cb584d1ce1cf67b365df4da91"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "repository": "native",
+      "commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+      "sha256": "fae7453152dd63bc875c7de41e51b4e84a83bcda952f158e88c9b822b0978c4e"
+    },
+    "preview/native/services/azureus_router/router.cpp": {
+      "repository": "native",
+      "commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+      "sha256": "704c59b286f53ef0ed430268c2b517a9cf9a309f238f76370a4221ea7bd14c50"
+    },
+    "preview/native/services/azureus_router/router.hpp": {
+      "repository": "native",
+      "commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+      "sha256": "6c09dd071e8240a7755ad5fb2c8bd46b63a64ab3f7c195de47c015d0d027f015"
+    },
+    "preview/native/services/azureus_control/lookup.cpp": {
+      "repository": "native",
+      "commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+      "sha256": "a933889ae7929dabbbdd299cbe210c1ec3e7a03078f72e1b1818a15cb0aefde0"
+    },
+    "preview/native/services/azureus_control/lookup.hpp": {
+      "repository": "native",
+      "commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+      "sha256": "cddf32183bbab7d83336c652474c9d861729149456e167dd10826b28fcf75081"
+    },
+    "preview/native/services/azureus_store_policy/store_policy.cpp": {
+      "repository": "native",
+      "commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+      "sha256": "c6e43af5ee37abc23422c19d9ad4cc8a79e70c009f894b4451e7cdb8763adaa9"
+    },
+    "preview/native/services/azureus_store_policy/store_policy.hpp": {
+      "repository": "native",
+      "commit": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+      "sha256": "c6465c292efb2ec1107c20cbaf9525a0f2b2787de84ea23e85b6d0256851294f"
+    }
+  },
+  "read_only": true,
+  "implementation_authored": false,
+  "execution": false
+}

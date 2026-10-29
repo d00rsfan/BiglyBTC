@@ -1,0 +1,60 @@
+{
+  "files": {
+    "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/recipe_support_followup.py": {
+      "sha256": "64e0bd2b9ec87b9babf90bdf8d1235746f7dc63c797c82c5e5a138a4c2ea893a",
+      "bytes": 6300
+    },
+    "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/jobs-r3.mk": {
+      "sha256": "cbdd2d7cfbeefd905e09107e35d3e8d6610d8b491ee3c7a519e39cf6110d06b9",
+      "bytes": 770
+    },
+    "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/run-r3.py": {
+      "sha256": "4c6e88b37330605cf0fbf13504317792a776b2ce84f3da8b6ed74f815c3a16c2",
+      "bytes": 11282
+    },
+    "/usr/bin/cmake": {
+      "sha256": "6e1dccda39845415d68eabb934c598998949c99ec4668625d571aee1827b05c7",
+      "bytes": 14253272
+    },
+    "/usr/bin/ctest": {
+      "sha256": "2cf8308ae2235efcae86a2eba443444f33ab611193a84092de33ec16836f5f17",
+      "bytes": 15926040
+    },
+    "/usr/bin/make": {
+      "sha256": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49",
+      "bytes": 295120
+    },
+    "/usr/bin/ninja": {
+      "sha256": "91e9548850cda2799facfdaa7abe33f9e978832f85e98212255708a7bbe437f2",
+      "bytes": 350624
+    },
+    "/usr/bin/x86_64-linux-gnu-g++-16": {
+      "sha256": "ca3bb855e752ea0b36544ef684e542fcf04273d8c229b1a96a9c160587e41c62",
+      "bytes": 1456856
+    }
+  },
+  "versions": {
+    "make": "GNU Make 4.4.1",
+    "ninja": "1.13.2"
+  },
+  "java_reference": {
+    "classes": {
+      "StreamingPeer$Adapter.class": "ea1d4bd05d8fa5c2c78e9011cf38fd0523f753f6c81368042006bb86de1bce06",
+      "StreamingPeer.class": "f4c81ea2bd3c2dd52bb92cddc754cc2ecbb0169363a4fdd8ce386c1027acc9db"
+    },
+    "classes_directory": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/java-peer-r1/classes",
+    "java": {
+      "/usr/lib/jvm/java-26-openjdk-amd64/bin/java": {
+        "sha256": "347282b66d7dfa462f84190f4254b3f5647c791b4250fe84ed0028fc9343f9ae",
+        "bytes": 14536
+      }
+    },
+    "jar": {
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar": {
+        "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+        "bytes": 4288652
+      }
+    }
+  },
+  "jobserver_fifo": "/tmp/GMfifo2325496"
+}

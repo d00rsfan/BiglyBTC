@@ -1,0 +1,54 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+Connected to MAKE jobserver
+      Start 178: azureus-owned-service
+ 1/11 Test #178: azureus-owned-service ................   Passed    5.54 sec
+      Start 182: azureus-router-owner
+ 2/11 Test #182: azureus-router-owner .................   Passed    0.01 sec
+      Start 192: owned-ddb-control
+ 3/11 Test #192: owned-ddb-control ....................   Passed    0.00 sec
+      Start 285: i2cp-initial-channel
+ 4/11 Test #285: i2cp-initial-channel .................   Passed   13.16 sec
+      Start 288: pure-i2cp-datagram-messages
+ 5/11 Test #288: pure-i2cp-datagram-messages ..........   Passed    0.03 sec
+      Start 289: i2cp-lease-backed-datagram-channel
+ 6/11 Test #289: i2cp-lease-backed-datagram-channel ...   Passed    7.38 sec
+      Start 291: i2cp-bounded-datagram-receiver
+ 7/11 Test #291: i2cp-bounded-datagram-receiver .......   Passed   11.21 sec
+      Start 292: azureus-profile-io
+ 8/11 Test #292: azureus-profile-io ...................   Passed    2.99 sec
+      Start 294: i2cp-explicit-tracker-channel
+ 9/11 Test #294: i2cp-explicit-tracker-channel ........   Passed    5.40 sec
+      Start 296: azureus-routing
+10/11 Test #296: azureus-routing ......................Subprocess aborted***Exception:   0.08 sec
+********* Start testing of AzureusRoutingTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusRoutingTests::initTestCase()
+FAIL!  : AzureusRoutingTests::realSelfLookupDiscoversThirdNormalOwnerThenAuthorisesActualCachedForward() Caught unhandled exception
+   Loc: [/home/qt/work/qt/qtbase/src/testlib/qtestcase.cpp(2004)]
+Totals: 1 passed, 1 failed, 0 skipped, 0 blacklisted, 63ms
+********* Finished testing of AzureusRoutingTests *********
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Cannot read owned routing source
+
+      Start 297: pure-i2p-streaming
+11/11 Test #297: pure-i2p-streaming ...................   Passed    0.03 sec
+
+91% tests passed, 1 tests failed out of 11
+
+Label Time Summary:
+crypto            =   0.03 sec*proc (1 test)
+i2p               =  37.21 sec*proc (6 tests)
+loopback          =   8.60 sec*proc (3 tests)
+no-network        =   0.05 sec*proc (2 tests)
+owned-loopback    =  37.16 sec*proc (4 tests)
+profile           =   3.07 sec*proc (2 tests)
+router            =   0.01 sec*proc (1 test)
+routing           =   0.08 sec*proc (1 test)
+statistics        =   5.55 sec*proc (3 tests)
+unit              =  45.83 sec*proc (11 tests)
+
+Total Test time (real) =  45.84 sec
+
+The following tests FAILED:
+	296 - azureus-routing (Subprocess aborted)              loopback profile routing unit
+Errors while running CTest

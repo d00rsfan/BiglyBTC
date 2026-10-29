@@ -1,0 +1,20 @@
+{
+  "status": "SOURCE_ONLY_REVIEWED_PENDING_ACTUAL_GATES",
+  "runtime_executed": false,
+  "source_commit": "514a238f0efa749e7a7fb1e68f8123af78e766da",
+  "artifacts_sha256": {
+    "finish.py": "8f129983056c4182a290129d1c734213fff4a497c6ed4ce545eaf17c082cb2b4",
+    "publish.py": "45705f96f4ac8083c3dce4e71cab600d67fd4ef113d5b7d72620fc1bfc949f13",
+    "drafts/private-run.py": "f8b1f871c129274643f9ad69cb2a95c7168c4265312afdeed869927c1281fa0a",
+    "drafts/router.py": "1a48a4be808c44dc59abc0122ae858bd948a180670b8996477657779bb1de546",
+    "drafts/private-manifest.json": "e1bcc84783926aaf856d224ce2a3bc23734be9f3531aae52540dbc5d079abf03",
+    "drafts/private-source-review-oracle.json": "4279f1ea7279f89c6d69481226bfb1c6ec1e1a1c6995b07d5b92dc52a29dcab9",
+    "drafts/finish-source-review.json": "05881b59236dee9aa254ca7f9d01d32253ca0d12c57f952351803876cb3a22b2",
+    "drafts/finish-final-source-review.json": "c1a45faddb234838e1bc4b874f456bdee2d6495a8b305ba08ad1c4f722f47d7e",
+    "drafts/finish-review-private-gates.patch": "ac9faae9772fd096670cba0dcbd830d57829c282abf6f73610e4ed0c39379acd",
+    "drafts/finish-review-router-bindings.patch": "de65bbe66cc365f2729d6732f21677151c333245650b4e81d89d9b4ea65f9b76",
+    "drafts/router-source.json": "7a69c10a9ae03f2767f5464cbf9c29b37c69ac19e608805d31197913c0a4129b",
+    "REVIEW.md": "249c453a8844e62eb47c8796f0e26ead5eebf54fbc87c232b7f61153c81f2367"
+  },
+  "root_review": "Private and router recipes read; both independent finisher patches read and applied, final syntax checked. Actual gates still required."
+}

@@ -1,0 +1,101 @@
+--- parent/run.py
++++ real-router/run.py
+@@ -1,15 +1,15 @@
+ #!/usr/bin/env python3
+-"""Root-run, opt-in isolated real-router acceptance. Importing starts nothing."""
++"""Root-run real external-manager Streaming acceptance; importing starts nothing."""
+ import argparse, errno, hashlib, json, os, pathlib, re, signal, socket
+ import subprocess, sys, time
+ 
+ H=pathlib.Path(__file__).resolve().parent
+ JAR_SHA='b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5'
+-ARCHIVES=('biglybtc_i2cp_initial_channel','biglybtc_i2cp_tracker_codec',
++ARCHIVES=('biglybtc_i2p_streaming','biglybtc_i2cp_initial_channel','biglybtc_i2cp_tracker_codec',
+           'biglybtc_i2cp_leaseset2','biglybtc_i2cp_datagram',
+           'biglybtc_i2cp_session_config','biglybtc_i2p_client_identity',
+           'biglybtc_i2p_datagram','biglybtc_i2cp_protocol')
+-SOURCE_DIRS=('i2cp_channel','i2cp_tracker','i2cp_datagram','i2cp_leaseset',
++SOURCE_DIRS=('i2p_streaming','i2cp_channel','i2cp_tracker','i2cp_datagram','i2cp_leaseset',
+              'i2cp_session','i2p_client','i2p_datagram','i2cp')
+ def sha(p):
+     h=hashlib.sha256()
+@@ -55,9 +55,9 @@
+     resource.setrlimit(resource.RLIMIT_CORE,(0,0))
+     resource.setrlimit(resource.RLIMIT_FSIZE,(32*1024*1024,32*1024*1024))
+     work=pathlib.Path('/work');commands=[];subjects=[];logs=[]
+-    result={'status':'FAIL','scope':'warmed-local-lookup-real-router-tracker',
++    result={'status':'FAIL','scope':'real-isolated-router-original-manager-streaming',
+             'cache_setup':'actual accepted+signature-verified LS2 via public store',
+-            'discovery_or_public_tunnels_qualified':False}
++            'discovery_or_public_tunnels_qualified':False,'full_peer_destination_explicit':True}
+     write(work/'fence-before.json',fence(parent_namespace))
+     def start(label,args):
+         log=(work/(label+'.log')).open('wb');logs.append(log)
+@@ -85,7 +85,7 @@
+                     '-Djava.io.tmpdir=/tmp','-Di2p.dir.base='+data,
+                     '-Di2p.dir.config='+data,'-Dtime.disabled=true',
+                     '-Djbigi.enable=false','-Djcpuid.enable=false',
+-                    '-cp','/classes:/reference.jar','RouterTracker',mode,'/work',str(port)]
++                    '-cp','/classes:/reference.jar','RouterStreaming',mode,'/work',str(port)]
+         router=start('router',java_command('router'))
+         wait_file('router-ready.json',70,[router])
+         end=time.monotonic()+5
+@@ -103,12 +103,12 @@
+         send(router,'warm-owned-cache')
+         marker=wait_file('cache-precondition.json',35,[router,tracker,probe])
+         assert marker['status']=='ACTUAL_SIGNED_LS2_CACHE_PRECONDITION'
+-        join(probe,40);assert load(work/'native-result.json')['status']=='PASS'
++        join(probe,80);assert load(work/'native-result.json')['status']=='PASS'
+         send(router,'native-closed');wait_file('native-retired.json',12,[router,tracker])
+         send(tracker,'stop');join(tracker,15);assert load(work/'tracker-result.json')['status']=='PASS'
+         send(router,'stop');join(router,20);assert load(work/'router-result.json')['status']=='PASS'
+         write(work/'fence-after.json',fence(parent_namespace))
+-        result.update(status='PASS_WARMED_LOCAL_LOOKUP_AND_REAL_ROUTER_TRACKER',
++        result.update(status='PASS_REAL_ISOLATED_ROUTER_STREAMING',
+                       port=port,native=load(work/'native-result.json'),
+                       tracker=load(work/'tracker-result.json'),router=load(work/'router-result.json'))
+     except BaseException as e:result['failure']=repr(e)
+@@ -135,8 +135,8 @@
+     a=p.parse_args();assert re.fullmatch('[0-9a-f]{40}',a.source_commit)
+     assert a.output.parent.resolve()==(H/'runs').resolve(),'Output must be a fresh task-local run'
+     assert sha(a.jar)==JAR_SHA and a.jar.is_file()
+-    pins=load(H/'source-pins.json');assert sha(pathlib.Path('/usr/bin/bwrap'))==pins['fence_tool']['sha256'],'Reviewed namespace tool changed'
+-    actual=load(a.native_result);assert actual['status']=='PASS_PROFILE_IO_I2CP_TRACKER_COHORT' and actual['lane']=='gcc' and actual['source_commit']==a.source_commit
++    pins=load(H/'source-pins.json');assert sha(pins['router_parent_source']['path'])==pins['router_parent_source']['sha256'];assert sha(pathlib.Path('/usr/bin/bwrap'))==pins['fence_tool']['sha256'],'Reviewed namespace tool changed'
++    actual=load(a.native_result);assert actual['status']=='PASS_ROUTING_STREAMING_COHORT' and actual['lane']=='gcc' and actual['source_commit']==a.source_commit
+     assert actual['source_unchanged'] and actual['images_unchanged'],'GCC qualification did not retain its source/images'
+     snapshot=load(a.native_result.parent/'source-before.json');assert snapshot['source_commit']==a.source_commit
+     native_build=pathlib.Path(actual['cache']).resolve();nc=cache(native_build/'CMakeCache.txt');native=pathlib.Path(nc['CMAKE_HOME_DIRECTORY'])
+@@ -156,15 +156,15 @@
+     links=link_receipt['archives']
+     expected={str(native_build/'services'/('lib'+name+'.a')) for name in ARCHIVES};assert set(links)==expected
+     assert all(sha(name)==value for name,value in links.items())
+-    probe=(a.probe_build/'biglybtc-i2cp-isolated-router-probe').resolve();assert probe.is_file()
++    probe=(a.probe_build/'biglybtc-i2p-real-router-streaming-probe').resolve();assert probe.is_file()
+     classes={str(path.relative_to(a.classes)):sha(path) for path in a.classes.rglob('*.class')}
+-    assert set(classes)=={'RouterTracker.class','RouterTracker$Tracker.class'},'Unexpected classpath content'
++    assert set(classes)=={'RouterTracker.class','RouterTracker$Tracker.class','RouterStreaming.class'},'Unexpected classpath content'
+     qt=pathlib.Path(nc['Qt6_DIR']).parents[2];assert (qt/'lib/libQt6Core.so.6').exists()
+     (H/'runs').mkdir(exist_ok=True);out=fresh(a.output);(out/'home').mkdir(mode=0o700)
+     inputs={'source_commit':a.source_commit,'native_result':str(a.native_result.resolve()),'native_result_sha256':sha(a.native_result),
+             'native_source':source,'archives':links,'probe_sha256':sha(probe),'java':str(a.java.resolve()),'java_sha256':sha(a.java.resolve()),
+             'jar_sha256':sha(a.jar),'fence_tool_sha256':sha(pathlib.Path('/usr/bin/bwrap')),
+-            'classes':classes,'fixture_sources':{name:sha(H/name) for name in ('RouterTracker.java','probe.cpp','run.py','CMakeLists.txt','source-pins.json')}}
++            'classes':classes,'fixture_sources':{name:sha(H/name) for name in ('RouterStreaming.java','probe.cpp','run.py','CMakeLists.txt','source-pins.json')}}
+     write(out/'inputs.json',inputs)
+     cmd=['/usr/bin/bwrap','--unshare-user','--unshare-net','--unshare-pid','--unshare-ipc','--unshare-uts',
+          '--disable-userns','--cap-drop','ALL','--die-with-parent','--new-session','--clearenv',
+@@ -188,10 +188,12 @@
+     if not (out/'result.json').exists():
+         write(out/'result.json',{'status':'FAIL_FENCE_OR_SETUP','namespace_exit_code':rc,
+                                 'reason':'No subject acceptance receipt; inspect namespace.log'})
+-    assert rc==0 and load(out/'result.json')['status']=='PASS_WARMED_LOCAL_LOOKUP_AND_REAL_ROUTER_TRACKER',out/'namespace.log'
++    assert rc==0 and load(out/'result.json')['status']=='PASS_REAL_ISOLATED_ROUTER_STREAMING',out/'namespace.log'
+     assert sha(probe)==inputs['probe_sha256'] and sha(a.jar)==JAR_SHA and all(sha(name)==value for name,value in links.items())
+     assert {str(path.relative_to(a.classes)):sha(path) for path in a.classes.rglob('*.class')}==classes
+     assert all(sha(native/rel.removeprefix('preview/native/'))==value for rel,value in source.items()),'Native source changed during acceptance'
++    assert all(sha(H/name)==value for name,value in inputs['fixture_sources'].items()),'Fixture source changed during acceptance'
++    assert sha(pins['router_parent_source']['path'])==pins['router_parent_source']['sha256']
+     print(out/'result.json');return 0
+ if __name__=='__main__':
+     if len(sys.argv)==4 and sys.argv[1]=='--inside':raise SystemExit(inside(sys.argv[2],sys.argv[3]))

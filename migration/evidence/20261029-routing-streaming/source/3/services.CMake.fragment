@@ -1,0 +1,3 @@
+# Append after both existing service libraries are defined. No cyclic dependency:
+# control remains a pure policy library; owned UDP now executes its NODE mode.
+target_link_libraries(biglybtc_azureus_owned_udp PUBLIC biglybtc_azureus_control)

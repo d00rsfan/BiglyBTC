@@ -1,0 +1,14 @@
+{
+  "status": "SOURCE_REVIEW_PASS_NO_EXECUTION",
+  "manifest_sha256": "974bf04246e7df682fcccee69eee80b228ae65b30973fc85fb4c216690fdef16",
+  "finding": "Protocol55 positions encoder requires engaged collection; empty span produces zero providers exactly like normal owner. Helper now verifies full decoded framing, correlation, positions/provider failures and contact count before returning wire bytes.",
+  "source_paths": 1,
+  "artifacts_checked": 5,
+  "preserved": [
+    "Every slot body and deadline",
+    "Production sources",
+    "Foreign/malformed/cancel/source/close/capacity assertions"
+  ],
+  "native_mutated": false,
+  "runtime_executed": false
+}

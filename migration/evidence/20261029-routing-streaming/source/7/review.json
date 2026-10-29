@@ -1,0 +1,35 @@
+{
+  "status": "SOURCE_REVIEW_PASS_NO_RUNTIME_CREDIT",
+  "manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/amendments/actor-member-order/manifest.json",
+    "sha256": "b85be109bd0f676671083c5efc1d3eb51f3c81edd9d4b3bbf85f9cf90c51cf9f"
+  },
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/manifest.json",
+    "sha256": "e6c66209e508e1f6640a078df5c0d20d02da2b02da492a860732d7efd92e0ac1"
+  },
+  "checked_source_paths": 11,
+  "checked_child_artifacts": 6,
+  "changed_parent_source_paths": [
+    "preview/native/services/azureus_udp/owned_routing.inc",
+    "preview/native/services/azureus_udp/owned_transport.hpp"
+  ],
+  "findings_resolved": [
+    "QChronoTimer declaration order now matches construction",
+    "Absolute routing budget anchored before preparation; central pump enforces exact end",
+    "Source-preflight reply continuation checks current Running round/deadline before NodeCache/router/contact effects"
+  ],
+  "reviewed_behavior": [
+    "ExactPeers remains default; dynamic contacts limited to explicit same-family owned loopback scope",
+    "Actual matched NODE replies and real RouterOwner state produce seeded/closest evidence; no caller seeded/closest setter",
+    "Source permits retain same profile authority; false preflight does not resume protocol work",
+    "Round cancellation/deadline/close settle outstanding received or queued RPCs; normal forwarding preserves original cached origin/version/flags and uses token/STORE/FINAL proof",
+    "Original cb8 seed closest callback and contact known/alive/forwarded STORE gates checked; finite seed/8-concurrency scope remains explicit"
+  ],
+  "remaining_scope": [
+    "Source-only; compile and actual owned runtime still required",
+    "Public/bootstrap persistence/all-known20 concurrency/maintenance/random refresh/full republish remain open"
+  ],
+  "native_mutated": false,
+  "subjects_executed": false
+}

@@ -1,0 +1,20 @@
+{
+    "arguments": [
+        "-Xms16m",
+        "-Xmx128m",
+        "-Djava.awt.headless=true",
+        "-Dtime.disabled=true",
+        "-Djbigi.enable=false",
+        "-Djcpuid.enable=false",
+        "-Duser.home=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/actor-supplement-r1/actual-java-peer/http",
+        "-Djava.io.tmpdir=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/actor-supplement-r1/actual-java-peer/http",
+        "-cp",
+        "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/java-peer-r1/classes:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+        "StreamingPeer",
+        "http",
+        "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/actor-supplement-r1/actual-java-peer/http",
+        "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram",
+        "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar"
+    ],
+    "program": "/usr/bin/java"
+}

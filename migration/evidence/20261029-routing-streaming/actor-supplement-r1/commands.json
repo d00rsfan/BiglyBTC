@@ -1,0 +1,25 @@
+[
+  {
+    "name": "actor-tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "-R",
+      "^i2p-original-streaming-peer$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/actor-supplement-r1/actor-tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 7.92,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/actor-supplement-r1/actor-tests.log",
+    "log_sha256": "6dd2d7fe9e10bee9abfa9fbd407aca97e9297b5aee8b6c11ad0dbde72d84523d"
+  }
+]

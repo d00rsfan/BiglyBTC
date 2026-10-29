@@ -1,0 +1,789 @@
+--- a/preview/native/app/azureus_local_publish.inc
++++ b/preview/native/app/azureus_local_publish.inc
+@@ -137,10 +137,21 @@
+       auto value=std::make_shared<Publishing>();value->command=command;value->deadline=command.deadline;value->snapshot.request=command.id;
+       const auto digest=QCryptographicHash::hash(QByteArray(command.applicationKey.data(),static_cast<qsizetype>(command.applicationKey.size())),QCryptographicHash::Sha1);
+       std::copy_n(reinterpret_cast<const std::uint8_t*>(digest.constData()),value->snapshot.key.size(),value->snapshot.key.begin());publishing_=value;
+-      withPublish(value,true,[this,value,command](const ProfileIo::Data& data){
+-      if(!data.version){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return;}PublicationClock clock;const auto version=*data.version;
+-      const auto key=std::string_view(reinterpret_cast<const char*>(value->snapshot.key.data()),value->snapshot.key.size());
+-      auto local=localDatabase_->putLocal(key,command.payload,version,clock,command.publicationFlags);if(!local){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}value->snapshot.localValue=std::move(*local);
++      withPublish(value,command.kind!=AzureusServiceCommand::ForwardCached,[this,value,command](const ProfileIo::Data& data){
++      PublicationClock clock;const auto key=std::string_view(reinterpret_cast<const char*>(value->snapshot.key.data()),value->snapshot.key.size());
++      if(command.kind==AzureusServiceCommand::ForwardCached){
++        const auto self=localDatabase_->localContact();if(!self||!*self){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}
++        auto found=localDatabase_->read(key,**self,64,0,clock);if(!found||!*found){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}
++        const services::azureus_values::Value* selected=nullptr;
++        for(const auto& candidate:(**found).values){if(candidate.originator.id!=(**self).id){if(selected){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}selected=&candidate;}}
++        if(!selected){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}
++        auto payload=services::azureus_db_value::Payload::copy(selected->bytes);if(!payload){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Memory);return;}
++        services::azureus_db_value::Fields fields{selected->created,std::move(*payload),selected->version,services::azureus_db_value::ContactHandle::copy(selected->originator),services::azureus_db_value::ContactHandle::copy(**self),false,selected->flags,selected->lifeHours,selected->replication};
++        value->snapshot.localValue=services::azureus_db_value::DbValue::create(std::move(fields),clock);
++      }else{
++        if(!data.version){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return;}
++        auto local=localDatabase_->putLocal(key,command.payload,*data.version,clock,command.publicationFlags);if(!local){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}value->snapshot.localValue=std::move(*local);
++      }
+       if(!validatePublish(value)){return;}value->snapshot.state=AzureusPublishState::Token;capturePublish(value);
+       auto sent=actor_.requestStoreToken(command.peer,options_.version,this,[this,value](azureus::DetailedFindNodeOutcome outcome){try{withPublish(value,false,[this,value,outcome=std::move(outcome)](const auto&)mutable{
+         if(!validatePublish(value)){return;}
+--- a/preview/native/app/azureus_profile_io_owner.inc
++++ b/preview/native/app/azureus_profile_io_owner.inc
+@@ -76,11 +76,16 @@
+         std::move_only_function<void()> expired={},std::move_only_function<void()> cancelled={}){
+       if(!state_->profileIo){return false;}
+       IoSlot* slot=nullptr;for(auto& item:ioSlots_){if(!item.job){slot=&item;break;}}if(!slot){return false;}
+-      auto versions=options_.valueVersions;auto lease=state_->profileIo->lease();
+-      auto submitted=state_->profileIo->submit([versions,lease,command,reserve,deadline,allowExpired](std::stop_token stop)->ProfileIo::Result{
++      auto versions=options_.valueVersions;auto lease=state_->profileIo->lease();const bool routingPolicy=options_.routingScope==azureus::RoutingScope::OwnedLoopback;
++      auto submitted=state_->profileIo->submit([versions,lease,command,reserve,deadline,allowExpired,routingPolicy](std::stop_token stop)->ProfileIo::Result{
+         const auto cancelled=[&]{return stop.stop_requested()||(!allowExpired&&std::chrono::steady_clock::now()>=deadline);};
+         if(cancelled()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO expired"});}
+         auto valid=versions->validate();if(!valid){return std::unexpected(valid.error());}
++        if(routingPolicy){
++          auto config=storage::ConfigFile::load(*lease,"biglybt.config");if(!config&&config.error().code!=storage::ErrorCode::Missing){return std::unexpected(config.error());}
++          if(config){if(config->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Resolve routing configuration recovery first"});}
++            if(const auto* enabled=config->document().find("Plugin.DHT.dht.enabled")){if(enabled->type!=core::Node::Type::Integer){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Invalid original DHT availability"});}if(static_cast<std::uint32_t>(enabled->integer)==0){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Original Azureus DHT is disabled"});}}}
++        }
+         ProfileIo::Data result;
+         const auto rating=[&]()->std::expected<void,storage::Error>{
+           if(!command.ratingHash){return {};}
+--- /dev/null
++++ b/preview/native/app/azureus_routing_owner.inc
+@@ -0,0 +1,25 @@
++// Included in the private owner. Actor-only NODE completion is observed here;
++// application code cannot install a seeded/closest/routing snapshot.
++    std::optional<Command> routingCommand_;
++    std::uint64_t routingOperation_=0;
++    bool routingResultPublished_=true;
++    void captureOwnedRouting(){
++      const auto snapshot=actor_.routingSnapshot();
++      {std::lock_guard lock(state_->mutex);if(state_->value.routingSnapshot!=snapshot){state_->value.routingSnapshot=snapshot;state_->advance();}}
++      if(!routingCommand_||routingResultPublished_||!routingOperation_||!snapshot||snapshot->operation!=routingOperation_||!snapshot->finished){return;}
++      bool closing=false;{std::lock_guard lock(state_->mutex);closing=state_->stop;}
++      routingResultPublished_=true;reply(*routingCommand_,closing?std::optional{azureus::Failure::Closed}:snapshot->failure,true);
++    }
++    void beginRouting(const Command& command){
++      if(!routingResultPublished_){failCommand(command,AzureusServiceError::Capacity);return;}
++      routingCommand_=command;routingOperation_=0;routingResultPublished_=false;
++      auto current=[this,id=command.id]{std::lock_guard lock(state_->mutex);return !state_->stop&&!routingResultPublished_&&routingCommand_&&routingCommand_->id==id;};
++      if(!deferProfile(command,false,command.deadline,std::move(current),
++          [this,command](const ProfileIo::Data&){
++            if(routingResultPublished_){return;}const auto remaining=command.deadline-std::chrono::steady_clock::now();
++            auto started=actor_.integrateRouting(command.peer,remaining);if(!started){routingResultPublished_=true;reply(command,started.error(),true);return;}routingOperation_=*started;captureOwnedRouting();publish();
++          },[this,command](storage::Error){if(!routingResultPublished_){routingResultPublished_=true;failCommand(command,AzureusServiceError::Profile);}},false,
++          [this,command]{if(!routingResultPublished_){routingResultPublished_=true;reply(command,azureus::Failure::Timeout,true);}})){
++        routingResultPublished_=true;failCommand(command,AzureusServiceError::Capacity);
++      }
++    }
+--- a/preview/native/app/owned_azureus_service.cpp
++++ b/preview/native/app/owned_azureus_service.cpp
+@@ -62,7 +62,8 @@
+     &&(value.bindAddress.protocol()==QAbstractSocket::IPv4Protocol||value.bindAddress.protocol()==QAbstractSocket::IPv6Protocol)
+     &&value.network>=0&&value.version>=51&&value.version<=55&&value.maximumPending&&value.maximumPending<=32
+     &&value.maximumPeers&&value.maximumPeers<=32&&value.maximumCommands&&value.maximumCommands<=64
+-    &&(!value.valueVersions||value.valueVersions->network()==value.network)&&(!value.serveValues||value.valueVersions);}
++    &&(!value.valueVersions||value.valueVersions->network()==value.network)&&(!value.serveValues||value.valueVersions)
++    &&(value.routingScope==azureus::RoutingScope::ExactPeers||(value.routingScope==azureus::RoutingScope::OwnedLoopback&&value.serveValues&&value.valueVersions));}
+ }
+ struct OwnedAzureusService::Impl {
+   struct State {
+@@ -108,9 +109,14 @@
+       try{
+         if(value.kind==AzureusServiceCommand::AllowPeer){auto allowed=actor_.allowPeer(value.peer);if(allowed){rememberOwned(value.peer);routerKnown(value.peer);}complete(value,allowed);return;}
+         if(value.kind==AzureusServiceCommand::LookupValue){beginLookup(value);return;}
+-        if(value.kind==AzureusServiceCommand::PublishValue){beginPublish(value);return;}
++        if(value.kind==AzureusServiceCommand::PublishValue||value.kind==AzureusServiceCommand::ForwardCached){beginPublish(value);return;}
++        if(value.kind==AzureusServiceCommand::IntegrateRouting){beginRouting(value);return;}
+         if(value.kind==AzureusServiceCommand::PublishRating||value.kind==AzureusServiceCommand::ReadRatings){beginRating(std::move(value));return;}
+         if(value.kind==AzureusServiceCommand::Cancel){
++          if(routingCommand_&&routingCommand_->id==value.target&&!routingResultPublished_){
++            if(routingOperation_){const bool accepted=actor_.cancelRouting(routingOperation_);captureOwnedRouting();complete(value,accepted?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));}
++            else{routingResultPublished_=true;reply(*routingCommand_,azureus::Failure::Cancelled,true);drainProfileIo();complete(value,{});}return;
++          }
+           if(ratingRead_&&ratingRead_->command.id==value.target&&!ratingRead_->finished){
+             ratingRead_->cancelled=true;const bool cancelled=actor_.cancel(ratingRead_->ticket)||bool(state_->profileIo);finishRatingRead(ratingRead_,AzureusRatingReadState::Cancelled,AzureusServiceError::Transport,azureus::Failure::Cancelled);drainProfileIo();
+             complete(value,cancelled?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));return;
+@@ -169,6 +175,7 @@
+     #include "azureus_profile_io_owner.inc"
+     #include "azureus_local_publish.inc"
+     #include "azureus_rating_consumer.inc"
++    #include "azureus_routing_owner.inc"
+ 
+     struct LookupRpc {std::uint64_t node=0;azureus::Ticket ticket;azureus::Peer peer;bool cancellationRequested=false;};
+     using Clock=std::chrono::steady_clock;
+@@ -248,7 +255,7 @@
+       return {};
+     }
+     bool isOwned(const azureus::Peer& peer)const noexcept{
+-      return std::ranges::any_of(ownedPeers_,[&](const auto& item){return item&&*item==peer;});
++      return actor_.isRoutingPeer(peer)||std::ranges::any_of(ownedPeers_,[&](const auto& item){return item&&*item==peer;});
+     }
+     void rememberOwned(const azureus::Peer& peer)noexcept{
+       if(isOwned(peer)){return;}for(auto& item:ownedPeers_){if(!item){item=peer;return;}}
+@@ -378,7 +385,7 @@
+     }
+ 
+     static azureus::Config configuration(const AzureusServiceOptions& options){azureus::Config config;config.network=options.network;config.version=options.version;
+-      config.servePings=options.servePings;config.observeOperations=true;config.enableVivaldi=options.enableVivaldi;config.maximumPending=options.maximumPending;config.maximumPeers=options.maximumPeers;return config;}
++      config.routingScope=options.routingScope;config.servePings=options.servePings;config.observeOperations=true;config.enableVivaldi=options.enableVivaldi;config.maximumPending=options.maximumPending;config.maximumPeers=options.maximumPeers;return config;}
+     void releaseLocked(){if(state_->value.outstandingCommands){--state_->value.outstandingCommands;}}
+     void reply(const Command& value,std::optional<azureus::Failure> failure,bool terminal){
+       if(terminal){for(auto& slot:active_){if(slot.id==value.id){slot.id=0;break;}}}
+@@ -392,7 +399,7 @@
+       try{
+         const auto actual=actor_.dhtStatisticsSnapshot(); // Exported getter is noexcept and fixed-state.
+         if(!actual){std::lock_guard lock(state_->mutex);state_->value.current=false;state_->value.error=AzureusServiceError::Transport;state_->value.transportFailure=actual.error();state_->advance();return;}
+-        captureRouter();captureLookup();refreshRatingObservation();
++        captureOwnedRouting();captureRouter();captureLookup();refreshRatingObservation();
+         if(localDatabase_){const auto value=localDatabase_->snapshot();if(value){auto copy=std::make_shared<const services::azureus_db_runtime::Snapshot>(*value);std::lock_guard lock(state_->mutex);state_->value.databaseSnapshot=std::move(copy);}}
+         if(last_&&sameFacts(*last_,*actual)){std::lock_guard lock(state_->mutex);const bool current=!state_->stop&&state_->value.state==AzureusServiceState::Running&&actual->transport().state()==azureus::TransportStatisticsState::Bound;
+           if(state_->value.current!=current||state_->value.error||state_->value.routerSnapshot!=routerSnapshot_||state_->value.routerFailure!=routerFailure_||state_->value.lookupSnapshot!=lookupSnapshot_||state_->value.lookupFailure!=lookupFailure_){
+@@ -484,6 +491,9 @@
+   if((value.kind==AzureusServiceCommand::PublishRating||value.kind==AzureusServiceCommand::ReadRatings)
+       &&(!impl_->options.valueVersions||impl_->options.network!=0||!value.ratingHash||value.timeout<std::chrono::milliseconds(1)
+           ||(value.kind==AzureusServiceCommand::ReadRatings&&value.timeout>std::chrono::seconds(20)))){return std::unexpected(AzureusServiceError::Invalid);}
++  if((value.kind==AzureusServiceCommand::IntegrateRouting||value.kind==AzureusServiceCommand::ForwardCached)
++      &&(impl_->options.routingScope!=azureus::RoutingScope::OwnedLoopback||!impl_->options.serveValues||!impl_->options.valueVersions||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
++  if(value.kind==AzureusServiceCommand::ForwardCached&&(value.applicationKey.empty()||value.applicationKey.size()>1024)){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.publicationFlags!=AzureusPublicationFlags::Normal&&value.publicationFlags!=AzureusPublicationFlags::Anonymous){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind==AzureusServiceCommand::PublishValue&&(!impl_->options.valueVersions||value.applicationKey.empty()||value.applicationKey.size()>1024||value.payload.empty()||value.payload.size()>512||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind==AzureusServiceCommand::FindValue&&(value.maximumValues<0||value.maximumValues>255)){return std::unexpected(AzureusServiceError::Invalid);}
+@@ -502,6 +512,8 @@
+ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::publishValue(azureus::Peer peer,std::string key,std::string payload,std::chrono::nanoseconds timeout,AzureusPublicationFlags flags){Command value;value.kind=AzureusServiceCommand::PublishValue;value.peer=std::move(peer);value.applicationKey=std::move(key);value.payload=std::move(payload);value.timeout=timeout;value.publicationFlags=flags;return submit(std::move(value));}
+ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::publishSavedRating(azureus::Peer peer,core::TorrentHash hash,std::array<std::uint8_t,32> revision,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::PublishRating;value.peer=std::move(peer);value.ratingHash=std::move(hash);value.ratingRevision=revision;value.timeout=timeout;return submit(std::move(value));}
+ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::readSavedRatings(azureus::Peer peer,core::TorrentHash hash,std::array<std::uint8_t,32> revision,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::ReadRatings;value.peer=std::move(peer);value.ratingHash=std::move(hash);value.ratingRevision=revision;value.timeout=timeout;return submit(std::move(value));}
++std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::integrateRouting(azureus::Peer seed,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::IntegrateRouting;value.peer=std::move(seed);value.timeout=timeout;return submit(std::move(value));}
++std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::forwardCachedValue(azureus::Peer peer,std::string key,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::ForwardCached;value.peer=std::move(peer);value.applicationKey=std::move(key);value.timeout=timeout;return submit(std::move(value));}
+ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::cancel(std::uint64_t request){Command value;value.kind=AzureusServiceCommand::Cancel;value.target=request;return submit(value);}
+ std::expected<void,AzureusServiceError> OwnedAzureusService::close(){
+   if(QThread::currentThread()==&impl_->thread){return std::unexpected(AzureusServiceError::Thread);}std::lock_guard lifecycle(impl_->closeMutex);auto& state=*impl_->state;
+--- a/preview/native/app/owned_azureus_service.hpp
++++ b/preview/native/app/owned_azureus_service.hpp
+@@ -19,7 +19,7 @@
+   Disabled,Invalid,NoApplication,Start,Closed,Capacity,Dispatch,Memory,Thread,UnknownRequest,Transport,Profile,Readback
+ };
+ enum class AzureusServiceState { Starting,Running,Closing,Closed,Failed };
+-enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue,PublishRating,ReadRatings };
++enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue,PublishRating,ReadRatings,IntegrateRouting,ForwardCached };
+ struct AzureusServiceOptions {
+   bool enabled=false;
+   QHostAddress bindAddress{QHostAddress::LocalHost};
+@@ -33,6 +33,7 @@
+   // Explicit normal receiving STORE/GET using this actor's real router + DB.
+   // Requires valueVersions; direct values only until genuine seeded support.
+   bool serveValues=false;
++  azureus::RoutingScope routingScope=azureus::RoutingScope::ExactPeers;
+ 
+ };
+ struct AzureusServiceResult {
+@@ -94,6 +95,7 @@
+   std::shared_ptr<const AzureusPublishSnapshot> publishSnapshot;
+   std::shared_ptr<const services::azureus_db_runtime::Snapshot> databaseSnapshot;
+   std::shared_ptr<const AzureusRatingReadSnapshot> ratingReadSnapshot;
++  std::shared_ptr<const azureus::RoutingSnapshot> routingSnapshot;
+   // Passive bounded IO progress only; no source/packet permission is exposed.
+   std::size_t profileIoPending=0,profileIoRunning=0,profileIoReady=0,profileIoHighWater=0;
+ };
+@@ -154,6 +156,15 @@
+   std::expected<std::uint64_t,AzureusServiceError> readSavedRatings(azureus::Peer,
+       core::TorrentHash,std::array<std::uint8_t,32> sourceRevision,
+       std::chrono::nanoseconds timeout=std::chrono::seconds(20));
++  // Opt-in owned-loopback normal service only. One explicit self-ID NODE
++  // integration; response contacts need no individual allowPeer grant.
++  std::expected<std::uint64_t,AzureusServiceError> integrateRouting(azureus::Peer seed,
++      std::chrono::nanoseconds timeout=std::chrono::seconds(10));
++  // Select exactly one existing nonlocal value at SHA1(applicationKey), keep
++  // its original origin/version/flags, and prove actual final remote readback.
++  // No local version reservation, automatic republish or supplied value facts.
++  std::expected<std::uint64_t,AzureusServiceError> forwardCachedValue(azureus::Peer,
++      std::string applicationKey,std::chrono::nanoseconds timeout=std::chrono::seconds(5));
+   std::expected<std::uint64_t,AzureusServiceError> cancel(std::uint64_t request);
+   // Seals admission and joins even with queued/active work; idempotent. No forced
+   // termination or detached actor. Call/destruction must not race object lifetime.
+--- a/preview/native/services/azureus_control/lookup.cpp
++++ b/preview/native/services/azureus_control/lookup.cpp
+@@ -16,7 +16,7 @@
+   for(unsigned i=0;i<15;++i){if(c.address.bytes[i]){return false;}}return true;
+ }
+ bool validOptions(const LookupOptions& o)noexcept{
+-  return o.parallelism>0&&o.parallelism<=LookupController::MaximumParallelism&&o.accuracy>0&&o.accuracy<=20&&o.maximumContacts>=o.parallelism&&o.maximumContacts<=LookupController::MaximumContacts&&o.maximumValues>0&&o.maximumValues<=LookupController::MaximumValues&&o.timeoutMillis>0&&o.timeoutMillis<=300000&&(o.flags==0||o.flags==8);
++  return (o.kind==LookupKind::Value||o.kind==LookupKind::Node)&&(o.kind!=LookupKind::Node||o.flags==0)&&o.parallelism>0&&o.parallelism<=LookupController::MaximumParallelism&&o.accuracy>0&&o.accuracy<=20&&o.maximumContacts>=o.parallelism&&o.maximumContacts<=LookupController::MaximumContacts&&o.maximumValues>0&&o.maximumValues<=LookupController::MaximumValues&&o.timeoutMillis>0&&o.timeoutMillis<=300000&&(o.flags==0||o.flags==8);
+ }
+ int distance(const NodeId& a,const NodeId& b,const NodeId& target)noexcept{
+   for(std::size_t i=0;i<a.size();++i){const auto x=a[i]^target[i],y=b[i]^target[i];if(x<y){return -1;}if(x>y){return 1;}}return 0;
+@@ -26,6 +26,7 @@
+ bool same(const Contact& a,const Contact& b)noexcept{return a.id==b.id||a.address==b.address;}
+ }
+ bool validLookupSnapshot(const LookupSnapshot& s)noexcept{
++  if(s.options.kind==LookupKind::Node&&(!s.results.empty()||s.valueReplies)){return false;}
+   if(!s.generation||!s.lookup||!s.revision||!validOptions(s.options)||s.startedMillis<0||s.updatedMillis<s.startedMillis||s.nodes.size()>s.options.maximumContacts||s.results.size()>s.options.maximumValues||s.valueReplies>s.nodes.size()||s.state==LookupState::Idle){return false;}
+   if(s.state!=LookupState::Running&&s.state!=LookupState::Stopping&&!lookupTerminal(s.state)){return false;}
+   if(s.stop){switch(*s.stop){
+@@ -165,6 +166,7 @@
+   settle(now);bump();return {};
+ }
+ std::expected<void,LookupError> LookupController::values(std::uint64_t id,std::span<const Value> values,bool continuation,std::int8_t diversification,std::int64_t now){try{
++  if(data_.options.kind==LookupKind::Node){return std::unexpected(LookupError::Unsupported);}
+   auto* value=node(id);if(!value||!rpc(value->state)){return std::unexpected(LookupError::Stale);}
+   if(const auto result=clock(now);!result){return result;}
+   const bool sliceLimit=value->slices==MaximumSlices;if(!sliceLimit){++value->slices;}
+--- a/preview/native/services/azureus_control/lookup.hpp
++++ b/preview/native/services/azureus_control/lookup.hpp
+@@ -15,10 +15,12 @@
+ enum class LookupState {Idle,Running,Stopping,Complete,TimedOut,Cancelled,Closed,Failed};
+ enum class LookupStop {Exhausted,Closest,ValueLimit,TwoValueReplies,Deadline,Cancelled,Closed,Capacity,Unsupported,Clock,Memory,Overflow};
+ enum class LookupNodeState {Candidate,Reserved,Sent,Partial,Replied,Timeout,Cancelled,Closed,Failed,Rejected,Skipped};
++enum class LookupKind {Value,Node};
+ struct LookupOptions {
+   NodeId target{},localId{};
+   std::size_t parallelism=3,accuracy=20,maximumContacts=128,maximumValues=32;
+   std::int64_t timeoutMillis=30000;
++  LookupKind kind=LookupKind::Value;
+   std::uint8_t flags=0; // Normal0 or source FLAG_STATS8; no obfuscation/diversification.
+ };
+ // Explicit adapter policy decision; discovering a contact NEVER grants admission.
+@@ -71,6 +73,7 @@
+   std::expected<void,LookupError> close(std::int64_t now);
+   std::expected<std::vector<CancelIntent>,LookupError> cancellationIntents()const;
+   std::expected<LookupSnapshot,LookupError> snapshot()const;
++  LookupState state()const noexcept{return data_.state;}
+ private:
+   std::expected<void,LookupError> clock(std::int64_t now);
+   std::expected<void,LookupError> offer(std::span<const AdmittedContact>,std::uint64_t parent,std::int64_t now);
+--- /dev/null
++++ b/preview/native/services/azureus_udp/owned_routing.inc
+@@ -0,0 +1,207 @@
++// Included in namespace azureus_udp. The normal actor owns all RPC/contact
++// state; no external seeded/closest snapshots or completion callbacks exist.
++struct OwnedPingTransport::Routing final {
++  std::uint64_t id=0;
++  Clock::time_point deadline;
++  azureus_control::LookupController controller;
++  struct Rpc {std::uint64_t node=0;Ticket ticket;Peer peer;bool received=false;};
++  std::array<Rpc,azureus_control::LookupController::MaximumParallelism> rpcs{};
++  bool finished=false,finalizing=false;
++  std::shared_ptr<RoutingSnapshot> terminalFailure=std::make_shared<RoutingSnapshot>();
++  std::optional<Failure> failure;
++};
++bool OwnedPingTransport::ownedRoutingPeer(const Peer& peer)const noexcept{
++  return config_.routingScope==RoutingScope::OwnedLoopback&&state_==State::Bound
++      &&peer.port&&peer.address.isLoopback()&&peer.address.scopeId().isEmpty()
++      &&peer.address.protocol()==socket_.localAddress().protocol()&&peer!=endpoint();
++}
++bool OwnedPingTransport::isRoutingPeer(const Peer& peer)const noexcept{
++  return owner()&&ownedRoutingPeer(peer)&&allowed(peer)&&bool(normalRouter_);
++}
++std::optional<Peer> OwnedPingTransport::routingPeer(const find::nodes::Contact& contact)const{
++  if(contact.protocol<51||contact.protocol>55||!contact.address.port){return {};}
++  Peer peer;peer.port=contact.address.port;
++  if(contact.address.length==4){quint32 ip=0;for(unsigned i=0;i<4;++i){ip=(ip<<8)|contact.address.bytes[i];}peer.address=QHostAddress(ip);}
++  else if(contact.address.length==16){Q_IPV6ADDR ip;std::copy_n(contact.address.bytes.begin(),16,ip.c);peer.address=QHostAddress(ip);}
++  else{return {};}
++  return ownedRoutingPeer(peer)?std::optional{peer}:std::nullopt;
++}
++bool OwnedPingTransport::learnRoutingContact(const find::nodes::Contact& contact,bool alive){
++  if(!normalCurrent()||!localId_||contact.id==*localId_){return false;}
++  const auto peer=routingPeer(contact);if(!peer){return false;}
++  const auto id=nodeCache_->lookup(find::nodes::ResolvedEndpoint{contact.address,{}},contact.protocol);
++  if(!id||id->id!=contact.id){return false;}
++  // A restricted source ID can alias multiple endpoints. This finite scope
++  // refuses ambiguity instead of substituting an attachment for an old node.
++  for(const auto& old:normalContacts_){if(old.id==contact.id&&old.address!=contact.address){return false;}}
++  auto previous=std::ranges::find(normalContacts_,contact.address,&find::nodes::Contact::address);
++  if(previous==normalContacts_.end()&&normalContacts_.size()==config_.maximumPeers){return false;}
++  if(!allowPeer(*peer)){return false;}
++  if(alive){if(!normalAlive(contact)){return false;}}
++  else{
++    const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
++    if(!normalRouter_->contactKnown({.id=contact.id,.instance=contact.instance,.sleeping=(static_cast<std::uint8_t>(contact.flags)&1U)!=0},now)){return false;}
++    if(previous==normalContacts_.end()){normalContacts_.push_back(contact);}else{*previous=contact;}
++  }
++  if(learnedRouting_==UINT64_MAX){return false;}++learnedRouting_;return true;
++}
++void OwnedPingTransport::captureRouting()noexcept{
++  const auto failed=[&]()noexcept{
++    normalSeeded_=false;routingSnapshot_.reset();if(!routing_){return;}routing_->failure=Failure::Capacity;
++    try{if(!routing_->finished){static_cast<void>(routing_->controller.cancel(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count()));}}catch(...){}
++    if(routing_->finished&&routing_->terminalFailure){auto value=std::move(routing_->terminalFailure);value->generation=statisticsGeneration_;value->operation=routing_->id;value->finished=true;value->failure=Failure::Capacity;routingSnapshot_=std::move(value);}
++  };
++  try{
++    if(config_.routingScope!=RoutingScope::OwnedLoopback){routingSnapshot_.reset();return;}
++    if(routingRevision_==UINT64_MAX){failed();return;}
++    auto snapshot=std::make_shared<RoutingSnapshot>();snapshot->generation=statisticsGeneration_;snapshot->operation=routing_?routing_->id:0;snapshot->revision=++routingRevision_;
++    snapshot->finished=routing_&&routing_->finished;snapshot->seeded=normalSeeded_;snapshot->learned=learnedRouting_;snapshot->rejected=rejectedRouting_;snapshot->pings=routingPings_;
++    if(routing_){auto lookup=routing_->controller.snapshot();if(!lookup){failed();return;}snapshot->lookup=std::make_shared<const azureus_control::LookupSnapshot>(std::move(*lookup));snapshot->failure=routing_->failure;}
++    routingSnapshot_=std::move(snapshot);
++  }catch(...){failed();}
++}
++std::shared_ptr<const RoutingSnapshot> OwnedPingTransport::routingSnapshot()const noexcept{
++  return owner()?routingSnapshot_:nullptr;
++}
++void OwnedPingTransport::routingFailed(Failure failure)noexcept{
++  normalSeeded_=false;
++  if(routing_&&!routing_->finished){routing_->failure=failure;try{static_cast<void>(routing_->controller.cancel(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count()));pumpRouting(routing_);}catch(...){routingSnapshot_.reset();}}
++  else{captureRouting();}
++}
++void OwnedPingTransport::answerRoutingPing(const Peer& peer,packet::Decoded request,std::int64_t receivedAt){
++  auto completion=[this,peer,request=std::move(request),receivedAt](bool accepted)mutable{
++    if(state_!=State::Bound||!normalRouter_){return;}if(!accepted){++statistics_.authorityErrors;return;}
++    const auto& header=request.header().fields();
++    if(!normalCurrent()||!header.originator||*header.originator!=originator(peer)){++statistics_.serviceAddressRejected;return;}
++    const auto id=nodeCache_->lookup(find::nodes::ResolvedEndpoint{*header.originator,{}},header.originatorVersion);if(!id){++statistics_.authorityErrors;return;}
++    find::nodes::Contact contact;contact.id=id->id;contact.address=*header.originator;contact.protocol=header.originatorVersion;contact.instance=header.instance;contact.flags=header.flags;
++    if(!learnRoutingContact(contact,true)){++statistics_.authorityErrors;return;}answer(peer,request,receivedAt);dispatchRoutingPings();captureRouting();
++  };
++  if(!normalPreflight_||!normalPreflight_(std::move(completion))){++statistics_.serviceCapacityDrops;}
++}
++std::expected<std::uint64_t,Failure> OwnedPingTransport::integrateRouting(Peer seed,std::chrono::nanoseconds timeout){
++  const auto entered=Clock::now();
++  if(!owner()){return std::unexpected(Failure::Thread);}
++  if(!normalCurrent()||!normalPreflight_||!ownedRoutingPeer(seed)||!localId_){return std::unexpected(Failure::Authority);}
++  if(timeout<=std::chrono::nanoseconds::zero()||timeout>std::chrono::seconds(30)){return std::unexpected(Failure::Deadline);}
++  const auto end=entered+timeout;
++  if((routing_&&!routing_->finished)||nextRouting_==UINT64_MAX){return std::unexpected(Failure::Capacity);}
++  auto contact=normalDatabase_->localContact();if(!contact||!*contact){return std::unexpected(Failure::State);}
++  find::nodes::Contact first;first.address=originator(seed);first.protocol=config_.version;
++  const auto derived=nodeCache_->lookup(find::nodes::ResolvedEndpoint{first.address,{}},first.protocol);if(!derived){return std::unexpected(Failure::Authority);}first.id=derived->id;
++  if(Clock::now()>=end){return std::unexpected(Failure::Deadline);}
++  if(first.id==*localId_||!learnRoutingContact(first,false)){return std::unexpected(Failure::Authority);}
++  auto round=std::make_shared<Routing>();round->id=++nextRouting_;round->deadline=end;
++  const auto remaining=end-Clock::now();if(remaining<=Clock::duration::zero()){return std::unexpected(Failure::Deadline);}
++  azureus_control::LookupOptions options;options.kind=azureus_control::LookupKind::Node;options.target=*localId_;options.localId=*localId_;options.parallelism=8;options.maximumValues=1;options.timeoutMillis=std::chrono::ceil<std::chrono::milliseconds>(remaining).count();
++  const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();const std::array seeds{azureus_control::AdmittedContact{first,true}};
++  if(!round->controller.start(statisticsGeneration_,round->id,options,seeds,now)){return std::unexpected(Failure::State);}
++  routing_=round;routingDeadline_.setInterval(std::max(Clock::duration::zero(),end-Clock::now()));routingDeadline_.start();pumpRouting(round);return round->id;
++}
++bool OwnedPingTransport::cancelRouting(std::uint64_t id){
++  if(!owner()||!routing_||routing_->id!=id||routing_->finished){return false;}
++  const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();routing_->failure=Failure::Cancelled;static_cast<void>(routing_->controller.cancel(now));pumpRouting(routing_);return true;
++}
++void OwnedPingTransport::finishRouting(const std::shared_ptr<Routing>& round){
++  if(routing_!=round||round->finished){return;}
++  const auto state=round->controller.state();
++  if(!azureus_control::lookupTerminal(state)||std::ranges::any_of(round->rpcs,[](const auto& rpc){return rpc.node!=0;})){captureRouting();return;}
++  if(state==azureus_control::LookupState::Complete&&!round->failure){
++    // This call is reached only from a currently granted source permit. An
++    // exhausted result can be empty, exactly like the original closest callback.
++    if(Clock::now()>=round->deadline){round->failure=Failure::Timeout;round->finished=true;routingDeadline_.stop();captureRouting();return;}
++    if(!normalCurrent()){
++      if(round->finalizing){return;}round->finalizing=true;
++      if(!normalPreflight_||!normalPreflight_([this,round](bool accepted){if(routing_!=round||round->finished){return;}round->finalizing=false;if(!accepted||!normalCurrent()){round->failure=Failure::Authority;round->finished=true;routingDeadline_.stop();captureRouting();return;}finishRouting(round);})){round->failure=Failure::Capacity;round->finished=true;routingDeadline_.stop();captureRouting();}return;
++    }
++    const auto actual=normalRouter_->snapshot();if(!actual||actual->limited()){round->failure=Failure::Capacity;round->finished=true;routingDeadline_.stop();captureRouting();return;}
++    normalSeeded_=true;
++  }else if(!round->failure){round->failure=state==azureus_control::LookupState::TimedOut?Failure::Timeout:state==azureus_control::LookupState::Closed?Failure::Closed:Failure::Cancelled;}
++  round->finished=true;routingDeadline_.stop();captureRouting();
++}
++void OwnedPingTransport::pumpRouting(const std::shared_ptr<Routing>& round){
++  if(routing_!=round||round->finished){return;}
++  const auto instant=Clock::now();const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(instant.time_since_epoch()).count();
++  if(instant>=round->deadline){round->failure=Failure::Timeout;static_cast<void>(round->controller.cancel(now));}
++  auto intents=round->controller.takeIntents(now);if(!intents){round->failure=Failure::State;static_cast<void>(round->controller.cancel(now));}
++  // No new send without a fresh source permit. Deadline/cancel processing
++  // below is pure and may always progress while the I/O worker is blocked.
++  if(intents&&!intents->empty()){
++    if(!normalCurrent()){for(const auto& intent:*intents){static_cast<void>(round->controller.finish(intent.node,azureus_control::LookupNodeState::Failed,now));}round->failure=Failure::Authority;static_cast<void>(round->controller.cancel(now));}
++    else{for(const auto& intent:*intents){
++      auto free=std::ranges::find(round->rpcs,std::uint64_t{0},&Routing::Rpc::node);const auto peer=routingPeer(intent.contact);
++      if(free==round->rpcs.end()||!peer||!allowed(*peer)){static_cast<void>(round->controller.finish(intent.node,azureus_control::LookupNodeState::Rejected,now));continue;}
++      const auto remaining=round->deadline-Clock::now();if(remaining<=Clock::duration::zero()){static_cast<void>(round->controller.finish(intent.node,azureus_control::LookupNodeState::Rejected,now));continue;}
++      free->node=intent.node;free->peer=*peer;
++      auto sent=findNode(*peer,intent.contact.protocol,intent.target,this,[this,round,node=intent.node](FindNodeOutcome outcome){routingReply(round,node,std::move(outcome));},remaining);
++      if(!sent){*free={};static_cast<void>(round->controller.finish(intent.node,azureus_control::LookupNodeState::Failed,now));round->failure=sent.error();continue;}
++      free->ticket=*sent;if(!round->controller.sent(intent.node,sent->value,now)){round->failure=Failure::State;static_cast<void>(round->controller.cancel(now));}
++    }}
++  }
++  if(round->failure){static_cast<void>(round->controller.cancel(now));}
++  if(round->controller.state()!=azureus_control::LookupState::Running){for(auto& rpc:round->rpcs){if(!rpc.node){continue;}
++    if(rpc.received){static_cast<void>(round->controller.finish(rpc.node,azureus_control::LookupNodeState::Cancelled,now));rpc={};}
++    else{static_cast<void>(cancel(rpc.ticket));} // false may mean a real callback is already queued.
++  }}
++  finishRouting(round);
++}
++void OwnedPingTransport::routingReply(const std::shared_ptr<Routing>& round,std::uint64_t node,FindNodeOutcome outcome){
++  if(routing_!=round||round->finished){return;}
++  auto rpc=std::ranges::find(round->rpcs,node,&Routing::Rpc::node);if(rpc==round->rpcs.end()){return;}rpc->received=true;const auto peer=rpc->peer;
++  if(round->controller.state()!=azureus_control::LookupState::Running||Clock::now()>=round->deadline){pumpRouting(round);return;}
++  auto resumed=[this,round,node,peer,outcome=std::move(outcome)](bool accepted)mutable{
++    if(routing_!=round||round->finished){return;}auto live=std::ranges::find(round->rpcs,node,&Routing::Rpc::node);if(live==round->rpcs.end()){return;}
++    // Profile I/O may finish after the timer became due but before its Qt
++    // event. Settle the actual received slot before touching any contact.
++    if(round->controller.state()!=azureus_control::LookupState::Running||Clock::now()>=round->deadline){pumpRouting(round);return;}
++    const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
++    if(!accepted||!normalCurrent()){round->failure=Failure::Authority;static_cast<void>(round->controller.finish(node,azureus_control::LookupNodeState::Failed,now));static_cast<void>(round->controller.cancel(now));}
++    else if(!outcome){
++      if(outcome.error()==Failure::Timeout){const auto id=nodeCache_->lookup(find::nodes::ResolvedEndpoint{originator(peer),{}},config_.version);if(id){static_cast<void>(normalRouter_->contactDead(id->id,now));}}
++      static_cast<void>(round->controller.finish(node,outcome.error()==Failure::Timeout?azureus_control::LookupNodeState::Timeout:azureus_control::LookupNodeState::Failed,now));
++    }else{
++      const auto& header=outcome->header().fields();const auto id=nodeCache_->lookup(find::nodes::ResolvedEndpoint{originator(peer),{}},header.version);const auto* body=std::get_if<find::ReplyBody>(&outcome->body());
++      if(!id||!body||body->providerFailures){round->failure=Failure::Authority;static_cast<void>(round->controller.finish(node,azureus_control::LookupNodeState::Failed,now));}
++      else{
++        find::nodes::Contact respondent;respondent.id=id->id;respondent.address=originator(peer);respondent.protocol=header.version;respondent.instance=header.instance;respondent.flags=header.flags;
++        std::vector<azureus_control::AdmittedContact> contacts;contacts.reserve(body->contacts.size());
++        if(!learnRoutingContact(respondent,true)){round->failure=Failure::Authority;}
++        for(const auto& contact:body->contacts){
++          if(localId_&&contact.id==*localId_){continue;}
++          if(!routingPeer(contact)){if(rejectedRouting_==UINT64_MAX){round->failure=Failure::Capacity;break;}++rejectedRouting_;continue;}
++          if(!learnRoutingContact(contact,false)){round->failure=Failure::Capacity;break;}contacts.push_back({contact,true});
++        }
++        if(round->failure){static_cast<void>(round->controller.finish(node,azureus_control::LookupNodeState::Failed,now));static_cast<void>(round->controller.cancel(now));}
++        else{static_cast<void>(round->controller.contacts(node,contacts,false,now));}
++      }
++    }
++    if(round->failure){static_cast<void>(round->controller.cancel(now));}
++    *live={};if(!round->failure){dispatchRoutingPings();}pumpRouting(round);
++  };
++  if(!normalPreflight_||!normalPreflight_(std::move(resumed))){round->failure=Failure::Capacity;const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();static_cast<void>(round->controller.finish(node,azureus_control::LookupNodeState::Failed,now));*rpc={};static_cast<void>(round->controller.cancel(now));pumpRouting(round);}
++}
++void OwnedPingTransport::dispatchRoutingPings(){
++  if(config_.routingScope!=RoutingScope::OwnedLoopback||!normalCurrent()){return;}
++  const auto intents=normalRouter_->takeIntents();if(!intents){routingFailed(Failure::State);return;}
++  if(intents->count>64-routingIntents_.size()){routingFailed(Failure::Capacity);return;}
++  for(std::size_t i=0;i<intents->count;++i){routingIntents_.push_back(intents->values[i]);}
++  while(!routingIntents_.empty()){
++    const auto free=std::find_if(routingPingsPending_.begin(),routingPingsPending_.end(),[](const auto& value){return !value;});if(free==routingPingsPending_.end()){break;}
++    const auto intent=routingIntents_.front();routingIntents_.pop_front();const auto state=normalRouter_->find(intent.id);if(!state||!*state){continue;}
++    if((**state).local||(intent.kind==azureus_router::RouterIntentKind::NodeAdded&&(**state).hasBeenAlive)){continue;}
++    if(std::ranges::any_of(routingPingsPending_,[&](const auto& old){return old&&old->id==intent.id;})){continue;}
++    const auto found=std::ranges::find(normalContacts_,intent.id,&find::nodes::Contact::id);if(found==normalContacts_.end()){routingFailed(Failure::Authority);return;}const auto peer=routingPeer(*found);if(!peer){routingFailed(Failure::Authority);return;}
++    const auto index=static_cast<std::size_t>(free-routingPingsPending_.begin());const auto protocol=found->protocol;
++    auto sent=ping(*peer,protocol,this,[this,index,id=intent.id,peer=*peer,protocol](Outcome outcome){
++      routingPingsPending_[index].reset();if(state_!=State::Bound||!normalPreflight_){return;}
++      if(!normalPreflight_([this,id,peer,protocol,outcome=std::move(outcome)](bool accepted)mutable{
++        if(state_!=State::Bound){return;}if(!accepted||!normalCurrent()){routingFailed(Failure::Authority);return;}
++        const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
++        if(outcome){find::nodes::Contact contact;contact.id=id;contact.address=originator(peer);contact.protocol=protocol;contact.instance=outcome->header().fields().instance;contact.flags=outcome->header().fields().flags;if(!learnRoutingContact(contact,true)){routingFailed(Failure::Authority);return;}}
++        else if(outcome.error()==Failure::Timeout){static_cast<void>(normalRouter_->contactDead(id,now));}
++        dispatchRoutingPings();captureRouting();
++      })){routingFailed(Failure::Capacity);}
++    });
++    if(!sent){routingFailed(sent.error());return;}*free=RoutingPing{*sent,intent.id};if(routingPings_==UINT64_MAX){routingFailed(Failure::Capacity);return;}++routingPings_;
++  }
++}
+--- a/preview/native/services/azureus_udp/owned_transport.cpp
++++ b/preview/native/services/azureus_udp/owned_transport.cpp
+@@ -77,18 +77,20 @@
+   if (this!=&other) { auto copy=other;*this=std::move(copy); }return *this;
+ }
+ OwnedPingTransport::OwnedPingTransport(Config config,QObject* parent)
+-    :QObject(parent),config_(std::move(config)),socket_(this),deadline_(this),statisticsGeneration_(reserveStatisticsGeneration()) {
++    :QObject(parent),config_(std::move(config)),socket_(this),deadline_(this),routingDeadline_(this),statisticsGeneration_(reserveStatisticsGeneration()) {
+   socket_.setProxy(QNetworkProxy::NoProxy);deadline_.setSingleShot(true);deadline_.setTimerType(Qt::PreciseTimer);
+   connect(&socket_,&QUdpSocket::readyRead,this,[this] { consume(); });
+   connect(&socket_,&QUdpSocket::errorOccurred,this,[this] { ++statistics_.ioErrors; });
+   deadline_.callOnTimeout(this,[this] { expire(); });
++  routingDeadline_.setSingleShot(true);routingDeadline_.setTimerType(Qt::PreciseTimer);routingDeadline_.callOnTimeout(this,[this]{try{if(routing_){pumpRouting(routing_);}}catch(...){routingFailed(Failure::Capacity);}});
+ }
+ OwnedPingTransport::~OwnedPingTransport() {
+-  deadline_.stop();socket_.close();
++  deadline_.stop();routingDeadline_.stop();socket_.close();
+   for (auto& [transaction,pending]:pending_) { (void)transaction;disconnect(pending.death); }
+   pending_.clear();completions_.clear(); // Destruction never invokes a callback.
+ }
+ bool OwnedPingTransport::owner() const { return QThread::currentThread()==thread(); }
++#include "owned_routing.inc"
+ std::expected<TransportStatisticsSnapshot,Failure> OwnedPingTransport::statisticsSnapshot() const noexcept {
+   if(!owner()){return std::unexpected(Failure::Thread);}
+   if(!statisticsGeneration_ || statisticsPublication_==std::numeric_limits<std::uint64_t>::max()) {
+@@ -205,6 +207,8 @@
+   if (!bindAddress.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
+   const auto address=normalize({bindAddress,0}).address;
+   if (!address.isLoopback() || !address.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
++  if(config_.routingScope!=RoutingScope::ExactPeers&&config_.routingScope!=RoutingScope::OwnedLoopback){return std::unexpected(Failure::State);}
++  if(config_.routingScope==RoutingScope::OwnedLoopback&&(config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply)){return std::unexpected(Failure::State);}
+   if (config_.version<51 || config_.version>55) { return std::unexpected(Failure::Version); }
+   if (config_.maximumPending==0 || config_.maximumPending>256 || config_.maximumPeers==0 || config_.maximumPeers>256) { return std::unexpected(Failure::Capacity); }
+   if (config_.generatedStoreService) {
+@@ -467,10 +471,12 @@
+ }
+ void OwnedPingTransport::close() {
+   if (!owner() || state_==State::Closed) { return; }
++  routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
+   normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
+   if(database_){database_->close();database_.reset();}
+   state_=State::Closed;socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
+   while (!pending_.empty()) { finish(pending_.begin()->first,std::unexpected(Failure::Closed)); }
++  if(routing_&&!routing_->finished){const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();static_cast<void>(routing_->controller.close(now));for(auto& rpc:routing_->rpcs){if(rpc.node){static_cast<void>(routing_->controller.finish(rpc.node,azureus_control::LookupNodeState::Closed,now));rpc={};}}routing_->failure=Failure::Closed;routing_->finished=true;}captureRouting();
+ }
+ void OwnedPingTransport::answer(const Peer& peer,const packet::Decoded& request,std::int64_t receivedAt) {
+   if (!config_.servePings) { return; }
+@@ -556,8 +562,9 @@
+ void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,std::int64_t receivedAt) {
+   if(normalRouter_&&normalPreflight_&&!normalResuming_){
+     auto resumed=[this,peer,request=std::move(request),receivedAt](bool accepted)mutable{
+-      if(state_!=State::Bound||!normalRouter_||!allowed(peer)){return;}
+-      if(!accepted){++statistics_.authorityErrors;return;}normalResuming_=true;
++      if(state_!=State::Bound||!normalRouter_){return;}
++      if(!accepted){++statistics_.authorityErrors;return;}
++      if(!allowed(peer)&&!ownedRoutingPeer(peer)){return;}normalResuming_=true;
+       const auto reset=qScopeGuard([&]{normalResuming_=false;});answerService(peer,std::move(request),receivedAt);
+     };
+     if(!normalPreflight_(std::move(resumed))){++statistics_.serviceCapacityDrops;}return;
+@@ -590,7 +597,8 @@
+   receipt.sender=sender;receipt.transportAlive=true;
+   // The normal owned subset does not grant a returned routing endpoint from a
+   // different claimed port. Generated original-IP projection stays unchanged.
+-  if(!service&&(sender.address!=originator(peer)||!normalAlive(sender))){++statistics_.authorityErrors;return;}
++  if(!service&&(sender.address!=originator(peer)||(config_.routingScope==RoutingScope::OwnedLoopback?!learnRoutingContact(sender,true):!normalAlive(sender)))){++statistics_.authorityErrors;return;}
++  if(!service&&config_.routingScope==RoutingScope::OwnedLoopback){dispatchRoutingPings();captureRouting();}
+   if (const auto* findRequest=std::get_if<find::Decoded>(&receipt.request)) {
+     receipt.findNodeAlive=true;
+     std::span<const find::nodes::Snapshot> contacts;std::vector<find::nodes::Snapshot> actualContacts;
+@@ -616,10 +624,14 @@
+   if(service){input.seeded=service->seeded;input.k=service->k;input.storageNetwork=service->storageNetwork;input.furthest=service->furthest;}
+   else{
+     const auto state=normalRouter_->snapshot();if(!state||state->limited()){++statistics_.policyErrors;return;}
+-    // No normal seed-completion machinery exists yet. Original direct values
+-    // do not require seeded; every forwarded originator still fails the real
+-    // Admission seeded branch. Neither options nor caller facts can bypass it.
+-    input.seeded=false;input.k=state->config().k;input.storageNetwork=config_.network;
++    input.seeded=normalSeeded_;input.k=state->config().k;input.storageNetwork=config_.network;
++    if(normalSeeded_){
++      const auto factor=static_cast<std::size_t>(input.k+(config_.network==0?input.k/2:0));
++      const auto group=normalRouter_->closest(*localId_,factor,true);if(!group||!group->count){++statistics_.policyErrors;return;}
++      std::vector<find::nodes::NodeId> ids;ids.reserve(group->count);for(std::size_t i=0;i<group->count;++i){ids.push_back(group->values[i].id);}
++      std::ranges::sort(ids,[&](const auto& a,const auto& b){for(std::size_t i=0;i<a.size();++i){const auto x=a[i]^(*localId_)[i],y=b[i]^(*localId_)[i];if(x!=y){return x<y;}}return false;});
++      input.furthest=ids[std::min(factor,ids.size())-1];
++    }
+   }
+   auto* const db=activeDatabase();
+   input.keys.reserve(storeRequest.keys.size());input.valueOriginators.reserve(storeRequest.valueSets.size());
+@@ -760,7 +772,8 @@
+     observeSocketPayloadBytes(statistics_.receivedPayloadBytes,data.size());
+     if (datagram.senderPort()<=0 || datagram.senderPort()>65535) { ++statistics_.malformed;continue; }
+     const auto peer=normalize({datagram.senderAddress(),static_cast<quint16>(datagram.senderPort())});
+-    if (!allowed(peer)) { ++statistics_.unowned;continue; }
++    const bool unknown=!allowed(peer);
++    if(unknown&&(!normalRouter_||!ownedRoutingPeer(peer))){++statistics_.unowned;continue;}
+     if (data.isEmpty()) { ++statistics_.malformed;continue; }
+     const auto kind=(static_cast<unsigned char>(data.front())&128)?packet::udp::Kind::Request:packet::udp::Kind::Reply;
+     std::string bytes(data.constData(),static_cast<std::size_t>(data.size()));
+@@ -768,6 +781,7 @@
+     // contact bodies, so foreign replies cannot warm the node cache.
+     if (bytes.size()<16) { ++statistics_.malformed;continue; }
+     const auto action=readInt(bytes,kind==packet::udp::Kind::Request?8:0);
++    if(unknown&&(kind!=packet::udp::Kind::Request||(action!=1024&&action!=1028))){++statistics_.unowned;continue;}
+     if ((kind==packet::udp::Kind::Request && action!=1024 && action!=1026 && action!=1028 && action!=1030)
+         || (kind==packet::udp::Kind::Reply && action!=1025 && action!=1027 && action!=1029 && action!=1031 && action!=1032)) { ++statistics_.malformed;continue; }
+     if (kind==packet::udp::Kind::Reply) {
+@@ -780,7 +794,7 @@
+     if (action==1024 || action==1025) {
+       packet::Context context;context.header=headerContext;context.monotonicNow=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
+       auto decoded=packet::decode(kind,std::move(bytes),context);if (!decoded) { ++statistics_.malformed;continue; }
+-      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;answer(peer,*decoded,headerContext.now);continue; }
++      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;if(normalRouter_&&config_.routingScope==RoutingScope::OwnedLoopback){answerRoutingPing(peer,std::move(*decoded),headerContext.now);}else{answer(peer,*decoded,headerContext.now);}continue; }
+       const auto transaction=decoded->header().fields().transaction;
+       if (pending_.at(transaction).expires<=Clock::now()) { ++statistics_.timeouts;finish(transaction,std::unexpected(Failure::Timeout));continue; }
+       observeVivaldi(pending_.at(transaction),*decoded);
+--- a/preview/native/services/azureus_udp/owned_transport.hpp
++++ b/preview/native/services/azureus_udp/owned_transport.hpp
+@@ -21,6 +21,7 @@
+ #include <functional>
+ #include <unordered_map>
+ #include <utility>
++#include "../azureus_control/lookup.hpp"
+ namespace biglybtc::services::azureus_udp {
+ namespace packet=biglybtc::services::azureus_packets;
+ namespace find=biglybtc::services::azureus_find_node;
+@@ -110,10 +111,20 @@
+   policy::State admission{};
+   std::size_t receiptCount=0;
+ };
++enum class RoutingScope {ExactPeers,OwnedLoopback};
++struct RoutingSnapshot {
++  std::uint64_t generation=0,operation=0,revision=0;
++  bool finished=false;
++  bool seeded=false; // Last successful self-ID integration on this actor, never authority by itself.
++  std::shared_ptr<const azureus_control::LookupSnapshot> lookup;
++  std::optional<Failure> failure;
++  std::uint64_t learned=0,rejected=0,pings=0;
++};
+ struct Config {
+   std::int32_t network=4,instance=0;
+   std::int8_t version=55,flags=0,flags2=0;
+   bool servePings=false;
++  RoutingScope routingScope=RoutingScope::ExactPeers;
+   std::optional<FindNodeReply> findNodeReply; // Supplied inert snapshot, no nonce authorization/routing.
+   std::optional<std::vector<FindValueSlice>> findValueReply; // Inert owned test pieces only.
+   std::optional<std::string> storeReply; // Inert diversification, including an empty array.
+@@ -124,9 +135,10 @@
+   bool observeOperations=false,enableVivaldi=false; // Explicit owner policy; never enabled by a view.
+ };
+ 
+-// Development transport: fresh ephemeral numeric-loopback sockets and supplied
+-// owned peer allowlist only. Every API/destruction belongs to its Qt owner.
+-// No profile, DNS, proxy, discovery, router mapping or public-route switch.
++// Development transport: fresh numeric-loopback sockets, exact peers by default.
++// Explicit normal OwnedLoopback scope can discover bounded same-family peers;
++// every API/destruction still belongs to its Qt owner. No DNS, proxy or public
++// route exists; profile validation is the bound owner's asynchronous preflight.
+ class OwnedPingTransport final : public QObject {
+ public:
+   explicit OwnedPingTransport(Config,QObject* parent=nullptr);
+@@ -157,11 +169,18 @@
+   // on THIS Qt thread to THIS socket identity. No caller-supplied closest,
+   // seeded, token or value facts. Shared ownership lasts through close/join.
+   // current checks the owner's held profile and stop state before each effect.
+-  // Async preflight completes true to resume, false on actual source rejection.
+-  // The completion is returned on this actor thread after the source gate releases.
++  // Async completion stays on this actor: true resumes inside the one-shot
++  // worker-held permit until actor acknowledgement; false reports actual
++  // source rejection only after that worker has released its source gate.
+   std::expected<void,Failure> serveDatabase(std::shared_ptr<azureus_router::RouterOwner>,
+       std::shared_ptr<database::Owner>,std::function<bool()> current,
+       std::function<bool(std::move_only_function<void(bool)>)> preflight={});
++  // Explicit normal-owner self-ID FIND_NODE. Completion and seeded lineage
++  // arise only inside this actor from its own actual requests/replies.
++  std::expected<std::uint64_t,Failure> integrateRouting(Peer,std::chrono::nanoseconds);
++  bool cancelRouting(std::uint64_t);
++  bool isRoutingPeer(const Peer&)const noexcept;
++  std::shared_ptr<const RoutingSnapshot> routingSnapshot()const noexcept;
+   std::expected<GeneratedServiceState,Failure> generatedServiceState() const;
+   std::expected<database::Snapshot,Failure> databaseState() const;
+   // Owner-only pull. Moved receipts own the request referenced by policy indices.
+@@ -237,13 +256,31 @@
+   bool normalCurrent()noexcept;
+   bool normalAlive(const find::nodes::Contact&)noexcept;
+   std::expected<std::vector<find::nodes::Snapshot>,Failure> normalClosest(const find::nodes::NodeId&);
++  struct Routing;
++  std::shared_ptr<Routing> routing_;
++  std::shared_ptr<const RoutingSnapshot> routingSnapshot_;
++  std::uint64_t nextRouting_=0,routingRevision_=0,learnedRouting_=0,rejectedRouting_=0,routingPings_=0;
++  bool normalSeeded_=false;
++  struct RoutingPing {Ticket ticket;find::nodes::NodeId id;};
++  std::array<std::optional<RoutingPing>,8> routingPingsPending_{};
++  std::deque<azureus_router::RouterIntent> routingIntents_;
++  bool ownedRoutingPeer(const Peer&)const noexcept;
++  std::optional<Peer> routingPeer(const find::nodes::Contact&)const;
++  bool learnRoutingContact(const find::nodes::Contact&,bool alive);
++  void answerRoutingPing(const Peer&,packet::Decoded,std::int64_t);
++  void routingReply(const std::shared_ptr<Routing>&,std::uint64_t,FindNodeOutcome);
++  void pumpRouting(const std::shared_ptr<Routing>&);
++  void finishRouting(const std::shared_ptr<Routing>&);
++  void captureRouting()noexcept;
++  void routingFailed(Failure)noexcept;
++  void dispatchRoutingPings();
+   database::Owner* activeDatabase()const noexcept{return normalDatabase_?normalDatabase_.get():database_.get();}
+   std::shared_ptr<azureus_router::RouterOwner> normalRouter_;
+   std::shared_ptr<database::Owner> normalDatabase_;
+   std::function<bool()> normalCurrent_;
+   std::function<bool(std::move_only_function<void(bool)>)> normalPreflight_;
+   bool normalResuming_=false;
+-  std::vector<find::nodes::Contact> normalContacts_; // Only actually admitted request sources.
++  std::vector<find::nodes::Contact> normalContacts_; // Actual request sources or explicitly scoped reply candidates.
+   Config config_;
+   std::unique_ptr<find::nodes::NodeCache> nodeCache_;
+   std::unique_ptr<auth::Authority> authority_;
+@@ -253,6 +290,7 @@
+   std::deque<ServiceReceipt> serviceReceipts_;
+   QUdpSocket socket_;
+   QChronoTimer deadline_;
++  QChronoTimer routingDeadline_;
+   State state_=State::Idle;
+   std::vector<Peer> peers_;
+   std::unordered_map<std::int32_t,Pending> pending_;
+--- /dev/null
++++ b/preview/native/tests/azureus_routing_tests.cpp
+@@ -0,0 +1,102 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "owned_azureus_service.hpp"
++#include <QtTest>
++#include <QTemporaryDir>
++#include <QFile>
++#include <QNetworkDatagram>
++#include <QElapsedTimer>
++#include <QEventLoop>
++#include <QCoreApplication>
++#include <algorithm>
++
++namespace {
++using namespace biglybtc;
++using namespace std::chrono_literals;
++namespace udp=services::azureus_udp;
++namespace control=services::azureus_control;
++bool terminal(const app::OwnedAzureusService& owner,std::uint64_t id){const auto value=owner.observation();return value.lastResult&&value.lastResult->request==id&&value.lastResult->terminal;}
++bool success(const app::OwnedAzureusService& owner,std::uint64_t id){const auto value=owner.observation();return value.lastResult&&value.lastResult->request==id&&value.lastResult->terminal&&!value.lastResult->error&&!value.lastResult->transportFailure;}
++QByteArray read(const QString& path){QFile file(path);if(!file.open(QIODevice::ReadOnly)){throw std::runtime_error("Cannot read owned routing source");}return file.readAll();}
++void write(const QString& path,const QByteArray& bytes){QFile file(path);if(!file.open(QIODevice::WriteOnly|QIODevice::Truncate)||file.write(bytes)!=bytes.size()||!file.flush()){throw std::runtime_error("Cannot write owned routing source");}}
++services::azureus_nodes::Contact contact(const udp::Peer& peer,std::int8_t protocol=55){
++  services::azureus_nodes::Contact value;value.address.port=peer.port;value.protocol=protocol;
++  if(peer.address.protocol()==QAbstractSocket::IPv4Protocol){value.address.length=4;const auto ip=peer.address.toIPv4Address();for(unsigned i=0;i<4;++i){value.address.bytes[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}}
++  else{value.address.length=16;const auto ip=peer.address.toIPv6Address();std::copy_n(ip.c,16,value.address.bytes.begin());}
++  services::azureus_nodes::NodeCache cache;auto id=cache.lookup({value.address,{}},protocol);if(!id){throw std::runtime_error("Cannot derive actual routing fixture ID");}value.id=id->id;return value;
++}
++struct Normal {
++  QTemporaryDir root;std::optional<storage::ProfileLease> lease;std::shared_ptr<storage::AzureusValueVersions> versions;std::unique_ptr<app::OwnedAzureusService> owner;
++  QString address;udp::RoutingScope scope;std::size_t maximumPeers;
++  explicit Normal(const char* ip,udp::RoutingScope policy=udp::RoutingScope::OwnedLoopback,std::size_t peers=32):address(QString::fromLatin1(ip)),scope(policy),maximumPeers(peers){
++    if(!root.isValid()){throw std::runtime_error("Owned routing profile");}auto acquired=storage::ProfileLease::acquire(root.path().toStdString());if(!acquired){throw std::runtime_error(acquired.error().message);}lease.emplace(std::move(*acquired));
++    auto config=storage::ConfigFile::createMissing(*lease,"biglybt.config","d22:Plugin.DHT.dht.enabledi1ee");if(!config){throw std::runtime_error(config.error().message);}start();
++  }
++  void start(){auto opened=storage::AzureusValueVersions::open(*lease,0);if(!opened){throw std::runtime_error(opened.error().message);}versions=*opened;app::AzureusServiceOptions options;options.enabled=true;options.servePings=true;options.serveValues=true;options.network=0;options.bindAddress=QHostAddress(address);options.routingScope=scope;options.maximumPeers=maximumPeers;options.valueVersions=versions;auto made=app::OwnedAzureusService::create(options);if(!made){throw std::runtime_error("Cannot start normal routing owner");}owner=std::move(*made);}
++  void stop(){if(owner&&!owner->close()){throw std::runtime_error("Cannot close normal routing owner");}owner.reset();versions.reset();}
++  QString versionPath()const{return root.path()+"/dht/version.dat";}
++};
++QByteArray nodeReply(const QNetworkDatagram& datagram,std::span<const services::azureus_nodes::Snapshot> contacts={},bool wrongTransaction=false){
++  const auto bytes=datagram.data();udp::find::Context context;context.header.network=0;context.header.now=QDateTime::currentMSecsSinceEpoch();services::azureus_nodes::NodeCache cache;
++  auto request=udp::find::decode(udp::packet::udp::Kind::Request,std::string(bytes.constData(),static_cast<std::size_t>(bytes.size())),context,cache);if(!request){throw std::runtime_error("Cannot decode actual NODE fixture request");}
++  const auto& header=request->header().fields();udp::find::ReplyFields reply;reply.header.network=0;reply.header.localVersion=55;reply.header.remoteVersion=header.originatorVersion;reply.header.connection=header.connection;reply.header.transaction=wrongTransaction?header.transaction^1:header.transaction;reply.header.now=context.header.now;reply.header.receivedAt=context.header.now;reply.contacts=contacts;
++  auto encoded=udp::find::encodeReply(reply);if(!encoded){throw std::runtime_error("Cannot encode owned NODE reply");}return QByteArray(encoded->data(),static_cast<qsizetype>(encoded->size()));
++}
++void send(QUdpSocket& server,const QNetworkDatagram& datagram,const QByteArray& bytes){if(datagram.senderPort()<=0||datagram.senderPort()>65535||server.writeDatagram(bytes,datagram.senderAddress(),static_cast<quint16>(datagram.senderPort()))!=bytes.size()){throw std::runtime_error("Cannot send owned NODE fixture reply");}}
++}
++class AzureusRoutingTests final:public QObject {
++  Q_OBJECT
++private slots:
++  void realSelfLookupDiscoversThirdNormalOwnerThenAuthorisesActualCachedForward(){
++    Normal origin("127.51.0.1"),cache("127.52.0.1"),receiver("127.53.0.1");
++    auto pair=[&](Normal& a,Normal& b){const auto first=a.owner->allowPeer(b.owner->endpoint()),second=b.owner->allowPeer(a.owner->endpoint());if(!first||!second){return false;}QElapsedTimer wait;wait.start();while(wait.elapsed()<3000&&(!success(*a.owner,*first)||!success(*b.owner,*second))){QCoreApplication::processEvents(QEventLoop::AllEvents,10);}return success(*a.owner,*first)&&success(*b.owner,*second);};
++    QVERIFY(pair(origin,cache));QVERIFY(pair(cache,receiver));
++    const auto published=origin.owner->publishValue(cache.owner->endpoint(),"normal-routing-key","original-owned-value",5s,app::AzureusPublicationFlags::Anonymous);QVERIFY(published);QTRY_VERIFY_WITH_TIMEOUT(terminal(*origin.owner,*published),5000);QCOMPARE(origin.owner->observation().publishSnapshot->state,app::AzureusPublishState::Complete);const auto actualOrigin=origin.owner->observation().publishSnapshot->localValue;QVERIFY(actualOrigin&&actualOrigin->isLocal());QCOMPARE(cache.owner->observation().databaseSnapshot->stores,std::uint64_t{1});
++    const auto cacheVersion=read(cache.versionPath()),receiverVersion=read(receiver.versionPath());const auto rejected=cache.owner->forwardCachedValue(receiver.owner->endpoint(),"normal-routing-key");QVERIFY(rejected);QTRY_VERIFY_WITH_TIMEOUT(terminal(*cache.owner,*rejected),5000);QCOMPARE(cache.owner->observation().publishSnapshot->state,app::AzureusPublishState::Failed);QCOMPARE(cache.owner->observation().publishSnapshot->error,std::optional{app::AzureusServiceError::Readback});QCOMPARE(receiver.owner->observation().databaseSnapshot->stores,std::uint64_t{0});QCOMPARE(read(cache.versionPath()),cacheVersion);
++    const auto request=receiver.owner->integrateRouting(cache.owner->endpoint());QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(terminal(*receiver.owner,*request),10000);QVERIFY(success(*receiver.owner,*request));const auto routing=receiver.owner->observation().routingSnapshot;QVERIFY(routing&&routing->finished&&routing->seeded&&routing->lookup);QCOMPARE(routing->lookup->options.kind,control::LookupKind::Node);QVERIFY(routing->lookup->results.empty());
++    const auto original=contact(origin.owner->endpoint());const auto discovered=std::ranges::find(routing->lookup->nodes,original.id,[](const auto& node){return node.contact.id;});QVERIFY(discovered!=routing->lookup->nodes.end());QVERIFY(discovered->parent!=0);QCOMPARE(discovered->state,control::LookupNodeState::Replied);QTRY_VERIFY_WITH_TIMEOUT(receiver.owner->observation().routingSnapshot->pings>0,3000);
++    // No receiver<->origin allowPeer call occurred. The response path and its
++    // actual PING/NODE completions, not a fixture contact grant, prove discovery.
++    const auto forwarded=cache.owner->forwardCachedValue(receiver.owner->endpoint(),"normal-routing-key");QVERIFY(forwarded);QTRY_VERIFY_WITH_TIMEOUT(terminal(*cache.owner,*forwarded),5000);const auto proof=cache.owner->observation().publishSnapshot;QCOMPARE(proof->state,app::AzureusPublishState::Complete);QVERIFY(proof->localValue&&!proof->localValue->isLocal());QCOMPARE(proof->localValue->version(),actualOrigin->version());QCOMPARE(proof->localValue->originator().get()->id,actualOrigin->originator().get()->id);QCOMPARE(proof->readback.size(),std::size_t{1});QCOMPARE(proof->readback[0].bytes,std::string("original-owned-value"));QCOMPARE(proof->readback[0].flags,std::uint8_t{0x10});QCOMPARE(receiver.owner->observation().databaseSnapshot->stores,std::uint64_t{1});QCOMPARE(receiver.owner->observation().databaseSnapshot->localPuts,std::uint64_t{0});QCOMPARE(read(cache.versionPath()),cacheVersion);QCOMPARE(read(receiver.versionPath()),receiverVersion);
++    const auto generation=routing->generation;origin.stop();cache.stop();receiver.stop();origin.start();cache.start();receiver.start();QVERIFY(pair(origin,cache));QVERIFY(pair(cache,receiver));
++    const auto newValue=origin.owner->publishValue(cache.owner->endpoint(),"restart-routing-key","after-normal-restart");QVERIFY(newValue);QTRY_VERIFY_WITH_TIMEOUT(terminal(*origin.owner,*newValue),5000);QCOMPARE(origin.owner->observation().publishSnapshot->state,app::AzureusPublishState::Complete);
++    const auto cold=cache.owner->forwardCachedValue(receiver.owner->endpoint(),"restart-routing-key");QVERIFY(cold);QTRY_VERIFY_WITH_TIMEOUT(terminal(*cache.owner,*cold),5000);QCOMPARE(cache.owner->observation().publishSnapshot->state,app::AzureusPublishState::Failed);QCOMPARE(receiver.owner->observation().databaseSnapshot->stores,std::uint64_t{0});
++    const auto reseed=receiver.owner->integrateRouting(cache.owner->endpoint());QVERIFY(reseed);QTRY_VERIFY_WITH_TIMEOUT(success(*receiver.owner,*reseed),10000);QVERIFY(receiver.owner->observation().routingSnapshot->generation!=generation);QVERIFY(receiver.owner->observation().routingSnapshot->seeded);
++  }
++  void exactPeerDefaultStillRejectsUnlistedRequestsAndRoutingActivation(){
++    Normal exact("127.54.0.1",udp::RoutingScope::ExactPeers);udp::Config options;options.network=0;udp::OwnedPingTransport client(std::move(options));QVERIFY(client.start(QHostAddress(QStringLiteral("127.55.0.1"))));QVERIFY(client.allowPeer(exact.owner->endpoint()));QObject receiver;std::optional<udp::FindNodeOutcome> result;
++    QVERIFY(client.findNode(exact.owner->endpoint(),55,contact(exact.owner->endpoint()).id,&receiver,[&](auto outcome){result.emplace(std::move(outcome));},100ms));QTRY_VERIFY_WITH_TIMEOUT(result.has_value(),3000);QVERIFY(!*result);QCOMPARE(result->error(),udp::Failure::Timeout);QTRY_VERIFY_WITH_TIMEOUT(exact.owner->observation().snapshot->transport().counters().unowned>0,3000);
++    const auto integration=exact.owner->integrateRouting(client.endpoint());QVERIFY(!integration);QCOMPARE(integration.error(),app::AzureusServiceError::Invalid);QVERIFY(!exact.owner->observation().routingSnapshot);QVERIFY(exact.owner->close());client.close();
++  }
++  void heldNodeReplyCannotSeedAfterCancelClosePermissionOrVersionWithdrawal_data(){
++    QTest::addColumn<int>("change");QTest::newRow("cancel")<<0;QTest::newRow("close")<<1;QTest::newRow("DHT-permission")<<2;QTest::newRow("version-source")<<3;
++  }
++  void heldNodeReplyCannotSeedAfterCancelClosePermissionOrVersionWithdrawal(){
++    QFETCH(int,change);Normal owner("127.56.0.1");QUdpSocket server;QVERIFY(server.bind(QHostAddress(QStringLiteral("127.57.0.1")),0,QUdpSocket::DontShareAddress));const udp::Peer peer{server.localAddress(),server.localPort()};const auto request=owner.owner->integrateRouting(peer,2s);QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(server.hasPendingDatagrams(),3000);const auto held=server.receiveDatagram();const auto reply=nodeReply(held);
++    if(change==0){const auto cancel=owner.owner->cancel(*request);QVERIFY(cancel);QTRY_VERIFY_WITH_TIMEOUT(owner.owner->observation().outstandingCommands==0,3000);}
++    else if(change==1){QVERIFY(owner.owner->close());QVERIFY(owner.owner->observation().joined);}
++    else if(change==2){auto config=storage::ConfigFile::load(*owner.lease,"biglybt.config");QVERIFY(config);QVERIFY(config->document().setInteger("Plugin.DHT.dht.enabled",0));QVERIFY(config->save(*owner.lease));}
++    else{write(owner.versionPath(),"d4:nexti1ee");}
++    send(server,held,reply);
++    if(change<2){QVERIFY(!owner.owner->observation().routingSnapshot||!owner.owner->observation().routingSnapshot->seeded);}
++    else{QTRY_VERIFY_WITH_TIMEOUT(terminal(*owner.owner,*request),3000);QVERIFY(owner.owner->observation().lastResult->error);QVERIFY(owner.owner->observation().routingSnapshot&&!owner.owner->observation().routingSnapshot->seeded);}
++    if(change==0){QTRY_VERIFY_WITH_TIMEOUT(owner.owner->observation().snapshot->transport().counters().foreign>0,3000);const auto fresh=owner.owner->integrateRouting(peer,2s);QVERIFY(fresh);QTRY_VERIFY_WITH_TIMEOUT(server.hasPendingDatagrams(),3000);const auto next=server.receiveDatagram();send(server,held,reply);QTRY_VERIFY_WITH_TIMEOUT(owner.owner->observation().snapshot->transport().counters().foreign>1,3000);QVERIFY(!owner.owner->observation().routingSnapshot->seeded);const auto cancel=owner.owner->cancel(*fresh);QVERIFY(cancel);QTRY_VERIFY_WITH_TIMEOUT(owner.owner->observation().outstandingCommands==0,3000);QVERIFY(next.isValid());}
++    QVERIFY(owner.owner->close());if(change==3){QCOMPARE(read(owner.versionPath()),QByteArray("d4:nexti1ee"));}
++  }
++  void foreignAndMalformedRepliesDoNotGrantAndOutOfScopeContactsNeverDispatch(){
++    Normal owner("127.58.0.1");QUdpSocket server;QVERIFY(server.bind(QHostAddress(QStringLiteral("127.59.0.1")),0,QUdpSocket::DontShareAddress));const auto request=owner.owner->integrateRouting({server.localAddress(),server.localPort()},3s);QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(server.hasPendingDatagrams(),3000);const auto held=server.receiveDatagram();
++    send(server,held,nodeReply(held,{},true));QTRY_VERIFY_WITH_TIMEOUT(owner.owner->observation().snapshot->transport().counters().foreign>0,3000);QVERIFY(!owner.owner->observation().routingSnapshot->seeded);
++    send(server,held,QByteArray(16,'\0'));QTRY_VERIFY_WITH_TIMEOUT(owner.owner->observation().snapshot->transport().counters().malformed>0,3000);
++    const auto self=contact(owner.owner->endpoint());const auto publicPeer=contact({QHostAddress(QStringLiteral("1.2.3.4")),32111});const auto badVersion=contact({QHostAddress(QStringLiteral("127.60.0.1")),32112},0);std::array<services::azureus_nodes::Snapshot,3> contacts{{{true,55,self.address},{true,55,publicPeer.address},{true,0,badVersion.address}}};send(server,held,nodeReply(held,contacts));
++    QTRY_VERIFY_WITH_TIMEOUT(terminal(*owner.owner,*request),3000);QVERIFY(success(*owner.owner,*request));const auto observed=owner.owner->observation().routingSnapshot;QVERIFY(observed&&observed->seeded);QCOMPARE(observed->lookup->nodes.size(),std::size_t{1});QCOMPARE(observed->rejected,std::uint64_t{2});QCOMPARE(owner.owner->observation().snapshot->transport().allowedPeers(),std::size_t{1});QVERIFY(owner.owner->close());
++  }
++  void actualContactCapacityWithdrawalCannotSetSeededOrDispatchOverflowCandidates(){
++    Normal owner("127.63.0.1",udp::RoutingScope::OwnedLoopback,2);QUdpSocket server;QVERIFY(server.bind(QHostAddress(QStringLiteral("127.64.0.1")),0,QUdpSocket::DontShareAddress));const auto request=owner.owner->integrateRouting({server.localAddress(),server.localPort()},3s);QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(server.hasPendingDatagrams(),3000);const auto held=server.receiveDatagram();
++    const auto one=contact({QHostAddress(QStringLiteral("127.65.0.1")),32001}),two=contact({QHostAddress(QStringLiteral("127.66.0.1")),32002});const std::array<services::azureus_nodes::Snapshot,2> contacts{{{true,55,one.address},{true,55,two.address}}};send(server,held,nodeReply(held,contacts));
++    QTRY_VERIFY_WITH_TIMEOUT(terminal(*owner.owner,*request),3000);QVERIFY(owner.owner->observation().lastResult->error);const auto result=owner.owner->observation().routingSnapshot;QVERIFY(result&&result->finished&&!result->seeded);QCOMPARE(result->failure,std::optional{udp::Failure::Capacity});QCOMPARE(result->pings,std::uint64_t{0});QCOMPARE(owner.owner->observation().databaseSnapshot->stores,std::uint64_t{0});QVERIFY(owner.owner->close());
++  }
++  void contactOnlyControllerCannotCompleteThroughValueResults(){
++    control::LookupController controller;control::LookupOptions options;options.kind=control::LookupKind::Node;options.localId=contact({QHostAddress(QStringLiteral("127.61.0.1")),31000}).id;options.target=options.localId;const std::array seed{control::AdmittedContact{contact({QHostAddress(QStringLiteral("127.62.0.1")),31001}),true}};QVERIFY(controller.start(1,1,options,seed,0));auto intents=controller.takeIntents(1);QVERIFY(intents&&intents->size()==1);QVERIFY(controller.sent(intents->front().node,1,2));const auto wrong=controller.values(intents->front().node,{},false,1,3);QVERIFY(!wrong);QCOMPARE(wrong.error(),control::LookupError::Unsupported);QCOMPARE(controller.snapshot()->active,std::size_t{1});QVERIFY(controller.contacts(intents->front().node,{},false,4));auto result=controller.snapshot();QVERIFY(result&&control::validLookupSnapshot(*result));QCOMPARE(result->state,control::LookupState::Complete);QVERIFY(result->results.empty());
++  }
++};
++QTEST_GUILESS_MAIN(AzureusRoutingTests)
++#include "azureus_routing_tests.moc"

@@ -1,0 +1,41 @@
+{
+  "status": "SOURCE_ONLY_ROOT_RUN_RECIPES_NOT_EXECUTED",
+  "immutable_recipe_allowlist": {
+    "run.py": "434141ee70fce91f7491e31de6ed0fed81c365c530af16cfe32d6bd28d899295",
+    "jobs.mk": "8acc3828ada9df6864e25f42f52ce548e6e16618456912b9751353e179ac9762",
+    "README.md": "0cb699da27923a168639dd03ad93f5aceb419881befa25849102e647afffb0fa"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/manifest.json": "757cfa578b67533591a3dbc6880345d651708d8e0b79b25531458def13d216b7",
+    "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/amendments/actor-member-order/manifest.json": "b85be109bd0f676671083c5efc1d3eb51f3c81edd9d4b3bbf85f9cf90c51cf9f",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/amendments/trailing-peer-stderr/manifest.json": "a77d16dc7ecb725d50d9529e1cb07fc41246a89a3192aa5958dfd0097d7e517c",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029-review/review.json": "4893c9016d7f2aa9d14fbec3f449d648a07a03820548432d905b322b76ffef33",
+    "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029-review/review.json": "6ca639726bd4d8cb23c5a19b78e5296cf015927de611cfc84d43521ee8b62a1d",
+    "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/recipe_support_followup.py": "64e0bd2b9ec87b9babf90bdf8d1235746f7dc63c797c82c5e5a138a4c2ea893a"
+  },
+  "future_adoption": "root-adoption.json intentionally absent; root supplies actual clean commit and aftermap",
+  "default_suites": {
+    "gcc": 14,
+    "clang": 11,
+    "san": 11
+  },
+  "compiled_products": {
+    "gcc": 18,
+    "clang": 12,
+    "san": 12
+  },
+  "separate_actor_execution": {
+    "clang": 1,
+    "san": 1,
+    "gcc": "private-runtime pending"
+  },
+  "parallelism": "GNU Make4.4 shared FIFO3; Clang first, then GCC/SAN share3; Ninja1.13 no explicit jobs",
+  "static_checks": [
+    "Python AST/compile only (not execution)",
+    "Existing CMake and frozen fragment target/suite source matching",
+    "Make source recursive + prefixes and Clang dependency barrier",
+    "No build parallel option; CMAKE_BUILD_PARALLEL_LEVEL removed; MAKEFLAGS preserved"
+  ],
+  "make_build_or_subjects_executed": false,
+  "native_mutated": false
+}

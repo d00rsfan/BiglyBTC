@@ -1,0 +1,12 @@
+{
+  "existing_test_sources_byte_exact": {
+    "preview/native/tests/owned_azureus_service_tests.cpp": "5c4c4fc64d0d9bac7070d50a17ef756ea1c22dc9b69d32ab5843a1ee38d9b4f7",
+    "preview/native/tests/azureus_profile_io_tests.cpp": "5f6e1c48130db72f3ec73e527e17494700318b4dc998febcea228ecebf5ab523",
+    "preview/native/tests/owned_ddb_control_tests.cpp": "efd0da2b1e9779278821537fe73c6224e021fc89e3fd836d9e7b4a661ffdf8da"
+  },
+  "existing_store_policy_unchanged": "c6e43af5ee37abc23422c19d9ad4cc8a79e70c009f894b4451e7cdb8763adaa9",
+  "original_version_projection_unchanged": "c285913a2fcba30f21016dbce62e0167c119044efa531ac91d58e269303b47b5",
+  "provider_changed": false,
+  "host_activation": false,
+  "runtime_execution": false
+}

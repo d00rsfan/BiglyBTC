@@ -1,0 +1,218 @@
+{
+  "source_commit": "b40dcb567e46f825baa6e69e09c838543b94fecd",
+  "parent_commit": "cc5dada94a361685a5254edfac24de9988764d5c",
+  "source_path_count": 22,
+  "source_paths": {
+    "preview/native/app/azureus_local_publish.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/app/azureus_local_publish.inc",
+      "before_sha256": "5be8f8524c13e42690a55c2216347c18d29cd2918f8210d883490e1d14779122",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/app/azureus_local_publish.inc",
+      "after_sha256": "57a01a4ec3f145f55c524771b97c26ab22b6077ce74c5e7926cf4e13abcedefc"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/app/azureus_profile_io_owner.inc",
+      "before_sha256": "51825e083f0c444bb49a2708e56896a73668467fb619a16b3756395942ad502d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/app/azureus_profile_io_owner.inc",
+      "after_sha256": "71523d23c952b25ac1558677f1f45eb6378627d57ab1e47c7bd0577a55b556b3"
+    },
+    "preview/native/app/azureus_routing_owner.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/app/azureus_routing_owner.inc",
+      "after_sha256": "6a052f8c6948fa2e2ab158ead28b317b59104e69cdec9ef8945380443b7c1465"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "5f41699ed737b029e345be5c8ff99600c769e1b24f0c27dcbcc5d80613bf3695",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "846bf2fce529c0ddbb2c49b12512904a45b956772717e358f6c5b9f01c7db5f7"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "899ae6594404eef19cb30627e5a4312cf2a90b8ff5aba2d19dc366c6f4d0c747",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "7cc966a3c6e5ef6e807b4aa1fa47ef14d8401dd195843d961b16cd5f58a2d974"
+    },
+    "preview/native/services/azureus_control/lookup.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/services/azureus_control/lookup.cpp",
+      "before_sha256": "a933889ae7929dabbbdd299cbe210c1ec3e7a03078f72e1b1818a15cb0aefde0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/services/azureus_control/lookup.cpp",
+      "after_sha256": "711334215f3c83c1e96ae9885066c816b055e84dcc669e28508ef24423969fe5"
+    },
+    "preview/native/services/azureus_control/lookup.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/services/azureus_control/lookup.hpp",
+      "before_sha256": "cddf32183bbab7d83336c652474c9d861729149456e167dd10826b28fcf75081",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/services/azureus_control/lookup.hpp",
+      "after_sha256": "fc38049295f881f2a54b1f29534c9e2be15d038208d6eed19ca8fa88e1c9c8c1"
+    },
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/amendments/actor-member-order/staging/preview/native/services/azureus_udp/owned_routing.inc",
+      "after_sha256": "8f0700a534ccd92c0b29aac19c840d78f59110d62c73a4090bd1d1deade4230f",
+      "parent_after_sha256": "ba46f54d4ef9e9b59c8ae99f3070621c24089b1a48eb78866363a8a495e5b7c2"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/services/azureus_udp/owned_transport.cpp",
+      "before_sha256": "08d589940032336a21fbec4da0521bfe3bb9bc592c81cf498d1103cd3879cd43",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+      "after_sha256": "59e008823ab22dbb1f40811eafafcae257b5fbce1869d8184bda4224db3d6dbc"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/services/azureus_udp/owned_transport.hpp",
+      "before_sha256": "e4e1de5cb11f3d41ba223fd11996685f2501d5a4110bb3f7ac22a59265eb16ef",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/amendments/actor-member-order/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+      "after_sha256": "d10ec131356fdd725371475cc527d0f2f1037fa1513681be1c98585d91bdbe7d",
+      "parent_after_sha256": "82919fcab02e17f4351668fa4c444e5319784c50afe0dab7b5fa79ac5192cf85"
+    },
+    "preview/native/tests/azureus_routing_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/amendments/absent-version-source/staging/preview/native/tests/azureus_routing_tests.cpp",
+      "after_sha256": "ca8a63952ae1ba9d99866150697518fa6829f447db054d0d7b0b950a82cb9dd3"
+    },
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/before/preview/native/services/i2cp_channel/channel.cpp",
+      "before_sha256": "f96cfadec04e00ccd41b2bcd3a698739a8faa73bf539d7cb4f1572935f8433de",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2cp_channel/channel.cpp",
+      "after_sha256": "5d1cf0f48b8404329e1bc65c73e826269a83ef683f7d1eb656a1f3161cc7144d"
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/before/preview/native/services/i2cp_channel/channel.hpp",
+      "before_sha256": "aa6f00e14cfb95b49294c564031d57bcad8d151b05fae824a348f141ba19af65",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2cp_channel/channel.hpp",
+      "after_sha256": "d375e697cbf856eab2a3f74b7526ca469b8cad8aba1179ac6f23451598f5b0e4"
+    },
+    "preview/native/services/i2cp_channel/receive.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/before/preview/native/services/i2cp_channel/receive.inc",
+      "before_sha256": "55f23b537873bf20401d7cd022b6490ce8545cfda655df4c0c524ae24e131831",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2cp_channel/receive.inc",
+      "after_sha256": "00e158022da3a780f958cd723285257358e21b533b6975fc0d137992f4b429b5"
+    },
+    "preview/native/services/i2cp_channel/streaming.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2cp_channel/streaming.inc",
+      "after_sha256": "3b846b3eff75034467f6db1be28f7ca141f55e76e63c453d2bc5b67ebd64f3ff"
+    },
+    "preview/native/services/i2cp_channel/tracker.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/before/preview/native/services/i2cp_channel/tracker.inc",
+      "before_sha256": "c3fd50c904b79b256a2a817154dc8befc5c58e1b1cc05ac8f43d4cb3fecb5ad4",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2cp_channel/tracker.inc",
+      "after_sha256": "b8f85542c20181d485ece2ff8a906eaf19f732dc3eea3baf0362b03531e2f8df"
+    },
+    "preview/native/services/i2p_streaming/stream.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2p_streaming/stream.cpp",
+      "after_sha256": "794bcd4e6ae32755c69f10d5f4e8ba00708b8de7bc4a7afc0fca8db6b149f3d6"
+    },
+    "preview/native/services/i2p_streaming/stream.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2p_streaming/stream.hpp",
+      "after_sha256": "b2dfcda91d55fb520853d02c7872650b6e6b56a5fa79e69c63142ddc73a3bf99"
+    },
+    "preview/native/tests/i2p_streaming_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/tests/i2p_streaming_tests.cpp",
+      "after_sha256": "d4b98a5d2748a20dabb1a40736df2dcf790dab695d8de2456098b4c9a521757d"
+    },
+    "preview/native/tests/i2p_streaming_interop_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/amendments/trailing-peer-stderr/staging/preview/native/tests/i2p_streaming_interop_tests.cpp",
+      "after_sha256": "11b51b87a15b6518b2d89849242f42c375cae1fce8e2f0ac5f042bd81557f529"
+    },
+    "preview/native/services/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/before/preview/native/services/CMakeLists.txt",
+      "before_sha256": "ec3f874ee61d43ffa2a842962280f8ef8dfd9984c582d1516f2f65ef09bdc968",
+      "after_path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/composed/preview/native/services/CMakeLists.txt",
+      "after_sha256": "bdb44aa563e35a6b96ec19f24413431a53f4d33c3f6c132b3340745e91408075"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/before/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "2ed35f690e2bb7dfd9bf902bc394838a427a9f3368e093c781026c06ac8a79eb",
+      "after_path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/composed/preview/native/tests/CMakeLists.txt",
+      "after_sha256": "2af98c6f55b38dc7c984c66612862958ccd8df5cacc10fdd94de9d88b2ca486f"
+    }
+  },
+  "source_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/amendments/actor-member-order/manifest.json",
+      "sha256": "b85be109bd0f676671083c5efc1d3eb51f3c81edd9d4b3bbf85f9cf90c51cf9f"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/manifest.json",
+      "sha256": "757cfa578b67533591a3dbc6880345d651708d8e0b79b25531458def13d216b7"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/amendments/trailing-peer-stderr/manifest.json",
+      "sha256": "a77d16dc7ecb725d50d9529e1cb07fc41246a89a3192aa5958dfd0097d7e517c"
+    }
+  ],
+  "source_reviews": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029-review/review.json",
+      "sha256": "6ca639726bd4d8cb23c5a19b78e5296cf015927de611cfc84d43521ee8b62a1d"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029-review/review.json",
+      "sha256": "81243542132106ddfdb74c4336800af8f1d481d231b348fbcb17be17176e9001"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029-review/review.json",
+      "sha256": "4893c9016d7f2aa9d14fbec3f449d648a07a03820548432d905b322b76ffef33"
+    }
+  ],
+  "source_history": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/manifest.json",
+      "sha256": "e6c66209e508e1f6640a078df5c0d20d02da2b02da492a860732d7efd92e0ac1"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/manifest.json",
+      "sha256": "537ecfe54563417a250a3e79f174d237eacfa53ac4b08abf342921c9be063cfd"
+    }
+  ],
+  "adopter_sha256": "709f9b705370b320875c0b757467c036e39ec87b1768a18673c6699b85ef1328",
+  "recipe_manifest_sha256": "b641cacf1816e67c142043997cfd130c17769cc85ebad610f76acaae4c2aedc2",
+  "initial_adoption": {
+    "path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/root-adoption.json",
+    "sha256": "73e4fde9053f7d333a8380ce1fe35450ae47113e6fbe697448cd7b28fe976389"
+  },
+  "correction_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/amendments/absent-version-source/manifest.json",
+      "sha256": "4ff08fd3200885cfb9c1f6b19c87af8089a26b5579e3e3d2d7382cd332e80111"
+    }
+  ],
+  "correction_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/amendments/absent-version-source/source-review.json",
+    "sha256": "76cff493c45f738e6e17c68a06c4a6a412d86a9e1f23fdf2ddddff5c3c493373"
+  },
+  "adopter_r2_sha256": "e651d5b83d500e1496fef24660290c36fd6e32287b1eeffd8b3f97188be34344",
+  "failed_first_clang_sha256": {
+    "runs/clang-r1/inventory.log": "2bb6551c32c24489f9522462dfed98ef4745e62b0dcdb1d437300324929c2c8a",
+    "runs/clang-r1/dependency-commands.json": "a570313309ae86935df55c39c8b90c0271396cbe5d1960e867425e60d519c562",
+    "runs/clang-r1/ctest-full.log": "c5a6477a5dc61a7337fa1a3a4045150fc72510a8276da5d896df054d61401652",
+    "runs/clang-r1/tests.log": "7684a561805e8d68ebf5cbca8b506a29ec25fed76560f827ff90fee00162b577",
+    "runs/clang-r1/dependencies-before.json": "4a3e6f875c115ff84b37424b55d3dccfbbb8fbbff19d1ed6d5db1eea991b0aef",
+    "runs/clang-r1/source-before.json": "0e8181db52396c2104dfdd77939453bd7b34b149904297b223f3e1b0b519d7cf",
+    "runs/clang-r1/build-receipt.json": "97ed32a91609ec8f5fd835b7451c6f899593958a640e29994b9ee711cf919b66",
+    "runs/clang-r1/tool-inputs.json": "d25273f2c77ff9ccbcdb56234581197ae0a494d657ca42971156efab23308d60",
+    "runs/clang-r1/tests.xml": "283e935bffcb0c5a189c37676d67cc1919df8b0e79c914fa7314f1ad23cfb5e7",
+    "runs/clang-r1/build.log": "f15fb6910d5423c440eee6b4e2bdbd8d0f0ab36e67eab758dac772bab7f8eb05",
+    "runs/clang-r1/configure.log": "1d9f6447ffecc6a8af124a836952922b6961daddeefe765736317cdef5ef3fe6",
+    "runs/clang-r1/result.json": "831a1adf78b11ff761c426ccf037de95d6e5aaab14c965c1b9076c81a32340ec",
+    "runs/clang-r1/images-before.json": "512a2d38ece0c246cd70391a0b3eb0e12807f0d9ac57ae0975e1d86b63ab1031",
+    "runs/clang-r1/commands.json": "b466ce3a38b750d2ea169020e84853c29882d99e27da53212b72bb0d43b242bc",
+    "runs/clang-r1/native-source-map.json": "a28db0ad9f988c0523ab524a33ef8bfd1146f1aff67b498c26856eaf054198c2",
+    "actor-supplement-r1/ctest-full.log": "736970a99aa3bb07e0f48f1e25306ef7902ef52d92a196be1be0be3031329dd7",
+    "actor-supplement-r1/actor-tests.xml": "8d1d67efdd791198ada076888d5b17bc2b1a3f3c8b15571091044d09c9c7b37f",
+    "actor-supplement-r1/result.json": "550d2e35c3a1d5482e33ee190ac879942df67fc227f90df4095dd55c88115721",
+    "actor-supplement-r1/actor-tests.log": "6dd2d7fe9e10bee9abfa9fbd407aca97e9297b5aee8b6c11ad0dbde72d84523d",
+    "actor-supplement-r1/commands.json": "0715893e68bcc61098b1264923ff554f9ce0a4c649dec6b679e2d118c87af997"
+  }
+}

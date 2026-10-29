@@ -1,0 +1,26 @@
+{
+  "status": "SOURCE_REVIEW_PASS_NO_EXECUTION",
+  "effective_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/amendments/trailing-peer-stderr/manifest.json",
+    "sha256": "a77d16dc7ecb725d50d9529e1cb07fc41246a89a3192aa5958dfd0097d7e517c"
+  },
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/manifest.json",
+    "sha256": "537ecfe54563417a250a3e79f174d237eacfa53ac4b08abf342921c9be063cfd"
+  },
+  "native_actor_manifest_sha256": "757cfa578b67533591a3dbc6880345d651708d8e0b79b25531458def13d216b7",
+  "checked": [
+    "Parent13 artifact hashes and child bounded trailing-stderr delta",
+    "Real modified manager accept/read/write/reset with full-Destination/protocol6/port allowlist; no substituted application echo or status callback",
+    "Five controlled cases require exact bytes/EOF, real retransmission and reorder, signed Delay61000/0, typed reset and local-cancel late FIFO UPDATED fence",
+    "Current native API/header and explicit opt-in target/480s CTest mapping",
+    "Real-router derivative reuses byte-pinned RouterTracker, exact inherited fence AST, generated keys and explicit signed-LS2 cache precondition; limits are declared",
+    "Probe links hashed existing actual GCC archives and binds explicit same-source result; no backend/default/Host activation"
+  ],
+  "resolved_note": "Destructor now retains bounded final child stderr after owned kill/join; no protocol or assertions changed",
+  "limits": [
+    "No javac/C++/subject/namespace/network execution by reviewer",
+    "Actual manager adapter and real-router positives remain separate pending runtime gates",
+    "Official9134 and modified b086 source equivalence is not claimed"
+  ]
+}

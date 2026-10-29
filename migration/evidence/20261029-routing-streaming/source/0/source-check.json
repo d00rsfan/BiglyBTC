@@ -1,0 +1,14 @@
+{
+  "status": "SOURCE_ONLY_PATCH_CHECK_PASS",
+  "native_commit_checked": "cc5dada94a361685a5254edfac24de9988764d5c",
+  "implementation_basis": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+  "all_eight_existing_preimages_equal": true,
+  "full_patch_apply_check": 0,
+  "parent_delta_apply_check": 0,
+  "changed_parent_leaves": [
+    "preview/native/services/azureus_udp/owned_routing.inc",
+    "preview/native/services/azureus_udp/owned_transport.hpp"
+  ],
+  "runtime_executed": false,
+  "compiler_executed": false
+}

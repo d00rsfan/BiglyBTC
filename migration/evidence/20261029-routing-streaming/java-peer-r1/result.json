@@ -1,0 +1,26 @@
+{
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "/usr/bin/javac",
+    "-J-Xmx128m",
+    "-J-XX:ActiveProcessorCount=1",
+    "--release",
+    "17",
+    "-cp",
+    "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+    "-d",
+    "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/java-peer-r1/classes",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/StreamingPeer.java"
+  ],
+  "exit": 0,
+  "source_sha256": "b09fde915825727452c33d6efb129aa990fc4074f5ba8f6fe65a34d664d3dfe1",
+  "jar_sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+  "javac": "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac",
+  "javac_sha256": "4d08eaac44a80fb0142bc001123ebfbc8aa4121801d4cd24711d1394733767f4",
+  "classes": {
+    "StreamingPeer$Adapter.class": "ea1d4bd05d8fa5c2c78e9011cf38fd0523f753f6c81368042006bb86de1bce06",
+    "StreamingPeer.class": "f4c81ea2bd3c2dd52bb92cddc754cc2ecbb0169363a4fdd8ce386c1027acc9db"
+  }
+}

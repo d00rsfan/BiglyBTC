@@ -7905,7 +7905,12 @@
         "preview/native/app/azureus_rating_consumer.inc",
         "preview/native/app/azureus_profile_io.hpp",
         "preview/native/app/azureus_profile_io_owner.inc",
-        "preview/native/tests/azureus_profile_io_tests.cpp"
+        "preview/native/tests/azureus_profile_io_tests.cpp",
+        "preview/native/app/azureus_routing_owner.inc",
+        "preview/native/services/azureus_control/lookup.cpp",
+        "preview/native/services/azureus_control/lookup.hpp",
+        "preview/native/services/azureus_udp/owned_routing.inc",
+        "preview/native/tests/azureus_routing_tests.cpp"
       ],
       "source_coverage": [
         {
@@ -7922,7 +7927,8 @@
             "core/src/com/biglybt/pifimpl/local/ddb/DDBaseImpl.java",
             "core/src/com/biglybt/pifimpl/local/ddb/DDBaseKeyImpl.java",
             "core/src/com/biglybt/pifimpl/local/ddb/DDBaseHelpers.java",
-            "core/src/com/biglybt/core/dht/DHT.java"
+            "core/src/com/biglybt/core/dht/DHT.java",
+            "core/src/com/biglybt/core/dht/control/DHTControl.java"
           ],
           "source_symbols": [
             "DHTDBImpl.store",
@@ -7935,7 +7941,9 @@
             "DDBaseImpl.write",
             "DDBaseKeyImpl",
             "DDBaseHelpers.encode",
-            "DHT.FLAG_ANON"
+            "DHT.FLAG_ANON",
+            "DHTControlImpl.seed",
+            "DHTRouterImpl.seed"
           ],
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "first_ported_commit": null,
@@ -7994,6 +8002,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "514a238f0efa749e7a7fb1e68f8123af78e766da",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -8001,7 +8014,8 @@
         "migration/evidence/20261029-signed-session-local-publish/REVIEW.md",
         "migration/evidence/20261029-normal-dht-leaseset2/REVIEW.md",
         "migration/evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md",
-        "migration/evidence/20261029-profile-io-i2cp-tracker/REVIEW.md"
+        "migration/evidence/20261029-profile-io-i2cp-tracker/REVIEW.md",
+        "migration/evidence/20261029-routing-streaming/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-azureus-volatile-database/verification.json",
@@ -8009,7 +8023,8 @@
         "migration/evidence/20261029-signed-session-local-publish/verification.json",
         "migration/evidence/20261029-normal-dht-leaseset2/verification.json",
         "migration/evidence/20261029-saved-ratings-i2cp-datagrams/verification.json",
-        "migration/evidence/20261029-profile-io-i2cp-tracker/verification.json"
+        "migration/evidence/20261029-profile-io-i2cp-tracker/verification.json",
+        "migration/evidence/20261029-routing-streaming/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8708,7 +8723,12 @@
         "preview/native/services/i2cp_tracker/tracker.cpp",
         "preview/native/services/i2cp_tracker/tracker.hpp",
         "preview/native/tests/i2cp_tracker_channel_tests.cpp",
-        "preview/native/tests/i2cp_tracker_codec_tests.cpp"
+        "preview/native/tests/i2cp_tracker_codec_tests.cpp",
+        "preview/native/services/i2cp_channel/streaming.inc",
+        "preview/native/services/i2p_streaming/stream.cpp",
+        "preview/native/services/i2p_streaming/stream.hpp",
+        "preview/native/tests/i2p_streaming_tests.cpp",
+        "preview/native/tests/i2p_streaming_interop_tests.cpp"
       ],
       "source_coverage": [
         {
@@ -8764,7 +8784,41 @@
             "core/java/src/net/i2p/data/i2cp/HostLookupMessage.java",
             "core/java/src/net/i2p/data/i2cp/HostReplyMessage.java",
             "core/java/src/net/i2p/client/SendMessageOptions.java",
-            "core/java/src/net/i2p/client/I2PSession.java"
+            "core/java/src/net/i2p/client/I2PSession.java",
+            "apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocket.java",
+            "apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketManager.java",
+            "apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketOptions.java",
+            "apps/ministreaming/java/src/net/i2p/client/streaming/I2PServerSocket.java",
+            "apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketManagerFactory.java",
+            "apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketEepGet.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/Packet.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/PacketLocal.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/PacketQueue.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/Connection.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionOptions.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionManager.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionDataReceiver.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionHandler.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionPacketHandler.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/MessageHandler.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/PacketHandler.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/MessageInputStream.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/MessageOutputStream.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/I2PSocketManagerFull.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/I2PSocketFull.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/I2PSocketOptionsImpl.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/RetransmissionTimer.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerChooser.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerImpl.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/TaskScheduler.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerConnecting.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerPreconnect.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerReceived.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerConnectedBulk.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerClosing.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerClosed.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerHardDisconnected.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerDead.java"
           ],
           "source_symbols": [
             "I2CPMessageImpl.readMessage/writeMessage",
@@ -8795,7 +8849,10 @@
             "HostLookupMessage",
             "HostReplyMessage",
             "SendMessageOptions.setSendLeaseSet",
-            "I2PSession.lookupDest"
+            "I2PSession.lookupDest",
+            "Packet",
+            "Connection",
+            "I2PSocketManagerFull"
           ],
           "baseline_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
           "first_ported_commit": null,
@@ -8859,6 +8916,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "514a238f0efa749e7a7fb1e68f8123af78e766da",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -8869,7 +8931,8 @@
         "migration/evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md",
         "migration/evidence/20261029-i2cp-bounded-receiver/REVIEW.md",
         "migration/evidence/20261029-profile-io-i2cp-tracker/REVIEW.md",
-        "migration/evidence/20261029-i2cp-isolated-router/REVIEW.md"
+        "migration/evidence/20261029-i2cp-isolated-router/REVIEW.md",
+        "migration/evidence/20261029-routing-streaming/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
@@ -8879,7 +8942,8 @@
         "migration/evidence/20261029-saved-ratings-i2cp-datagrams/verification.json",
         "migration/evidence/20261029-i2cp-bounded-receiver/verification.json",
         "migration/evidence/20261029-profile-io-i2cp-tracker/verification.json",
-        "migration/evidence/20261029-i2cp-isolated-router/verification.json"
+        "migration/evidence/20261029-i2cp-isolated-router/verification.json",
+        "migration/evidence/20261029-routing-streaming/verification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     }

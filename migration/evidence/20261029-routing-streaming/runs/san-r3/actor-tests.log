@@ -1,0 +1,12 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop
+Connected to MAKE jobserver
+    Start 298: i2p-original-streaming-peer
+1/1 Test #298: i2p-original-streaming-peer ......   Passed   18.09 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+explicit-i2p    =  18.09 sec*proc (1 test)
+reference       =  18.09 sec*proc (1 test)
+
+Total Test time (real) =  18.11 sec

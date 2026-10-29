@@ -32,3 +32,9 @@ This closes the bounded execution slice only. Public maintenance/router/Streamin
 ## 2026-10-29 actual isolated-router acceptance
 
 Actual isolated-router acceptance on native `f9c72f14be1494b6d75b38288f9eff256a1a878b` passes warmed Hash38/39 and signed2connect/claimed3scrape/RAW18 through a real Java26 router and external tracker. All3subjects exit0, both clients retire, fences hold and dist remains `0cb123398f3a5462ef6ef1e444f245dd8ce09c757bdc804213fa2f82a50ec976`. Warmed actual signed-LS2 cache is an explicit fixture prerequisite; discovery/tunnels/Streaming/default activation remain open. [Review](evidence/20261029-i2cp-isolated-router/REVIEW.md).
+
+## 2026-10-29 owned routing and original I2P Streaming
+
+Source `514a238f0efa749e7a7fb1e68f8123af78e766da` qualifies opt-in owned Azureus self-lookup/contact discovery/cached forwarding and bounded outbound I2P Streaming. Fresh GCC14/Clang11/leak-enabled ASan+UBSan11 default suites, separate original Java manager acceptance on Clang/SAN, private14+GCC actor1 and actual isolated-router HTTP transfer pass. [Review](evidence/20261029-routing-streaming/REVIEW.md).
+
+This closes the bounded interoperability slice. Current one dist replaces its predecessor; all existing component states/baseline fields and22dependencies remain unchanged. Public maintenance/backend/default activation and complete P05–P13 remain open.

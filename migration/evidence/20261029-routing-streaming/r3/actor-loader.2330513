@@ -1,0 +1,430 @@
+   2330513:	find library=libjli.so [0]; searching
+   2330513:	 search path=/usr/lib/jvm/java-26-openjdk-amd64/bin/glibc-hwcaps/x86-64-v3:/usr/lib/jvm/java-26-openjdk-amd64/bin/glibc-hwcaps/x86-64-v2:/usr/lib/jvm/java-26-openjdk-amd64/bin:/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/glibc-hwcaps/x86-64-v3:/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/glibc-hwcaps/x86-64-v2:/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib		(RPATH from file /usr/bin/java)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/glibc-hwcaps/x86-64-v3/libjli.so
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/glibc-hwcaps/x86-64-v2/libjli.so
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/libjli.so
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/glibc-hwcaps/x86-64-v3/libjli.so
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/glibc-hwcaps/x86-64-v2/libjli.so
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/libjli.so
+   2330513:	
+   2330513:	find library=libc.so.6 [0]; searching
+   2330513:	 search path=/usr/lib/jvm/java-26-openjdk-amd64/bin:/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib		(RPATH from file /usr/bin/java)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/libc.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/libc.so.6
+   2330513:	    (no such file)
+   2330513:	 search path=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/glibc-hwcaps/x86-64-v3/libc.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/glibc-hwcaps/x86-64-v2/libc.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/libc.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3/libc.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2/libc.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libc.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3/libc.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2/libc.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libc.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3/libc.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2/libc.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libc.so.6
+   2330513:	    (no such file)
+   2330513:	 search cache=/etc/ld.so.cache
+   2330513:	  trying file=/usr/lib/x86_64-linux-gnu/libc.so.6
+   2330513:	
+   2330513:	find library=libz.so.1 [0]; searching
+   2330513:	 search path=/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib		(RPATH from file /usr/bin/java)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/libz.so.1
+   2330513:	    (no such file)
+   2330513:	 search path=/usr/lib/jvm/java-26-openjdk-amd64/bin:/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib		(RPATH from file /usr/bin/java)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/libz.so.1
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/libz.so.1
+   2330513:	    (no such file)
+   2330513:	 search path=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/libz.so.1
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libz.so.1
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libz.so.1
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libz.so.1
+   2330513:	    (no such file)
+   2330513:	 search cache=/etc/ld.so.cache
+   2330513:	  trying file=/usr/lib/x86_64-linux-gnu/libz.so.1
+   2330513:	
+   2330513:	
+   2330513:	calling init: /lib64/ld-linux-x86-64.so.2
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/x86_64-linux-gnu/libc.so.6
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/x86_64-linux-gnu/libz.so.1
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/libjli.so
+   2330513:	
+   2330513:	
+   2330513:	initialize program: /usr/bin/java
+   2330513:	
+   2330513:	
+   2330513:	transferring control: /usr/bin/java
+   2330513:	
+   2330513:	find library=libstdc++.so.6 [0]; searching
+   2330513:	 search path=/usr/lib/jvm/java-26-openjdk-amd64/bin:/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib		(RPATH from file /usr/bin/java)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/libstdc++.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/libstdc++.so.6
+   2330513:	    (no such file)
+   2330513:	 search path=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/libstdc++.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libstdc++.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libstdc++.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2330513:	    (no such file)
+   2330513:	 search cache=/etc/ld.so.cache
+   2330513:	  trying file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2330513:	
+   2330513:	find library=libm.so.6 [0]; searching
+   2330513:	 search path=/usr/lib/jvm/java-26-openjdk-amd64/bin:/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib		(RPATH from file /usr/bin/java)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/libm.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/libm.so.6
+   2330513:	    (no such file)
+   2330513:	 search path=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/libm.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libm.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libm.so.6
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libm.so.6
+   2330513:	    (no such file)
+   2330513:	 search cache=/etc/ld.so.cache
+   2330513:	  trying file=/usr/lib/x86_64-linux-gnu/libm.so.6
+   2330513:	
+   2330513:	find library=libgcc_s.so.1 [0]; searching
+   2330513:	 search path=/usr/lib/jvm/java-26-openjdk-amd64/bin:/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib		(RPATH from file /usr/bin/java)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/libgcc_s.so.1
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/libgcc_s.so.1
+   2330513:	    (no such file)
+   2330513:	 search path=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/libgcc_s.so.1
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libgcc_s.so.1
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libgcc_s.so.1
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2330513:	    (no such file)
+   2330513:	 search cache=/etc/ld.so.cache
+   2330513:	  trying file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/x86_64-linux-gnu/libm.so.6
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/jvm/java-26-openjdk-amd64/lib/server/libjvm.so
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so
+   2330513:	
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/server/libjvm.so: error: symbol lookup error: undefined symbol: JVM_begin_signal_setting (fatal)
+   2330513:	find library=libnss_compat.so.2 [0]; searching
+   2330513:	 search path=/usr/lib/jvm/java-26-openjdk-amd64/bin:/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib		(RPATH from file /usr/bin/java)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/libnss_compat.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/libnss_compat.so.2
+   2330513:	    (no such file)
+   2330513:	 search path=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/libnss_compat.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libnss_compat.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libnss_compat.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libnss_compat.so.2
+   2330513:	    (no such file)
+   2330513:	 search cache=/etc/ld.so.cache
+   2330513:	  trying file=/usr/lib/x86_64-linux-gnu/libnss_compat.so.2
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/x86_64-linux-gnu/libnss_compat.so.2
+   2330513:	
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_endaliasent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_endetherent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_endhostent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_endnetent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_endnetgrent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_endprotoent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_endrpcent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_endservent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_endsgent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getaliasbyname_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getaliasent_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getcanonname_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getetherent_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_gethostbyaddr2_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_gethostbyaddr_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_gethostbyname2_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_gethostbyname3_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_gethostbyname4_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_gethostbyname_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_gethostent_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_gethostton_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getnetbyaddr_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getnetbyname_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getnetent_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getnetgrent_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getntohost_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getprotobyname_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getprotobynumber_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getprotoent_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getpublickey (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getrpcbyname_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getrpcbynumber_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getrpcent_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getsecretkey (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getservbyname_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getservbyport_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getservent_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getsgent_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_getsgnam_r (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_netname2user (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_setaliasent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_setetherent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_sethostent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_setnetent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_setnetgrent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_setprotoent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_setrpcent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_setservent (fatal)
+   2330513:	/usr/lib/x86_64-linux-gnu/libnss_compat.so.2: error: symbol lookup error: undefined symbol: _nss_compat_setsgent (fatal)
+   2330513:	find library=libnss_nis.so.2 [0]; searching
+   2330513:	 search path=/usr/lib/jvm/java-26-openjdk-amd64/bin:/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib		(RPATH from file /usr/bin/java)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	 search path=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	 search cache=/etc/ld.so.cache
+   2330513:	 search path=/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3:/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3:/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2:/usr/lib/x86_64-linux-gnu:/lib/glibc-hwcaps/x86-64-v3:/lib/glibc-hwcaps/x86-64-v2:/lib:/usr/lib/glibc-hwcaps/x86-64-v3:/usr/lib/glibc-hwcaps/x86-64-v2:/usr/lib		(system search path)
+   2330513:	  trying file=/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/lib/x86_64-linux-gnu/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/x86_64-linux-gnu/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/lib/glibc-hwcaps/x86-64-v3/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/lib/glibc-hwcaps/x86-64-v2/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/lib/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/glibc-hwcaps/x86-64-v3/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/glibc-hwcaps/x86-64-v2/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/libnss_nis.so.2
+   2330513:	    (no such file)
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/jvm/java-26-openjdk-amd64/lib/libsimdsort.so
+   2330513:	
+   2330513:	/usr/bin/java: error: symbol lookup error: undefined symbol: JNI_OnLoad_nio (fatal)
+   2330513:	find library=libnet.so [0]; searching
+   2330513:	 search path=/usr/lib/jvm/java-26-openjdk-amd64/lib/glibc-hwcaps/x86-64-v3:/usr/lib/jvm/java-26-openjdk-amd64/lib/glibc-hwcaps/x86-64-v2:/usr/lib/jvm/java-26-openjdk-amd64/lib		(RPATH from file /usr/lib/jvm/java-26-openjdk-amd64/lib/libnio.so)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/lib/glibc-hwcaps/x86-64-v3/libnet.so
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/lib/glibc-hwcaps/x86-64-v2/libnet.so
+   2330513:	    (no such file)
+   2330513:	  trying file=/usr/lib/jvm/java-26-openjdk-amd64/lib/libnet.so
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/jvm/java-26-openjdk-amd64/lib/libnet.so
+   2330513:	
+   2330513:	
+   2330513:	calling init: /usr/lib/jvm/java-26-openjdk-amd64/lib/libnio.so
+   2330513:	
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_getcwd (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_fstatat0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_stat0 (fatal)
+   2330513:	/usr/bin/java: error: symbol lookup error: undefined symbol: JNI_OnLoad_zip (fatal)
+   2330513:	
+   2330513:	calling init: /usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so
+   2330513:	
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_util_zip_Inflater_initIDs (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_util_zip_Inflater_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_util_zip_Inflater_inflateBytesBytes (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_util_zip_Inflater_reset (fatal)
+   2330513:	/usr/bin/java: error: symbol lookup error: undefined symbol: JNI_OnLoad_zip (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_open0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_open0 (fatal)
+   2330513:	/usr/bin/java: error: symbol lookup error: undefined symbol: JNI_OnLoad_net (fatal)
+   2330513:	/usr/bin/java: error: symbol lookup error: undefined symbol: JNI_OnLoad_nio (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_IOUtil_initIDs (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_IOUtil_initIDs (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_IOUtil_iovMax (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_IOUtil_iovMax (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_IOUtil_writevMax (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_IOUtil_writevMax (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_FileDispatcherImpl_init0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_FileDispatcherImpl_init0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_NativeThread_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_NativeThread_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_NativeThread_current0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_NativeThread_current0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_UnixFileDispatcherImpl_size0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_UnixFileDispatcherImpl_size0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_UnixFileDispatcherImpl_read0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_UnixFileDispatcherImpl_read0 (fatal)
+   2330513:	/usr/bin/java: error: symbol lookup error: undefined symbol: JNI_OnLoad_jimage (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: JNI_OnLoad (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_jdk_internal_jimage_NativeImageBuffer_getNativeMap (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_jdk_internal_jimage_NativeImageBuffer_getNativeMap (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_UnixFileDispatcherImpl_write0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_UnixFileDispatcherImpl_write0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_sun_nio_ch_UnixFileDispatcherImpl_write0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_rename0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_rename0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_rename0 (fatal)
+   2330513:	/usr/bin/java: error: symbol lookup error: undefined symbol: JNI_OnLoad_net (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_net_NetworkInterface_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_java_net_NetworkInterface_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_java_net_NetworkInterface_init (fatal)
+   2330513:	/usr/bin/java: error: symbol lookup error: undefined symbol: JNI_OnLoad_net (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_net_InetAddress_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_java_net_InetAddress_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_java_net_InetAddress_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_net_InetAddress_isIPv6Supported (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_java_net_InetAddress_isIPv6Supported (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_java_net_InetAddress_isIPv6Supported (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_net_InetAddress_isIPv4Available (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_java_net_InetAddress_isIPv4Available (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_java_net_InetAddress_isIPv4Available (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_net_Inet4Address_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_java_net_Inet4Address_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_java_net_Inet4Address_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_net_Inet6Address_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_java_net_Inet6Address_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_java_net_Inet6Address_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_net_NetworkInterface_getAll (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_java_net_NetworkInterface_getAll (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_java_net_NetworkInterface_getAll (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_net_NetworkInterface_isLoopback0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_java_net_NetworkInterface_isLoopback0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_java_net_NetworkInterface_isLoopback0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_net_NetworkInterface_getMacAddr0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_java_net_NetworkInterface_getMacAddr0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_java_net_NetworkInterface_getMacAddr0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_dup (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_dup (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_dup (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_fdopendir (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_fdopendir (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_fdopendir (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_readdir0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_readdir0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_readdir0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_closedir (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_closedir (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_closedir (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_close0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_close0 (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so: error: symbol lookup error: undefined symbol: Java_sun_nio_fs_UnixNativeDispatcher_close0 (fatal)
+   2330513:	/usr/bin/java: error: symbol lookup error: undefined symbol: JNI_OnLoad_zip (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_util_zip_Deflater_init (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_util_zip_Deflater_deflateBytesBytes (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_util_zip_Deflater_reset (fatal)
+   2330513:	/usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so: error: symbol lookup error: undefined symbol: Java_java_util_zip_Deflater_end (fatal)
+   2330513:	
+   2330513:	calling fini:  [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/jvm/java-26-openjdk-amd64/bin/../lib/libjli.so [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/jvm/java-26-openjdk-amd64/lib/libjimage.so [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/x86_64-linux-gnu/libnss_compat.so.2 [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/jvm/java-26-openjdk-amd64/lib/libsimdsort.so [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/jvm/java-26-openjdk-amd64/lib/libnio.so [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/jvm/java-26-openjdk-amd64/lib/libnet.so [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/jvm/java-26-openjdk-amd64/lib/libzip.so [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/x86_64-linux-gnu/libz.so.1 [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/jvm/java-26-openjdk-amd64/lib/libjava.so [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/jvm/java-26-openjdk-amd64/lib/server/libjvm.so [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/x86_64-linux-gnu/libstdc++.so.6 [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/x86_64-linux-gnu/libm.so.6 [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /usr/lib/x86_64-linux-gnu/libc.so.6 [0]
+   2330513:	
+   2330513:	
+   2330513:	calling fini: /lib64/ld-linux-x86-64.so.2 [0]
+   2330513:	

@@ -1,0 +1,15 @@
+{
+  "status": "SOURCE_REVIEW_PASS_NO_EXECUTION",
+  "manifest_sha256": "4ff08fd3200885cfb9c1f6b19c87af8089a26b5579e3e3d2d7382cd332e80111",
+  "checked_source_paths": 1,
+  "checked_artifacts": 5,
+  "finding": "AzureusValueVersions::open captures optional primary/pending without creating a version reservation; only next publishes. Fixture now compares exact optional version.dat and version.saving states, initially proving both absent. Existing poison-file mandatory read remains unchanged.",
+  "preserved": [
+    "Production bytes",
+    "Routing and cache-forward predicates",
+    "Real payload/origin/version/readback and no-local-put assertions",
+    "All deadlines and explicit close/join controls"
+  ],
+  "native_mutated": false,
+  "runtime_executed": false
+}

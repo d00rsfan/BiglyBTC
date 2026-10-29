@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_EXPLICIT_OUTBOUND_STREAMING_PENDING_QUALIFICATION",
+  "native_source_basis": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+  "source_path_count": 8,
+  "source_paths": {
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/before/preview/native/services/i2cp_channel/channel.cpp",
+      "before_sha256": "f96cfadec04e00ccd41b2bcd3a698739a8faa73bf539d7cb4f1572935f8433de",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2cp_channel/channel.cpp",
+      "after_sha256": "5d1cf0f48b8404329e1bc65c73e826269a83ef683f7d1eb656a1f3161cc7144d"
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/before/preview/native/services/i2cp_channel/channel.hpp",
+      "before_sha256": "aa6f00e14cfb95b49294c564031d57bcad8d151b05fae824a348f141ba19af65",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2cp_channel/channel.hpp",
+      "after_sha256": "d375e697cbf856eab2a3f74b7526ca469b8cad8aba1179ac6f23451598f5b0e4"
+    },
+    "preview/native/services/i2cp_channel/receive.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/before/preview/native/services/i2cp_channel/receive.inc",
+      "before_sha256": "55f23b537873bf20401d7cd022b6490ce8545cfda655df4c0c524ae24e131831",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2cp_channel/receive.inc",
+      "after_sha256": "00e158022da3a780f958cd723285257358e21b533b6975fc0d137992f4b429b5"
+    },
+    "preview/native/services/i2cp_channel/streaming.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2cp_channel/streaming.inc",
+      "after_sha256": "3b846b3eff75034467f6db1be28f7ca141f55e76e63c453d2bc5b67ebd64f3ff"
+    },
+    "preview/native/services/i2cp_channel/tracker.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/before/preview/native/services/i2cp_channel/tracker.inc",
+      "before_sha256": "c3fd50c904b79b256a2a817154dc8befc5c58e1b1cc05ac8f43d4cb3fecb5ad4",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2cp_channel/tracker.inc",
+      "after_sha256": "b8f85542c20181d485ece2ff8a906eaf19f732dc3eea3baf0362b03531e2f8df"
+    },
+    "preview/native/services/i2p_streaming/stream.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2p_streaming/stream.cpp",
+      "after_sha256": "794bcd4e6ae32755c69f10d5f4e8ba00708b8de7bc4a7afc0fca8db6b149f3d6"
+    },
+    "preview/native/services/i2p_streaming/stream.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/services/i2p_streaming/stream.hpp",
+      "after_sha256": "b2dfcda91d55fb520853d02c7872650b6e6b56a5fa79e69c63142ddc73a3bf99"
+    },
+    "preview/native/tests/i2p_streaming_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/staging/preview/native/tests/i2p_streaming_tests.cpp",
+      "after_sha256": "d4b98a5d2748a20dabb1a40736df2dcf790dab695d8de2456098b4c9a521757d"
+    }
+  },
+  "artifacts_sha256": {
+    "ADOPTION.md": "4f17ef8e622c60f1f9015c76f684164e12d3f992beed90fa91ff772c47abe8bd",
+    "CMake.fragment": "8c86645587c53fb02d1bae5cd01b5a3840cacc071fd827fb506c03af6a0a0dd7",
+    "before/preview/native/services/i2cp_channel/channel.cpp": "f96cfadec04e00ccd41b2bcd3a698739a8faa73bf539d7cb4f1572935f8433de",
+    "before/preview/native/services/i2cp_channel/channel.hpp": "aa6f00e14cfb95b49294c564031d57bcad8d151b05fae824a348f141ba19af65",
+    "before/preview/native/services/i2cp_channel/receive.inc": "55f23b537873bf20401d7cd022b6490ce8545cfda655df4c0c524ae24e131831",
+    "before/preview/native/services/i2cp_channel/tracker.inc": "c3fd50c904b79b256a2a817154dc8befc5c58e1b1cc05ac8f43d4cb3fecb5ad4",
+    "changes.patch": "842a5e7bfe61ce3c15c8754049b101723a62520e9b0933c1f1a47346663363ab",
+    "source-checks.json": "29dd8e704ca3db6fbb30cea8f7d6e8f36d6d04c951306abbecdb5d09c50c6c1b",
+    "source-pins.json": "0c881b8b34a090094fa2dbcaea240607190cc7fcaf628a5fc7731d4c7867a062",
+    "staging/preview/native/services/i2cp_channel/channel.cpp": "5d1cf0f48b8404329e1bc65c73e826269a83ef683f7d1eb656a1f3161cc7144d",
+    "staging/preview/native/services/i2cp_channel/channel.hpp": "d375e697cbf856eab2a3f74b7526ca469b8cad8aba1179ac6f23451598f5b0e4",
+    "staging/preview/native/services/i2cp_channel/receive.inc": "00e158022da3a780f958cd723285257358e21b533b6975fc0d137992f4b429b5",
+    "staging/preview/native/services/i2cp_channel/streaming.inc": "3b846b3eff75034467f6db1be28f7ca141f55e76e63c453d2bc5b67ebd64f3ff",
+    "staging/preview/native/services/i2cp_channel/tracker.inc": "b8f85542c20181d485ece2ff8a906eaf19f732dc3eea3baf0362b03531e2f8df",
+    "staging/preview/native/services/i2p_streaming/stream.cpp": "794bcd4e6ae32755c69f10d5f4e8ba00708b8de7bc4a7afc0fca8db6b149f3d6",
+    "staging/preview/native/services/i2p_streaming/stream.hpp": "b2dfcda91d55fb520853d02c7872650b6e6b56a5fa79e69c63142ddc73a3bf99",
+    "staging/preview/native/tests/i2p_streaming_tests.cpp": "d4b98a5d2748a20dabb1a40736df2dcf790dab695d8de2456098b4c9a521757d"
+  },
+  "cmake_append_fragments": [
+    "CMake.fragment"
+  ],
+  "source_inputs": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/source-pins.json",
+    "sha256": "0c881b8b34a090094fa2dbcaea240607190cc7fcaf628a5fc7731d4c7867a062"
+  },
+  "java_acceptance_capsule": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029",
+  "runtime_executed": false,
+  "provider_changed": false,
+  "host_activation": false
+}

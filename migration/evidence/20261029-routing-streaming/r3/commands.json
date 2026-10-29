@@ -1,0 +1,416 @@
+[
+  {
+    "name": "stage",
+    "command": [
+      "python3",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--output",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate",
+      "--libtorrent-package",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+      "--source-libtorrent",
+      "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--private-mainline-routing-provider-manifest",
+      "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-runtime.json"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 8.267,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/stage.log",
+    "log_sha256": "0d1ce368c886ec6f84835673fca4590b7c9545aa2f9a54261c6b0caf08f5be4e"
+  },
+  {
+    "name": "loader-azureus-routing",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-azureus-routing-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.033,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-azureus-routing.log",
+    "log_sha256": "a292180b3b68b75a9231975c6256c9b15ff5202566433dc63d848f97d3b84c59"
+  },
+  {
+    "name": "azureus-routing",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-azureus-routing-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-routing.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-routing.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 1.374,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-routing.log",
+    "log_sha256": "04b2e820006f82c2831329d0a829b67e227df32e9d21da55fd048a3fec2091ec"
+  },
+  {
+    "name": "loader-owned-ddb-control",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-owned-ddb-control-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.019,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-owned-ddb-control.log",
+    "log_sha256": "f661345bdcffd4c2c1aacedd701d74980bde99a7b2a00140ad7fa7f663e999bc"
+  },
+  {
+    "name": "owned-ddb-control",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-owned-ddb-control-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.018,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/owned-ddb-control.log",
+    "log_sha256": "3968aa653560b8977278db13df070af94ade4fafc120cb0ae8212eaf9b69a82c"
+  },
+  {
+    "name": "loader-azureus-router-owner",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-azureus-router-owner-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.021,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-azureus-router-owner.log",
+    "log_sha256": "752eb68fcdf5623cf33695f40c4af11d70cb9674bec0960269f888a88e967853"
+  },
+  {
+    "name": "azureus-router-owner",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-azureus-router-owner-tests",
+      "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/azureus-router/source-cases.tsv"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.033,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-router-owner.log",
+    "log_sha256": "063504fb8e91b1473ebbb2b7140814c46ab7a3e3490970a1eebd561198b1ed2c"
+  },
+  {
+    "name": "loader-azureus-owned-service",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-azureus-owned-service-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.018,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-azureus-owned-service.log",
+    "log_sha256": "69a97bf68c982f5b6bde200214ca0c4a0407223d65fa70ca547c163b57035e87"
+  },
+  {
+    "name": "azureus-owned-service",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-azureus-owned-service-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-owned-service.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-owned-service.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 5.451,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-owned-service.log",
+    "log_sha256": "387198a73b959a047373d7296d5ab6f9083d3f1f0e5d01702e623ba628788101"
+  },
+  {
+    "name": "loader-azureus-profile-io",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-azureus-profile-io-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.022,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-azureus-profile-io.log",
+    "log_sha256": "57f7e99e643137186a0f5cdb4c49be7a9438a6ab9b88a5883945148e880cbc72"
+  },
+  {
+    "name": "azureus-profile-io",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-azureus-profile-io-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-profile-io.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-profile-io.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 2.476,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-profile-io.log",
+    "log_sha256": "31af7f92ed2fe44cb5ca642da94072eccbe7b949ee84cae5c3d1fcd37220910c"
+  },
+  {
+    "name": "loader-i2cp-initial-channel",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2cp-initial-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-i2cp-initial-channel.log",
+    "log_sha256": "c9501ec7fc8624de000444defa504e4c09ca1433817d616a3425f4779fd0503b"
+  },
+  {
+    "name": "i2cp-initial-channel",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2cp-initial-channel-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2cp-initial-channel.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2cp-initial-channel.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 13.224,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2cp-initial-channel.log",
+    "log_sha256": "512e2bd231f786b7f7a438315867acfdf3c3bdc59524b1398ead98e43d79bdf8"
+  },
+  {
+    "name": "loader-pure-i2cp-datagram-messages",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2cp-datagram-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.017,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-pure-i2cp-datagram-messages.log",
+    "log_sha256": "6c4e0768f1bf1d5f159ce22a47afe85feba46aa2644465292216957a03a2a698"
+  },
+  {
+    "name": "pure-i2cp-datagram-messages",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2cp-datagram-tests",
+      "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/pure-i2cp-datagram-messages.log",
+    "log_sha256": "59f831ba3a0fb32e6891157ff19adc0a33c89d278d936d9d206134bbacd8ab7d"
+  },
+  {
+    "name": "loader-i2cp-lease-backed-datagram-channel",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2cp-datagram-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-i2cp-lease-backed-datagram-channel.log",
+    "log_sha256": "06796c76403fcae502fcf790a45fb7ae7543ad36467e6bf638740ae654c17c6e"
+  },
+  {
+    "name": "i2cp-lease-backed-datagram-channel",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2cp-datagram-channel-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2cp-lease-backed-datagram-channel.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2cp-lease-backed-datagram-channel.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 7.401,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2cp-lease-backed-datagram-channel.log",
+    "log_sha256": "182a732c945c6872e293abbf0b7d1fc081b3162ffc3d29b8477fd77096f7e797"
+  },
+  {
+    "name": "loader-i2cp-bounded-datagram-receiver",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2cp-receive-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-i2cp-bounded-datagram-receiver.log",
+    "log_sha256": "9e039eb952e2d9f0cf968066bc3c225e6525da0ed58ac6bc7106182fd0c25efe"
+  },
+  {
+    "name": "i2cp-bounded-datagram-receiver",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2cp-receive-channel-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2cp-bounded-datagram-receiver.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2cp-bounded-datagram-receiver.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 11.157,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2cp-bounded-datagram-receiver.log",
+    "log_sha256": "69b6eca8aaa12884e1d599eb696bd3ebfed18a48d3b869ffa5f18fc2bd9b5a06"
+  },
+  {
+    "name": "loader-i2cp-explicit-tracker-channel",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2cp-tracker-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-i2cp-explicit-tracker-channel.log",
+    "log_sha256": "d96216ebe8515954ed9ee5f7cdf30fb6906a1af27ec45a12f9d4a6f4a6a06991"
+  },
+  {
+    "name": "i2cp-explicit-tracker-channel",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2cp-tracker-channel-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2cp-explicit-tracker-channel.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2cp-explicit-tracker-channel.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 5.383,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2cp-explicit-tracker-channel.log",
+    "log_sha256": "e4347f8b0402425edf682dfff0d1f32477d56dd7bf54fa375c99eae108d7c99a"
+  },
+  {
+    "name": "loader-pure-i2p-streaming",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2p-streaming-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.008,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-pure-i2p-streaming.log",
+    "log_sha256": "785dbcbd98598cdd36ae5a167a9c3647c719fbce7dba4175b52bea9d468300bf"
+  },
+  {
+    "name": "pure-i2p-streaming",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2p-streaming-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/pure-i2p-streaming.log",
+    "log_sha256": "30f55d8f7e9575478a77b58f8cf3398391c6b4d1628e214104afa6276bd6c041"
+  },
+  {
+    "name": "loader-azureus-router-binding",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-azureus-router-binding-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-azureus-router-binding.log",
+    "log_sha256": "2826986c79c99703637373a0517e23351c9f839c164c95d19df9d02809b2ee78"
+  },
+  {
+    "name": "azureus-router-binding",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-azureus-router-binding-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-router-binding.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-router-binding.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.818,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/azureus-router-binding.log",
+    "log_sha256": "e21b1490af1efd44f59c7526df26017cf4af80183d47a735971b222ead3160df"
+  },
+  {
+    "name": "loader-owned-ddb-binding",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-owned-ddb-binding-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-owned-ddb-binding.log",
+    "log_sha256": "3624cbb5d5d246631d7bc9dbd008b14f62328709eb8ec4644d2cc99f8e4ef14a"
+  },
+  {
+    "name": "owned-ddb-binding",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-owned-ddb-binding-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/owned-ddb-binding.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/owned-ddb-binding.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.816,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/owned-ddb-binding.log",
+    "log_sha256": "4e66a87f36aa0671e5ef5f55a4cc32e47844e4fc4b6e0bdb19d19408fb6c6c13"
+  },
+  {
+    "name": "loader-owned-lookup-tree-ui",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-owned-lookup-tree-ui-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-owned-lookup-tree-ui.log",
+    "log_sha256": "769578a5aab3da37a3ed497aef70618c6ff13207ff8785aec87536ea8fbfee38"
+  },
+  {
+    "name": "owned-lookup-tree-ui",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-owned-lookup-tree-ui-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/owned-lookup-tree-ui.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/owned-lookup-tree-ui.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.517,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/owned-lookup-tree-ui.log",
+    "log_sha256": "b2f840e254ec0a97fd1c6432cb68dab75261f7c8462189b043d894b6b3ec64b6"
+  },
+  {
+    "name": "loader-i2p-original-streaming-peer",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2p-streaming-interop-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/loader-i2p-original-streaming-peer.log",
+    "log_sha256": "25199e6ce20a551d59b7fd2b97f346690ddc7d87af32df117e0dc40b5ada3dee"
+  },
+  {
+    "name": "i2p-original-streaming-peer",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-i2p-streaming-interop-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2p-original-streaming-peer.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2p-original-streaming-peer.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 8.587,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/i2p-original-streaming-peer.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

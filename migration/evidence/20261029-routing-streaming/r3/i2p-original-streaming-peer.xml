@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="StreamingInteropTests" timestamp="2026&#x002D;10&#x002D;29T19:57:09" hostname="ubuntud" tests="7" failures="0" errors="0" skipped="0" time="8.571">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="StreamingInteropTests" time="0.038"/>
+  <testcase name="actualOriginalManagerCarriesHttpAndRecoverablePackets(http)" classname="StreamingInteropTests" time="1.344"/>
+  <testcase name="actualOriginalManagerCarriesHttpAndRecoverablePackets(loss&#x002D;reorder)" classname="StreamingInteropTests" time="2.230"/>
+  <testcase name="actualOriginalManagerCarriesHttpAndRecoverablePackets(queue&#x002D;backpressure)" classname="StreamingInteropTests" time="2.605"/>
+  <testcase name="actualOriginalResetHasTypedNativeTerminal" classname="StreamingInteropTests" time="1.174"/>
+  <testcase name="localCancelRejectsGenuineLatePeerBytesBeforeUpdatedBarrier" classname="StreamingInteropTests" time="1.180"/>
+  <testcase name="cleanupTestCase" classname="StreamingInteropTests" time="0.000"/>
+</testsuite>

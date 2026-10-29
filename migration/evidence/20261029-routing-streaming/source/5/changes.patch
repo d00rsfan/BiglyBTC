@@ -1,0 +1,42 @@
+--- a/preview/native/tests/azureus_routing_tests.cpp
++++ b/preview/native/tests/azureus_routing_tests.cpp
+@@ -8,6 +8,9 @@
+ #include <QEventLoop>
+ #include <QCoreApplication>
+ #include <algorithm>
++#include <array>
++#include <cerrno>
++#include <sys/stat.h>
+ 
+ namespace {
+ using namespace biglybtc;
+@@ -17,6 +20,14 @@
+ bool terminal(const app::OwnedAzureusService& owner,std::uint64_t id){const auto value=owner.observation();return value.lastResult&&value.lastResult->request==id&&value.lastResult->terminal;}
+ bool success(const app::OwnedAzureusService& owner,std::uint64_t id){const auto value=owner.observation();return value.lastResult&&value.lastResult->request==id&&value.lastResult->terminal&&!value.lastResult->error&&!value.lastResult->transportFailure;}
+ QByteArray read(const QString& path){QFile file(path);if(!file.open(QIODevice::ReadOnly)){throw std::runtime_error("Cannot read owned routing source");}return file.readAll();}
++// Missing is an actual source state: open() does not reserve a version.
++// Capture BOTH canonical leaves; every other read/stat failure still refuses.
++std::optional<QByteArray> optionalRead(const QString& path){
++  struct stat info{};const auto name=QFile::encodeName(path);
++  if(::lstat(name.constData(),&info)!=0){if(errno==ENOENT){return {};}throw std::runtime_error("Cannot inspect owned routing version source");}
++  if(!S_ISREG(info.st_mode)){throw std::runtime_error("Unexpected owned routing version source type");}return read(path);
++}
++std::array<std::optional<QByteArray>,2> versionSource(const QString& primary){return {optionalRead(primary),optionalRead(primary.chopped(4)+".saving")};}
+ void write(const QString& path,const QByteArray& bytes){QFile file(path);if(!file.open(QIODevice::WriteOnly|QIODevice::Truncate)||file.write(bytes)!=bytes.size()||!file.flush()){throw std::runtime_error("Cannot write owned routing source");}}
+ services::azureus_nodes::Contact contact(const udp::Peer& peer,std::int8_t protocol=55){
+   services::azureus_nodes::Contact value;value.address.port=peer.port;value.protocol=protocol;
+@@ -51,12 +62,12 @@
+     auto pair=[&](Normal& a,Normal& b){const auto first=a.owner->allowPeer(b.owner->endpoint()),second=b.owner->allowPeer(a.owner->endpoint());if(!first||!second){return false;}QElapsedTimer wait;wait.start();while(wait.elapsed()<3000&&(!success(*a.owner,*first)||!success(*b.owner,*second))){QCoreApplication::processEvents(QEventLoop::AllEvents,10);}return success(*a.owner,*first)&&success(*b.owner,*second);};
+     QVERIFY(pair(origin,cache));QVERIFY(pair(cache,receiver));
+     const auto published=origin.owner->publishValue(cache.owner->endpoint(),"normal-routing-key","original-owned-value",5s,app::AzureusPublicationFlags::Anonymous);QVERIFY(published);QTRY_VERIFY_WITH_TIMEOUT(terminal(*origin.owner,*published),5000);QCOMPARE(origin.owner->observation().publishSnapshot->state,app::AzureusPublishState::Complete);const auto actualOrigin=origin.owner->observation().publishSnapshot->localValue;QVERIFY(actualOrigin&&actualOrigin->isLocal());QCOMPARE(cache.owner->observation().databaseSnapshot->stores,std::uint64_t{1});
+-    const auto cacheVersion=read(cache.versionPath()),receiverVersion=read(receiver.versionPath());const auto rejected=cache.owner->forwardCachedValue(receiver.owner->endpoint(),"normal-routing-key");QVERIFY(rejected);QTRY_VERIFY_WITH_TIMEOUT(terminal(*cache.owner,*rejected),5000);QCOMPARE(cache.owner->observation().publishSnapshot->state,app::AzureusPublishState::Failed);QCOMPARE(cache.owner->observation().publishSnapshot->error,std::optional{app::AzureusServiceError::Readback});QCOMPARE(receiver.owner->observation().databaseSnapshot->stores,std::uint64_t{0});QCOMPARE(read(cache.versionPath()),cacheVersion);
++    const auto cacheVersion=versionSource(cache.versionPath()),receiverVersion=versionSource(receiver.versionPath());QVERIFY(!cacheVersion[0]&&!cacheVersion[1]&&!receiverVersion[0]&&!receiverVersion[1]);const auto rejected=cache.owner->forwardCachedValue(receiver.owner->endpoint(),"normal-routing-key");QVERIFY(rejected);QTRY_VERIFY_WITH_TIMEOUT(terminal(*cache.owner,*rejected),5000);QCOMPARE(cache.owner->observation().publishSnapshot->state,app::AzureusPublishState::Failed);QCOMPARE(cache.owner->observation().publishSnapshot->error,std::optional{app::AzureusServiceError::Readback});QCOMPARE(receiver.owner->observation().databaseSnapshot->stores,std::uint64_t{0});QCOMPARE(versionSource(cache.versionPath()),cacheVersion);
+     const auto request=receiver.owner->integrateRouting(cache.owner->endpoint());QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(terminal(*receiver.owner,*request),10000);QVERIFY(success(*receiver.owner,*request));const auto routing=receiver.owner->observation().routingSnapshot;QVERIFY(routing&&routing->finished&&routing->seeded&&routing->lookup);QCOMPARE(routing->lookup->options.kind,control::LookupKind::Node);QVERIFY(routing->lookup->results.empty());
+     const auto original=contact(origin.owner->endpoint());const auto discovered=std::ranges::find(routing->lookup->nodes,original.id,[](const auto& node){return node.contact.id;});QVERIFY(discovered!=routing->lookup->nodes.end());QVERIFY(discovered->parent!=0);QCOMPARE(discovered->state,control::LookupNodeState::Replied);QTRY_VERIFY_WITH_TIMEOUT(receiver.owner->observation().routingSnapshot->pings>0,3000);
+     // No receiver<->origin allowPeer call occurred. The response path and its
+     // actual PING/NODE completions, not a fixture contact grant, prove discovery.
+-    const auto forwarded=cache.owner->forwardCachedValue(receiver.owner->endpoint(),"normal-routing-key");QVERIFY(forwarded);QTRY_VERIFY_WITH_TIMEOUT(terminal(*cache.owner,*forwarded),5000);const auto proof=cache.owner->observation().publishSnapshot;QCOMPARE(proof->state,app::AzureusPublishState::Complete);QVERIFY(proof->localValue&&!proof->localValue->isLocal());QCOMPARE(proof->localValue->version(),actualOrigin->version());QCOMPARE(proof->localValue->originator().get()->id,actualOrigin->originator().get()->id);QCOMPARE(proof->readback.size(),std::size_t{1});QCOMPARE(proof->readback[0].bytes,std::string("original-owned-value"));QCOMPARE(proof->readback[0].flags,std::uint8_t{0x10});QCOMPARE(receiver.owner->observation().databaseSnapshot->stores,std::uint64_t{1});QCOMPARE(receiver.owner->observation().databaseSnapshot->localPuts,std::uint64_t{0});QCOMPARE(read(cache.versionPath()),cacheVersion);QCOMPARE(read(receiver.versionPath()),receiverVersion);
++    const auto forwarded=cache.owner->forwardCachedValue(receiver.owner->endpoint(),"normal-routing-key");QVERIFY(forwarded);QTRY_VERIFY_WITH_TIMEOUT(terminal(*cache.owner,*forwarded),5000);const auto proof=cache.owner->observation().publishSnapshot;QCOMPARE(proof->state,app::AzureusPublishState::Complete);QVERIFY(proof->localValue&&!proof->localValue->isLocal());QCOMPARE(proof->localValue->version(),actualOrigin->version());QCOMPARE(proof->localValue->originator().get()->id,actualOrigin->originator().get()->id);QCOMPARE(proof->readback.size(),std::size_t{1});QCOMPARE(proof->readback[0].bytes,std::string("original-owned-value"));QCOMPARE(proof->readback[0].flags,std::uint8_t{0x10});QCOMPARE(receiver.owner->observation().databaseSnapshot->stores,std::uint64_t{1});QCOMPARE(receiver.owner->observation().databaseSnapshot->localPuts,std::uint64_t{0});QCOMPARE(versionSource(cache.versionPath()),cacheVersion);QCOMPARE(versionSource(receiver.versionPath()),receiverVersion);
+     const auto generation=routing->generation;origin.stop();cache.stop();receiver.stop();origin.start();cache.start();receiver.start();QVERIFY(pair(origin,cache));QVERIFY(pair(cache,receiver));
+     const auto newValue=origin.owner->publishValue(cache.owner->endpoint(),"restart-routing-key","after-normal-restart");QVERIFY(newValue);QTRY_VERIFY_WITH_TIMEOUT(terminal(*origin.owner,*newValue),5000);QCOMPARE(origin.owner->observation().publishSnapshot->state,app::AzureusPublishState::Complete);
+     const auto cold=cache.owner->forwardCachedValue(receiver.owner->endpoint(),"restart-routing-key");QVERIFY(cold);QTRY_VERIFY_WITH_TIMEOUT(terminal(*cache.owner,*cold),5000);QCOMPARE(cache.owner->observation().publishSnapshot->state,app::AzureusPublishState::Failed);QCOMPARE(receiver.owner->observation().databaseSnapshot->stores,std::uint64_t{0});

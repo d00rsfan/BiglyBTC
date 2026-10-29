@@ -1,0 +1,10 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2324130 -- ATTEMPT=r2 CLASSES=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/java-peer-r1/classes
+[1/22] Automatic MOC for target biglybtc-azureus-owned-service-tests
+[2/20] Automatic MOC for target biglybtc-i2cp-initial-channel-tests
+[3/18] Automatic MOC for target biglybtc-i2cp-datagram-channel-tests
+[4/16] Automatic MOC for target biglybtc-azureus-profile-io-tests
+[5/14] Automatic MOC for target biglybtc-i2cp-receive-channel-tests
+[6/12] Automatic MOC for target biglybtc-i2cp-tracker-channel-tests
+[7/10] Automatic MOC for target biglybtc-azureus-routing-tests
+[8/9] Building CXX object tests/CMakeFiles/biglybtc-azureus-routing-tests.dir/azureus_routing_tests.cpp.o
+[9/9] Linking CXX executable tests/biglybtc-azureus-routing-tests

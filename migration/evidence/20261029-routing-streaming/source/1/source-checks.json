@@ -1,0 +1,17 @@
+{
+  "status": "SOURCE_CHECKS_ONLY_NO_EXECUTION",
+  "basis": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+  "native_beforeimages_equal": true,
+  "source_paths": 8,
+  "official_sources_verified": 34,
+  "existing_test_sources_modified": false,
+  "raw18_dispatch_still_tracker_only": true,
+  "protocol6_separate": true,
+  "cmake_targets_exist": [
+    "biglybtc_i2cp_initial_channel",
+    "biglybtc_i2p_client_identity",
+    "biglybtc_i2cp_datagram"
+  ],
+  "independent_java_acceptance_required": true,
+  "remaining_limits": "ADOPTION.md"
+}

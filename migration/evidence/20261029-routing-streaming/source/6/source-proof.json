@@ -1,0 +1,44 @@
+{
+  "status": "SOURCE_ONLY_FULL_FIXTURE_AUDIT",
+  "proofs": {
+    "preview/native/services/azureus_find_node/find_node.cpp": {
+      "commit": "b40dcb567e46f825baa6e69e09c838543b94fecd",
+      "sha256": "884218510b783a87fbb609fbfe3fe4c9bcb3064f274aa3042b15bfaee5fb0bbd",
+      "sections": "71-83 requires positions encoding and engaged contacts"
+    },
+    "preview/native/services/azureus_positions/positions.cpp": {
+      "commit": "b40dcb567e46f825baa6e69e09c838543b94fecd",
+      "sha256": "97813eef1bba0edb61ba13c948ba6da211b524577b5027688a58d3e6069a3a5b",
+      "sections": "52-61 protocol>=10 requires positions.has_value; protocol55 permits zero count"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "commit": "b40dcb567e46f825baa6e69e09c838543b94fecd",
+      "sha256": "59e008823ab22dbb1f40811eafafcae257b5fbce1869d8184bda4224db3d6dbc",
+      "sections": "617 real normal reply supplies engaged empty positions;758-838 actual correlation/malformed dispatch"
+    },
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "commit": "b40dcb567e46f825baa6e69e09c838543b94fecd",
+      "sha256": "8f0700a534ccd92c0b29aac19c840d78f59110d62c73a4090bd1d1deade4230f",
+      "sections": "current protocol/family/contact capacity and late-round source checks"
+    },
+    "preview/native/services/azureus_control/lookup.cpp": {
+      "commit": "b40dcb567e46f825baa6e69e09c838543b94fecd",
+      "sha256": "711334215f3c83c1e96ae9885066c816b055e84dcc669e28508ef24423969fe5",
+      "sections": "Node refuses value results; current contact/terminal predicates"
+    },
+    "actual_failed_r2": {
+      "path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/clang-r2/tests.xml",
+      "sha256": "6539b66359fda723c717115ec3f601b186f6bbd5b82defefb44977b98a791fe7",
+      "status": "FAIL: real three-normal-owner and default-closed methods PASS; held reply helper throws before injection; not relabelled"
+    }
+  },
+  "remaining_case_audit": [
+    "Held Cancel/close/config/version rows share valid empty positions helper; no changed budgets or authority predicates.",
+    "Wrong transaction stays foreign before body parse;16 zero bytes remains malformed action0 from already allowed seed.",
+    "Self/public/protocol0 contacts remain wire-encodable; runtime routing alone must reject self/out-of-scope/old protocol.",
+    "Capacity reply still supplies two distinct actual numeric candidate records; maximumPeers2/pings0/seedfalse assertions unchanged.",
+    "Pure Node control continues to refuse values and requires actual contact reply completion."
+  ],
+  "apply_check": 0,
+  "executed": false
+}

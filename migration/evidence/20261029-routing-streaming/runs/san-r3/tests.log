@@ -1,0 +1,40 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop
+Connected to MAKE jobserver
+      Start 178: azureus-owned-service
+ 1/11 Test #178: azureus-owned-service ................   Passed    6.21 sec
+      Start 182: azureus-router-owner
+ 2/11 Test #182: azureus-router-owner .................   Passed    0.16 sec
+      Start 192: owned-ddb-control
+ 3/11 Test #192: owned-ddb-control ....................   Passed    0.06 sec
+      Start 285: i2cp-initial-channel
+ 4/11 Test #285: i2cp-initial-channel .................   Passed   13.66 sec
+      Start 288: pure-i2cp-datagram-messages
+ 5/11 Test #288: pure-i2cp-datagram-messages ..........   Passed    0.08 sec
+      Start 289: i2cp-lease-backed-datagram-channel
+ 6/11 Test #289: i2cp-lease-backed-datagram-channel ...   Passed    7.66 sec
+      Start 291: i2cp-bounded-datagram-receiver
+ 7/11 Test #291: i2cp-bounded-datagram-receiver .......   Passed   11.46 sec
+      Start 292: azureus-profile-io
+ 8/11 Test #292: azureus-profile-io ...................   Passed    1.59 sec
+      Start 294: i2cp-explicit-tracker-channel
+ 9/11 Test #294: i2cp-explicit-tracker-channel ........   Passed    5.54 sec
+      Start 296: azureus-routing
+10/11 Test #296: azureus-routing ......................   Passed    1.61 sec
+      Start 297: pure-i2p-streaming
+11/11 Test #297: pure-i2p-streaming ...................   Passed    0.10 sec
+
+100% tests passed, 0 tests failed out of 11
+
+Label Time Summary:
+crypto            =   0.08 sec*proc (1 test)
+i2p               =  38.50 sec*proc (6 tests)
+loopback          =   9.41 sec*proc (3 tests)
+no-network        =   0.18 sec*proc (2 tests)
+owned-loopback    =  38.33 sec*proc (4 tests)
+profile           =   3.20 sec*proc (2 tests)
+router            =   0.16 sec*proc (1 test)
+routing           =   1.61 sec*proc (1 test)
+statistics        =   6.43 sec*proc (3 tests)
+unit              =  48.14 sec*proc (11 tests)
+
+Total Test time (real) =  48.17 sec

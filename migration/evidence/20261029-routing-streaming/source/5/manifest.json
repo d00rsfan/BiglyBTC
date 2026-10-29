@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_TEST_FIX_ABSENT_CANONICAL_VERSION_STATE",
+  "native_source_basis": "8849b3cc2d2c13771fde3381d66beadf173fbe48",
+  "source_paths": {
+    "preview/native/tests/azureus_routing_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/amendments/absent-version-source/before/preview/native/tests/azureus_routing_tests.cpp",
+      "before_sha256": "e25ffaf6d63715a4168a47a4fb81f215abc002c6c04e8f2e4f01956a824238a8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/amendments/absent-version-source/staging/preview/native/tests/azureus_routing_tests.cpp",
+      "after_sha256": "ca8a63952ae1ba9d99866150697518fa6829f447db054d0d7b0b950a82cb9dd3"
+    }
+  },
+  "artifacts": {
+    "ADOPTION.txt": "3c622689e4b7195fc23ae7aae998dda1654bccbfa75db959fdc7786566d84360",
+    "before/preview/native/tests/azureus_routing_tests.cpp": "e25ffaf6d63715a4168a47a4fb81f215abc002c6c04e8f2e4f01956a824238a8",
+    "changes.patch": "4a9e579a9f46ec07dbe06befe55dc47c18c45d76a24261b27d9c6a9869f039fa",
+    "source-proof.json": "ff499e9d05d1529c77d20a3dd403f900eb17edc38d8526d8b3b66869c05454ee",
+    "staging/preview/native/tests/azureus_routing_tests.cpp": "ca8a63952ae1ba9d99866150697518fa6829f447db054d0d7b0b950a82cb9dd3"
+  },
+  "production_changed": false,
+  "runtime_execution": false
+}

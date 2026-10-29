@@ -1,0 +1,20 @@
+# Services: append once after the existing I2CP channel/datagram targets.
+if(TARGET biglybtc_i2cp_initial_channel)
+  add_library(biglybtc_i2p_streaming STATIC i2p_streaming/stream.cpp)
+  target_include_directories(biglybtc_i2p_streaming PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2p_streaming")
+  target_link_libraries(biglybtc_i2p_streaming PUBLIC biglybtc_i2p_client_identity PRIVATE ZLIB::ZLIB)
+  target_compile_features(biglybtc_i2p_streaming PUBLIC cxx_std_23)
+  target_compile_options(biglybtc_i2p_streaming PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_sources(biglybtc_i2cp_initial_channel PRIVATE i2cp_channel/streaming.inc)
+  target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2p_streaming)
+endif()
+
+# Tests: append once. Actual-Java acceptance has its separate explicit opt-in.
+if(TARGET biglybtc_i2p_streaming)
+  add_executable(biglybtc-i2p-streaming-tests i2p_streaming_tests.cpp)
+  target_link_libraries(biglybtc-i2p-streaming-tests PRIVATE biglybtc_i2p_streaming biglybtc_i2cp_datagram)
+  target_compile_definitions(biglybtc-i2p-streaming-tests PRIVATE BIGLYBTC_I2P_TEST_KEYS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
+  target_compile_options(biglybtc-i2p-streaming-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME pure-i2p-streaming COMMAND biglybtc-i2p-streaming-tests)
+  set_tests_properties(pure-i2p-streaming PROPERTIES TIMEOUT 30 LABELS "unit;i2p;no-network")
+endif()

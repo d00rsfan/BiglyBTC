@@ -1,0 +1,80 @@
+--- a/preview/native/services/azureus_udp/owned_routing.inc
++++ b/preview/native/services/azureus_udp/owned_routing.inc
+@@ -80,19 +80,23 @@
+   if(!normalPreflight_||!normalPreflight_(std::move(completion))){++statistics_.serviceCapacityDrops;}
+ }
+ std::expected<std::uint64_t,Failure> OwnedPingTransport::integrateRouting(Peer seed,std::chrono::nanoseconds timeout){
++  const auto entered=Clock::now();
+   if(!owner()){return std::unexpected(Failure::Thread);}
+   if(!normalCurrent()||!normalPreflight_||!ownedRoutingPeer(seed)||!localId_){return std::unexpected(Failure::Authority);}
+   if(timeout<=std::chrono::nanoseconds::zero()||timeout>std::chrono::seconds(30)){return std::unexpected(Failure::Deadline);}
++  const auto end=entered+timeout;
+   if((routing_&&!routing_->finished)||nextRouting_==UINT64_MAX){return std::unexpected(Failure::Capacity);}
+   auto contact=normalDatabase_->localContact();if(!contact||!*contact){return std::unexpected(Failure::State);}
+   find::nodes::Contact first;first.address=originator(seed);first.protocol=config_.version;
+   const auto derived=nodeCache_->lookup(find::nodes::ResolvedEndpoint{first.address,{}},first.protocol);if(!derived){return std::unexpected(Failure::Authority);}first.id=derived->id;
++  if(Clock::now()>=end){return std::unexpected(Failure::Deadline);}
+   if(first.id==*localId_||!learnRoutingContact(first,false)){return std::unexpected(Failure::Authority);}
+-  auto round=std::make_shared<Routing>();round->id=++nextRouting_;round->deadline=Clock::now()+timeout;
+-  azureus_control::LookupOptions options;options.kind=azureus_control::LookupKind::Node;options.target=*localId_;options.localId=*localId_;options.parallelism=8;options.maximumValues=1;options.timeoutMillis=std::chrono::ceil<std::chrono::milliseconds>(timeout).count();
++  auto round=std::make_shared<Routing>();round->id=++nextRouting_;round->deadline=end;
++  const auto remaining=end-Clock::now();if(remaining<=Clock::duration::zero()){return std::unexpected(Failure::Deadline);}
++  azureus_control::LookupOptions options;options.kind=azureus_control::LookupKind::Node;options.target=*localId_;options.localId=*localId_;options.parallelism=8;options.maximumValues=1;options.timeoutMillis=std::chrono::ceil<std::chrono::milliseconds>(remaining).count();
+   const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();const std::array seeds{azureus_control::AdmittedContact{first,true}};
+   if(!round->controller.start(statisticsGeneration_,round->id,options,seeds,now)){return std::unexpected(Failure::State);}
+-  routing_=round;routingDeadline_.setInterval(timeout);routingDeadline_.start();pumpRouting(round);return round->id;
++  routing_=round;routingDeadline_.setInterval(std::max(Clock::duration::zero(),end-Clock::now()));routingDeadline_.start();pumpRouting(round);return round->id;
+ }
+ bool OwnedPingTransport::cancelRouting(std::uint64_t id){
+   if(!owner()||!routing_||routing_->id!=id||routing_->finished){return false;}
+@@ -117,7 +121,9 @@
+ }
+ void OwnedPingTransport::pumpRouting(const std::shared_ptr<Routing>& round){
+   if(routing_!=round||round->finished){return;}
+-  const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();auto intents=round->controller.takeIntents(now);if(!intents){round->failure=Failure::State;static_cast<void>(round->controller.cancel(now));}
++  const auto instant=Clock::now();const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(instant.time_since_epoch()).count();
++  if(instant>=round->deadline){round->failure=Failure::Timeout;static_cast<void>(round->controller.cancel(now));}
++  auto intents=round->controller.takeIntents(now);if(!intents){round->failure=Failure::State;static_cast<void>(round->controller.cancel(now));}
+   // No new send without a fresh source permit. Deadline/cancel processing
+   // below is pure and may always progress while the I/O worker is blocked.
+   if(intents&&!intents->empty()){
+@@ -145,6 +151,9 @@
+   if(round->controller.state()!=azureus_control::LookupState::Running||Clock::now()>=round->deadline){pumpRouting(round);return;}
+   auto resumed=[this,round,node,peer,outcome=std::move(outcome)](bool accepted)mutable{
+     if(routing_!=round||round->finished){return;}auto live=std::ranges::find(round->rpcs,node,&Routing::Rpc::node);if(live==round->rpcs.end()){return;}
++    // Profile I/O may finish after the timer became due but before its Qt
++    // event. Settle the actual received slot before touching any contact.
++    if(round->controller.state()!=azureus_control::LookupState::Running||Clock::now()>=round->deadline){pumpRouting(round);return;}
+     const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
+     if(!accepted||!normalCurrent()){round->failure=Failure::Authority;static_cast<void>(round->controller.finish(node,azureus_control::LookupNodeState::Failed,now));static_cast<void>(round->controller.cancel(now));}
+     else if(!outcome){
+--- a/preview/native/services/azureus_udp/owned_transport.hpp
++++ b/preview/native/services/azureus_udp/owned_transport.hpp
+@@ -169,8 +169,9 @@
+   // on THIS Qt thread to THIS socket identity. No caller-supplied closest,
+   // seeded, token or value facts. Shared ownership lasts through close/join.
+   // current checks the owner's held profile and stop state before each effect.
+-  // Async preflight completes true to resume, false on actual source rejection.
+-  // The completion is returned on this actor thread after the source gate releases.
++  // Async completion stays on this actor: true resumes inside the one-shot
++  // worker-held permit until actor acknowledgement; false reports actual
++  // source rejection only after that worker has released its source gate.
+   std::expected<void,Failure> serveDatabase(std::shared_ptr<azureus_router::RouterOwner>,
+       std::shared_ptr<database::Owner>,std::function<bool()> current,
+       std::function<bool(std::move_only_function<void(bool)>)> preflight={});
+@@ -258,7 +259,6 @@
+   struct Routing;
+   std::shared_ptr<Routing> routing_;
+   std::shared_ptr<const RoutingSnapshot> routingSnapshot_;
+-  QChronoTimer routingDeadline_;
+   std::uint64_t nextRouting_=0,routingRevision_=0,learnedRouting_=0,rejectedRouting_=0,routingPings_=0;
+   bool normalSeeded_=false;
+   struct RoutingPing {Ticket ticket;find::nodes::NodeId id;};
+@@ -290,6 +290,7 @@
+   std::deque<ServiceReceipt> serviceReceipts_;
+   QUdpSocket socket_;
+   QChronoTimer deadline_;
++  QChronoTimer routingDeadline_;
+   State state_=State::Idle;
+   std::vector<Peer> peers_;
+   std::unordered_map<std::int32_t,Pending> pending_;

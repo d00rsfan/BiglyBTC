@@ -1,0 +1,36 @@
+{
+  "status": "PASS_REAL_ISOLATED_ROUTER_STREAMING",
+  "scope": "real-isolated-router-original-manager-streaming",
+  "cache_setup": "actual accepted+signature-verified LS2 via public store",
+  "discovery_or_public_tunnels_qualified": false,
+  "full_peer_destination_explicit": true,
+  "port": 60333,
+  "native": {
+    "acknowledged_bytes": "47",
+    "body_bytes": 8192,
+    "elapsed_ms": 2301,
+    "general_receiver_enabled": false,
+    "native_destination_sha256": "96cd61b09c1563cfa176260a45c47c7a7699b404749c24f1eeeb8427230cf163",
+    "phase": 3,
+    "reason": "Exact real-router Streaming bytes and peer EOF",
+    "request_bytes": 47,
+    "response_bytes": 8252,
+    "scope": "actual-isolated-router-original-manager-stream",
+    "status": "PASS",
+    "tracker_destination_sha256": "6b7c35de4efed74cb0a99f1ac04dca21f7ff159b84e2f2715c9946c61e65d990",
+    "transmitted_packets": "10"
+  },
+  "tracker": {
+    "status": "PASS",
+    "scope": "actual-external-manager-http-shaped-stream",
+    "body_bytes": 8192,
+    "external_i2cp": true,
+    "session_closed": true
+  },
+  "router": {
+    "status": "PASS",
+    "scope": "warmed-local-cache-and-real-local-client-forwarding",
+    "public_transports": 0,
+    "remaining_clients": 0
+  }
+}

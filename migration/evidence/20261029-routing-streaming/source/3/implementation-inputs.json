@@ -1,0 +1,38 @@
+{
+  "proposal": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/PROPOSAL.txt",
+    "sha256": "8057e496fbe55eb89974e589be4ffcf9cdd0e0957a370db2ac4cf5016a051b6e"
+  },
+  "proposal_source_pins": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/source-pins.json",
+    "sha256": "c62b9115ded2bada4161793744c0ca983c8fa3b3de2733bf25a7a77604765d46"
+  },
+  "native_source_basis": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "extra_native_inputs": {
+    "preview/native/services/CMakeLists.txt": {
+      "commit": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+      "sha256": "ec3f874ee61d43ffa2a842962280f8ef8dfd9984c582d1516f2f65ef09bdc968"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "commit": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+      "sha256": "2ed35f690e2bb7dfd9bf902bc394838a427a9f3368e093c781026c06ac8a79eb"
+    },
+    "preview/native/services/azureus_nodes/nodes.cpp": {
+      "commit": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+      "sha256": "ce79c94ebabc0c192e22253af6f980b9b2bac8ffd92b1e4b1bd939ed563c9bfb"
+    },
+    "preview/native/services/azureus_db_value/db_value.cpp": {
+      "commit": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+      "sha256": "094fb52f5708bf9bfa978dadb41dec2016cd4e13a06c6e276ee1c4cc2fe027db"
+    },
+    "preview/native/services/azureus_db_runtime/database.cpp": {
+      "commit": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+      "sha256": "38eaf22d94386dd54ecfb9100a2b83caadceae3f169b65be4bcdd113f07e7eaf"
+    },
+    "preview/native/services/azureus_store_policy/store_policy.cpp": {
+      "commit": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+      "sha256": "c6e43af5ee37abc23422c19d9ad4cc8a79e70c009f894b4451e7cdb8763adaa9"
+    }
+  }
+}

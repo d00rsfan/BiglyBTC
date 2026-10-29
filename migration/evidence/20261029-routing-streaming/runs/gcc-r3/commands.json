@@ -1,0 +1,99 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBTC/preview/native",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "-DBIGLYBTC_I2P_STREAMING_JAVA_ACCEPTANCE=ON",
+      "-DBIGLYBTC_I2P_STREAMING_JAVA=/usr/bin/java",
+      "-DBIGLYBTC_I2P_STREAMING_JAR=/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-DBIGLYBTC_I2P_STREAMING_CLASSES=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/java-peer-r1/classes"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 10.988,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/gcc-r3/configure.log",
+    "log_sha256": "f401dbb6bde6cd96aa29c256b41af0da065b072b37d40e0ed81676b1593779de"
+  },
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--target",
+      "biglybtc-azureus-routing-tests",
+      "biglybtc-owned-ddb-control-tests",
+      "biglybtc-azureus-router-owner-tests",
+      "biglybtc-azureus-owned-service-tests",
+      "biglybtc-azureus-profile-io-tests",
+      "biglybtc-i2cp-initial-channel-tests",
+      "biglybtc-i2cp-datagram-tests",
+      "biglybtc-i2cp-datagram-channel-tests",
+      "biglybtc-i2cp-receive-channel-tests",
+      "biglybtc-i2cp-tracker-channel-tests",
+      "biglybtc-i2p-streaming-tests",
+      "biglybtc-azureus-router-binding-tests",
+      "biglybtc-owned-ddb-binding-tests",
+      "biglybtc-owned-lookup-tree-ui-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke",
+      "biglybtc-i2p-streaming-interop-tests",
+      "--",
+      "-k",
+      "0"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 672.223,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/gcc-r3/build.log",
+    "log_sha256": "cdcfaecad14751e72889791e11a4f734be7c915caecf4bbd6dee90754cc1ece7"
+  },
+  {
+    "name": "inventory",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--show-only=json-v1"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.064,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/gcc-r3/inventory.log",
+    "log_sha256": "4d1c56c4a1162b841202717cb5ca9600e2bc960bbada242a8c6ecf29d268c6cc"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "-R",
+      "^(azureus\\-routing|owned\\-ddb\\-control|azureus\\-router\\-owner|azureus\\-owned\\-service|azureus\\-profile\\-io|i2cp\\-initial\\-channel|pure\\-i2cp\\-datagram\\-messages|i2cp\\-lease\\-backed\\-datagram\\-channel|i2cp\\-bounded\\-datagram\\-receiver|i2cp\\-explicit\\-tracker\\-channel|pure\\-i2p\\-streaming|azureus\\-router\\-binding|owned\\-ddb\\-binding|owned\\-lookup\\-tree\\-ui)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/gcc-r3/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 49.16,
+    "log": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/gcc-r3/tests.log",
+    "log_sha256": "5c8281f21f9413d3216f85726b4edc5f5641ed4b12408833cb17dc47024fc945"
+  }
+]

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="OwnedLookupTreeUiTests" timestamp="2026&#x002D;10&#x002D;29T19:57:08" hostname="ubuntud" tests="6" failures="0" errors="0" skipped="0" time="0.455">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="OwnedLookupTreeUiTests" time="0.000"/>
+  <testcase name="actualRecursiveGetBranchesAndAcceptedBytesFeedPassiveTreeAndRawTimeline" classname="OwnedLookupTreeUiTests" time="0.165">
+    <system-err>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+    </system-err>
+  </testcase>
+  <testcase name="actualCancellationKeepsDispatchedChildDistinctFromAcknowledgement" classname="OwnedLookupTreeUiTests" time="0.088">
+    <system-err>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+    </system-err>
+  </testcase>
+  <testcase name="hiddenUpdatesProfilesAndMalformedSnapshotsCannotReplaceAcceptedFacts" classname="OwnedLookupTreeUiTests" time="0.099">
+    <system-err>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+    </system-err>
+  </testcase>
+  <testcase name="statusAndSelectedResultCallbacksMayRebindOrDeleteTheParent" classname="OwnedLookupTreeUiTests" time="0.102">
+    <system-err>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+    </system-err>
+  </testcase>
+  <testcase name="cleanupTestCase" classname="OwnedLookupTreeUiTests" time="0.000"/>
+</testsuite>

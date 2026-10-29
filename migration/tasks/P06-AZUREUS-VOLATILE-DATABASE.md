@@ -41,3 +41,9 @@ Source `d384a850980f1b6245230ea852d617b11c405e11` binds the existing rating key/
 Source `f9c72f14be1494b6d75b38288f9eff256a1a878b` qualifies bounded profile I/O off the DHT network owner and explicit I2CP hash lookup/connect/scrape. Fresh GCC17/Clang12/leak-enabled ASan+UBSan12 suites, private-runtime17 and actual official/modified Java2signing families/10frames per reference/direction pass. [Review](evidence/20261029-profile-io-i2cp-tracker/REVIEW.md).
 
 This closes the bounded execution slice only. Public maintenance/router/Streaming/default activation and full performance/parity remain open; consult the linked review for exact limits.
+
+## 2026-10-29 owned routing and original I2P Streaming
+
+Source `514a238f0efa749e7a7fb1e68f8123af78e766da` qualifies opt-in owned Azureus self-lookup/contact discovery/cached forwarding and bounded outbound I2P Streaming. Fresh GCC14/Clang11/leak-enabled ASan+UBSan11 default suites, separate original Java manager acceptance on Clang/SAN, private14+GCC actor1 and actual isolated-router HTTP transfer pass. [Review](evidence/20261029-routing-streaming/REVIEW.md).
+
+This closes the bounded interoperability slice. Current one dist replaces its predecessor; all existing component states/baseline fields and22dependencies remain unchanged. Public maintenance/backend/default activation and complete P05–P13 remain open.

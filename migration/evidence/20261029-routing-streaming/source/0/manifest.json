@@ -1,0 +1,128 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_COMPLETE_OWNED_ROUTING_REVIEW_CORRECTION",
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/manifest.json",
+    "sha256": "e6c66209e508e1f6640a078df5c0d20d02da2b02da492a860732d7efd92e0ac1"
+  },
+  "native_source_basis": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+  "current_source_equal_descendant_checked": "cc5dada94a361685a5254edfac24de9988764d5c",
+  "source_path_count": 11,
+  "changed_parent_source_paths": [
+    "preview/native/services/azureus_udp/owned_routing.inc",
+    "preview/native/services/azureus_udp/owned_transport.hpp"
+  ],
+  "source_paths": {
+    "preview/native/app/azureus_local_publish.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/app/azureus_local_publish.inc",
+      "before_sha256": "5be8f8524c13e42690a55c2216347c18d29cd2918f8210d883490e1d14779122",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/app/azureus_local_publish.inc",
+      "after_sha256": "57a01a4ec3f145f55c524771b97c26ab22b6077ce74c5e7926cf4e13abcedefc"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/app/azureus_profile_io_owner.inc",
+      "before_sha256": "51825e083f0c444bb49a2708e56896a73668467fb619a16b3756395942ad502d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/app/azureus_profile_io_owner.inc",
+      "after_sha256": "71523d23c952b25ac1558677f1f45eb6378627d57ab1e47c7bd0577a55b556b3"
+    },
+    "preview/native/app/azureus_routing_owner.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/app/azureus_routing_owner.inc",
+      "after_sha256": "6a052f8c6948fa2e2ab158ead28b317b59104e69cdec9ef8945380443b7c1465"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "5f41699ed737b029e345be5c8ff99600c769e1b24f0c27dcbcc5d80613bf3695",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "846bf2fce529c0ddbb2c49b12512904a45b956772717e358f6c5b9f01c7db5f7"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "899ae6594404eef19cb30627e5a4312cf2a90b8ff5aba2d19dc366c6f4d0c747",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "7cc966a3c6e5ef6e807b4aa1fa47ef14d8401dd195843d961b16cd5f58a2d974"
+    },
+    "preview/native/services/azureus_control/lookup.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/services/azureus_control/lookup.cpp",
+      "before_sha256": "a933889ae7929dabbbdd299cbe210c1ec3e7a03078f72e1b1818a15cb0aefde0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/services/azureus_control/lookup.cpp",
+      "after_sha256": "711334215f3c83c1e96ae9885066c816b055e84dcc669e28508ef24423969fe5"
+    },
+    "preview/native/services/azureus_control/lookup.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/services/azureus_control/lookup.hpp",
+      "before_sha256": "cddf32183bbab7d83336c652474c9d861729149456e167dd10826b28fcf75081",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/services/azureus_control/lookup.hpp",
+      "after_sha256": "fc38049295f881f2a54b1f29534c9e2be15d038208d6eed19ca8fa88e1c9c8c1"
+    },
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/amendments/actor-member-order/staging/preview/native/services/azureus_udp/owned_routing.inc",
+      "after_sha256": "8f0700a534ccd92c0b29aac19c840d78f59110d62c73a4090bd1d1deade4230f",
+      "parent_after_sha256": "ba46f54d4ef9e9b59c8ae99f3070621c24089b1a48eb78866363a8a495e5b7c2"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/services/azureus_udp/owned_transport.cpp",
+      "before_sha256": "08d589940032336a21fbec4da0521bfe3bb9bc592c81cf498d1103cd3879cd43",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+      "after_sha256": "59e008823ab22dbb1f40811eafafcae257b5fbce1869d8184bda4224db3d6dbc"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/before/preview/native/services/azureus_udp/owned_transport.hpp",
+      "before_sha256": "e4e1de5cb11f3d41ba223fd11996685f2501d5a4110bb3f7ac22a59265eb16ef",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/amendments/actor-member-order/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+      "after_sha256": "d10ec131356fdd725371475cc527d0f2f1037fa1513681be1c98585d91bdbe7d",
+      "parent_after_sha256": "82919fcab02e17f4351668fa4c444e5319784c50afe0dab7b5fa79ac5192cf85"
+    },
+    "preview/native/tests/azureus_routing_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/staging/preview/native/tests/azureus_routing_tests.cpp",
+      "after_sha256": "e25ffaf6d63715a4168a47a4fb81f215abc002c6c04e8f2e4f01956a824238a8"
+    }
+  },
+  "artifacts": {
+    "ADOPTION.txt": "0b56c36b2aeacedb9ef98f42dc8c3943eb75242e05d2429c38d83e5cc43e59b1",
+    "changes.patch": "44461876caca758e0c64fee1701265c2650334c162b1d79d9c042f4a379b9476",
+    "delta.patch": "1659b2d3dd9d32fe0d886898f91bf7ebfbc0bfd70b79db3aa98ab42397e79e33",
+    "source-check.json": "379d2ea264db85dea3b0edfb53bb7b234b33cbab2005c757a300ae2f3922c4fd",
+    "staging/preview/native/services/azureus_udp/owned_routing.inc": "8f0700a534ccd92c0b29aac19c840d78f59110d62c73a4090bd1d1deade4230f",
+    "staging/preview/native/services/azureus_udp/owned_transport.hpp": "d10ec131356fdd725371475cc527d0f2f1037fa1513681be1c98585d91bdbe7d"
+  },
+  "cmake_append_fragments": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/services.CMake.fragment",
+      "sha256": "d94468f0ab2bba0eb0d2acc00b24519f049c47e87698e3b6f70a46ab1a0fe9b6"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/tests.CMake.fragment",
+      "sha256": "a6a1cda262ebd0b925f0e2cf8af24609d86ac32a30bd6255209bdc0e4b039240"
+    }
+  ],
+  "inherited_inputs": {
+    "PROPOSAL.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/PROPOSAL.txt",
+      "sha256": "8057e496fbe55eb89974e589be4ffcf9cdd0e0957a370db2ac4cf5016a051b6e"
+    },
+    "source-pins.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/source-pins.json",
+      "sha256": "c62b9115ded2bada4161793744c0ca983c8fa3b3de2733bf25a7a77604765d46"
+    },
+    "implementation-inputs.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/implementation-inputs.json",
+      "sha256": "b457b9ada58d4b4037be7c49b4c04f2c98f6a450165e97e0c67abbdaff0e4737"
+    },
+    "retention.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/retention.json",
+      "sha256": "677dcdaf6d6f7fe34bafdbabe16ed53c20672198f84560f97e8f6317b0c8f9e6"
+    },
+    "ADOPTION.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-routing-bootstrap-20261029/ADOPTION.txt",
+      "sha256": "e2cffc6ed4f3d9d9cf2112d3aee70a67234eaee5175af7a0ebd1e10684e058f7"
+    }
+  },
+  "runtime_execution": false,
+  "provider_changed": false,
+  "host_activation": false
+}

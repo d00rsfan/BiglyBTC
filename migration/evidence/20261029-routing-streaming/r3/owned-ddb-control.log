@@ -1,0 +1,128 @@
+   2330071:	find library=libstdc++.so.6 [0]; searching
+   2330071:	 search path=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/libstdc++.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libstdc++.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libstdc++.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2330071:	    (no such file)
+   2330071:	 search cache=/etc/ld.so.cache
+   2330071:	  trying file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2330071:	
+   2330071:	find library=libgcc_s.so.1 [0]; searching
+   2330071:	 search path=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/libgcc_s.so.1
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libgcc_s.so.1
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libgcc_s.so.1
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2330071:	    (no such file)
+   2330071:	 search cache=/etc/ld.so.cache
+   2330071:	  trying file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2330071:	
+   2330071:	find library=libc.so.6 [0]; searching
+   2330071:	 search path=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/libc.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libc.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libc.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libc.so.6
+   2330071:	    (no such file)
+   2330071:	 search cache=/etc/ld.so.cache
+   2330071:	  trying file=/usr/lib/x86_64-linux-gnu/libc.so.6
+   2330071:	
+   2330071:	find library=libm.so.6 [0]; searching
+   2330071:	 search path=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/test-support/libm.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libm.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libm.so.6
+   2330071:	    (no such file)
+   2330071:	  trying file=/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libm.so.6
+   2330071:	    (no such file)
+   2330071:	 search cache=/etc/ld.so.cache
+   2330071:	  trying file=/usr/lib/x86_64-linux-gnu/libm.so.6
+   2330071:	
+   2330071:	
+   2330071:	calling init: /lib64/ld-linux-x86-64.so.2
+   2330071:	
+   2330071:	
+   2330071:	calling init: /usr/lib/x86_64-linux-gnu/libc.so.6
+   2330071:	
+   2330071:	
+   2330071:	calling init: /usr/lib/x86_64-linux-gnu/libm.so.6
+   2330071:	
+   2330071:	
+   2330071:	calling init: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2330071:	
+   2330071:	
+   2330071:	calling init: /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2330071:	
+   2330071:	
+   2330071:	initialize program: /home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-owned-ddb-control-tests
+   2330071:	
+   2330071:	
+   2330071:	transferring control: /home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/private-runs/r3/biglybtc-owned-ddb-control-tests
+   2330071:	
+   2330071:	
+   2330071:	calling fini:  [0]
+   2330071:	
+   2330071:	
+   2330071:	calling fini: /usr/lib/x86_64-linux-gnu/libstdc++.so.6 [0]
+   2330071:	
+case empty-and-invalid-start-never-produce-a-query
+case literal-xor-order-and-parallel-reservations
+case actual-contact-reply-creates-only-observed-admitted-child-query
+case unowned-public-contact-is-recorded-but-cannot-authorize-a-query
+case repeated-contacts-and-cycles-never-requery-an-ancestor
+case source-value-dedup-is-originator-id-plus-exact-bytes
+case two-final-value-replies-stop-normal-get-and-wait-real-cancel-ack
+case source-stats-flag-does-not-use-two-reply-shortcut
+case value-limit-keeps-live-partial-ticket-until-real-completion
+case closest-success-policy-skips-farther-unqueried-root
+case failed-near-contact-does-not-count-as-successful-closest
+case cancel-and-owner-close-retain-distinct-real-node-acks
+case actual-submission-crossing-global-deadline-keeps-ticket-for-cancel
+case backward-clock-stops-scheduling-without-time-wrap-or-fake-ack
+case contact-cap-is-atomic-and-never-draws-unretained-children
+case sixty-fifth-final-slice-does-not-strand-already-completed-rpc
+case unsupported-contact-stream-and-diversification-never-invent-subqueries
+case snapshot-fences-reject-malformed-public-dto-fields
+case results-and-snapshots-own-full-binary-value-and-origin-metadata
+case dispatch-failure-never-claims-an-actual-ticket-or-timeout
+PASS 20 owned-ddb-control cases; 334 assertions; explicit GET observations only; no Java/runtime equality credit
+   2330071:	
+   2330071:	calling fini: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 [0]
+   2330071:	
+   2330071:	
+   2330071:	calling fini: /usr/lib/x86_64-linux-gnu/libm.so.6 [0]
+   2330071:	
+   2330071:	
+   2330071:	calling fini: /usr/lib/x86_64-linux-gnu/libc.so.6 [0]
+   2330071:	
+   2330071:	
+   2330071:	calling fini: /lib64/ld-linux-x86-64.so.2 [0]
+   2330071:	

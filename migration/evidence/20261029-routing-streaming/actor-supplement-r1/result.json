@@ -1,0 +1,8 @@
+{
+  "status": "PASS_SUPPLEMENTAL_ACTOR_ONLY",
+  "source_commit": "8849b3cc2d2c13771fde3381d66beadf173fbe48",
+  "no_build": true,
+  "same_compiled_images_sha256": "512a2d38ece0c246cd70391a0b3eb0e12807f0d9ac57ae0975e1d86b63ab1031",
+  "no_pass_credit_to_failed_cohort": true,
+  "commands_sha256": "0715893e68bcc61098b1264923ff554f9ce0a4c649dec6b679e2d118c87af997"
+}

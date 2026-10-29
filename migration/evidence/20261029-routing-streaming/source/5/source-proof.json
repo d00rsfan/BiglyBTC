@@ -1,0 +1,20 @@
+{
+  "status": "SOURCE_ONLY_CAUSE_AND_APPLY_CHECK",
+  "proofs": {
+    "preview/native/adapters/azureus_value_versions.cpp": {
+      "commit": "8849b3cc2d2c13771fde3381d66beadf173fbe48",
+      "sha256": "d2f6b7d3f44d7e3d788cde1f5d21a769ece08511fe2a7b5b477ae7aaff095978"
+    },
+    "preview/native/app/azureus_local_publish.inc": {
+      "commit": "8849b3cc2d2c13771fde3381d66beadf173fbe48",
+      "sha256": "57a01a4ec3f145f55c524771b97c26ab22b6077ce74c5e7926cf4e13abcedefc"
+    },
+    "actual_failed_invocation": {
+      "path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/runs/clang-r1/ctest-full.log",
+      "sha256": "c5a6477a5dc61a7337fa1a3a4045150fc72510a8276da5d896df054d61401652",
+      "outcome": "FAIL azureus-routing first method unhandled Cannot read owned routing source;63ms; not reclassified"
+    }
+  },
+  "full_patch_apply_check": 0,
+  "runtime_execution": false
+}

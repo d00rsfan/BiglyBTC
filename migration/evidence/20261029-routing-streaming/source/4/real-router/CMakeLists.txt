@@ -1,0 +1,47 @@
+cmake_minimum_required(VERSION 3.24)
+project(BiglyBTCIsolatedStreamingProbe LANGUAGES CXX)
+# Standalone opt-in probe: imports already-built native archives. No native
+# source tree modification, add_subdirectory, CTest registration, or backend.
+if(NOT IS_ABSOLUTE "${BIGLYBTC_NATIVE_SOURCE}" OR NOT IS_ABSOLUTE "${BIGLYBTC_NATIVE_BUILD}")
+  message(FATAL_ERROR "Supply actual absolute native source/build roots")
+endif()
+if(NOT DEFINED Qt6_DIR)
+  message(FATAL_ERROR "Supply Qt6_DIR from the actual native build cache")
+endif()
+find_package(Qt6 6.12.0 EXACT REQUIRED COMPONENTS Core Network)
+find_package(OpenSSL 3.0 REQUIRED COMPONENTS Crypto)
+find_package(ZLIB 1.3.1 EXACT REQUIRED)
+set(probe_archives)
+file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/probe.cpp" probe_digest)
+file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt" cmake_digest)
+set(input_json "{\n  \"probe_source_sha256\": \"${probe_digest}\",\n  \"cmake_sha256\": \"${cmake_digest}\",\n  \"archives\": {\n")
+set(sep "")
+foreach(name IN ITEMS biglybtc_i2p_streaming biglybtc_i2cp_initial_channel biglybtc_i2cp_tracker_codec
+    biglybtc_i2cp_leaseset2 biglybtc_i2cp_datagram biglybtc_i2cp_session_config
+    biglybtc_i2p_client_identity biglybtc_i2p_datagram biglybtc_i2cp_protocol)
+  set(archive "${BIGLYBTC_NATIVE_BUILD}/services/lib${name}.a")
+  if(NOT EXISTS "${archive}")
+    message(FATAL_ERROR "Required current native archive absent: ${archive}")
+  endif()
+  add_library(${name} STATIC IMPORTED)
+  set_target_properties(${name} PROPERTIES IMPORTED_LOCATION "${archive}")
+  list(APPEND probe_archives ${name})
+  file(SHA256 "${archive}" digest)
+  string(APPEND input_json "${sep}    \"${archive}\": \"${digest}\"")
+  set(sep ",\n")
+endforeach()
+string(APPEND input_json "\n  }\n}\n")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/link-inputs.json" "${input_json}")
+add_executable(biglybtc-i2p-real-router-streaming-probe probe.cpp)
+foreach(dir IN ITEMS i2p_streaming i2cp_channel i2cp_tracker i2cp_datagram i2cp_leaseset
+    i2cp_session i2p_client i2p_datagram i2cp)
+  target_include_directories(biglybtc-i2p-real-router-streaming-probe PRIVATE
+    "${BIGLYBTC_NATIVE_SOURCE}/services/${dir}")
+endforeach()
+target_include_directories(biglybtc-i2p-real-router-streaming-probe PRIVATE
+  "${BIGLYBTC_NATIVE_SOURCE}/core/include")
+list(JOIN probe_archives "," probe_group)
+target_link_libraries(biglybtc-i2p-real-router-streaming-probe PRIVATE
+  "$<LINK_GROUP:RESCAN,${probe_group}>" Qt6::Core Qt6::Network OpenSSL::Crypto ZLIB::ZLIB)
+target_compile_features(biglybtc-i2p-real-router-streaming-probe PRIVATE cxx_std_23)
+target_compile_options(biglybtc-i2p-real-router-streaming-probe PRIVATE -Wall -Wextra -Wpedantic -Werror)

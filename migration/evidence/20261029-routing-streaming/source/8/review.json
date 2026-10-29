@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "status": "INDEPENDENT_SOURCE_REVIEW_PASS",
+  "subject": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/manifest.json",
+    "sha256": "757cfa578b67533591a3dbc6880345d651708d8e0b79b25531458def13d216b7"
+  },
+  "native_basis": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+  "current_source_equal_checkout": "cc5dada94a361685a5254edfac24de9988764d5c",
+  "verified": {
+    "source_maps": 8,
+    "artifacts": 17,
+    "official_source_blobs_and_sha256": 34,
+    "native_beforeimages_equal": true,
+    "git_apply_check_pass": true
+  },
+  "findings": [],
+  "bounded_conclusions": [
+    "Packet header/NACK/option ordering and zero-filled signature preimage match exact official Packet.java457-568 and PacketLocal.writeSignedPacket. Full peer FROM and online DSA0/Ed7 checks remain independent from unsigned established stream-ID context.",
+    "Initial outbound SYN is bound to peer Destination hash, valid signed current SYN reply establishes the remote ID, actual dispatch gates ACK authority and retry timers. Single outstanding window, finite eight resends, bounded reorder, contiguous bytes, duplicate suppression, final payload/EOF/ACK and choke/unchoke are coherent within the declared envelope.",
+    "Channel retains one operation and lifetime-unique IDs, exact port mux/current session/LS2/generation/absolute deadline before effects. Bounded Qt write buffering keeps end/lease timers armed; cancel/close clears authority before late packet processing; all new public notifications are queued with QPointer and no post-signal use.",
+    "Protocol6 is dispatched only to current stream context; general datagram19/20 and tracker RAW18 codecs remain strict. Existing tracker/datagram operations are excluded while a stream is active; explicit full Destination supplies no DNS/address-book/public/router permission.",
+    "CMake reuses existing identity/ZLIB dependencies and appends new targets. All existing I2P test sources remain byte-exact. No provider/Host/default listener activation is introduced."
+  ],
+  "retained_existing_test_sources": {
+    "preview/native/tests/i2cp_datagram_channel_tests.cpp": "4a952687ace251b91a3b1902aa5bb4354744323ad894fcd93353d575bae93401",
+    "preview/native/tests/i2cp_datagram_tests.cpp": "c412d177295983e817fd04349c9add8dfed226d631416994c9a33865662aef40",
+    "preview/native/tests/i2cp_initial_channel_tests.cpp": "f366232d4ecabc4738c4312105c82bc1b65bc44e5ee8d51ce4ba144a7dd2d8a2",
+    "preview/native/tests/i2cp_leaseset_tests.cpp": "f668e4e9befbbad910d5259b444a8588bf01aaed4e86feb93f6bb89bccf27d17",
+    "preview/native/tests/i2cp_protocol_tests.cpp": "2fc8ef8dc32e4df338242b48dd1a24546d75217b21c11ca660500519c0f6695b",
+    "preview/native/tests/i2cp_receive_channel_tests.cpp": "068c49d5239ff89480d36499ad1d3472c58f741773fe5df1b6177c1affe4eec1",
+    "preview/native/tests/i2cp_receive_control_tests.cpp": "10c221004258c4655eb8770976771a03534cf05fbb77339f2aff221f30b2c3ab",
+    "preview/native/tests/i2cp_session_config_tests.cpp": "a603946936cecde938980693872063a219a973cbf1c3727d05b90662f9b2a656",
+    "preview/native/tests/i2cp_tracker_channel_tests.cpp": "414c9ed93d8c0bb289b13c5d8d89ab76bbca52db0740b6ed4c61ece89d95b79c",
+    "preview/native/tests/i2cp_tracker_codec_tests.cpp": "32ffa4448807df9fbfc3829b6dc03fa7d080eb6c18200d4c53d85aa5394f1ab4",
+    "preview/native/tests/i2p_client_identity_tests.cpp": "d721d2dc5c176e11a1450604cd98d20fc19947cdbc7be58340489fdfe415b74c",
+    "preview/native/tests/i2p_datagram_tests.cpp": "d75339ad2334a3729c9e9547b6ead0270a48e057d034b7e47df9bb6f47ac4bcd"
+  },
+  "inputs": {
+    "source_pins": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/source-pins.json",
+      "sha256": "0c881b8b34a090094fa2dbcaea240607190cc7fcaf628a5fc7731d4c7867a062"
+    },
+    "materialization": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/materialization-r2.json",
+      "sha256": "3ec83333d2b6cf847deae209d5150f77487bf8aa6a99dc3276208b5860963167"
+    },
+    "official_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+    "official_tree": "b38c70fbf3f7ce6f33ca95bedaa001e1458a4c9b",
+    "modified_peer_jar": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+      "official_source_equivalence": false
+    }
+  },
+  "limits": [
+    "SOURCE review only: no compiler, runtime, Java, endpoint or native modification.",
+    "Pure codec/connection controls do not qualify the Qt channel lifecycle or actual original manager. Matching-source finite modified-Java-manager acceptance plus affected I2CP/receive/datagram/tracker runtime regressions remain required.",
+    "Single outbound window1,64KiB/64reorder,120s absolute API envelope,1024 lifetime IDs, no full congestion/fast retransmit/automatic TIME-WAIT/listener/public/default/Host or full P07 equivalence. Official source and modified JAR are separately attributed."
+  ],
+  "execution": {
+    "compiled": false,
+    "native_runtime": false,
+    "java": false,
+    "network": false,
+    "native_changed": false
+  }
+}

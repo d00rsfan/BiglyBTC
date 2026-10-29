@@ -1,0 +1,316 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "modified_jar": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+    "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+    "bytes": 4288652,
+    "class_sha256": {
+      "net/i2p/client/streaming/impl/I2PSocketManagerFull.class": "8c730ef1859b98209880ce84ad647823a4acc57df9e30334b02831bdf81fa4e0",
+      "net/i2p/client/streaming/impl/ConnectionManager.class": "082f990f9905d03ba8f3dcfb5abd62f488e43102c114e3e0c257a4874affc6fb",
+      "net/i2p/client/streaming/impl/Connection.class": "9ea76bd1420685ba0758923c4ea9f774afe98f982ae8eeeaf80dbf99faf75452",
+      "net/i2p/client/streaming/impl/PacketQueue.class": "16ad21f92b636e1c81bf9db1e42700d2a6a4bd57e96e0f32c62d45b037eae7f0",
+      "net/i2p/client/streaming/impl/Packet.class": "61c73a28624ebe77668ceb29a1a2f9888a3ac96cb498992f3567c0daf0876aac",
+      "net/i2p/client/streaming/impl/MessageHandler.class": "def709cc21c3d63cdc953c1b2e21524eb0820d02bd3017e7cbb0f43f75ca1424",
+      "net/i2p/client/streaming/impl/MessageOutputStream.class": "a07a8ff4e2807fbf1e5e223a73ca437fc42f3fff3c5481c67c1f1ae9f5f04ced",
+      "net/i2p/client/streaming/impl/I2PSocketFull.class": "e10501a82a934b4dd2af994c0b253df39b167ca0749facb7496ba76c1cf74470",
+      "net/i2p/client/I2PSession.class": "db57cbfb0251e3850edabeabf7dec77f5ee0b76e58b2ae3ad02594721b687158",
+      "net/i2p/client/impl/I2PSessionImpl2.class": "bb121d639bf2397d8615d61138d527b6af1abaaa0c346f4d9b2cc1c140323c0f",
+      "net/i2p/client/impl/I2PSessionMuxedImpl.class": "bc32610d168acca4a11b9efac653610cbec78da1a49efb39d5352b3af8ef8936",
+      "net/i2p/client/SendMessageOptions.class": "8c59d4d8bcf37be31da2b0efed5722468bd337602d0d8b33e335d7ac63eac37d",
+      "net/i2p/data/DataHelper.class": "172e6ba4b4c6d346f075106c2c2e023f7b9a713bbd0fd13e82607d7554184404"
+    }
+  },
+  "official_reference": {
+    "commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+    "tree": "b38c70fbf3f7ce6f33ca95bedaa001e1458a4c9b",
+    "streaming_source_materialization": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/materialization-r2.json",
+    "streaming_source_materialization_sha256": "3ec83333d2b6cf847deae209d5150f77487bf8aa6a99dc3276208b5860963167",
+    "source_files": [
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocket.java",
+        "upstream_path": "apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocket.java",
+        "git_blob": "d38afc6893715049f0f200153a40eb5f4c61f19e",
+        "sha256": "9708d1df30d34b88382a9c681b898cbee7e7774df24701e258ac8fe16d43f088",
+        "bytes": 5009,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketManager.java",
+        "upstream_path": "apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketManager.java",
+        "git_blob": "e8638d4a37285713e9b7c9ed658f46ec5a8ab1b6",
+        "sha256": "bced0f84184c987ff51eccb6c03490c1da2082c7c8c46e93d8309fc760a30825",
+        "bytes": 8741,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketOptions.java",
+        "upstream_path": "apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketOptions.java",
+        "git_blob": "91d840494e9c691abd94704e00e0e6b00c2ec516",
+        "sha256": "2521c7bb52dac290c49689a56b8abdd253faabeb5e85e9725ebb8851279e9cff",
+        "bytes": 5315,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/ministreaming/java/src/net/i2p/client/streaming/I2PServerSocket.java",
+        "upstream_path": "apps/ministreaming/java/src/net/i2p/client/streaming/I2PServerSocket.java",
+        "git_blob": "641aab7284d73694ce1b635bfbbb8cadd2d86c88",
+        "sha256": "8fa94fd257b1c157bf3f143ea0d1604308ad41d848fea03bd59dcab48957415e",
+        "bytes": 2387,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketManagerFactory.java",
+        "upstream_path": "apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketManagerFactory.java",
+        "git_blob": "4c13b1013a87018fa757ff8a78cd1a7caae896de",
+        "sha256": "070ccf73019232a5dea7f6c0d8cedea3eaf892f197a8992caeb4f1015a3f43f3",
+        "bytes": 23645,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketEepGet.java",
+        "upstream_path": "apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketEepGet.java",
+        "git_blob": "513a0545d1137cb47e2a69d98b5136c6041e7ba4",
+        "sha256": "7dcb786cf0bef00fd7c0a04c6b4b410af1fecfd1a053f72ad5cb931b11b4cf60",
+        "bytes": 14295,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/Packet.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/Packet.java",
+        "git_blob": "00e2c0ba459c86515e6d98f0170ae1b095c7500b",
+        "sha256": "1675f4600ff4f9e4ad214baab31c2afc2a7f7f6444c3cadac852bb5861e6977e",
+        "bytes": 36566,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/PacketLocal.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/PacketLocal.java",
+        "git_blob": "e03075a08fd9c6e0a85688c4c38a0b847559a47c",
+        "sha256": "620447a2ed621d09f702bbbf0e3187d35eb8cd5d43edfa76e3da81fe219a15d1",
+        "bytes": 14045,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/PacketQueue.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/PacketQueue.java",
+        "git_blob": "dcbdb300bbc65297cd4425ff2b48c9dd2a621d39",
+        "sha256": "31a9ca981486582b18aba0a7360c6a33ed6eb1284ada048f3beaaaa6a95f9ebf",
+        "bytes": 18112,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/Connection.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/Connection.java",
+        "git_blob": "e0b46214bc2e085835d66185e5fcd8d071edde39",
+        "sha256": "51c5a7cd753fb16b60eb1835d8ee24f3446ea79d742a03e9ebd7b71e210e3052",
+        "bytes": 76350,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionOptions.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionOptions.java",
+        "git_blob": "9b81a286ea29253387945d18baed57de336db7d5",
+        "sha256": "95b2d48a3ed14e4e73babc2c73798789f65e6c1046e43e2abc6d849c405150f5",
+        "bytes": 42181,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionManager.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionManager.java",
+        "git_blob": "e52ef49404c7b6ae365367d1fd2a1590a8196b56",
+        "sha256": "dd22d79f6e3f777f29735cf1b1c7fd8d64af7a868bd33a751b0123bc79ea0fff",
+        "bytes": 47297,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionDataReceiver.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionDataReceiver.java",
+        "git_blob": "7fa5be83907890d29fcfc9e990f49d9deed4b9fd",
+        "sha256": "26304f75a63ca75659534c99d3905ca32843dbfbbcaf760e0a900cfca6e1f716",
+        "bytes": 10929,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionHandler.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionHandler.java",
+        "git_blob": "6240dc3d5bcf7ca1ed1b7f50c0dc826e280c25a2",
+        "sha256": "416ab3b11e19e663599aa5fcb145687bbf0b56176970269850d43331bd1b7e12",
+        "bytes": 14245,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionPacketHandler.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionPacketHandler.java",
+        "git_blob": "72ade38f0bf0e0dfecc29938eaec5322a816be68",
+        "sha256": "dd2948c8b75791fe9a68d23aac58db8390398c54ab44b8a191850bb512bb58ab",
+        "bytes": 33619,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/MessageHandler.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/MessageHandler.java",
+        "git_blob": "1e94068aa816c430fbc04ee488fd6e300fcdf3e7",
+        "sha256": "7b94dd8ef79c81cf5a8ae38c653b531bba19f3b2659bbc6e32d30c398c23d912",
+        "bytes": 6082,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/PacketHandler.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/PacketHandler.java",
+        "git_blob": "bf42b0d1228fe181e5bf17a8a425ab5a15ec5328",
+        "sha256": "94c059bf1848154fa6bf92540d7a31653347914cb91590dd8485de06156bac70",
+        "bytes": 17712,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/MessageInputStream.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/MessageInputStream.java",
+        "git_blob": "eed12b44444c01963ff817669a0a1912aa168118",
+        "sha256": "e9125cb3ee13818b6c829fd623606ad8a0a09f9cdec09f8af002ea27296262f1",
+        "bytes": 26694,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/MessageOutputStream.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/MessageOutputStream.java",
+        "git_blob": "f66a03cfbd244e21fd99f96a9406bbbb80292f22",
+        "sha256": "3323209d479d93a3b80031d64bb6b812e5afaacfa625d8a2e915ed1d607313c2",
+        "bytes": 23547,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/I2PSocketManagerFull.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/I2PSocketManagerFull.java",
+        "git_blob": "ec5315e05a2de6ad979dc3c70a28077dd1fab9f9",
+        "sha256": "4cf1983b2fe82d3aed9b6dfb8cc17bb873b8982a6a66004b504b83da9f69b6b5",
+        "bytes": 31184,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/I2PSocketFull.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/I2PSocketFull.java",
+        "git_blob": "f86a1979de1c2db276ba7adf380040ae637d750d",
+        "sha256": "2159c0639836525fbf7c28292a53311219eb1510d98889249eeb61d8b4be4572",
+        "bytes": 7147,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/I2PSocketOptionsImpl.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/I2PSocketOptionsImpl.java",
+        "git_blob": "1dd16901e87deb28f03bfe2adb8524c24ddbc966",
+        "sha256": "53bfb896e2369319e587e5b4610ba064ba94e82dd2f68d48a661e2e920a9e906",
+        "bytes": 8846,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/RetransmissionTimer.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/RetransmissionTimer.java",
+        "git_blob": "01f04c08366aa73a63c4ac778cfa0c79eb4b7da2",
+        "sha256": "b45d7161b97f43bee1c0c3c66b7c94b33b19285c3dfb1858da7f957150e42416",
+        "bytes": 660,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerChooser.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerChooser.java",
+        "git_blob": "f995954cb4a37fbd0d23d942ff69efae79841dc0",
+        "sha256": "5c2e56f974725932f4316ea2366f98521fb55b1c16ad3caff8ca0a406db4a0f1",
+        "bytes": 2064,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerImpl.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerImpl.java",
+        "git_blob": "bc54ba3c8016e2952129a3b08cdff068c9d97ef3",
+        "sha256": "3eb25c86f4480c70e9f610ab7a6fc21f9bc9e631ca730ad8a746a6fd901dd6ca",
+        "bytes": 612,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/TaskScheduler.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/TaskScheduler.java",
+        "git_blob": "7f515f41635ce07f4d45d2f49cacf19ce372b780",
+        "sha256": "e61e0fd7d40b0a949d726459d6d09a2bd968dd2535139cc2c88288a4f1cddf65",
+        "bytes": 577,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerConnecting.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerConnecting.java",
+        "git_blob": "78a6195a38bc9053bc34af1c7c460290ce40ded9",
+        "sha256": "9b2a212bc5e197614481fbe66db19c17a30e6da24043a7e14a3216f8c0f7141e",
+        "bytes": 2931,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerPreconnect.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerPreconnect.java",
+        "git_blob": "7464341fc59a22b84fb0f4a8e054572716766af2",
+        "sha256": "cc8258b645117fcde608c702aeb0cb72accaa34130cef7e3b00af0506a630fb5",
+        "bytes": 1662,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerReceived.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerReceived.java",
+        "git_blob": "abe2cec2a6b536036c567154c72b65bb4b073e80",
+        "sha256": "831472d0841c6545dda371066084cdbaeaa11f850285fd2b36bf48533ee2568c",
+        "bytes": 1532,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerConnectedBulk.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerConnectedBulk.java",
+        "git_blob": "1a2c2f8b18322b02fe0dd3baeb1e3ebfd8755dab",
+        "sha256": "271b7ad3141be123e6c61ed898df89ddf0253097b72925a185096394693baac3",
+        "bytes": 2259,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerClosing.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerClosing.java",
+        "git_blob": "c076bbcacd8e13d81437e86f62f52d1162c7b041",
+        "sha256": "3ea60d9c435370bb8ffdbbd9d8d236dc5c7abdbe2952f605e1546595539c964c",
+        "bytes": 2566,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerClosed.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerClosed.java",
+        "git_blob": "55646a7981380ecf4e2cebefd2e755160290954b",
+        "sha256": "ad4f1f0e9208bfd0f087e7f0aa0dfb58c972481b105acff0ec077eb071a29eb3",
+        "bytes": 1837,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerHardDisconnected.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerHardDisconnected.java",
+        "git_blob": "28d11d6c58a038d1c0bf70d78b483bdd737f921b",
+        "sha256": "3f1f245534aa0c8457b3484e65a9ebb21053e852e6e8b2aaa609960f26655029",
+        "bytes": 1379,
+        "retained_git_exact": true
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerDead.java",
+        "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerDead.java",
+        "git_blob": "cf4b560f6ca0d7e835e557b26d86695899a98709",
+        "sha256": "16c595fee644fd140400d4c14b0b5da38877e75303f8983dc6eed52575a52629",
+        "bytes": 1301,
+        "retained_git_exact": true
+      }
+    ],
+    "modified_whole_source_equivalence_claimed": false
+  },
+  "plugin": {
+    "commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+    "router_source": "org/parg/azureus/plugins/networks/i2p/router/I2PHelperRouter.java",
+    "sha256": "a11205c5a9d343edc1f2634023317ff8c0b6dd638d7f1b4dab75958cf3bdf2f2"
+  },
+  "native_actor": {
+    "manifest": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/manifest.json",
+    "manifest_sha256": "757cfa578b67533591a3dbc6880345d651708d8e0b79b25531458def13d216b7",
+    "stream_header_sha256": "b2dfcda91d55fb520853d02c7872650b6e6b56a5fa79e69c63142ddc73a3bf99",
+    "channel_header_sha256": "d375e697cbf856eab2a3f74b7526ca469b8cad8aba1179ac6f23451598f5b0e4"
+  }
+}
