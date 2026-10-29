@@ -26,6 +26,9 @@ public:
   AzureusValueVersions& operator=(const AzureusValueVersions&)=delete;
   std::int32_t network()const noexcept;
   std::expected<void,Error> validate() const;
+  // Explicit retained alias of this SAME profile OFD, after current version
+  // validation. Consumers own the alias; no borrowed caller lease is exposed.
+  std::expected<std::shared_ptr<const ProfileLease>,Error> retainProfile() const;
   // A version is returned only AFTER its128-value chunk's durable reservation.
   // Indeterminate publication poisons this owner; never replay after an error.
   std::expected<std::int32_t,Error> next(std::int64_t nowMillis);

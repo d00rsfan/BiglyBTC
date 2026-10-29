@@ -3,6 +3,7 @@
 #include "protocol.hpp"
 #include "session.hpp"
 #include "leaseset.hpp"
+#include "messages.hpp"
 #include <QHostAddress>
 #include <QObject>
 #include <memory>
@@ -54,6 +55,18 @@ public:
   // Historical signing+successful socket enqueue only. No router ack, OPEN,
   // tunnel health, delivery or right to submit application payload is implied.
   [[nodiscard]] std::optional<LeaseSubmission> leaseSetSubmission()const noexcept;
+  enum class DatagramPhase {Pending,RouterAccepted,RouterStatus,LocalCancelled,LocalTimeout,LocalLeaseExpired};
+  struct DatagramObservation {std::uint32_t nonce=0;DatagramPhase phase=DatagramPhase::Pending;std::optional<MessageStatus> routerStatus;};
+  struct DatagramOptions {std::uint16_t fromPort=0,toPort=0;GzipMode gzip=GzipMode::Stored;std::optional<std::uint64_t> expirationMilliseconds;};
+  // Explicit status-requesting datagrams only; initial reliability=none refuses.
+  // One pending request. Nonces never repeat within this object's lifetime.
+  // Enqueue/Accepted/probable/local success are not end-to-end delivery proof.
+  [[nodiscard]] ConfigResult<std::uint32_t> submitDatagram2(View recipientDestination,View payload,const DatagramOptions&);
+  [[nodiscard]] ConfigResult<std::uint32_t> submitClaimedDatagram3(View recipientDestination,View payload,const DatagramOptions&);
+  // Local cancellation only: I2CP has no matching remote cancel message.
+  bool cancelDatagram(std::uint32_t nonce);
+  [[nodiscard]] bool datagramPending()const noexcept;
+  [[nodiscard]] std::optional<DatagramObservation> datagramObservation()const noexcept;
   [[nodiscard]] State state()const noexcept;
   [[nodiscard]] Failure failure()const noexcept;
   [[nodiscard]] bool socketActive()const noexcept;
@@ -69,6 +82,7 @@ signals:
   void sessionCreated();
   void sessionUpdated();
   void leaseSetSubmitted();
+  void datagramChanged(); // Coalesced latest observation, not a result queue.
   void failed(Failure);
   void closed();
 private:

@@ -26,6 +26,10 @@ struct OwnedAzureusService::Command {
   std::int32_t flags=0,maximumValues=0;
   std::chrono::nanoseconds timeout=std::chrono::seconds(2);
   std::string applicationKey,payload;
+  AzureusPublicationFlags publicationFlags=AzureusPublicationFlags::Normal;
+  std::optional<core::TorrentHash> ratingHash;
+  std::array<std::uint8_t,32> ratingRevision{};
+  std::shared_ptr<const storage::DistributedRatingSnapshot> ratingSubject;
 };
 namespace {
 bool sameCounters(const azureus::Statistics& a,const azureus::Statistics& b){
@@ -92,7 +96,12 @@ struct OwnedAzureusService::Impl {
         if(value.kind==AzureusServiceCommand::AllowPeer){auto allowed=actor_.allowPeer(value.peer);if(allowed){rememberOwned(value.peer);routerKnown(value.peer);}complete(value,allowed);return;}
         if(value.kind==AzureusServiceCommand::LookupValue){beginLookup(value);return;}
         if(value.kind==AzureusServiceCommand::PublishValue){beginPublish(value);return;}
+        if(value.kind==AzureusServiceCommand::PublishRating||value.kind==AzureusServiceCommand::ReadRatings){beginRating(std::move(value));return;}
         if(value.kind==AzureusServiceCommand::Cancel){
+          if(ratingRead_&&ratingRead_->command.id==value.target&&!ratingRead_->finished){
+            ratingRead_->cancelled=true;const bool cancelled=actor_.cancel(ratingRead_->ticket);
+            complete(value,cancelled?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));return;
+          }
           if(publishing_&&publishing_->command.id==value.target&&!publishing_->finished){
             publishing_->cancelled=true;const bool cancelled=actor_.cancel(publishing_->ticket);
             complete(value,cancelled?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));return;
@@ -119,6 +128,7 @@ struct OwnedAzureusService::Impl {
       bool closed=true;try{actor_.close();}catch(...){closed=false;}
       if(closed){
         if(publishing_&&!publishing_->finished){try{finishPublish(publishing_,AzureusPublishState::Closed,AzureusServiceError::Closed,azureus::Failure::Closed);}catch(...){publicationMemoryFailure();}}
+        if(ratingRead_&&!ratingRead_->finished){try{finishRatingRead(ratingRead_,AzureusRatingReadState::Closed,AzureusServiceError::Closed,azureus::Failure::Closed);}catch(...){publicationMemoryFailure();}}
         if(localDatabase_){localDatabase_->close();}
         // actor.close() actually closes all outstanding tickets. Its queued
         // callbacks need not run after the event loop stops; record only that
@@ -137,6 +147,7 @@ struct OwnedAzureusService::Impl {
   private:
     struct Active {std::uint64_t id=0;azureus::Ticket ticket;};
     #include "azureus_local_publish.inc"
+    #include "azureus_rating_consumer.inc"
 
     struct LookupRpc {std::uint64_t node=0;azureus::Ticket ticket;azureus::Peer peer;bool cancellationRequested=false;};
     using Clock=std::chrono::steady_clock;
@@ -360,7 +371,7 @@ struct OwnedAzureusService::Impl {
       try{
         const auto actual=actor_.dhtStatisticsSnapshot(); // Exported getter is noexcept and fixed-state.
         if(!actual){std::lock_guard lock(state_->mutex);state_->value.current=false;state_->value.error=AzureusServiceError::Transport;state_->value.transportFailure=actual.error();state_->advance();return;}
-        captureRouter();captureLookup();
+        captureRouter();captureLookup();refreshRatingObservation();
         if(localDatabase_){const auto value=localDatabase_->snapshot();if(value){auto copy=std::make_shared<const services::azureus_db_runtime::Snapshot>(*value);std::lock_guard lock(state_->mutex);state_->value.databaseSnapshot=std::move(copy);}}
         if(last_&&sameFacts(*last_,*actual)){std::lock_guard lock(state_->mutex);const bool current=!state_->stop&&state_->value.state==AzureusServiceState::Running&&actual->transport().state()==azureus::TransportStatisticsState::Bound;
           if(state_->value.current!=current||state_->value.error||state_->value.routerSnapshot!=routerSnapshot_||state_->value.routerFailure!=routerFailure_||state_->value.lookupSnapshot!=lookupSnapshot_||state_->value.lookupFailure!=lookupFailure_){
@@ -439,6 +450,10 @@ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::submit(Com
   if(value.kind!=AzureusServiceCommand::Cancel&&!validPeer(value.peer,state.endpoint.address)){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind==AzureusServiceCommand::Cancel&&!value.target){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind!=AzureusServiceCommand::AllowPeer&&value.kind!=AzureusServiceCommand::Cancel&&(value.timeout<=std::chrono::nanoseconds::zero()||value.timeout>std::chrono::seconds(30))){return std::unexpected(AzureusServiceError::Invalid);}
+  if((value.kind==AzureusServiceCommand::PublishRating||value.kind==AzureusServiceCommand::ReadRatings)
+      &&(!impl_->options.valueVersions||impl_->options.network!=0||!value.ratingHash||value.timeout<std::chrono::milliseconds(1)
+          ||(value.kind==AzureusServiceCommand::ReadRatings&&value.timeout>std::chrono::seconds(20)))){return std::unexpected(AzureusServiceError::Invalid);}
+  if(value.publicationFlags!=AzureusPublicationFlags::Normal&&value.publicationFlags!=AzureusPublicationFlags::Anonymous){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind==AzureusServiceCommand::PublishValue&&(!impl_->options.valueVersions||value.applicationKey.empty()||value.applicationKey.size()>1024||value.payload.empty()||value.payload.size()>512||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind==AzureusServiceCommand::FindValue&&(value.maximumValues<0||value.maximumValues>255)){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind==AzureusServiceCommand::LookupValue&&((value.flags!=0&&value.flags!=8)||value.maximumValues<1||value.maximumValues>64||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
@@ -452,7 +467,10 @@ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::ping(azure
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::findNode(azureus::Peer peer,azureus::find::nodes::NodeId target,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::FindNode;value.peer=std::move(peer);value.node=target;value.timeout=timeout;return submit(value);}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::findValue(azureus::Peer peer,azureus::lookup::nodes::NodeId target,std::int32_t flags,std::int32_t maximumValues,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::FindValue;value.peer=std::move(peer);value.node=target;value.flags=flags;value.maximumValues=maximumValues;value.timeout=timeout;return submit(value);}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::lookupValue(azureus::Peer seed,azureus::lookup::nodes::NodeId target,std::int32_t flags,std::int32_t maximumValues,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::LookupValue;value.peer=std::move(seed);value.node=target;value.flags=flags;value.maximumValues=maximumValues;value.timeout=timeout;return submit(value);}
-std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::publishValue(azureus::Peer peer,std::string key,std::string payload,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::PublishValue;value.peer=std::move(peer);value.applicationKey=std::move(key);value.payload=std::move(payload);value.timeout=timeout;return submit(std::move(value));}
+std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::publishValue(azureus::Peer peer,std::string key,std::string payload,std::chrono::nanoseconds timeout){return publishValue(std::move(peer),std::move(key),std::move(payload),timeout,AzureusPublicationFlags::Normal);}
+std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::publishValue(azureus::Peer peer,std::string key,std::string payload,std::chrono::nanoseconds timeout,AzureusPublicationFlags flags){Command value;value.kind=AzureusServiceCommand::PublishValue;value.peer=std::move(peer);value.applicationKey=std::move(key);value.payload=std::move(payload);value.timeout=timeout;value.publicationFlags=flags;return submit(std::move(value));}
+std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::publishSavedRating(azureus::Peer peer,core::TorrentHash hash,std::array<std::uint8_t,32> revision,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::PublishRating;value.peer=std::move(peer);value.ratingHash=std::move(hash);value.ratingRevision=revision;value.timeout=timeout;return submit(std::move(value));}
+std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::readSavedRatings(azureus::Peer peer,core::TorrentHash hash,std::array<std::uint8_t,32> revision,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::ReadRatings;value.peer=std::move(peer);value.ratingHash=std::move(hash);value.ratingRevision=revision;value.timeout=timeout;return submit(std::move(value));}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::cancel(std::uint64_t request){Command value;value.kind=AzureusServiceCommand::Cancel;value.target=request;return submit(value);}
 std::expected<void,AzureusServiceError> OwnedAzureusService::close(){
   if(QThread::currentThread()==&impl_->thread){return std::unexpected(AzureusServiceError::Thread);}std::lock_guard lifecycle(impl_->closeMutex);auto& state=*impl_->state;

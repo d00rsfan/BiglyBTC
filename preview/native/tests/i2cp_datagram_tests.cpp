@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#include "messages.hpp"
+#include <zlib.h>
+#include <cerrno>
+#include <fcntl.h>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <string_view>
+#include <sys/stat.h>
+#include <unistd.h>
+namespace i2p=biglybtc::services::i2p;namespace cp=i2p::i2cp;
+void require(bool ok,const char* why){if(!ok){throw std::runtime_error(why);}}
+template<class T,class E>T take(std::expected<T,E> value){if(!value){throw std::runtime_error(value.error().message);}return std::move(*value);}
+i2p::Bytes read(const std::filesystem::path& path){require(std::filesystem::file_size(path)<=1024,"Unbounded synthetic input");std::ifstream in(path,std::ios::binary);require(in.good(),"Cannot open synthetic input");i2p::Bytes out(std::istreambuf_iterator<char>(in),{});require(!in.bad()&&out.size()<=1024,"Cannot read synthetic input");return out;}
+void cases(const std::filesystem::path& fixtures){
+  const auto recipient=take(i2p::decodeDestination(read(fixtures/"ed25519.sender")));
+  for(const std::string family:{"dsa","ed25519"}){
+    const auto sender=read(fixtures/(family+".sender")),key=read(fixtures/(family+".known-test-key"));
+    for(const bool claimed:{false,true}){const i2p::Bytes payload{0,0xff,3,0x51};auto datagram=take(claimed?i2p::encode3(sender,payload):i2p::encode2(sender,key,recipient.hash,payload));
+      for(const auto mode:{cp::GzipMode::Stored,cp::GzipMode::Deflate}){
+        auto gzip=take(cp::encodeMuxDatagram({claimed?i2p::Datagram3Protocol:i2p::Datagram2Protocol,65535,0,datagram},mode));require(gzip[4]==255&&gzip[5]==255&&gzip[6]==0&&gzip[7]==0&&gzip[8]==2,"Original mux header differs");auto mux=take(cp::decodeMuxDatagram(gzip));require(mux.datagram==datagram&&mux.fromPort==65535&&mux.toPort==0,"Mux gzip roundtrip differs");
+        if(claimed){require(take(i2p::decode3(mux.datagram)).payload==payload,"Unsigned payload differs");}else{require(take(i2p::decode2(mux.datagram,recipient.hash)).payload==payload,"Signed recipient-bound payload differs");}
+        for(const auto expiration:{std::optional<std::uint64_t>{},std::optional<std::uint64_t>{1700000000123ULL}}){cp::SendDatagram send{0,recipient,gzip,0xffffffffU,expiration};auto wire=take(cp::encodeSendDatagram(send));auto parsed=take(cp::decodeSendDatagram(take(cp::decodeFrame(wire))));require(parsed.sessionId==0&&parsed.nonce==0xffffffffU&&parsed.expirationMilliseconds==expiration&&parsed.recipient.wire==recipient.wire&&parsed.payload==gzip,"Send5/Expires36 fields differ");wire.push_back(0);require(!cp::decodeFrame(wire),"Trailing frame accepted");}
+        auto changed=gzip;changed.back()^=1;require(!cp::decodeMuxDatagram(changed),"Changed gzip ISIZE accepted");changed=gzip;changed[changed.size()-8]^=1;require(!cp::decodeMuxDatagram(changed),"Changed gzip CRC accepted");changed=gzip;changed.insert(changed.end(),gzip.begin(),gzip.end());require(!cp::decodeMuxDatagram(changed),"Concatenated gzip accepted");changed=gzip;changed[3]=8;require(!cp::decodeMuxDatagram(changed),"Unbounded optional gzip name accepted");
+      }
+    }
+  }
+  for(const auto mode:{cp::GzipMode::Stored,cp::GzipMode::Deflate}){const i2p::Bytes maximum(cp::MaximumMuxDatagramBytes,0x51);auto gzip=take(cp::encodeMuxDatagram({i2p::Datagram2Protocol,1,65535,maximum},mode));require(take(cp::decodeMuxDatagram(gzip)).datagram==maximum,"40KiB gzip limit differs");require(!cp::encodeMuxDatagram({i2p::Datagram2Protocol,0,0,i2p::Bytes(cp::MaximumMuxDatagramBytes+1)},mode),"Oversize gzip input accepted");}
+  {z_stream stream{};require(deflateInit2(&stream,3,Z_DEFLATED,31,8,Z_DEFAULT_STRATEGY)==Z_OK,"Cannot author bounded gzip bomb control");i2p::Bytes expanded(cp::MaximumMuxDatagramBytes+1,0),gzip(65536);stream.next_in=expanded.data();stream.avail_in=static_cast<uInt>(expanded.size());stream.next_out=gzip.data();stream.avail_out=static_cast<uInt>(gzip.size());const auto result=deflate(&stream,Z_FINISH);const auto length=stream.total_out;deflateEnd(&stream);require(result==Z_STREAM_END,"Cannot finish gzip bomb control");gzip.resize(length);gzip[9]=i2p::Datagram2Protocol;require(!cp::decodeMuxDatagram(gzip),"Actual valid gzip expanding past40KiB accepted");}
+  for(unsigned code=0;code<=23;++code){cp::MessageStatus status{7,0xffffffffU,static_cast<i2p::Byte>(code),65536,0xffffffffU};auto decoded=take(cp::decodeMessageStatus(take(cp::decodeFrame(take(cp::encodeMessageStatus(status))))));require(decoded.code==code&&decoded.nonce==status.nonce&&decoded.messageId==status.messageId,"Status unsigned fields differ");}
+  require(take(cp::messageStatusMeaning(1))==cp::StatusMeaning::RouterAccepted&&take(cp::messageStatusMeaning(4))==cp::StatusMeaning::ProbableSuccess&&take(cp::messageStatusMeaning(6))==cp::StatusMeaning::LocalSuccess,"Status certainty invented");require(!cp::messageStatusMeaning(24),"Unknown status accepted");
+  for(const std::size_t size:{0U,65536U}){cp::MessagePayload data{7,123,i2p::Bytes(size,0x51)};auto decoded=take(cp::decodeMessagePayload(take(cp::decodeFrame(take(cp::encodeMessagePayload(data))))));require(decoded.messageId==123&&decoded.payload==data.payload,"Inbound31 DTO differs");}require(!cp::encodeMessagePayload({7,1,i2p::Bytes(65537)}),"Oversize Payload31 accepted");
+  require(!cp::originalStatusRepliesEnabled({{"i2cp.messageReliability","NoNe"}}),"Original none spelling differs");require(cp::originalStatusRepliesEnabled({{"i2cp.messageReliability"," none "}})&&cp::originalStatusRepliesEnabled({}),"Original trimming/default invented");
+}
+struct Fd {int value=-1;explicit Fd(int n):value(n){}~Fd(){if(value>=0){::close(value);}}Fd(const Fd&)=delete;Fd& operator=(const Fd&)=delete;};
+bool stamp(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_size==b.st_size&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
+i2p::Bytes ownedRead(int root,const char* name){Fd fd(::openat(root,name,O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));require(fd.value>=0,"Cannot read fixed offline vector");struct stat before{},after{},named{};require(::fstat(fd.value,&before)==0&&S_ISREG(before.st_mode)&&before.st_uid==::geteuid()&&before.st_nlink==1&&before.st_size>=0&&before.st_size<=70000,"Unsafe/unbounded offline vector");i2p::Bytes out(static_cast<std::size_t>(before.st_size));std::size_t at=0;while(at<out.size()){auto n=::read(fd.value,out.data()+at,out.size()-at);if(n<0&&errno==EINTR){continue;}require(n>0,"Cannot read offline vector bytes");at+=static_cast<std::size_t>(n);}require(::fstat(fd.value,&after)==0&&::fstatat(root,name,&named,AT_SYMLINK_NOFOLLOW)==0&&stamp(before,after)&&stamp(after,named),"Offline vector changed");return out;}
+void ownedWrite(int root,const char* name,i2p::View bytes){Fd fd(::openat(root,name,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));require(fd.value>=0&&bytes.size()<=70000,"Cannot exclusively create offline vector");std::size_t at=0;while(at<bytes.size()){auto n=::write(fd.value,bytes.data()+at,bytes.size()-at);if(n<0&&errno==EINTR){continue;}require(n>0,"Cannot write offline vector");at+=static_cast<std::size_t>(n);}require(::fsync(fd.value)==0,"Cannot sync offline vector");}
+void interop(const std::filesystem::path& path){
+  require(path.is_absolute(),"Offline root must be absolute");Fd root(::open(path.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));struct stat st{};require(root.value>=0&&::fstat(root.value,&st)==0&&st.st_uid==::geteuid()&&(st.st_mode&077)==0,"Private owned offline root required");
+  const i2p::Bytes payload{0,1,0xff,0x51,0,0x80,0};require(ownedRead(root.value,"payload")==payload,"Original payload differs");
+  for(const std::string family:{"dsa","ed25519"}){
+    auto sender=ownedRead(root.value,(family+".sender").c_str()),secret=ownedRead(root.value,(family+".known-test-key").c_str());auto recipient=take(i2p::decodeDestination(ownedRead(root.value,(family+".recipient").c_str())));
+    for(const bool claimed:{false,true})for(const bool compressed:{false,true}){
+      const auto label=family+"-"+(claimed?"3":"2")+"-"+(compressed?"deflate":"stored");auto send=take(cp::decodeSendDatagram(take(cp::decodeFrame(ownedRead(root.value,(label+".java.send").c_str())))));require(send.sessionId==7&&send.nonce==0x80000000U&&send.recipient.wire==recipient.wire&&send.expirationMilliseconds==(compressed?std::optional<std::uint64_t>(1700000030123ULL):std::nullopt),"Original Send full fields differ");auto mux=take(cp::decodeMuxDatagram(send.payload));require(mux.protocol==(claimed?i2p::Datagram3Protocol:i2p::Datagram2Protocol)&&mux.fromPort==65534&&mux.toPort==42,"Original mux fields differ");
+      if(claimed){auto decoded=take(i2p::decode3(mux.datagram));require(decoded.claimedSender==take(i2p::decodeDestination(sender)).hash&&decoded.payload==payload,"Original claimed datagram differs");}else{auto decoded=take(i2p::decode2(mux.datagram,recipient.hash));require(decoded.sender.wire==sender&&decoded.payload==payload,"Original signed datagram differs");}
+      auto packet=take(claimed?i2p::encode3(sender,payload):i2p::encode2(sender,secret,recipient.hash,payload));auto gzip=take(cp::encodeMuxDatagram({claimed?i2p::Datagram3Protocol:i2p::Datagram2Protocol,65534,42,std::move(packet)},compressed?cp::GzipMode::Deflate:cp::GzipMode::Stored));auto output=take(cp::encodeSendDatagram({7,recipient,std::move(gzip),0x80000000U,send.expirationMilliseconds}));ownedWrite(root.value,(label+".native.send").c_str(),output);std::cout<<"PASS NATIVE VERIFIED JAVA "<<label<<" send\n";
+    }
+  }
+  for(const unsigned code:{1U,4U,6U,15U}){const auto name="status"+std::to_string(code);auto raw=ownedRead(root.value,(name+".java").c_str());auto parsed=take(cp::decodeMessageStatus(take(cp::decodeFrame(raw))));require(parsed.sessionId==7&&parsed.messageId==0xffffffffU&&parsed.nonce==0x80000000U&&parsed.size==65536&&parsed.code==code,"Original Status22 fields differ");auto output=take(cp::encodeMessageStatus(parsed));require(output==raw,"Original Status22 exact bytes differ");ownedWrite(root.value,(name+".native").c_str(),output);}
+  auto raw=ownedRead(root.value,"payload.java");auto data=take(cp::decodeMessagePayload(take(cp::decodeFrame(raw))));require(data.sessionId==7&&data.messageId==0xffffffffU,"Original inbound Payload31 IDs differ");auto output=take(cp::encodeMessagePayload(data));require(output==raw,"Original Payload31 exact bytes differ");ownedWrite(root.value,"payload.native",output);require(::fsync(root.value)==0,"Cannot sync offline vector directory");std::cout<<"PASS NATIVE VERIFIED JAVA FOUR STATUSES AND INBOUND PAYLOAD\n";
+}
+int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);return 0;}require(argc==2,"Usage: i2cp-datagram-tests SYNTHETIC_FIXTURES | --java-interop PRIVATE_DIR");cases(argv[1]);std::cout<<"PASS bounded I2CP datagram messages/mux/status\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}

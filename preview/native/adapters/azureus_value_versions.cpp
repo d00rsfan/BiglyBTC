@@ -74,6 +74,10 @@ std::expected<std::shared_ptr<AzureusValueVersions>,Error> AzureusValueVersions:
     out->primary=std::move(*primary);auto valid=out->validate();if(!valid){return std::unexpected(valid.error());}return std::shared_ptr<AzureusValueVersions>(new AzureusValueVersions(std::move(out)));
   }catch(...){return error(ErrorCode::Io,"Cannot allocate Azureus version owner");}
 }
+std::expected<std::shared_ptr<const ProfileLease>,Error> AzureusValueVersions::retainProfile()const{
+  try{std::lock_guard guard(impl_->mutex);auto valid=impl_->validate();if(!valid){return std::unexpected(valid.error());}return impl_->lease->retain();}
+  catch(...){return error(ErrorCode::Io,"Cannot retain Azureus value profile");}
+}
 std::expected<void,Error> AzureusValueVersions::validate()const {try{std::lock_guard guard(impl_->mutex);return impl_->validate();}catch(...){return error(ErrorCode::Io,"Cannot validate Azureus version owner");}}
 std::expected<std::int32_t,Error> AzureusValueVersions::next(std::int64_t now){
   try{

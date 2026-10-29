@@ -47,6 +47,12 @@ bool stored(const std::optional<udp::StoreOutcome>& result){return result&&resul
 class AzureusDatabaseRuntimeTests final:public QObject {
  Q_OBJECT
 private slots:
+ void typedLocalAnonymousFlagPersistsWithoutOpeningArbitraryFlagAuthority(){
+   auto owner=db::Owner::create();QVERIFY(owner);Clock clock;const auto actual=contact({QHostAddress::LocalHost,41001});QVERIFY((*owner)->bindLocal(actual));const std::string key(20,'A');
+   auto value=(*owner)->putLocal(key,"anonymous-rating",10,clock,db::LocalPublicationFlags::Anonymous);QVERIFY(value);QCOMPARE(value->flags(),std::uint8_t{0x10});QVERIFY(value->isLocal());QVERIFY(value->originator().get()->address==actual.address);
+   auto read=(*owner)->read(key,actual,64,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).values[0].flags,std::uint8_t{0x10});QCOMPARE((**read).values[0].bytes,std::string("anonymous-rating"));
+   const auto before=(*owner)->snapshot();QVERIFY(before);QVERIFY(!(*owner)->putLocal(key,"bad",11,clock,static_cast<db::LocalPublicationFlags>(0x40)));QCOMPARE((*owner)->snapshot()->localPuts,before->localPuts);
+ }
  void localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData(){
    auto owner=db::Owner::create();QVERIFY(owner);Clock clock;const std::string key(20,'L'),payload("rating\0binary",13);
    QVERIFY(!(*owner)->putLocal(key,payload,100,clock));auto actual=contact({QHostAddress::LocalHost,41001});QVERIFY((*owner)->bindLocal(actual));

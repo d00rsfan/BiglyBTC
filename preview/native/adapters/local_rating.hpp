@@ -20,6 +20,15 @@ struct LocalRatingSaved {
   // Local-only host binding. Never reports a DDB write/queue as performed.
   bool publicationPerformed = false;
 };
+// Explicit Public-DDB target. The revision binds full original info bytes,
+// selected identity, actual inventory, cached attributes/nickname and saved
+// DHT availability config. No runtime/service or publication authority itself.
+struct DistributedRatingSnapshot {
+  LocalRatingSnapshot local;
+  std::array<std::uint8_t,32> sourceRevision{};
+  std::array<std::uint8_t,27> key{};
+};
+std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const ProfileLease&,const core::TorrentHash&);
 std::expected<LocalRatingSnapshot, Error> readLocalRating(const ProfileLease&, const core::TorrentHash&);
 std::expected<LocalRatingSaved, Error> saveLocalRating(const ProfileLease&, const core::TorrentHash&,
     const std::array<std::uint8_t, 32>& expectedAttributesRevision,

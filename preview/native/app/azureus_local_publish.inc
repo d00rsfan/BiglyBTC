@@ -59,7 +59,9 @@
       if(value->cancelled){finishPublish(value,AzureusPublishState::Cancelled,AzureusServiceError::Transport,azureus::Failure::Cancelled);return false;}
       if(std::chrono::steady_clock::now()>=value->deadline){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,azureus::Failure::Timeout);return false;}
       if(!isOwned(value->command.peer)){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid,azureus::Failure::Peer);return false;}
-      auto valid=options_.valueVersions->validate();if(!valid){value->snapshot.profileFailure=valid.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return false;}return true;
+      auto valid=options_.valueVersions->validate();if(!valid){value->snapshot.profileFailure=valid.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return false;}
+      if(value->command.ratingSubject){auto current=validateRating(value->command);if(!current){value->snapshot.profileFailure=current.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return false;}}
+      return true;
     }
     std::chrono::nanoseconds publishRemaining(const Publishing& value)const{return std::chrono::duration_cast<std::chrono::nanoseconds>(value.deadline-std::chrono::steady_clock::now());}
     void publishReadback(const std::shared_ptr<Publishing>& value){
@@ -102,7 +104,7 @@
       if(!validatePublish(value)){return;}PublicationClock clock;auto version=options_.valueVersions->next(clock.nowMilliseconds());
       if(!version){value->snapshot.profileFailure=version.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return;}
       const auto key=std::string_view(reinterpret_cast<const char*>(value->snapshot.key.data()),value->snapshot.key.size());
-      auto local=localDatabase_->putLocal(key,command.payload,*version,clock);if(!local){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}value->snapshot.localValue=std::move(*local);
+      auto local=localDatabase_->putLocal(key,command.payload,*version,clock,command.publicationFlags);if(!local){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}value->snapshot.localValue=std::move(*local);
       if(!validatePublish(value)){return;}value->snapshot.state=AzureusPublishState::Token;capturePublish(value);
       auto sent=actor_.requestStoreToken(command.peer,options_.version,this,[this,value](azureus::DetailedFindNodeOutcome outcome){try{
         if(!validatePublish(value)){return;}

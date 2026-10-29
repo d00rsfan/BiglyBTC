@@ -2,6 +2,7 @@
 #include "owned_transport.hpp"
 #include "router.hpp"
 #include "azureus_value_versions.hpp"
+#include "../adapters/local_rating.hpp"
 #include "../services/azureus_control/lookup.hpp"
 #include <chrono>
 #include <cstddef>
@@ -18,7 +19,7 @@ enum class AzureusServiceError {
   Disabled,Invalid,NoApplication,Start,Closed,Capacity,Dispatch,Memory,Thread,UnknownRequest,Transport,Profile,Readback
 };
 enum class AzureusServiceState { Starting,Running,Closing,Closed,Failed };
-enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue };
+enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue,PublishRating,ReadRatings };
 struct AzureusServiceOptions {
   bool enabled=false;
   QHostAddress bindAddress{QHostAddress::LocalHost};
@@ -41,6 +42,7 @@ struct AzureusServiceResult {
   std::optional<AzureusServiceError> error;
   std::optional<azureus::Failure> transportFailure;
 };
+using AzureusPublicationFlags=services::azureus_db_runtime::LocalPublicationFlags;
 enum class AzureusPublishState {Local,Token,Store,Readback,Complete,Failed,Cancelled,Closed};
 struct AzureusPublishSnapshot {
   std::uint64_t request=0;
@@ -48,6 +50,26 @@ struct AzureusPublishSnapshot {
   services::azureus_nodes::NodeId key{};
   std::optional<services::azureus_db_value::DbValue> localValue;
   std::vector<services::azureus_values::Value> readback;
+  std::optional<AzureusServiceError> error;
+  std::optional<azureus::Failure> transportFailure;
+  std::optional<storage::Error> profileFailure;
+};
+enum class AzureusRatingReadState {Reading,Complete,TimedOut,Cancelled,Closed,Failed};
+struct AzureusRatingReadSnapshot {
+  std::uint64_t request=0;
+  AzureusRatingReadState state=AzureusRatingReadState::Reading;
+  std::optional<core::TorrentHash> hash;
+  std::array<std::uint8_t,32> sourceRevision{};
+  services::azureus_nodes::NodeId key{};
+  plugins::rating::RatingResults ratings;
+  std::size_t receivedValues=0,decodeErrors=0,ignoredMalformedValues=0;
+  // Explicit single owned peer sample, never a complete global rating.
+  std::size_t maximumValues=64,originalMaximumValues=256;
+  bool wholeNetwork=false,possiblyPartial=true;
+  // Last worker-validated source only. No IO is performed by observation().
+  // Current values are withdrawn when a subsequent worker fence sees a change;
+  // retained old snapshot pointers remain historical receipts, not authority.
+  bool current=false,localFallback=false;
   std::optional<AzureusServiceError> error;
   std::optional<azureus::Failure> transportFailure;
   std::optional<storage::Error> profileFailure;
@@ -71,6 +93,7 @@ struct AzureusServiceObservation {
   std::optional<AzureusServiceError> lookupFailure;
   std::shared_ptr<const AzureusPublishSnapshot> publishSnapshot;
   std::shared_ptr<const services::azureus_db_runtime::Snapshot> databaseSnapshot;
+  std::shared_ptr<const AzureusRatingReadSnapshot> ratingReadSnapshot;
 };
 // Explicit Host-owned development service. create(enabled=false) returns before
 // any Qt thread/socket exists. A dedicated Qt event loop exclusively constructs,
@@ -116,6 +139,19 @@ public:
   std::expected<std::uint64_t,AzureusServiceError> publishValue(azureus::Peer,
       std::string applicationKey,std::string payload,
       std::chrono::nanoseconds timeout=std::chrono::seconds(5));
+  std::expected<std::uint64_t,AzureusServiceError> publishValue(azureus::Peer,
+      std::string applicationKey,std::string payload,std::chrono::nanoseconds timeout,
+      AzureusPublicationFlags);
+  // Explicit single already-admitted peer, held-profile Public network0 only.
+  // The source revision must come from readDistributedRating on this SAME OFD.
+  // Publish uses saved RatingData + original ANON0x10, <=512B; no queue/timer.
+  // Read preserves actual partial/timeout status, max64 values (original256).
+  std::expected<std::uint64_t,AzureusServiceError> publishSavedRating(azureus::Peer,
+      core::TorrentHash,std::array<std::uint8_t,32> sourceRevision,
+      std::chrono::nanoseconds timeout=std::chrono::seconds(5));
+  std::expected<std::uint64_t,AzureusServiceError> readSavedRatings(azureus::Peer,
+      core::TorrentHash,std::array<std::uint8_t,32> sourceRevision,
+      std::chrono::nanoseconds timeout=std::chrono::seconds(20));
   std::expected<std::uint64_t,AzureusServiceError> cancel(std::uint64_t request);
   // Seals admission and joins even with queued/active work; idempotent. No forced
   // termination or detached actor. Call/destruction must not race object lifetime.

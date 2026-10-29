@@ -113,3 +113,14 @@ target_link_libraries(biglybtc_i2cp_leaseset2 PUBLIC biglybtc_i2cp_session_confi
 target_compile_features(biglybtc_i2cp_leaseset2 PUBLIC cxx_std_23)
 target_compile_options(biglybtc_i2cp_leaseset2 PRIVATE -Wall -Wextra -Wpedantic -Werror)
 target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2cp_leaseset2)
+
+# Existing exact dependency, already required by adapters. No new zlib backend.
+if(NOT TARGET ZLIB::ZLIB)
+  find_package(ZLIB 1.3.1 EXACT REQUIRED)
+endif()
+add_library(biglybtc_i2cp_datagram STATIC i2cp_datagram/messages.cpp)
+target_include_directories(biglybtc_i2cp_datagram PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2cp_datagram")
+target_link_libraries(biglybtc_i2cp_datagram PUBLIC biglybtc_i2cp_session_config ZLIB::ZLIB)
+target_compile_features(biglybtc_i2cp_datagram PUBLIC cxx_std_23)
+target_compile_options(biglybtc_i2cp_datagram PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2cp_datagram)

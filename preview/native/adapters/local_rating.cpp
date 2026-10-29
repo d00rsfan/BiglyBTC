@@ -15,7 +15,7 @@ constexpr std::string_view ScoreKey = "Plugin.azrating.rating";
 constexpr std::string_view CommentKey = "Plugin.azrating.comment";
 std::unexpected<Error> bad(ErrorCode code, const char* message) { return std::unexpected(Error{code,message}); }
 std::string encoded(std::string_view value) { return std::to_string(value.size()) + ':' + std::string(value); }
-std::expected<void, Error> savedTarget(const ProfileLease& lease, const core::TorrentHash& hash) {
+std::expected<ConfigFile, Error> savedTarget(const ProfileLease& lease, const core::TorrentHash& hash) {
   auto file = ConfigFile::load(lease, "downloads.config");
   if (!file) { return std::unexpected(file.error()); }
   if (file->recoverySource() == RecoverySource::Saving) { return bad(ErrorCode::Conflict,"Resolve saved library recovery before editing a rating"); }
@@ -36,7 +36,7 @@ std::expected<void, Error> savedTarget(const ProfileLease& lease, const core::To
     found |= *item.hash == hash;
   }
   if (!found) { return bad(ErrorCode::Conflict,"Rating download is no longer in the saved library"); }
-  return {};
+  return std::move(*file);
 }
 template<std::size_t N>
 std::expected<std::array<std::byte,N>, Error> hashInfo(std::string_view raw, const EVP_MD* method) {
@@ -63,10 +63,8 @@ std::expected<void, Error> identity(const TorrentStateFile& state) {
   if (!selected) { return std::unexpected(selected.error()); }
   return validateOriginalTorrentKey(*selected,state.hash(),true);
 }
-std::expected<std::u16string, Error> nickname(const ProfileLease& lease) {
-  auto config = ConfigFile::load(lease,"biglybt.config");
-  if (!config && config.error().code != ErrorCode::Missing) { return std::unexpected(config.error()); }
-  const auto* value = config ? config->document().find("Plugin.azrating.nick") : nullptr;
+std::expected<std::u16string, Error> nicknameValue(const core::Document* config) {
+  const auto* value = config ? config->find("Plugin.azrating.nick") : nullptr;
   if (value && value->type != core::Node::Type::Bytes) { return bad(ErrorCode::InvalidFormat,"Invalid saved rating nickname"); }
   auto text = rating::decodeAttributeText(value ? value->bytes : std::string_view{});
   if (!text) { return bad(ErrorCode::InvalidFormat,"Saved rating nickname exceeds limits"); }
@@ -75,6 +73,11 @@ std::expected<std::u16string, Error> nickname(const ProfileLease& lease) {
   if (begin == text->size()) { return std::u16string(u"Anonymous"); }
   auto end = text->size(); while (end > begin && (*text)[end-1] <= 0x20) { --end; }
   return text->substr(begin,end-begin);
+}
+std::expected<std::u16string, Error> nickname(const ProfileLease& lease) {
+  auto config=ConfigFile::load(lease,"biglybt.config");
+  if(!config&&config.error().code!=ErrorCode::Missing){return std::unexpected(config.error());}
+  return nicknameValue(config?&config->document():nullptr);
 }
 std::expected<core::Document, Error> attributes(const TorrentStateFile& state) {
   const auto* node = state.document().find("attributes");
@@ -114,6 +117,57 @@ std::expected<LocalRatingSnapshot, Error> snapshot(const TorrentStateFile& state
   std::transform(revision->begin(),revision->end(),token.begin(),[](std::byte b) { return std::to_integer<std::uint8_t>(b); });
   return LocalRatingSnapshot{state.hash(),std::move(*local),token,state.recoveredBackup()};
 }
+}
+std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const ProfileLease& lease,const core::TorrentHash& hash){
+  try{
+    const auto unique=[](const core::Node& node){
+      if(node.type!=core::Node::Type::Dictionary||node.children.size()%2){return false;}
+      std::unordered_set<std::string_view> seen;for(std::size_t i=0;i<node.children.size();i+=2){if(node.children[i].type!=core::Node::Type::Bytes||!seen.insert(node.children[i].bytes).second){return false;}}return true;
+    };
+    auto inventory=savedTarget(lease,hash);if(!inventory){return std::unexpected(inventory.error());}
+    if(inventory->recoverySource()!=RecoverySource::Primary||!unique(inventory->document().root())){return bad(ErrorCode::Conflict,"Resolve rating inventory recovery first");}
+    const auto& root=inventory->document().root();
+    if(const auto* rows=inventory->document().find("downloads")){
+      if(rows->type!=core::Node::Type::List){return bad(ErrorCode::InvalidFormat,"Invalid rating inventory list");}
+      for(const auto& row:rows->children){if(!unique(row)){return bad(ErrorCode::InvalidFormat,"Duplicate or invalid rating inventory row");}}
+    }else{
+      for(std::size_t i=0;i<root.children.size();i+=2){const auto& row=root.children[i+1];
+        if(row.type==core::Node::Type::Dictionary&&(row.find("torrent")||row.find("torrent_hash")||row.find("save_dir")||row.find("path"))&&!unique(row)){
+          return bad(ErrorCode::InvalidFormat,"Duplicate legacy rating inventory row");
+        }
+      }
+    }
+    auto store=TorrentStateStore::open(lease);if(!store){return std::unexpected(store.error());}
+    auto state=store->loadAttributes(lease,hash);if(!state){return std::unexpected(state.error());}
+    if(state->recoveredBackup()||!unique(state->document().root())){return bad(ErrorCode::Conflict,"Resolve rating state recovery first");}
+    auto valid=identity(*state);if(!valid){return std::unexpected(valid.error());}
+    auto attrs=attributes(*state);if(!attrs){return std::unexpected(attrs.error());}
+    const auto* info=state->document().find("info");if(!info||!unique(*info)||!unique(attrs->root())){return bad(ErrorCode::InvalidFormat,"Invalid distributed rating metadata");}
+    if(const auto* flags=attrs->find("flags")){if(flags->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid rating download flags");}
+      if((static_cast<std::uint64_t>(flags->integer)&0x200U)!=0){return bad(ErrorCode::Unsupported,"Metadata downloads cannot publish ratings");}}
+    // DDBaseImpl selects Public by the exact canonical saved network constant.
+    // No private-torrent or Mainline peer-source gate is invented here. The
+    // initial explicit branch requires present saved networks, not an inferred
+    // chooser/default from an uninitialised original DownloadManager.
+    const auto* networks=attrs->find("networks");if(!networks||networks->type!=core::Node::Type::List||networks->children.size()>16){return bad(ErrorCode::Unsupported,"Explicit saved Public DDB network required");}
+    bool publicNetwork=false;for(const auto& item:networks->children){if(item.type!=core::Node::Type::Bytes){return bad(ErrorCode::InvalidFormat,"Invalid rating network value");}publicNetwork|=item.bytes=="Public";}
+    if(!publicNetwork){return bad(ErrorCode::Unsupported,"Rating Public DDB is not enabled");}
+    auto config=ConfigFile::load(lease,"biglybt.config");if(!config&&config.error().code!=ErrorCode::Missing){return std::unexpected(config.error());}
+    if(config&&(config->recoverySource()!=RecoverySource::Primary||!unique(config->document().root()))){return bad(ErrorCode::Conflict,"Resolve rating configuration recovery first");}
+    if(const auto* enabled=config?config->document().find("Plugin.DHT.dht.enabled"):nullptr){
+      if(enabled->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid original DHT availability");}
+      if(static_cast<std::uint32_t>(enabled->integer)==0){return bad(ErrorCode::Unsupported,"Original Azureus DHT is disabled");}}
+    auto nick=nicknameValue(config?&config->document():nullptr);if(!nick){return std::unexpected(nick.error());}
+    auto local=snapshot(*state,*attrs,*nick);if(!local){return std::unexpected(local.error());}
+    const auto hashBytes=hash.bytes();auto key=rating::lookupKey({reinterpret_cast<const std::uint8_t*>(hashBytes.data()),hashBytes.size()});if(!key){return bad(ErrorCode::InvalidFormat,"Invalid selected rating hash");}
+    auto infoBytes=originalTorrentInfoSubject(state->document());if(!infoBytes){return std::unexpected(infoBytes.error());}
+    std::string scope=encoded(inventory->document().serialize())+encoded(*infoBytes)+encoded(attrs->serialize())
+        +encoded(config?config->document().serialize():std::string("missing"));
+    const auto digest=hashInfo<32>(scope,EVP_sha256());if(!digest){return std::unexpected(digest.error());}
+    std::array<std::uint8_t,32> revision{};std::transform(digest->begin(),digest->end(),revision.begin(),[](std::byte v){return std::to_integer<std::uint8_t>(v);});
+    auto held=lease.retain();if(!held){return std::unexpected(held.error());}
+    return DistributedRatingSnapshot{std::move(*local),revision,*key};
+  }catch(const std::bad_alloc&){return bad(ErrorCode::Io,"Insufficient memory for distributed rating");}
 }
 std::expected<LocalRatingSnapshot, Error> readLocalRating(const ProfileLease& lease, const core::TorrentHash& hash) {
   try {

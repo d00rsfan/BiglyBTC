@@ -164,9 +164,11 @@ std::expected<std::int8_t,Error> Owner::store(std::string_view key,const azureus
   }catch(...){return std::unexpected(Error::Memory);}
 }
 std::expected<lifecycle::DbValue,Error> Owner::putLocal(std::string_view key,
-    std::string_view bytes,std::int32_t version,lifecycle::WallClock& clock){
+    std::string_view bytes,std::int32_t version,lifecycle::WallClock& clock){return putLocal(key,bytes,version,clock,LocalPublicationFlags::Normal);}
+std::expected<lifecycle::DbValue,Error> Owner::putLocal(std::string_view key,
+    std::string_view bytes,std::int32_t version,lifecycle::WallClock& clock,LocalPublicationFlags flags){
   if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}
-  if(!impl_->local||key.size()!=20||bytes.empty()||bytes.size()>512){return std::unexpected(Error::Invalid);}
+  if((flags!=LocalPublicationFlags::Normal&&flags!=LocalPublicationFlags::Anonymous)||!impl_->local||key.size()!=20||bytes.empty()||bytes.size()>512){return std::unexpected(Error::Invalid);}
   try{
     Impl::Guard guard(*impl_);if(impl_->localPuts==UINT64_MAX){return std::unexpected(Error::Capacity);}
     auto found=impl_->records.find(key);
@@ -183,7 +185,7 @@ std::expected<lifecycle::DbValue,Error> Owner::putLocal(std::string_view key,
     auto& record=*found->second;KeyPort::Borrow borrowed(record.port,clock);
     auto origin=record.owner.contact(*impl_->local);auto payload=lifecycle::Payload::copy(bytes);
     if(!origin||!payload){return std::unexpected(Error::Memory);}
-    mapping::ValueFields fields{clock.nowMilliseconds(),std::move(*payload),version,*origin,*origin,true,0,0,-1};
+    mapping::ValueFields fields{clock.nowMilliseconds(),std::move(*payload),version,*origin,*origin,true,static_cast<std::int32_t>(flags),0,-1};
     auto value=record.owner.value(std::move(fields),clock);
     if(!value||!record.owner.add(value->value,clock,record.port)||record.port.failed){return std::unexpected(Error::Mapping);}
     auto actual=value->value.snapshot();if(!actual){return std::unexpected(Error::Mapping);}
