@@ -2010,3 +2010,13 @@ if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIM
   add_test(NAME mainline-single-http COMMAND biglybtc-mainline-single-http-tests)
   set_tests_properties(mainline-single-http PROPERTIES TIMEOUT 240 LABELS "network;discovery;owned;tls;slow")
 endif()
+
+# Append to preview/native/tests/CMakeLists.txt when the codec target exists.
+if(TARGET biglybtc_i2p_datagram)
+  add_executable(biglybtc-i2p-datagram-tests i2p_datagram_tests.cpp)
+  target_link_libraries(biglybtc-i2p-datagram-tests PRIVATE biglybtc_i2p_datagram)
+  target_compile_options(biglybtc-i2p-datagram-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME pure-i2p-datagram-codec COMMAND biglybtc-i2p-datagram-tests
+    --java-fixtures "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
+  set_tests_properties(pure-i2p-datagram-codec PROPERTIES TIMEOUT 30 LABELS "unit;crypto;i2p;no-network")
+endif()

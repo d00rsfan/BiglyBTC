@@ -69,3 +69,11 @@ if(BIGLYBTC_TOR_CONTROL)
   add_subdirectory("${BIGLYBTC_TOR_AUTH_SOURCE_DIR}" "tor-auth")
   add_subdirectory(tor_control)
 endif()
+
+# Append to preview/native/services/CMakeLists.txt; pure, inactive codec only.
+find_package(OpenSSL 3.0 REQUIRED COMPONENTS Crypto)
+add_library(biglybtc_i2p_datagram STATIC i2p_datagram/datagram.cpp)
+target_include_directories(biglybtc_i2p_datagram PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2p_datagram")
+target_link_libraries(biglybtc_i2p_datagram PRIVATE OpenSSL::Crypto)
+target_compile_features(biglybtc_i2p_datagram PUBLIC cxx_std_23)
+target_compile_options(biglybtc_i2p_datagram PRIVATE -Wall -Wextra -Wpedantic -Werror)
