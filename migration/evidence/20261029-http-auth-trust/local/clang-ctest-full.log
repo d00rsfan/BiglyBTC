@@ -1,0 +1,42 @@
+Start testing: Oct 29 09:37 IST
+----------------------------------------------------------
+200/281 Testing: network-policy
+200/281 Test: network-policy
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-network-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+"network-policy" start time: Oct 29 09:37 IST
+Output:
+----------------------------------------------------------
+33 network-policy families, 501 assertions passed
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"network-policy" end time: Oct 29 09:37 IST
+"network-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+218/281 Testing: queue-policy
+218/281 Test: queue-policy
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-queue-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+"queue-policy" start time: Oct 29 09:37 IST
+Output:
+----------------------------------------------------------
+40 queue-policy families, 8682 assertions passed
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"queue-policy" end time: Oct 29 09:37 IST
+"queue-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 29 09:37 IST
+
+queue =   0.03 sec*proc
+
+torrent-workflows =   0.02 sec*proc
+
+unit =   0.05 sec*proc
+

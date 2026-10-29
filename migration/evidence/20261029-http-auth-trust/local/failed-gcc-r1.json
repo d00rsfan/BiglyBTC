@@ -1,0 +1,22 @@
+{
+  "status": "FAIL",
+  "source_commit": "170295385399dc577ca45d2cc9bdb9e9ca746cc5",
+  "lane": "gcc",
+  "prior_qualification_sha256": "6ead41b9364bc795dbedf9de897aa2dbe65c8bd0083c0ca94da44041b58f0931",
+  "historical_passes_pooled": false,
+  "provider_rebuilt": false,
+  "compiled_targets": [
+    "biglybtc-mainline-single-http-tests",
+    "biglybtc-queue-policy-tests",
+    "biglybtc-network-policy-tests",
+    "BiglyBTC",
+    "BiglyBTC-headless",
+    "biglybtc-preview-smoke"
+  ],
+  "compile_only_suites": [],
+  "cache": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "dist_manifest_before": "60d71fd3b2f991523f7ae6a0a399663dcfabf7b796ed4050a707e65b160ea83c",
+  "failure": "AssertionError('build')",
+  "commands_sha256": "a9f6bdab933e04baba23616b1a0dea6a8180011c66f858d0d712941ab7917b2e"
+}

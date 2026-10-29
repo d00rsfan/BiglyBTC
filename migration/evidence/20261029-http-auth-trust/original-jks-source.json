@@ -1,0 +1,35 @@
+{
+  "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerStatus.java": {
+    "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "sha256": "7537d5397a4bb25e56018b03e420a4bdf94248c8393fea9bc8eec613d1b5699e"
+  },
+  "core/src/com/biglybt/core/security/SESecurityManager.java": {
+    "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "sha256": "e7427af74355822de5c55f5cd354818953e8b279132f69a12e141696fecb9300"
+  },
+  "core/src/com/biglybt/core/security/impl/SESecurityManagerImpl.java": {
+    "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "sha256": "036c7654c68ab646c709c5105feb02a20a9ac2c4e778e98dcd1bff7840bf3e68"
+  },
+  "/usr/lib/jvm/openjdk-17/lib/src.zip!/java.base/sun/security/provider/JavaKeyStore.java": {
+    "sha256": "65b6e30ebc00ecfce71c173af29fe8becd185c37cd5b3a6d03837548775e65ed"
+  },
+  "/usr/lib/jvm/openjdk-17/lib/src.zip!/java.base/sun/security/validator/TrustStoreUtil.java": {
+    "sha256": "3972d5bf7882e185db295b0938f469608eb2f7d83afdd6edf1eda4afd1119d71"
+  },
+  "/usr/lib/jvm/openjdk-17/lib/src.zip!/java.base/java/io/DataInputStream.java": {
+    "sha256": "d3baaba4cb066e3eba884026532e329176cd1fe5110cb6750d2f718368f3bfdc"
+  },
+  "/home/yurii/Java/BiglyBTC/preview/native/engine/CMakeLists.txt": {
+    "sha256": "b794b189ff001d64c456ca111b32d093ba48d1848efc42afb1b3e0f5f33630c7"
+  },
+  "/home/yurii/Java/BiglyBTC/preview/native/tests/CMakeLists.txt": {
+    "sha256": "1ebda8fa8adc3dc68891ba1905ccf8946d942cf0e6d0bb162895d65285e8a7b7"
+  },
+  "/home/yurii/Java/BiglyBTC/preview/native/adapters/profile.hpp": {
+    "sha256": "e54ab9b6404293fea1dc476903d9a38f0ce0403ea1162c80368f737c71f919c3"
+  },
+  "/home/yurii/Java/BiglyBTC/preview/native/adapters/file_io.hpp": {
+    "sha256": "8d0fc78f8b6fd62932c8ff07fcbcd8203d6bac0ca2255d86bb849c4b1b413cb6"
+  }
+}

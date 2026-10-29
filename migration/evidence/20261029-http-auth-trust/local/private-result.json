@@ -1,0 +1,79 @@
+{
+  "status": "PASS_PRIVATE_FOCUSED_HTTP_AUTH_TRUST",
+  "source_commit": "c7a6ab6700666b86cbf2a0a265cb95addb57a660",
+  "focused_results": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/runs/gcc-r3/result.json",
+      "sha256": "d51c2f62e0cd08031c9b93bb24946869fca5444e986ccc1f6c078aefbbbaffe5",
+      "images_sha256": "18799e19c0031fd568663d4bfaf36afc344b5e5e11b2a23aa5ed15f60dfe74c9",
+      "source_before_sha256": "dcfa8b6380786fc66e5f49b2de01b4a88130ef243deca9cea5141b21d7d6b3a7"
+    },
+    "clang": {
+      "path": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/runs/clang-r3/result.json",
+      "sha256": "2cb716aef25e23cf018c0f2e050c80eaba40642e37436b438a356af2ec6b6e70",
+      "images_sha256": "f8651d67fd7f62e2e8ae0722281d75008d5cacad2bb5cc7ef8cd21fada0067fc",
+      "source_before_sha256": "dcfa8b6380786fc66e5f49b2de01b4a88130ef243deca9cea5141b21d7d6b3a7"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/runs/san-r3/result.json",
+      "sha256": "fe2f3d83dbd7429effaba807b21072d88042c559b609020b7d291bb77f62c1e6",
+      "images_sha256": "b6fd96a002e1f9c8b383118524e3bc821a7ff3dab544beb59c82cfbef21f03bd",
+      "source_before_sha256": "dcfa8b6380786fc66e5f49b2de01b4a88130ef243deca9cea5141b21d7d6b3a7"
+    }
+  },
+  "builds_executed": false,
+  "promotion_executed": false,
+  "historical_runtime_passes_pooled": false,
+  "candidate": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/candidate",
+  "candidate_manifest_sha256": "e64600352485e17178bad2803af14ea7e0941ed7dd13954c7f2bfbf48f4049c0",
+  "actual_leaf_count": 119,
+  "http_image": {
+    "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests",
+    "sha256": "45b2816c16f18209e7d3b251c572fb307c748779f88611258a54dbd4d10c7983",
+    "bytes": 6202120
+  },
+  "actual_tests": [
+    {
+      "selector": "actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls:verified-https",
+      "exit": 0,
+      "xml_sha256": "5310f6f6dbb1f82921aad26f31942729c5b65030f8bd792cb30b45783293e8c1",
+      "case_names": [
+        "initTestCase",
+        "actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls(verified-https)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    },
+    {
+      "selector": "savedJksAnchorsDriveActualTlsAndFreshGatesRevokeReplacedTrust",
+      "exit": 0,
+      "xml_sha256": "2456a6f42082013188129348ef2c7ec59d11216978a1db7fe6ff2039287ed047",
+      "case_names": [
+        "initTestCase",
+        "savedJksAnchorsDriveActualTlsAndFreshGatesRevokeReplacedTrust",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    }
+  ],
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "old_dist_unchanged": "60d71fd3b2f991523f7ae6a0a399663dcfabf7b796ed4050a707e65b160ea83c",
+  "source_unchanged": true,
+  "commands_sha256": "050082650844981d525c587d12a7d0a1c49d4246c913beb60155e8842148030e"
+}

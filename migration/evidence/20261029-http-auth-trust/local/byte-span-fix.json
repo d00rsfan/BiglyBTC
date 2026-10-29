@@ -1,0 +1,9 @@
+{
+  "source_commit": "eb00e5c23e2f888082c5a0f3c621b4fac0954e7b",
+  "parent_commit": "170295385399dc577ca45d2cc9bdb9e9ca746cc5",
+  "path": "preview/native/engine/library_http_policy.hpp",
+  "before_sha256": "cde0d28309788202923b467767d2b752d6aff900fc797229920400f85b5f3bd5",
+  "after_sha256": "567171327b7ca0105f47e4ed781974ed694443e8abcfec2ed6fbb9b46e863082",
+  "reason": "Node bytes are string_view; Qt concatenation already returned QByteArray, incompatible with fromStdString. Explicit owned spans preserve exact bounded ASCII bytes.",
+  "runtime_executed": false
+}

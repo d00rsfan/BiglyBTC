@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "review_sha256": "fcce5f18a86456e12484648d55ed6fd4326c4af893397dc29a68c7f50a21476e",
+  "reviewed_manifest_sha256": "7f17136e7305588e15af9d56ce9e786c1357fddcf3982359966f2f0e9f998fc7",
+  "files": {
+    "review.json": "fcce5f18a86456e12484648d55ed6fd4326c4af893397dc29a68c7f50a21476e"
+  }
+}

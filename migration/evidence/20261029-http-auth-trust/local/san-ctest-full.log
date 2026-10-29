@@ -1,0 +1,99 @@
+Start testing: Oct 29 09:38 IST
+----------------------------------------------------------
+200/281 Testing: network-policy
+200/281 Test: network-policy
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-network-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests
+"network-policy" start time: Oct 29 09:38 IST
+Output:
+----------------------------------------------------------
+33 network-policy families, 501 assertions passed
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"network-policy" end time: Oct 29 09:38 IST
+"network-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+218/281 Testing: queue-policy
+218/281 Test: queue-policy
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-queue-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests
+"queue-policy" start time: Oct 29 09:38 IST
+Output:
+----------------------------------------------------------
+40 queue-policy families, 8682 assertions passed
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"queue-policy" end time: Oct 29 09:38 IST
+"queue-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+281/281 Testing: mainline-single-http
+281/281 Test: mainline-single-http
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-http-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests
+"mainline-single-http" start time: Oct 29 09:38 IST
+Output:
+----------------------------------------------------------
+********* Start testing of MainlineSingleHttpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleHttpTests::initTestCase()
+PASS   : MainlineSingleHttpTests::originalUrlMappingAndRoutePermissions()
+PASS   : MainlineSingleHttpTests::sourceBodyMissingFailureNarrowingAndIntervals()
+PASS   : MainlineSingleHttpTests::heldSettingsAreStrictAndLow32OriginalBooleans()
+PASS   : MainlineSingleHttpTests::actualHostnameHttpChunkedAndCancellationReuse()
+PASS   : MainlineSingleHttpTests::dnsProposalRequiresFreshOwnerPermissionBeforeSocket()
+PASS   : MainlineSingleHttpTests::neverAdmittedSavedHttpFailureUsesSameMainlineConsumerWithoutPayloadAccess()
+PASS   : MainlineSingleHttpTests::savedBasicChallengeAndCacheAreExactRealmOriginAndSecretFreeScope()
+PASS   : MainlineSingleHttpTests::actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls(http)
+PASS   : MainlineSingleHttpTests::actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls(verified-https)
+PASS   : MainlineSingleHttpTests::basicAuthorizationNeverCrossesRedirectOriginAndWrongPasswordStops()
+PASS   : MainlineSingleHttpTests::changedSavedCredentialsAndCancellationRevokeBeforeRetrySocket()
+PASS   : MainlineSingleHttpTests::unchangedCacheCannotSurviveInternalTrackerPolicyChangeBeforeRetry()
+PASS   : MainlineSingleHttpTests::thirdAuthenticationOriginExhaustionIsUnknownWithoutAThirdCredential()
+PASS   : MainlineSingleHttpTests::genuineNeverAdmittedOwnerUsesSavedBasicWithoutPayloadOrHiddenTorrent()
+PASS   : MainlineSingleHttpTests::originalMinimumFailureAndSingleOnlyDialectAreSourceDerived()
+PASS   : MainlineSingleHttpTests::awaitingOwnerDeadlineCannotManufactureNetworkFailure()
+PASS   : MainlineSingleHttpTests::gzipMemberBoundsCrcAndRedirectScopeAreExplicit()
+PASS   : MainlineSingleHttpTests::actualSameHostRedirectRequiresFreshAuthorityAndDecodesGzip()
+PASS   : MainlineSingleHttpTests::redirectedProposalRevocationAndLateCompressedReplyCannotGrant()
+PASS   : MainlineSingleHttpTests::actualGzipBombAndRedirectLoopAreUnavailableRatherThanError()
+PASS   : MainlineSingleHttpTests::actualRedirectChainStopsBeforeSeventhRequest()
+PASS   : MainlineSingleHttpTests::redirectedTlsChecksTheNewHostnameBeforeSendingHash()
+PASS   : MainlineSingleHttpTests::originalJksTrustUsesLastAliasAndFirstKeyCertificateAndChecksIntegrity()
+PASS   : MainlineSingleHttpTests::savedHttpsTrustIsProfileBoundReadOnlyAndCannotDisableOrdinaryHttp()
+PASS   : MainlineSingleHttpTests::savedJksAnchorsDriveActualTlsAndFreshGatesRevokeReplacedTrust()
+PASS   : MainlineSingleHttpTests::actualTlsRequiresRootAndHostnameAndSupportsTrustedOwnedRoot()
+PASS   : MainlineSingleHttpTests::cleanupTestCase()
+Totals: 28 passed, 0 failed, 0 skipped, 0 blacklisted, 135846ms
+********* Finished testing of MainlineSingleHttpTests *********
+<end of output>
+Test time = 136.09 sec
+----------------------------------------------------------
+Test Passed.
+"mainline-single-http" end time: Oct 29 09:41 IST
+"mainline-single-http" time elapsed: 00:02:16
+----------------------------------------------------------
+
+End testing: Oct 29 09:41 IST
+
+discovery = 136.09 sec*proc
+
+network = 136.09 sec*proc
+
+owned = 136.09 sec*proc
+
+queue =   0.10 sec*proc
+
+slow = 136.09 sec*proc
+
+tls = 136.09 sec*proc
+
+torrent-workflows =   0.06 sec*proc
+
+unit =   0.16 sec*proc
+

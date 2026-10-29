@@ -1,0 +1,69 @@
+[
+  {
+    "name": "stage",
+    "command": [
+      "python3",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--output",
+      "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/candidate",
+      "--libtorrent-package",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+      "--source-libtorrent",
+      "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--private-mainline-routing-provider-manifest",
+      "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-runtime.json"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 12.81,
+    "log": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/stage.log",
+    "log_sha256": "c9e2fa84d8f0614acc84021359eb9ec43e308b23d2212781b239da1711083188"
+  },
+  {
+    "name": "loader",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.034,
+    "log": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/loader.log",
+    "log_sha256": "ba2797487c0b7a49583d810ffecf6ac10c8c00b109707100c3d547ee37f84055"
+  },
+  {
+    "name": "http-1",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests",
+      "actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls:verified-https",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/http-1.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/http-1.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.37,
+    "log": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/http-1.log",
+    "log_sha256": "2e3dd2be93ff3ca37a087cec3c347f3ae30f00f41005015a70aab62f930fcc1b"
+  },
+  {
+    "name": "http-2",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests",
+      "savedJksAnchorsDriveActualTlsAndFreshGatesRevokeReplacedTrust",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/http-2.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/http-2.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.77,
+    "log": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/private-focused/runs/r1/http-2.log",
+    "log_sha256": "084bacff7fec29bcfba05fe06bc66b949fbe0f7655a5bb6b40444c7b8fd41825"
+  }
+]

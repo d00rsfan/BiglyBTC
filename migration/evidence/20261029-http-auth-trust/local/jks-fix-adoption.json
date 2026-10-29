@@ -1,0 +1,18 @@
+{
+  "source_commit": "c7a6ab6700666b86cbf2a0a265cb95addb57a660",
+  "parent_commit": "eb00e5c23e2f888082c5a0f3c621b4fac0954e7b",
+  "proposal_sha256": "7c774f7967daece91cb2a0a2e2d974bbd8a37e359c8bbb7357f11318481af41d",
+  "source_paths": {
+    "preview/native/engine/library_http_trust.hpp": {
+      "before_sha256": "44e6e5499f21554731d29138f9c25557ea0e608ee3d8e851fe8bacc17e338ae5",
+      "after_sha256": "aa477cd4c9621c176a811e7ddc76caa46e8fab37d01d4390942f364041d2e707",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/amendments/full-jks-whitening-string/staging/preview/native/engine/library_http_trust.hpp"
+    },
+    "preview/native/tests/mainline_single_http_tests.cpp": {
+      "before_sha256": "a11bf094bd71c4d671356b9a342bb21440d7dcf48bfe0ce9e2b23a315bf945a5",
+      "after_sha256": "294ad03106c165a790444691322fc9532efaa68aab16260f28342f7c30e075a9",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/amendments/full-jks-whitening-string/staging/preview/native/tests/mainline_single_http_tests.cpp"
+    }
+  },
+  "runtime_executed": false
+}

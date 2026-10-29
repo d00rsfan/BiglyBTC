@@ -1,0 +1,45 @@
+{
+  "status": "SOURCE_ADOPTED_PENDING_FOCUSED_TESTS",
+  "base_commit": "55a72ff84882281928f220d1ab5293bfbaec3a55",
+  "source_commit": "170295385399dc577ca45d2cc9bdb9e9ca746cc5",
+  "review_sha256": "cb8c11b80706d0170e5e4bcc028d3f51669fa521646bbe34e372cc432c13f94b",
+  "proposal_sha256": "7f17136e7305588e15af9d56ce9e786c1357fddcf3982359966f2f0e9f998fc7",
+  "source_paths": {
+    "preview/native/engine/library_http_owner.inc": {
+      "before_sha256": "915ff238e40ee53c0cea01e45690b602f0db20bca3a2855e40d699af4b5dc039",
+      "after_sha256": "6bec3072da7428aa1fb135ab22fa1cf53d662c385f542862113e8816e4e0542b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/staging/preview/native/engine/library_http_owner.inc"
+    },
+    "preview/native/engine/library_http_policy.hpp": {
+      "before_sha256": "d4f3eb6ad98383c019b223653efa2153bd857f254125e1190dd44866d6566725",
+      "after_sha256": "cde0d28309788202923b467767d2b752d6aff900fc797229920400f85b5f3bd5",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/staging/preview/native/engine/library_http_policy.hpp"
+    },
+    "preview/native/engine/library_http_protocol.cpp": {
+      "before_sha256": "b1f348f5b0f8aaa55ba780e4847b5a5f7874a7419d2c9340336bbc443eecc42f",
+      "after_sha256": "80cb42af4e4f3027478de86878d7ab7f53e1d1a1c505d0bb884d7fb568ec3dbe",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/staging/preview/native/engine/library_http_protocol.cpp"
+    },
+    "preview/native/engine/library_http_tracker.cpp": {
+      "before_sha256": "7645eeac8a0fa87fb65e0aa439654675d6a806d3494a347bdb9b8851eed6edec",
+      "after_sha256": "c93c252e8ec7dce014d85026a9fe4b06fc3d0643652bdcc6b157048379bfc273",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/staging/preview/native/engine/library_http_tracker.cpp"
+    },
+    "preview/native/engine/library_http_tracker.hpp": {
+      "before_sha256": "18b1a3a0c325c176ec7d067169995f028e003cb3175e473a869f3a442dcdb3cd",
+      "after_sha256": "3c4144d48ac35b9ff2837a279b255efae32c0b2086697c04c5c733188f9846b1",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/staging/preview/native/engine/library_http_tracker.hpp"
+    },
+    "preview/native/engine/library_http_trust.hpp": {
+      "before_sha256": null,
+      "after_sha256": "44e6e5499f21554731d29138f9c25557ea0e608ee3d8e851fe8bacc17e338ae5",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/staging/preview/native/engine/library_http_trust.hpp"
+    },
+    "preview/native/tests/mainline_single_http_tests.cpp": {
+      "before_sha256": "e679a0d9613c42c2d1de79022176c215ad3d2f42cbcbca0217346b8bc03f027e",
+      "after_sha256": "a11bf094bd71c4d671356b9a342bb21440d7dcf48bfe0ce9e2b23a315bf945a5",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-http-auth-trust-20261029/staging/preview/native/tests/mainline_single_http_tests.cpp"
+    }
+  },
+  "runtime_executed": false
+}

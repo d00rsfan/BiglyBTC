@@ -7899,6 +7899,23 @@
           "first_ported_commit": null,
           "integrated_through_commit": null,
           "last_reviewed_commit": "067f434eb60323123a5e885093ab2504ab10d5f9"
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "uis/src/com/biglybt/ui/swt/auth/AuthenticatorWindow.java",
+            "core/src/com/biglybt/core/security/impl/SESecurityManagerImpl.java",
+            "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerStatus.java"
+          ],
+          "source_symbols": [
+            "AuthenticatorWindow",
+            "SESecurityManagerImpl",
+            "TrackerStatus"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
         }
       ],
       "native_commits": [
@@ -7941,13 +7958,19 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c7a6ab6700666b86cbf2a0a265cb95addb57a660",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/engine.mainline_queued_scrape/20261028-in-progress.md",
         "migration/updates/engine.mainline_queued_scrape/20261028-active-scrape.md",
         "migration/updates/network-service-cohort/20261028-bounded.md",
-        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md"
+        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md",
+        "migration/evidence/20261029-http-auth-trust/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-scrape-storage-stats/verification.json",
@@ -7955,7 +7978,8 @@
         "migration/evidence/20261028-mainline-active-scrape/verification.json",
         "migration/evidence/20261028-mainline-active-scrape/REVIEW.md",
         "migration/evidence/20261028-network-service-cohort/verification.json",
-        "migration/evidence/20261029-mainline-owned-trackers/verification.json"
+        "migration/evidence/20261029-mainline-owned-trackers/verification.json",
+        "migration/evidence/20261029-http-auth-trust/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8048,14 +8072,20 @@
             "core/src/com/biglybt/pifimpl/local/download/DownloadScrapeResultImpl.java",
             "core/src/com/biglybt/core/tracker/client/impl/TRTrackerScraperResponseImpl.java",
             "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
-            "core/src/com/biglybt/core/tracker/client/impl/bt/TRTrackerBTAnnouncerImpl.java"
+            "core/src/com/biglybt/core/tracker/client/impl/bt/TRTrackerBTAnnouncerImpl.java",
+            "uis/src/com/biglybt/ui/swt/auth/AuthenticatorWindow.java",
+            "core/src/com/biglybt/core/security/impl/SESecurityManagerImpl.java",
+            "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerStatus.java"
           ],
           "source_symbols": [
             "DownloadImpl.getLastScrapeResult",
             "DownloadScrapeResultImpl",
             "TRTrackerScraperResponseImpl.isValid",
             "DownloadManagerImpl.getTrackerScrapeResponse",
-            "TRTrackerBTAnnouncerImpl"
+            "TRTrackerBTAnnouncerImpl",
+            "AuthenticatorWindow",
+            "SESecurityManagerImpl",
+            "TrackerStatus"
           ],
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "first_ported_commit": null,
@@ -8078,16 +8108,23 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c7a6ab6700666b86cbf2a0a265cb95addb57a660",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/engine.tracker_scrape_observations/20261028-in-progress.md",
-        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md"
+        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md",
+        "migration/evidence/20261029-http-auth-trust/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-active-scrape/verification.json",
         "migration/evidence/20261028-mainline-active-scrape/REVIEW.md",
-        "migration/evidence/20261029-mainline-owned-trackers/verification.json"
+        "migration/evidence/20261029-mainline-owned-trackers/verification.json",
+        "migration/evidence/20261029-http-auth-trust/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },

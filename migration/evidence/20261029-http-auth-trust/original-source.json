@@ -1,0 +1,62 @@
+{
+  "uis/src/com/biglybt/ui/swt/auth/AuthenticatorWindow.java": {
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "sha256": "97280b863da8bd6a41f02bcfaa35cddccce4657df3cfe4a32165585d19df1885",
+    "lines": [
+      [
+        57,
+        85
+      ],
+      [
+        105,
+        127
+      ],
+      [
+        259,
+        275
+      ]
+    ]
+  },
+  "core/src/com/biglybt/core/security/impl/SESecurityManagerImpl.java": {
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "sha256": "036c7654c68ab646c709c5105feb02a20a9ac2c4e778e98dcd1bff7840bf3e68",
+    "lines": [
+      [
+        454,
+        496
+      ]
+    ]
+  },
+  "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerStatus.java": {
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "sha256": "7537d5397a4bb25e56018b03e420a4bdf94248c8393fea9bc8eec613d1b5699e",
+    "lines": [
+      [
+        1405,
+        1427
+      ]
+    ]
+  },
+  "JDK17:java.base/sun/net/www/protocol/http/HttpURLConnection.java": {
+    "sha256": "1298a5f5a37ba27ab3b40317f9bd22c8b237fe677b5abed80b8dd7d0b910c250",
+    "lines": [
+      [
+        2669,
+        2693
+      ],
+      [
+        3010,
+        3027
+      ]
+    ]
+  },
+  "JDK17:java.base/sun/net/www/protocol/http/BasicAuthentication.java": {
+    "sha256": "3d21c79a883b404e8fd7057b41b6222564f4477bdb406a12e1d57ddcc1d99529",
+    "lines": [
+      [
+        67,
+        105
+      ]
+    ]
+  }
+}
