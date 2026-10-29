@@ -195,6 +195,7 @@ class AdmittedHttpServer final:public QTcpServer {
   const Certificate* tls;
 public:
   QByteArray expectedHash;QString failure;int announces=0,scrapes=0;
+  int sockets=0,lastSocketError=0,lastTlsError=0; // Bounded owned-fixture diagnostics only.
   bool failedAnnounce=false,holdScrapes=false;int completedAnnounceConnections=0;QList<QPointer<QTcpSocket>> held;
   explicit AdmittedHttpServer(const Certificate* cert=nullptr):tls(cert){test::require(listen(QHostAddress::LocalHost,0),"Cannot bind owned admitted tracker");}
   std::string url()const{return std::string(tls?"https://":"http://")+"localhost:"+std::to_string(serverPort())+"/announce";}
@@ -204,8 +205,10 @@ private:
   void reply(QTcpSocket* socket,const QByteArray& body,bool waitForClientClose=false){const auto bytes="HTTP/1.1 200 OK\r\nContent-Length: "+QByteArray::number(body.size())+"\r\nConnection: "+(waitForClientClose?"keep-alive":"close")+"\r\n\r\n"+body;if(socket->write(bytes)!=bytes.size()){failure="Owned admitted reply failed";}if(!waitForClientClose){socket->disconnectFromHost();}}
 protected:
   void incomingConnection(qintptr fd)override{
-    QTcpSocket* socket=tls?static_cast<QTcpSocket*>(new QSslSocket(this)):new QTcpSocket(this);
-    if(tls){auto* ssl=static_cast<QSslSocket*>(socket);ssl->setLocalCertificate(tls->certificate);ssl->setPrivateKey(tls->key);}
+    ++sockets;QTcpSocket* socket=tls?static_cast<QTcpSocket*>(new QSslSocket(this)):new QTcpSocket(this);
+    QObject::connect(socket,&QTcpSocket::errorOccurred,this,[this](QAbstractSocket::SocketError error){lastSocketError=static_cast<int>(error);});
+    if(tls){auto* ssl=static_cast<QSslSocket*>(socket);ssl->setLocalCertificate(tls->certificate);ssl->setPrivateKey(tls->key);
+      QObject::connect(ssl,&QSslSocket::sslErrors,this,[this](const QList<QSslError>& errors){lastTlsError=errors.isEmpty()?0:static_cast<int>(errors.first().error());});}
     if(!socket->setSocketDescriptor(fd)){failure="Owned admitted descriptor failed";socket->deleteLater();return;}
     auto input=std::make_shared<QByteArray>();auto complete=std::make_shared<bool>(false);
     QObject::connect(socket,&QTcpSocket::readyRead,this,[this,socket,input,complete]{
@@ -240,6 +243,12 @@ void prepareNormalAdmittedProxy(test::OwnedEngineFixture& saved,const std::strin
   test::require(row->replaceValue("torrent_hash",test::encoded(libtorrent::entry(rawHash))).has_value()&&row->replaceValue("torrent",test::encoded(libtorrent::entry(saved.stateFile.toStdString()))).has_value()&&row->replaceValue("state","i50e").has_value(),"Owned live intent fields");
   test::require(inventory->replaceValue("downloads","l"+row->serialize()+"e").has_value(),"Owned row replace");test::write(saved.profile+"/downloads.config",QByteArray::fromStdString(inventory->serialize()));
 }
+// Release only generated held endpoints and join the owner on early QtTest
+// return as well as success. This guard cannot publish a passing assertion.
+struct AdmittedOwnerCleanup {
+  engine::PersistentSession& owner;AdmittedHttpServer& server;SocksProxy& proxy;
+  ~AdmittedOwnerCleanup(){server.release();proxy.release();static_cast<void>(owner.close(std::chrono::steady_clock::now()+10s));}
+};
 struct SavedBytes {
   QString path;QByteArray bytes;struct stat before{};
   explicit SavedBytes(QString p):path(std::move(p)),bytes(test::read(path)){test::require(::lstat(path.toStdString().c_str(),&before)==0,"Cannot snapshot owned control");}
@@ -347,7 +356,16 @@ private slots:
     test::OwnedEngineFixture saved(false);SocksProxy proxy(server.serverPort());auto selected=socksPolicy(proxy);selected.dht=privateTorrent;QTcpServer listen;QVERIFY(listen.listen(QHostAddress::LocalHost,0));selected.listenPort=listen.serverPort();listen.close();prepareNormalAdmittedProxy(saved,server.url(),privateTorrent);server.expectedHash=QByteArray(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);test::write(saved.profile+"/biglybt.config",socksSettings(selected));
     if(encrypted){QVERIFY(QSslSocket::supportsSsl());test::write(saved.profile+"/.certs",jksStore({{"owned",{identity.certificate.toDer()},false}}));}
     const auto rawBefore=test::read(saved.stateFile);const auto doc=core::Document::parse(rawBefore.toStdString());QVERIFY(doc);const auto rawInfo=core::encodeValue(*doc->find("info"));QVERIFY(rawInfo);const auto payload=test::read(saved.payload+"/sample.bin");
-    auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);auto created=engine::PersistentSession::create({8841,8842,8843});QVERIFY(created);auto owner=std::move(*created);QVERIFY(owner->configureNetwork(selected));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*lease));QVERIFY(owner->startManaged(*lease,{.hash=*saved.hash,.queued=false}));QString failure;
+    auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);auto created=engine::PersistentSession::create({8841,8842,8843});QVERIFY(created);auto owner=std::move(*created);QVERIFY(owner->configureNetwork(selected));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*lease));QVERIFY(owner->startManaged(*lease,{.hash=*saved.hash,.queued=false}));AdmittedOwnerCleanup cleanup{*owner,server,proxy};QString failure;
+    const auto diagnostics=[&]{
+      const auto views=owner->libraryTrackerResponses();const auto rows=owner->managedDownloads();const auto discovery=owner->mainlineDiscovery();
+      QString text=QStringLiteral("owned sockets=%1 announce=%2 scrape=%3 announceClosed=%4 socketError=%5 tlsError=%6 proxyGreeting=%7 proxyConnect=%8 views=%9 managed=%10")
+          .arg(server.sockets).arg(server.announces).arg(server.scrapes).arg(server.completedAnnounceConnections).arg(server.lastSocketError).arg(server.lastTlsError).arg(proxy.greetings).arg(proxy.connects).arg(views.size()).arg(rows.size());
+      if(!rows.empty()){const auto& row=rows.front();text+=QStringLiteral(" admission=%1 checked=%2 retained=%3 phase=%4").arg(row.admission).arg(row.checked).arg(row.retained).arg(static_cast<int>(row.phase));
+        const auto response=owner->managedTrackerResponse(*saved.hash,row.admission);text+=QStringLiteral(" shared=%1").arg(response?static_cast<int>(response->type):-1);if(response&&response->content){text+=QStringLiteral(" sharedCounts=%1/%2").arg(response->content->seeds).arg(response->content->peers);}}
+      if(!views.empty()&&views.front().response.content){text+=QStringLiteral(" viewCounts=%1/%2").arg(views.front().response.content->seeds).arg(views.front().response.content->peers);}
+      text+=QStringLiteral(" mainlineError=%1 optionalScrapeError=%2").arg(discovery.failure?static_cast<int>(discovery.failure->code):-1).arg(discovery.queuedScrapeFailure?static_cast<int>(discovery.queuedScrapeFailure->code):-1);return text;
+    };
     if(mode==0){
       // No owner pump runs before this actual first-announce barrier. The
       // owned server leaves the reply socket open; LT on_response dispatches
@@ -360,7 +378,7 @@ private slots:
     if(mode==3){
       QTRY_VERIFY_WITH_TIMEOUT(!pump()||server.scrapes==1,15000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QVERIFY(owner->pauseManaged(*saved.hash,true));QVERIFY(owner->libraryTrackerResponses().empty());server.release();QVERIFY(pump());const auto late=owner->managedTrackerResponse(*saved.hash,admission);QVERIFY(!late||late->type!=core::QueueOriginalScrapeType::Success);QVERIFY(owner->libraryTrackerResponses().empty());
     }else{
-      QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!pump()){return true;}const auto views=owner->libraryTrackerResponses();return views.size()==1&&views[0].admission==admission&&views[0].response.content&&views[0].response.content->seeds==(mode==0?5:7)&&views[0].response.content->peers==(mode==0?6:8);}()),20000);QVERIFY2(failure.isEmpty(),qPrintable(failure));const auto views=owner->libraryTrackerResponses();QCOMPARE(views.size(),std::size_t{1});QCOMPARE(views[0].hash,*saved.hash);QCOMPARE(views[0].admission,admission);QCOMPARE(views[0].response.type,core::QueueOriginalScrapeType::Success);const auto actual=owner->managedTrackerResponse(*saved.hash,admission);QVERIFY(actual&&actual->content);QCOMPARE(actual->content->seeds,mode==0?5:7);QCOMPARE(server.scrapes,mode==0?0:1);if(!encrypted){QVERIFY(server.announces>=1);}QVERIFY(owner->pauseManaged(*saved.hash,true));QVERIFY(owner->libraryTrackerResponses().empty());
+      QTRY_VERIFY2_WITH_TIMEOUT(([&]{if(!pump()){return true;}const auto views=owner->libraryTrackerResponses();return views.size()==1&&views[0].admission==admission&&views[0].response.content&&views[0].response.content->seeds==(mode==0?5:7)&&views[0].response.content->peers==(mode==0?6:8);}()),qPrintable(diagnostics()),20000);QVERIFY2(failure.isEmpty(),qPrintable(failure));const auto views=owner->libraryTrackerResponses();QCOMPARE(views.size(),std::size_t{1});QCOMPARE(views[0].hash,*saved.hash);QCOMPARE(views[0].admission,admission);QCOMPARE(views[0].response.type,core::QueueOriginalScrapeType::Success);const auto actual=owner->managedTrackerResponse(*saved.hash,admission);QVERIFY(actual&&actual->content);QCOMPARE(actual->content->seeds,mode==0?5:7);QCOMPARE(server.scrapes,mode==0?0:1);if(!encrypted){QVERIFY(server.announces>=1);}QVERIFY(owner->pauseManaged(*saved.hash,true));QVERIFY(owner->libraryTrackerResponses().empty());
     }
     const auto discovery=owner->mainlineDiscovery();QCOMPARE(discovery.lookups,std::uint64_t{0});QCOMPARE(discovery.announces,std::uint64_t{0});QCOMPARE(discovery.deliveredPeers,std::uint64_t{0});QVERIFY(owner->mainlineScrapeEstimates().empty());
     const auto closed=owner->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(owner->libraryTrackerResponses().empty());QCOMPARE(test::read(saved.payload+"/sample.bin"),payload);const auto after=core::Document::parse(test::read(saved.stateFile).toStdString());QVERIFY(after);const auto afterInfo=core::encodeValue(*after->find("info"));QVERIFY(afterInfo);QCOMPARE(*afterInfo,*rawInfo);QVERIFY(saved.accountingIntact(false));QVERIFY(server.failure.isEmpty()&&proxy.failure.isEmpty());
