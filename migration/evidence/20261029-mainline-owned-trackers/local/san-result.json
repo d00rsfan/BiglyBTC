@@ -1,0 +1,962 @@
+{
+  "schema": 1,
+  "status": "PASS_ACTUAL_SELECTED_COHORT",
+  "lane": "san",
+  "source_commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+  "plan_sha256": "ed2c768d9963981c2f9b58c84650d61b2291eb83a4cdf20e2a9e5eeec91f7509",
+  "actual_suites": 19,
+  "historical_passes_pooled": false,
+  "provider_rebuilt": false,
+  "optional_methods_not_qualified": [],
+  "suite_names": [
+    "mainline-original-identity",
+    "mainline-original-wire-identity",
+    "mainline-single-tracker-owner",
+    "mainline-dht",
+    "owned-tor-child-lifecycle",
+    "managed-queue",
+    "persistent-native-peer-session",
+    "mainline-original-identity-create",
+    "mainline-original-host-identity",
+    "mainline-bind-plan",
+    "profile-lease-retention",
+    "mainline-single-udp",
+    "network-policy",
+    "mainline-single-http",
+    "provider-mainline-routing-runtime-inputs",
+    "provider-mainline-routing-runtime-deployment",
+    "provider-mainline-routing-reject-foreign-identity",
+    "provider-mainline-routing-reject-foreign-tracker",
+    "provider-mainline-routing-reject-foreign-routing"
+  ],
+  "compiled_suites": [
+    "mainline-original-identity",
+    "mainline-original-wire-identity",
+    "mainline-single-tracker-owner",
+    "mainline-dht",
+    "owned-tor-child-lifecycle",
+    "managed-queue",
+    "persistent-native-peer-session",
+    "mainline-original-identity-create",
+    "mainline-original-host-identity",
+    "mainline-bind-plan",
+    "profile-lease-retention",
+    "mainline-single-udp",
+    "network-policy",
+    "mainline-single-http",
+    "provider-mainline-routing-runtime-inputs",
+    "provider-mainline-routing-runtime-deployment",
+    "provider-mainline-routing-reject-foreign-identity",
+    "provider-mainline-routing-reject-foreign-tracker",
+    "provider-mainline-routing-reject-foreign-routing"
+  ],
+  "compile_only_suites": [],
+  "images_before": {
+    "biglybtc-mainline-identity-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-identity-tests",
+      "sha256": "7ea9f2a10a6ded16867b4e0b9f9484265b6a54f0b7eaf0307c09638f312e65f1",
+      "bytes": 6386952
+    },
+    "biglybtc-mainline-original-wire-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-original-wire-tests",
+      "sha256": "3b63b861cd65f9faee4bebc17316cb2099e51ad96591e6ce88ea61f543f3ede7",
+      "bytes": 115558048
+    },
+    "biglybtc-mainline-single-tracker-owner-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-tracker-owner-tests",
+      "sha256": "8ed534b05727759ece4f5542121d6d3767756f81ff88b74c48afa8bdb4627851",
+      "bytes": 117745928
+    },
+    "biglybtc-mainline-dht-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-dht-tests",
+      "sha256": "38c898a88e565ddb0b583d91db77a886bb56dc7ba20518ac2793c2e9b1b35c36",
+      "bytes": 123178320
+    },
+    "biglybtc-tor-owned-child-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/services/tor_control/biglybtc-tor-owned-child-tests",
+      "sha256": "35269a26621360addfef8b69d768364bd0ce28e234c2ed9852aa51d5c6df15fa",
+      "bytes": 8479976
+    },
+    "biglybtc-managed-queue-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-managed-queue-tests",
+      "sha256": "803fd53890e7efa481eb05b26645b5ed79ed9dcef2b32c463e2533ff27347ead",
+      "bytes": 121701400
+    },
+    "biglybtc-persistent-session-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-persistent-session-tests",
+      "sha256": "6df13ffae728fa81f042bd546e4d03d6761da63027d594de286163e3a124330f",
+      "bytes": 115743576
+    },
+    "biglybtc-mainline-identity-create-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-identity-create-tests",
+      "sha256": "dd71227bef24e55103a799d7034554bf10da57d6d38e806520ec84893a8ac3af",
+      "bytes": 6636264
+    },
+    "biglybtc-mainline-original-host-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-original-host-tests",
+      "sha256": "c45ae9d96c29b2649b95319a5bed46a6bccd310669a3ecb9e983879a6990cbe6",
+      "bytes": 202807688
+    },
+    "biglybtc-mainline-bind-plan-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-bind-plan-tests",
+      "sha256": "290e8d58e0be10fb229fd153b59357a0788dbde37dc8eab11992671395826575",
+      "bytes": 7108416
+    },
+    "biglybtc-profile-lease-retention-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-profile-lease-retention-tests",
+      "sha256": "73b48bf73d510100c22d2577972ec7064f3ee3957835b001416c617976806afb",
+      "bytes": 4003144
+    },
+    "biglybtc-mainline-single-udp-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-udp-tests",
+      "sha256": "a300d79b5b9df2013542899e37d0a04b47cfb1be1d08c268dd547287c43f839d",
+      "bytes": 118360712
+    },
+    "biglybtc-network-policy-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-network-policy-tests",
+      "sha256": "61efeb9d6859c5afe9ca5735392bbc66fbcf4eb92a11060d4c120d9b51bd9b60",
+      "bytes": 10334632
+    },
+    "biglybtc-mainline-single-http-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-http-tests",
+      "sha256": "bc506cfed83fdb69d2fa9f3e152c576a35271dd3ba2ce8f5c577e1ac66b2c9d7",
+      "bytes": 118869160
+    },
+    "biglybtc-provider-mainline-routing-runtime-deployment-driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-provider-mainline-routing-runtime-deployment-driver",
+      "sha256": "e3c8896691b3fc061080cdd2745295247bc5fa983202f99261e1e4c432dbc1f0",
+      "bytes": 888952
+    },
+    "biglybtc-mainline-routing-interposition-driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-routing-interposition-driver",
+      "sha256": "51c335ad5a8430a8fa30887cca880f767b285db45e26a186a534d4724d6bea60",
+      "bytes": 485472
+    },
+    "BiglyBTC": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/app/BiglyBTC",
+      "sha256": "7b571dda24b54738d036a03660ee536020e2202481bd1f99dc5b1841ccb7e317",
+      "bytes": 281786120
+    },
+    "BiglyBTC-headless": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/app/BiglyBTC-headless",
+      "sha256": "a188dd8fa8d03287bf7f762af8651e6fa993fb8a10cbda9dae5d6f46ebec5c5b",
+      "bytes": 112587376
+    },
+    "biglybtc-preview-smoke": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/biglybtc-preview-smoke",
+      "sha256": "9b278d2e4fdcd762c304ca017981eac17e70365d87b9bd6f6dbc89d955c8cb32",
+      "bytes": 285218128
+    },
+    "biglybtc-runtime-binding-driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-runtime-binding-driver",
+      "sha256": "1635ea1cd29206a00b7f17bbf64831e9f6bc486a40db027e07898398c309d949",
+      "bytes": 112518576
+    },
+    "biglybtc-runtime-negative-driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-runtime-negative-driver",
+      "sha256": "6d0bfff180581b292ddb812fe7fd5b7b75caab69b28c68064bf8fbfd5e3bb6e9",
+      "bytes": 112509312
+    },
+    "biglybtc-runtime-interposition-driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-runtime-interposition-driver",
+      "sha256": "195b3e4f51ba93fa91c89b602cf282531254a112b71b0daff02b7881a05d8eed",
+      "bytes": 112473960
+    },
+    "biglybtc-runtime-interposer": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/libbiglybtc-runtime-interposer.so",
+      "sha256": "569f7f5fb4a411b16292b6008285af64a0102fefbfe6c780306b4b1fd8e16a2a",
+      "bytes": 17336
+    },
+    "biglybtc-routing-identity-foreign-marker": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/libbiglybtc-routing-identity-foreign-marker.so",
+      "sha256": "830682ed7f1d182cf4123d0e56a49e1f7937cbb1497645f83b66f31ecfad4e58",
+      "bytes": 17024
+    },
+    "biglybtc-routing-tracker-foreign-marker": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/libbiglybtc-routing-tracker-foreign-marker.so",
+      "sha256": "cdfb99c3e5b2c9e5e2984e94b556b1671e8e9c4eb9e6a7c7bd6ae2879cc74c88",
+      "bytes": 17024
+    },
+    "biglybtc-routing-routing-foreign-marker": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/libbiglybtc-routing-routing-foreign-marker.so",
+      "sha256": "014bb647bdeb52dd660a582b8430f60808b3fe8357b0363a87e814aca6caf0b2",
+      "bytes": 17024
+    }
+  },
+  "provider": {
+    "binding": "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-runtime.json",
+    "binding_sha256": "f746fd279755ea90f31e20b0c9131c46e5f0871c4aab3665f232975f98feb56e",
+    "record": "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-source-build-record.json",
+    "record_sha256": "623778fc3a5b25144e842a39154dab4cd107e4f115bc6474dd973f67888582d3",
+    "approval": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/root-provider-r2-approval.json",
+    "approval_sha256": "b133a344ef4ed018fd6ebce86ce6590721a45f90a1bd364ef2f6f3a66baea868",
+    "review": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/root-provider-r2-review.json",
+    "review_sha256": "2b79ded9b226be11ddffb0590168afb0aa2cff89fa4e9a7ec310677e9ab6c5a3",
+    "artifact": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+    "artifact_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+    "artifact_bytes": 9198832,
+    "install_root": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install",
+    "sdk_map_sha256": "e2a0d38d0bd81f4638f93a663ee8622b78cf6007c4b8ba2452533805fa5e5271",
+    "provider_rebuilt": false
+  },
+  "cache": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+  "source_receipt": {
+    "path": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/source-adoption-r4.json",
+    "sha256": "7d86d01291cd706666dbfa2a2346228ac8b74ae4724c483a812121529e158dd7",
+    "base_commit": "0f32a6bfbb0e2d5e8f1d842c932df4c45f4f08ef",
+    "source_commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+    "changed_files": [
+      "migration/fixtures/tor-owned-child/peer.py",
+      "preview/migration/tools/stage_preview.py",
+      "preview/native/adapters/mainline_identity.cpp",
+      "preview/native/adapters/mainline_identity.hpp",
+      "preview/native/adapters/profile.cpp",
+      "preview/native/adapters/profile.hpp",
+      "preview/native/app/session_bridge.cpp",
+      "preview/native/app/session_bridge.hpp",
+      "preview/native/core/include/biglybtc/queue_observations.hpp",
+      "preview/native/core/src/queue_observations.cpp",
+      "preview/native/engine/CMakeLists.txt",
+      "preview/native/engine/library_http_owner.inc",
+      "preview/native/engine/library_http_policy.hpp",
+      "preview/native/engine/library_http_protocol.cpp",
+      "preview/native/engine/library_http_tracker.cpp",
+      "preview/native/engine/library_http_tracker.hpp",
+      "preview/native/engine/library_udp_owner.inc",
+      "preview/native/engine/library_udp_policy.hpp",
+      "preview/native/engine/library_udp_tracker.hpp",
+      "preview/native/engine/live_settings.cpp",
+      "preview/native/engine/mainline_bind_plan.cpp",
+      "preview/native/engine/mainline_bind_plan.hpp",
+      "preview/native/engine/mainline_dht.cpp",
+      "preview/native/engine/mainline_original_identity.inc",
+      "preview/native/engine/mainline_owner.inc",
+      "preview/native/engine/mainline_scrape_runtime.inc",
+      "preview/native/engine/network_policy.cpp",
+      "preview/native/engine/network_policy.hpp",
+      "preview/native/engine/persistent_runtime_guard.cpp",
+      "preview/native/engine/persistent_runtime_guard.hpp",
+      "preview/native/engine/persistent_session.cpp",
+      "preview/native/engine/persistent_session.hpp",
+      "preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake",
+      "preview/native/engine/runtime-binding/provider-mainline-routing-runtime.json",
+      "preview/native/engine/runtime-binding/provider-mainline-routing-source-build-record.json",
+      "preview/native/engine/runtime-binding/verify_runtime_manifest_mainline_routing.py",
+      "preview/native/packaging/Debian.cmake",
+      "preview/native/packaging/qt_bundle.py",
+      "preview/native/services/CMakeLists.txt",
+      "preview/native/services/tor_control/owned_child.cpp",
+      "preview/native/services/tor_control/owned_child_tests.cpp",
+      "preview/native/tests/CMakeLists.txt",
+      "preview/native/tests/ProviderMainlineRoutingRuntimeTests.cmake",
+      "preview/native/tests/RuntimeDeploymentTests.cmake",
+      "preview/native/tests/mainline_bind_plan_tests.cpp",
+      "preview/native/tests/mainline_identity_create_tests.cpp",
+      "preview/native/tests/mainline_original_host_tests.cpp",
+      "preview/native/tests/mainline_original_identity_tests.cpp",
+      "preview/native/tests/mainline_routing_foreign_marker.cpp",
+      "preview/native/tests/mainline_routing_interposition_driver.cpp",
+      "preview/native/tests/mainline_single_http_tests.cpp",
+      "preview/native/tests/mainline_single_tracker_owner_tests.cpp",
+      "preview/native/tests/mainline_single_udp_tests.cpp",
+      "preview/native/tests/network_policy_tests.cpp",
+      "preview/native/tests/owned_original_mainline.hpp",
+      "preview/native/tests/profile_lease_retention_tests.cpp",
+      "preview/native/tests/provider_mainline_routing_runtime_inputs_tests.py",
+      "preview/native/tests/runtime_deployment_driver.cpp",
+      "preview/native/tests/runtime_deployment_tests.py"
+    ]
+  },
+  "observed_testcases": [
+    {
+      "name": "owned-tor-child-lifecycle",
+      "status": "PASS",
+      "seconds": "5.47378",
+      "qt_method_rows": [
+        {
+          "status": "PASS",
+          "name": "OwnedTorChildTests::initTestCase()"
+        },
+        {
+          "status": "PASS",
+          "name": "OwnedTorChildTests::actualOwnedChildAuthenticatesStopsJoinsAndRestartsInFreshDirectory()"
+        },
+        {
+          "status": "PASS",
+          "name": "OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(deadline-no-discovery)"
+        },
+        {
+          "status": "PASS",
+          "name": "OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(cancel-while-discovering)"
+        },
+        {
+          "status": "PASS",
+          "name": "OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(owned-kill-after-term-refusal)"
+        },
+        {
+          "status": "PASS",
+          "name": "OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(unexpected-exit-after-ready)"
+        },
+        {
+          "status": "PASS",
+          "name": "OwnedTorChildTests::unsafeDiscoveryCannotAuthenticateOrTouchOutsider(symlink-cookie)"
+        },
+        {
+          "status": "PASS",
+          "name": "OwnedTorChildTests::unsafeDiscoveryCannotAuthenticateOrTouchOutsider(hardlink-cookie)"
+        },
+        {
+          "status": "PASS",
+          "name": "OwnedTorChildTests::unsafeDiscoveryCannotAuthenticateOrTouch..."
+        }
+      ]
+    },
+    {
+      "name": "persistent-native-peer-session",
+      "status": "PASS",
+      "seconds": "42.827",
+      "qt_method_rows": [
+        {
+          "status": "PASS",
+          "name": "PersistentSessionTests::initTestCase()"
+        },
+        {
+          "status": "PASS",
+          "name": "PersistentSessionTests::lazyOwnerAndPermanentCloseNeverFabricateAZeroSample()"
+        },
+        {
+          "status": "PASS",
+          "name": "PersistentSessionTests::foreignThreadCannotPollOrCloseTheOwner()"
+        },
+        {
+          "status": "PASS",
+          "name": "PersistentSessionTests::sequentialMixedLayoutsAndRepeatedHashUseOneAbsoluteEpoch()"
+        },
+        {
+          "status": "PASS",
+          "name": "PersistentSessionTests::activeCancellationRetiresBeforeCallbackStorageUnwindsAndCanRetrySameHash()"
+        },
+        {
+          "status": "PASS",
+          "name": "PersistentSessionTests::optionalThrowingSinksDoNotDisableEssentialRetentionOrSafeTransfer()"
+        },
+        {
+          "status": "PASS",
+          "name": "PersistentSessionTests::preparationFailureCannotExposeEarlierSettlementOrEraseAbsoluteTotals()"
+        },
+        {
+          "status": "PASS",
+          "name": "PersistentSessionTests::foreignProfileIsRejectedBeforeCompatibleCacheOrPayloadAccess()"
+        },
+        {
+          "status": "PASS",
+          "name": "PersistentSessionTests::throwingProgressRetiresAnAlreadyRegisteredTorrentBeforeRet..."
+        }
+      ]
+    },
+    {
+      "name": "network-policy",
+      "status": "PASS",
+      "seconds": "0.052305",
+      "qt_method_rows": []
+    },
+    {
+      "name": "managed-queue",
+      "status": "PASS",
+      "seconds": "63.0285",
+      "qt_method_rows": [
+        {
+          "status": "PASS",
+          "name": "ManagedQueueTests::initTestCase()"
+        },
+        {
+          "status": "PASS",
+          "name": "ManagedQueueTests::ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(single)"
+        },
+        {
+          "status": "PASS",
+          "name": "ManagedQueueTests::ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(multi)"
+        },
+        {
+          "status": "PASS",
+          "name": "ManagedQueueTests::rawScrapeTerminalUsesSameAdmissionRingAndWithdrawsOnLoss()"
+        },
+        {
+          "status": "PASS",
+          "name": "ManagedQueueTests::actualOwnedTrackerScrapeReplyAndErrorReachRetainedRawSource()"
+        },
+        {
+          "status": "PASS",
+          "name": "ManagedQueueTests::actualAnnounceResponseSurvivesScrapeErrorWithoutGrantingConfiguredPermission()"
+        },
+        {
+          "status": "PASS",
+          "name": "ManagedQueueTests::trackerResponseLifetimeRetainsAcrossAdmissionsAndLossCannotResetToInitialError()"
+        },
+        {
+          "status": "PASS",
+          "name": "ManagedQueueTests::actualObserverQueueHasBoundedNonblockingProducerAndWorkerOnlyDrain()"
+        },
+        {
+          "status": "PASS",
+          "name": "ManagedQueueTests::actualProviderLifecycleAndPayloadSendSmoothingReti..."
+        }
+      ]
+    },
+    {
+      "name": "mainline-dht",
+      "status": "PASS",
+      "seconds": "124.714",
+      "qt_method_rows": [
+        {
+          "status": "PASS",
+          "name": "MainlineDhtTests::initTestCase()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineDhtTests::queuedScrapeUsesActualLiveNodesExplicitDialectAndNeverAnnounces()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineDhtTests::heldScrapeCancellationCannotPublishIntoSameHashFreshRound()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineDhtTests::savedQueuedAuthorityReadsNoPayloadAndRefusesOtherConsumers()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineDhtTests::unissuedScrapeCancellationReclaimsWithoutLosingCloseFence()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineDhtTests::completedWireRoundsReclaimBeyondSixtyFourAndUnreadResultsStayBounded()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineDhtTests::cancelledHeldAndErrorTimeoutProbesRequireActualTerminalConsumption()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineDhtTests::activeScrapeAuthorityBindsRealStorageFreshPolicyAndAdmissionWithoutPayloadEffects()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineDhtTests::queuedSchedulingAndPositivePublicationAreScopeBoundWithoutInventedExpiry()"
+        }
+      ]
+    },
+    {
+      "name": "mainline-original-identity",
+      "status": "PASS",
+      "seconds": "0.0575589",
+      "qt_method_rows": [
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityTests::initTestCase()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityTests::absentSourceNeverCreatesOrFallsBackToInventedBackup()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityTests::importedBytesAndQualifiedFirstFreeSlotsStaySeparateFromWireAuthority()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityTests::originalDirectoryAndRestorePreferenceComeFromQualifiedSettings()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityTests::originalZeroRootRemainsAParsedSourceNotAnLtWireGuarantee()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityTests::malformedAndUnsafeSourcesAreRefusedWithoutOriginalFallbackWrite(empty)"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityTests::malformedAndUnsafeSourcesAreRefusedWithoutOriginalFallbackWrite(missing-key)"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityTests::malformedAndUnsafeSourcesAreRefusedWithoutOriginalFallbackWrite(early-overlong-candidate)"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityTests::malformedAnd..."
+        }
+      ]
+    },
+    {
+      "name": "mainline-original-wire-identity",
+      "status": "PASS",
+      "seconds": "5.65802",
+      "qt_method_rows": [
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineWireTests::initTestCase()"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineWireTests::exactOriginalWireIdentity(v4-arbitrary)"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineWireTests::exactOriginalWireIdentity(v4-zero)"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineWireTests::exactOriginalWireIdentity(v6-arbitrary)"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineWireTests::exactOriginalWireIdentity(v6-zero)"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineWireTests::changedHeldSourceRetiresActualOriginalNodeWithoutFallback()"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineWireTests::currentSourceAndOneSocketPerFamilyAreRequiredBeforeConstruction()"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineWireTests::twoFamiliesShareOriginalSlotZeroWithoutSharingRoutingAuthority(same-arbitrary-id)"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineWireTests::twoFamiliesShareOriginalSlotZeroWithoutSharingRoutingAuthority(same-zero-id)"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlin..."
+        }
+      ]
+    },
+    {
+      "name": "mainline-single-tracker-owner",
+      "status": "PASS",
+      "seconds": "156.34",
+      "qt_method_rows": [
+        {
+          "status": "PASS",
+          "name": "MainlineSingleTrackerOwnerTests::initTestCase()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleTrackerOwnerTests::configuredCandidateRequiresSameFullSubjectUrlPolicyAndRealResponseOwner()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleTrackerOwnerTests::retainedOriginalLeaseKeepsTheActualAdmittedTrackerScrapeCandidate()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleTrackerOwnerTests::actualFailedUdpResponseAllowsScrapeWhileHealthyResponseSuppressesIt()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleTrackerOwnerTests::cleanupTestCase()"
+        }
+      ]
+    },
+    {
+      "name": "profile-lease-retention",
+      "status": "PASS",
+      "seconds": "0.0295815",
+      "qt_method_rows": [
+        {
+          "status": "PASS",
+          "name": "ProfileLeaseRetentionTests::initTestCase()"
+        },
+        {
+          "status": "PASS",
+          "name": "ProfileLeaseRetentionTests::retainedAliasesKeepActualJavaPosixExclusionUntilLastClose()"
+        },
+        {
+          "status": "PASS",
+          "name": "ProfileLeaseRetentionTests::rejectedIndependentAcquisitionDoesNotReleaseRetainedOFD()"
+        },
+        {
+          "status": "PASS",
+          "name": "ProfileLeaseRetentionTests::onlyGenuineRetainedAliasesShareTheAcquiredLineageAcrossMoves()"
+        },
+        {
+          "status": "PASS",
+          "name": "ProfileLeaseRetentionTests::sameDirectoryWithAReplacedLockCannotClaimTheOldOfdLineage()"
+        },
+        {
+          "status": "PASS",
+          "name": "ProfileLeaseRetentionTests::replacedLockNameCannotProduceNewAuthority()"
+        },
+        {
+          "status": "PASS",
+          "name": "ProfileLeaseRetentionTests::cleanupTestCase()"
+        }
+      ]
+    },
+    {
+      "name": "mainline-original-host-identity",
+      "status": "PASS",
+      "seconds": "13.0842",
+      "qt_method_rows": [
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineHostTests::initTestCase()"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineHostTests::actualNormalHostLoadsOriginalRootBeforeItsOneOwnerStarts(ipv4-original-root)"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineHostTests::actualNormalHostLoadsOriginalRootBeforeItsOneOwnerStarts(dual-original-same-slot-zero)"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineHostTests::actualDefaultOwnerCreatesRootBindsGenuineRouteAndRetires(joined-default-route)"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineHostTests::actualDefaultOwnerCreatesRootBindsGenuineRouteAndRetires(changed-original-settings-withdraw)"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineHostTests::defaultOwnerRefusesChangedSourceBeforeMissingRootPublication()"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineHostTests::malformedOriginalIsReportedWithoutDisablingPayloadOwner()"
+        },
+        {
+          "status": "PASS",
+          "name": "OriginalMainlineHostTests::missingOriginalIsCreatedOnceByTheRealH..."
+        }
+      ]
+    },
+    {
+      "name": "mainline-original-identity-create",
+      "status": "PASS",
+      "seconds": "0.0818637",
+      "qt_method_rows": [
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityCreateTests::initTestCase()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityCreateTests::actualRandomCreationReturnsFreshReaderAndNeverChangesOtherFiles()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityCreateTests::privateModeNormalizesOnlyTheNewOwnedInodeUnderStrictUmask()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityCreateTests::interruptedShortRandomAndZeroDistributionHaveNoInventedExclusion()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityCreateTests::disabledMissingDirectoriesAndRandomFailureHaveNoPublication()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityCreateTests::existingPrimaryKindsAreNeverReplaced(0)"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityCreateTests::existingPrimaryKindsAreNeverReplaced(1)"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityCreateTests::existingPrimaryKindsAreNeverReplaced(2)"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentityCreateTests::existingPrimaryKindsAreNeverReplaced(3)"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineIdentit..."
+        }
+      ]
+    },
+    {
+      "name": "mainline-single-udp",
+      "status": "PASS",
+      "seconds": "110.775",
+      "qt_method_rows": [
+        {
+          "status": "PASS",
+          "name": "MainlineSingleUdpTests::initTestCase()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleUdpTests::canonicalWirePreservesOriginalSignedCountsAndDeclinesAmbiguousShapes()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleUdpTests::ownedPendingRequestRetainsPriorResponseButCannotGrantFromConstructorOrLoss()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleUdpTests::routeAndSavedSettingsNeverGuessDnsProxyVersionOrTrackerOverrides()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleUdpTests::actualWireCancellationFreshAuthorizationMalformedAndDeadlineAreIndependent()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleUdpTests::actualNumericIpv6RoundUsesOnlyTheExplicitIpv6Socket()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleUdpTests::neverAdmittedSavedQueuedUsesActualRegularUdpAndLateReplyCannotGrant()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleUdpTests::cleanupTestCase()"
+        }
+      ]
+    },
+    {
+      "name": "mainline-bind-plan",
+      "status": "PASS",
+      "seconds": "0.0336095",
+      "qt_method_rows": []
+    },
+    {
+      "name": "provider-mainline-routing-runtime-inputs",
+      "status": "PASS",
+      "seconds": "39.6275",
+      "qt_method_rows": []
+    },
+    {
+      "name": "provider-mainline-routing-runtime-deployment",
+      "status": "PASS",
+      "seconds": "1.72406",
+      "qt_method_rows": []
+    },
+    {
+      "name": "provider-mainline-routing-reject-foreign-identity",
+      "status": "PASS",
+      "seconds": "0.13094",
+      "qt_method_rows": []
+    },
+    {
+      "name": "provider-mainline-routing-reject-foreign-tracker",
+      "status": "PASS",
+      "seconds": "0.168869",
+      "qt_method_rows": []
+    },
+    {
+      "name": "provider-mainline-routing-reject-foreign-routing",
+      "status": "PASS",
+      "seconds": "0.212031",
+      "qt_method_rows": []
+    },
+    {
+      "name": "mainline-single-http",
+      "status": "PASS",
+      "seconds": "143.423",
+      "qt_method_rows": [
+        {
+          "status": "PASS",
+          "name": "MainlineSingleHttpTests::initTestCase()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleHttpTests::originalUrlMappingAndRoutePermissions()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleHttpTests::sourceBodyMissingFailureNarrowingAndIntervals()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleHttpTests::heldSettingsAreStrictAndLow32OriginalBooleans()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleHttpTests::actualHostnameHttpChunkedAndCancellationReuse()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleHttpTests::dnsProposalRequiresFreshOwnerPermissionBeforeSocket()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleHttpTests::neverAdmittedSavedHttpFailureUsesSameMainlineConsumerWithoutPayloadAccess()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleHttpTests::originalMinimumFailureAndSingleOnlyDialectAreSourceDerived()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleHttpTests::awaitingOwnerDeadlineCannotManufactureNetworkFailure()"
+        },
+        {
+          "status": "PASS",
+          "name": "MainlineSingleHttpTests::gzipMemberBound..."
+        }
+      ]
+    }
+  ],
+  "tests_xml": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/qualification/runs/san-r4/tests.xml",
+  "tests_xml_sha256": "a7969c8f8ad53772a59a9001889d39e135f56d02eeb967f383ddca1bd6f40453",
+  "images_after": {
+    "biglybtc-mainline-identity-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-identity-tests",
+      "sha256": "7ea9f2a10a6ded16867b4e0b9f9484265b6a54f0b7eaf0307c09638f312e65f1",
+      "bytes": 6386952
+    },
+    "biglybtc-mainline-original-wire-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-original-wire-tests",
+      "sha256": "3b63b861cd65f9faee4bebc17316cb2099e51ad96591e6ce88ea61f543f3ede7",
+      "bytes": 115558048
+    },
+    "biglybtc-mainline-single-tracker-owner-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-tracker-owner-tests",
+      "sha256": "8ed534b05727759ece4f5542121d6d3767756f81ff88b74c48afa8bdb4627851",
+      "bytes": 117745928
+    },
+    "biglybtc-mainline-dht-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-dht-tests",
+      "sha256": "38c898a88e565ddb0b583d91db77a886bb56dc7ba20518ac2793c2e9b1b35c36",
+      "bytes": 123178320
+    },
+    "biglybtc-tor-owned-child-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/services/tor_control/biglybtc-tor-owned-child-tests",
+      "sha256": "35269a26621360addfef8b69d768364bd0ce28e234c2ed9852aa51d5c6df15fa",
+      "bytes": 8479976
+    },
+    "biglybtc-managed-queue-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-managed-queue-tests",
+      "sha256": "803fd53890e7efa481eb05b26645b5ed79ed9dcef2b32c463e2533ff27347ead",
+      "bytes": 121701400
+    },
+    "biglybtc-persistent-session-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-persistent-session-tests",
+      "sha256": "6df13ffae728fa81f042bd546e4d03d6761da63027d594de286163e3a124330f",
+      "bytes": 115743576
+    },
+    "biglybtc-mainline-identity-create-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-identity-create-tests",
+      "sha256": "dd71227bef24e55103a799d7034554bf10da57d6d38e806520ec84893a8ac3af",
+      "bytes": 6636264
+    },
+    "biglybtc-mainline-original-host-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-original-host-tests",
+      "sha256": "c45ae9d96c29b2649b95319a5bed46a6bccd310669a3ecb9e983879a6990cbe6",
+      "bytes": 202807688
+    },
+    "biglybtc-mainline-bind-plan-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-bind-plan-tests",
+      "sha256": "290e8d58e0be10fb229fd153b59357a0788dbde37dc8eab11992671395826575",
+      "bytes": 7108416
+    },
+    "biglybtc-profile-lease-retention-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-profile-lease-retention-tests",
+      "sha256": "73b48bf73d510100c22d2577972ec7064f3ee3957835b001416c617976806afb",
+      "bytes": 4003144
+    },
+    "biglybtc-mainline-single-udp-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-udp-tests",
+      "sha256": "a300d79b5b9df2013542899e37d0a04b47cfb1be1d08c268dd547287c43f839d",
+      "bytes": 118360712
+    },
+    "biglybtc-network-policy-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-network-policy-tests",
+      "sha256": "61efeb9d6859c5afe9ca5735392bbc66fbcf4eb92a11060d4c120d9b51bd9b60",
+      "bytes": 10334632
+    },
+    "biglybtc-mainline-single-http-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-http-tests",
+      "sha256": "bc506cfed83fdb69d2fa9f3e152c576a35271dd3ba2ce8f5c577e1ac66b2c9d7",
+      "bytes": 118869160
+    },
+    "biglybtc-provider-mainline-routing-runtime-deployment-driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-provider-mainline-routing-runtime-deployment-driver",
+      "sha256": "e3c8896691b3fc061080cdd2745295247bc5fa983202f99261e1e4c432dbc1f0",
+      "bytes": 888952
+    },
+    "biglybtc-mainline-routing-interposition-driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-routing-interposition-driver",
+      "sha256": "51c335ad5a8430a8fa30887cca880f767b285db45e26a186a534d4724d6bea60",
+      "bytes": 485472
+    },
+    "BiglyBTC": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/app/BiglyBTC",
+      "sha256": "7b571dda24b54738d036a03660ee536020e2202481bd1f99dc5b1841ccb7e317",
+      "bytes": 281786120
+    },
+    "BiglyBTC-headless": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/app/BiglyBTC-headless",
+      "sha256": "a188dd8fa8d03287bf7f762af8651e6fa993fb8a10cbda9dae5d6f46ebec5c5b",
+      "bytes": 112587376
+    },
+    "biglybtc-preview-smoke": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/biglybtc-preview-smoke",
+      "sha256": "9b278d2e4fdcd762c304ca017981eac17e70365d87b9bd6f6dbc89d955c8cb32",
+      "bytes": 285218128
+    },
+    "biglybtc-runtime-binding-driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-runtime-binding-driver",
+      "sha256": "1635ea1cd29206a00b7f17bbf64831e9f6bc486a40db027e07898398c309d949",
+      "bytes": 112518576
+    },
+    "biglybtc-runtime-negative-driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-runtime-negative-driver",
+      "sha256": "6d0bfff180581b292ddb812fe7fd5b7b75caab69b28c68064bf8fbfd5e3bb6e9",
+      "bytes": 112509312
+    },
+    "biglybtc-runtime-interposition-driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-runtime-interposition-driver",
+      "sha256": "195b3e4f51ba93fa91c89b602cf282531254a112b71b0daff02b7881a05d8eed",
+      "bytes": 112473960
+    },
+    "biglybtc-runtime-interposer": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/libbiglybtc-runtime-interposer.so",
+      "sha256": "569f7f5fb4a411b16292b6008285af64a0102fefbfe6c780306b4b1fd8e16a2a",
+      "bytes": 17336
+    },
+    "biglybtc-routing-identity-foreign-marker": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/libbiglybtc-routing-identity-foreign-marker.so",
+      "sha256": "830682ed7f1d182cf4123d0e56a49e1f7937cbb1497645f83b66f31ecfad4e58",
+      "bytes": 17024
+    },
+    "biglybtc-routing-tracker-foreign-marker": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/libbiglybtc-routing-tracker-foreign-marker.so",
+      "sha256": "cdfb99c3e5b2c9e5e2984e94b556b1671e8e9c4eb9e6a7c7bd6ae2879cc74c88",
+      "bytes": 17024
+    },
+    "biglybtc-routing-routing-foreign-marker": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/libbiglybtc-routing-routing-foreign-marker.so",
+      "sha256": "014bb647bdeb52dd660a582b8430f60808b3fe8357b0363a87e814aca6caf0b2",
+      "bytes": 17024
+    }
+  },
+  "source_unchanged": true,
+  "snapshot_sha256": {
+    "source-before.json": "8d91ad365c6376cd61773e901d139ecb1fb9b4ed8e4b55cd694e9a0763c4a5da",
+    "source-after.json": "8d91ad365c6376cd61773e901d139ecb1fb9b4ed8e4b55cd694e9a0763c4a5da",
+    "tools-before.json": "01082021db364f286b5a53fcba18a1c21ca02d6fffe52843ff9bcfb1aa41529f",
+    "tools-after.json": "01082021db364f286b5a53fcba18a1c21ca02d6fffe52843ff9bcfb1aa41529f",
+    "dependencies-before.json": "1ce4cdf7ea4d7a3b8f4bf45c2d8c8b007bfc2dd4aba226b1f765103c6eb122e9",
+    "dependencies-after.json": "1ce4cdf7ea4d7a3b8f4bf45c2d8c8b007bfc2dd4aba226b1f765103c6eb122e9",
+    "provider-before.json": "690399c8b5407bef67d9ead5dc4d82194dd6ad226332158b8b8e001ff36da02f",
+    "provider-after.json": "690399c8b5407bef67d9ead5dc4d82194dd6ad226332158b8b8e001ff36da02f",
+    "runtime-images-before.json": "ae54e631a7105589cc54dad7ae9a0a72086b7f73c9ece840c18d9e8e4d4348ed",
+    "runtime-images-after.json": "ae54e631a7105589cc54dad7ae9a0a72086b7f73c9ece840c18d9e8e4d4348ed"
+  },
+  "commands_sha256": "036005d8ef3e8c9a8a7e8247909ca9a941cf6c2a46d4c8c797090a87d372cb2b",
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  }
+}

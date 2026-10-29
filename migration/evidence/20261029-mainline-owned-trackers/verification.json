@@ -1,0 +1,68 @@
+{
+  "status": "PASS_BOUNDED_OWNED_TRACKERS_AND_PRIVATE_DIST",
+  "source_commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC.git",
+  "actual_suites": {
+    "gcc": 19,
+    "clang": 16,
+    "san": 19
+  },
+  "qt_method_rows": {
+    "gcc": 103,
+    "clang": 80,
+    "san": 103
+  },
+  "clang_compile_only": [
+    "mainline-single-tracker-owner",
+    "mainline-single-udp",
+    "mainline-single-http"
+  ],
+  "private_checks": 3,
+  "private_manifest_sha256": "60d71fd3b2f991523f7ae6a0a399663dcfabf7b796ed4050a707e65b160ea83c",
+  "private_leaves": 119,
+  "offline_real_tor": [
+    "gcc",
+    "san"
+  ],
+  "original_udp_projection": {
+    "source_commit": "6315055985dbd2bb6a0ebac760ff49326363fcc0",
+    "cases": 13,
+    "scalars": 78,
+    "historical_subject_only": true
+  },
+  "historical_suite_passes_pooled": false,
+  "previous_preview_retained": false,
+  "shipping_qualified": false,
+  "full_migration_complete": false,
+  "artifacts_sha256": {
+    "local/gcc-result.json": "6ead41b9364bc795dbedf9de897aa2dbe65c8bd0083c0ca94da44041b58f0931",
+    "local/gcc-commands.json": "5b5e3477622fd58587b5a6970d3d270a2f7e09508289db8903d598146dd0a08c",
+    "local/gcc-tests.xml": "b16c3fb22841dc89c77d93c73b93a05fc7b6e9ec7d222724ee6679ae14340c36",
+    "local/clang-result.json": "2df3e62da1b5feb6cd4c1de3ba33f885c236a47f01b483d773afdaa14ea1295d",
+    "local/clang-commands.json": "1087728ab9a017e1f9dde179d72c51a49851e31f9ecacfb0f906da85156fbee8",
+    "local/clang-tests.xml": "4a533e4c024f558d26a933b228e72ad47bee86c416737215f8f8b882499459f7",
+    "local/san-result.json": "14b0fa2084733e545dba7445e793f3de117cad68d196c3459f783bf82c5faec1",
+    "local/san-commands.json": "036005d8ef3e8c9a8a7e8247909ca9a941cf6c2a46d4c8c797090a87d372cb2b",
+    "local/san-tests.xml": "a7969c8f8ad53772a59a9001889d39e135f56d02eeb967f383ddca1bd6f40453",
+    "local/tor-gcc-result.json": "64046bd2897a76cacda2ff93d4c3e1cac07f76eb81065258ae544c78d1ccafac",
+    "local/tor-san-result.json": "6820ac7629f81484be5fd4c644050148b7bf7040fa6c73f107bf0dd8f6110ab3",
+    "local/private-result.json": "75e55d38368f7c7e70770f62bbd784df39c6a91e61614dc8a2c5c6b0c2579eb6",
+    "local/private-commands.json": "d3443f480447900c4c05b496f7aa6d3e7de5b883af83232295c46d3360f2abde",
+    "local/private-generated-sample.json": "85819cfbd42ffc50bac4bdedb2bbf48489c4fed5a82129b6c1eebb7946ee6e02",
+    "local/private-private-loaders.json": "2474c858d65e1141aa523cc5331431ef503171da3aa09677af30ae009a139a7b",
+    "local/private-copied-images.json": "7593503d7ba4b3c7e5560cdcc3642a24a11c8c7a12a5aab644b0fe91406b571c",
+    "local/private-biglybtc-mainline-original-wire-tests.xml": "87ef0184b28b6b1d73bde4ed05d71fc45599f8406831fc1fb3847242840e2427",
+    "local/private-biglybtc-preview-smoke.xml": "7b3ab3016088af0299af8f5c8f9518e164500642221f68669ee4f252c3ae21a0",
+    "local/private-biglybtc-mainline-single-http-tests.xml": "00e143de865f799ae94ee37eebb1a73f3be146fb44a88fb6d3c9f53638574080",
+    "local/promotion.json": "b1abcdd7a67e2329e6ed001a1b80ba88aa7a563fec409c060932925290e8c9e8",
+    "local/source-adoption.json": "7d86d01291cd706666dbfa2a2346228ac8b74ae4724c483a812121529e158dd7",
+    "local/provider-review.json": "2b79ded9b226be11ddffb0590168afb0aa2cff89fa4e9a7ec310677e9ab6c5a3",
+    "local/provider-private-approval.json": "b133a344ef4ed018fd6ebce86ce6590721a45f90a1bd364ef2f6f3a66baea868",
+    "local/failed-private-r4.json": "38c8c14e664d3e55efca657e00d23542d7d673ca16e48b0a9f31d061105b20ce",
+    "local/failed-private-r4b.json": "16831c5c45dc9bf0cb020bd17ebe39d29e0aaf82bd477dd990839f0844ae91d2",
+    "local/normal-empty-profile-open.json": "97f96869595196525793266fcbd56ded3f2acbf4eadeaa843b2b96284775d167",
+    "provider/source-build-record.json": "623778fc3a5b25144e842a39154dab4cd107e4f115bc6474dd973f67888582d3",
+    "provider/provider-r2-patch-info.json": "aba5dd8f4192d60898be37a06b41c3e3f30c482a6e493eb09fc769645e230b8a",
+    "provider/libtorrent-2.0.12-biglybtc-provider-r2.patch": "1667cf84508a5fddccb6d6a7bc546454e6707eabd7df9766738016f1ed02cf8e"
+  }
+}

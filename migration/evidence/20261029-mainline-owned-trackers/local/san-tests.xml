@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="19"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="707"
+	timestamp="2026-10-29T02:31:18"
+	>
+	<testcase name="owned-tor-child-lifecycle" classname="owned-tor-child-lifecycle" time="5.47378" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;loopback;owned-process;qt"/>
+		</properties>
+		<system-out>********* Start testing of OwnedTorChildTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedTorChildTests::initTestCase()
+PASS   : OwnedTorChildTests::actualOwnedChildAuthenticatesStopsJoinsAndRestartsInFreshDirectory()
+PASS   : OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(deadline-no-discovery)
+PASS   : OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(cancel-while-discovering)
+PASS   : OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(owned-kill-after-term-refusal)
+PASS   : OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(unexpected-exit-after-ready)
+PASS   : OwnedTorChildTests::unsafeDiscoveryCannotAuthenticateOrTouchOutsider(symlink-cookie)
+PASS   : OwnedTorChildTests::unsafeDiscoveryCannotAuthenticateOrTouchOutsider(hardlink-cookie)
+PASS   : OwnedTorChildTests::unsafeDiscoveryCannotAuthenticateOrTouch...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="persistent-native-peer-session" classname="persistent-native-peer-session" time="42.827" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;loopback;statistics;unit"/>
+		</properties>
+		<system-out>********* Start testing of PersistentSessionTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : PersistentSessionTests::initTestCase()
+PASS   : PersistentSessionTests::lazyOwnerAndPermanentCloseNeverFabricateAZeroSample()
+PASS   : PersistentSessionTests::foreignThreadCannotPollOrCloseTheOwner()
+PASS   : PersistentSessionTests::sequentialMixedLayoutsAndRepeatedHashUseOneAbsoluteEpoch()
+PASS   : PersistentSessionTests::activeCancellationRetiresBeforeCallbackStorageUnwindsAndCanRetrySameHash()
+PASS   : PersistentSessionTests::optionalThrowingSinksDoNotDisableEssentialRetentionOrSafeTransfer()
+PASS   : PersistentSessionTests::preparationFailureCannotExposeEarlierSettlementOrEraseAbsoluteTotals()
+PASS   : PersistentSessionTests::foreignProfileIsRejectedBeforeCompatibleCacheOrPayloadAccess()
+PASS   : PersistentSessionTests::throwingProgressRetiresAnAlreadyRegisteredTorrentBeforeRet...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="network-policy" classname="network-policy" time="0.052305" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>33 network-policy families, 501 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="managed-queue" classname="managed-queue" time="63.0285" status="run">
+		<properties>
+			<property name="cmake_labels" value="queue;runtime-bound;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedQueueTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedQueueTests::initTestCase()
+PASS   : ManagedQueueTests::ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(single)
+PASS   : ManagedQueueTests::ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(multi)
+PASS   : ManagedQueueTests::rawScrapeTerminalUsesSameAdmissionRingAndWithdrawsOnLoss()
+PASS   : ManagedQueueTests::actualOwnedTrackerScrapeReplyAndErrorReachRetainedRawSource()
+PASS   : ManagedQueueTests::actualAnnounceResponseSurvivesScrapeErrorWithoutGrantingConfiguredPermission()
+PASS   : ManagedQueueTests::trackerResponseLifetimeRetainsAcrossAdmissionsAndLossCannotResetToInitialError()
+PASS   : ManagedQueueTests::actualObserverQueueHasBoundedNonblockingProducerAndWorkerOnlyDrain()
+PASS   : ManagedQueueTests::actualProviderLifecycleAndPayloadSendSmoothingReti...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="mainline-dht" classname="mainline-dht" time="124.714" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;network;owned"/>
+		</properties>
+		<system-out>********* Start testing of MainlineDhtTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineDhtTests::initTestCase()
+PASS   : MainlineDhtTests::queuedScrapeUsesActualLiveNodesExplicitDialectAndNeverAnnounces()
+PASS   : MainlineDhtTests::heldScrapeCancellationCannotPublishIntoSameHashFreshRound()
+PASS   : MainlineDhtTests::savedQueuedAuthorityReadsNoPayloadAndRefusesOtherConsumers()
+PASS   : MainlineDhtTests::unissuedScrapeCancellationReclaimsWithoutLosingCloseFence()
+PASS   : MainlineDhtTests::completedWireRoundsReclaimBeyondSixtyFourAndUnreadResultsStayBounded()
+PASS   : MainlineDhtTests::cancelledHeldAndErrorTimeoutProbesRequireActualTerminalConsumption()
+PASS   : MainlineDhtTests::activeScrapeAuthorityBindsRealStorageFreshPolicyAndAdmissionWithoutPayloadEffects()
+PASS   : MainlineDhtTests::queuedSchedulingAndPositivePublicationAreScopeBoundWithoutInventedExpiry()
+PAS...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="mainline-original-identity" classname="mainline-original-identity" time="0.0575589" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;read-only;storage;unit"/>
+		</properties>
+		<system-out>********* Start testing of MainlineIdentityTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineIdentityTests::initTestCase()
+PASS   : MainlineIdentityTests::absentSourceNeverCreatesOrFallsBackToInventedBackup()
+PASS   : MainlineIdentityTests::importedBytesAndQualifiedFirstFreeSlotsStaySeparateFromWireAuthority()
+PASS   : MainlineIdentityTests::originalDirectoryAndRestorePreferenceComeFromQualifiedSettings()
+PASS   : MainlineIdentityTests::originalZeroRootRemainsAParsedSourceNotAnLtWireGuarantee()
+PASS   : MainlineIdentityTests::malformedAndUnsafeSourcesAreRefusedWithoutOriginalFallbackWrite(empty)
+PASS   : MainlineIdentityTests::malformedAndUnsafeSourcesAreRefusedWithoutOriginalFallbackWrite(missing-key)
+PASS   : MainlineIdentityTests::malformedAndUnsafeSourcesAreRefusedWithoutOriginalFallbackWrite(early-overlong-candidate)
+PASS   : MainlineIdentityTests::malformedAnd...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="mainline-original-wire-identity" classname="mainline-original-wire-identity" time="5.65802" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;network;optional-provider;owned"/>
+		</properties>
+		<system-out>********* Start testing of OriginalMainlineWireTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OriginalMainlineWireTests::initTestCase()
+PASS   : OriginalMainlineWireTests::exactOriginalWireIdentity(v4-arbitrary)
+PASS   : OriginalMainlineWireTests::exactOriginalWireIdentity(v4-zero)
+PASS   : OriginalMainlineWireTests::exactOriginalWireIdentity(v6-arbitrary)
+PASS   : OriginalMainlineWireTests::exactOriginalWireIdentity(v6-zero)
+PASS   : OriginalMainlineWireTests::changedHeldSourceRetiresActualOriginalNodeWithoutFallback()
+PASS   : OriginalMainlineWireTests::currentSourceAndOneSocketPerFamilyAreRequiredBeforeConstruction()
+PASS   : OriginalMainlineWireTests::twoFamiliesShareOriginalSlotZeroWithoutSharingRoutingAuthority(same-arbitrary-id)
+PASS   : OriginalMainlineWireTests::twoFamiliesShareOriginalSlotZeroWithoutSharingRoutingAuthority(same-zero-id)
+PASS   : OriginalMainlin...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="mainline-single-tracker-owner" classname="mainline-single-tracker-owner" time="156.34" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;network;owned;slow"/>
+		</properties>
+		<system-out>********* Start testing of MainlineSingleTrackerOwnerTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleTrackerOwnerTests::initTestCase()
+PASS   : MainlineSingleTrackerOwnerTests::configuredCandidateRequiresSameFullSubjectUrlPolicyAndRealResponseOwner()
+PASS   : MainlineSingleTrackerOwnerTests::retainedOriginalLeaseKeepsTheActualAdmittedTrackerScrapeCandidate()
+QINFO  : MainlineSingleTrackerOwnerTests::actualFailedUdpResponseAllowsScrapeWhileHealthyResponseSuppressesIt() actual configured UDP: failed announces=3 scrapes=1, healthy announces=1 scrapes=1, DHT=1/0
+PASS   : MainlineSingleTrackerOwnerTests::actualFailedUdpResponseAllowsScrapeWhileHealthyResponseSuppressesIt()
+PASS   : MainlineSingleTrackerOwnerTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 156164ms
+********* Finished testing of MainlineSingleTrackerOwnerTests ********...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="profile-lease-retention" classname="profile-lease-retention" time="0.0295815" status="run">
+		<properties>
+			<property name="cmake_labels" value="locking;storage;unit"/>
+		</properties>
+		<system-out>********* Start testing of ProfileLeaseRetentionTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ProfileLeaseRetentionTests::initTestCase()
+PASS   : ProfileLeaseRetentionTests::retainedAliasesKeepActualJavaPosixExclusionUntilLastClose()
+PASS   : ProfileLeaseRetentionTests::rejectedIndependentAcquisitionDoesNotReleaseRetainedOFD()
+PASS   : ProfileLeaseRetentionTests::onlyGenuineRetainedAliasesShareTheAcquiredLineageAcrossMoves()
+PASS   : ProfileLeaseRetentionTests::sameDirectoryWithAReplacedLockCannotClaimTheOldOfdLineage()
+PASS   : ProfileLeaseRetentionTests::replacedLockNameCannotProduceNewAuthority()
+PASS   : ProfileLeaseRetentionTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 3ms
+********* Finished testing of ProfileLeaseRetentionTests *********
+</system-out>
+	</testcase>
+	<testcase name="mainline-original-host-identity" classname="mainline-original-host-identity" time="13.0842" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;network;optional-provider;owned;ui"/>
+		</properties>
+		<system-out>********* Start testing of OriginalMainlineHostTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OriginalMainlineHostTests::initTestCase()
+PASS   : OriginalMainlineHostTests::actualNormalHostLoadsOriginalRootBeforeItsOneOwnerStarts(ipv4-original-root)
+PASS   : OriginalMainlineHostTests::actualNormalHostLoadsOriginalRootBeforeItsOneOwnerStarts(dual-original-same-slot-zero)
+PASS   : OriginalMainlineHostTests::actualDefaultOwnerCreatesRootBindsGenuineRouteAndRetires(joined-default-route)
+PASS   : OriginalMainlineHostTests::actualDefaultOwnerCreatesRootBindsGenuineRouteAndRetires(changed-original-settings-withdraw)
+PASS   : OriginalMainlineHostTests::defaultOwnerRefusesChangedSourceBeforeMissingRootPublication()
+PASS   : OriginalMainlineHostTests::malformedOriginalIsReportedWithoutDisablingPayloadOwner()
+PASS   : OriginalMainlineHostTests::missingOriginalIsCreatedOnceByTheRealH...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="mainline-original-identity-create" classname="mainline-original-identity-create" time="0.0818637" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;owned;storage;unit;writeback"/>
+		</properties>
+		<system-out>********* Start testing of MainlineIdentityCreateTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineIdentityCreateTests::initTestCase()
+PASS   : MainlineIdentityCreateTests::actualRandomCreationReturnsFreshReaderAndNeverChangesOtherFiles()
+PASS   : MainlineIdentityCreateTests::privateModeNormalizesOnlyTheNewOwnedInodeUnderStrictUmask()
+PASS   : MainlineIdentityCreateTests::interruptedShortRandomAndZeroDistributionHaveNoInventedExclusion()
+PASS   : MainlineIdentityCreateTests::disabledMissingDirectoriesAndRandomFailureHaveNoPublication()
+PASS   : MainlineIdentityCreateTests::existingPrimaryKindsAreNeverReplaced(0)
+PASS   : MainlineIdentityCreateTests::existingPrimaryKindsAreNeverReplaced(1)
+PASS   : MainlineIdentityCreateTests::existingPrimaryKindsAreNeverReplaced(2)
+PASS   : MainlineIdentityCreateTests::existingPrimaryKindsAreNeverReplaced(3)
+PASS   : MainlineIdentit...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="mainline-single-udp" classname="mainline-single-udp" time="110.775" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;network;owned;slow"/>
+		</properties>
+		<system-out>********* Start testing of MainlineSingleUdpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleUdpTests::initTestCase()
+PASS   : MainlineSingleUdpTests::canonicalWirePreservesOriginalSignedCountsAndDeclinesAmbiguousShapes()
+PASS   : MainlineSingleUdpTests::ownedPendingRequestRetainsPriorResponseButCannotGrantFromConstructorOrLoss()
+PASS   : MainlineSingleUdpTests::routeAndSavedSettingsNeverGuessDnsProxyVersionOrTrackerOverrides()
+PASS   : MainlineSingleUdpTests::actualWireCancellationFreshAuthorizationMalformedAndDeadlineAreIndependent()
+PASS   : MainlineSingleUdpTests::actualNumericIpv6RoundUsesOnlyTheExplicitIpv6Socket()
+PASS   : MainlineSingleUdpTests::neverAdmittedSavedQueuedUsesActualRegularUdpAndLateReplyCannotGrant()
+PASS   : MainlineSingleUdpTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 110636ms
+********* Finished testin...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="mainline-bind-plan" classname="mainline-bind-plan" time="0.0336095" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;owned-profile;read-only;unit"/>
+		</properties>
+		<system-out>Mainline bind-plan deterministic cases passed
+</system-out>
+	</testcase>
+	<testcase name="provider-mainline-routing-runtime-inputs" classname="provider-mainline-routing-runtime-inputs" time="39.6275" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualified-provider;source-binding;unit"/>
+		</properties>
+		<system-out>......
+----------------------------------------------------------------------
+Ran 6 tests in 39.544s
+
+OK
+</system-out>
+	</testcase>
+	<testcase name="provider-mainline-routing-runtime-deployment" classname="provider-mainline-routing-runtime-deployment" time="1.72406" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualified-provider;runtime-binding;unit"/>
+		</properties>
+		<system-out>{"receipt": "/tmp/biglybtc-runtime-deploy-results-9lzwqnhf/result.json", "cases": 11, "mode": "mainline-routing"}
+</system-out>
+	</testcase>
+	<testcase name="provider-mainline-routing-reject-foreign-identity" classname="provider-mainline-routing-reject-foreign-identity" time="0.13094" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualified-provider;runtime-binding;unit"/>
+		</properties>
+		<system-out>genuine20=1 original23=0 foreign27_rejected=1 after_env_removed=1
+</system-out>
+	</testcase>
+	<testcase name="provider-mainline-routing-reject-foreign-tracker" classname="provider-mainline-routing-reject-foreign-tracker" time="0.168869" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualified-provider;runtime-binding;unit"/>
+		</properties>
+		<system-out>genuine20=1 original23=1 foreign27_rejected=1 after_env_removed=1
+</system-out>
+	</testcase>
+	<testcase name="provider-mainline-routing-reject-foreign-routing" classname="provider-mainline-routing-reject-foreign-routing" time="0.212031" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualified-provider;runtime-binding;unit"/>
+		</properties>
+		<system-out>genuine20=1 original23=1 foreign27_rejected=1 after_env_removed=1
+</system-out>
+	</testcase>
+	<testcase name="mainline-single-http" classname="mainline-single-http" time="143.423" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;network;owned;slow;tls"/>
+		</properties>
+		<system-out>********* Start testing of MainlineSingleHttpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleHttpTests::initTestCase()
+PASS   : MainlineSingleHttpTests::originalUrlMappingAndRoutePermissions()
+PASS   : MainlineSingleHttpTests::sourceBodyMissingFailureNarrowingAndIntervals()
+PASS   : MainlineSingleHttpTests::heldSettingsAreStrictAndLow32OriginalBooleans()
+PASS   : MainlineSingleHttpTests::actualHostnameHttpChunkedAndCancellationReuse()
+PASS   : MainlineSingleHttpTests::dnsProposalRequiresFreshOwnerPermissionBeforeSocket()
+PASS   : MainlineSingleHttpTests::neverAdmittedSavedHttpFailureUsesSameMainlineConsumerWithoutPayloadAccess()
+PASS   : MainlineSingleHttpTests::originalMinimumFailureAndSingleOnlyDialectAreSourceDerived()
+PASS   : MainlineSingleHttpTests::awaitingOwnerDeadlineCannotManufactureNetworkFailure()
+PASS   : MainlineSingleHttpTests::gzipMemberBound...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

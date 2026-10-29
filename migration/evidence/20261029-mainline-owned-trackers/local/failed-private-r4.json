@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "status": "FAIL",
+  "source_commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+  "gcc_result": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/qualification/runs/gcc-r4/result.json",
+  "gcc_result_sha256": "6ead41b9364bc795dbedf9de897aa2dbe65c8bd0083c0ca94da44041b58f0931",
+  "no_build": true,
+  "promotion_executed": false,
+  "real_tor_repeated": false,
+  "failure": "RuntimeError('Stale target graph; root must settle it before qualification')",
+  "commands_sha256": "8d1183fdfaca7346cb821f56be4f9af8e6c2061928e1d551d21289e50c77ba9a"
+}

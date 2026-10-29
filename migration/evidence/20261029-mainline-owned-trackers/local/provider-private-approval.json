@@ -1,0 +1,10 @@
+{
+  "status": "EXACT_PROVIDER27_APPROVED_FOR_PRIVATE_NATIVE_QUALIFICATION",
+  "source_record_sha256": "623778fc3a5b25144e842a39154dab4cd107e4f115bc6474dd973f67888582d3",
+  "runtime_manifest_sha256": "f746fd279755ea90f31e20b0c9131c46e5f0871c4aab3665f232975f98feb56e",
+  "review_sha256": "2b79ded9b226be11ddffb0590168afb0aa2cff89fa4e9a7ec310677e9ab6c5a3",
+  "artifact_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "artifact_bytes": 9198832,
+  "shipping_approved": false,
+  "causal_qualified": false
+}

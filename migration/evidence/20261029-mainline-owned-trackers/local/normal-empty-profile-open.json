@@ -1,0 +1,37 @@
+{
+  "status": "NORMAL_EMPTY_PROFILE_OPEN",
+  "pid": 2158789,
+  "profile": "/home/yurii/.bitlybtc",
+  "loopback_tcp_udp_port": 60481,
+  "empty_inventory": true,
+  "sample_torrents": false,
+  "private_images": [
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/bin/BiglyBTC",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/lib/BiglyBTC-plugin-SpeedScheduler.so",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6Core.so.6",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6DBus.so.6",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6Gui.so.6",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6Network.so.6",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6Svg.so.6",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6WaylandClient.so.6",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6Widgets.so.6",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libicudata.so.73",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libicui18n.so.73",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libicuuc.so.73",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/plugins/iconengines/libqsvgicon.so",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/plugins/platforms/libqwayland.so",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/plugins/platformthemes/libqgtk3.so",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/plugins/wayland-decoration-client/libadwaita.so",
+    "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/plugins/wayland-shell-integration/libxdg-shell.so"
+  ],
+  "observed_memory": {
+    "VmRSS": "119784 kB",
+    "VmSize": "1287988 kB",
+    "Threads": "11"
+  },
+  "manifest_sha256": "60d71fd3b2f991523f7ae6a0a399663dcfabf7b796ed4050a707e65b160ea83c",
+  "user_can_close_window": true,
+  "shutdown_not_yet_observed": true
+}

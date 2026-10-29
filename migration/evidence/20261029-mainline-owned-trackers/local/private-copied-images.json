@@ -1,0 +1,17 @@
+{
+  "biglybtc-mainline-original-wire-tests": {
+    "source": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-original-wire-tests",
+    "copy": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/tests/biglybtc-mainline-original-wire-tests",
+    "sha256": "6545fa64df83904db06f69fe4b677227f667a4dbfc412d2a1f89f7f15a0b0d84"
+  },
+  "biglybtc-preview-smoke": {
+    "source": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke",
+    "copy": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/tests/biglybtc-preview-smoke",
+    "sha256": "828a8c7373039f32e685e406c7870aad21921828dbf72997c83d5339a3ddaf12"
+  },
+  "biglybtc-mainline-single-http-tests": {
+    "source": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests",
+    "copy": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/tests/biglybtc-mainline-single-http-tests",
+    "sha256": "db5f2cad5f7ebc102d5ba6abc6f85cef318c22f55fa022d2e38691e24b5588c4"
+  }
+}

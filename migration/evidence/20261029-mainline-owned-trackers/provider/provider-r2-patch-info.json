@@ -1,0 +1,259 @@
+{
+  "schema": 1,
+  "status": "PATCH_APPLIED_AND_FULL_SOURCE_MAP_VERIFIED",
+  "upstream_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "upstream_repository": "https://github.com/arvidn/libtorrent.git",
+  "pristine_archive": {
+    "url": "https://archive.ubuntu.com/ubuntu/pool/universe/libt/libtorrent-rasterbar/libtorrent-rasterbar_2.0.12.orig.tar.xz",
+    "sha256": "fa0168f5c2b510105ce4e215f5863c80597112b99fc4f30514de2a6ea84da1b5",
+    "strip_components": 1,
+    "source_files": 1067
+  },
+  "commit_attribution": "Existing P01-02/gcc16-source-build.json and20261018-statistics-engine/source-audit.json record740a0b9. This reproduction verifies the exact public orig archive, not a newly available Git object/tree.",
+  "qualified_record_sha256": "623778fc3a5b25144e842a39154dab4cd107e4f115bc6474dd973f67888582d3",
+  "recorded_artifact_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "patch": {
+    "path": "libtorrent-2.0.12-biglybtc-provider-r2.patch",
+    "sha256": "1667cf84508a5fddccb6d6a7bc546454e6707eabd7df9766738016f1ed02cf8e",
+    "bytes": 172020
+  },
+  "changes": {
+    "modified": 30,
+    "added": 15,
+    "deleted": 0
+  },
+  "files": {
+    "include/libtorrent/aux_/biglybtc_mainline_identity.hpp": {
+      "before_sha256": null,
+      "after_sha256": "898490f87bfbaeb08699aa318389243e2d4b31fa26e07251a542e4c875974953"
+    },
+    "include/libtorrent/aux_/listen_socket_handle.hpp": {
+      "before_sha256": "c5abb731a6beeef4bfd5b27e33a0fd084ee06b0a45f1db7b075c3705588808f4",
+      "after_sha256": "0c425e80235da4512a8a5ffecce8c04d0c9100ae42f796496f065ea0199913c7"
+    },
+    "include/libtorrent/aux_/proxy_settings.hpp": {
+      "before_sha256": "e9c06a2dc2a2c486fcb928e98e5b71383c3468e710ed11bde19601a8e7658833",
+      "after_sha256": "b6266343e687aedeb5f468e48dafc0a4656b2293d8025af07cf9a7601ab913fe"
+    },
+    "include/libtorrent/aux_/session_impl.hpp": {
+      "before_sha256": "e6734b09b078a6ece0532286bef2272ca6e7c8787616cef94979f24479befc96",
+      "after_sha256": "b6770dcdbdf50aa4123e921ab8a5eeb1ebc7bbace89668384b9b0b5d0c752c68"
+    },
+    "include/libtorrent/biglybtc_mainline_identity.hpp": {
+      "before_sha256": null,
+      "after_sha256": "8096472003203b5ad240f429ae05d7236af3a9929aea87051fbdbde39b8371f2"
+    },
+    "include/libtorrent/biglybtc_mainline_port.hpp": {
+      "before_sha256": null,
+      "after_sha256": "5b4c84a034e7ddc88f23adff559926de351294bed50292b298031013f9e43690"
+    },
+    "include/libtorrent/biglybtc_mainline_routing.hpp": {
+      "before_sha256": null,
+      "after_sha256": "f58185a0a71f3c51825571204c417d0c1a0d3ae2f77c89f676ead24c10b2ac08"
+    },
+    "include/libtorrent/biglybtc_payload_counters.hpp": {
+      "before_sha256": null,
+      "after_sha256": "d92bad4e429c71c7359d00e771d4e062f702ffcc10fb29aec20483b6a6e80ad8"
+    },
+    "include/libtorrent/biglybtc_queue_observer.hpp": {
+      "before_sha256": null,
+      "after_sha256": "c0f20a3f71ecb013253266ef3cd20cae5c6fd76f575b75183acab350bb730ce7"
+    },
+    "include/libtorrent/biglybtc_socks4a.hpp": {
+      "before_sha256": null,
+      "after_sha256": "c8f8d4ae78bbac8d63cadb2bcb82dda0656d9ea0c71a2a65f700a13321b6857b"
+    },
+    "include/libtorrent/biglybtc_swarm.hpp": {
+      "before_sha256": null,
+      "after_sha256": "84b8778e065b850875f5e17a855a6789ccf48299167fa0e22af6dc2b30f3bc85"
+    },
+    "include/libtorrent/biglybtc_tracker_response.hpp": {
+      "before_sha256": null,
+      "after_sha256": "f4621ce7883b757fe1466a723337d03ea6b815264f0a8e248e0b948f68593d4c"
+    },
+    "include/libtorrent/bt_peer_connection.hpp": {
+      "before_sha256": "51e16cf775a2c57646676fe6e357c2edabc86cfbc2c4496c2f9acf9612d62ea7",
+      "after_sha256": "6d0d72a34ccd27569640f1b11f3b0c8fcd77c79b22c79cdcb8ae6713535ca854"
+    },
+    "include/libtorrent/kademlia/dht_tracker.hpp": {
+      "before_sha256": "10e97eca3995afdc4b3e833396ec367709c5e86c99b1d60e11d029d06cb025c8",
+      "after_sha256": "9b2d871fbe19c032138ff6a70da9ab9ccb72e655f7ae11d6fd284a1edc31e2f6"
+    },
+    "include/libtorrent/kademlia/node.hpp": {
+      "before_sha256": "8d6e13850c53da1cd212c57894bdad4f7c8633e1c7a6cfffc1187bba1e97e4db",
+      "after_sha256": "b7a4384a142ae36884c5a3462e692b87927d81b4c026cc1a9e25aee249b2a512"
+    },
+    "include/libtorrent/session_handle.hpp": {
+      "before_sha256": "66055aa158d65f70972a2a19927d4cf7bc7e3ef223a69e3b825353a270757798",
+      "after_sha256": "db8212e1c4795876872adc3149eba5b71a03cc5e68353e228d1d5536a5357088"
+    },
+    "include/libtorrent/settings_pack.hpp": {
+      "before_sha256": "101e5bd1561765eedfe498e753cc23cb66611bf8a47b66455497fb91e7514d67",
+      "after_sha256": "0730a635e38975fa728672b2e484e107ae510d910a7deb137732152a5d40a148"
+    },
+    "include/libtorrent/socks5_stream.hpp": {
+      "before_sha256": "ae4f116b943d01ed16ed8b62fe298fe92d379c82720b057ed33e7deb8e2a5f13",
+      "after_sha256": "97678a90bed06ee4c7324982a3baf455f313cb8e0d8aa87f95432594bd8a1ec2"
+    },
+    "include/libtorrent/torrent.hpp": {
+      "before_sha256": "f9da4c3df6fa52718106e5862f8e6df85bb614b2d8395e584830ff539ecb92c3",
+      "after_sha256": "6b2b84912a086d220280c636563c583eae5207be7f41a513611c395415c75f40"
+    },
+    "include/libtorrent/torrent_handle.hpp": {
+      "before_sha256": "97638a77492f9c9a11e40e82eeb522dd9bab0e3a1ff6596be0594bcaa8ce8019",
+      "after_sha256": "ca3a3a4a06850ab59b83506d77da96f58ce86b5f28e08cf8b2a4b147bc2e24f6"
+    },
+    "include/libtorrent/tracker_manager.hpp": {
+      "before_sha256": "f9b00abdbe07712f16da75b47d1e4a7b9354f75383cb561ebdf8204f407c163a",
+      "after_sha256": "04306de288d5f11145ea3375e63a5ec954db378bee7bdf81b551f34847b4f0f0"
+    },
+    "src/biglybtc_utf16_info.hpp": {
+      "before_sha256": null,
+      "after_sha256": "b6b8a67c0d299865708aaf92472c22736432ce6887bc7b2ef9eaf5877dea6ae5"
+    },
+    "src/bt_peer_connection.cpp": {
+      "before_sha256": "390a7c9a1c91babc0227a657979773662dfdea2e1f0eab03e9d07f1bc2280448",
+      "after_sha256": "e3cce5e9275932fde01e42e35c6e3123dc01f3b55d412779ac6ae1370b4fd3d8"
+    },
+    "src/http_connection.cpp": {
+      "before_sha256": "d11c7d8546d7e5d1111fca069a5c30d6bc299ffd596021c97ed599dd8d2786f0",
+      "after_sha256": "a446dc2e042ee140b6bc27099cac690cbb8361cfe8ce5a1ee7f0ef23d904de9d"
+    },
+    "src/http_tracker_connection.cpp": {
+      "before_sha256": "e6c1c00ab8247a2cda08930be6967f265686525ef86f861ace374e8120e9c275",
+      "after_sha256": "fe47413e5eba505211e30608430960e8da345a67204a35550fa5a100aeb41050"
+    },
+    "src/instantiate_connection.cpp": {
+      "before_sha256": "5d5cb4a183505bffef8b91ca3cf140e4ae9bae61ecb0cc5c47c6436112818a56",
+      "after_sha256": "010edf26a7ba73b5584d884522ab2cc6da173a0d845bf37054232ad8569142dc"
+    },
+    "src/kademlia/dht_tracker.cpp": {
+      "before_sha256": "d3711a78e50dbbfd37fb0a501fbe13e9f7ef2b7b5fba6735095ff05aa2225bcc",
+      "after_sha256": "c4e7c299cac0085b60e7b7078ebe0bec28b82fba42dced02af900d57d147adc6"
+    },
+    "src/kademlia/node.cpp": {
+      "before_sha256": "f0b5bec6ae7ef0bcefb868c65ea489c71e8f286f9287a72e9380ea8b21df58d6",
+      "after_sha256": "b6e81023f24fc7831e430e39f96d28710a8240cfa6617d387971d433af6099e9"
+    },
+    "src/listen_socket_handle.cpp": {
+      "before_sha256": "38a3751036c04ff1e5d1cfdc8b7859fe8c97305ee7878669a258efdc94781ffa",
+      "after_sha256": "df68d13c015f08c7e2c36cac8e78d3e4f225810f176cdfe6310d7745e8bdcd97"
+    },
+    "src/peer_connection.cpp": {
+      "before_sha256": "41d22135c8f01adb1eaf6f668b7113d09b270da0d593b2b9cb6fb866048ee7e4",
+      "after_sha256": "45047f59d4931e40cdc8d8e4603de7f41f8f85ad894536368a1f7f9822de237b"
+    },
+    "src/read_resume_data.cpp": {
+      "before_sha256": "2da374303dbec1a914e8bf1282be33761a61d80c9e022e22ee29dd3dfd254062",
+      "after_sha256": "22f8fbc64b738b8f1f6db9311a8ecbd1e2d6e7f357b207e5bc01e42200c4d15d"
+    },
+    "src/session_handle.cpp": {
+      "before_sha256": "4982bbac9aa578949623ee62781b124900b75c95ca99d5fb1adc410ef728b74e",
+      "after_sha256": "509f2bc8cf0824b673b2a05906c27ca82fe2eba8f4eaa2a47a25a2880f7d37d8"
+    },
+    "src/session_impl.cpp": {
+      "before_sha256": "e33778939a03634f7ca588752f924afcdf790ac48ddd2a127af71e00f34d1c65",
+      "after_sha256": "dc327bffc7cfc1bc4393e08894582c01070ea91affcb08c36b9e39365b3c7b91"
+    },
+    "src/socks5_stream.cpp": {
+      "before_sha256": "dfd77c9c61cc719e0af526400990be48f5c7fd1046544b4cf60e85b107fce2e1",
+      "after_sha256": "92cf3d06da777f1c8a67ddd8e1fff860011067ecb4b189ae54f9092f3de1402c"
+    },
+    "src/torrent.cpp": {
+      "before_sha256": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185",
+      "after_sha256": "79dc7e41311846a895b3a75a24addd5cc0134910b8b2cb53882b6c69c51eb0bd"
+    },
+    "src/torrent_handle.cpp": {
+      "before_sha256": "9f8c985b4bff1fbf160fa8a68a4e808eb9a60caf10b853c1b29d08bea7fcb5fe",
+      "after_sha256": "279b6f9417e792c08522f99d5b822cc0616c1ef2eb20185ebd66f599072cfcdc"
+    },
+    "src/torrent_info.cpp": {
+      "before_sha256": "5d91d6f12fe9af67db0c72436e51bdde437b2654b611f06c32197ff62c47c730",
+      "after_sha256": "ab50e17b2c718ac329df31e83e6334782d68d8371866736771c711bf75d8c435"
+    },
+    "src/udp_tracker_connection.cpp": {
+      "before_sha256": "f0c15f9fe6c7469fd97aa0544d9b5c4b4ae8458ccdd35e7c3a2b8b4e23fa7406",
+      "after_sha256": "e1efbed38ff98520ab6fa2502bf2f240fbfcee12cef5720eb4362da9ce4544b9"
+    },
+    "src/version.cpp": {
+      "before_sha256": "a4ba1563b910288fb5b4f7fe7384ce26f028bcb1a19876341afa3b66b92fdbef",
+      "after_sha256": "27dc6ce720a5b6751633b9d851111e18c717b688e17f79b050b67d1451b42603"
+    },
+    "src/write_resume_data.cpp": {
+      "before_sha256": "61b1a9a8cf5a6851e38a11791c9b6d72d3ae1fa313f41b1103de306919652ab2",
+      "after_sha256": "579faf4f49e3144f21ea8b4cc9d92e2152dd34cea86213486cef13eb58ce5b22"
+    },
+    "test/test_biglybtc_mainline_identity.cpp": {
+      "before_sha256": null,
+      "after_sha256": "ec658d0f7754d5d2df3e6d795dcedeea9c5a65d0cd1d203afdb8b272fc8c1ab3"
+    },
+    "test/test_biglybtc_swarm.cpp": {
+      "before_sha256": null,
+      "after_sha256": "ed9a68fe47e96c2a90b7a80c3510f514dee0148fb8015ed4b45ad347f2ecbea6"
+    },
+    "test/test_biglybtc_tracker_response.cpp": {
+      "before_sha256": null,
+      "after_sha256": "5ac8ed0d8df9abf053f8017e6705f62315292363998f24ea4617684a6f1133b7"
+    },
+    "test/test_biglybtc_traffic_counters.cpp": {
+      "before_sha256": null,
+      "after_sha256": "2d8c18cbb0619c257319d1c3fdefc8aba03f6a31f07a3d47525fca20d4bd81ba"
+    },
+    "test/test_biglybtc_utf16_info.cpp": {
+      "before_sha256": null,
+      "after_sha256": "361f4bf19a6e41fe45b1ad74d27fcf1d7dcd35dfad3809b971b62cb8a2fab0fc"
+    }
+  },
+  "source_map_fingerprint": {
+    "encoding": "SHA256 of compact JSON sorted pathname->SHA256 map; separators comma/colon, UTF8",
+    "pristine": "09066ef6b7a4f7a70bc50921e498937171e980926ba2ac40f1014bfbfb2bb58c",
+    "after": "f6c3243ea16c40013e78cad1e98f898a27fcfedfeb70f3d8bc12b726c84bd4a5"
+  },
+  "verification": {
+    "pristine_file_count": 1067,
+    "after_file_count": 1082,
+    "full_record_source_map_equal": true,
+    "commands": [
+      {
+        "cwd": "/home/yurii/Java/BiglyBT/build/provider-r2-patch-verify-kwksp6cu",
+        "command": [
+          "patch",
+          "--batch",
+          "--forward",
+          "-p1",
+          "--input",
+          "/home/yurii/Java/BiglyBT/migration/evidence/20261029-mainline-owned-trackers/provider/libtorrent-2.0.12-biglybtc-provider-r2.patch",
+          "--dry-run"
+        ],
+        "exit": 0,
+        "stdout": "checking file include/libtorrent/aux_/biglybtc_mainline_identity.hpp\nchecking file include/libtorrent/aux_/listen_socket_handle.hpp\nchecking file include/libtorrent/aux_/proxy_settings.hpp\nchecking file include/libtorrent/aux_/session_impl.hpp\nchecking file include/libtorrent/biglybtc_mainline_identity.hpp\nchecking file include/libtorrent/biglybtc_mainline_port.hpp\nchecking file include/libtorrent/biglybtc_mainline_routing.hpp\nchecking file include/libtorrent/biglybtc_payload_counters.hpp\nchecking file include/libtorrent/biglybtc_queue_observer.hpp\nchecking file include/libtorrent/biglybtc_socks4a.hpp\nchecking file include/libtorrent/biglybtc_swarm.hpp\nchecking file include/libtorrent/biglybtc_tracker_response.hpp\nchecking file include/libtorrent/bt_peer_connection.hpp\nchecking file include/libtorrent/kademlia/dht_tracker.hpp\nchecking file include/libtorrent/kademlia/node.hpp\nchecking file include/libtorrent/session_handle.hpp\nchecking file include/libtorrent/settings_pack.hpp\nchecking file include/libtorrent/socks5_stream.hpp\nchecking file include/libtorrent/torrent.hpp\nchecking file include/libtorrent/torrent_handle.hpp\nchecking file include/libtorrent/tracker_manager.hpp\nchecking file src/biglybtc_utf16_info.hpp\nchecking file src/bt_peer_connection.cpp\nchecking file src/http_connection.cpp\nchecking file src/http_tracker_connection.cpp\nchecking file src/instantiate_connection.cpp\nchecking file src/kademlia/dht_tracker.cpp\nchecking file src/kademlia/node.cpp\nchecking file src/listen_socket_handle.cpp\nchecking file src/peer_connection.cpp\nchecking file src/read_resume_data.cpp\nchecking file src/session_handle.cpp\nchecking file src/session_impl.cpp\nchecking file src/socks5_stream.cpp\nchecking file src/torrent.cpp\nchecking file src/torrent_handle.cpp\nchecking file src/torrent_info.cpp\nchecking file src/udp_tracker_connection.cpp\nchecking file src/version.cpp\nchecking file src/write_resume_data.cpp\nchecking file test/test_biglybtc_mainline_identity.cpp\nchecking file test/test_biglybtc_swarm.cpp\nchecking file test/test_biglybtc_tracker_response.cpp\nchecking file test/test_biglybtc_traffic_counters.cpp\nchecking file test/test_biglybtc_utf16_info.cpp\n",
+        "stderr": ""
+      },
+      {
+        "cwd": "/home/yurii/Java/BiglyBT/build/provider-r2-patch-verify-kwksp6cu",
+        "command": [
+          "patch",
+          "--batch",
+          "--forward",
+          "-p1",
+          "--input",
+          "/home/yurii/Java/BiglyBT/migration/evidence/20261029-mainline-owned-trackers/provider/libtorrent-2.0.12-biglybtc-provider-r2.patch"
+        ],
+        "exit": 0,
+        "stdout": "patching file include/libtorrent/aux_/biglybtc_mainline_identity.hpp\npatching file include/libtorrent/aux_/listen_socket_handle.hpp\npatching file include/libtorrent/aux_/proxy_settings.hpp\npatching file include/libtorrent/aux_/session_impl.hpp\npatching file include/libtorrent/biglybtc_mainline_identity.hpp\npatching file include/libtorrent/biglybtc_mainline_port.hpp\npatching file include/libtorrent/biglybtc_mainline_routing.hpp\npatching file include/libtorrent/biglybtc_payload_counters.hpp\npatching file include/libtorrent/biglybtc_queue_observer.hpp\npatching file include/libtorrent/biglybtc_socks4a.hpp\npatching file include/libtorrent/biglybtc_swarm.hpp\npatching file include/libtorrent/biglybtc_tracker_response.hpp\npatching file include/libtorrent/bt_peer_connection.hpp\npatching file include/libtorrent/kademlia/dht_tracker.hpp\npatching file include/libtorrent/kademlia/node.hpp\npatching file include/libtorrent/session_handle.hpp\npatching file include/libtorrent/settings_pack.hpp\npatching file include/libtorrent/socks5_stream.hpp\npatching file include/libtorrent/torrent.hpp\npatching file include/libtorrent/torrent_handle.hpp\npatching file include/libtorrent/tracker_manager.hpp\npatching file src/biglybtc_utf16_info.hpp\npatching file src/bt_peer_connection.cpp\npatching file src/http_connection.cpp\npatching file src/http_tracker_connection.cpp\npatching file src/instantiate_connection.cpp\npatching file src/kademlia/dht_tracker.cpp\npatching file src/kademlia/node.cpp\npatching file src/listen_socket_handle.cpp\npatching file src/peer_connection.cpp\npatching file src/read_resume_data.cpp\npatching file src/session_handle.cpp\npatching file src/session_impl.cpp\npatching file src/socks5_stream.cpp\npatching file src/torrent.cpp\npatching file src/torrent_handle.cpp\npatching file src/torrent_info.cpp\npatching file src/udp_tracker_connection.cpp\npatching file src/version.cpp\npatching file src/write_resume_data.cpp\npatching file test/test_biglybtc_mainline_identity.cpp\npatching file test/test_biglybtc_swarm.cpp\npatching file test/test_biglybtc_tracker_response.cpp\npatching file test/test_biglybtc_traffic_counters.cpp\npatching file test/test_biglybtc_utf16_info.cpp\n",
+        "stderr": ""
+      }
+    ],
+    "temporary_source_copy_removed": true,
+    "builds_executed": false,
+    "network_used": false,
+    "initial_check": "An initial git apply invocation beneath the original repository skipped paths outside its working prefix; full-map equality rejected it. Verified independently with GNU patch on a fresh owned pristine copy, as recorded above."
+  },
+  "reproduction": [
+    "Verify archive SHA256, then extract with tar --strip-components=1 into an empty source directory.",
+    "From that directory run: patch --batch --forward -p1 --dry-run --input /absolute/path/libtorrent-2.0.12-biglybtc-provider-r2.patch",
+    "Then run: patch --batch --forward -p1 --input /absolute/path/libtorrent-2.0.12-biglybtc-provider-r2.patch",
+    "Verify each changed file against this map; all1082 resulting files matched the qualified record during local verification."
+  ],
+  "exclusions": "No build outputs, generated installed SDK, binaries or old incremental patches included."
+}

@@ -1,0 +1,3771 @@
+diff --git a/include/libtorrent/aux_/biglybtc_mainline_identity.hpp b/include/libtorrent/aux_/biglybtc_mainline_identity.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..7a5178af01d5f951645919921f46ff3716ab785e
+--- /dev/null
++++ b/include/libtorrent/aux_/biglybtc_mainline_identity.hpp
+@@ -0,0 +1,95 @@
++// Private executor-confined state for the optional local-ID policy.
++#ifndef TORRENT_AUX_BIGLYBTC_MAINLINE_IDENTITY_HPP
++#define TORRENT_AUX_BIGLYBTC_MAINLINE_IDENTITY_HPP
++#include "libtorrent/biglybtc_mainline_identity.hpp"
++#include "libtorrent/biglybtc_mainline_routing.hpp"
++#include "libtorrent/kademlia/node_id.hpp"
++#include "libtorrent/socket.hpp"
++#include <algorithm>
++#include <limits>
++#include <thread>
++
++namespace libtorrent { namespace aux {
++struct biglybtc_mainline_identity {
++  std::thread::id const executor=std::this_thread::get_id();
++  BiglybtcMainlineIdentityPolicyV1 policy;
++  BiglybtcMainlineIdentityStatusV1 status{};
++  std::shared_ptr<BiglybtcMainlineIdentityObserverV1> observer;
++  std::uint64_t sequence=0, routing_cookie=0;
++
++  static address binding_address(BiglybtcMainlineIdentityBindingV1 const& b) {
++    if(b.family==4){address_v4::bytes_type a{};std::copy_n(b.address.begin(),4,a.begin());return address_v4(a);}
++    address_v6::bytes_type a{};std::copy(b.address.begin(),b.address.end(),a.begin());return address_v6(a);
++  }
++  static bool valid(BiglybtcMainlineIdentityPolicyV1 const& p) {
++    if(p.version!=1||p.size!=sizeof(p)||!p.generation||p.reserved||(p.count<1||p.count>2)){return false;}
++    unsigned families=0;
++    for(unsigned i=0;i<p.count;++i){
++      auto const& b=p.bindings[i];if((b.family!=4&&b.family!=6)||b.slot!=0||!b.port||b.reserved){return false;}
++      auto const bit=b.family==4?1U:2U;if(families&bit){return false;}families|=bit;
++      if(b.family==4&&std::any_of(b.address.begin()+4,b.address.end(),[](unsigned char c){return c!=0;})){return false;}
++      auto const a=binding_address(b);
++      if(a.is_unspecified()||a.is_multicast()||(a.is_v4()&&a.to_v4().to_uint()==0xffffffffU)
++          ||(a.is_v6()&&(a.to_v6().is_v4_mapped()||a.to_v6().is_link_local()))){return false;}
++    }
++    for(unsigned i=p.count;i<2;++i){auto const& b=p.bindings[i];
++      if(b.family||b.slot||b.port||b.reserved
++          ||std::any_of(b.address.begin(),b.address.end(),[](unsigned char c){return c!=0;})
++          ||std::any_of(b.key.begin(),b.key.end(),[](unsigned char c){return c!=0;})){return false;}}
++    return true;
++  }
++  biglybtc_mainline_identity(BiglybtcMainlineIdentityPolicyV1 const& p,
++      std::shared_ptr<BiglybtcMainlineIdentityObserverV1> sink):policy(p),observer(std::move(sink)) {
++    status.generation=p.generation;status.phase=1;
++    for(unsigned i=0;i<p.count;++i){status.expected_mask|=p.bindings[i].family==4?1U:2U;}
++  }
++  bool ready()const{return status.phase!=3&&status.active_mask==status.expected_mask;}
++  int index(udp::endpoint const& ep)const{
++    for(unsigned i=0;i<policy.count;++i){auto const& b=policy.bindings[i];
++      if(ep.port()==b.port&&ep.address()==binding_address(b)){return int(i);}}
++    return -1;
++  }
++  bool emit(unsigned kind,BiglybtcMainlineIdentityBindingV1 const& binding) {
++    if(std::this_thread::get_id()!=executor){status.phase=3;return false;}
++    if(sequence==std::numeric_limits<std::uint64_t>::max()){status.phase=3;return false;}
++    BiglybtcMainlineIdentityEventV1 event{};event.generation=policy.generation;
++    event.sequence=++sequence;event.kind=kind;event.binding=binding;
++    if(!observer||!observer->observe(event)){status.phase=3;return false;}return true;
++  }
++  void fail(){if(status.phase!=3){status.phase=3;emit(3,{});}}
++  bool can_adopt(udp::endpoint const& ep){
++    auto const i=index(ep);if(i<0||status.phase==3){fail();return false;}
++    auto const bit=policy.bindings[unsigned(i)].family==4?1U:2U;
++    // A consumed family slot never re-adopts within this immutable generation.
++    if((status.active_mask&bit)||status.bindings[unsigned(i)].family){fail();return false;}return true;
++  }
++  bool permits(udp::endpoint const& ep){
++    auto const i=index(ep);
++    if(i<0||!ready()||!(status.active_mask&(policy.bindings[unsigned(i)].family==4?1U:2U))){fail();return false;}
++    return true;
++  }
++  dht::node_id key(udp::endpoint const& ep)const{
++    auto const i=index(ep);return dht::node_id(reinterpret_cast<char const*>(policy.bindings[unsigned(i)].key.data()));
++  }
++  bool adopted(udp::endpoint const& ep,dht::node_id const& actual){
++    auto const i=index(ep);if(i<0||status.phase==3){fail();return false;}
++    auto b=policy.bindings[unsigned(i)];std::copy_n(reinterpret_cast<unsigned char const*>(actual.data()),20,b.key.begin());
++    if(b.key!=policy.bindings[unsigned(i)].key||status.adopted==std::numeric_limits<std::uint64_t>::max()){fail();return false;}
++    status.bindings[unsigned(i)]=b;status.active_mask|=b.family==4?1U:2U;++status.adopted;
++    status.phase=ready()?2U:1U;return emit(1,b);
++  }
++  void retired(udp::endpoint const& ep){
++    auto const i=index(ep);if(i<0){fail();return;}
++    auto const bit=policy.bindings[unsigned(i)].family==4?1U:2U;
++    if(!(status.active_mask&bit)){fail();return;}
++    status.active_mask&=~bit;
++    if(status.retired==std::numeric_limits<std::uint64_t>::max()){fail();return;}
++    ++status.retired;if(status.phase!=3){status.phase=1;}emit(2,status.bindings[unsigned(i)]);
++  }
++  void retire_all(){
++    for(unsigned i=0;i<policy.count;++i){auto const& b=policy.bindings[i];
++      if(status.active_mask&(b.family==4?1U:2U)){retired(udp::endpoint(binding_address(b),b.port));}}
++  }
++};
++}}
++#endif
+diff --git a/include/libtorrent/aux_/listen_socket_handle.hpp b/include/libtorrent/aux_/listen_socket_handle.hpp
+index a20a0129282bd079746937e48ed58618e7f1fe38..c660f874fa1870fbc69670967b5f5f7fe420a21c
+--- a/include/libtorrent/aux_/listen_socket_handle.hpp
++++ b/include/libtorrent/aux_/listen_socket_handle.hpp
+@@ -62,6 +62,7 @@
+ 
+ 		address get_external_address() const;
+ 		tcp::endpoint get_local_endpoint() const;
++		udp::endpoint get_udp_local_endpoint() const;
+ 		bool can_route(address const&) const;
+ 
+ 		std::string device() const;
+diff --git a/include/libtorrent/aux_/proxy_settings.hpp b/include/libtorrent/aux_/proxy_settings.hpp
+index 283c7e706c3c92d5e1144a855fea73bf098a60c6..9e2cd7de6e02e28be71d0ec33d29fdb6f7b0ef32
+--- a/include/libtorrent/aux_/proxy_settings.hpp
++++ b/include/libtorrent/aux_/proxy_settings.hpp
+@@ -76,7 +76,8 @@
+ 
+ 		// defaults to true. It means that hostnames should be attempted to be
+ 		// resolved through the proxy instead of using the local DNS service.
+-		// This is only supported by SOCKS5 and HTTP.
++		// The exact-source BiglyBTC extension also selects SOCKS4a framing
++		// for SOCKS4. Upstream supports SOCKS5 and HTTP.
+ 		bool proxy_hostnames = true;
+ 
+ 		// determines whether or not to exempt peer and web seed connections
+diff --git a/include/libtorrent/aux_/session_impl.hpp b/include/libtorrent/aux_/session_impl.hpp
+index 9b4a4e893a90fcdb7c63e3d3463b6cd86fed4616..ef2486016fb2ed1928bd12ff4394c462ea0fb54f
+--- a/include/libtorrent/aux_/session_impl.hpp
++++ b/include/libtorrent/aux_/session_impl.hpp
+@@ -40,6 +40,7 @@
+ #define TORRENT_SESSION_IMPL_HPP_INCLUDED
+ 
+ #include "libtorrent/config.hpp"
++#include "libtorrent/aux_/biglybtc_mainline_identity.hpp"
+ #include "libtorrent/aux_/session_settings.hpp"
+ #include "libtorrent/aux_/session_interface.hpp"
+ #include "libtorrent/aux_/session_udp_sockets.hpp"
+@@ -534,6 +535,10 @@
+ 			void dht_get_peers(sha1_hash const& info_hash);
+ 			void dht_announce(sha1_hash const& info_hash, int port = 0, dht::announce_flags_t flags = {});
+ 
++			std::uint32_t biglybtc_configure_mainline_identity(BiglybtcMainlineIdentityPolicyV1 const&,
++				std::shared_ptr<BiglybtcMainlineIdentityObserverV1>);
++			BiglybtcMainlineIdentityStatusV1 biglybtc_mainline_identity_status() const;
++			BiglybtcMainlineRoutingAckV1 biglybtc_mainline_routing_query(BiglybtcMainlineRoutingQueryV1 const&);
+ 			void dht_live_nodes(sha1_hash const& nid);
+ 			void dht_sample_infohashes(udp::endpoint const& ep, sha1_hash const& target);
+ 
+@@ -1067,6 +1072,7 @@
+ 
+ #ifndef TORRENT_DISABLE_DHT
+ 			dht::dht_state m_dht_state;
++			std::shared_ptr<biglybtc_mainline_identity> m_biglybtc_identity;
+ #endif
+ 
+ 			// this is initialized to the unchoke_interval
+diff --git a/include/libtorrent/biglybtc_mainline_identity.hpp b/include/libtorrent/biglybtc_mainline_identity.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..f9df32e3689583e6d2ff24e8586c20b937d7b120
+--- /dev/null
++++ b/include/libtorrent/biglybtc_mainline_identity.hpp
+@@ -0,0 +1,63 @@
++// Optional exact-source/artifact-bound original mlDHT local-ID policy.
++// No stock policy or remote-node BEP42 validation changes without this opt-in.
++#ifndef TORRENT_BIGLYBTC_MAINLINE_IDENTITY_HPP
++#define TORRENT_BIGLYBTC_MAINLINE_IDENTITY_HPP
++#include "libtorrent/config.hpp"
++#include "libtorrent/fwd.hpp"
++#include <array>
++#include <cstdint>
++#include <memory>
++#include <type_traits>
++#define TORRENT_BIGLYBTC_MAINLINE_IDENTITY_ABI 1
++namespace libtorrent {
++struct BiglybtcMainlineIdentityBindingV1 {
++  std::array<unsigned char,16> address; // Actual local address; V4 tail must0.
++  std::array<unsigned char,20> key; // Exact original derived key, including0.
++  std::uint32_t family; //4 or6; at most ONE explicitly bound socket per family.
++  std::uint32_t slot; // Only original first free slot0 currently supported.
++  std::uint16_t port;
++  std::uint16_t reserved;
++};
++struct BiglybtcMainlineIdentityPolicyV1 {
++  std::uint32_t version, size, count, reserved; // version1,size=sizeof, count1 or2 (one per family).
++  std::uint64_t generation; // Nonzero, fixed for the real session lifetime.
++  std::array<BiglybtcMainlineIdentityBindingV1,2> bindings;
++};
++struct BiglybtcMainlineIdentityEventV1 {
++  std::uint64_t generation, sequence;
++  std::uint32_t kind, reserved; // Adopted1, Retired2, Lost3.
++  BiglybtcMainlineIdentityBindingV1 binding;
++};
++struct BiglybtcMainlineIdentityStatusV1 {
++  std::uint64_t generation, adopted, retired;
++  std::uint32_t phase, expected_mask, active_mask, reserved; // Configured1,Active2,Failed3.
++  std::array<BiglybtcMainlineIdentityBindingV1,2> bindings; // Actual last adoption.
++};
++static_assert(std::is_standard_layout<BiglybtcMainlineIdentityPolicyV1>::value
++    &&std::is_trivially_copyable<BiglybtcMainlineIdentityPolicyV1>::value,"Identity policy POD");
++static_assert(sizeof(BiglybtcMainlineIdentityBindingV1)==48
++    &&sizeof(BiglybtcMainlineIdentityPolicyV1)==120
++    &&sizeof(BiglybtcMainlineIdentityEventV1)==72
++    &&sizeof(BiglybtcMainlineIdentityStatusV1)==136,"Identity ABI sizes");
++// Called only on the actual LT executor, including real node destruction.
++// Must not block/allocate/throw/call LT. False irreversibly fences this policy's
++// DHT sends/receives. Observer must retain the SAME authenticated provider pin.
++struct BiglybtcMainlineIdentityObserverV1 {
++  virtual ~BiglybtcMainlineIdentityObserverV1()=default;
++  virtual bool observe(BiglybtcMainlineIdentityEventV1 const&) noexcept=0;
++};
++enum class BiglybtcMainlineIdentityResultV1 : std::uint32_t {
++  Accepted=0, InvalidArgument=1, Busy=2, InvalidHandle=3, Failed=4
++};
++extern "C" TORRENT_EXPORT unsigned biglybtc_mainline_identity_abi_v1() noexcept;
++// Synchronous real-executor installation ONLY while DHT is disabled/uncreated.
++// Exactly once per session; no replacing/rebinding policy, no settings restore.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_configure_mainline_identity_v1(
++    session_handle const*,BiglybtcMainlineIdentityPolicyV1 const*,
++    std::shared_ptr<BiglybtcMainlineIdentityObserverV1> const*) noexcept;
++// Synchronous real-executor snapshot. Accepted means the read completed; only
++// phaseActive+all actual adoption acknowledgements confer local-ID readiness.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_read_mainline_identity_v1(
++    session_handle const*,BiglybtcMainlineIdentityStatusV1*) noexcept;
++}
++#endif
+diff --git a/include/libtorrent/biglybtc_mainline_port.hpp b/include/libtorrent/biglybtc_mainline_port.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..22f2a0b0e06fdaa895e2d9f0ad8b022fc9d6fadf
+--- /dev/null
++++ b/include/libtorrent/biglybtc_mainline_port.hpp
+@@ -0,0 +1,56 @@
++// Optional exact-source/artifact-bound LT2.0.12 BEP5 bridge. A header/marker is
++// not runtime authority. Existing provider ABIs and extension vtables unchanged.
++#ifndef TORRENT_BIGLYBTC_MAINLINE_PORT_HPP
++#define TORRENT_BIGLYBTC_MAINLINE_PORT_HPP
++#include "libtorrent/config.hpp"
++#include "libtorrent/fwd.hpp"
++#include <array>
++#include <cstdint>
++#include <memory>
++#include <type_traits>
++#define TORRENT_BIGLYBTC_MAINLINE_PORT_ABI 1
++namespace libtorrent {
++enum class BiglybtcMainlinePortEventKindV1 : std::uint32_t { Received=1, Lost=2 };
++struct BiglybtcMainlinePortEventV1 {
++    std::uint64_t sequence;
++    std::uint64_t admission;
++    std::array<unsigned char,20> wire_info_hash; // Actual connected wire swarm, including truncated V2.
++    std::array<unsigned char,16> address; // Actual numeric peer socket; V4 occupies first4, rest0.
++    std::uint16_t peer_port;
++    std::uint16_t dht_port;
++    std::uint32_t family; //4 or6
++    std::uint32_t protocol; //1=V1,2=V2
++    std::uint32_t kind;
++    std::uint32_t reserved;
++};
++static_assert(sizeof(BiglybtcMainlinePortEventV1)==72,"Mainline PORT event ABI size");
++static_assert(std::is_standard_layout<BiglybtcMainlinePortEventV1>::value
++    &&std::is_trivially_copyable<BiglybtcMainlinePortEventV1>::value,"Mainline PORT event POD");
++// Each admitted torrent owns its sink until real destruction. Both callbacks
++// run only on the actual LT executor. They must not block, allocate, throw or
++// call LT. No provider-side event queue, timer, status query or private pointer.
++// The owner implements a bounded queue and sticky overflow/loss withdrawal.
++struct BiglybtcMainlinePortObserverV1 {
++    virtual ~BiglybtcMainlinePortObserverV1()=default;
++    // Owner-controlled atomic snapshot:0 withdraws BOTH directions. Nonzero is
++    // permitted only for the SAME live eligible dedicated DHT service listener.
++    // Already queued transport bytes still require real retirement to drain.
++    virtual std::uint16_t advertised_port() const noexcept=0;
++    virtual void observe(BiglybtcMainlinePortEventV1 const&) noexcept=0;
++};
++enum class BiglybtcMainlinePortStatusV1 : std::uint32_t {
++    Accepted=0, InvalidArgument=1, InvalidHandle=2, WrongThread=3, AlreadyBound=4, Failed=5
++};
++extern "C" TORRENT_EXPORT unsigned biglybtc_mainline_port_abi_v1() noexcept;
++// Attach exactly once in the existing extension factory before connections.
++// Admission must be nonzero. Sink must retain the exact authenticated provider
++// mapping. Failure does not replace another sink; no dispatch or waiting.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_attach_mainline_port_observer_v1(
++    torrent_handle const*,std::shared_ptr<BiglybtcMainlinePortObserverV1> const*,std::uint64_t admission) noexcept;
++// Same real-executor contract. Explicitly refresh existing handshaked peers
++// after an atomic port transition; this creates no plugin and no timer. A stale
++// admission fails. The getter is rechecked before each actual message send.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_refresh_mainline_port_v1(
++    torrent_handle const*,std::uint64_t admission) noexcept;
++}
++#endif
+diff --git a/include/libtorrent/biglybtc_mainline_routing.hpp b/include/libtorrent/biglybtc_mainline_routing.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..318888865973bd38f1cdbd6f88f990e44d10c181
+--- /dev/null
++++ b/include/libtorrent/biglybtc_mainline_routing.hpp
+@@ -0,0 +1,44 @@
++// Optional exact-installed-socket routing proof. No stock policy changes.
++#ifndef TORRENT_BIGLYBTC_MAINLINE_ROUTING_HPP
++#define TORRENT_BIGLYBTC_MAINLINE_ROUTING_HPP
++#include "libtorrent/biglybtc_mainline_identity.hpp"
++#define TORRENT_BIGLYBTC_MAINLINE_ROUTING_ABI 1
++namespace libtorrent {
++struct BiglybtcMainlineRoutingNodeV1 {
++  std::array<unsigned char,16> address;
++  std::array<unsigned char,20> id;
++  std::uint16_t port, family; // Numeric actual remote UDP endpoint; family4/6.
++};
++struct BiglybtcMainlineRoutingQueryV1 {
++  std::uint32_t version,size,mode,reserved; // version1, sizeof, List1 or Match2.
++  std::uint64_t generation,cookie; // Installed generation; strictly increasing nonzero cookie.
++  BiglybtcMainlineIdentityBindingV1 local; // Exact INSTALLED binding, never authority by itself.
++  BiglybtcMainlineRoutingNodeV1 remote; // Match2 only; all zero for List1.
++};
++struct BiglybtcMainlineRoutingAckV1 {
++  std::uint64_t generation,cookie;
++  BiglybtcMainlineIdentityBindingV1 local; // Actual adopted FD endpoint+actual node ID.
++  std::uint32_t result,count,matched,overflow;
++  std::array<BiglybtcMainlineRoutingNodeV1,256> nodes; // List1, ACTIVE entries only.
++};
++enum class BiglybtcMainlineRoutingResultV1 : std::uint32_t {
++  Accepted=0, InvalidArgument=1, NotReady=2, NoSocket=3, InvalidHandle=4, Failed=5
++};
++static_assert(sizeof(BiglybtcMainlineRoutingNodeV1)==40
++    &&sizeof(BiglybtcMainlineRoutingQueryV1)==120
++    &&sizeof(BiglybtcMainlineRoutingAckV1)==10320,"Routing POD sizes");
++static_assert(std::is_standard_layout<BiglybtcMainlineRoutingAckV1>::value
++    &&std::is_trivially_copyable<BiglybtcMainlineRoutingAckV1>::value,"Routing ACK POD");
++extern "C" TORRENT_EXPORT unsigned biglybtc_mainline_routing_abi_v1() noexcept;
++// Synchronous actual LT executor query. Only a currently installed, fully
++// adopted original-ID policy may answer. The local tuple, generation and cookie
++// are checked against real state; caller data cannot create/choose a socket.
++// No callback/caller pointer is retained. Output is cleared on every refusal.
++// List overflow is explicit, never silently treated as a complete live table.
++// Match scans ALL active-bucket entries, excluding replacements. Membership
++// alone grants no responder/source authority; the consumer correlates the real
++// RPC response first and queues this read after node_seen on the SAME executor.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_query_mainline_routing_v1(
++    session_handle const*,BiglybtcMainlineRoutingQueryV1 const*,BiglybtcMainlineRoutingAckV1*) noexcept;
++}
++#endif
+diff --git a/include/libtorrent/biglybtc_payload_counters.hpp b/include/libtorrent/biglybtc_payload_counters.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..a9730b17a0aa9cdb0a71e029a97deb0a5d9b47a0
+--- /dev/null
++++ b/include/libtorrent/biglybtc_payload_counters.hpp
+@@ -0,0 +1,89 @@
++// Supported only by the reviewed BiglyBTC LT2.0.12 provider.
++// This is a source/artifact-bound C++-handle ABI, not an upstream portable API.
++#ifndef TORRENT_BIGLYBTC_PAYLOAD_COUNTERS_HPP
++#define TORRENT_BIGLYBTC_PAYLOAD_COUNTERS_HPP
++
++#include "libtorrent/config.hpp"
++#include "libtorrent/fwd.hpp"
++#include <cstdint>
++#include <type_traits>
++
++namespace libtorrent {
++// Raw m_stat values copied in the provider, before the caller's existing
++// on_resume callback returns to LT's normal clear/reset path. No epoch, total,
++// reset, ownership/finality claim or private-class pointer crosses this ABI.
++struct BiglybtcPayloadCountersV1 {
++    std::int64_t received;
++    std::int64_t sent;
++    std::uint32_t files_checked;
++    std::uint32_t reserved;
++};
++static_assert(sizeof(BiglybtcPayloadCountersV1) == 24, "Counter ABI size");
++static_assert(std::is_standard_layout<BiglybtcPayloadCountersV1>::value
++    && std::is_trivially_copyable<BiglybtcPayloadCountersV1>::value, "Counter ABI layout");
++
++enum class BiglybtcPayloadCounterStatusV1 : std::uint32_t {
++    Accepted = 0, InvalidArgument = 1, InvalidHandle = 2,
++    WrongThread = 3, InvalidCounters = 4, Failed = 5
++};
++
++extern "C" TORRENT_EXPORT unsigned biglybtc_payload_counter_abi_v1() noexcept;
++// Only call from a callback on this handle's real io_context executor thread.
++// Unlike status(), this never dispatches or waits. Failure leaves *output
++// unchanged. A temporary weak-lock is released before the function returns.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_read_payload_counters_v1(
++    torrent_handle const* handle, BiglybtcPayloadCountersV1* output,
++    std::uint32_t output_bytes) noexcept;
++
++// Optional extension. Presence of this header/marker is NOT runtime approval;
++// the consumer must authenticate and retain the exact mapped source-bound DSO.
++#define TORRENT_BIGLYBTC_TRAFFIC_COUNTERS_ABI 2
++struct BiglybtcTrafficCountersV2 {
++    BiglybtcPayloadCountersV1 payload;
++    std::int64_t protocol_received;
++    std::int64_t protocol_sent;
++    // Zero means protocol fields are unknown and MUST NOT be used as zeros.
++    // Payload acceptance remains independent of optional protocol overflow.
++    std::uint32_t protocol_known;
++    std::uint32_t reserved;
++};
++static_assert(sizeof(BiglybtcTrafficCountersV2) == 48, "Traffic counter ABI size");
++static_assert(std::is_standard_layout<BiglybtcTrafficCountersV2>::value
++    && std::is_trivially_copyable<BiglybtcTrafficCountersV2>::value, "Traffic counter ABI layout");
++enum class BiglybtcTrafficCounterStatusV2 : std::uint32_t {
++    Accepted = 0, InvalidArgument = 1, InvalidHandle = 2,
++    WrongThread = 3, InvalidCounters = 4, Failed = 5
++};
++extern "C" TORRENT_EXPORT unsigned biglybtc_traffic_counter_abi_v2() noexcept;
++// SAME executor-thread/no-dispatch/weak-lock/output-unchanged contract as v1.
++// One statistics copy supplies payload AND protocol; no IP/DHT/tracker total,
++// lifetime/finality or reset-epoch authority is exported.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_read_traffic_counters_v2(
++    torrent_handle const* handle, BiglybtcTrafficCountersV2* output,
++    std::uint32_t output_bytes) noexcept;
++
++// Additive raw bad-byte extension; ABI1/2 definitions/exports remain unchanged.
++// The caller still authenticates the exact mapped artifact and uses ONE read.
++#define TORRENT_BIGLYBTC_EXTENDED_TRAFFIC_COUNTERS_ABI 3
++struct BiglybtcTrafficCountersV3 {
++    BiglybtcTrafficCountersV2 traffic;
++    std::int64_t failed_bytes;
++    std::int64_t redundant_bytes;
++    // 0 means absent/negative/saturated source: fields are NOT known zeros.
++    std::uint32_t bad_known;
++    std::uint32_t reserved;
++};
++static_assert(sizeof(BiglybtcTrafficCountersV3)==72,"Extended traffic ABI size");
++static_assert(std::is_standard_layout<BiglybtcTrafficCountersV3>::value
++    && std::is_trivially_copyable<BiglybtcTrafficCountersV3>::value,"Extended traffic ABI layout");
++enum class BiglybtcTrafficCounterStatusV3 : std::uint32_t {
++    Accepted=0,InvalidArgument=1,InvalidHandle=2,WrongThread=3,InvalidCounters=4,Failed=5
++};
++extern "C" TORRENT_EXPORT unsigned biglybtc_traffic_counter_abi_v3() noexcept;
++// SAME executor/no-dispatch/output-unchanged contract. Raw reset epoch only;
++// caller owns continuity/finality. Failed/redundant source counters saturate,
++// so INT64_MAX is conservatively unavailable, never certified as an exact tail.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_read_traffic_counters_v3(
++    torrent_handle const*,BiglybtcTrafficCountersV3*,std::uint32_t output_bytes) noexcept;
++}
++#endif
+diff --git a/include/libtorrent/biglybtc_queue_observer.hpp b/include/libtorrent/biglybtc_queue_observer.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..9a4a378c82957d026879ca32f9dcaa42549688ef
+--- /dev/null
++++ b/include/libtorrent/biglybtc_queue_observer.hpp
+@@ -0,0 +1,50 @@
++// Optional exact-source/artifact-bound LT2.0.12 observation ABI. A marker or
++// installed header alone never grants runtime authority. Existing ABIs unchanged.
++#ifndef TORRENT_BIGLYBTC_QUEUE_OBSERVER_HPP
++#define TORRENT_BIGLYBTC_QUEUE_OBSERVER_HPP
++#include "libtorrent/config.hpp"
++#include "libtorrent/fwd.hpp"
++#include <array>
++#include <cstdint>
++#include <memory>
++#include <type_traits>
++#define TORRENT_BIGLYBTC_QUEUE_OBSERVER_ABI 1
++namespace libtorrent {
++enum class BiglybtcQueueEventKindV1 : std::uint32_t {
++    StartedDownload=1, StartedSeed=2, Finished=3, Unfinished=4, Stopped=5,
++    Scrape=6, Announce=7, ScrapeFailed=8, AnnounceFailed=9, Lost=10
++};
++struct BiglybtcQueueEventV1 {
++    std::uint64_t sequence;
++    std::uint64_t request;
++    std::int64_t observed_nanoseconds;
++    std::int64_t request_started_nanoseconds;
++    std::int64_t observed_wall_milliseconds;
++    std::int64_t request_started_wall_milliseconds;
++    std::int32_t seeds;
++    std::int32_t peers;
++    std::uint32_t kind;
++    std::uint32_t protocol; //1=V1,2=V2;0 only lifecycle/loss
++    std::array<unsigned char,32> tracker_sha256; //Exact URL bytes; never credentials
++};
++static_assert(sizeof(BiglybtcQueueEventV1)==96,"Queue event ABI size");
++static_assert(std::is_standard_layout<BiglybtcQueueEventV1>::value
++    &&std::is_trivially_copyable<BiglybtcQueueEventV1>::value,"Queue event POD");
++// Each bound torrent owns its sink until real destruction. Observations run
++// only on its actual io_context thread; sink must not block, throw or call LT.
++// No polling, IO, extra status, timer, count synthesis or private pointer export.
++struct BiglybtcQueueObserverV1 {
++    virtual ~BiglybtcQueueObserverV1()=default;
++    virtual void observe(BiglybtcQueueEventV1 const&) noexcept=0;
++};
++enum class BiglybtcQueueObserverStatusV1 : std::uint32_t {
++    Accepted=0, InvalidArgument=1, InvalidHandle=2, WrongThread=3, AlreadyBound=4, Failed=5
++};
++extern "C" TORRENT_EXPORT unsigned biglybtc_queue_observer_abi_v1() noexcept;
++// Shared C++ sink/weak-handle ABI is versioned with this reviewed toolchain.
++// Attach once in the existing extension factory before activation. Output-free;
++// failure never replaces another sink. The sink retains the same qualified DSO.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_attach_queue_observer_v1(
++    torrent_handle const*,std::shared_ptr<BiglybtcQueueObserverV1> const*) noexcept;
++}
++#endif
+diff --git a/include/libtorrent/biglybtc_socks4a.hpp b/include/libtorrent/biglybtc_socks4a.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..797665854e586ddcb0a2bffba4196377604fdd47
+--- /dev/null
++++ b/include/libtorrent/biglybtc_socks4a.hpp
+@@ -0,0 +1,16 @@
++// Exact-source BiglyBTC provider extension, not upstream LT API.
++// A marker alone does not authorize a runtime. Requires reviewed full source,
++// imported header/artifact identity and the actual loaded-image qualification.
++#ifndef BIGLYBTC_LIBTORRENT_SOCKS4A_HPP
++#define BIGLYBTC_LIBTORRENT_SOCKS4A_HPP
++#include "libtorrent/config.hpp"
++namespace libtorrent {
++// Private socks5_stream discriminator; no settings enum or object layout change.
++inline constexpr int biglybtc_socks4a_version = 41;
++extern "C" TORRENT_EXPORT unsigned biglybtc_socks4a_abi_v1() noexcept;
++// Optional exact-source extension: torrent webseed lookup/redirect paths use
++// the same remote SOCKS4a name framing. This marker alone grants no authority.
++#define BIGLYBTC_SOCKS4A_WEBSEED_ABI 1
++extern "C" TORRENT_EXPORT unsigned biglybtc_socks4a_webseed_abi_v1() noexcept;
++}
++#endif
+diff --git a/include/libtorrent/biglybtc_swarm.hpp b/include/libtorrent/biglybtc_swarm.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..12524ca3401f1d448e7696297293d05b9adf05f5
+--- /dev/null
++++ b/include/libtorrent/biglybtc_swarm.hpp
+@@ -0,0 +1,23 @@
++// BiglyBTC source-provider extension. Not part of upstream libtorrent API.
++// Requires exact artifact binding AND biglybtc_swarm_mask_abi_v1()==1.
++#ifndef BIGLYBTC_LIBTORRENT_SWARM_HPP
++#define BIGLYBTC_LIBTORRENT_SWARM_HPP
++#include "libtorrent/info_hash.hpp"
++#include "libtorrent/torrent_flags.hpp"
++namespace libtorrent {
++// Admission only. Both clear preserves upstream dual-swarm behavior.
++// Both set, or an unavailable selected hash, rejects admission.
++constexpr torrent_flags_t biglybtc_v1_only{std::uint64_t{1} << 25};
++constexpr torrent_flags_t biglybtc_v2_only{std::uint64_t{1} << 26};
++constexpr torrent_flags_t biglybtc_swarm_mask = biglybtc_v1_only | biglybtc_v2_only;
++inline info_hash_t biglybtc_wire_hashes(info_hash_t full,torrent_flags_t flags) noexcept
++{
++ auto const selected=flags & biglybtc_swarm_mask;
++ if(selected==biglybtc_swarm_mask) return {};
++ if(selected==biglybtc_v1_only) return full.has_v1()?info_hash_t(full.v1):info_hash_t{};
++ if(selected==biglybtc_v2_only) return full.has_v2()?info_hash_t(full.v2):info_hash_t{};
++ return full;
++}
++extern "C" TORRENT_EXPORT unsigned biglybtc_swarm_mask_abi_v1() noexcept;
++}
++#endif
+diff --git a/include/libtorrent/biglybtc_tracker_response.hpp b/include/libtorrent/biglybtc_tracker_response.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..4024f9f73ca1c22a005dd04f5eb0c60c78ee0bf7
+--- /dev/null
++++ b/include/libtorrent/biglybtc_tracker_response.hpp
+@@ -0,0 +1,48 @@
++#pragma once
++#define TORRENT_BIGLYBTC_TRACKER_RESPONSE_ABI 1
++#include "libtorrent/config.hpp"
++#include <array>
++#include <cstdint>
++#include <memory>
++#include <type_traits>
++namespace libtorrent {
++struct torrent_handle;
++// Meaning is a proof of the bounded HTTP/UDP shape only. Unknown must withdraw
++// original response knowledge; it is never a request failure or zero counts.
++enum class BiglybtcTrackerResponseMeaningV1 : std::uint32_t {
++    Unknown=0, OriginalHttpFields=1, DefinitiveFailure=2, OriginalUdpFields=3
++};
++struct BiglybtcTrackerResponseFieldsV1 {
++    std::int64_t complete=0,incomplete=0,downloaded=0;
++    std::uint32_t present=0; // complete1,incomplete2,downloaded4
++    BiglybtcTrackerResponseMeaningV1 meaning=BiglybtcTrackerResponseMeaningV1::Unknown;
++};
++enum class BiglybtcTrackerResponseKindV1 : std::uint32_t {
++    Scrape=1,Announce=2,ScrapeFailed=3,AnnounceFailed=4,Lost=5
++};
++struct BiglybtcTrackerResponseEventV1 {
++    std::uint64_t admission=0,sequence=0,request=0;
++    std::int64_t observed_nanoseconds=0,request_started_nanoseconds=0;
++    std::int64_t observed_wall_milliseconds=0,request_started_wall_milliseconds=0;
++    std::array<unsigned char,32> tracker_sha256{};
++    BiglybtcTrackerResponseFieldsV1 fields;
++    BiglybtcTrackerResponseKindV1 kind=BiglybtcTrackerResponseKindV1::Lost;
++    std::uint32_t protocol=0;
++};
++static_assert(sizeof(BiglybtcTrackerResponseFieldsV1)==32,"Tracker fields ABI");
++static_assert(sizeof(BiglybtcTrackerResponseEventV1)==128,"Tracker terminal ABI");
++static_assert(std::is_standard_layout<BiglybtcTrackerResponseEventV1>::value
++    &&std::is_trivially_copyable<BiglybtcTrackerResponseEventV1>::value,"Tracker terminal POD");
++// Exactly the actual torrent executor, fixed POD callback; observer owns its
++// lifetime and must not call LT, block, throw, or perform IO in observe().
++struct BiglybtcTrackerResponseObserverV1 {
++    virtual ~BiglybtcTrackerResponseObserverV1()=default;
++    virtual void observe(BiglybtcTrackerResponseEventV1 const&) noexcept=0;
++};
++enum class BiglybtcTrackerResponseStatusV1 : std::uint32_t {
++    Accepted=0,InvalidArgument=1,WrongThread=2,InvalidHandle=3,AlreadyBound=4,Failed=5
++};
++extern "C" TORRENT_EXPORT unsigned biglybtc_tracker_response_abi_v1() noexcept;
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_attach_tracker_response_observer_v1(
++    torrent_handle const*,std::shared_ptr<BiglybtcTrackerResponseObserverV1> const*,std::uint64_t admission) noexcept;
++}
+diff --git a/include/libtorrent/bt_peer_connection.hpp b/include/libtorrent/bt_peer_connection.hpp
+index f5f87c3807a50839dd7adf4d84cc8739aac2c41b..cf6bc35e85979a2e5a800796721766211e31bc49
+--- a/include/libtorrent/bt_peer_connection.hpp
++++ b/include/libtorrent/bt_peer_connection.hpp
+@@ -269,6 +269,7 @@
+ 
+ 		// DHT extension
+ 		void write_dht_port(int listen_port);
++		void refresh_biglybtc_dht_port();
+ 
+ 		// FAST extension
+ 		void write_have_all();
+@@ -395,6 +396,7 @@
+ 		// the peer indicated that it supports the
+ 		// extension protocol
+ 		bool m_supports_extensions:1;
++		std::uint16_t m_biglybtc_last_dht_port=0;
+ 		bool m_supports_dht_port:1;
+ 		bool m_supports_fast:1;
+ 
+diff --git a/include/libtorrent/kademlia/dht_tracker.hpp b/include/libtorrent/kademlia/dht_tracker.hpp
+index 4fff75f4f3b869f85db175e37f93b0319af2236a..9409477e4e33f84ab741c387d25e625365a616b6
+--- a/include/libtorrent/kademlia/dht_tracker.hpp
++++ b/include/libtorrent/kademlia/dht_tracker.hpp
+@@ -38,6 +38,8 @@
+ #define TORRENT_DHT_TRACKER
+ 
+ #include <functional>
++#include "libtorrent/aux_/biglybtc_mainline_identity.hpp"
++#include "libtorrent/biglybtc_mainline_routing.hpp"
+ 
+ #include <libtorrent/kademlia/node.hpp>
+ #include <libtorrent/kademlia/dos_blocker.hpp>
+@@ -79,7 +81,9 @@
+ 			, aux::session_settings const& settings
+ 			, counters& cnt
+ 			, dht_storage_interface& storage
+-			, dht_state&& state);
++			, dht_state&& state
++			, std::shared_ptr<aux::biglybtc_mainline_identity> identity = {});
++		~dht_tracker();
+ 
+ 		// the dht_state must be moved in!
+ 		dht_tracker(dht_observer* observer
+@@ -162,6 +166,7 @@
+ 			, udp::endpoint const& ep, span<char const> buf);
+ 
+ 		std::vector<std::pair<node_id, udp::endpoint>> live_nodes(node_id const& nid);
++		BiglybtcMainlineRoutingAckV1 biglybtc_routing_query(BiglybtcMainlineRoutingQueryV1 const&);
+ 
+ 	private:
+ 		struct tracker_node
+@@ -172,12 +177,13 @@
+ 				, node_id const& nid
+ 				, dht_observer* observer, counters& cnt
+ 				, get_foreign_node_t get_foreign_node
+-				, dht_storage_interface& storage);
++				, dht_storage_interface& storage, bool original_local_identity = false);
+ 			tracker_node(tracker_node const&) = delete;
+ 			tracker_node(tracker_node&&) = delete;
+ 
+ 			node dht;
+ 			deadline_timer connection_timer;
++			udp::endpoint const original_endpoint;
+ 		};
+ 		using tracker_nodes_t = std::map<aux::listen_socket_handle, tracker_node>;
+ 
+@@ -223,6 +229,7 @@
+ 		time_point m_last_tick;
+ 
+ 		io_context& m_ioc;
++		std::shared_ptr<aux::biglybtc_mainline_identity> m_biglybtc_identity;
+ 	};
+ } // namespace dht
+ } // namespace libtorrent
+diff --git a/include/libtorrent/kademlia/node.hpp b/include/libtorrent/kademlia/node.hpp
+index 234d0514965edd58515572833478e746692c704f..4f49a3876553080a5b2becf0af43a9e05f32e098
+--- a/include/libtorrent/kademlia/node.hpp
++++ b/include/libtorrent/kademlia/node.hpp
+@@ -111,7 +111,7 @@
+ 		, node_id const& nid
+ 		, dht_observer* observer, counters& cnt
+ 		, get_foreign_node_t get_foreign_node
+-		, dht_storage_interface& storage);
++		, dht_storage_interface& storage, bool original_local_identity = false);
+ 
+ 	~node();
+ 
+@@ -256,6 +256,7 @@
+ 		, bdecode_node const& want, entry& r);
+ 
+ 	node_id m_id;
++	bool m_biglybtc_original_identity;
+ 
+ public:
+ 	routing_table m_table;
+diff --git a/include/libtorrent/session_handle.hpp b/include/libtorrent/session_handle.hpp
+index 9622f5781f3d8544920102b8d5313d56726c9d51..70168892ef987cfa8a765c8ea54ba9a208f5cb77
+--- a/include/libtorrent/session_handle.hpp
++++ b/include/libtorrent/session_handle.hpp
+@@ -40,6 +40,8 @@
+ 
+ #include "libtorrent/config.hpp"
+ #include "libtorrent/fwd.hpp"
++#include "libtorrent/biglybtc_mainline_identity.hpp"
++#include "libtorrent/biglybtc_mainline_routing.hpp"
+ #include "libtorrent/entry.hpp"
+ #include "libtorrent/torrent_handle.hpp"
+ #include "libtorrent/add_torrent_params.hpp"
+@@ -102,6 +104,13 @@
+ 		// session has been destroyed, all session_handle objects will expire and
+ 		// not be valid.
+ 		bool is_valid() const { return !m_impl.expired(); }
++#ifndef TORRENT_DISABLE_DHT
++		// Optional provider implementation entry points; public class layout unchanged.
++		std::uint32_t biglybtc_configure_mainline_identity(BiglybtcMainlineIdentityPolicyV1 const&,
++			std::shared_ptr<BiglybtcMainlineIdentityObserverV1>) const;
++		BiglybtcMainlineIdentityStatusV1 biglybtc_mainline_identity_status() const;
++		BiglybtcMainlineRoutingAckV1 biglybtc_mainline_routing_query(BiglybtcMainlineRoutingQueryV1 const&) const;
++#endif
+ 
+ 		// saves settings (i.e. the settings_pack)
+ 		static constexpr save_state_flags_t save_settings = 0_bit;
+diff --git a/include/libtorrent/settings_pack.hpp b/include/libtorrent/settings_pack.hpp
+index b3d6f33743d03b7365dd9a03d55fa1b43c60dd50..e57f779afcdd5a534cef547ec443d371f2ac935b
+--- a/include/libtorrent/settings_pack.hpp
++++ b/include/libtorrent/settings_pack.hpp
+@@ -884,7 +884,8 @@
+ 			prefer_rc4,
+ 
+ 			// if true, hostname lookups are done via the configured proxy (if
+-			// any). This is only supported by SOCKS5 and HTTP.
++			// any). The exact-source BiglyBTC extension also selects SOCKS4a
++			// framing for SOCKS4. Upstream supports SOCKS5 and HTTP.
+ 			proxy_hostnames,
+ 
+ 			// if true, peer connections are made (and accepted) over the
+diff --git a/include/libtorrent/socks5_stream.hpp b/include/libtorrent/socks5_stream.hpp
+index 0459331e452a0f9dd41fdcc0ea945750b593d15e..11d8183ce7a7848f865741a88b479b39d1f76f8e
+--- a/include/libtorrent/socks5_stream.hpp
++++ b/include/libtorrent/socks5_stream.hpp
+@@ -35,8 +35,11 @@
+ #define TORRENT_SOCKS5_STREAM_HPP_INCLUDED
+ 
+ #include <functional>
++#include <memory>
++#include <vector>
+ 
+ #include "libtorrent/proxy_base.hpp"
++#include "libtorrent/biglybtc_socks4a.hpp"
+ #include "libtorrent/address.hpp"
+ #include "libtorrent/aux_/ip_helpers.hpp" // for is_ip_address
+ #include "libtorrent/assert.hpp"
+@@ -95,6 +98,14 @@
+ 
+ class socks5_stream : public proxy_base
+ {
++	// Socket operations retain their buffers until completion, including
++	// when close() is followed immediately by another connect.
++	struct connect_attempt
++	{
++		std::vector<char> buffer;
++	};
++	using attempt_ptr = std::shared_ptr<connect_attempt>;
++
+ public:
+ 
+ 	// commands
+@@ -132,12 +143,29 @@
+ 		// async_connect instead
+ 		TORRENT_ASSERT(!aux::is_ip_address(host));
+ 		m_dst_name = host;
+-		if (m_dst_name.size() > 255)
++		// The private 4a path rejects an overlong name in socks_connect rather
++		// than silently changing its destination. The factory sets version first.
++		if (m_dst_name.size() > 255 && m_version != biglybtc_socks4a_version)
+ 			m_dst_name.resize(255);
+ 	}
+ 
++	void cancel()
++	{
++		m_attempt.reset();
++		m_resolver.cancel();
++		proxy_base::cancel();
++	}
++
++	void cancel(error_code& ec)
++	{
++		m_attempt.reset();
++		m_resolver.cancel();
++		proxy_base::cancel(ec);
++	}
++
+ 	void close(error_code& ec)
+ 	{
++		m_attempt.reset();
+ 		m_dst_name.clear();
+ 		proxy_base::close(ec);
+ 	}
+@@ -145,6 +173,7 @@
+ #ifndef BOOST_NO_EXCEPTIONS
+ 	void close()
+ 	{
++		m_attempt.reset();
+ 		m_dst_name.clear();
+ 		proxy_base::close();
+ 	}
+@@ -157,9 +186,21 @@
+ 		// make sure we don't try to connect to INADDR_ANY. binding is fine,
+ 		// and using a hostname is fine on SOCKS version 5.
+ 		TORRENT_ASSERT(endpoint.address() != address()
+-			|| (!m_dst_name.empty() && m_version == 5));
+-
+-		m_remote_endpoint = endpoint;
++			|| (!m_dst_name.empty() && (m_version == 5 || m_version == biglybtc_socks4a_version)));
++
++		auto attempt = std::make_shared<connect_attempt>();
++		endpoint_type const remote = endpoint;
++		// Supersede the old handshake before closing its transport. Pending
++		// callbacks retain their own buffers and cannot advance this attempt.
++		// Preserve the caller's newly configured destination name.
++		if (m_attempt)
++		{
++			m_attempt.reset();
++			error_code ignored;
++			proxy_base::close(ignored);
++		}
++		m_attempt = attempt;
++		m_remote_endpoint = remote;
+ 
+ 		// the connect is split up in the following steps:
+ 		// 1. resolve name of proxy server
+@@ -172,48 +213,83 @@
+ 
+ 		ADD_OUTSTANDING_ASYNC("socks5_stream::name_lookup");
+ 		m_resolver.async_resolve(m_hostname, to_string(m_port).data(), wrap_allocator(
+-			[this](error_code const& ec, tcp::resolver::results_type ips, Handler hn) {
+-				name_lookup(ec, std::move(ips), std::move(hn));
++			[this, attempt](error_code const& ec, tcp::resolver::results_type ips, Handler hn) {
++				name_lookup(ec, std::move(ips), attempt, std::move(hn));
+ 			}, std::move(handler)));
+ 	}
+ 
+ private:
+ 
++	// A resolver success already queued when close() runs must not reopen
++	// the socket or serialize a cleared destination.
++	template <typename Handler>
++	bool check_attempt(error_code const& e, attempt_ptr const& attempt, Handler&& h)
++	{
++		if (m_attempt != attempt)
++		{
++			std::forward<Handler>(h)(error_code(boost::asio::error::operation_aborted));
++			return true;
++		}
++		if (!e) return false;
++		finish_attempt(attempt, e, std::forward<Handler>(h));
++		return true;
++	}
++
++	template <typename Handler>
++	void finish_attempt(attempt_ptr const& attempt, error_code const& e, Handler&& h)
++	{
++		if (m_attempt != attempt)
++		{
++			std::forward<Handler>(h)(error_code(boost::asio::error::operation_aborted));
++			return;
++		}
++		m_attempt.reset();
++		if (e)
++		{
++			m_dst_name.clear();
++			error_code ignored;
++			proxy_base::close(ignored);
++		}
++		// The callback may destroy or reconnect the stream. All cleanup,
++		// including protocol-error cleanup, precedes it.
++		std::forward<Handler>(h)(e);
++	}
++
+ 	template <typename Handler>
+ 	void name_lookup(error_code const& e, tcp::resolver::results_type ips
+-		, Handler h)
++		, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::name_lookup");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		auto i = ips.begin();
+ 		if (!m_sock.is_open())
+ 		{
+ 			error_code ec;
+ 			m_sock.open(i->endpoint().protocol(), ec);
+-			if (handle_error(ec, std::move(h))) return;
++			if (check_attempt(ec, attempt, std::move(h))) return;
+ 		}
+ 
+ 		// TODO: we could bind the socket here, since we know what the
+ 		// target endpoint is of the proxy
+ 		ADD_OUTSTANDING_ASYNC("socks5_stream::connected");
+ 		m_sock.async_connect(i->endpoint(), wrap_allocator(
+-			[this](error_code const& ec, Handler hn)
+-			{ connected(ec, std::move(hn)); }, std::move(h)));
+-	}
+-
+-	template <typename Handler>
+-	void connected(error_code const& e, Handler h)
++			[this, attempt](error_code const& ec, Handler hn)
++			{ connected(ec, attempt, std::move(hn)); }, std::move(h)));
++	}
++
++	template <typename Handler>
++	void connected(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::connected");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		using namespace libtorrent::aux;
+ 		if (m_version == 5)
+ 		{
+ 			// send SOCKS5 authentication methods
+-			m_buffer.resize(m_user.empty()?3:4);
+-			char* p = &m_buffer[0];
++			attempt->buffer.resize(m_user.empty()?3:4);
++			char* p = &attempt->buffer[0];
+ 			write_uint8(5, p); // SOCKS VERSION 5
+ 			if (m_user.empty())
+ 			{
+@@ -227,68 +303,68 @@
+ 				write_uint8(2, p); // username/password
+ 			}
+ 			ADD_OUTSTANDING_ASYNC("socks5_stream::handshake1");
+-			async_write(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(
+-				[this](error_code const& ec, std::size_t, Handler hn) {
+-					handshake1(ec, std::move(hn));
++			async_write(m_sock, boost::asio::buffer(attempt->buffer), wrap_allocator(
++				[this, attempt](error_code const& ec, std::size_t, Handler hn) {
++					handshake1(ec, attempt, std::move(hn));
+ 				}, std::move(h)));
+ 		}
+-		else if (m_version == 4)
+-		{
+-			socks_connect(std::move(h));
++		else if (m_version == 4 || m_version == biglybtc_socks4a_version)
++		{
++			socks_connect(attempt, std::move(h));
+ 		}
+ 		else
+ 		{
+-			std::move(h)(error_code(socks_error::unsupported_version));
+-		}
+-	}
+-
+-	template <typename Handler>
+-	void handshake1(error_code const& e, Handler h)
++			finish_attempt(attempt, error_code(socks_error::unsupported_version), std::move(h));
++		}
++	}
++
++	template <typename Handler>
++	void handshake1(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::handshake1");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		ADD_OUTSTANDING_ASYNC("socks5_stream::handshake2");
+-		m_buffer.resize(2);
+-		async_read(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(
+-			[this](error_code const& ec, std::size_t, Handler hn) {
+-				handshake2(ec, std::move(hn));
++		attempt->buffer.resize(2);
++		async_read(m_sock, boost::asio::buffer(attempt->buffer), wrap_allocator(
++			[this, attempt](error_code const& ec, std::size_t, Handler hn) {
++				handshake2(ec, attempt, std::move(hn));
+ 			}, std::move(h)));
+ 	}
+ 
+ 	template <typename Handler>
+-	void handshake2(error_code const& e, Handler h)
++	void handshake2(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::handshake2");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		using namespace libtorrent::aux;
+ 
+-		char* p = &m_buffer[0];
++		char* p = &attempt->buffer[0];
+ 		int version = read_uint8(p);
+ 		int method = read_uint8(p);
+ 
+ 		if (version < m_version)
+ 		{
+-			std::move(h)(error_code(socks_error::unsupported_version));
++			finish_attempt(attempt, error_code(socks_error::unsupported_version), std::move(h));
+ 			return;
+ 		}
+ 
+ 		if (method == 0)
+ 		{
+-			socks_connect(std::move(h));
++			socks_connect(attempt, std::move(h));
+ 		}
+ 		else if (method == 2)
+ 		{
+ 			if (m_user.empty())
+ 			{
+-				std::move(h)(error_code(socks_error::username_required));
++				finish_attempt(attempt, error_code(socks_error::username_required), std::move(h));
+ 				return;
+ 			}
+ 
+ 			// start sub-negotiation
+-			m_buffer.resize(m_user.size() + m_password.size() + 3);
+-			p = &m_buffer[0];
++			attempt->buffer.resize(m_user.size() + m_password.size() + 3);
++			p = &attempt->buffer[0];
+ 			write_uint8(1, p);
+ 			TORRENT_ASSERT(m_user.size() < 0x100);
+ 			write_uint8(uint8_t(m_user.size()), p);
+@@ -298,72 +374,74 @@
+ 			write_string(m_password, p);
+ 
+ 			ADD_OUTSTANDING_ASYNC("socks5_stream::handshake3");
+-			async_write(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(
+-				[this](error_code const& ec, std::size_t const, Handler hn) {
+-					handshake3(ec, std::move(hn));
++			async_write(m_sock, boost::asio::buffer(attempt->buffer), wrap_allocator(
++				[this, attempt](error_code const& ec, std::size_t const, Handler hn) {
++					handshake3(ec, attempt, std::move(hn));
+ 				}, std::move(h)));
+ 		}
+ 		else
+ 		{
+-			std::move(h)(error_code(socks_error::unsupported_authentication_method));
++			finish_attempt(attempt, error_code(socks_error::unsupported_authentication_method), std::move(h));
+ 			return;
+ 		}
+ 	}
+ 
+ 	template <typename Handler>
+-	void handshake3(error_code const& e, Handler h)
++	void handshake3(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::handshake3");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		ADD_OUTSTANDING_ASYNC("socks5_stream::handshake4");
+-		m_buffer.resize(2);
+-		async_read(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(
+-			[this](error_code const& ec, std::size_t, Handler hn) {
+-				handshake4(ec, std::move(hn));
++		attempt->buffer.resize(2);
++		async_read(m_sock, boost::asio::buffer(attempt->buffer), wrap_allocator(
++			[this, attempt](error_code const& ec, std::size_t, Handler hn) {
++				handshake4(ec, attempt, std::move(hn));
+ 			}, std::move(h)));
+ 	}
+ 
+ 	template <typename Handler>
+-	void handshake4(error_code const& e, Handler h)
++	void handshake4(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::handshake4");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		using namespace libtorrent::aux;
+ 
+-		char* p = &m_buffer[0];
++		char* p = &attempt->buffer[0];
+ 		int version = read_uint8(p);
+ 		int status = read_uint8(p);
+ 
+ 		if (version != 1)
+ 		{
+-			std::move(h)(error_code(socks_error::unsupported_authentication_version));
++			finish_attempt(attempt, error_code(socks_error::unsupported_authentication_version), std::move(h));
+ 			return;
+ 		}
+ 
+ 		if (status != 0)
+ 		{
+-			std::move(h)(error_code(socks_error::authentication_error));
++			finish_attempt(attempt, error_code(socks_error::authentication_error), std::move(h));
+ 			return;
+ 		}
+ 
+-		std::vector<char>().swap(m_buffer);
+-		socks_connect(std::move(h));
+-	}
+-
+-	template <typename Handler>
+-	void socks_connect(Handler h)
+-	{
++		std::vector<char>().swap(attempt->buffer);
++		socks_connect(attempt, std::move(h));
++	}
++
++	template <typename Handler>
++	void socks_connect(attempt_ptr const& attempt, Handler h)
++	{
++		if (check_attempt(error_code{}, attempt, std::move(h))) return;
++
+ 		using namespace libtorrent::aux;
+ 
+ 		if (m_version == 5)
+ 		{
+ 			// send SOCKS5 connect command
+-			m_buffer.resize(6 + (!m_dst_name.empty()
++			attempt->buffer.resize(6 + (!m_dst_name.empty()
+ 				? m_dst_name.size() + 1
+ 				:(aux::is_v4(m_remote_endpoint) ? 4 : 16)));
+-			char* p = &m_buffer[0];
++			char* p = &attempt->buffer[0];
+ 			write_uint8(5, p); // SOCKS VERSION 5
+ 			write_uint8(std::uint8_t(m_command), p); // CONNECT command
+ 			write_uint8(0, p); // reserved
+@@ -385,64 +463,87 @@
+ 			}
+ 			write_uint16(m_remote_endpoint.port(), p);
+ 		}
+-		else if (m_version == 4)
+-		{
+-			// SOCKS4 only supports IPv4
+-			if (!aux::is_v4(m_remote_endpoint))
+-			{
+-				std::move(h)(error_code(boost::asio::error::address_family_not_supported));
+-				return;
+-			}
+-			m_buffer.resize(m_user.size() + 9);
+-			char* p = &m_buffer[0];
++		else if (m_version == 4 || m_version == biglybtc_socks4a_version)
++		{
++			bool const remote_name = m_version == biglybtc_socks4a_version;
++			if (m_command != socks5_connect || m_user.find('\0') != std::string::npos
++				|| (!remote_name && !m_dst_name.empty()))
++			{
++				finish_attempt(attempt, error_code(boost::asio::error::invalid_argument), std::move(h));
++				return;
++			}
++			// SOCKS4 uses numeric IPv4. SOCKS4a carries the bounded destination
++			// as a NUL-terminated name after USERID, never a local DNS fallback.
++			if (!remote_name && !aux::is_v4(m_remote_endpoint))
++			{
++				finish_attempt(attempt, error_code(boost::asio::error::address_family_not_supported), std::move(h));
++				return;
++			}
++			std::string const host = remote_name
++				? (m_dst_name.empty() ? m_remote_endpoint.address().to_string() : m_dst_name)
++				: std::string{};
++			if (remote_name && (host.empty() || host.size() > 255
++				|| host.find('\0') != std::string::npos
++				|| (m_dst_name.empty() && m_remote_endpoint.address().is_unspecified())))
++			{
++				finish_attempt(attempt, error_code(boost::asio::error::invalid_argument), std::move(h));
++				return;
++			}
++			attempt->buffer.resize(m_user.size() + 9 + (remote_name ? host.size() + 1 : 0));
++			char* p = &attempt->buffer[0];
+ 			write_uint8(4, p); // SOCKS VERSION 4
+ 			write_uint8(std::uint8_t(m_command), p); // CONNECT command
+ 			write_uint16(m_remote_endpoint.port(), p);
+-			write_uint32(m_remote_endpoint.address().to_v4().to_uint(), p);
++			write_uint32(remote_name ? 1 : m_remote_endpoint.address().to_v4().to_uint(), p);
+ 			std::copy(m_user.begin(), m_user.end(), p);
+ 			p += m_user.size();
+-			write_uint8(0, p); // 0-terminator
++			write_uint8(0, p); // USERID terminator
++			if (remote_name)
++			{
++				std::copy(host.begin(), host.end(), p); p += host.size();
++				write_uint8(0, p); // SOCKS4a destination terminator
++			}
+ 		}
+ 		else
+ 		{
+-			std::move(h)(error_code(socks_error::unsupported_version));
++			finish_attempt(attempt, error_code(socks_error::unsupported_version), std::move(h));
+ 			return;
+ 		}
+ 
+ 		ADD_OUTSTANDING_ASYNC("socks5_stream::connect1");
+-		async_write(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(
+-			[this](error_code const& ec, std::size_t, Handler hn) {
+-				connect1(ec, std::move(hn));
++		async_write(m_sock, boost::asio::buffer(attempt->buffer), wrap_allocator(
++			[this, attempt](error_code const& ec, std::size_t, Handler hn) {
++				connect1(ec, attempt, std::move(hn));
+ 			}, std::move(h)));
+ 	}
+ 
+ 	template <typename Handler>
+-	void connect1(error_code const& e, Handler h)
++	void connect1(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::connect1");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		if (m_version == 5)
+-			m_buffer.resize(6 + 4); // assume an IPv4 address
+-		else if (m_version == 4)
+-			m_buffer.resize(8);
++			attempt->buffer.resize(6 + 4); // assume an IPv4 address
++		else if (m_version == 4 || m_version == biglybtc_socks4a_version)
++			attempt->buffer.resize(8);
+ 
+ 		ADD_OUTSTANDING_ASYNC("socks5_stream::connect2");
+-		async_read(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(
+-			[this](error_code const& ec, std::size_t, Handler hn) {
+-				connect2(ec, std::move(hn));
++		async_read(m_sock, boost::asio::buffer(attempt->buffer), wrap_allocator(
++			[this, attempt](error_code const& ec, std::size_t, Handler hn) {
++				connect2(ec, attempt, std::move(hn));
+ 			}, std::move(h)));
+ 	}
+ 
+ 	template <typename Handler>
+-	void connect2(error_code const& e, Handler h)
++	void connect2(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::connect2");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		using namespace libtorrent::aux;
+ 
+-		char const* p = &m_buffer[0];
++		char const* p = &attempt->buffer[0];
+ 		int const version = read_uint8(p);
+ 		int const response = read_uint8(p);
+ 
+@@ -450,7 +551,7 @@
+ 		{
+ 			if (version < m_version)
+ 			{
+-				std::move(h)(error_code(socks_error::unsupported_version));
++				finish_attempt(attempt, error_code(socks_error::unsupported_version), std::move(h));
+ 				return;
+ 			}
+ 			if (response != 0)
+@@ -466,7 +567,7 @@
+ 					case 7: ec = socks_error::command_not_supported; break;
+ 					case 8: ec = boost::asio::error::address_family_not_supported; break;
+ 				}
+-				std::move(h)(ec);
++				finish_attempt(attempt, ec, std::move(h));
+ 				return;
+ 			}
+ 			p += 1; // reserved
+@@ -475,8 +576,8 @@
+ 			// on address type)
+ 			if (atyp == 1)
+ 			{
+-				std::vector<char>().swap(m_buffer);
+-				std::move(h)(e);
++				std::vector<char>().swap(attempt->buffer);
++				finish_attempt(attempt, e, std::move(h));
+ 				return;
+ 			}
+ 			std::size_t extra_bytes = 0;
+@@ -492,31 +593,31 @@
+ 			}
+ 			else
+ 			{
+-				std::move(h)(error_code(boost::asio::error::address_family_not_supported));
+-				return;
+-			}
+-			m_buffer.resize(m_buffer.size() + extra_bytes);
++				finish_attempt(attempt, error_code(boost::asio::error::address_family_not_supported), std::move(h));
++				return;
++			}
++			attempt->buffer.resize(attempt->buffer.size() + extra_bytes);
+ 
+ 			ADD_OUTSTANDING_ASYNC("socks5_stream::connect3");
+ 			TORRENT_ASSERT(extra_bytes > 0);
+-			async_read(m_sock, boost::asio::buffer(&m_buffer[m_buffer.size() - extra_bytes], extra_bytes)
+-				, wrap_allocator([this](error_code const& ec, std::size_t, Handler hn) {
+-					connect3(ec, std::move(hn));
++			async_read(m_sock, boost::asio::buffer(&attempt->buffer[attempt->buffer.size() - extra_bytes], extra_bytes)
++				, wrap_allocator([this, attempt](error_code const& ec, std::size_t, Handler hn) {
++					connect3(ec, attempt, std::move(hn));
+ 				}, std::move(h)));
+ 		}
+-		else if (m_version == 4)
++		else if (m_version == 4 || m_version == biglybtc_socks4a_version)
+ 		{
+ 			if (version != 0)
+ 			{
+-				std::move(h)(error_code(socks_error::general_failure));
++				finish_attempt(attempt, error_code(socks_error::general_failure), std::move(h));
+ 				return;
+ 			}
+ 
+ 			// access granted
+ 			if (response == 90)
+ 			{
+-				std::vector<char>().swap(m_buffer);
+-				std::move(h)(e);
++				std::vector<char>().swap(attempt->buffer);
++				finish_attempt(attempt, e, std::move(h));
+ 				return;
+ 			}
+ 
+@@ -527,24 +628,24 @@
+ 				case 92: ec = socks_error::no_identd; break;
+ 				case 93: ec = socks_error::identd_error; break;
+ 			}
+-			std::move(h)(ec);
+-		}
+-	}
+-
+-	template <typename Handler>
+-	void connect3(error_code const& e, Handler h)
++			finish_attempt(attempt, ec, std::move(h));
++		}
++	}
++
++	template <typename Handler>
++	void connect3(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::connect3");
+ 		using namespace libtorrent::aux;
+ 
+-		if (handle_error(e, std::move(h))) return;
+-
+-		std::vector<char>().swap(m_buffer);
+-		std::move(h)(e);
+-	}
+-
+-	// send and receive buffer
+-	std::vector<char> m_buffer;
++		if (check_attempt(e, attempt, std::move(h))) return;
++
++		std::vector<char>().swap(attempt->buffer);
++		finish_attempt(attempt, e, std::move(h));
++	}
++
++	// Only this handshake may advance the socket.
++	attempt_ptr m_attempt;
+ 	// proxy authentication
+ 	std::string m_user;
+ 	std::string m_password;
+diff --git a/include/libtorrent/torrent.hpp b/include/libtorrent/torrent.hpp
+index 59bc425b928b1768005099634a96efcec43d1467..39a6a7046b72fc164a3e52457eac01b2c471222c
+--- a/include/libtorrent/torrent.hpp
++++ b/include/libtorrent/torrent.hpp
+@@ -66,6 +66,9 @@
+ #include "libtorrent/address.hpp"
+ #include "libtorrent/peer_list.hpp"
+ #include "libtorrent/tracker_manager.hpp"
++#include "libtorrent/biglybtc_queue_observer.hpp"
++#include "libtorrent/biglybtc_tracker_response.hpp"
++#include "libtorrent/biglybtc_mainline_port.hpp"
+ #include "libtorrent/stat.hpp"
+ #include "libtorrent/alert.hpp"
+ #include "libtorrent/piece_picker.hpp"
+@@ -374,7 +377,12 @@
+ 		~torrent() override;
+ 
+ 		// This may be called from multiple threads
+-		info_hash_t const& info_hash() const { return m_info_hash; }
++		// Internal wire identity: session indices and peer/discovery protocols.
++		info_hash_t const& info_hash() const { return m_wire_info_hash; }
++		// Full immutable metainfo identity remains available for disk/Merkle
++		// verification and public metadata/status access.
++		info_hash_t const& metadata_info_hash() const { return m_info_hash; }
++		torrent_flags_t swarm_selection_flags() const { return m_swarm_flags; }
+ 
+ 		bool is_deleted() const { return m_deleted; }
+ 
+@@ -535,6 +543,8 @@
+ 		std::string name() const;
+ 		aux::allocation_slot name_idx(aux::stack_allocator& a);
+ 
++		friend std::uint32_t biglybtc_read_traffic_counters_v3(torrent_handle const*,
++			BiglybtcTrafficCountersV3*,std::uint32_t) noexcept;
+ 		stat statistics() const { return m_stat; }
+ 		boost::optional<std::int64_t> bytes_left() const;
+ 
+@@ -807,6 +817,17 @@
+ 			, int complete, int incomplete, int downloaded, int downloaders) override;
+ 
+ 		void update_scrape_state();
++		bool biglybtc_attach_mainline_port_observer(std::shared_ptr<BiglybtcMainlinePortObserverV1>, std::uint64_t admission);
++		bool biglybtc_has_mainline_port_observer() const noexcept { return bool(m_biglybtc_mainline_observer); }
++		std::uint16_t biglybtc_mainline_port() const noexcept;
++		bool biglybtc_refresh_mainline_port(std::uint64_t admission);
++		void biglybtc_mainline_port_received(tcp::endpoint const&, sha1_hash const&, std::uint32_t protocol, std::uint16_t port) noexcept;
++		bool biglybtc_attach_queue_observer(std::shared_ptr<BiglybtcQueueObserverV1> sink);
++		bool biglybtc_attach_tracker_response_observer(std::shared_ptr<BiglybtcTrackerResponseObserverV1>,std::uint64_t);
++		void biglybtc_tracker_response_event(BiglybtcTrackerResponseKindV1,tracker_request const&,BiglybtcTrackerResponseFieldsV1) noexcept;
++		void biglybtc_queue_dispatch(tracker_request& req);
++		void biglybtc_queue_event(BiglybtcQueueEventKindV1 kind,
++			tracker_request const* req=nullptr,int seeds=-1,int peers=-1) noexcept;
+ 
+ #if TORRENT_ABI_VERSION == 1
+ 		// if no password and username is set
+@@ -1366,6 +1387,17 @@
+ 		std::list<std::shared_ptr<torrent_plugin>> m_extensions;
+ #endif
+ 
++		// Optional fixed-state event source; all accesses on the real executor.
++		std::shared_ptr<BiglybtcMainlinePortObserverV1> m_biglybtc_mainline_observer;
++		std::uint64_t m_biglybtc_mainline_admission=0, m_biglybtc_mainline_sequence=0;
++		bool m_biglybtc_mainline_lost=false;
++		std::shared_ptr<BiglybtcQueueObserverV1> m_biglybtc_queue_observer;
++		std::uint64_t m_biglybtc_queue_sequence=0,m_biglybtc_queue_request=0;
++		bool m_biglybtc_queue_lost=false;
++		std::shared_ptr<BiglybtcTrackerResponseObserverV1> m_biglybtc_response_observer;
++		std::uint64_t m_biglybtc_response_admission=0,m_biglybtc_response_sequence=0;
++		bool m_biglybtc_response_lost=false;
++
+ 		// used for tracker announces
+ 		deadline_timer m_tracker_timer;
+ 
+@@ -1476,6 +1508,8 @@
+ 		// keep a copy of the info-hash here, so it can be accessed from multiple
+ 		// threads, and be cheap to access from the client
+ 		info_hash_t m_info_hash;
++		info_hash_t m_wire_info_hash;
++		torrent_flags_t const m_swarm_flags;
+ 
+ 	public:
+ 		// these are the lists this torrent belongs to. For more
+diff --git a/include/libtorrent/torrent_handle.hpp b/include/libtorrent/torrent_handle.hpp
+index 88a763049e31ac563252085304bf70d682453395..eee7e5a1c3c29352793e46ca34e4c9ca7dbb1349
+--- a/include/libtorrent/torrent_handle.hpp
++++ b/include/libtorrent/torrent_handle.hpp
+@@ -43,6 +43,10 @@
+ #define TORRENT_TORRENT_HANDLE_HPP_INCLUDED
+ 
+ #include "libtorrent/config.hpp"
++#include "libtorrent/biglybtc_payload_counters.hpp"
++#include "libtorrent/biglybtc_queue_observer.hpp"
++#include "libtorrent/biglybtc_tracker_response.hpp"
++#include "libtorrent/biglybtc_mainline_port.hpp"
+ 
+ #include <vector>
+ #include <set>
+@@ -242,6 +246,19 @@
+ 		friend struct aux::session_impl;
+ 		friend struct session_handle;
+ 		friend struct torrent;
++		friend std::uint32_t biglybtc_read_payload_counters_v1(torrent_handle const*,
++			BiglybtcPayloadCountersV1*, std::uint32_t) noexcept;
++		friend std::uint32_t biglybtc_read_traffic_counters_v2(torrent_handle const*,
++			BiglybtcTrafficCountersV2*, std::uint32_t) noexcept;
++		friend std::uint32_t biglybtc_read_traffic_counters_v3(torrent_handle const*,
++			BiglybtcTrafficCountersV3*, std::uint32_t) noexcept;
++		friend std::uint32_t biglybtc_attach_mainline_port_observer_v1(torrent_handle const*,
++			std::shared_ptr<BiglybtcMainlinePortObserverV1> const*, std::uint64_t) noexcept;
++		friend std::uint32_t biglybtc_refresh_mainline_port_v1(torrent_handle const*, std::uint64_t) noexcept;
++		friend std::uint32_t biglybtc_attach_queue_observer_v1(torrent_handle const*,
++			std::shared_ptr<BiglybtcQueueObserverV1> const*) noexcept;
++		friend std::uint32_t biglybtc_attach_tracker_response_observer_v1(torrent_handle const*,
++			std::shared_ptr<BiglybtcTrackerResponseObserverV1> const*,std::uint64_t) noexcept;
+ 		TORRENT_EXPORT friend std::size_t hash_value(torrent_handle const& th);
+ 
+ 		// constructs a torrent handle that does not refer to a torrent.
+diff --git a/include/libtorrent/tracker_manager.hpp b/include/libtorrent/tracker_manager.hpp
+index bdc3e8fe094e8366987a9abf0a50c69f16873e86..9c114c68d2a30ae6bcee961fb5877771beaad1e1
+--- a/include/libtorrent/tracker_manager.hpp
++++ b/include/libtorrent/tracker_manager.hpp
+@@ -51,6 +51,7 @@
+ #include <deque>
+ 
+ #include "libtorrent/flags.hpp"
++#include "libtorrent/biglybtc_tracker_response.hpp"
+ #include "libtorrent/socket.hpp"
+ #include "libtorrent/fwd.hpp"
+ #include "libtorrent/address.hpp"
+@@ -147,6 +148,13 @@
+ 		// scrape_tracker() or force_reannounce()
+ 		bool triggered_manually = false;
+ 
++		// Reviewed optional queue provenance, copied with this exact request.
++		// Stamped at actual torrent dispatch; zero means unavailable, not epoch0.
++		mutable BiglybtcTrackerResponseFieldsV1 biglybtc_response_fields;
++		std::uint64_t biglybtc_queue_request = 0;
++		std::int64_t biglybtc_queue_started_nanoseconds = 0;
++		std::int64_t biglybtc_queue_started_wall_milliseconds = 0;
++
+ #if TORRENT_USE_SSL
+ 		ssl::context* ssl_ctx = nullptr;
+ #endif
+@@ -157,6 +165,7 @@
+ 
+ 	struct tracker_response
+ 	{
++		BiglybtcTrackerResponseFieldsV1 biglybtc_response_fields;
+ 		tracker_response()
+ 			: interval(1800)
+ 			, min_interval(1)
+diff --git a/src/biglybtc_utf16_info.hpp b/src/biglybtc_utf16_info.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..525e7265acb5f89b09fcfe3513273fc2d5c2cda7
+--- /dev/null
++++ b/src/biglybtc_utf16_info.hpp
+@@ -0,0 +1,83 @@
++// Private compatibility exception for the pinned original BEncoder file tree.
++// No exported ABI; included only by torrent_info.cpp. No raw bytes are edited.
++#pragma once
++#include "libtorrent/bdecode.hpp"
++#include <algorithm>
++#include <cstdint>
++#include <string>
++#include <utility>
++
++namespace libtorrent { namespace aux { namespace biglybtc_info_detail {
++inline bool utf16Key(string_view bytes, std::u16string& out) {
++  out.clear();
++  for (std::size_t at=0;at<bytes.size();) {
++    const auto first=static_cast<unsigned char>(bytes[at++]);
++    std::uint32_t scalar=0, minimum=0; unsigned continuation=0;
++    if (first<0x80) { scalar=first; }
++    else if ((first&0xe0)==0xc0) { scalar=first&0x1f; continuation=1; minimum=0x80; }
++    else if ((first&0xf0)==0xe0) { scalar=first&0x0f; continuation=2; minimum=0x800; }
++    else if ((first&0xf8)==0xf0) { scalar=first&0x07; continuation=3; minimum=0x10000; }
++    else { return false; }
++    if (continuation>bytes.size()-at) { return false; }
++    for (unsigned i=0;i<continuation;++i) {
++      const auto next=static_cast<unsigned char>(bytes[at++]);
++      if ((next&0xc0)!=0x80) { return false; }
++      scalar=(scalar<<6)|(next&0x3f);
++    }
++    if (scalar<minimum||scalar>0x10ffff||(scalar>=0xd800&&scalar<=0xdfff)) { return false; }
++    if (scalar<0x10000) { out.push_back(static_cast<char16_t>(scalar)); }
++    else { scalar-=0x10000; out.push_back(static_cast<char16_t>(0xd800+(scalar>>10))); out.push_back(static_cast<char16_t>(0xdc00+(scalar&0x3ff))); }
++  }
++  return true;
++}
++inline bool byteLess(string_view a,string_view b) {
++  return std::lexicographical_compare(a.begin(),a.end(),b.begin(),b.end(),
++      [](char x,char y){return static_cast<unsigned char>(x)<static_cast<unsigned char>(y);});
++}
++inline bool canonicalScalar(bdecode_node const& node) {
++  auto const raw=node.data_section();
++  if (node.type()==bdecode_node::string_t) {
++    return raw.size()>=2&&(raw[0]!='0'||raw[1]==':');
++  }
++  if (node.type()==bdecode_node::int_t) {
++    if (raw.size()<3||raw[0]!='i'||raw[raw.size()-1]!='e') return false;
++    std::ptrdiff_t const start=raw[1]=='-'?2:1;
++    if (start>=raw.size()-1||raw[start]<'0'||raw[start]>'9') return false;
++    if (raw[start]=='0'&&(start==2||raw.size()!=3)) return false;
++    for (std::ptrdiff_t i=start;i<raw.size()-1;++i) if (raw[i]<'0'||raw[i]>'9') return false;
++  }
++  return true;
++}
++struct State { int tokens=0; bool changedOrder=false; };
++inline bool canonicalNode(bdecode_node const& node,std::ptrdiff_t treeOffset,bool inTree,int depth,State& state) {
++  if (depth>100||++state.tokens>2000000||!canonicalScalar(node)) return false;
++  if (node.type()==bdecode_node::dict_t) {
++    string_view previous; std::u16string priorUnits;
++    for (int i=0;i<node.dict_size();++i) {
++      auto const entry=node.dict_at_node(i);
++      if (++state.tokens>2000000||entry.first.type()!=bdecode_node::string_t||!canonicalScalar(entry.first)) return false;
++      auto const key=entry.first.string_value();
++      if (inTree) {
++        std::u16string units;
++        if (!utf16Key(key,units)||(i>0&&!(priorUnits<units))) return false;
++        if (i>0&&!byteLess(previous,key)) state.changedOrder=true;
++        priorUnits=std::move(units);
++      } else if (i>0&&!byteLess(previous,key)) return false;
++      previous=key;
++      if (!canonicalNode(entry.second,treeOffset,inTree||entry.second.data_offset()==treeOffset,depth+1,state)) return false;
++    }
++  } else if (node.type()==bdecode_node::list_t) {
++    for (int i=0;i<node.list_size();++i) if (!canonicalNode(node.list_at(i),treeOffset,inTree,depth+1,state)) return false;
++  } else if (node.type()!=bdecode_node::string_t&&node.type()!=bdecode_node::int_t) return false;
++  return true;
++}
++} // biglybtc_info_detail
++inline bool biglybtcOriginalUtf16Info(bdecode_node const& info) {
++  if (info.type()!=bdecode_node::dict_t||info.data_section().size()>32*1024*1024
++      ||info.dict_find_int_value("meta version",-1)!=2) return false;
++  auto const tree=info.dict_find_dict("file tree");
++  if (!tree) return false;
++  biglybtc_info_detail::State state;
++  return biglybtc_info_detail::canonicalNode(info,tree.data_offset(),false,0,state)&&state.changedOrder;
++}
++} } // libtorrent::aux
+diff --git a/src/bt_peer_connection.cpp b/src/bt_peer_connection.cpp
+index 87fc694277de9d2a70e839b4fb7c0f35fd0e900b..c9b0757b8150d49a9bf4dd4dcd6ff5c5023932a1
+--- a/src/bt_peer_connection.cpp
++++ b/src/bt_peer_connection.cpp
+@@ -49,6 +49,7 @@
+ #endif
+ 
+ #include "libtorrent/bt_peer_connection.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
+ #include "libtorrent/session.hpp"
+ #include "libtorrent/identify_client.hpp"
+ #include "libtorrent/entry.hpp"
+@@ -330,8 +331,26 @@
+ 		maybe_send_hash_request();
+ 	}
+ 
++	void bt_peer_connection::refresh_biglybtc_dht_port()
++	{
++		if (m_sent_handshake && m_sent_bitfield && !is_disconnecting()) write_dht_port();
++	}
++
+ 	void bt_peer_connection::write_dht_port()
+ 	{
++		auto const t = associated_torrent().lock();
++		if (t && t->biglybtc_has_mainline_port_observer())
++		{
++			// A bound bridge never falls back to the torrent session's own DHT.
++			auto const port = t->biglybtc_mainline_port();
++			if (port == 0) { m_biglybtc_last_dht_port = 0; return; }
++			if (m_supports_dht_port && m_sent_handshake && m_sent_bitfield && !is_disconnecting()
++				&& port != m_biglybtc_last_dht_port)
++			{
++				write_dht_port(port); m_biglybtc_last_dht_port = port;
++			}
++			return;
++		}
+ #ifndef TORRENT_DISABLE_DHT
+ 		if (m_supports_dht_port && m_ses.has_dht())
+ 		{
+@@ -3448,7 +3467,11 @@
+ 
+ 				// this must go after the connection is attached to a torrent because that is what
+ 				// adds the peer info for incoming connections
+-				if (recv_buffer[7] & 0x10)
++				// A selected original v1 swarm may accept a v1 hybrid peer's
++				// upgrade offer without enabling the unselected v2 identity.
++				// Default/upstream admissions retain the exact old branch.
++				if ((recv_buffer[7] & 0x10)
++					&& t->swarm_selection_flags() != biglybtc_v1_only)
+ 				{
+ 					if (t->valid_metadata() && !t->info_hash().has_v2())
+ 					{
+diff --git a/src/http_connection.cpp b/src/http_connection.cpp
+index 82e654b4d2ce0aa7f7e5b6fd8da363e75ed21781..42c078deb961cf3d886967e6c03ae46f50b9e7d9
+--- a/src/http_connection.cpp
++++ b/src/http_connection.cpp
+@@ -370,7 +370,8 @@
+ #endif
+ 		if (ps && ps->proxy_hostnames
+ 			&& (ps->type == settings_pack::socks5
+-				|| ps->type == settings_pack::socks5_pw))
++				|| ps->type == settings_pack::socks5_pw
++				|| ps->type == settings_pack::socks4))
+ 		{
+ 			m_hostname = hostname;
+ 			m_port = std::uint16_t(port);
+@@ -557,7 +558,8 @@
+ 
+ 	if (m_proxy.proxy_hostnames
+ 		&& (m_proxy.type == settings_pack::socks5
+-			|| m_proxy.type == settings_pack::socks5_pw))
++			|| m_proxy.type == settings_pack::socks5_pw
++			|| m_proxy.type == settings_pack::socks4))
+ 	{
+ 		// test to see if m_hostname really just is an IP (and not a hostname). If it
+ 		// is, ec will be represent "success". If so, don't set it as the socks5
+diff --git a/src/http_tracker_connection.cpp b/src/http_tracker_connection.cpp
+index d7b66c57dc28c12c150af53f6b51dfca152bf889..997699a51016bfc4d76097ec68f4f8c1dce9fb69
+--- a/src/http_tracker_connection.cpp
++++ b/src/http_tracker_connection.cpp
+@@ -51,6 +51,7 @@
+ 
+ #include "libtorrent/tracker_manager.hpp"
+ #include "libtorrent/http_tracker_connection.hpp"
++#include <initializer_list>
+ #include "libtorrent/http_connection.hpp"
+ #include "libtorrent/aux_/escape_string.hpp"
+ #include "libtorrent/io.hpp"
+@@ -454,6 +455,7 @@
+ 			return;
+ 		}
+ 
++		tracker_req().biglybtc_response_fields=resp.biglybtc_response_fields;
+ 		// do slightly different things for scrape requests
+ 		if (tracker_req().kind & tracker_request::scrape_request)
+ 		{
+@@ -518,6 +520,67 @@
+ 		return true;
+ 	}
+ 
++	namespace {
++	bool original_dict(bdecode_node const& node,std::initializer_list<string_view> keys)
++	{
++		if(node.type()!=bdecode_node::dict_t||node.dict_size()>32) return false;
++		string_view previous;
++		for(int i=0;i<node.dict_size();++i) {
++			auto const item=node.dict_at(i);auto const key=item.first;
++			if(i&&!(previous<key)) return false; // Duplicate/noncanonical is unavailable.
++			previous=key;bool known=false;for(auto const allowed:keys) if(key==allowed) known=true;
++			if(!known) return false;
++		}
++		return true;
++	}
++	bool original_count(bdecode_node const& node,char const* key,std::uint32_t mask,
++		std::int64_t& value,std::uint32_t& present)
++	{
++		auto const field=node.dict_find(key);if(!field) return true;
++		if(field.type()!=bdecode_node::int_t) return false;
++		value=field.int_value();present|=mask;return true;
++	}
++	BiglybtcTrackerResponseFieldsV1 original_http_fields(bdecode_node const& root,
++		bool const scrape,sha1_hash const& hash,std::size_t const bytes)
++	{
++		BiglybtcTrackerResponseFieldsV1 out;if(bytes>16384) return out;
++		bdecode_node counts=root;
++		if(scrape) {
++			if(!original_dict(root,{"files","flags"})) return out;
++			auto const files=root.dict_find_dict("files");if(!files||files.dict_size()!=1) return out;
++			counts=files.dict_find_dict(hash.to_string());
++			if(!counts||!original_dict(counts,{"complete","incomplete","downloaded"})) return out;
++			auto const flags=root.dict_find("flags");
++			if(flags) {
++				if(!original_dict(flags,{"min_request_interval"})) return out;
++				auto const interval=flags.dict_find("min_request_interval");if(interval&&interval.type()!=bdecode_node::int_t) return out;
++			}
++		} else {
++			if(!original_dict(root,{"complete","incomplete","downloaded","extensions","interval","min interval","peers","peers6","tracker id","warning message"})) return out;
++			auto const interval=root.dict_find("interval");
++			if(!interval||interval.type()!=bdecode_node::int_t||interval.int_value()<=0||interval.int_value()>2147483647) return out;
++			auto const peers=root.dict_find("peers");
++			if(!peers||peers.type()!=bdecode_node::string_t||peers.string_length()%6!=0) return out;
++			auto const peers6=root.dict_find("peers6");if(peers6&&(peers6.type()!=bdecode_node::string_t||peers6.string_length()%18!=0)) return out;
++			for(auto const key:{"warning message","tracker id"}) {auto const field=root.dict_find(key);if(field&&field.type()!=bdecode_node::string_t) return out;}
++			auto const minimum=root.dict_find("min interval");if(minimum&&minimum.type()!=bdecode_node::int_t) return out;
++		}
++		if(!original_count(counts,"complete",1,out.complete,out.present)
++			||!original_count(counts,"incomplete",2,out.incomplete,out.present)
++			||!original_count(counts,"downloaded",4,out.downloaded,out.present)) return BiglybtcTrackerResponseFieldsV1{};
++		if(!scrape) {
++			auto const extensions=root.dict_find("extensions");
++			if(extensions) {
++				if(!original_dict(extensions,{"complete","incomplete","min interval override"})) return BiglybtcTrackerResponseFieldsV1{};
++				auto const minimum=extensions.dict_find("min interval override");if(minimum&&minimum.type()!=bdecode_node::int_t) return BiglybtcTrackerResponseFieldsV1{};
++				if((out.present&1)==0&&!original_count(extensions,"complete",1,out.complete,out.present)) return BiglybtcTrackerResponseFieldsV1{};
++				if((out.present&2)==0&&!original_count(extensions,"incomplete",2,out.incomplete,out.present)) return BiglybtcTrackerResponseFieldsV1{};
++			}
++		}
++		out.meaning=BiglybtcTrackerResponseMeaningV1::OriginalHttpFields;return out;
++	}
++	} // anonymous namespace
++
+ 	tracker_response parse_tracker_response(span<char const> const data, error_code& ec
+ 		, tracker_request_flags_t const flags, sha1_hash const& scrape_ih)
+ 	{
+@@ -554,6 +617,8 @@
+ 		bdecode_node const warning = e.dict_find_string("warning message");
+ 		if (warning)
+ 			resp.warning_message = warning.string_value().to_string();
++
++		resp.biglybtc_response_fields=original_http_fields(e,bool(flags&tracker_request::scrape_request),scrape_ih,static_cast<std::size_t>(data.size()));
+ 
+ 		if (flags & tracker_request::scrape_request)
+ 		{
+diff --git a/src/instantiate_connection.cpp b/src/instantiate_connection.cpp
+index 3ecd8b4829361539ad9922fbb76bca293467e9da..8858e98d49cf41003e0be9ef075e2db39fcb17ec
+--- a/src/instantiate_connection.cpp
++++ b/src/instantiate_connection.cpp
+@@ -132,7 +132,10 @@
+ 				if (ps.type == settings_pack::socks5_pw)
+ 					str->set_username(ps.username, ps.password);
+ 				if (ps.type == settings_pack::socks4)
+-					str->set_version(4);
++				{
++					str->set_version(ps.proxy_hostnames ? biglybtc_socks4a_version : 4);
++					str->set_username(ps.username, {});
++				}
+ 				return socket_type(std::move(s));
+ 			}
+ 			else
+@@ -143,7 +146,10 @@
+ 				if (ps.type == settings_pack::socks5_pw)
+ 					s.set_username(ps.username, ps.password);
+ 				if (ps.type == settings_pack::socks4)
+-					s.set_version(4);
++				{
++					s.set_version(ps.proxy_hostnames ? biglybtc_socks4a_version : 4);
++					s.set_username(ps.username, {});
++				}
+ 				return socket_type(std::move(s));
+ 			}
+ 		}
+diff --git a/src/kademlia/dht_tracker.cpp b/src/kademlia/dht_tracker.cpp
+index de0434e8d6bba84f8c7c0486398bbf0a1a52d6fe..aed1ac0cf0309ed9035cf1e87617e161e48da80f
+--- a/src/kademlia/dht_tracker.cpp
++++ b/src/kademlia/dht_tracker.cpp
+@@ -94,7 +94,8 @@
+ 		, aux::session_settings const& settings
+ 		, counters& cnt
+ 		, dht_storage_interface& storage
+-		, dht_state&& state)
++		, dht_state&& state
++		, std::shared_ptr<aux::biglybtc_mainline_identity> identity)
+ 		: m_counters(cnt)
+ 		, m_storage(storage)
+ 		, m_state(std::move(state))
+@@ -108,9 +109,19 @@
+ 		, m_send_quota(settings.get_int(settings_pack::dht_upload_rate_limit))
+ 		, m_last_tick(aux::time_now())
+ 		, m_ioc(ios)
++		, m_biglybtc_identity(std::move(identity))
+ 	{
+ 		m_blocker.set_block_timer(m_settings.get_int(settings_pack::dht_block_timeout));
+ 		m_blocker.set_rate_limit(m_settings.get_int(settings_pack::dht_block_ratelimit));
++	}
++
++	dht_tracker::~dht_tracker()
++	{
++		if (m_biglybtc_identity) {
++			// Real node destructors precede original-slot retirement acknowledgement.
++			m_nodes.clear();
++			m_biglybtc_identity->retire_all();
++		}
+ 	}
+ 
+ 	void dht_tracker::update_node_id(aux::listen_socket_handle const& s)
+@@ -123,17 +134,30 @@
+ 
+ 	void dht_tracker::new_socket(aux::listen_socket_handle const& s)
+ 	{
++		udp::endpoint const actual = m_biglybtc_identity ? s.get_udp_local_endpoint() : udp::endpoint{};
++		if (m_biglybtc_identity && m_nodes.find(s) != m_nodes.end()) {
++			if (m_nodes.find(s)->second.original_endpoint != actual) m_biglybtc_identity->fail();
++			return;
++		}
++		if (m_biglybtc_identity && !m_biglybtc_identity->can_adopt(actual)) return;
+ 		address const local_address = s.get_local_endpoint().address();
+ 		auto stored_nid = std::find_if(m_state.nids.begin(), m_state.nids.end()
+ 			, [&](node_ids_t::value_type const& nid) { return nid.first == local_address; });
+-		node_id const nid = stored_nid != m_state.nids.end() ? stored_nid->second : node_id();
++		node_id const nid = m_biglybtc_identity ? m_biglybtc_identity->key(actual)
++			: stored_nid != m_state.nids.end() ? stored_nid->second : node_id();
+ 		// must use piecewise construction because tracker_node::connection_timer
+ 		// is neither copyable nor movable
+ 		auto n = m_nodes.emplace(std::piecewise_construct_t(), std::forward_as_tuple(s)
+ 			, std::forward_as_tuple(m_ioc
+ 			, s, this, m_settings, nid, m_log, m_counters
+ 			, std::bind(&dht_tracker::get_node, this, _1, _2)
+-			, m_storage));
++			, m_storage, bool(m_biglybtc_identity)));
++		if (m_biglybtc_identity && n.second
++			&& !m_biglybtc_identity->adopted(actual, n.first->second.dht.nid())) {
++			m_nodes.erase(n.first);
++			m_biglybtc_identity->retired(actual);
++			return;
++		}
+ 
+ 		update_storage_node_ids();
+ 
+@@ -166,13 +190,18 @@
+ 				, local_address.to_string().c_str());
+ 		}
+ #endif
+-		m_nodes.erase(s);
++		auto const existing = m_nodes.find(s);
++		auto const actual = m_biglybtc_identity && existing != m_nodes.end()
++			? existing->second.original_endpoint : udp::endpoint{};
++		auto const erased = m_nodes.erase(s);
++		if (m_biglybtc_identity && erased) m_biglybtc_identity->retired(actual);
+ 
+ 		update_storage_node_ids();
+ 	}
+ 
+ 	void dht_tracker::start(find_data::nodes_callback const& f)
+ 	{
++		if (m_biglybtc_identity && !m_biglybtc_identity->ready()) return;
+ 		m_running = true;
+ 
+ 		ADD_OUTSTANDING_ASYNC("dht_tracker::refresh_key");
+@@ -480,7 +509,19 @@
+ 	{
+ 		for (auto& n : m_nodes)
+ 		{
+-			if (ep.protocol() != (n.first.get_external_address().is_v4() ? udp::v4() : udp::v6()))
++			if (m_biglybtc_identity)
++			{
++				// A cold IPv6 socket has no external-address vote yet. Original
++				// policy already binds the actual UDP descriptor, not that vote.
++				auto const actual = n.first.get_udp_local_endpoint();
++				if (actual != n.second.original_endpoint || !m_biglybtc_identity->permits(actual))
++				{
++					m_biglybtc_identity->fail();
++					return;
++				}
++				if (ep.protocol() != actual.protocol()) continue;
++			}
++			else if (ep.protocol() != (n.first.get_external_address().is_v4() ? udp::v4() : udp::v6()))
+ 				continue;
+ 			n.second.dht.direct_request(ep, e, f);
+ 			break;
+@@ -508,6 +549,7 @@
+ 	bool dht_tracker::incoming_packet(aux::listen_socket_handle const& s
+ 		, udp::endpoint const& ep, span<char const> const buf)
+ 	{
++		if (m_biglybtc_identity && !m_biglybtc_identity->permits(s.get_udp_local_endpoint())) return true;
+ 		int const buf_size = int(buf.size());
+ 		if (buf_size <= 20
+ 			|| buf.front() != 'd'
+@@ -581,9 +623,10 @@
+ 		, node_id const& nid
+ 		, dht_observer* observer, counters& cnt
+ 		, get_foreign_node_t get_foreign_node
+-		, dht_storage_interface& storage)
+-		: dht(s, sock, settings, nid, observer, cnt, std::move(get_foreign_node), storage)
++		, dht_storage_interface& storage, bool original_local_identity)
++		: dht(s, sock, settings, nid, observer, cnt, std::move(get_foreign_node), storage, original_local_identity)
+ 		, connection_timer(ios)
++		, original_endpoint(original_local_identity ? s.get_udp_local_endpoint() : udp::endpoint{})
+ 	{}
+ 
+ 	std::vector<std::pair<node_id, udp::endpoint>> dht_tracker::live_nodes(node_id const& nid)
+@@ -600,6 +643,64 @@
+ 		}
+ 
+ 		return ret;
++	}
++
++	BiglybtcMainlineRoutingAckV1 dht_tracker::biglybtc_routing_query(BiglybtcMainlineRoutingQueryV1 const& query)
++	{
++		using result = BiglybtcMainlineRoutingResultV1;
++		BiglybtcMainlineRoutingAckV1 answer{};
++		auto refused = [&](result value) { answer = {}; answer.result = std::uint32_t(value); return answer; };
++		if (!m_biglybtc_identity || !m_biglybtc_identity->ready()) return refused(result::NotReady);
++		auto& identity = *m_biglybtc_identity;
++		if (std::this_thread::get_id() != identity.executor) return refused(result::Failed);
++		if (query.version != 1 || query.size != sizeof(query) || query.reserved
++			|| (query.mode != 1 && query.mode != 2) || !query.cookie
++			|| query.cookie <= identity.routing_cookie || query.generation != identity.policy.generation)
++			return refused(result::InvalidArgument);
++		auto const same = [](BiglybtcMainlineIdentityBindingV1 const& a, BiglybtcMainlineIdentityBindingV1 const& b) {
++			return a.address == b.address && a.key == b.key && a.family == b.family
++				&& a.slot == b.slot && a.port == b.port && a.reserved == b.reserved;
++		};
++		int index = -1;
++		for (unsigned i = 0; i < identity.policy.count; ++i)
++			if (same(query.local, identity.policy.bindings[i])) index = int(i);
++		if (index < 0) return refused(result::NoSocket);
++		BiglybtcMainlineRoutingNodeV1 const empty{};
++		if (query.mode == 1 && (query.remote.address != empty.address || query.remote.id != empty.id
++			|| query.remote.port || query.remote.family)) return refused(result::InvalidArgument);
++		if (query.mode == 2 && (query.remote.family != query.local.family || !query.remote.port
++			|| (query.remote.family == 4 && std::any_of(query.remote.address.begin()+4,query.remote.address.end(),[](unsigned char c){return c != 0;}))))
++			return refused(result::InvalidArgument);
++		identity.routing_cookie = query.cookie;
++		auto const expected = udp::endpoint(aux::biglybtc_mainline_identity::binding_address(query.local), query.local.port);
++		auto node = m_nodes.end();
++		for (auto it = m_nodes.begin(); it != m_nodes.end(); ++it) {
++			if (it->second.original_endpoint != expected) continue;
++			// Re-read the actual FD, rather than trusting the saved tuple.
++			if (it->first.get_udp_local_endpoint() != expected || !identity.permits(expected)) {
++				identity.fail(); return refused(result::NoSocket);
++			}
++			if (node != m_nodes.end()) { identity.fail(); return refused(result::NoSocket); }
++			node = it;
++		}
++		if (node == m_nodes.end() || node->second.dht.nid() != identity.key(expected)) return refused(result::NoSocket);
++		answer.generation = identity.policy.generation; answer.cookie = query.cookie;
++		answer.local = identity.status.bindings[unsigned(index)];
++		node->second.dht.m_table.for_each_node([&](node_entry const& entry) {
++			auto const ep = entry.ep();
++			if (ep.address().is_v4() != (query.local.family == 4)) return;
++			BiglybtcMainlineRoutingNodeV1 actual{};
++			actual.family = ep.address().is_v4() ? 4 : 6; actual.port = ep.port();
++			std::copy_n(reinterpret_cast<unsigned char const*>(entry.id.data()),20,actual.id.begin());
++			if (ep.address().is_v4()) { auto bytes = ep.address().to_v4().to_bytes(); std::copy(bytes.begin(),bytes.end(),actual.address.begin()); }
++			else actual.address = ep.address().to_v6().to_bytes();
++			if (query.mode == 2) {
++				if (actual.address == query.remote.address && actual.id == query.remote.id
++					&& actual.port == query.remote.port && actual.family == query.remote.family) answer.matched = 1;
++			} else if (answer.count < answer.nodes.size()) answer.nodes[answer.count++] = actual;
++			else answer.overflow = 1;
++		}, nullptr); // Explicitly exclude every replacement/candidate bucket.
++		answer.result = std::uint32_t(result::Accepted); return answer;
+ 	}
+ 
+ namespace {
+@@ -678,6 +779,7 @@
+ 
+ 	bool dht_tracker::send_packet(aux::listen_socket_handle const& s, entry& e, udp::endpoint const& addr)
+ 	{
++		if (m_biglybtc_identity && !m_biglybtc_identity->permits(s.get_udp_local_endpoint())) return false;
+ 		TORRENT_ASSERT(m_nodes.find(s) != m_nodes.end());
+ 
+ 		static_assert(lt::version_minor < 16, "version number not supported by DHT");
+diff --git a/src/kademlia/node.cpp b/src/kademlia/node.cpp
+index d2bab1b9158532b9f5a08fd529c090f052b548a6..21044b68140fe6af68656bf85b17e357e03c1903
+--- a/src/kademlia/node.cpp
++++ b/src/kademlia/node.cpp
+@@ -121,9 +121,10 @@
+ 	, dht_observer* observer
+ 	, counters& cnt
+ 	, get_foreign_node_t get_foreign_node
+-	, dht_storage_interface& storage)
++	, dht_storage_interface& storage, bool original_local_identity)
+ 	: m_settings(settings)
+-	, m_id(calculate_node_id(nid, sock))
++	, m_id(original_local_identity ? nid : calculate_node_id(nid, sock))
++	, m_biglybtc_original_identity(original_local_identity)
+ 	, m_table(m_id, aux::is_v4(sock.get_local_endpoint()) ? udp::v4() : udp::v6(), 8, settings, observer)
+ 	, m_rpc(m_id, m_settings, m_table, sock, sock_man, observer)
+ 	, m_sock(sock)
+@@ -146,6 +147,8 @@
+ 
+ void node::update_node_id()
+ {
++	// Optional exact original local ID only. Remote BEP42 checks below remain unchanged.
++	if (m_biglybtc_original_identity) return;
+ 	// if we don't have an observer, we can't ask for the external IP (and our
+ 	// current node ID is likely not generated from an external address), so we
+ 	// can just stop here in that case.
+diff --git a/src/listen_socket_handle.cpp b/src/listen_socket_handle.cpp
+index 3616f865a62812ae66f255edbcad92b82a3c3ea1..bc2424716bceac3cf768333c18347cc63a0f020e
+--- a/src/listen_socket_handle.cpp
++++ b/src/listen_socket_handle.cpp
+@@ -52,6 +52,15 @@
+ 		return s->local_endpoint;
+ 	}
+ 
++	udp::endpoint listen_socket_handle::get_udp_local_endpoint() const
++	{
++		auto s = m_sock.lock();
++		if (!s || !s->udp_sock) return {};
++		error_code ec;
++		auto const endpoint = s->udp_sock->sock.local_endpoint(ec);
++		return ec ? udp::endpoint{} : endpoint;
++	}
++
+ 	bool listen_socket_handle::is_ssl() const
+ 	{
+ 		auto s = m_sock.lock();
+diff --git a/src/peer_connection.cpp b/src/peer_connection.cpp
+index 628fc8b63e47877d4519297275affb7d926ee5c2..272aa25d09571db9716a0b7f70d3d498a39a078a
+--- a/src/peer_connection.cpp
++++ b/src/peer_connection.cpp
+@@ -1135,7 +1135,7 @@
+ 		// if protocol_v2 is set on the peer, this better be a v2 torrent,
+ 		// otherwise something isn't right
+ 		TORRENT_ASSERT(ih.has_v2() || !peer_info_struct()->protocol_v2);
+-		return ih.get((ih.has_v2() && peer_info_struct()->protocol_v2)
++		return ih.get((!ih.has_v1() || (ih.has_v2() && peer_info_struct()->protocol_v2))
+ 			? protocol_version::V2 : protocol_version::V1);
+ 	}
+ 
+@@ -3332,6 +3332,19 @@
+ #ifndef TORRENT_DISABLE_LOGGING
+ 		peer_log(peer_log_alert::incoming_message, "DHT_PORT", "p: %d", listen_port);
+ #endif
++		auto const t = associated_torrent().lock();
++		if (t && t->biglybtc_has_mainline_port_observer())
++		{
++			if (listen_port > 0 && listen_port <= 65535)
++			{
++				auto const& hashes = t->info_hash();
++				std::uint32_t const protocol = (!hashes.has_v1()
++					|| (hashes.has_v2() && peer_info_struct()->protocol_v2)) ? 2u : 1u;
++				t->biglybtc_mainline_port_received(m_remote, associated_info_hash(), protocol,
++					static_cast<std::uint16_t>(listen_port));
++			}
++			return; // Disabled/withdrawn bridge never queues an internal-DHT hint.
++		}
+ #ifndef TORRENT_DISABLE_DHT
+ 		m_ses.add_dht_node({m_remote.address(), std::uint16_t(listen_port)});
+ #else
+@@ -5344,10 +5357,10 @@
+ 				// this means we're in seed mode and we haven't yet
+ 				// verified this piece (r.piece)
+ 				disk_job_flags_t flags;
+-				if (t->info_hash().has_v1())
++				if (t->metadata_info_hash().has_v1())
+ 					flags |= disk_interface::v1_hash;
+ 				aux::vector<sha256_hash> hashes;
+-				if (t->info_hash().has_v2())
++				if (t->metadata_info_hash().has_v2())
+ 					hashes.resize(t->torrent_file().orig_files().blocks_in_piece2(r.piece));
+ 
+ 				span<sha256_hash> v2_hashes(hashes);
+@@ -5455,13 +5468,13 @@
+ 
+ 		// we're using the piece hashes here, we need the torrent to be loaded
+ 		if (!m_settings.get_bool(settings_pack::disable_hash_checks)
+-			&& t->info_hash().has_v1())
++			&& t->metadata_info_hash().has_v1())
+ 		{
+ 			hash_failed[protocol_version::V1] = piece_hash != t->torrent_file().hash_for_piece(piece);
+ 		}
+ 
+ 		if (!m_settings.get_bool(settings_pack::disable_hash_checks)
+-			&& t->info_hash().has_v2())
++			&& t->metadata_info_hash().has_v2())
+ 		{
+ 			hash_failed[protocol_version::V2] = false;
+ 
+diff --git a/src/read_resume_data.cpp b/src/read_resume_data.cpp
+index 9f6e626beaa7c18da9029d4de3dc85d49ce16af4..e4c0671bfd9eeb436f25aca478fd5b23697409c2
+--- a/src/read_resume_data.cpp
++++ b/src/read_resume_data.cpp
+@@ -38,6 +38,7 @@
+ 
+ #include "libtorrent/bdecode.hpp"
+ #include "libtorrent/read_resume_data.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
+ #include "libtorrent/add_torrent_params.hpp"
+ #include "libtorrent/socket_io.hpp" // for read_*_endpoint()
+ #include "libtorrent/hasher.hpp"
+@@ -271,6 +272,31 @@
+ 		apply_flag(ret.flags, rd, "disable_dht", torrent_flags::disable_dht);
+ 		apply_flag(ret.flags, rd, "disable_lsd", torrent_flags::disable_lsd);
+ 		apply_flag(ret.flags, rd, "disable_pex", torrent_flags::disable_pex);
++		int selection_keys=0;
++		for (int i=0;i<rd.dict_size();++i)
++			if (rd.dict_at(i).first=="biglybtc.swarm") ++selection_keys;
++		if (selection_keys>1)
++		{
++			ec=errors::invalid_info_hash;
++			return ret;
++		}
++		if (auto const selected=rd.dict_find("biglybtc.swarm"))
++		{
++			if (selected.type()!=bdecode_node::int_t || selected.int_value()<0 || selected.int_value()>2)
++			{
++				ec=errors::invalid_info_hash;
++				return ret;
++			}
++			if (selected.int_value()==1) ret.flags |= biglybtc_v1_only;
++			if (selected.int_value()==2) ret.flags |= biglybtc_v2_only;
++			auto const wire=biglybtc_wire_hashes(ret.info_hashes,ret.flags);
++			if (!wire.has_v1() && !wire.has_v2())
++			{
++				ec=errors::invalid_info_hash;
++				return ret;
++			}
++		}
++
+ 
+ 		ret.save_path = rd.dict_find_string_value("save_path").to_string();
+ 
+diff --git a/src/session_handle.cpp b/src/session_handle.cpp
+index 68cde2679456fa2666c909f6c3b8eb7c5192eee8..968c7688ac70f0efdc39180dd128dc34f0f205b3
+--- a/src/session_handle.cpp
++++ b/src/session_handle.cpp
+@@ -1296,4 +1296,84 @@
+ 		async_call(&session_impl::reopen_network_sockets, options);
+ 	}
+ 
++#ifndef TORRENT_DISABLE_DHT
++	std::uint32_t session_handle::biglybtc_configure_mainline_identity(
++		BiglybtcMainlineIdentityPolicyV1 const& policy,
++		std::shared_ptr<BiglybtcMainlineIdentityObserverV1> observer) const
++	{
++		return sync_call_ret<std::uint32_t>(&session_impl::biglybtc_configure_mainline_identity, policy, std::move(observer));
++	}
++	BiglybtcMainlineRoutingAckV1 session_handle::biglybtc_mainline_routing_query(BiglybtcMainlineRoutingQueryV1 const& query) const
++	{
++		return sync_call_ret<BiglybtcMainlineRoutingAckV1>(&session_impl::biglybtc_mainline_routing_query, query);
++	}
++	BiglybtcMainlineIdentityStatusV1 session_handle::biglybtc_mainline_identity_status() const
++	{
++		return sync_call_ret<BiglybtcMainlineIdentityStatusV1>(&session_impl::biglybtc_mainline_identity_status);
++	}
++#endif
++	extern "C" TORRENT_EXPORT unsigned biglybtc_mainline_identity_abi_v1() noexcept
++	{
++#ifndef TORRENT_DISABLE_DHT
++		return 1;
++#else
++		return 0;
++#endif
++	}
++	extern "C" TORRENT_EXPORT std::uint32_t biglybtc_configure_mainline_identity_v1(
++		session_handle const* handle, BiglybtcMainlineIdentityPolicyV1 const* policy,
++		std::shared_ptr<BiglybtcMainlineIdentityObserverV1> const* observer) noexcept
++	{
++		using result = BiglybtcMainlineIdentityResultV1;
++		if (!handle || !policy || !observer || !*observer) return std::uint32_t(result::InvalidArgument);
++		if (!handle->is_valid()) return std::uint32_t(result::InvalidHandle);
++#ifndef TORRENT_DISABLE_DHT
++		try { return handle->biglybtc_configure_mainline_identity(*policy, *observer); }
++		catch (...) { return std::uint32_t(result::Failed); }
++#else
++		return std::uint32_t(result::Failed);
++#endif
++	}
++	extern "C" TORRENT_EXPORT std::uint32_t biglybtc_read_mainline_identity_v1(
++		session_handle const* handle, BiglybtcMainlineIdentityStatusV1* output) noexcept
++	{
++		using result = BiglybtcMainlineIdentityResultV1;
++		if (!handle || !output) return std::uint32_t(result::InvalidArgument);
++		if (!handle->is_valid()) return std::uint32_t(result::InvalidHandle);
++#ifndef TORRENT_DISABLE_DHT
++		try { *output = handle->biglybtc_mainline_identity_status(); return std::uint32_t(result::Accepted); }
++		catch (...) { return std::uint32_t(result::Failed); }
++#else
++		return std::uint32_t(result::Failed);
++#endif
++	}
++
++	extern "C" TORRENT_EXPORT unsigned biglybtc_mainline_routing_abi_v1() noexcept
++	{
++#ifndef TORRENT_DISABLE_DHT
++		return 1;
++#else
++		return 0;
++#endif
++	}
++	extern "C" TORRENT_EXPORT std::uint32_t biglybtc_query_mainline_routing_v1(
++		session_handle const* handle, BiglybtcMainlineRoutingQueryV1 const* query,
++		BiglybtcMainlineRoutingAckV1* output) noexcept
++	{
++		using result = BiglybtcMainlineRoutingResultV1;
++		if (!output) return std::uint32_t(result::InvalidArgument);
++		*output = {};
++		if (!handle || !query) return std::uint32_t(result::InvalidArgument);
++		if (!handle->is_valid()) return std::uint32_t(result::InvalidHandle);
++#ifndef TORRENT_DISABLE_DHT
++		try {
++			auto const answer = handle->biglybtc_mainline_routing_query(*query);
++			if (answer.result == std::uint32_t(result::Accepted)) *output = answer;
++			return answer.result;
++		} catch (...) { return std::uint32_t(result::Failed); }
++#else
++		return std::uint32_t(result::Failed);
++#endif
++	}
++
+ } // namespace libtorrent
+diff --git a/src/session_impl.cpp b/src/session_impl.cpp
+index 6f017e6cd4efff35a7ea4d0577e37b98686b4bb8..6315aea2e247a5f0787542de94e304252acebb6e
+--- a/src/session_impl.cpp
++++ b/src/session_impl.cpp
+@@ -70,6 +70,7 @@
+ #include "libtorrent/ssl.hpp"
+ #include "libtorrent/peer_id.hpp"
+ #include "libtorrent/torrent_info.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
+ #include "libtorrent/tracker_manager.hpp"
+ #include "libtorrent/bencode.hpp"
+ #include "libtorrent/hasher.hpp"
+@@ -4966,7 +4967,7 @@
+ 		add_extensions_to_torrent(torrent_ptr, userdata);
+ #endif
+ 
+-		TORRENT_ASSERT(info_hash == torrent_ptr->torrent_file().info_hashes());
++		TORRENT_ASSERT(info_hash == torrent_ptr->info_hash());
+ 		insert_torrent(info_hash, torrent_ptr);
+ 
+         m_alerts.emplace_alert<add_torrent_alert>(handle, std::move(alert_params), ec);
+@@ -5043,6 +5044,16 @@
+ 			return ret_t{ptr_t(), params.info_hashes, false};
+ 		}
+ 
++		// Validate immutable selection before discovery, torrent construction or IO.
++		auto const wire_hashes=biglybtc_wire_hashes(
++			params.ti?params.ti->info_hashes():params.info_hashes,params.flags);
++		if ((params.flags & biglybtc_swarm_mask)
++			&& !wire_hashes.has_v1() && !wire_hashes.has_v2())
++		{
++			ec=errors::invalid_info_hash;
++			return ret_t{ptr_t(),params.info_hashes,false};
++		}
++
+ #ifndef TORRENT_DISABLE_DHT
+ 		// add params.dht_nodes to the DHT, if enabled
+ 		for (auto const& n : params.dht_nodes)
+@@ -5080,12 +5091,18 @@
+ 		}
+ 
+ 		// is the torrent already active?
+-		std::shared_ptr<torrent> torrent_ptr = find_torrent(params.info_hashes).lock();
++		std::shared_ptr<torrent> torrent_ptr = find_torrent(wire_hashes).lock();
+ 
+ 		if (torrent_ptr)
+ 		{
++			// Never return an existing dual-swarm handle for a selected request.
++			if (torrent_ptr->swarm_selection_flags() != (params.flags & biglybtc_swarm_mask))
++			{
++				ec=errors::duplicate_torrent;
++				return ret_t{ptr_t(),wire_hashes,false};
++			}
+ 			if (!(params.flags & torrent_flags::duplicate_is_error))
+-				return ret_t{std::move(torrent_ptr), params.info_hashes, false};
++				return ret_t{std::move(torrent_ptr), wire_hashes, false};
+ 
+ 			ec = errors::duplicate_torrent;
+ 			return ret_t{ptr_t(), params.info_hashes, false};
+@@ -5113,7 +5130,7 @@
+ 
+ 		// it's fine to copy this moved-from info_hash_t object, since its move
+ 		// construction is just a copy.
+-		return ret_t{std::move(torrent_ptr), params.info_hashes, true};
++		return ret_t{std::move(torrent_ptr), wire_hashes, true};
+ 	}
+ 
+ 	void session_impl::update_outgoing_interfaces()
+@@ -5638,7 +5655,7 @@
+ 		if (t->torrent_file().priv() || (t->torrent_file().is_i2p()
+ 			&& !m_settings.get_bool(settings_pack::allow_i2p_mixed))) return;
+ 
+-		protocol_version const v = ih == t->torrent_file().info_hashes().v1
++		protocol_version const v = ih == t->info_hash().v1
+ 			? protocol_version::V1 : protocol_version::V2;
+ 
+ 		t->add_peer(peer, peer_info::lsd, v == protocol_version::V2 ? pex_lt_v2 : pex_flags_t(0));
+@@ -5852,6 +5869,32 @@
+ #endif // TORRENT_ABI_VERSION
+ 
+ #ifndef TORRENT_DISABLE_DHT
++
++	std::uint32_t session_impl::biglybtc_configure_mainline_identity(
++		BiglybtcMainlineIdentityPolicyV1 const& policy,
++		std::shared_ptr<BiglybtcMainlineIdentityObserverV1> observer)
++	{
++		TORRENT_ASSERT(is_single_thread());
++		using result = BiglybtcMainlineIdentityResultV1;
++		if (!observer || !biglybtc_mainline_identity::valid(policy)) return std::uint32_t(result::InvalidArgument);
++		if (m_abort || m_dht || m_biglybtc_identity || !m_torrents.empty()
++			|| m_settings.get_bool(settings_pack::enable_dht)) return std::uint32_t(result::Busy);
++		m_biglybtc_identity = std::make_shared<biglybtc_mainline_identity>(policy, std::move(observer));
++		return std::uint32_t(result::Accepted);
++	}
++	BiglybtcMainlineIdentityStatusV1 session_impl::biglybtc_mainline_identity_status() const
++	{
++		TORRENT_ASSERT(is_single_thread());
++		return m_biglybtc_identity ? m_biglybtc_identity->status : BiglybtcMainlineIdentityStatusV1{};
++	}
++
++	BiglybtcMainlineRoutingAckV1 session_impl::biglybtc_mainline_routing_query(BiglybtcMainlineRoutingQueryV1 const& query)
++	{
++		TORRENT_ASSERT(is_single_thread());
++		if (!m_abort && m_dht) return m_dht->biglybtc_routing_query(query);
++		BiglybtcMainlineRoutingAckV1 result{};
++		result.result = std::uint32_t(BiglybtcMainlineRoutingResultV1::NotReady); return result;
++	}
+ 
+ 	void session_impl::start_dht()
+ 	{
+@@ -5898,7 +5941,7 @@
+ 			, m_settings
+ 			, m_stats_counters
+ 			, *m_dht_storage
+-			, std::move(m_dht_state));
++			, std::move(m_dht_state), m_biglybtc_identity);
+ 
+ 		for (auto& s : m_listen_sockets)
+ 		{
+diff --git a/src/socks5_stream.cpp b/src/socks5_stream.cpp
+index 14603991bbd7f27b9fac89b07240024843db60d4..44a1305230280999d37556414a5c58bb7ab82d06
+--- a/src/socks5_stream.cpp
++++ b/src/socks5_stream.cpp
+@@ -33,11 +33,15 @@
+ */
+ 
+ #include "libtorrent/socks5_stream.hpp"
++#include "libtorrent/biglybtc_socks4a.hpp"
+ #include "libtorrent/socket_io.hpp"
+ 
+ using namespace std::placeholders;
+ 
+ namespace libtorrent {
++
++	extern "C" unsigned biglybtc_socks4a_abi_v1() noexcept { return 1; }
++	extern "C" unsigned biglybtc_socks4a_webseed_abi_v1() noexcept { return 1; }
+ 
+ 	namespace socks_error
+ 	{
+diff --git a/src/torrent.cpp b/src/torrent.cpp
+index 22a616b0dc6fc305541252aa4fd7ec3c452a71c6..140932e763f0a57b91380c02b10c1bf3a13e6e1a
+--- a/src/torrent.cpp
++++ b/src/torrent.cpp
+@@ -66,6 +66,7 @@
+ #include <functional>
+ 
+ #include "libtorrent/torrent.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
+ #include "libtorrent/torrent_handle.hpp"
+ #include "libtorrent/announce_entry.hpp"
+ #include "libtorrent/torrent_info.hpp"
+@@ -245,6 +246,8 @@
+ 		, m_last_seen_complete(p.last_seen_complete)
+ 		, m_swarm_last_seen_complete(p.last_seen_complete)
+ 		, m_info_hash(p.info_hashes)
++		, m_wire_info_hash(biglybtc_wire_hashes(p.info_hashes,p.flags))
++		, m_swarm_flags(p.flags & biglybtc_swarm_mask)
+ 		, m_error_file(torrent_status::error_file_none)
+ 		, m_sequence_number(-1)
+ 		, m_peer_id(aux::generate_peer_id(settings()))
+@@ -907,7 +910,7 @@
+ 
+ 	torrent_flags_t torrent::flags() const
+ 	{
+-		torrent_flags_t ret = torrent_flags_t{};
++		torrent_flags_t ret = m_swarm_flags;
+ 		if (m_seed_mode)
+ 			ret |= torrent_flags::seed_mode;
+ 		if (m_upload_mode)
+@@ -2801,7 +2804,7 @@
+ #endif
+ 
+ 		// announce with the local discovery service
+-		m_torrent_file->info_hashes().for_each([&](sha1_hash const& ih, protocol_version)
++		m_wire_info_hash.for_each([&](sha1_hash const& ih, protocol_version)
+ 		{
+ 			m_ses.announce_lsd(ih, port);
+ 		});
+@@ -2889,7 +2892,7 @@
+ 		}
+ 
+ 		std::weak_ptr<torrent> self(shared_from_this());
+-		m_torrent_file->info_hashes().for_each([&](sha1_hash const& ih, protocol_version v)
++		m_wire_info_hash.for_each([&](sha1_hash const& ih, protocol_version v)
+ 		{
+ 			m_ses.dht()->announce(ih, announce_port, flags
+ 				, std::bind(&torrent::on_dht_announce_response_disp, self, v, _1));
+@@ -3167,8 +3170,8 @@
+ #endif
+ 		aux::array<bool const, num_protocols, protocol_version> const supports_protocol
+ 		{ {
+-			m_info_hash.has_v1(),
+-			m_info_hash.has_v2()
++			m_wire_info_hash.has_v1(),
++			m_wire_info_hash.has_v2()
+ 		} };
+ #ifdef __clang__
+ #pragma clang diagnostic pop
+@@ -3309,7 +3312,7 @@
+ 					req.key = tracker_key();
+ 
+ 					req.outgoing_socket = aep.socket;
+-					req.info_hash = m_torrent_file->info_hashes().get(ih);
++					req.info_hash = m_wire_info_hash.get(ih);
+ 					if (high_priority) req.kind |= tracker_request::high_priority;
+ 
+ #ifndef TORRENT_DISABLE_LOGGING
+@@ -3343,6 +3346,7 @@
+ 					else
+ #endif
+ 					{
++						biglybtc_queue_dispatch(req);
+ 						m_ses.queue_tracker_request(req, shared_from_this());
+ 					}
+ 
+@@ -3380,6 +3384,153 @@
+ 		update_tracker_timer(now);
+ 	}
+ 
++	bool torrent::biglybtc_attach_mainline_port_observer(
++		std::shared_ptr<BiglybtcMainlinePortObserverV1> sink, std::uint64_t const admission)
++	{
++		TORRENT_ASSERT(is_single_thread());
++		if (!sink || admission == 0 || m_biglybtc_mainline_observer || m_abort || !m_connections.empty()) return false;
++		m_biglybtc_mainline_observer = std::move(sink);
++		m_biglybtc_mainline_admission = admission;
++		return true;
++	}
++
++	std::uint16_t torrent::biglybtc_mainline_port() const noexcept
++	{
++		if (!m_biglybtc_mainline_observer || m_biglybtc_mainline_lost || m_abort || is_paused()
++			|| (valid_metadata() && torrent_file().priv())) return 0;
++		return m_biglybtc_mainline_observer->advertised_port();
++	}
++
++	bool torrent::biglybtc_refresh_mainline_port(std::uint64_t const admission)
++	{
++		TORRENT_ASSERT(is_single_thread());
++		if (!m_biglybtc_mainline_observer || admission != m_biglybtc_mainline_admission || m_abort) return false;
++		// Hold actual connections independently while send-buffer failure may
++		// disconnect a peer and mutate m_connections. No peer is kept afterward.
++		std::vector<std::shared_ptr<peer_connection>> peers;
++		peers.reserve(m_connections.size());
++		for (auto* peer : m_connections) peers.push_back(peer->self());
++		for (auto const& peer : peers)
++		{
++			if (peer->type() == connection_type::bittorrent && !peer->is_disconnecting())
++				static_cast<bt_peer_connection*>(peer.get())->refresh_biglybtc_dht_port();
++		}
++		return true;
++	}
++
++	void torrent::biglybtc_mainline_port_received(tcp::endpoint const& remote,
++		sha1_hash const& wire_hash, std::uint32_t const protocol, std::uint16_t const port) noexcept
++	{
++		if (biglybtc_mainline_port() == 0 || port == 0 || remote.port() == 0
++			|| remote.address().is_unspecified() || remote.address().is_multicast()) return;
++		if (remote.address().is_v4() && remote.address().to_v4().to_uint() == 0xffffffffu) return;
++		if (remote.address().is_v6() && (remote.address().to_v6().scope_id() != 0
++			|| remote.address().to_v6().is_v4_mapped())) return;
++		BiglybtcMainlinePortEventV1 event{};
++		event.admission = m_biglybtc_mainline_admission;
++		event.kind = static_cast<std::uint32_t>(BiglybtcMainlinePortEventKindV1::Received);
++		bool const valid_hash = (protocol == 1 && m_wire_info_hash.has_v1() && wire_hash == m_wire_info_hash.v1)
++			|| (protocol == 2 && m_wire_info_hash.has_v2() && wire_hash == m_wire_info_hash.get(protocol_version::V2));
++		if (!valid_hash || m_biglybtc_mainline_sequence == (std::numeric_limits<std::uint64_t>::max)())
++		{
++			m_biglybtc_mainline_lost = true;
++			event.kind = static_cast<std::uint32_t>(BiglybtcMainlinePortEventKindV1::Lost);
++			event.sequence = m_biglybtc_mainline_sequence;
++			m_biglybtc_mainline_observer->observe(event);
++			return;
++		}
++		event.sequence = ++m_biglybtc_mainline_sequence;
++		event.protocol = protocol;
++		event.peer_port = remote.port(); event.dht_port = port;
++		std::copy(wire_hash.begin(), wire_hash.end(), event.wire_info_hash.begin());
++		if (remote.address().is_v4())
++		{
++			event.family = 4;
++			auto const bytes = remote.address().to_v4().to_bytes();
++			std::copy(bytes.begin(), bytes.end(), event.address.begin());
++		}
++		else
++		{
++			event.family = 6;
++			auto const bytes = remote.address().to_v6().to_bytes();
++			std::copy(bytes.begin(), bytes.end(), event.address.begin());
++		}
++		m_biglybtc_mainline_observer->observe(event);
++	}
++
++	bool torrent::biglybtc_attach_queue_observer(std::shared_ptr<BiglybtcQueueObserverV1> sink)
++	{
++		TORRENT_ASSERT(is_single_thread());
++		if(m_biglybtc_queue_observer||!sink||m_announcing) return false;
++		m_biglybtc_queue_observer=std::move(sink);return true;
++	}
++	bool torrent::biglybtc_attach_tracker_response_observer(std::shared_ptr<BiglybtcTrackerResponseObserverV1> sink,std::uint64_t const admission)
++	{
++		TORRENT_ASSERT(is_single_thread());
++		if(m_biglybtc_response_observer||!sink||!admission||m_announcing) return false;
++		m_biglybtc_response_observer=std::move(sink);m_biglybtc_response_admission=admission;return true;
++	}
++	void torrent::biglybtc_tracker_response_event(BiglybtcTrackerResponseKindV1 kind,
++		tracker_request const& req,BiglybtcTrackerResponseFieldsV1 fields) noexcept
++	{
++		if(!m_biglybtc_response_observer||m_biglybtc_response_lost) return;
++		if(m_biglybtc_response_sequence==(std::numeric_limits<std::uint64_t>::max)()) kind=BiglybtcTrackerResponseKindV1::Lost;
++		BiglybtcTrackerResponseEventV1 event{};event.admission=m_biglybtc_response_admission;event.sequence=m_biglybtc_response_sequence;
++		if(kind!=BiglybtcTrackerResponseKindV1::Lost) event.sequence=++m_biglybtc_response_sequence;
++		event.request=req.biglybtc_queue_request;event.request_started_nanoseconds=req.biglybtc_queue_started_nanoseconds;
++		event.request_started_wall_milliseconds=req.biglybtc_queue_started_wall_milliseconds;
++		event.observed_nanoseconds=std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
++		event.observed_wall_milliseconds=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
++		if(m_wire_info_hash.has_v1()&&req.info_hash==m_wire_info_hash.v1) event.protocol=1;
++		else if(m_wire_info_hash.has_v2()&&req.info_hash==m_wire_info_hash.get(protocol_version::V2)) event.protocol=2;
++		else kind=BiglybtcTrackerResponseKindV1::Lost;
++		if(!event.request||event.request_started_nanoseconds<=0) kind=BiglybtcTrackerResponseKindV1::Lost;
++		try {auto const hash=hasher256(span<char const>(req.url.data(),req.url.size())).final();std::copy(hash.begin(),hash.end(),event.tracker_sha256.begin());}
++		catch(...) {kind=BiglybtcTrackerResponseKindV1::Lost;}
++		event.kind=kind;event.fields=fields;
++		if(kind==BiglybtcTrackerResponseKindV1::Lost) m_biglybtc_response_lost=true;
++		m_biglybtc_response_observer->observe(event);
++	}
++	void torrent::biglybtc_queue_dispatch(tracker_request& req)
++	{
++		if(!m_biglybtc_queue_observer&&!m_biglybtc_response_observer) return;
++		if(m_biglybtc_queue_request==(std::numeric_limits<std::uint64_t>::max)()) {
++			biglybtc_queue_event(BiglybtcQueueEventKindV1::Lost);biglybtc_tracker_response_event(BiglybtcTrackerResponseKindV1::Lost,req,{});return;
++		}
++		req.biglybtc_queue_request=++m_biglybtc_queue_request;
++		req.biglybtc_queue_started_nanoseconds=std::chrono::duration_cast<std::chrono::nanoseconds>(
++			std::chrono::steady_clock::now().time_since_epoch()).count();
++		req.biglybtc_queue_started_wall_milliseconds=std::chrono::duration_cast<std::chrono::milliseconds>(
++			std::chrono::system_clock::now().time_since_epoch()).count();
++	}
++	void torrent::biglybtc_queue_event(BiglybtcQueueEventKindV1 kind,
++		tracker_request const* req,int const seeds,int const peers) noexcept
++	{
++		if(!m_biglybtc_queue_observer||m_biglybtc_queue_lost) return;
++		if(m_biglybtc_queue_sequence==(std::numeric_limits<std::uint64_t>::max)()) kind=BiglybtcQueueEventKindV1::Lost;
++		BiglybtcQueueEventV1 event{};event.sequence=m_biglybtc_queue_sequence;
++		if(kind!=BiglybtcQueueEventKindV1::Lost) event.sequence=++m_biglybtc_queue_sequence;
++		event.kind=static_cast<std::uint32_t>(kind);event.seeds=seeds;event.peers=peers;
++		event.observed_nanoseconds=std::chrono::duration_cast<std::chrono::nanoseconds>(
++			std::chrono::steady_clock::now().time_since_epoch()).count();
++		event.observed_wall_milliseconds=std::chrono::duration_cast<std::chrono::milliseconds>(
++			std::chrono::system_clock::now().time_since_epoch()).count();
++		if(req) {
++			event.request=req->biglybtc_queue_request;
++			event.request_started_nanoseconds=req->biglybtc_queue_started_nanoseconds;
++			event.request_started_wall_milliseconds=req->biglybtc_queue_started_wall_milliseconds;
++			if(m_wire_info_hash.has_v1()&&req->info_hash==m_wire_info_hash.v1) event.protocol=1;
++			else if(m_wire_info_hash.has_v2()&&req->info_hash==m_wire_info_hash.get(protocol_version::V2)) event.protocol=2;
++			else {kind=BiglybtcQueueEventKindV1::Lost;event.kind=static_cast<std::uint32_t>(kind);}
++			try {
++				auto const digest=hasher256(span<char const>(req->url.data(),req->url.size())).final();
++				std::copy(digest.begin(),digest.end(),event.tracker_sha256.begin());
++			} catch(...) {kind=BiglybtcQueueEventKindV1::Lost;event.kind=static_cast<std::uint32_t>(kind);}
++		}
++		if(kind==BiglybtcQueueEventKindV1::Lost) m_biglybtc_queue_lost=true;
++		m_biglybtc_queue_observer->observe(event);
++	}
++
+ 	void torrent::scrape_tracker(int idx, bool const user_triggered)
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
+@@ -3418,9 +3569,10 @@
+ 		{
+ 			if (!aep.enabled) continue;
+ 			req.outgoing_socket = aep.socket;
+-			m_torrent_file->info_hashes().for_each([&](sha1_hash const& ih, protocol_version)
++			m_wire_info_hash.for_each([&](sha1_hash const& ih, protocol_version)
+ 			{
+ 				req.info_hash = ih;
++				biglybtc_queue_dispatch(req);
+ 				m_ses.queue_tracker_request(req, shared_from_this());
+ 			});
+ 		}
+@@ -3432,7 +3584,7 @@
+ 
+ 		INVARIANT_CHECK;
+ 
+-		protocol_version const hash_version = req.info_hash == m_info_hash.v1
++		protocol_version const hash_version = req.info_hash == m_wire_info_hash.v1
+ 			? protocol_version::V1 : protocol_version::V2;
+ 
+ 		aux::announce_entry* ae = find_tracker(req.url);
+@@ -3460,8 +3612,10 @@
+ 
+ 		INVARIANT_CHECK;
+ 		TORRENT_ASSERT(req.kind & tracker_request::scrape_request);
+-
+-		protocol_version const hash_version = req.info_hash == m_info_hash.v1
++		biglybtc_queue_event(BiglybtcQueueEventKindV1::Scrape,&req,complete,incomplete);
++		biglybtc_tracker_response_event(BiglybtcTrackerResponseKindV1::Scrape,req,req.biglybtc_response_fields);
++
++		protocol_version const hash_version = req.info_hash == m_wire_info_hash.v1
+ 			? protocol_version::V1 : protocol_version::V2;
+ 
+ 		aux::announce_entry* ae = find_tracker(req.url);
+@@ -3542,6 +3696,8 @@
+ 
+ 		INVARIANT_CHECK;
+ 		TORRENT_ASSERT(!(r.kind & tracker_request::scrape_request));
++		biglybtc_queue_event(BiglybtcQueueEventKindV1::Announce,&r,resp.complete,resp.incomplete);
++		biglybtc_tracker_response_event(BiglybtcTrackerResponseKindV1::Announce,r,r.biglybtc_response_fields);
+ 
+ 		// if the tracker told us what our external IP address is, record it with
+ 		// out external IP counter (and pass along the IP of the tracker to know
+@@ -3553,7 +3709,7 @@
+ 
+ 		time_point32 const now = aux::time_now32();
+ 
+-		protocol_version const v = r.info_hash == torrent_file().info_hashes().v1
++		protocol_version const v = r.info_hash == m_wire_info_hash.v1
+ 			? protocol_version::V1 : protocol_version::V2;
+ 
+ 		auto const interval = std::max(resp.interval, seconds32(
+@@ -4990,7 +5146,7 @@
+ 			if (alerts().should_post<cache_flushed_alert>())
+ 				alerts().emplace_alert<cache_flushed_alert>(get_handle());
+ 			alerts().emplace_alert<torrent_removed_alert>(get_handle()
+-				, info_hash(), get_userdata());
++				, metadata_info_hash(), get_userdata());
+ 		}
+ 
+ 		// TODO: 2 abort lookups this torrent has made via the
+@@ -6485,7 +6641,8 @@
+ 		}
+ 		else if (ps.proxy_hostnames
+ 			&& (ps.type == settings_pack::socks5
+-				|| ps.type == settings_pack::socks5_pw)
++				|| ps.type == settings_pack::socks5_pw
++				|| ps.type == settings_pack::socks4)
+ 			&& ps.proxy_peer_connections)
+ 		{
+ 			connect_web_seed(web, {address(), std::uint16_t(port)});
+@@ -7506,6 +7663,7 @@
+ 		TORRENT_ASSERT(peerinfo->connection == nullptr);
+ 
+ 		if (m_abort) return false;
++		if (!m_wire_info_hash.has(peerinfo->protocol())) return false;
+ 
+ 		peerinfo->last_connected = m_ses.session_time();
+ #if TORRENT_USE_ASSERTS
+@@ -7626,7 +7784,7 @@
+ 			{
+ 				// for ssl sockets, set the hostname
+ 				std::string const host_name = aux::to_hex(
+-					m_torrent_file->info_hashes().get(peerinfo->protocol()));
++					m_wire_info_hash.get(peerinfo->protocol()));
+ 
+ 				boost::apply_visitor(hostname_visitor{host_name}, ret);
+ 			}
+@@ -7712,7 +7870,7 @@
+ 
+ 	error_code torrent::initialize_merkle_trees()
+ 	{
+-		if (!info_hash().has_v2()) return {};
++		if (!metadata_info_hash().has_v2()) return {};
+ 
+ 		bool valid = m_torrent_file->v2_piece_hashes_verified();
+ 
+@@ -7793,7 +7951,7 @@
+ 		// the torrent's info hash might change
+ 		// e.g. it could be a hybrid torrent which we only had one of the hashes for
+ 		// so remove the existing entry
+-		info_hash_t const old_ih = m_torrent_file->info_hashes();
++		info_hash_t const old_ih = m_wire_info_hash;
+ 
+ 		error_code ec;
+ 		int pos = 0;
+@@ -7817,9 +7975,16 @@
+ 			return false;
+ 		}
+ 
+-		// we might already have this torrent in the session.
++		auto const selected_ih = biglybtc_wire_hashes(info->info_hashes(),m_swarm_flags);
++		if (!selected_ih.has_v1() && !selected_ih.has_v2())
++		{
++			set_error(errors::invalid_info_hash,torrent_status::error_file_metadata);
++			pause();
++			return false;
++		}
++		// Only selected wire identities participate in collision checks.
+ 		bool failed = false;
+-		info->info_hashes().for_each([&](sha1_hash const& ih, protocol_version)
++		selected_ih.for_each([&](sha1_hash const& ih, protocol_version)
+ 		{
+ 			if (failed) return;
+ 
+@@ -7855,6 +8020,7 @@
+ 		m_name_idx.clear();
+ 		m_torrent_file = info;
+ 		m_info_hash = m_torrent_file->info_hashes();
++		m_wire_info_hash = selected_ih;
+ 
+ 		m_size_on_disk = aux::size_on_disk(m_torrent_file->files());
+ 
+@@ -8908,6 +9074,7 @@
+ 		{
+ 			TORRENT_ASSERT(m_info_hash.v1 == m_torrent_file->info_hashes().v1);
+ 			TORRENT_ASSERT(m_info_hash.v2 == m_torrent_file->info_hashes().v2);
++			TORRENT_ASSERT(m_wire_info_hash == biglybtc_wire_hashes(m_info_hash,m_swarm_flags));
+ 		}
+ 
+ 		for (torrent_list_index_t i{}; i != m_links.end_index(); ++i)
+@@ -9602,7 +9769,7 @@
+ 		m_storage.reset();
+ 
+ 		alerts().emplace_alert<torrent_removed_alert>(get_handle()
+-			, info_hash(), get_userdata());
++			, metadata_info_hash(), get_userdata());
+ 	}
+ 
+ 	bool torrent::is_paused() const
+@@ -9970,8 +10137,8 @@
+ #endif
+ 		aux::array<bool const, num_protocols, protocol_version> const supports_protocol{
+ 		{
+-			m_info_hash.has_v1(),
+-			m_info_hash.has_v2()
++			m_wire_info_hash.has_v1(),
++			m_wire_info_hash.has_v2()
+ 		}};
+ #ifdef __clang__
+ #pragma clang diagnostic pop
+@@ -10141,6 +10308,7 @@
+ 		if (m_announcing) return;
+ 
+ 		m_announcing = true;
++		biglybtc_queue_event(is_finished()?BiglybtcQueueEventKindV1::StartedSeed:BiglybtcQueueEventKindV1::StartedDownload);
+ 
+ #ifndef TORRENT_DISABLE_DHT
+ 		if ((!m_peer_list || m_peer_list->num_peers() < 50) && m_ses.dht())
+@@ -10179,6 +10347,7 @@
+ 		m_tracker_timer.cancel();
+ 
+ 		m_announcing = false;
++		biglybtc_queue_event(BiglybtcQueueEventKindV1::Stopped);
+ 
+ 		time_point32 const now = aux::time_now32();
+ 		for (auto& t : m_trackers)
+@@ -11259,6 +11428,8 @@
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
+ 
++		// A hint cannot opt a V1-only admission into the other swarm.
++		if ((flags & pex_lt_v2) && !m_wire_info_hash.has_v2()) return nullptr;
+ 		TORRENT_ASSERT(info_hash().has_v2() || !(flags & pex_lt_v2));
+ 
+ 		if (m_apply_ip_filter
+@@ -11320,7 +11491,7 @@
+ 		}
+ #endif
+ 
+-		if (!torrent_file().info_hashes().has_v1())
++		if (!m_wire_info_hash.has_v1())
+ 			flags |= pex_lt_v2;
+ 
+ 		need_peer_list();
+@@ -11763,6 +11934,12 @@
+ 		// it may think we're still checking files, even though we're just
+ 		// leaving that state
+ 		m_state = s;
++		if(m_announcing) {
++			if(s==torrent_status::finished||s==torrent_status::seeding)
++				biglybtc_queue_event(BiglybtcQueueEventKindV1::Finished);
++			else if(s==torrent_status::downloading)
++				biglybtc_queue_event(BiglybtcQueueEventKindV1::Unfinished);
++		}
+ 
+ 		update_gauge();
+ 		update_want_peers();
+@@ -11857,9 +12034,9 @@
+ 		time_point32 const now = aux::time_now32();
+ 
+ 		st->handle = get_handle();
+-		st->info_hashes = info_hash();
++		st->info_hashes = metadata_info_hash();
+ #if TORRENT_ABI_VERSION < 3
+-		st->info_hash = info_hash().get_best();
++		st->info_hash = metadata_info_hash().get_best();
+ #endif
+ #if TORRENT_ABI_VERSION == 1
+ 		st->is_loaded = true;
+@@ -12013,8 +12190,8 @@
+ #endif
+ 			aux::array<bool const, num_protocols, protocol_version> const supports_protocol{
+ 			{
+-				m_info_hash.has_v1(),
+-				m_info_hash.has_v2()
++				m_wire_info_hash.has_v1(),
++				m_wire_info_hash.has_v2()
+ 			}};
+ #ifdef __clang__
+ #pragma clang diagnostic pop
+@@ -12254,7 +12431,18 @@
+ 		, seconds32 const retry_interval)
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
+-
++		biglybtc_queue_event((r.kind&tracker_request::scrape_request)
++			?BiglybtcQueueEventKindV1::ScrapeFailed:BiglybtcQueueEventKindV1::AnnounceFailed,&r);
++
++		BiglybtcTrackerResponseFieldsV1 original_failure;
++		// HTTP error statuses cannot be an original successful tracker body.
++		// Parser/filter/partial-body failures remain Unknown, never RT_ERROR.
++		if((r.url.compare(0,7,"http://")==0||r.url.compare(0,8,"https://")==0)
++			&&ec.category()==http_category()&&ec.value()>=400&&ec.value()<=599)
++			original_failure.meaning=BiglybtcTrackerResponseMeaningV1::DefinitiveFailure;
++		if(r.url.compare(0,6,"udp://")==0&&ec==errors::tracker_failure)
++			original_failure.meaning=BiglybtcTrackerResponseMeaningV1::DefinitiveFailure;
++		biglybtc_tracker_response_event((r.kind&tracker_request::scrape_request)?BiglybtcTrackerResponseKindV1::ScrapeFailed:BiglybtcTrackerResponseKindV1::AnnounceFailed,r,original_failure);
+ 		INVARIANT_CHECK;
+ 
+ // some older versions of clang had a bug where it would fire this warning here
+@@ -12264,8 +12452,8 @@
+ #endif
+ 		aux::array<bool const, num_protocols, protocol_version> const supports_protocol
+ 		{ {
+-			m_info_hash.has_v1(),
+-			m_info_hash.has_v2()
++			m_wire_info_hash.has_v1(),
++			m_wire_info_hash.has_v2()
+ 		} };
+ #ifdef __clang__
+ #pragma clang diagnostic pop
+@@ -12292,7 +12480,7 @@
+ 
+ 				if (aep != ae->endpoints.end())
+ 				{
+-					hash_version = r.info_hash == m_info_hash.v1
++					hash_version = r.info_hash == m_wire_info_hash.v1
+ 						? protocol_version::V1 : protocol_version::V2;
+ 					auto& a = aep->info_hashes[hash_version];
+ 					local_endpoint = aep->local_endpoint;
+@@ -12374,7 +12562,7 @@
+ 					if (aep != nullptr) local_endpoint = aep->local_endpoint;
+ 				}
+ 
+-				protocol_version hash_version = r.info_hash == m_info_hash.v1
++				protocol_version hash_version = r.info_hash == m_wire_info_hash.v1
+ 					? protocol_version::V1 : protocol_version::V2;
+ 
+ 				m_ses.alerts().emplace_alert<scrape_failed_alert>(get_handle()
+diff --git a/src/torrent_handle.cpp b/src/torrent_handle.cpp
+index 6e55eb25c2b20252c464ddc3b0b5698f50003abb..14e684298cb75b92bf9fb5676e7c7d04055aa94c
+--- a/src/torrent_handle.cpp
++++ b/src/torrent_handle.cpp
+@@ -40,6 +40,7 @@
+ 
+ #include <ctime>
+ #include <iterator>
++#include <limits>
+ #include <algorithm>
+ #include <set>
+ #include <cctype>
+@@ -217,13 +218,13 @@
+ 	sha1_hash torrent_handle::info_hash() const
+ 	{
+ 		std::shared_ptr<torrent> t = m_torrent.lock();
+-		return t ? t->info_hash().get_best() : sha1_hash{};
++		return t ? t->metadata_info_hash().get_best() : sha1_hash{};
+ 	}
+ 
+ 	info_hash_t torrent_handle::info_hashes() const
+ 	{
+ 		std::shared_ptr<torrent> t = m_torrent.lock();
+-		return t ? t->info_hash() : info_hash_t();
++		return t ? t->metadata_info_hash() : info_hash_t();
+ 	}
+ 
+ 	int torrent_handle::max_uploads() const
+@@ -953,6 +954,164 @@
+ #endif
+ 	}
+ 
++	extern "C" unsigned biglybtc_payload_counter_abi_v1() noexcept
++	{
++		return 1;
++	}
++
++	extern "C" std::uint32_t biglybtc_read_payload_counters_v1(
++		torrent_handle const* handle, BiglybtcPayloadCountersV1* output,
++		std::uint32_t const output_bytes) noexcept
++	{
++		using result = BiglybtcPayloadCounterStatusV1;
++		if (handle == nullptr || output == nullptr
++			|| output_bytes != sizeof(BiglybtcPayloadCountersV1))
++			return static_cast<std::uint32_t>(result::InvalidArgument);
++		try
++		{
++			// The layout and inline stat read stay inside their defining DSO.
++			// Never dispatch: a delayed read would miss the pre-clear boundary.
++			auto const t = handle->m_torrent.lock();
++			if (!t) return static_cast<std::uint32_t>(result::InvalidHandle);
++			if (!t->session().get_context().get_executor().running_in_this_thread())
++				return static_cast<std::uint32_t>(result::WrongThread);
++			auto const raw = t->statistics();
++			auto const received = raw.total_payload_download();
++			auto const sent = raw.total_payload_upload();
++			if (received < 0 || sent < 0)
++				return static_cast<std::uint32_t>(result::InvalidCounters);
++			BiglybtcPayloadCountersV1 const value{received, sent,
++				t->are_files_checked() ? 1u : 0u, 0u};
++			*output = value;
++			return static_cast<std::uint32_t>(result::Accepted);
++		}
++		catch (...) { return static_cast<std::uint32_t>(result::Failed); }
++	}
++
++	extern "C" unsigned biglybtc_traffic_counter_abi_v2() noexcept
++	{
++		return 2;
++	}
++
++	extern "C" std::uint32_t biglybtc_read_traffic_counters_v2(
++		torrent_handle const* handle, BiglybtcTrafficCountersV2* output,
++		std::uint32_t const output_bytes) noexcept
++	{
++		using result = BiglybtcTrafficCounterStatusV2;
++		if (handle == nullptr || output == nullptr
++			|| output_bytes != sizeof(BiglybtcTrafficCountersV2))
++			return static_cast<std::uint32_t>(result::InvalidArgument);
++		try
++		{
++			auto const t = handle->m_torrent.lock();
++			if (!t) return static_cast<std::uint32_t>(result::InvalidHandle);
++			if (!t->session().get_context().get_executor().running_in_this_thread())
++				return static_cast<std::uint32_t>(result::WrongThread);
++			auto const raw = t->statistics();
++			auto const received = raw.total_payload_download();
++			auto const sent = raw.total_payload_upload();
++			if (received < 0 || sent < 0)
++				return static_cast<std::uint32_t>(result::InvalidCounters);
++			auto const protocol_received = raw.total_protocol_download();
++			auto const protocol_sent = raw.total_protocol_upload();
++			bool const known = protocol_received >= 0 && protocol_sent >= 0;
++			BiglybtcTrafficCountersV2 const value{
++				{received, sent, t->are_files_checked() ? 1u : 0u, 0u},
++				known ? protocol_received : 0, known ? protocol_sent : 0,
++				known ? 1u : 0u, 0u};
++			*output = value;
++			return static_cast<std::uint32_t>(result::Accepted);
++		}
++		catch (...) { return static_cast<std::uint32_t>(result::Failed); }
++	}
++
++	extern "C" unsigned biglybtc_traffic_counter_abi_v3() noexcept { return 3; }
++	extern "C" std::uint32_t biglybtc_read_traffic_counters_v3(
++		torrent_handle const* handle,BiglybtcTrafficCountersV3* output,std::uint32_t const output_bytes) noexcept
++	{
++		using result=BiglybtcTrafficCounterStatusV3;
++		if(!handle||!output||output_bytes!=sizeof(BiglybtcTrafficCountersV3))
++			return static_cast<std::uint32_t>(result::InvalidArgument);
++		try {
++			auto const t=handle->m_torrent.lock();
++			if(!t) return static_cast<std::uint32_t>(result::InvalidHandle);
++			if(!t->session().get_context().get_executor().running_in_this_thread())
++				return static_cast<std::uint32_t>(result::WrongThread);
++			auto const raw=t->statistics();
++			auto const received=raw.total_payload_download(),sent=raw.total_payload_upload();
++			if(received<0||sent<0) return static_cast<std::uint32_t>(result::InvalidCounters);
++			auto const protocol_received=raw.total_protocol_download(),protocol_sent=raw.total_protocol_upload();
++			bool const protocol_known=protocol_received>=0&&protocol_sent>=0;
++			auto const failed=t->m_total_failed_bytes,redundant=t->m_total_redundant_bytes;
++			bool const bad_known=failed>=0&&redundant>=0
++				&&failed<(std::numeric_limits<std::int64_t>::max)()&&redundant<(std::numeric_limits<std::int64_t>::max)();
++			BiglybtcTrafficCountersV3 const value{
++				{{received,sent,t->are_files_checked()?1u:0u,0u},protocol_known?protocol_received:0,
++				protocol_known?protocol_sent:0,protocol_known?1u:0u,0u},
++				bad_known?failed:0,bad_known?redundant:0,bad_known?1u:0u,0u};
++			*output=value;return static_cast<std::uint32_t>(result::Accepted);
++		} catch(...) {return static_cast<std::uint32_t>(result::Failed);}
++	}
++
++	extern "C" unsigned biglybtc_tracker_response_abi_v1() noexcept { return 1; }
++	extern "C" std::uint32_t biglybtc_attach_tracker_response_observer_v1(torrent_handle const* handle,
++		std::shared_ptr<BiglybtcTrackerResponseObserverV1> const* sink,std::uint64_t const admission) noexcept
++	{
++		using result=BiglybtcTrackerResponseStatusV1;
++		if(!handle||!sink||!*sink||!admission) return static_cast<std::uint32_t>(result::InvalidArgument);
++		try {
++			auto const t=handle->m_torrent.lock();
++			if(!t) return static_cast<std::uint32_t>(result::InvalidHandle);
++			if(!t->session().get_context().get_executor().running_in_this_thread()) return static_cast<std::uint32_t>(result::WrongThread);
++			return static_cast<std::uint32_t>(t->biglybtc_attach_tracker_response_observer(*sink,admission)?result::Accepted:result::AlreadyBound);
++		} catch(...) {return static_cast<std::uint32_t>(result::Failed);}
++	}
++	extern "C" unsigned biglybtc_queue_observer_abi_v1() noexcept { return 1; }
++	extern "C" std::uint32_t biglybtc_attach_queue_observer_v1(torrent_handle const* handle,
++		std::shared_ptr<BiglybtcQueueObserverV1> const* sink) noexcept
++	{
++		using result=BiglybtcQueueObserverStatusV1;
++		if(!handle||!sink||!*sink) return static_cast<std::uint32_t>(result::InvalidArgument);
++		try {
++			auto const t=handle->m_torrent.lock();
++			if(!t) return static_cast<std::uint32_t>(result::InvalidHandle);
++			if(!t->session().get_context().get_executor().running_in_this_thread())
++				return static_cast<std::uint32_t>(result::WrongThread);
++			return static_cast<std::uint32_t>(t->biglybtc_attach_queue_observer(*sink)
++				?result::Accepted:result::AlreadyBound);
++		} catch(...) {return static_cast<std::uint32_t>(result::Failed);}
++	}
++
++	extern "C" unsigned biglybtc_mainline_port_abi_v1() noexcept { return 1; }
++	extern "C" std::uint32_t biglybtc_attach_mainline_port_observer_v1(torrent_handle const* handle,
++		std::shared_ptr<BiglybtcMainlinePortObserverV1> const* sink, std::uint64_t const admission) noexcept
++	{
++		using result = BiglybtcMainlinePortStatusV1;
++		if (!handle || !sink || !*sink || admission == 0) return static_cast<std::uint32_t>(result::InvalidArgument);
++		try {
++			auto const t = handle->m_torrent.lock();
++			if (!t) return static_cast<std::uint32_t>(result::InvalidHandle);
++			if (!t->session().get_context().get_executor().running_in_this_thread())
++				return static_cast<std::uint32_t>(result::WrongThread);
++			return static_cast<std::uint32_t>(t->biglybtc_attach_mainline_port_observer(*sink, admission)
++				? result::Accepted : result::AlreadyBound);
++		} catch (...) { return static_cast<std::uint32_t>(result::Failed); }
++	}
++	extern "C" std::uint32_t biglybtc_refresh_mainline_port_v1(torrent_handle const* handle,
++		std::uint64_t const admission) noexcept
++	{
++		using result = BiglybtcMainlinePortStatusV1;
++		if (!handle || admission == 0) return static_cast<std::uint32_t>(result::InvalidArgument);
++		try {
++			auto const t = handle->m_torrent.lock();
++			if (!t) return static_cast<std::uint32_t>(result::InvalidHandle);
++			if (!t->session().get_context().get_executor().running_in_this_thread())
++				return static_cast<std::uint32_t>(result::WrongThread);
++			return static_cast<std::uint32_t>(t->biglybtc_refresh_mainline_port(admission)
++				? result::Accepted : result::InvalidArgument);
++		} catch (...) { return static_cast<std::uint32_t>(result::Failed); }
++	}
++
+ 	std::shared_ptr<torrent> torrent_handle::native_handle() const
+ 	{
+ 		return m_torrent.lock();
+diff --git a/src/torrent_info.cpp b/src/torrent_info.cpp
+index bb4f7330fa0bc1981c35f54adf0409d3a98e4142..e51ff5fdfc16be2c5b9281715a348b6333ee2acf
+--- a/src/torrent_info.cpp
++++ b/src/torrent_info.cpp
+@@ -35,6 +35,7 @@
+ */
+ 
+ #include "libtorrent/config.hpp"
++#include "biglybtc_utf16_info.hpp"
+ #include "libtorrent/torrent_info.hpp"
+ #include "libtorrent/string_util.hpp" // is_space, is_i2p_url
+ #include "libtorrent/bencode.hpp"
+@@ -1166,7 +1167,8 @@
+ 		if (version > 0)
+ 		{
+ 			char error_string[200];
+-			if (info.has_soft_error(error_string))
++			if (info.has_soft_error(error_string)
++				&& !aux::biglybtcOriginalUtf16Info(info))
+ 			{
+ 				ec = errors::invalid_bencoding;
+ 				return false;
+diff --git a/src/udp_tracker_connection.cpp b/src/udp_tracker_connection.cpp
+index fca0a7e7e68b41c8e7cd4c04caeddea1b023edb2..9ead38689f931ffc1097dd0f0fa36b9735d0129a
+--- a/src/udp_tracker_connection.cpp
++++ b/src/udp_tracker_connection.cpp
+@@ -633,6 +633,7 @@
+ 		std::transform(m_endpoints.begin(), m_endpoints.end(), std::back_inserter(ip_list)
+ 			, [](tcp::endpoint const& ep) { return ep.address(); } );
+ 
++		tracker_req().biglybtc_response_fields={resp.complete,resp.incomplete,0,3,BiglybtcTrackerResponseMeaningV1::OriginalUdpFields};
+ 		cb->tracker_response(tracker_req(), m_target.address(), ip_list, resp);
+ 
+ 		close();
+@@ -681,6 +682,7 @@
+ 			return true;
+ 		}
+ 
++		tracker_req().biglybtc_response_fields={complete,incomplete,downloaded,7,BiglybtcTrackerResponseMeaningV1::OriginalUdpFields};
+ 		cb->tracker_scrape_response(tracker_req()
+ 			, complete, incomplete, downloaded, -1);
+ 
+diff --git a/src/version.cpp b/src/version.cpp
+index 6db34f29c79945c35b8dc0f9692225e985ab2f90..ba993c2d20ef7187ea58b44916519eac572a31b9
+--- a/src/version.cpp
++++ b/src/version.cpp
+@@ -31,8 +31,11 @@
+ */
+ 
+ #include "libtorrent/version.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
+ 
+ namespace libtorrent {
++
++extern "C" unsigned biglybtc_swarm_mask_abi_v1() noexcept { return 1; }
+ 
+ char const* version()
+ {
+diff --git a/src/write_resume_data.cpp b/src/write_resume_data.cpp
+index bed5de7405cb1fe5234442c9e0b6699757043cf3..fcb782962de1a19451707a2490eca70f97461d65
+--- a/src/write_resume_data.cpp
++++ b/src/write_resume_data.cpp
+@@ -37,6 +37,7 @@
+ 
+ #include "libtorrent/bdecode.hpp"
+ #include "libtorrent/write_resume_data.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
+ #include "libtorrent/add_torrent_params.hpp"
+ #include "libtorrent/socket_io.hpp" // for write_*_endpoint()
+ #include "libtorrent/torrent_info.hpp"
+@@ -116,6 +117,10 @@
+ 		ret["disable_dht"] = bool(atp.flags & torrent_flags::disable_dht);
+ 		ret["disable_lsd"] = bool(atp.flags & torrent_flags::disable_lsd);
+ 		ret["disable_pex"] = bool(atp.flags & torrent_flags::disable_pex);
++		auto const selected=atp.flags & biglybtc_swarm_mask;
++		if (selected) ret["biglybtc.swarm"] = selected==biglybtc_v1_only?1:
++			selected==biglybtc_v2_only?2:3; // invalid combined bits fail on read
++
+ 
+ 		ret["added_time"] = atp.added_time;
+ 		ret["completed_time"] = atp.completed_time;
+diff --git a/test/test_biglybtc_mainline_identity.cpp b/test/test_biglybtc_mainline_identity.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..c883e9e3b7838d71d2e59b57f71c2d645b7421fd
+--- /dev/null
++++ b/test/test_biglybtc_mainline_identity.cpp
+@@ -0,0 +1,214 @@
++// Optional original local-ID policy. Generated sockets only; no public traffic.
++#include "test.hpp"
++#ifndef TORRENT_DISABLE_DHT
++#include "libtorrent/aux_/biglybtc_mainline_identity.hpp"
++#include "libtorrent/aux_/session_impl.hpp"
++#include "libtorrent/aux_/session_udp_sockets.hpp"
++#include "libtorrent/kademlia/dht_tracker.hpp"
++#include "libtorrent/kademlia/dht_storage.hpp"
++#include "libtorrent/kademlia/node.hpp"
++#include "libtorrent/kademlia/dht_observer.hpp"
++#include "libtorrent/settings_pack.hpp"
++#include "libtorrent/bencode.hpp"
++#include "libtorrent/bdecode.hpp"
++#include <vector>
++#include <array>
++#include <algorithm>
++
++using namespace libtorrent;
++namespace {
++struct Observer final : dht::dht_observer {
++  void set_external_address(aux::listen_socket_handle const&,address const&,address const&) override {}
++  int get_listen_port(aux::transport,aux::listen_socket_handle const&) override {return 0;}
++  void get_peers(sha1_hash const&) override {}
++  void outgoing_get_peers(sha1_hash const&,sha1_hash const&,udp::endpoint const&) override {}
++  void announce(sha1_hash const&,address const&,int) override {}
++  bool on_dht_request(string_view,dht::msg const&,entry&) override {return false;}
++#ifndef TORRENT_DISABLE_LOGGING
++  bool should_log(module_t) const override {return false;}
++  void log(module_t,char const*,...) override {}
++  void log_packet(message_direction_t,span<char const>,udp::endpoint const&) override {}
++#endif
++};
++struct Socket final : dht::socket_manager {
++  bool has_quota() override {return true;}
++  bool send_packet(aux::listen_socket_handle const&,entry&,udp::endpoint const&) override {return true;}
++};
++struct Sink final : BiglybtcMainlineIdentityObserverV1 {
++  std::array<BiglybtcMainlineIdentityEventV1,8> events{};
++  unsigned count=0; bool accept=true;
++  bool observe(BiglybtcMainlineIdentityEventV1 const& event) noexcept override {
++    if(count==events.size()){return false;}events[count++]=event;return accept;
++  }
++};
++void external(std::shared_ptr<aux::listen_socket_t> const& socket,address const& value) {
++  socket->external_address=ip_voter{};
++  socket->external_address.cast_vote(value,aux::session_interface::source_dht,
++      make_address(value.is_v4()?"93.184.216.35":"2001:4860:4860::8844"));
++  TEST_CHECK(socket->external_address.external_address()==value);
++}
++auto local_socket(io_context& io,bool v6) {
++  auto socket=std::make_shared<aux::listen_socket_t>();
++  socket->udp_sock=std::make_shared<aux::session_udp_socket>(io,aux::listen_socket_handle(socket));
++  error_code ec;
++  socket->udp_sock->sock.open(v6?udp::v6():udp::v4(),ec);TEST_CHECK(!ec);
++  socket->udp_sock->sock.bind({make_address(v6?"::1":"127.0.0.1"),0},ec);TEST_CHECK(!ec);
++  auto const actual=socket->udp_sock->sock.local_endpoint(ec);TEST_CHECK(!ec);TEST_CHECK(actual.port()!=0);
++  socket->local_endpoint={actual.address(),actual.port()};return socket;
++}
++auto policy(udp::endpoint const& endpoint,dht::node_id const& key) {
++  BiglybtcMainlineIdentityPolicyV1 result{};
++  result.version=1;result.size=sizeof(result);result.count=1;result.generation=17;
++  auto& binding=result.bindings[0];binding.family=endpoint.address().is_v4()?4:6;binding.port=endpoint.port();
++  if(binding.family==4){auto bytes=endpoint.address().to_v4().to_bytes();std::copy(bytes.begin(),bytes.end(),binding.address.begin());}
++  else{binding.address=endpoint.address().to_v6().to_bytes();}
++  std::copy_n(reinterpret_cast<unsigned char const*>(key.data()),20,binding.key.begin());return result;
++}
++void original_update(bool v6,bool zero) {
++  io_context io;auto socket=local_socket(io,v6);
++  auto const first=make_address(v6?"2001:4860:4860::8888":"93.184.216.34");
++  auto const second=make_address(v6?"2606:4700:4700::1111":"1.1.1.1");
++  external(socket,first);dht::node_id key{};
++  if(!zero){std::fill_n(key.data(),20,char(0x5a));if(dht::verify_id(key,first)){key[0]^=0x80;}}
++  TEST_CHECK(zero||!dht::verify_id(key,first));
++  aux::session_settings settings;counters counters;Observer observer;Socket manager;
++  auto storage=dht::dht_default_storage_constructor(settings);
++  auto foreign=[](dht::node_id const&,std::string const&)->dht::node*{return nullptr;};
++  dht::node original(socket,&manager,settings,key,&observer,counters,foreign,*storage,true);
++  TEST_EQUAL(original.nid(),key);external(socket,second);original.update_node_id();TEST_EQUAL(original.nid(),key);
++  // The stock control still derives a valid local ID from each public address.
++  external(socket,first);dht::node stock(socket,&manager,settings,key,&observer,counters,foreign,*storage);
++  TEST_CHECK(!stock.nid().is_all_zeros());TEST_CHECK(dht::verify_id(stock.nid(),first));external(socket,second);stock.update_node_id();
++  TEST_CHECK(dht::verify_id(stock.nid(),second));
++}
++void actual_lifecycle(bool v6,bool zero) {
++  io_context io;auto socket=local_socket(io,v6);aux::listen_socket_handle handle(socket);
++  dht::node_id key{};if(!zero){std::fill_n(key.data(),20,char(0x37));}
++  auto requested=policy(handle.get_udp_local_endpoint(),key);TEST_CHECK(aux::biglybtc_mainline_identity::valid(requested));
++  auto sink=std::make_shared<Sink>();auto state=std::make_shared<aux::biglybtc_mainline_identity>(requested,sink);
++  aux::session_settings settings;counters counters;Observer observer;auto storage=dht::dht_default_storage_constructor(settings);
++  auto tracker=std::make_shared<dht::dht_tracker>(&observer,io,
++      [](aux::listen_socket_handle const&,udp::endpoint const&,span<char const>,error_code&,udp_send_flags_t){},
++      settings,counters,*storage,dht::dht_state{},state);
++  tracker->new_socket(handle);TEST_EQUAL(sink->count,1U);TEST_EQUAL(sink->events[0].kind,1U);
++  TEST_EQUAL(sink->events[0].binding.port,handle.get_udp_local_endpoint().port());
++  TEST_CHECK(sink->events[0].binding.key==requested.bindings[0].key);TEST_CHECK(state->ready());
++  auto actual=tracker->state();TEST_EQUAL(actual.nids.size(),1U);TEST_EQUAL(actual.nids[0].second,key);
++  external(socket,make_address(v6?"2001:4860:4860::8888":"93.184.216.34"));tracker->update_node_id(handle);
++  TEST_EQUAL(tracker->state().nids[0].second,key);
++  socket->udp_sock->sock.close();TEST_EQUAL(handle.get_udp_local_endpoint().port(),0);
++  tracker->delete_socket(handle);TEST_EQUAL(sink->count,2U);TEST_EQUAL(sink->events[1].kind,2U);
++  TEST_EQUAL(sink->events[1].binding.port,requested.bindings[0].port);
++  TEST_EQUAL(sink->events[1].sequence,2U);TEST_EQUAL(state->status.retired,1U);TEST_CHECK(!state->ready());
++  // Retirement used the captured real endpoint even if the FD has since closed.
++  tracker.reset();TEST_EQUAL(sink->count,2U);
++}
++}
++TORRENT_TEST(biglybtc_original_identity_local_update) {
++  original_update(false,false);original_update(false,true);original_update(true,false);original_update(true,true);
++}
++TORRENT_TEST(biglybtc_original_identity_actual_adoption_retirement) {
++  actual_lifecycle(false,false);actual_lifecycle(false,true);actual_lifecycle(true,false);actual_lifecycle(true,true);
++}
++TORRENT_TEST(biglybtc_original_identity_refuses_ambiguous_and_lost) {
++  io_context io;auto socket=local_socket(io,false);auto other=local_socket(io,false);
++  auto requested=policy(aux::listen_socket_handle(socket).get_udp_local_endpoint(),dht::node_id{});
++  auto invalid=requested;invalid.count=2;invalid.bindings[1]=invalid.bindings[0]; // Duplicate SAME family remains ambiguous.
++  TEST_CHECK(!aux::biglybtc_mainline_identity::valid(invalid));invalid=requested;invalid.bindings[0].slot=1;
++  TEST_CHECK(!aux::biglybtc_mainline_identity::valid(invalid));
++  auto sink=std::make_shared<Sink>();aux::biglybtc_mainline_identity state(requested,sink);
++  auto const endpoint=aux::listen_socket_handle(socket).get_udp_local_endpoint();
++  TEST_CHECK(state.can_adopt(endpoint));TEST_CHECK(state.adopted(endpoint,dht::node_id{}));
++  TEST_CHECK(!state.can_adopt(aux::listen_socket_handle(other).get_udp_local_endpoint()));
++  TEST_EQUAL(state.status.phase,3U);TEST_CHECK(!state.permits(endpoint));
++  auto lost=std::make_shared<Sink>();lost->accept=false;aux::biglybtc_mainline_identity failed(requested,lost);
++  TEST_CHECK(failed.can_adopt(endpoint));TEST_CHECK(!failed.adopted(endpoint,dht::node_id{}));
++  TEST_CHECK(!failed.permits(endpoint));TEST_EQUAL(failed.status.phase,3U);
++}
++
++// Real UDP descriptors, real parser/RPC/node_seen path. Each direct request's
++// response reaches only its actual family socket; no test-only table insertion.
++TORRENT_TEST(biglybtc_original_identity_dual_socket_routing_correlation) {
++  for(bool zero:{false,true}) {
++    io_context io;auto v4=local_socket(io,false);auto v6=local_socket(io,true);
++    aux::listen_socket_handle h4(v4),h6(v6);
++    // Cold startup has no external-IP votes for EITHER socket. In particular,
++    // the IPv6 socket's default voter address is IPv4-unspecified.
++    TEST_CHECK(h4.get_external_address().is_unspecified());
++    TEST_CHECK(h6.get_external_address().is_unspecified());
++    TEST_CHECK(h6.get_external_address().is_v4());
++    dht::node_id key{};
++    if(!zero){std::fill_n(key.data(),20,char(0x5a));}
++    auto requested=policy(h4.get_udp_local_endpoint(),key);requested.count=2;
++    requested.bindings[1]=policy(h6.get_udp_local_endpoint(),key).bindings[0];
++    TEST_CHECK(aux::biglybtc_mainline_identity::valid(requested));
++    auto sink=std::make_shared<Sink>();auto identity=std::make_shared<aux::biglybtc_mainline_identity>(requested,sink);
++    aux::session_settings settings;counters counters;Observer observer;auto storage=dht::dht_default_storage_constructor(settings);
++    struct Sent{aux::listen_socket_handle socket;udp::endpoint endpoint;std::string bytes;};std::vector<Sent> sent;
++    auto tracker=std::make_shared<dht::dht_tracker>(&observer,io,
++        [&](aux::listen_socket_handle const& socket,udp::endpoint const& endpoint,span<char const> packet,error_code&,udp_send_flags_t){
++          sent.push_back({socket,endpoint,std::string(packet.data(),packet.size())});
++        },settings,counters,*storage,dht::dht_state{},identity);
++    tracker->new_socket(h4);TEST_CHECK(!identity->ready());tracker->new_socket(h6);TEST_CHECK(identity->ready());
++    TEST_EQUAL(identity->status.adopted,2U);TEST_EQUAL(identity->status.active_mask,3U);
++    std::uint64_t cookie=0;
++    auto query=[&](unsigned index,unsigned mode=1){BiglybtcMainlineRoutingQueryV1 q{};q.version=1;q.size=sizeof(q);
++      q.generation=requested.generation;q.cookie=++cookie;q.mode=mode;q.local=requested.bindings[index];return q;};
++    for(unsigned i=0;i<2;++i){auto empty=tracker->biglybtc_routing_query(query(i));
++      TEST_EQUAL(empty.result,0U);TEST_EQUAL(empty.count,0U);TEST_EQUAL(empty.local.family,i==0?4U:6U);TEST_CHECK(empty.local.key==requested.bindings[i].key);}
++    for(unsigned i=0;i<2;++i){
++      auto const handle=i==0?h4:h6;udp::endpoint const remote(make_address(i==0?"127.0.0.2":"::1"),std::uint16_t(10000+i));
++      entry ping;ping["q"]="ping";bool callback=false;auto const previous=sent.size();
++      tracker->direct_request(remote,ping,[&](dht::msg const&){callback=true;});TEST_EQUAL(sent.size(),previous+1);
++      if(sent.size()!=previous+1){continue;}
++      auto const outgoing=sent.back();TEST_CHECK(outgoing.socket==handle);TEST_CHECK(outgoing.endpoint==remote);
++      error_code ec;bdecode_node packet;bdecode(outgoing.bytes.data(),outgoing.bytes.data()+outgoing.bytes.size(),packet,ec);TEST_CHECK(!ec);
++      auto transaction=packet.dict_find_string_value("t");TEST_CHECK(!transaction.empty());
++      TEST_CHECK(packet.dict_find_dict("a").dict_find_string_value("id")==key.to_string());
++      entry reply;reply["y"]="r";reply["t"]=transaction.to_string();reply["r"]["id"]=std::string(20,'K');
++      std::vector<char> response;bencode(std::back_inserter(response),reply);
++      TEST_CHECK(tracker->incoming_packet(handle,remote,span<char const>(response.data(),response.size())));TEST_CHECK(callback);
++      auto q=query(i,2);std::fill(q.remote.id.begin(),q.remote.id.end(),static_cast<unsigned char>('K'));
++      q.remote.family=remote.address().is_v4()?4:6;q.remote.port=remote.port();
++      if(i==0){auto bytes=remote.address().to_v4().to_bytes();std::copy(bytes.begin(),bytes.end(),q.remote.address.begin());}
++      else{q.remote.address=remote.address().to_v6().to_bytes();}
++      auto match=tracker->biglybtc_routing_query(q);TEST_EQUAL(match.result,0U);TEST_EQUAL(match.matched,1U);
++      TEST_EQUAL(match.cookie,q.cookie);TEST_EQUAL(match.generation,q.generation);TEST_CHECK(match.local.address==q.local.address);
++      auto replay=tracker->biglybtc_routing_query(q);TEST_EQUAL(replay.result,std::uint32_t(BiglybtcMainlineRoutingResultV1::InvalidArgument));
++      auto wrong=query(1-i,2);wrong.remote=q.remote;
++      TEST_EQUAL(tracker->biglybtc_routing_query(wrong).result,std::uint32_t(BiglybtcMainlineRoutingResultV1::InvalidArgument));
++    }
++    for(unsigned i=0;i<2;++i){auto q=query(i);auto table=tracker->biglybtc_routing_query(q);
++      TEST_EQUAL(table.result,0U);TEST_EQUAL(table.count,1U);TEST_EQUAL(table.nodes[0].family,i==0?4U:6U);TEST_EQUAL(table.overflow,0U);
++      auto wrong=query(i);wrong.local.port=wrong.local.port==65535?1:std::uint16_t(wrong.local.port+1);
++      TEST_EQUAL(tracker->biglybtc_routing_query(wrong).result,std::uint32_t(BiglybtcMainlineRoutingResultV1::NoSocket));
++      auto stale=query(i);++stale.generation;
++      TEST_EQUAL(tracker->biglybtc_routing_query(stale).result,std::uint32_t(BiglybtcMainlineRoutingResultV1::InvalidArgument));}
++    // Actual FD closure/retirement of one family cannot leave a query-ready
++    // half service, and real destruction still acknowledges both old sockets.
++    v4->udp_sock->sock.close();tracker->delete_socket(h4);
++    TEST_EQUAL(tracker->biglybtc_routing_query(query(1)).result,std::uint32_t(BiglybtcMainlineRoutingResultV1::NotReady));
++    tracker->delete_socket(h6);TEST_EQUAL(identity->status.retired,2U);TEST_EQUAL(identity->status.active_mask,0U);
++    TEST_EQUAL(sink->count,4U);tracker.reset();TEST_EQUAL(sink->count,4U);
++  }
++}
++TORRENT_TEST(biglybtc_original_identity_dual_rebind_fails_both) {
++  io_context io;auto v4=local_socket(io,false);auto v6=local_socket(io,true);auto replacement=local_socket(io,false);
++  aux::listen_socket_handle h4(v4),h6(v6);auto requested=policy(h4.get_udp_local_endpoint(),dht::node_id{});
++  requested.count=2;requested.bindings[1]=policy(h6.get_udp_local_endpoint(),dht::node_id{}).bindings[0];
++  auto sink=std::make_shared<Sink>();auto identity=std::make_shared<aux::biglybtc_mainline_identity>(requested,sink);
++  aux::session_settings settings;counters counters;Observer observer;auto storage=dht::dht_default_storage_constructor(settings);
++  auto tracker=std::make_shared<dht::dht_tracker>(&observer,io,
++      [](aux::listen_socket_handle const&,udp::endpoint const&,span<char const>,error_code&,udp_send_flags_t){},
++      settings,counters,*storage,dht::dht_state{},identity);
++  tracker->new_socket(h4);tracker->new_socket(h6);TEST_CHECK(identity->ready());
++  auto const old=h4.get_udp_local_endpoint();v4->udp_sock->sock.close();tracker->delete_socket(h4);
++  // Even the exact same address/port and original ID on a NEW FD may not
++  // resurrect an already retired family within this immutable generation.
++  replacement->udp_sock->sock.close();error_code ec;replacement->udp_sock->sock.open(udp::v4(),ec);TEST_CHECK(!ec);
++  replacement->udp_sock->sock.bind(old,ec);TEST_CHECK(!ec);replacement->local_endpoint={old.address(),old.port()};
++  tracker->new_socket(aux::listen_socket_handle(replacement));TEST_EQUAL(identity->status.phase,3U);
++  TEST_CHECK(!identity->permits(h4.get_udp_local_endpoint()));TEST_CHECK(!identity->permits(h6.get_udp_local_endpoint()));
++  tracker.reset();TEST_EQUAL(identity->status.retired,2U);TEST_EQUAL(identity->status.active_mask,0U);
++}
++#endif
+diff --git a/test/test_biglybtc_swarm.cpp b/test/test_biglybtc_swarm.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..8ea1d515ede3e4a1302932aa124e99f55b5d6279
+--- /dev/null
++++ b/test/test_biglybtc_swarm.cpp
+@@ -0,0 +1,147 @@
++// Source-only tests for the source-qualified BiglyBTC provider extension.
++// These do not certify actual selected/unselected wire traffic or hash IO.
++#include "test.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
++#include "libtorrent/add_torrent_params.hpp"
++#include "libtorrent/bencode.hpp"
++#include "libtorrent/create_torrent.hpp"
++#include "libtorrent/disabled_disk_io.hpp"
++#include "libtorrent/error_code.hpp"
++#include "libtorrent/entry.hpp"
++#include "libtorrent/file_storage.hpp"
++#include "libtorrent/read_resume_data.hpp"
++#include "libtorrent/session.hpp"
++#include "libtorrent/session_params.hpp"
++#include "libtorrent/settings_pack.hpp"
++#include "libtorrent/torrent_handle.hpp"
++#include "libtorrent/torrent_info.hpp"
++#include "libtorrent/torrent_status.hpp"
++#include "libtorrent/write_resume_data.hpp"
++#include <iterator>
++#include <memory>
++#include <string>
++#include <vector>
++using namespace lt;
++namespace {
++info_hash_t hashes()
++{
++ sha1_hash v1;v1[0]=1;sha256_hash v2;v2[0]=2;
++ return {v1,v2};
++}
++std::shared_ptr<torrent_info> hybrid()
++{
++ file_storage files;files.add_file("owned.bin",16384);
++ create_torrent creator(files,16384);
++ creator.set_hash(piece_index_t{0},hashes().v1);
++ creator.set_hash2(file_index_t{0},piece_index_t::diff_type{0},hashes().v2);
++ std::vector<char> bytes;bencode(std::back_inserter(bytes),creator.generate());
++ error_code ec;auto out=std::make_shared<torrent_info>(bytes.data(),int(bytes.size()),ec);
++ TEST_CHECK(!ec);return out;
++}
++session_params isolated()
++{
++ settings_pack settings;
++ settings.set_str(settings_pack::listen_interfaces,"");
++ settings.set_str(settings_pack::outgoing_interfaces,"127.0.0.1");
++ settings.set_bool(settings_pack::enable_dht,false);
++ settings.set_bool(settings_pack::enable_lsd,false);
++ settings.set_bool(settings_pack::enable_upnp,false);
++ settings.set_bool(settings_pack::enable_natpmp,false);
++ settings.set_bool(settings_pack::enable_incoming_tcp,false);
++ settings.set_bool(settings_pack::enable_outgoing_tcp,false);
++ settings.set_bool(settings_pack::enable_incoming_utp,false);
++ settings.set_bool(settings_pack::enable_outgoing_utp,false);
++ session_params p(settings);p.disk_io_constructor=disabled_disk_io_constructor;return p;
++}
++add_torrent_params parameters(std::shared_ptr<torrent_info> info,torrent_flags_t selected)
++{
++ add_torrent_params p;p.ti=std::move(info);p.save_path=".";
++ p.flags &= ~torrent_flags::auto_managed;p.flags |= torrent_flags::paused | selected;
++ return p;
++}
++}
++TORRENT_TEST(biglybtc_swarm_hash_selection)
++{
++ auto const full=hashes();
++ for(auto const selected:{torrent_flags_t{},biglybtc_v1_only,biglybtc_v2_only})
++ {
++  auto const wire=biglybtc_wire_hashes(full,selected);
++  TEST_CHECK(wire.has_v1()==(selected!=biglybtc_v2_only));
++  TEST_CHECK(wire.has_v2()==(selected!=biglybtc_v1_only));
++  TEST_CHECK(full.has_v1()&&full.has_v2());
++ }
++ TEST_CHECK(!biglybtc_wire_hashes(full,biglybtc_swarm_mask).has_v1());
++ TEST_CHECK(!biglybtc_wire_hashes(full,biglybtc_swarm_mask).has_v2());
++ TEST_CHECK(!biglybtc_wire_hashes(info_hash_t(full.v1),biglybtc_v2_only).has_v2());
++ TEST_CHECK(!biglybtc_wire_hashes(info_hash_t(full.v2),biglybtc_v1_only).has_v1());
++ TEST_EQUAL(biglybtc_swarm_mask_abi_v1(),1u);
++}
++TORRENT_TEST(biglybtc_swarm_session_indices_and_immutable_admission)
++{
++ auto const info=hybrid();auto const full=info->info_hashes();
++ auto const section=info->info_section();std::string const raw(section.data(),section.size());
++ for(auto const selected:{torrent_flags_t{},biglybtc_v1_only,biglybtc_v2_only})
++ {
++  session owner(isolated());error_code ec;
++  auto handle=owner.add_torrent(parameters(info,selected),ec);TEST_CHECK(!ec);TEST_CHECK(handle.is_valid());
++  if(!handle.is_valid())continue;
++  TEST_CHECK(owner.find_torrent(full.v1).is_valid()==(selected!=biglybtc_v2_only));
++  TEST_CHECK(owner.find_torrent(full.v2).is_valid()==(selected!=biglybtc_v1_only));
++  TEST_CHECK(handle.info_hashes()==full);TEST_CHECK(handle.status().info_hashes==full);
++  handle.set_flags(torrent_flags_t{},biglybtc_swarm_mask);
++  TEST_CHECK((handle.status().flags & biglybtc_swarm_mask)==selected);
++  auto duplicate=parameters(info,selected==torrent_flags_t{}?biglybtc_v1_only:torrent_flags_t{});
++  auto rejected=owner.add_torrent(std::move(duplicate),ec);
++  TEST_CHECK(ec==errors::duplicate_torrent);TEST_CHECK(!rejected.is_valid());
++  auto const retained=handle.torrent_file()->info_section();
++  TEST_CHECK(std::string(retained.data(),retained.size())==raw);
++  TEST_CHECK(handle.torrent_file()->info_hashes()==full);
++ }
++}
++TORRENT_TEST(biglybtc_swarm_metadata_arrival_preserves_selection)
++{
++ auto const info=hybrid();auto const full=info->info_hashes();
++ for(auto const selected:{biglybtc_v1_only,biglybtc_v2_only})
++ {
++  session owner(isolated());add_torrent_params p;p.save_path=".";
++  p.info_hashes=biglybtc_wire_hashes(full,selected);
++  p.flags &= ~torrent_flags::auto_managed;p.flags |= torrent_flags::paused | selected;
++  error_code ec;auto handle=owner.add_torrent(std::move(p),ec);TEST_CHECK(!ec);
++  if(!handle.is_valid())continue;
++  TEST_CHECK(handle.set_metadata(info->info_section()));
++  TEST_CHECK(handle.info_hashes()==full);
++  TEST_CHECK(owner.find_torrent(full.v1).is_valid()==(selected==biglybtc_v1_only));
++  TEST_CHECK(owner.find_torrent(full.v2).is_valid()==(selected==biglybtc_v2_only));
++  TEST_CHECK((handle.status().flags & biglybtc_swarm_mask)==selected);
++ }
++}
++TORRENT_TEST(biglybtc_swarm_resume_and_invalid_admission)
++{
++ auto const info=hybrid();auto const full=info->info_hashes();
++ for(auto const selected:{torrent_flags_t{},biglybtc_v1_only,biglybtc_v2_only})
++ {
++  auto p=parameters(info,selected);p.info_hashes=full;
++  auto bytes=write_resume_data_buf(p);error_code ec;
++  auto restored=read_resume_data(bytes,ec);TEST_CHECK(!ec);
++  TEST_CHECK((restored.flags & biglybtc_swarm_mask)==selected);
++  TEST_CHECK(restored.info_hashes==full);
++ }
++ for(auto const selected:{biglybtc_swarm_mask,biglybtc_v2_only})
++ {
++  session owner(isolated());auto p=parameters({},selected);p.info_hashes=info_hash_t(full.v1);
++  error_code ec;auto rejected=owner.add_torrent(std::move(p),ec);
++  TEST_CHECK(ec==errors::invalid_info_hash);TEST_CHECK(!rejected.is_valid());TEST_CHECK(owner.get_torrents().empty());
++ }
++ auto invalid=parameters(info,biglybtc_v1_only);invalid.info_hashes=full;
++ auto malformed=write_resume_data(invalid);
++ malformed["biglybtc.swarm"]="bad";std::vector<char> bytes;
++ bencode(std::back_inserter(bytes),malformed);error_code ec;
++ (void)read_resume_data(bytes,ec);TEST_CHECK(ec==errors::invalid_info_hash);
++ auto duplicate=write_resume_data_buf(invalid);TEST_CHECK(!duplicate.empty());
++ if(!duplicate.empty())
++ {
++  duplicate.pop_back();std::string const field="14:biglybtc.swarmi0ee";
++  duplicate.insert(duplicate.end(),field.begin(),field.end());ec.clear();
++  (void)read_resume_data(duplicate,ec);TEST_CHECK(ec==errors::invalid_info_hash);
++ }
++}
+diff --git a/test/test_biglybtc_tracker_response.cpp b/test/test_biglybtc_tracker_response.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..86311a012c1364cddfb252a9eafd57a9702838e4
+--- /dev/null
++++ b/test/test_biglybtc_tracker_response.cpp
+@@ -0,0 +1,42 @@
++#include "test.hpp"
++#include "libtorrent/http_tracker_connection.hpp"
++#include "libtorrent/tracker_manager.hpp"
++#include "libtorrent/bencode.hpp"
++#include "libtorrent/entry.hpp"
++#include <iterator>
++using namespace lt;
++namespace {
++std::string encoded(entry const& value){std::string out;bencode(std::back_inserter(out),value);return out;}
++tracker_response parsed(entry const& value,bool scrape=false){
++    auto const text=encoded(value);error_code ec;
++    auto result=parse_tracker_response(span<char const>(text.data(),text.size()),ec,
++        scrape?tracker_request::scrape_request:tracker_request_flags_t{},sha1_hash("aaaaaaaaaaaaaaaaaaaa"));
++    TEST_CHECK(!ec);return result;
++}
++}
++TORRENT_TEST(original_tracker_fields_preserve_presence_raw_longs_and_extensions)
++{
++    entry announce;announce["interval"]=1800;announce["peers"]="";
++    auto a=parsed(announce);TEST_CHECK(a.biglybtc_response_fields.meaning==BiglybtcTrackerResponseMeaningV1::OriginalHttpFields);
++    TEST_EQUAL(a.biglybtc_response_fields.present,0u);
++    announce["complete"]=std::int64_t{4294967296};announce["extensions"]["incomplete"]=7;
++    auto b=parsed(announce);TEST_EQUAL(b.biglybtc_response_fields.present,3u);
++    TEST_EQUAL(b.biglybtc_response_fields.complete,std::int64_t{4294967296});TEST_EQUAL(b.biglybtc_response_fields.incomplete,7);
++    announce["downloaded"]=-2;auto c=parsed(announce);TEST_EQUAL(c.biglybtc_response_fields.present,7u);TEST_EQUAL(c.biglybtc_response_fields.downloaded,-2);
++}
++TORRENT_TEST(original_scrape_fields_distinguish_absence_invalid_downloaded_and_wrong_types)
++{
++    entry scrape;scrape["files"]["aaaaaaaaaaaaaaaaaaaa"]["complete"]=3;
++    auto a=parsed(scrape,true);TEST_CHECK(a.biglybtc_response_fields.meaning==BiglybtcTrackerResponseMeaningV1::OriginalHttpFields);TEST_EQUAL(a.biglybtc_response_fields.present,1u);
++    scrape["files"]["aaaaaaaaaaaaaaaaaaaa"]["downloaded"]=-2;auto b=parsed(scrape,true);TEST_EQUAL(b.biglybtc_response_fields.present,5u);TEST_EQUAL(b.biglybtc_response_fields.downloaded,-2);
++    scrape["files"]["aaaaaaaaaaaaaaaaaaaa"]["incomplete"]="bad";auto c=parsed(scrape,true);TEST_CHECK(c.biglybtc_response_fields.meaning==BiglybtcTrackerResponseMeaningV1::Unknown);
++}
++TORRENT_TEST(original_tracker_unknown_shapes_cannot_be_initial_error_authority)
++{
++    entry announce;announce["interval"]=1800;announce["peers"]="";announce["unknown-extension"]=7;
++    TEST_CHECK(parsed(announce).biglybtc_response_fields.meaning==BiglybtcTrackerResponseMeaningV1::Unknown);
++    announce.dict().erase("unknown-extension");announce["peers"]="x";
++    TEST_CHECK(parsed(announce).biglybtc_response_fields.meaning==BiglybtcTrackerResponseMeaningV1::Unknown);
++    announce["peers"]="";announce["extensions"]["complete"]="bad";
++    TEST_CHECK(parsed(announce).biglybtc_response_fields.meaning==BiglybtcTrackerResponseMeaningV1::Unknown);
++}
+diff --git a/test/test_biglybtc_traffic_counters.cpp b/test/test_biglybtc_traffic_counters.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..39d50f10054277ad85aed1da6e5ef98483ce8d3f
+--- /dev/null
++++ b/test/test_biglybtc_traffic_counters.cpp
+@@ -0,0 +1,91 @@
++// Optional ABI contract only; actual positive protocol traffic is qualified by
++// the application owned-loopback test. No private torrent layout is included.
++#include "test.hpp"
++#include "libtorrent/biglybtc_payload_counters.hpp"
++#include "libtorrent/add_torrent_params.hpp"
++#include "libtorrent/bencode.hpp"
++#include "libtorrent/create_torrent.hpp"
++#include "libtorrent/disabled_disk_io.hpp"
++#include "libtorrent/extensions.hpp"
++#include "libtorrent/file_storage.hpp"
++#include "libtorrent/session.hpp"
++#include "libtorrent/session_params.hpp"
++#include "libtorrent/settings_pack.hpp"
++#include "libtorrent/torrent_handle.hpp"
++#include "libtorrent/torrent_info.hpp"
++#include <array>
++#include <atomic>
++#include <chrono>
++#include <cstring>
++#include <future>
++#include <iterator>
++#include <memory>
++#include <utility>
++#include <vector>
++
++using namespace lt;
++namespace {
++struct Observation {
++ std::uint32_t oldStatus=99,newStatus=99;
++ BiglybtcPayloadCountersV1 oldValue{};
++ BiglybtcTrafficCountersV2 newValue{};
++};
++struct Frame {std::atomic_bool reported{false};std::promise<Observation> promise;};
++struct Reader final:torrent_plugin {
++ torrent_handle handle;std::shared_ptr<Frame> frame;
++ Reader(torrent_handle value,std::shared_ptr<Frame> target):handle(std::move(value)),frame(std::move(target)){}
++ void on_files_checked() override {
++  if(frame->reported.exchange(true))return;
++  Observation actual;
++  // Test compatibility of both exports on an actual executor callback. The
++  // application production path chooses ONE read, never these two test reads.
++  actual.oldStatus=biglybtc_read_payload_counters_v1(&handle,&actual.oldValue,sizeof(actual.oldValue));
++  actual.newStatus=biglybtc_read_traffic_counters_v2(&handle,&actual.newValue,sizeof(actual.newValue));
++  frame->promise.set_value(actual);
++ }
++};
++session_params isolated() {
++ settings_pack s;s.set_str(settings_pack::listen_interfaces,"");s.set_str(settings_pack::outgoing_interfaces,"127.0.0.1");
++ s.set_str(settings_pack::dht_bootstrap_nodes,"");
++ for(auto key:{settings_pack::enable_dht,settings_pack::enable_lsd,settings_pack::enable_upnp,settings_pack::enable_natpmp,
++     settings_pack::enable_incoming_tcp,settings_pack::enable_outgoing_tcp,settings_pack::enable_incoming_utp,settings_pack::enable_outgoing_utp})s.set_bool(key,false);
++ session_params p(s);p.disk_io_constructor=disabled_disk_io_constructor;return p;
++}
++std::shared_ptr<torrent_info> metadata() {
++ file_storage files;files.add_file("counter-abi.bin",16384);
++ create_torrent creator(files,16384,create_torrent::v1_only);sha1_hash piece;piece[0]=1;creator.set_hash(piece_index_t{0},piece);
++ std::vector<char> raw;bencode(std::back_inserter(raw),creator.generate());error_code error;
++ auto result=std::make_shared<torrent_info>(raw.data(),static_cast<int>(raw.size()),error);TEST_CHECK(!error);return result;
++}
++}
++TORRENT_TEST(biglybtc_traffic_counter_versions_and_failure_output) {
++ TEST_EQUAL(biglybtc_payload_counter_abi_v1(),1u);TEST_EQUAL(biglybtc_traffic_counter_abi_v2(),2u);
++ TEST_EQUAL(sizeof(BiglybtcPayloadCountersV1),std::size_t(24));TEST_EQUAL(sizeof(BiglybtcTrafficCountersV2),std::size_t(48));
++ BiglybtcTrafficCountersV2 output;std::memset(&output,0x5d,sizeof(output));
++ std::array<unsigned char,sizeof(output)> before{};std::memcpy(before.data(),&output,sizeof(output));
++ torrent_handle invalid;
++ TEST_EQUAL(biglybtc_read_traffic_counters_v2(nullptr,&output,sizeof(output)),std::uint32_t(BiglybtcTrafficCounterStatusV2::InvalidArgument));
++ TEST_CHECK(std::memcmp(&output,before.data(),sizeof(output))==0);
++ TEST_EQUAL(biglybtc_read_traffic_counters_v2(&invalid,&output,sizeof(output)-1),std::uint32_t(BiglybtcTrafficCounterStatusV2::InvalidArgument));
++ TEST_CHECK(std::memcmp(&output,before.data(),sizeof(output))==0);
++ TEST_EQUAL(biglybtc_read_traffic_counters_v2(&invalid,&output,sizeof(output)),std::uint32_t(BiglybtcTrafficCounterStatusV2::InvalidHandle));
++ TEST_CHECK(std::memcmp(&output,before.data(),sizeof(output))==0);
++}
++TORRENT_TEST(biglybtc_traffic_counter_actual_executor_and_wrong_thread) {
++ auto frame=std::make_shared<Frame>();auto future=frame->promise.get_future();session owner(isolated());
++ add_torrent_params p;p.ti=metadata();p.save_path=".";p.flags&=~(torrent_flags::paused|torrent_flags::auto_managed);
++ p.extensions.push_back([frame](torrent_handle const& handle,client_data_t){return std::make_shared<Reader>(handle,frame);});
++ error_code error;auto handle=owner.add_torrent(p,error);TEST_CHECK(!error);TEST_CHECK(handle.is_valid());if(error||!handle.is_valid())return;
++ auto const ready=future.wait_for(std::chrono::seconds(10));TEST_CHECK(ready==std::future_status::ready);if(ready!=std::future_status::ready)return;
++ auto const actual=future.get();
++ TEST_EQUAL(actual.oldStatus,std::uint32_t(BiglybtcPayloadCounterStatusV1::Accepted));
++ TEST_EQUAL(actual.newStatus,std::uint32_t(BiglybtcTrafficCounterStatusV2::Accepted));
++ TEST_EQUAL(actual.newValue.payload.received,actual.oldValue.received);TEST_EQUAL(actual.newValue.payload.sent,actual.oldValue.sent);
++ TEST_EQUAL(actual.newValue.payload.files_checked,actual.oldValue.files_checked);
++ TEST_EQUAL(actual.newValue.payload.reserved,0u);TEST_EQUAL(actual.newValue.reserved,0u);TEST_EQUAL(actual.newValue.protocol_known,1u);
++ TEST_EQUAL(actual.newValue.protocol_received,std::int64_t(0));TEST_EQUAL(actual.newValue.protocol_sent,std::int64_t(0));
++ BiglybtcTrafficCountersV2 output;std::memset(&output,0x6b,sizeof(output));
++ std::array<unsigned char,sizeof(output)> before{};std::memcpy(before.data(),&output,sizeof(output));
++ TEST_EQUAL(biglybtc_read_traffic_counters_v2(&handle,&output,sizeof(output)),std::uint32_t(BiglybtcTrafficCounterStatusV2::WrongThread));
++ TEST_CHECK(std::memcmp(&output,before.data(),sizeof(output))==0);
++}
+diff --git a/test/test_biglybtc_utf16_info.cpp b/test/test_biglybtc_utf16_info.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..e863f1e99e088f58ce04d1cc5e206aa9ed0913a5
+--- /dev/null
++++ b/test/test_biglybtc_utf16_info.cpp
+@@ -0,0 +1,96 @@
++// Source-derived parser compatibility tests; root executes against the exact
++// rebuilt provider. These are not original-Java or active swarm equality credit.
++#include "test.hpp"
++#include "libtorrent/bdecode.hpp"
++#include "libtorrent/error_code.hpp"
++#include "libtorrent/hasher.hpp"
++#include "libtorrent/torrent_info.hpp"
++#include "../src/biglybtc_utf16_info.hpp"
++#include <array>
++#include <string>
++#include <vector>
++using namespace lt;
++namespace {
++std::string b(std::string const& text) { return std::to_string(text.size())+':'+text; }
++std::string const astral="\xf0\x90\x80\x80-a",bmp="\xee\x80\x80-b",empty="\xef\xbf\xbf-empty";
++std::string leaf(char byte) {
++ return "d0:d6:lengthi1e11:pieces root"+b(hasher256(&byte,1).final().to_string())+"ee";
++}
++std::string info(std::string tree) {
++ return "d9:file tree"+tree+"12:meta versioni2e4:name6:bundle12:piece lengthi16384ee";
++}
++std::string tree(bool javaOrder) {
++ auto const a=b(astral)+leaf('a'),z=b(bmp)+leaf('z');
++ const auto e=b(empty)+"d0:d6:lengthi0eee";
++ return "d"+(javaOrder?a+z+e:z+e+a)+"e";
++}
++std::string replaceOne(std::string value,std::string const& from,std::string const& to) {
++ auto const at=value.find(from);TEST_CHECK(at!=std::string::npos);
++ if (at!=std::string::npos) value.replace(at,from.size(),to);
++ return value;
++}
++bool exception(std::string const& subject) {
++ error_code ec;auto const parsed=bdecode(span<char const>(subject.data(),subject.size()),ec,nullptr,128,2000000);
++ if(ec) return false;
++ return aux::biglybtcOriginalUtf16Info(parsed);
++}
++void refused(std::string const& subject) {
++ TEST_CHECK(!exception(subject));
++ auto const full="d4:info"+subject+'e';error_code ec;
++ torrent_info ti(full.data(),static_cast<int>(full.size()),ec);
++ TEST_EQUAL(ec,errors::invalid_bencoding);
++}
++}
++TORRENT_TEST(biglybtc_original_utf16_info_hash_and_indices)
++{
++ auto const subject=info(tree(true)),full="d4:info"+subject+'e';error_code ec;
++ auto const decoded=bdecode(span<char const>(subject.data(),subject.size()),ec);
++ TEST_CHECK(!ec);std::array<char,200> message{};
++ TEST_CHECK(decoded.has_soft_error(message)); // Global bdecode remains strict.
++ TEST_CHECK(exception(subject));
++ torrent_info ti(full.data(),static_cast<int>(full.size()),ec);
++ TEST_CHECK(!ec);if(ec)return;
++ TEST_EQUAL(std::string(ti.info_section().data(),ti.info_section().size()),subject);
++ TEST_EQUAL(ti.info_hashes().v2,hasher256(subject.data(),static_cast<int>(subject.size())).final());
++ TEST_EQUAL(ti.num_files(),5);TEST_EQUAL(ti.total_size(),32768);
++ auto const& files=ti.files();
++ TEST_EQUAL(files.file_path(file_index_t{0}),"bundle/"+astral);
++ TEST_EQUAL(files.file_path(file_index_t{2}),"bundle/"+bmp);
++ TEST_EQUAL(files.file_path(file_index_t{4}),"bundle/"+empty);
++ TEST_CHECK(files.pad_file_at(file_index_t{1})&&files.pad_file_at(file_index_t{3}));
++ TEST_EQUAL(files.file_offset(file_index_t{2}),16384);
++ TEST_EQUAL(files.file_size(file_index_t{4}),0);
++}
++TORRENT_TEST(biglybtc_original_utf16_info_preserves_byte_canonical_input)
++{
++ auto const subject=info(tree(false)),full="d4:info"+subject+'e';error_code ec;
++ TEST_CHECK(!exception(subject)); // Existing fast path, not the exception.
++ torrent_info ti(full.data(),static_cast<int>(full.size()),ec);
++ TEST_CHECK(!ec);if(ec)return;
++ TEST_EQUAL(ti.files().file_path(file_index_t{0}),"bundle/"+bmp);
++ TEST_EQUAL(ti.info_hashes().v2,hasher256(subject.data(),static_cast<int>(subject.size())).final());
++ TEST_EQUAL(std::string(ti.info_section().data(),ti.info_section().size()),subject);
++}
++TORRENT_TEST(biglybtc_original_utf16_info_rejects_other_soft_errors)
++{
++ auto const subject=info(tree(true));
++ refused(replaceOne(subject,"i1e","i01e"));
++ refused(replaceOne(subject,"i1e","i-0e"));
++ refused(replaceOne(subject,"9:file tree","09:file tree"));
++ refused(replaceOne(subject,"4:name6:bundle12:piece lengthi16384e","12:piece lengthi16384e4:name6:bundle"));
++ refused(replaceOne(subject,b(bmp)+leaf('z'),b(astral)+leaf('z')));
++ // Outside-tree arbitrary maps are not part of the BEncoder compatibility exception.
++ refused(replaceOne(subject,"4:name6:bundle","4:name6:bundle6:opaqued1:zi1e1:ai2ee"));
++ // A canonical-order descendant cannot disguise a mixed order Java tree.
++ refused(info("d1:ad"+b(astral)+leaf('a')+b(bmp)+leaf('z')+"e1:bd"+b(bmp)+leaf('z')+b(astral)+leaf('a')+"ee"));
++}
++TORRENT_TEST(biglybtc_original_utf16_info_rejects_invalid_unicode_and_bounds)
++{
++ auto const subject=info(tree(true));
++ for(auto const& invalid:std::vector<std::string>{std::string("\xc0\x80",2),std::string("\xed\xa0\x80",3),std::string("\xf4\x90\x80\x80",4),std::string("\xe2\x82",2)}) {
++  refused(replaceOne(subject,b(bmp),b(invalid)));
++ }
++ std::string nested="d0:d6:lengthi0eee";
++ for(int i=0;i<102;++i) nested="d1:x"+nested+'e';
++ TEST_CHECK(!exception(info("d"+b(astral)+leaf('a')+b(bmp)+nested+'e')));
++}

@@ -1,0 +1,48 @@
+{
+  "status": "PASS_REAL_EXTRACTED_OFFLINE_TOR",
+  "source_commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+  "source_snapshot_sha256": "8d91ad365c6376cd61773e901d139ecb1fb9b4ed8e4b55cd694e9a0763c4a5da",
+  "scope": "Actual same-source successful build; this subject credits only extracted offline Tor, independently of other pending or failed suites",
+  "build_receipt_sha256": "d5e6e712481e1e6795e7d07d3893635ac335d2023c3cca92914d87804ba59958",
+  "image": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/services/tor_control/biglybtc-tor-owned-child-tests",
+    "sha256": "35269a26621360addfef8b69d768364bd0ce28e234c2ed9852aa51d5c6df15fa",
+    "bytes": 8479976
+  },
+  "command": [
+    "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/services/tor_control/biglybtc-tor-owned-child-tests",
+    "--real-offline-tor",
+    "-o",
+    "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/real-offline/san-r4/test.txt,txt",
+    "-o",
+    "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/real-offline/san-r4/test.xml,junitxml"
+  ],
+  "runtime_artifact_sha256": "25f0d75d2a2cc482b3e912457099ee666622444a0ae714151257844ca5987356",
+  "lane": "san",
+  "exit": 0,
+  "observed": {
+    "cancelled_before_authentication": true,
+    "cancelled_child_pid": 2155947,
+    "child_pid": 2155936,
+    "control_port": 38689,
+    "cookie_bytes": 32,
+    "cookie_device": "46",
+    "cookie_inode": "1682782",
+    "cookie_sha256": "7cf6003191074feea5f221623a9fcb27831ea5e5611f4baf54882a07425287eb",
+    "executable": "/home/yurii/Java/BiglyBT/build/dependencies/tor-owned-0.4.9.11/runtime/tor-offline-launcher",
+    "joined": true,
+    "network_scope": "Fixed DisableNetwork1/SocksPort0; only observed control traffic is numeric loopback; no packet-wide absence measurement by this Qt assertion",
+    "original_profile_used": false,
+    "raw_version_info": "version=0.4.9.11",
+    "runtime_artifact_sha256": "25f0d75d2a2cc482b3e912457099ee666622444a0ae714151257844ca5987356",
+    "schema": 1,
+    "status": "PASS_REAL_EXTRACTED_OFFLINE_TOR",
+    "system_installed": false
+  },
+  "files_sha256": {
+    "process.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "observed.json": "a74aaaee31b7ae3986407206aa878551aa1a45c93245eea909ad5a039c63473e",
+    "test.txt": "8ff8cc8e76908c1065dd68b5c61c63ea99dc2879ae2c0bb779284dfa0d1eae94",
+    "test.xml": "23dd64aafe37d49482d3687fdfaa67ec75991e0b3d1c713b36952b2bb253ae55"
+  }
+}

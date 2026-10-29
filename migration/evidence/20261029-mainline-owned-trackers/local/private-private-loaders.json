@@ -1,0 +1,23 @@
+{
+  "biglybtc-mainline-original-wire-tests": {
+    "libQt6Test.so.6": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/test-support/libQt6Test.so.6",
+    "libQt6Network.so.6": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6",
+    "libtorrent-rasterbar.so.2.0": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12",
+    "libQt6Core.so.6": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6"
+  },
+  "biglybtc-preview-smoke": {
+    "libQt6Test.so.6": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/test-support/libQt6Test.so.6",
+    "libQt6Widgets.so.6": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Widgets.so.6",
+    "libQt6Gui.so.6": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Gui.so.6",
+    "libQt6Network.so.6": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6",
+    "libQt6Core.so.6": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6",
+    "libtorrent-rasterbar.so.2.0": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12",
+    "libQt6DBus.so.6": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6DBus.so.6"
+  },
+  "biglybtc-mainline-single-http-tests": {
+    "libQt6Test.so.6": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/test-support/libQt6Test.so.6",
+    "libQt6Network.so.6": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6",
+    "libtorrent-rasterbar.so.2.0": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12",
+    "libQt6Core.so.6": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6"
+  }
+}

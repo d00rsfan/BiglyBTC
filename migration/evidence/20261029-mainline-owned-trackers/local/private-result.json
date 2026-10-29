@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "status": "PASS_SHORT_PRIVATE27_RELOCATION",
+  "source_commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+  "gcc_result": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/qualification/runs/gcc-r4/result.json",
+  "gcc_result_sha256": "6ead41b9364bc795dbedf9de897aa2dbe65c8bd0083c0ca94da44041b58f0931",
+  "no_build": true,
+  "promotion_executed": false,
+  "real_tor_repeated": false,
+  "candidate": "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate",
+  "candidate_manifest_sha256": "60d71fd3b2f991523f7ae6a0a399663dcfabf7b796ed4050a707e65b160ea83c",
+  "actual_leaf_count": 119,
+  "actual_tests": [
+    {
+      "target": "biglybtc-mainline-original-wire-tests",
+      "selector": "twoFamiliesShareOriginalSlotZeroWithoutSharingRoutingAuthority:same-zero-id",
+      "case_names": [
+        "initTestCase",
+        "twoFamiliesShareOriginalSlotZeroWithoutSharingRoutingAuthority(same-zero-id)",
+        "cleanupTestCase"
+      ],
+      "exit": 0,
+      "image_sha256": "6545fa64df83904db06f69fe4b677227f667a4dbfc412d2a1f89f7f15a0b0d84",
+      "xml_sha256": "87ef0184b28b6b1d73bde4ed05d71fc45599f8406831fc1fb3847242840e2427",
+      "initialized_private": [
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libicudata.so.73",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libicuuc.so.73",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libicui18n.so.73",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6"
+      ]
+    },
+    {
+      "target": "biglybtc-preview-smoke",
+      "selector": "generatedSampleLibraryAndFiles",
+      "case_names": [
+        "initTestCase",
+        "generatedSampleLibraryAndFiles",
+        "cleanupTestCase"
+      ],
+      "exit": 0,
+      "image_sha256": "828a8c7373039f32e685e406c7870aad21921828dbf72997c83d5339a3ddaf12",
+      "xml_sha256": "7b3ab3016088af0299af8f5c8f9518e164500642221f68669ee4f252c3ae21a0",
+      "initialized_private": [
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libicudata.so.73",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libicuuc.so.73",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libicui18n.so.73",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6DBus.so.6",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Gui.so.6",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Widgets.so.6",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/plugins/platforms/libqoffscreen.so"
+      ]
+    },
+    {
+      "target": "biglybtc-mainline-single-http-tests",
+      "selector": "actualTlsRequiresRootAndHostnameAndSupportsTrustedOwnedRoot",
+      "case_names": [
+        "initTestCase",
+        "actualTlsRequiresRootAndHostnameAndSupportsTrustedOwnedRoot",
+        "cleanupTestCase"
+      ],
+      "exit": 0,
+      "image_sha256": "db5f2cad5f7ebc102d5ba6abc6f85cef318c22f55fa022d2e38691e24b5588c4",
+      "xml_sha256": "00e143de865f799ae94ee37eebb1a73f3be146fb44a88fb6d3c9f53638574080",
+      "initialized_private": [
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libicudata.so.73",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libicuuc.so.73",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libicui18n.so.73",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6",
+        "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/amendments/measured-images/amendments/owned-smoke-sample/runs/r4c/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so"
+      ]
+    }
+  ],
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "tls_backend_sha256": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+  "old_dist_unchanged": "e79037c9d5b5bdf7cb2662bb240f1a57a347fddc85d0a206ce28bf6c7925b3d3",
+  "source_unchanged": true,
+  "commands_sha256": "d3443f480447900c4c05b496f7aa6d3e7de5b883af83232295c46d3360f2abde"
+}

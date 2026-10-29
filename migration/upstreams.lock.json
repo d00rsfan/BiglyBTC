@@ -2018,11 +2018,17 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "013fa60f59898392a33855ba148961090bacca14",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/plugins.mldht_identity/20261017-initial-bounded.md",
-        "migration/updates/network-service-cohort/20261028-bounded.md"
+        "migration/updates/network-service-cohort/20261028-bounded.md",
+        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/P05-02-mldht/source-comparison.json",
@@ -2031,7 +2037,8 @@
         "migration/fixtures/mldht-identity/manifest.json",
         "migration/evidence/P05-02-mldht/fixture-location-followup.json",
         "migration/evidence/P05-02-mldht/byte-exact-fixtures.json",
-        "migration/evidence/20261028-network-service-cohort/verification.json"
+        "migration/evidence/20261028-network-service-cohort/verification.json",
+        "migration/evidence/20261029-mainline-owned-trackers/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-008.md"
     },
@@ -3801,17 +3808,24 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "013fa60f59898392a33855ba148961090bacca14",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+          "purpose": "integration"
         }
       ],
       "review_records": [
-        "migration/updates/network-service-cohort/20261028-bounded.md"
+        "migration/updates/network-service-cohort/20261028-bounded.md",
+        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md"
       ],
       "evidence": [
         "migration/tasks/P07-01c-tor-ownership.md",
         "migration/evidence/P07-01c-tor-ownership/matrix.json",
         "migration/evidence/P07-01c-tor-ownership/review.md",
         "migration/evidence/P07-01c-tor-ownership/source-verification.json",
-        "migration/evidence/20261028-network-service-cohort/verification.json"
+        "migration/evidence/20261028-network-service-cohort/verification.json",
+        "migration/evidence/20261029-mainline-owned-trackers/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-004.md"
     },
@@ -7249,7 +7263,8 @@
         "migration/evidence/20261026-compatibility-batch3/verification.json",
         "migration/evidence/20261027-compatibility-gcc-milestone/verification.json",
         "migration/evidence/20261028-compatibility-chapter/verification.json",
-        "migration/evidence/20261028-network-reliability/verification.json"
+        "migration/evidence/20261028-network-reliability/verification.json",
+        "migration/evidence/20261029-mainline-owned-trackers/verification.json"
       ],
       "feature_ids": [
         "F05.persistent_owned_local"
@@ -7335,6 +7350,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "22916f704844836955cc33cce3a6aee86cfe6bcd",
           "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -7345,7 +7365,8 @@
         "migration/updates/compatibility.providers/20261026-batch3.md",
         "migration/updates/compatibility.providers/20261027-gcc-milestone.md",
         "migration/updates/compatibility.providers/20261028-chapter.md",
-        "migration/updates/network.reliability/20261028.md"
+        "migration/updates/network.reliability/20261028.md",
+        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md"
       ],
       "source_coverage": [
         {
@@ -7592,14 +7613,21 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "439a406d87c643df9ce440c18f20eb6cf3086109",
           "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+          "purpose": "integration"
         }
       ],
       "review_records": [
-        "migration/updates/engine.mainline_discovery/20261028.md"
+        "migration/updates/engine.mainline_discovery/20261028.md",
+        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-discovery/verification.json",
-        "migration/evidence/20261028-mainline-discovery/REVIEW.md"
+        "migration/evidence/20261028-mainline-discovery/REVIEW.md",
+        "migration/evidence/20261029-mainline-owned-trackers/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -7908,19 +7936,26 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "013fa60f59898392a33855ba148961090bacca14",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/engine.mainline_queued_scrape/20261028-in-progress.md",
         "migration/updates/engine.mainline_queued_scrape/20261028-active-scrape.md",
-        "migration/updates/network-service-cohort/20261028-bounded.md"
+        "migration/updates/network-service-cohort/20261028-bounded.md",
+        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-scrape-storage-stats/verification.json",
         "migration/evidence/20261028-mainline-scrape-storage-stats/REVIEW.md",
         "migration/evidence/20261028-mainline-active-scrape/verification.json",
         "migration/evidence/20261028-mainline-active-scrape/REVIEW.md",
-        "migration/evidence/20261028-network-service-cohort/verification.json"
+        "migration/evidence/20261028-network-service-cohort/verification.json",
+        "migration/evidence/20261029-mainline-owned-trackers/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8038,14 +8073,21 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "36bb5613aea66cf6e10ec20f51c4f5dfba03a612",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+          "purpose": "integration"
         }
       ],
       "review_records": [
-        "migration/updates/engine.tracker_scrape_observations/20261028-in-progress.md"
+        "migration/updates/engine.tracker_scrape_observations/20261028-in-progress.md",
+        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-active-scrape/verification.json",
-        "migration/evidence/20261028-mainline-active-scrape/REVIEW.md"
+        "migration/evidence/20261028-mainline-active-scrape/REVIEW.md",
+        "migration/evidence/20261029-mainline-owned-trackers/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8119,14 +8161,21 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "36bb5613aea66cf6e10ec20f51c4f5dfba03a612",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
+          "purpose": "integration"
         }
       ],
       "review_records": [
-        "migration/updates/adapters.mainline_original_identity/20261028-in-progress.md"
+        "migration/updates/adapters.mainline_original_identity/20261028-in-progress.md",
+        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-active-scrape/verification.json",
-        "migration/evidence/20261028-mainline-active-scrape/REVIEW.md"
+        "migration/evidence/20261028-mainline-active-scrape/REVIEW.md",
+        "migration/evidence/20261029-mainline-owned-trackers/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     }
@@ -8879,6 +8928,35 @@
         {
           "path": "migration/evidence/20261028-mainline-port/provider/mainline-port.patch",
           "sha256": "cbf8f0d1882144efae3038b9f4c8a7b7ab9d29c09972027708bcc54b078b9e62"
+        }
+      ],
+      "notices": [
+        "migration/notices/libtorrent-2.0.12-LICENSE",
+        "migration/notices/libtorrent-2.0.12-COPYING",
+        "migration/notices/libtorrent-2.0.12-debian-copyright"
+      ]
+    },
+    {
+      "id": "bounded-engine-libtorrent-private-original-routing",
+      "name": "Private LT original dual-family routing provider (development qualification)",
+      "version": "2.0.12",
+      "repository_url": "https://github.com/arvidn/libtorrent.git",
+      "source_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+      "artifacts": [
+        {
+          "url": "https://archive.ubuntu.com/ubuntu/pool/universe/libt/libtorrent-rasterbar/libtorrent-rasterbar_2.0.12.orig.tar.xz",
+          "sha256": "fa0168f5c2b510105ce4e215f5863c80597112b99fc4f30514de2a6ea84da1b5"
+        },
+        {
+          "url": "file:///home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+          "sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443"
+        }
+      ],
+      "build_recipe": "Complete additive patch against the pinned pristine public source archive: 30 modified and 15 added files, all 1082 patched files verified against source/build record623778fc3a5b25144e842a39154dab4cd107e4f115bc6474dd973f67888582d3. See migration/evidence/20261029-mainline-owned-trackers/provider/provider-r2-patch-info.json and provider/source-build-record.json for archive/source mapping, actual build flags/commands, installed SDK and28 executed provider controls; migration/evidence/20261029-mainline-owned-trackers/verification.json records actual native19/16/19 selected suites and private relocation. Upstream Git attribution is retained from earlier source audit; this patch verification establishes archive equivalence, not a fresh Git-object comparison. Development/private qualification only; shipping, public interoperability, whole-client and performance gates remain open.",
+      "patches": [
+        {
+          "path": "migration/evidence/20261029-mainline-owned-trackers/provider/libtorrent-2.0.12-biglybtc-provider-r2.patch",
+          "sha256": "1667cf84508a5fddccb6d6a7bc546454e6707eabd7df9766738016f1ed02cf8e"
         }
       ],
       "notices": [
