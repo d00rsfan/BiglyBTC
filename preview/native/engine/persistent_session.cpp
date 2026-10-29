@@ -2058,11 +2058,18 @@ std::vector<MainlineScrapeEstimate> PersistentSession::mainlineScrapeEstimates()
   if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission||!impl_->mainline){return {};}
   return impl_->mainlineScrapes.estimates();
 }
+std::vector<LibraryTrackerResponse> PersistentSession::libraryTrackerResponses()const {
+  if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission){return {};}
+  auto result=impl_->regularTrackerViews;
+  std::erase_if(result,[&](const auto& row){return !impl_->libraryUdpUnadmitted(row.hash)||impl_->mainlineScrapes.revoked(row.hash);});
+  return result;
+}
 void PersistentSession::revokeMainlineScrape(const core::TorrentHash& hash) noexcept {
   if(!impl_->onWorker()){return;}
   std::erase_if(impl_->mainlineStatus.admittedScrapeCandidates,[&](const auto& row){return row.hash==hash;});
   impl_->cancelLibraryUdp(&hash);impl_->cancelLibraryHttp(&hash);
-  if(!impl_->mainline){return;}
+  std::erase_if(impl_->regularTrackerViews,[&](const auto& row){return row.hash==hash;});
+  if(!impl_->mainline){impl_->mainlineScrapes.revoke(hash);return;}
   try{
     const auto active=impl_->mainlineScrapes.activeTarget();
     if(active&&active->hash==hash&&impl_->mainlineScrapes.active()&&impl_->mainline){
@@ -2072,15 +2079,16 @@ void PersistentSession::revokeMainlineScrape(const core::TorrentHash& hash) noex
   impl_->mainlineScrapes.revoke(hash);
 }
 std::expected<void,storage::Error> PersistentSession::rearmMainlineScrape(const core::TorrentHash& hash) {
-  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||!impl_->mainline||!impl_->mainlineLease){
+  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||(!impl_->mainline&&!impl_->libraryHttpProxyMode())||!impl_->mainlineLease){
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Mainline saved-intent rearm is unavailable"});
   }
   revokeMainlineScrape(hash); // Cancel any old cookie before fresh authority IO.
   // This is independent fresh saved authority; no caller-supplied scope or
   // row cache can clear a failed command's tombstone by itself.
-  auto fresh=readSavedMainlineScrapeTargets(*impl_->mainlineLease);
+  auto fresh=impl_->libraryHttpProxyMode()?readCurrentMainlineScrapeTargets(*impl_->mainlineLease,{},true,nullptr,SavedTrackerPurpose::RegularHttp)
+      :readSavedMainlineScrapeTargets(*impl_->mainlineLease);
   if(!fresh){impl_->mainlineScrapeFailure=fresh.error();return std::unexpected(fresh.error());}
-  impl_->mainlineScrapes.settled(hash);impl_->mainlineScrapeRefresh={};return {};
+  impl_->mainlineScrapes.settled(hash);impl_->mainlineScrapeRefresh={};impl_->regularTrackerRefresh={};return {};
 }
 std::optional<core::TrackerStatistics> PersistentSession::trackerStatistics() const noexcept {
   if (!impl_ || !impl_->onWorker()) { return std::nullopt; }

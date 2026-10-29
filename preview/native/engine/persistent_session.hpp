@@ -47,7 +47,13 @@ using ApplicationObservationSink = std::function<void(ApplicationPeerObservation
 
 struct NetworkPolicy;
 struct PendingMagnet;
-// Last successful existing-pump refresh only; never a permission/dispatch DTO.
+// Last authenticated regular library response. This owns values only and
+// supplies no admission, scheduler/peer permission or synthetic queue epoch.
+struct LibraryTrackerResponse {
+  core::TorrentHash hash;
+  core::QueueOriginalScrapeResponse response;
+  std::int64_t observedWallMillis=0;
+};
 struct MainlineScrapeCandidateStatus {
   core::TorrentHash hash;
   std::uint64_t admission;
@@ -139,6 +145,7 @@ public:
   MainlineDiscoveryStatus mainlineDiscovery() const;
   // Last accepted saved-target estimates; no LT/profile IO or rank authority.
   std::vector<MainlineScrapeEstimate> mainlineScrapeEstimates() const;
+  std::vector<LibraryTrackerResponse> libraryTrackerResponses() const; // Passive last successful worker refresh, no IO/drain.
   void revokeMainlineScrape(const core::TorrentHash&) noexcept;
   // Call only after a successful explicit saved-intent/controller transaction.
   std::expected<void,storage::Error> rearmMainlineScrape(const core::TorrentHash&);

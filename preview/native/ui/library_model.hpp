@@ -52,6 +52,7 @@ struct SavedSelectedValues {
   quint32 defaults = 0;
   quint32 diagnostics = 0;
 };
+struct TrackerScrapeValues {qint32 seeds=-1,peers=-1;qint64 observedWallMillis=0;bool failed=false;};
 struct MainlineEstimateValues {qint32 seeds=0,peers=0;qint64 startedWallMillis=0;};
 struct LibraryItem {
   QString key;
@@ -68,6 +69,7 @@ struct LibraryItem {
   // Current Host-authorized actions. Saved state names grant no permissions.
   quint16 actionMask = 0;
   std::optional<MainlineEstimateValues> mainlineEstimate{};
+  std::optional<TrackerScrapeValues> trackerScrape{};
 };
 struct LibraryPresentation {
   quint64 revision = 0;

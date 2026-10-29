@@ -136,8 +136,10 @@ readSavedMainlineScrapeTargets(const storage::ProfileLease& lease){
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     std::span<const ManagedMainlineScrapeObservation> observations,bool configuredCandidates,
-    std::vector<std::string>* authenticatedInventoryHashes){
+    std::vector<std::string>* authenticatedInventoryHashes,SavedTrackerPurpose purpose){
   try{
+    const bool regular=purpose==SavedTrackerPurpose::RegularHttp;
+    if(regular&&!observations.empty()){return error(Code::Unsupported,"Saved regular HTTP scope does not borrow an admission");}
     if(observations.size()>256){return error(Code::Unsupported,"Active Mainline scrape target bound");}
     std::map<std::string,const ManagedMainlineScrapeObservation*> active;
     std::set<std::uint64_t> admissions;
@@ -189,15 +191,15 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       if(state->recoveredBackup()){continue;}
       const auto& doc=state->document();const auto* info=doc.find("info");const auto* attrs=doc.find("attributes");
       if(!unique(doc.root())||!info||!unique(*info)||!attrs||!unique(*attrs)){return error(Code::InvalidFormat,"Invalid saved Mainline metadata/attributes");}
-      if(const auto* privateFlag=info->find("private")){if(privateFlag->type!=Node::Type::Integer||privateFlag->integer!=0){continue;}}
+      if(const auto* privateFlag=info->find("private")){if(privateFlag->type!=Node::Type::Integer||(!regular&&privateFlag->integer!=0)){continue;}}
       if(!validList(attrs->find("networks"))||!validList(attrs->find("peersources"))||!validList(attrs->find("peersourcesdenied"))){return error(Code::InvalidFormat,"Invalid saved Mainline permission list");}
-      if(!listIncludes(attrs->find("networks"),"Public",true)||!listIncludes(attrs->find("peersources"),"DHT",true)
-          ||listIncludes(attrs->find("peersourcesdenied"),"DHT",false)){continue;}
+      if(!listIncludes(attrs->find("networks"),"Public",true)||(!regular&&(!listIncludes(attrs->find("peersources"),"DHT",true)
+          ||listIncludes(attrs->find("peersourcesdenied"),"DHT",false)))){continue;}
       if(const auto* azureus=doc.find("azureus_properties")){
         if(!unique(*azureus)){return error(Code::InvalidFormat,"Invalid saved Mainline backup permission");}
-        if(const auto* backup=azureus->find("dht_backup_enable");backup&&(backup->type!=Node::Type::Integer||backup->integer!=1)){continue;}
+        if(!regular){if(const auto* backup=azureus->find("dht_backup_enable");backup&&(backup->type!=Node::Type::Integer||backup->integer!=1)){continue;}}
       }
-      if(const auto* flags=attrs->find("flags");flags&&(flags->type!=Node::Type::Integer||(static_cast<std::uint64_t>(flags->integer)&0x200u))){continue;}
+      if(const auto* flags=attrs->find("flags");flags&&(flags->type!=Node::Type::Integer||(!regular&&(static_cast<std::uint64_t>(flags->integer)&0x200u)))){continue;}
       std::optional<std::vector<TrackerUrl>> configured;
       if(!withoutRealTracker(doc,key)){
         if(!configuredCandidates){continue;}configured=configuredTrackerTiers(doc);
@@ -206,6 +208,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
         if(!configured||!listIncludes(attrs->find("peersources"),"Tracker",true)
             ||listIncludes(attrs->find("peersourcesdenied"),"Tracker",false)){continue;}
       }
+      if(regular&&!configured){continue;}
       if(observation&&configured&&configured->size()>1){continue;} // Active announcer selection is separate.
       if(observation){
         const auto permitted=activeScrapeOnly(*attrs);if(!permitted){return std::unexpected(permitted.error());}
@@ -240,7 +243,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
         if(files.capturedQueueMappingScope().empty()||*currentMapping!=files.capturedQueueMappingScope()
             ||!currentPolicy||!std::ranges::equal(*currentPolicy,files.capturedFilePolicy())){continue;}
         mapping=std::move(*currentMapping);noSeeds=observation->wholeComplete;
-      }else{
+      }else if(!regular){
         if(!row.saved.completedBytes||*row.saved.completedBytes<0||*row.saved.completedBytes>layout->bytes){continue;}
         const auto progress=core::projectSavedDndProgress(layout->bytes,row.saved.completedBytes,core::readSavedDndFacts(attrs));
         if(*row.saved.completedBytes==layout->bytes&&!progress.controllerNoDiskCompleteIncludingDnd){continue;}
@@ -252,7 +255,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       // Full32 input stays a reader policy; BEP5 queries always use original20.
       if(key.bytes().size()!=20){continue;}
       auto raw=storage::originalTorrentInfoSubject(doc);if(!raw){return std::unexpected(raw.error());}
-      std::string scope;append(scope,std::to_string(profile.st_dev));append(scope,std::to_string(profile.st_ino));append(scope,key.hex());append(scope,identity->selected==storage::OriginalSelectedHash::V1?"v1":"v2");append(scope,*raw);append(scope,noSeeds?"noseed1":"noseed0");append(scope,row.saved.torrentFile);
+      std::string scope;if(regular){append(scope,"saved-regular-http");}append(scope,std::to_string(profile.st_dev));append(scope,std::to_string(profile.st_ino));append(scope,key.hex());append(scope,identity->selected==storage::OriginalSelectedHash::V1?"v1":"v2");append(scope,*raw);append(scope,noSeeds?"noseed1":"noseed0");append(scope,row.saved.torrentFile);
       append(scope,row.saved.saveDirectory);append(scope,row.saved.saveFile.value_or(""));
       for(auto name:{"networks","peersources","peersourcesdenied","pluginoptions"}){
         if(const auto* value=attrs->find(name)){auto encodedValue=core::encodeValue(*value,storage::compatibleConfigLimits());if(!encodedValue){return error(Code::InvalidFormat,"Scrape scope exceeds encoding bound");}append(scope,*encodedValue);}else{append(scope,"");}

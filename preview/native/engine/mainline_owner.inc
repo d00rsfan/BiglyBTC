@@ -91,13 +91,13 @@ std::shared_ptr<MainlinePortQueue> attachMainlinePort(lt::add_torrent_params& pa
 }
 static void retireMainlinePort(const std::shared_ptr<MainlinePortQueue>& queue) noexcept {if(queue){queue->retire();}}
 void retireMainlinePorts() noexcept {
-  cancelLibraryUdp();cancelLibraryHttp();libraryHttp.close();
+  cancelLibraryUdp();cancelLibraryHttp();libraryHttp.close();regularTrackerViews.clear();
   for(auto& [key,value]:managed){(void)key;retireMainlinePort(value->mainlinePort);}
   for(auto& [key,value]:magnets){(void)key;retireMainlinePort(value->mainlinePort);}
 }
 void silenceMainlinePorts() noexcept {
   mainlineStatus.admittedScrapeCandidates.clear();
-  cancelLibraryUdp();cancelLibraryHttp();libraryHttp.close();
+  cancelLibraryUdp();cancelLibraryHttp();libraryHttp.close();regularTrackerViews.clear();
   for(auto& [key,value]:managed){(void)key;if(value->mainlinePort){value->mainlinePort->advertised.store(0,std::memory_order_release);}}
   for(auto& [key,value]:magnets){(void)key;if(value->mainlinePort){value->mainlinePort->advertised.store(0,std::memory_order_release);}}
 }
@@ -494,6 +494,37 @@ void advanceMainlineScrapes(Clock::time_point now) noexcept {
   }
 }
 
+// Saved SOCKS5 tracker scraping is independent of the unavailable Mainline
+// service. It uses only this existing worker tick and the same per-URL response
+// reducer; no DHT, lookup, PORT, announce or hidden torrent can be started here.
+void advanceProxyHttpTrackers(Clock::time_point now)noexcept {
+  if(!libraryHttpProxyMode()){regularTrackerViews.clear();return;}
+  try{
+    advanceLibraryHttp(now);if(now<regularTrackerRefresh){return;}regularTrackerRefresh=now+10s;
+    if(!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){cancelLibraryHttp();regularTrackerViews.clear();return;}
+    std::vector<std::string> inventory;
+    auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,{},true,&inventory,SavedTrackerPurpose::RegularHttp);
+    if(!targets){cancelLibraryHttp();regularTrackerViews.clear();return;}
+    if(const auto* request=libraryHttp.active();request&&!libraryHttpAuthorise(*request)){cancelLibraryHttp();}
+    std::erase_if(trackerSelectionSeeds,[&](const auto& row){return std::ranges::find(inventory,row.first)==inventory.end();});
+    std::vector<LibraryTrackerResponse> next;
+    for(auto target:*targets){
+      if(target.admission||mainlineScrapes.revoked(target.hash)||!libraryUdpUnadmitted(target.hash)||!trackerSelectionSeed(target.hash)){continue;}
+      bool pending=false;
+      if(!target.configuredTrackers.empty()){
+        if(!prepareLibraryTrackerTiers(target,std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count(),pending)){continue;}
+      }else{
+        if(!prepareLibraryHttp(target,std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count(),pending,true)){continue;}
+      }
+      const auto response=trackerResponses.find(target.trackerResponseKey);const auto observed=libraryHttpObservedWall.find(target.trackerResponseKey);
+      if(response==trackerResponses.end()||observed==libraryHttpObservedWall.end()||observed->second<0){continue;}
+      const auto content=response->second->response();
+      if(content.type!=core::QueueOriginalScrapeType::Unknown&&content.content){next.push_back({target.hash,content,observed->second});}
+    }
+    regularTrackerViews=std::move(next);
+  }catch(...){cancelLibraryHttp();regularTrackerViews.clear();}
+}
+
 static lt::sha1_hash discoveryHash(const core::TorrentHash& hash) {
   const auto bytes=hash.bytes();
   detail::require(bytes.size()>=20,"Mainline discovery requires a complete selected identity");
@@ -585,7 +616,9 @@ bool discoverable(const Magnet& value) const {
       && value.status.phase==MagnetPhase::Resolving && value.handle.is_valid();
 }
 void advanceMainline() noexcept {
-  if (!mainline || closingAdmission || poisoned || closed) { return; }
+  if(closingAdmission||poisoned||closed){return;}
+  advanceProxyHttpTrackers(Clock::now());
+  if (!mainline) { return; }
   try {
     if(!checkMainlineBind()){return;}
     const auto now=Clock::now();

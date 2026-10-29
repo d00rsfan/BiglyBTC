@@ -578,6 +578,7 @@ struct SessionBridge::Host {
     checkpoint(stop);
     auto source = take(storage::readLibraryView(lease));
     const auto mainlineEstimates=engine?engine->mainlineScrapeEstimates():std::vector<engine::MainlineScrapeEstimate>{};
+    const auto trackerResponses=engine?engine->libraryTrackerResponses():std::vector<engine::LibraryTrackerResponse>{};
     readMagnets();
     checkpoint(stop);
     auto result = std::make_shared<ui::LibraryPresentation>();
@@ -709,6 +710,11 @@ struct SessionBridge::Host {
           .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained && !magnetRetained,
           .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions});
       if(unique&&!retained&&!magnetRetained&&!paused&&!stopped&&!admissionFailures.contains(hash)){
+        const auto tracker=std::ranges::find_if(trackerResponses,[&](const auto& item){return item.hash.hex()==hash;});
+        if(tracker!=trackerResponses.end()&&tracker->response.type!=core::QueueOriginalScrapeType::Unknown&&tracker->response.content){
+          result->items.back().trackerScrape=ui::TrackerScrapeValues{tracker->response.content->seeds,tracker->response.content->peers,
+              tracker->observedWallMillis,tracker->response.type==core::QueueOriginalScrapeType::Error};
+        }
         const auto estimate=std::ranges::find_if(mainlineEstimates,[&](const auto& item){return item.hash.hex()==hash;});
         if(estimate!=mainlineEstimates.end()){result->items.back().mainlineEstimate=ui::MainlineEstimateValues{
             estimate->counts.seeds,estimate->counts.peers,estimate->startedWallMillis};}

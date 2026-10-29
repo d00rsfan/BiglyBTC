@@ -7,7 +7,7 @@
 namespace biglybtc::engine::detail {
 struct LibraryHttpConfiguration {std::string scope;bool singleOnly=false;std::optional<QList<QSslCertificate>> trustAnchors=std::nullopt;};
 inline std::expected<LibraryHttpConfiguration,storage::Error> libraryHttpConfiguration(const storage::ProfileLease& lease,bool https=false,
-    std::optional<storage::ConfigFile>* authenticationSnapshot=nullptr){
+    std::optional<storage::ConfigFile>* authenticationSnapshot=nullptr,const NetworkPolicy* routing=nullptr){
   const auto unsupported=[](){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Standalone HTTP scrape requires enabled TCP scrape settings and default tracker overrides"});};
   auto settings=udpTrackerConfig(lease,"biglybt.config");if(!settings){return std::unexpected(settings.error());}
   bool single=false;std::uint32_t probe=1,udp=1;std::string authScope="absent",internalScope="absent";
@@ -35,7 +35,24 @@ inline std::expected<LibraryHttpConfiguration,storage::Error> libraryHttpConfigu
       }}
     }
   }
-  LibraryHttpConfiguration result{"original-http-single-request:tcp:single="+std::to_string(single)+":udp-probe="+std::to_string(probe)+":udp="+std::to_string(udp)+":auth="+authScope+":internal="+internalScope,single};
+  // A live owner's selected proxy may not silently survive a saved route or
+  // credential change. Exact source bytes also revoke an already queued hop.
+  if(routing){
+    const auto current=readNetworkPolicy(*settings?&(**settings).document():nullptr,
+        {.mode=NetworkMode::Normal,.socks4Capability=routing->socks4Capability});
+    if(!current){return unsupported();}const auto& a=current->proxy;const auto& b=routing->proxy;
+    if(a.kind!=b.kind||a.host!=b.host||a.port!=b.port||a.username!=b.username||a.password!=b.password
+        ||a.peers!=b.peers||a.trackers!=b.trackers||a.remoteDns!=b.remoteDns){return unsupported();}
+  }
+  QByteArray proxySource;
+  for(const auto key:{"Enable.Proxy","Enable.SOCKS","Proxy.Host","Proxy.Port","Proxy.Username","Proxy.Password","Proxy.SOCKS.Tracker.DNS.Disable",
+      "Proxy.Data.Enable","Proxy.Data.Same","Proxy.Data.SOCKS.version","Proxy.Data.Host","Proxy.Data.Port","Proxy.Data.Username","Proxy.Data.Password"}){
+    proxySource+=key;proxySource+=':';
+    const auto* value=*settings?(**settings).document().find(key):nullptr;
+    if(value){const auto bytes=core::encodeValue(*value,storage::compatibleConfigLimits());if(!bytes||bytes->size()>4096){return unsupported();}proxySource+=QByteArray::fromStdString(*bytes);}else{proxySource+="absent";}
+    proxySource+=';';
+  }
+  LibraryHttpConfiguration result{"original-http-single-request:tcp:single="+std::to_string(single)+":udp-probe="+std::to_string(probe)+":udp="+std::to_string(udp)+":auth="+authScope+":internal="+internalScope+":proxy="+QCryptographicHash::hash(proxySource,QCryptographicHash::Sha256).toHex().toStdString(),single};
   if(https){auto trust=libraryHttpTrust(lease);if(!trust){return std::unexpected(trust.error());}result.scope+=":"+trust->scope;result.trustAnchors=std::move(trust->anchors);}
   if(authenticationSnapshot){*authenticationSnapshot=std::move(*settings);}
   return result;

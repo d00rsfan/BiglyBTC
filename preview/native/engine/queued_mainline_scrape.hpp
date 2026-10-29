@@ -19,6 +19,7 @@ struct ManagedMainlineScrapeObservation {
 };
 // Passive query authority, never a payload claim or transfer permission. Scope
 // binds selected raw/full identity, current policy and optional actual admission.
+enum class SavedTrackerPurpose {MainlineBackup,RegularHttp};
 struct SavedMainlineTracker {std::string url,responseKey;unsigned tier=0;};
 struct SavedMainlineScrapeTarget {
   core::TorrentHash hash;
@@ -43,7 +44,8 @@ readSavedMainlineScrapeTargets(const storage::ProfileLease&);
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readCurrentMainlineScrapeTargets(const storage::ProfileLease&,
     std::span<const ManagedMainlineScrapeObservation>,bool configuredCandidates=false,
-    std::vector<std::string>* authenticatedInventoryHashes=nullptr);
+    std::vector<std::string>* authenticatedInventoryHashes=nullptr,
+    SavedTrackerPurpose purpose=SavedTrackerPurpose::MainlineBackup);
 // The optional inventory output is assigned only after successful full saved
 // inventory authentication/CAS. It includes ineligible/stopped rows, allowing
 // RAM-only manager lifetime cleanup without treating lost permission as removal.

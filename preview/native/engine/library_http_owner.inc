@@ -1,6 +1,16 @@
 // Included before the UDP owner: both transports share the same retained
 // library/URL response and never attach a torrent or open a payload file.
 detail::LibraryHttpTracker libraryHttp;
+std::map<std::string,std::int64_t> libraryHttpObservedWall;
+std::vector<LibraryTrackerResponse> regularTrackerViews;
+Clock::time_point regularTrackerRefresh{};
+bool libraryHttpProxyMode()const noexcept {
+  return network&&network->mode==NetworkMode::Normal&&network->httpTrackers
+      &&network->proxy.kind==NetworkProxyKind::Socks5&&network->proxy.trackers;
+}
+SavedTrackerPurpose libraryHttpPurpose()const noexcept {
+  return libraryHttpProxyMode()?SavedTrackerPurpose::RegularHttp:SavedTrackerPurpose::MainlineBackup;
+}
 std::uint64_t libraryHttpNonce=0;
 void cancelLibraryHttp(const core::TorrentHash* hash=nullptr) noexcept {
   if(const auto* request=libraryHttp.active();request&&(!hash||request->hash==*hash)){
@@ -9,15 +19,15 @@ void cancelLibraryHttp(const core::TorrentHash* hash=nullptr) noexcept {
 }
 bool libraryHttpAuthorise(const detail::LibraryHttpTracker::Request& request) noexcept {
   try{
-    if(!mainlineLease||!networkBinding||!network||network->mode!=NetworkMode::Normal||!network->dht||!network->httpTrackers
-        ||network->proxy.kind!=NetworkProxyKind::None||!networkBindingCurrent(*networkBinding)
+    if(!mainlineLease||!networkBinding||!network||network->mode!=NetworkMode::Normal||!network->httpTrackers
+        ||(!libraryHttpProxyMode()&&(!network->dht||network->proxy.kind!=NetworkProxyKind::None))||!networkBindingCurrent(*networkBinding)
         ||mainlineScrapes.revoked(request.hash)||!libraryUdpUnadmitted(request.hash)){return false;}
-    auto fresh=readCurrentMainlineScrapeTargets(*mainlineLease,{},true);if(!fresh){return false;}
+    auto fresh=readCurrentMainlineScrapeTargets(*mainlineLease,{},true,nullptr,libraryHttpPurpose());if(!fresh){return false;}
     const auto row=std::ranges::find(*fresh,request.hash,&SavedMainlineScrapeTarget::hash);
     const auto target=row==fresh->end()?std::nullopt:selectConfiguredMainlineTracker(*row,request.responseKey);
     if(!target||target->admission||target->scope!=request.scope){return false;}
     const auto route=detail::libraryHttpRoute(networkBinding->effective,target->configuredTracker);
-    const auto config=detail::libraryHttpConfiguration(*mainlineLease,route&&route->scrape.scheme()=="https");
+    const auto config=detail::libraryHttpConfiguration(*mainlineLease,route&&route->scrape.scheme()=="https",nullptr,&networkBinding->effective);
     return route&&config&&detail::libraryHttpRouteScope(*route,config->scope)==request.configuration;
   }catch(...){return false;}
 }
@@ -26,13 +36,13 @@ std::expected<std::optional<QByteArray>,storage::Error> libraryHttpAuthenticate(
   const auto changed=[](){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Saved tracker authentication source changed"});};
   try{
     if(!libraryHttpAuthorise(request)){return changed();}
-    auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,{},true);if(!targets){return changed();}
+    auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,{},true,nullptr,libraryHttpPurpose());if(!targets){return changed();}
     const auto row=std::ranges::find(*targets,request.hash,&SavedMainlineScrapeTarget::hash);
     const auto target=row==targets->end()?std::nullopt:selectConfiguredMainlineTracker(*row,request.responseKey);
     if(!target||target->admission||target->scope!=request.scope){return changed();}
     const auto base=detail::libraryHttpRoute(networkBinding->effective,target->configuredTracker);if(!base){return changed();}
     std::optional<storage::ConfigFile> snapshot;
-    auto config=detail::libraryHttpConfiguration(*mainlineLease,base->scrape.scheme()=="https",&snapshot);
+    auto config=detail::libraryHttpConfiguration(*mainlineLease,base->scrape.scheme()=="https",&snapshot,&networkBinding->effective);
     if(!config||detail::libraryHttpRouteScope(*base,config->scope)!=request.configuration){return changed();}
     auto credential=detail::libraryHttpSavedBasic(snapshot?&snapshot->document():nullptr,challenged,realm);
     if(!libraryHttpAuthorise(request)){return changed();}return credential;
@@ -46,14 +56,16 @@ void advanceLibraryHttp(Clock::time_point now){
       [&](const auto& request,const auto& route,const auto& realm){return libraryHttpAuthenticate(request,route,realm);});
   const auto response=trackerResponses.find(responseKey);
   if(!result){if(response!=trackerResponses.end()){response->second->cancelRequest();}libraryHttp.cancel();mainlineScrapeFailure=result.error();return;}
-  if(*result){if(response!=trackerResponses.end()){response->second->observe((**result).terminal);}}
+  if(*result){if(response!=trackerResponses.end()){response->second->observe((**result).terminal);
+    if((**result).terminal.comparable||(**result).terminal.definitiveFailure){
+      libraryHttpObservedWall.insert_or_assign(responseKey,(**result).terminal.observedWallMillis);}}}
   else if(!libraryHttp.active()&&response!=trackerResponses.end()){response->second->cancelRequest();}
 }
 bool prepareLibraryHttp(SavedMainlineScrapeTarget& target,std::int64_t now,bool& pendingEligibility,bool regularPoll=false,bool dispatch=true){
   pendingEligibility=false;
   if(!mainlineLease||!networkBinding||!network||!network->httpTrackers||!networkBindingCurrent(*networkBinding)||!libraryUdpUnadmitted(target.hash)){return false;}
   const auto route=detail::libraryHttpRoute(networkBinding->effective,target.configuredTracker);if(!route){return false;}
-  const auto config=detail::libraryHttpConfiguration(*mainlineLease,route&&route->scrape.scheme()=="https");if(!config){return false;}
+  const auto config=detail::libraryHttpConfiguration(*mainlineLease,route&&route->scrape.scheme()=="https",nullptr,&networkBinding->effective);if(!config){return false;}
   const auto configuration=detail::libraryHttpRouteScope(*route,config->scope);
   auto found=trackerResponses.find(target.trackerResponseKey);
   if(found==trackerResponses.end()){

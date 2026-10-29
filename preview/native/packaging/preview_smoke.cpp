@@ -81,6 +81,19 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
 class PreviewSmoke final : public QObject {
   Q_OBJECT
 private slots:
+  void regularTrackerTooltipKeepsActualRetainedCountsSeparateFromMainlineEstimate(){
+    ui::LibraryModel model;auto snapshot=std::make_shared<ui::LibraryPresentation>();snapshot->revision=1;
+    ui::LibraryItem row;row.key="owned-tracker";row.hash=QString(40,'1');row.name="Owned queued download";row.state="Queued";
+    row.trackerScrape=ui::TrackerScrapeValues{5,6,1700000000000,false};snapshot->items.push_back(row);QVERIFY(model.apply(snapshot));
+    auto tooltip=model.data(model.index(0,1),Qt::ToolTipRole).toString();QVERIFY(tooltip.contains("5 seeds, 6 peers"));QVERIFY(tooltip.contains("Retained tracker counts"));QVERIFY(!tooltip.contains("Mainline"));
+    auto both=std::make_shared<ui::LibraryPresentation>(*snapshot);both->revision=2;both->items[0].mainlineEstimate=ui::MainlineEstimateValues{2,3,1700000001000};QVERIFY(model.apply(both));
+    tooltip=model.data(model.index(0,1),Qt::ToolTipRole).toString();QVERIFY(tooltip.contains("5 seeds, 6 peers"));QVERIFY(tooltip.contains("Mainline estimate: 2 seeds, 3 peers"));
+    auto failed=std::make_shared<ui::LibraryPresentation>(*snapshot);failed->revision=3;failed->items[0].trackerScrape=ui::TrackerScrapeValues{-1,-1,1700000002000,true};QVERIFY(model.apply(failed));
+    tooltip=model.data(model.index(0,1),Qt::ToolTipRole).toString();QVERIFY(tooltip.contains("Tracker scrape failed"));QVERIFY(!tooltip.contains("-1 seeds"));
+    auto retained=std::make_shared<ui::LibraryPresentation>(*failed);retained->revision=4;retained->items[0].trackerScrape=ui::TrackerScrapeValues{5,6,1700000003000,true};QVERIFY(model.apply(retained));
+    tooltip=model.data(model.index(0,1),Qt::ToolTipRole).toString();QVERIFY(tooltip.contains("Tracker scrape failed"));QVERIFY(tooltip.contains("Retained tracker counts: 5 seeds, 6 peers"));
+    auto invalid=std::make_shared<ui::LibraryPresentation>(*retained);invalid->revision=5;invalid->items[0].trackerScrape->seeds=-2;QVERIFY(!model.apply(invalid));
+  }
   void exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler(){
     const QMessageLogContext wayland(__FILE__,__LINE__,Q_FUNC_INFO,"qt.qpa.wayland.textinput");
     const QMessageLogContext other(__FILE__,__LINE__,Q_FUNC_INFO,"another.category");

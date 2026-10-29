@@ -6,10 +6,11 @@
 #include <charconv>
 #include <set>
 #include <zlib.h>
+#include <QCryptographicHash>
 
 namespace biglybtc::engine::detail {
 namespace {
-auto unsupported(){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Standalone HTTP scrape requires one direct public route without credentials or proxy"});}
+auto unsupported(){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Standalone HTTP scrape requires a supported public direct or saved SOCKS5 tracker route"});}
 bool unique(const core::Node& value){
   if(value.type!=core::Node::Type::Dictionary||value.children.size()%2){return false;}
   std::set<std::string_view> keys;for(std::size_t i=0;i<value.children.size();i+=2){if(value.children[i].type!=core::Node::Type::Bytes||!keys.insert(value.children[i].bytes).second){return false;}}return true;
@@ -24,7 +25,7 @@ bool privateAddress(const QHostAddress& a){
 }
 }
 std::expected<LibraryHttpRoute,storage::Error> libraryHttpRoute(const NetworkPolicy& p,std::string_view raw){
-  if(p.mode!=NetworkMode::Normal||!p.dht||!p.httpTrackers||p.proxy.kind!=NetworkProxyKind::None||raw.empty()||raw.size()>2048){return unsupported();}
+  if(p.mode!=NetworkMode::Normal||!p.httpTrackers||(p.proxy.kind!=NetworkProxyKind::None&&(p.proxy.kind!=NetworkProxyKind::Socks5||!p.proxy.trackers))||raw.empty()||raw.size()>2048){return unsupported();}
   std::string text;for(const unsigned char c:raw){if(c==' '){continue;}if(c<33||c>126){return unsupported();}text+=static_cast<char>(c);}
   // Literal original TrackerStatus constructor: replace announce prefix after
   // final slash, or append scrape only when no dot follows the final slash.
@@ -38,12 +39,24 @@ std::expected<LibraryHttpRoute,storage::Error> libraryHttpRoute(const NetworkPol
   // Normal hostname routes use the resolver, but Tor/I2P and scoped literals
   // cannot accidentally become local-DNS/direct fallbacks.
   auto host=url.host().toLower();while(host.endsWith('.')){host.chop(1);}if(host.endsWith(".onion")||host.endsWith(".i2p")||host.contains('%')){return unsupported();}
-  LibraryHttpRoute route{url,{},p.ipv6};
+  LibraryHttpRoute route{url,{},p.ipv6,std::nullopt};
   for(const auto& rawLocal:p.bindAddresses){QHostAddress local(QString::fromStdString(rawLocal));
     if(local.isNull()||(!p.ipv6&&local.protocol()==QAbstractSocket::IPv6Protocol)){if(local.protocol()==QAbstractSocket::IPv6Protocol&&!p.ipv6){continue;}return unsupported();}
     const auto same=std::ranges::find_if(route.locals,[&](const auto& old){return old.protocol()==local.protocol();});
     if(same!=route.locals.end()&&*same!=local){return unsupported();}if(same==route.locals.end()){route.locals.push_back(local);}
-  }if(route.locals.empty()){return unsupported();}return route;
+  }if(route.locals.empty()){return unsupported();}
+  if(p.proxy.kind==NetworkProxyKind::Socks5){
+    auto host=QString::fromStdString(p.proxy.host).trimmed();auto lower=host.toLower();while(lower.endsWith('.')){lower.chop(1);}
+    const auto bytes=host.toLatin1();
+    if(host.isEmpty()||host.size()>255||QString::fromLatin1(bytes)!=host||lower.endsWith(".onion")||lower.endsWith(".i2p")||host.contains('%')
+        ||!std::ranges::all_of(bytes,[](unsigned char c){return c>=33&&c<=126;})||p.proxy.port<=0||p.proxy.port>65535){return unsupported();}
+    QHostAddress numericProxy;
+    if(!numericProxy.setAddress(host)&&!std::ranges::all_of(bytes,[](unsigned char c){return (c>='a'&&c<='z')||(c>='A'&&c<='Z')||(c>='0'&&c<='9')||c=='.'||c=='-'||c=='_';})){return unsupported();}
+    auto user=QByteArray::fromStdString(p.proxy.username).trimmed(),password=QByteArray::fromStdString(p.proxy.password).trimmed();
+    const auto printable=[](const QByteArray& b){return b.size()<=255&&std::ranges::all_of(b,[](unsigned char c){return c>=32&&c<=126;});};
+    if(!printable(user)||!printable(password)||(user.isEmpty()&&!password.isEmpty())){return unsupported();}
+    route.socks5=LibraryHttpSocks5{host,static_cast<quint16>(p.proxy.port),std::move(user),std::move(password),p.proxy.remoteDns};
+  }return route;
 }
 std::expected<LibraryHttpRoute,storage::Error> libraryHttpRedirectRoute(
     const LibraryHttpRoute& source,const QByteArray& location,std::span<const std::byte,20> hash){
@@ -64,11 +77,16 @@ std::expected<LibraryHttpRoute,storage::Error> libraryHttpRedirectRoute(
     }else{kept.push_back(field);}
   }
   if(hashes){const auto query=kept.join('&');target.setQuery(query.isEmpty()?QString():QString::fromLatin1(query));}
-  return LibraryHttpRoute{target,source.locals,source.ipv6};
+  return LibraryHttpRoute{target,source.locals,source.ipv6,source.socks5};
 }
 std::string libraryHttpRouteScope(const LibraryHttpRoute& r,std::string_view config){
   auto out=std::string(config)+":"+r.scrape.toEncoded(QUrl::FullyEncoded).toStdString()+":"+std::to_string(r.ipv6);
-  for(const auto& a:r.locals){out+=':'+a.toString().toStdString();}return out;
+  for(const auto& a:r.locals){out+=':'+a.toString().toStdString();}
+  if(r.socks5){
+    QByteArray fields;const auto add=[&](const QByteArray& value){fields+=QByteArray::number(value.size())+':'+value;};
+    add(r.socks5->host.toUtf8());add(QByteArray::number(r.socks5->port));add(r.socks5->username);add(r.socks5->password);add(r.socks5->remoteDns?"remote":"local");
+    out+=":socks5:"+QCryptographicHash::hash(fields,QCryptographicHash::Sha256).toHex().toStdString();
+  }return out;
 }
 std::optional<std::pair<QHostAddress,QHostAddress>> libraryHttpEndpoint(const LibraryHttpRoute& r,const QList<QHostAddress>& candidates){
   if(candidates.size()>32){return {};}
@@ -81,6 +99,28 @@ std::optional<std::pair<QHostAddress,QHostAddress>> libraryHttpEndpoint(const Li
     if((remote.isLoopback()||privateAddress(remote))&&!(remote.isLoopback()&&local->isLoopback())){continue;}
     return std::pair{remote,*local};
   }return {};
+}
+std::optional<std::pair<QHostAddress,QHostAddress>> libraryHttpProxyEndpoint(const LibraryHttpRoute& r,const QList<QHostAddress>& candidates){
+  if(!r.socks5||candidates.size()>32){return {};}
+  for(const auto& remote:candidates){
+    if(remote.isNull()||remote==QHostAddress::Any||remote==QHostAddress::AnyIPv4||remote==QHostAddress::AnyIPv6||remote.isMulticast()||!remote.scopeId().isEmpty()
+        ||(remote.protocol()!=QAbstractSocket::IPv4Protocol&&remote.protocol()!=QAbstractSocket::IPv6Protocol)||(!r.ipv6&&remote.protocol()==QAbstractSocket::IPv6Protocol)){continue;}
+    if(remote.protocol()==QAbstractSocket::IPv6Protocol){const auto b=remote.toIPv6Address();bool mapped=true;for(int i=0;i<10;++i){mapped&=b[i]==0;}if(mapped&&b[10]==255&&b[11]==255){continue;}}
+    const auto local=std::ranges::find_if(r.locals,[&](const auto& a){return a.protocol()==remote.protocol();});
+    // An explicit saved proxy may itself be private/loopback. It is a route
+    // endpoint, never a classification/permission for the tracker destination.
+    if(local!=r.locals.end()){return std::pair{remote,*local};}
+  }return {};
+}
+std::optional<QHostAddress> libraryHttpProxyTarget(const LibraryHttpRoute& r,const QList<QHostAddress>& candidates,bool trackerHostNotFound){
+  if(!r.socks5){return {};}
+  QHostAddress numeric;
+  if((r.socks5->remoteDns||(trackerHostNotFound&&candidates.isEmpty()))&&!numeric.setAddress(r.scrape.host())){
+    const auto host=QUrl::toAce(r.scrape.host());if(host.isEmpty()||host.size()>255){return {};}
+    return QHostAddress{}; // Remote DNS or an actual local HostNotFound result; same saved proxy only.
+  }
+  const auto values=r.socks5->remoteDns?QList<QHostAddress>{numeric}:candidates;
+  if(const auto direct=libraryHttpEndpoint(r,values)){return direct->first;}return {};
 }
 namespace http_tracker_wire {
 namespace {

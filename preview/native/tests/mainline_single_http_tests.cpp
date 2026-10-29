@@ -4,6 +4,8 @@
 #include "library_commands.hpp"
 #include "persistent_session.hpp"
 #include <QPointer>
+#include <QTimer>
+#include <QNetworkProxy>
 #include <QDataStream>
 #include <QCryptographicHash>
 #include <QDir>
@@ -116,6 +118,74 @@ private:
   }
 };
 detail::LibraryHttpTracker::Request request(std::uint64_t nonce=1){return {hash(),"owned-http",std::string(64,'s'),"configuration",nonce};}
+// Controlled SOCKS5 endpoint: validates real greeting/auth/CONNECT bytes and
+// tunnels only to its one known owned server. It never resolves target names.
+class SocksProxy final:public QTcpServer {
+  struct Client {QPointer<QTcpSocket> client,upstream;QByteArray input;int stage=0;};
+  QList<std::weak_ptr<Client>> clients;
+  const quint16 targetPort;
+  void send(const std::shared_ptr<Client>& c,const QByteArray& data){if(c->client&&c->client->write(data)!=data.size()){failure="Owned SOCKS reply write failed";}}
+  void greet(const std::shared_ptr<Client>& c){
+    if(!c->client){return;}if(rejectMethod){send(c,QByteArray::fromHex("05ff"));c->client->disconnectFromHost();return;}
+    send(c,authentication?QByteArray::fromHex("0502"):QByteArray::fromHex("0500"));c->stage=authentication?1:2;process(c);
+  }
+  void tunnel(const std::shared_ptr<Client>& c){
+    if(!c->client||c->client->state()!=QAbstractSocket::ConnectedState){return;}
+    if(malformedReply){send(c,QByteArray::fromHex("04000001000000000000"));c->client->disconnectFromHost();return;}
+    if(rejectConnect){send(c,QByteArray::fromHex("05050001000000000000"));c->client->disconnectFromHost();return;}
+    c->stage=3;auto* upstream=new QTcpSocket(this);c->upstream=upstream;upstream->setProxy(QNetworkProxy::NoProxy);upstream->setReadBufferSize(65536);
+    QObject::connect(upstream,&QTcpSocket::connected,this,[this,c]{if(!c->client){if(c->upstream){c->upstream->abort();}return;}send(c,QByteArray::fromHex("05000001000000000000"));c->stage=4;process(c);});
+    QObject::connect(upstream,&QTcpSocket::readyRead,this,[this,c]{if(c->upstream&&c->client){const auto bytes=c->upstream->readAll();if(bytes.size()>65536||c->client->write(bytes)!=bytes.size()){failure="Owned SOCKS upstream relay failed";}}});
+    QObject::connect(upstream,&QTcpSocket::disconnected,this,[c]{if(c->client){c->client->disconnectFromHost();}});
+    QObject::connect(upstream,&QTcpSocket::disconnected,upstream,&QObject::deleteLater);
+    if(!upstream->bind(QHostAddress::LocalHost,0)){failure="Cannot bind owned SOCKS upstream";return;}upstream->connectToHost(QHostAddress::LocalHost,targetPort);
+  }
+  void process(const std::shared_ptr<Client>& c){
+    if(!c->client){return;}if(c->stage==4){if(c->upstream&&!c->input.isEmpty()){if(c->upstream->write(c->input)!=c->input.size()){failure="Owned SOCKS client relay failed";}c->input.clear();}return;}
+    const auto byte=[&](qsizetype i){return static_cast<unsigned char>(c->input[i]);};
+    if(c->stage==0){if(c->input.size()<2){return;}const qsizetype needed=2+byte(1);if(c->input.size()<needed){return;}
+      if(byte(0)!=5||!byte(1)||!c->input.mid(2,byte(1)).contains(authentication?char{2}:char{0})){failure="Invalid actual SOCKS greeting";return;}
+      c->input.remove(0,needed);++greetings;c->stage=5;if(!holdGreeting){greet(c);}return;
+    }
+    if(c->stage==1){if(c->input.size()<2){return;}const qsizetype userBytes=byte(1);if(c->input.size()<3+userBytes){return;}const qsizetype passwordBytes=byte(2+userBytes),needed=3+userBytes+passwordBytes;if(c->input.size()<needed){return;}
+      const auto user=c->input.mid(2,userBytes),password=c->input.mid(3+userBytes,passwordBytes);credentials.push_back({user,password});
+      if(byte(0)!=1){failure="Invalid actual SOCKS auth version";return;}c->input.remove(0,needed);
+      if(rejectAuthentication||user!="proxy-user"||password!="proxy-password"){send(c,QByteArray::fromHex("0101"));c->client->disconnectFromHost();return;}
+      send(c,QByteArray::fromHex("0100"));c->stage=2;process(c);return;
+    }
+    if(c->stage!=2){return;}if(c->input.size()<4){return;}qsizetype needed=0;QString name;const auto type=byte(3);
+    if(type==1){needed=10;if(c->input.size()<needed){return;}const auto ip=(quint32(byte(4))<<24)|(quint32(byte(5))<<16)|(quint32(byte(6))<<8)|byte(7);name=QHostAddress(ip).toString();}
+    else if(type==4){needed=22;if(c->input.size()<needed){return;}Q_IPV6ADDR ip{};for(int i=0;i<16;++i){ip[i]=byte(4+i);}name=QHostAddress(ip).toString();}
+    else if(type==3){if(c->input.size()<5){return;}needed=7+byte(4);if(c->input.size()<needed){return;}name=QString::fromLatin1(c->input.mid(5,byte(4)));}
+    else{failure="Unexpected SOCKS target address type";return;}
+    const auto port=quint16((unsigned(byte(needed-2))<<8)|byte(needed-1));
+    if(byte(0)==5&&byte(1)==3&&byte(2)==0){++udpAssociates;c->input.remove(0,needed);send(c,QByteArray::fromHex("05070001000000000000"));c->client->disconnectFromHost();return;}
+    if(byte(0)!=5||byte(1)!=1||byte(2)!=0||port!=targetPort
+        ||(name!="127.0.0.1"&&name!="localhost"&&name!="owned-tracker.invalid")){failure="SOCKS CONNECT did not match the exact owned tracker";return;}
+    ++connects;targetTypes.push_back(type);targetNames.push_back(name);targetPorts.push_back(port);c->input.remove(0,needed);c->stage=6;if(!holdConnect){tunnel(c);}
+  }
+protected:
+  void incomingConnection(qintptr fd)override{
+    ++connections;auto c=std::make_shared<Client>();auto* socket=new QTcpSocket(this);c->client=socket;socket->setReadBufferSize(65536);
+    if(!socket->setSocketDescriptor(fd)){failure="Owned SOCKS descriptor failed";socket->deleteLater();return;}actualPeer=socket->peerAddress();clients.push_back(c);
+    QObject::connect(socket,&QTcpSocket::readyRead,this,[this,c]{if(!c->client){return;}const auto bytes=c->client->readAll();if(bytes.size()>65536||c->input.size()+bytes.size()>65536){failure="Unbounded owned SOCKS input";return;}c->input+=bytes;process(c);});
+    QObject::connect(socket,&QTcpSocket::disconnected,this,[c]{if(c->upstream){c->upstream->abort();}});QObject::connect(socket,&QTcpSocket::disconnected,socket,&QObject::deleteLater);
+  }
+public:
+  bool authentication=false,holdGreeting=false,holdConnect=false,rejectMethod=false,rejectAuthentication=false,rejectConnect=false,malformedReply=false;
+  int connections=0,greetings=0,connects=0,udpAssociates=0;QString failure;QHostAddress actualPeer;
+  QList<unsigned> targetTypes;QList<QString> targetNames;QList<quint16> targetPorts;QList<QPair<QByteArray,QByteArray>> credentials;
+  explicit SocksProxy(quint16 port):targetPort(port){test::require(listen(QHostAddress::LocalHost,0),"Cannot bind owned SOCKS proxy");}
+  void release(){holdGreeting=false;holdConnect=false;const auto copy=clients;for(const auto& weak:copy){if(const auto c=weak.lock()){if(c->stage==5){greet(c);}else if(c->stage==6){tunnel(c);}}}}
+};
+engine::NetworkPolicy socksPolicy(const SocksProxy& proxy,bool remoteDns=true,bool authentication=false,bool proxyHostname=false){
+  auto p=policy();p.proxy.kind=engine::NetworkProxyKind::Socks5;p.proxy.trackers=true;p.proxy.host=proxyHostname?"localhost":"127.0.0.1";p.proxy.port=proxy.serverPort();p.proxy.remoteDns=remoteDns;
+  if(authentication){p.proxy.username="proxy-user";p.proxy.password="proxy-password";}return p;
+}
+QByteArray socksSettings(const engine::NetworkPolicy& p){
+  return krpc::dictionary({{"Peer Source Selection Default.DHT",p.dht?"i1e":"i0e"},{"Enable.Proxy","i1e"},{"Enable.SOCKS","i1e"},{"Proxy.Host",krpc::string(QByteArray::fromStdString(p.proxy.host))},{"Proxy.Port",krpc::string(QByteArray::number(p.proxy.port))},
+      {"Proxy.Username",krpc::string(QByteArray::fromStdString(p.proxy.username))},{"Proxy.Password",krpc::string(QByteArray::fromStdString(p.proxy.password))},{"Proxy.SOCKS.Tracker.DNS.Disable",p.proxy.remoteDns?"i1e":"i0e"}});
+}
 struct SavedBytes {
   QString path;QByteArray bytes;struct stat before{};
   explicit SavedBytes(QString p):path(std::move(p)),bytes(test::read(path)){test::require(::lstat(path.toStdString().c_str(),&before)==0,"Cannot snapshot owned control");}
@@ -142,6 +212,117 @@ QByteArray savedAuthentication(const QUrl& url,const QByteArray& realm,const QBy
 class MainlineSingleHttpTests final:public QObject {
   Q_OBJECT
 private slots:
+  void socks5RoutesKeepExplicitProxyDnsAndSavedConfigurationAuthority(){
+    HttpServer server;SocksProxy proxy(server.serverPort());auto p=socksPolicy(proxy);p.dht=false;
+    auto route=detail::libraryHttpRoute(p,server.url());QVERIFY(route&&route->socks5);QVERIFY(route->socks5->remoteDns);
+    auto numeric=detail::libraryHttpProxyEndpoint(*route,{QHostAddress::LocalHost});QVERIFY(numeric);QCOMPARE(numeric->first,QHostAddress(QHostAddress::LocalHost));
+    QVERIFY(!detail::libraryHttpProxyEndpoint(*route,{QHostAddress::AnyIPv4}));QVERIFY(!detail::libraryHttpProxyEndpoint(*route,{QHostAddress("224.1.2.3")}));
+    for(const auto* target:{"http://hidden.onion/announce","https://hidden.i2p/announce"}){QVERIFY(!detail::libraryHttpRoute(p,target));}
+    for(const auto kind:{engine::NetworkProxyKind::Http,engine::NetworkProxyKind::Socks4,engine::NetworkProxyKind::Socks4a}){auto other=p;other.proxy.kind=kind;QVERIFY(!detail::libraryHttpRoute(other,server.url()));}
+    auto unselected=p;unselected.proxy.trackers=false;QVERIFY(!detail::libraryHttpRoute(unselected,server.url()));
+    QTemporaryDir root;QVERIFY(root.isValid());auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);const auto file=root.filePath("biglybt.config");test::write(file,socksSettings(p));
+    auto config=detail::libraryHttpConfiguration(*lease,false,nullptr,&p);QVERIFY(config);const auto source=config->scope;
+    auto changed=p;changed.proxy.password="changed-secret";changed.proxy.username="proxy-user";test::write(file,socksSettings(changed));
+    QVERIFY(!detail::libraryHttpConfiguration(*lease,false,nullptr,&p));auto accepted=detail::libraryHttpConfiguration(*lease,false,nullptr,&changed);QVERIFY(accepted);QVERIFY(accepted->scope!=source);QVERIFY(accepted->scope.find("changed-secret")==std::string::npos);
+    auto changedRoute=detail::libraryHttpRoute(changed,server.url());QVERIFY(changedRoute);QVERIFY(detail::libraryHttpRouteScope(*changedRoute,accepted->scope).find("changed-secret")==std::string::npos);
+  }
+  void actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate_data(){
+    QTest::addColumn<bool>("encrypted");QTest::addColumn<bool>("proxyAuthentication");
+    QTest::newRow("http-no-auth")<<false<<false;QTest::newRow("http-proxy-userpass")<<false<<true;
+    QTest::newRow("https-no-auth")<<true<<false;QTest::newRow("https-proxy-userpass")<<true<<true;
+  }
+  void actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(){
+    QFETCH(bool,encrypted);QFETCH(bool,proxyAuthentication);Certificate identity;HttpServer server(encrypted?&identity:nullptr);SocksProxy proxy(server.serverPort());proxy.authentication=proxyAuthentication;
+    auto p=socksPolicy(proxy,true,proxyAuthentication,!encrypted);auto url=QUrl(QString::fromStdString(server.url()));if(!encrypted){url.setHost("owned-tracker.invalid");}
+    auto route=detail::libraryHttpRoute(p,url.toEncoded().toStdString());QVERIFY(route);
+    server.basicRealm="tracker-owned";server.requiredAuthorization="Basic "+QByteArray("tracker-user:tracker-password").toBase64();auto cache=core::Document::parse(savedAuthentication(route->scrape,server.basicRealm,"tracker-user","tracker-password").toStdString());QVERIFY(cache);
+    detail::LibraryHttpTracker client;if(encrypted){QVERIFY(QSslSocket::supportsSsl());auto trust=QSslConfiguration::defaultConfiguration();trust.setCaCertificates({identity.certificate});QVERIFY(client.testTlsConfiguration(trust));}
+    std::optional<detail::LibraryHttpTracker::Result> result;QString failure;int approvals=0;
+    const auto pump=[&]{auto value=client.poll(millis(),wallMillis(),[&](const auto&){++approvals;return true;},[&](const auto&,const auto& actual,const auto& realm){return detail::libraryHttpSavedBasic(&*cache,actual,realm);});if(!value){failure=QString::fromStdString(value.error().message);return false;}if(*value){result=std::move(**value);}return true;};
+    QVERIFY(client.start(request(),*route,millis(),wallMillis()));QTRY_VERIFY_WITH_TIMEOUT(!pump()||result.has_value(),15000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QVERIFY(result&&result->terminal.comparable);QCOMPARE(result->terminal.complete,std::int64_t{5});QCOMPARE(result->terminal.incomplete,std::int64_t{6});QVERIFY(approvals>=4);
+    QCOMPARE(proxy.connects,2);QCOMPARE(server.requests,2);QCOMPARE(proxy.actualPeer,QHostAddress(QHostAddress::LocalHost));QCOMPARE(proxy.targetNames,(QList<QString>{route->scrape.host(),route->scrape.host()}));
+    QCOMPARE(proxy.targetTypes,(QList<unsigned>{3,3}));QCOMPARE(proxy.targetPorts,(QList<quint16>{server.serverPort(),server.serverPort()}));
+    const auto submitted=client.resolverSubmissions();if(encrypted){QVERIFY(submitted.empty());}else{QCOMPARE(submitted,std::vector<std::string>({"localhost","localhost"}));}
+    QVERIFY(server.authorizations[0].isEmpty());QCOMPARE(server.authorizations[1],server.requiredAuthorization);QVERIFY(!server.lastRequest.contains("proxy-user"));QVERIFY(!server.lastRequest.contains("Proxy-Authorization"));
+    if(proxyAuthentication){QCOMPARE(proxy.credentials.size(),qsizetype{2});for(const auto& credential:proxy.credentials){QCOMPARE(credential.first,QByteArray("proxy-user"));QCOMPARE(credential.second,QByteArray("proxy-password"));}}
+    else{QVERIFY(proxy.credentials.isEmpty());}QVERIFY2(proxy.failure.isEmpty(),qPrintable(proxy.failure));QVERIFY(server.failure.isEmpty());client.close();
+  }
+  void actualSocks5LocalDnsUsesNumericConnectAndCancellationCannotReuseOldReply(){
+    HttpServer server;SocksProxy proxy(server.serverPort());auto p=socksPolicy(proxy,false);auto route=detail::libraryHttpRoute(p,server.url());QVERIFY(route);detail::LibraryHttpTracker client;
+    std::optional<detail::LibraryHttpTracker::Result> result;QString failure;
+    const auto pump=[&]{auto value=client.poll(millis(),wallMillis(),[](const auto&){return true;});if(!value){failure=QString::fromStdString(value.error().message);return false;}if(*value){result=std::move(**value);}return true;};
+    QVERIFY(client.start(request(),*route,millis(),wallMillis()));QTRY_VERIFY_WITH_TIMEOUT(!pump()||result.has_value(),10000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QVERIFY(result&&result->terminal.comparable);QCOMPARE(proxy.targetTypes,QList<unsigned>{1});QCOMPARE(proxy.targetNames,QList<QString>{"127.0.0.1"});QCOMPARE(client.resolverSubmissions(),std::vector<std::string>{"localhost"});
+    result.reset();proxy.holdConnect=true;QVERIFY(client.start(request(2),*route,millis(),wallMillis()));QTRY_VERIFY_WITH_TIMEOUT(!pump()||proxy.connects==2,10000);QVERIFY(failure.isEmpty());client.cancel();QVERIFY(!client.active());
+    QVERIFY(client.start(request(3),*route,millis(),wallMillis()));proxy.release();QTRY_VERIFY_WITH_TIMEOUT(!pump()||result.has_value(),10000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QVERIFY(result&&result->terminal.comparable);QCOMPARE(result->request.nonce,std::uint64_t{3});QCOMPARE(server.requests,2);QCOMPARE(proxy.connects,3);QVERIFY(proxy.failure.isEmpty()&&server.failure.isEmpty());client.close();
+  }
+  void injectedTrackerLookupHostNotFoundUsesFreshSameProxyDomainProposal(){
+    // Inject only the resolver outcome; the proxy/TCP/HTTP flow below is real
+    // owned loopback. This does not claim an actual external DNS failure.
+    HttpServer server;SocksProxy proxy(server.serverPort());auto p=socksPolicy(proxy,false);auto url=QUrl(QString::fromStdString(server.url()));url.setHost("owned-tracker.invalid");
+    auto route=detail::libraryHttpRoute(p,url.toEncoded().toStdString());QVERIFY(route);
+    detail::LibraryHttpResolver resolver;
+    resolver.submit=[](const QString& host,QObject* context,detail::LibraryHttpResolver::Completion completion){
+      QHostInfo result;result.setHostName(host);result.setError(QHostInfo::HostNotFound);
+      QTimer::singleShot(0,context,[completion=std::move(completion),result]{completion(result);});return 1;
+    };
+    resolver.cancel=[](int){};detail::LibraryHttpTracker client(std::move(resolver));std::optional<detail::LibraryHttpTracker::Result> result;
+    QVERIFY(!detail::libraryHttpProxyTarget(*route,{}));const auto unresolved=detail::libraryHttpProxyTarget(*route,{},true);QVERIFY(unresolved&&unresolved->isNull());
+    QVERIFY(client.start(request(),*route,millis(),wallMillis()));QTRY_VERIFY_WITH_TIMEOUT(client.resolvedProposalPending(),10000);
+    QCOMPARE(proxy.connections,0);QCOMPARE(server.connections,0);QCOMPARE(client.resolverSubmissions(),std::vector<std::string>{"owned-tracker.invalid"});
+    int approvals=0;const auto pump=[&]{auto value=client.poll(millis(),wallMillis(),[&](const auto&){++approvals;return true;});if(!value){return false;}if(*value){result=std::move(**value);}return true;};
+    QTRY_VERIFY_WITH_TIMEOUT(!pump()||result.has_value(),10000);QVERIFY(result&&result->terminal.comparable);QCOMPARE(result->terminal.complete,std::int64_t{5});QCOMPARE(result->terminal.incomplete,std::int64_t{6});QVERIFY(approvals>=2);
+    QCOMPARE(proxy.connects,1);QCOMPARE(proxy.targetTypes,QList<unsigned>{3});QCOMPARE(proxy.targetNames,QList<QString>{"owned-tracker.invalid"});QCOMPARE(server.requests,1);QVERIFY(proxy.failure.isEmpty());client.close();
+    // The same queued fallback has no authority if its owner now refuses it.
+    detail::LibraryHttpResolver revokedResolver;
+    revokedResolver.submit=[](const QString& host,QObject* context,detail::LibraryHttpResolver::Completion completion){QHostInfo value;value.setHostName(host);value.setError(QHostInfo::HostNotFound);QTimer::singleShot(0,context,[completion=std::move(completion),value]{completion(value);});return 1;};revokedResolver.cancel=[](int){};
+    detail::LibraryHttpTracker revoked(std::move(revokedResolver));QVERIFY(revoked.start(request(2),*route,millis(),wallMillis()));QTRY_VERIFY_WITH_TIMEOUT(revoked.resolvedProposalPending(),10000);
+    auto rejected=revoked.poll(millis(),wallMillis(),[](const auto&){return false;});QVERIFY(rejected&&!*rejected);QVERIFY(!revoked.active());QCOMPARE(proxy.connects,1);QCOMPARE(server.requests,1);revoked.close();
+    detail::LibraryHttpResolver unavailable;
+    unavailable.submit=[](const QString& host,QObject* context,detail::LibraryHttpResolver::Completion completion){QHostInfo value;value.setHostName(host);value.setError(QHostInfo::UnknownError);QTimer::singleShot(0,context,[completion=std::move(completion),value]{completion(value);});return 1;};unavailable.cancel=[](int){};
+    detail::LibraryHttpTracker unknown(std::move(unavailable));result.reset();QVERIFY(unknown.start(request(3),*route,millis(),wallMillis()));
+    const auto unknownPump=[&]{auto value=unknown.poll(millis(),wallMillis(),[](const auto&){return true;});if(!value){return false;}if(*value){result=std::move(**value);}return true;};
+    QTRY_VERIFY_WITH_TIMEOUT(!unknownPump()||result.has_value(),10000);QVERIFY(result&&!result->terminal.comparable&&!result->terminal.definitiveFailure);QCOMPARE(proxy.connects,1);QCOMPARE(server.requests,1);unknown.close();
+  }
+  void actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown_data(){
+    QTest::addColumn<int>("mode");QTest::newRow("method-refused")<<0;QTest::newRow("auth-refused")<<1;QTest::newRow("connect-refused")<<2;QTest::newRow("malformed-socks-version")<<3;
+  }
+  void actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(){
+    QFETCH(int,mode);HttpServer server;SocksProxy proxy(server.serverPort());proxy.authentication=mode==1;proxy.rejectMethod=mode==0;proxy.rejectAuthentication=mode==1;proxy.rejectConnect=mode==2;proxy.malformedReply=mode==3;
+    auto p=socksPolicy(proxy,true,mode==1);auto route=detail::libraryHttpRoute(p,server.url());QVERIFY(route);detail::LibraryHttpTracker client;std::optional<detail::LibraryHttpTracker::Result> result;
+    const auto pump=[&]{auto value=client.poll(millis(),wallMillis(),[](const auto&){return true;});if(!value){return false;}if(*value){result=std::move(**value);}return true;};
+    QVERIFY(client.start(request(),*route,millis(),wallMillis()));QTRY_VERIFY_WITH_TIMEOUT(!pump()||result.has_value(),10000);QVERIFY(result);QVERIFY(!result->terminal.comparable);QCOMPARE(result->terminal.definitiveFailure,mode!=3);QCOMPARE(server.connections,0);QCOMPARE(server.requests,0);QCOMPARE(proxy.connections,1);QVERIFY(proxy.failure.isEmpty());client.close();
+  }
+  void savedProxyChangesWithdrawResolvedEndpointBeforeAnyConnection(){
+    HttpServer server;SocksProxy proxy(server.serverPort());auto p=socksPolicy(proxy,true,true,true);auto route=detail::libraryHttpRoute(p,server.url());QVERIFY(route);
+    QTemporaryDir root;QVERIFY(root.isValid());auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);const auto path=root.filePath("biglybt.config");test::write(path,socksSettings(p));
+    auto config=detail::libraryHttpConfiguration(*lease,false,nullptr,&p);QVERIFY(config);auto current=request();current.configuration=detail::libraryHttpRouteScope(*route,config->scope);detail::LibraryHttpTracker client;QVERIFY(client.start(current,*route,millis(),wallMillis()));
+    QTRY_VERIFY_WITH_TIMEOUT(client.resolvedProposalPending(),10000);QCOMPARE(proxy.connections,0);QCOMPARE(client.resolverSubmissions(),std::vector<std::string>{"localhost"});
+    auto changed=p;changed.proxy.port=p.proxy.port==65535?65534:p.proxy.port+1;test::write(path,socksSettings(changed));
+    auto rejected=client.poll(millis(),wallMillis(),[&](const auto& request){auto fresh=detail::libraryHttpConfiguration(*lease,false,nullptr,&p);return fresh&&request.configuration==detail::libraryHttpRouteScope(*route,fresh->scope);});QVERIFY(rejected&&!*rejected);QVERIFY(!client.active());QCOMPARE(proxy.connections,0);QCOMPARE(server.connections,0);client.close();
+  }
+  void genuinePrivateOrDhtDisabledSavedOwnerConsumesProxyResponseWithoutDiscovery_data(){
+    QTest::addColumn<bool>("privateTorrent");QTest::newRow("public-DHT-disabled")<<false;QTest::newRow("private-Tracker-only")<<true;
+  }
+  void genuinePrivateOrDhtDisabledSavedOwnerConsumesProxyResponseWithoutDiscovery(){
+    QFETCH(bool,privateTorrent);test::OwnedEngineFixture saved(false);HttpServer server;SocksProxy proxy(server.serverPort());auto p=socksPolicy(proxy);p.dht=privateTorrent;
+    QTcpServer transfer;QVERIFY(transfer.listen(QHostAddress::LocalHost,0));p.listenPort=transfer.serverPort();transfer.close();
+    auto source=core::Document::parse(test::read(saved.stateFile).toStdString());QVERIFY(source);QVERIFY(source->replaceValue("announce",test::encoded(libtorrent::entry(server.url()))));
+    if(privateTorrent){
+      auto bytes=core::encodeValue(*source->find("info"));QVERIFY(bytes);auto info=core::Document::parse(*bytes);QVERIFY(info);QVERIFY(info->replaceValue("private","i1e"));QVERIFY(source->replaceValue("info",info->serialize()));
+      const auto raw=QCryptographicHash::hash(QByteArray::fromStdString(info->serialize()),QCryptographicHash::Sha1);auto key=core::TorrentHash::parse(std::string_view(raw.constData(),static_cast<std::size_t>(raw.size())));QVERIFY(key);saved.hash=*key;
+      const auto old=saved.stateFile;saved.stateFile=saved.profile+"/active/"+QString::fromStdString(key->hex())+".dat";QVERIFY(QFile::remove(old));
+      auto inventory=core::Document::parse(test::read(saved.profile+"/downloads.config").toStdString());QVERIFY(inventory);auto rowBytes=core::encodeValue(inventory->find("downloads")->children[0]);QVERIFY(rowBytes);auto row=core::Document::parse(*rowBytes);QVERIFY(row);QVERIFY(row->replaceValue("torrent_hash",test::encoded(libtorrent::entry(raw.toStdString()))));QVERIFY(row->replaceValue("torrent",test::encoded(libtorrent::entry(saved.stateFile.toStdString()))));QVERIFY(inventory->replaceValue("downloads","l"+row->serialize()+"e"));test::write(saved.profile+"/downloads.config",QByteArray::fromStdString(inventory->serialize()));
+    }
+    auto attrsBytes=core::encodeValue(*source->find("attributes"));QVERIFY(attrsBytes);auto attrs=core::Document::parse(*attrsBytes);QVERIFY(attrs);QVERIFY(attrs->replaceValue("peersources","l7:Trackere"));QVERIFY(attrs->replaceValue("peersourcesdenied","l3:DHTe"));QVERIFY(attrs->replaceValue("flags","i512e"));QVERIFY(source->replaceValue("attributes",attrs->serialize()));test::write(saved.stateFile,QByteArray::fromStdString(source->serialize()));
+    server.expectedHash=QByteArray(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);server.body=counts(*saved.hash);test::write(saved.profile+"/biglybt.config",socksSettings(p));
+    const SavedBytes state(saved.stateFile),statistics(saved.profile+"/BiglyBT.statistics"),config(saved.profile+"/biglybt.config");const auto payload=test::read(saved.payload+"/sample.bin");auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);PayloadWatch watch(saved);
+    auto created=engine::PersistentSession::create({7971,7972,7973});QVERIFY(created);auto owner=std::move(*created);QVERIFY(owner->configureNetwork(p));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*lease));QString failure;
+    const auto pump=[&]{if(!owner->poll()){failure="SOCKS regular owner poll failed";return false;}if(!owner->managedDownloads().empty()||!owner->pendingMagnets().empty()||!watch.untouched()){failure="Saved tracker proxy acquired payload authority";return false;}failure=server.failure+proxy.failure;return failure.isEmpty();};
+    QTRY_VERIFY_WITH_TIMEOUT(!pump()||!owner->libraryTrackerResponses().empty(),25000);QVERIFY2(failure.isEmpty(),qPrintable(failure));const auto responses=owner->libraryTrackerResponses();QCOMPARE(responses.size(),std::size_t{1});QCOMPARE(responses[0].hash,*saved.hash);QCOMPARE(responses[0].response.type,core::QueueOriginalScrapeType::Success);QVERIFY(responses[0].response.content);QCOMPARE(responses[0].response.content->seeds,5);QCOMPARE(responses[0].response.content->peers,6);QVERIFY(responses[0].observedWallMillis>0);QCOMPARE(server.requests,1);QCOMPARE(proxy.connects,1);
+    auto discovery=owner->mainlineDiscovery();QCOMPARE(discovery.state,privateTorrent?engine::MainlineDiscoveryStatus::State::Unavailable:engine::MainlineDiscoveryStatus::State::Disabled);QCOMPARE(discovery.lookups,std::uint64_t{0});QCOMPARE(discovery.announces,std::uint64_t{0});QCOMPARE(discovery.deliveredPeers,std::uint64_t{0});QVERIFY(owner->mainlineScrapeEstimates().empty());QVERIFY(!QFileInfo::exists(saved.profile+"/plugins/mldht"));
+    owner->revokeMainlineScrape(*saved.hash);QVERIFY(owner->libraryTrackerResponses().empty());QVERIFY(storage::applyLibraryCommand(*lease,*saved.hash,core::DownloadAction::Stop));QVERIFY(owner->stopManaged(*saved.hash));QVERIFY(owner->rearmMainlineScrape(*saved.hash));QVERIFY(pump());QVERIFY(owner->libraryTrackerResponses().empty());
+    const auto closed=owner->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(owner->libraryTrackerResponses().empty());QVERIFY(state.unchanged()&&statistics.unchanged()&&config.unchanged());QVERIFY(watch.untouched());watch.stop();QCOMPARE(test::read(saved.payload+"/sample.bin"),payload);QVERIFY(saved.intact(false));
+  }
   void originalUrlMappingAndRoutePermissions(){
     auto p=policy();auto route=detail::libraryHttpRoute(p,"http://localhost:1234/path/announce.php?key=abc");QVERIFY(route);QCOMPARE(route->scrape.toEncoded(),QByteArray("http://localhost:1234/path/scrape.php?key=abc"));
     QVERIFY(detail::libraryHttpRoute(p,"https://example.org/"));QVERIFY(!detail::libraryHttpRoute(p,"http://localhost/file.php"));
