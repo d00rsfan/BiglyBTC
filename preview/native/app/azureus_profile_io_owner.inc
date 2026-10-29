@@ -78,7 +78,7 @@
       if(!state_->profileIo){return false;}
       IoSlot* slot=nullptr;for(auto& item:ioSlots_){if(!item.job){slot=&item;break;}}if(!slot){return false;}
       auto versions=options_.valueVersions;auto contacts=options_.contacts;auto lease=state_->profileIo->lease();const bool routingPolicy=options_.routingScope==azureus::RoutingScope::OwnedLoopback;
-      auto submitted=state_->profileIo->submit([versions,contacts,lease,command,reserve,deadline,allowExpired,routingPolicy,contactWork=std::move(contactWork)](std::stop_token stop)->ProfileIo::Result{
+      auto submitted=state_->profileIo->submit([versions,contacts,lease,command,reserve,deadline,allowExpired,routingPolicy,contactWork=std::move(contactWork)](std::stop_token stop)mutable->ProfileIo::Result{
         const auto cancelled=[&]{return stop.stop_requested()||(!allowExpired&&std::chrono::steady_clock::now()>=deadline);};
         if(cancelled()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO expired"});}
         auto valid=versions->validate();if(!valid){return std::unexpected(valid.error());}if(contacts){valid=contacts->validate();if(!valid){return std::unexpected(valid.error());}}
