@@ -379,6 +379,32 @@ int main(){try{
     event.kind=QueueTrackerTerminalKind::ScrapeFailed;event.definitiveFailure=true;event.observedMillis=11000;fresh.observe(event);CHECK(fresh.response().type==QueueOriginalScrapeType::Unknown); // Failure cannot repair lost lineage.
     event.kind=QueueTrackerTerminalKind::Scrape;event.comparable=true;event.present=3;event.complete=0;event.incomplete=0;event.observedMillis=12000;fresh.observe(event);CHECK(fresh.response().type==QueueOriginalScrapeType::Success&&!fresh.eligible(12000));
   });
+  run("original multi tracker selection preserves status retained counts backup and Java tier shuffle",[]{
+    const std::array<unsigned,5> tiers{0,0,0,1,1};
+    CHECK(sourceQueueTrackerOrder(tiers,0)==std::vector<std::size_t>({1,2,0,3,4}));
+    CHECK(sourceQueueTrackerOrder(tiers,1)==std::vector<std::size_t>({2,1,0,3,4}));
+    CHECK(sourceQueueTrackerOrder(tiers,0)==sourceQueueTrackerOrder(tiers,std::int64_t{1}<<48)); // Java uses only48 seed bits.
+    CHECK(sourceQueueTrackerOrder(std::array<unsigned,2>{1,0},0).empty());
+    std::array<QueueOriginalTrackerResponse,3> responses;
+    const std::array<const QueueOriginalTrackerResponse*,3> rows{&responses[0],&responses[1],&responses[2]};
+    CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{0});
+    QueueTrackerTerminal error;error.kind=QueueTrackerTerminalKind::ScrapeFailed;error.definitiveFailure=true;error.observedMillis=100;
+    responses[0].requested();responses[0].observe(error);CHECK(responses[0].eligible(100));
+    CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{1}); // First error is not all failed.
+    responses[1].requested();CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{1});
+    QueueTrackerTerminal good;good.kind=QueueTrackerTerminalKind::Scrape;good.comparable=true;good.present=7;good.complete=5;good.incomplete=6;good.downloaded=9;good.observedMillis=200;good.requestStartedWallMillis=900;
+    good.observedMillis=500;responses[1].observe(good);CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{1}); // Later initial never replaces healthy earlier.
+    CHECK(!responses[1].regularDue(600200));CHECK(!responses[1].regularPollDue(600199));CHECK(responses[1].regularPollDue(600200));
+    error.observedMillis=300;responses[1].observe(error);CHECK(responses[1].response().type==QueueOriginalScrapeType::Success); // Original ERROR retains valid response content.
+    CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{2});responses[2].observe(error);
+    CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{0}); // All actual errors selects first error.
+    CHECK(responses[0].publishDht(2,3,1000));CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{0});
+    good.observedMillis=400;responses[2].observe(good);CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{2}); // Prefer real tracker over DHT backup.
+    responses[1].unavailable();CHECK(!sourceQueueTrackerSelection(rows)); // No local failure/unknown as complete failure.
+    good.observedMillis=500;responses[1].observe(good);CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{1});
+    responses[0].requested();CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{0});responses[0].cancelRequest();
+    CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{1});
+  });
   run("source lifecycle floors each actual peer epoch and resets seed time on unfinish",[]{
     QueueOwnerObservations source(1);std::uint64_t sequence=0;
     const auto send=[&](QueueObservationKind kind,std::int64_t millis){QueueObservation e;e.sequence=++sequence;e.observedNanos=millis*1000000;e.observedWallMillis=100000+millis;e.kind=kind;return source.observe(e);};

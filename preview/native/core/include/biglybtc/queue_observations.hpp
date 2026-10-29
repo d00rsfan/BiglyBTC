@@ -1,9 +1,11 @@
 #pragma once
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string_view>
 #include <span>
+#include <vector>
 namespace biglybtc::core {
 // Exact Java-long arithmetic and int narrowing; physical byte counters remain
 // independently validated. Negative results besides infinity−1 are legitimate.
@@ -100,12 +102,17 @@ struct QueueTrackerTerminal {
   // Present only for a source-decoded HTTP scheduler recommendation.
   std::optional<std::int64_t> regularDelayMillis;
 };
+// BT scraper status is separate from DownloadScrapeResult validity: an ERROR
+// can retain valid counts. A local Unknown is never a definitive tracker error.
+enum class QueueTrackerSelectionStatus { Unknown,Initializing,Scraping,Online,Error };
 class QueueOriginalTrackerResponse final {
 public:
   void observe(const QueueTrackerTerminal&) noexcept;
   void unavailable() noexcept {known_=false;pending_=false;}
   bool eligible(std::int64_t nowMillis) const noexcept;
   bool regularDue(std::int64_t nowMillis) const noexcept;
+  bool regularPollDue(std::int64_t nowMillis) const noexcept;
+  QueueTrackerSelectionStatus selectionStatus() const noexcept;
   void requested() noexcept {pending_=true;}
   void cancelRequest() noexcept {pending_=false;} // Withdraw only this pending transport, retaining response history.
   // Original skips intermediate SCRAPING notifications, retaining the same
@@ -124,6 +131,13 @@ private:
   std::int64_t nextRegular_=0;
   std::optional<std::int64_t> ownStart_;
 };
+// Original stable JavaRandom48 insertion shuffle within each ordered tier.
+// The caller retains one wall-time seed for its native library-row lifetime.
+std::vector<std::size_t> sourceQueueTrackerOrder(std::span<const unsigned> tiers,std::int64_t seed);
+// Caller supplies current per-URL responses in that stable tier order.
+// Missing/Unknown cannot assert that every configured tracker failed.
+std::optional<std::size_t> sourceQueueTrackerSelection(
+    std::span<const QueueOriginalTrackerResponse* const>) noexcept;
 struct QueueSingleTrackerResponse {
   std::array<unsigned char,32> tracker{};
   std::uint64_t sequence=0,request=0;

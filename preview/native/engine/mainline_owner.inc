@@ -282,6 +282,63 @@ std::optional<storage::Error> mainlineScrapeFailure;
 detail::LibraryTrackerResponses trackerResponses;
 #include "library_http_owner.inc"
 #include "library_udp_owner.inc"
+// Original no-announcer selection for ordered, stably shuffled tiers. The same
+// library response owns each URL across retries/readmissions. Unknown/local
+// unsupported is not an all-trackers-failed observation.
+std::map<std::string,std::int64_t> trackerSelectionSeeds;
+std::optional<std::int64_t> trackerSelectionSeed(const core::TorrentHash& hash){
+  const auto found=trackerSelectionSeeds.find(hash.hex());if(found!=trackerSelectionSeeds.end()){return found->second;}
+  if(trackerSelectionSeeds.size()>=256){return {};}
+  const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+  trackerSelectionSeeds.emplace(hash.hex(),wall);return wall;
+}
+bool prepareLibraryTrackerTiers(SavedMainlineScrapeTarget& target,std::int64_t now,bool& pendingEligibility){
+  if(target.admission||target.configuredTrackers.size()<2||target.configuredTrackers.size()>8){return false;}
+  const auto seed=trackerSelectionSeed(target.hash);if(!seed){return false;}
+  std::vector<unsigned> tiers;for(const auto& url:target.configuredTrackers){tiers.push_back(url.tier);}
+  const auto order=core::sourceQueueTrackerOrder(tiers,*seed);if(order.size()!=tiers.size()){return false;}
+  std::vector<const core::QueueOriginalTrackerResponse*> responses;
+  std::optional<std::expected<std::string,storage::Error>> udpConfig;
+  const auto prepare=[&](SavedMainlineScrapeTarget& member,bool& pending,bool dispatch){
+    if(member.configuredTracker.starts_with("http://")||member.configuredTracker.starts_with("https://")){
+      return prepareLibraryHttp(member,now,pending,true,dispatch);
+    }
+    if(!udpConfig){udpConfig=detail::libraryUdpConfiguration(*mainlineLease);}
+    return *udpConfig&&prepareLibraryUdp(member,now,**udpConfig,pending,true,dispatch);
+  };
+  // Authenticate every transport/configuration without IO first. A later
+  // unsupported route must not be reported as an observed tracker failure.
+  for(const auto index:order){
+    const auto& url=target.configuredTrackers[index];
+    auto member=selectConfiguredMainlineTracker(target,url.responseKey);bool pending=false;
+    if(!member||!prepare(*member,pending,false)){return false;}
+    const auto response=trackerResponses.find(url.responseKey);if(response==trackerResponses.end()){return false;}
+    responses.push_back(response->second.get());
+  }
+  // Do not start an unvisited later tier after an earlier healthy response,
+  // or while the original selector is waiting for an earlier initial scrape.
+  auto limit=responses.size();const auto previous=core::sourceQueueTrackerSelection(responses);
+  if(previous){
+    const auto state=responses[*previous]->selectionStatus();
+    if(state==core::QueueTrackerSelectionStatus::Initializing||state==core::QueueTrackerSelectionStatus::Scraping
+        ||(state==core::QueueTrackerSelectionStatus::Online&&!responses[*previous]->dhtBackup())){limit=*previous+1;}
+  }else{
+    for(std::size_t i=0;i<responses.size();++i){if(responses[i]->selectionStatus()==core::QueueTrackerSelectionStatus::Unknown){limit=i+1;break;}}
+  }
+  // One actual regular scrape at a time. Retry deadlines are per URL; unlike
+  // the single-URL DHT gate, multi-tier selection also revisits healthy URLs.
+  for(std::size_t i=0;i<limit;++i){
+    if(!responses[i]->regularPollDue(now)){continue;}
+    auto member=selectConfiguredMainlineTracker(target,target.configuredTrackers[order[i]].responseKey);bool pending=false;
+    if(!member||!prepare(*member,pending,true)){return false;}
+    break;
+  }
+  const auto chosen=core::sourceQueueTrackerSelection(responses);if(!chosen){return false;}
+  auto member=selectConfiguredMainlineTracker(target,target.configuredTrackers[order[*chosen]].responseKey);
+  if(!member||!prepare(*member,pendingEligibility,false)){return false;}
+  target=std::move(*member);return true;
+}
+
 // Stop/Pause removes the wrapper's TrackedTorrent own-start authority. The
 // core BT response itself survives; positions/reconcile only revoke RPCs.
 void forgetTrackerDhtAuthority(const core::TorrentHash& hash) noexcept {
@@ -324,7 +381,12 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrape
     if(handle==managedByHandle.end()||handle->second!=&value){continue;}
     admitted.push_back({&value.storage,value.status.admission,value.status.complete});
   }
-  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,admitted,true);if(!targets){return targets;}
+  std::vector<std::string> inventoryHashes;
+  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,admitted,true,&inventoryHashes);if(!targets){return targets;}
+  // A manager seed survives Stop, permission loss, admission and tier edits.
+  // Only a successfully authenticated complete inventory can end that row's
+  // lifetime. Failed reads and merely ineligible-target absence never prune it.
+  std::erase_if(trackerSelectionSeeds,[&](const auto& row){return std::ranges::find(inventoryHashes,row.first)==inventoryHashes.end();});
   const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
   std::optional<std::expected<std::string,storage::Error>> udpConfiguration;
   std::erase_if(*targets,[&](auto& target){
@@ -334,7 +396,12 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrape
     // torrent, payload handle or constructor-null response grants authority.
     bool pendingEligibility=false;
     if(!target.admission){
-      if(target.configuredTracker.starts_with("http://")||target.configuredTracker.starts_with("https://")){
+      // Construct once even for a single URL, retaining the same manager seed
+      // if its announce tiers are edited later during this library lifetime.
+      if(!trackerSelectionSeed(target.hash)){return true;}
+      if(!target.configuredTrackers.empty()){
+        if(!prepareLibraryTrackerTiers(target,now,pendingEligibility)){return true;}
+      }else if(target.configuredTracker.starts_with("http://")||target.configuredTracker.starts_with("https://")){
         if(!prepareLibraryHttp(target,now,pendingEligibility)){return true;}
       }else{
         if(!udpConfiguration){udpConfiguration=detail::libraryUdpConfiguration(*mainlineLease);}

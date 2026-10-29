@@ -60,6 +60,46 @@ std::optional<std::string> singleConfiguredTracker(const core::Document& source)
     for(const auto& tier:tiers->children){if(tier.type!=Node::Type::List||tier.children.size()>64){return {};}for(const auto& url:tier.children){take(url);}}
   }return valid?one:std::nullopt;
 }
+struct TrackerUrl {std::string url;unsigned tier;};
+std::optional<std::vector<TrackerUrl>> configuredTrackerTiers(const core::Document& source){
+  // Keep every previously accepted single-URL representation unchanged.
+  if(const auto one=singleConfiguredTracker(source)){return std::vector<TrackerUrl>{{*one,0}};}
+  std::vector<TrackerUrl> urls;
+  const auto take=[&](const Node& node,unsigned tier)->bool{
+    if(node.type!=Node::Type::Bytes||node.bytes.size()>2048||node.bytes.empty()
+        ||node.bytes.find('\0')!=std::string::npos
+        ||(!node.bytes.starts_with("http://")&&!node.bytes.starts_with("https://")&&!node.bytes.starts_with("udp://"))){return false;}
+    urls.push_back({std::string(node.bytes),tier});return urls.size()<=8;
+  };
+  const auto* tiers=source.find("announce-list");
+  if(tiers&&tiers->type!=Node::Type::List){return {};}
+  if(tiers&&!tiers->children.empty()){
+    if(tiers->children.size()>64){return {};}
+    unsigned index=0;
+    for(const auto& tier:tiers->children){
+      if(tier.type!=Node::Type::List||tier.children.size()>64){return {};}
+      for(const auto& url:tier.children){if(!take(url,index)){return {};}}++index;
+    }
+    // TOTorrentDeserialiseImpl adds a valid primary as a final singleton set
+    // when it is absent (case-insensitively) from announce-list.
+    if(const auto* primary=source.find("announce")){
+      if(primary->type!=Node::Type::Bytes){return {};}
+      const auto same=[](std::string_view a,std::string_view b){
+        const auto lower=[](unsigned char c){return c>='A'&&c<='Z'?static_cast<unsigned char>(c+32):c;};
+        return a.size()==b.size()&&std::ranges::equal(a,b,[&](unsigned char x,unsigned char y){return lower(x)==lower(y);});
+      };
+      if(!primary->bytes.empty()&&!std::ranges::any_of(urls,[&](const auto& url){return same(url.url,primary->bytes);})&&!take(*primary,index)){return {};}
+    }
+  }else{
+    const auto* primary=source.find("announce");if(!primary||!take(*primary,0)){return {};}
+  }
+  if(urls.empty()){return {};}
+  if(urls.size()>1&&std::ranges::any_of(urls,[](const auto& url){return std::ranges::any_of(url.url,[](unsigned char c){return c<=32||c>=127;});})){return {};}
+  // Repeated aliases of the identical URL share one response and no ordering
+  // choice. Preserve the established active/single-URL behavior in that case.
+  if(std::ranges::all_of(urls,[&](const auto& url){return url.url==urls.front().url;})){urls.resize(1);}
+  return urls;
+}
 std::optional<std::string> digest(std::string_view bytes){
   std::array<unsigned char,32> out{};unsigned count=0;
   if(EVP_Digest(bytes.data(),bytes.size(),out.data(),&count,EVP_sha256(),nullptr)!=1||count!=out.size()){return {};}
@@ -78,13 +118,25 @@ std::expected<bool,storage::Error> activeScrapeOnly(const Node& attributes){
 }
 std::int64_t later(std::int64_t now,std::int64_t delay){return now>INT64_MAX-delay?INT64_MAX:now+delay;}
 }
+std::optional<SavedMainlineScrapeTarget> selectConfiguredMainlineTracker(
+    const SavedMainlineScrapeTarget& target,std::string_view responseKey){
+  if(target.configuredTrackers.empty()){
+    return target.trackerResponseKey==responseKey?std::optional{target}:std::nullopt;
+  }
+  const auto member=std::ranges::find(target.configuredTrackers,responseKey,&SavedMainlineTracker::responseKey);
+  if(member==target.configuredTrackers.end()||target.admission){return {};}
+  auto selected=target;selected.configuredTracker=member->url;selected.trackerResponseKey=member->responseKey;
+  std::string scope;append(scope,target.scope);append(scope,member->url);append(scope,member->responseKey);
+  auto hash=digest(scope);if(!hash){return {};}selected.scope=std::move(*hash);return selected;
+}
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readSavedMainlineScrapeTargets(const storage::ProfileLease& lease){
   return readCurrentMainlineScrapeTargets(lease,{});
 }
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
-    std::span<const ManagedMainlineScrapeObservation> observations,bool configuredCandidates){
+    std::span<const ManagedMainlineScrapeObservation> observations,bool configuredCandidates,
+    std::vector<std::string>* authenticatedInventoryHashes){
   try{
     if(observations.size()>256){return error(Code::Unsupported,"Active Mainline scrape target bound");}
     std::map<std::string,const ManagedMainlineScrapeObservation*> active;
@@ -146,14 +198,15 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
         if(const auto* backup=azureus->find("dht_backup_enable");backup&&(backup->type!=Node::Type::Integer||backup->integer!=1)){continue;}
       }
       if(const auto* flags=attrs->find("flags");flags&&(flags->type!=Node::Type::Integer||(static_cast<std::uint64_t>(flags->integer)&0x200u))){continue;}
-      std::optional<std::string> configured;
+      std::optional<std::vector<TrackerUrl>> configured;
       if(!withoutRealTracker(doc,key)){
-        if(!configuredCandidates){continue;}configured=singleConfiguredTracker(doc);
+        if(!configuredCandidates){continue;}configured=configuredTrackerTiers(doc);
         // This returns an authenticated candidate, not network permission.
         // The sole owner additionally requires its actual library response.
         if(!configured||!listIncludes(attrs->find("peersources"),"Tracker",true)
             ||listIncludes(attrs->find("peersourcesdenied"),"Tracker",false)){continue;}
       }
+      if(observation&&configured&&configured->size()>1){continue;} // Active announcer selection is separate.
       if(observation){
         const auto permitted=activeScrapeOnly(*attrs);if(!permitted){return std::unexpected(permitted.error());}
         if(!*permitted){continue;} // Normal active announce mode is not a passive scrape.
@@ -205,18 +258,35 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
         if(const auto* value=attrs->find(name)){auto encodedValue=core::encodeValue(*value,storage::compatibleConfigLimits());if(!encodedValue){return error(Code::InvalidFormat,"Scrape scope exceeds encoding bound");}append(scope,*encodedValue);}else{append(scope,"");}
       }
       if(const auto* az=doc.find("azureus_properties")){auto value=core::encodeValue(*az,storage::compatibleConfigLimits());if(!value){return error(Code::InvalidFormat,"Scrape source scope exceeds encoding bound");}append(scope,*value);}
-      if(configured){append(scope,"single-configured-tracker");append(scope,*configured);}
+      if(configured){
+        append(scope,configured->size()==1?"single-configured-tracker":"ordered-configured-tracker-tiers");
+        for(const auto& url:*configured){append(scope,url.url);if(configured->size()>1){append(scope,std::to_string(url.tier));}}
+        if(configured->size()>1){
+          for(const auto name:{"announce","announce-list"}){
+            if(const auto* value=doc.find(name)){const auto bytes=core::encodeValue(*value,storage::compatibleConfigLimits());if(!bytes){return error(Code::InvalidFormat,"Tracker tier source exceeds bound");}append(scope,*bytes);}else{append(scope,"");}
+          }
+        }
+      }
       if(observation){append(scope,"active-mldht-scrape");append(scope,std::to_string(observation->admission));append(scope,mapping);}
       auto hashed=digest(scope);if(!hashed){return error(Code::Io,observation?"Cannot authenticate managed Mainline scope":"Cannot authenticate saved Mainline scope");}
-      std::string responseKey;
-      if(configured){const auto ownerKey=detail::originalTrackerResponseKey(lease,*identity,*raw,*configured);if(!ownerKey){continue;}responseKey=*ownerKey;}
-      result.push_back({key,identity->full,std::move(*hashed),noSeeds,observation?observation->admission:0,std::move(responseKey),configured.value_or("")});
+      std::string responseKey;std::vector<SavedMainlineTracker> trackers;
+      if(configured){
+        for(const auto& url:*configured){
+          const auto ownerKey=detail::originalTrackerResponseKey(lease,*identity,*raw,url.url);if(!ownerKey){return error(Code::Io,"Cannot bind configured tracker response");}
+          trackers.push_back({url.url,*ownerKey,url.tier});
+        }
+        responseKey=trackers.front().responseKey;
+      }
+      const auto first=configured?configured->front().url:std::string{};
+      if(trackers.size()==1){trackers.clear();} // Keep the established single-URL scope/API.
+      result.push_back({key,identity->full,std::move(*hashed),noSeeds,observation?observation->admission:0,std::move(responseKey),first,std::move(trackers)});
     }
     auto current=storage::ConfigFile::load(lease,"downloads.config");
     if(!current||current->recoverySource()!=storage::RecoverySource::Primary
         ||current->document().originalBytes()!=inventory->document().originalBytes()){
       return error(Code::Conflict,"Saved Mainline inventory changed while authenticating targets");
     }
+    if(authenticatedInventoryHashes){authenticatedInventoryHashes->assign(seen.begin(),seen.end());}
     return result;
   }catch(...){return error(Code::Io,"Cannot read saved Mainline scrape authority");}
 }

@@ -48,6 +48,47 @@ bool QueueOriginalTrackerResponse::regularDue(std::int64_t now)const noexcept {
       &&!sourceQueueQueuedScrapeEligible(current,ownStart_)){return false;}
   return !regular_||now>=nextRegular_;
 }
+bool QueueOriginalTrackerResponse::regularPollDue(std::int64_t now)const noexcept {
+  return !pending_&&now>=0&&(!regular_||now>=nextRegular_);
+}
+QueueTrackerSelectionStatus QueueOriginalTrackerResponse::selectionStatus()const noexcept {
+  if(!known_){return QueueTrackerSelectionStatus::Unknown;}
+  if(pending_){return QueueTrackerSelectionStatus::Scraping;}
+  if(!visible_){return QueueTrackerSelectionStatus::Initializing;}
+  return error_?QueueTrackerSelectionStatus::Error:QueueTrackerSelectionStatus::Online;
+}
+std::vector<std::size_t> sourceQueueTrackerOrder(std::span<const unsigned> tiers,std::int64_t seed){
+  if(tiers.size()>8||!std::ranges::is_sorted(tiers)){return {};}
+  constexpr std::uint64_t mask=(std::uint64_t{1}<<48)-1;
+  auto state=(static_cast<std::uint64_t>(seed)^UINT64_C(0x5deece66d))&mask;
+  const auto next=[&](unsigned bits){state=(state*UINT64_C(0x5deece66d)+11)&mask;return state>>(48-bits);};
+  std::vector<std::size_t> order;order.reserve(tiers.size());std::size_t begin=0;
+  for(std::size_t i=0;i<tiers.size();++i){
+    if(i&&tiers[i]!=tiers[i-1]){begin=order.size();}
+    const auto high=next(26);const auto low=next(27);
+    const auto fraction=static_cast<double>((high<<27)+low)*0x1.0p-53;
+    const auto position=static_cast<std::size_t>(fraction*static_cast<double>(order.size()-begin+1));
+    order.insert(order.begin()+static_cast<std::ptrdiff_t>(begin+position),i);
+  }
+  return order;
+}
+std::optional<std::size_t> sourceQueueTrackerSelection(
+    std::span<const QueueOriginalTrackerResponse* const> responses) noexcept {
+  std::optional<std::size_t> backup,firstError;
+  for(std::size_t i=0;i<responses.size();++i){
+    if(!responses[i]){return {};}
+    switch(responses[i]->selectionStatus()){
+      case QueueTrackerSelectionStatus::Unknown:return {};
+      case QueueTrackerSelectionStatus::Initializing:
+      case QueueTrackerSelectionStatus::Scraping:return i;
+      case QueueTrackerSelectionStatus::Online:
+        if(!responses[i]->dhtBackup()){return i;}
+        backup=i;break;
+      case QueueTrackerSelectionStatus::Error:if(!firstError){firstError=i;}break;
+    }
+  }
+  return backup?backup:firstError;
+}
 void QueueOriginalTrackerResponse::observe(const QueueTrackerTerminal& value) noexcept {
   if(value.observedMillis<0||(value.present&~7u)){unavailable();return;}
   const bool scrape=value.kind==QueueTrackerTerminalKind::Scrape||value.kind==QueueTrackerTerminalKind::ScrapeFailed;

@@ -5,6 +5,7 @@
 #include <map>
 #include <optional>
 #include <span>
+#include <vector>
 
 namespace biglybtc::engine {
 namespace detail {class ManagedStorage;}
@@ -18,6 +19,7 @@ struct ManagedMainlineScrapeObservation {
 };
 // Passive query authority, never a payload claim or transfer permission. Scope
 // binds selected raw/full identity, current policy and optional actual admission.
+struct SavedMainlineTracker {std::string url,responseKey;unsigned tier=0;};
 struct SavedMainlineScrapeTarget {
   core::TorrentHash hash;
   storage::OriginalFullInfoHashes full;
@@ -26,7 +28,13 @@ struct SavedMainlineScrapeTarget {
   std::uint64_t admission=0; // Zero is explicit saved/unadmitted queued authority.
   std::string trackerResponseKey{}; // Empty is the established trackerless path.
   std::string configuredTracker{};
+  // Original declared tier/URL order; the owner applies its retained Java seed.
+  // Active announcer multi-URL selection remains outside this saved-only seam.
+  std::vector<SavedMainlineTracker> configuredTrackers{};
 };
+// Resolve a member only from a freshly authenticated complete URL inventory.
+std::optional<SavedMainlineScrapeTarget> selectConfiguredMainlineTracker(
+    const SavedMainlineScrapeTarget&,std::string_view responseKey);
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readSavedMainlineScrapeTargets(const storage::ProfileLease&);
 // Combines saved queued75 with actual active Downloading/Seeding observations
@@ -34,7 +42,11 @@ readSavedMainlineScrapeTargets(const storage::ProfileLease&);
 // row state alone can never manufacture the active branch.
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readCurrentMainlineScrapeTargets(const storage::ProfileLease&,
-    std::span<const ManagedMainlineScrapeObservation>,bool configuredCandidates=false);
+    std::span<const ManagedMainlineScrapeObservation>,bool configuredCandidates=false,
+    std::vector<std::string>* authenticatedInventoryHashes=nullptr);
+// The optional inventory output is assigned only after successful full saved
+// inventory authentication/CAS. It includes ineligible/stopped rows, allowing
+// RAM-only manager lifetime cleanup without treating lost permission as removal.
 // Pure injected monotone clock/random-word scheduling. No sampler or timer.
 // Initial 60..119s, repeat 1200..1799s; check cadence10s, startup100s.
 class QueuedMainlineScrapes final {

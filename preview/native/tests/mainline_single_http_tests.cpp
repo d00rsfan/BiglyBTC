@@ -1,4 +1,5 @@
 #include "library_http_policy.hpp"
+#include "queued_mainline_scrape.hpp"
 #include "owned_mainline_krpc.hpp"
 #include "library_commands.hpp"
 #include "persistent_session.hpp"
@@ -200,6 +201,63 @@ private slots:
     const auto current=owner->mainlineDiscovery();QCOMPARE(current.lookups,std::uint64_t{0});QCOMPARE(current.announces,std::uint64_t{0});QCOMPARE(current.deliveredPeers,std::uint64_t{0});QVERIFY(!peer.hasPendingConnections());
     QVERIFY(inventory.unchanged());QVERIFY(state.unchanged());QVERIFY(statistics.unchanged());QVERIFY(tables.unchanged());QVERIFY(original.unchanged());
     const auto closed=owner->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(watch.untouched());watch.stop();QCOMPARE(test::read(saved.payload+"/sample.bin"),payload);QVERIFY(saved.intact(false));
+  }
+  void savedTrackerTiersBindAllUrlsAndPreservePrimaryFallbackAndRawIdentity(){
+    test::OwnedEngineFixture fixture(false);auto lease=storage::ProfileLease::acquire(fixture.native());QVERIFY(lease);
+    const auto state=test::read(fixture.stateFile),inventory=test::read(fixture.profile+"/downloads.config"),payload=test::read(fixture.payload+"/sample.bin");
+    const std::string a="http://localhost:12001/announce",b="udp://127.0.0.1:12002/announce",c="https://localhost:12003/announce";
+    const auto write=[&](const std::string& primary,const libtorrent::entry::list_type& tiers){
+      auto doc=core::Document::parse(state.toStdString());if(!doc||!doc->replaceValue("announce",test::encoded(libtorrent::entry(primary)))||!doc->replaceValue("announce-list",test::encoded(libtorrent::entry(tiers)))){return false;}
+      test::write(fixture.stateFile,QByteArray::fromStdString(doc->serialize()));return true;
+    };
+    const auto tier=[](std::initializer_list<std::string> urls){libtorrent::entry::list_type list;for(const auto& url:urls){list.emplace_back(url);}return libtorrent::entry(list);};
+    QVERIFY(write(c,{tier({a,b})}));auto found=engine::readCurrentMainlineScrapeTargets(*lease,{},true);QVERIFY(found);QCOMPARE(found->size(),std::size_t{1});
+    const auto original=found->front();QCOMPARE(original.hash,*fixture.hash);QCOMPARE(original.configuredTrackers.size(),std::size_t{3});
+    QCOMPARE(original.configuredTrackers[0].url,a);QCOMPARE(original.configuredTrackers[1].url,b);QCOMPARE(original.configuredTrackers[2].url,c);
+    QCOMPARE(original.configuredTrackers[0].tier,0u);QCOMPARE(original.configuredTrackers[1].tier,0u);QCOMPARE(original.configuredTrackers[2].tier,1u);
+    auto selected=engine::selectConfiguredMainlineTracker(original,original.configuredTrackers[1].responseKey);QVERIFY(selected);QCOMPARE(selected->configuredTracker,b);QVERIFY(selected->scope!=original.scope);
+    QVERIFY(!engine::selectConfiguredMainlineTracker(original,"unknown"));
+    QVERIFY(write(a,{tier({a}),tier({b})}));auto changed=engine::readCurrentMainlineScrapeTargets(*lease,{},true);QVERIFY(changed&&changed->size()==1);QCOMPARE(changed->front().configuredTrackers.size(),std::size_t{2});QVERIFY(changed->front().scope!=original.scope);
+    auto member=engine::selectConfiguredMainlineTracker(changed->front(),original.configuredTrackers[1].responseKey);QVERIFY(member);QVERIFY(member->scope!=selected->scope); // SAME URL cannot borrow a previous tier/source scope.
+    QVERIFY(write(a,{tier({a,a})}));auto duplicate=engine::readCurrentMainlineScrapeTargets(*lease,{},true);QVERIFY(duplicate&&duplicate->size()==1);QVERIFY(duplicate->front().configuredTrackers.empty());
+    libtorrent::entry::list_type repeated;for(unsigned i=0;i<9;++i){repeated.push_back(tier({a}));}QVERIFY(write(a,repeated));auto legacy=engine::readCurrentMainlineScrapeTargets(*lease,{},true);QVERIFY(legacy&&legacy->size()==1&&legacy->front().configuredTrackers.empty());
+    libtorrent::entry::list_type excessive;for(unsigned i=0;i<9;++i){excessive.push_back(tier({"http://localhost:"+std::to_string(12100+i)+"/announce"}));}
+    QVERIFY(write(a,excessive));auto bounded=engine::readCurrentMainlineScrapeTargets(*lease,{},true);QVERIFY(bounded&&bounded->empty());
+    QVERIFY(write(a,{tier({a}),tier({"wss://localhost/announce"})}));auto unsupported=engine::readCurrentMainlineScrapeTargets(*lease,{},true);QVERIFY(unsupported&&unsupported->empty());
+    QVERIFY(write(a,{tier({a}),tier({b})}));auto doc=core::Document::parse(test::read(fixture.stateFile).toStdString());QVERIFY(doc);auto attrs=core::encodeValue(*doc->find("attributes"));QVERIFY(attrs);auto denied=core::Document::parse(*attrs);QVERIFY(denied);QVERIFY(denied->replaceValue("peersourcesdenied","l7:Trackere"));QVERIFY(doc->replaceValue("attributes",denied->serialize()));test::write(fixture.stateFile,QByteArray::fromStdString(doc->serialize()));std::vector<std::string> allRows;auto revoked=engine::readCurrentMainlineScrapeTargets(*lease,{},true,&allRows);QVERIFY(revoked&&revoked->empty());QCOMPARE(allRows,std::vector<std::string>{fixture.hash->hex()}); // Eligibility loss does not end the manager lifetime.
+    auto before=core::Document::parse(state.toStdString()),after=core::Document::parse(test::read(fixture.stateFile).toStdString());QVERIFY(before&&after);auto oldInfo=storage::originalTorrentInfoSubject(*before),newInfo=storage::originalTorrentInfoSubject(*after);QVERIFY(oldInfo&&newInfo);QCOMPARE(*oldInfo,*newInfo);
+    QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);test::write(fixture.stateFile,state);QVERIFY(fixture.intact(false));
+  }
+  void savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply_data(){
+    QTest::addColumn<bool>("sameTier");QTest::newRow("ordered-tiers")<<false;QTest::newRow("stable-shuffled-tier")<<true;
+  }
+  void savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply(){
+    QFETCH(bool,sameTier);
+    test::OwnedEngineFixture saved(false);HttpServer first,second,third;
+    for(auto* tracker:{&first,&second,&third}){tracker->expectedHash=QByteArray(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);tracker->body=counts(*saved.hash);}
+    first.body=krpc::dictionary({{"failure reason",krpc::string("owned first unavailable")}});second.body=first.body;first.hold=true;second.hold=true;
+    auto metadata=core::Document::parse(test::read(saved.stateFile).toStdString());QVERIFY(metadata);
+    const auto tier=[](const std::string& url){return libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(url)});};
+    QVERIFY(metadata->replaceValue("announce",test::encoded(libtorrent::entry(first.url()))));
+    const auto tiers=sameTier?libtorrent::entry::list_type{libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(first.url()),libtorrent::entry(second.url())}),tier(third.url())}
+        :libtorrent::entry::list_type{tier(first.url()),tier(second.url()),tier(third.url())};
+    QVERIFY(metadata->replaceValue("announce-list",test::encoded(libtorrent::entry(tiers))));test::write(saved.stateFile,QByteArray::fromStdString(metadata->serialize()));
+    const SavedBytes state(saved.stateFile),statistics(saved.profile+"/BiglyBT.statistics"),tables(saved.profile+"/tables.config");const auto payload=test::read(saved.payload+"/sample.bin");
+    auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);PayloadWatch watch(saved);auto p=policy();p.mainlineIpv4=true;p.mainlineIpv6=false;p.mainlinePeerBootstrapOnly=true;
+    QTcpServer transfer,discovery;QVERIFY(transfer.listen(QHostAddress::LocalHost,0));QVERIFY(discovery.listen(QHostAddress::LocalHost,0));QUdpSocket reserved;QVERIFY(reserved.bind(QHostAddress::LocalHost,discovery.serverPort(),QUdpSocket::DontShareAddress));p.listenPort=transfer.serverPort();p.mainlinePort=discovery.serverPort();transfer.close();discovery.close();reserved.close();
+    auto created=engine::PersistentSession::create({7964,7965,7966});QVERIFY(created);auto owner=std::move(*created);QVERIFY(owner->configureNetwork(p));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*lease));QString failure;
+    const auto pump=[&]{if(!owner->poll()){failure="Multi-tracker saved owner poll failed";return false;}const auto current=owner->mainlineDiscovery();if(current.failure||current.queuedScrapeFailure){failure=QString::fromStdString(current.failure?current.failure->message:current.queuedScrapeFailure->message);return false;}if(!owner->managedDownloads().empty()||!owner->pendingMagnets().empty()||!watch.untouched()){failure="Multi-tracker stats acquired or accessed payload";return false;}failure=first.failure+second.failure+third.failure;return failure.isEmpty();};
+    QTRY_VERIFY_WITH_TIMEOUT(!pump()||first.requests+second.requests==1,25000);QVERIFY2(failure.isEmpty(),qPrintable(failure));
+    auto* initial=first.requests?&first:&second;auto* next=first.requests?&second:&first;
+    if(!sameTier){QCOMPARE(initial,&first);}QCOMPARE(next->connections,0);QCOMPARE(third.connections,0);QVERIFY(owner->mainlineScrapeEstimates().empty());
+    next->body=counts(*saved.hash);initial->release();
+    QTRY_VERIFY_WITH_TIMEOUT(!pump()||next->requests==1,25000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QCOMPARE(initial->requests,1);QCOMPARE(third.connections,0);QVERIFY(owner->mainlineScrapeEstimates().empty());
+    // The real first error only authorises visiting the next tracker. It is
+    // not an all-configured-trackers-failed response or DHT permission.
+    owner->revokeMainlineScrape(*saved.hash);auto stopped=storage::applyLibraryCommand(*lease,*saved.hash,core::DownloadAction::Stop);QVERIFY(stopped);QVERIFY(owner->stopManaged(*saved.hash));QVERIFY(owner->rearmMainlineScrape(*saved.hash));
+    next->release();QVERIFY(pump());QVERIFY(owner->mainlineScrapeEstimates().empty());QCOMPARE(third.connections,0);
+    const auto current=owner->mainlineDiscovery();QCOMPARE(current.lookups,std::uint64_t{0});QCOMPARE(current.announces,std::uint64_t{0});QCOMPARE(current.deliveredPeers,std::uint64_t{0});
+    const auto closed=owner->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(state.unchanged()&&statistics.unchanged()&&tables.unchanged());QVERIFY(watch.untouched());watch.stop();QCOMPARE(test::read(saved.payload+"/sample.bin"),payload);QVERIFY(saved.intact(false));
   }
   void savedBasicChallengeAndCacheAreExactRealmOriginAndSecretFreeScope(){
     const auto envelope=[](const QByteArray& value){return "HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: "+value+"\r\nContent-Length: 0\r\n\r\n";};

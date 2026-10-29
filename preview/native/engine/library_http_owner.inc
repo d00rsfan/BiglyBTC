@@ -13,8 +13,9 @@ bool libraryHttpAuthorise(const detail::LibraryHttpTracker::Request& request) no
         ||network->proxy.kind!=NetworkProxyKind::None||!networkBindingCurrent(*networkBinding)
         ||mainlineScrapes.revoked(request.hash)||!libraryUdpUnadmitted(request.hash)){return false;}
     auto fresh=readCurrentMainlineScrapeTargets(*mainlineLease,{},true);if(!fresh){return false;}
-    const auto target=std::ranges::find(*fresh,request.hash,&SavedMainlineScrapeTarget::hash);
-    if(target==fresh->end()||target->admission||target->trackerResponseKey!=request.responseKey||target->scope!=request.scope){return false;}
+    const auto row=std::ranges::find(*fresh,request.hash,&SavedMainlineScrapeTarget::hash);
+    const auto target=row==fresh->end()?std::nullopt:selectConfiguredMainlineTracker(*row,request.responseKey);
+    if(!target||target->admission||target->scope!=request.scope){return false;}
     const auto route=detail::libraryHttpRoute(networkBinding->effective,target->configuredTracker);
     const auto config=detail::libraryHttpConfiguration(*mainlineLease,route&&route->scrape.scheme()=="https");
     return route&&config&&detail::libraryHttpRouteScope(*route,config->scope)==request.configuration;
@@ -26,8 +27,9 @@ std::expected<std::optional<QByteArray>,storage::Error> libraryHttpAuthenticate(
   try{
     if(!libraryHttpAuthorise(request)){return changed();}
     auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,{},true);if(!targets){return changed();}
-    const auto target=std::ranges::find(*targets,request.hash,&SavedMainlineScrapeTarget::hash);
-    if(target==targets->end()||target->admission||target->scope!=request.scope||target->trackerResponseKey!=request.responseKey){return changed();}
+    const auto row=std::ranges::find(*targets,request.hash,&SavedMainlineScrapeTarget::hash);
+    const auto target=row==targets->end()?std::nullopt:selectConfiguredMainlineTracker(*row,request.responseKey);
+    if(!target||target->admission||target->scope!=request.scope){return changed();}
     const auto base=detail::libraryHttpRoute(networkBinding->effective,target->configuredTracker);if(!base){return changed();}
     std::optional<storage::ConfigFile> snapshot;
     auto config=detail::libraryHttpConfiguration(*mainlineLease,base->scrape.scheme()=="https",&snapshot);
@@ -47,7 +49,7 @@ void advanceLibraryHttp(Clock::time_point now){
   if(*result){if(response!=trackerResponses.end()){response->second->observe((**result).terminal);}}
   else if(!libraryHttp.active()&&response!=trackerResponses.end()){response->second->cancelRequest();}
 }
-bool prepareLibraryHttp(SavedMainlineScrapeTarget& target,std::int64_t now,bool& pendingEligibility){
+bool prepareLibraryHttp(SavedMainlineScrapeTarget& target,std::int64_t now,bool& pendingEligibility,bool regularPoll=false,bool dispatch=true){
   pendingEligibility=false;
   if(!mainlineLease||!networkBinding||!network||!network->httpTrackers||!networkBindingCurrent(*networkBinding)||!libraryUdpUnadmitted(target.hash)){return false;}
   const auto route=detail::libraryHttpRoute(networkBinding->effective,target.configuredTracker);if(!route){return false;}
@@ -58,7 +60,7 @@ bool prepareLibraryHttp(SavedMainlineScrapeTarget& target,std::int64_t now,bool&
     if(trackerResponses.size()>=256){return false;}
     found=trackerResponses.emplace(target.trackerResponseKey,std::make_shared<core::QueueOriginalTrackerResponse>()).first;
   }
-  if(found->second->regularDue(now)&&!libraryHttp.active()&&!libraryUdp.active()){
+  if(dispatch&&(regularPoll?found->second->regularPollDue(now):found->second->regularDue(now))&&!libraryHttp.active()&&!libraryUdp.active()){
     if(libraryHttpNonce==UINT64_MAX){return false;}
     detail::LibraryHttpTracker::Request request{target.hash,target.trackerResponseKey,target.scope,configuration,++libraryHttpNonce};
     const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
