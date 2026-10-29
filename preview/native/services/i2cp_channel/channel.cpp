@@ -11,6 +11,7 @@
 #include <chrono>
 #include <charconv>
 #include <cstring>
+#include <deque>
 #include <limits>
 
 namespace biglybtc::services::i2p::i2cp {
@@ -20,6 +21,7 @@ struct InitialChannel::Impl {
   QTcpSocket socket;
   QTimer timer;
   QTimer statusTimer;
+  QTimer receiveTimer;
   FrameDecoder decoder;
   Options options;
   QByteArray hello;
@@ -46,11 +48,12 @@ struct InitialChannel::Impl {
   Clock::time_point dateObserved{};
   bool notificationQueued=false,drainQueued=false,reading=false,lostPending=false;
 
-  explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner),statusTimer(owner){
+  explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner),statusTimer(owner),receiveTimer(owner){
     socket.setProxy(QNetworkProxy::NoProxy); // Local I2CP control, never app proxy.
     socket.setReadBufferSize(static_cast<qint64>(MaximumFrameBytes));
     timer.setSingleShot(true);
     statusTimer.setSingleShot(true);
+    receiveTimer.setSingleShot(true);
   }
   ~Impl(){stopIo();}
   bool active()const{return state==State::Connecting||state==State::WaitingDate||state==State::DateReceived||state==State::Creating||state==State::SessionCreated||state==State::Reconfiguring;}
@@ -62,10 +65,11 @@ struct InitialChannel::Impl {
     for(std::size_t i=0;i<3;++i){const auto dot=value.find('.');const auto part=value.substr(0,dot);if(part.empty()){return false;}const auto parsed=std::from_chars(part.data(),part.data()+part.size(),version[i]);if(parsed.ec!=std::errc{}||parsed.ptr!=part.data()+part.size()){return false;}if(i<2){if(dot==std::string_view::npos){return false;}value.remove_prefix(dot+1);}}
     return version[0]>0||version[1]>9||(version[1]==9&&version[2]>=38);
   }
-  void clearSession(){session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;statusPending=false;datagram.reset();datagramMessageId.reset();statusReplies=true;pendingStatusReplies=true;statusTimer.stop();}
+  void clearSession(){clearReceive();session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;statusPending=false;datagram.reset();datagramMessageId.reset();statusReplies=true;pendingStatusReplies=true;statusTimer.stop();}
   void stopIo(){
     timer.stop();QObject::disconnect(&timer,nullptr,q,nullptr);
     statusTimer.stop();QObject::disconnect(&statusTimer,nullptr,q,nullptr);
+    receiveTimer.stop();QObject::disconnect(&receiveTimer,nullptr,q,nullptr);
     QObject::disconnect(&socket,nullptr,q,nullptr);socket.abort();
   }
   void notify(){
@@ -116,6 +120,7 @@ struct InitialChannel::Impl {
     if(!queued){drainQueued=false;fail(Failure::Resources);}
   }
   void message(Frame frame){
+    if(frame.type==MessagePayloadType){inboundPayload(std::move(frame));return;}
     if(frame.type==MessageStatusType){observeDatagram(frame);return;}
     if(frame.type==RequestVariableLeaseSetType){answerLease(std::move(frame));return;}
     auto decoded=decodeMessage(frame);
@@ -142,6 +147,7 @@ struct InitialChannel::Impl {
       session=status.sessionId;acceptedDestination=std::move(pendingDestination);
       acceptedOptions=std::move(pendingOptions);revision=1;
       statusReplies=pendingStatusReplies; // Original immutable creation policy.
+      fastReceive=pendingFastReceive; // Original immutable receive policy too.
     }else if(state==State::Reconfiguring&&status.state==SessionState::Updated){
       if(expired()){return;}
       acceptedOptions=std::move(pendingOptions);pendingDestination.clear();++revision;
@@ -189,6 +195,7 @@ struct InitialChannel::Impl {
       if(Clock::now()>=requestEnd){return reject(Code::InvalidFormat,"I2CP request preparation exceeded deadline");}
       pendingOptions=std::move(*merged);pendingDestination=std::move(destination);state=update?State::Reconfiguring:State::Creating;
       if(!update){pendingStatusReplies=originalStatusRepliesEnabled(pendingOptions);}
+      if(!update){pendingFastReceive=originalFastReceiveEnabled(pendingOptions);}
       if(consume){leaseSigner.emplace(std::move(*consume));}
       const auto phase=state;expires=requestEnd;
       const auto remaining=std::chrono::duration_cast<std::chrono::milliseconds>(expires-Clock::now()).count();
@@ -256,6 +263,7 @@ struct InitialChannel::Impl {
   }
   void observeDatagram(const Frame& frame){
     auto status=decodeMessageStatus(frame);if(!status){fail(Failure::Framing);return;}
+    if(status->code==0){availableDatagram(*status);return;}
     if(!session||status->sessionId!=*session||status->code==0){fail(Failure::UnexpectedMessage);return;}
     // Same current session, strictly retired nonce: no stale status can finish
     // a later request. No message-ID-only/nonce0 fallback is permitted here.
@@ -292,6 +300,7 @@ struct InitialChannel::Impl {
       notifyDatagram();if(!current(at)){return reject(Code::CryptoFailure,"Datagram notification failed");}return nonce;
     }catch(...){if(statusPending){fail(Failure::Resources);}return reject(Code::CryptoFailure,"Datagram resources unavailable");}
   }
+#include "receive.inc"
   void drain(){
     if(reading||!active()||state==State::Connecting||expired()){return;}
     reading=true;
@@ -371,6 +380,8 @@ struct InitialChannel::Impl {
       }
     });
     QObject::connect(&statusTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{armStatusDeadline();}catch(...){fail(Failure::Resources);}}});
+    QObject::connect(&receiveTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{receiveDeadline();}catch(...){fail(Failure::Resources);}}});
+    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){flushReceiveControls();}});
     state=State::Connecting;expires=Clock::now()+std::chrono::milliseconds(next.deadlineMilliseconds);
     timer.start(next.deadlineMilliseconds);notify();
     if(!current(at)||state!=State::Connecting){return false;}
@@ -407,6 +418,10 @@ ConfigResult<std::uint32_t> InitialChannel::submitClaimedDatagram3(View recipien
 bool InitialChannel::cancelDatagram(std::uint32_t nonce){if(!impl_->onThread()||!impl_->statusPending||!impl_->datagram||impl_->datagram->nonce!=nonce){return false;}impl_->localDatagram(DatagramPhase::LocalCancelled);return true;}
 bool InitialChannel::datagramPending()const noexcept{return impl_->statusPending;}
 std::optional<InitialChannel::DatagramObservation> InitialChannel::datagramObservation()const noexcept{return sessionId()?impl_->datagram:std::nullopt;}
+bool InitialChannel::enableDatagramReceiver(){return impl_->enableReceive();}
+void InitialChannel::disableDatagramReceiver(){impl_->disableReceive();}
+std::optional<InitialChannel::ReceivedDatagram> InitialChannel::takeReceivedDatagram(){return impl_->takeReceive();}
+InitialChannel::ReceiverObservation InitialChannel::receiverObservation()const noexcept{return impl_->receiveSnapshot();}
 InitialChannel::State InitialChannel::state()const noexcept{return impl_->state;}
 InitialChannel::Failure InitialChannel::failure()const noexcept{return impl_->failure;}
 bool InitialChannel::socketActive()const noexcept{return impl_->socket.state()!=QAbstractSocket::UnconnectedState;}

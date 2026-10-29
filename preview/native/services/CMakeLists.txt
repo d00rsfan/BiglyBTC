@@ -124,3 +124,6 @@ target_link_libraries(biglybtc_i2cp_datagram PUBLIC biglybtc_i2cp_session_config
 target_compile_features(biglybtc_i2cp_datagram PUBLIC cxx_std_23)
 target_compile_options(biglybtc_i2cp_datagram PRIVATE -Wall -Wextra -Wpedantic -Werror)
 target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2cp_datagram)
+
+# Services section: include belongs to the existing actual channel target.
+target_sources(biglybtc_i2cp_initial_channel PRIVATE i2cp_channel/receive.inc)

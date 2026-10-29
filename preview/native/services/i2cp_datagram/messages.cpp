@@ -16,6 +16,13 @@ ConfigResult<void> payloadValid(std::uint16_t id,View bytes){if(id==65535){retur
 bool originalStatusRepliesEnabled(const SessionOptions& options)noexcept{
   for(const auto& [key,value]:options){if(key=="i2cp.messageReliability"&&value.size()==4&&(value[0]=='n'||value[0]=='N')&&(value[1]=='o'||value[1]=='O')&&(value[2]=='n'||value[2]=='N')&&(value[3]=='e'||value[3]=='E')){return false;}}return true;
 }
+bool originalFastReceiveEnabled(const SessionOptions& options)noexcept{
+  for(const auto& [key,value]:options){if(key=="i2cp.fastReceive"){return value.size()==4&&(value[0]=='t'||value[0]=='T')&&(value[1]=='r'||value[1]=='R')&&(value[2]=='u'||value[2]=='U')&&(value[3]=='e'||value[3]=='E');}}return false;
+}
+ConfigResult<Bytes> encodeReceiveControl(const ReceiveControl& data){if(data.sessionId==65535){return error(Code::InvalidFormat,"Unknown receive-control session");}Bytes bytes;put(bytes,data.sessionId,2);put(bytes,data.messageId,4);return frame(data.begin?ReceiveMessageBeginType:ReceiveMessageEndType,bytes);}
+ConfigResult<ReceiveControl> decodeReceiveControl(const Frame& input){
+  if((input.type!=ReceiveMessageBeginType&&input.type!=ReceiveMessageEndType)||input.payload.size()!=6){return error(Code::InvalidFormat,"ReceiveBegin6/End7 requires six exact bytes");}Reader r{input.payload};std::uint64_t id=0,message=0;if(!r.number(2,id)||!r.number(4,message)||id==65535){return error(Code::InvalidFormat,"Invalid receive-control fields");}return ReceiveControl{static_cast<std::uint16_t>(id),static_cast<std::uint32_t>(message),input.type==ReceiveMessageBeginType};
+}
 ConfigResult<Bytes> encodeMuxDatagram(const MuxDatagram& data,GzipMode mode){
   if(data.protocol!=Datagram2Protocol&&data.protocol!=Datagram3Protocol){return error(Code::Unsupported,"Only explicit Datagram2/3 mux protocols supported");}
   if(data.datagram.size()>MaximumMuxDatagramBytes){return error(Code::TooLarge,"Original gzip input exceeds40KiB");}

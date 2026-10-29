@@ -9,6 +9,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <variant>
 
 namespace biglybtc::services::i2p::i2cp {
 // Explicit external-router TCP registration, NOT a usable/tunnel I2P session.
@@ -67,6 +68,24 @@ public:
   bool cancelDatagram(std::uint32_t nonce);
   [[nodiscard]] bool datagramPending()const noexcept;
   [[nodiscard]] std::optional<DatagramObservation> datagramObservation()const noexcept;
+  struct ReceivedDatagram {
+    std::uint32_t messageId=0;std::uint16_t fromPort=0,toPort=0;
+    // Datagram2 verifies signing-key possession/current recipient, not every
+    // sender Destination byte or freshness. Datagram3 is an unsigned claim.
+    std::variant<Datagram2,Datagram3> body;
+  };
+  enum class ReceiveDrop {Disabled,QueueFull,Malformed,Unsupported,InvalidDatagram,WrongSession,UnexpectedPayload,Duplicate,LeaseExpired,PendingTimeout,ControlBackpressure,Cancelled};
+  struct ReceiverObservation {
+    bool enabled=false,fast=false,pending=false,controlLost=false;
+    std::size_t queued=0,decodedBytes=0,queuedControls=0;
+    std::uint64_t dropped=0;std::optional<ReceiveDrop> lastDrop;
+  };
+  // Explicit opt-in after owned Create is armed is allowed; admission still
+  // requires an actual current unexpired LS2 enqueue. No default activation.
+  bool enableDatagramReceiver();
+  void disableDatagramReceiver();
+  [[nodiscard]] std::optional<ReceivedDatagram> takeReceivedDatagram();
+  [[nodiscard]] ReceiverObservation receiverObservation()const noexcept;
   [[nodiscard]] State state()const noexcept;
   [[nodiscard]] Failure failure()const noexcept;
   [[nodiscard]] bool socketActive()const noexcept;
@@ -83,6 +102,7 @@ signals:
   void sessionUpdated();
   void leaseSetSubmitted();
   void datagramChanged(); // Coalesced latest observation, not a result queue.
+  void receiverChanged(); // Queued current bounded queue/drop observation.
   void failed(Failure);
   void closed();
 private:

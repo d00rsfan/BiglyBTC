@@ -3,6 +3,7 @@
 #include "session.hpp"
 namespace biglybtc::services::i2p::i2cp {
 inline constexpr Byte SendMessageType=5,SendMessageExpiresType=36,MessageStatusType=22,MessagePayloadType=31;
+inline constexpr Byte ReceiveMessageBeginType=6,ReceiveMessageEndType=7;
 inline constexpr std::size_t MaximumMuxDatagramBytes=40*1024,MaximumI2cpPayloadBytes=64*1024;
 enum class GzipMode {Stored,Deflate}; // Explicit original GZIP_OFF / level3.
 struct MuxDatagram {Byte protocol=Datagram2Protocol;std::uint16_t fromPort=0,toPort=0;Bytes datagram;};
@@ -10,6 +11,10 @@ struct SendDatagram {std::uint16_t sessionId=0;Destination recipient;Bytes paylo
 struct MessageStatus {std::uint16_t sessionId=0;std::uint32_t messageId=0;Byte code=0;std::uint32_t size=0,nonce=0;};
 enum class StatusMeaning {IncomingAvailable,RouterAccepted,UnusedLegacySuccess,ProbableSuccess,LocalSuccess,ProbableFailure,Failure};
 struct MessagePayload {std::uint16_t sessionId=0;std::uint32_t messageId=0;Bytes payload;};
+struct ReceiveControl {std::uint16_t sessionId=0;std::uint32_t messageId=0;bool begin=false;};
+[[nodiscard]] ConfigResult<Bytes> encodeReceiveControl(const ReceiveControl&);
+[[nodiscard]] ConfigResult<ReceiveControl> decodeReceiveControl(const Frame&);
+[[nodiscard]] bool originalFastReceiveEnabled(const SessionOptions&) noexcept;
 [[nodiscard]] ConfigResult<Bytes> encodeMuxDatagram(const MuxDatagram&,GzipMode);
 [[nodiscard]] ConfigResult<MuxDatagram> decodeMuxDatagram(View);
 [[nodiscard]] ConfigResult<Bytes> encodeSendDatagram(const SendDatagram&);
