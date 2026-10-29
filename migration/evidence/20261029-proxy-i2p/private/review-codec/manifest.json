@@ -1,0 +1,18 @@
+{
+  "status": "PASS_SOURCE_REVIEW_AST_ONLY_NOT_EXECUTED",
+  "script": {
+    "path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/run.py",
+    "sha256": "2955c2608ca88186515fb1a0f2e631aa54ed1d05a3d5413834cc584cb839bda3"
+  },
+  "producer": {
+    "path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/run.py",
+    "sha256": "3f2dcf991f5a4f1b2141eb7785e3d1a14beba42e8a7d10b27647c9d4f5c017da",
+    "modified": false
+  },
+  "artifacts_sha256": {
+    "review.json": "4c8cc4b08cf10a058a390101bd34fc00b94c0cbc480e8eda116467d56f1d4e09",
+    "changes.patch": "9cfcec42939504bdd24c80921322107d60a9005d20e06ce97e85920bcb4090aa",
+    "run-before.py": "bdacc1341603427d912315f68a9099d61971e94779949336567ded396f73dc4d"
+  },
+  "execution": false
+}

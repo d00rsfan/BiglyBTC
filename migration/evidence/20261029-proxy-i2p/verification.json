@@ -1,0 +1,124 @@
+{
+  "status": "PASS_BOUNDED_PROXY_I2P_COHORT",
+  "source_commit": "ecd63457da93e7f0c993c1f684e6d50d1c79a48c",
+  "source_commits": [
+    {
+      "slice": "socks5",
+      "commit": "853e2b09f5d791f5d5c3d73595509e6c3820d480",
+      "path_count": 15
+    },
+    {
+      "slice": "i2p",
+      "commit": "ecd63457da93e7f0c993c1f684e6d50d1c79a48c",
+      "path_count": 37
+    }
+  ],
+  "source_path_count": 52,
+  "lanes": {
+    "gcc": {
+      "actual_suites": 6,
+      "suite_names": [
+        "network-policy",
+        "queue-policy",
+        "managed-queue",
+        "mainline-single-tracker-owner",
+        "mainline-single-http",
+        "pure-i2p-datagram-codec"
+      ],
+      "compile_only_suites": [],
+      "smoke_methods": [
+        "regularTrackerTooltipKeepsActualRetainedCountsSeparateFromMainlineEstimate"
+      ],
+      "sanitizer_environment": {}
+    },
+    "clang": {
+      "actual_suites": 3,
+      "suite_names": [
+        "network-policy",
+        "queue-policy",
+        "pure-i2p-datagram-codec"
+      ],
+      "compile_only_suites": [
+        "mainline-single-http",
+        "managed-queue",
+        "mainline-single-tracker-owner"
+      ],
+      "smoke_methods": [
+        "regularTrackerTooltipKeepsActualRetainedCountsSeparateFromMainlineEstimate"
+      ],
+      "sanitizer_environment": {}
+    },
+    "san": {
+      "actual_suites": 6,
+      "suite_names": [
+        "network-policy",
+        "queue-policy",
+        "managed-queue",
+        "mainline-single-tracker-owner",
+        "mainline-single-http",
+        "pure-i2p-datagram-codec"
+      ],
+      "compile_only_suites": [],
+      "smoke_methods": [
+        "regularTrackerTooltipKeepsActualRetainedCountsSeparateFromMainlineEstimate"
+      ],
+      "sanitizer_environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    }
+  },
+  "actual_private_runnable_rows": 3,
+  "provider_rebuilt": false,
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "dist_manifest_sha256": "ffaaa3a5b9a0ad7333d3a315b98d296ca99369514d7df6dcef38ae12ff77c826",
+  "prior_dist_retained": false,
+  "real_profile_used": false,
+  "router_or_public_network_activated": false,
+  "full_feature_or_performance_parity_claimed": false,
+  "artifacts_sha256": {
+    "manifest.json": "e97c98e66295a41ae4f6198d100b42c424c339bcf3af2c00e85e8c47d87922ef",
+    "root-adoption.json": "afd6dbd84c29433692a4f7ce0d6131922ff6829736bd3b4f8bc570611c18f82f",
+    "compose-whitespace-fix.json": "4fce41b41ab0cd2b8acabcccb84e9b877e1cc1b0ebfe577bc2d92847904f427c",
+    "promotion.json": "9fd2176e6c88d0cedc70a1934f2c656a663e5a643280d521557ba3161e425d43",
+    "run.py": "3f2dcf991f5a4f1b2141eb7785e3d1a14beba42e8a7d10b27647c9d4f5c017da",
+    "socks-source-pins.json": "1d8bb7c07fbb8c1e6193688d02583425c55239c8e6e01e7584894e26b24862c1",
+    "socks-review.json": "2ccb7fb075e1a2eacc0ae60fda7e4d687ca327b4ca79bc55ac61bd00999096d8",
+    "i2p-review.json": "e448a14296df3557e8ee9df2abe9f83c0ca00f1f5a960d5d33322cdc7194fc2b",
+    "i2p-fixture-manifest.json": "44d18a42c3cd494cdffc43841f69236851025e37788ee59992d98cabba03160a",
+    "i2p-modified-manifest.json": "f6bbe266766faf72fce1f875a2d5de269fd524f92dd4700895efdedbc0419ed3",
+    "i2p-tracking-proposal.json": "3fcb45184445b9c06ec4e207cd8d1c733dd9b722d0b36012c81b1594ff4d9a45",
+    "runs/gcc-r1/result.json": "823b3392fe39ce4ae820c42bf0c0a31da97eb7d152f8838d1d2b805665a57b95",
+    "runs/gcc-r1/commands.json": "9b34d44e7f8c958bb725b5c36d51c0f563ee98152b4fcf1b08c3291b26060bf0",
+    "runs/gcc-r1/images-before.json": "5109a30a2c7eb962b20bdc003ca13cf65af27a5ff2aecc02d96dee38c4d9aa25",
+    "runs/gcc-r1/tests.xml": "574e7a5ae745e72242b4a539dc542e056ef17eb08d3a770ba14432882d3feaea",
+    "runs/gcc-r1/ctest-full.log": "0306073613589bbe662c4074ec42d6217722beadfc1132baa6557cd59a65b6aa",
+    "runs/gcc-r1/wayland-smoke.xml": "b4e31012f768f688600c19a18bc8a0b9f07bd998bcb69c0ab788e6f0c31eac3f",
+    "runs/gcc-r1/build.log": "a208a1e3fa0c7eb880a7616762f7eaf56f981e1c1372b7007dfc92ebe138d4d7",
+    "runs/clang-r1/result.json": "eb95dee29f2fca1b1f7620f2ec8864f4d358f765ed3200845a2148c44649e0e2",
+    "runs/clang-r1/commands.json": "502edc90a84c6424e162e38a80fa6d5e6e2ff14f9443f5dcee44f62990baddd6",
+    "runs/clang-r1/images-before.json": "d75d82986974afde62a76e7b744dda4a76afe46bc218889142777f2e8bf56168",
+    "runs/clang-r1/tests.xml": "e30bb6a626801f2bec05cb517f1d727b297f0b1ab64434edbed94de3ab2d0480",
+    "runs/clang-r1/ctest-full.log": "51fee8baeffe7b6e9dabb58851ab146cf20edec199b08b0987fbe97d2696ad90",
+    "runs/clang-r1/wayland-smoke.xml": "2529d3d1a83ad8cc47ac3c134dc99dc3d46efc9d297dfa846e4a67c8193815fc",
+    "runs/clang-r1/build.log": "f5aa92c1e064e02db12b0e934296a417ba72ee8e40aa8200d38dea4d2110977e",
+    "runs/san-r1/result.json": "371fdf4e6b5a6fa3a363f352c8ed7a338d7fc3a545e97e48f6acc0e2cbf41128",
+    "runs/san-r1/commands.json": "fa1f832572f31d543b460961f0b24605de8e18da9588c23fa4b8993f6d337c9e",
+    "runs/san-r1/images-before.json": "ca4f397f01d3c75d69c707aa251261ae371f5801a7b6848f9885a0c902794991",
+    "runs/san-r1/tests.xml": "7e19cd6aa0d60d5f0629e3f68b88962210c5437c658e39809ff0d2b45b096357",
+    "runs/san-r1/ctest-full.log": "ea5d09d5756c6e7b0e3c3c75200f6e49373d6968406b10a879c0596f566a5f79",
+    "runs/san-r1/wayland-smoke.xml": "49dc8fd008a8dbeb25806563500515737eb85a46ff5fa9a671b574021dadf8a1",
+    "runs/san-r1/build.log": "1fed5dbc54ed940a518ff8310e082ffcc611ea1a9539fab52ff76eede2063dc9",
+    "private/run.py": "2955c2608ca88186515fb1a0f2e631aa54ed1d05a3d5413834cc584cb839bda3",
+    "private/review-codec/manifest.json": "eea653483576423a5c5ae2c7ec6668b921c3c64da4a43507ea8841136e80eae5",
+    "private/runs/r1/result.json": "064aae9d6d02ef9333bbd14f52840b9ce5f41852fe7f9d157c80c9477aff5d7c",
+    "private/runs/r1/commands.json": "3df423f4b96f02735450ef5ecb642d9f515df8957459e8b773801eaba4d2ab4b",
+    "private/runs/r1/selected-1.txt": "16161dded8fed96abd18aa90036a6653d8124cbfce79b4efbd5dc221bfecd2bc",
+    "private/runs/r1/selected-2.xml": "27f2685968d1ea3be48133d26bf8efa5a6b9880e6352ebde506649b97e6cf0db",
+    "private/runs/r1/selected-3.xml": "1746a68e4fc425b96cfd967164b1ebb83d4c3a9335602543c0621339fb098263",
+    "private/runs/r1/selected-2.txt": "9a5642c2345e035ecdf9bde86fbdd2c23eef5985f488865496348db32ae6e254",
+    "private/runs/r1/selected-3.txt": "25dcab0789522e1fcee6b48df3fdbfd80c125d8f1018b62ba7fe46479b8e765f",
+    "private/runs/r1/selected-1.xml": "8dabeb652536dccc29ad5f47703541e1164c020fcacb15e6b0b5c22bd1aa359f",
+    "dist-manifest.json": "ffaaa3a5b9a0ad7333d3a315b98d296ca99369514d7df6dcef38ae12ff77c826"
+  }
+}

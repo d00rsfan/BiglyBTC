@@ -206,6 +206,20 @@
         "Durable bare mirror retains refs/pinned/wrapper-3b12515c-engine; tree27bd9fc5af237d63a7a2725f78855149ccffe8f3; strict full fsck receipt retained in task-local paired-engine-recovery.",
         "Selected identity/cache/default methods compared with historical inspected mldht f9290cbd63805229aef418639b781696c5fa1573; whole engines differ. This establishes declared source, not shipped-JAR, Java/LT node-ID or routing equivalence."
       ]
+    },
+    {
+      "id": "i2p-java",
+      "url": "https://github.com/i2p/i2p.i2p.git",
+      "checkout_hint": "../BiglyBT/build/dependencies/i2p-java-2.13.0",
+      "git_object_format": "sha1",
+      "audit_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+      "audited_on": "2026-10-29",
+      "audit_checkout_dirty": false,
+      "notes": [
+        "Official annotated i2p-2.13.0 tag3dce17b4ff55f8d7674d25eb3c742b9c84e2581e; treeb38c70fbf3f7ce6f33ca95bedaa001e1458a4c9b.",
+        "Isolated shallow bare/promisor repository retains commit/tag/full tree and21 materialized source blobs; all required paths git-show verified with GIT_NO_LAZY_FETCH=1. No full-history/full-working-tree claim.",
+        "Official net.i2p:i2p:2.13.0 JAR manifest reports this Base-Revision;16 source-JAR leaves match retained Git source. Modified azi2pcore is separately pinned reference input, not falsely attributed to this exact source commit."
+      ]
     }
   ],
   "components": [
@@ -4523,6 +4537,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "3228091a1e12f81b334e27e589da8605c0b76420",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ecd63457da93e7f0c993c1f684e6d50d1c79a48c",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -4531,7 +4550,8 @@
         "migration/updates/engine.everyday-workflows/20261024.md",
         "migration/updates/settings.classic_options/20261024.md",
         "migration/updates/ui.classic_navigation_preview/20261027-wayland-console.md",
-        "migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md"
+        "migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md",
+        "migration/evidence/20261029-proxy-i2p/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261018-navigation/verification.json",
@@ -4541,7 +4561,8 @@
         "migration/evidence/20261024-torrent-workflows/verification.json",
         "migration/evidence/20261024-options/verification.json",
         "migration/evidence/20261027-wayland-preview/verification.json",
-        "migration/evidence/20261029-tracker-tiers-tor-console/verification.json"
+        "migration/evidence/20261029-tracker-tiers-tor-console/verification.json",
+        "migration/evidence/20261029-proxy-i2p/verification.json"
       ],
       "decision_ref": null
     },
@@ -7931,7 +7952,12 @@
             "core/src/com/biglybt/core/security/impl/SESecurityManagerImpl.java",
             "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerStatus.java",
             "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
-            "core/src/com/biglybt/core/torrent/impl/TOTorrentDeserialiseImpl.java"
+            "core/src/com/biglybt/core/torrent/impl/TOTorrentDeserialiseImpl.java",
+            "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java",
+            "core/src/com/biglybt/core/config/impl/ConfigurationChecker.java",
+            "core/src/com/biglybt/core/util/spi/AENameServiceJava12.java",
+            "core/src/com/biglybt/core/proxy/impl/AEProxySelectorImpl.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java"
           ],
           "source_symbols": [
             "AuthenticatorWindow",
@@ -7999,6 +8025,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "3228091a1e12f81b334e27e589da8605c0b76420",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ecd63457da93e7f0c993c1f684e6d50d1c79a48c",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -8007,7 +8038,8 @@
         "migration/updates/network-service-cohort/20261028-bounded.md",
         "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md",
         "migration/evidence/20261029-http-auth-trust/REVIEW.md",
-        "migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md"
+        "migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md",
+        "migration/evidence/20261029-proxy-i2p/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-scrape-storage-stats/verification.json",
@@ -8017,7 +8049,8 @@
         "migration/evidence/20261028-network-service-cohort/verification.json",
         "migration/evidence/20261029-mainline-owned-trackers/verification.json",
         "migration/evidence/20261029-http-auth-trust/verification.json",
-        "migration/evidence/20261029-tracker-tiers-tor-console/verification.json"
+        "migration/evidence/20261029-tracker-tiers-tor-console/verification.json",
+        "migration/evidence/20261029-proxy-i2p/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8114,7 +8147,12 @@
             "uis/src/com/biglybt/ui/swt/auth/AuthenticatorWindow.java",
             "core/src/com/biglybt/core/security/impl/SESecurityManagerImpl.java",
             "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerStatus.java",
-            "core/src/com/biglybt/core/torrent/impl/TOTorrentDeserialiseImpl.java"
+            "core/src/com/biglybt/core/torrent/impl/TOTorrentDeserialiseImpl.java",
+            "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java",
+            "core/src/com/biglybt/core/config/impl/ConfigurationChecker.java",
+            "core/src/com/biglybt/core/util/spi/AENameServiceJava12.java",
+            "core/src/com/biglybt/core/proxy/impl/AEProxySelectorImpl.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java"
           ],
           "source_symbols": [
             "DownloadImpl.getLastScrapeResult",
@@ -8162,20 +8200,27 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "3228091a1e12f81b334e27e589da8605c0b76420",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ecd63457da93e7f0c993c1f684e6d50d1c79a48c",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/engine.tracker_scrape_observations/20261028-in-progress.md",
         "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md",
         "migration/evidence/20261029-http-auth-trust/REVIEW.md",
-        "migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md"
+        "migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md",
+        "migration/evidence/20261029-proxy-i2p/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-active-scrape/verification.json",
         "migration/evidence/20261028-mainline-active-scrape/REVIEW.md",
         "migration/evidence/20261029-mainline-owned-trackers/verification.json",
         "migration/evidence/20261029-http-auth-trust/verification.json",
-        "migration/evidence/20261029-tracker-tiers-tor-console/verification.json"
+        "migration/evidence/20261029-tracker-tiers-tor-console/verification.json",
+        "migration/evidence/20261029-proxy-i2p/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8266,6 +8311,96 @@
         "migration/evidence/20261029-mainline-owned-trackers/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
+    },
+    {
+      "id": "services.i2p_datagram",
+      "feature_ids": [
+        "F06.i2p_datagram"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P07-02a-i2p-datagram.md"
+      ],
+      "target_paths": [
+        "preview/native/services/i2p_datagram/datagram.hpp",
+        "preview/native/services/i2p_datagram/datagram.cpp",
+        "preview/native/tests/i2p_datagram_tests.cpp",
+        "preview/native/tests/fixtures/i2p-datagram",
+        "preview/native/services/CMakeLists.txt",
+        "preview/native/tests/CMakeLists.txt"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "i2p-java",
+          "source_paths": [
+            "core/java/src/net/i2p/client/datagram/Datagram2.java",
+            "core/java/src/net/i2p/client/datagram/Datagram3.java",
+            "core/java/src/net/i2p/data/Destination.java",
+            "core/java/src/net/i2p/data/KeysAndCert.java",
+            "core/java/src/net/i2p/data/KeyCertificate.java",
+            "core/java/src/net/i2p/data/SigningPublicKey.java",
+            "core/java/src/net/i2p/crypto/DSAEngine.java",
+            "core/java/src/net/i2p/crypto/SigType.java",
+            "core/java/src/net/i2p/crypto/SigUtil.java",
+            "core/java/src/net/i2p/crypto/CryptoConstants.java",
+            "core/java/src/net/i2p/client/I2PClient.java",
+            "core/java/src/net/i2p/client/impl/I2PClientImpl.java"
+          ],
+          "source_symbols": [
+            "Datagram2.make/load",
+            "Datagram3.make/load",
+            "Destination",
+            "KeysAndCert",
+            "KeyCertificate",
+            "SigningPublicKey",
+            "DSAEngine.sign/verifySignature",
+            "SigType.DSA_SHA1/EdDSA_SHA512_Ed25519",
+            "SigUtil.toJavaKey/toJavaSig/fromJavaSig",
+            "CryptoConstants.dsap/dsaq/dsag",
+            "I2PClient.DEFAULT_SIGTYPE",
+            "I2PClientImpl.createDestination"
+          ],
+          "baseline_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "9134f808337b401e8e53c73734c81fab04280c9d"
+        },
+        {
+          "upstream_id": "azneti2phelper",
+          "source_paths": [
+            "org/parg/azureus/plugins/networks/i2p/router/I2PSMHolder.java",
+            "org/parg/azureus/plugins/networks/i2p/router/I2PHelperRouter.java"
+          ],
+          "source_symbols": [
+            "I2PSMHolder.makeI2PDatagram(int,Destination,byte[])",
+            "I2PHelperRouter I2PClient.PROP_SIGTYPE default EdDSA_SHA512_Ed25519"
+          ],
+          "baseline_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ecd63457da93e7f0c993c1f684e6d50d1c79a48c",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/updates/services.i2p_datagram/20261029-bounded-in-progress.md",
+        "migration/evidence/20261029-proxy-i2p/REVIEW.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261029-i2p-datagram/reference-inputs.json",
+        "migration/evidence/20261029-i2p-datagram/official-offline-result.json",
+        "migration/evidence/20261029-i2p-datagram/modified-offline-result.json",
+        "migration/evidence/20261029-i2p-datagram/actual-vector-comparison.json",
+        "migration/evidence/20261029-i2p-datagram/retained-official-git-source.json",
+        "migration/evidence/20261029-proxy-i2p/verification.json"
+      ],
+      "decision_ref": "MIGRATION_PLAN.md"
     }
   ],
   "update_reviews": [],
@@ -9051,6 +9186,56 @@
         "migration/notices/libtorrent-2.0.12-LICENSE",
         "migration/notices/libtorrent-2.0.12-COPYING",
         "migration/notices/libtorrent-2.0.12-debian-copyright"
+      ]
+    },
+    {
+      "id": "i2p-java-reference-2-13-0",
+      "name": "Official I2P2.13.0 offline datagram Java reference",
+      "version": "2.13.0",
+      "repository_url": "https://github.com/i2p/i2p.i2p.git",
+      "source_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+      "artifacts": [
+        {
+          "url": "https://repo.maven.apache.org/maven2/net/i2p/i2p/2.13.0/i2p-2.13.0.jar",
+          "sha256": "d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896"
+        },
+        {
+          "url": "https://repo.maven.apache.org/maven2/net/i2p/i2p/2.13.0/i2p-2.13.0-sources.jar",
+          "sha256": "b169a9cebb58bee8b9ca2e73743418b1e9a634bdea4faa8ca6e2063d1032f23a"
+        },
+        {
+          "url": "https://repo.maven.apache.org/maven2/net/i2p/i2p/2.13.0/i2p-2.13.0.pom",
+          "sha256": "b0e744f13e70f6de95fb6a4420bafde8bfc67d40718bd2309c209cb4c6d1f6b7"
+        }
+      ],
+      "build_recipe": "Unmodified official Maven release, reference-only. Manifest Base-Revision and16 source-JAR leaves match retained Git9134f808337b401e8e53c73734c81fab04280c9d. No JAR rebuild/reproducibility claim. Inert offline driver compiled once --release8; serial nice5 native/Java qualification and exact inputs in migration/evidence/20261029-i2p-datagram/reference-inputs.json; no router/session.connect/network endpoint. Existing tor-openssl-host supplies native Crypto.",
+      "patches": [],
+      "notices": [
+        "migration/notices/i2p-2.13.0-LICENSE.txt",
+        "migration/notices/i2p-datagram-reference-attribution.txt"
+      ]
+    },
+    {
+      "id": "azi2pcore-reference-2-13-0-1",
+      "name": "Modified azi2pcore offline reference from official I2PHelper distribution",
+      "version": "2.13.0.1 (plugin2.13.0.1.1)",
+      "repository_url": "https://github.com/BiglySoftware/BiglyBT-plugin-azneti2phelper",
+      "source_commit": null,
+      "artifacts": [
+        {
+          "url": "https://files.biglybt.com/plugins/azneti2phelper-linux_2.13.0.1.1.zip",
+          "sha256": "86bbc02ff0cbd41dda97efefff028ad7180bf5434fed8c1392b21fc820b4b15c"
+        },
+        {
+          "url": "https://files.biglybt.com/plugins/azneti2phelper-linux_2.13.0.1.1.biglybt",
+          "sha256": "5339a23dfc02f7ed5f8ccf6e0affc555a4ecf07772a09843065e4624c7b883d6"
+        }
+      ],
+      "build_recipe": "Prebuilt reference-only. ZIP entry azi2pcore_2.13.0.1.jar SHA256b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5,4288652bytes. .biglybt contains exact ZIP at byte48; distributed wrapper41 Java leaves match plugin33d97eca67a9f332e3d4da7e7492ec54f4bec078. Modified core source/build commit is unpublished/unknown; wrapper manual patch instructions are documentary, not an applied/reconstructed patch set. Offline run reused existing Java/native images and observed actual modified class origins; only default Datagram2 types0/7 and unsigned3 interop credited. No app distribution/router/JNI activation. See migration/evidence/20261029-i2p-datagram/reference-inputs.json.",
+      "patches": [],
+      "notices": [
+        "migration/notices/i2p-2.13.0-LICENSE.txt",
+        "migration/notices/i2p-datagram-reference-attribution.txt"
       ]
     }
   ],

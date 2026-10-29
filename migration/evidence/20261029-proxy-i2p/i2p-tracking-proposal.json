@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_TASK_LOCAL_TRACKING_PROPOSAL",
+  "parent_manifest_sha256": "f6bbe266766faf72fce1f875a2d5de269fd524f92dd4700895efdedbc0419ed3",
+  "native_implementation_commit": "ecd63457da93e7f0c993c1f684e6d50d1c79a48c",
+  "component_state": "in_progress",
+  "source_integration_fields": "ALL_NULL_PENDING_NATIVE_COHORT",
+  "new_upstream_id": "i2p-java",
+  "official_upstream_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "artifacts_sha256": {
+    "feature-matrix-row.md": "11cd316c0d4a60a2ee42aa39dd93d1526e97cb102c2ed728ac0fa7620e970e5e",
+    "proposal-inputs.json": "4a86761f8eba44f6493360c51203d8668ec7920fc5213943eaa6d1219c6a6d3c",
+    "registry-additions.json": "d9771967031098d767c4ab0343a234c772fbca5dbe4d63c99c1a900328544f0f",
+    "staging/migration/evidence/20261029-i2p-datagram/actual-vector-comparison.json": "5001364d27fc37808b241a9d6a712929e16949434dfa1efb0c26934100211463",
+    "staging/migration/evidence/20261029-i2p-datagram/modified-offline-result.json": "aeaf490344b0853f85e80f30a0d6ae791f2761181b7c296ac27a70b23be836ab",
+    "staging/migration/evidence/20261029-i2p-datagram/official-offline-result.json": "e832f3328ac1968ffa5779f77e85fefe1cfa919ba9f12f8de5d2905fffb6f0d2",
+    "staging/migration/evidence/20261029-i2p-datagram/reference-inputs.json": "06d68070c8a306dc6dd90d72031b15a1df965bf50656a1468b66bf7fb7b6de40",
+    "staging/migration/evidence/20261029-i2p-datagram/retained-official-git-source.json": "0a852b41eab5ea6d4bd68316e111fd8a81df66d4191bee104a652f8c115cfeab",
+    "staging/migration/notices/i2p-2.13.0-LICENSE.txt": "26be886ca69249de7213d244455a71e53d8a9ed85ac1a52545f0e00c8e098a55",
+    "staging/migration/notices/i2p-datagram-reference-attribution.txt": "dcec31cc79f2aa58c6cf5cc26dcac4250889e6f35b0fc0955f7b335a6db4d307",
+    "staging/migration/tasks/P07-02a-i2p-datagram.md": "35bd06b3205e97d2a479fec3cbd6362034e393c44855bc573ba7c854189ac4e6",
+    "staging/migration/updates/services.i2p_datagram/20261029-bounded-in-progress.md": "5e2cd831d49e92692be70c31ad8041ece3e52d85ee0543f656b9eff944e8e8e6",
+    "unresolved-input-note.txt": "e7b9db68fdaeac3c752138d4f6257c01fc0f3c4f130664d78686483493610ef5",
+    "validation.json": "24637d51c91a22efc595e6f37e4792a5755f8ee3608dceb764f007eaa5e4268f"
+  }
+}

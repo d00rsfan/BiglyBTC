@@ -1,0 +1,79 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-mainline-single-http-tests",
+      "biglybtc-managed-queue-tests",
+      "biglybtc-network-policy-tests",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-mainline-single-tracker-owner-tests",
+      "biglybtc-i2p-datagram-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 921.875,
+    "log": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/runs/gcc-r1/build.log",
+    "log_sha256": "a208a1e3fa0c7eb880a7616762f7eaf56f981e1c1372b7007dfc92ebe138d4d7"
+  },
+  {
+    "name": "http-loader",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.018,
+    "log": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/runs/gcc-r1/http-loader.log",
+    "log_sha256": "4fb58c5b69a51527e7fadd52b19445dafab85f65d4234fa518667cde2b96b30d"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "-R",
+      "^(network-policy|queue-policy|pure-i2p-datagram-codec|managed-queue|mainline-single-tracker-owner|mainline-single-http)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/runs/gcc-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 427.182,
+    "log": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/runs/gcc-r1/tests.log",
+    "log_sha256": "fa24d444945abaeafcc101c7780b142cb8f085d4369057caa7b8bece5196325e"
+  },
+  {
+    "name": "wayland-smoke",
+    "command": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke",
+      "regularTrackerTooltipKeepsActualRetainedCountsSeparateFromMainlineEstimate",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/runs/gcc-r1/wayland-smoke.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.064,
+    "log": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/runs/gcc-r1/wayland-smoke.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

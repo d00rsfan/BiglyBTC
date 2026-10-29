@@ -1,0 +1,81 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_repository": "/home/yurii/Java/BiglyBT",
+  "sources": {
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": {
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "lines": [
+        382,
+        392
+      ]
+    },
+    "core/src/com/biglybt/core/config/impl/ConfigurationChecker.java": {
+      "sha256": "79c718dac6d1f44d62938e8dda4168fa024066caff6e5af8887b27cf598e9b76",
+      "lines": [
+        264,
+        286
+      ]
+    },
+    "core/src/com/biglybt/core/util/spi/AENameServiceJava12.java": {
+      "sha256": "8dfe1676157a362b156e3fd301004503085dfaf632377279fd2eebf9e8150b76",
+      "lines": [
+        165,
+        218
+      ]
+    },
+    "core/src/com/biglybt/core/security/impl/SESecurityManagerImpl.java": {
+      "sha256": "036c7654c68ab646c709c5105feb02a20a9ac2c4e778e98dcd1bff7840bf3e68",
+      "lines": [
+        523,
+        565
+      ]
+    },
+    "core/src/com/biglybt/core/proxy/impl/AEProxySelectorImpl.java": {
+      "sha256": "08513adc6e5b2bff1b652a330708bd9f2554c259714c4155493923c28b62e5e1",
+      "lines": [
+        83,
+        105
+      ]
+    },
+    "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerStatus.java": {
+      "sha256": "7537d5397a4bb25e56018b03e420a4bdf94248c8393fea9bc8eec613d1b5699e",
+      "lines": [
+        1128,
+        1401
+      ]
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": {
+      "sha256": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "lines": [
+        2142,
+        2147
+      ]
+    }
+  },
+  "jdk_source_archive": "/usr/lib/jvm/openjdk-17/lib/src.zip",
+  "jdk_entries": {
+    "java.base/java/net/InetSocketAddress.java": {
+      "sha256": "efea91fd89dd963e453af3036a98321a1337e013062c2fbd3b1bdcdd277b5506",
+      "lines": [
+        224,
+        234
+      ]
+    },
+    "java.base/sun/net/NetworkClient.java": {
+      "sha256": "c7abbf2dc22a8390d1ae4dd6ad2e8e963f816d323bd44e972b4208f5f3c04011",
+      "lines": [
+        155,
+        183
+      ]
+    },
+    "java.base/java/net/SocksSocketImpl.java": {
+      "sha256": "68f46fcc5f7a957cdcd2618c965df08931132b10d8028f686f657fb74cc63167",
+      "lines": [
+        137,
+        177,
+        306,
+        427
+      ]
+    }
+  }
+}

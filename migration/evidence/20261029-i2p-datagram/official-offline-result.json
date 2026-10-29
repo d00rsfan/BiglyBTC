@@ -1,0 +1,223 @@
+{
+  "schema": 1,
+  "status": "PASS_ACTUAL_OFFLINE_ORIGINAL_NATIVE_INTEROP",
+  "run": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/actual-offline-interop/runs/run-r2",
+  "reference_release": "net.i2p:i2p:2.13.0",
+  "reference_git_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "modified_azi2pcore_equivalence": "OPEN_ARTIFACT_NOT_AVAILABLE",
+  "compiler_concurrency": 1,
+  "nice": 5,
+  "network_endpoints": false,
+  "native_app_or_cache_or_dist_mutations": false,
+  "signing_types": [
+    0,
+    7
+  ],
+  "payload_rows_per_type": [
+    "empty",
+    "binary",
+    "1024",
+    "maximum_Datagram2"
+  ],
+  "java2_verified_native": 8,
+  "java3_decoded_native": 8,
+  "native2_verified_original": 8,
+  "native3_decoded_original": 8,
+  "unsigned3_byte_equal_pairs": 8,
+  "recipient_signature_and_nonempty_payload_negatives": "PASS_BOTH_DIRECTIONS",
+  "native_executable_sha256": "366e51fb70663297d738141dce478becb32ab6944b47e1c375c60dbfc1583d30",
+  "reference_jar_sha256": "d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896",
+  "fixtures": {
+    "dsa-1024.java2": {
+      "sha256": "16eda66aa83db1bf00e5df202c4a1588275b124293a1c33368d23311142f60ae",
+      "bytes": 1453
+    },
+    "dsa-1024.java3": {
+      "sha256": "de658c8610caa184262fbea9ce442a743f318ab1384e944d3aab89bd128b2390",
+      "bytes": 1058
+    },
+    "dsa-1024.native2": {
+      "sha256": "3b0ee8e432e44f6a0df8653a89ceb0a835a8a19dc2b3a18aff8336dabe450c3e",
+      "bytes": 1453
+    },
+    "dsa-1024.native3": {
+      "sha256": "de658c8610caa184262fbea9ce442a743f318ab1384e944d3aab89bd128b2390",
+      "bytes": 1058
+    },
+    "dsa-1024.payload": {
+      "sha256": "2f4be09e2869bec4db144cc27130220f26570ddc8a6320c6f7472ccbc5decfb1",
+      "bytes": 1024
+    },
+    "dsa-binary.java2": {
+      "sha256": "5d42afc6dbffa6dbc21e5faded09316b0dcb5cb423e28418c8c3c109f0c9c903",
+      "bytes": 436
+    },
+    "dsa-binary.java3": {
+      "sha256": "849ea45a93dc5336f767c7110df71cfe1561912d822065b5b6bc03f35575bf98",
+      "bytes": 41
+    },
+    "dsa-binary.native2": {
+      "sha256": "dc52dc6b3d7ca8935839370f5b82dc75e0c732a022e02c924a51857bf698b79d",
+      "bytes": 436
+    },
+    "dsa-binary.native3": {
+      "sha256": "849ea45a93dc5336f767c7110df71cfe1561912d822065b5b6bc03f35575bf98",
+      "bytes": 41
+    },
+    "dsa-binary.payload": {
+      "sha256": "fdf92fc77b380f006e39fe28bbc224476a2c442f1e6d766f6e9c9342d392bee4",
+      "bytes": 7
+    },
+    "dsa-empty.java2": {
+      "sha256": "3a616a7037ab78bee6abfb4ce7c96ea12d78e6962fd52046f18f821aa013bf12",
+      "bytes": 429
+    },
+    "dsa-empty.java3": {
+      "sha256": "5ba53f531e7e8fed5908e119adeb9c8d1eb192d24aaa7f3adac6765cb74227e8",
+      "bytes": 34
+    },
+    "dsa-empty.native2": {
+      "sha256": "b240eddea7bfeaa48c939bb6c2a35cb3539562edb885c9748ca7725cef5255e1",
+      "bytes": 429
+    },
+    "dsa-empty.native3": {
+      "sha256": "5ba53f531e7e8fed5908e119adeb9c8d1eb192d24aaa7f3adac6765cb74227e8",
+      "bytes": 34
+    },
+    "dsa-empty.payload": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "dsa-maximum.java2": {
+      "sha256": "58a153e16e2f042b01a19a0ae099a2bf3490a2098f896467bada9fa61c14ca6c",
+      "bytes": 62464
+    },
+    "dsa-maximum.java3": {
+      "sha256": "77bddc09f576d20b912f2592056f0a0db1afab38d2171ca74ee039a08e543eed",
+      "bytes": 62069
+    },
+    "dsa-maximum.native2": {
+      "sha256": "ec780d0c234019fb5af5fa97cf3ace939e864e577743cbffce73a0eea7f28fe1",
+      "bytes": 62464
+    },
+    "dsa-maximum.native3": {
+      "sha256": "77bddc09f576d20b912f2592056f0a0db1afab38d2171ca74ee039a08e543eed",
+      "bytes": 62069
+    },
+    "dsa-maximum.payload": {
+      "sha256": "a8e8fb45f4a127ae98708d30ef684ac473f9b38b8e0d9c37696befb4254b0c9d",
+      "bytes": 62035
+    },
+    "dsa.known-test-key": {
+      "sha256": "e9ff0e6e6de95da56ff09f4e3e0f481d67585f0a68aafdeef0f86f7b8533ce17",
+      "bytes": 20
+    },
+    "dsa.recipient": {
+      "sha256": "10cdba035bd41026a230a4d58981e0122b442d07e8c2f1038e7a5142c6c20a66",
+      "bytes": 387
+    },
+    "dsa.sender": {
+      "sha256": "2f0554e07af3496216dd5645d91b1c65711aecfb033fd19109df59f0bd3bc1c7",
+      "bytes": 387
+    },
+    "ed25519-1024.java2": {
+      "sha256": "b376a2d5ba17659dda706a51bc3f0d894f2970c70a86047215f4cb4e252ae77c",
+      "bytes": 1481
+    },
+    "ed25519-1024.java3": {
+      "sha256": "e87d9add32f734a719fdf420ad371ab6a317dd72cc9dbbaa5be15d0c74b741bc",
+      "bytes": 1058
+    },
+    "ed25519-1024.native2": {
+      "sha256": "b376a2d5ba17659dda706a51bc3f0d894f2970c70a86047215f4cb4e252ae77c",
+      "bytes": 1481
+    },
+    "ed25519-1024.native3": {
+      "sha256": "e87d9add32f734a719fdf420ad371ab6a317dd72cc9dbbaa5be15d0c74b741bc",
+      "bytes": 1058
+    },
+    "ed25519-1024.payload": {
+      "sha256": "2f4be09e2869bec4db144cc27130220f26570ddc8a6320c6f7472ccbc5decfb1",
+      "bytes": 1024
+    },
+    "ed25519-binary.java2": {
+      "sha256": "cf130b2401eb98a91fc1bd4cc96b976072cabbed4272faeba4fbf0ac926def97",
+      "bytes": 464
+    },
+    "ed25519-binary.java3": {
+      "sha256": "68339e9f5c8f1834762c3e083790e53efe0cd516afc32bf540a4cc1018d05cdc",
+      "bytes": 41
+    },
+    "ed25519-binary.native2": {
+      "sha256": "cf130b2401eb98a91fc1bd4cc96b976072cabbed4272faeba4fbf0ac926def97",
+      "bytes": 464
+    },
+    "ed25519-binary.native3": {
+      "sha256": "68339e9f5c8f1834762c3e083790e53efe0cd516afc32bf540a4cc1018d05cdc",
+      "bytes": 41
+    },
+    "ed25519-binary.payload": {
+      "sha256": "fdf92fc77b380f006e39fe28bbc224476a2c442f1e6d766f6e9c9342d392bee4",
+      "bytes": 7
+    },
+    "ed25519-empty.java2": {
+      "sha256": "31fbb273545d64ac329fb3ef55ae07c4275b82e63d348d10e53a6169c831dab3",
+      "bytes": 457
+    },
+    "ed25519-empty.java3": {
+      "sha256": "414176eddc1aba1d43203041da689bec9e81a4d3990c9ee48034d69d8cb18f21",
+      "bytes": 34
+    },
+    "ed25519-empty.native2": {
+      "sha256": "31fbb273545d64ac329fb3ef55ae07c4275b82e63d348d10e53a6169c831dab3",
+      "bytes": 457
+    },
+    "ed25519-empty.native3": {
+      "sha256": "414176eddc1aba1d43203041da689bec9e81a4d3990c9ee48034d69d8cb18f21",
+      "bytes": 34
+    },
+    "ed25519-empty.payload": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "ed25519-maximum.java2": {
+      "sha256": "31eec7ffaad1abce5cceb5433b82d8eeb87ab0c4fa22254871f3ed2fdd6555d0",
+      "bytes": 62464
+    },
+    "ed25519-maximum.java3": {
+      "sha256": "21697f5cc46c2e55c4f30627450bf9b9335a7cb5447c4cd4b24e5007c9d9b80a",
+      "bytes": 62041
+    },
+    "ed25519-maximum.native2": {
+      "sha256": "31eec7ffaad1abce5cceb5433b82d8eeb87ab0c4fa22254871f3ed2fdd6555d0",
+      "bytes": 62464
+    },
+    "ed25519-maximum.native3": {
+      "sha256": "21697f5cc46c2e55c4f30627450bf9b9335a7cb5447c4cd4b24e5007c9d9b80a",
+      "bytes": 62041
+    },
+    "ed25519-maximum.payload": {
+      "sha256": "8ba8239bc33b8e8d1734a61550be6c4ce64b0fd2003f87fd48a4cf6b265812c9",
+      "bytes": 62007
+    },
+    "ed25519.known-test-key": {
+      "sha256": "644d50ab64864c20a12b3c4656d46b4a48f69ef7c47ecdc8415cd28316b22ef5",
+      "bytes": 32
+    },
+    "ed25519.recipient": {
+      "sha256": "c439e09b76788b0157a984d060cb0cd462bd38b16f27c1cd45c20df5c4cc9b3a",
+      "bytes": 391
+    },
+    "ed25519.sender": {
+      "sha256": "0c80bed1687e0f7fcbc915eab269f9b00e5f40f77dd966eb0829b040a8c14db8",
+      "bytes": 391
+    }
+  },
+  "tools": {
+    "/usr/bin/x86_64-linux-gnu-g++-16": "ca3bb855e752ea0b36544ef684e542fcf04273d8c229b1a96a9c160587e41c62",
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac": "ef60c7cfcdbd1313151738e56754e09a4706f7d822899054281d4def617bce1d",
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/java": "0e72dac1212b98b6450d1b17d403680be25002d47465dbdb460d24c45cbbde3c",
+    "/usr/bin/openssl": "aca2a81d2d532c78f2657459d3ded5d61a19a2f134fe30f1b931fc8300a7fa08"
+  },
+  "commands_sha256": "cb6dc256e821961350a68af38da057daf8bb0909a7798dc6a9c18f9ec6687ee2"
+}

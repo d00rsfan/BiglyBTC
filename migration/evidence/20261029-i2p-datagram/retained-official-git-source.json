@@ -1,0 +1,186 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/i2p/i2p.i2p.git",
+  "retained_repo": "/home/yurii/Java/BiglyBT/build/dependencies/i2p-java-2.13.0",
+  "bare": true,
+  "shallow": true,
+  "partial_filter": "blob:none",
+  "tag": "i2p-2.13.0",
+  "tag_object": "3dce17b4ff55f8d7674d25eb3c742b9c84e2581e",
+  "commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "tree": "b38c70fbf3f7ce6f33ca95bedaa001e1458a4c9b",
+  "materialized_source_blobs": 21,
+  "source_files": [
+    {
+      "path": "core/java/src/net/i2p/client/datagram/Datagram2.java",
+      "git_blob": "01fad3c95f5d559440237478e104cc72cb4cc047",
+      "bytes": 14963,
+      "sha256": "2934bcaaaeaf977ce917b02c6d99229056ef73b4661b790fc84e7402c939bfdc",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/client/datagram/Datagram2.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/datagram/Datagram3.java",
+      "git_blob": "bc8794448cff8bae772a776fd06479ece1e2b616",
+      "bytes": 7896,
+      "sha256": "8d618c7b967703cfacf1523de299662f010f0b027877b7d666522e38a5a1d70c",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/client/datagram/Datagram3.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/datagram/I2PDatagramMaker.java",
+      "git_blob": "9b7da58906770f61bc4371887748caf7c4841e12",
+      "bytes": 4980,
+      "sha256": "8dabc4a1c437f0285cd0530bee62d534329298d7f78e8ba6c15b579cf37d7649",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/client/datagram/I2PDatagramMaker.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/datagram/I2PDatagramDissector.java",
+      "git_blob": "e401142934f12f7dffd528eaa93ca91051ffa2be",
+      "bytes": 8977,
+      "sha256": "8726690c70b08619f2693b0bd3b34564fcf75d6c7631d8cebdff28d41f4a8ddb",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/client/datagram/I2PDatagramDissector.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/Destination.java",
+      "git_blob": "230524d2c5368911d9c8001373c5cd486f1bd164",
+      "bytes": 7621,
+      "sha256": "7f3733c59cf601ac80aab174f153ce8b60329d7f04f3d6bf9139d8334bae5a04",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/data/Destination.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/KeysAndCert.java",
+      "git_blob": "74b792dff6f04a9e35e949fc5d8b9ea9433be4dd",
+      "bytes": 11575,
+      "sha256": "742813247efed3177a434964fcd28125f2f82971f7c2c817cf3e4f88ff5eded4",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/data/KeysAndCert.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/KeyCertificate.java",
+      "git_blob": "c599d0f5433384f3a0c5d30b3f9b52a42799ddd9",
+      "bytes": 16105,
+      "sha256": "1b7cd6d8be63405758284b008049c6937e5c2cd7f41e0902e4837a9bb96031af",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/data/KeyCertificate.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/SigningPublicKey.java",
+      "git_blob": "46b287152806def7596f71d8eb7ad51511ddd758",
+      "bytes": 8353,
+      "sha256": "b6f3eae6418d281c4efb913be2cd679890621f87f4acde7e98de75002d5a7446",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/data/SigningPublicKey.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/crypto/SigType.java",
+      "git_blob": "afb96ac7cd3c65ada7595dca8dc665bae7f8c3ec",
+      "bytes": 13018,
+      "sha256": "0d4d5c89936f784dc16cea2189c36efccc1c71a10e1859bd8ef47465a82de35d",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/crypto/SigType.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/crypto/DSAEngine.java",
+      "git_blob": "ce2bfa78d30f5c3ee57198663e5481fb394fc415",
+      "bytes": 34905,
+      "sha256": "8df22317ae4e39ba4702c749217a59dcdce3282bb0113ab2e72e07ff3195d247",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/crypto/DSAEngine.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/I2PSession.java",
+      "git_blob": "b9fa728077b2cb0ae160d79ed1965da4616b5bb2",
+      "bytes": 22891,
+      "sha256": "c6cbe0c20fa2212e426a2886a7c107e63ecd0e857768c6d8bef56098dbe10c05",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/client/I2PSession.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/CoreVersion.java",
+      "git_blob": "a052d7359ac4e16a389fe081493541d42c5cb3f3",
+      "bytes": 2077,
+      "sha256": "4de2363a24d25efed55e2c7c69caa048ed9d1b0cc97648b76ad2e4948ed6666a",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/CoreVersion.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/crypto/CryptoConstants.java",
+      "git_blob": "05efe426cb88e4a879f977148804be7a4c7ce5ed",
+      "bytes": 6274,
+      "sha256": "99b8cba0036d6faab1a06b2c6aab126cc004b96355ab1370efa324e3e745215a",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/crypto/CryptoConstants.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/crypto/SigUtil.java",
+      "git_blob": "b67f4161d23abfcf17223261629176d343b57c79",
+      "bytes": 32899,
+      "sha256": "38c91542bd9fa9991a76f4b1626198cbd20311cf77965d2854cc5dccda993d52",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/crypto/SigUtil.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/I2PClientImpl.java",
+      "git_blob": "c9bc25687f162128a3c3a6f0dda17683c998fc82",
+      "bytes": 7930,
+      "sha256": "30ac6a62fbeb2f25fc3c2ce5f934e06dd6beef3c33267ddb825e87002924c2e5",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/client/impl/I2PClientImpl.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/I2PClient.java",
+      "git_blob": "831e4c905abcd4284dcf0e325b7ec45076258391",
+      "bytes": 5906,
+      "sha256": "50b2e033b0692ed5d5a01de9b650e1dc206c273bc8169165e0cfcf831a8c057d",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/core/java/src/net/i2p/client/I2PClient.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "LICENSE.txt",
+      "git_blob": "5b69f900a2e5c43a8e33d7ef442db08e61f08f91",
+      "bytes": 12895,
+      "sha256": "26be886ca69249de7213d244455a71e53d8a9ed85ac1a52545f0e00c8e098a55",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/original-source/LICENSE.txt",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/util/NativeBigInteger.java",
+      "git_blob": "7dd7fdc6a9006f0a50ef8f878f40bb561ef96f44",
+      "bytes": 59838,
+      "sha256": "5e5fd3a6f04e8918b60a66eb528bdadc6bc49bdad52ad259629bd55c24d8da49",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/official-source/net/i2p/util/NativeBigInteger.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/crypto/eddsa/EdDSAPublicKey.java",
+      "git_blob": "00c2479509a703345784b57d87a3df94da40aa2b",
+      "bytes": 9523,
+      "sha256": "57c450e0090bd5abfd4a952191bc07e42cfd054c0e77136576f6d17d57026215",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/official-source/net/i2p/crypto/eddsa/EdDSAPublicKey.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/crypto/eddsa/EdDSAPrivateKey.java",
+      "git_blob": "a90931d2c1afe5eedd29c4a37f4b75d744412040",
+      "bytes": 11023,
+      "sha256": "e9c1701753c7adc961cf4caa0821f187a868189de99a008d51699cd0649062c1",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/official-source/net/i2p/crypto/eddsa/EdDSAPrivateKey.java",
+      "exact_git_show_without_network": true
+    },
+    {
+      "path": "core/java/src/net/i2p/util/ReusableGZIPOutputStream.java",
+      "git_blob": "c36280b0effcc0ab853c12dc2bdc456fb3d08bed",
+      "bytes": 5392,
+      "sha256": "be1d0322728516c72d259813c667a3b0273777890c057891d303cbc9426b43fc",
+      "retained_source": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/official-source/net/i2p/util/ReusableGZIPOutputStream.java",
+      "exact_git_show_without_network": true
+    }
+  ],
+  "repository_disk_bytes": 303874,
+  "shared_registry_changed": false,
+  "scope": "Commit/tag/full tree retained; only necessary21 source blobs materialized. Exact git show checked with GIT_NO_LAZY_FETCH=1; no complete-history/full-working-tree claim."
+}

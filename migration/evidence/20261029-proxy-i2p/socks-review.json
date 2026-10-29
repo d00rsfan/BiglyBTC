@@ -1,0 +1,13 @@
+{
+  "status": "PASS_SOURCE_ONLY_NO_EXECUTION",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/mainline-http-socks5-20261029/manifest.json",
+    "sha256": "0af2a6212ad007fbf67db8144d967e488dba38cdefce3882ed27a0827b49628f"
+  },
+  "artifacts_sha256": {
+    "review.json": "4d59265cb2b22d213d47158958a15c9474bd3a4196271ce065b0c22f9bbbf880"
+  },
+  "source_maps_sha256": "e713056066445804e8dc218578d742a636ed6a18e03f412f262ee585d9c8fd3e",
+  "original_pins_sha256": "1d8bb7c07fbb8c1e6193688d02583425c55239c8e6e01e7584894e26b24862c1",
+  "execution": false
+}

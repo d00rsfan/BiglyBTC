@@ -1,0 +1,382 @@
+{
+  "status": "SOURCE_ADOPTED_PENDING_BATCH_RUNTIME",
+  "base_commit": "33ff9e5d579c6575b9faa5bf7c73acf55c39ad4d",
+  "source_path_count": 52,
+  "source_paths": {
+    "preview/native/engine/library_http_tracker.hpp": {
+      "before_sha256": "3c4144d48ac35b9ff2837a279b255efae32c0b2086697c04c5c733188f9846b1",
+      "after_sha256": "9c26f5f9a40821700961301f9bc5514a4ada927c9dd1802772507a528d433e6b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/engine/library_http_tracker.hpp",
+      "slice": "socks5"
+    },
+    "preview/native/engine/library_http_tracker.cpp": {
+      "before_sha256": "c93c252e8ec7dce014d85026a9fe4b06fc3d0643652bdcc6b157048379bfc273",
+      "after_sha256": "f003f96c2cd6a0d65817bc6e75b309028e7e15d8e11c4ae0dc3bdf970ff4581c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/engine/library_http_tracker.cpp",
+      "slice": "socks5"
+    },
+    "preview/native/engine/library_http_protocol.cpp": {
+      "before_sha256": "80cb42af4e4f3027478de86878d7ab7f53e1d1a1c505d0bb884d7fb568ec3dbe",
+      "after_sha256": "8a493552f508b6c769810bd7cd556c08cc7e7f1f8c87533d7df8664938652a44",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/engine/library_http_protocol.cpp",
+      "slice": "socks5"
+    },
+    "preview/native/engine/library_http_policy.hpp": {
+      "before_sha256": "567171327b7ca0105f47e4ed781974ed694443e8abcfec2ed6fbb9b46e863082",
+      "after_sha256": "569bcfe0e9825d8a14fe551edbc1a45d7a8d32dbd2fc48728d798dfe95e45e21",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/engine/library_http_policy.hpp",
+      "slice": "socks5"
+    },
+    "preview/native/engine/library_http_owner.inc": {
+      "before_sha256": "768a14625a073ac9b6f2d5d53fdd3693b3636cae97fd8f145e817f9f36488d7f",
+      "after_sha256": "482d45a67638d13898e145848ec1bc5d02bc00b8b7a25ea077d422a8ea33fc69",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/engine/library_http_owner.inc",
+      "slice": "socks5"
+    },
+    "preview/native/engine/queued_mainline_scrape.hpp": {
+      "before_sha256": "212d056f00c59c22ee514b4e885c3f9378adcd7a86f2e38ec4914f2f54977879",
+      "after_sha256": "2e0e8befa0cc0ed8ded0908493d32d90522ca3c99b24c0fbb098539c2cf7e5af",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/engine/queued_mainline_scrape.hpp",
+      "slice": "socks5"
+    },
+    "preview/native/engine/queued_mainline_scrape.cpp": {
+      "before_sha256": "587a1e896ce86f19520f582267e8a3beed65b553a740c9c66789fb8643d6a1d3",
+      "after_sha256": "f82b9ad6fb0b2877b23e6c68ccf6c38d0d681ea1da5a7755224f6b02876a7352",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/engine/queued_mainline_scrape.cpp",
+      "slice": "socks5"
+    },
+    "preview/native/engine/mainline_owner.inc": {
+      "before_sha256": "ed087de47e927b1bb8dbe34cdb05f798dd3f2df64d87f79f362d9a0fbfde0344",
+      "after_sha256": "9a6693bf72ecbb4e2dfb89200bbcd38561d2be9ed7a4e8c890d24322ffbc08ee",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/engine/mainline_owner.inc",
+      "slice": "socks5"
+    },
+    "preview/native/engine/persistent_session.hpp": {
+      "before_sha256": "60d43ec32598b9a11615973fcb84270ec99e8cec958e0414a496a68a215f54e7",
+      "after_sha256": "2c4c2c5b1b1220421ac3b13890ed4d4e85a7f9846b3287ade0bb1da58966609a",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/engine/persistent_session.hpp",
+      "slice": "socks5"
+    },
+    "preview/native/engine/persistent_session.cpp": {
+      "before_sha256": "f2fce3a361f81280e8bdebafa2292b5328d867bb0fad9683f85cbbf106e42ff4",
+      "after_sha256": "ba8db84eab9682a5b109b471cfd295a3bcba5a15aad13aaf3a682d6111a43600",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/engine/persistent_session.cpp",
+      "slice": "socks5"
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "before_sha256": "221b0300d92852417e653385a92920ee96afc8bafcf5207859c7fb4e0a0d4f42",
+      "after_sha256": "85ae1200b9de8f17bf117d621cf95c284baf8cfb5255144a740cfbcae3961a02",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/app/session_bridge.cpp",
+      "slice": "socks5"
+    },
+    "preview/native/ui/library_model.hpp": {
+      "before_sha256": "ee0b60924a2938d6a97ee91e5cdfe1ca8d8489bbee177c6d130d35ada9b46747",
+      "after_sha256": "ea4875b453c26723a8674af77f87acbb71c10ad943026aca0b6187bb99250a76",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/ui/library_model.hpp",
+      "slice": "socks5"
+    },
+    "preview/native/ui/library_model.cpp": {
+      "before_sha256": "bad581376f7fb692ea47cea258f38af6a6fc979c84c1958ddd592f7205465f00",
+      "after_sha256": "9db0b291c2f43ee55ca5bdf84134888e41cb67c120949abab15d3797563300f1",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/ui/library_model.cpp",
+      "slice": "socks5"
+    },
+    "preview/native/tests/mainline_single_http_tests.cpp": {
+      "before_sha256": "03034386110515a671ea24b14fe0e5626f244c6528806f5286a9d4ca59cd32d6",
+      "after_sha256": "dfcfe94f349d978f66066c897a24c79961564c017fa4e76b2047f04d428bb2f5",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/mainline_single_http_tests.cpp",
+      "slice": "socks5"
+    },
+    "preview/native/packaging/preview_smoke.cpp": {
+      "before_sha256": "e3ce8aa6df8ab7bb34a9d5f91a30ef51b88794523c50c795a6e9de133ca54f9f",
+      "after_sha256": "4e828bcadff810947daf9b3c920038ddfac69a9e2e78425193e0f019304efa51",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/packaging/preview_smoke.cpp",
+      "slice": "socks5"
+    },
+    "preview/native/services/i2p_datagram/datagram.cpp": {
+      "before_sha256": null,
+      "parent_sha256": "d27493f3b26722f21022ceb2bff7eb02a5a8c152e8d73eae6c878bea8f41051f",
+      "after_sha256": "d27493f3b26722f21022ceb2bff7eb02a5a8c152e8d73eae6c878bea8f41051f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/services/i2p_datagram/datagram.cpp",
+      "slice": "i2p"
+    },
+    "preview/native/services/i2p_datagram/datagram.hpp": {
+      "before_sha256": null,
+      "parent_sha256": "2d0ff0ccb1e3cb23e0439b6a902f58eda88b5e40ab27b3aa79530d57a856c584",
+      "after_sha256": "2d0ff0ccb1e3cb23e0439b6a902f58eda88b5e40ab27b3aa79530d57a856c584",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/services/i2p_datagram/datagram.hpp",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/README.txt": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "30ef11a879e183fd874ac27b86de0e8de3ecd157cdc223954aac819dae40a909",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/README.txt",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/SOURCE.json": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "eb525a7643365b4a052a368d1cbd036d368195bf47f1e2569c0bcc66222c5259",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/SOURCE.json",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa-1024.java2": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "16eda66aa83db1bf00e5df202c4a1588275b124293a1c33368d23311142f60ae",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa-1024.java2",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa-1024.java3": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "de658c8610caa184262fbea9ce442a743f318ab1384e944d3aab89bd128b2390",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa-1024.java3",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa-1024.payload": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "2f4be09e2869bec4db144cc27130220f26570ddc8a6320c6f7472ccbc5decfb1",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa-1024.payload",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa-binary.java2": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "5d42afc6dbffa6dbc21e5faded09316b0dcb5cb423e28418c8c3c109f0c9c903",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa-binary.java2",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa-binary.java3": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "849ea45a93dc5336f767c7110df71cfe1561912d822065b5b6bc03f35575bf98",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa-binary.java3",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa-binary.payload": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "fdf92fc77b380f006e39fe28bbc224476a2c442f1e6d766f6e9c9342d392bee4",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa-binary.payload",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa-empty.java2": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "3a616a7037ab78bee6abfb4ce7c96ea12d78e6962fd52046f18f821aa013bf12",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa-empty.java2",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa-empty.java3": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "5ba53f531e7e8fed5908e119adeb9c8d1eb192d24aaa7f3adac6765cb74227e8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa-empty.java3",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa-empty.payload": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa-empty.payload",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa-maximum.java2": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "58a153e16e2f042b01a19a0ae099a2bf3490a2098f896467bada9fa61c14ca6c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa-maximum.java2",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa-maximum.java3": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "77bddc09f576d20b912f2592056f0a0db1afab38d2171ca74ee039a08e543eed",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa-maximum.java3",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa-maximum.payload": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "a8e8fb45f4a127ae98708d30ef684ac473f9b38b8e0d9c37696befb4254b0c9d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa-maximum.payload",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa.known-test-key": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "e9ff0e6e6de95da56ff09f4e3e0f481d67585f0a68aafdeef0f86f7b8533ce17",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa.known-test-key",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa.recipient": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "10cdba035bd41026a230a4d58981e0122b442d07e8c2f1038e7a5142c6c20a66",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa.recipient",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/dsa.sender": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "2f0554e07af3496216dd5645d91b1c65711aecfb033fd19109df59f0bd3bc1c7",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/dsa.sender",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-1024.java2": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "b376a2d5ba17659dda706a51bc3f0d894f2970c70a86047215f4cb4e252ae77c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519-1024.java2",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-1024.java3": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "e87d9add32f734a719fdf420ad371ab6a317dd72cc9dbbaa5be15d0c74b741bc",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519-1024.java3",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-1024.payload": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "2f4be09e2869bec4db144cc27130220f26570ddc8a6320c6f7472ccbc5decfb1",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519-1024.payload",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-binary.java2": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "cf130b2401eb98a91fc1bd4cc96b976072cabbed4272faeba4fbf0ac926def97",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519-binary.java2",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-binary.java3": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "68339e9f5c8f1834762c3e083790e53efe0cd516afc32bf540a4cc1018d05cdc",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519-binary.java3",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-binary.payload": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "fdf92fc77b380f006e39fe28bbc224476a2c442f1e6d766f6e9c9342d392bee4",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519-binary.payload",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-empty.java2": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "31fbb273545d64ac329fb3ef55ae07c4275b82e63d348d10e53a6169c831dab3",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519-empty.java2",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-empty.java3": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "414176eddc1aba1d43203041da689bec9e81a4d3990c9ee48034d69d8cb18f21",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519-empty.java3",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-empty.payload": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519-empty.payload",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.java2": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "31eec7ffaad1abce5cceb5433b82d8eeb87ab0c4fa22254871f3ed2fdd6555d0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.java2",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.java3": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "21697f5cc46c2e55c4f30627450bf9b9335a7cb5447c4cd4b24e5007c9d9b80a",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.java3",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.payload": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "8ba8239bc33b8e8d1734a61550be6c4ce64b0fd2003f87fd48a4cf6b265812c9",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.payload",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.known-test-key": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "644d50ab64864c20a12b3c4656d46b4a48f69ef7c47ecdc8415cd28316b22ef5",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519.known-test-key",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.recipient": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "c439e09b76788b0157a984d060cb0cd462bd38b16f27c1cd45c20df5c4cc9b3a",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519.recipient",
+      "slice": "i2p"
+    },
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.sender": {
+      "before_sha256": null,
+      "parent_sha256": null,
+      "after_sha256": "0c80bed1687e0f7fcbc915eab269f9b00e5f40f77dd966eb0829b040a8c14db8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/fixtures/i2p-datagram/ed25519.sender",
+      "slice": "i2p"
+    },
+    "preview/native/tests/i2p_datagram_tests.cpp": {
+      "before_sha256": null,
+      "parent_sha256": "8e38646b0443b04c3fe692b9f24e216f098967361d2106c40ed59967faa8de79",
+      "after_sha256": "d75339ad2334a3729c9e9547b6ead0270a48e057d034b7e47df9bb6f47ac4bcd",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/i2p_datagram_tests.cpp",
+      "slice": "i2p"
+    },
+    "preview/native/services/CMakeLists.txt": {
+      "slice": "i2p",
+      "before_sha256": "0b8221f9f4a99e98655ed9b83d55ae4f7a2ff5a4f8cf657627706db9adb7e35e",
+      "after_sha256": "c0444c925af85ddcdf1bb103e4af13a1752e6c92337ccd1fbccd03b700608e0b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/services/CMakeLists.txt"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "slice": "i2p",
+      "before_sha256": "1ebda8fa8adc3dc68891ba1905ccf8946d942cf0e6d0bb162895d65285e8a7b7",
+      "after_sha256": "9f4e7216ed411f40e0cd7b33a6260217c4610b7a20a6abc67c6e0e4bf7a4edfd",
+      "after_path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/staging/preview/native/tests/CMakeLists.txt"
+    }
+  },
+  "inputs": [
+    {
+      "slice": "socks5",
+      "path": "/home/yurii/Java/BiglyBT/build/mainline-http-socks5-20261029/manifest.json",
+      "sha256": "0af2a6212ad007fbf67db8144d967e488dba38cdefce3882ed27a0827b49628f"
+    },
+    {
+      "slice": "i2p",
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/retained-java-fixtures/manifest.json",
+      "sha256": "44d18a42c3cd494cdffc43841f69236851025e37788ee59992d98cabba03160a"
+    }
+  ],
+  "provider_mutated": false,
+  "dist_manifest_before": "45044b40030008230c556c17aa25fcf36938fe7bd1254d7707780dc1f509a238",
+  "source_commit": "ecd63457da93e7f0c993c1f684e6d50d1c79a48c",
+  "source_commits": [
+    {
+      "slice": "socks5",
+      "commit": "853e2b09f5d791f5d5c3d73595509e6c3820d480",
+      "path_count": 15
+    },
+    {
+      "slice": "i2p",
+      "commit": "ecd63457da93e7f0c993c1f684e6d50d1c79a48c",
+      "path_count": 37
+    }
+  ],
+  "composition_sha256": "e97c98e66295a41ae4f6198d100b42c424c339bcf3af2c00e85e8c47d87922ef"
+}

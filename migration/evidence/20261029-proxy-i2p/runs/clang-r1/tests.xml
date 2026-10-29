@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="3"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="0"
+	timestamp="2026-10-29T11:29:52"
+	>
+	<testcase name="network-policy" classname="network-policy" time="0.0518277" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>33 network-policy families, 501 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="queue-policy" classname="queue-policy" time="0.0792332" status="run">
+		<properties>
+			<property name="cmake_labels" value="queue;unit"/>
+		</properties>
+		<system-out>41 queue-policy families, 8704 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="pure-i2p-datagram-codec" classname="pure-i2p-datagram-codec" time="0.116458" status="run">
+		<properties>
+			<property name="cmake_labels" value="crypto;i2p;no-network;unit"/>
+		</properties>
+		<system-out>PASS retained official Java Datagram2/3 dsa-empty
+PASS retained official Java Datagram2/3 dsa-binary
+PASS retained official Java Datagram2/3 dsa-1024
+PASS retained official Java Datagram2/3 dsa-maximum
+PASS retained official Java Datagram2/3 ed25519-empty
+PASS retained official Java Datagram2/3 ed25519-binary
+PASS retained official Java Datagram2/3 ed25519-1024
+PASS retained official Java Datagram2/3 ed25519-maximum
+PASS bounded I2P Datagram2/3 default0/7 codec
+</system-out>
+	</testcase>
+</testsuite>

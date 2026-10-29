@@ -1,0 +1,12 @@
+{
+  "status": "PASS_SOURCE_REVIEW_NO_NEW_EXECUTION",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/retained-java-fixtures/manifest.json",
+    "sha256": "44d18a42c3cd494cdffc43841f69236851025e37788ee59992d98cabba03160a"
+  },
+  "artifacts_sha256": {
+    "review.json": "8a1f1a7b201d4620e9d06ca274a5a7a8bdb27e28e6521f7dcfccefa454842cc7"
+  },
+  "parent_actual_result_sha256": "e832f3328ac1968ffa5779f77e85fefe1cfa919ba9f12f8de5d2905fffb6f0d2",
+  "execution": false
+}

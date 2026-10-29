@@ -1,0 +1,47 @@
+{
+  "biglybtc-mainline-single-http-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-http-tests",
+    "sha256": "39d160159644565b9cceede3c9eaae54aa9e9ded97bb87c531b40147979ce833",
+    "bytes": 128774656
+  },
+  "biglybtc-managed-queue-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-managed-queue-tests",
+    "sha256": "4958a9b0b6b9860ce9b529af50ed77bd351c56608c8c72606ac484138b4251a4",
+    "bytes": 125460240
+  },
+  "biglybtc-network-policy-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-network-policy-tests",
+    "sha256": "61efeb9d6859c5afe9ca5735392bbc66fbcf4eb92a11060d4c120d9b51bd9b60",
+    "bytes": 10334632
+  },
+  "biglybtc-queue-policy-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-queue-policy-tests",
+    "sha256": "2281195be1d833b76182ccffc0427b0c0d6ac8f1f8bef9a16192cc238e4ca367",
+    "bytes": 6234352
+  },
+  "biglybtc-mainline-single-tracker-owner-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-tracker-owner-tests",
+    "sha256": "7db368291f87277a6eb3ba83d5be85f8efada024cc42146195335e6ce9b64e7d",
+    "bytes": 121513744
+  },
+  "biglybtc-i2p-datagram-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2p-datagram-tests",
+    "sha256": "657e8eaf7cf012d6fa2c3b77520e9848db5947fabbeb61e54a06c823d311ee0e",
+    "bytes": 2006904
+  },
+  "BiglyBTC": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/app/BiglyBTC",
+    "sha256": "c9ee4c991ef17cea9e24bf60d3cf376b0f68e2b0e6f903a64e83ab0feac6f695",
+    "bytes": 285629248
+  },
+  "BiglyBTC-headless": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/app/BiglyBTC-headless",
+    "sha256": "b2fed0510e8f123eedbe79984359ef0325082b247eddbecbc9f1abacadae278c",
+    "bytes": 116355384
+  },
+  "biglybtc-preview-smoke": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/biglybtc-preview-smoke",
+    "sha256": "3ca4b05e684f42002b7b0d9896ceb3aeb33a92cc8208298e737bf998dddde303",
+    "bytes": 289613496
+  }
+}

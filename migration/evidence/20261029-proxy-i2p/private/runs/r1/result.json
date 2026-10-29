@@ -1,0 +1,111 @@
+{
+  "status": "PASS_PRIVATE_SOCKS5_TLS_AND_TOOLTIP",
+  "source_commit": "ecd63457da93e7f0c993c1f684e6d50d1c79a48c",
+  "focused_results": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/runs/gcc-r1/result.json",
+      "sha256": "823b3392fe39ce4ae820c42bf0c0a31da97eb7d152f8838d1d2b805665a57b95",
+      "images_sha256": "5109a30a2c7eb962b20bdc003ca13cf65af27a5ff2aecc02d96dee38c4d9aa25",
+      "source_before_sha256": "11cbf4cb047c2f3025bb44ec113ed111b75d8795b041148ad2bf6db96158467a"
+    },
+    "clang": {
+      "path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/runs/clang-r1/result.json",
+      "sha256": "eb95dee29f2fca1b1f7620f2ec8864f4d358f765ed3200845a2148c44649e0e2",
+      "images_sha256": "d75d82986974afde62a76e7b744dda4a76afe46bc218889142777f2e8bf56168",
+      "source_before_sha256": "11cbf4cb047c2f3025bb44ec113ed111b75d8795b041148ad2bf6db96158467a"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/runs/san-r1/result.json",
+      "sha256": "371fdf4e6b5a6fa3a363f352c8ed7a338d7fc3a545e97e48f6acc0e2cbf41128",
+      "images_sha256": "ca4f397f01d3c75d69c707aa251261ae371f5801a7b6848f9885a0c902794991",
+      "source_before_sha256": "11cbf4cb047c2f3025bb44ec113ed111b75d8795b041148ad2bf6db96158467a"
+    }
+  },
+  "builds_executed": false,
+  "promotion_executed": false,
+  "historical_runtime_passes_pooled": false,
+  "candidate": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate",
+  "candidate_manifest_sha256": "ffaaa3a5b9a0ad7333d3a315b98d296ca99369514d7df6dcef38ae12ff77c826",
+  "actual_leaf_count": 119,
+  "copied_images": {
+    "biglybtc-mainline-single-http-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests",
+      "sha256": "bef862d5487e042833eb1f0f165381fe08ab6229eba1ad387a34fcb24304bd66",
+      "bytes": 6500080
+    },
+    "biglybtc-preview-smoke": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke",
+      "sha256": "e2836cd015d8337a9ee9db66e46b2bc8d25a0d826591647549ae20b2a2d71f89",
+      "bytes": 11768608
+    }
+  },
+  "actual_tests": [
+    {
+      "target": "biglybtc-mainline-single-http-tests",
+      "selector": "actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate:https-no-auth",
+      "exit": 0,
+      "xml_sha256": "8dabeb652536dccc29ad5f47703541e1164c020fcacb15e6b0b5c22bd1aa359f",
+      "case_names": [
+        "initTestCase",
+        "actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(https-no-auth)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    },
+    {
+      "target": "biglybtc-mainline-single-http-tests",
+      "selector": "actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate:https-proxy-userpass",
+      "exit": 0,
+      "xml_sha256": "27f2685968d1ea3be48133d26bf8efa5a6b9880e6352ebde506649b97e6cf0db",
+      "case_names": [
+        "initTestCase",
+        "actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(https-proxy-userpass)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    },
+    {
+      "target": "biglybtc-preview-smoke",
+      "selector": "regularTrackerTooltipKeepsActualRetainedCountsSeparateFromMainlineEstimate",
+      "exit": 0,
+      "xml_sha256": "1746a68e4fc425b96cfd967164b1ebb83d4c3a9335602543c0621339fb098263",
+      "case_names": [
+        "initTestCase",
+        "regularTrackerTooltipKeepsActualRetainedCountsSeparateFromMainlineEstimate",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6DBus.so.6": "678d0bf82548e35680a93615d476d79405f1d4beec4ce405236e04bc64ea14eb",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Gui.so.6": "392cf5a2fed77ca7b861484ae0f25a2f7f54789024e79518c6c28e1ddf5b4b1a",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Widgets.so.6": "ae894c4a328a883311faf7449dcdd1ec70e6be25784e5676cb9977fe437d01c4",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/plugins/platforms/libqoffscreen.so": "b03cc26de26de6e09adceaf7ab2866ebbae39d88d893e0a5032e3ea55f190a67",
+        "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    }
+  ],
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "old_dist_unchanged": "45044b40030008230c556c17aa25fcf36938fe7bd1254d7707780dc1f509a238",
+  "source_unchanged": true,
+  "commands_sha256": "3df423f4b96f02735450ef5ecb642d9f515df8957459e8b773801eaba4d2ab4b"
+}

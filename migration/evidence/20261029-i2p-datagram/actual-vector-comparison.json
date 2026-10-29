@@ -1,0 +1,78 @@
+{
+  "status": "ACTUAL_BOUNDED_DEFAULT_FORMAT_INTEROP_AND_WIRE_COMPARISON_PASS",
+  "rows": [
+    {
+      "case": "dsa-empty",
+      "datagram2_same_size": true,
+      "datagram2_non_signature_envelope_byte_equal": true,
+      "datagram2_signature_equality_required": false,
+      "datagram2_full_byte_equal": false,
+      "datagram3_byte_equal": true,
+      "payload_byte_equal": true
+    },
+    {
+      "case": "dsa-binary",
+      "datagram2_same_size": true,
+      "datagram2_non_signature_envelope_byte_equal": true,
+      "datagram2_signature_equality_required": false,
+      "datagram2_full_byte_equal": false,
+      "datagram3_byte_equal": true,
+      "payload_byte_equal": true
+    },
+    {
+      "case": "dsa-1024",
+      "datagram2_same_size": true,
+      "datagram2_non_signature_envelope_byte_equal": true,
+      "datagram2_signature_equality_required": false,
+      "datagram2_full_byte_equal": false,
+      "datagram3_byte_equal": true,
+      "payload_byte_equal": true
+    },
+    {
+      "case": "dsa-maximum",
+      "datagram2_same_size": true,
+      "datagram2_non_signature_envelope_byte_equal": true,
+      "datagram2_signature_equality_required": false,
+      "datagram2_full_byte_equal": false,
+      "datagram3_byte_equal": true,
+      "payload_byte_equal": true
+    },
+    {
+      "case": "ed25519-empty",
+      "datagram2_same_size": true,
+      "datagram2_non_signature_envelope_byte_equal": true,
+      "datagram2_signature_equality_required": true,
+      "datagram2_full_byte_equal": true,
+      "datagram3_byte_equal": true,
+      "payload_byte_equal": true
+    },
+    {
+      "case": "ed25519-binary",
+      "datagram2_same_size": true,
+      "datagram2_non_signature_envelope_byte_equal": true,
+      "datagram2_signature_equality_required": true,
+      "datagram2_full_byte_equal": true,
+      "datagram3_byte_equal": true,
+      "payload_byte_equal": true
+    },
+    {
+      "case": "ed25519-1024",
+      "datagram2_same_size": true,
+      "datagram2_non_signature_envelope_byte_equal": true,
+      "datagram2_signature_equality_required": true,
+      "datagram2_full_byte_equal": true,
+      "datagram3_byte_equal": true,
+      "payload_byte_equal": true
+    },
+    {
+      "case": "ed25519-maximum",
+      "datagram2_same_size": true,
+      "datagram2_non_signature_envelope_byte_equal": true,
+      "datagram2_signature_equality_required": true,
+      "datagram2_full_byte_equal": true,
+      "datagram3_byte_equal": true,
+      "payload_byte_equal": true
+    }
+  ],
+  "whole_core_equivalence": false
+}

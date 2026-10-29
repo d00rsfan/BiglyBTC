@@ -1,0 +1,23 @@
+I2P2.13.0 reference and native datagram attribution
+
+Official source: https://github.com/i2p/i2p.i2p.git
+commit9134f808337b401e8e53c73734c81fab04280c9d.
+Official core reference is net.i2p:i2p:2.13.0. Original I2PHelper source is
+BiglySoftware/BiglyBT-plugin-azneti2phelper at
+33d97eca67a9f332e3d4da7e7492ec54f4bec078. Its official2.13.0.1.1 Linux
+distribution includes modified azi2pcore_2.13.0.1.jar. This modified core has no
+included source/build commit and is not asserted source-identical to officialI2P.
+
+The retained top-level I2P LICENSE.txt describes public-domain code and separately
+licensed portions. It references additional license texts, including TheCrypto's
+DSA/ElGamal attribution and EdDSA-Java. The inspected EdDSA-Java key source header
+states EdDSA-Java by str4d, CC0 waiver (https://creativecommons.org/publicdomain/zero/1.0/).
+This summary does not replace those licenses or qualify redistribution of the
+whole modified router/JNI bundle. Complete bundled third-party redistribution
+notice/build closure remains open before shipping those Java/native artifacts.
+
+Native datagram files are GPL-2.0-or-later and use OpenSSL EVP implementations;
+no copied Java crypto engine is embedded and no router/client is activated.
+Reuse the existing tor-openssl-host dependency and its retained Ubuntu/OpenSSL
+copyright notice. Reference JARs are offline test inputs, not app runtime files.
+Synthetic fixture signing keys are deliberately public known tests, never user keys.

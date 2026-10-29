@@ -1,0 +1,6 @@
+{
+  "path": "preview/native/services/CMakeLists.txt",
+  "reason": "Remove one composer-owned trailing blank line rejected by diff --check",
+  "before_sha256": "fc71fa4ebaf5e6d3d3689d7bf70ff7aa84cfee47f0c2b6048cfdc82d8ddfd168",
+  "after_sha256": "c0444c925af85ddcdf1bb103e4af13a1752e6c92337ccd1fbccd03b700608e0b"
+}

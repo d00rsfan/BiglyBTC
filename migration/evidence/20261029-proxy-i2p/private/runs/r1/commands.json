@@ -1,0 +1,97 @@
+[
+  {
+    "name": "stage",
+    "command": [
+      "python3",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--output",
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/candidate",
+      "--libtorrent-package",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+      "--source-libtorrent",
+      "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--private-mainline-routing-provider-manifest",
+      "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-runtime.json"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 7.935,
+    "log": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/stage.log",
+    "log_sha256": "380071213b0ee407516104d691dae0cec0b017d66b45f6ecee659dce2513e767"
+  },
+  {
+    "name": "loader-biglybtc-mainline-single-http-tests",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/loader-biglybtc-mainline-single-http-tests.log",
+    "log_sha256": "6ac2063f1d6b126bc980ea5dad4f1c892118e9e7f1f916f3ea5e3fffb8c6d9d1"
+  },
+  {
+    "name": "loader-biglybtc-preview-smoke",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/loader-biglybtc-preview-smoke.log",
+    "log_sha256": "ee74473b84c5d443fa2ec0d73fe14c7e1506a3a5e89c7bf7731b633d77da5850"
+  },
+  {
+    "name": "selected-1",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests",
+      "actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate:https-no-auth",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/selected-1.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/selected-1.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.315,
+    "log": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/selected-1.log",
+    "log_sha256": "5ec3c5903c2acd244e62fd8107e5e3ebf9cb4311b14693132e4b928b7f508ff7"
+  },
+  {
+    "name": "selected-2",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests",
+      "actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate:https-proxy-userpass",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/selected-2.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/selected-2.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.415,
+    "log": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/selected-2.log",
+    "log_sha256": "f72cd546c9724eceeac960a524c14e344d31d95e37ced873d6f58a47cedb6086"
+  },
+  {
+    "name": "selected-3",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/biglybtc-preview-smoke",
+      "regularTrackerTooltipKeepsActualRetainedCountsSeparateFromMainlineEstimate",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/selected-3.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/selected-3.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.064,
+    "log": "/home/yurii/Java/BiglyBT/build/proxy-i2p-followup-20261029/private-focused/runs/r1/selected-3.log",
+    "log_sha256": "2830eb0f024cb3318468f1bea17be57c6b946221b957452e95de24158e69af91"
+  }
+]

@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "status": "REFERENCE_INTEROP_ACTUAL_NATIVE_COHORT_QUALIFICATION_PENDING",
+  "native_implementation_commit": "ecd63457da93e7f0c993c1f684e6d50d1c79a48c",
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC.git",
+  "native_committed_source_sha256": {
+    "preview/native/services/i2p_datagram/datagram.cpp": "d27493f3b26722f21022ceb2bff7eb02a5a8c152e8d73eae6c878bea8f41051f",
+    "preview/native/services/i2p_datagram/datagram.hpp": "2d0ff0ccb1e3cb23e0439b6a902f58eda88b5e40ab27b3aa79530d57a856c584",
+    "preview/native/tests/fixtures/i2p-datagram/README.txt": "30ef11a879e183fd874ac27b86de0e8de3ecd157cdc223954aac819dae40a909",
+    "preview/native/tests/fixtures/i2p-datagram/SOURCE.json": "eb525a7643365b4a052a368d1cbd036d368195bf47f1e2569c0bcc66222c5259",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-1024.java2": "16eda66aa83db1bf00e5df202c4a1588275b124293a1c33368d23311142f60ae",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-1024.java3": "de658c8610caa184262fbea9ce442a743f318ab1384e944d3aab89bd128b2390",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-1024.payload": "2f4be09e2869bec4db144cc27130220f26570ddc8a6320c6f7472ccbc5decfb1",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-binary.java2": "5d42afc6dbffa6dbc21e5faded09316b0dcb5cb423e28418c8c3c109f0c9c903",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-binary.java3": "849ea45a93dc5336f767c7110df71cfe1561912d822065b5b6bc03f35575bf98",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-binary.payload": "fdf92fc77b380f006e39fe28bbc224476a2c442f1e6d766f6e9c9342d392bee4",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-empty.java2": "3a616a7037ab78bee6abfb4ce7c96ea12d78e6962fd52046f18f821aa013bf12",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-empty.java3": "5ba53f531e7e8fed5908e119adeb9c8d1eb192d24aaa7f3adac6765cb74227e8",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-empty.payload": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-maximum.java2": "58a153e16e2f042b01a19a0ae099a2bf3490a2098f896467bada9fa61c14ca6c",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-maximum.java3": "77bddc09f576d20b912f2592056f0a0db1afab38d2171ca74ee039a08e543eed",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-maximum.payload": "a8e8fb45f4a127ae98708d30ef684ac473f9b38b8e0d9c37696befb4254b0c9d",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.known-test-key": "e9ff0e6e6de95da56ff09f4e3e0f481d67585f0a68aafdeef0f86f7b8533ce17",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.recipient": "10cdba035bd41026a230a4d58981e0122b442d07e8c2f1038e7a5142c6c20a66",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.sender": "2f0554e07af3496216dd5645d91b1c65711aecfb033fd19109df59f0bd3bc1c7",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-1024.java2": "b376a2d5ba17659dda706a51bc3f0d894f2970c70a86047215f4cb4e252ae77c",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-1024.java3": "e87d9add32f734a719fdf420ad371ab6a317dd72cc9dbbaa5be15d0c74b741bc",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-1024.payload": "2f4be09e2869bec4db144cc27130220f26570ddc8a6320c6f7472ccbc5decfb1",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-binary.java2": "cf130b2401eb98a91fc1bd4cc96b976072cabbed4272faeba4fbf0ac926def97",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-binary.java3": "68339e9f5c8f1834762c3e083790e53efe0cd516afc32bf540a4cc1018d05cdc",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-binary.payload": "fdf92fc77b380f006e39fe28bbc224476a2c442f1e6d766f6e9c9342d392bee4",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-empty.java2": "31fbb273545d64ac329fb3ef55ae07c4275b82e63d348d10e53a6169c831dab3",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-empty.java3": "414176eddc1aba1d43203041da689bec9e81a4d3990c9ee48034d69d8cb18f21",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-empty.payload": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.java2": "31eec7ffaad1abce5cceb5433b82d8eeb87ab0c4fa22254871f3ed2fdd6555d0",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.java3": "21697f5cc46c2e55c4f30627450bf9b9335a7cb5447c4cd4b24e5007c9d9b80a",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.payload": "8ba8239bc33b8e8d1734a61550be6c4ce64b0fd2003f87fd48a4cf6b265812c9",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.known-test-key": "644d50ab64864c20a12b3c4656d46b4a48f69ef7c47ecdc8415cd28316b22ef5",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.recipient": "c439e09b76788b0157a984d060cb0cd462bd38b16f27c1cd45c20df5c4cc9b3a",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.sender": "0c80bed1687e0f7fcbc915eab269f9b00e5f40f77dd966eb0829b040a8c14db8",
+    "preview/native/tests/i2p_datagram_tests.cpp": "d75339ad2334a3729c9e9547b6ead0270a48e057d034b7e47df9bb6f47ac4bcd"
+  },
+  "official": {
+    "upstream_id": "i2p-java",
+    "repository": "https://github.com/i2p/i2p.i2p.git",
+    "commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+    "tree": "b38c70fbf3f7ce6f33ca95bedaa001e1458a4c9b",
+    "tag_object": "3dce17b4ff55f8d7674d25eb3c742b9c84e2581e",
+    "retained_repo": "build/dependencies/i2p-java-2.13.0",
+    "source_relation": "Release manifest Base-Revision matches commit;16 retained Java leaves byte-match official source JAR.21 required Git blobs retained/offline-readable. No reproducible JAR-build claim.",
+    "artifact_receipt_sha256": "d2acddaf5e03859e4fb5e5693419271d00e80c53e9e3f44a5afa51374f3e105c",
+    "release_binary_relation_sha256": "127cfe2e836bdc6c61aa60dc80bd76ec8500838d48b11c33f13f8826830fc4b4"
+  },
+  "modified": {
+    "distribution_url": "https://files.biglybt.com/plugins/azneti2phelper-linux_2.13.0.1.1.zip",
+    "zip_sha256": "86bbc02ff0cbd41dda97efefff028ad7180bf5434fed8c1392b21fc820b4b15c",
+    "archive_entry": "azi2pcore_2.13.0.1.jar",
+    "core_sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+    "core_bytes": 4288652,
+    "core_source_commit": null,
+    "wrapper_source_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+    "wrapper_source_relation": "All41 Java sources in distributed wrapper exactly equal pinned plugin source; this does not identify the separate modified core source commit.",
+    "core_scope": "1654 classes; no included source/build stamp.549 shared official classes differ in bytes, major52 versus51; no whole-core equivalence claim."
+  },
+  "openssl_reuse": {
+    "external_dependency_id": "tor-openssl-host",
+    "record_sha256": "efe09dec8f1ace049646e722f1f9705da0254cadf4b56d4b31230bf1ddc8f388",
+    "current_libcrypto_sha256": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+    "artifact_sha256_matches_existing_record": true,
+    "add_new_dependency": false
+  },
+  "official_actual_result_sha256": "e832f3328ac1968ffa5779f77e85fefe1cfa919ba9f12f8de5d2905fffb6f0d2",
+  "modified_actual_result_sha256": "aeaf490344b0853f85e80f30a0d6ae791f2761181b7c296ac27a70b23be836ab",
+  "credited_actual_offline_scope": "Each reference:8 original2/native verify,8 original3/native decode,8 native2/original verify,8 native3/original decode;types0/7 x empty,binary,1024,max,wrong-recipient/signature/nonempty-payload negatives. Modified run used existing pinned images without compiling.",
+  "pending": [
+    "Current52 GCC/Clang/SAN/native/runtime/private qualification",
+    "Ordinary retained-Java-fixture CTest execution in current source cohort",
+    "Root independent acceptance/publication review"
+  ],
+  "not_claimed": [
+    "Router/client/session activation",
+    "Datagram1/offline/options/other signing/certificate algorithms",
+    "Whole modified core or JNI/streaming equivalence",
+    "Public I2P network or performance/packaging parity"
+  ],
+  "durable_receipts": [
+    {
+      "path": "build/i2p-modified-core-20261029/manifest.json",
+      "sha256": "f6bbe266766faf72fce1f875a2d5de269fd524f92dd4700895efdedbc0419ed3"
+    },
+    {
+      "path": "build/i2p-datagram-codec-20261029/amendments/actual-offline-interop/manifest.json",
+      "sha256": "4428fffd9a036e10d341d6157f1714b37b4364917ddf5f6c104994cd1c7a4011"
+    },
+    {
+      "path": "build/i2p-datagram-codec-20261029/amendments/retained-java-fixtures/manifest.json",
+      "sha256": "44d18a42c3cd494cdffc43841f69236851025e37788ee59992d98cabba03160a"
+    }
+  ]
+}
