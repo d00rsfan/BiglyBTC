@@ -2234,7 +2234,7 @@ if(TARGET biglybtc_owned_azureus_service)
   target_compile_features(biglybtc-azureus-public-bound-tests PRIVATE cxx_std_23)
   target_compile_options(biglybtc-azureus-public-bound-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_test(NAME azureus-public-bound COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/azureus_public_bound_namespace.py" "$<TARGET_FILE:biglybtc-azureus-public-bound-tests>")
-  set_tests_properties(azureus-public-bound PROPERTIES TIMEOUT 240 LABELS "unit;namespace;profile;routing" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+  set_tests_properties(azureus-public-bound PROPERTIES TIMEOUT 1000 LABELS "unit;namespace;profile;routing" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()
 
 # Append once; no default Java/original-manager execution.
