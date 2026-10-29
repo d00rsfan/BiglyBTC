@@ -2220,7 +2220,15 @@ endif()
 
 if(TARGET biglybtc_owned_azureus_service)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  # Test-only fixed libc namespace setup. It never installs or runs at build time.
+  enable_language(C)
+  add_executable(biglybtc-public-netns-admin public_namespace_fixture/public_netns_admin.c)
+  set_target_properties(biglybtc-public-netns-admin PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)
+  # This privileged fixture is libc-only even in a sanitizer subject build.
+  target_compile_options(biglybtc-public-netns-admin PRIVATE -fno-sanitize=all -Wall -Wextra -Wpedantic -Werror)
+  target_link_options(biglybtc-public-netns-admin PRIVATE -fno-sanitize=all)
   add_executable(biglybtc-azureus-public-bound-tests azureus_public_bound_tests.cpp)
+  add_dependencies(biglybtc-azureus-public-bound-tests biglybtc-public-netns-admin)
   set_target_properties(biglybtc-azureus-public-bound-tests PROPERTIES AUTOMOC ON)
   target_link_libraries(biglybtc-azureus-public-bound-tests PRIVATE biglybtc_owned_azureus_service Qt6::Test)
   target_compile_features(biglybtc-azureus-public-bound-tests PRIVATE cxx_std_23)

@@ -29,7 +29,7 @@ if [[ $variant == bundled-qt || $variant == system-qt ]]; then
   packages+=(libboost1.90-dev=1.90.0-6ubuntu1 libtorrent-rasterbar-dev=2.0.12-1 libtorrent-rasterbar2.0t64=2.0.12-1 libmaxminddb-dev libarchive-dev)
 fi
 if [[ $variant != compiler-only ]]; then
-  packages+=(libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-x11-0 libxcb-cursor0
+  packages+=(bubblewrap iproute2 util-linux libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-x11-0 libxcb-cursor0
     libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0
     libxcb-xkb1 libx11-xcb1 libfontconfig1 libfreetype6 libdbus-1-3
     libglib2.0-0t64 libgtk-3-0t64 libwayland-client0 libwayland-cursor0 libwayland-egl1)

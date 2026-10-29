@@ -92,6 +92,11 @@ jobs:
           export BIGLYBTC_HISTORY_RANGE_CAPTURE_DIRECTORY="$EVIDENCE_DIR/range-captures"
           mkdir -m 700 "$EVIDENCE_DIR/native-session-captures"
           export BIGLYBTC_NATIVE_SESSION_CAPTURE_DIRECTORY="$EVIDENCE_DIR/native-session-captures"
+          # Explicit CI authorization for the fixed caller-dropping test helper.
+          export BIGLYBTC_PUBLIC_ADMIN_MODE=sudo
+          export BIGLYBTC_PUBLIC_ADMIN_HELPER="$BUILD_DIR/tests/biglybtc-public-netns-admin"
+          export BIGLYBTC_PUBLIC_ADMIN_SHA256=$(sha256sum "$BIGLYBTC_PUBLIC_ADMIN_HELPER" | cut -d ' ' -f1)
+          export BIGLYBTC_PUBLIC_ADMIN_RECEIPT="$EVIDENCE_DIR/public-namespace-launch.json"
           /usr/bin/ctest --test-dir "$BUILD_DIR" -L unit --no-tests=error \
             --output-on-failure --output-junit "$EVIDENCE_DIR/unit-tests.xml" \
             2>&1 | tee "$EVIDENCE_DIR/unit-tests.log"
