@@ -1,0 +1,258 @@
+{
+  "status": "REPAIRS_SOURCE_ADOPTED_PENDING_FOCUSED_RUNTIME",
+  "base_commit": "d77d615f87748666fcce73ab424caed8c704907b",
+  "source_commit": "3228091a1e12f81b334e27e589da8605c0b76420",
+  "composition_sha256": "3462e851993d31ee677fa15b97a24783c32273da406ce6616e157836be3c8115",
+  "source_path_count": 20,
+  "source_paths": {
+    "preview/native/core/include/biglybtc/queue_observations.hpp": {
+      "before_sha256": "30478290224b9c42d543d3eae90467da87b34839e43f058dba28a19acf264d3f",
+      "after_sha256": "eabd4d4651e5028d9ee532e943f86055ea2348e7f9cd0b89dacfba38e2fc0b2f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/core/include/biglybtc/queue_observations.hpp",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "eabd4d4651e5028d9ee532e943f86055ea2348e7f9cd0b89dacfba38e2fc0b2f",
+      "current_git_blob": "034f36e9d457449a775805a02f47fb2c3d869333"
+    },
+    "preview/native/core/src/queue_observations.cpp": {
+      "before_sha256": "73abd6d6e679b26b398c2359431a176dbca1926d18b8f7e0235cbeaf64c7be6e",
+      "after_sha256": "8bf7090d9cfccb51fde4e8004226749cc63717d3fcc8af190cd7ffb5e0420ae0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/core/src/queue_observations.cpp",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "8bf7090d9cfccb51fde4e8004226749cc63717d3fcc8af190cd7ffb5e0420ae0",
+      "current_git_blob": "d00a1227b115965f44a6e8da5bc5350f9f2f6d67"
+    },
+    "preview/native/engine/library_http_owner.inc": {
+      "before_sha256": "6bec3072da7428aa1fb135ab22fa1cf53d662c385f542862113e8816e4e0542b",
+      "after_sha256": "768a14625a073ac9b6f2d5d53fdd3693b3636cae97fd8f145e817f9f36488d7f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/engine/library_http_owner.inc",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "768a14625a073ac9b6f2d5d53fdd3693b3636cae97fd8f145e817f9f36488d7f",
+      "current_git_blob": "a0b68c8f93e127ab4472d39d80abfbb6ea1d5db8"
+    },
+    "preview/native/engine/library_udp_owner.inc": {
+      "before_sha256": "a1b322374176f0967473071a9caabaae58906f4bd983fd0ae4b819c2893180a4",
+      "after_sha256": "77e45a980d68abe5b7f43ad304a9624aa74823bb93df8993809dcf7bf2b96e77",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/engine/library_udp_owner.inc",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "77e45a980d68abe5b7f43ad304a9624aa74823bb93df8993809dcf7bf2b96e77",
+      "current_git_blob": "8e016aff0fd232460b95bb7594e8f6ce49789447"
+    },
+    "preview/native/engine/mainline_owner.inc": {
+      "before_sha256": "0032625f1810d45b563371b5de7c9ea420937926d530eb966c7e366f928e7541",
+      "after_sha256": "ed087de47e927b1bb8dbe34cdb05f798dd3f2df64d87f79f362d9a0fbfde0344",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/engine/mainline_owner.inc",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "ed087de47e927b1bb8dbe34cdb05f798dd3f2df64d87f79f362d9a0fbfde0344",
+      "current_git_blob": "d55d92c3c15b92681e200afe75286661e6b6087b"
+    },
+    "preview/native/engine/queued_mainline_scrape.cpp": {
+      "before_sha256": "2376dac105d6b924177afaed1b491c5bde6fae4378bda0d894921d273aa9a842",
+      "after_sha256": "587a1e896ce86f19520f582267e8a3beed65b553a740c9c66789fb8643d6a1d3",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/engine/queued_mainline_scrape.cpp",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "587a1e896ce86f19520f582267e8a3beed65b553a740c9c66789fb8643d6a1d3",
+      "current_git_blob": "4a460d23c2a07550a5a93c9495e1bcf9f7dcf82c"
+    },
+    "preview/native/engine/queued_mainline_scrape.hpp": {
+      "before_sha256": "87e375035a0d05e44435b1adaa7e80acf41b7fedeae2f3ab791aa476be3037f9",
+      "after_sha256": "212d056f00c59c22ee514b4e885c3f9378adcd7a86f2e38ec4914f2f54977879",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/engine/queued_mainline_scrape.hpp",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "212d056f00c59c22ee514b4e885c3f9378adcd7a86f2e38ec4914f2f54977879",
+      "current_git_blob": "80badee56b455ca5baf7df11b1c409653ae5e9ca"
+    },
+    "preview/native/tests/mainline_single_http_tests.cpp": {
+      "before_sha256": "294ad03106c165a790444691322fc9532efaa68aab16260f28342f7c30e075a9",
+      "after_sha256": "03034386110515a671ea24b14fe0e5626f244c6528806f5286a9d4ca59cd32d6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/tests/mainline_single_http_tests.cpp",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "4a8b787468af89cb30946590aacf92a8df47995b35fd1a659e038c1713580e06",
+      "composition": "Only append exact separately pinned JDK17 golden method; remove insertion recovers reviewed multi-URL afterimage byte-for-byte.",
+      "current_git_blob": "46c405539364b0312eb36bc38c2a596aa9b6b13d"
+    },
+    "preview/native/tests/queue_policy_tests.cpp": {
+      "before_sha256": "d72ee568ff0293e2067edea35215e76532fb216d8dae4ca256f1e42cb95868c7",
+      "after_sha256": "d53eac406c10fb0f123e560443aeb2b5a017d345e0757b0ac682984a55573441",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/review-codec/queue-deadline/staging/preview/native/tests/queue_policy_tests.cpp",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "2003676c931c1bc3002fef3115d0445ce6ea3da0398a8450e0cd4e61642d5219",
+      "repair_source_manifest": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/review-codec/queue-deadline/manifest.json",
+      "current_git_blob": "510d7ead965874a6c2f0d7564cb368d0aa087238"
+    },
+    "migration/fixtures/tor-owned-child/peer.py": {
+      "before_sha256": "6070b6e789e90311a7be751f94a0a0fabbb5bdbd6447913ed854e86820f54cae",
+      "after_sha256": "6bbeb0cbd19052a81ec7cf23218edf0efb8d8fc045a5a41c9a2db372f596a7c8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/migration/fixtures/tor-owned-child/peer.py",
+      "slice": "tor-control-loss",
+      "reviewed_parent_after_sha256": "6bbeb0cbd19052a81ec7cf23218edf0efb8d8fc045a5a41c9a2db372f596a7c8",
+      "current_git_blob": "d3f74c715a05e1925dbead0d0a388b20d9022498"
+    },
+    "preview/native/services/tor_control/owned_child.cpp": {
+      "before_sha256": "432ec155d070c513d6b0cf67e99b4eae5e188e44e84a4b15fbc850e54fdc1649",
+      "after_sha256": "dcaf52d3d364ee645d7ba606a3bba1d1648a11e2640e40e0ef8a6fd75415bfb0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/amendments/queued-terminal/staging/preview/native/services/tor_control/owned_child.cpp",
+      "slice": "tor-control-loss",
+      "reviewed_parent_after_sha256": "349dc0226b048050d880c1f00cf3585d1f2639164d9dbab9927b9fa00344eeda",
+      "repair_source_manifest": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/amendments/queued-terminal/manifest.json",
+      "current_git_blob": "2f05b5ae03d4c1de23f6b58081d48d695dcda0fd"
+    },
+    "preview/native/services/tor_control/owned_child_tests.cpp": {
+      "before_sha256": "b7536f21da1c15fd12e31deae00510c7341280313abba66f0ee6fd1937a2d91e",
+      "after_sha256": "8c2a3b30632be79f61e4c8508f0bf0dfaf29f0a1c61d5249b8cb8ed1a8f6a488",
+      "after_path": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/amendments/queued-terminal/staging/preview/native/services/tor_control/owned_child_tests.cpp",
+      "slice": "tor-control-loss",
+      "reviewed_parent_after_sha256": "73ef506d60de7d23ce0d1e214462ea3b8d788403920ac6555b5f2995a7f9bf90",
+      "repair_source_manifest": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/amendments/queued-terminal/manifest.json",
+      "current_git_blob": "24cc7f0d0ae4fc24619665957c96cfed9706e744"
+    },
+    "preview/native/app/main_desktop.cpp": {
+      "before_sha256": "7c1c43f059d3c396f28de803893d7808424f7c25a6fb64a7bb47d5edd24e1894",
+      "after_sha256": "d616885945ab1114b4cf175f7084263075c4e1425fd5a2304e46cff94b88eb75",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/app/main_desktop.cpp",
+      "slice": "wayland-console",
+      "reviewed_parent_after_sha256": "d616885945ab1114b4cf175f7084263075c4e1425fd5a2304e46cff94b88eb75",
+      "current_git_blob": "0221e2f57f1ba7377db6778b405a29ec4e7fc1cb"
+    },
+    "preview/native/app/wayland_console.hpp": {
+      "before_sha256": null,
+      "after_sha256": "94df873fdba3f2261f8c932422400c22e044cbb57c52d5193322dfa59a7dfbe4",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/app/wayland_console.hpp",
+      "slice": "wayland-console",
+      "reviewed_parent_after_sha256": "94df873fdba3f2261f8c932422400c22e044cbb57c52d5193322dfa59a7dfbe4",
+      "current_git_blob": "27e86f0345af138d3bb800f531bbbb8ade21b7ac"
+    },
+    "preview/native/packaging/preview.py": {
+      "before_sha256": "794cccedccbd20d4bd0c0f44d9447f3ffe2a5703fd9995a2a424d0a427085809",
+      "after_sha256": "ccae0bcbd252a316b77c832daedfdeaca62b79e04bcb71364e7fe960149eab0b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/packaging/preview.py",
+      "slice": "wayland-console",
+      "reviewed_parent_after_sha256": "ccae0bcbd252a316b77c832daedfdeaca62b79e04bcb71364e7fe960149eab0b",
+      "current_git_blob": "e36245518bac44aa3a5f0624c6a975ec6cfef8f8"
+    },
+    "preview/native/packaging/preview_smoke.cpp": {
+      "before_sha256": "8ca4a0f5fb35b7b263d489a01f30405b902dc533f47b52bf5a2baec2740f356b",
+      "after_sha256": "e3ce8aa6df8ab7bb34a9d5f91a30ef51b88794523c50c795a6e9de133ca54f9f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/packaging/preview_smoke.cpp",
+      "slice": "wayland-console",
+      "reviewed_parent_after_sha256": "e3ce8aa6df8ab7bb34a9d5f91a30ef51b88794523c50c795a6e9de133ca54f9f",
+      "current_git_blob": "c78448ae01934e557cc4d59c11626c26b880348e"
+    },
+    "preview/native/packaging/test_preview.py": {
+      "before_sha256": "53573e80f4b2aab38a6475c607f91d80918a3992e848e9c5a0aac1b7b034cfd9",
+      "after_sha256": "fb548267a3b6a283a993a7177567434dc5274a1aedfcb460568cc26d5e81afd6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/packaging/test_preview.py",
+      "slice": "wayland-console",
+      "reviewed_parent_after_sha256": "fb548267a3b6a283a993a7177567434dc5274a1aedfcb460568cc26d5e81afd6",
+      "current_git_blob": "87ef297d96c96887322cd1bbff612085792d5a86"
+    },
+    "preview/native/tests/fixtures/jks/jdk17-owned-root.der": {
+      "before_sha256": null,
+      "after_sha256": "a73545ce2cb04003e7e52561484b2032150b074c21737ef3d719087501eddcdd",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/tests/fixtures/jks/jdk17-owned-root.der",
+      "slice": "actual-jdk17-public-golden",
+      "current_git_blob": "9841c4e752b1af1d84dffe4aced78f4924ecd8b6"
+    },
+    "preview/native/tests/fixtures/jks/jdk17-owned-truststore.jks": {
+      "before_sha256": null,
+      "after_sha256": "711822d92da592638c3675072e588e5a30110188fa83475fd753804b530a8b83",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/tests/fixtures/jks/jdk17-owned-truststore.jks",
+      "slice": "actual-jdk17-public-golden",
+      "current_git_blob": "37611d124b876e31daabae3cd6db3eaaf1da4dc1"
+    },
+    "preview/native/tests/mainline_original_host_tests.cpp": {
+      "path": "preview/native/tests/mainline_original_host_tests.cpp",
+      "before_sha256": "b8721f50232b2aca5b42094fd560ed0b59bb6cabe803bee9d881dbf734972765",
+      "after_sha256": "a4602570af3ab2704ad5841547814f7f83c7715b7dd0679e28cc22b2b4d05c53",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/root-additions/preview/native/tests/mainline_original_host_tests.cpp",
+      "hosted_run": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40834240380",
+      "reason": "Three test helpers are used only under the existing original-identity feature guard; give their definitions the same guard. No warning suppression or test body changes.",
+      "affected_helpers": [
+        "cache",
+        "savedDefaultProfile",
+        "defaultPolicy"
+      ],
+      "runtime_executed": false,
+      "current_git_blob": "67c1cbc8b500e7275ee85faa73d03864da8e7061"
+    }
+  },
+  "source_commits": [
+    {
+      "commit": "c89340fdff044c51174d9e15917e1bcad10a2bd9",
+      "subject": "Preserve tracker tiers and retry alternate scrape URLs",
+      "paths": [
+        "preview/native/core/include/biglybtc/queue_observations.hpp",
+        "preview/native/core/src/queue_observations.cpp",
+        "preview/native/engine/library_http_owner.inc",
+        "preview/native/engine/library_udp_owner.inc",
+        "preview/native/engine/mainline_owner.inc",
+        "preview/native/engine/queued_mainline_scrape.cpp",
+        "preview/native/engine/queued_mainline_scrape.hpp",
+        "preview/native/tests/mainline_single_http_tests.cpp",
+        "preview/native/tests/queue_policy_tests.cpp"
+      ]
+    },
+    {
+      "commit": "f810ca74be0aa5f65de29eab1ed1ecfdadfe9572",
+      "subject": "Withdraw owned Tor authority after control loss",
+      "paths": [
+        "migration/fixtures/tor-owned-child/peer.py",
+        "preview/native/services/tor_control/owned_child.cpp",
+        "preview/native/services/tor_control/owned_child_tests.cpp"
+      ]
+    },
+    {
+      "commit": "42f8098b895d7debefecf81a624acd535dbfbbbd",
+      "subject": "Filter the redundant Qt Wayland focus warning",
+      "paths": [
+        "preview/native/app/main_desktop.cpp",
+        "preview/native/app/wayland_console.hpp",
+        "preview/native/packaging/preview.py",
+        "preview/native/packaging/preview_smoke.cpp",
+        "preview/native/packaging/test_preview.py"
+      ]
+    },
+    {
+      "commit": "dfc27e723344203e49d96341a3039be444062858",
+      "subject": "Cover original JDK trust stores and stock provider builds",
+      "paths": [
+        "preview/native/tests/mainline_single_http_tests.cpp",
+        "preview/native/tests/fixtures/jks/jdk17-owned-root.der",
+        "preview/native/tests/fixtures/jks/jdk17-owned-truststore.jks",
+        "preview/native/tests/mainline_original_host_tests.cpp"
+      ]
+    }
+  ],
+  "runtime_executed": false,
+  "repairs": [
+    {
+      "source_manifest": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/review-codec/queue-deadline/manifest.json",
+      "source_manifest_sha256": "bad7ce15aae0fb2251db05f1d6c42bd6795532fd75b4a5204d256a89435e153c",
+      "commit": "f601fc7868bfa1d06fd09f95d0030e93193c42ba",
+      "paths": {
+        "preview/native/tests/queue_policy_tests.cpp": {
+          "before_sha256": "2003676c931c1bc3002fef3115d0445ce6ea3da0398a8450e0cd4e61642d5219",
+          "after_sha256": "d53eac406c10fb0f123e560443aeb2b5a017d345e0757b0ac682984a55573441",
+          "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/review-codec/queue-deadline/staging/preview/native/tests/queue_policy_tests.cpp"
+        }
+      }
+    },
+    {
+      "source_manifest": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/amendments/queued-terminal/manifest.json",
+      "source_manifest_sha256": "57a8245b1931a7c0aded684a0346ab01206efcb55bf9dd828c7a574d74d13960",
+      "commit": "3228091a1e12f81b334e27e589da8605c0b76420",
+      "paths": {
+        "preview/native/services/tor_control/owned_child.cpp": {
+          "before_sha256": "349dc0226b048050d880c1f00cf3585d1f2639164d9dbab9927b9fa00344eeda",
+          "after_sha256": "dcaf52d3d364ee645d7ba606a3bba1d1648a11e2640e40e0ef8a6fd75415bfb0",
+          "after_path": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/amendments/queued-terminal/staging/preview/native/services/tor_control/owned_child.cpp"
+        },
+        "preview/native/services/tor_control/owned_child_tests.cpp": {
+          "before_sha256": "73ef506d60de7d23ce0d1e214462ea3b8d788403920ac6555b5f2995a7f9bf90",
+          "after_sha256": "8c2a3b30632be79f61e4c8508f0bf0dfaf29f0a1c61d5249b8cb8ed1a8f6a488",
+          "after_path": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/amendments/queued-terminal/staging/preview/native/services/tor_control/owned_child_tests.cpp"
+        }
+      }
+    }
+  ],
+  "failed_source_commit": "dfc27e723344203e49d96341a3039be444062858"
+}

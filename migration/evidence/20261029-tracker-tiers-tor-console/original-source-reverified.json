@@ -1,0 +1,52 @@
+{
+  "scope": "Immutable source bytes independently re-read; no Java execution or runtime parity claim",
+  "sources": {
+    "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "blob": "99617ee6753153c8af1598fc17cf28ed7631319b",
+      "sha256": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda"
+    },
+    "core/src/com/biglybt/core/torrent/impl/TOTorrentDeserialiseImpl.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/torrent/impl/TOTorrentDeserialiseImpl.java",
+      "blob": "0d29d44d09bf40c6acbc9cb3162a7a4edd3874ef",
+      "sha256": "a94afaca1ed16990e95e172941acf5f613f28186ecf8c581bbdb9987e9b738d9"
+    },
+    "core/src/com/biglybt/core/tracker/client/impl/bt/TRTrackerBTScraperImpl.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/tracker/client/impl/bt/TRTrackerBTScraperImpl.java",
+      "blob": "734d1094e7e57671c04965dda3753fcbf3aaa424",
+      "sha256": "81cdeb818d1f7e23df45fccdcb3112f5c22dfb7563ecd21d1ba1a417006f0d85"
+    },
+    "core/src/com/biglybt/pifimpl/local/download/DownloadScrapeResultImpl.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/pifimpl/local/download/DownloadScrapeResultImpl.java",
+      "blob": "224cd3c9a0539c5325922b312411099834896ad8",
+      "sha256": "4eacd4b4a0ba524f7a1c7e34bb7d8ea50d63bcb91372151cab937d3a2dd5960c"
+    },
+    "mldht/src/lbms/plugins/mldht/azureus/Tracker.java": {
+      "repository": "/home/yurii/Java/BiglyBT-plugin-mlDHT",
+      "commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45",
+      "path": "src/lbms/plugins/mldht/azureus/Tracker.java",
+      "blob": "7304831014fdb8a541d99e3231445c84f09c922b",
+      "sha256": "f23b0570b66ce3cb46bc1fcd5116230b4ea2feaa379b29ac4fc08d3e362c35c8"
+    },
+    "JDK17:java.base/java/util/Random.java": {
+      "sha256": "48efa002098f2a2a34005fe687e294c5dccf57aac9c5de71d13dce87519061f6",
+      "archive": "/usr/lib/jvm/openjdk-17/lib/src.zip",
+      "entry": "java.base/java/util/Random.java"
+    },
+    "TorPlugin.java": {
+      "repository": "/home/yurii/Java/BiglyBT-plugin-aznettor",
+      "commit": "ae8efb8d40fb38246ac1790ab5cfb11584689c4a",
+      "path": "org/parg/azureus/plugins/networks/tor/TorPlugin.java",
+      "blob": "be9894e30e078a437c722c368161d612207dbdd2",
+      "sha256": "b4d560691d64a200e46222cb9e1f74b2ce90f4e3df9b737ad8a7f2a67d708776"
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-multi-tracker-20261029/amendments/row-seed-lifetime/manifest.json",
+    "sha256": "13a483ba90213826ac083e0b0a5ced283fdb8b1b63d2830efa2c5bec6705cb12"
+  },
+  "frozen_parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-multi-tracker-20261029/manifest.json",
+    "sha256": "50e83b7c7792426bb3be5654fd1fad5383524f5e475a34f135faa726b436b369"
+  },
+  "findings": [],
+  "verified": {
+    "source_maps": 9,
+    "parent_artifacts": 15,
+    "child_artifacts": 13,
+    "original_source_pins": 6,
+    "old_http_method_bodies_byte_exact": 30,
+    "old_queue_policy_lines_retained": true,
+    "inherited_paths_byte_exact": 5,
+    "parent_delta_paths": 4,
+    "beforeimages": "all9 equal c7a6ab and current native files"
+  },
+  "reasoning": [
+    "Original DownloadManagerImpl3890-4022 uses fixed per-manager JavaRandom.nextDouble insertion within ordered tiers. Native48-bit seed/26+27 draws/double placement, tier order and primary-last append match that algorithm. This is transient native-owner state, not cross-process order equality or persisted seed.",
+    "Typed selection preserves ERROR separately from retained valid counts, waits for initial/scraping, prefers first regular online result, defers DHT backup and returns first error only after represented known errors. Unknown/unsupported cannot manufacture all-trackers-failed permission. Per-URL regular retry deadlines and existing Mainline scheduling remain.",
+    "Fresh HTTP/UDP member resolution binds exact responseKey/URL to complete current source scope. Full raw/info identities, private/source/denied/verification/admission/retirement gates and fresh configuration/DNS/redirect/auth/JKS proofs remain. No hidden torrent, payload handle, announce, peer injection or persisted source rewriting. Auth/JKS helpers untouched; owner delta only reselects fresh member.",
+    "Child full seen-hash inventory is assigned only after final primary/raw inventory comparison succeeds. Stop, denied/other eligibility absence, failed reads, tier edits and admissions retain RAM seed; absence from that authenticated full inventory prunes it. No deletion inferred from an unavailable target list.",
+    "Single-URL remains first legacy reader branch. New source tests cover source/raw identity/bounds, fixed-seed selection/status/retained-count math, actual serial HTTP fallback and Stop revoking held reply with no payload admission/access; all30 current HTTP methods/helpers unchanged."
+  ],
+  "limits": [
+    "Source-only: no builds, Java, fixtures, network or runtime execution. Authored seed expectations are pending assertions, not actual original comparison evidence.",
+    "Active announcer multi-URL, more than8 multi entries, malformed/repaired/non-ASCII/mixed DHT groups, tracker proxies and full background scheduler parity remain unsupported.",
+    "Root must execute affected existing suites before runtime qualification; no broad chapter claim."
+  ],
+  "pin_label_note": "original-source-pins.json namespaced mldht/src/... label verified as literal src/... within declared wrapper3b125 repository; exact supplied hash matches. Other originalcb8 files and actual JDK17 Random.java zip member hashes verified.",
+  "affected_suites": [
+    "queue-policy",
+    "mainline-single-http",
+    "mainline-single-udp"
+  ],
+  "native_cache_dist_or_original_mutated": false
+}

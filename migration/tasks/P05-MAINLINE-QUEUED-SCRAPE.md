@@ -7,3 +7,10 @@ Queued scrape covers held saved-library eligibility, exact selected/raw identity
 Azureus normal flag reads preserve original seed/downloading/unknown flag behavior. Explicit suspended-diversification volatile storage-key stats use actual Mapping events, original unique-IP bloom/RPM and 14-byte wire values with real bound local contact. Default absent-storage stats return an empty result. Full frequency/size diversification, persistence/expiry/random storage-manager behavior, public activation and whole P06 remain open. Existing DbValue/Mapping and all broader registry baselines are unchanged.
 
 Both new components remain in_progress. No whole phase, shipping, public-network, full Java-runtime or performance parity is claimed. Whole-plan continuation remains authorised; no chapter STOP is inserted.
+
+
+## 2026-10-29 bounded follow-up
+
+Saved multi-tracker tier selection and per-owner JavaRandom48 shuffle are now qualified for the bounded queued/unadmitted HTTP(S)/numeric-UDP path (up to eight URLs). The authentic regular status/count reducer preserves per-URL history and all-tiers error meaning. Active-announcer parity and remaining proxy/auth/public-network paths stay open.
+
+Qualified source: `3228091a1e12f81b334e27e589da8605c0b76420`. See `migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md` for the initial failures, repairs and explicit reuse of identical tested executables.

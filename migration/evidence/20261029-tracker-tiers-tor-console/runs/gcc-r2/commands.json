@@ -1,0 +1,88 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-tor-owned-child-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 66.17,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r2/build.log",
+    "log_sha256": "8cc7664b12d4f56bc9a2c2bcd5b0aa20ba62bae496310ae16c35de2081c1799c"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "-R",
+      "^(queue-policy|owned-tor-child-lifecycle)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r2/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 13.841,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r2/tests.log",
+    "log_sha256": "c44143ed0638cdbf5b5a1e7e63ea83a4fbef6d724d65b7d6db879659d8121b1c"
+  },
+  {
+    "name": "wayland-smoke",
+    "command": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke",
+      "exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler",
+      "explicitQtConsoleControlsDisableNativeFiltering",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r2/wayland-smoke.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.12,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r2/wayland-smoke.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "launcher-units",
+    "command": [
+      "python3",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/native/packaging/test_preview.py"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 1.876,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r2/launcher-units.log",
+    "log_sha256": "255062f78eed7bfdbcdf7ec764fe1a88422a02f77c6a4a2d5e211821ba3ffe16"
+  },
+  {
+    "name": "real-offline-tor",
+    "command": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/tor_control/biglybtc-tor-owned-child-tests",
+      "--real-offline-tor",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r2/real-offline-tor.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.841,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r2/real-offline-tor.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

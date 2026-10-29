@@ -73,3 +73,10 @@ Ctrl+W closes the selected view, with the generic entry veto; Ctrl+1 can reopen
 My Torrents. The native permanent tab in the earlier preview is an adaptation,
 not original parity or an accepted final restriction. Preserve the old source
 reports unchanged; P04-07 now corrects the native visible behavior.
+
+
+## 2026-10-29 bounded follow-up
+
+The normal launcher now uses the same narrowly proven Qt6.12.0 Wayland no-focus warning filter as preview; explicit diagnostic/fatal/logging controls bypass it and unrelated messages retain the original handler. General focus/IME acceptance remains open.
+
+Qualified source: `3228091a1e12f81b334e27e589da8605c0b76420`. See `migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md` for the initial failures, repairs and explicit reuse of identical tested executables.

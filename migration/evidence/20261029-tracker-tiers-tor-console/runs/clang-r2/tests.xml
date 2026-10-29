@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="1"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="0"
+	timestamp="2026-10-29T11:00:25"
+	>
+	<testcase name="queue-policy" classname="queue-policy" time="0.107427" status="run">
+		<properties>
+			<property name="cmake_labels" value="queue;unit"/>
+		</properties>
+		<system-out>41 queue-policy families, 8704 assertions passed
+</system-out>
+	</testcase>
+</testsuite>

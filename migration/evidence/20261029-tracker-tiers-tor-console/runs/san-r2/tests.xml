@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="2"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="8"
+	timestamp="2026-10-29T11:01:05"
+	>
+	<testcase name="owned-tor-child-lifecycle" classname="owned-tor-child-lifecycle" time="8.71952" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;loopback;owned-process;qt"/>
+		</properties>
+		<system-out>********* Start testing of OwnedTorChildTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedTorChildTests::initTestCase()
+PASS   : OwnedTorChildTests::postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(control-eof)
+PASS   : OwnedTorChildTests::postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(unsupported-post-setup-event)
+PASS   : OwnedTorChildTests::postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(control-eof-kill-escalation)
+PASS   : OwnedTorChildTests::postReadyControlLossSupportsReentrantStopAndDeletion()
+PASS   : OwnedTorChildTests::actualOwnedChildAuthenticatesStopsJoinsAndRestartsInFreshDirectory()
+PASS   : OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(deadline-no-discovery)
+PASS   : OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(cancel-while-discovering)
+PASS   : OwnedTo...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="queue-policy" classname="queue-policy" time="0.10964" status="run">
+		<properties>
+			<property name="cmake_labels" value="queue;unit"/>
+		</properties>
+		<system-out>41 queue-policy families, 8704 assertions passed
+</system-out>
+	</testcase>
+</testsuite>

@@ -7,3 +7,10 @@ Active scrape is bounded to an actually admitted, held original-profile row with
 Tracker observations expose exact selected-protocol matched callback request/terminal timestamps, URL digest and raw reply/error counts through the same admission ring. A failed RPC alone does not prove original null/invalid retained scrape response or RT_ERROR. Configured-tracker activation remains blocked. The original identity adapter only reads an owned held profile's original plugin-directory baseID.config through no-follow descriptor/name proofs, with bounded parser reuse from native plugin92c. Restore-disabled/absence remains absence; it writes no original ID/cache, reserves no runtime family and activates no wire ID. CMake stays opt-in with an explicit pinned source-directory dependency and clean-CI checkout.
 
 Original core `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`, wrapper `3b12515c5541ed75cfb4f795b672d4e786df9f45` and exact paired engine `067f434eb60323123a5e885093ab2504ab10d5f9` are attributed by full paths/hashes in the retained source records. Historical f929 provenance and all existing first-ported/integrated baselines are preserved. The two new components and queued-scrape parent stay in_progress. P06, broader compatibility parents, public-network/shipping and unrestricted performance/parity claims remain open. Native registry resolution of the historical original repository dot is tracked separately in migration/tasks/P13-02-prototype-export.md; this preparation does not claim that export validated. Whole-plan continuation remains authorized.
+
+
+## 2026-10-29 bounded follow-up
+
+The regular tracker response reducer now selects across original saved tiers with a lifetime-scoped JavaRandom48 seed and retained per-URL counts/status. A failed first URL no longer authorises a completed all-trackers error. Active-announcer and broader tracker compatibility stay open.
+
+Qualified source: `3228091a1e12f81b334e27e589da8605c0b76420`. See `migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md` for the initial failures, repairs and explicit reuse of identical tested executables.

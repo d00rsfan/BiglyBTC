@@ -1,0 +1,67 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-mainline-single-http-tests",
+      "biglybtc-mainline-single-udp-tests",
+      "biglybtc-mainline-single-tracker-owner-tests",
+      "biglybtc-mainline-dht-tests",
+      "biglybtc-mainline-original-host-tests",
+      "biglybtc-tor-owned-child-tests",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-network-policy-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 851.042,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r1/build.log",
+    "log_sha256": "1644eaa26d9661919b597cfbe06aa707a57f49ed5379a1db517cd6b1f4385b4c"
+  },
+  {
+    "name": "http-loader",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.017,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r1/http-loader.log",
+    "log_sha256": "ea54b63bd293e15b1795da65f86d7439d4363e1049e4601d8991e0fd35d08f15"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "-R",
+      "^(queue-policy|network-policy|mainline-dht|mainline-single-http|mainline-single-udp|mainline-single-tracker-owner|owned-tor-child-lifecycle)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 8,
+    "seconds": 521.876,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r1/tests.log",
+    "log_sha256": "8fa586be5d97d93a51f0d315eb99cb8a717d63b5ef10ee791e59af15ef7f0fdf"
+  }
+]

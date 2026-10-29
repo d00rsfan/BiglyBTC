@@ -1,0 +1,250 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_REVIEWED_SLICES_COMPOSED_PENDING_ROOT_QUALIFICATION",
+  "native_source_basis": "d77d615f87748666fcce73ab424caed8c704907b",
+  "source_paths": {
+    "preview/native/core/include/biglybtc/queue_observations.hpp": {
+      "before_sha256": "30478290224b9c42d543d3eae90467da87b34839e43f058dba28a19acf264d3f",
+      "after_sha256": "eabd4d4651e5028d9ee532e943f86055ea2348e7f9cd0b89dacfba38e2fc0b2f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/core/include/biglybtc/queue_observations.hpp",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "eabd4d4651e5028d9ee532e943f86055ea2348e7f9cd0b89dacfba38e2fc0b2f"
+    },
+    "preview/native/core/src/queue_observations.cpp": {
+      "before_sha256": "73abd6d6e679b26b398c2359431a176dbca1926d18b8f7e0235cbeaf64c7be6e",
+      "after_sha256": "8bf7090d9cfccb51fde4e8004226749cc63717d3fcc8af190cd7ffb5e0420ae0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/core/src/queue_observations.cpp",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "8bf7090d9cfccb51fde4e8004226749cc63717d3fcc8af190cd7ffb5e0420ae0"
+    },
+    "preview/native/engine/library_http_owner.inc": {
+      "before_sha256": "6bec3072da7428aa1fb135ab22fa1cf53d662c385f542862113e8816e4e0542b",
+      "after_sha256": "768a14625a073ac9b6f2d5d53fdd3693b3636cae97fd8f145e817f9f36488d7f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/engine/library_http_owner.inc",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "768a14625a073ac9b6f2d5d53fdd3693b3636cae97fd8f145e817f9f36488d7f"
+    },
+    "preview/native/engine/library_udp_owner.inc": {
+      "before_sha256": "a1b322374176f0967473071a9caabaae58906f4bd983fd0ae4b819c2893180a4",
+      "after_sha256": "77e45a980d68abe5b7f43ad304a9624aa74823bb93df8993809dcf7bf2b96e77",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/engine/library_udp_owner.inc",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "77e45a980d68abe5b7f43ad304a9624aa74823bb93df8993809dcf7bf2b96e77"
+    },
+    "preview/native/engine/mainline_owner.inc": {
+      "before_sha256": "0032625f1810d45b563371b5de7c9ea420937926d530eb966c7e366f928e7541",
+      "after_sha256": "ed087de47e927b1bb8dbe34cdb05f798dd3f2df64d87f79f362d9a0fbfde0344",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/engine/mainline_owner.inc",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "ed087de47e927b1bb8dbe34cdb05f798dd3f2df64d87f79f362d9a0fbfde0344"
+    },
+    "preview/native/engine/queued_mainline_scrape.cpp": {
+      "before_sha256": "2376dac105d6b924177afaed1b491c5bde6fae4378bda0d894921d273aa9a842",
+      "after_sha256": "587a1e896ce86f19520f582267e8a3beed65b553a740c9c66789fb8643d6a1d3",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/engine/queued_mainline_scrape.cpp",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "587a1e896ce86f19520f582267e8a3beed65b553a740c9c66789fb8643d6a1d3"
+    },
+    "preview/native/engine/queued_mainline_scrape.hpp": {
+      "before_sha256": "87e375035a0d05e44435b1adaa7e80acf41b7fedeae2f3ab791aa476be3037f9",
+      "after_sha256": "212d056f00c59c22ee514b4e885c3f9378adcd7a86f2e38ec4914f2f54977879",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/engine/queued_mainline_scrape.hpp",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "212d056f00c59c22ee514b4e885c3f9378adcd7a86f2e38ec4914f2f54977879"
+    },
+    "preview/native/tests/mainline_single_http_tests.cpp": {
+      "before_sha256": "294ad03106c165a790444691322fc9532efaa68aab16260f28342f7c30e075a9",
+      "after_sha256": "03034386110515a671ea24b14fe0e5626f244c6528806f5286a9d4ca59cd32d6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/tests/mainline_single_http_tests.cpp",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "4a8b787468af89cb30946590aacf92a8df47995b35fd1a659e038c1713580e06",
+      "composition": "Only append exact separately pinned JDK17 golden method; remove insertion recovers reviewed multi-URL afterimage byte-for-byte."
+    },
+    "preview/native/tests/queue_policy_tests.cpp": {
+      "before_sha256": "d72ee568ff0293e2067edea35215e76532fb216d8dae4ca256f1e42cb95868c7",
+      "after_sha256": "2003676c931c1bc3002fef3115d0445ce6ea3da0398a8450e0cd4e61642d5219",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/tests/queue_policy_tests.cpp",
+      "slice": "multi-url",
+      "reviewed_parent_after_sha256": "2003676c931c1bc3002fef3115d0445ce6ea3da0398a8450e0cd4e61642d5219"
+    },
+    "migration/fixtures/tor-owned-child/peer.py": {
+      "before_sha256": "6070b6e789e90311a7be751f94a0a0fabbb5bdbd6447913ed854e86820f54cae",
+      "after_sha256": "6bbeb0cbd19052a81ec7cf23218edf0efb8d8fc045a5a41c9a2db372f596a7c8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/migration/fixtures/tor-owned-child/peer.py",
+      "slice": "tor-control-loss",
+      "reviewed_parent_after_sha256": "6bbeb0cbd19052a81ec7cf23218edf0efb8d8fc045a5a41c9a2db372f596a7c8"
+    },
+    "preview/native/services/tor_control/owned_child.cpp": {
+      "before_sha256": "432ec155d070c513d6b0cf67e99b4eae5e188e44e84a4b15fbc850e54fdc1649",
+      "after_sha256": "349dc0226b048050d880c1f00cf3585d1f2639164d9dbab9927b9fa00344eeda",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/services/tor_control/owned_child.cpp",
+      "slice": "tor-control-loss",
+      "reviewed_parent_after_sha256": "349dc0226b048050d880c1f00cf3585d1f2639164d9dbab9927b9fa00344eeda"
+    },
+    "preview/native/services/tor_control/owned_child_tests.cpp": {
+      "before_sha256": "b7536f21da1c15fd12e31deae00510c7341280313abba66f0ee6fd1937a2d91e",
+      "after_sha256": "73ef506d60de7d23ce0d1e214462ea3b8d788403920ac6555b5f2995a7f9bf90",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/services/tor_control/owned_child_tests.cpp",
+      "slice": "tor-control-loss",
+      "reviewed_parent_after_sha256": "73ef506d60de7d23ce0d1e214462ea3b8d788403920ac6555b5f2995a7f9bf90"
+    },
+    "preview/native/app/main_desktop.cpp": {
+      "before_sha256": "7c1c43f059d3c396f28de803893d7808424f7c25a6fb64a7bb47d5edd24e1894",
+      "after_sha256": "d616885945ab1114b4cf175f7084263075c4e1425fd5a2304e46cff94b88eb75",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/app/main_desktop.cpp",
+      "slice": "wayland-console",
+      "reviewed_parent_after_sha256": "d616885945ab1114b4cf175f7084263075c4e1425fd5a2304e46cff94b88eb75"
+    },
+    "preview/native/app/wayland_console.hpp": {
+      "before_sha256": null,
+      "after_sha256": "94df873fdba3f2261f8c932422400c22e044cbb57c52d5193322dfa59a7dfbe4",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/app/wayland_console.hpp",
+      "slice": "wayland-console",
+      "reviewed_parent_after_sha256": "94df873fdba3f2261f8c932422400c22e044cbb57c52d5193322dfa59a7dfbe4"
+    },
+    "preview/native/packaging/preview.py": {
+      "before_sha256": "794cccedccbd20d4bd0c0f44d9447f3ffe2a5703fd9995a2a424d0a427085809",
+      "after_sha256": "ccae0bcbd252a316b77c832daedfdeaca62b79e04bcb71364e7fe960149eab0b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/packaging/preview.py",
+      "slice": "wayland-console",
+      "reviewed_parent_after_sha256": "ccae0bcbd252a316b77c832daedfdeaca62b79e04bcb71364e7fe960149eab0b"
+    },
+    "preview/native/packaging/preview_smoke.cpp": {
+      "before_sha256": "8ca4a0f5fb35b7b263d489a01f30405b902dc533f47b52bf5a2baec2740f356b",
+      "after_sha256": "e3ce8aa6df8ab7bb34a9d5f91a30ef51b88794523c50c795a6e9de133ca54f9f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/packaging/preview_smoke.cpp",
+      "slice": "wayland-console",
+      "reviewed_parent_after_sha256": "e3ce8aa6df8ab7bb34a9d5f91a30ef51b88794523c50c795a6e9de133ca54f9f"
+    },
+    "preview/native/packaging/test_preview.py": {
+      "before_sha256": "53573e80f4b2aab38a6475c607f91d80918a3992e848e9c5a0aac1b7b034cfd9",
+      "after_sha256": "fb548267a3b6a283a993a7177567434dc5274a1aedfcb460568cc26d5e81afd6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/packaging/test_preview.py",
+      "slice": "wayland-console",
+      "reviewed_parent_after_sha256": "fb548267a3b6a283a993a7177567434dc5274a1aedfcb460568cc26d5e81afd6"
+    },
+    "preview/native/tests/fixtures/jks/jdk17-owned-root.der": {
+      "before_sha256": null,
+      "after_sha256": "a73545ce2cb04003e7e52561484b2032150b074c21737ef3d719087501eddcdd",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/tests/fixtures/jks/jdk17-owned-root.der",
+      "slice": "actual-jdk17-public-golden"
+    },
+    "preview/native/tests/fixtures/jks/jdk17-owned-truststore.jks": {
+      "before_sha256": null,
+      "after_sha256": "711822d92da592638c3675072e588e5a30110188fa83475fd753804b530a8b83",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/staging/preview/native/tests/fixtures/jks/jdk17-owned-truststore.jks",
+      "slice": "actual-jdk17-public-golden"
+    }
+  },
+  "source_path_count": 19,
+  "slice_composition": [
+    {
+      "name": "multi-url",
+      "manifest": "/home/yurii/Java/BiglyBT/build/mainline-scrape-multi-tracker-20261029/amendments/row-seed-lifetime/manifest.json",
+      "manifest_sha256": "13a483ba90213826ac083e0b0a5ced283fdb8b1b63d2830efa2c5bec6705cb12",
+      "source_review": "/home/yurii/Java/BiglyBT/build/mainline-scrape-multi-tracker-20261029-review/review.json",
+      "source_review_sha256": "38bb3232585a573d314262605a46b6aa1e1b463d8d7c1307ab124fc135619afd",
+      "source_paths": [
+        "preview/native/core/include/biglybtc/queue_observations.hpp",
+        "preview/native/core/src/queue_observations.cpp",
+        "preview/native/engine/library_http_owner.inc",
+        "preview/native/engine/library_udp_owner.inc",
+        "preview/native/engine/mainline_owner.inc",
+        "preview/native/engine/queued_mainline_scrape.cpp",
+        "preview/native/engine/queued_mainline_scrape.hpp",
+        "preview/native/tests/mainline_single_http_tests.cpp",
+        "preview/native/tests/queue_policy_tests.cpp"
+      ]
+    },
+    {
+      "name": "tor-control-loss",
+      "manifest": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/manifest.json",
+      "manifest_sha256": "d96f9592491c49d1a14c06b17a14fbb80588db2708f2c5d03dbd3e0f280add49",
+      "source_review": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029-review/review.json",
+      "source_review_sha256": "7010465f9d931616580ca4fb0951c39250a106a1e6fa43c4eef5266e615fea9a",
+      "source_paths": [
+        "migration/fixtures/tor-owned-child/peer.py",
+        "preview/native/services/tor_control/owned_child.cpp",
+        "preview/native/services/tor_control/owned_child_tests.cpp"
+      ]
+    },
+    {
+      "name": "wayland-console",
+      "manifest": "/home/yurii/Java/BiglyBT/build/wayland-console-normal-20261029/manifest.json",
+      "manifest_sha256": "b1239388c41d25d079ba8ead3dbe07798463145cdef69754989bddc9860191db",
+      "source_review": "/home/yurii/Java/BiglyBT/build/wayland-console-normal-20261029-review/review.json",
+      "source_review_sha256": "35fde24e61264ad1c01d09a280e7f0debb1cf3dec12f2ed49f2547fcd537bf58",
+      "source_paths": [
+        "preview/native/app/main_desktop.cpp",
+        "preview/native/app/wayland_console.hpp",
+        "preview/native/packaging/preview.py",
+        "preview/native/packaging/preview_smoke.cpp",
+        "preview/native/packaging/test_preview.py"
+      ]
+    }
+  ],
+  "added_golden_fixture_paths": [
+    "preview/native/tests/fixtures/jks/jdk17-owned-root.der",
+    "preview/native/tests/fixtures/jks/jdk17-owned-truststore.jks"
+  ],
+  "golden_native_method": "actualJdk17KeytoolJksMatchesItsExportedTrustedCertificate",
+  "golden_generation_receipt": "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/info.json",
+  "golden_generation_receipt_sha256": "1e0df1e12ddebb5df54ec6698fd9a47e760486cc61ab0660aca059f13df0b58a",
+  "source_overlap_resolution": "Append only exact golden method to reviewed multiURL HTTP afterimage; no slice path overlaps otherwise.",
+  "current_beforeimages_and_git_blobs_verified": true,
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/mainline-scrape-multi-tracker-20261029/amendments/row-seed-lifetime/manifest.json": "13a483ba90213826ac083e0b0a5ced283fdb8b1b63d2830efa2c5bec6705cb12",
+    "/home/yurii/Java/BiglyBT/build/mainline-scrape-multi-tracker-20261029-review/review.json": "38bb3232585a573d314262605a46b6aa1e1b463d8d7c1307ab124fc135619afd",
+    "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/manifest.json": "d96f9592491c49d1a14c06b17a14fbb80588db2708f2c5d03dbd3e0f280add49",
+    "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029-review/review.json": "7010465f9d931616580ca4fb0951c39250a106a1e6fa43c4eef5266e615fea9a",
+    "/home/yurii/Java/BiglyBT/build/wayland-console-normal-20261029/manifest.json": "b1239388c41d25d079ba8ead3dbe07798463145cdef69754989bddc9860191db",
+    "/home/yurii/Java/BiglyBT/build/wayland-console-normal-20261029-review/review.json": "35fde24e61264ad1c01d09a280e7f0debb1cf3dec12f2ed49f2547fcd537bf58",
+    "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/info.json": "1e0df1e12ddebb5df54ec6698fd9a47e760486cc61ab0660aca059f13df0b58a",
+    "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/append-method.cpp.inc": "e9e282614981520b859ef3c4931cf080b26dae19ddf78eaf11189cc718a5e37d",
+    "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/staging/preview/native/tests/fixtures/jks/jdk17-owned-root.der": "a73545ce2cb04003e7e52561484b2032150b074c21737ef3d719087501eddcdd",
+    "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/staging/preview/native/tests/fixtures/jks/jdk17-owned-truststore.jks": "711822d92da592638c3675072e588e5a30110188fa83475fd753804b530a8b83"
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "12948dcee08f793b4e877bf7709889a04f169115d9e0c1708596ff211f9ba76c",
+    "changes.patch": "77f57887dd65d5cc56195775a40efed03512a98b3cd3223476c7d9b4594b2c16",
+    "staging/migration/fixtures/tor-owned-child/peer.py": "6bbeb0cbd19052a81ec7cf23218edf0efb8d8fc045a5a41c9a2db372f596a7c8",
+    "staging/preview/native/app/main_desktop.cpp": "d616885945ab1114b4cf175f7084263075c4e1425fd5a2304e46cff94b88eb75",
+    "staging/preview/native/app/wayland_console.hpp": "94df873fdba3f2261f8c932422400c22e044cbb57c52d5193322dfa59a7dfbe4",
+    "staging/preview/native/core/include/biglybtc/queue_observations.hpp": "eabd4d4651e5028d9ee532e943f86055ea2348e7f9cd0b89dacfba38e2fc0b2f",
+    "staging/preview/native/core/src/queue_observations.cpp": "8bf7090d9cfccb51fde4e8004226749cc63717d3fcc8af190cd7ffb5e0420ae0",
+    "staging/preview/native/engine/library_http_owner.inc": "768a14625a073ac9b6f2d5d53fdd3693b3636cae97fd8f145e817f9f36488d7f",
+    "staging/preview/native/engine/library_udp_owner.inc": "77e45a980d68abe5b7f43ad304a9624aa74823bb93df8993809dcf7bf2b96e77",
+    "staging/preview/native/engine/mainline_owner.inc": "ed087de47e927b1bb8dbe34cdb05f798dd3f2df64d87f79f362d9a0fbfde0344",
+    "staging/preview/native/engine/queued_mainline_scrape.cpp": "587a1e896ce86f19520f582267e8a3beed65b553a740c9c66789fb8643d6a1d3",
+    "staging/preview/native/engine/queued_mainline_scrape.hpp": "212d056f00c59c22ee514b4e885c3f9378adcd7a86f2e38ec4914f2f54977879",
+    "staging/preview/native/packaging/preview.py": "ccae0bcbd252a316b77c832daedfdeaca62b79e04bcb71364e7fe960149eab0b",
+    "staging/preview/native/packaging/preview_smoke.cpp": "e3ce8aa6df8ab7bb34a9d5f91a30ef51b88794523c50c795a6e9de133ca54f9f",
+    "staging/preview/native/packaging/test_preview.py": "fb548267a3b6a283a993a7177567434dc5274a1aedfcb460568cc26d5e81afd6",
+    "staging/preview/native/services/tor_control/owned_child.cpp": "349dc0226b048050d880c1f00cf3585d1f2639164d9dbab9927b9fa00344eeda",
+    "staging/preview/native/services/tor_control/owned_child_tests.cpp": "73ef506d60de7d23ce0d1e214462ea3b8d788403920ac6555b5f2995a7f9bf90",
+    "staging/preview/native/tests/fixtures/jks/jdk17-owned-root.der": "a73545ce2cb04003e7e52561484b2032150b074c21737ef3d719087501eddcdd",
+    "staging/preview/native/tests/fixtures/jks/jdk17-owned-truststore.jks": "711822d92da592638c3675072e588e5a30110188fa83475fd753804b530a8b83",
+    "staging/preview/native/tests/mainline_single_http_tests.cpp": "03034386110515a671ea24b14fe0e5626f244c6528806f5286a9d4ca59cd32d6",
+    "staging/preview/native/tests/queue_policy_tests.cpp": "2003676c931c1bc3002fef3115d0445ce6ea3da0398a8450e0cd4e61642d5219"
+  },
+  "new_targets": [],
+  "suggested_suites": [
+    "queue-policy",
+    "network-policy",
+    "mainline-single-http",
+    "owned-tor-child-lifecycle"
+  ],
+  "suggested_smoke_methods": [
+    "exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler",
+    "explicitQtConsoleControlsDisableNativeFiltering"
+  ],
+  "actual_composer_build_or_subject_runs": [],
+  "python_ast_only": [
+    "migration/fixtures/tor-owned-child/peer.py",
+    "preview/native/packaging/preview.py",
+    "preview/native/packaging/test_preview.py"
+  ],
+  "native_mutated": false,
+  "provider_mutated": false,
+  "dist_mutated": false
+}

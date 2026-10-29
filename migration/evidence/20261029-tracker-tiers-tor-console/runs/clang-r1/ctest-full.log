@@ -1,0 +1,106 @@
+Start testing: Oct 29 10:30 IST
+----------------------------------------------------------
+200/281 Testing: network-policy
+200/281 Test: network-policy
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-network-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+"network-policy" start time: Oct 29 10:30 IST
+Output:
+----------------------------------------------------------
+33 network-policy families, 501 assertions passed
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"network-policy" end time: Oct 29 10:30 IST
+"network-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+218/281 Testing: queue-policy
+218/281 Test: queue-policy
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-queue-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+"queue-policy" start time: Oct 29 10:30 IST
+Output:
+----------------------------------------------------------
+original multi tracker selection preserves status retained counts backup and Java tier shuffle: responses[1].regularPollDue(600200)
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Failed.
+"queue-policy" end time: Oct 29 10:30 IST
+"queue-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+261/281 Testing: mainline-dht
+261/281 Test: mainline-dht
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-mainline-dht-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+"mainline-dht" start time: Oct 29 10:30 IST
+Output:
+----------------------------------------------------------
+********* Start testing of MainlineDhtTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineDhtTests::initTestCase()
+PASS   : MainlineDhtTests::queuedScrapeUsesActualLiveNodesExplicitDialectAndNeverAnnounces()
+PASS   : MainlineDhtTests::heldScrapeCancellationCannotPublishIntoSameHashFreshRound()
+PASS   : MainlineDhtTests::savedQueuedAuthorityReadsNoPayloadAndRefusesOtherConsumers()
+PASS   : MainlineDhtTests::unissuedScrapeCancellationReclaimsWithoutLosingCloseFence()
+PASS   : MainlineDhtTests::completedWireRoundsReclaimBeyondSixtyFourAndUnreadResultsStayBounded()
+PASS   : MainlineDhtTests::cancelledHeldAndErrorTimeoutProbesRequireActualTerminalConsumption()
+PASS   : MainlineDhtTests::activeScrapeAuthorityBindsRealStorageFreshPolicyAndAdmissionWithoutPayloadEffects()
+PASS   : MainlineDhtTests::queuedSchedulingAndPositivePublicationAreScopeBoundWithoutInventedExpiry()
+PASS   : MainlineDhtTests::lookupAndTokenAnnounceUseActualDistinctPeerPort()
+PASS   : MainlineDhtTests::malformedUnsolicitedAndInvalidEndpointsCannotBecomePeerHints()
+PASS   : MainlineDhtTests::forgetRevokesLateReplyBeforeAnotherHashMakesProgress()
+PASS   : MainlineDhtTests::invalidInputsAndUnavailablePoliciesFailBeforeDiscovery()
+PASS   : MainlineDhtTests::checkpointRecreatesActualLookupWithoutRoutersAndOptionallyRestoresWireIdentity()
+PASS   : MainlineDhtTests::injectedSettingsAndMalformedCheckpointCannotConstructAListener(injected-root-settings)
+PASS   : MainlineDhtTests::injectedSettingsAndMalformedCheckpointCannotConstructAListener(injected-nested-settings)
+PASS   : MainlineDhtTests::injectedSettingsAndMalformedCheckpointCannotConstructAListener(old-bare-node-id)
+PASS   : MainlineDhtTests::injectedSettingsAndMalformedCheckpointCannotConstructAListener(zero-node-identity)
+PASS   : MainlineDhtTests::injectedSettingsAndMalformedCheckpointCannotConstructAListener(zero-contact-port)
+PASS   : MainlineDhtTests::injectedSettingsAndMalformedCheckpointCannotConstructAListener(malformed-bencode)
+PASS   : MainlineDhtTests::untrustedLegacyHintFailuresCannotSuppressThePermittedOwnedNode()
+PASS   : MainlineDhtTests::corruptDisposableStateDoesNotRerouteOrDisableTheOwnedTorrentSession()
+PASS   : MainlineDhtTests::hashOnlyMagnetImportsMetadataFromOwnedMainlineResult()
+PASS   : MainlineDhtTests::inactiveOrProxiedOwnerNeverFallsBackToMainline(isolated)
+PASS   : MainlineDhtTests::inactiveOrProxiedOwnerNeverFallsBackToMainline(normal-disabled)
+PASS   : MainlineDhtTests::inactiveOrProxiedOwnerNeverFallsBackToMainline(proxy-unavailable)
+PASS   : MainlineDhtTests::originalPerTorrentDhtSourcePermissions(default-public)
+PASS   : MainlineDhtTests::originalPerTorrentDhtSourcePermissions(DHT-source-disabled)
+PASS   : MainlineDhtTests::originalPerTorrentDhtSourcePermissions(DHT-source-denied)
+PASS   : MainlineDhtTests::originalPerTorrentDhtSourcePermissions(announce-disabled-scrape-pending)
+PASS   : MainlineDhtTests::actualPeerPortBootstrapsHashOnlyMetadataAndAdvertisesSeparateListener()
+PASS   : MainlineDhtTests::queuedPeerPortCannotSurviveStopAndReadmission()
+PASS   : MainlineDhtTests::actualPortFloodWithdrawsAdmissionBeforeUnrelatedOwnerProgress()
+PASS   : MainlineDhtTests::deniedSourceCannotAdvertiseOrBootstrapPort(source-disabled)
+PASS   : MainlineDhtTests::deniedSourceCannotAdvertiseOrBootstrapPort(source-denied)
+PASS   : MainlineDhtTests::deniedSourceCannotAdvertiseOrBootstrapPort(private)
+PASS   : MainlineDhtTests::peerProbeRequiresRealReplyAndActiveRoutingBeforeProgress()
+PASS   : MainlineDhtTests::peerProbeLifetimeBoundDoesNotIssueUnownedRequests()
+PASS   : MainlineDhtTests::cleanupTestCase()
+Totals: 39 passed, 0 failed, 0 skipped, 0 blacklisted, 125164ms
+********* Finished testing of MainlineDhtTests *********
+<end of output>
+Test time = 125.24 sec
+----------------------------------------------------------
+Test Passed.
+"mainline-dht" end time: Oct 29 10:32 IST
+"mainline-dht" time elapsed: 00:02:05
+----------------------------------------------------------
+
+End testing: Oct 29 10:32 IST
+
+discovery = 125.24 sec*proc
+
+network = 125.24 sec*proc
+
+owned = 125.24 sec*proc
+
+queue =   0.03 sec*proc
+
+torrent-workflows =   0.04 sec*proc
+
+unit =   0.07 sec*proc
+

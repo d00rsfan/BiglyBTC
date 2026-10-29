@@ -1,0 +1,10 @@
+{
+  "run": 40838856359,
+  "head": "d77d615f87748666fcce73ab424caed8c704907b",
+  "conclusion": "failure",
+  "errors": [
+    "preview\tConfigure and build the desktop preview\t2026-10-29T08:16:45.3191136Z /home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/mainline_original_host_tests.cpp:47:23: error: \u2018biglybtc::engine::NetworkPolicy {anonymous}::defaultPolicy(biglybtc::test::original_mainline::Source&)\u2019 defined but not used [-Werror=unused-function]",
+    "preview\tConfigure and build the desktop preview\t2026-10-29T08:16:45.3194042Z /home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/mainline_original_host_tests.cpp:37:6: error: \u2018void {anonymous}::savedDefaultProfile(biglybtc::test::original_mainline::Source&, short unsigned int, short unsigned int)\u2019 defined but not used [-Werror=unused-function]",
+    "preview\tConfigure and build the desktop preview\t2026-10-29T08:16:45.3196894Z /home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/mainline_original_host_tests.cpp:21:12: error: \u2018QByteArray {anonymous}::cache(bool, short unsigned int)\u2019 defined but not used [-Werror=unused-function]"
+  ]
+}

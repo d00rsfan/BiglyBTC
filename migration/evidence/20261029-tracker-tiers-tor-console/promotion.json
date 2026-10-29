@@ -1,0 +1,26 @@
+{
+  "status": "PROMOTED_ONE_CHECKED_DEVELOPMENT_DIST",
+  "source_commit": "3228091a1e12f81b334e27e589da8605c0b76420",
+  "manifest_sha256": "45044b40030008230c556c17aa25fcf36938fe7bd1254d7707780dc1f509a238",
+  "leaf_count": 119,
+  "private_result_sha256": "c950855ae6580b39171c6917068ea3efd8c52a724ad84c38b8aae629627dbbe2",
+  "previous_dist_removed": true,
+  "previous_dist_retained": false,
+  "atomic_exchange": true,
+  "copied_test_images_removed": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests",
+      "sha256": "ad6863a2641c732c492f5f14cc766271bf20ca14160331d62d0413bffc38d2b2"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/biglybtc-preview-smoke",
+      "sha256": "443ade9e78b67bf43a47df5a9c4d2460e91e81aafdb8d403e8ebebf084a67069"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/biglybtc-tor-owned-child-tests",
+      "sha256": "b0cb52a8429490281f64d0e019d4ae3c51cc3d60f482399cfdb47f9124c412a2"
+    }
+  ],
+  "test_support_removed": true,
+  "created_utc": "2026-10-29T09:03:47.050475+00:00"
+}

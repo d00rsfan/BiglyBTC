@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/wayland-console-normal-20261029/manifest.json",
+    "sha256": "b1239388c41d25d079ba8ead3dbe07798463145cdef69754989bddc9860191db"
+  },
+  "verified": {
+    "source_paths": 5,
+    "artifacts": 8,
+    "beforeimages_and_base_git_blobs": true,
+    "retained_qt_sources": true,
+    "actual_matching_log_and_qt_core_pins": true,
+    "old_smoke_method_bodies_exact": 11,
+    "python_ast_files": 2
+  },
+  "findings": [],
+  "bounded_review": [
+    "Pinned Qt6.12 disableSurface branch with null focused surface warns and returns before disable/commit/state changes. Filter changes console output only; general focus/IME correctness is not claimed.",
+    "Only QtWarningMsg, exact Wayland textinput category/function-message prefix/null-focus suffix and bounded nonzero ASCII hex pointer match. Enabled-surface mismatch, nonnull focus, other text/categories/severities/context are forwarded. Native install is disabled outside qVersion6.12.0.",
+    "main_desktop installs once before QApplication and before service/Qt-thread startup. The previous handler pointer is then immutable under this startup-only contract; later explicit handler installation supersedes this wrapper. No runtime reinstall or polling.",
+    "Read-only pinned QtCore disassembly independently confirms qInstallMessageHandler returns the actual previous pointer or real default, so forwarding preserves Qt output formatting and custom-handler semantics without a default-handler approximation.",
+    "Startup explicit diagnostics/fatal-warning/log-format/log-rules/log-config environment controls bypass native and preview filtering, including empty Qt variables. QtFatal/critical/other levels remain forwarded unchanged; no fatal/environment/category rules are rewritten.",
+    "Existing preview byte filtering is unchanged except the added explicit logging opt-outs. Its Qt6.12 applicability remains the existing pinned dependency contract; the new native filter separately gates exact runtime version.",
+    "Focused tests exercise forwarding/matching and startup env controls with RAII restoration; existing smoke bodies remain exact. Tests have not been run by this reviewer."
+  ],
+  "limitations": [
+    "No compiler, tests, GUI, network or native mutation. Real Wayland focus/international-input acceptance remains root-owned.",
+    "Opt-outs are evaluated at startup, as documented; this is not a dynamic logging-configuration watcher.",
+    "No general claim that all Wayland warnings or future Qt versions are harmless."
+  ]
+}

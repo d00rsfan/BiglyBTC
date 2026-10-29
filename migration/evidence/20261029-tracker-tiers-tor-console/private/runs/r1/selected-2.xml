@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="OwnedTorChildTests" timestamp="2026&#x002D;10&#x002D;29T11:02:24" hostname="ubuntud" tests="5" failures="0" errors="0" skipped="0" time="1.380">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="OwnedTorChildTests" time="0.000"/>
+  <testcase name="postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(control&#x002D;eof)" classname="OwnedTorChildTests" time="0.306"/>
+  <testcase name="postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(unsupported&#x002D;post&#x002D;setup&#x002D;event)" classname="OwnedTorChildTests" time="0.513"/>
+  <testcase name="postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(control&#x002D;eof&#x002D;kill&#x002D;escalation)" classname="OwnedTorChildTests" time="0.559"/>
+  <testcase name="cleanupTestCase" classname="OwnedTorChildTests" time="0.000"/>
+</testsuite>

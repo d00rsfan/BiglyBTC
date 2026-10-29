@@ -1,0 +1,89 @@
+Start testing: Oct 29 11:00 IST
+----------------------------------------------------------
+10/281 Testing: owned-tor-child-lifecycle
+10/281 Test: owned-tor-child-lifecycle
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/tor_control/biglybtc-tor-owned-child-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/tor_control
+"owned-tor-child-lifecycle" start time: Oct 29 11:00 IST
+Output:
+----------------------------------------------------------
+********* Start testing of OwnedTorChildTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedTorChildTests::initTestCase()
+PASS   : OwnedTorChildTests::postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(control-eof)
+PASS   : OwnedTorChildTests::postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(unsupported-post-setup-event)
+PASS   : OwnedTorChildTests::postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(control-eof-kill-escalation)
+PASS   : OwnedTorChildTests::postReadyControlLossSupportsReentrantStopAndDeletion()
+PASS   : OwnedTorChildTests::actualOwnedChildAuthenticatesStopsJoinsAndRestartsInFreshDirectory()
+PASS   : OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(deadline-no-discovery)
+PASS   : OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(cancel-while-discovering)
+PASS   : OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(owned-kill-after-term-refusal)
+PASS   : OwnedTorChildTests::boundedStartupCancellationEscalationAndCrash(unexpected-exit-after-ready)
+PASS   : OwnedTorChildTests::unsafeDiscoveryCannotAuthenticateOrTouchOutsider(symlink-cookie)
+PASS   : OwnedTorChildTests::unsafeDiscoveryCannotAuthenticateOrTouchOutsider(hardlink-cookie)
+PASS   : OwnedTorChildTests::unsafeDiscoveryCannotAuthenticateOrTouchOutsider(bad-address)
+PASS   : OwnedTorChildTests::unsafeDiscoveryCannotAuthenticateOrTouchOutsider(bad-proof)
+PASS   : OwnedTorChildTests::partialCookieWaitsWithinSameDeadlineAndSourceReplacementRevokes()
+PASS   : OwnedTorChildTests::authenticatedResetMayRepublishOnlyTheSamePrivateEndpointOnce()
+PASS   : OwnedTorChildTests::authenticatedResetCannotRefreshOtherAuthorityOrUnsafePort(reset-bad-port)
+PASS   : OwnedTorChildTests::authenticatedResetCannotRefreshOtherAuthorityOrUnsafePort(reset-cookie)
+PASS   : OwnedTorChildTests::authenticatedResetCannotRefreshOtherAuthorityOrUnsafePort(reset-config)
+PASS   : OwnedTorChildTests::authenticatedResetCannotRefreshOtherAuthorityOrUnsafePort(reset-symlink-port)
+PASS   : OwnedTorChildTests::authenticatedResetCannotRefreshOtherAuthorityOrUnsafePort(reset-hardlink-port)
+PASS   : OwnedTorChildTests::authenticatedResetCannotRefreshOtherAuthorityOrUnsafePort(reset-fifo-port)
+PASS   : OwnedTorChildTests::authenticatedResetCannotRefreshOtherAuthorityOrUnsafePort(reset-public-port)
+PASS   : OwnedTorChildTests::authenticatedResetCannotRefreshOtherAuthorityOrUnsafePort(reset-ancestor)
+PASS   : OwnedTorChildTests::preexistingRootAndSymlinkExecutableAreRefusedWithoutSpawn()
+PASS   : OwnedTorChildTests::intactWorkDirectoryCannotAuthorizeReplacedHigherAncestor()
+PASS   : OwnedTorChildTests::retainedAncestorEventsRevokeWithoutAnySourceQuery(higher-work-ancestor)
+PASS   : OwnedTorChildTests::retainedAncestorEventsRevokeWithoutAnySourceQuery(work-ancestor-renamed-back-before-dispatch)
+PASS   : OwnedTorChildTests::retainedAncestorEventsRevokeWithoutAnySourceQuery(executable-ancestor)
+PASS   : OwnedTorChildTests::directoryWatchIgnoresSiblingEntriesAndDrainsWithFixedWorkBudget()
+PASS   : OwnedTorChildTests::lostKernelWatchWithdrawsAndJoinsWithoutSourceQuery()
+PASS   : OwnedTorChildTests::queuedAncestorEventsCannotCrossCancellationAndFreshRestart()
+PASS   : OwnedTorChildTests::ancestorInvalidationSupportsReentrantStopAndDeletion()
+PASS   : OwnedTorChildTests::signalCancellationAndImmediateDeletionCannotLaunchAfterCallback()
+PASS   : OwnedTorChildTests::deletionAtAuthenticationReapsTheAlreadyRunningChild()
+PASS   : OwnedTorChildTests::failedExecIsJoinedAndCanRetryWithFreshAuthority()
+PASS   : OwnedTorChildTests::destructionJoinsOnlyTheActuallyOwnedReadyChild()
+PASS   : OwnedTorChildTests::cleanupTestCase()
+Totals: 38 passed, 0 failed, 0 skipped, 0 blacklisted, 13681ms
+********* Finished testing of OwnedTorChildTests *********
+<end of output>
+Test time =  13.71 sec
+----------------------------------------------------------
+Test Passed.
+"owned-tor-child-lifecycle" end time: Oct 29 11:00 IST
+"owned-tor-child-lifecycle" time elapsed: 00:00:13
+----------------------------------------------------------
+
+218/281 Testing: queue-policy
+218/281 Test: queue-policy
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-queue-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"queue-policy" start time: Oct 29 11:00 IST
+Output:
+----------------------------------------------------------
+41 queue-policy families, 8704 assertions passed
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"queue-policy" end time: Oct 29 11:00 IST
+"queue-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 29 11:00 IST
+
+integration =  13.71 sec*proc
+
+loopback =  13.71 sec*proc
+
+owned-process =  13.71 sec*proc
+
+qt =  13.71 sec*proc
+
+queue =   0.07 sec*proc
+
+unit =   0.07 sec*proc
+

@@ -3813,11 +3813,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "210148e403a9e3b0b539d0c195a44e5bb661ba6c",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "f810ca74be0aa5f65de29eab1ed1ecfdadfe9572",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3228091a1e12f81b334e27e589da8605c0b76420",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/network-service-cohort/20261028-bounded.md",
-        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md"
+        "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md",
+        "migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md"
       ],
       "evidence": [
         "migration/tasks/P07-01c-tor-ownership.md",
@@ -3825,7 +3836,8 @@
         "migration/evidence/P07-01c-tor-ownership/review.md",
         "migration/evidence/P07-01c-tor-ownership/source-verification.json",
         "migration/evidence/20261028-network-service-cohort/verification.json",
-        "migration/evidence/20261029-mainline-owned-trackers/verification.json"
+        "migration/evidence/20261029-mainline-owned-trackers/verification.json",
+        "migration/evidence/20261029-tracker-tiers-tor-console/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-004.md"
     },
@@ -4501,6 +4513,16 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "465b8c1c7cde7738d3d530aede104fb1da641da2",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "42f8098b895d7debefecf81a624acd535dbfbbbd",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3228091a1e12f81b334e27e589da8605c0b76420",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -4508,7 +4530,8 @@
         "migration/evidence/20261018-navigation/classic-closeability-correction.json",
         "migration/updates/engine.everyday-workflows/20261024.md",
         "migration/updates/settings.classic_options/20261024.md",
-        "migration/updates/ui.classic_navigation_preview/20261027-wayland-console.md"
+        "migration/updates/ui.classic_navigation_preview/20261027-wayland-console.md",
+        "migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261018-navigation/verification.json",
@@ -4517,7 +4540,8 @@
         "migration/evidence/20261018-saved-selected/verification.json",
         "migration/evidence/20261024-torrent-workflows/verification.json",
         "migration/evidence/20261024-options/verification.json",
-        "migration/evidence/20261027-wayland-preview/verification.json"
+        "migration/evidence/20261027-wayland-preview/verification.json",
+        "migration/evidence/20261029-tracker-tiers-tor-console/verification.json"
       ],
       "decision_ref": null
     },
@@ -7905,7 +7929,9 @@
           "source_paths": [
             "uis/src/com/biglybt/ui/swt/auth/AuthenticatorWindow.java",
             "core/src/com/biglybt/core/security/impl/SESecurityManagerImpl.java",
-            "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerStatus.java"
+            "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerStatus.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+            "core/src/com/biglybt/core/torrent/impl/TOTorrentDeserialiseImpl.java"
           ],
           "source_symbols": [
             "AuthenticatorWindow",
@@ -7963,6 +7989,16 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "c7a6ab6700666b86cbf2a0a265cb95addb57a660",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c89340fdff044c51174d9e15917e1bcad10a2bd9",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3228091a1e12f81b334e27e589da8605c0b76420",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -7970,7 +8006,8 @@
         "migration/updates/engine.mainline_queued_scrape/20261028-active-scrape.md",
         "migration/updates/network-service-cohort/20261028-bounded.md",
         "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md",
-        "migration/evidence/20261029-http-auth-trust/REVIEW.md"
+        "migration/evidence/20261029-http-auth-trust/REVIEW.md",
+        "migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-scrape-storage-stats/verification.json",
@@ -7979,7 +8016,8 @@
         "migration/evidence/20261028-mainline-active-scrape/REVIEW.md",
         "migration/evidence/20261028-network-service-cohort/verification.json",
         "migration/evidence/20261029-mainline-owned-trackers/verification.json",
-        "migration/evidence/20261029-http-auth-trust/verification.json"
+        "migration/evidence/20261029-http-auth-trust/verification.json",
+        "migration/evidence/20261029-tracker-tiers-tor-console/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8075,7 +8113,8 @@
             "core/src/com/biglybt/core/tracker/client/impl/bt/TRTrackerBTAnnouncerImpl.java",
             "uis/src/com/biglybt/ui/swt/auth/AuthenticatorWindow.java",
             "core/src/com/biglybt/core/security/impl/SESecurityManagerImpl.java",
-            "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerStatus.java"
+            "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerStatus.java",
+            "core/src/com/biglybt/core/torrent/impl/TOTorrentDeserialiseImpl.java"
           ],
           "source_symbols": [
             "DownloadImpl.getLastScrapeResult",
@@ -8113,18 +8152,30 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "c7a6ab6700666b86cbf2a0a265cb95addb57a660",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c89340fdff044c51174d9e15917e1bcad10a2bd9",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3228091a1e12f81b334e27e589da8605c0b76420",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/engine.tracker_scrape_observations/20261028-in-progress.md",
         "migration/evidence/20261029-mainline-owned-trackers/REVIEW.md",
-        "migration/evidence/20261029-http-auth-trust/REVIEW.md"
+        "migration/evidence/20261029-http-auth-trust/REVIEW.md",
+        "migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-active-scrape/verification.json",
         "migration/evidence/20261028-mainline-active-scrape/REVIEW.md",
         "migration/evidence/20261029-mainline-owned-trackers/verification.json",
-        "migration/evidence/20261029-http-auth-trust/verification.json"
+        "migration/evidence/20261029-http-auth-trust/verification.json",
+        "migration/evidence/20261029-tracker-tiers-tor-console/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },

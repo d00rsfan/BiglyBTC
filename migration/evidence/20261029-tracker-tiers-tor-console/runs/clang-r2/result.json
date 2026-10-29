@@ -1,0 +1,52 @@
+{
+  "status": "PASS_FOCUSED_NETWORK_UI_REPAIR_IDENTICAL_OTHER_IMAGES",
+  "source_commit": "3228091a1e12f81b334e27e589da8605c0b76420",
+  "lane": "clang",
+  "cache": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+  "runner_sha256": "ff7b79f68ce18dc7ebe50e6c0959ff109705d99cbb2cb4d2f3d0262123b10e71",
+  "source_receipt": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/final-source.json",
+  "source_receipt_sha256": "1a4e203c0e6ce2246140baa7d620ab99ca19833652e37db30c717c2e6f53c63f",
+  "compiled_targets": [
+    "biglybtc-queue-policy-tests",
+    "biglybtc-tor-owned-child-tests"
+  ],
+  "compile_only_suites": [
+    "mainline-original-host-identity",
+    "mainline-single-http",
+    "mainline-single-udp",
+    "mainline-single-tracker-owner",
+    "owned-tor-child-lifecycle"
+  ],
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "unchanged_image_evidence_reused": true,
+  "provider_rebuilt": false,
+  "prior_failure_audit_sha256": "ba12c5fa2d9c48b11bf1c9a82e8ba7ea355a9e1cf96b7a55e75075b32b0f46b3",
+  "dist_manifest_before": "e64600352485e17178bad2803af14ea7e0941ed7dd13954c7f2bfbf48f4049c0",
+  "suite_names": [
+    "queue-policy"
+  ],
+  "actual_suites": 1,
+  "identical_image_passed_suites": [
+    "network-policy",
+    "mainline-dht"
+  ],
+  "combined_covered_suites": [
+    "mainline-dht",
+    "network-policy",
+    "queue-policy"
+  ],
+  "prior_source_commit": "dfc27e723344203e49d96341a3039be444062858",
+  "all_other_source_bytes_unchanged": true,
+  "all_other_images_unchanged": true,
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "wayland_smoke_methods": [
+    "exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler",
+    "explicitQtConsoleControlsDisableNativeFiltering"
+  ],
+  "launcher_unit_tests": 6,
+  "tests_xml_sha256": "a1db0003f8eac262ad6686cb072be71a6d26b3a8c5bd71277335f24b87940351",
+  "full_ctest_log_sha256": "d6d56923dc98025a7e2cdcb74ccdf48b75c8627c3741af5ec4e7e1505aa25be8",
+  "wayland_smoke_xml_sha256": "b839beb56cc93ebe8091d00d1d5d3ce11d5be676afec77186c74398bbe84a96d",
+  "commands_sha256": "7f9b352b9d73b1f4f8b72f6bdc83c9e2f58710ecfcc4c82b78e3f6e001242e4a"
+}

@@ -1,0 +1,67 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-mainline-single-http-tests",
+      "biglybtc-mainline-single-udp-tests",
+      "biglybtc-mainline-single-tracker-owner-tests",
+      "biglybtc-mainline-dht-tests",
+      "biglybtc-mainline-original-host-tests",
+      "biglybtc-tor-owned-child-tests",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-network-policy-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 800.591,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/clang-r1/build.log",
+    "log_sha256": "1644eaa26d9661919b597cfbe06aa707a57f49ed5379a1db517cd6b1f4385b4c"
+  },
+  {
+    "name": "http-loader",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.037,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/clang-r1/http-loader.log",
+    "log_sha256": "2d76c9c6433cb14230754ad88bea30fc268bb020d6d97bbaf9e8bdf5184a2b96"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "-R",
+      "^(queue-policy|network-policy|mainline-dht)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/clang-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 8,
+    "seconds": 125.492,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/clang-r1/tests.log",
+    "log_sha256": "1efad096878ba9311c4668c480c7a7db2297d44f373d8efc8939e108d1bdf600"
+  }
+]

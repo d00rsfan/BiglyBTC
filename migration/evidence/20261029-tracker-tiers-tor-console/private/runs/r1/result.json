@@ -1,0 +1,156 @@
+{
+  "status": "PASS_PRIVATE_FOCUSED_NETWORK_UI",
+  "source_commit": "3228091a1e12f81b334e27e589da8605c0b76420",
+  "focused_results": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/gcc-r2/result.json",
+      "sha256": "2c12adf0d83fbfeb39645f5a795526b656e4e6555a454f343d2223fec8ffb3f8",
+      "images_sha256": "d47422a8bcddf60ea429e6772544d181caf3a7c2f74eb6369e02e1a10f203f1a",
+      "source_before_sha256": "4fb9a4355a6e6a2316969d4abb42a7492c666b8f81d300e2ff3e6b9953ea97ed"
+    },
+    "clang": {
+      "path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/clang-r2/result.json",
+      "sha256": "a7f9f4a79585c5fc9603a7e1c8eda5c5a987d5018e11dee129f5a630eb1e051f",
+      "images_sha256": "451fe36f01a7b320edb2283ff6c1ee88bf18a1c9fcf53d827eba2b6ebaa06799",
+      "source_before_sha256": "4fb9a4355a6e6a2316969d4abb42a7492c666b8f81d300e2ff3e6b9953ea97ed"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/san-r2/result.json",
+      "sha256": "d88a575c41dffed599fd56b8541fbd8692d68ce20a86ed6c7cdf26376b8d4b8a",
+      "images_sha256": "43b230980393cc11c144469a2167e6b28602e9eb9a8b61048fc709e66f25352d",
+      "source_before_sha256": "4fb9a4355a6e6a2316969d4abb42a7492c666b8f81d300e2ff3e6b9953ea97ed"
+    }
+  },
+  "builds_executed": false,
+  "promotion_executed": false,
+  "historical_runtime_passes_pooled": false,
+  "candidate": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate",
+  "candidate_manifest_sha256": "45044b40030008230c556c17aa25fcf36938fe7bd1254d7707780dc1f509a238",
+  "actual_leaf_count": 119,
+  "copied_images": {
+    "biglybtc-mainline-single-http-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests",
+      "sha256": "ad6863a2641c732c492f5f14cc766271bf20ca14160331d62d0413bffc38d2b2",
+      "bytes": 6287272
+    },
+    "biglybtc-preview-smoke": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke",
+      "sha256": "443ade9e78b67bf43a47df5a9c4d2460e91e81aafdb8d403e8ebebf084a67069",
+      "bytes": 11730960
+    },
+    "biglybtc-tor-owned-child-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/tor_control/biglybtc-tor-owned-child-tests",
+      "sha256": "b0cb52a8429490281f64d0e019d4ae3c51cc3d60f482399cfdb47f9124c412a2",
+      "bytes": 408936
+    }
+  },
+  "actual_tests": [
+    {
+      "target": "biglybtc-mainline-single-http-tests",
+      "selector": "savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply",
+      "exit": 0,
+      "xml_sha256": "f05c5e04ecfb945b49b8b5ddc89a2ba338f5392569fdf70b13a0827e9a172ab0",
+      "case_names": [
+        "initTestCase",
+        "savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply(ordered-tiers)",
+        "savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply(stable-shuffled-tier)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    },
+    {
+      "target": "biglybtc-tor-owned-child-tests",
+      "selector": "postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart",
+      "exit": 0,
+      "xml_sha256": "daf4d8c2074c23e3b568776e095ab8e8e65650c451d31822ec7928d5f14b353a",
+      "case_names": [
+        "initTestCase",
+        "postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(control-eof)",
+        "postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(unsupported-post-setup-event)",
+        "postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(control-eof-kill-escalation)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f"
+      }
+    },
+    {
+      "target": "biglybtc-tor-owned-child-tests",
+      "selector": "postReadyControlLossSupportsReentrantStopAndDeletion",
+      "exit": 0,
+      "xml_sha256": "81a708eb94da5680fe67f12e8c2422d5a235ab1e7a5d5097ffa29c4af1b0c0ff",
+      "case_names": [
+        "initTestCase",
+        "postReadyControlLossSupportsReentrantStopAndDeletion",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f"
+      }
+    },
+    {
+      "target": "biglybtc-preview-smoke",
+      "selector": "exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler",
+      "exit": 0,
+      "xml_sha256": "ad232f7c2309eaea4dbf39a8eed2f6b1f7385138e8ffd01a326b9163cbb9dbbf",
+      "case_names": [
+        "initTestCase",
+        "exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6DBus.so.6": "678d0bf82548e35680a93615d476d79405f1d4beec4ce405236e04bc64ea14eb",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Gui.so.6": "392cf5a2fed77ca7b861484ae0f25a2f7f54789024e79518c6c28e1ddf5b4b1a",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Widgets.so.6": "ae894c4a328a883311faf7449dcdd1ec70e6be25784e5676cb9977fe437d01c4",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/plugins/platforms/libqoffscreen.so": "b03cc26de26de6e09adceaf7ab2866ebbae39d88d893e0a5032e3ea55f190a67",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    },
+    {
+      "target": "biglybtc-preview-smoke",
+      "selector": "explicitQtConsoleControlsDisableNativeFiltering",
+      "exit": 0,
+      "xml_sha256": "9b90b58e31fc11b01fa1c2455cdedd2fddad7f0bb4957cc4b21d574051ef15d4",
+      "case_names": [
+        "initTestCase",
+        "explicitQtConsoleControlsDisableNativeFiltering",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6DBus.so.6": "678d0bf82548e35680a93615d476d79405f1d4beec4ce405236e04bc64ea14eb",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Gui.so.6": "392cf5a2fed77ca7b861484ae0f25a2f7f54789024e79518c6c28e1ddf5b4b1a",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Widgets.so.6": "ae894c4a328a883311faf7449dcdd1ec70e6be25784e5676cb9977fe437d01c4",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/plugins/platforms/libqoffscreen.so": "b03cc26de26de6e09adceaf7ab2866ebbae39d88d893e0a5032e3ea55f190a67",
+        "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    }
+  ],
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "old_dist_unchanged": "e64600352485e17178bad2803af14ea7e0941ed7dd13954c7f2bfbf48f4049c0",
+  "source_unchanged": true,
+  "commands_sha256": "bf6da0d4fe43edd15f03c8212474fcc75423c43014fc289a65f1e6e339af4942"
+}

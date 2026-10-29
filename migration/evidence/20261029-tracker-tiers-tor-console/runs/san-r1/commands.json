@@ -1,0 +1,67 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-mainline-single-http-tests",
+      "biglybtc-mainline-single-udp-tests",
+      "biglybtc-mainline-single-tracker-owner-tests",
+      "biglybtc-mainline-dht-tests",
+      "biglybtc-mainline-original-host-tests",
+      "biglybtc-tor-owned-child-tests",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-network-policy-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 1238.013,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/san-r1/build.log",
+    "log_sha256": "1644eaa26d9661919b597cfbe06aa707a57f49ed5379a1db517cd6b1f4385b4c"
+  },
+  {
+    "name": "http-loader",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.019,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/san-r1/http-loader.log",
+    "log_sha256": "c4bdf600f51acd68317181c9a1cb787aadec5081daa3bbde55e8be1ac88a530c"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "-R",
+      "^(queue-policy|network-policy|mainline-dht|mainline-single-http|mainline-single-udp|mainline-single-tracker-owner|owned-tor-child-lifecycle)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/san-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 8,
+    "seconds": 558.247,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/san-r1/tests.log",
+    "log_sha256": "a1218dfe6c5866fb9da944f6e67ee26ac7f13c58ca867879807faf5e4b4b6064"
+  }
+]

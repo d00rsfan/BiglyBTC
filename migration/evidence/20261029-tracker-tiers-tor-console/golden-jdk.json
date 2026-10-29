@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "kind": "ACTUAL_JDK17_KEYTOOL_PUBLIC_JKS_GOLDEN",
+  "generated_utc": "2026-10-29T07:57:31.583311+00:00",
+  "keytool": {
+    "path": "/usr/lib/jvm/java-17-openjdk-amd64/bin/keytool",
+    "resolved": "/usr/lib/jvm/java-17-openjdk-amd64/bin/keytool",
+    "sha256": "6ed7da456563669b97a70d0bc6e1fe57f6794213c6367aac96a5833cd9646958"
+  },
+  "source_archive": {
+    "path": "/usr/lib/jvm/openjdk-17/lib/src.zip",
+    "sha256": "1e3ed31cd3903ba69bdb6e754b79aae41747cc038453ead30ca8431087b1e8aa",
+    "entry_sha256": {
+      "java.base/sun/security/provider/JavaKeyStore.java": "65b6e30ebc00ecfce71c173af29fe8becd185c37cd5b3a6d03837548775e65ed",
+      "java.base/sun/security/validator/TrustStoreUtil.java": "3972d5bf7882e185db295b0938f469608eb2f7d83afdd6edf1eda4afd1119d71"
+    }
+  },
+  "package_version": [
+    "openjdk-17-jdk-headless:amd64\t17.0.20+8-1~26.04",
+    "openjdk-17-jre-headless:amd64\t17.0.20+8-1~26.04",
+    "openjdk-17-source\t17.0.20+8-1~26.04"
+  ],
+  "commands": [
+    {
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/keytool",
+        "-J-version"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "openjdk version \"17.0.20\" 2026-07-21\nOpenJDK Runtime Environment (build 17.0.20+8-1-26.04-Ubuntu)\nOpenJDK 64-Bit Server VM (build 17.0.20+8-1-26.04-Ubuntu, mixed mode, sharing)\n"
+    },
+    {
+      "argv": [
+        "dpkg-query",
+        "-W",
+        "openjdk-17-jdk-headless",
+        "openjdk-17-jre-headless",
+        "openjdk-17-source"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029",
+      "exit_code": 0,
+      "stdout": "openjdk-17-jdk-headless:amd64\t17.0.20+8-1~26.04\nopenjdk-17-jre-headless:amd64\t17.0.20+8-1~26.04\nopenjdk-17-source\t17.0.20+8-1~26.04\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/keytool",
+        "-genkeypair",
+        "-alias",
+        "owned-generated-key",
+        "-keyalg",
+        "EC",
+        "-groupname",
+        "secp256r1",
+        "-dname",
+        "CN=owned-jdk17-fixture",
+        "-validity",
+        "36500",
+        "-ext",
+        "BC=ca:true",
+        "-ext",
+        "KU=keyCertSign,cRLSign",
+        "-storetype",
+        "JKS",
+        "-keystore",
+        "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/.ephemeral-private.jks",
+        "-storepass",
+        "changeit",
+        "-keypass",
+        "changeit",
+        "-noprompt"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "Generating 256 bit EC (secp256r1) key pair and self-signed certificate (SHA256withECDSA) with a validity of 36,500 days\n\tfor: CN=owned-jdk17-fixture\n\nWarning:\nThe JKS keystore uses a proprietary format. It is recommended to migrate to PKCS12 which is an industry standard format using \"keytool -importkeystore -srckeystore /home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/.ephemeral-private.jks -destkeystore /home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/.ephemeral-private.jks -deststoretype pkcs12\".\n"
+    },
+    {
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/keytool",
+        "-exportcert",
+        "-alias",
+        "owned-generated-key",
+        "-keystore",
+        "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/.ephemeral-private.jks",
+        "-storetype",
+        "JKS",
+        "-storepass",
+        "changeit",
+        "-file",
+        "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/staging/preview/native/tests/fixtures/jks/jdk17-owned-root.der"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "Certificate stored in file </home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/staging/preview/native/tests/fixtures/jks/jdk17-owned-root.der>\n\nWarning:\nThe JKS keystore uses a proprietary format. It is recommended to migrate to PKCS12 which is an industry standard format using \"keytool -importkeystore -srckeystore /home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/.ephemeral-private.jks -destkeystore /home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/.ephemeral-private.jks -deststoretype pkcs12\".\n"
+    },
+    {
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/keytool",
+        "-importcert",
+        "-alias",
+        "owned-jdk17-fixture",
+        "-file",
+        "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/staging/preview/native/tests/fixtures/jks/jdk17-owned-root.der",
+        "-keystore",
+        "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/staging/preview/native/tests/fixtures/jks/jdk17-owned-truststore.jks",
+        "-storetype",
+        "JKS",
+        "-storepass",
+        "changeit",
+        "-noprompt"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "Certificate was added to keystore\n"
+    },
+    {
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/keytool",
+        "-list",
+        "-keystore",
+        "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029/staging/preview/native/tests/fixtures/jks/jdk17-owned-truststore.jks",
+        "-storetype",
+        "JKS",
+        "-storepass",
+        "changeit"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/mainline-jks-golden-20261029",
+      "exit_code": 0,
+      "stdout": "Keystore type: JKS\nKeystore provider: SUN\n\nYour keystore contains 1 entry\n\nowned-jdk17-fixture, Oct 29, 2026, trustedCertEntry, \nCertificate fingerprint (SHA-256): A7:35:45:CE:2C:B0:40:03:E7:E5:25:61:48:4B:20:32:15:0B:07:4C:21:73:7E:F3:D7:19:08:75:01:ED:DC:DD\n",
+      "stderr": ""
+    }
+  ],
+  "public_fixtures": {
+    "preview/native/tests/fixtures/jks/jdk17-owned-root.der": {
+      "bytes": 372,
+      "sha256": "a73545ce2cb04003e7e52561484b2032150b074c21737ef3d719087501eddcdd"
+    },
+    "preview/native/tests/fixtures/jks/jdk17-owned-truststore.jks": {
+      "bytes": 448,
+      "sha256": "711822d92da592638c3675072e588e5a30110188fa83475fd753804b530a8b83"
+    }
+  },
+  "append_snippet": {
+    "path": "append-method.cpp.inc",
+    "sha256": "e9e282614981520b859ef3c4931cf080b26dae19ddf78eaf11189cc718a5e37d"
+  },
+  "private_material_deleted": true,
+  "scope": "Actual JDK17 keytool generated one keypair, exported one public DER certificate, and imported it as a trustedCertEntry into an explicitly named JKS store with public test password changeit. Ephemeral private keystore deleted. No default keystore, real profile, endpoint, router, C++ compilation or native decode execution; append snippet is pending root composition/qualification."
+}

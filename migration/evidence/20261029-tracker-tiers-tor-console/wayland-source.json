@@ -1,0 +1,26 @@
+{
+  "qt_source": {
+    "repository": "https://github.com/qt/qtbase.git",
+    "tag": "v6.12.0",
+    "commit": "025bdad181de241e81bf853c8a2d7bf3d19261a9",
+    "source_sha256": {
+      "qwaylandtextinputv3.cpp": "8715cd9e73534b238215a2ea3b777385ac93c4f655f985c3c0f03d2abb4df0ae",
+      "qwaylandinputcontext.cpp": "c787a34e1a35aa35f3a576a639b705865e4b1ea717c4f83165b339a7322e0e98"
+    }
+  },
+  "retained_inputs": {
+    "/home/yurii/Java/BiglyBT/build/wayland-textinput-20261027/qt-upstream-pin.json": "ae0dac8d0bedd74b68e199c27e01b5ced4d760a6fccda6769c6075374622f237",
+    "/home/yurii/Java/BiglyBT/build/wayland-textinput-20261027/qwaylandinputcontext.cpp": "c787a34e1a35aa35f3a576a639b705865e4b1ea717c4f83165b339a7322e0e98",
+    "/home/yurii/Java/BiglyBT/build/wayland-textinput-20261027/qwaylandtextinputv3.cpp": "8715cd9e73534b238215a2ea3b777385ac93c4f655f985c3c0f03d2abb4df0ae"
+  },
+  "actual_normal_log": {
+    "path": "/home/yurii/Java/BiglyBT/build/normal-empty-profile-20261029/launch-r4.log",
+    "sha256": "888ffba4474cd9c04ad952ec2af5e30b5083a0d86c01b88600fbf99e9521d617"
+  },
+  "actual_qt_core": {
+    "path": "/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6",
+    "sha256": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+    "read_only_inspection": "nm -D -C and objdump -d -C --start-address=0x10c160 --stop-address=0x10c1d0; qInstallMessageHandler xchg old pointer, cmovne old or default return"
+  },
+  "limitations": "Retained exact upstream source and actual matching diagnostic support this one console workaround, not general Wayland/IME correctness. Runtime unexecuted."
+}

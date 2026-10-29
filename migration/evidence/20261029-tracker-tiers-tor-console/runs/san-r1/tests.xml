@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="7"
+	failures="2"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="556"
+	timestamp="2026-10-29T10:37:45"
+	>
+	<testcase name="owned-tor-child-lifecycle" classname="owned-tor-child-lifecycle" time="2.94717" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="integration;loopback;owned-process;qt"/>
+		</properties>
+		<system-out>********* Start testing of OwnedTorChildTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedTorChildTests::initTestCase()
+PASS   : OwnedTorChildTests::postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(control-eof)
+PASS   : OwnedTorChildTests::postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(unsupported-post-setup-event)
+PASS   : OwnedTorChildTests::postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(control-eof-kill-escalation)
+Received signal 11 (SIGSEGV), code SEGV_MAPERR, at instruction address 0x000072f2dc1eb59d, accessing address 0x0000000000000008
+         postReadyControlLossSupportsReentrantStopAndDeletion function time: 401ms, total time: 2179ms
+AddressSanitizer:DEADLYSIGNAL
+=================================================================
+==2179974==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000008 (pc 0x72f2dc1eb59d bp 0x7ffd7390d1d0 sp 0x7ffd7390d140 T0)
+==2179974==The signal is caused by a READ memory access.
+==2179974==Hint: address points to the zero page.
+    #0 0x72f2dc1eb59d in QObject::event(QEvent*) (/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6+0x1eb59d) (BuildId: 0ce45bd85f8b12e9b7dff15aa2187f0a390f3929)
+    #1 0x72f2dd0d1fb4 in QAbstractSocketPrivate::canReadNotification() (/opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6+0xd1fb4) (BuildId: 7105f90f6c5d182a8957311e9683e1d108705434)
+    #2 0x72f2dd0d9ce8  (/opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6+0xd9ce8) (BuildId: 7105f90f6c5d182a8957311e9683e1d108705434)
+    #3 0x72f2dc18fd92 in QCoreApplication::notifyInternal2(QObject*, QEvent*) (/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6+0x18fd92) (BuildId: 0ce45bd85f8b12e9b7dff15aa2187f0a390f3929)
+    #4 0x72f2dc4b2392  (/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6+0x4b2392) (BuildId: 0ce45bd85f8b12e9b7dff15aa2187f0a390f3929)
+    #5 0x72f2dce92b9a  (/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0+0x60b9a) (BuildId: 2426ee6f828a10bf4da963a4c474752c33742359)
+    #6 0x72f2dce941d6  (/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0+0x621d6) (BuildId: 2426ee6f828a10bf4da963a4c474752c33742359)
+    #7 0x72f2dce943c2 in g_main_context_iteration (/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0+0x623c2) (BuildId: 2426ee6f828a10bf4da963a4c474752c33742359)
+    #8 0x72f2dc4b11ab in QEventDispatcherGlib::processEvents(QFlags&lt;QEventLoop::ProcessEventsFlag&gt;) (/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6+0x4b11ab) (BuildId: 0ce45bd85f8b12e9b7dff15aa2187f0a390f3929)
+    #9 0x72f2dc18ff0f in QCoreApplication::processEvents(QFlags&lt;QEventLoop::ProcessEventsFlag&gt;, QDeadlineTimer) (/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6+0x18ff0f) (BuildId: 0ce45bd85f8b12e9b7dff15aa2187f0a390f3929)
+    #10 0x72f2dc205b42 in QTest::qWait(std::chrono::duration&lt;long, std::ratio&lt;1l, 1000l&gt; &gt;) (/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6+0x205b42) (BuildId: 0ce45bd85f8b12e9b7dff15aa2187f0a390f3929)
+    #11 0x62c4cea42f71 in OwnedTorChildTests::postReadyControlLossSupportsReentrantStopAndDeletion() /home/yurii/Java/BiglyBTC/preview/native/services/tor_control/owned_child_tests.cpp:167
+    #12 0x62c4ce9c2e75 in OwnedTorChildTests::qt_static_metacall(QObject*, QMetaObject::Call, int, void**) /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/services/tor_control/biglybtc-tor-owned-child-tests_autogen/include/owned_child_tests.moc:144
+    #13 0x72f2dc1a5091 in QMetaMethodInvoker::invokeImpl(QMetaMethod, void*, Qt::ConnectionType, long long, void const* const*, char const* const*, QtPrivate::QMetaTypeInterface const* const*) (/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6+0x1a5091) (BuildId: 0ce45bd85f8b12e9b7dff15aa2187f0a390f3929)
+    #14 0x72f2dc1a62cf in QMetaMethod::invokeImpl(QMetaMethod, void*, Qt::ConnectionType, long long, void const* const*, char const* const*, QtPrivate::QMetaTypeInterface const* const*) (/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6+0x1a62cf) (BuildId: 0ce45bd85f8b12e9b7dff15aa2187f0a390f3929)
+    #15 0x72f2ddbbc101  (/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6+0x2e101) (BuildId: 203fad6511dec9d802283da1acd52092b1b8f51b)
+    #16 0x72f2ddbc3c72  (/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6+0x35c72) (BuildId: 203fad6511dec9d802283da1acd52092b1b8f51b)
+    #17 0x72f2ddbc49a0  (/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6+0x369a0) (BuildId: 203fad6511dec9d802283da1acd52092b1b8f51b)
+    #18 0x72f2ddbc5087  (/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6+0x37087) (BuildId: 203fad6511dec9d802283da1acd52092b1b8f51b)
+    #19 0x72f2ddbc5e49 in QTest::qRun() (/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6+0x37e49) (BuildId: 203fad6511dec9d802283da1acd52092b1b8f51b)
+    #20 0x72f2ddbc605f in QTest::qExec(QObject*, int, char**) (/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6+0x3805f) (BuildId: 203fad6511dec9d802283da1acd52092b1b8f51b)
+    #21 0x72f2ddbc6285 in QTest::qExec(QObject*, QList&lt;QString&gt; const&amp;) (/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6+0x38285) (BuildId: 203fad6511dec9d802283da1acd52092b1b8f51b)
+    #22 0x62c4ce9bbc26 in main /home/yurii/Java/BiglyBTC/preview/native/services/tor_control/owned_child_tests.cpp:627
+    #23 0x72f2db02a600 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:59
+    #24 0x72f2db02a717 in __libc_start_main_impl ../csu/libc-start.c:360
+    #25 0x62c4ce9b99b4 in _start (/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/services/tor_control/biglybtc-tor-owned-child-tests+0xb19b4) (BuildId: 0ef4fc34f42674f71d9eda5f419332cbc7fcd294)
+
+==2179974==Register values:
+rax = 0x000072f2dc744a18  rbx = 0x0000000000000000  rcx = 0x0000000000000076  rdx = 0x0000000000000077  
+rdi = 0x00007002d7c022a0  rsi = 0x0000000000000000  rbp = 0x00007ffd7390d1d0  rsp = 0x00007ffd7390d140  
+ r8 = 0x00006f72d7bedc10   r9 = 0x00000000000af93c  r10 = 0x000072f2dd5da298  r11 = 0x000072f2dd8c0980  
+r12 = 0x0000000000000000  r13 = 0x00007002d7c022a0  r14 = 0x000072f2dcf5e284  r15 = 0x00006f12d7be0af0  
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV (/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6+0x1eb59d) (BuildId: 0ce45bd85f8b12e9b7dff15aa2187f0a390f3929) in QObject::event(QEvent*)
+==2179974==ABORTING
+</system-out>
+	</testcase>
+	<testcase name="network-policy" classname="network-policy" time="0.0546207" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>33 network-policy families, 501 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="queue-policy" classname="queue-policy" time="0.104093" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="queue;unit"/>
+		</properties>
+		<system-out>original multi tracker selection preserves status retained counts backup and Java tier shuffle: responses[1].regularPollDue(600200)
+</system-out>
+	</testcase>
+	<testcase name="mainline-dht" classname="mainline-dht" time="129.092" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;network;owned"/>
+		</properties>
+		<system-out>********* Start testing of MainlineDhtTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineDhtTests::initTestCase()
+PASS   : MainlineDhtTests::queuedScrapeUsesActualLiveNodesExplicitDialectAndNeverAnnounces()
+PASS   : MainlineDhtTests::heldScrapeCancellationCannotPublishIntoSameHashFreshRound()
+PASS   : MainlineDhtTests::savedQueuedAuthorityReadsNoPayloadAndRefusesOtherConsumers()
+PASS   : MainlineDhtTests::unissuedScrapeCancellationReclaimsWithoutLosingCloseFence()
+PASS   : MainlineDhtTests::completedWireRoundsReclaimBeyondSixtyFourAndUnreadResultsStayBounded()
+PASS   : MainlineDhtTests::cancelledHeldAndErrorTimeoutProbesRequireActualTerminalConsumption()
+PASS   : MainlineDhtTests::activeScrapeAuthorityBindsRealStorageFreshPolicyAndAdmissionWithoutPayloadEffects()
+PASS   : MainlineDhtTests::queuedSchedulingAndPositivePublicationAreScopeBoundWithoutInventedExpiry()
+PAS...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="mainline-single-tracker-owner" classname="mainline-single-tracker-owner" time="127.01" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;network;owned;slow"/>
+		</properties>
+		<system-out>********* Start testing of MainlineSingleTrackerOwnerTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleTrackerOwnerTests::initTestCase()
+PASS   : MainlineSingleTrackerOwnerTests::configuredCandidateRequiresSameFullSubjectUrlPolicyAndRealResponseOwner()
+PASS   : MainlineSingleTrackerOwnerTests::retainedOriginalLeaseKeepsTheActualAdmittedTrackerScrapeCandidate()
+QINFO  : MainlineSingleTrackerOwnerTests::actualFailedUdpResponseAllowsScrapeWhileHealthyResponseSuppressesIt() actual configured UDP: failed announces=3 scrapes=1, healthy announces=1 scrapes=1, DHT=1/0
+PASS   : MainlineSingleTrackerOwnerTests::actualFailedUdpResponseAllowsScrapeWhileHealthyResponseSuppressesIt()
+PASS   : MainlineSingleTrackerOwnerTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 126810ms
+********* Finished testing of MainlineSingleTrackerOwnerTests ********...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="mainline-single-udp" classname="mainline-single-udp" time="120.775" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;network;owned;slow"/>
+		</properties>
+		<system-out>********* Start testing of MainlineSingleUdpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleUdpTests::initTestCase()
+PASS   : MainlineSingleUdpTests::canonicalWirePreservesOriginalSignedCountsAndDeclinesAmbiguousShapes()
+PASS   : MainlineSingleUdpTests::ownedPendingRequestRetainsPriorResponseButCannotGrantFromConstructorOrLoss()
+PASS   : MainlineSingleUdpTests::routeAndSavedSettingsNeverGuessDnsProxyVersionOrTrackerOverrides()
+PASS   : MainlineSingleUdpTests::actualWireCancellationFreshAuthorizationMalformedAndDeadlineAreIndependent()
+PASS   : MainlineSingleUdpTests::actualNumericIpv6RoundUsesOnlyTheExplicitIpv6Socket()
+PASS   : MainlineSingleUdpTests::neverAdmittedSavedQueuedUsesActualRegularUdpAndLateReplyCannotGrant()
+PASS   : MainlineSingleUdpTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 120617ms
+********* Finished testin...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="mainline-single-http" classname="mainline-single-http" time="176.919" status="run">
+		<properties>
+			<property name="cmake_labels" value="discovery;network;owned;slow;tls"/>
+		</properties>
+		<system-out>********* Start testing of MainlineSingleHttpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleHttpTests::initTestCase()
+PASS   : MainlineSingleHttpTests::originalUrlMappingAndRoutePermissions()
+PASS   : MainlineSingleHttpTests::sourceBodyMissingFailureNarrowingAndIntervals()
+PASS   : MainlineSingleHttpTests::heldSettingsAreStrictAndLow32OriginalBooleans()
+PASS   : MainlineSingleHttpTests::actualHostnameHttpChunkedAndCancellationReuse()
+PASS   : MainlineSingleHttpTests::dnsProposalRequiresFreshOwnerPermissionBeforeSocket()
+PASS   : MainlineSingleHttpTests::neverAdmittedSavedHttpFailureUsesSameMainlineConsumerWithoutPayloadAccess()
+PASS   : MainlineSingleHttpTests::savedTrackerTiersBindAllUrlsAndPreservePrimaryFallbackAndRawIdentity()
+PASS   : MainlineSingleHttpTests::savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply(ordered-tiers)
+PASS   : Mai...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

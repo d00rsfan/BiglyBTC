@@ -32,3 +32,10 @@ Use fresh persistent project build roots for GCC16/Clang24/ASan+UBSan+LSan,
 two compilers maximum at reduced priority. Retain failures and qualified input,
 helper, runtime, binary and immutable commit provenance. Continue actual owned
 child lifecycle and settings/proxy integration after this bounded component.
+
+
+## 2026-10-29 bounded follow-up
+
+Post-Ready control EOF/protocol loss now withdraws state/port/source authority immediately. Terminal callbacks are deferred until the Qt socket frame unwinds, preserving synchronous controller deletion and owned child join. GCC/SAN mock lifecycle and explicit extracted offline Tor checks passed; this does not activate complete app Tor routing.
+
+Qualified source: `3228091a1e12f81b334e27e589da8605c0b76420`. See `migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md` for the initial failures, repairs and explicit reuse of identical tested executables.

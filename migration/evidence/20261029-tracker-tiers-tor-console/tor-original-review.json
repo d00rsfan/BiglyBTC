@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/manifest.json",
+    "sha256": "d96f9592491c49d1a14c06b17a14fbb80588db2708f2c5d03dbd3e0f280add49"
+  },
+  "findings": [],
+  "verified": {
+    "source_maps": 3,
+    "artifact_pins": 6,
+    "support_source_pins": 8,
+    "old_test_method_bodies_byte_exact": 22,
+    "python_mock_ast": "valid",
+    "native_basis": "eb00e5c23e2f888082c5a0f3c621b4fac0954e7b",
+    "current_beforeimages": "all3 equal current native files"
+  },
+  "reasoning": [
+    "Existing OwnershipHandshake treats Ready as nonterminal: channel EOF or unsupported unsolicited reply emits failed. Previous owner handled only Authenticating, leaving stale Ready. New same-generation Ready branch enters existing failure/stop/join path; setup branch unchanged.",
+    "Existing stop blocks/stops handshake before stateChanged(Stopping); controlPort already returns0 before listeners, only the owned QProcess is terminated/escalated. QPointer+same-generation change guard handles listener stop/deletion, and failed handshake/frame callbacks have no member access after their terminal signal returns.",
+    "No new automatic retry, protocol commands, timers, sockets or profiles in production. Explicit restart still requires terminal join, increments generation and resets old handshake. Lost/stale signal cannot publish current Ready.",
+    "New mock modes wait for parent-observed Ready via a second generated loopback trigger, then fail only the original authenticated control connection while child remains alive. Test rows prove early port withdrawal, exact failure, one finished/join/reap, SIGTERM escalation, explicit fresh restart and synchronous stop/deletion. Audit requires original5 setup commands plus explicit loss marker."
+  ],
+  "limits": [
+    "Source review only; no compile/process/test/network execution by reviewer.",
+    "Unsubscribed650 is unsupported in this bounded ownership channel; this adds no Tor asynchronous event support, automatic reconnection or proxy/onion/I2P parity.",
+    "Existing real offline Tor and owned fixture runtime gates remain required after adoption."
+  ],
+  "native_cache_dist_or_original_mutated": false
+}

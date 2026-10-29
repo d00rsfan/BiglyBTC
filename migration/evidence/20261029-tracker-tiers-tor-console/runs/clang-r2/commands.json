@@ -1,0 +1,74 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-tor-owned-child-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 67.466,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/clang-r2/build.log",
+    "log_sha256": "8cc7664b12d4f56bc9a2c2bcd5b0aa20ba62bae496310ae16c35de2081c1799c"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "-R",
+      "^(queue-policy)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/clang-r2/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.216,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/clang-r2/tests.log",
+    "log_sha256": "51e9f666d34462166c32aa64bee172cc667b514b665a1ee39e3a83cb5057aba8"
+  },
+  {
+    "name": "wayland-smoke",
+    "command": [
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/biglybtc-preview-smoke",
+      "exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler",
+      "explicitQtConsoleControlsDisableNativeFiltering",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/clang-r2/wayland-smoke.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.367,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/clang-r2/wayland-smoke.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "launcher-units",
+    "command": [
+      "python3",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/native/packaging/test_preview.py"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 2.463,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/clang-r2/launcher-units.log",
+    "log_sha256": "0d4e0c118b3bc0162a59b64c75851f9fa974ce848c39f2fdba94ba679fe72dc1"
+  }
+]

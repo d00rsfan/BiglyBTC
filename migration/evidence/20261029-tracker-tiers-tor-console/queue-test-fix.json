@@ -1,0 +1,27 @@
+{
+  "status": "SOURCE_ONLY_FIXTURE_DEADLINE_CORRECTION",
+  "source_basis": "dfc27e723344203e49d96341a3039be444062858",
+  "source_paths": {
+    "preview/native/tests/queue_policy_tests.cpp": {
+      "before_sha256": "2003676c931c1bc3002fef3115d0445ce6ea3da0398a8450e0cd4e61642d5219",
+      "after_sha256": "d53eac406c10fb0f123e560443aeb2b5a017d345e0757b0ac682984a55573441",
+      "after_path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/review-codec/queue-deadline/staging/preview/native/tests/queue_policy_tests.cpp"
+    }
+  },
+  "reason": "Test assigns good.observedMillis=200 then overwrites500 before observe(). observe stores nextRegular=observedMillis+600000 when no source delay override. The correct exact before/at checks are600499/600500; regularDue remains false for a healthy external response. Production code, event times, all CHECK predicates and other cases unchanged.",
+  "observed_failure": {
+    "path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/clang-r1/tests.log",
+    "sha256": "1efad096878ba9311c4668c480c7a7db2297d44f373d8efc8939e108d1bdf600",
+    "text": "responses[1].regularPollDue(600200)"
+  },
+  "unchanged_production": {
+    "path": "/home/yurii/Java/BiglyBTC/preview/native/core/src/queue_observations.cpp",
+    "sha256": "8bf7090d9cfccb51fde4e8004226749cc63717d3fcc8af190cd7ffb5e0420ae0"
+  },
+  "artifacts_sha256": {
+    "changes.patch": "a1098bc73363a68d82d22c97ffef9b56eb338b0334a6305190a27fa080393584",
+    "staging/preview/native/tests/queue_policy_tests.cpp": "d53eac406c10fb0f123e560443aeb2b5a017d345e0757b0ac682984a55573441"
+  },
+  "tests_or_builds_executed": false,
+  "native_mutated": false
+}

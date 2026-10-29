@@ -1,0 +1,188 @@
+{
+  "status": "PASS_BOUNDED_COHORT_WITH_EXPLICIT_IDENTICAL_IMAGE_REUSE",
+  "source_commit": "3228091a1e12f81b334e27e589da8605c0b76420",
+  "source_commits": [
+    {
+      "commit": "c89340fdff044c51174d9e15917e1bcad10a2bd9",
+      "subject": "Preserve tracker tiers and retry alternate scrape URLs",
+      "paths": [
+        "preview/native/core/include/biglybtc/queue_observations.hpp",
+        "preview/native/core/src/queue_observations.cpp",
+        "preview/native/engine/library_http_owner.inc",
+        "preview/native/engine/library_udp_owner.inc",
+        "preview/native/engine/mainline_owner.inc",
+        "preview/native/engine/queued_mainline_scrape.cpp",
+        "preview/native/engine/queued_mainline_scrape.hpp",
+        "preview/native/tests/mainline_single_http_tests.cpp",
+        "preview/native/tests/queue_policy_tests.cpp"
+      ]
+    },
+    {
+      "commit": "f810ca74be0aa5f65de29eab1ed1ecfdadfe9572",
+      "subject": "Withdraw owned Tor authority after control loss",
+      "paths": [
+        "migration/fixtures/tor-owned-child/peer.py",
+        "preview/native/services/tor_control/owned_child.cpp",
+        "preview/native/services/tor_control/owned_child_tests.cpp"
+      ]
+    },
+    {
+      "commit": "42f8098b895d7debefecf81a624acd535dbfbbbd",
+      "subject": "Filter the redundant Qt Wayland focus warning",
+      "paths": [
+        "preview/native/app/main_desktop.cpp",
+        "preview/native/app/wayland_console.hpp",
+        "preview/native/packaging/preview.py",
+        "preview/native/packaging/preview_smoke.cpp",
+        "preview/native/packaging/test_preview.py"
+      ]
+    },
+    {
+      "commit": "dfc27e723344203e49d96341a3039be444062858",
+      "subject": "Cover original JDK trust stores and stock provider builds",
+      "paths": [
+        "preview/native/tests/mainline_single_http_tests.cpp",
+        "preview/native/tests/fixtures/jks/jdk17-owned-root.der",
+        "preview/native/tests/fixtures/jks/jdk17-owned-truststore.jks",
+        "preview/native/tests/mainline_original_host_tests.cpp"
+      ]
+    }
+  ],
+  "repair_commits": [
+    "f601fc7868bfa1d06fd09f95d0030e93193c42ba",
+    "3228091a1e12f81b334e27e589da8605c0b76420"
+  ],
+  "source_path_count": 20,
+  "lanes": {
+    "gcc": {
+      "fresh_suites": [
+        "owned-tor-child-lifecycle",
+        "queue-policy"
+      ],
+      "identical_image_reused_suites": [
+        "network-policy",
+        "mainline-dht",
+        "mainline-single-tracker-owner",
+        "mainline-single-udp",
+        "mainline-single-http"
+      ],
+      "console_methods": [
+        "exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler",
+        "explicitQtConsoleControlsDisableNativeFiltering"
+      ],
+      "launcher_python_tests": 6,
+      "real_offline_tor": true
+    },
+    "clang": {
+      "fresh_suites": [
+        "queue-policy"
+      ],
+      "identical_image_reused_suites": [
+        "network-policy",
+        "mainline-dht"
+      ],
+      "console_methods": [
+        "exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler",
+        "explicitQtConsoleControlsDisableNativeFiltering"
+      ],
+      "launcher_python_tests": 6,
+      "real_offline_tor": false
+    },
+    "san": {
+      "fresh_suites": [
+        "owned-tor-child-lifecycle",
+        "queue-policy"
+      ],
+      "identical_image_reused_suites": [
+        "network-policy",
+        "mainline-dht",
+        "mainline-single-tracker-owner",
+        "mainline-single-udp",
+        "mainline-single-http"
+      ],
+      "console_methods": [
+        "exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler",
+        "explicitQtConsoleControlsDisableNativeFiltering"
+      ],
+      "launcher_python_tests": 6,
+      "real_offline_tor": true
+    }
+  },
+  "private_actual_runnable_rows": 8,
+  "private_selectors": 5,
+  "provider_rebuilt": false,
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "dist_manifest_sha256": "45044b40030008230c556c17aa25fcf36938fe7bd1254d7707780dc1f509a238",
+  "old_dist_retained": false,
+  "real_profile_used": false,
+  "full_feature_or_performance_parity_claimed": false,
+  "artifacts_sha256": {
+    "manifest.json": "3462e851993d31ee677fa15b97a24783c32273da406ce6616e157836be3c8115",
+    "root-adoption.json": "32d6cd38db0bd6904d6a74615922258709e2f4446e70a0f3203c1bbb42a0c65a",
+    "final-source.json": "1a4e203c0e6ce2246140baa7d620ab99ca19833652e37db30c717c2e6f53c63f",
+    "r1-failure-audit.json": "ba12c5fa2d9c48b11bf1c9a82e8ba7ea355a9e1cf96b7a55e75075b32b0f46b3",
+    "original-source-reverified.json": "5d221e3437d6c1ac7908f129636b6bd397655685f4f4ccd4f065216bbfab70ad",
+    "promotion.json": "5044084a2a6f9edac10f6c72ca7c5effef74a75d9ca3a7410a815e6e9564da1b",
+    "hosted-d77-errors.json": "29d7e6aa17492586b678721e6e75e7db57d06fcf7c134d84f8eced8a56c85dae",
+    "run.py": "740ec8385d69af26e5179573f4897aa68028279d1d35c11231afc777cd034e4d",
+    "qualify-test-fix.py": "ff7b79f68ce18dc7ebe50e6c0959ff109705d99cbb2cb4d2f3d0262123b10e71",
+    "multi-url-review.json": "38bb3232585a573d314262605a46b6aa1e1b463d8d7c1307ab124fc135619afd",
+    "tor-original-review.json": "7010465f9d931616580ca4fb0951c39250a106a1e6fa43c4eef5266e615fea9a",
+    "tor-terminal-fix.json": "57a8245b1931a7c0aded684a0346ab01206efcb55bf9dd828c7a574d74d13960",
+    "wayland-review.json": "35fde24e61264ad1c01d09a280e7f0debb1cf3dec12f2ed49f2547fcd537bf58",
+    "wayland-source.json": "4d82080bb5b6fe1281793e7ab11ad21910b2e2254f82b3e3d8d04b63cfa97e0d",
+    "golden-jdk.json": "1e0df1e12ddebb5df54ec6698fd9a47e760486cc61ab0660aca059f13df0b58a",
+    "queue-test-fix.json": "bad7ce15aae0fb2251db05f1d6c42bd6795532fd75b4a5204d256a89435e153c",
+    "runs/gcc-r1/result.json": "dc7e7249b4f3beb63548283953f6e6b7f6b3a700ad71e00875a4c851d0aa0fcc",
+    "runs/gcc-r1/commands.json": "a6bfa1d19d9a9caa47bd03a6ed9b7339f8c3c7487a429192ef3e853e0b07146f",
+    "runs/gcc-r1/images-before.json": "0320a083eb247998824300768bf0faf41989a6c12042433749882ce31ae676fb",
+    "runs/gcc-r1/tests.xml": "65989617f92222099d8f0d32ecc357c919250fd703392493cae6c31bcd76b6ff",
+    "runs/gcc-r1/ctest-full.log": "84731f09d20ad3cc1af0aab8c9f1b36d01f6e7a2e5e66bfd706df67d33613060",
+    "runs/gcc-r2/result.json": "2c12adf0d83fbfeb39645f5a795526b656e4e6555a454f343d2223fec8ffb3f8",
+    "runs/gcc-r2/commands.json": "6f44bc1aa6d037f558040ca33ab8e9982cb3522eaf847a5332ec4213d4c52197",
+    "runs/gcc-r2/images-before.json": "d47422a8bcddf60ea429e6772544d181caf3a7c2f74eb6369e02e1a10f203f1a",
+    "runs/gcc-r2/tests.xml": "f6db67b924cef98928b13b550d83bf4d824247e42ab0373aa3b2970a29c02153",
+    "runs/gcc-r2/ctest-full.log": "738af6362abc4021492c6bad2b1bdb279c5d4a61c7ea504f75dd3cc1b6705810",
+    "runs/gcc-r2/wayland-smoke.xml": "dcd3b900db56ed4142a517ec32d0032859b6204330e6c543799c44a71e6b00d5",
+    "runs/gcc-r2/real-offline-tor.xml": "a92c8d0f6aab4eecf25af72031c2f113823e2657c81a19f3d16684cc54e97722",
+    "runs/gcc-r2/real-tor-observed.json": "bee6f273fcc4ab00c800ff1aad78bdffe1a70b2c694ffbd76d45d116bb65b24d",
+    "runs/clang-r1/result.json": "03c57426646f09074cd632ddc142ae8e959252d5cd27f6137ac7fb7bdba8b79b",
+    "runs/clang-r1/commands.json": "e55bc25eb47fe546973e94015e5ef9282cc8c78abbb81b0fe41fac5748c9a103",
+    "runs/clang-r1/images-before.json": "402e9965daf7bc13b5561ace1abc4c1eaa3a5a5dc8558482506b9654bb64258e",
+    "runs/clang-r1/tests.xml": "f8902e2a83cf12d383a4ae7325b2ae864e6101688eddc35b87282dcff80af013",
+    "runs/clang-r1/ctest-full.log": "4ed854a021b503dd994d6f0575feaa8a9a9599e8e440ff170a5a70834cf3e8e3",
+    "runs/clang-r2/result.json": "a7f9f4a79585c5fc9603a7e1c8eda5c5a987d5018e11dee129f5a630eb1e051f",
+    "runs/clang-r2/commands.json": "7f9b352b9d73b1f4f8b72f6bdc83c9e2f58710ecfcc4c82b78e3f6e001242e4a",
+    "runs/clang-r2/images-before.json": "451fe36f01a7b320edb2283ff6c1ee88bf18a1c9fcf53d827eba2b6ebaa06799",
+    "runs/clang-r2/tests.xml": "a1db0003f8eac262ad6686cb072be71a6d26b3a8c5bd71277335f24b87940351",
+    "runs/clang-r2/ctest-full.log": "d6d56923dc98025a7e2cdcb74ccdf48b75c8627c3741af5ec4e7e1505aa25be8",
+    "runs/clang-r2/wayland-smoke.xml": "b839beb56cc93ebe8091d00d1d5d3ce11d5be676afec77186c74398bbe84a96d",
+    "runs/san-r1/result.json": "b016f41e2b7e8e092f1838dc5cebd83ff7cfa250c86049776134e1ee45ffb263",
+    "runs/san-r1/commands.json": "965e68c7546d54a70e7efd4e4e2c4dd30ebf451bddbcddec423c8e17472936b6",
+    "runs/san-r1/images-before.json": "d93b8afac39e6b85cd598df5ec86c3855fb02af2146184bb533030589059f510",
+    "runs/san-r1/tests.xml": "8845160b3f94c5f105d7e6f3ee97ea994c545574d1f97e321fa5b59c138cd475",
+    "runs/san-r1/ctest-full.log": "16218bd34568abec47d721bc0fe97528b66f20b030072a73717fd4f337f8adc0",
+    "runs/san-r2/result.json": "d88a575c41dffed599fd56b8541fbd8692d68ce20a86ed6c7cdf26376b8d4b8a",
+    "runs/san-r2/commands.json": "4b2c4942e507bed959018d6f94870dcc0d59134ae731684097ddb8f7e0de0060",
+    "runs/san-r2/images-before.json": "43b230980393cc11c144469a2167e6b28602e9eb9a8b61048fc709e66f25352d",
+    "runs/san-r2/tests.xml": "2a6d8a0e79af5405ed2c8e696a20a6e304b0940251eca0d9ec86ef81705f8c2d",
+    "runs/san-r2/ctest-full.log": "25040f08a6be7998824a990e214ef785d8edbf81b2eb57d26c34fe8f10229096",
+    "runs/san-r2/wayland-smoke.xml": "39bbd0db35d1c5935c9c0f99cee531f09e2d0cbe0edc8878f8daeb36b332a590",
+    "runs/san-r2/real-offline-tor.xml": "4b3f28905569f92a8bb3d70f19ffe525bc323c7522a7c59d3f595d4e82b7e0b5",
+    "runs/san-r2/real-tor-observed.json": "7f6209aa66323ec1827b8466da9bc511acd6fa7717e6a66f7b2b3d0265573218",
+    "private/run.py": "688c74945b13b1356afab8c0a26d053846dccc01aeea4a69a5f9e22abfd8fa37",
+    "private/runs/r1/result.json": "c950855ae6580b39171c6917068ea3efd8c52a724ad84c38b8aae629627dbbe2",
+    "private/runs/r1/commands.json": "bf6da0d4fe43edd15f03c8212474fcc75423c43014fc289a65f1e6e339af4942",
+    "private/runs/r1/selected-5.txt": "a257ee7378d24fba1f3ea7e2b44b78786fc4c98916fe92619fe770c52b9e99b4",
+    "private/runs/r1/selected-4.txt": "efa2fec65c8afb377da1f03e40da106941875223133bb40b732329bc4227c6ad",
+    "private/runs/r1/selected-1.txt": "462d28d3c133fa88761b940ab28f4750c1f297c011b3e512cabf59a90f76939e",
+    "private/runs/r1/selected-2.xml": "daf4d8c2074c23e3b568776e095ab8e8e65650c451d31822ec7928d5f14b353a",
+    "private/runs/r1/selected-5.xml": "9b90b58e31fc11b01fa1c2455cdedd2fddad7f0bb4957cc4b21d574051ef15d4",
+    "private/runs/r1/selected-3.xml": "81a708eb94da5680fe67f12e8c2422d5a235ab1e7a5d5097ffa29c4af1b0c0ff",
+    "private/runs/r1/selected-2.txt": "0856a5798efec81a6c9b3e0de94af86b1d968e5616fb88298402e76bc4697fc4",
+    "private/runs/r1/selected-4.xml": "ad232f7c2309eaea4dbf39a8eed2f6b1f7385138e8ffd01a326b9163cbb9dbbf",
+    "private/runs/r1/selected-3.txt": "b2e35cc03dd72c9f0f3e29d56bc0061b8382e592a0e08880b2efca28087487e5",
+    "private/runs/r1/selected-1.xml": "f05c5e04ecfb945b49b8b5ddc89a2ba338f5392569fdf70b13a0827e9a172ab0",
+    "dist-manifest.json": "45044b40030008230c556c17aa25fcf36938fe7bd1254d7707780dc1f509a238"
+  }
+}

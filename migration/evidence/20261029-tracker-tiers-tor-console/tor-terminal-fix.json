@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_CONTROL_FAILURE_CALLBACK_LIFETIME_CORRECTION_PENDING_REVIEW_AND_RUNTIME",
+  "source_basis": "dfc27e723344203e49d96341a3039be444062858",
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/manifest.json",
+    "sha256": "d96f9592491c49d1a14c06b17a14fbb80588db2708f2c5d03dbd3e0f280add49"
+  },
+  "historical_source_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029-review/review.json",
+    "sha256": "7010465f9d931616580ca4fb0951c39250a106a1e6fa43c4eef5266e615fea9a",
+    "runtime_discovery_supersedes_lifetime_assumption": true
+  },
+  "source_paths": {
+    "preview/native/services/tor_control/owned_child.cpp": {
+      "before_sha256": "349dc0226b048050d880c1f00cf3585d1f2639164d9dbab9927b9fa00344eeda",
+      "after_sha256": "dcaf52d3d364ee645d7ba606a3bba1d1648a11e2640e40e0ef8a6fd75415bfb0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/amendments/queued-terminal/staging/preview/native/services/tor_control/owned_child.cpp"
+    },
+    "preview/native/services/tor_control/owned_child_tests.cpp": {
+      "before_sha256": "73ef506d60de7d23ce0d1e214462ea3b8d788403920ac6555b5f2995a7f9bf90",
+      "after_sha256": "8c2a3b30632be79f61e4c8508f0bf0dfaf29f0a1c61d5249b8cb8ed1a8f6a488",
+      "after_path": "/home/yurii/Java/BiglyBT/build/tor-control-loss-20261029/amendments/queued-terminal/staging/preview/native/services/tor_control/owned_child_tests.cpp"
+    }
+  },
+  "artifacts_sha256": {
+    "NOTE.txt": "e76b1f39c8aef96d0e2f628b3493d3a253bc4d2a59fc24bbfc4a509801a6e576",
+    "changes.patch": "a0ffd5bfc3627f1ac9f5d838d71cf6c4252b3b29706076b74ce87ac4b7d48532",
+    "san-control-loss-excerpt.txt": "ea6c2193ebcaae0c2f4f4abcf144b4d544bfe634bdc59be630f5cc7571e7eccc",
+    "staging/preview/native/services/tor_control/owned_child.cpp": "dcaf52d3d364ee645d7ba606a3bba1d1648a11e2640e40e0ef8a6fd75415bfb0",
+    "staging/preview/native/services/tor_control/owned_child_tests.cpp": "8c2a3b30632be79f61e4c8508f0bf0dfaf29f0a1c61d5249b8cb8ed1a8f6a488"
+  },
+  "observed_stack": {
+    "path": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/runs/san-r1/tests.log",
+    "captured_lines": [
+      6,
+      39
+    ],
+    "immutable_excerpt": "san-control-loss-excerpt.txt",
+    "original_full_log_not_pinned_while_other_tests_active": true
+  },
+  "original22_methods_byte_exact": true,
+  "new_loss_assertions_strengthened": true,
+  "production_ownership_channel_unchanged": true,
+  "affected_target": "biglybtc-tor-owned-child-tests",
+  "affected_suite": "owned-tor-child-lifecycle",
+  "actual_author_runs": [],
+  "native_cache_dist_or_java_mutated": false
+}

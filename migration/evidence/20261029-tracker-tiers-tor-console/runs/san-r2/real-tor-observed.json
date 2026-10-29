@@ -1,0 +1,19 @@
+{
+    "cancelled_before_authentication": true,
+    "cancelled_child_pid": 2183660,
+    "child_pid": 2183654,
+    "control_port": 37879,
+    "cookie_bytes": 32,
+    "cookie_device": "46",
+    "cookie_inode": "1694475",
+    "cookie_sha256": "a8aab20fa1dee9d626251a13c569b8d7f165db36f2a4ff7f9cd7fe1adaa7cb6a",
+    "executable": "/home/yurii/Java/BiglyBT/build/dependencies/tor-owned-0.4.9.11/runtime/tor-offline-launcher",
+    "joined": true,
+    "network_scope": "Fixed DisableNetwork1/SocksPort0; only observed control traffic is numeric loopback; no packet-wide absence measurement by this Qt assertion",
+    "original_profile_used": false,
+    "raw_version_info": "version=0.4.9.11",
+    "runtime_artifact_sha256": "25f0d75d2a2cc482b3e912457099ee666622444a0ae714151257844ca5987356",
+    "schema": 1,
+    "status": "PASS_REAL_EXTRACTED_OFFLINE_TOR",
+    "system_installed": false
+}

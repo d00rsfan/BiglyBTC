@@ -1,0 +1,244 @@
+Start testing: Oct 29 10:31 IST
+----------------------------------------------------------
+10/281 Testing: owned-tor-child-lifecycle
+10/281 Test: owned-tor-child-lifecycle
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/tor_control/biglybtc-tor-owned-child-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/tor_control
+"owned-tor-child-lifecycle" start time: Oct 29 10:31 IST
+Output:
+----------------------------------------------------------
+********* Start testing of OwnedTorChildTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedTorChildTests::initTestCase()
+PASS   : OwnedTorChildTests::postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(control-eof)
+PASS   : OwnedTorChildTests::postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(unsupported-post-setup-event)
+PASS   : OwnedTorChildTests::postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart(control-eof-kill-escalation)
+Received signal 11 (SIGSEGV), code 128, at instruction address 0x000077dc14a069ef, accessing address 0x0000000000000000
+         postReadyControlLossSupportsReentrantStopAndDeletion function time: 378ms, total time: 1720ms
+<end of output>
+Test time =   1.73 sec
+----------------------------------------------------------
+Test Failed.
+"owned-tor-child-lifecycle" end time: Oct 29 10:31 IST
+"owned-tor-child-lifecycle" time elapsed: 00:00:01
+----------------------------------------------------------
+
+200/281 Testing: network-policy
+200/281 Test: network-policy
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-network-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"network-policy" start time: Oct 29 10:31 IST
+Output:
+----------------------------------------------------------
+33 network-policy families, 501 assertions passed
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"network-policy" end time: Oct 29 10:31 IST
+"network-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+218/281 Testing: queue-policy
+218/281 Test: queue-policy
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-queue-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"queue-policy" start time: Oct 29 10:31 IST
+Output:
+----------------------------------------------------------
+original multi tracker selection preserves status retained counts backup and Java tier shuffle: responses[1].regularPollDue(600200)
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Failed.
+"queue-policy" end time: Oct 29 10:31 IST
+"queue-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+261/281 Testing: mainline-dht
+261/281 Test: mainline-dht
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-dht-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"mainline-dht" start time: Oct 29 10:31 IST
+Output:
+----------------------------------------------------------
+********* Start testing of MainlineDhtTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineDhtTests::initTestCase()
+PASS   : MainlineDhtTests::queuedScrapeUsesActualLiveNodesExplicitDialectAndNeverAnnounces()
+PASS   : MainlineDhtTests::heldScrapeCancellationCannotPublishIntoSameHashFreshRound()
+PASS   : MainlineDhtTests::savedQueuedAuthorityReadsNoPayloadAndRefusesOtherConsumers()
+PASS   : MainlineDhtTests::unissuedScrapeCancellationReclaimsWithoutLosingCloseFence()
+PASS   : MainlineDhtTests::completedWireRoundsReclaimBeyondSixtyFourAndUnreadResultsStayBounded()
+PASS   : MainlineDhtTests::cancelledHeldAndErrorTimeoutProbesRequireActualTerminalConsumption()
+PASS   : MainlineDhtTests::activeScrapeAuthorityBindsRealStorageFreshPolicyAndAdmissionWithoutPayloadEffects()
+PASS   : MainlineDhtTests::queuedSchedulingAndPositivePublicationAreScopeBoundWithoutInventedExpiry()
+PASS   : MainlineDhtTests::lookupAndTokenAnnounceUseActualDistinctPeerPort()
+PASS   : MainlineDhtTests::malformedUnsolicitedAndInvalidEndpointsCannotBecomePeerHints()
+PASS   : MainlineDhtTests::forgetRevokesLateReplyBeforeAnotherHashMakesProgress()
+PASS   : MainlineDhtTests::invalidInputsAndUnavailablePoliciesFailBeforeDiscovery()
+PASS   : MainlineDhtTests::checkpointRecreatesActualLookupWithoutRoutersAndOptionallyRestoresWireIdentity()
+PASS   : MainlineDhtTests::injectedSettingsAndMalformedCheckpointCannotConstructAListener(injected-root-settings)
+PASS   : MainlineDhtTests::injectedSettingsAndMalformedCheckpointCannotConstructAListener(injected-nested-settings)
+PASS   : MainlineDhtTests::injectedSettingsAndMalformedCheckpointCannotConstructAListener(old-bare-node-id)
+PASS   : MainlineDhtTests::injectedSettingsAndMalformedCheckpointCannotConstructAListener(zero-node-identity)
+PASS   : MainlineDhtTests::injectedSettingsAndMalformedCheckpointCannotConstructAListener(zero-contact-port)
+PASS   : MainlineDhtTests::injectedSettingsAndMalformedCheckpointCannotConstructAListener(malformed-bencode)
+PASS   : MainlineDhtTests::untrustedLegacyHintFailuresCannotSuppressThePermittedOwnedNode()
+PASS   : MainlineDhtTests::corruptDisposableStateDoesNotRerouteOrDisableTheOwnedTorrentSession()
+PASS   : MainlineDhtTests::hashOnlyMagnetImportsMetadataFromOwnedMainlineResult()
+PASS   : MainlineDhtTests::inactiveOrProxiedOwnerNeverFallsBackToMainline(isolated)
+PASS   : MainlineDhtTests::inactiveOrProxiedOwnerNeverFallsBackToMainline(normal-disabled)
+PASS   : MainlineDhtTests::inactiveOrProxiedOwnerNeverFallsBackToMainline(proxy-unavailable)
+PASS   : MainlineDhtTests::originalPerTorrentDhtSourcePermissions(default-public)
+PASS   : MainlineDhtTests::originalPerTorrentDhtSourcePermissions(DHT-source-disabled)
+PASS   : MainlineDhtTests::originalPerTorrentDhtSourcePermissions(DHT-source-denied)
+PASS   : MainlineDhtTests::originalPerTorrentDhtSourcePermissions(announce-disabled-scrape-pending)
+PASS   : MainlineDhtTests::actualPeerPortBootstrapsHashOnlyMetadataAndAdvertisesSeparateListener()
+PASS   : MainlineDhtTests::queuedPeerPortCannotSurviveStopAndReadmission()
+PASS   : MainlineDhtTests::actualPortFloodWithdrawsAdmissionBeforeUnrelatedOwnerProgress()
+PASS   : MainlineDhtTests::deniedSourceCannotAdvertiseOrBootstrapPort(source-disabled)
+PASS   : MainlineDhtTests::deniedSourceCannotAdvertiseOrBootstrapPort(source-denied)
+PASS   : MainlineDhtTests::deniedSourceCannotAdvertiseOrBootstrapPort(private)
+PASS   : MainlineDhtTests::peerProbeRequiresRealReplyAndActiveRoutingBeforeProgress()
+PASS   : MainlineDhtTests::peerProbeLifetimeBoundDoesNotIssueUnownedRequests()
+PASS   : MainlineDhtTests::cleanupTestCase()
+Totals: 39 passed, 0 failed, 0 skipped, 0 blacklisted, 125825ms
+********* Finished testing of MainlineDhtTests *********
+<end of output>
+Test time = 125.85 sec
+----------------------------------------------------------
+Test Passed.
+"mainline-dht" end time: Oct 29 10:33 IST
+"mainline-dht" time elapsed: 00:02:05
+----------------------------------------------------------
+
+270/281 Testing: mainline-single-tracker-owner
+270/281 Test: mainline-single-tracker-owner
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-tracker-owner-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"mainline-single-tracker-owner" start time: Oct 29 10:33 IST
+Output:
+----------------------------------------------------------
+********* Start testing of MainlineSingleTrackerOwnerTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleTrackerOwnerTests::initTestCase()
+PASS   : MainlineSingleTrackerOwnerTests::configuredCandidateRequiresSameFullSubjectUrlPolicyAndRealResponseOwner()
+PASS   : MainlineSingleTrackerOwnerTests::retainedOriginalLeaseKeepsTheActualAdmittedTrackerScrapeCandidate()
+QINFO  : MainlineSingleTrackerOwnerTests::actualFailedUdpResponseAllowsScrapeWhileHealthyResponseSuppressesIt() actual configured UDP: failed announces=3 scrapes=1, healthy announces=1 scrapes=0, DHT=1/0
+PASS   : MainlineSingleTrackerOwnerTests::actualFailedUdpResponseAllowsScrapeWhileHealthyResponseSuppressesIt()
+PASS   : MainlineSingleTrackerOwnerTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 125999ms
+********* Finished testing of MainlineSingleTrackerOwnerTests *********
+<end of output>
+Test time = 126.02 sec
+----------------------------------------------------------
+Test Passed.
+"mainline-single-tracker-owner" end time: Oct 29 10:35 IST
+"mainline-single-tracker-owner" time elapsed: 00:02:06
+----------------------------------------------------------
+
+274/281 Testing: mainline-single-udp
+274/281 Test: mainline-single-udp
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-udp-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"mainline-single-udp" start time: Oct 29 10:35 IST
+Output:
+----------------------------------------------------------
+********* Start testing of MainlineSingleUdpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleUdpTests::initTestCase()
+PASS   : MainlineSingleUdpTests::canonicalWirePreservesOriginalSignedCountsAndDeclinesAmbiguousShapes()
+PASS   : MainlineSingleUdpTests::ownedPendingRequestRetainsPriorResponseButCannotGrantFromConstructorOrLoss()
+PASS   : MainlineSingleUdpTests::routeAndSavedSettingsNeverGuessDnsProxyVersionOrTrackerOverrides()
+PASS   : MainlineSingleUdpTests::actualWireCancellationFreshAuthorizationMalformedAndDeadlineAreIndependent()
+PASS   : MainlineSingleUdpTests::actualNumericIpv6RoundUsesOnlyTheExplicitIpv6Socket()
+PASS   : MainlineSingleUdpTests::neverAdmittedSavedQueuedUsesActualRegularUdpAndLateReplyCannotGrant()
+PASS   : MainlineSingleUdpTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 100524ms
+********* Finished testing of MainlineSingleUdpTests *********
+<end of output>
+Test time = 100.54 sec
+----------------------------------------------------------
+Test Passed.
+"mainline-single-udp" end time: Oct 29 10:37 IST
+"mainline-single-udp" time elapsed: 00:01:40
+----------------------------------------------------------
+
+281/281 Testing: mainline-single-http
+281/281 Test: mainline-single-http
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"mainline-single-http" start time: Oct 29 10:37 IST
+Output:
+----------------------------------------------------------
+********* Start testing of MainlineSingleHttpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleHttpTests::initTestCase()
+PASS   : MainlineSingleHttpTests::originalUrlMappingAndRoutePermissions()
+PASS   : MainlineSingleHttpTests::sourceBodyMissingFailureNarrowingAndIntervals()
+PASS   : MainlineSingleHttpTests::heldSettingsAreStrictAndLow32OriginalBooleans()
+PASS   : MainlineSingleHttpTests::actualHostnameHttpChunkedAndCancellationReuse()
+PASS   : MainlineSingleHttpTests::dnsProposalRequiresFreshOwnerPermissionBeforeSocket()
+PASS   : MainlineSingleHttpTests::neverAdmittedSavedHttpFailureUsesSameMainlineConsumerWithoutPayloadAccess()
+PASS   : MainlineSingleHttpTests::savedTrackerTiersBindAllUrlsAndPreservePrimaryFallbackAndRawIdentity()
+PASS   : MainlineSingleHttpTests::savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply(ordered-tiers)
+PASS   : MainlineSingleHttpTests::savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply(stable-shuffled-tier)
+PASS   : MainlineSingleHttpTests::savedBasicChallengeAndCacheAreExactRealmOriginAndSecretFreeScope()
+PASS   : MainlineSingleHttpTests::actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls(http)
+PASS   : MainlineSingleHttpTests::actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls(verified-https)
+PASS   : MainlineSingleHttpTests::basicAuthorizationNeverCrossesRedirectOriginAndWrongPasswordStops()
+PASS   : MainlineSingleHttpTests::changedSavedCredentialsAndCancellationRevokeBeforeRetrySocket()
+PASS   : MainlineSingleHttpTests::unchangedCacheCannotSurviveInternalTrackerPolicyChangeBeforeRetry()
+PASS   : MainlineSingleHttpTests::thirdAuthenticationOriginExhaustionIsUnknownWithoutAThirdCredential()
+PASS   : MainlineSingleHttpTests::genuineNeverAdmittedOwnerUsesSavedBasicWithoutPayloadOrHiddenTorrent()
+PASS   : MainlineSingleHttpTests::originalMinimumFailureAndSingleOnlyDialectAreSourceDerived()
+PASS   : MainlineSingleHttpTests::awaitingOwnerDeadlineCannotManufactureNetworkFailure()
+PASS   : MainlineSingleHttpTests::gzipMemberBoundsCrcAndRedirectScopeAreExplicit()
+PASS   : MainlineSingleHttpTests::actualSameHostRedirectRequiresFreshAuthorityAndDecodesGzip()
+PASS   : MainlineSingleHttpTests::redirectedProposalRevocationAndLateCompressedReplyCannotGrant()
+PASS   : MainlineSingleHttpTests::actualGzipBombAndRedirectLoopAreUnavailableRatherThanError()
+PASS   : MainlineSingleHttpTests::actualRedirectChainStopsBeforeSeventhRequest()
+PASS   : MainlineSingleHttpTests::redirectedTlsChecksTheNewHostnameBeforeSendingHash()
+PASS   : MainlineSingleHttpTests::originalJksTrustUsesLastAliasAndFirstKeyCertificateAndChecksIntegrity()
+PASS   : MainlineSingleHttpTests::savedHttpsTrustIsProfileBoundReadOnlyAndCannotDisableOrdinaryHttp()
+PASS   : MainlineSingleHttpTests::savedJksAnchorsDriveActualTlsAndFreshGatesRevokeReplacedTrust()
+PASS   : MainlineSingleHttpTests::actualTlsRequiresRootAndHostnameAndSupportsTrustedOwnedRoot()
+PASS   : MainlineSingleHttpTests::actualJdk17KeytoolJksMatchesItsExportedTrustedCertificate()
+PASS   : MainlineSingleHttpTests::cleanupTestCase()
+Totals: 32 passed, 0 failed, 0 skipped, 0 blacklisted, 167195ms
+********* Finished testing of MainlineSingleHttpTests *********
+<end of output>
+Test time = 167.52 sec
+----------------------------------------------------------
+Test Passed.
+"mainline-single-http" end time: Oct 29 10:39 IST
+"mainline-single-http" time elapsed: 00:02:47
+----------------------------------------------------------
+
+End testing: Oct 29 10:39 IST
+
+discovery = 519.93 sec*proc
+
+integration =   1.73 sec*proc
+
+loopback =   1.73 sec*proc
+
+network = 519.93 sec*proc
+
+owned = 519.93 sec*proc
+
+owned-process =   1.73 sec*proc
+
+qt =   1.73 sec*proc
+
+queue =   0.02 sec*proc
+
+slow = 394.08 sec*proc
+
+tls = 167.52 sec*proc
+
+torrent-workflows =   0.01 sec*proc
+
+unit =   0.04 sec*proc
+

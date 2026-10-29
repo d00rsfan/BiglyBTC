@@ -1,0 +1,141 @@
+[
+  {
+    "name": "stage",
+    "command": [
+      "python3",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--output",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/candidate",
+      "--libtorrent-package",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+      "--source-libtorrent",
+      "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--private-mainline-routing-provider-manifest",
+      "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-runtime.json"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 8.289,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/stage.log",
+    "log_sha256": "2c12ee1bb1156a46dceda549539d1f85a4d6f5bd277a4c19f4b5696bbc90d5bb"
+  },
+  {
+    "name": "loader-biglybtc-mainline-single-http-tests",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/loader-biglybtc-mainline-single-http-tests.log",
+    "log_sha256": "484284d9fe69408dd9d86417cf1cbd6d1ea17525cdbcf7dc5327029358e81586"
+  },
+  {
+    "name": "loader-biglybtc-preview-smoke",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/loader-biglybtc-preview-smoke.log",
+    "log_sha256": "4eea1740c3fdb2d04a4c6988464702b49381b94d7fcf235e22d33d5bead5fc8c"
+  },
+  {
+    "name": "loader-biglybtc-tor-owned-child-tests",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/biglybtc-tor-owned-child-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/loader-biglybtc-tor-owned-child-tests.log",
+    "log_sha256": "199e2292c890dd45ed4e7b7162613d3581c70a7c90688f40bad20c843bbaaaa7"
+  },
+  {
+    "name": "selected-1",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests",
+      "savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-1.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-1.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 20.533,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-1.log",
+    "log_sha256": "157c5327ebae040a4e57302fc6083bd0b1b97333ed6d12bf97f7e5cb7aa8f2ec"
+  },
+  {
+    "name": "selected-2",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/biglybtc-tor-owned-child-tests",
+      "postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-2.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-2.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 1.423,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-2.log",
+    "log_sha256": "c57d6ce736a76873b3bbe4bd4459ecf1a830f61af199546bad2ddfcc3357b0d3"
+  },
+  {
+    "name": "selected-3",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/biglybtc-tor-owned-child-tests",
+      "postReadyControlLossSupportsReentrantStopAndDeletion",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-3.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-3.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.466,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-3.log",
+    "log_sha256": "ea6c92c191b05183c22b22809935e75457c8e557e6c3c6bdbdacf22e68651d4a"
+  },
+  {
+    "name": "selected-4",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/biglybtc-preview-smoke",
+      "exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-4.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-4.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.116,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-4.log",
+    "log_sha256": "8b010367c09aca8a5b1ef41870f77891ea04ae13da83f50607a8f6aa9926f433"
+  },
+  {
+    "name": "selected-5",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/biglybtc-preview-smoke",
+      "explicitQtConsoleControlsDisableNativeFiltering",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-5.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-5.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.065,
+    "log": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/private-focused/runs/r1/selected-5.log",
+    "log_sha256": "c19f3802bd2b91c0136f319ca53c06f873baaea7e66f8c4cdcbb75dac6237ee8"
+  }
+]

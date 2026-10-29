@@ -1,0 +1,58 @@
+{
+  "status": "PASS_FOCUSED_NETWORK_UI_REPAIR_IDENTICAL_OTHER_IMAGES",
+  "source_commit": "3228091a1e12f81b334e27e589da8605c0b76420",
+  "lane": "gcc",
+  "cache": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "runner_sha256": "ff7b79f68ce18dc7ebe50e6c0959ff109705d99cbb2cb4d2f3d0262123b10e71",
+  "source_receipt": "/home/yurii/Java/BiglyBT/build/network-ui-followup-20261029/final-source.json",
+  "source_receipt_sha256": "1a4e203c0e6ce2246140baa7d620ab99ca19833652e37db30c717c2e6f53c63f",
+  "compiled_targets": [
+    "biglybtc-queue-policy-tests",
+    "biglybtc-tor-owned-child-tests"
+  ],
+  "compile_only_suites": [
+    "mainline-original-host-identity"
+  ],
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "unchanged_image_evidence_reused": true,
+  "provider_rebuilt": false,
+  "prior_failure_audit_sha256": "ba12c5fa2d9c48b11bf1c9a82e8ba7ea355a9e1cf96b7a55e75075b32b0f46b3",
+  "dist_manifest_before": "e64600352485e17178bad2803af14ea7e0941ed7dd13954c7f2bfbf48f4049c0",
+  "real_tor_xml_sha256": "a92c8d0f6aab4eecf25af72031c2f113823e2657c81a19f3d16684cc54e97722",
+  "real_tor_observed_sha256": "bee6f273fcc4ab00c800ff1aad78bdffe1a70b2c694ffbd76d45d116bb65b24d",
+  "suite_names": [
+    "owned-tor-child-lifecycle",
+    "queue-policy"
+  ],
+  "actual_suites": 2,
+  "identical_image_passed_suites": [
+    "network-policy",
+    "mainline-dht",
+    "mainline-single-tracker-owner",
+    "mainline-single-udp",
+    "mainline-single-http"
+  ],
+  "combined_covered_suites": [
+    "mainline-dht",
+    "mainline-single-http",
+    "mainline-single-tracker-owner",
+    "mainline-single-udp",
+    "network-policy",
+    "owned-tor-child-lifecycle",
+    "queue-policy"
+  ],
+  "prior_source_commit": "dfc27e723344203e49d96341a3039be444062858",
+  "all_other_source_bytes_unchanged": true,
+  "all_other_images_unchanged": true,
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "wayland_smoke_methods": [
+    "exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler",
+    "explicitQtConsoleControlsDisableNativeFiltering"
+  ],
+  "launcher_unit_tests": 6,
+  "tests_xml_sha256": "f6db67b924cef98928b13b550d83bf4d824247e42ab0373aa3b2970a29c02153",
+  "full_ctest_log_sha256": "738af6362abc4021492c6bad2b1bdb279c5d4a61c7ea504f75dd3cc1b6705810",
+  "wayland_smoke_xml_sha256": "dcd3b900db56ed4142a517ec32d0032859b6204330e6c543799c44a71e6b00d5",
+  "commands_sha256": "6f44bc1aa6d037f558040ca33ab8e9982cb3522eaf847a5332ec4213d4c52197"
+}

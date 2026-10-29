@@ -1,0 +1,74 @@
+{
+  "status": "ACTUAL_QUEUE_TOR_FAILURES_WITH_UNCHANGED_IMAGES",
+  "source_commit": "dfc27e723344203e49d96341a3039be444062858",
+  "source_snapshot_sha256": "932cab777170053c28a08b633dbe641ea8376fc26a8c94efa788067a1885f889",
+  "all_sessions_joined_exit": 1,
+  "r1_real_offline_tor_executed": false,
+  "lanes": {
+    "gcc": {
+      "passed_suites": [
+        "network-policy",
+        "mainline-dht",
+        "mainline-single-tracker-owner",
+        "mainline-single-udp",
+        "mainline-single-http"
+      ],
+      "failed_suites": [
+        "owned-tor-child-lifecycle",
+        "queue-policy"
+      ],
+      "all_images_unchanged": true,
+      "evidence_sha256": {
+        "tests.xml": "65989617f92222099d8f0d32ecc357c919250fd703392493cae6c31bcd76b6ff",
+        "ctest-full.log": "84731f09d20ad3cc1af0aab8c9f1b36d01f6e7a2e5e66bfd706df67d33613060",
+        "result.json": "dc7e7249b4f3beb63548283953f6e6b7f6b3a700ad71e00875a4c851d0aa0fcc",
+        "commands.json": "a6bfa1d19d9a9caa47bd03a6ed9b7339f8c3c7487a429192ef3e853e0b07146f",
+        "images-before.json": "0320a083eb247998824300768bf0faf41989a6c12042433749882ce31ae676fb",
+        "source-before.json": "932cab777170053c28a08b633dbe641ea8376fc26a8c94efa788067a1885f889"
+      },
+      "actual_qt_pass_rows": 88
+    },
+    "clang": {
+      "passed_suites": [
+        "network-policy",
+        "mainline-dht"
+      ],
+      "failed_suites": [
+        "queue-policy"
+      ],
+      "all_images_unchanged": true,
+      "evidence_sha256": {
+        "tests.xml": "f8902e2a83cf12d383a4ae7325b2ae864e6101688eddc35b87282dcff80af013",
+        "ctest-full.log": "4ed854a021b503dd994d6f0575feaa8a9a9599e8e440ff170a5a70834cf3e8e3",
+        "result.json": "03c57426646f09074cd632ddc142ae8e959252d5cd27f6137ac7fb7bdba8b79b",
+        "commands.json": "e55bc25eb47fe546973e94015e5ef9282cc8c78abbb81b0fe41fac5748c9a103",
+        "images-before.json": "402e9965daf7bc13b5561ace1abc4c1eaa3a5a5dc8558482506b9654bb64258e",
+        "source-before.json": "932cab777170053c28a08b633dbe641ea8376fc26a8c94efa788067a1885f889"
+      },
+      "actual_qt_pass_rows": 39
+    },
+    "san": {
+      "passed_suites": [
+        "network-policy",
+        "mainline-dht",
+        "mainline-single-tracker-owner",
+        "mainline-single-udp",
+        "mainline-single-http"
+      ],
+      "failed_suites": [
+        "owned-tor-child-lifecycle",
+        "queue-policy"
+      ],
+      "all_images_unchanged": true,
+      "evidence_sha256": {
+        "tests.xml": "8845160b3f94c5f105d7e6f3ee97ea994c545574d1f97e321fa5b59c138cd475",
+        "ctest-full.log": "16218bd34568abec47d721bc0fe97528b66f20b030072a73717fd4f337f8adc0",
+        "result.json": "b016f41e2b7e8e092f1838dc5cebd83ff7cfa250c86049776134e1ee45ffb263",
+        "commands.json": "965e68c7546d54a70e7efd4e4e2c4dd30ebf451bddbcddec423c8e17472936b6",
+        "images-before.json": "d93b8afac39e6b85cd598df5ec86c3855fb02af2146184bb533030589059f510",
+        "source-before.json": "932cab777170053c28a08b633dbe641ea8376fc26a8c94efa788067a1885f889"
+      },
+      "actual_qt_pass_rows": 88
+    }
+  }
+}
