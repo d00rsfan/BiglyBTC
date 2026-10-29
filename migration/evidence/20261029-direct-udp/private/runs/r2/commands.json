@@ -1,0 +1,97 @@
+[
+  {
+    "name": "stage",
+    "command": [
+      "python3",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--output",
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/candidate",
+      "--libtorrent-package",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+      "--source-libtorrent",
+      "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--private-mainline-routing-provider-manifest",
+      "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-runtime.json"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 11.081,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/stage.log",
+    "log_sha256": "569ecac5fc2a52a2d681b5861a286603710badd8238a0a0b6c289e80639f54b6"
+  },
+  {
+    "name": "loader-biglybtc-mainline-single-http-tests",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.036,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/loader-biglybtc-mainline-single-http-tests.log",
+    "log_sha256": "59eacc18cb194e325d0c451e09c0ecacb2dee819dd88bcfff9975d0e2eb97792"
+  },
+  {
+    "name": "loader-biglybtc-mainline-single-tracker-owner-tests",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/biglybtc-mainline-single-tracker-owner-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.02,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/loader-biglybtc-mainline-single-tracker-owner-tests.log",
+    "log_sha256": "3e05050256e158ca2870338ae80ff1f4155462925520fbae020f4ad45cd14cfa"
+  },
+  {
+    "name": "selected-1",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/biglybtc-mainline-single-tracker-owner-tests",
+      "directRegularUdpActualAdmissionSharesResponseAndCannotDeliverAfterPause:DHT-disabled-real-announce-failure-then-scrape",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/selected-1.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/selected-1.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 20.484,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/selected-1.log",
+    "log_sha256": "06e6ab3fa0fa6416566379a8c8eea2e4c0672dd662fa5c3e971ef445e37795d5"
+  },
+  {
+    "name": "selected-2",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/biglybtc-mainline-single-tracker-owner-tests",
+      "directRegularUdpSavedRowsRequireTrackerButNotDhtOrPayload:global-DHT-disabled",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/selected-2.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/selected-2.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 10.424,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/selected-2.log",
+    "log_sha256": "e0cd4ad6ad793de32caeac9f597a663b79fe9dc0f41220efdefea66ce8147a62"
+  },
+  {
+    "name": "selected-3",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/biglybtc-mainline-single-http-tests",
+      "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline:private-HTTPS-saved-JKS-regular-scrape",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/selected-3.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/selected-3.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 21.222,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/selected-3.log",
+    "log_sha256": "011ece4b3d8cff89bd1bda99013c3c6fc915198c99ec34d31a65335f068f912d"
+  }
+]

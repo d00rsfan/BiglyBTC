@@ -1,0 +1,28 @@
+{
+  "status": "SOURCE_ONLY_ROOT_READY",
+  "script": {
+    "path": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/run.py",
+    "sha256": "d79e70fae74dd41dd4cd4c7fca6473c84840a799bfadf09c3a4441442994b5b0"
+  },
+  "parent_script": {
+    "path": "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/private-focused/run.py",
+    "sha256": "ade8ee5e6bb0df099bc899a8bde44574674dfca6f8ef52e09bb8eb3103ec70ad"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/run.py": "25c44e4b46f8f231a56434aa547bfd8df021f187324026fa5f0d61a28397d7c7",
+    "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/root-adoption.json": "a7c395dd351da8499df3d859f09703e28a685f2fc8e7452053a856cbc42c79c7"
+  },
+  "source_commit": "14580a816f13f7169a85a5944ec43af10b1f3d5e",
+  "qualification": "Requires fresh PASS_DIRECT_UDP_COHORT4/3/4; exact Clang udp-selected command +12 XML cases(init/cleanup+10rows), full owner suite compile-only on Clang. Actual suite\u2192ELF/source/log/image gates retained.",
+  "private_selectors": [
+    "directRegularUdpActualAdmissionSharesResponseAndCannotDeliverAfterPause:DHT-disabled-real-announce-failure-then-scrape",
+    "directRegularUdpSavedRowsRequireTrackerButNotDhtOrPayload:global-DHT-disabled",
+    "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline:private-HTTPS-saved-JKS-regular-scrape"
+  ],
+  "private_scope": "One candidate; two copied current GCC ELFs plus qualified same-Qt QtTest. All rows require actual private QtCore/Network/provider; HTTPS additionally actual private TLS backend +OS OpenSSL. No full owner/HTTP suite replay, I2P/Tor/Java/provider rebuild or promotion.",
+  "checks": "Python AST and exact source selector/tag existence only. Sourcecount11/current adopted leaves; current seven compiled image paths/hash/size and clean source unchanged. Existing provider/package/stager/dependency/candidate/current-dist/copy/map gates retained.",
+  "invocation": "python3 -B /home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/run.py --source-commit 14580a816f13f7169a85a5944ec43af10b1f3d5e --attempt r1 --gcc-result /home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/runs/gcc-r1/result.json --gcc-sha256 ACTUAL_SHA --clang-result /home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/runs/clang-r1/result.json --clang-sha256 ACTUAL_SHA --san-result /home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/runs/san-r1/result.json --san-sha256 ACTUAL_SHA",
+  "expected_result": "private-focused/runs/r1/result.json status PASS_PRIVATE_DIRECT_UDP_AND_HTTPS (only after root actual run)",
+  "compiler_or_subject_executed": false,
+  "native_cache_dist_modified": false
+}

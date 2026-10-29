@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_TEST_FIX_PENDING_REVIEW",
+  "native_source_basis": "14580a816f13f7169a85a5944ec43af10b1f3d5e",
+  "source_path_count": 1,
+  "source_paths": {
+    "preview/native/tests/mainline_single_tracker_owner_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/mainline_single_tracker_owner_tests.cpp",
+      "before_sha256": "84f1816e41b423f6ea42efa2b93b096fcf41892a84f9f3ffc9c367088d5d7a52",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/validated-sender-port/staging/preview/native/tests/mainline_single_tracker_owner_tests.cpp",
+      "after_sha256": "f25e7d96c290effad4bf5e63bf864a8df22a0267361cfb18fd65754eed477dca"
+    }
+  },
+  "artifacts": {
+    "ADOPTION.txt": "75f8f52c1594e0497ff5b1d1322632c263468f73f43d3cc90658ebec3f124551",
+    "changes.patch": "bbeacdaed9dd226d916cbb53547fb0aabab431398bae587181d12fdbdb520782",
+    "staging/preview/native/tests/mainline_single_tracker_owner_tests.cpp": "f25e7d96c290effad4bf5e63bf864a8df22a0267361cfb18fd65754eed477dca"
+  },
+  "author_execution": false
+}

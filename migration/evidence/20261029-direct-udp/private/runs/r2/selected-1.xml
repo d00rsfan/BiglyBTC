@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="MainlineSingleTrackerOwnerTests" timestamp="2026&#x002D;10&#x002D;29T13:25:43" hostname="ubuntud" tests="3" failures="0" errors="0" skipped="0" time="20.426">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="MainlineSingleTrackerOwnerTests" time="0.000"/>
+  <testcase name="directRegularUdpActualAdmissionSharesResponseAndCannotDeliverAfterPause(DHT&#x002D;disabled&#x002D;real&#x002D;announce&#x002D;failure&#x002D;then&#x002D;scrape)" classname="MainlineSingleTrackerOwnerTests" time="20.425"/>
+  <testcase name="cleanupTestCase" classname="MainlineSingleTrackerOwnerTests" time="0.000"/>
+</testsuite>

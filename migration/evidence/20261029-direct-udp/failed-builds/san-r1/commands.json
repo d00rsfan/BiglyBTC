@@ -1,0 +1,28 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-mainline-single-http-tests",
+      "biglybtc-managed-queue-tests",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-mainline-single-tracker-owner-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 1,
+    "seconds": 300.382,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/runs/san-r1/build.log",
+    "log_sha256": "0af0892780d3e55e62abab79e66c553561487c11774da80a791a9dd9a76b681a"
+  }
+]

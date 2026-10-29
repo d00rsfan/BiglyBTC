@@ -1,0 +1,7 @@
+********* Start testing of MainlineSingleTrackerOwnerTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleTrackerOwnerTests::initTestCase()
+PASS   : MainlineSingleTrackerOwnerTests::directRegularUdpActualAdmissionSharesResponseAndCannotDeliverAfterPause(DHT-disabled-real-announce-failure-then-scrape)
+PASS   : MainlineSingleTrackerOwnerTests::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 20426ms
+********* Finished testing of MainlineSingleTrackerOwnerTests *********

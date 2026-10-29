@@ -1,0 +1,19 @@
+{
+  "status": "SOURCE_ONLY_ROOT_READY",
+  "parent_sha256": "d79e70fae74dd41dd4cd4c7fca6473c84840a799bfadf09c3a4441442994b5b0",
+  "child_sha256": "586c5c960ad3e86b8b1108127c9a3d641c31d623ef76029aa5bc2b9d8b276284",
+  "artifacts_sha256": {
+    "parent-delta.patch": "49ff861f3370691b487942f842ffdf4155212d33c3544d1294657ae54df95b12",
+    "review.json": "94a07d39ba3dd5896e3a5270476234e0a166611049eddf43a5dee4838733de53"
+  },
+  "input_pins": {
+    "producer": {
+      "path": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/run-r2.py",
+      "sha256": "4980fd60a27cef88a66167781a7cb5030d1290a702b36bb9068102c5f7c3c66b"
+    },
+    "source_receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/root-adoption-r2.json",
+      "sha256": "2665c13bf589bb98b910055356eb43150c08970e26a87ce43385a0b02002651c"
+    }
+  }
+}

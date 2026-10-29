@@ -1,0 +1,47 @@
+{
+  "status": "SOURCE_ONLY",
+  "original": {
+    "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "lines": "770-854",
+      "meaning": "Regular Queued/Downloading/Seeding scraper and tracker network permission are independent of DHT/private exclusion."
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "lines": "2224-2265",
+      "meaning": "Exact Tracker/DHT enabled and denied tokens; private/DHT-backup rule applies to DHT."
+    },
+    "core/src/com/biglybt/core/tracker/client/impl/bt/TrackerStatus.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "7537d5397a4bb25e56018b03e420a4bdf94248c8393fea9bc8eec613d1b5699e",
+      "lines": "94-104,486-504,588-652,940-970",
+      "meaning": "Direct UDP enabled setting, network/state gates, UDP selected route, and common post-UDP scrape count/next-time projection."
+    },
+    "core/src/com/biglybt/core/tracker/client/impl/TRTrackerScraperResponseImpl.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "1a0fc237366266ba06adbebfae97e803193dd3f3ffb7f7ac385de46e13a1e272",
+      "lines": "262-280",
+      "meaning": "Shared successful interval900+10*seeds+process jitter0..179 capped10800 with Java integer arithmetic."
+    },
+    "core/src/com/biglybt/core/tracker/client/impl/bt/TRTrackerBTAnnouncerImpl.java": {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "fa6258a6a28d88fa296eb938d5031e4d54b34e658757e4849cdc01bef721bc96",
+      "lines": "4184-4232",
+      "meaning": "Only actual successful eligible announce counts update shared scrape; max postponement retained by existing ring."
+    }
+  },
+  "owned_fixture_provider_constraint": {
+    "path": "/home/yurii/Java/BiglyBT/build/mainline-port-20261028/provider-candidate/source/src/udp_tracker_connection.cpp",
+    "sha256": "f0c15f9fe6c7469fd97aa0544d9b5c4b4ae8458ccdd35e7c3a2b8b4e23fa7406",
+    "lines": "60-63,261-279,445-450",
+    "meaning": "LT process-global IP-address-keyed connection ID cache can reuse cookie across owned ports. New endpoint shares the existing fixture fixed cookie for actual LT announces; standalone manual scrape still requires its own CONNECT/source entry.",
+    "new_provider_qualification": false
+  }
+}

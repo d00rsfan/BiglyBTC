@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="MainlineSingleTrackerOwnerTests" timestamp="2026&#x002D;10&#x002D;29T13:18:48" hostname="ubuntud" tests="12" failures="0" errors="0" skipped="0" time="81.615">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="MainlineSingleTrackerOwnerTests" time="0.000"/>
+  <testcase name="directRegularUdpSuccessfulScrapeUsesTheOriginalSharedInterval" classname="MainlineSingleTrackerOwnerTests" time="0.006"/>
+  <testcase name="directRegularUdpSavedProxyChangesCannotKeepDirectAuthority" classname="MainlineSingleTrackerOwnerTests" time="0.037"/>
+  <testcase name="directRegularUdpSavedRowsRequireTrackerButNotDhtOrPayload(global&#x002D;DHT&#x002D;disabled)" classname="MainlineSingleTrackerOwnerTests" time="10.174"/>
+  <testcase name="directRegularUdpSavedRowsRequireTrackerButNotDhtOrPayload(private)" classname="MainlineSingleTrackerOwnerTests" time="10.143"/>
+  <testcase name="directRegularUdpSavedRowsRequireTrackerButNotDhtOrPayload(DHT&#x002D;source&#x002D;denied)" classname="MainlineSingleTrackerOwnerTests" time="10.158"/>
+  <testcase name="directRegularUdpActualAdmissionSharesResponseAndCannotDeliverAfterPause(DHT&#x002D;disabled&#x002D;real&#x002D;announce&#x002D;failure&#x002D;then&#x002D;scrape)" classname="MainlineSingleTrackerOwnerTests" time="20.291"/>
+  <testcase name="directRegularUdpActualAdmissionSharesResponseAndCannotDeliverAfterPause(private&#x002D;real&#x002D;announce&#x002D;failure&#x002D;then&#x002D;scrape)" classname="MainlineSingleTrackerOwnerTests" time="20.323"/>
+  <testcase name="directRegularUdpActualAdmissionSharesResponseAndCannotDeliverAfterPause(private&#x002D;pause&#x002D;before&#x002D;held&#x002D;scrape)" classname="MainlineSingleTrackerOwnerTests" time="10.361"/>
+  <testcase name="directRegularUdpFreshTrackerDenialCancelsConnectOrReply(deny&#x002D;before&#x002D;CONNECT&#x002D;consumed)" classname="MainlineSingleTrackerOwnerTests" time="0.049"/>
+  <testcase name="directRegularUdpFreshTrackerDenialCancelsConnectOrReply(deny&#x002D;before&#x002D;scrape&#x002D;terminal)" classname="MainlineSingleTrackerOwnerTests" time="0.071"/>
+  <testcase name="cleanupTestCase" classname="MainlineSingleTrackerOwnerTests" time="0.000"/>
+</testsuite>

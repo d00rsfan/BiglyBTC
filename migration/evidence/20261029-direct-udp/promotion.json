@@ -1,0 +1,22 @@
+{
+  "status": "PROMOTED_ONE_CHECKED_DEVELOPMENT_DIST",
+  "source_commit": "0cb5817bf07c6268bcccf9722f8c741a904163c6",
+  "manifest_sha256": "64a35efc425f418ca8ae84ca5044db53c13144e2ad6666fcb88f4635835dd623",
+  "leaf_count": 119,
+  "private_result_sha256": "91466a41dbecf9ac26022719cbcd1ebcc5db154d239b78aae4574fc5eb39d74f",
+  "previous_dist_removed": true,
+  "previous_dist_retained": false,
+  "atomic_exchange": true,
+  "copied_test_images_removed": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/biglybtc-mainline-single-http-tests",
+      "sha256": "d6a9cad6e7ba97c82f4976afa2c2765010f892b30be66a599e25090b2785157b"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/private-focused/runs/r2/biglybtc-mainline-single-tracker-owner-tests",
+      "sha256": "485cafc8c98f8212e88ff30c8bfffcf41a9b2daf1b8c55b3da2ef8ad4b6274bd"
+    }
+  ],
+  "test_support_removed": true,
+  "created_utc": "2026-10-29T11:27:09.003508+00:00"
+}

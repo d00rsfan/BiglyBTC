@@ -1,0 +1,193 @@
+Start testing: Oct 29 13:13 IST
+----------------------------------------------------------
+218/283 Testing: queue-policy
+218/283 Test: queue-policy
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-queue-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"queue-policy" start time: Oct 29 13:13 IST
+Output:
+----------------------------------------------------------
+43 queue-policy families, 8794 assertions passed
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"queue-policy" end time: Oct 29 13:13 IST
+"queue-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+221/283 Testing: managed-queue
+221/283 Test: managed-queue
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-queue-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"managed-queue" start time: Oct 29 13:13 IST
+Output:
+----------------------------------------------------------
+********* Start testing of ManagedQueueTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedQueueTests::initTestCase()
+PASS   : ManagedQueueTests::ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(single)
+PASS   : ManagedQueueTests::ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(multi)
+PASS   : ManagedQueueTests::rawScrapeTerminalUsesSameAdmissionRingAndWithdrawsOnLoss()
+PASS   : ManagedQueueTests::actualOwnedTrackerScrapeReplyAndErrorReachRetainedRawSource()
+PASS   : ManagedQueueTests::actualAnnounceResponseSurvivesScrapeErrorWithoutGrantingConfiguredPermission()
+PASS   : ManagedQueueTests::trackerResponseLifetimeRetainsAcrossAdmissionsAndLossCannotResetToInitialError()
+PASS   : ManagedQueueTests::actualObserverQueueHasBoundedNonblockingProducerAndWorkerOnlyDrain()
+PASS   : ManagedQueueTests::actualProviderLifecycleAndPayloadSendSmoothingRetireAndReopenIndependently(single)
+PASS   : ManagedQueueTests::actualProviderLifecycleAndPayloadSendSmoothingRetireAndReopenIndependently(multi)
+PASS   : ManagedQueueTests::verifiedSeedActualPostPrimaryFailureCannotReleaseOrReplay()
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(download-cap)
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(active-cap)
+PASS   : ManagedQueueTests::completionRatioQueuesAndClearsOnlyForceBeforeActualCheckpoint()
+PASS   : ManagedQueueTests::actualNewSeedNormalizesBothSavedGroups(new-seed-top)
+PASS   : ManagedQueueTests::actualNewSeedNormalizesBothSavedGroups(new-seed-end)
+PASS   : ManagedQueueTests::laterAdmissionRestoresCompletePositionAuthorityWithoutReopening()
+PASS   : ManagedQueueTests::uncertainPublishedGroupTransitionNeverReplaysInSameOwner()
+PASS   : ManagedQueueTests::actualTargetEtaIsAdmissionOwnedAndPauseClearsCurrentAuthority()
+PASS   : ManagedQueueTests::actualOriginalFilePriorityProviderPreservesStartupAndManualHold()
+PASS   : ManagedQueueTests::cleanupTestCase()
+Totals: 21 passed, 0 failed, 0 skipped, 0 blacklisted, 60077ms
+********* Finished testing of ManagedQueueTests *********
+<end of output>
+Test time =  60.10 sec
+----------------------------------------------------------
+Test Passed.
+"managed-queue" end time: Oct 29 13:14 IST
+"managed-queue" time elapsed: 00:01:00
+----------------------------------------------------------
+
+270/283 Testing: mainline-single-tracker-owner
+270/283 Test: mainline-single-tracker-owner
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-tracker-owner-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"mainline-single-tracker-owner" start time: Oct 29 13:14 IST
+Output:
+----------------------------------------------------------
+********* Start testing of MainlineSingleTrackerOwnerTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleTrackerOwnerTests::initTestCase()
+PASS   : MainlineSingleTrackerOwnerTests::directRegularUdpSuccessfulScrapeUsesTheOriginalSharedInterval()
+PASS   : MainlineSingleTrackerOwnerTests::directRegularUdpSavedProxyChangesCannotKeepDirectAuthority()
+PASS   : MainlineSingleTrackerOwnerTests::directRegularUdpSavedRowsRequireTrackerButNotDhtOrPayload(global-DHT-disabled)
+PASS   : MainlineSingleTrackerOwnerTests::directRegularUdpSavedRowsRequireTrackerButNotDhtOrPayload(private)
+PASS   : MainlineSingleTrackerOwnerTests::directRegularUdpSavedRowsRequireTrackerButNotDhtOrPayload(DHT-source-denied)
+PASS   : MainlineSingleTrackerOwnerTests::directRegularUdpActualAdmissionSharesResponseAndCannotDeliverAfterPause(DHT-disabled-real-announce-failure-then-scrape)
+PASS   : MainlineSingleTrackerOwnerTests::directRegularUdpActualAdmissionSharesResponseAndCannotDeliverAfterPause(private-real-announce-failure-then-scrape)
+PASS   : MainlineSingleTrackerOwnerTests::directRegularUdpActualAdmissionSharesResponseAndCannotDeliverAfterPause(private-pause-before-held-scrape)
+PASS   : MainlineSingleTrackerOwnerTests::directRegularUdpFreshTrackerDenialCancelsConnectOrReply(deny-before-CONNECT-consumed)
+PASS   : MainlineSingleTrackerOwnerTests::directRegularUdpFreshTrackerDenialCancelsConnectOrReply(deny-before-scrape-terminal)
+PASS   : MainlineSingleTrackerOwnerTests::configuredCandidateRequiresSameFullSubjectUrlPolicyAndRealResponseOwner()
+PASS   : MainlineSingleTrackerOwnerTests::retainedOriginalLeaseKeepsTheActualAdmittedTrackerScrapeCandidate()
+QINFO  : MainlineSingleTrackerOwnerTests::actualFailedUdpResponseAllowsScrapeWhileHealthyResponseSuppressesIt() actual configured UDP: failed announces=3 scrapes=1, healthy announces=1 scrapes=1, DHT=1/0
+PASS   : MainlineSingleTrackerOwnerTests::actualFailedUdpResponseAllowsScrapeWhileHealthyResponseSuppressesIt()
+PASS   : MainlineSingleTrackerOwnerTests::cleanupTestCase()
+Totals: 15 passed, 0 failed, 0 skipped, 0 blacklisted, 207774ms
+********* Finished testing of MainlineSingleTrackerOwnerTests *********
+<end of output>
+Test time = 207.81 sec
+----------------------------------------------------------
+Test Passed.
+"mainline-single-tracker-owner" end time: Oct 29 13:17 IST
+"mainline-single-tracker-owner" time elapsed: 00:03:27
+----------------------------------------------------------
+
+281/283 Testing: mainline-single-http
+281/283 Test: mainline-single-http
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"mainline-single-http" start time: Oct 29 13:17 IST
+Output:
+----------------------------------------------------------
+********* Start testing of MainlineSingleHttpTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MainlineSingleHttpTests::initTestCase()
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(global-DHT-disabled-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(private-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(per-download-DHT-denied-Public-HTTP)
+PASS   : MainlineSingleHttpTests::directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(DHT-disabled-healthy-announce-no-redundant-scrape)
+PASS   : MainlineSingleHttpTests::directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(private-HTTPS-saved-JKS-regular-scrape)
+PASS   : MainlineSingleHttpTests::directHeldResponseLosesAuthorityWhenCurrentTrackerPermissionChanges()
+PASS   : MainlineSingleHttpTests::actualAnnounceDefersWithoutReplacingRetainedContentOrShorteningScrapeDue()
+PASS   : MainlineSingleHttpTests::chronologicalMergeRejectsOldCountStatusAndPreScrapeAnnounceDeadline()
+PASS   : MainlineSingleHttpTests::pendingQtScrapeCutsOldHeavyAnnounceButRetainsNewerAnnounceCountsAndTiming()
+PASS   : MainlineSingleHttpTests::providerScrapeDoesNotSettleTheSeparatePhysicalQtTimingWindow()
+PASS   : MainlineSingleHttpTests::announceDeadlinePreservesJavaOverflowWithCheckedSignedAddition()
+PASS   : MainlineSingleHttpTests::everyActualAnnouncePostponesInOrderAndLostRingWithdrawsLatestResponse()
+PASS   : MainlineSingleHttpTests::admittedProxyReaderRequiresActualCapturedUrlFullSubjectAndFreshTrackerPermission()
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(HTTP-healthy-announce-no-redundant-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(HTTP-failed-announce-real-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(private-HTTPS-saved-JKS-real-scrape)
+PASS   : MainlineSingleHttpTests::normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(private-HTTP-stop-before-held-scrape)
+PASS   : MainlineSingleHttpTests::socks5RoutesKeepExplicitProxyDnsAndSavedConfigurationAuthority()
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(http-no-auth)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(http-proxy-userpass)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(https-no-auth)
+PASS   : MainlineSingleHttpTests::actualSocks5RemoteDnsKeepsTlsOriginAndTrackerBasicSeparate(https-proxy-userpass)
+PASS   : MainlineSingleHttpTests::actualSocks5LocalDnsUsesNumericConnectAndCancellationCannotReuseOldReply()
+PASS   : MainlineSingleHttpTests::injectedTrackerLookupHostNotFoundUsesFreshSameProxyDomainProposal()
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(method-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(auth-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(connect-refused)
+PASS   : MainlineSingleHttpTests::actualSocks5FailuresNeverRetryDirectAndMalformedReplyStaysUnknown(malformed-socks-version)
+PASS   : MainlineSingleHttpTests::savedProxyChangesWithdrawResolvedEndpointBeforeAnyConnection()
+PASS   : MainlineSingleHttpTests::genuinePrivateOrDhtDisabledSavedOwnerConsumesProxyResponseWithoutDiscovery(public-DHT-disabled)
+PASS   : MainlineSingleHttpTests::genuinePrivateOrDhtDisabledSavedOwnerConsumesProxyResponseWithoutDiscovery(private-Tracker-only)
+PASS   : MainlineSingleHttpTests::originalUrlMappingAndRoutePermissions()
+PASS   : MainlineSingleHttpTests::sourceBodyMissingFailureNarrowingAndIntervals()
+PASS   : MainlineSingleHttpTests::heldSettingsAreStrictAndLow32OriginalBooleans()
+PASS   : MainlineSingleHttpTests::actualHostnameHttpChunkedAndCancellationReuse()
+PASS   : MainlineSingleHttpTests::dnsProposalRequiresFreshOwnerPermissionBeforeSocket()
+PASS   : MainlineSingleHttpTests::neverAdmittedSavedHttpFailureUsesSameMainlineConsumerWithoutPayloadAccess()
+PASS   : MainlineSingleHttpTests::savedTrackerTiersBindAllUrlsAndPreservePrimaryFallbackAndRawIdentity()
+PASS   : MainlineSingleHttpTests::savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply(ordered-tiers)
+PASS   : MainlineSingleHttpTests::savedTrackerTiersFailOverToActualSecondHttpAndStopRevokesHeldReply(stable-shuffled-tier)
+PASS   : MainlineSingleHttpTests::savedBasicChallengeAndCacheAreExactRealmOriginAndSecretFreeScope()
+PASS   : MainlineSingleHttpTests::actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls(http)
+PASS   : MainlineSingleHttpTests::actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls(verified-https)
+PASS   : MainlineSingleHttpTests::basicAuthorizationNeverCrossesRedirectOriginAndWrongPasswordStops()
+PASS   : MainlineSingleHttpTests::changedSavedCredentialsAndCancellationRevokeBeforeRetrySocket()
+PASS   : MainlineSingleHttpTests::unchangedCacheCannotSurviveInternalTrackerPolicyChangeBeforeRetry()
+PASS   : MainlineSingleHttpTests::thirdAuthenticationOriginExhaustionIsUnknownWithoutAThirdCredential()
+PASS   : MainlineSingleHttpTests::genuineNeverAdmittedOwnerUsesSavedBasicWithoutPayloadOrHiddenTorrent()
+PASS   : MainlineSingleHttpTests::originalMinimumFailureAndSingleOnlyDialectAreSourceDerived()
+PASS   : MainlineSingleHttpTests::awaitingOwnerDeadlineCannotManufactureNetworkFailure()
+PASS   : MainlineSingleHttpTests::gzipMemberBoundsCrcAndRedirectScopeAreExplicit()
+PASS   : MainlineSingleHttpTests::actualSameHostRedirectRequiresFreshAuthorityAndDecodesGzip()
+PASS   : MainlineSingleHttpTests::redirectedProposalRevocationAndLateCompressedReplyCannotGrant()
+PASS   : MainlineSingleHttpTests::actualGzipBombAndRedirectLoopAreUnavailableRatherThanError()
+PASS   : MainlineSingleHttpTests::actualRedirectChainStopsBeforeSeventhRequest()
+PASS   : MainlineSingleHttpTests::redirectedTlsChecksTheNewHostnameBeforeSendingHash()
+PASS   : MainlineSingleHttpTests::originalJksTrustUsesLastAliasAndFirstKeyCertificateAndChecksIntegrity()
+PASS   : MainlineSingleHttpTests::savedHttpsTrustIsProfileBoundReadOnlyAndCannotDisableOrdinaryHttp()
+PASS   : MainlineSingleHttpTests::savedJksAnchorsDriveActualTlsAndFreshGatesRevokeReplacedTrust()
+PASS   : MainlineSingleHttpTests::actualTlsRequiresRootAndHostnameAndSupportsTrustedOwnedRoot()
+PASS   : MainlineSingleHttpTests::actualJdk17KeytoolJksMatchesItsExportedTrustedCertificate()
+PASS   : MainlineSingleHttpTests::cleanupTestCase()
+Totals: 63 passed, 0 failed, 0 skipped, 0 blacklisted, 291166ms
+********* Finished testing of MainlineSingleHttpTests *********
+<end of output>
+Test time = 291.19 sec
+----------------------------------------------------------
+Test Passed.
+"mainline-single-http" end time: Oct 29 13:22 IST
+"mainline-single-http" time elapsed: 00:04:51
+----------------------------------------------------------
+
+End testing: Oct 29 13:22 IST
+
+discovery = 499.01 sec*proc
+
+network = 499.01 sec*proc
+
+owned = 499.01 sec*proc
+
+queue =  60.12 sec*proc
+
+runtime-bound =  60.10 sec*proc
+
+slow = 499.01 sec*proc
+
+tls = 291.19 sec*proc
+
+unit =  60.12 sec*proc
+

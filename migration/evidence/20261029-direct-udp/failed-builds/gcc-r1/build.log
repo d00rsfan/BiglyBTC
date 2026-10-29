@@ -1,0 +1,18 @@
+[1/20] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_session.cpp.o
+[2/20] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[3/20] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/queued_mainline_scrape.cpp.o
+[4/20] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/library_http_tracker.cpp.o
+[5/20] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/library_http_protocol.cpp.o
+[6/20] Linking CXX static library engine/libbiglybtc_local_engine.a
+[7/20] Automatic MOC for target biglybtc-managed-queue-tests
+[8/19] Automatic MOC for target biglybtc-mainline-single-tracker-owner-tests
+[9/18] Automatic MOC for target biglybtc-mainline-single-http-tests
+[10/17] Building CXX object tests/CMakeFiles/biglybtc-mainline-single-tracker-owner-tests.dir/mainline_single_tracker_owner_tests.cpp.o
+FAILED: [code=1] tests/CMakeFiles/biglybtc-mainline-single-tracker-owner-tests.dir/mainline_single_tracker_owner_tests.cpp.o 
+/usr/bin/g++-16 -DBIGLYBTC_TEST_ORIGINAL_MAINLINE_READER=1 -DBOOST_ASIO_ENABLE_CANCELIO -DBOOST_ASIO_NO_DEPRECATED -DOPENSSL_NO_DTLS1 -DOPENSSL_NO_SSL2 -DOPENSSL_NO_SSL3 -DOPENSSL_NO_TLS1 -DOPENSSL_NO_TLS1_1 -DQT_CORE_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -DQT_TESTCASE_BUILDDIR=\"/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests\" -DQT_TESTCASE_SOURCEDIR=\"/home/yurii/Java/BiglyBTC/preview/native/tests\" -DQT_TESTLIB_LIB -DTORRENT_EXPORT_EXTRA -DTORRENT_LINKING_SHARED -DTORRENT_SSL_PEERS -DTORRENT_USE_LIBCRYPTO -DTORRENT_USE_OPENSSL -I/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-tracker-owner-tests_autogen/include -I/home/yurii/Java/BiglyBTC/preview/native/adapters -I/home/yurii/Java/BiglyBTC/preview/native/core/include -I/home/yurii/Java/BiglyBTC/plugin-sdk/include -I/home/yurii/Java/BiglyBTC/preview/native/engine -isystem /home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/include -isystem /home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include -isystem /opt/Qt/6.12.0/gcc_64/include/QtTest -isystem /opt/Qt/6.12.0/gcc_64/include -isystem /opt/Qt/6.12.0/gcc_64/include/QtCore -isystem /opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++ -isystem /opt/Qt/6.12.0/gcc_64/include/QtNetwork -O3 -DNDEBUG -std=c++23 -Wall -Wextra -Wpedantic -Werror -fexceptions -fPIC -MD -MT tests/CMakeFiles/biglybtc-mainline-single-tracker-owner-tests.dir/mainline_single_tracker_owner_tests.cpp.o -MF tests/CMakeFiles/biglybtc-mainline-single-tracker-owner-tests.dir/mainline_single_tracker_owner_tests.cpp.o.d -o tests/CMakeFiles/biglybtc-mainline-single-tracker-owner-tests.dir/mainline_single_tracker_owner_tests.cpp.o -c /home/yurii/Java/BiglyBTC/preview/native/tests/mainline_single_tracker_owner_tests.cpp
+/home/yurii/Java/BiglyBTC/preview/native/tests/mainline_single_tracker_owner_tests.cpp: In member function ‘void {anonymous}::RegularUdpEndpoint::receive()’:
+/home/yurii/Java/BiglyBTC/preview/native/tests/mainline_single_tracker_owner_tests.cpp:147:57: error: narrowing conversion of ‘d.QNetworkDatagram::senderPort()’ from ‘int’ to ‘quint16’ {aka ‘short unsigned int’} [-Werror=narrowing]
+  147 |     Pending pending{reply,d.senderAddress(),d.senderPort()};if((action==0&&holdConnect)||(action==2&&holdScrape)){held.push_back(std::move(pending));}else{send(pending);}
+      |                                             ~~~~~~~~~~~~^~
+cc1plus: all warnings being treated as errors
+ninja: build stopped: subcommand failed.

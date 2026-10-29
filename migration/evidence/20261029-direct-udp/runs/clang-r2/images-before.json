@@ -1,0 +1,37 @@
+{
+  "biglybtc-mainline-single-http-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-mainline-single-http-tests",
+    "sha256": "250faee777470be9f25bf413dfbda4be9d4a911da2cb80924ca33ca07beb6827",
+    "bytes": 5576536
+  },
+  "biglybtc-managed-queue-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-managed-queue-tests",
+    "sha256": "3281de3bd0233d5a3b4dd5364b6cdca2d2cc6fcdcd14e4701ec2a4eb7ce145c6",
+    "bytes": 5268704
+  },
+  "biglybtc-queue-policy-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-queue-policy-tests",
+    "sha256": "43a72b4b6d15b762019fc3ae1e0ec9f3b06113dc18b62c7dd121cee74e40f373",
+    "bytes": 297408
+  },
+  "biglybtc-mainline-single-tracker-owner-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-mainline-single-tracker-owner-tests",
+    "sha256": "ac570e912e3f238ac5d4f8b67f4d4d0cd969cd1cdcf1121bd58c7ff828eb8b0e",
+    "bytes": 5073728
+  },
+  "BiglyBTC": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/app/BiglyBTC",
+    "sha256": "94ea209ec2542b1229e4bf517eab42fc45d0559213f2a82d27f4bdb8e9639186",
+    "bytes": 9222216
+  },
+  "BiglyBTC-headless": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/app/BiglyBTC-headless",
+    "sha256": "2c31f7f160a94fd618303430de4825e6b04f8f90e7c14aa14a15cd1bb5eb09cd",
+    "bytes": 4815256
+  },
+  "biglybtc-preview-smoke": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/biglybtc-preview-smoke",
+    "sha256": "e71a053b307d39d2d95aaadb5f541b1b577dc557b3c72caac92aefbad963bf50",
+    "bytes": 9496368
+  }
+}

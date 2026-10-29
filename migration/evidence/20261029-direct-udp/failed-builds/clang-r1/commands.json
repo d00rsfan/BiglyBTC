@@ -1,0 +1,28 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-mainline-single-http-tests",
+      "biglybtc-managed-queue-tests",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-mainline-single-tracker-owner-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 1,
+    "seconds": 194.73,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/runs/clang-r1/build.log",
+    "log_sha256": "7ca7eca992cea66358dbea3472952438a7f4b75c38f0d48657d823d8cb5594f4"
+  }
+]

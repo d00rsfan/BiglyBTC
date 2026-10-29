@@ -8049,6 +8049,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "5dfbd587e16e86122edd548f861a67430c20586d",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0cb5817bf07c6268bcccf9722f8c741a904163c6",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -8059,7 +8064,8 @@
         "migration/evidence/20261029-http-auth-trust/REVIEW.md",
         "migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md",
         "migration/evidence/20261029-proxy-i2p/REVIEW.md",
-        "migration/evidence/20261029-direct-i2p-identity/REVIEW.md"
+        "migration/evidence/20261029-direct-i2p-identity/REVIEW.md",
+        "migration/evidence/20261029-direct-udp/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-scrape-storage-stats/verification.json",
@@ -8071,7 +8077,8 @@
         "migration/evidence/20261029-http-auth-trust/verification.json",
         "migration/evidence/20261029-tracker-tiers-tor-console/verification.json",
         "migration/evidence/20261029-proxy-i2p/verification.json",
-        "migration/evidence/20261029-direct-i2p-identity/verification.json"
+        "migration/evidence/20261029-direct-i2p-identity/verification.json",
+        "migration/evidence/20261029-direct-udp/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8231,6 +8238,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "5dfbd587e16e86122edd548f861a67430c20586d",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0cb5817bf07c6268bcccf9722f8c741a904163c6",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -8239,7 +8251,8 @@
         "migration/evidence/20261029-http-auth-trust/REVIEW.md",
         "migration/evidence/20261029-tracker-tiers-tor-console/REVIEW.md",
         "migration/evidence/20261029-proxy-i2p/REVIEW.md",
-        "migration/evidence/20261029-direct-i2p-identity/REVIEW.md"
+        "migration/evidence/20261029-direct-i2p-identity/REVIEW.md",
+        "migration/evidence/20261029-direct-udp/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-active-scrape/verification.json",
@@ -8248,7 +8261,8 @@
         "migration/evidence/20261029-http-auth-trust/verification.json",
         "migration/evidence/20261029-tracker-tiers-tor-console/verification.json",
         "migration/evidence/20261029-proxy-i2p/verification.json",
-        "migration/evidence/20261029-direct-i2p-identity/verification.json"
+        "migration/evidence/20261029-direct-i2p-identity/verification.json",
+        "migration/evidence/20261029-direct-udp/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },

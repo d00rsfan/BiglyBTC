@@ -1,0 +1,63 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-mainline-single-http-tests",
+      "biglybtc-managed-queue-tests",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-mainline-single-tracker-owner-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 149.802,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/runs/gcc-r2/build.log",
+    "log_sha256": "0b99581796fa88fe5705c3b0ac376ba267d2f551dde4270f19ccfaaec6487645"
+  },
+  {
+    "name": "http-loader",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.017,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/runs/gcc-r2/http-loader.log",
+    "log_sha256": "904f16278f28625678485e711dad82053665648206930690da1f0e4f3fced05c"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "-R",
+      "^(queue-policy|managed-queue|mainline-single-http|mainline-single-tracker-owner)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/runs/gcc-r2/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 559.242,
+    "log": "/home/yurii/Java/BiglyBT/build/direct-udp-followup-20261029/runs/gcc-r2/tests.log",
+    "log_sha256": "191c562a0508226c4cc0de2edffa3e9f4406aad484240a02a597f55aa6b70ae2"
+  }
+]

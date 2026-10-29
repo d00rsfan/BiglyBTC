@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_DIRECT_REGULAR_UDP_PRE_AUTHORITY_STAMP_PENDING_REVIEW",
+  "native_source_basis": "5dfbd587e16e86122edd548f861a67430c20586d",
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/manifest.json",
+  "parent_manifest_sha256": "b675c2463a9af79e235817b7e41ece271b9919bb85567cd61fd1b4c21a66e2db",
+  "source_path_count": 11,
+  "source_paths": {
+    "preview/native/engine/library_udp_tracker.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/library_udp_tracker.hpp",
+      "before_sha256": "614d3f7f16d5e01cdd092150efd27553476972494a89523451943d0bd36d17d8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/library_udp_tracker.hpp",
+      "after_sha256": "9924fdc30db0d711b31e767a533fd70319778945119a1e32f0847969a323e199",
+      "parent_bytes_exact": false
+    },
+    "preview/native/engine/library_udp_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/library_udp_owner.inc",
+      "before_sha256": "77e45a980d68abe5b7f43ad304a9624aa74823bb93df8993809dcf7bf2b96e77",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/library_udp_owner.inc",
+      "after_sha256": "1bea224d9daaced20b20adda6ef415b5eba4fd04b6f33b220c3a266c24050681",
+      "parent_bytes_exact": true
+    },
+    "preview/native/engine/library_http_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/library_http_owner.inc",
+      "before_sha256": "4c60768d53c3d0cabfbdf4fb9b434cdb2ef9d8422a86c79151d9a8a05fdececc",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/library_http_owner.inc",
+      "after_sha256": "0885f7d17893240dcdb6ef26f55a5dc91f99b8393f32d425ea674ea8e3813818",
+      "parent_bytes_exact": true
+    },
+    "preview/native/engine/mainline_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/mainline_owner.inc",
+      "before_sha256": "720db139abcd613612d4c7fcc15ce3331fc0df7bd535bfe6f40b182681ebf86e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/mainline_owner.inc",
+      "after_sha256": "cafdc301adbf9f4898b01014e61b045b6054f115f00dc0a5537ec5c4fbc3be13",
+      "parent_bytes_exact": true
+    },
+    "preview/native/engine/persistent_session.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/persistent_session.cpp",
+      "before_sha256": "dea7162c34a80fe77181c58414874e32f00c08e63702862921b58f07a793f914",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/persistent_session.cpp",
+      "after_sha256": "86979280ff71e5c3e992f7b1d11d4b199fcc50bbae4785d0db079859ae90821e",
+      "parent_bytes_exact": true
+    },
+    "preview/native/engine/queued_mainline_scrape.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/queued_mainline_scrape.hpp",
+      "before_sha256": "5e61fee6c1606eec4f7b87ab2b51a3c8cc46b95c74eef678fdcc7708278b2210",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/queued_mainline_scrape.hpp",
+      "after_sha256": "e953cff344c8d9b444ab97aa5c1ea4b4b50a12dbdf73292444d3e65be19b3239",
+      "parent_bytes_exact": true
+    },
+    "preview/native/engine/queued_mainline_scrape.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/queued_mainline_scrape.cpp",
+      "before_sha256": "b30b35ffad6629cc6b045965c35c61dd8394fff64605784c290c113bb166e28b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/queued_mainline_scrape.cpp",
+      "after_sha256": "57dd04df1712043fccb41f2b4f24329283e0a1942689009470dbf5b61deb5404",
+      "parent_bytes_exact": true
+    },
+    "preview/native/tests/mainline_single_tracker_owner_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/mainline_single_tracker_owner_tests.cpp",
+      "before_sha256": "1b55b05e5e7492b2d945ed471309da270f26ccfddf6edd0c820589af5848751d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/tests/mainline_single_tracker_owner_tests.cpp",
+      "after_sha256": "84f1816e41b423f6ea42efa2b93b096fcf41892a84f9f3ffc9c367088d5d7a52",
+      "parent_bytes_exact": true
+    },
+    "preview/native/engine/library_http_tracker.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/library_http_tracker.hpp",
+      "before_sha256": "d9ffd1d4074ea2f4f84c5cec99b7d44ff18f424870cce728aff446f46325a6ea",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/library_http_tracker.hpp",
+      "after_sha256": "6c30e8c2b478b3e1dd09e447e0be881898ce1ba380e1fbab81a5b0b4330d43b8",
+      "parent_bytes_exact": true
+    },
+    "preview/native/engine/library_http_tracker.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/library_http_tracker.cpp",
+      "before_sha256": "bb584dbde90efdd7bb0f3be8f9af2f0e9628b9b6cdfd2a1dce3e79fa46abfa2c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/library_http_tracker.cpp",
+      "after_sha256": "4a813e15735df24d5a9c9408cae67c2832bfc9ce23b6e636dd6faeb5fa8113bc",
+      "parent_bytes_exact": true
+    },
+    "preview/native/engine/library_udp_policy.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/library_udp_policy.hpp",
+      "before_sha256": "93daa8e106485d99cfdb83e9a3f7ddd1f4b3b9a0c3701e2ad078af6e4959cf1b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/library_udp_policy.hpp",
+      "after_sha256": "46c4a0fc501f32607da4f41de81ba252301e25d587bd1634bb1e241e5f4deca0",
+      "parent_bytes_exact": true
+    }
+  },
+  "source_inputs": {
+    "/home/yurii/Java/BiglyBT/build/mainline-http-direct-20261029/amendments/adopted-core-and-diagnostics/manifest.json": "2395447573dce75a6a487597c4e7cb2f02922f8d70ef4d3a2fa74519cef76069",
+    "/home/yurii/Java/BiglyBT/build/mainline-http-direct-20261029-review/amendments/adopted-core-and-diagnostics/manifest.json": "96507bb8b14106c202c8b15797baeb25a0d247dd53d89173bf6ed84d9493d40f"
+  },
+  "artifacts": {
+    "parent-delta.patch": "99b7c2f5a90558b07dd1da622c43dbb389d5635f7f0e79de4cfe6766913438bf",
+    "retention.json": "e82fa7f27c9675e7f3f2a48d57c474d6e12b9ad9048902db99b1e1f02e1bf188",
+    "ADOPTION.txt": "5eea1f59ab076d82b61bd24815bd41e2a7ff27a5f19f1a0ddfca8f06f57b2bb3",
+    "changes.patch": "95b3eb9f7becb3009b9f630b8c28b166c2139f29c958ea4417601f5796048ac9",
+    "original-source-pins.json": "796ab5f567822d6094de54512c85e29a6c2e694b3042a4ab02b212844ee477fe",
+    "staging/preview/native/tests/mainline_single_tracker_owner_tests.cpp": "84f1816e41b423f6ea42efa2b93b096fcf41892a84f9f3ffc9c367088d5d7a52",
+    "staging/preview/native/engine/persistent_session.cpp": "86979280ff71e5c3e992f7b1d11d4b199fcc50bbae4785d0db079859ae90821e",
+    "staging/preview/native/engine/queued_mainline_scrape.cpp": "57dd04df1712043fccb41f2b4f24329283e0a1942689009470dbf5b61deb5404",
+    "staging/preview/native/engine/queued_mainline_scrape.hpp": "e953cff344c8d9b444ab97aa5c1ea4b4b50a12dbdf73292444d3e65be19b3239",
+    "staging/preview/native/engine/library_http_tracker.cpp": "4a813e15735df24d5a9c9408cae67c2832bfc9ce23b6e636dd6faeb5fa8113bc",
+    "staging/preview/native/engine/library_http_tracker.hpp": "6c30e8c2b478b3e1dd09e447e0be881898ce1ba380e1fbab81a5b0b4330d43b8",
+    "staging/preview/native/engine/library_http_owner.inc": "0885f7d17893240dcdb6ef26f55a5dc91f99b8393f32d425ea674ea8e3813818",
+    "staging/preview/native/engine/mainline_owner.inc": "cafdc301adbf9f4898b01014e61b045b6054f115f00dc0a5537ec5c4fbc3be13",
+    "staging/preview/native/engine/library_udp_policy.hpp": "46c4a0fc501f32607da4f41de81ba252301e25d587bd1634bb1e241e5f4deca0",
+    "staging/preview/native/engine/library_udp_owner.inc": "1bea224d9daaced20b20adda6ef415b5eba4fd04b6f33b220c3a266c24050681",
+    "staging/preview/native/engine/library_udp_tracker.hpp": "9924fdc30db0d711b31e767a533fd70319778945119a1e32f0847969a323e199"
+  },
+  "author_execution": false
+}
