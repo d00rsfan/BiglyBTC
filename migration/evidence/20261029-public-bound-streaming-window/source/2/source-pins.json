@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "native_actor": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/manifest.json",
+    "sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1"
+  },
+  "acceptance_parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/amendments/trailing-peer-stderr/manifest.json",
+    "sha256": "a77d16dc7ecb725d50d9529e1cb07fc41246a89a3192aa5958dfd0097d7e517c"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/amendments/trailing-peer-stderr/manifest.json": "a77d16dc7ecb725d50d9529e1cb07fc41246a89a3192aa5958dfd0097d7e517c",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/manifest.json": "537ecfe54563417a250a3e79f174d237eacfa53ac4b08abf342921c9be063cfd",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/source-pins.json": "e305318db9b88096dae6d46e9db727d1030bc1430b9691e3274d352c4294a507",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/StreamingPeer.java": "b09fde915825727452c33d6efb129aa990fc4074f5ba8f6fe65a34d664d3dfe1",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/manifest.json": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1",
+    "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5"
+  },
+  "reference_relation": "Same actual modified manager/protocol adapter as qualified H; original source/class pins inherited exactly, no whole modified-core source equivalence. New Java MessageDigest SHA256 is a standard JDK test assertion only.",
+  "new_runtime": false
+}

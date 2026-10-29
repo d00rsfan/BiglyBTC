@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "status": "PASS_INDEPENDENT_HOSTED_SOURCE_CHECKPOINT",
+  "source_commit": "04b6287a38cec6bd123e2648ada278ea348b85db",
+  "observed_utc": "2026-10-29T22:40:00Z",
+  "command": [
+    "gh",
+    "run",
+    "list",
+    "--repo",
+    "d00rsfan/BiglyBTC",
+    "--commit",
+    "04b6287a38cec6bd123e2648ada278ea348b85db",
+    "--limit",
+    "8",
+    "--json",
+    "databaseId,workflowName,status,conclusion,headSha,url"
+  ],
+  "runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 40963992927,
+      "headSha": "04b6287a38cec6bd123e2648ada278ea348b85db",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40963992927",
+      "workflowName": "Native plugin SDK contract"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 40963993309,
+      "headSha": "04b6287a38cec6bd123e2648ada278ea348b85db",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40963993309",
+      "workflowName": "Native desktop preview unit and smoke tests"
+    }
+  ],
+  "substitutes_local_images_or_missing_executions": false
+}

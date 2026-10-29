@@ -1,0 +1,14 @@
+********* Start testing of AzureusMaintenanceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusMaintenanceTests::initTestCase()
+PASS   : AzureusMaintenanceTests::rawOriginalEnvelopePrimaryRecoveryAndCompareBeforePublish()
+PASS   : AzureusMaintenanceTests::foreignAndAmbiguousCacheCannotBeRewrittenOrChangeOriginalBytes()
+PASS   : AzureusMaintenanceTests::unsafePendingAndChangedParentNeverPublish()
+PASS   : AzureusMaintenanceTests::originalTenSecondRetrySixTickSelectivePrefixAndFiveMinuteIdleRules()
+PASS   : AzureusMaintenanceTests::originalTreeSetNarrowedComparatorAndWallAliveDurationArePreserved()
+PASS   : AzureusMaintenanceTests::genuineNormalCacheRestartBootstrapsWithoutSuppliedPeerAndThenAcceptsForwardedStore()
+PASS   : AzureusMaintenanceTests::blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority()
+PASS   : AzureusMaintenanceTests::actualDefaultKSelectiveRefreshAndFailureRetryUseRealNormalOwners()
+PASS   : AzureusMaintenanceTests::cleanupTestCase()
+Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 80753ms
+********* Finished testing of AzureusMaintenanceTests *********

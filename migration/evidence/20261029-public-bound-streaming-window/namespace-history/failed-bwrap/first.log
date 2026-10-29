@@ -1,0 +1,2 @@
+RTNETLINK answers: Operation not permitted
+FAIL owned PublicBound namespace: Command '['/usr/sbin/ip', 'link', 'set', 'dev', 'lo', 'up']' returned non-zero exit status 2.

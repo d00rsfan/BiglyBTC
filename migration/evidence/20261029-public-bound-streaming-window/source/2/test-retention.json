@@ -1,0 +1,15 @@
+{
+  "old_subject_cases": 5,
+  "old_helpers_and_test_method_spans": {
+    "registered": "b1eb9cd2d5fb1d74e8391baae60e8989dcd036c1b302e8fdda98e4c9d482d610",
+    "finish": "abf519fd6d5d6db39187c3bc85cb9b52add0f8eafb38026b838b9b1d2e10bf8f",
+    "initTestCase": "c90d50b8f72e7c16bf6b7f578eb8d787e17ffb1b01557c1485c80ca3999c5c7a",
+    "actualOriginalManagerCarriesHttpAndRecoverablePackets_data": "0acb7124fe739c7d9ae35099039b572e893810774256f24fb2d6aa96c3e34d78",
+    "actualOriginalManagerCarriesHttpAndRecoverablePackets": "cca5fefb61f36bb4f25e16e3cfdb500a9a97087b0d48488ed6c17df69ebb43b7",
+    "actualOriginalResetHasTypedNativeTerminal": "2c0c6200103eefe1897a77576ca7a53d03eabab861291a7ece8fa3635623a4f1",
+    "localCancelRejectsGenuineLatePeerBytesBeforeUpdatedBarrier": "403051e8056b09ab06aac07d40fe20abc0482e4e3f8c6abcb8c1f513ffdc83ab"
+  },
+  "old_method_bodies_byte_exact": true,
+  "new_subject_cases": 2,
+  "runtime": false
+}

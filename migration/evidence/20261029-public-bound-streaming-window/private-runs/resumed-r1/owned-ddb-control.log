@@ -1,0 +1,21 @@
+case empty-and-invalid-start-never-produce-a-query
+case literal-xor-order-and-parallel-reservations
+case actual-contact-reply-creates-only-observed-admitted-child-query
+case unowned-public-contact-is-recorded-but-cannot-authorize-a-query
+case repeated-contacts-and-cycles-never-requery-an-ancestor
+case source-value-dedup-is-originator-id-plus-exact-bytes
+case two-final-value-replies-stop-normal-get-and-wait-real-cancel-ack
+case source-stats-flag-does-not-use-two-reply-shortcut
+case value-limit-keeps-live-partial-ticket-until-real-completion
+case closest-success-policy-skips-farther-unqueried-root
+case failed-near-contact-does-not-count-as-successful-closest
+case cancel-and-owner-close-retain-distinct-real-node-acks
+case actual-submission-crossing-global-deadline-keeps-ticket-for-cancel
+case backward-clock-stops-scheduling-without-time-wrap-or-fake-ack
+case contact-cap-is-atomic-and-never-draws-unretained-children
+case sixty-fifth-final-slice-does-not-strand-already-completed-rpc
+case unsupported-contact-stream-and-diversification-never-invent-subqueries
+case snapshot-fences-reject-malformed-public-dto-fields
+case results-and-snapshots-own-full-binary-value-and-origin-metadata
+case dispatch-failure-never-claims-an-actual-ticket-or-timeout
+PASS 20 owned-ddb-control cases; 334 assertions; explicit GET observations only; no Java/runtime equality credit

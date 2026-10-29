@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="DatagramChannelTests" timestamp="2026&#x002D;10&#x002D;30T00:41:15" hostname="ubuntud" tests="15" failures="0" errors="0" skipped="0" time="7.385">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="DatagramChannelTests" time="0.000"/>
+  <testcase name="actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(DSA0&#x002D;v4&#x002D;signed)" classname="DatagramChannelTests" time="0.423"/>
+  <testcase name="actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(Ed7&#x002D;v6&#x002D;signed)" classname="DatagramChannelTests" time="0.414"/>
+  <testcase name="actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(DSA0&#x002D;v6&#x002D;claimed)" classname="DatagramChannelTests" time="0.411"/>
+  <testcase name="actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(Ed7&#x002D;v4&#x002D;claimed)" classname="DatagramChannelTests" time="0.421"/>
+  <testcase name="createdWithoutActualLeaseCannotSubmit" classname="DatagramChannelTests" time="0.206"/>
+  <testcase name="localCancelAndOldNonceCannotFinishTheNextRequest" classname="DatagramChannelTests" time="0.477"/>
+  <testcase name="terminalFailureCanPrecedeAcceptedAndOldStatusesCannotRebind" classname="DatagramChannelTests" time="0.522"/>
+  <testcase name="renewalCannotExtendOrCancelTheIndependentStatusBudget" classname="DatagramChannelTests" time="0.819"/>
+  <testcase name="actualLeaseExpiryWithdrawsSubmissionUntilNewSignedRenewal" classname="DatagramChannelTests" time="2.127"/>
+  <testcase name="reliabilityPolicyRemainsTheInitialOriginalRouterSetting(none&#x002D;cannot&#x002D;upgrade)" classname="DatagramChannelTests" time="0.368"/>
+  <testcase name="reliabilityPolicyRemainsTheInitialOriginalRouterSetting(best&#x002D;effort&#x002D;cannot&#x002D;downgrade)" classname="DatagramChannelTests" time="0.470"/>
+  <testcase name="wrongSessionStatusWithdrawsRatherThanCompletes" classname="DatagramChannelTests" time="0.367"/>
+  <testcase name="publicDatagramNotificationMayDeleteTheChannel" classname="DatagramChannelTests" time="0.360"/>
+  <testcase name="cleanupTestCase" classname="DatagramChannelTests" time="0.000"/>
+</testsuite>

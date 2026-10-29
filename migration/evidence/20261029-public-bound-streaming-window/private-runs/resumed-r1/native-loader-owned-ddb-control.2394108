@@ -1,0 +1,107 @@
+   2394108:	find library=libstdc++.so.6 [0]; searching
+   2394108:	 search path=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/test-support/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/test-support/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/test-support:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/test-support/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/test-support/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/test-support/libstdc++.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/lib/libstdc++.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/qt/lib/libstdc++.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2394108:	    (no such file)
+   2394108:	 search cache=/etc/ld.so.cache
+   2394108:	  trying file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2394108:	
+   2394108:	find library=libgcc_s.so.1 [0]; searching
+   2394108:	 search path=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/test-support:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/test-support/libgcc_s.so.1
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/lib/libgcc_s.so.1
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/qt/lib/libgcc_s.so.1
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2394108:	    (no such file)
+   2394108:	 search cache=/etc/ld.so.cache
+   2394108:	  trying file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2394108:	
+   2394108:	find library=libc.so.6 [0]; searching
+   2394108:	 search path=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/test-support:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/test-support/libc.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/lib/libc.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/qt/lib/libc.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libc.so.6
+   2394108:	    (no such file)
+   2394108:	 search cache=/etc/ld.so.cache
+   2394108:	  trying file=/usr/lib/x86_64-linux-gnu/libc.so.6
+   2394108:	
+   2394108:	find library=libm.so.6 [0]; searching
+   2394108:	 search path=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/test-support:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/test-support/libm.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/lib/libm.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/usr/lib/biglybtc/qt/lib/libm.so.6
+   2394108:	    (no such file)
+   2394108:	  trying file=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libm.so.6
+   2394108:	    (no such file)
+   2394108:	 search cache=/etc/ld.so.cache
+   2394108:	  trying file=/usr/lib/x86_64-linux-gnu/libm.so.6
+   2394108:	
+   2394108:	
+   2394108:	calling init: /lib64/ld-linux-x86-64.so.2
+   2394108:	
+   2394108:	
+   2394108:	calling init: /usr/lib/x86_64-linux-gnu/libc.so.6
+   2394108:	
+   2394108:	
+   2394108:	calling init: /usr/lib/x86_64-linux-gnu/libm.so.6
+   2394108:	
+   2394108:	
+   2394108:	calling init: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2394108:	
+   2394108:	
+   2394108:	calling init: /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2394108:	
+   2394108:	
+   2394108:	initialize program: /home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/biglybtc-owned-ddb-control-tests
+   2394108:	
+   2394108:	
+   2394108:	transferring control: /home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/biglybtc-owned-ddb-control-tests
+   2394108:	
+   2394108:	
+   2394108:	calling fini:  [0]
+   2394108:	
+   2394108:	
+   2394108:	calling fini: /usr/lib/x86_64-linux-gnu/libstdc++.so.6 [0]
+   2394108:	
+   2394108:	
+   2394108:	calling fini: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 [0]
+   2394108:	
+   2394108:	
+   2394108:	calling fini: /usr/lib/x86_64-linux-gnu/libm.so.6 [0]
+   2394108:	
+   2394108:	
+   2394108:	calling fini: /usr/lib/x86_64-linux-gnu/libc.so.6 [0]
+   2394108:	
+   2394108:	
+   2394108:	calling fini: /lib64/ld-linux-x86-64.so.2 [0]
+   2394108:	

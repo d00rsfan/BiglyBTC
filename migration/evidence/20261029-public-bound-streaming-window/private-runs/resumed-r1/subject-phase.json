@@ -1,0 +1,8 @@
+{
+  "mechanism": "fcntl.flock",
+  "lock_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/subject-phase.lock",
+  "pid": 2393741,
+  "entered_monotonic_ns": 6649957739278757,
+  "scope": "subject phase only",
+  "left_monotonic_ns": 6650146903596149
+}

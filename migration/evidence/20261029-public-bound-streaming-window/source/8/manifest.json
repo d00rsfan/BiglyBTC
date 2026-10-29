@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_NATIVE_HOSTED_TEST_DEPENDENCY",
+  "support_path": "migration/tools/hosted_preview_dependencies.sh",
+  "before_sha256": "30586358e01b7bc18b9289bd301a777bc4fc7bcb3b2eb4ba011262ecfe789bc9",
+  "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/admin-namespace-recipes/amendments/preserve-unchanged-mtimes/amendments/native-hosted-dependency-basis/amendments/required-test-tools/support/after.sh",
+  "after_sha256": "b83b69b3671fac9a4c240032d315b842e33639efb4777dcf51322d5f2e13d26c",
+  "canonical_reference": {
+    "path": "/home/yurii/Java/BiglyBT/migration/tools/hosted_preview_dependencies.sh",
+    "sha256": "6eceffa8db789c38a8afa2adafbeda91daa849843a35854d1ed8df5f216540e0",
+    "copied_to_native": false
+  },
+  "artifacts_sha256": {
+    "before.sh": "30586358e01b7bc18b9289bd301a777bc4fc7bcb3b2eb4ba011262ecfe789bc9",
+    "changes.patch": "6b54c3ca52a7ea16d16760afbb645275ba737354a694fad1e02d4824f3e03dd4",
+    "after.sh": "b83b69b3671fac9a4c240032d315b842e33639efb4777dcf51322d5f2e13d26c"
+  },
+  "scope": "Add only bubblewrap/iproute2/util-linux to actual native noncompiler test dependencies; preserve all other native bytes.",
+  "product_runtime_dependencies_changed": false,
+  "execution": false,
+  "source_precondition_failures": {
+    "kind": "unexecuted SOURCE precondition; no functional test failure",
+    "old_support_manifest": "de69dab2fb0b7408893d63e4dd1706c411aa6090e1ffe8543402e0d171a74a3a",
+    "old_recipe_manifests": [
+      "e4fec482edd5af6f2633fa1aec9b0920a5e07e1d7dfc445e7e3ebd4ed3037ebe",
+      "372f729f07a1f01ab0466aee37a8ed31480dd8b2ea50fc3645b9c8586e15bce1"
+    ]
+  }
+}

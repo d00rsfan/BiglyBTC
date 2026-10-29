@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "status": "ROOT_REVIEWED_PRE_SUBJECT_AUTH_OBSTRUCTION",
+  "utc": "2026-10-29T22:09:47Z",
+  "source_commit": "04b6287a38cec6bd123e2648ada278ea348b85db",
+  "make_session": {
+    "id": 35342,
+    "joined": true,
+    "exit": 2,
+    "observed_final_output": "tests 8; GCC FAIL; make gcc Error 1"
+  },
+  "process_observation": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/authwait-observation-admin-r1.json",
+    "sha256": "a293bc87ce349684daad68b393341d849d75ec6706f62001eb70f7aaff55e2ee",
+    "bytes": 5544
+  },
+  "observed_cause": "Local polkit authentication for pkexec remained pending before the native Public subject was launched. Root inspected the owned process trees directly; the saved fresh process snapshot covers GCC. Earlier SAN observation is root-reported, not replayable proc bytes. No native Public ELF or drop marker was observed in either blocked launch.",
+  "limitations": [
+    "No successful SAN/GCC Public execution is claimed.",
+    "Timeout/XML/empty receipt alone do not prove auth wait; prior direct root observation and retained scoped process observation are explicit additional inputs.",
+    "No historical different-source test result may be pooled."
+  ],
+  "lanes": {
+    "clang": {
+      "result": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/result.json",
+        "sha256": "52df5cb8a517b3f57518c9530d3286fea5da517e0d79e287c6b96301568ee36e",
+        "bytes": 57299
+      },
+      "junit": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/tests.xml",
+        "sha256": "3f0c563ef95ec10eb88a91bc60e20eacfab9ff2e9db055887afc1184643e1b42",
+        "bytes": 18898
+      },
+      "transcript": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/tests.log",
+        "sha256": "391aaae3f5ca00a86c594aaa2777aca2dd0812f0ab032c1bfeaedb480595360c",
+        "bytes": 2677
+      },
+      "namespace_launch": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/public-namespace-launch.json",
+        "sha256": "73cb4fa30fb66b41eea3f15d1da4ac09e6712c8e43d1301a3d1469a4608514b6",
+        "bytes": 2038
+      },
+      "total": 16,
+      "passed": 16,
+      "failed": [],
+      "original_receipt_preserved": true
+    },
+    "gcc": {
+      "result": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/result.json",
+        "sha256": "3eae0fc761ccef939fe794a3d1b4f290924876d07c7f797705098b1015722612",
+        "bytes": 39191
+      },
+      "junit": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/tests.xml",
+        "sha256": "34adf780b7d00f2db90e9bc4b666d9453449939d56e723f1f4f79c6a9e35742b",
+        "bytes": 21691
+      },
+      "transcript": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/tests.log",
+        "sha256": "0adae1ab0cac034bc1bb10e21e4b8004b34d710840d518122a46623ee311c16f",
+        "bytes": 3227
+      },
+      "namespace_launch": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/public-namespace-launch.json",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "total": 19,
+      "passed": 18,
+      "failed": [
+        "azureus-public-bound"
+      ],
+      "original_receipt_preserved": true
+    },
+    "san": {
+      "result": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/result.json",
+        "sha256": "1d2d7a6101b7b7acc4023dd3b6e977ac11a5f9258f23309819f920bb61c63689",
+        "bytes": 38982
+      },
+      "junit": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/tests.xml",
+        "sha256": "0874d96ccdc22ecba025476fd99dac09a21027c209eed8e06f80843f2d5ff887",
+        "bytes": 17808
+      },
+      "transcript": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/tests.log",
+        "sha256": "b8458d5e15115adea62cbe1172682dec48e7183b10066ea272df083b138da3a1",
+        "bytes": 2833
+      },
+      "namespace_launch": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/public-namespace-launch.json",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "total": 16,
+      "passed": 15,
+      "failed": [
+        "azureus-public-bound"
+      ],
+      "original_receipt_preserved": true
+    }
+  },
+  "allowed_recovery": "Only the two affected Public subjects may be resumed against exact unchanged current-cohort source, binaries, cache/tool/dependency pins with fresh authenticated namespace receipts; original failures must remain linked. No policy/deadline/test weakening or PASS fabrication.",
+  "dist_promoted": false,
+  "public_functional_credit_from_observation": false
+}

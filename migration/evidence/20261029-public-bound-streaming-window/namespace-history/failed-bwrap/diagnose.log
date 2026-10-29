@@ -1,0 +1,29 @@
+{
+  "status": "METADATA_ONLY_NO_ADDRESS_OR_FUNCTIONAL_TEST",
+  "label": "bwrap//&unpriv_bwrap (enforce)",
+  "privileges": {
+    "CapInh": 4096,
+    "CapPrm": 4096,
+    "CapEff": 4096,
+    "CapBnd": 4096,
+    "CapAmb": 4096,
+    "NoNewPrivs": 1
+  },
+  "net_owner_userns": {
+    "identity": [
+      5,
+      4026532411
+    ],
+    "same_as_current_userns": true
+  },
+  "current_userns": [
+    5,
+    4026532411
+  ],
+  "current_netns": [
+    5,
+    4026532415
+  ],
+  "uid_map": "         0       1000          1\n",
+  "gid_map": "         0       1000          1\n"
+}

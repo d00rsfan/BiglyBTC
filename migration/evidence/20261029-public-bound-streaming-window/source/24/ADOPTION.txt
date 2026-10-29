@@ -1,0 +1,12 @@
+SOURCE-ONLY complete23 overlay child of immutable c28261. Exactly two source deltas:
+1. Readonly preflight checks PR_GET_SECUREBITS >=0 before testing NOROOT bits.
+2. Only biglybtc-public-netns-admin gets -fno-sanitize=all in compile/link options,
+   so a global sanitizer linker flag cannot pull sanitizer runtimes into this
+   fixed privileged libc fixture. All ordinary subject sanitizer flags persist.
+C source, launch.py/companion, wrapper, both CI workflow afterimages and16 Public
+C++ afterimages are exact parent. The measured22ccc/40848B helper remains exact;
+no recompile/admin/namespace/subject required to correct these source guards.
+Root's first actual authorized invocation remains readonly preflight only,
+using this child's staged preflight.py and the root-reviewed measured helper.
+Parent-delta.patch is exactly two files; changes.patch applies directly to
+current nativead4854. No N mutation or execution by author.

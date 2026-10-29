@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "capsule": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/manifest.json",
+  "capsule_sha256": "fec3012f2abcda6ba8be92ff9ea767bbd291f1dd52019f8cb8ef441554c896dc",
+  "native_actor_manifest_sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1",
+  "checks": {
+    "artifact_pins": 13,
+    "input_pins": 6,
+    "native_current_and_git_preimages": 2,
+    "old_helpers_and_method_spans_byte_exact": 7,
+    "old_subject_rows": 5,
+    "new_upload_rows": 2,
+    "read_only_patch_check": "PASS",
+    "shell_syntax": "PASS"
+  },
+  "findings": [],
+  "assessment": [
+    "Actual modified b086 manager receives the complete deterministic128KiB body and native FIN, verifies every byte, then returns SHA256 through its real socket. Native assertions require exact response/EOF and Java application/result/process success. No synthetic application reply, ACK or router delivery credit.",
+    "Cap2 and cap8 share40ms FIFO delay on genuine reverse frames, with64-frame/65536-byte route bound. Distinct native data sequences are tracked until actual reverse ACK framing enqueue, respecting NoAck and explicit NACK holes. First ACK flight, actual acknowledged bytes, bounded native sent table/queue and final outstanding-set assertions make window1 insufficient.",
+    "Old five cases and seven helper/method spans are exact; original CTest selects them separately from the two new upload rows with independent fresh-root suffix. Finite per-operation budgets remain60000ms; no speedup threshold or public/router/tunnel/backend claim.",
+    "Source/retained signer/session/LS2/port/protocol gates are inherited from reviewed actor. Java helper adaptation is separate from original manager bytes; exact classes must be compiled once and pinned by root before actual lanes."
+  ],
+  "limitations": "Source checks only, including read-only patch application and shell parse. No compiler, JVM, subject, native/provider/profile mutation or runtime qualification."
+}

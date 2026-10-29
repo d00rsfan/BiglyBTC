@@ -1,0 +1,11 @@
+********* Start testing of StreamingInteropTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : StreamingInteropTests::initTestCase()
+PASS   : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(http)
+PASS   : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(loss-reorder)
+PASS   : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(queue-backpressure)
+PASS   : StreamingInteropTests::actualOriginalResetHasTypedNativeTerminal()
+PASS   : StreamingInteropTests::localCancelRejectsGenuineLatePeerBytesBeforeUpdatedBarrier()
+PASS   : StreamingInteropTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 7085ms
+********* Finished testing of StreamingInteropTests *********

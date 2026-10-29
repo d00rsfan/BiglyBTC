@@ -1,0 +1,46 @@
+{
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/manifest.json",
+    "sha256": "7e0094facb8330ba7332859c99b4a7db9b0cfdfc1800a19017b42da3076393a7"
+  },
+  "scope": "Combined explicit PublicBound + Streaming window finite qualification/closeout derivative",
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/manifest.json": "122e845c0bbdd2edc499932d260b807df3c6c9c52a37251b885042c2943fde3a",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029-review/review.json": "803384933d6ee11eee1949e3c11ca3c912178fd074319adbf39567043fd10adb",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/manifest.json": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/manifest.json": "fec3012f2abcda6ba8be92ff9ea767bbd291f1dd52019f8cb8ef441554c896dc",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029-acceptance-review/review.json": "d471b7cbbae292729e0f1228c25025698db9d2b64c3d383cddcc660866e4653e"
+  },
+  "source_inputs": {
+    "actual_future_source_commit": "required CLI",
+    "actual_merged_adoption": "required CLI",
+    "previous_dist": "measured at private execution"
+  },
+  "suite_counts": {
+    "gcc": 19,
+    "clang": 16,
+    "san": 16,
+    "private": 19
+  },
+  "unique_test_images": {
+    "gcc": 18,
+    "clang": 15,
+    "san": 15
+  },
+  "products_gcc": 3,
+  "helper_compiles": 1,
+  "public_namespace_fallback": false,
+  "author_execution": false,
+  "artifacts_sha256": {
+    "COMMANDS.txt": "987db6b7ca72eb0a19731021e874aa256ac74499bd75d870d7c3bdf3c9a7c5f1",
+    "PLAN.md": "c8a9ad7c100eea48ab34f5490ddcf40c162fccf8f8493c4d97d35c0ae25cb765",
+    "changes.patch": "a4a75f5742935832095234fd0b4647cc25be4e6f78d57928d0e61fcf004ce087",
+    "finish.py": "07a13337aede3afc6666914e0ade44ed3a90a8953caf920bdd14d42952b8b74a",
+    "jobs.mk": "10b62fb11f9f77e1c7c9ff19f8e530a1b75420288078c881eb6884dfc30c2663",
+    "prepare.py": "821753b7c7f80597b61f30db8007d3e2942f53478479ae76e3f0ae8eb93f792c",
+    "private.py": "ce1f382caecebe9f74e33c54f1d1f209092ab3b4352d7dc5c5a7e83766823616",
+    "publish.py": "d776d286f93461bca10a3eefeb4259e6cf62cd37f8dcdc3be788e4c106e1967c",
+    "run.py": "c9c847d8fa810307d38fdc6a7065616ee087dc0d44e193a954d364ab64578a2f"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "diagnostic": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/namespace-preflight/diagnose.py",
+    "sha256": "ce52cf33873166dc47fc81e20268210d605cdf7dae9b6a20215327fb9cab15ba"
+  },
+  "actual_failed_preflight": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/namespace-preflight/first.log",
+    "sha256": "2a49a665410d4306e05527a94c31ea2af4ce7dc3f6239b8379fc96e0122927a7"
+  },
+  "host_profile": {
+    "path": "/etc/apparmor.d/bwrap-userns-restrict",
+    "sha256": "d61facde27707b9c47ffe47921b7273e788784484cb5530eb819e6daac1f1990"
+  },
+  "source_facts": [
+    "Installed child profile unpriv_bwrap explicitly audit-denies all capabilities despite visible cap bits.",
+    "Current author helper own label bwrap//&unpriv_bwrap(enforce), not asserted as measured failed child label.",
+    "bwrap original source creates network in first userns; second userns only if UID/GID mapping differs/devpts or disable-userns. Current wrapper uid/gid0,no devpts,no disable-userns, so parent-owner mismatch not source-expected.",
+    "Root-only diagnostic checks actual net owning userns ioctl plus current label and cap/maps without assigning any addresses.",
+    "Inline ioctl/netlink would face same LSM capability deny; no bypass/profile/sysctl change proposed."
+  ],
+  "source_reference": "https://raw.githubusercontent.com/containers/bubblewrap/v0.11.1/bubblewrap.c#L3209-L3247"
+}

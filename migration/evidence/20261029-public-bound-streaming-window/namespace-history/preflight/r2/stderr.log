@@ -1,0 +1,9 @@
+PROC_OPEN phase=dropped-user-payload pid=2377685 leaf=fd/6 ruid=1000 euid=1000 rgid=1000 egid=1000 dumpable=0 errno=13
+PROC_OPEN label=unconfined 
+PROC_OPEN CapInh:	0000000000000000
+PROC_OPEN CapPrm:	0000000000000000
+PROC_OPEN CapEff:	0000000000000000
+PROC_OPEN CapBnd:	0000000000000000
+PROC_OPEN CapAmb:	0000000000000000
+PROC_OPEN NoNewPrivs:	1
+FAIL public namespace admin: owned proc open (errno=13)

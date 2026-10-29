@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "status": "BLOCKED_SOURCE_ONLY",
+  "parent_recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/admin-namespace-recipes/manifest.json",
+    "sha256": "e4fec482edd5af6f2633fa1aec9b0920a5e07e1d7dfc445e7e3ebd4ed3037ebe"
+  },
+  "effective_recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/admin-namespace-recipes/amendments/preserve-unchanged-mtimes/manifest.json",
+    "sha256": "372f729f07a1f01ab0466aee37a8ed31480dd8b2ea50fc3645b9c8586e15bce1"
+  },
+  "static_checks": [
+    "Read all six recipe sources and final adopter-only delta",
+    "All6recipe hashes/10inputs/5artifacts; child pins and Python AST checked without import",
+    "All31component maps/current beforeimages pass; seven changed/new leaves",
+    "Reviewed actual outer85cc/rootapproval2bb/raw stdout sole rowbac6/launch/source9c/helper900ffe association",
+    "Current private loader/caller/drop/argv/env/source gates and fresh19/16/16 claims coherent"
+  ],
+  "blockers": [
+    {
+      "file": "adopt-admin-current.py",
+      "problem": "native_support prepends preview/ to migration/tools support path, which does not exist in the actual native tree; actual hosted workflow uses root migration/tools path. Actual native support preimage also differs from canonical original support preimage, so a whole-file canonical copy would regress existing native CI package/mirror/timeout fixes.",
+      "actual_native_before": {
+        "path": "/home/yurii/Java/BiglyBTC/migration/tools/hosted_preview_dependencies.sh",
+        "sha256": "30586358e01b7bc18b9289bd301a777bc4fc7bcb3b2eb4ba011262ecfe789bc9"
+      },
+      "requested_fix": "Use root migration/tools path with actual beforeimage and merge the intended namespace-test dependency hunk into existing native contents; preserve prior libmaxminddb/libarchive, HTTPS mirror and bounded APT logic. Keep original R source association distinct."
+    }
+  ],
+  "execution": false,
+  "native_mutations": false
+}

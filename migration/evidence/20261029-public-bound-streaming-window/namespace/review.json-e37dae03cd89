@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_SEALED_STDIN_FOR_ROOT_NEW_IMAGE_AND_READONLY_PREFLIGHT",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/manifest.json",
+    "sha256": "9c781e5bebea7841cc7d574894367be4460c486f5a9abb99aed7580325f65edb"
+  },
+  "source_changes": [
+    "Unprivileged launcher rewinds already-sealed payload to0 and supplies only that memfd as fixed stdin through explicit authorizer; no environment preservation/fallback.",
+    "Root parent never reads/parses stdin. Existing mapped child explicitly re-verifies complete credential/cap/NNP drop before fstat/owner/seal/bound and offset0 checks, then uses unchanged bounded payload parser. Shared sealed predicate is unchanged in actual executing-image proof.",
+    "After reading, the ordinary-user child replaces stdin with /dev/null before subject execution; only existing namespace proof FDs survive. Image/invoker proof, network effects, full drop, cancellation and deadlines remain unchanged."
+  ],
+  "static_checks": {
+    "source_maps": 23,
+    "changed_files": 2,
+    "inherited_exact": 21,
+    "python_ast_only": true,
+    "main_equal_except_execute_user_arguments": true,
+    "effective_helper_source_pin_correct": true,
+    "all_artifact_parent_and_actual_failed_r2_pins_verified": true
+  },
+  "blockers": [],
+  "limits": "Source-only approval. New root-measured helper and one read-only preflight required. Does not credit environment/Public acceptance or infer a broader confinement bypass. No reviewer compiler/admin/namespace/subject execution or native checkout edit.",
+  "execution": false
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="AzureusProfileIoTests" timestamp="2026&#x002D;10&#x002D;30T00:38:52" hostname="ubuntud" tests="11" failures="0" errors="0" skipped="0" time="4.016">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="AzureusProfileIoTests" time="0.000"/>
+  <testcase name="heldDiskHandoffDoesNotBlockRealPingDeadlineCancellationOrSocketClose" classname="AzureusProfileIoTests" time="0.619">
+    <system-out>
+      <![CDATA[Held post-read/reservation IO: source=1048622B ping=50ms total-through-close=455ms, sockets closed before external IO join]]>
+    </system-out>
+  </testcase>
+  <testcase name="currentVersionSourceIsRecheckedAfterTheHeldJobBeforeAnyPacketEffect" classname="AzureusProfileIoTests" time="0.217"/>
+  <testcase name="initialRatingIoCanBeCancelledBeforeAnySnapshotOrPacketAndFreshReadStillWorks" classname="AzureusProfileIoTests" time="0.325"/>
+  <testcase name="nestedObservedWritersRefuseBeforeEffectsRatherThanCallUnderOuterGate" classname="AzureusProfileIoTests" time="0.000"/>
+  <testcase name="realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose(release&#x002D;current)" classname="AzureusProfileIoTests" time="0.157"/>
+  <testcase name="realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose(disable&#x002D;current&#x002D;source)" classname="AzureusProfileIoTests" time="1.020"/>
+  <testcase name="realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose(close&#x002D;and&#x002D;cancel&#x002D;queued)" classname="AzureusProfileIoTests" time="0.258"/>
+  <testcase name="runningWorkerWakesQueueBackpressureBeforeHeldSourceCanBecomeReady" classname="AzureusProfileIoTests" time="0.101"/>
+  <testcase name="permitsAreSingleUseBoundQueuedActiveAndReadyThenReclaimSlots" classname="AzureusProfileIoTests" time="1.315">
+    <system-out>
+      <![CDATA[Profile IO high-water=8 (queued+active+ready),16 later real validation rounds reclaimed]]>
+    </system-out>
+  </testcase>
+  <testcase name="cleanupTestCase" classname="AzureusProfileIoTests" time="0.000"/>
+</testsuite>

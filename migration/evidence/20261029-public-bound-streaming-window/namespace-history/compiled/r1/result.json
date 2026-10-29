@@ -1,0 +1,50 @@
+{
+  "status": "PASS_COMPILED_FIXED_NAMESPACE_HELPER",
+  "compiler_exit": 0,
+  "source_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/manifest.json",
+    "sha256": "c28261eb9c89fae9185a4333a548b1e454f05971c377e74c4b262bf3985671e2"
+  },
+  "source": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/staging/preview/native/tests/public_namespace_fixture/public_netns_admin.c",
+    "sha256": "3d0aeaa1aae49716950d2d7a96d8e1a60879ed3586a582438700affb1fe5728d"
+  },
+  "compiler": {
+    "path": "/usr/bin/x86_64-linux-gnu-gcc-15",
+    "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88",
+    "version": "x86_64-linux-gnu-gcc-15 (Ubuntu 15.2.0-16ubuntu1) 15.2.0"
+  },
+  "command": [
+    "/usr/bin/make",
+    "--jobserver-style=fifo",
+    "-j3",
+    "--no-print-directory",
+    "-f",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r1/compile.mk"
+  ],
+  "compiler_command": [
+    "/usr/bin/x86_64-linux-gnu-gcc-15",
+    "-std=c11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+    "-Werror",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/staging/preview/native/tests/public_namespace_fixture/public_netns_admin.c",
+    "-o",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r1/public-netns-admin"
+  ],
+  "makefile_sha256": "83710ff72c3c1b803314e30e4ae3994294c3764ecfa864b0f5e2611d7c23c5d9",
+  "compile_log_sha256": "133ea48619fca6c4bbe88409d11370d23a9f004f98b42b93096898096da05102",
+  "elapsed_ms": 727,
+  "admin_invoked": false,
+  "namespace_invoked": false,
+  "subjects_run": false,
+  "helper": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r1/public-netns-admin",
+    "sha256": "22ccc598283ab5818f05b9fbab0bb2238b170fb97fc81ade613fa0015a9713ab",
+    "bytes": 40848,
+    "uid": 1000,
+    "gid": 1000
+  }
+}

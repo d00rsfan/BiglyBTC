@@ -1,0 +1,19 @@
+********* Start testing of DatagramChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : DatagramChannelTests::initTestCase()
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(DSA0-v4-signed)
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(Ed7-v6-signed)
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(DSA0-v6-claimed)
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(Ed7-v4-claimed)
+PASS   : DatagramChannelTests::createdWithoutActualLeaseCannotSubmit()
+PASS   : DatagramChannelTests::localCancelAndOldNonceCannotFinishTheNextRequest()
+PASS   : DatagramChannelTests::terminalFailureCanPrecedeAcceptedAndOldStatusesCannotRebind()
+PASS   : DatagramChannelTests::renewalCannotExtendOrCancelTheIndependentStatusBudget()
+PASS   : DatagramChannelTests::actualLeaseExpiryWithdrawsSubmissionUntilNewSignedRenewal()
+PASS   : DatagramChannelTests::reliabilityPolicyRemainsTheInitialOriginalRouterSetting(none-cannot-upgrade)
+PASS   : DatagramChannelTests::reliabilityPolicyRemainsTheInitialOriginalRouterSetting(best-effort-cannot-downgrade)
+PASS   : DatagramChannelTests::wrongSessionStatusWithdrawsRatherThanCompletes()
+PASS   : DatagramChannelTests::publicDatagramNotificationMayDeleteTheChannel()
+PASS   : DatagramChannelTests::cleanupTestCase()
+Totals: 15 passed, 0 failed, 0 skipped, 0 blacklisted, 7385ms
+********* Finished testing of DatagramChannelTests *********

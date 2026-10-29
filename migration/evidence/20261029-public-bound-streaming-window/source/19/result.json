@@ -1,0 +1,44 @@
+{
+  "status": "PASS_PREPARED_STREAMING_WINDOW_HELPER",
+  "source_commit": "ad4854e920d86a511cc90cd52e4ab161adcb0fec",
+  "adoption_sha256": "15c1c3805ed57c5e9c089b742acb13376cc445b19b9eed75e5ced9be0c4ca6e3",
+  "runner_sha256": "821753b7c7f80597b61f30db8007d3e2942f53478479ae76e3f0ae8eb93f792c",
+  "acceptance_manifest_sha256": "fec3012f2abcda6ba8be92ff9ea767bbd291f1dd52019f8cb8ef441554c896dc",
+  "java_program": "/usr/bin/java",
+  "classes_directory": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/java-runs/r1/classes",
+  "classes": {
+    "StreamingPeer$Adapter.class": "d4e4d3b54638d457f46cbc13d053137ff50a584977f10b1d3c4fe5f70e71c201",
+    "StreamingPeer.class": "d1a87eae3f123844765b7ac77cf4428fcdd5c3089cb77e90864f657a1e96c6f6"
+  },
+  "java": {
+    "/usr/lib/jvm/java-26-openjdk-amd64/bin/java": {
+      "sha256": "347282b66d7dfa462f84190f4254b3f5647c791b4250fe84ed0028fc9343f9ae",
+      "bytes": 14536
+    }
+  },
+  "javac": {
+    "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac": {
+      "sha256": "4d08eaac44a80fb0142bc001123ebfbc8aa4121801d4cd24711d1394733767f4",
+      "bytes": 14592
+    }
+  },
+  "jar": {
+    "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar": {
+      "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+      "bytes": 4288652
+    }
+  },
+  "helper_source": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/StreamingPeer.java",
+  "helper_source_sha256": "8c78205c17273122b381b30cb8ad6aadbd59105dfccbaad9fed0df5ac351e8cd",
+  "source_unchanged": true,
+  "subjects_executed": false,
+  "commands_sha256": "03eb4371ac2896949bcda134c76af2ec2e6126be36d7cdcfcf2137323c601ffc",
+  "parent_reference": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/java-runs/r1/result.json",
+    "sha256": "033cee5b0b3612b572b29026b0becb15a5b2c9b8e397b3ecb7f3dc8fed2b12a5"
+  },
+  "original_compile_source_commit": "049c92e931e279af1ab66f8ff8ddcdf70d1247b6",
+  "original_compile_adoption_sha256": "d874199ddaee829089a68682e790357ffa8d7e5afa82dc6d5c0b398d0f9af0ab",
+  "javac_reexecuted": false,
+  "reuse_reason": "Only native UDP direct CMake dependency changed; actual prepared helper/JAR/tool/class bytes unchanged"
+}

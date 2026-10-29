@@ -1,0 +1,18 @@
+--- a/preview/native/tests/CMakeLists.txt
++++ b/preview/native/tests/CMakeLists.txt
+@@ -2196,7 +2196,14 @@
+     BIGLYBTC_I2P_STREAMING_JAR="${BIGLYBTC_I2P_STREAMING_JAR}"
+     BIGLYBTC_I2P_STREAMING_CLASSES="${BIGLYBTC_I2P_STREAMING_CLASSES}"
+     BIGLYBTC_I2P_STREAMING_KEYS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
+-  add_test(NAME i2p-original-streaming-peer COMMAND biglybtc-i2p-streaming-interop-tests)
++  add_test(NAME i2p-original-streaming-peer COMMAND biglybtc-i2p-streaming-interop-tests
++    actualOriginalManagerCarriesHttpAndRecoverablePackets
++    actualOriginalResetHasTypedNativeTerminal
++    localCancelRejectsGenuineLatePeerBytesBeforeUpdatedBarrier)
++  add_test(NAME i2p-original-streaming-upload COMMAND biglybtc-i2p-streaming-interop-tests
++    actualOriginalManagerReceives128KiBWithBoundedNativeWindow)
++  set_tests_properties(i2p-original-streaming-upload PROPERTIES TIMEOUT 300 LABELS "reference;explicit-i2p"
++    ENVIRONMENT_MODIFICATION "BIGLYBTC_I2P_STREAMING_ACCEPTANCE_ROOT=string_append:-upload")
+   set_tests_properties(i2p-original-streaming-peer PROPERTIES TIMEOUT 480 LABELS "reference;explicit-i2p")
+ endif()
+ 

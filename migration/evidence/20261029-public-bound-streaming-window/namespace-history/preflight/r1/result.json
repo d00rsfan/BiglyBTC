@@ -1,0 +1,95 @@
+{
+  "status": "BLOCKED_READONLY_NAMESPACE_ENVIRONMENT",
+  "exit": 1,
+  "source_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/manifest.json",
+    "sha256": "a36fd2153e0b490e3af428968b7a4dfb10054dd59b6b9a44bc64af8092c84d8b"
+  },
+  "source_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-admin-boundary-20261029-review/review.json",
+    "sha256": "5962340ad5a035491dee13bc60831780e8c2aa1e936e8416077d78ed0b564ea4"
+  },
+  "compiled_receipt": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r1/result.json",
+    "sha256": "aa519f66daf4ff53f4081110d49f7ca1a72868473741d9b73e404757ffd0e8d1"
+  },
+  "helper": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r1/public-netns-admin",
+    "sha256": "22ccc598283ab5818f05b9fbab0bb2238b170fb97fc81ade613fa0015a9713ab",
+    "bytes": 40848,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "command": [
+    "/usr/bin/python3",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/staging/preview/native/tests/azureus_public_admin_launcher.py",
+    "--mode",
+    "pkexec",
+    "--helper",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r1/public-netns-admin",
+    "--sha256",
+    "22ccc598283ab5818f05b9fbab0bb2238b170fb97fc81ade613fa0015a9713ab",
+    "--receipt",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r1/launch.json",
+    "--",
+    "/usr/bin/python3",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/staging/preview/native/tests/public_namespace_fixture/preflight.py",
+    "--uid",
+    "1000",
+    "--gid",
+    "1000"
+  ],
+  "launch": {
+    "argv": [
+      "/usr/bin/python3.14",
+      "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/staging/preview/native/tests/public_namespace_fixture/preflight.py",
+      "--uid",
+      "1000",
+      "--gid",
+      "1000"
+    ],
+    "caller_gid": 1000,
+    "caller_uid": 1000,
+    "command": [
+      "/usr/bin/pkexec",
+      "--disable-internal-agent",
+      "/proc/2376795/fd/4",
+      "pkexec",
+      "2376795",
+      "4",
+      "5",
+      "666797107",
+      "fixed-public-fixture-v1"
+    ],
+    "elapsed_milliseconds": 17792,
+    "helper": {
+      "bytes": 40848,
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r1/public-netns-admin",
+      "sha256": "22ccc598283ab5818f05b9fbab0bb2238b170fb97fc81ade613fa0015a9713ab"
+    },
+    "invoker": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/staging/preview/native/tests/azureus_public_admin_launcher.py",
+      "sha256": "dd3a78140d08ad0342e73e4534a4ad3fdad58c585cc103137e233c19b3903bda"
+    },
+    "launch_environment": {},
+    "memfd_seals": 15,
+    "mode": "pkexec",
+    "no_fallback": true,
+    "output_bytes": [
+      0,
+      56
+    ],
+    "schema": 1,
+    "status": "BLOCKED_AUTH_OR_NAMESPACE_SETUP",
+    "subject_exit": 1,
+    "verified_drop_marker": false
+  },
+  "preflight": [],
+  "logs_sha256": {
+    "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr.log": "5bbe76f4c1edd18acdabc003e5c4d5209b92814d6a8500ed5a512b263185ddf8"
+  },
+  "elapsed_ms": 17951,
+  "functional_test_credit": false,
+  "source_unchanged": true
+}

@@ -1,0 +1,25 @@
+[
+  {
+    "name": "public-tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "-R",
+      "^azureus-public-bound$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/resume-runs/gcc-auth-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 36.554,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/resume-runs/gcc-auth-r1/public-tests.log",
+    "log_sha256": "5637091d658071bbd8ec2fbefdf328be0e80e76417e18f4d399c51a626f00782"
+  }
+]

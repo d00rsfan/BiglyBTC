@@ -7917,7 +7917,17 @@
         "preview/native/services/azureus_udp/owned_maintenance.inc",
         "preview/native/tests/azureus_maintenance_tests.cpp",
         "preview/native/adapters/CMakeLists.txt",
-        "preview/native/tests/CMakeLists.txt"
+        "preview/native/tests/CMakeLists.txt",
+        "preview/native/adapters/azureus_public_policy.cpp",
+        "preview/native/adapters/azureus_public_policy.hpp",
+        "preview/native/app/azureus_public_owner.inc",
+        "preview/native/core/include/biglybtc/azureus_endpoint.hpp",
+        "preview/native/services/CMakeLists.txt",
+        "preview/native/tests/azureus_public_admin_launcher.py",
+        "preview/native/tests/azureus_public_bound_namespace.py",
+        "preview/native/tests/azureus_public_bound_tests.cpp",
+        "preview/native/tests/public_namespace_fixture/preflight.py",
+        "preview/native/tests/public_namespace_fixture/public_netns_admin.c"
       ],
       "source_coverage": [
         {
@@ -7940,7 +7950,14 @@
             "core/src/com/biglybt/core/dht/router/impl/DHTRouterContactImpl.java",
             "core/src/com/biglybt/core/dht/control/impl/DHTControlStatsImpl.java",
             "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPUtils.java",
-            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java"
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java",
+            "core/src/com/biglybt/plugin/dht/DHTPlugin.java",
+            "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java",
+            "core/src/com/biglybt/core/ipfilter/impl/IpFilterImpl.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/packethandler/DHTUDPPacketHandler.java",
+            "core/src/com/biglybt/core/networkmanager/impl/udp/UDPNetworkManager.java",
+            "core/src/com/biglybt/core/util/Constants.java",
+            "core/src/com/biglybt/pifimpl/local/PluginConfigImpl.java"
           ],
           "source_symbols": [
             "DHTDBImpl.store",
@@ -7960,7 +7977,12 @@
             "DHTRouterNodeImpl",
             "DHTRouterContactImpl",
             "DHTControlStatsImpl",
-            "DHTPluginStorageManager"
+            "DHTPluginStorageManager",
+            "DHTTransportUDPImpl",
+            "DHTPluginImpl",
+            "DHTUDPPacketHandler",
+            "UDPNetworkManager",
+            "IpFilterImpl"
           ],
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "first_ported_commit": null,
@@ -8029,6 +8051,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "0f7e9216253a7881fae11e1a7dae8a849cb333e8",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "04b6287a38cec6bd123e2648ada278ea348b85db",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -8038,7 +8065,8 @@
         "migration/evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md",
         "migration/evidence/20261029-profile-io-i2cp-tracker/REVIEW.md",
         "migration/evidence/20261029-routing-streaming/REVIEW.md",
-        "migration/evidence/20261029-contacts-enc4/REVIEW.md"
+        "migration/evidence/20261029-contacts-enc4/REVIEW.md",
+        "migration/evidence/20261029-public-bound-streaming-window/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-azureus-volatile-database/verification.json",
@@ -8048,7 +8076,8 @@
         "migration/evidence/20261029-saved-ratings-i2cp-datagrams/verification.json",
         "migration/evidence/20261029-profile-io-i2cp-tracker/verification.json",
         "migration/evidence/20261029-routing-streaming/verification.json",
-        "migration/evidence/20261029-contacts-enc4/verification.json"
+        "migration/evidence/20261029-contacts-enc4/verification.json",
+        "migration/evidence/20261029-public-bound-streaming-window/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8752,7 +8781,8 @@
         "preview/native/services/i2p_streaming/stream.cpp",
         "preview/native/services/i2p_streaming/stream.hpp",
         "preview/native/tests/i2p_streaming_tests.cpp",
-        "preview/native/tests/i2p_streaming_interop_tests.cpp"
+        "preview/native/tests/i2p_streaming_interop_tests.cpp",
+        "preview/native/adapters/CMakeLists.txt"
       ],
       "source_coverage": [
         {
@@ -8848,7 +8878,9 @@
             "core/java/src/net/i2p/client/impl/I2PClientImpl.java",
             "core/java/src/net/i2p/data/PrivateKeyFile.java",
             "core/java/src/net/i2p/data/PrivateKey.java",
-            "core/java/src/net/i2p/data/PublicKey.java"
+            "core/java/src/net/i2p/data/PublicKey.java",
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/SimpleBandwidthEstimator.java",
+            "core/java/src/net/i2p/util/BandwidthEstimator.java"
           ],
           "source_symbols": [
             "I2CPMessageImpl.readMessage/writeMessage",
@@ -8886,7 +8918,11 @@
             "LeaseSet2",
             "CreateLeaseSet2Message",
             "KeyGenerator.generatePKIKeys",
-            "EncType.ECIES_X25519"
+            "EncType.ECIES_X25519",
+            "ConnectionOptions",
+            "ConnectionPacketHandler",
+            "PacketLocal",
+            "SimpleBandwidthEstimator"
           ],
           "baseline_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
           "first_ported_commit": null,
@@ -8965,6 +9001,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "0f7e9216253a7881fae11e1a7dae8a849cb333e8",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "04b6287a38cec6bd123e2648ada278ea348b85db",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -8977,7 +9018,8 @@
         "migration/evidence/20261029-profile-io-i2cp-tracker/REVIEW.md",
         "migration/evidence/20261029-i2cp-isolated-router/REVIEW.md",
         "migration/evidence/20261029-routing-streaming/REVIEW.md",
-        "migration/evidence/20261029-contacts-enc4/REVIEW.md"
+        "migration/evidence/20261029-contacts-enc4/REVIEW.md",
+        "migration/evidence/20261029-public-bound-streaming-window/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
@@ -8989,7 +9031,8 @@
         "migration/evidence/20261029-profile-io-i2cp-tracker/verification.json",
         "migration/evidence/20261029-i2cp-isolated-router/verification.json",
         "migration/evidence/20261029-routing-streaming/verification.json",
-        "migration/evidence/20261029-contacts-enc4/verification.json"
+        "migration/evidence/20261029-contacts-enc4/verification.json",
+        "migration/evidence/20261029-public-bound-streaming-window/verification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     }

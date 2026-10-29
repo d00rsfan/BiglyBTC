@@ -1,0 +1,18 @@
+DIAGNOSTIC ONLY. Immutable complete23 source overlay over a36fd215.
+Two changed files: fixed C proc_open failure logging, and read-only launcher
+PR_GET_DUMPABLE/UID/GID/namespace metadata before authentication.
+
+C logs only its controlled fixed /proc leaf/PID, helper phase, actual real/
+effective UID/GID and dumpability, /proc/self/attr/current confinement label,
+and kernel Cap*/NoNewPrivs fields. The original failing errno is restored.
+No payload/argv/environment data is read or logged; all access/seal/map/drop/
+route/address/authorization/timeout/exec behavior is unchanged. No retries,
+new permissions or policy changes. Launcher does not set dumpability or any
+security option. New C image must be compiled/measured/reviewed by root before
+ONE newly authorized readonly preflight; do not reuse the old22ccc image for
+this source. Parent compile and actual failed r1 remain immutable.
+
+This is diagnostic source, not a semantic repair or environment PASS. No
+compiler/admin/namespace/subject execution or N mutation by author. W full
+qualification derivatives are paused until an actual reviewed environment
+preflight succeeds.

@@ -1,0 +1,21 @@
+********* Start testing of OwnedLookupTreeUiTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedLookupTreeUiTests::initTestCase()
+QWARN  : OwnedLookupTreeUiTests::actualRecursiveGetBranchesAndAcceptedBytesFeedPassiveTreeAndRawTimeline() This plugin does not support propagateSizeHints()
+QWARN  : OwnedLookupTreeUiTests::actualRecursiveGetBranchesAndAcceptedBytesFeedPassiveTreeAndRawTimeline() This plugin does not support propagateSizeHints()
+PASS   : OwnedLookupTreeUiTests::actualRecursiveGetBranchesAndAcceptedBytesFeedPassiveTreeAndRawTimeline()
+QWARN  : OwnedLookupTreeUiTests::actualCancellationKeepsDispatchedChildDistinctFromAcknowledgement() This plugin does not support propagateSizeHints()
+QWARN  : OwnedLookupTreeUiTests::actualCancellationKeepsDispatchedChildDistinctFromAcknowledgement() This plugin does not support propagateSizeHints()
+PASS   : OwnedLookupTreeUiTests::actualCancellationKeepsDispatchedChildDistinctFromAcknowledgement()
+QWARN  : OwnedLookupTreeUiTests::hiddenUpdatesProfilesAndMalformedSnapshotsCannotReplaceAcceptedFacts() This plugin does not support propagateSizeHints()
+QWARN  : OwnedLookupTreeUiTests::hiddenUpdatesProfilesAndMalformedSnapshotsCannotReplaceAcceptedFacts() This plugin does not support propagateSizeHints()
+QWARN  : OwnedLookupTreeUiTests::hiddenUpdatesProfilesAndMalformedSnapshotsCannotReplaceAcceptedFacts() This plugin does not support propagateSizeHints()
+PASS   : OwnedLookupTreeUiTests::hiddenUpdatesProfilesAndMalformedSnapshotsCannotReplaceAcceptedFacts()
+QWARN  : OwnedLookupTreeUiTests::statusAndSelectedResultCallbacksMayRebindOrDeleteTheParent() This plugin does not support propagateSizeHints()
+QWARN  : OwnedLookupTreeUiTests::statusAndSelectedResultCallbacksMayRebindOrDeleteTheParent() This plugin does not support propagateSizeHints()
+QWARN  : OwnedLookupTreeUiTests::statusAndSelectedResultCallbacksMayRebindOrDeleteTheParent() This plugin does not support propagateSizeHints()
+QWARN  : OwnedLookupTreeUiTests::statusAndSelectedResultCallbacksMayRebindOrDeleteTheParent() This plugin does not support propagateSizeHints()
+PASS   : OwnedLookupTreeUiTests::statusAndSelectedResultCallbacksMayRebindOrDeleteTheParent()
+PASS   : OwnedLookupTreeUiTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 499ms
+********* Finished testing of OwnedLookupTreeUiTests *********

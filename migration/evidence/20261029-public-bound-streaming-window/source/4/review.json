@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "status": "PASS_INDEPENDENT_SOURCE_REVIEW_ONLY",
+  "reviewer": "/root/error_driver",
+  "reviewed_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/manifest.json",
+    "sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1"
+  },
+  "parent_reviewed": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/manifest.json",
+    "sha256": "6cd76aa50754570f2a6e8cde32333c46226ab77b2816bb7f33df7d79a758d48b"
+  },
+  "native_current": "9a8cf1aa2375797e368434423b8890fce1dbb09b",
+  "native_source_basis": "f443b0f21975c69fbddf557618f6dd9b43bbc302",
+  "checks": {
+    "artifacts": 15,
+    "inputs": 3,
+    "before_after_maps": 5,
+    "current_and_git_beforeimages": true,
+    "read_only_apply_check": "PASS",
+    "old_pure_test_prefix_and_codec_prefix": "BYTE_EXACT",
+    "materialized_official_source_hashes_checked": 34,
+    "additional_official_source_hashes_checked": 2,
+    "modified_actual_jar_class_hashes_checked": 7
+  },
+  "resolved_findings": [
+    {
+      "parent": "6cd76aa50754570f2a6e8cde32333c46226ab77b2816bb7f33df7d79a758d48b",
+      "finding": "Partial ACK with remaining flight restarted global retry after applying the new RTT/RTO; original ackPackets restarts before ConnectionPacketHandler updates RTT.",
+      "source": "9134f808337b401e8e53c73734c81fab04280c9d Connection.java586-603;ConnectionPacketHandler354-396",
+      "resolution": "Move sample(highestRtt) after remaining-flight timer restart; deterministic numeric partial-ACK/duplicate/timeout regression asserts old150ms\u2192deadline400 while newRTO300, then actual retry backoff600\u21921000."
+    }
+  ],
+  "reviewed_scope": [
+    "fixed8 sent table and actual-dispatch-only credit; selective ACK/NACK, no implicit NACK and selective FIN holes",
+    "global RTO/backoff/oldest ceil(flight/2), fast retry anti-repeat and congestion guards",
+    "original first-ACK retransmission exception and highest packet-creation age RTT sample",
+    "Westwood packet estimator, bounded16 idle decays, separate float operations and clamp2..8 subset",
+    "existing actor bytesWritten refill, RAND bounds, lease/generation/peer/signing/deadline guards, cancellation and bounded TX/RX; ordinary datagram/tracker sources unchanged"
+  ],
+  "remaining_blockers": [],
+  "limits": [
+    "Finite supported native window2..8; no whole original performance/fairness or public/Host/default activation claim.",
+    "Actual pure/actor/modified-Java upload qualification remains pending; no subject/build/JVM/network run by reviewer.",
+    "Parent history stays immutable; selected modified JAR class hashes do not assert whole official/modified-source equivalence."
+  ],
+  "execution": false,
+  "native_or_provider_mutation": false
+}

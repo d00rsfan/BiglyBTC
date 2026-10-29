@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "status": "ROOT_UNCHANGED_CURRENT_COHORT_CACHE_ATTESTATION",
+  "source_commit": "04b6287a38cec6bd123e2648ada278ea348b85db",
+  "utc": "2026-10-29T22:11:56Z",
+  "ordinary_source_clean": true,
+  "make35342_joined": true,
+  "subsequent_cache_mutations_or_compilers": false,
+  "current_cache_pins": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/CMakeCache.txt",
+      "sha256": "7e55e0f6c80b4e8cab3b74f24132b8d7965a1602885ba5ee0a22843012eb032b",
+      "bytes": 74711
+    },
+    "clang": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/CMakeCache.txt",
+      "sha256": "e570b9d052c89d0c5e29883cf9d925e652acf7c13550bc3c0b9846e85aecc775",
+      "bytes": 74754
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/CMakeCache.txt",
+      "sha256": "8945604f0d4896723a2399a12b3b989dc31059daeedeee3d9ea9e81a4c0ae0e9",
+      "bytes": 74800
+    }
+  },
+  "original_failed_run_cache_hash_finalized": false,
+  "limitation": "These are current pins observed after the failed authentication-only cohort, not retrospectively captured original-run cache hashes. Root performed no intervening source/cache mutations or compiler invocations. Recovery must independently match actual original built-image hashes and compiler/dependency/source maps."
+}

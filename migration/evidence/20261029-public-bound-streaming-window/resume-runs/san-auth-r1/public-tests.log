@@ -1,0 +1,13 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop
+    Start 301: azureus-public-bound
+1/1 Test #301: azureus-public-bound .............   Passed   38.65 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+namespace    =  38.65 sec*proc (1 test)
+profile      =  38.65 sec*proc (1 test)
+routing      =  38.65 sec*proc (1 test)
+unit         =  38.65 sec*proc (1 test)
+
+Total Test time (real) =  38.65 sec

@@ -1,0 +1,551 @@
+--- a/preview/native/tests/azureus_public_bound_namespace.py
++++ b/preview/native/tests/azureus_public_bound_namespace.py
+@@ -1,67 +1,25 @@
+ #!/usr/bin/env python3
+ # SPDX-License-Identifier: GPL-2.0-or-later
+-"""Owned namespace fixture only. Root must review/schedule; never falls back."""
++"""Explicit reviewed admin fixture only. No fallback or skipped Public gate."""
+ import os
+ import pathlib
+-import shutil
+-import socket
+-import subprocess
+ import sys
+ 
+-
+-def identity(path):
+-    value = os.stat(path)
+-    return value.st_dev, value.st_ino
++from azureus_public_admin_launcher import ENV_KEYS, launch
+ 
+ 
+ def main():
+-    if len(sys.argv) >= 5 and sys.argv[1] == "--inside":
+-        net_fd, user_fd = int(sys.argv[2]), int(sys.argv[3])
+-        driver, arguments = sys.argv[4], sys.argv[5:]
+-        if (os.geteuid() != 0 or not os.readlink(f"/proc/self/fd/{net_fd}").startswith("net:[")
+-                or not os.readlink(f"/proc/self/fd/{user_fd}").startswith("user:[") or identity(f"/proc/self/fd/{net_fd}") == identity("/proc/self/ns/net")
+-                or identity(f"/proc/self/fd/{user_fd}") == identity("/proc/self/ns/user")
+-                or {name for _, name in socket.if_nameindex()} != {"lo"}):
+-            raise RuntimeError("PublicBound requires a distinct owned user/network namespace containing only lo")
+-        ip = shutil.which("ip")
+-        if not ip:
+-            raise RuntimeError("Owned namespace fixture requires iproute2; no fallback")
+-        for family in ("-4", "-6"):
+-            if subprocess.check_output([ip, family, "route", "show", "default"]).strip():
+-                raise RuntimeError("Owned namespace must have no default route")
+-        # Only after both namespace identities and interface/route fences pass.
+-        subprocess.run([ip, "link", "set", "dev", "lo", "up"], check=True)
+-        for address in ("203.0.113.1/32", "203.0.113.2/32", "203.0.113.3/32"):
+-            subprocess.run([ip, "-4", "address", "add", address, "dev", "lo"], check=True)
+-        for address in ("2001:db8::1/128", "2001:db8::2/128", "2001:db8::3/128"):
+-            subprocess.run([ip, "-6", "address", "add", address, "dev", "lo", "nodad"], check=True)
+-        environment = os.environ.copy()
+-        environment["BIGLYBTC_OWNED_PUBLIC_NET_FD"] = str(net_fd)
+-        environment["BIGLYBTC_OWNED_PUBLIC_USER_FD"] = str(user_fd)
+-        print("Owned distinct user/net namespace, lo only, no default route; documentation-prefix addresses only", flush=True)
+-        return subprocess.run([driver, *arguments], env=environment, stdin=subprocess.DEVNULL,
+-                              pass_fds=(net_fd, user_fd)).returncode
+-    if len(sys.argv) < 2:
+-        raise RuntimeError("Expected the explicitly supplied owned test ELF")
++    if len(sys.argv) < 2 or any(not os.environ.get(key) for key in ENV_KEYS):
++        raise RuntimeError("Explicit measured admin helper/mode/fresh receipt required; no fallback")
+     driver = str(pathlib.Path(sys.argv[1]).resolve(strict=True))
+-    net_fd = os.open("/proc/self/ns/net", os.O_RDONLY | os.O_CLOEXEC)
+-    user_fd = os.open("/proc/self/ns/user", os.O_RDONLY | os.O_CLOEXEC)
+-    try:
+-        unshare = shutil.which("unshare")
+-        if not unshare:
+-            raise RuntimeError("Owned namespace fixture requires unshare; no fallback")
+-        command = [unshare, "--user", "--map-root-user", "--net", "--", sys.executable,
+-                   str(pathlib.Path(__file__).resolve()), "--inside", str(net_fd), str(user_fd),
+-                   driver, *sys.argv[2:]]
+-        return subprocess.run(command, stdin=subprocess.DEVNULL, pass_fds=(net_fd, user_fd)).returncode
+-    finally:
+-        os.close(user_fd)
+-        os.close(net_fd)
++    return launch(os.environ[ENV_KEYS[0]], pathlib.Path(os.environ[ENV_KEYS[1]]),
++                  os.environ[ENV_KEYS[2]], pathlib.Path(os.environ[ENV_KEYS[3]]),
++                  [driver, *sys.argv[2:]])
+ 
+ 
+ if __name__ == "__main__":
+     try:
+         sys.exit(main())
+-    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+-        print(f"FAIL owned PublicBound namespace: {error}", file=sys.stderr)
++    except (OSError, RuntimeError, ValueError) as error:
++        print(f"FAIL explicit Public namespace: {error}", file=sys.stderr)
+         sys.exit(1)
+--- a/.github/workflows/biglybtc-linux-deb.yml
++++ b/.github/workflows/biglybtc-linux-deb.yml
+@@ -104,6 +104,11 @@
+         run: |
+           set -o pipefail
+           nice -n 5 cmake --build "$BIGLYBTC_PACKAGE_BUILD" --parallel 2 2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/build.log"
++          # Explicit CI authorization for the fixed caller-dropping test helper.
++          export BIGLYBTC_PUBLIC_ADMIN_MODE=sudo
++          export BIGLYBTC_PUBLIC_ADMIN_HELPER="$BIGLYBTC_PACKAGE_BUILD/tests/biglybtc-public-netns-admin"
++          export BIGLYBTC_PUBLIC_ADMIN_SHA256=$(sha256sum "$BIGLYBTC_PUBLIC_ADMIN_HELPER" | cut -d ' ' -f1)
++          export BIGLYBTC_PUBLIC_ADMIN_RECEIPT="$BIGLYBTC_PACKAGE_OUTPUT/public-namespace-launch.json"
+           ctest --test-dir "$BIGLYBTC_PACKAGE_BUILD" -L unit --no-tests=error --output-on-failure \
+             2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/unit-tests.log"
+       - name: Package and audit
+--- a/.github/workflows/native-preview.yml
++++ b/.github/workflows/native-preview.yml
+@@ -92,6 +92,11 @@
+           export BIGLYBTC_HISTORY_RANGE_CAPTURE_DIRECTORY="$EVIDENCE_DIR/range-captures"
+           mkdir -m 700 "$EVIDENCE_DIR/native-session-captures"
+           export BIGLYBTC_NATIVE_SESSION_CAPTURE_DIRECTORY="$EVIDENCE_DIR/native-session-captures"
++          # Explicit CI authorization for the fixed caller-dropping test helper.
++          export BIGLYBTC_PUBLIC_ADMIN_MODE=sudo
++          export BIGLYBTC_PUBLIC_ADMIN_HELPER="$BUILD_DIR/tests/biglybtc-public-netns-admin"
++          export BIGLYBTC_PUBLIC_ADMIN_SHA256=$(sha256sum "$BIGLYBTC_PUBLIC_ADMIN_HELPER" | cut -d ' ' -f1)
++          export BIGLYBTC_PUBLIC_ADMIN_RECEIPT="$EVIDENCE_DIR/public-namespace-launch.json"
+           /usr/bin/ctest --test-dir "$BUILD_DIR" -L unit --no-tests=error \
+             --output-on-failure --output-junit "$EVIDENCE_DIR/unit-tests.xml" \
+             2>&1 | tee "$EVIDENCE_DIR/unit-tests.log"
+--- a/preview/native/tests/CMakeLists.txt
++++ b/preview/native/tests/CMakeLists.txt
+@@ -2220,7 +2220,15 @@
+ 
+ if(TARGET biglybtc_owned_azureus_service)
+   find_package(Python3 REQUIRED COMPONENTS Interpreter)
++  # Test-only fixed libc namespace setup. It never installs or runs at build time.
++  enable_language(C)
++  add_executable(biglybtc-public-netns-admin public_namespace_fixture/public_netns_admin.c)
++  set_target_properties(biglybtc-public-netns-admin PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)
++  # This privileged fixture is libc-only even in a sanitizer subject build.
++  target_compile_options(biglybtc-public-netns-admin PRIVATE -fno-sanitize=all -Wall -Wextra -Wpedantic -Werror)
++  target_link_options(biglybtc-public-netns-admin PRIVATE -fno-sanitize=all)
+   add_executable(biglybtc-azureus-public-bound-tests azureus_public_bound_tests.cpp)
++  add_dependencies(biglybtc-azureus-public-bound-tests biglybtc-public-netns-admin)
+   set_target_properties(biglybtc-azureus-public-bound-tests PROPERTIES AUTOMOC ON)
+   target_link_libraries(biglybtc-azureus-public-bound-tests PRIVATE biglybtc_owned_azureus_service Qt6::Test)
+   target_compile_features(biglybtc-azureus-public-bound-tests PRIVATE cxx_std_23)
+--- /dev/null
++++ b/preview/native/tests/azureus_public_admin_launcher.py
+@@ -0,0 +1,213 @@
++#!/usr/bin/env python3
++# SPDX-License-Identifier: GPL-2.0-or-later
++"""Explicit authenticated fixture launcher; never retries with another mode."""
++import argparse
++import errno
++import fcntl
++import hashlib
++import json
++import os
++import pathlib
++import selectors
++import signal
++import stat
++import struct
++import subprocess
++import sys
++import time
++
++
++SEALS = fcntl.F_SEAL_WRITE | fcntl.F_SEAL_GROW | fcntl.F_SEAL_SHRINK | fcntl.F_SEAL_SEAL
++ENV_KEYS = ("BIGLYBTC_PUBLIC_ADMIN_MODE", "BIGLYBTC_PUBLIC_ADMIN_HELPER",
++            "BIGLYBTC_PUBLIC_ADMIN_SHA256", "BIGLYBTC_PUBLIC_ADMIN_RECEIPT")
++
++
++def checked(condition, reason):
++    if not condition:
++        raise RuntimeError(reason)
++
++
++def digest(data):
++    return hashlib.sha256(data).hexdigest()
++
++
++def sealed_bytes(name, data, executable=False):
++    fd = os.memfd_create(name, os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING)
++    try:
++        at = 0
++        while at < len(data):
++            at += os.write(fd, data[at:])
++        os.fchmod(fd, 0o500 if executable else 0o400)
++        fcntl.fcntl(fd, fcntl.F_ADD_SEALS, SEALS)
++        checked(fcntl.fcntl(fd, fcntl.F_GET_SEALS) & SEALS == SEALS, "Memfd seals missing")
++        return fd
++    except BaseException:
++        os.close(fd)
++        raise
++
++
++def helper_bytes(path, expected):
++    checked(len(expected) == 64 and all(c in "0123456789abcdef" for c in expected), "Exact helper SHA256 required")
++    checked(path.is_absolute(), "Absolute helper required")
++    fd = os.open(path, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW)
++    try:
++        before = os.fstat(fd)
++        checked(stat.S_ISREG(before.st_mode) and before.st_uid == os.getuid()
++                and before.st_gid == os.getgid() and not before.st_mode & 0o6000
++                and 0 < before.st_size < 2097152, "Ordinary caller-owned bounded helper required")
++        try:
++            os.getxattr(fd, "security.capability")
++        except OSError as error:
++            checked(error.errno in (errno.ENODATA, errno.ENOTSUP), "Cannot inspect helper capabilities")
++        else:
++            raise RuntimeError("File-capability helper refused")
++        data = b""
++        while len(data) <= before.st_size:
++            block = os.read(fd, min(65536, before.st_size + 1 - len(data)))
++            if not block:
++                break
++            data += block
++        after = os.fstat(fd)
++        stable = lambda value: (value.st_dev, value.st_ino, value.st_mode, value.st_uid, value.st_gid, value.st_size, value.st_mtime_ns, value.st_ctime_ns, value.st_nlink)
++        checked(stable(after) == stable(before) and len(data) == before.st_size
++                and data.startswith(b"\x7fELF") and digest(data) == expected,
++                "Helper image changed or does not match approved SHA256")
++        return data
++    finally:
++        os.close(fd)
++
++
++def payload(argv, environment):
++    values = [os.fsencode(value) for value in argv]
++    entries = [os.fsencode(key) + b"=" + os.fsencode(value) for key, value in sorted(environment.items())]
++    checked(0 < len(values) <= 256 and len(entries) <= 256, "Payload count bound")
++    checked(all(0 < len(value) <= 16384 and b"\0" not in value for value in values + entries), "Payload string bound")
++    result = b"BBPUB1\0\0" + struct.pack("!II", len(values), len(entries))
++    for value in values + entries:
++        result += struct.pack("!I", len(value)) + value
++    checked(len(result) < 131072, "Payload byte bound")
++    return result
++
++
++def launch(mode, helper, expected, receipt, argv):
++    checked(os.getuid() != 0 and os.getresuid() == (os.getuid(),) * 3
++            and os.getresgid() == (os.getgid(),) * 3, "Actual ordinary caller required")
++    checked(argv and pathlib.Path(argv[0]).is_absolute(), "Explicit absolute user ELF required")
++    argv = [str(pathlib.Path(argv[0]).resolve(strict=True)), *argv[1:]]
++    checked(receipt.is_absolute() and not receipt.exists(), "Fresh absolute launch receipt required")
++    receipt_fd = os.open(receipt, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC | os.O_NOFOLLOW, 0o600)
++    image_fd = data_fd = -1
++    process = None
++    old_handlers = {}
++    outcome = {"schema": 1, "status": "FAIL_BEFORE_AUTHORIZATION", "mode": mode,
++               "caller_uid": os.getuid(), "caller_gid": os.getgid(),
++               "helper": {"path": str(helper), "sha256": expected},
++               "invoker": {"path": str(pathlib.Path(__file__).resolve()),
++                           "sha256": digest(pathlib.Path(__file__).read_bytes())},
++               "launch_environment": {key: os.environ[key] for key in ENV_KEYS if key in os.environ},
++               "argv": argv, "no_fallback": True, "subject_exit": None}
++    try:
++        image = helper_bytes(helper, expected)
++        image_fd = sealed_bytes("biglybtc-public-admin", image, True)
++        data_fd = sealed_bytes("biglybtc-public-user-payload", payload(argv, os.environ.copy()))
++        outcome["helper"]["bytes"] = len(image)
++        outcome["memfd_seals"] = SEALS
++        invoker = os.getpid()
++        start = pathlib.Path("/proc/self/stat").read_text().rsplit(")", 1)[1].split()[19]
++        image_path = f"/proc/{invoker}/fd/{image_fd}"
++        prefix = ["/usr/bin/pkexec", "--disable-internal-agent"] if mode == "pkexec" else ["/usr/bin/sudo", "-n"]
++        checked(mode in ("pkexec", "sudo"), "Explicit pkexec or sudo mode required")
++        command = [*prefix, image_path, mode, str(invoker), str(image_fd), str(data_fd), start, "fixed-public-fixture-v1"]
++        outcome["command"] = command
++        # User loader/Qt/environment data only lives in sealed data until after
++        # the helper's verified UID/GID/capability/NNP drop. No env-preserve flag.
++        process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
++                                   env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LANG": "C", "LC_ALL": "C"}, close_fds=True)
++        stopped = []
++        for number in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
++            old_handlers[number] = signal.signal(number, lambda signum, frame: stopped.append(signum))
++        selector = selectors.DefaultSelector()
++        selector.register(process.stdout, selectors.EVENT_READ, 0)
++        selector.register(process.stderr, selectors.EVENT_READ, 1)
++        counts, tails = [0, 0], [b"", b""]
++        begun, stopping, proof = time.monotonic(), None, False
++        while selector.get_map() or process.poll() is None:
++            now = time.monotonic()
++            if stopped or now - begun > 270 or any(count > 8388608 for count in counts):
++                if stopping is None:
++                    stopping = now
++                    outcome["status"] = "CANCELLED_OR_BOUNDED_LAUNCH_EXPIRED"
++                    try:
++                        process.terminate()
++                    except ProcessLookupError:
++                        pass
++                    except PermissionError:
++                        # The fixed privileged setup lasts <=5s. On invoker exit,
++                        # its pidfd causes the helper to kill/reap only its child.
++                        pass
++                if now - stopping > 7:
++                    try:
++                        process.kill()
++                    except (ProcessLookupError, PermissionError):
++                        pass
++                    raise RuntimeError("Bounded cancellation; invoker exit revokes helper child")
++            for key, _ in selector.select(0.1):
++                block = os.read(key.fileobj.fileno(), 65536)
++                which = key.data
++                if not block:
++                    selector.unregister(key.fileobj)
++                    key.fileobj.close()
++                    continue
++                counts[which] += len(block)
++                combined = tails[which] + block
++                proof |= which == 0 and f"BBPUB_DROP uid={os.getuid()} gid={os.getgid()} groups=0 capabilities=0 bounding=0 ambient=0 nnp=1\n".encode() in combined
++                tails[which] = combined[-65536:]
++                stream = sys.stdout.buffer if which == 0 else sys.stderr.buffer
++                stream.write(block)
++                stream.flush()
++        code = process.wait(timeout=1)
++        outcome.update(subject_exit=code, elapsed_milliseconds=round((time.monotonic() - begun) * 1000),
++                       output_bytes=counts, verified_drop_marker=proof)
++        if stopping is None:
++            outcome["status"] = "PASS_AUTHENTICATED_NAMESPACE_SUBJECT" if code == 0 and proof else (
++                "BLOCKED_AUTH_OR_NAMESPACE_SETUP" if not proof else "FAIL_NAMESPACE_SUBJECT")
++        return 0 if outcome["status"] == "PASS_AUTHENTICATED_NAMESPACE_SUBJECT" else (code or 1)
++    except BaseException as error:
++        outcome["error"] = str(error)
++        if process is not None and process.poll() is None:
++            try:
++                process.terminate()
++            except (ProcessLookupError, PermissionError):
++                pass
++        raise
++    finally:
++        for number, handler in old_handlers.items():
++            signal.signal(number, handler)
++        for fd in (data_fd, image_fd):
++            if fd >= 0:
++                os.close(fd)
++        encoded = (json.dumps(outcome, indent=2, sort_keys=True) + "\n").encode()
++        at = 0
++        while at < len(encoded):
++            at += os.write(receipt_fd, encoded[at:])
++        os.close(receipt_fd)
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--mode", choices=("pkexec", "sudo"), required=True)
++    parser.add_argument("--helper", type=pathlib.Path, required=True)
++    parser.add_argument("--sha256", required=True)
++    parser.add_argument("--receipt", type=pathlib.Path, required=True)
++    parser.add_argument("argv", nargs=argparse.REMAINDER)
++    options = parser.parse_args()
++    argv = options.argv[1:] if options.argv and options.argv[0] == "--" else options.argv
++    return launch(options.mode, options.helper, options.sha256, options.receipt, argv)
++
++
++if __name__ == "__main__":
++    try:
++        sys.exit(main())
++    except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
++        print(f"FAIL explicit Public namespace launcher: {error}", file=sys.stderr)
++        sys.exit(1)
+--- /dev/null
++++ b/preview/native/tests/public_namespace_fixture/preflight.py
+@@ -0,0 +1,94 @@
++#!/usr/bin/env python3
++# SPDX-License-Identifier: GPL-2.0-or-later
++"""Read-only environment acceptance. Does not run any product test."""
++import argparse
++import ctypes
++import errno
++import fcntl
++import json
++import os
++import pathlib
++import socket
++import subprocess
++
++
++def require(value, why):
++    if not value:
++        raise RuntimeError(why)
++
++
++def identity(fd):
++    value = os.fstat(fd)
++    return [value.st_dev, value.st_ino]
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--uid", type=int, required=True)
++    parser.add_argument("--gid", type=int, required=True)
++    options = parser.parse_args()
++    require(options.uid > 0 and os.getresuid() == (options.uid,) * 3
++            and os.getresgid() == (options.gid,) * 3 and os.getgroups() == [], "Caller IDs/groups differ")
++    fields = dict(line.split(":", 1) for line in pathlib.Path("/proc/self/status").read_text().splitlines() if ":" in line)
++    capabilities = {name: int(fields[name], 16) for name in ("CapInh", "CapPrm", "CapEff", "CapBnd", "CapAmb")}
++    require(not any(capabilities.values()) and int(fields["NoNewPrivs"]) == 1, "Capabilities/NNP differ")
++    libc = ctypes.CDLL(None, use_errno=True)
++    libc.prctl.argtypes = [ctypes.c_int, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong]
++    libc.prctl.restype = ctypes.c_int
++    cap_count = 0
++    while cap_count < 1024:
++        ctypes.set_errno(0)
++        result = libc.prctl(23, cap_count, 0, 0, 0)  # PR_CAPBSET_READ
++        if result == -1 and ctypes.get_errno() == errno.EINVAL:
++            break
++        require(result == 0 and libc.prctl(47, 1, cap_count, 0, 0) == 0, "Runtime bounding/ambient set differs")
++        cap_count += 1
++    securebits = libc.prctl(27, 0, 0, 0, 0)
++    require(0 < cap_count < 1024 and securebits >= 0 and securebits & 3 == 3, "Runtime caps/NOROOT lock missing")
++    parent_net = int(os.environ["BIGLYBTC_OWNED_PUBLIC_NET_FD"])
++    parent_user = int(os.environ["BIGLYBTC_OWNED_PUBLIC_USER_FD"])
++    current_net = os.open("/proc/self/ns/net", os.O_RDONLY | os.O_CLOEXEC)
++    current_user = os.open("/proc/self/ns/user", os.O_RDONLY | os.O_CLOEXEC)
++    owner = -1
++    try:
++        require(fcntl.ioctl(parent_net, 0xB703) == 0x40000000
++                and fcntl.ioctl(parent_user, 0xB703) == 0x10000000, "Inherited namespace FD types differ")
++        require(identity(parent_net) != identity(current_net) and identity(parent_user) != identity(current_user),
++                "Parent namespace not distinct")
++        owner = fcntl.ioctl(current_net, 0xB701)  # NS_GET_USERNS
++        require(identity(owner) == identity(current_user), "Network is owned by a different user namespace")
++        require({name for _, name in socket.if_nameindex()} == {"lo"}, "Interface inventory differs")
++        ip = "/usr/sbin/ip"
++        def read_ip(arguments):
++            result = subprocess.run([ip, "-j", *arguments], check=True, stdout=subprocess.PIPE,
++                                    stderr=subprocess.PIPE, timeout=3, env={"PATH": "/usr/sbin:/usr/bin", "LC_ALL": "C"})
++            require(len(result.stdout) < 65536 and len(result.stderr) < 65536, "Read-only ip output bound")
++            return json.loads(result.stdout)
++        addresses = read_ip(["address", "show"])
++        require(len(addresses) == 1 and addresses[0]["ifname"] == "lo" and "UP" in addresses[0]["flags"], "Loopback not up")
++        actual = []
++        for item in addresses[0]["addr_info"]:
++            actual.append((item["local"], item["prefixlen"]))
++        docs = {(f"203.0.113.{n}", 32) for n in (1, 2, 3)} | {(f"2001:db8::{n}", 128) for n in (1, 2, 3)}
++        require(len(actual) == len(set(actual)) and docs <= set(actual)
++                and set(actual) <= docs | {("127.0.0.1", 8), ("::1", 128)}, "Exact six documentation/normal lo addresses differ")
++        routes = {family: read_ip([family, "route", "show", "table", "all"]) for family in ("-4", "-6")}
++        for entries in routes.values():
++            for entry in entries:
++                require(entry.get("dev", "lo") == "lo" and "gateway" not in entry
++                        and (entry.get("dst") != "default" or entry.get("type") in ("unreachable", "prohibit", "blackhole")),
++                        "External/usable default route found")
++        print(json.dumps({"status": "PASS_OWNED_CALLER_NAMESPACE_PREFLIGHT", "functional_test_credit": False,
++                          "uid": list(os.getresuid()), "gid": list(os.getresgid()), "groups": os.getgroups(),
++                          "capabilities": capabilities, "runtime_capabilities": cap_count, "NoNewPrivs": 1,
++                          "parent_net": identity(parent_net), "parent_user": identity(parent_user),
++                          "current_net": identity(current_net), "current_user": identity(current_user),
++                          "net_owning_user": identity(owner), "addresses": sorted(actual), "routes": routes}, sort_keys=True))
++    finally:
++        for fd in (owner, current_user, current_net):
++            if fd >= 0:
++                os.close(fd)
++
++
++if __name__ == "__main__":
++    main()
+--- /dev/null
++++ b/preview/native/tests/public_namespace_fixture/public_netns_admin.c
+@@ -0,0 +1,110 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++// Disposable, explicitly authorized fixture setup only. No root user command.
++#define _GNU_SOURCE
++#include <arpa/inet.h>
++#include <dirent.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <grp.h>
++#include <ifaddrs.h>
++#include <limits.h>
++#include <linux/capability.h>
++#include <linux/if_addr.h>
++#include <linux/netlink.h>
++#include <linux/nsfs.h>
++#include <linux/rtnetlink.h>
++#include <linux/securebits.h>
++#include <net/if.h>
++#include <net/route.h>
++#include <poll.h>
++#include <signal.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/ioctl.h>
++#include <sys/prctl.h>
++#include <sys/resource.h>
++#include <sys/socket.h>
++#include <sys/stat.h>
++#include <sys/syscall.h>
++#include <sys/types.h>
++#include <sys/time.h>
++#include <sys/wait.h>
++#include <sys/xattr.h>
++#include <time.h>
++#include <unistd.h>
++#include <sched.h>
++
++enum { PAYLOAD_MAX=131072, IMAGE_MAX=2097152, COUNT_MAX=256, STRING_MAX=16384 };
++static pid_t owned_child=-1;
++static int owned_pidfd=-1;
++static volatile sig_atomic_t cancelled=0;
++static void on_signal(int sig){(void)sig;cancelled=1;}
++static void reap_owned(void){if(owned_child>0){if(owned_pidfd>=0){(void)syscall(SYS_pidfd_send_signal,owned_pidfd,SIGKILL,NULL,0);}else{(void)kill(owned_child,SIGKILL);}while(waitpid(owned_child,NULL,0)<0&&errno==EINTR){}owned_child=-1;}}
++static void fail(const char* why){int e=errno;reap_owned();fprintf(stderr,"FAIL public namespace admin: %s (errno=%d)\n",why,e);exit(1);}
++static void need(int condition,const char* why){if(!condition){fail(why);}}
++static uint64_t number(const char* s,uint64_t maximum){char* end=NULL;errno=0;need(s&&*s&&strspn(s,"0123456789")==strlen(s),"numeric input");unsigned long long n=strtoull(s,&end,10);need(!errno&&end&&!*end&&n<=maximum,"numeric bound");return (uint64_t)n;}
++static uint64_t mono(void){struct timespec t;need(clock_gettime(CLOCK_MONOTONIC,&t)==0,"monotone clock");return (uint64_t)t.tv_sec*1000+(uint64_t)t.tv_nsec/1000000;}
++static size_t read_bounded(int fd,void* data,size_t maximum){size_t done=0;for(;;){need(done<maximum,"read size bound");ssize_t n=read(fd,(char*)data+done,maximum-done);if(n<0&&errno==EINTR){continue;}need(n>=0,"read");if(!n){return done;}done+=(size_t)n;}}
++static void write_exact(int fd,const void* data,size_t size){while(size){ssize_t n=write(fd,data,size);if(n<0&&errno==EINTR){continue;}need(n>0,"write");data=(const char*)data+n;size-=(size_t)n;}}
++static int same(int a,int b){struct stat x,y;need(fstat(a,&x)==0&&fstat(b,&y)==0,"namespace fstat");return x.st_dev==y.st_dev&&x.st_ino==y.st_ino;}
++static int proc_open(pid_t pid,const char* leaf,int flags){char path[128];need(snprintf(path,sizeof(path),"/proc/%ld/%s",(long)pid,leaf)>0,"proc path");int fd=open(path,flags|O_CLOEXEC);need(fd>=0,"owned proc open");return fd;}
++static void token(int fd,char expected,uint64_t deadline,int watcher){for(;;){need(!cancelled&&mono()<deadline,"setup cancelled/expired");struct pollfd p[2]={{fd,POLLIN,0},{watcher,POLLIN,0}};int n=poll(p,watcher>=0?2:1,100);if(n<0&&errno==EINTR){continue;}need(n>=0,"setup poll");need(watcher<0||!p[1].revents,"invoker exited during setup");if(p[0].revents){char c=0;need(read(fd,&c,1)==1&&c==expected,"setup token/EOF");return;}}}
++static unsigned cap_count(void){unsigned cap=0;for(;cap<1024;++cap){errno=0;long n=prctl(PR_CAPBSET_READ,cap,0,0,0);if(n<0&&errno==EINVAL){break;}need(n==0||n==1,"runtime capability enumeration");}need(cap>0&&cap<1024,"runtime capability bound");return cap;}
++static void verify_dropped(uid_t uid,gid_t gid,unsigned caps){uid_t r,e,s;gid_t gr,ge,gs;need(getresuid(&r,&e,&s)==0&&r==uid&&e==uid&&s==uid,"caller UID drop");need(getresgid(&gr,&ge,&gs)==0&&gr==gid&&ge==gid&&gs==gid&&getgroups(0,NULL)==0,"caller GID/groups drop");struct __user_cap_header_struct h={_LINUX_CAPABILITY_VERSION_3,0};struct __user_cap_data_struct d[2]={{0}};need(syscall(SYS_capget,&h,d)==0,"capget");for(unsigned i=0;i<2;++i){need(!(d[i].effective|d[i].permitted|d[i].inheritable),"nonzero capability set");}for(unsigned i=0;i<caps;++i){need(prctl(PR_CAPBSET_READ,i,0,0,0)==0&&prctl(PR_CAP_AMBIENT,PR_CAP_AMBIENT_IS_SET,i,0,0)==0,"bounding/ambient capability drop");}need(prctl(PR_GET_NO_NEW_PRIVS,0,0,0,0)==1,"NoNewPrivs");}
++static unsigned drop(uid_t uid,gid_t gid,int groups_locked){if(groups_locked){need(getgroups(0,NULL)==0,"locked supplementary groups were not empty");}else{need(setgroups(0,NULL)==0,"clear supplementary groups");}unsigned caps=cap_count();need(prctl(PR_CAP_AMBIENT,PR_CAP_AMBIENT_CLEAR_ALL,0,0,0)==0,"ambient clear");for(unsigned i=0;i<caps;++i){need(prctl(PR_CAPBSET_DROP,i,0,0,0)==0,"bounding capability clear");}need(prctl(PR_SET_SECUREBITS,SECBIT_NOROOT|SECBIT_NOROOT_LOCKED,0,0,0)==0&&prctl(PR_SET_KEEPCAPS,0,0,0,0)==0,"root semantics lock");need(setresgid(gid,gid,gid)==0&&setresuid(uid,uid,uid)==0,"set caller IDs");struct __user_cap_header_struct h={_LINUX_CAPABILITY_VERSION_3,0};struct __user_cap_data_struct d[2]={{0}};need(syscall(SYS_capset,&h,d)==0&&prctl(PR_SET_NO_NEW_PRIVS,1,0,0,0)==0,"capability/NNP seal");verify_dropped(uid,gid,caps);return caps;}
++static void caller(pid_t pid,uint64_t start,uid_t uid,gid_t* gid){char text[16384];int fd=proc_open(pid,"status",O_RDONLY);size_t n=read_bounded(fd,text,sizeof(text)-1);close(fd);text[n]=0;unsigned ur,ue,us,uf,gr,ge,gs,gf;char* u=strstr(text,"\nUid:");char* g=strstr(text,"\nGid:");need(u&&g&&sscanf(u,"\nUid:\t%u\t%u\t%u\t%u",&ur,&ue,&us,&uf)==4&&sscanf(g,"\nGid:\t%u\t%u\t%u\t%u",&gr,&ge,&gs,&gf)==4,"kernel invoker IDs");need(ur==uid&&ue==uid&&us==uid&&uf==uid&&gr==ge&&gr==gs&&gr==gf&&gr!=UINT_MAX,"invoker ownership");*gid=(gid_t)gr;fd=proc_open(pid,"stat",O_RDONLY);n=read_bounded(fd,text,sizeof(text)-1);close(fd);text[n]=0;char* end=strrchr(text,')');need(end&&end[1]==' ',"kernel invoker stat");char* save=NULL;char* value=strtok_r(end+2," ",&save);for(unsigned field=3;field<22&&value;++field){value=strtok_r(NULL," ",&save);}need(value&&number(value,UINT64_MAX)==start,"invoker start time");}
++static int sealed(pid_t pid,int number_fd,uid_t uid,gid_t gid,size_t maximum){char leaf[64];need(snprintf(leaf,sizeof(leaf),"fd/%d",number_fd)>0,"sealed fd path");int fd=proc_open(pid,leaf,O_RDONLY);struct stat st;need(fstat(fd,&st)==0&&S_ISREG(st.st_mode)&&st.st_uid==uid&&st.st_gid==gid&&st.st_size>0&&(uint64_t)st.st_size<maximum,"sealed object ownership/bound");int required=F_SEAL_WRITE|F_SEAL_GROW|F_SEAL_SHRINK|F_SEAL_SEAL;int seals=fcntl(fd,F_GET_SEALS);need(seals>=0&&(seals&required)==required,"sealed object immutable");return fd;}
++static void map_file(int directory,const char* leaf,const char* value){int fd=openat(directory,leaf,O_WRONLY|O_CLOEXEC|O_NOFOLLOW);need(fd>=0,"owned child map open");write_exact(fd,value,strlen(value));need(close(fd)==0,"owned child map close");}
++static void maps(pid_t child,uid_t uid,gid_t gid){int directory=proc_open(child,"",O_RDONLY|O_DIRECTORY);char value[128];map_file(directory,"setgroups","deny");int n=snprintf(value,sizeof(value),"0 0 65536\n");if(uid>=65536){n+=snprintf(value+n,sizeof(value)-(size_t)n,"%u %u 1\n",uid,uid);}need(n>0&&(size_t)n<sizeof(value),"UID map bound");map_file(directory,"uid_map",value);n=snprintf(value,sizeof(value),"0 0 65536\n");if(gid>=65536){n+=snprintf(value+n,sizeof(value)-(size_t)n,"%u %u 1\n",gid,gid);}need(n>0&&(size_t)n<sizeof(value),"GID map bound");map_file(directory,"gid_map",value);close(directory);}
++static void namespaces(int parent_net,int parent_user){int net=open("/proc/self/ns/net",O_RDONLY|O_CLOEXEC),user=open("/proc/self/ns/user",O_RDONLY|O_CLOEXEC);need(net>=0&&user>=0&&!same(net,parent_net)&&!same(user,parent_user),"actual namespace separation");need(ioctl(parent_net,NS_GET_NSTYPE)==CLONE_NEWNET&&ioctl(parent_user,NS_GET_NSTYPE)==CLONE_NEWUSER,"actual parent namespace descriptor types");int owner=ioctl(net,NS_GET_USERNS);need(owner>=0&&same(owner,user),"network owning user namespace");close(owner);close(user);close(net);struct if_nameindex* links=if_nameindex();need(links!=NULL,"interface inventory");unsigned count=0;for(struct if_nameindex* it=links;it->if_index;++it){need(!strcmp(it->if_name,"lo"),"external interface refused");++count;}if_freenameindex(links);need(count==1,"only loopback required");}
++// A fresh Linux namespace may expose unreachable lo ::/0 sentinels.
++// Only a REJECT route with UP clear is unusable; every usable default fails.
++static void no_default_routes(void){
++ const char* files[]={"/proc/net/route","/proc/net/ipv6_route"};
++ for(unsigned i=0;i<2;++i){
++  FILE* f=fopen(files[i],"re");need(f!=NULL,"route inventory");char line[1024];unsigned lines=0;
++  while(fgets(line,sizeof(line),f)){
++   need(++lines<=64&&strchr(line,'\n')!=NULL,"route inventory bound");
++   char iface[32];unsigned flags=0;int is_default=0;
++   if(i==0){
++    char dest[32],gateway[32];if(!strncmp(line,"Iface",5)){continue;}
++    need(sscanf(line,"%31s %31s %31s %x",iface,dest,gateway,&flags)==4,"IPv4 route shape");
++    is_default=!strcmp(dest,"00000000");
++   }else{
++    char dest[33],prefix[3];
++    need(sscanf(line,"%32s %2s %*32s %*2s %*32s %*8s %*8s %*8s %x %31s",dest,prefix,&flags,iface)==4,"IPv6 route shape");
++    is_default=!strcmp(dest,"00000000000000000000000000000000")&&!strcmp(prefix,"00");
++   }
++   need(!strcmp(iface,"lo"),"external route refused");
++   need(!is_default||(!(flags&RTF_UP)&&(flags&RTF_REJECT)),"usable default route refused");
++  }
++  need(!ferror(f),"route read");fclose(f);
++ }
++}
++static void address_inventory(unsigned expected){
++ const char* docs[]={"203.0.113.1","203.0.113.2","203.0.113.3","2001:db8::1","2001:db8::2","2001:db8::3"};
++ struct ifaddrs* list=NULL;need(getifaddrs(&list)==0,"address inventory");unsigned observed=0,loopback=0;
++ for(struct ifaddrs* it=list;it!=NULL;it=it->ifa_next){
++  need(!strcmp(it->ifa_name,"lo"),"external address interface");
++  if(it->ifa_addr==NULL){continue;}
++  int family=it->ifa_addr->sa_family;
++  if(family!=AF_INET&&family!=AF_INET6){continue;}
++  const void* bytes=family==AF_INET?(const void*)&((struct sockaddr_in*)it->ifa_addr)->sin_addr:(const void*)&((struct sockaddr_in6*)it->ifa_addr)->sin6_addr;
++  unsigned char known[16];size_t width=family==AF_INET?4:16;
++  need(inet_pton(family,family==AF_INET?"127.0.0.1":"::1",known)==1,"fixed loopback address");
++  if(!memcmp(bytes,known,width)){unsigned bit=family==AF_INET?1u:2u;need(!(loopback&bit),"duplicate loopback address");loopback|=bit;continue;}
++  unsigned match=0;
++  for(unsigned i=0;i<6;++i){if((i<3?AF_INET:AF_INET6)==family){need(inet_pton(family,docs[i],known)==1,"fixed documentation address");if(!memcmp(bytes,known,width)){match=1u<<i;break;}}}
++  need(match!=0&&!(observed&match),"unexpected/duplicate private address");observed|=match;
++ }
++ freeifaddrs(list);need(observed==expected,"exact six-address setup inventory");
++}
++static void net_ack(int fd,struct nlmsghdr* request){static uint32_t sequence=1;request->nlmsg_seq=sequence++;request->nlmsg_flags|=NLM_F_REQUEST|NLM_F_ACK;struct sockaddr_nl kernel={.nl_family=AF_NETLINK};need(sendto(fd,request,request->nlmsg_len,0,(struct sockaddr*)&kernel,sizeof(kernel))==(ssize_t)request->nlmsg_len,"fixed netlink request");_Alignas(struct nlmsghdr) char buffer[4096];struct sockaddr_nl from;memset(&from,0,sizeof(from));socklen_t size=sizeof(from);ssize_t n=recvfrom(fd,buffer,sizeof(buffer),0,(struct sockaddr*)&from,&size);need(n>0&&size==sizeof(from)&&!from.nl_pid,"kernel netlink acknowledgement");int remaining=(int)n;for(struct nlmsghdr* h=(struct nlmsghdr*)buffer;NLMSG_OK(h,remaining);h=NLMSG_NEXT(h,remaining)){if(h->nlmsg_seq==request->nlmsg_seq){need(h->nlmsg_type==NLMSG_ERROR&&h->nlmsg_len>=NLMSG_LENGTH(sizeof(struct nlmsgerr)),"netlink ACK shape");struct nlmsgerr* error=NLMSG_DATA(h);if(error->error){errno=-error->error;fail("fixed namespace network setup");}return;}}fail("missing correlated netlink ACK");}
++static void address(int fd,int family,const char* value,unsigned index){struct {struct nlmsghdr h;struct ifaddrmsg a;char data[64];} message;memset(&message,0,sizeof(message));message.h.nlmsg_len=NLMSG_LENGTH(sizeof(message.a));message.h.nlmsg_type=RTM_NEWADDR;message.h.nlmsg_flags=NLM_F_CREATE|NLM_F_EXCL;message.a.ifa_family=(unsigned char)family;message.a.ifa_prefixlen=family==AF_INET?32:128;message.a.ifa_scope=RT_SCOPE_UNIVERSE;message.a.ifa_index=index;if(family==AF_INET6){message.a.ifa_flags=IFA_F_NODAD;}unsigned char bytes[16];size_t width=family==AF_INET?4:16;need(inet_pton(family,value,bytes)==1,"fixed documentation address");for(unsigned type=IFA_ADDRESS;type<=IFA_LOCAL;++type){if(family==AF_INET6&&type==IFA_LOCAL){continue;}struct rtattr* a=(struct rtattr*)((char*)&message+NLMSG_ALIGN(message.h.nlmsg_len));a->rta_type=(unsigned short)type;a->rta_len=(unsigned short)RTA_LENGTH(width);memcpy(RTA_DATA(a),bytes,width);message.h.nlmsg_len=(uint32_t)(NLMSG_ALIGN(message.h.nlmsg_len)+RTA_ALIGN(a->rta_len));}net_ack(fd,&message.h);}
++static void setup_network(int net,int user){namespaces(net,user);no_default_routes();address_inventory(0);unsigned index=if_nametoindex("lo");need(index,"loopback index");int fd=socket(AF_NETLINK,SOCK_RAW|SOCK_CLOEXEC,NETLINK_ROUTE);need(fd>=0,"owned route socket");struct timeval limit={.tv_sec=1};need(setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&limit,sizeof(limit))==0,"netlink budget");struct {struct nlmsghdr h;struct ifinfomsg i;} link;memset(&link,0,sizeof(link));link.h.nlmsg_len=NLMSG_LENGTH(sizeof(link.i));link.h.nlmsg_type=RTM_NEWLINK;link.i.ifi_family=AF_UNSPEC;link.i.ifi_index=(int)index;link.i.ifi_change=IFF_UP;link.i.ifi_flags=IFF_UP;net_ack(fd,&link.h);const char* v4[]={"203.0.113.1","203.0.113.2","203.0.113.3"};const char* v6[]={"2001:db8::1","2001:db8::2","2001:db8::3"};for(unsigned i=0;i<3;++i){namespaces(net,user);no_default_routes();address(fd,AF_INET,v4[i],index);namespaces(net,user);no_default_routes();address(fd,AF_INET6,v6[i],index);}close(fd);namespaces(net,user);no_default_routes();address_inventory(63);}
++static uint32_t take32(const unsigned char** cursor,const unsigned char* end){need((size_t)(end-*cursor)>=4,"payload integer bound");uint32_t n;memcpy(&n,*cursor,4);*cursor+=4;return ntohl(n);}
++static char* string(const unsigned char** cursor,const unsigned char* end){uint32_t n=take32(cursor,end);need(n&&n<=STRING_MAX&&(size_t)(end-*cursor)>=n&&!memchr(*cursor,0,n),"payload string bound");char* s=malloc((size_t)n+1);need(s!=NULL,"payload allocation");memcpy(s,*cursor,n);s[n]=0;*cursor+=n;return s;}
++static void execute_user(pid_t invoker,int payload_fd,uid_t uid,gid_t gid,int net,int user,unsigned caps){int input=sealed(invoker,payload_fd,uid,gid,PAYLOAD_MAX);unsigned char* data=malloc(PAYLOAD_MAX);need(data!=NULL,"payload allocation");size_t size=read_bounded(input,data,PAYLOAD_MAX);close(input);need(size>=16&&!memcmp(data,"BBPUB1\0\0",8),"payload header");const unsigned char* at=data+8;const unsigned char* end=data+size;uint32_t argc=take32(&at,end),envc=take32(&at,end);need(argc&&argc<=COUNT_MAX&&envc<=COUNT_MAX,"payload count bounds");char** argv=calloc((size_t)argc+1,sizeof(char*));need(argv!=NULL,"argument allocation");for(uint32_t i=0;i<argc;++i){argv[i]=string(&at,end);}need(argv[0][0]=='/',"absolute user ELF");need(clearenv()==0,"clear administrative environment");for(uint32_t i=0;i<envc;++i){char* value=string(&at,end);char* equal=strchr(value,'=');need(equal&&equal!=value,"environment shape");*equal=0;need(setenv(value,equal+1,1)==0,"user environment");free(value);}need(at==end,"payload trailing data");free(data);char value[32];snprintf(value,sizeof(value),"%d",net);need(setenv("BIGLYBTC_OWNED_PUBLIC_NET_FD",value,1)==0,"net descriptor environment");snprintf(value,sizeof(value),"%d",user);need(setenv("BIGLYBTC_OWNED_PUBLIC_USER_FD",value,1)==0,"user descriptor environment");verify_dropped(uid,gid,caps);namespaces(net,user);no_default_routes();address_inventory(63);int driver=open(argv[0],O_RDONLY|O_CLOEXEC|O_NOFOLLOW);struct stat st;need(driver>=0&&fstat(driver,&st)==0&&S_ISREG(st.st_mode)&&!(st.st_mode&(S_ISUID|S_ISGID)),"ordinary user ELF");unsigned char magic[4];need(pread(driver,magic,4,0)==4&&!memcmp(magic,"\177ELF",4),"only actual ELF execution");errno=0;ssize_t capability=fgetxattr(driver,"security.capability",NULL,0);need(capability<0&&(errno==ENODATA||errno==ENOTSUP),"file capabilities refused");need(fcntl(net,F_SETFD,0)==0&&fcntl(user,F_SETFD,0)==0,"namespace proof inheritance");DIR* directory=opendir("/proc/self/fd");need(directory!=NULL,"descriptor inventory");struct dirent* entry;while((entry=readdir(directory))){char* tail=NULL;long n=strtol(entry->d_name,&tail,10);if(tail&&!*tail&&n>=3&&n!=net&&n!=user&&n!=driver&&n!=dirfd(directory)){close((int)n);}}closedir(directory);printf("BBPUB_DROP uid=%u gid=%u groups=0 capabilities=0 bounding=0 ambient=0 nnp=1\n",uid,gid);fflush(stdout);fexecve(driver,argv,environ);fail("user ELF exec");}
++int main(int argc,char** argv){need(argc==7,"fixed admin arguments");const char* mode=argv[1];const char* authority=!strcmp(mode,"pkexec")?getenv("PKEXEC_UID"):!strcmp(mode,"sudo")?getenv("SUDO_UID"):NULL;need(authority!=NULL,"explicit authorized mode/caller");uid_t uid=(uid_t)number(authority,UINT_MAX-1);need(uid!=0,"nonroot caller required");const char* other=getenv(!strcmp(mode,"pkexec")?"SUDO_UID":"PKEXEC_UID");need(!other||number(other,UINT_MAX-1)==uid,"conflicting caller identity");pid_t invoker=(pid_t)number(argv[2],INT_MAX);int image_fd=(int)number(argv[3],INT_MAX),payload_fd=(int)number(argv[4],INT_MAX);uint64_t start=number(argv[5],UINT64_MAX);need(!strcmp(argv[6],"fixed-public-fixture-v1")&&invoker>1&&image_fd>=3&&payload_fd>=3&&image_fd!=payload_fd,"fixed invocation");uid_t r,e,s;gid_t gr,ge,gs;need(getresuid(&r,&e,&s)==0&&r==0&&e==0&&s==0&&getresgid(&gr,&ge,&gs)==0,"actual root authorization");gid_t gid;caller(invoker,start,uid,&gid);if(!strcmp(mode,"sudo")){need(getenv("SUDO_GID")&&number(getenv("SUDO_GID"),UINT_MAX-1)==gid,"sudo/kernel caller group");}need(clearenv()==0,"root environment scrub");struct rlimit core={0,0};need(setrlimit(RLIMIT_CORE,&core)==0,"no privileged core");int image=sealed(invoker,image_fd,uid,gid,IMAGE_MAX),self=open("/proc/self/exe",O_RDONLY|O_CLOEXEC);need(self>=0&&same(image,self),"actual sealed approved image");close(image);close(self);int watcher=(int)syscall(SYS_pidfd_open,invoker,0);need(watcher>=0,"invoker pidfd");caller(invoker,start,uid,&gid);int net=open("/proc/self/ns/net",O_RDONLY|O_CLOEXEC),user=open("/proc/self/ns/user",O_RDONLY|O_CLOEXEC);need(net>=0&&user>=0,"actual parent namespace descriptors");int oldnet=proc_open(invoker,"ns/net",O_RDONLY),olduser=proc_open(invoker,"ns/user",O_RDONLY);need(same(net,oldnet)&&same(user,olduser),"invoker/admin namespace continuity");close(oldnet);close(olduser);int ready[2],go[2];need(pipe2(ready,O_CLOEXEC)==0&&pipe2(go,O_CLOEXEC)==0,"owned setup pipes");struct sigaction action;memset(&action,0,sizeof(action));action.sa_handler=on_signal;sigemptyset(&action.sa_mask);need(sigaction(SIGTERM,&action,NULL)==0&&sigaction(SIGINT,&action,NULL)==0&&sigaction(SIGHUP,&action,NULL)==0,"owned cancellation handlers");signal(SIGPIPE,SIG_IGN);struct sigaction child_action;memset(&child_action,0,sizeof(child_action));child_action.sa_handler=SIG_DFL;sigemptyset(&child_action.sa_mask);need(sigaction(SIGCHLD,&child_action,NULL)==0,"owned child must remain waitable");uint64_t setup_end=mono()+5000;pid_t parent=getpid();pid_t child=fork();need(child>=0,"owned child fork");if(child==0){close(ready[0]);close(go[1]);need(prctl(PR_SET_PDEATHSIG,SIGKILL,0,0,0)==0&&getppid()==parent,"setup parent lifetime");need(setgroups(0,NULL)==0,"clear groups BEFORE userns deny");need(unshare(CLONE_NEWUSER|CLONE_NEWNET)==0,"fresh fixed user/network namespace");write_exact(ready[1],"R",1);token(go[0],'M',setup_end,watcher);close(go[0]);setup_network(net,user);unsigned caps=drop(uid,gid,1);need(prctl(PR_SET_PDEATHSIG,SIGKILL,0,0,0)==0&&getppid()==parent,"dropped parent lifetime");namespaces(net,user);write_exact(ready[1],"D",1);close(ready[1]);close(watcher);execute_user(invoker,payload_fd,uid,gid,net,user,caps);return 1;}owned_child=child;owned_pidfd=(int)syscall(SYS_pidfd_open,child,0);need(owned_pidfd>=0,"owned child pidfd");close(ready[1]);close(go[0]);close(net);close(user);token(ready[0],'R',setup_end,watcher);maps(child,uid,gid);write_exact(go[1],"M",1);close(go[1]);token(ready[0],'D',setup_end,watcher);close(ready[0]);(void)drop(uid,gid,0);uint64_t end=mono()+240000;for(;;){int status=0;pid_t done=waitpid(child,&status,WNOHANG);if(done==child){owned_child=-1;close(owned_pidfd);close(watcher);return WIFEXITED(status)?WEXITSTATUS(status):128+WTERMSIG(status);}need(done==0||(done<0&&errno==EINTR),"owned child wait");struct pollfd p[2]={{owned_pidfd,POLLIN,0},{watcher,POLLIN,0}};int n=poll(p,2,100);if(n<0&&errno==EINTR){continue;}need(n>=0&&!cancelled&&mono()<end&&!p[1].revents,"owned child/invoker lifetime");}}

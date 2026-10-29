@@ -1,0 +1,15 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2380445 --no-print-directory -- ATTEMPT=admin-r1 NAMESPACE_PREFLIGHT=/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/result.json REFERENCE=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/java-runs/admin-r1/result.json ADOPTION=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/root-adoption-admin-r1.json SOURCE_COMMIT=04b6287a38cec6bd123e2648ada278ea348b85db
+[1/38] Automatic MOC for target biglybtc-azureus-owned-service-tests
+[2/36] Automatic MOC for target biglybtc-owned-dht-bytes-tests
+[3/34] Automatic MOC for target biglybtc-azureus-database-runtime-tests
+[4/32] Automatic MOC for target biglybtc-i2cp-initial-channel-tests
+[5/30] Automatic MOC for target biglybtc-i2cp-datagram-channel-tests
+[6/28] Automatic MOC for target biglybtc-i2cp-receive-channel-tests
+[7/26] Automatic MOC for target biglybtc-azureus-profile-io-tests
+[8/24] Automatic MOC for target biglybtc-azureus-routing-tests
+[9/22] Automatic MOC for target biglybtc-i2cp-tracker-channel-tests
+[10/20] Automatic MOC for target biglybtc-i2p-streaming-interop-tests
+[11/18] Automatic MOC for target biglybtc-azureus-maintenance-tests
+[12/16] Building C object tests/CMakeFiles/biglybtc-public-netns-admin.dir/public_namespace_fixture/public_netns_admin.c.o
+[13/16] Linking C executable tests/biglybtc-public-netns-admin
+[14/16] Automatic MOC for target biglybtc-azureus-public-bound-tests

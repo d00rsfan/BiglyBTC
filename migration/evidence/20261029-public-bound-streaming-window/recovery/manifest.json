@@ -1,0 +1,140 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_REVIEW_NO_EXECUTION",
+  "purpose": "Resume only the two pre-subject authorization-blocked Public subjects of exact unchanged W04b628/admin-r1; preserve actual current-cohort passed rows and raw original failures.",
+  "source_commit": "04b6287a38cec6bd123e2648ada278ea348b85db",
+  "cohort": "admin-r1",
+  "recipe_files_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/resume-public.py": "4f2f3f635d681b1163987d2dc4c725ce04198b5fb44ddaad7c03432134494bbb",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-resumed.py": "6068b526438585282b8b61fe1449213f783bf706f2af5e0b570b66a90748ca55",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/finish-resumed.py": "cc2ef8e67ed1065f386195bb90d6c300bfb0233a6fd6a22d1ed1ff34ef07e8d4",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/publish-resumed.py": "bf70b3dbadb1c0adce28664dabd884375173f51b5914c8449f0d61f04f541eaf"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/run-admin.py": "b4514f5cc1e964ad05e7fcb39c47b94b6ff109e222288d07ae56b5bc6439b5ff",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/namespace-admin.py": "fe8a101796cb5b639af98104730669dc15acd884e40d3928a52f10ffede91618",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-admin.py": "2fc1ae94be1cc28684948c4deecb6f0b79cee9650005adf20b2b1d0e6f59977c",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/finish-admin.py": "5320339598836012c07249eae52cd66fcf589ee28a54e97cb3dc288388c3cad0",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/publish.py": "d776d286f93461bca10a3eefeb4259e6cf62cd37f8dcdc3be788e4c106e1967c",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/root-auth-obstruction-admin-r1.json": "cb0c560e0699e3ec13c7e86a434ee39acd7c742bc2fa8fcbfa9cbb45c59a8f18",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/root-cache-continuity-admin-r1.json": "2353d4c458e205d31459a86435ab139e411ae1503a25aad869cb91ff3d675f1a",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/authwait-observation-admin-r1.json": "a293bc87ce349684daad68b393341d849d75ec6706f62001eb70f7aaff55e2ee",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/root-adoption-admin-r1.json": "45570855cdeb9b14adfd04cd8dd8c1045091c52288cf906b87adaf737c55b874",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/java-runs/admin-r1/result.json": "baf86af203369b9a57443099b73332bb7f4e384fcf417154d50bae73f3fd3c1f",
+    "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/run-r3.py": "4c6e88b37330605cf0fbf13504317792a776b2ce84f3da8b6ed74f815c3a16c2",
+    "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/recipe_support_followup.py": "64e0bd2b9ec87b9babf90bdf8d1235746f7dc63c797c82c5e5a138a4c2ea893a",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-admin-recipes-20261029-review/review.json": "2d24ccf8b4b5c1a78145464888bf5d87651b8ef23007999a05d07fd19e3b95d8",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/admin-namespace-recipes/amendments/preserve-unchanged-mtimes/amendments/native-hosted-dependency-basis/amendments/required-test-tools/manifest.json": "ba607b41200be437983d282e03d7ee1d0c67d923a4581a8919b7be2d3685f7b6",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/result.json": "3eae0fc761ccef939fe794a3d1b4f290924876d07c7f797705098b1015722612",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/commands.json": "bf8e4862cda18e6fb9407ed04b75a8cbb57522a5b7af9f804dcd3f618d767e71",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/tests.xml": "34adf780b7d00f2db90e9bc4b666d9453449939d56e723f1f4f79c6a9e35742b",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/tests.log": "0adae1ab0cac034bc1bb10e21e4b8004b34d710840d518122a46623ee311c16f",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/ctest-full.log": "ade0475ad950571a64b23a60b0e99d62e55604b2e1f40b8a3858d2df50629b7d",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/source-before.json": "13c7cef0b87b6175f473b20d33f05c531fd56ffa6c7f2d7c6175d66fc620e325",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/native-source-map.json": "6f446e7382571023ca7158156eaa4d7e0de469b3db74ad9f5f86940fad6ab303",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/images-before.json": "aebccacdeaeab4726a41b98a14849ec03ca4b4ea21fa9bb43d683ec2730de15b",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/dependencies-before.json": "9c990e9bdfd4fb32f059c81e7acab4da4d1f6287a12259cf1b1b5a3117383783",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/tool-inputs.json": "3c7c167cfbfd7e5128795cef676a41db0951fb65d4611c16f9e10ff35c11c168",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/build-receipt.json": "f3cfd42b4f8d200ecd6d3d710e594cef0909ac574a8ecaa547fe1b6ed58d6a0d",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/inventory.log": "9df7eca19eaba5b61e63617e95f68d06414c2e067fcb74b9c47d3e6fff81e6f7",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/subject-phase.json": "e8a52de7736063918b678f379c894dfefe7641becfee185c4c192dd2c3359489",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/public-namespace-launch.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/configure.log": "f12932fe16efa6f502001c77145d6ebc3b867fd3772c1709d040365bae2c312d",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/build.log": "706e19e5b77d4f54ff915b0d921776bb9fb0a14640772f9d8506c647af5b431d",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/result.json": "52df5cb8a517b3f57518c9530d3286fea5da517e0d79e287c6b96301568ee36e",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/commands.json": "4a4fa60cc9e5dd40716e381a42e79c55fd6d785a2191bc8af131175c42cbd3a6",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/tests.xml": "3f0c563ef95ec10eb88a91bc60e20eacfab9ff2e9db055887afc1184643e1b42",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/tests.log": "391aaae3f5ca00a86c594aaa2777aca2dd0812f0ab032c1bfeaedb480595360c",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/ctest-full.log": "da1b84c296ea5163fc80e1f941e04551b982e2597a54cab2a83ac934fcdfecb6",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/source-before.json": "13c7cef0b87b6175f473b20d33f05c531fd56ffa6c7f2d7c6175d66fc620e325",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/native-source-map.json": "6f446e7382571023ca7158156eaa4d7e0de469b3db74ad9f5f86940fad6ab303",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/images-before.json": "d63e0d7390b6858c2a06b0e73d2d260e73d68a63f8e11ae086deee69fc212f48",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/dependencies-before.json": "4a3e6f875c115ff84b37424b55d3dccfbbb8fbbff19d1ed6d5db1eea991b0aef",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/tool-inputs.json": "713159884a4be6cdc0f4b77401adf787cbeb87ca2640a562734f60159b2c57d0",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/build-receipt.json": "1ed20235f7e4599c63cac26813132570b0de0d7c7b36c11a2b214f0fbad9f49b",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/inventory.log": "f1519bf18b74666bbd701a494471790249608a67dd6d5b2f57e4f7d64c984f89",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/subject-phase.json": "2dc96d276ec344cad70eecd91ed9e875311e590ec31b74e94d0d8c1dcf401ea5",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/public-namespace-launch.json": "73cb4fa30fb66b41eea3f15d1da4ac09e6712c8e43d1301a3d1469a4608514b6",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/configure.log": "a3eb413c7672618dd4834b550834de0288eea0782c0aa491928252870cb28f56",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/build.log": "fab2c77c427c954fe4d0fad8f91867c0fb140452c6a6e30ea63d5a07a078b149",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/result.json": "1d2d7a6101b7b7acc4023dd3b6e977ac11a5f9258f23309819f920bb61c63689",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/commands.json": "2e42d512e7429b741a0eed1160ce325d5d3df3d973b66d0b8f454bf42bec739a",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/tests.xml": "0874d96ccdc22ecba025476fd99dac09a21027c209eed8e06f80843f2d5ff887",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/tests.log": "b8458d5e15115adea62cbe1172682dec48e7183b10066ea272df083b138da3a1",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/ctest-full.log": "8af9b98a6ba4ea22d72c684bfde6bed2c6f6e4fd90339da26e8021cc6766bc07",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/source-before.json": "13c7cef0b87b6175f473b20d33f05c531fd56ffa6c7f2d7c6175d66fc620e325",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/native-source-map.json": "6f446e7382571023ca7158156eaa4d7e0de469b3db74ad9f5f86940fad6ab303",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/images-before.json": "462c8fced59d2870bf19f5ab1cc7deb6be208696ba2ffc049618f211b14a63ce",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/dependencies-before.json": "dd7f71d636a4d743eedd5f6efb8bc08a5211b0cf10212192e53e8751cdc74673",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/tool-inputs.json": "3c7c167cfbfd7e5128795cef676a41db0951fb65d4611c16f9e10ff35c11c168",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/build-receipt.json": "4505889370ca3c60cd46639b4a1fc1e14c8d4e1b6c5955c03fc6e460b2b27436",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/inventory.log": "74b56276aa8944338140d2cca56d8bcb623d0269723e05e74379324d45e5b19e",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/subject-phase.json": "473dc2f036f5e1f092e63c428aad4fc297387dbe83805941ee453ff173d367f4",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/public-namespace-launch.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/configure.log": "4479172718d7ccb09e994dae5651e1cce5178488d74614e9d6c7e7e8dfd88a3b",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/build.log": "05acfab65f3155541f65e5afdb4bd88fc0323358082369456d5ff838235d3514"
+  },
+  "artifacts_sha256": {
+    "ADOPTION.md": "75abdeaaebd3a42ac8a06b8038c0ee51daa56672c06cea96d62d4dbd4f0697d5",
+    "private-resumed.py.patch": "dda3352251dc0e0b88ee05d85d1e6beed18559d7b2df2dd2d1efdb003b97ee5c",
+    "finish-resumed.py.patch": "4717988cdfeed8ccfa8f4ae630bb559a68d5136be605c4d701155b4ae4e057d8",
+    "publish-resumed.py.patch": "8af1cabdab881bb2b7dcafada10a114f1bc657daecbce0dc1e907d42485e4d30"
+  },
+  "allowed_recovery": {
+    "gcc": {
+      "original_passed": 18,
+      "original_failed": [
+        "azureus-public-bound"
+      ],
+      "fresh_suites": [
+        "azureus-public-bound"
+      ]
+    },
+    "san": {
+      "original_passed": 15,
+      "original_failed": [
+        "azureus-public-bound"
+      ],
+      "fresh_suites": [
+        "azureus-public-bound"
+      ]
+    },
+    "clang": {
+      "original_complete_passed": 16,
+      "fresh_suites": []
+    }
+  },
+  "root_obstruction_sha256": "cb0c560e0699e3ec13c7e86a434ee39acd7c742bc2fa8fcbfa9cbb45c59a8f18",
+  "cache_continuity_sha256": "2353d4c458e205d31459a86435ab139e411ae1503a25aad869cb91ff3d675f1a",
+  "cache_hash_limit": "Original failed-run CMakeCache hash was not finalized. Root attests no intervening changes; current cache pins are explicitly post-failure, combined with exact original built images/source/tools/dependencies and before/after recovery equality.",
+  "authorization_observation_limit": "Saved process snapshot covers GCC; prior SAN inspection is root-reported with no retained proc bytes. Neither timeout/empty receipt nor allcaps0 alone grants recovery.",
+  "final_status": "PASS_RESUMED_PUBLIC_BOUND_STREAMING_WINDOW",
+  "qualification_mode": "resumed_same_source_current_cohort",
+  "raw_failed_statuses_preserved": true,
+  "derived_association_is_actual_full_invocation": false,
+  "maximum_authorized_recovery_attempts_per_lane": 1,
+  "unchanged": [
+    "Native source/Git/profile/namespace policy",
+    "Public240s deadline and authenticated helper/mode",
+    "Existing compiler/provider/SDK/Java/classes/builtimages",
+    "All unrelated current-cohort passed row bodies and XML/transcript origins",
+    "Private19commands/current18GCCimages/loaderproof and two-registry validation/promotion boundaries"
+  ],
+  "no_actions": [
+    "No compilers or configure",
+    "No Java replay",
+    "No changed or replaced test images",
+    "No different-source/historical/remoteCI pass substitution",
+    "No polkit/sysctl/AppArmor/config change or privilege-mode fallback",
+    "No real code failure acceptance or automatic retry"
+  ],
+  "author_checks": [
+    "Read exact root obstruction/continuity records and original current-cohort raw outcomes",
+    "AST4 without imports",
+    "Original XML classification18+1/16+0/15+1; Public Timeout/empty output/empty launch confirmed",
+    "Semantic delta and input pin review; inherited boilerplate unchanged except declared patches"
+  ],
+  "author_execution": false,
+  "native_mutations": false,
+  "future_pass_claimed": false
+}

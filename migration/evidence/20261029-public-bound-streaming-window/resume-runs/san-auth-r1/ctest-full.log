@@ -1,0 +1,42 @@
+Start testing: Oct 30 00:37 IST
+----------------------------------------------------------
+301/301 Testing: azureus-public-bound
+301/301 Test: azureus-public-bound
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_public_bound_namespace.py" "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-azureus-public-bound-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests
+"azureus-public-bound" start time: Oct 30 00:37 IST
+Output:
+----------------------------------------------------------
+BBPUB_DROP uid=1000 gid=1000 groups=0 capabilities=0 bounding=0 ambient=0 nnp=1
+********* Start testing of AzureusPublicBoundTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusPublicBoundTests::initTestCase()
+PASS   : AzureusPublicBoundTests::numericEnvelopeNeverAcceptsPrivateWildcardMappedOrMulticast()
+PASS   : AzureusPublicBoundTests::publicNodeControllerScopeCannotGrantLegacyValueOrLoopbackAdmission()
+PASS   : AzureusPublicBoundTests::enabledFilterProxyWrongTupleAndChangedSourceRefuseBeforeAnyRebind()
+PASS   : AzureusPublicBoundTests::savedBindEmbeddedNulCannotGrantNumericPrefixOrChangeSourceBytes()
+PASS   : AzureusPublicBoundTests::foreignCacheScopeAndUnapprovedSourcesNeverAcquirePublicAuthority()
+PASS   : AzureusPublicBoundTests::realPublicTupleRoutingPublicationAndCacheOnlyRestart(IPv4-original-network0)
+PASS   : AzureusPublicBoundTests::realPublicTupleRoutingPublicationAndCacheOnlyRestart(IPv6-original-network3)
+PASS   : AzureusPublicBoundTests::blockedCommandCancellationAndSourceWithdrawalCloseWithoutAnyLatePacket()
+PASS   : AzureusPublicBoundTests::cleanupTestCase()
+Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 31213ms
+********* Finished testing of AzureusPublicBoundTests *********
+<end of output>
+Test time =  38.65 sec
+----------------------------------------------------------
+Test Passed.
+"azureus-public-bound" end time: Oct 30 00:37 IST
+"azureus-public-bound" time elapsed: 00:00:38
+----------------------------------------------------------
+
+End testing: Oct 30 00:37 IST
+
+namespace =  38.65 sec*proc
+
+profile =  38.65 sec*proc
+
+routing =  38.65 sec*proc
+
+unit =  38.65 sec*proc
+

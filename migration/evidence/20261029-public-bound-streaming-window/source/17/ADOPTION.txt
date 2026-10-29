@@ -1,0 +1,4 @@
+Metadata-only correction: namespace_admin_contract.helper_source now equals the
+effective diagnostic C source_paths entry (b93c41...), rather than inherited
+pre-diagnostic C3d0aea. All23 source afterimages and diagnostic code are byte-exact
+64ecc37 parent. No compiler/admin/namespace/subject or native mutation by author.

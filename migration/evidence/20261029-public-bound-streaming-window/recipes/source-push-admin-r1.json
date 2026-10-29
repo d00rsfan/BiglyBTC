@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "status": "PUSHED_SOURCE_CHECKPOINT_NOT_QUALIFICATION",
+  "source_commit": "04b6287a38cec6bd123e2648ada278ea348b85db",
+  "remote_before": "f1973f944e9640fe0eb2b3b0bb42557c3324bed3",
+  "remote_after": "04b6287a38cec6bd123e2648ada278ea348b85db",
+  "exit": 0,
+  "elapsed_ms": 4164,
+  "log": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/source-push-admin-r1.log",
+    "sha256": "7f51c41a146c2d92661e6d0b137abddaf2a8564d488cc7dc750d665374aed49f",
+    "bytes": 70
+  },
+  "dist_promoted": false,
+  "local_public_gcc_san_authentication_pending": true,
+  "purpose": "Allow existing standard hosted CI to independently test current source via its explicitly authorised sudo-n fixture. Hosted images do not replace missing local image evidence."
+}

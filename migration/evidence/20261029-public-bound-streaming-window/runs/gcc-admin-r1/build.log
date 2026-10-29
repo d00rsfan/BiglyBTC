@@ -1,0 +1,114 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2380445 --no-print-directory -- ATTEMPT=admin-r1 NAMESPACE_PREFLIGHT=/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/result.json REFERENCE=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/java-runs/admin-r1/result.json ADOPTION=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/root-adoption-admin-r1.json SOURCE_COMMIT=04b6287a38cec6bd123e2648ada278ea348b85db
+[1/126] Building CXX object services/CMakeFiles/biglybtc_azureus_control.dir/azureus_control/lookup.cpp.o
+[2/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_dht/headers.cpp.o
+[3/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_ping/options.cpp.o
+[4/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_positions/positions.cpp.o
+[5/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_contacts/contacts.cpp.o
+[6/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_nodes/nodes.cpp.o
+[7/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_values/values.cpp.o
+[8/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_packets/ping.cpp.o
+[9/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_find_node/find_node.cpp.o
+[10/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_find_value/find_value.cpp.o
+[11/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_store/store.cpp.o
+[12/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_error/error.cpp.o
+[13/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_auth/authority.cpp.o
+[14/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_store_policy/store_policy.cpp.o
+[15/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o
+[16/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_router/router.cpp.o
+[17/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_value/db_value.cpp.o
+[18/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_mapping/mapping.cpp.o
+[19/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_runtime/database.cpp.o
+[20/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_runtime/storage_stats.cpp.o
+[21/126] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_runtime/storage_diversification.cpp.o
+[22/126] Linking CXX static library services/libbiglybtc_azureus_control.a
+[23/126] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_contacts.cpp.o
+[24/126] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_public_policy.cpp.o
+[25/126] Linking CXX static library services/libbiglybtc_azureus_owned_udp.a
+[26/126] Linking CXX static library adapters/libbiglybtc_profile.a
+[27/126] Automatic MOC for target biglybtc_ui
+[28/126] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[29/126] Building CXX object services/CMakeFiles/biglybtc_i2p_streaming.dir/i2p_streaming/stream.cpp.o
+[30/126] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/biglybtc_ui_autogen/mocs_compilation.cpp.o
+[31/126] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/library_window.cpp.o
+[32/126] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/statistics_page.cpp.o
+[33/126] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/runtime_metrics_view.cpp.o
+[34/126] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/tracker_statistics_view.cpp.o
+[35/126] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/azureus_statistics_view.cpp.o
+[36/126] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/cache_statistics_view.cpp.o
+[37/126] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/owned_lookup_tree_widget.cpp.o
+[38/126] Building CXX object app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o
+[39/126] Linking CXX static library engine/libbiglybtc_local_engine.a
+[40/126] Linking CXX static library services/libbiglybtc_i2p_streaming.a
+[41/126] Linking CXX static library ui/libbiglybtc_ui.a
+[42/126] Linking CXX static library app/libbiglybtc_owned_azureus_service.a
+[43/126] Automatic MOC for target biglybtc_i2cp_initial_channel
+[44/126] Automatic MOC for target biglybtc_desktop_host
+[45/126] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/biglybtc_i2cp_initial_channel_autogen/mocs_compilation.cpp.o
+[46/126] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/i2cp_channel/channel.cpp.o
+[47/126] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/biglybtc_desktop_host_autogen/mocs_compilation.cpp.o
+[48/126] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/session_bridge.cpp.o
+[49/126] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/owned_dht_accounting.cpp.o
+[50/126] Building C object tests/CMakeFiles/biglybtc-public-netns-admin.dir/public_namespace_fixture/public_netns_admin.c.o
+[51/126] Linking CXX static library services/libbiglybtc_i2cp_initial_channel.a
+[52/126] Linking C executable tests/biglybtc-public-netns-admin
+[53/126] Automatic MOC for target biglybtc-azureus-owned-service-tests
+[54/125] Automatic MOC for target biglybtc-azureus-router-binding-tests
+[55/124] Automatic MOC for target biglybtc-owned-dht-bytes-tests
+[56/124] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/live_speed_mapper_binding.cpp.o
+[57/124] Linking CXX static library app/libbiglybtc_desktop_host.a
+[58/124] Automatic MOC for target biglybtc-owned-ddb-binding-tests
+[59/123] Automatic MOC for target biglybtc-preview-smoke
+[60/122] Automatic MOC for target biglybtc-owned-lookup-tree-ui-tests
+[61/121] Automatic MOC for target biglybtc-azureus-database-runtime-tests
+[62/120] Automatic MOC for target biglybtc-i2cp-initial-channel-tests
+[63/119] Automatic MOC for target biglybtc-i2cp-datagram-channel-tests
+[64/118] Automatic MOC for target biglybtc-i2cp-receive-channel-tests
+[65/117] Automatic MOC for target biglybtc-i2cp-tracker-channel-tests
+[66/116] Automatic MOC for target biglybtc-azureus-profile-io-tests
+[67/115] Automatic MOC for target biglybtc-i2p-streaming-interop-tests
+[68/115] Automatic MOC for target biglybtc-azureus-routing-tests
+[69/114] Automatic MOC for target biglybtc-azureus-maintenance-tests
+[70/113] Automatic MOC for target biglybtc-azureus-public-bound-tests
+[71/113] Building CXX object app/CMakeFiles/BiglyBTC.dir/main_desktop.cpp.o
+[72/113] Building CXX object tests/CMakeFiles/biglybtc-owned-ddb-control-tests.dir/owned_ddb_control_tests.cpp.o
+[73/113] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-tests.dir/i2p_streaming_tests.cpp.o
+[74/113] Building CXX object CMakeFiles/biglybtc-preview-smoke.dir/packaging/preview_smoke.cpp.o
+[75/113] Building CXX object tests/CMakeFiles/biglybtc-azureus-router-binding-tests.dir/azureus_router_binding_tests.cpp.o
+[76/113] Building CXX object tests/CMakeFiles/biglybtc-owned-dht-bytes-tests.dir/biglybtc-owned-dht-bytes-tests_autogen/mocs_compilation.cpp.o
+[77/113] Building CXX object tests/CMakeFiles/biglybtc-azureus-owned-service-tests.dir/owned_azureus_service_tests.cpp.o
+[78/113] Building CXX object tests/CMakeFiles/biglybtc-owned-dht-bytes-tests.dir/owned_dht_bytes_tests.cpp.o
+[79/113] Building CXX object tests/CMakeFiles/biglybtc-owned-ddb-binding-tests.dir/owned_ddb_binding_tests.cpp.o
+[80/113] Building CXX object tests/CMakeFiles/biglybtc-owned-lookup-tree-ui-tests.dir/owned_lookup_tree_ui_tests.cpp.o
+[81/113] Building CXX object tests/CMakeFiles/biglybtc-azureus-database-runtime-tests.dir/azureus_database_runtime_tests.cpp.o
+[82/113] Building CXX object tests/CMakeFiles/biglybtc-i2cp-datagram-channel-tests.dir/i2cp_datagram_channel_tests.cpp.o
+[83/113] Building CXX object tests/CMakeFiles/biglybtc-i2cp-initial-channel-tests.dir/i2cp_initial_channel_tests.cpp.o
+[84/113] Building CXX object tests/CMakeFiles/biglybtc-i2cp-receive-channel-tests.dir/i2cp_receive_channel_tests.cpp.o
+[85/113] Building CXX object tests/CMakeFiles/biglybtc-azureus-profile-io-tests.dir/azureus_profile_io_tests.cpp.o
+[86/113] Building CXX object tests/CMakeFiles/biglybtc-i2cp-tracker-channel-tests.dir/i2cp_tracker_channel_tests.cpp.o
+[87/113] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-interop-tests.dir/biglybtc-i2p-streaming-interop-tests_autogen/mocs_compilation.cpp.o
+[88/113] Building CXX object tests/CMakeFiles/biglybtc-azureus-routing-tests.dir/azureus_routing_tests.cpp.o
+[89/113] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-interop-tests.dir/i2p_streaming_interop_tests.cpp.o
+[90/113] Building CXX object tests/CMakeFiles/biglybtc-azureus-public-bound-tests.dir/biglybtc-azureus-public-bound-tests_autogen/mocs_compilation.cpp.o
+[91/113] Building CXX object tests/CMakeFiles/biglybtc-azureus-maintenance-tests.dir/azureus_maintenance_tests.cpp.o
+[92/113] Linking CXX executable biglybtc-preview-smoke
+[93/113] Linking CXX executable app/BiglyBTC-headless
+[94/113] Linking CXX executable app/BiglyBTC
+[95/113] Building CXX object tests/CMakeFiles/biglybtc-azureus-public-bound-tests.dir/azureus_public_bound_tests.cpp.o
+[96/113] Linking CXX executable tests/biglybtc-azureus-owned-service-tests
+[97/113] Linking CXX executable tests/biglybtc-azureus-router-binding-tests
+[98/113] Linking CXX executable tests/biglybtc-azureus-router-owner-tests
+[99/113] Linking CXX executable tests/biglybtc-owned-ddb-control-tests
+[100/113] Linking CXX executable tests/biglybtc-owned-dht-bytes-tests
+[101/113] Linking CXX executable tests/biglybtc-owned-ddb-binding-tests
+[102/113] Linking CXX executable tests/biglybtc-azureus-database-runtime-tests
+[103/113] Linking CXX executable tests/biglybtc-owned-lookup-tree-ui-tests
+[104/113] Linking CXX executable tests/biglybtc-i2cp-initial-channel-tests
+[105/113] Linking CXX executable tests/biglybtc-i2cp-datagram-channel-tests
+[106/113] Linking CXX executable tests/biglybtc-i2cp-receive-channel-tests
+[107/113] Linking CXX executable tests/biglybtc-azureus-profile-io-tests
+[108/113] Linking CXX executable tests/biglybtc-i2cp-tracker-channel-tests
+[109/113] Linking CXX executable tests/biglybtc-azureus-routing-tests
+[110/113] Linking CXX executable tests/biglybtc-i2p-streaming-tests
+[111/113] Linking CXX executable tests/biglybtc-i2p-streaming-interop-tests
+[112/113] Linking CXX executable tests/biglybtc-azureus-maintenance-tests
+[113/113] Linking CXX executable tests/biglybtc-azureus-public-bound-tests

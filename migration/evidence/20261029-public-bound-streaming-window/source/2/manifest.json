@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ORIGINAL_MANAGER_WINDOW_ACCEPTANCE",
+  "native_basis": "9a8cf1aa2375797e368434423b8890fce1dbb09b",
+  "native_actor": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/manifest.json",
+    "sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1"
+  },
+  "acceptance_parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/amendments/trailing-peer-stderr/manifest.json",
+    "sha256": "a77d16dc7ecb725d50d9529e1cb07fc41246a89a3192aa5958dfd0097d7e517c"
+  },
+  "source_paths": {
+    "preview/native/tests/i2p_streaming_interop_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/before/preview/native/tests/i2p_streaming_interop_tests.cpp",
+      "before_sha256": "11b51b87a15b6518b2d89849242f42c375cae1fce8e2f0ac5f042bd81557f529",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/staging/preview/native/tests/i2p_streaming_interop_tests.cpp",
+      "after_sha256": "7b81e9b1bcafd2365220dc0bd21f9cfcfc0796ad5c710e723967caa7102c9caa"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/before/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "7286db4f2c70ce3a9a10a23bfabb8ece66009bd54c4e08e389805a1a4c616c2c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/staging/preview/native/tests/CMakeLists.txt",
+      "after_sha256": "e90ae9e48cf069933e7e6cf98c98e564512ffaadb3c9cfe202c44e395225c1e0"
+    }
+  },
+  "helper_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/StreamingPeer.java",
+    "sha256": "8c78205c17273122b381b30cb8ad6aadbd59105dfccbaad9fed0df5ac351e8cd",
+    "parent_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/StreamingPeer.java",
+    "parent_sha256": "b09fde915825727452c33d6efb129aa990fc4074f5ba8f6fe65a34d664d3dfe1",
+    "compile_once": true
+  },
+  "target": "biglybtc-i2p-streaming-interop-tests",
+  "ctest_controls": {
+    "i2p-original-streaming-peer": {
+      "subject_cases": 5,
+      "timeout": 480,
+      "old_bodies_exact": true
+    },
+    "i2p-original-streaming-upload": {
+      "subject_cases": 2,
+      "timeout": 300,
+      "operation_timeout_milliseconds": 60000,
+      "window_caps": [
+        2,
+        8
+      ]
+    }
+  },
+  "wire_proof": "Real modified manager128KiB upload/byte verification/digest/FIN/EOF; actual delayed ACK bytes and distinct native data flight; no synthetic packet/status/app success.",
+  "limits": {
+    "native_combined_tx_bytes": 65536,
+    "controlled_route_frames": 64,
+    "controlled_route_bytes": 65536,
+    "route_delay_milliseconds": 40,
+    "upload_body_bytes": 131072
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "e450fa4d31a21515f0d445d47a3756065eb9732b0a14fa6663db1320a89352a6",
+    "CMake.patch": "a5d3884bff06f041714f7e631a038a62c9e884dbc28c125a35c630203c716f5a",
+    "COMMANDS.sh": "4004c6f5769f6694c84a9be61284eca20199afabe83608a496fcced51543472b",
+    "StreamingPeer.java": "8c78205c17273122b381b30cb8ad6aadbd59105dfccbaad9fed0df5ac351e8cd",
+    "before/StreamingPeer.java": "b09fde915825727452c33d6efb129aa990fc4074f5ba8f6fe65a34d664d3dfe1",
+    "before/preview/native/tests/CMakeLists.txt": "7286db4f2c70ce3a9a10a23bfabb8ece66009bd54c4e08e389805a1a4c616c2c",
+    "before/preview/native/tests/i2p_streaming_interop_tests.cpp": "11b51b87a15b6518b2d89849242f42c375cae1fce8e2f0ac5f042bd81557f529",
+    "changes.patch": "b450ea6b3f31eddd5da5ece39c89e65505a950e27954ba47dfa97c8c634eb2e7",
+    "java-helper.patch": "6c7681dcdda1b58e1ac2b00eebdbd5513224d567414fa300900ffbdb725339d4",
+    "source-pins.json": "b398b1cae49b701940f073b15b1c9a2a60965e7b8f9c0858d684086757ccdfc9",
+    "staging/preview/native/tests/CMakeLists.txt": "e90ae9e48cf069933e7e6cf98c98e564512ffaadb3c9cfe202c44e395225c1e0",
+    "staging/preview/native/tests/i2p_streaming_interop_tests.cpp": "7b81e9b1bcafd2365220dc0bd21f9cfcfc0796ad5c710e723967caa7102c9caa",
+    "test-retention.json": "e084b151220ac75e0eb5c4ac6c89d3a2eb1eaec45147bb764d0b5f245037936f"
+  },
+  "compiler_execution": false,
+  "runtime_execution": false,
+  "native_mutated": false,
+  "provider_mutated": false
+}

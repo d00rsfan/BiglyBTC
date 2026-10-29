@@ -1,0 +1,26 @@
+{
+  "runner_pid": 2376794,
+  "launcher_pid": 2376795,
+  "command": [
+    "/usr/bin/python3",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/staging/preview/native/tests/azureus_public_admin_launcher.py",
+    "--mode",
+    "pkexec",
+    "--helper",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r1/public-netns-admin",
+    "--sha256",
+    "22ccc598283ab5818f05b9fbab0bb2238b170fb97fc81ade613fa0015a9713ab",
+    "--receipt",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r1/launch.json",
+    "--",
+    "/usr/bin/python3",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/staging/preview/native/tests/public_namespace_fixture/preflight.py",
+    "--uid",
+    "1000",
+    "--gid",
+    "1000"
+  ],
+  "functional_test_credit": false,
+  "source_capsule_sha256": "a36fd2153e0b490e3af428968b7a4dfb10054dd59b6b9a44bc64af8092c84d8b",
+  "helper_sha256": "22ccc598283ab5818f05b9fbab0bb2238b170fb97fc81ade613fa0015a9713ab"
+}

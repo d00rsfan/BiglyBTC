@@ -1,0 +1,14 @@
+********* Start testing of AzureusPublicBoundTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusPublicBoundTests::initTestCase()
+PASS   : AzureusPublicBoundTests::numericEnvelopeNeverAcceptsPrivateWildcardMappedOrMulticast()
+PASS   : AzureusPublicBoundTests::publicNodeControllerScopeCannotGrantLegacyValueOrLoopbackAdmission()
+PASS   : AzureusPublicBoundTests::enabledFilterProxyWrongTupleAndChangedSourceRefuseBeforeAnyRebind()
+PASS   : AzureusPublicBoundTests::savedBindEmbeddedNulCannotGrantNumericPrefixOrChangeSourceBytes()
+PASS   : AzureusPublicBoundTests::foreignCacheScopeAndUnapprovedSourcesNeverAcquirePublicAuthority()
+PASS   : AzureusPublicBoundTests::realPublicTupleRoutingPublicationAndCacheOnlyRestart(IPv4-original-network0)
+PASS   : AzureusPublicBoundTests::realPublicTupleRoutingPublicationAndCacheOnlyRestart(IPv6-original-network3)
+PASS   : AzureusPublicBoundTests::blockedCommandCancellationAndSourceWithdrawalCloseWithoutAnyLatePacket()
+PASS   : AzureusPublicBoundTests::cleanupTestCase()
+Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 31072ms
+********* Finished testing of AzureusPublicBoundTests *********

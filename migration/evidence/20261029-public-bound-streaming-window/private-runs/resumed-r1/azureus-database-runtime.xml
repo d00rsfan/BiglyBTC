@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="AzureusDatabaseRuntimeTests" timestamp="2026&#x002D;10&#x002D;30T00:40:17" hostname="ubuntud" tests="17" failures="0" errors="0" skipped="0" time="2.042">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="AzureusDatabaseRuntimeTests" time="0.000"/>
+  <testcase name="typedLocalAnonymousFlagPersistsWithoutOpeningArbitraryFlagAuthority" classname="AzureusDatabaseRuntimeTests" time="0.002"/>
+  <testcase name="localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData" classname="AzureusDatabaseRuntimeTests" time="0.000"/>
+  <testcase name="qualifiedMappingOwnsVersionsForwardingAndUnknownBinaryBytes" classname="AzureusDatabaseRuntimeTests" time="0.000"/>
+  <testcase name="normalFindFlagsReturnUnfilteredValuesLikeOriginalMapping" classname="AzureusDatabaseRuntimeTests" time="0.000"/>
+  <testcase name="actualFindFlagsReachTheDatabaseWithoutSeedFiltering" classname="AzureusDatabaseRuntimeTests" time="0.011"/>
+  <testcase name="statsValueRequiresRealAdapterAndLocalIdentity" classname="AzureusDatabaseRuntimeTests" time="0.000"/>
+  <testcase name="actualStatsReadIsBoundToSocketAndRealMappingEvents" classname="AzureusDatabaseRuntimeTests" time="0.008"/>
+  <testcase name="originalDiversificationRequiresExplicitControlAndRealMappingEvents" classname="AzureusDatabaseRuntimeTests" time="0.002"/>
+  <testcase name="originalFrequencyUsesActualIpBloomAndSuspensionSamples" classname="AzureusDatabaseRuntimeTests" time="0.002"/>
+  <testcase name="borrowedClockCannotReenterFacadeMutation" classname="AzureusDatabaseRuntimeTests" time="0.000"/>
+  <testcase name="strictExpiryBoundaryThrottleAndDelayedEmptyMappingRemoval" classname="AzureusDatabaseRuntimeTests" time="0.000"/>
+  <testcase name="quotaChecksExistingFourByteOverheadAndCapacityNeverClobbers" classname="AzureusDatabaseRuntimeTests" time="0.000"/>
+  <testcase name="actualTokenStoreAndRecursiveGetReadMutatedDatabase" classname="AzureusDatabaseRuntimeTests" time="0.011"/>
+  <testcase name="malformedAndWrongNetworkNeverReachTheDatabase" classname="AzureusDatabaseRuntimeTests" time="2.004"/>
+  <testcase name="legacyModeRemainsNonDatabaseAndUnsafeBindCannotActivateIt" classname="AzureusDatabaseRuntimeTests" time="0.000"/>
+  <testcase name="cleanupTestCase" classname="AzureusDatabaseRuntimeTests" time="0.000"/>
+</testsuite>

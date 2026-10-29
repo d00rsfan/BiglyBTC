@@ -1,0 +1,68 @@
+SOURCE ONLY. No compiler, sudo, pkexec, namespace or subject run by author.
+
+This complete overlay retains the prior 17 Public source maps and adds the
+fixed libc helper, unprivileged launcher, readonly preflight, existing-tests
+CMake glue and two existing hosted workflow environment hunks. Seven paths
+change/add; all sixteen Public C++/header afterimages are identical. Parent
+122e/800a/b09 and both failed namespace approaches remain immutable history.
+
+Only the fixed C executable runs privileged, after explicit pkexec or sudo-n
+authorization for its measured sealed ELF. Caller UID comes from that selected
+authorizer and must match all kernel invoker UID fields and sealed file owner;
+GID comes from all equal kernel invoker GID fields (sudo also checks SUDO_GID).
+The PID/starttime/pidfd and sealed actual executable inode must match. Unlike
+the proposal's possible passwd lookup, this has no NSS/module invocation.
+
+Root parent maps only its waitable owned child, then drops root after the
+child's verified drop token. SIGCHLD is reset to default before fork so PID
+reuse cannot follow automatic reaping. Child clears supplementary groups
+BEFORE unshare/setgroups-deny; after mapping it verifies groups empty. Only
+fixed loopback/doc addresses can be configured. The kernel unreachable ::/0
+lo sentinel is allowed only when REJECT set and UP clear; usable defaults and
+all external interfaces/routes/addresses are refused. Exact six doc addresses
+and optional ordinary lo addresses are verified before any user ELF. All
+runtime bounding/ambient bits are enumerated and cleared; UID/GID triples,
+other cap sets and NNP are checked again before user payload is even opened.
+No LSM, polkit, sysctl, service, package or host network policy is changed.
+
+Root's NEXT authorized operation (after source review) is compilation of this
+single reviewed libc helper as the ordinary user, image measurement/review,
+then ONE readonly preflight, not Public functional acceptance:
+
+  cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror \
+    ADMIN_FIXTURE/public_netns_admin.c -o OWNED_OUTPUT/public-netns-admin
+  sha256sum OWNED_OUTPUT/public-netns-admin
+  python3 ADMIN_FIXTURE/launch.py --mode pkexec \
+    --helper ABS_MEASURED_ELF --sha256 EXACT_REVIEWED_SHA256 \
+    --receipt FRESH_OWNED_ABSOLUTE_JSON -- \
+    /usr/bin/python3 ADMIN_FIXTURE/preflight.py --uid ACTUAL_UID --gid ACTUAL_GID
+
+The invoker resolves /usr/bin/python3 to its real ELF. The admin environment is
+minimal; original user argv/env are inert sealed data until verified drop.
+The readonly preflight reports actual namespace ownership, parent FD identity,
+IDs/groups/all caps/NNP, exact addresses and no usable default/external routes.
+Review actual exit, drop marker and preflight JSON; auth/setup refusal is
+BLOCKED and earns no test credit. Only root may authorize subsequent Public
+Qt execution using this same measured mode/helper and reviewed source.
+
+Wrapper argv remains python WRAPPER ELF [Qt selectors]. Required environment:
+BIGLYBTC_PUBLIC_ADMIN_MODE=pkexec (local) OR sudo (explicit CI),
+BIGLYBTC_PUBLIC_ADMIN_HELPER=absolute measured image,
+BIGLYBTC_PUBLIC_ADMIN_SHA256=exact measured approved SHA256,
+BIGLYBTC_PUBLIC_ADMIN_RECEIPT=fresh absolute owned result JSON per invocation.
+The first three values are authority pins; only the fresh receipt location
+changes between independent owned runs. Never reuse a prior result filename.
+No implicit fallback, skip or mode change. Refusal leaves Public required.
+
+The CMake helper target biglybtc-public-netns-admin is test-only/uninstalled;
+Public test target depends on it. enable_language(C) is confined to the
+existing Public test block; libc only, C11 and strict warnings, no C++/Qt link.
+No root process/build/install action occurs at configure/build time. Both
+existing hosted unit jobs explicitly select sudo-n, measure the helper just
+built from the same source, and use a fresh owned output receipt. Existing
+CI job scope/unit selection is unchanged. Local qualification may explicitly
+reuse the separately reviewed helper image; no automatic image approval.
+
+No test assertions, deadlines, C++ methods, runtime product, provider, or
+Java helpers change. W run/private/finish derivative follows actual root
+preflight and measured pins; do not run old bwrap recipe against this source.

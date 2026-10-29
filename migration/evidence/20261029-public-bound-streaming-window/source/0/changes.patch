@@ -1,0 +1,1109 @@
+--- a/preview/native/adapters/azureus_contacts.cpp
++++ b/preview/native/adapters/azureus_contacts.cpp
+@@ -1,5 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0-or-later
+ #include "azureus_contacts.hpp"
++#include "biglybtc/azureus_endpoint.hpp"
+ #include "file_io.hpp"
+ #include <bit>
+ #include <cerrno>
+@@ -52,16 +53,17 @@
+   for(const auto& value:values){if(value.length!=4&&value.length!=16){return error(ErrorCode::InvalidFormat,"Invalid original contact family");}put(static_cast<std::uint64_t>(value.timeAlive),8);put(1,1);put(static_cast<std::uint8_t>(value.protocol),1);put(value.length,1);for(std::size_t j=0;j<value.length;++j){put(value.address[j],1);}put(value.port,2);}return out;
+ }
+ namespace {
+-bool writable(std::span<const AzureusSavedContact> contacts,std::uint8_t family){
++bool writable(std::span<const AzureusSavedContact> contacts,std::uint8_t family,AzureusContactScope scope){
+   for(const auto& value:contacts){
+     if(value.length!=family||!value.port||value.protocol<51||value.protocol>55){return false;}
++    if(scope==AzureusContactScope::PublicBound){if(!core::azureusPublicAddress(std::span(value.address).first(family))){return false;}continue;}
+     if(family==4){if(value.address[0]!=127){return false;}}
+     else{for(std::size_t i=0;i<15;++i){if(value.address[i]){return false;}}if(value.address[15]!=1){return false;}}
+   }return true;
+ }
+ }
+ struct AzureusContacts::Impl {
+-  std::shared_ptr<const ProfileLease> lease;Descriptor dht{-1},net{-1};std::int32_t network=0;std::uint8_t family=4;std::string netName;
++  std::shared_ptr<const ProfileLease> lease;Descriptor dht{-1},net{-1};std::int32_t network=0;std::uint8_t family=4;AzureusContactScope scope=AzureusContactScope::OwnedLoopback;std::string netName;
+   Capture primary,pending;std::vector<AzureusSavedContact> contacts;bool canWrite=false,poisoned=false;mutable std::mutex mutex;
+   int dir()const{return network?net.get():dht.get();}
+   std::expected<void,Error> validate()const{
+@@ -75,16 +77,17 @@
+ AzureusContacts::~AzureusContacts()=default;
+ std::int32_t AzureusContacts::network()const noexcept{return impl_->network;}
+ std::uint8_t AzureusContacts::family()const noexcept{return impl_->family;}
++AzureusContactScope AzureusContacts::scope()const noexcept{return impl_->scope;}
+ std::shared_ptr<const ProfileLease> AzureusContacts::profileOwnership()const noexcept{return impl_->lease;}
+-std::expected<std::shared_ptr<AzureusContacts>,Error> AzureusContacts::open(const ProfileLease& source,std::int32_t network,std::uint8_t family){
++std::expected<std::shared_ptr<AzureusContacts>,Error> AzureusContacts::open(const ProfileLease& source,std::int32_t network,std::uint8_t family,AzureusContactScope scope){
+   try{
+-    if(network<0||(family!=4&&family!=16)){return error(ErrorCode::InvalidFormat,"Invalid contact profile network/family");}auto access=source.sourceAccess(true);if(!access){return std::unexpected(access.error());}auto held=source.retain();if(!held){return std::unexpected(held.error());}
+-    auto out=std::make_unique<Impl>();out->lease=std::move(*held);out->network=network;out->family=family;auto dht=directory(out->lease->directoryHandle(),"dht");if(!dht){return std::unexpected(dht.error());}out->dht=std::move(*dht);
++    if((scope!=AzureusContactScope::OwnedLoopback&&scope!=AzureusContactScope::PublicBound)||(scope==AzureusContactScope::PublicBound&&!((network==0&&family==4)||(network==3&&family==16)))||network<0||(family!=4&&family!=16)){return error(ErrorCode::InvalidFormat,"Invalid contact profile network/family");}auto access=source.sourceAccess(true);if(!access){return std::unexpected(access.error());}auto held=source.retain();if(!held){return std::unexpected(held.error());}
++    auto out=std::make_unique<Impl>();out->lease=std::move(*held);out->network=network;out->family=family;out->scope=scope;auto dht=directory(out->lease->directoryHandle(),"dht");if(!dht){return std::unexpected(dht.error());}out->dht=std::move(*dht);
+     if(network){out->netName="net"+std::to_string(network);auto net=directory(out->dht.get(),out->netName);if(!net){return std::unexpected(net.error());}out->net=std::move(*net);}
+     auto primary=capture(out->dir(),"contacts.dat"),pending=capture(out->dir(),"contacts.saving");if(!primary){return std::unexpected(primary.error());}if(!pending){return std::unexpected(pending.error());}
+     const auto selected=primary->bytes?primary->bytes:pending->bytes;
+     if(selected){auto decoded=decodeAzureusContactState(*selected);if(!decoded){return std::unexpected(decoded.error());}out->contacts=std::move(*decoded);}
+-    out->canWrite=writable(out->contacts,family)&&!(primary->bytes&&pending->bytes);
++    out->canWrite=writable(out->contacts,family,scope)&&!(primary->bytes&&pending->bytes);
+     if(!primary->bytes&&pending->bytes&&out->canWrite){
+       auto fresh=out->lease->retain();if(!fresh){return std::unexpected(fresh.error());}Descriptor fd(::openat(out->dir(),"contacts.saving",O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_NOFOLLOW));struct stat actual{};auto latest=capture(out->dir(),"contacts.saving");
+       if(fd.get()<0||::fstat(fd.get(),&actual)!=0||!latest||!latest->stamp||!same(actual,*latest->stamp)||!equal(*latest,*pending)||!namedDirectory(out->lease->directoryHandle(),"dht",out->dht.get())||(network&&!namedDirectory(out->dht.get(),out->netName,out->net.get()))){return error(ErrorCode::Conflict,"Contact pending recovery changed");}
+@@ -99,7 +102,7 @@
+ std::expected<void,Error> AzureusContacts::save(std::span<const AzureusSavedContact> values,std::stop_token stop,std::chrono::steady_clock::time_point deadline){
+   try{
+     auto access=impl_->lease->sourceAccess(true);if(!access){return std::unexpected(access.error());}std::lock_guard lock(impl_->mutex);auto valid=impl_->validate();if(!valid){return std::unexpected(valid.error());}
+-    if(!impl_->canWrite||!writable(values,impl_->family)){return error(ErrorCode::Unsupported,"Foreign/ambiguous original cache remains unchanged");}auto bytes=encodeAzureusContactState(values);if(!bytes){return std::unexpected(bytes.error());}if(stop.stop_requested()||std::chrono::steady_clock::now()>=deadline){return error(ErrorCode::Cancelled,"Contact export cancelled/expired");}
++    if(!impl_->canWrite||!writable(values,impl_->family,impl_->scope)){return error(ErrorCode::Unsupported,"Foreign/ambiguous original cache remains unchanged");}auto bytes=encodeAzureusContactState(values);if(!bytes){return std::unexpected(bytes.error());}if(stop.stop_requested()||std::chrono::steady_clock::now()>=deadline){return error(ErrorCode::Cancelled,"Contact export cancelled/expired");}
+     impl_->poisoned=true;auto created=detail::writeExclusiveOwned(impl_->dir(),"contacts.saving",*bytes,0600);if(!created){return std::unexpected(created.error());}
+     auto held=impl_->lease->retain();if(!held){return std::unexpected(held.error());}auto primary=capture(impl_->dir(),"contacts.dat"),pending=capture(impl_->dir(),"contacts.saving");struct stat fd{};
+     if(stop.stop_requested()||std::chrono::steady_clock::now()>=deadline){return error(ErrorCode::Cancelled,"Contact export cancelled/expired before publication");}
+--- a/preview/native/adapters/azureus_contacts.hpp
++++ b/preview/native/adapters/azureus_contacts.hpp
+@@ -20,16 +20,18 @@
+ inline constexpr std::size_t MaximumAzureusSavedContacts=32,MaximumAzureusContactFile=932;
+ std::expected<std::vector<AzureusSavedContact>,Error> decodeAzureusContactState(std::string_view);
+ std::expected<std::string,Error> encodeAzureusContactState(std::span<const AzureusSavedContact>);
++enum class AzureusContactScope {OwnedLoopback,PublicBound};
+ struct AzureusContactsSnapshot {std::vector<AzureusSavedContact> contacts;bool writable=false;};
+ // Explicit opaque-compatible file owner. Calls perform synchronous filesystem
+ // IO and belong only to external initialization or the existing profile worker.
+ // It retains SAME OFD; no actor/router, timer or network permission lives here.
+ class AzureusContacts final {
+ public:
+-  static std::expected<std::shared_ptr<AzureusContacts>,Error> open(const ProfileLease&,std::int32_t network,std::uint8_t family);
++  static std::expected<std::shared_ptr<AzureusContacts>,Error> open(const ProfileLease&,std::int32_t network,std::uint8_t family,AzureusContactScope=AzureusContactScope::OwnedLoopback);
+   ~AzureusContacts();
+   std::int32_t network()const noexcept;
+   std::uint8_t family()const noexcept;
++  AzureusContactScope scope()const noexcept;
+   std::shared_ptr<const ProfileLease> profileOwnership()const noexcept;
+   std::expected<void,Error> validate()const;
+   std::expected<std::shared_ptr<const AzureusContactsSnapshot>,Error> snapshot()const;
+--- /dev/null
++++ b/preview/native/adapters/azureus_public_policy.cpp
+@@ -0,0 +1,78 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++// Original DHTPlugin / DHTTransportUDPImpl, cb8c6cb9; bounded explicit-bind slice.
++#include "azureus_public_policy.hpp"
++#include "biglybtc/azureus_endpoint.hpp"
++#include <atomic>
++#include <algorithm>
++#include <bit>
++#include <cerrno>
++#include <cstring>
++#include <fcntl.h>
++#include <ifaddrs.h>
++#include <net/if.h>
++#include <netinet/in.h>
++#include <arpa/inet.h>
++#include <sys/stat.h>
++#include <unistd.h>
++namespace biglybtc::storage {
++namespace {
++std::unexpected<Error> error(ErrorCode code,const char* text){return std::unexpected(Error{code,text});}
++bool same(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
++struct Config {std::string bytes;struct stat stamp{};core::Document document;Config(std::string b,struct stat s,core::Document d):bytes(std::move(b)),stamp(s),document(std::move(d)){}};
++std::expected<Config,Error> config(const ProfileLease& lease){
++  struct stat before{},pending{},after{};const auto fd=lease.directoryHandle();
++  if(::fstatat(fd,"biglybt.config.saving",&pending,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return error(ErrorCode::Conflict,"Resolve public DHT pending configuration first");}
++  if(::fstatat(fd,"biglybt.config",&before,AT_SYMLINK_NOFOLLOW)!=0){return error(ErrorCode::Missing,"Current primary public DHT configuration required");}
++  if(!S_ISREG(before.st_mode)||before.st_uid!=::geteuid()||before.st_nlink!=1||(before.st_mode&0022)){return error(ErrorCode::UnsafePath,"Unsafe public DHT configuration");}
++  auto source=ConfigFile::load(lease,"biglybt.config");if(!source){return std::unexpected(source.error());}if(source->recoverySource()!=RecoverySource::Primary){return error(ErrorCode::Conflict,"Primary public DHT configuration required");}
++  if(::fstatat(fd,"biglybt.config",&after,AT_SYMLINK_NOFOLLOW)!=0||!same(before,after)){return error(ErrorCode::Conflict,"Public DHT configuration changed while reading");}
++  const auto raw=source->document().originalBytes();return Config{std::string(raw),before,std::move(source->document())};
++}
++std::expected<std::int64_t,Error> integer(const core::Document& d,const char* key,std::int64_t fallback){const auto* node=d.find(key);if(!node){return fallback;}if(node->type!=core::Node::Type::Integer){return error(ErrorCode::InvalidFormat,"Invalid public DHT policy integer");}return node->integer;}
++std::expected<std::string,Error> text(const core::Document& d,const char* key){const auto* node=d.find(key);if(!node){return std::string{};}if(node->type!=core::Node::Type::Bytes){return error(ErrorCode::InvalidFormat,"Invalid public DHT bind policy");}return std::string(node->bytes);}
++std::expected<void,Error> permitted(const core::Document& d,const AzureusPublicBind& bind){
++  for(const char* key:{"Plugin.DHT.dht.enabled",bind.family==4?"dht.net.main_v4.enable":"dht.net.main_v6.enable"}){auto value=integer(d,key,1);if(!value){return std::unexpected(value.error());}if(static_cast<std::uint32_t>(*value)==0){return error(ErrorCode::Unsupported,"Original public DHT network is disabled");}}
++  if(bind.family==16){auto value=integer(d,"IPV6 Enable Support",0);if(!value){return std::unexpected(value.error());}if(static_cast<std::uint32_t>(*value)==0){return error(ErrorCode::Unsupported,"Original IPv6 support is disabled");}}
++  for(const char* key:{"Enable.Proxy","Enable.SOCKS","Proxy.Data.Enable"}){auto value=integer(d,key,0);if(!value){return std::unexpected(value.error());}if(static_cast<std::uint32_t>(*value)!=0){return error(ErrorCode::Unsupported,"PublicBound requires direct policy; no proxy fallback");}}
++  auto filter=integer(d,"Ip Filter Enabled",1);if(!filter){return std::unexpected(filter.error());}if(static_cast<std::uint32_t>(*filter)!=0){return error(ErrorCode::Unsupported,"Native public IP filter adapter is not available");}
++  auto port=integer(d,"UDP.NonData.Listen.Port",6881);if(!port){return std::unexpected(port.error());}const auto selected=std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(*port));if(selected<=0||selected>65535||selected==6880||selected!=bind.port){return error(ErrorCode::Unsupported,"PublicBound must match saved non-data UDP port");}
++  auto advanced=integer(d,"Plugin.DHT.dht.advanced",0);if(!advanced){return std::unexpected(advanced.error());}
++  if(static_cast<std::uint32_t>(*advanced)!=0){auto override=text(d,"Plugin.DHT.dht.override.ip");if(!override){return std::unexpected(override.error());}if(std::ranges::any_of(*override,[](unsigned char c){return c>0x20;})){return error(ErrorCode::Unsupported,"Saved DHT external override requires its own identity policy");}}
++  auto saved=text(d,"Bind IP"),extra=text(d,"Additional Service Bind IPs");auto enforce=integer(d,"Enforce Bind IP",0);if(!saved){return std::unexpected(saved.error());}if(!extra){return std::unexpected(extra.error());}if(!enforce){return std::unexpected(enforce.error());}if(!extra->empty()){return error(ErrorCode::Unsupported,"Additional public binds are not supported");}
++  if(saved->empty()){if(static_cast<std::uint32_t>(*enforce)!=0){return error(ErrorCode::Unsupported,"Explicit saved enforced bind required");}return {};}
++  std::array<std::uint8_t,16> bytes{};if(saved->find('\0')!=std::string::npos||::inet_pton(bind.family==4?AF_INET:AF_INET6,saved->c_str(),bytes.data())!=1){return error(ErrorCode::Unsupported,"Only same-family numeric saved bind is supported");}
++  const auto end=bytes.begin()+bind.family;const bool wildcard=std::all_of(bytes.begin(),end,[](auto b){return b==0;});if(wildcard){if(static_cast<std::uint32_t>(*enforce)!=0){return error(ErrorCode::Unsupported,"Enforced wildcard public bind is unsupported");}return {};}
++  if(!std::equal(bytes.begin(),end,bind.address.begin())){return error(ErrorCode::Unsupported,"PublicBound differs from saved explicit bind");}return {};
++}
++struct Interface {unsigned index=0;std::string name;bool operator==(const Interface&)const=default;};
++std::expected<Interface,Error> interface(const AzureusPublicBind& bind){
++  ifaddrs* list=nullptr;if(::getifaddrs(&list)!=0){return error(ErrorCode::Io,"Cannot inspect public bound interface");}const auto release=std::unique_ptr<ifaddrs,decltype(&::freeifaddrs)>(list,::freeifaddrs);std::optional<Interface> out;
++  for(const auto* at=list;at;at=at->ifa_next){if(!at->ifa_addr||!at->ifa_name||!(at->ifa_flags&IFF_UP)){continue;}const auto* a=at->ifa_addr;const void* bytes=nullptr;
++    if(bind.family==4&&a->sa_family==AF_INET){bytes=&reinterpret_cast<const sockaddr_in*>(a)->sin_addr;}
++    else if(bind.family==16&&a->sa_family==AF_INET6){const auto* v6=reinterpret_cast<const sockaddr_in6*>(a);if(v6->sin6_scope_id){continue;}bytes=&v6->sin6_addr;}
++    if(!bytes||std::memcmp(bytes,bind.address.data(),bind.family)){continue;}Interface next{::if_nametoindex(at->ifa_name),at->ifa_name};if(!next.index){return error(ErrorCode::Io,"Cannot identify public bound interface");}if(out&&*out!=next){return error(ErrorCode::Unsupported,"Ambiguous public bound interface");}out=std::move(next);
++  }if(!out){return error(ErrorCode::Unsupported,"Public numeric address is not on a live local interface");}return std::move(*out);
++}
++}
++struct AzureusPublicPolicy::Impl {
++  std::shared_ptr<const ProfileLease> lease;std::shared_ptr<AzureusValueVersions> versions;AzureusPublicBind bind;std::string bytes;struct stat stamp{};Interface local;mutable std::atomic<bool> rejected{false};
++  std::expected<void,Error> validate()const{
++    if(rejected.load()){return error(ErrorCode::Conflict,"Public DHT source was withdrawn; recreate explicitly");}auto gate=lease->sourceAccess();if(!gate){return std::unexpected(gate.error());}auto held=lease->retain();if(!held){return std::unexpected(held.error());}auto valid=versions->validate();if(!valid){return valid;}
++    auto current=config(*lease);if(!current){return std::unexpected(current.error());}if(current->bytes!=bytes||!same(current->stamp,stamp)){return error(ErrorCode::Conflict,"Saved public DHT source changed");}valid=permitted(current->document,bind);if(!valid){return valid;}auto actual=interface(bind);if(!actual){return std::unexpected(actual.error());}if(*actual!=local){return error(ErrorCode::Conflict,"Public DHT bound interface changed");}return {};
++  }
++};
++AzureusPublicPolicy::AzureusPublicPolicy(std::unique_ptr<Impl> value):impl_(std::move(value)){}
++AzureusPublicPolicy::~AzureusPublicPolicy()=default;
++const AzureusPublicBind& AzureusPublicPolicy::binding()const noexcept{return impl_->bind;}
++bool AzureusPublicPolicy::matchesVersions(const AzureusValueVersions& value)const noexcept{return impl_->versions.get()==&value;}
++std::shared_ptr<const ProfileLease> AzureusPublicPolicy::profileOwnership()const noexcept{return impl_->lease;}
++bool AzureusPublicPolicy::current()const noexcept{return !impl_->rejected.load();}
++void AzureusPublicPolicy::revoke()noexcept{impl_->rejected.store(true);}
++std::expected<void,Error> AzureusPublicPolicy::validate()const{try{auto valid=impl_->validate();if(!valid){impl_->rejected.store(true);}return valid;}catch(...){impl_->rejected.store(true);return error(ErrorCode::Io,"Cannot validate public DHT source");}}
++std::expected<std::shared_ptr<AzureusPublicPolicy>,Error> AzureusPublicPolicy::open(const ProfileLease& lease,std::shared_ptr<AzureusValueVersions> versions,AzureusPublicBind bind){
++  try{if(!versions||!versions->profileOwnership()->sharesOwnership(lease)||versions->network()!=bind.network||!bind.port||!((bind.network==0&&bind.family==4)||(bind.network==3&&bind.family==16))||!core::azureusPublicAddress(std::span(bind.address).first(bind.family))){return error(ErrorCode::Unsupported,"Explicit supported public numeric bind and SAME version owner required");}
++    auto gate=lease.sourceAccess();if(!gate){return std::unexpected(gate.error());}auto held=lease.retain();if(!held){return std::unexpected(held.error());}auto valid=versions->validate();if(!valid){return std::unexpected(valid.error());}auto source=config(lease);if(!source){return std::unexpected(source.error());}valid=permitted(source->document,bind);if(!valid){return std::unexpected(valid.error());}auto local=interface(bind);if(!local){return std::unexpected(local.error());}
++    auto out=std::make_unique<Impl>();out->lease=std::move(*held);out->versions=std::move(versions);out->bind=bind;out->bytes=std::move(source->bytes);out->stamp=source->stamp;out->local=std::move(*local);return std::shared_ptr<AzureusPublicPolicy>(new AzureusPublicPolicy(std::move(out)));
++  }catch(...){return error(ErrorCode::Io,"Cannot initialize public DHT source");}
++}
++}
+--- /dev/null
++++ b/preview/native/adapters/azureus_public_policy.hpp
+@@ -0,0 +1,32 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#pragma once
++#include "azureus_value_versions.hpp"
++#include <array>
++#include <memory>
++namespace biglybtc::storage {
++struct AzureusPublicBind {
++  std::int32_t network=0;std::uint8_t family=4;
++  std::array<std::uint8_t,16> address{};std::uint16_t port=0;
++  bool operator==(const AzureusPublicBind&)const=default;
++};
++// SDK-neutral, profile-bound direct numeric policy. Synchronous reads belong
++// to external initialization or the existing profile worker, never the actor.
++// A failed validation latches withdrawal; explicit recreation is required.
++class AzureusPublicPolicy final {
++public:
++  static std::expected<std::shared_ptr<AzureusPublicPolicy>,Error> open(
++      const ProfileLease&,std::shared_ptr<AzureusValueVersions>,AzureusPublicBind);
++  ~AzureusPublicPolicy();
++  const AzureusPublicBind& binding()const noexcept;
++  bool matchesVersions(const AzureusValueVersions&)const noexcept;
++  std::shared_ptr<const ProfileLease> profileOwnership()const noexcept;
++  // Revocation only. True is NOT a fresh permit or a live route observation.
++  bool current()const noexcept;
++  // Monotone revocation when a same-profile dependent source also fails.
++  void revoke()noexcept;
++  std::expected<void,Error> validate()const;
++private:
++  struct Impl;explicit AzureusPublicPolicy(std::unique_ptr<Impl>);
++  std::unique_ptr<Impl> impl_;
++};
++}
+--- a/preview/native/app/azureus_profile_io.hpp
++++ b/preview/native/app/azureus_profile_io.hpp
+@@ -97,17 +97,21 @@
+         {
+           std::lock_guard lock(job->mutex);job->result=std::move(result);
+           if(stop.stop_requested()){job->revoked=true;}
+-          job->phase=Phase::Ready;
++          job->phase=Phase::Ready;job->changed.notify_all();
+         }
+         signal();
+         std::unique_lock lock(job->mutex);
+         std::stop_callback stopped(stop,[&]{job->revoked.store(true);job->changed.notify_all();});
+         job->changed.wait(lock,[&]{return job->phase==Phase::Committed||(job->revoked&&job->phase!=Phase::Executing);});
+       }}catch(...){job->revoked.store(true);} // Source gate released first.
+-      {std::lock_guard lock(job->mutex);job->phase=Phase::Released;}signal();return {};
++      {std::lock_guard lock(job->mutex);job->phase=Phase::Released;job->changed.notify_all();}signal();return {};
+     });
+     if(!submitted){free->reset();return std::unexpected(submitted.error());}
+     job->ticket.emplace(std::move(*submitted));return job;
++  }
++  // External service creation only. The actor never waits for this handshake.
++  static bool waitReady(const Handle& job,std::chrono::steady_clock::time_point end){
++    std::unique_lock lock(job->mutex);return job->changed.wait_until(lock,end,[&]{return job->phase==Phase::Ready||job->phase==Phase::Released;})&&job->phase==Phase::Ready&&!job->revoked&&job->result&&bool(*job->result);
+   }
+   static std::optional<Result> take(const Handle& job){
+     std::lock_guard lock(job->mutex);if(job->phase!=Phase::Ready||job->revoked||!job->result){return {};}
+--- a/preview/native/app/azureus_profile_io_owner.inc
++++ b/preview/native/app/azureus_profile_io_owner.inc
+@@ -34,6 +34,7 @@
+       }catch(...){try{ioDeadline_.stop();}catch(...){}publicationMemoryFailure();}
+     }
+     bool profilePermit_=false,passiveIo_=false,drainingIo_=false;
++    std::chrono::steady_clock::time_point profileDeadline_{};
+     std::uint64_t profileCommand_=0,profileRevision_=0;
+     bool passiveSkip_=false;
+     std::shared_ptr<std::atomic<std::size_t>> pendingFrames_=std::make_shared<std::atomic<std::size_t>>(0);
+@@ -62,9 +63,9 @@
+           slot.consumed=true;passiveSkip_=true;
+           if(!*ready){slot.error=ready->error();}
+           else if(!slot.error&&state_->profileIo->lease()->sourceRevision()==ready->value().revision){
+-            profilePermit_=true;profileCommand_=slot.command;profileRevision_=ready->value().revision;
++            profileDeadline_=slot.deadline;profilePermit_=true;profileCommand_=slot.command;profileRevision_=ready->value().revision;
+             try{slot.commit(ready->value());}catch(...){publicationMemoryFailure();}
+-            profilePermit_=false;profileCommand_=0;profileRevision_=0;
++            profilePermit_=false;profileDeadline_={};profileCommand_=0;profileRevision_=0;
+           }else if(!slot.error){slot.error=storage::Error{storage::ErrorCode::Conflict,"Profile source permit changed"};}
+           ProfileIo::acknowledge(slot.job);
+         }}
+@@ -76,7 +77,7 @@
+           if(error){done(std::move(*error));}
+         }
+       }}catch(...){
+-        profilePermit_=false;profileCommand_=0;profileRevision_=0;
++        profilePermit_=false;profileDeadline_={};profileCommand_=0;profileRevision_=0;
+         for(auto& slot:ioSlots_){if(slot.job){ProfileIo::acknowledge(slot.job);ProfileIo::revoke(slot.job);}}
+         publicationMemoryFailure();
+       }
+@@ -89,11 +90,11 @@
+         std::move_only_function<std::expected<std::shared_ptr<const storage::AzureusContactsSnapshot>,storage::Error>(std::stop_token)> contactWork={}){
+       if(!state_->profileIo){return false;}
+       IoSlot* slot=nullptr;for(auto& item:ioSlots_){if(!item.job){slot=&item;break;}}if(!slot){return false;}
+-      auto versions=options_.valueVersions;auto contacts=options_.contacts;auto lease=state_->profileIo->lease();const bool routingPolicy=options_.routingScope==azureus::RoutingScope::OwnedLoopback;
+-      auto submitted=state_->profileIo->submit([versions,contacts,lease,command,reserve,deadline,allowExpired,routingPolicy,contactWork=std::move(contactWork)](std::stop_token stop)mutable->ProfileIo::Result{
++      auto versions=options_.valueVersions;auto contacts=options_.contacts;auto publicPolicy=options_.publicPolicy;auto lease=state_->profileIo->lease();const bool routingPolicy=options_.routingScope==azureus::RoutingScope::OwnedLoopback;
++      auto submitted=state_->profileIo->submit([versions,contacts,publicPolicy,lease,command,reserve,deadline,allowExpired,routingPolicy,contactWork=std::move(contactWork)](std::stop_token stop)mutable->ProfileIo::Result{
+         const auto cancelled=[&]{return stop.stop_requested()||(!allowExpired&&std::chrono::steady_clock::now()>=deadline);};
+         if(cancelled()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO expired"});}
+-        auto valid=versions->validate();if(!valid){return std::unexpected(valid.error());}if(contacts){valid=contacts->validate();if(!valid){return std::unexpected(valid.error());}}
++        auto valid=publicPolicy?publicPolicy->validate():versions->validate();if(!valid){return std::unexpected(valid.error());}if(contacts){valid=contacts->validate();if(!valid){if(publicPolicy){publicPolicy->revoke();}return std::unexpected(valid.error());}}
+         if(routingPolicy){
+           auto config=storage::ConfigFile::load(*lease,"biglybt.config");if(!config&&config.error().code!=storage::ErrorCode::Missing){return std::unexpected(config.error());}
+           if(config){if(config->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Resolve routing configuration recovery first"});}
+--- /dev/null
++++ b/preview/native/app/azureus_public_owner.inc
+@@ -0,0 +1,49 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++// Included in the existing private owner. PublicBound adds no thread or timer.
++// Its cached policy bit can revoke only: a true bit never replaces an IO permit.
++    bool publiclyBound()const noexcept{return options_.routingScope==azureus::RoutingScope::PublicBound;}
++    bool publicPacketPermit()const noexcept{
++      if(!publiclyBound()||!profilePermit_||!options_.publicPolicy||!options_.publicPolicy->current()){return false;}
++      std::lock_guard lock(state_->mutex);return !state_->stop&&Clock::now()<profileDeadline_;
++    }
++    void withdrawPublic()noexcept{
++      if(!publiclyBound()||options_.publicPolicy->current()){return;}
++      {std::lock_guard lock(state_->mutex);state_->stop=true;state_->value.current=false;state_->value.error=AzureusServiceError::Profile;state_->value.state=AzureusServiceState::Closing;state_->advance();}
++      // The ordinary Thread shutdown closes the UDP socket before external IO
++      // join. No profile lock or future is acquired on this network thread.
++      loop_.quit();
++    }
++    bool rpcCurrent(std::uint64_t id)const noexcept{return std::ranges::any_of(active_,[&](const auto& value){return value.id==id;});}
++    void beginPublicCommand(Command command){
++      auto pending=std::make_shared<bool>(true);
++      const auto current=[this,pending]{return *pending&&serviceCurrent()&&options_.publicPolicy->current();};
++      const auto finish=[this,command,pending](std::optional<azureus::Failure> failure){if(!*pending){return;}*pending=false;reply(command,failure,true);};
++      if(!deferProfile(command,false,command.deadline,current,
++        [this,command,pending](const ProfileIo::Data&)mutable{
++          if(!*pending){return;}*pending=false;
++          const auto remaining=command.deadline-Clock::now();if(remaining<=Clock::duration::zero()||!publicPacketPermit()){reply(command,azureus::Failure::Timeout,true);return;}
++          command.timeout=std::chrono::duration_cast<std::chrono::nanoseconds>(remaining);this->command(std::move(command));
++        },[finish](storage::Error){finish(azureus::Failure::Authority);},false,
++        [finish]{finish(azureus::Failure::Timeout);},[finish]{finish(azureus::Failure::Cancelled);})){finish(azureus::Failure::Capacity);}
++    }
++    template<class Result>void completeRpc(const Command& command,Result result){
++      if(!rpcCurrent(command.id)){return;}
++      // A failed/cancelled/closed RPC grants no peer/DB authority. Settle it
++      // immediately without waiting for disk; PublicBound does not mutate the
++      // router from this unpermitted failure continuation.
++      if(publiclyBound()&&!result){reply(command,result.error(),true);return;}
++      auto held=publiclyBound()?holdProfileFrame():std::shared_ptr<void>{};
++      if(publiclyBound()&&!held){reply(command,azureus::Failure::Capacity,true);return;}
++      auto complete=[this,command,result=std::move(result),held=std::move(held)](const ProfileIo::Data&)mutable{
++        if(!rpcCurrent(command.id)){return;}
++        if(publiclyBound()&&(Clock::now()>=command.deadline||!publicPacketPermit())){reply(command,azureus::Failure::Timeout,true);return;}
++        bool terminal=true;
++        if constexpr(std::is_same_v<Result,azureus::FindValueOutcome>){const auto* body=result?std::get_if<azureus::lookup::ReplyBody>(&result->body()):nullptr;terminal=!body||!body->continuation;}
++        routerReply(command.peer,result);reply(command,result?std::optional<azureus::Failure>{}:result.error(),terminal);
++      };
++      if(!publiclyBound()){complete(ProfileIo::Data{});return;}
++      const auto finish=[this,command](azureus::Failure failure){if(rpcCurrent(command.id)){reply(command,failure,true);}};
++      if(!deferProfile(command,false,command.deadline,[this,id=command.id]{return rpcCurrent(id)&&serviceCurrent()&&options_.publicPolicy->current();},
++        std::move(complete),[finish](storage::Error){finish(azureus::Failure::Authority);},false,
++        [finish]{finish(azureus::Failure::Timeout);},[finish]{finish(azureus::Failure::Cancelled);})){finish(azureus::Failure::Capacity);}
++    }
+--- a/preview/native/app/owned_azureus_service.cpp
++++ b/preview/native/app/owned_azureus_service.cpp
+@@ -1,5 +1,6 @@
+ #include "owned_azureus_service.hpp"
+ #include "azureus_profile_io.hpp"
++#include "biglybtc/azureus_endpoint.hpp"
+ #include <QScopeGuard>
+ #include <QAbstractEventDispatcher>
+ #include <QCoreApplication>
+@@ -15,6 +16,7 @@
+ #include <mutex>
+ #include <new>
+ #include <tuple>
++#include <type_traits>
+ #include <utility>
+ 
+ namespace biglybtc::app {
+@@ -57,15 +59,26 @@
+     if(std::tie(p.serial,p.ticket,p.requestAction,p.kind,p.elapsedNanoseconds)!=std::tie(q.serial,q.ticket,q.requestAction,q.kind,q.elapsedNanoseconds)){return false;}}
+   return true; // Pull publication itself is deliberately excluded from fact equality.
+ }
+-bool validPeer(const azureus::Peer& peer,const QHostAddress& bound){return peer.port&&peer.address.isLoopback()&&peer.address.scopeId().isEmpty()&&peer.address.protocol()==bound.protocol();}
+-bool validOptions(const AzureusServiceOptions& value){return value.bindAddress.isLoopback()&&value.bindAddress.scopeId().isEmpty()
++storage::AzureusPublicBind publicBinding(const AzureusServiceOptions& value){
++  storage::AzureusPublicBind out;out.network=value.network;out.port=value.bindPort;out.family=value.bindAddress.protocol()==QAbstractSocket::IPv4Protocol?4:16;
++  if(out.family==4){const auto ip=value.bindAddress.toIPv4Address();for(unsigned i=0;i<4;++i){out.address[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}}
++  else{const auto ip=value.bindAddress.toIPv6Address();std::copy_n(ip.c,16,out.address.begin());}return out;
++}
++bool validPeer(const azureus::Peer& peer,const QHostAddress& bound,azureus::RoutingScope scope=azureus::RoutingScope::ExactPeers){
++  if(!peer.port||!peer.address.scopeId().isEmpty()||peer.address.protocol()!=bound.protocol()){return false;}
++  if(scope!=azureus::RoutingScope::PublicBound){return peer.address.isLoopback();}std::array<std::uint8_t,16> bytes{};
++  if(peer.address.protocol()==QAbstractSocket::IPv4Protocol){const auto ip=peer.address.toIPv4Address();for(unsigned i=0;i<4;++i){bytes[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}return core::azureusPublicAddress(std::span(bytes).first(4));}
++  if(peer.address.protocol()==QAbstractSocket::IPv6Protocol){const auto ip=peer.address.toIPv6Address();std::copy_n(ip.c,16,bytes.begin());return core::azureusPublicAddress(bytes);}return false;
++}
++bool validOptions(const AzureusServiceOptions& value){const bool publiclyBound=value.routingScope==azureus::RoutingScope::PublicBound;return (publiclyBound?validPeer({value.bindAddress,value.bindPort},value.bindAddress,value.routingScope):value.bindAddress.isLoopback())&&value.bindAddress.scopeId().isEmpty()
+     &&(value.bindAddress.protocol()==QAbstractSocket::IPv4Protocol||value.bindAddress.protocol()==QAbstractSocket::IPv6Protocol)
+     &&value.network>=0&&value.version>=51&&value.version<=55&&value.maximumPending&&value.maximumPending<=32
+     &&value.maximumPeers&&value.maximumPeers<=32&&value.maximumCommands&&value.maximumCommands<=64
+-    &&(!value.contacts||(value.valueVersions&&value.contacts->network()==value.network&&value.contacts->family()==(value.bindAddress.protocol()==QAbstractSocket::IPv4Protocol?4:16)&&value.contacts->profileOwnership()->sharesOwnership(*value.valueVersions->profileOwnership())))
+-    &&(!value.maintenance||(value.contacts&&value.routingScope==azureus::RoutingScope::OwnedLoopback&&value.serveValues&&value.valueVersions))
++    &&(!value.contacts||(value.valueVersions&&value.contacts->network()==value.network&&value.contacts->family()==(value.bindAddress.protocol()==QAbstractSocket::IPv4Protocol?4:16)&&value.contacts->scope()==(publiclyBound?storage::AzureusContactScope::PublicBound:storage::AzureusContactScope::OwnedLoopback)&&value.contacts->profileOwnership()->sharesOwnership(*value.valueVersions->profileOwnership())))
++    &&(!value.maintenance||(value.contacts&&azureus::dynamicRoutingScope(value.routingScope)&&value.serveValues&&value.valueVersions))
+     &&(!value.valueVersions||value.valueVersions->network()==value.network)&&(!value.serveValues||value.valueVersions)
+-    &&(value.routingScope==azureus::RoutingScope::ExactPeers||(value.routingScope==azureus::RoutingScope::OwnedLoopback&&value.serveValues&&value.valueVersions));}
++    &&(value.routingScope==azureus::RoutingScope::ExactPeers||(azureus::dynamicRoutingScope(value.routingScope)&&value.serveValues&&value.valueVersions))
++    &&(publiclyBound?(value.publicPolicy&&value.publicPolicy->current()&&value.valueVersions&&value.publicPolicy->matchesVersions(*value.valueVersions)&&value.publicPolicy->binding()==publicBinding(value)&&value.maintenance):!value.publicPolicy);}
+ }
+ struct OwnedAzureusService::Impl {
+   struct State {
+@@ -77,6 +90,7 @@
+     AzureusServiceObservation value;
+     bool ready=false,stop=false;
+     std::shared_ptr<detail::AzureusProfileIo> profileIo;
++    detail::AzureusProfileIo::Handle startup;std::chrono::steady_clock::time_point startupDeadline{};
+     std::uint64_t ratingRevision=0;
+     std::uint64_t nextRequest=0;
+     void advance(){if(value.sequence!=std::numeric_limits<std::uint64_t>::max()){++value.sequence;}else{value.current=false;value.error=AzureusServiceError::Capacity;}}
+@@ -94,22 +108,30 @@
+     }
+     std::expected<void,azureus::Failure> start(){
+       if(state_->profileIo){state_->profileIo->bind(this);}
+-      auto started=actor_.start(options_.bindAddress,options_.bindPort);if(!started){return started;}initializeRouter();
++      auto startup=std::move(state_->startup);const auto acknowledge=qScopeGuard([&]{if(startup){profilePermit_=false;profileDeadline_={};ProfileIo::acknowledge(startup);}});
++      if(publiclyBound()){
++        if(!startup){return std::unexpected(azureus::Failure::Authority);}ioSlots_[0].job=startup;ioSlots_[0].consumed=true;
++        auto permit=ProfileIo::take(startup);if(!permit||!*permit||!options_.publicPolicy->current()||Clock::now()>=state_->startupDeadline||state_->profileIo->lease()->sourceRevision()!=permit->value().revision){return std::unexpected(azureus::Failure::Authority);}
++        profileDeadline_=state_->startupDeadline;profilePermit_=true;profileRevision_=permit->value().revision;
++      }
++      std::function<bool()> publicPermit;if(publiclyBound()){publicPermit=[this]{return publicPacketPermit();};}
++      auto started=actor_.start(options_.bindAddress,options_.bindPort,std::move(publicPermit));if(!started){return started;}initializeRouter();
+       if(options_.valueVersions&&!initializeLocalDatabase()){return std::unexpected(azureus::Failure::State);}
+       if(options_.serveValues){
+         if(!router_||!localDatabase_){return std::unexpected(azureus::Failure::State);}
+-        profilePermit_=true;const auto bound=actor_.serveDatabase(router_,localDatabase_,[this]{
++        const bool priorPermit=profilePermit_;profilePermit_=true;const auto bound=actor_.serveDatabase(router_,localDatabase_,[this]{
+           {std::lock_guard lock(state_->mutex);if(state_->stop){return false;}}
+-          return bool(router_)&&profilePermit_;
+-        },[this](std::move_only_function<void(bool)> complete){return normalProfileRequest(std::move(complete));});profilePermit_=false;if(!bound){return bound;}
+-      }if(options_.maintenance){maintenanceTimer_.start();}return started;
++          return bool(router_)&&profilePermit_&&(!publiclyBound()||publicPacketPermit());
++        },[this](std::move_only_function<void(bool)> complete){return normalProfileRequest(std::move(complete));});profilePermit_=priorPermit;if(!bound){return bound;}
++      }if(publiclyBound()&&(Clock::now()>=state_->startupDeadline||!publicPacketPermit())){return std::unexpected(azureus::Failure::Authority);}if(options_.maintenance){maintenanceTimer_.start();}return started;
+     }
+     azureus::Peer endpoint()const{return actor_.endpoint();}
+-    void idle(){drainProfileIo();bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}if(stop){loop_.quit();return;}publish();}
++    void idle(){drainProfileIo();withdrawPublic();bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}if(stop){loop_.quit();return;}publish();}
+     void command(Command value){
+       if(value.deadline==std::chrono::steady_clock::time_point{}){value.deadline=std::chrono::steady_clock::now()+value.timeout;}
+       {std::lock_guard lock(state_->mutex);if(state_->stop){releaseLocked();state_->advance();return;}}
+       try{
++        if(publiclyBound()&&!profilePermit_&&value.kind!=AzureusServiceCommand::Cancel){beginPublicCommand(std::move(value));return;}
+         if(value.kind==AzureusServiceCommand::AllowPeer){auto allowed=actor_.allowPeer(value.peer);if(allowed){rememberOwned(value.peer);routerKnown(value.peer);}complete(value,allowed);return;}
+         if(value.kind==AzureusServiceCommand::LookupValue){beginLookup(value);return;}
+         if(value.kind==AzureusServiceCommand::PublishValue||value.kind==AzureusServiceCommand::ForwardCached){beginPublish(value);return;}
+@@ -147,9 +169,9 @@
+         if(!slot){complete(value,std::unexpected(azureus::Failure::Capacity));return;}
+         slot->id=value.id;
+         std::expected<azureus::Ticket,azureus::Failure> submitted=std::unexpected(azureus::Failure::State);
+-        if(value.kind==AzureusServiceCommand::Ping){submitted=actor_.ping(value.peer,options_.version,this,[this,value](azureus::Outcome result){routerReply(value.peer,result);reply(value,result?std::optional<azureus::Failure>{}:result.error(),true);},value.timeout);}
+-        else if(value.kind==AzureusServiceCommand::FindNode){submitted=actor_.findNode(value.peer,options_.version,value.node,this,[this,value](azureus::FindNodeOutcome result){routerReply(value.peer,result);reply(value,result?std::optional<azureus::Failure>{}:result.error(),true);},value.timeout);}
+-        else if(value.kind==AzureusServiceCommand::FindValue){submitted=actor_.findValue(value.peer,options_.version,value.node,value.flags,value.maximumValues,this,[this,value](azureus::FindValueOutcome result){routerReply(value.peer,result);const auto* body=result?std::get_if<azureus::lookup::ReplyBody>(&result->body()):nullptr;const bool terminal=!body||!body->continuation;reply(value,result?std::optional<azureus::Failure>{}:result.error(),terminal);},value.timeout);}
++        if(value.kind==AzureusServiceCommand::Ping){submitted=actor_.ping(value.peer,options_.version,this,[this,value](azureus::Outcome result){completeRpc(value,std::move(result));},value.timeout);}
++        else if(value.kind==AzureusServiceCommand::FindNode){submitted=actor_.findNode(value.peer,options_.version,value.node,this,[this,value](azureus::FindNodeOutcome result){completeRpc(value,std::move(result));},value.timeout);}
++        else if(value.kind==AzureusServiceCommand::FindValue){submitted=actor_.findValue(value.peer,options_.version,value.node,value.flags,value.maximumValues,this,[this,value](azureus::FindValueOutcome result){completeRpc(value,std::move(result));},value.timeout);}
+         if(!submitted){slot->id=0;complete(value,std::unexpected(submitted.error()));return;}slot->ticket=*submitted;publish();
+       }catch(...){for(auto& slot:active_){if(slot.id==value.id){slot.id=0;}}failCommand(value,AzureusServiceError::Memory);{std::lock_guard lock(state_->mutex);state_->stop=true;state_->value.current=false;state_->value.error=AzureusServiceError::Memory;state_->value.state=AzureusServiceState::Closing;state_->advance();}loop_.quit();}
+     }
+@@ -179,6 +201,7 @@
+   private:
+     struct Active {std::uint64_t id=0;azureus::Ticket ticket;};
+     #include "azureus_profile_io_owner.inc"
++    #include "azureus_public_owner.inc"
+     #include "azureus_local_publish.inc"
+     #include "azureus_rating_consumer.inc"
+     #include "azureus_routing_owner.inc"
+@@ -269,7 +292,7 @@
+     }
+     control::AdmittedContact lookupAdmission(const nodes::Contact& contact)const{
+       const auto peer=lookupPeer(contact.address);
+-      return {contact,peer&&validPeer(*peer,options_.bindAddress)&&isOwned(*peer)};
++      return {contact,peer&&validPeer(*peer,options_.bindAddress,options_.routingScope)&&isOwned(*peer)};
+     }
+     void failLookup(AzureusServiceError error)noexcept{
+       // Optional lookup failure never stops the actor, changes byte accounting
+@@ -347,7 +370,7 @@
+         for(const auto& intent:*intents){
+           auto free=std::ranges::find(lookupRpcs_,std::uint64_t{0},&LookupRpc::node);
+           const auto peer=lookupPeer(intent.contact.address);
+-          if(free==lookupRpcs_.end()||!peer||!validPeer(*peer,options_.bindAddress)||!isOwned(*peer)){
++          if(free==lookupRpcs_.end()||!peer||!validPeer(*peer,options_.bindAddress,options_.routingScope)||!isOwned(*peer)){
+             static_cast<void>(lookup_->finish(intent.node,control::LookupNodeState::Rejected,lookupNow()));continue;
+           }
+           const auto remaining=lookupTimeoutMillis_-(lookupNow()-lookupStartedMillis_);
+@@ -474,7 +497,11 @@
+   if(!QCoreApplication::instance()||QCoreApplication::closingDown()){return std::unexpected(AzureusServiceError::NoApplication);}
+   try{
+     auto service=std::unique_ptr<OwnedAzureusService>(new OwnedAzureusService(std::make_unique<Impl>(std::move(options))));
+-    if(service->impl_->state->profileIo&&!service->impl_->state->profileIo->initialize(service->impl_->options.valueVersions,service->impl_->options.contacts)){return std::unexpected(AzureusServiceError::Profile);}
++    if(service->impl_->options.routingScope==azureus::RoutingScope::PublicBound){
++      auto& state=*service->impl_->state;state.startupDeadline=std::chrono::steady_clock::now()+std::chrono::seconds(5);const auto policy=service->impl_->options.publicPolicy;const auto contacts=service->impl_->options.contacts;
++      auto pending=state.profileIo->submit([policy,contacts](std::stop_token stop)->detail::AzureusProfileIo::Result{if(stop.stop_requested()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Public startup cancelled"});}auto valid=policy->validate();if(!valid){return std::unexpected(valid.error());}valid=contacts->validate();if(!valid){policy->revoke();return std::unexpected(valid.error());}return detail::AzureusProfileIo::Data{};});
++      if(!pending){return std::unexpected(AzureusServiceError::Capacity);}state.startup=*pending;if(!detail::AzureusProfileIo::waitReady(state.startup,state.startupDeadline)){return std::unexpected(AzureusServiceError::Profile);}
++    }else if(service->impl_->state->profileIo&&!service->impl_->state->profileIo->initialize(service->impl_->options.valueVersions,service->impl_->options.contacts)){return std::unexpected(AzureusServiceError::Profile);}
+     service->impl_->thread.start();
+     auto& state=*service->impl_->state;std::unique_lock lock(state.mutex);
+     const bool ready=state.readyCondition.wait_for(lock,std::chrono::seconds(5),[&]{return state.ready;});
+@@ -496,19 +523,20 @@
+   auto& state=*impl_->state;std::lock_guard lock(state.mutex);
+   if(state.stop||state.value.state!=AzureusServiceState::Running||!state.owner){return std::unexpected(AzureusServiceError::Closed);}
+   const bool contactCommand=value.kind==AzureusServiceCommand::BootstrapSaved||value.kind==AzureusServiceCommand::FlushContacts;
+-  if(value.kind!=AzureusServiceCommand::Cancel&&!contactCommand&&!validPeer(value.peer,state.endpoint.address)){return std::unexpected(AzureusServiceError::Invalid);}
++  if(value.kind!=AzureusServiceCommand::Cancel&&!contactCommand&&!validPeer(value.peer,state.endpoint.address,impl_->options.routingScope)){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind==AzureusServiceCommand::Cancel&&!value.target){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind!=AzureusServiceCommand::AllowPeer&&value.kind!=AzureusServiceCommand::Cancel&&(value.timeout<=std::chrono::nanoseconds::zero()||value.timeout>std::chrono::seconds(30))){return std::unexpected(AzureusServiceError::Invalid);}
+   if((value.kind==AzureusServiceCommand::PublishRating||value.kind==AzureusServiceCommand::ReadRatings)
+       &&(!impl_->options.valueVersions||impl_->options.network!=0||!value.ratingHash||value.timeout<std::chrono::milliseconds(1)
+           ||(value.kind==AzureusServiceCommand::ReadRatings&&value.timeout>std::chrono::seconds(20)))){return std::unexpected(AzureusServiceError::Invalid);}
+   if((value.kind==AzureusServiceCommand::IntegrateRouting||value.kind==AzureusServiceCommand::ForwardCached)
+-      &&(impl_->options.routingScope!=azureus::RoutingScope::OwnedLoopback||!impl_->options.serveValues||!impl_->options.valueVersions||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
++      &&(!azureus::dynamicRoutingScope(impl_->options.routingScope)||!impl_->options.serveValues||!impl_->options.valueVersions||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind==AzureusServiceCommand::ForwardCached&&(value.applicationKey.empty()||value.applicationKey.size()>1024)){return std::unexpected(AzureusServiceError::Invalid);}
+   if(contactCommand&&(!impl_->options.maintenance||!impl_->options.contacts||!impl_->options.valueVersions)){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.publicationFlags!=AzureusPublicationFlags::Normal&&value.publicationFlags!=AzureusPublicationFlags::Anonymous){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind==AzureusServiceCommand::PublishValue&&(!impl_->options.valueVersions||value.applicationKey.empty()||value.applicationKey.size()>1024||value.payload.empty()||value.payload.size()>512||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind==AzureusServiceCommand::FindValue&&(value.maximumValues<0||value.maximumValues>255)){return std::unexpected(AzureusServiceError::Invalid);}
++  if(value.kind==AzureusServiceCommand::LookupValue&&impl_->options.routingScope==azureus::RoutingScope::PublicBound){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind==AzureusServiceCommand::LookupValue&&((value.flags!=0&&value.flags!=8)||value.maximumValues<1||value.maximumValues>64||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
+   if(state.value.outstandingCommands>=impl_->options.maximumCommands||state.nextRequest==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(AzureusServiceError::Capacity);}
+   value.id=++state.nextRequest;++state.value.outstandingCommands;auto* owner=static_cast<Impl::Owner*>(state.owner);
+--- a/preview/native/app/owned_azureus_service.hpp
++++ b/preview/native/app/owned_azureus_service.hpp
+@@ -3,6 +3,7 @@
+ #include "router.hpp"
+ #include "azureus_value_versions.hpp"
+ #include "azureus_contacts.hpp"
++#include "azureus_public_policy.hpp"
+ #include "../adapters/local_rating.hpp"
+ #include "../services/azureus_control/lookup.hpp"
+ #include <chrono>
+@@ -38,6 +39,8 @@
+   // Requires valueVersions; direct values only until genuine seeded support.
+   bool serveValues=false;
+   azureus::RoutingScope routingScope=azureus::RoutingScope::ExactPeers;
++  // Explicit PublicBound only: exact SAME-OFD/network/version/bind source.
++  std::shared_ptr<storage::AzureusPublicPolicy> publicPolicy{};
+ 
+ };
+ struct AzureusServiceResult {
+@@ -111,15 +114,14 @@
+   // Passive bounded IO progress only; no source/packet permission is exposed.
+   std::size_t profileIoPending=0,profileIoRunning=0,profileIoReady=0,profileIoHighWater=0;
+ };
+-// Explicit Host-owned development service. create(enabled=false) returns before
+-// any Qt thread/socket exists. A dedicated Qt event loop exclusively constructs,
+-// calls and destroys the existing numeric-loopback actor. No bootstrap/public
+-// peer, full DHT controller/DB activation, observer timer or GUI callback is added.
+-// Optional explicit local publication performs only version reservations on its
+-// held profile. Explicit serveValues uses the actual same router/local DB;
+-// generated receiving DB facts never become normal routing authority.
+-// The optional bounded router records explicit known contacts and qualified
+-// replies/timeouts only. Its Ping/NodeAdded intents are never executed here.
++// Explicit opt-in service; no default Host/public activation. create(false)
++// returns before a Qt thread/socket exists. One private Qt event loop owns the
++// actor/router/DB. ExactPeers and OwnedLoopback retain their loopback defaults.
++// PublicBound requires a held-profile policy matching an actual numeric local
++// interface/port, direct routing and disabled saved IP filter. Its packet
++// effects consume fresh existing worker permits; unknown inbound peers refuse.
++// Compatible contacts are inert until actual correlated routing replies.
++// Generated receiving facts never become normal routing authority.
+ class OwnedAzureusService final {
+ public:
+   static std::expected<std::unique_ptr<OwnedAzureusService>,AzureusServiceError>
+--- /dev/null
++++ b/preview/native/core/include/biglybtc/azureus_endpoint.hpp
+@@ -0,0 +1,16 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#pragma once
++#include <cstdint>
++#include <span>
++namespace biglybtc::core {
++// Numeric unicast-only initial PublicBound subset. Original UDP validity also
++// excludes loopback/link/site-local; this native scope additionally refuses
++// unspecified, multicast, mapped aliases, IPv6 ULA and shared IPv4 space.
++// Documentation prefixes are not proof of Internet reachability.
++inline bool azureusPublicAddress(std::span<const std::uint8_t> bytes)noexcept{
++  if(bytes.size()==4){const auto a=bytes[0],b=bytes[1];return a!=0&&a!=10&&a!=127&&a<224&&!(a==169&&b==254)&&!(a==172&&b>=16&&b<=31)&&!(a==192&&b==168)&&!(a==100&&b>=64&&b<=127);}
++  if(bytes.size()!=16||bytes[0]==255||(bytes[0]&0xfe)==0xfc||(bytes[0]==0xfe&&(bytes[1]&0xc0)>=0x80)){return false;}
++  bool prefixZero=true;for(unsigned i=0;i<15;++i){prefixZero&=bytes[i]==0;}if(prefixZero&&(bytes[15]==0||bytes[15]==1)){return false;}
++  bool mapped=true;for(unsigned i=0;i<10;++i){mapped&=bytes[i]==0;}return !(mapped&&bytes[10]==255&&bytes[11]==255);
++}
++}
+--- a/preview/native/services/azureus_control/lookup.cpp
++++ b/preview/native/services/azureus_control/lookup.cpp
+@@ -1,5 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0-or-later
+ #include "lookup.hpp"
++#include "biglybtc/azureus_endpoint.hpp"
+ #include <algorithm>
+ #include <array>
+ #include <limits>
+@@ -15,8 +16,13 @@
+   if(c.address.length!=16||c.address.bytes[15]!=1){return false;}
+   for(unsigned i=0;i<15;++i){if(c.address.bytes[i]){return false;}}return true;
+ }
++bool permittedOwned(const LookupOptions& options,const Contact& contact)noexcept{
++  return options.addressScope==LookupAddressScope::OwnedLoopback?loopback(contact):
++      options.addressScope==LookupAddressScope::PublicNode&&options.kind==LookupKind::Node
++          &&core::azureusPublicAddress(std::span(contact.address.bytes).first(contact.address.length));
++}
+ bool validOptions(const LookupOptions& o)noexcept{
+-  return (o.kind==LookupKind::Value||o.kind==LookupKind::Node)&&(o.kind!=LookupKind::Node||o.flags==0)&&o.parallelism>0&&o.parallelism<=LookupController::MaximumParallelism&&o.accuracy>0&&o.accuracy<=20&&o.maximumContacts>=o.parallelism&&o.maximumContacts<=LookupController::MaximumContacts&&o.maximumValues>0&&o.maximumValues<=LookupController::MaximumValues&&o.timeoutMillis>0&&o.timeoutMillis<=300000&&(o.flags==0||o.flags==8);
++  return (o.addressScope==LookupAddressScope::OwnedLoopback||(o.addressScope==LookupAddressScope::PublicNode&&o.kind==LookupKind::Node))&&(o.kind==LookupKind::Value||o.kind==LookupKind::Node)&&(o.kind!=LookupKind::Node||o.flags==0)&&o.parallelism>0&&o.parallelism<=LookupController::MaximumParallelism&&o.accuracy>0&&o.accuracy<=20&&o.maximumContacts>=o.parallelism&&o.maximumContacts<=LookupController::MaximumContacts&&o.maximumValues>0&&o.maximumValues<=LookupController::MaximumValues&&o.timeoutMillis>0&&o.timeoutMillis<=300000&&(o.flags==0||o.flags==8);
+ }
+ int distance(const NodeId& a,const NodeId& b,const NodeId& target)noexcept{
+   for(std::size_t i=0;i<a.size();++i){const auto x=a[i]^target[i],y=b[i]^target[i];if(x<y){return -1;}if(x>y){return 1;}}return 0;
+@@ -41,7 +47,7 @@
+   std::size_t count=0,values=0;
+   for(std::size_t i=0;i<s.nodes.size();++i){const auto& n=s.nodes[i];
+     if(n.id!=i+1||n.parent>=n.id||!validContact(n.contact)||n.contact.id==s.options.localId||n.discoveredMillis<s.startedMillis||n.discoveredMillis>s.updatedMillis||n.slices>LookupController::MaximumSlices||n.values>s.results.size()){return false;}
+-    if(n.owned&&!loopback(n.contact)){return false;}
++    if(n.owned&&!permittedOwned(s.options,n.contact)){return false;}
+     if(n.parent){if(n.depth!=s.nodes[n.parent-1].depth+1){return false;}}else if(n.depth){return false;}
+     for(std::size_t j=0;j<i;++j){if(same(n.contact,s.nodes[j].contact)){return false;}}
+     if(n.intentMillis&&(*n.intentMillis<n.discoveredMillis||*n.intentMillis>s.updatedMillis)){return false;}
+@@ -107,7 +113,7 @@
+   if(contacts.size()>MaximumContacts){return std::unexpected(LookupError::Limit);}
+   std::array<LookupNode,MaximumContacts> additions{};std::size_t count=0;std::uint64_t duplicates=0,rejected=0;
+   for(const auto& offered:contacts){const auto& contact=offered.contact;
+-    if(!validContact(contact)||(offered.owned&&!loopback(contact))){return std::unexpected(LookupError::Invalid);}
++    if(!validContact(contact)||(offered.owned&&!permittedOwned(data_.options,contact))){return std::unexpected(LookupError::Invalid);}
+     if(contact.id==data_.options.localId||std::any_of(data_.nodes.begin(),data_.nodes.end(),[&](const auto& old){return same(contact,old.contact);})||std::any_of(additions.begin(),additions.begin()+count,[&](const auto& old){return same(contact,old.contact);})){++duplicates;continue;}
+     if(data_.nodes.size()+count==data_.options.maximumContacts){return std::unexpected(LookupError::Limit);}
+     auto& value=additions[count++];value.id=data_.nodes.size()+count;value.parent=parent;value.contact=contact;value.owned=offered.owned;value.discoveredMillis=now;
+--- a/preview/native/services/azureus_control/lookup.hpp
++++ b/preview/native/services/azureus_control/lookup.hpp
+@@ -16,12 +16,15 @@
+ enum class LookupStop {Exhausted,Closest,ValueLimit,TwoValueReplies,Deadline,Cancelled,Closed,Capacity,Unsupported,Clock,Memory,Overflow};
+ enum class LookupNodeState {Candidate,Reserved,Sent,Partial,Replied,Timeout,Cancelled,Closed,Failed,Rejected,Skipped};
+ enum class LookupKind {Value,Node};
++// A typed adapter scope, never source/endpoint admission by itself.
++enum class LookupAddressScope {OwnedLoopback,PublicNode};
+ struct LookupOptions {
+   NodeId target{},localId{};
+   std::size_t parallelism=3,accuracy=20,maximumContacts=128,maximumValues=32;
+   std::int64_t timeoutMillis=30000;
+   LookupKind kind=LookupKind::Value;
+   std::uint8_t flags=0; // Normal0 or source FLAG_STATS8; no obfuscation/diversification.
++  LookupAddressScope addressScope=LookupAddressScope::OwnedLoopback;
+ };
+ // Explicit adapter policy decision; discovering a contact NEVER grants admission.
+ struct AdmittedContact {Contact contact;bool owned=false;};
+--- a/preview/native/services/azureus_udp/owned_routing.inc
++++ b/preview/native/services/azureus_udp/owned_routing.inc
+@@ -11,8 +11,8 @@
+   std::optional<Failure> failure;
+ };
+ bool OwnedPingTransport::ownedRoutingPeer(const Peer& peer)const noexcept{
+-  return config_.routingScope==RoutingScope::OwnedLoopback&&state_==State::Bound
+-      &&peer.port&&peer.address.isLoopback()&&peer.address.scopeId().isEmpty()
++  return dynamicRoutingScope(config_.routingScope)&&state_==State::Bound
++      &&peer.port&&(config_.routingScope==RoutingScope::PublicBound?publicAddress(peer.address):peer.address.isLoopback())&&peer.address.scopeId().isEmpty()
+       &&peer.address.protocol()==socket_.localAddress().protocol()&&peer!=endpoint();
+ }
+ bool OwnedPingTransport::isRoutingPeer(const Peer& peer)const noexcept{
+@@ -52,7 +52,7 @@
+     if(routing_->finished&&routing_->terminalFailure){auto value=std::move(routing_->terminalFailure);value->generation=statisticsGeneration_;value->operation=routing_->id;value->finished=true;value->failure=Failure::Capacity;routingSnapshot_=std::move(value);}
+   };
+   try{
+-    if(config_.routingScope!=RoutingScope::OwnedLoopback){routingSnapshot_.reset();return;}
++    if(!dynamicRoutingScope(config_.routingScope)){routingSnapshot_.reset();return;}
+     if(routingRevision_==UINT64_MAX){failed();return;}
+     auto snapshot=std::make_shared<RoutingSnapshot>();snapshot->generation=statisticsGeneration_;snapshot->operation=routing_?routing_->id:0;snapshot->revision=++routingRevision_;
+     snapshot->finished=routing_&&routing_->finished;snapshot->seeded=normalSeeded_;snapshot->learned=learnedRouting_;snapshot->rejected=rejectedRouting_;snapshot->pings=routingPings_;
+@@ -102,7 +102,7 @@
+   std::vector<azureus_control::AdmittedContact> seeds;
+   for(std::size_t i=0;i<closest->count;++i){const auto& candidate=closest->values[i];if(candidate.local){continue;}const auto attachment=std::ranges::find(normalContacts_,candidate.id,&find::nodes::Contact::id);if(attachment!=normalContacts_.end()&&routingPeer(*attachment)){seeds.push_back({*attachment,true});}}
+   const auto less=[&](const auto& a,const auto& b){for(std::size_t i=0;i<target.size();++i){const auto x=a.contact.id[i]^target[i],y=b.contact.id[i]^target[i];if(x!=y){return x<y;}}return false;};std::sort(seeds.begin(),seeds.end(),less);if(seeds.size()>20){seeds.resize(20);}if(seeds.empty()){return std::unexpected(Failure::Peer);}
+-  azureus_control::LookupOptions options;options.kind=azureus_control::LookupKind::Node;options.target=target;options.localId=*localId_;options.parallelism=integration?8:5;options.accuracy=integration?20:10;options.maximumValues=1;options.timeoutMillis=std::chrono::ceil<std::chrono::milliseconds>(remaining).count();
++  azureus_control::LookupOptions options;options.kind=azureus_control::LookupKind::Node;if(config_.routingScope==RoutingScope::PublicBound){options.addressScope=azureus_control::LookupAddressScope::PublicNode;}options.target=target;options.localId=*localId_;options.parallelism=integration?8:5;options.accuracy=integration?20:10;options.maximumValues=1;options.timeoutMillis=std::chrono::ceil<std::chrono::milliseconds>(remaining).count();
+   const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();if(!normalRouter_->lookupStarted(QDateTime::currentMSecsSinceEpoch(),now)){return std::unexpected(Failure::State);}if(!round->controller.start(statisticsGeneration_,round->id,options,seeds,now)){return std::unexpected(Failure::State);}
+   routing_=round;routingDeadline_.setInterval(std::max(Clock::duration::zero(),end-Clock::now()));routingDeadline_.start();pumpRouting(round);return round->id;
+ }
+@@ -194,7 +194,7 @@
+   if(!normalPreflight_||!normalPreflight_(std::move(resumed))){round->failure=Failure::Capacity;const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();static_cast<void>(round->controller.finish(node,azureus_control::LookupNodeState::Failed,now));*rpc={};static_cast<void>(round->controller.cancel(now));pumpRouting(round);}
+ }
+ void OwnedPingTransport::dispatchRoutingPings(){
+-  if(config_.routingScope!=RoutingScope::OwnedLoopback||!normalCurrent()){return;}
++  if(!dynamicRoutingScope(config_.routingScope)||!normalCurrent()){return;}
+   const auto intents=normalRouter_->takeIntents();if(!intents){routingFailed(Failure::State);return;}
+   if(intents->count>64-routingIntents_.size()){routingFailed(Failure::Capacity);return;}
+   for(std::size_t i=0;i<intents->count;++i){routingIntents_.push_back(intents->values[i]);}
+--- a/preview/native/services/azureus_udp/owned_transport.cpp
++++ b/preview/native/services/azureus_udp/owned_transport.cpp
+@@ -1,5 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0-or-later
+ #include "owned_transport.hpp"
++#include "biglybtc/azureus_endpoint.hpp"
+ #include <QDateTime>
+ #include <QNetworkDatagram>
+ #include <QNetworkProxy>
+@@ -12,6 +13,11 @@
+ #include <limits>
+ namespace biglybtc::services::azureus_udp {
+ namespace {
++bool publicAddress(const QHostAddress& address)noexcept{
++  if(!address.scopeId().isEmpty()){return false;}std::array<std::uint8_t,16> bytes{};
++  if(address.protocol()==QAbstractSocket::IPv4Protocol){const auto ip=address.toIPv4Address();for(unsigned i=0;i<4;++i){bytes[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}return core::azureusPublicAddress(std::span(bytes).first(4));}
++  if(address.protocol()==QAbstractSocket::IPv6Protocol){const auto ip=address.toIPv6Address();std::copy_n(ip.c,16,bytes.begin());return core::azureusPublicAddress(bytes);}return false;
++}
+ constexpr qint64 maximumDatagram=1400;
+ constexpr unsigned workPerTurn=64;
+ // Process-local observation identity only; no service registration or authority.
+@@ -202,14 +208,19 @@
+ }
+ bool OwnedPingTransport::allowed(const Peer& peer) const { return std::ranges::find(peers_,peer)!=peers_.end(); }
+ std::uint64_t OwnedPingTransport::word() { return config_.randomWord?config_.randomWord():QRandomGenerator::system()->generate64(); }
+-std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAddress,quint16 bindPort) {
++std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAddress,quint16 bindPort,std::function<bool()> publicPermit) {
+   if (!owner()) { return std::unexpected(Failure::Thread); }
+   if (state_!=State::Idle) { return std::unexpected(Failure::State); }
+   if (!bindAddress.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
+   const auto address=normalize({bindAddress,0}).address;
+-  if (!address.isLoopback() || !address.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
+-  if(config_.routingScope!=RoutingScope::ExactPeers&&config_.routingScope!=RoutingScope::OwnedLoopback){return std::unexpected(Failure::State);}
+-  if(config_.routingScope==RoutingScope::OwnedLoopback&&(config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply)){return std::unexpected(Failure::State);}
++  const bool publiclyBound=config_.routingScope==RoutingScope::PublicBound;
++  if(publiclyBound){
++    if(config_.maximumPeers>32||config_.maximumPending>32){return std::unexpected(Failure::Capacity);}
++    if(!publicAddress(bindAddress)||!bindPort||!((config_.network==0&&address.protocol()==QAbstractSocket::IPv4Protocol)||(config_.network==3&&address.protocol()==QAbstractSocket::IPv6Protocol))||!publicPermit){return std::unexpected(Failure::Peer);}
++    bool current=false;try{current=publicPermit();}catch(...){}if(!current){return std::unexpected(Failure::Authority);}
++  }else if (!address.isLoopback() || !address.scopeId().isEmpty() || publicPermit) { return std::unexpected(Failure::Peer); }
++  if(config_.routingScope!=RoutingScope::ExactPeers&&!dynamicRoutingScope(config_.routingScope)){return std::unexpected(Failure::State);}
++  if(dynamicRoutingScope(config_.routingScope)&&(config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply)){return std::unexpected(Failure::State);}
+   if (config_.version<51 || config_.version>55) { return std::unexpected(Failure::Version); }
+   if (config_.maximumPending==0 || config_.maximumPending>256 || config_.maximumPeers==0 || config_.maximumPeers>256) { return std::unexpected(Failure::Capacity); }
+   if (config_.generatedStoreService) {
+@@ -251,6 +262,7 @@
+       if(!database_->bindLocal(contact)){return std::unexpected(Failure::State);}}
+   }
+   statisticsFamily_=address.protocol()==QAbstractSocket::IPv6Protocol?TransportStatisticsFamily::IPv6:TransportStatisticsFamily::IPv4;
++  if(publiclyBound){bool current=false;try{current=publicPermit();}catch(...){}if(!current||socket_.localAddress()!=bindAddress||socket_.localPort()!=bindPort){return std::unexpected(Failure::Authority);}publicPermit_=std::move(publicPermit);}
+   state_=State::Bound;rollback.dismiss();return {};
+ }
+ std::expected<void,Failure> OwnedPingTransport::allowPeer(Peer candidate) {
+@@ -258,7 +270,7 @@
+   if (state_!=State::Bound) { return std::unexpected(Failure::State); }
+   if (!candidate.address.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
+   candidate=normalize(std::move(candidate));
+-  if (candidate.port==0 || !candidate.address.isLoopback() || !candidate.address.scopeId().isEmpty()
++  if (candidate.port==0 || (config_.routingScope==RoutingScope::PublicBound?!publicAddress(candidate.address):!candidate.address.isLoopback()) || !candidate.address.scopeId().isEmpty()
+       || candidate.address.protocol()!=socket_.localAddress().protocol()) { return std::unexpected(Failure::Peer); }
+   if (allowed(candidate)) { return {}; }
+   if (peers_.size()==config_.maximumPeers) { return std::unexpected(Failure::Capacity); }
+@@ -381,9 +393,22 @@
+     auto wire=storage::encodeRequest(request);if (!wire) { return std::unexpected(Failure::Encode); }return std::move(*wire);
+   });
+ }
++std::expected<qint64,Failure> OwnedPingTransport::writePacket(std::string_view wire,const Peer& peer,Clock::time_point end){
++  if(config_.routingScope==RoutingScope::PublicBound){
++    bool current=false;try{current=state_==State::Bound&&allowed(peer)&&publicPermit_&&publicPermit_();}catch(...){}
++    // This is after all RNG/encoding/allocation and before this physical write,
++    // including each fragment/error reply. The callback checks its executing
++    // worker permit's absolute deadline after taking the current stop lock.
++    if(Clock::now()>=end){++statistics_.authorityErrors;return std::unexpected(Failure::Deadline);}
++    if(!current){++statistics_.authorityErrors;return std::unexpected(Failure::Authority);}
++  }
++  return socket_.writeDatagram(wire.data(),static_cast<qint64>(wire.size()),peer.address,peer.port);
++}
+ std::expected<Ticket,Failure> OwnedPingTransport::submit(Peer peer,std::int8_t remoteVersion,QObject* receiver,CompletionCallback callback,std::chrono::nanoseconds timeout,std::int32_t action,Encoder encode) {
++  const auto entered=Clock::now();
+   if (!owner()) { return std::unexpected(Failure::Thread); }
+   if (state_!=State::Bound) { return std::unexpected(Failure::State); }
++  if(config_.routingScope==RoutingScope::PublicBound){bool current=false;try{current=publicPermit_&&publicPermit_();}catch(...){}if(!current){return std::unexpected(Failure::Authority);}}
+   if (!peer.address.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
+   peer=normalize(std::move(peer));if (!allowed(peer)) { return std::unexpected(Failure::Peer); }
+   if (remoteVersion<51) { return std::unexpected(Failure::Version); }
+@@ -404,13 +429,15 @@
+   const Ticket ticket{++nextTicket_};
+   auto state=std::make_shared<CallbackState>(CallbackState{receiver,std::move(callback)});
+   const auto started=Clock::now();
+-  Pending pending{ticket,peer,connection,action+1,started+timeout,std::move(state),{},started};
++  const auto requestEnd=config_.routingScope==RoutingScope::PublicBound?entered+timeout:started+timeout;
++  Pending pending{ticket,peer,connection,action+1,requestEnd,std::move(state),{},started};
+   pending.death=connect(receiver,&QObject::destroyed,this,[this,ticket] { abandon(ticket); });
+   pending_.emplace(transaction,std::move(pending));
+-  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
+-  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+-  if (sent!=static_cast<qint64>(wire->size())) {
+-    const auto found=pending_.find(transaction);observeOperation(found->second,OperationEventKind::SendFailed);disconnect(found->second.death);pending_.erase(found);armDeadline();return std::unexpected(Failure::Send);
++  const auto sent=writePacket(*wire,peer,requestEnd);
++  if(sent){observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);}
++  if (!sent||*sent!=static_cast<qint64>(wire->size())) {
++    const auto failure=sent?Failure::Send:sent.error();
++    const auto found=pending_.find(transaction);observeOperation(found->second,OperationEventKind::SendFailed);disconnect(found->second.death);pending_.erase(found);armDeadline();return std::unexpected(failure);
+   }
+   observeOperation(pending_.at(transaction),OperationEventKind::Sent);++statistics_.sent;armDeadline();return ticket;
+ }
+@@ -473,7 +500,7 @@
+ void OwnedPingTransport::close() {
+   if (!owner() || state_==State::Closed) { return; }
+   routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
+-  routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
++  publicPermit_={};routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
+   if(database_){database_->close();database_.reset();}
+   state_=State::Closed;socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
+   while (!pending_.empty()) { finish(pending_.begin()->first,std::unexpected(Failure::Closed)); }
+@@ -489,9 +516,9 @@
+   reply.positions=positions;
+   const auto wire=packet::encodeReply(reply);
+   if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) { ++statistics_.malformed;return; }
+-  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
+-  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+-  if (sent==static_cast<qint64>(wire->size())) { ++statistics_.sent; }
++  const auto sent=writePacket(*wire,peer);if(!sent){return;}
++  observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
++  if (*sent==static_cast<qint64>(wire->size())) { ++statistics_.sent; }
+ }
+ void OwnedPingTransport::answer(const Peer& peer,const find::Decoded& request,std::int64_t receivedAt) {
+   if (!config_.findNodeReply) { return; }
+@@ -502,9 +529,9 @@
+   reply.randomId=snapshot.randomId;reply.status=snapshot.status;reply.estimatedSize=snapshot.estimatedSize;reply.contacts=snapshot.contacts;
+   const auto wire=find::encodeReply(reply);
+   if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) { ++statistics_.malformed;return; }
+-  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
+-  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+-  if (sent==static_cast<qint64>(wire->size())) { ++statistics_.sent; }
++  const auto sent=writePacket(*wire,peer);if(!sent){return;}
++  observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
++  if (*sent==static_cast<qint64>(wire->size())) { ++statistics_.sent; }
+ }
+ void OwnedPingTransport::answer(const Peer& peer,const lookup::Decoded& request,std::int64_t receivedAt) {
+   if (!config_.findValueReply) { return; }const auto& incoming=request.header().fields();
+@@ -519,9 +546,9 @@
+     }
+     reply.contacts=piece.contacts;lookup::positions::Positions positions;reply.positions=positions;
+     const auto wire=lookup::encodeReply(reply);if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) { ++statistics_.malformed;return; }
+-    const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
+-    observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+-    if (sent!=static_cast<qint64>(wire->size())) { ++statistics_.ioErrors;return; }++statistics_.sent;
++    const auto sent=writePacket(*wire,peer);if(!sent){return;}
++    observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
++    if (*sent!=static_cast<qint64>(wire->size())) { ++statistics_.ioErrors;return; }++statistics_.sent;
+   }
+ }
+ void OwnedPingTransport::answer(const Peer& peer,const storage::Decoded& request,std::int64_t receivedAt) {
+@@ -543,9 +570,9 @@
+     auto encoded=storage::encodeReply(reply);if (encoded) { wire=std::move(*encoded); }
+   }
+   if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) { ++statistics_.malformed;return; }
+-  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
+-  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+-  if (sent!=static_cast<qint64>(wire->size())) { ++statistics_.ioErrors;return; }
++  const auto sent=writePacket(*wire,peer);if(!sent){return;}
++  observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
++  if (*sent!=static_cast<qint64>(wire->size())) { ++statistics_.ioErrors;return; }
+   ++statistics_.sent;
+ }
+ void OwnedPingTransport::sendServiceReply(ServiceReceipt& receipt,std::expected<std::string,Failure> wire) {
+@@ -553,9 +580,9 @@
+   if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) {
+     receipt.status=ServiceStatus::EncodeFailed;++statistics_.malformed;return;
+   }
+-  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),receipt.peer.address,receipt.peer.port);
+-  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+-  if (sent!=static_cast<qint64>(wire->size())) {
++  const auto sent=writePacket(*wire,receipt.peer);if(!sent){receipt.status=ServiceStatus::AuthorityFailed;return;}
++  observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
++  if (*sent!=static_cast<qint64>(wire->size())) {
+     receipt.status=ServiceStatus::SendFailed;++statistics_.ioErrors;return;
+   }
+   receipt.sent=true;receipt.status=receipt.addressMismatch?ServiceStatus::AddressRejected:ServiceStatus::Replied;++statistics_.sent;
+@@ -598,8 +625,8 @@
+   receipt.sender=sender;receipt.transportAlive=true;
+   // The normal owned subset does not grant a returned routing endpoint from a
+   // different claimed port. Generated original-IP projection stays unchanged.
+-  if(!service&&(sender.address!=originator(peer)||(config_.routingScope==RoutingScope::OwnedLoopback?!learnRoutingContact(sender,true):!normalAlive(sender)))){++statistics_.authorityErrors;return;}
+-  if(!service&&config_.routingScope==RoutingScope::OwnedLoopback){dispatchRoutingPings();captureRouting();}
++  if(!service&&(sender.address!=originator(peer)||(dynamicRoutingScope(config_.routingScope)?!learnRoutingContact(sender,true):!normalAlive(sender)))){++statistics_.authorityErrors;return;}
++  if(!service&&dynamicRoutingScope(config_.routingScope)){dispatchRoutingPings();captureRouting();}
+   if (const auto* findRequest=std::get_if<find::Decoded>(&receipt.request)) {
+     receipt.findNodeAlive=true;
+     std::span<const find::nodes::Snapshot> contacts;std::vector<find::nodes::Snapshot> actualContacts;
+@@ -713,15 +740,15 @@
+   const auto send=[&](const std::expected<std::string,lookup::Error>& encoded){
+     if(normalRouter_&&!normalCurrent()){++statistics_.authorityErrors;return false;}
+     if(!encoded||encoded->size()>static_cast<std::size_t>(maximumDatagram)){++statistics_.malformed;return false;}
+-    const auto sent=socket_.writeDatagram(encoded->data(),static_cast<qint64>(encoded->size()),peer.address,peer.port);
+-    observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+-    if(sent!=static_cast<qint64>(encoded->size())){++statistics_.ioErrors;return false;}++statistics_.sent;return true;
++    const auto sent=writePacket(*encoded,peer);if(!sent){return false;}
++    observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
++    if(*sent!=static_cast<qint64>(encoded->size())){++statistics_.ioErrors;return false;}++statistics_.sent;return true;
+   };
+   if(!incoming.originator||!sameIp(originator(peer),*incoming.originator)){
+     remote_error::ReplyFields reply;reply.header=header(1032);reply.type=1;reply.originator=remote_error::Endpoint{originator(peer)};
+     const auto encoded=remote_error::encodeReply(reply);if(!encoded||encoded->size()>static_cast<std::size_t>(maximumDatagram)){++statistics_.malformed;return;}
+-    const auto sent=socket_.writeDatagram(encoded->data(),static_cast<qint64>(encoded->size()),peer.address,peer.port);observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+-    if(sent==static_cast<qint64>(encoded->size())){++statistics_.sent;}else{++statistics_.ioErrors;}return;
++    const auto sent=writePacket(*encoded,peer);if(!sent){return;}observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
++    if(*sent==static_cast<qint64>(encoded->size())){++statistics_.sent;}else{++statistics_.ioErrors;}return;
+   }
+   const auto id=nodeCache_->lookup(find::nodes::ResolvedEndpoint{*incoming.originator,{}},incoming.originatorVersion);
+   if(!id){++statistics_.authorityErrors;return;}
+@@ -774,7 +801,7 @@
+     if (datagram.senderPort()<=0 || datagram.senderPort()>65535) { ++statistics_.malformed;continue; }
+     const auto peer=normalize({datagram.senderAddress(),static_cast<quint16>(datagram.senderPort())});
+     const bool unknown=!allowed(peer);
+-    if(unknown&&(!normalRouter_||!ownedRoutingPeer(peer))){++statistics_.unowned;continue;}
++    if(unknown&&(config_.routingScope==RoutingScope::PublicBound||!normalRouter_||!ownedRoutingPeer(peer))){++statistics_.unowned;continue;}
+     if (data.isEmpty()) { ++statistics_.malformed;continue; }
+     const auto kind=(static_cast<unsigned char>(data.front())&128)?packet::udp::Kind::Request:packet::udp::Kind::Reply;
+     std::string bytes(data.constData(),static_cast<std::size_t>(data.size()));
+@@ -795,7 +822,7 @@
+     if (action==1024 || action==1025) {
+       packet::Context context;context.header=headerContext;context.monotonicNow=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
+       auto decoded=packet::decode(kind,std::move(bytes),context);if (!decoded) { ++statistics_.malformed;continue; }
+-      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;if(normalRouter_&&config_.routingScope==RoutingScope::OwnedLoopback){answerRoutingPing(peer,std::move(*decoded),headerContext.now);}else{answer(peer,*decoded,headerContext.now);}continue; }
++      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;if(normalRouter_&&dynamicRoutingScope(config_.routingScope)){answerRoutingPing(peer,std::move(*decoded),headerContext.now);}else{answer(peer,*decoded,headerContext.now);}continue; }
+       const auto transaction=decoded->header().fields().transaction;
+       if (pending_.at(transaction).expires<=Clock::now()) { ++statistics_.timeouts;finish(transaction,std::unexpected(Failure::Timeout));continue; }
+       observeVivaldi(pending_.at(transaction),*decoded);
+--- a/preview/native/services/azureus_udp/owned_transport.hpp
++++ b/preview/native/services/azureus_udp/owned_transport.hpp
+@@ -111,7 +111,8 @@
+   policy::State admission{};
+   std::size_t receiptCount=0;
+ };
+-enum class RoutingScope {ExactPeers,OwnedLoopback};
++enum class RoutingScope {ExactPeers,OwnedLoopback,PublicBound};
++inline constexpr bool dynamicRoutingScope(RoutingScope scope)noexcept{return scope==RoutingScope::OwnedLoopback||scope==RoutingScope::PublicBound;}
+ struct RoutingSnapshot {
+   std::uint64_t generation=0,operation=0,revision=0;
+   bool finished=false;
+@@ -145,7 +146,7 @@
+ public:
+   explicit OwnedPingTransport(Config,QObject* parent=nullptr);
+   ~OwnedPingTransport() override;
+-  std::expected<void,Failure> start(const QHostAddress& bindAddress=QHostAddress::LocalHost,quint16 bindPort=0);
++  std::expected<void,Failure> start(const QHostAddress& bindAddress=QHostAddress::LocalHost,quint16 bindPort=0,std::function<bool()> publicPermit={});
+   std::expected<void,Failure> allowPeer(Peer);
+   std::expected<Ticket,Failure> ping(Peer,std::int8_t remoteVersion,QObject* receiver,Callback,
+       std::chrono::nanoseconds deadline=std::chrono::seconds(30));
+@@ -210,6 +211,8 @@
+   using Result=std::expected<Value,Failure>;
+   using CompletionCallback=std::move_only_function<void(Result)>;
+   using Encoder=std::move_only_function<std::expected<std::string,Failure>(packet::udp::EncodeFields)>;
++  // Every physical PublicBound write consumes the still-held source permit.
++  std::expected<qint64,Failure> writePacket(std::string_view,const Peer&,Clock::time_point end=Clock::time_point::max());
+   template<class T,class CallbackType> static CompletionCallback detailedCallback(CallbackType callback) {
+     if (!callback) { return {}; }
+     return [callback=std::move(callback)](Result result) mutable {
+@@ -295,6 +298,7 @@
+   std::function<bool(std::move_only_function<void(bool)>)> normalPreflight_;
+   bool normalResuming_=false;
+   std::vector<find::nodes::Contact> normalContacts_; // Actual request sources or explicitly scoped reply candidates.
++  std::function<bool()> publicPermit_; // Existing owner one-shot source permit, PublicBound only.
+   Config config_;
+   std::unique_ptr<find::nodes::NodeCache> nodeCache_;
+   std::unique_ptr<auth::Authority> authority_;
+--- /dev/null
++++ b/preview/native/tests/azureus_public_bound_namespace.py
+@@ -0,0 +1,67 @@
++#!/usr/bin/env python3
++# SPDX-License-Identifier: GPL-2.0-or-later
++"""Owned namespace fixture only. Root must review/schedule; never falls back."""
++import os
++import pathlib
++import shutil
++import socket
++import subprocess
++import sys
++
++
++def identity(path):
++    value = os.stat(path)
++    return value.st_dev, value.st_ino
++
++
++def main():
++    if len(sys.argv) >= 5 and sys.argv[1] == "--inside":
++        net_fd, user_fd = int(sys.argv[2]), int(sys.argv[3])
++        driver, arguments = sys.argv[4], sys.argv[5:]
++        if (os.geteuid() != 0 or not os.readlink(f"/proc/self/fd/{net_fd}").startswith("net:[")
++                or not os.readlink(f"/proc/self/fd/{user_fd}").startswith("user:[") or identity(f"/proc/self/fd/{net_fd}") == identity("/proc/self/ns/net")
++                or identity(f"/proc/self/fd/{user_fd}") == identity("/proc/self/ns/user")
++                or {name for _, name in socket.if_nameindex()} != {"lo"}):
++            raise RuntimeError("PublicBound requires a distinct owned user/network namespace containing only lo")
++        ip = shutil.which("ip")
++        if not ip:
++            raise RuntimeError("Owned namespace fixture requires iproute2; no fallback")
++        for family in ("-4", "-6"):
++            if subprocess.check_output([ip, family, "route", "show", "default"]).strip():
++                raise RuntimeError("Owned namespace must have no default route")
++        # Only after both namespace identities and interface/route fences pass.
++        subprocess.run([ip, "link", "set", "dev", "lo", "up"], check=True)
++        for address in ("203.0.113.1/32", "203.0.113.2/32", "203.0.113.3/32"):
++            subprocess.run([ip, "-4", "address", "add", address, "dev", "lo"], check=True)
++        for address in ("2001:db8::1/128", "2001:db8::2/128", "2001:db8::3/128"):
++            subprocess.run([ip, "-6", "address", "add", address, "dev", "lo", "nodad"], check=True)
++        environment = os.environ.copy()
++        environment["BIGLYBTC_OWNED_PUBLIC_NET_FD"] = str(net_fd)
++        environment["BIGLYBTC_OWNED_PUBLIC_USER_FD"] = str(user_fd)
++        print("Owned distinct user/net namespace, lo only, no default route; documentation-prefix addresses only", flush=True)
++        return subprocess.run([driver, *arguments], env=environment, stdin=subprocess.DEVNULL,
++                              pass_fds=(net_fd, user_fd)).returncode
++    if len(sys.argv) < 2:
++        raise RuntimeError("Expected the explicitly supplied owned test ELF")
++    driver = str(pathlib.Path(sys.argv[1]).resolve(strict=True))
++    net_fd = os.open("/proc/self/ns/net", os.O_RDONLY | os.O_CLOEXEC)
++    user_fd = os.open("/proc/self/ns/user", os.O_RDONLY | os.O_CLOEXEC)
++    try:
++        unshare = shutil.which("unshare")
++        if not unshare:
++            raise RuntimeError("Owned namespace fixture requires unshare; no fallback")
++        command = [unshare, "--user", "--map-root-user", "--net", "--", sys.executable,
++                   str(pathlib.Path(__file__).resolve()), "--inside", str(net_fd), str(user_fd),
++                   driver, *sys.argv[2:]]
++        return subprocess.run(command, stdin=subprocess.DEVNULL, pass_fds=(net_fd, user_fd)).returncode
++    finally:
++        os.close(user_fd)
++        os.close(net_fd)
++
++
++if __name__ == "__main__":
++    try:
++        sys.exit(main())
++    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
++        print(f"FAIL owned PublicBound namespace: {error}", file=sys.stderr)
++        sys.exit(1)
+--- /dev/null
++++ b/preview/native/tests/azureus_public_bound_tests.cpp
+@@ -0,0 +1,115 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "owned_azureus_service.hpp"
++#include "biglybtc/azureus_endpoint.hpp"
++#include <QtTest>
++#include <QTemporaryDir>
++#include <QFile>
++#include <QDir>
++#include <QScopeGuard>
++#include <QNetworkInterface>
++#include <QNetworkProxy>
++#include <algorithm>
++#include <future>
++#include <map>
++#include <memory>
++#include <sys/stat.h>
++#include <unistd.h>
++namespace {
++using namespace biglybtc;using namespace std::chrono_literals;namespace udp=services::azureus_udp;
++bool namespaceChanged(const char* environment,const char* name){bool parsed=false;const int fd=qEnvironmentVariableIntValue(environment,&parsed);if(!parsed||fd<0){return false;}const auto path=QByteArray("/proc/self/fd/")+QByteArray::number(fd);std::array<char,128> target{};const auto size=::readlink(path.constData(),target.data(),target.size());if(size<=0||size>=static_cast<ssize_t>(target.size())){return false;}const std::string_view link(target.data(),static_cast<std::size_t>(size));if((std::string_view(name).ends_with("/net")&&!link.starts_with("net:["))||(std::string_view(name).ends_with("/user")&&!link.starts_with("user:["))){return false;}struct stat parent{},current{};return ::fstat(fd,&parent)==0&&::stat(name,&current)==0&&(parent.st_dev!=current.st_dev||parent.st_ino!=current.st_ino);}
++bool success(const app::OwnedAzureusService& owner,std::uint64_t request){const auto v=owner.observation();return v.lastResult&&v.lastResult->request==request&&v.lastResult->terminal&&!v.lastResult->error&&!v.lastResult->transportFailure;}
++QByteArray read(const QString& path){QFile file(path);if(!file.open(QIODevice::ReadOnly)){return {};}return file.readAll();}
++std::string encoded(std::string_view bytes){return std::to_string(bytes.size())+':'+std::string(bytes);}
++std::string configuration(const storage::AzureusPublicBind& bind,const std::string& address){
++  std::map<std::string,std::string> values{{"Additional Service Bind IPs",encoded("")},{"Bind IP",encoded(address)},{"Enable.Proxy","i0e"},{"Enable.SOCKS","i0e"},{"Enforce Bind IP","i1e"},{"IPV6 Enable Support","i1e"},{"Ip Filter Enabled","i0e"},{"Plugin.DHT.dht.advanced","i0e"},{"Plugin.DHT.dht.enabled","i1e"},{"Plugin.DHT.dht.override.ip",encoded("203.0.113.3")},{"Proxy.Data.Enable","i0e"},{"UDP.NonData.Listen.Port","i"+std::to_string(bind.port)+"e"},{"dht.net.main_v4.enable","i1e"},{"dht.net.main_v6.enable","i1e"},{"future",encoded("retained-public-policy")}};
++  std::string out="d";for(const auto& [key,value]:values){out+=encoded(key)+value;}return out+'e';
++}
++storage::AzureusPublicBind binding(const QHostAddress& address,quint16 port){storage::AzureusPublicBind out;out.family=address.protocol()==QAbstractSocket::IPv4Protocol?4:16;out.network=out.family==4?0:3;out.port=port;if(out.family==4){const auto ip=address.toIPv4Address();for(unsigned i=0;i<4;++i){out.address[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}}else{const auto ip=address.toIPv6Address();std::copy_n(ip.c,16,out.address.begin());}return out;}
++struct Normal {
++  QTemporaryDir root;std::optional<storage::ProfileLease> lease;std::shared_ptr<storage::AzureusValueVersions> versions;std::shared_ptr<storage::AzureusContacts> contacts;std::shared_ptr<storage::AzureusPublicPolicy> policy;std::unique_ptr<app::OwnedAzureusService> owner;QHostAddress address;quint16 port=0;
++  static std::expected<std::unique_ptr<Normal>,QString> make(const QString& address,quint16 port){
++    auto out=std::make_unique<Normal>();out->address=QHostAddress(address);out->port=port;if(!out->root.isValid()){return std::unexpected(QStringLiteral("Owned public profile directory unavailable"));}auto lease=storage::ProfileLease::acquire(out->root.path().toStdString());if(!lease){return std::unexpected(QString::fromStdString(lease.error().message));}out->lease.emplace(std::move(*lease));const auto selected=binding(out->address,port);auto config=storage::ConfigFile::createMissing(*out->lease,"biglybt.config",configuration(selected,address.toStdString()));if(!config){return std::unexpected(QString::fromStdString(config.error().message));}auto started=out->start();if(!started){return std::unexpected(started.error());}return out;
++  }
++  std::expected<void,QString> start(){
++    auto v=storage::AzureusValueVersions::open(*lease,binding(address,port).network);if(!v){return std::unexpected(QString::fromStdString(v.error().message));}versions=*v;
++    auto c=storage::AzureusContacts::open(*lease,versions->network(),binding(address,port).family,storage::AzureusContactScope::PublicBound);if(!c){return std::unexpected(QString::fromStdString(c.error().message));}contacts=*c;
++    auto p=storage::AzureusPublicPolicy::open(*lease,versions,binding(address,port));if(!p){return std::unexpected(QString::fromStdString(p.error().message));}policy=*p;
++    auto created=app::OwnedAzureusService::create(options());if(!created){return std::unexpected(QString("Public service create error=%1").arg(static_cast<int>(created.error())));}owner=std::move(*created);return {};
++  }
++  app::AzureusServiceOptions options()const{
++    app::AzureusServiceOptions out;out.enabled=true;out.bindAddress=address;out.bindPort=port;out.network=versions->network();out.servePings=true;out.serveValues=true;out.valueVersions=versions;out.contacts=contacts;out.publicPolicy=policy;out.maintenance=true;out.routingScope=udp::RoutingScope::PublicBound;return out;
++  }
++  bool stop(){if(owner&&!owner->close()){return false;}owner.reset();policy.reset();contacts.reset();versions.reset();return true;}
++  QString cache()const{return root.path()+ (address.protocol()==QAbstractSocket::IPv4Protocol?"/dht/contacts.dat":"/dht/net3/contacts.dat");}
++};
++QString describe(const Normal& n){const auto v=n.owner->observation();return QString("state=%1 io=%2/%3 commands=%4 transport=%5 routing=%6 seeded=%7").arg(static_cast<int>(v.state)).arg(static_cast<qulonglong>(v.profileIoRunning)).arg(static_cast<qulonglong>(v.profileIoPending)).arg(static_cast<qulonglong>(v.outstandingCommands)).arg(v.lastResult&&v.lastResult->transportFailure?static_cast<int>(*v.lastResult->transportFailure):-1).arg(v.routingSnapshot&&v.routingSnapshot->failure?static_cast<int>(*v.routingSnapshot->failure):-1).arg(v.routingSnapshot&&v.routingSnapshot->seeded);}
++}
++class AzureusPublicBoundTests final:public QObject {
++  Q_OBJECT
++private slots:
++  void initTestCase(){
++    QVERIFY2(namespaceChanged("BIGLYBTC_OWNED_PUBLIC_NET_FD","/proc/self/ns/net")&&namespaceChanged("BIGLYBTC_OWNED_PUBLIC_USER_FD","/proc/self/ns/user"),"Refuse public-address fixture outside its independently owned user/network namespace");
++    for(const auto& interface:QNetworkInterface::allInterfaces()){QVERIFY(interface.name()==QStringLiteral("lo"));}
++  }
++  void numericEnvelopeNeverAcceptsPrivateWildcardMappedOrMulticast(){
++    for(const auto& text:{"0.0.0.0","10.0.0.1","127.0.0.1","169.254.1.2","172.16.0.1","192.168.1.1","100.64.0.1","224.1.1.1","255.255.255.255","::","::1","::ffff:203.0.113.1","fc00::1","fe80::1","fec0::1","ff02::1"}){const auto selected=binding(QHostAddress(QString::fromLatin1(text)),31301);QVERIFY(!core::azureusPublicAddress(std::span(selected.address).first(selected.family)));}
++    for(const auto& text:{"203.0.113.1","2001:db8::1"}){const auto selected=binding(QHostAddress(QString::fromLatin1(text)),31301);QVERIFY(core::azureusPublicAddress(std::span(selected.address).first(selected.family)));}
++  }
++  void publicNodeControllerScopeCannotGrantLegacyValueOrLoopbackAdmission(){
++    namespace control=services::azureus_control;control::Contact contact;contact.id[0]=1;contact.protocol=55;contact.address.length=4;contact.address.port=31301;contact.address.bytes[0]=203;contact.address.bytes[1]=0;contact.address.bytes[2]=113;contact.address.bytes[3]=2;
++    const std::array seeds{control::AdmittedContact{contact,true}};control::LookupOptions options;options.kind=control::LookupKind::Node;
++    control::LookupController oldDefault;QVERIFY(!oldDefault.start(1,1,options,seeds,1));options.addressScope=control::LookupAddressScope::PublicNode;
++    control::LookupController actual;QVERIFY(actual.start(1,2,options,seeds,1));auto intents=actual.takeIntents(2);QVERIFY(intents);QCOMPARE(intents->size(),std::size_t{1});QVERIFY(actual.snapshot());
++    options.kind=control::LookupKind::Value;control::LookupController value;QVERIFY(!value.start(1,3,options,seeds,1));options.kind=control::LookupKind::Node;
++    auto loopback=seeds;loopback[0].contact.address.bytes={127,0,0,1};control::LookupController refused;QVERIFY(!refused.start(1,4,options,loopback,1));
++  }
++  void enabledFilterProxyWrongTupleAndChangedSourceRefuseBeforeAnyRebind(){
++    auto created=Normal::make(QStringLiteral("203.0.113.1"),31301);QVERIFY2(created,qPrintable(created?QString{}:created.error()));auto normal=std::move(*created);QVERIFY(normal->stop());
++    auto versions=storage::AzureusValueVersions::open(*normal->lease,0);QVERIFY(versions);auto selected=binding(normal->address,normal->port);
++    for(const char* key:{"Ip Filter Enabled","Enable.Proxy","Enable.SOCKS","Proxy.Data.Enable"}){auto config=storage::ConfigFile::load(*normal->lease,"biglybt.config");QVERIFY(config);QVERIFY(config->document().setInteger(key,1));QVERIFY(config->save(*normal->lease));auto refused=storage::AzureusPublicPolicy::open(*normal->lease,*versions,selected);QVERIFY(!refused);QCOMPARE(refused.error().code,storage::ErrorCode::Unsupported);QVERIFY(config->document().setInteger(key,0));QVERIFY(config->save(*normal->lease));}
++    auto advanced=storage::ConfigFile::load(*normal->lease,"biglybt.config");QVERIFY(advanced);QVERIFY(advanced->document().setInteger("Plugin.DHT.dht.advanced",1));QVERIFY(advanced->save(*normal->lease));auto overridden=storage::AzureusPublicPolicy::open(*normal->lease,*versions,selected);QVERIFY(!overridden);QCOMPARE(overridden.error().code,storage::ErrorCode::Unsupported);QVERIFY(advanced->document().setInteger("Plugin.DHT.dht.advanced",0));QVERIFY(advanced->save(*normal->lease));
++    auto wrong=selected;wrong.network=4;QVERIFY(!storage::AzureusPublicPolicy::open(*normal->lease,*versions,wrong));wrong=selected;++wrong.port;QVERIFY(!storage::AzureusPublicPolicy::open(*normal->lease,*versions,wrong));
++    auto policy=storage::AzureusPublicPolicy::open(*normal->lease,*versions,selected);QVERIFY(policy);auto config=storage::ConfigFile::load(*normal->lease,"biglybt.config");QVERIFY(config);QVERIFY(config->document().setInteger("Plugin.DHT.dht.enabled",0));QVERIFY(config->save(*normal->lease));QVERIFY(!(*policy)->validate());QVERIFY(!(*policy)->current());QVERIFY(!(*policy)->validate());
++  }
++  void savedBindEmbeddedNulCannotGrantNumericPrefixOrChangeSourceBytes(){
++    QTemporaryDir directory;QVERIFY(directory.isValid());auto lease=storage::ProfileLease::acquire(directory.path().toStdString());QVERIFY(lease);auto versions=storage::AzureusValueVersions::open(*lease,0);QVERIFY(versions);
++    const auto selected=binding(QHostAddress(QStringLiteral("203.0.113.1")),31301);std::string malformed="203.0.113.1";malformed.push_back('\0');malformed+="unsupported";const auto source=configuration(selected,malformed);auto config=storage::ConfigFile::createMissing(*lease,"biglybt.config",source);QVERIFY(config);
++    auto policy=storage::AzureusPublicPolicy::open(*lease,*versions,selected);QVERIFY(!policy);QCOMPARE(policy.error().code,storage::ErrorCode::Unsupported);QCOMPARE(read(directory.path()+"/biglybt.config"),QByteArray(source.data(),static_cast<qsizetype>(source.size())));QVERIFY(!QFile::exists(directory.path()+"/biglybt.config.saving"));
++  }
++  void foreignCacheScopeAndUnapprovedSourcesNeverAcquirePublicAuthority(){
++    QTemporaryDir directory;QVERIFY(directory.isValid());auto lease=storage::ProfileLease::acquire(directory.path().toStdString());QVERIFY(lease);QVERIFY(QDir().mkpath(directory.path()+"/dht"));
++    storage::AzureusSavedContact foreign;foreign.protocol=55;foreign.length=4;foreign.address={127,0,0,1};foreign.port=31301;const std::array rows{foreign};auto wire=storage::encodeAzureusContactState(rows);QVERIFY(wire);const auto path=directory.path()+"/dht/contacts.dat";QFile file(path);QVERIFY(file.open(QIODevice::WriteOnly));QCOMPARE(file.write(wire->data(),static_cast<qint64>(wire->size())),static_cast<qint64>(wire->size()));file.close();
++    auto contacts=storage::AzureusContacts::open(*lease,0,4,storage::AzureusContactScope::PublicBound);QVERIFY(contacts);auto snapshot=(*contacts)->snapshot();QVERIFY(snapshot);QVERIFY(!(*snapshot)->writable);auto saved=(*contacts)->save(std::span<const storage::AzureusSavedContact>{});QVERIFY(!saved);QCOMPARE(saved.error().code,storage::ErrorCode::Unsupported);QCOMPARE(read(path),QByteArray(wire->data(),static_cast<qsizetype>(wire->size())));QVERIFY(!QFile::exists(directory.path()+"/dht/contacts.saving"));
++    auto madeA=Normal::make(QStringLiteral("203.0.113.1"),31301);QVERIFY2(madeA,qPrintable(madeA?QString{}:madeA.error()));auto a=std::move(*madeA);auto madeB=Normal::make(QStringLiteral("203.0.113.2"),31302);QVERIFY2(madeB,qPrintable(madeB?QString{}:madeB.error()));auto b=std::move(*madeB);
++    auto options=a->options();options.maximumPeers=33;auto full=app::OwnedAzureusService::create(options);QVERIFY(!full);QCOMPARE(full.error(),app::AzureusServiceError::Invalid);options=a->options();options.routingScope=udp::RoutingScope::OwnedLoopback;QVERIFY(!app::OwnedAzureusService::create(options));
++    QVERIFY(!a->owner->ping({QHostAddress(QStringLiteral("127.0.0.1")),31302}));QVERIFY(!a->owner->ping({QHostAddress(QStringLiteral("2001:db8::2")),31302}));
++    const auto before=a->owner->observation().snapshot->transport().counters();auto request=b->owner->ping(a->owner->endpoint(),200ms);QVERIFY(request);
++    QTRY_VERIFY_WITH_TIMEOUT(b->owner->observation().lastResult&&b->owner->observation().lastResult->request==*request&&b->owner->observation().lastResult->terminal,3000);QCOMPARE(b->owner->observation().lastResult->transportFailure,std::optional{udp::Failure::Timeout});QTRY_VERIFY_WITH_TIMEOUT(a->owner->observation().snapshot->transport().counters().unowned>before.unowned,3000);const auto actual=a->owner->observation();QCOMPARE(actual.snapshot->transport().counters().requests,before.requests);QCOMPARE(actual.snapshot->transport().counters().sent,before.sent);QVERIFY(actual.routerSnapshot);QCOMPARE(actual.routerSnapshot->counts()[2],std::uint64_t{1});QVERIFY(!actual.routingSnapshot||!actual.routingSnapshot->seeded);QVERIFY(a->stop());QVERIFY(b->stop());
++  }
++  void realPublicTupleRoutingPublicationAndCacheOnlyRestart_data(){QTest::addColumn<bool>("ipv6");QTest::newRow("IPv4-original-network0")<<false;QTest::newRow("IPv6-original-network3")<<true;}
++  void realPublicTupleRoutingPublicationAndCacheOnlyRestart(){
++    QFETCH(bool,ipv6);const auto host=[&](int n){return ipv6?QString("2001:db8::%1").arg(n):QString("203.0.113.%1").arg(n);};
++    auto madeA=Normal::make(host(1),31301);QVERIFY2(madeA,qPrintable(madeA?QString{}:madeA.error()));auto a=std::move(*madeA);
++    // A real existing10s turn separates the local getTimeAlive from contacts;
++    // never replace original TreeSet equal-age semantics with fake timestamps.
++    QTRY_VERIFY2_WITH_TIMEOUT(a->owner->observation().maintenance&&a->owner->observation().maintenance->routing.ticks>=1,qPrintable(describe(*a)),15000);
++    auto madeB=Normal::make(host(2),31302);QVERIFY2(madeB,qPrintable(madeB?QString{}:madeB.error()));auto b=std::move(*madeB);auto madeC=Normal::make(host(3),31303);QVERIFY2(madeC,qPrintable(madeC?QString{}:madeC.error()));auto c=std::move(*madeC);
++    auto cb=c->owner->allowPeer(b->owner->endpoint());QVERIFY(cb);QTRY_VERIFY2_WITH_TIMEOUT(success(*c->owner,*cb),qPrintable(describe(*c)),3000);auto bc=b->owner->integrateRouting(c->owner->endpoint());QVERIFY(bc);QTRY_VERIFY2_WITH_TIMEOUT(success(*b->owner,*bc),qPrintable(describe(*b)),10000);
++    auto ba=b->owner->allowPeer(a->owner->endpoint()),ca=c->owner->allowPeer(a->owner->endpoint());QVERIFY(ba&&ca);QTRY_VERIFY_WITH_TIMEOUT(success(*b->owner,*ba)&&success(*c->owner,*ca),3000);
++    auto ab=a->owner->integrateRouting(b->owner->endpoint());QVERIFY(ab);QTRY_VERIFY2_WITH_TIMEOUT(success(*a->owner,*ab),qPrintable(describe(*a)),10000);const auto first=a->owner->observation();QVERIFY(first.routingSnapshot&&first.routingSnapshot->seeded&&first.routingSnapshot->finished&&first.routingSnapshot->lookup);QVERIFY(first.routingSnapshot->lookup->nodes.size()>=2);QVERIFY(std::ranges::count_if(first.routingSnapshot->lookup->nodes,[](const auto& n){return n.state==services::azureus_control::LookupNodeState::Replied;})>=2);
++    auto published=a->owner->publishValue(b->owner->endpoint(),"owned-public-key","real namespace readback",5s,app::AzureusPublicationFlags::Anonymous);QVERIFY(published);QTRY_VERIFY2_WITH_TIMEOUT(success(*a->owner,*published),qPrintable(describe(*a)),5000);const auto publication=a->owner->observation().publishSnapshot;QVERIFY(publication&&publication->state==app::AzureusPublishState::Complete&&publication->localValue);QVERIFY(std::ranges::any_of(publication->readback,[](const auto& value){return value.bytes=="real namespace readback"&&value.flags==0x10;}));
++    auto flushed=a->owner->flushContacts();QVERIFY(flushed);QTRY_VERIFY2_WITH_TIMEOUT(success(*a->owner,*flushed),qPrintable(describe(*a)),5000);const auto cache=read(a->cache());QVERIFY(!cache.isEmpty());const auto records=storage::decodeAzureusContactState(cache.toStdString());QVERIFY(records&&records->size()>1);const auto endpoint=a->owner->endpoint();const auto generation=first.routingSnapshot->generation;
++    QVERIFY(a->stop());QVERIFY(a->start());QVERIFY(a->owner->endpoint()==endpoint);QVERIFY(!a->owner->observation().routingSnapshot||!a->owner->observation().routingSnapshot->seeded);QCOMPARE(a->owner->observation().snapshot->transport().counters().received,std::uint64_t{0});
++    auto warm=a->owner->bootstrapSavedContacts();QVERIFY(warm);QTRY_VERIFY2_WITH_TIMEOUT(success(*a->owner,*warm),qPrintable(describe(*a)),10000);const auto restarted=a->owner->observation();QVERIFY(restarted.routingSnapshot&&restarted.routingSnapshot->seeded&&restarted.routingSnapshot->generation!=generation);QCOMPARE(read(a->cache()),cache);QVERIFY(a->stop());QVERIFY(b->stop());QVERIFY(c->stop());
++  }
++  void blockedCommandCancellationAndSourceWithdrawalCloseWithoutAnyLatePacket(){
++    auto madeA=Normal::make(QStringLiteral("203.0.113.1"),31301);QVERIFY2(madeA,qPrintable(madeA?QString{}:madeA.error()));auto a=std::move(*madeA);auto madeB=Normal::make(QStringLiteral("203.0.113.2"),31302);QVERIFY2(madeB,qPrintable(madeB?QString{}:madeB.error()));auto b=std::move(*madeB);
++    auto allowed=b->owner->allowPeer(a->owner->endpoint());QVERIFY(allowed);QTRY_VERIFY_WITH_TIMEOUT(success(*b->owner,*allowed),3000);auto integrated=a->owner->integrateRouting(b->owner->endpoint());QVERIFY(integrated);QTRY_VERIFY2_WITH_TIMEOUT(success(*a->owner,*integrated),qPrintable(describe(*a)),10000);
++    auto gate=a->lease->sourceAccess(true);QVERIFY(gate);auto blocked=std::make_unique<storage::ProfileSourceAccess>(std::move(*gate));const auto release=qScopeGuard([&]{blocked.reset();});const auto sent=a->owner->observation().snapshot->transport().counters().sent;auto ping=a->owner->ping(b->owner->endpoint(),2s);QVERIFY(ping);QTRY_VERIFY_WITH_TIMEOUT(a->owner->observation().profileIoRunning>0,3000);auto cancel=a->owner->cancel(*ping);QVERIFY(cancel);QTRY_VERIFY_WITH_TIMEOUT(success(*a->owner,*cancel)&&a->owner->observation().outstandingCommands==0,3000);QCOMPARE(a->owner->observation().snapshot->transport().counters().sent,sent);
++    auto config=storage::ConfigFile::load(*a->lease,"biglybt.config");QVERIFY(config);QVERIFY(config->document().setInteger("Plugin.DHT.dht.enabled",0));QVERIFY(config->save(*a->lease));blocked.reset();
++    // The existing maintenance turn revalidates an otherwise idle service.
++    QTRY_VERIFY2_WITH_TIMEOUT(a->owner->observation().state==app::AzureusServiceState::Closed,qPrintable(describe(*a)),15000);QCOMPARE(a->owner->observation().snapshot->transport().counters().sent,sent);QVERIFY(!a->policy->current());QVERIFY(a->owner->close());QUdpSocket rebound;rebound.setProxy(QNetworkProxy::NoProxy);QVERIFY(rebound.bind(a->address,a->port,QUdpSocket::DontShareAddress));QVERIFY(b->stop());
++  }
++};
++QTEST_GUILESS_MAIN(AzureusPublicBoundTests)
++#include "azureus_public_bound_tests.moc"

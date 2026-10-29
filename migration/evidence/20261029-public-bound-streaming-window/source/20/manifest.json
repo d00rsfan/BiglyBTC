@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_INDEPENDENT_REVIEW_AND_RUNTIME",
+  "native_basis": "f443b0f21975c69fbddf557618f6dd9b43bbc302",
+  "source_paths": {
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/before/preview/native/services/i2cp_channel/channel.hpp",
+      "before_sha256": "d375e697cbf856eab2a3f74b7526ca469b8cad8aba1179ac6f23451598f5b0e4",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/staging/preview/native/services/i2cp_channel/channel.hpp",
+      "after_sha256": "023df0fe5a26eb9dce6c96d4c4afec4c9f3b2e4a037eb77e9632335587befd38"
+    },
+    "preview/native/services/i2cp_channel/streaming.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/before/preview/native/services/i2cp_channel/streaming.inc",
+      "before_sha256": "3b846b3eff75034467f6db1be28f7ca141f55e76e63c453d2bc5b67ebd64f3ff",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/staging/preview/native/services/i2cp_channel/streaming.inc",
+      "after_sha256": "93f5cd7121631d80eb63fba413f08dd7449a4ebc5dfe3028b5d82afc74205a27"
+    },
+    "preview/native/services/i2p_streaming/stream.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/before/preview/native/services/i2p_streaming/stream.cpp",
+      "before_sha256": "794bcd4e6ae32755c69f10d5f4e8ba00708b8de7bc4a7afc0fca8db6b149f3d6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/staging/preview/native/services/i2p_streaming/stream.cpp",
+      "after_sha256": "c861e4717287d9bbb01170684f8d5f126454479eceb78110c667a7ecf4024fb3"
+    },
+    "preview/native/services/i2p_streaming/stream.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/before/preview/native/services/i2p_streaming/stream.hpp",
+      "before_sha256": "b2dfcda91d55fb520853d02c7872650b6e6b56a5fa79e69c63142ddc73a3bf99",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/staging/preview/native/services/i2p_streaming/stream.hpp",
+      "after_sha256": "57f94997d46a347b997333e3f8e84e199cdbe92d119b4a14ac7f451f3318c8f4"
+    },
+    "preview/native/tests/i2p_streaming_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/before/preview/native/tests/i2p_streaming_tests.cpp",
+      "before_sha256": "d4b98a5d2748a20dabb1a40736df2dcf790dab695d8de2456098b4c9a521757d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/staging/preview/native/tests/i2p_streaming_tests.cpp",
+      "after_sha256": "7128c0d04f19710ae010d61acb5fb1af240036d7d9f02ac66cb0d32d23b78125"
+    }
+  },
+  "cmake_append": {
+    "path": "preview/native/services/CMakeLists.txt",
+    "basis_sha256": "bdb44aa563e35a6b96ec19f24413431a53f4d33c3f6c132b3340745e91408075",
+    "append_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/cmake/services.append.cmake",
+    "append_sha256": "5e7dc69f0c0517b88baa292dde0f2b56e28e0e29226b5f8abadb80b83cb17a39",
+    "target": "biglybtc_i2p_streaming"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/PROPOSAL.txt": "db309de930137c4de163de48cff5a7af1edc59b4737ea6849812059c61288469",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/source-pins.json": "ddda7e91b4349d8ff5e0fe05c475962d1ad30ce4c90ba0b9c41f6339fc16d12d",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/materialization.json": "834de8d584f36e9f560fc5414ed4c9a776ce6812a96ced2d72be658a8e34b09d"
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "9edad47d3c458c3fbcf6a731b884e77abd4512a64698d7c2a3db0658171359ed",
+    "before/preview/native/services/i2cp_channel/channel.hpp": "d375e697cbf856eab2a3f74b7526ca469b8cad8aba1179ac6f23451598f5b0e4",
+    "before/preview/native/services/i2cp_channel/streaming.inc": "3b846b3eff75034467f6db1be28f7ca141f55e76e63c453d2bc5b67ebd64f3ff",
+    "before/preview/native/services/i2p_streaming/stream.cpp": "794bcd4e6ae32755c69f10d5f4e8ba00708b8de7bc4a7afc0fca8db6b149f3d6",
+    "before/preview/native/services/i2p_streaming/stream.hpp": "b2dfcda91d55fb520853d02c7872650b6e6b56a5fa79e69c63142ddc73a3bf99",
+    "before/preview/native/tests/i2p_streaming_tests.cpp": "d4b98a5d2748a20dabb1a40736df2dcf790dab695d8de2456098b4c9a521757d",
+    "changes.patch": "2feb81c0e2055426831f58b228c60d7c432ba9663705b72d70a64e066c647328",
+    "cmake/services.append.cmake": "5e7dc69f0c0517b88baa292dde0f2b56e28e0e29226b5f8abadb80b83cb17a39",
+    "original-source-pins.json": "ddda7e91b4349d8ff5e0fe05c475962d1ad30ce4c90ba0b9c41f6339fc16d12d",
+    "staging/preview/native/services/i2cp_channel/channel.hpp": "023df0fe5a26eb9dce6c96d4c4afec4c9f3b2e4a037eb77e9632335587befd38",
+    "staging/preview/native/services/i2cp_channel/streaming.inc": "93f5cd7121631d80eb63fba413f08dd7449a4ebc5dfe3028b5d82afc74205a27",
+    "staging/preview/native/services/i2p_streaming/stream.cpp": "c861e4717287d9bbb01170684f8d5f126454479eceb78110c667a7ecf4024fb3",
+    "staging/preview/native/services/i2p_streaming/stream.hpp": "57f94997d46a347b997333e3f8e84e199cdbe92d119b4a14ac7f451f3318c8f4",
+    "staging/preview/native/tests/i2p_streaming_tests.cpp": "7128c0d04f19710ae010d61acb5fb1af240036d7d9f02ac66cb0d32d23b78125"
+  },
+  "retention": {
+    "original_packet_and_mux_codec_prefix": "BYTE_EXACT",
+    "original_pure_test_helpers_and_family_bodies": 10,
+    "old_datagram_tracker_receiver_sources": "UNCHANGED"
+  },
+  "tests": {
+    "target": "biglybtc-i2p-streaming-tests",
+    "ctest": "pure-i2p-streaming",
+    "new_pure_families": 5,
+    "actual_modified_manager_upload_acceptance": "SEPARATE_ORACLE_CHILD_PENDING"
+  },
+  "static_checks": {
+    "per_file_current_and_git_preimages": true,
+    "patch_apply_check": "PASS"
+  },
+  "execution": {
+    "compiler": false,
+    "jvm": false,
+    "subject": false,
+    "native_mutation": false,
+    "provider_mutation": false
+  }
+}

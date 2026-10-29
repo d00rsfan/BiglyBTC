@@ -1,0 +1,32 @@
+{
+  "status": "ROOT_REVIEWED_DIRECT_DEPENDENCY_CORRECTION",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/root-adoption.json",
+    "sha256": "d874199ddaee829089a68682e790357ffa8d7e5afa82dc6d5c0b398d0f9af0ab"
+  },
+  "source_paths": {
+    "preview/native/services/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/udp-core-dependency/before.cmake",
+      "before_sha256": "dfb36f3895ea9d5332ee5482f5d1b17122ec1d1492e4573e6610da341632f816",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/udp-core-dependency/after.cmake",
+      "after_sha256": "4568f0479386d02a58c17e0e42cc17ec685e8c03371a6e7c65099e55ad28fec5"
+    }
+  },
+  "artifacts_sha256": {
+    "before.cmake": "dfb36f3895ea9d5332ee5482f5d1b17122ec1d1492e4573e6610da341632f816",
+    "after.cmake": "4568f0479386d02a58c17e0e42cc17ec685e8c03371a6e7c65099e55ad28fec5",
+    "changes.patch": "500c5f2e9ed0a3f963d82f5b5335182ce8ac89f939f153fae9462883643032ac"
+  },
+  "failed_first_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/source-before.json": "8d291ab6dc34b1e1140ecb485bf5cfbe12d6f2b5ce3b5514d7b0f7dd30aa5c36",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/tool-inputs.json": "f927cc953e3d097dcfc91b42e549e765e5c9c2d53baf7b2958aa91d566db8764",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/build.log": "731ca5bf234ee5285635e7f962adc188154addb76178dafe7587281cc0fcb294",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/configure.log": "e5ce662cdd1ca3d937df21ee3f794ca558b46186f466de6a589cc4794ffe9547",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/result.json": "0eabdbfa7e3e5f71fb98d960883956716744afc00f2f5dbb649a5b155aa97b46",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/java-reference.json": "033cee5b0b3612b572b29026b0becb15a5b2c9b8e397b3ecb7f3dc8fed2b12a5",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/commands.json": "5c6203c48e968049d07bdefd8567100ac0df962f98568786c655d160bfccae24",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/native-source-map.json": "6007ee59949a2bd2dd3caec8345e67e32de10f53ab419fafce4460a98e5ded4c"
+  },
+  "scope": "Direct private Core dependency for its new header; no code/test/Java/tool/deadline changes",
+  "runtime_executed": false
+}

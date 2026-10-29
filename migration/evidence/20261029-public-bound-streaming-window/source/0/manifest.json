@@ -1,0 +1,166 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_INDEPENDENT_REVIEW",
+  "native_commit": "fe6cf7702b9c40f0975348721a8ab39e6df364f8",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/manifest.json",
+  "parent_manifest_sha256": "2f6620ffd44a80bdaa78606d05a314af30ad074412e560f1a37c9ed8a09cc9be",
+  "source_paths": {
+    "preview/native/adapters/azureus_contacts.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/adapters/azureus_contacts.cpp",
+      "before_sha256": "9c4707a4cfc956e8268b466fed506ce664609e1f32c199418a86ff0d5591a21f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/adapters/azureus_contacts.cpp",
+      "after_sha256": "ceb05b6ccc628090014535861e58785b0cdbc0f88ed07a11360a7e04246ff14b"
+    },
+    "preview/native/adapters/azureus_contacts.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/adapters/azureus_contacts.hpp",
+      "before_sha256": "05528b5d507c30b83d8d2ad5521e76352d2c32ce2e34b617fbf58b7f49d3c82e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/adapters/azureus_contacts.hpp",
+      "after_sha256": "a3cb3c15d3ad1bc7609e78151a515e499910a54bf29ce58650059ac861b6cfc5"
+    },
+    "preview/native/adapters/azureus_public_policy.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/adapters/azureus_public_policy.cpp",
+      "after_sha256": "4eb6b28fb8bf11ea7ccc49698561f4a2eeba9ca1cf6f10aa215586a2131f7ae7"
+    },
+    "preview/native/adapters/azureus_public_policy.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/adapters/azureus_public_policy.hpp",
+      "after_sha256": "20b5283e9699e9df6b265e8d4d574c546dbceb9c90962d7587d7fa5ce1f42352"
+    },
+    "preview/native/app/azureus_profile_io.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/app/azureus_profile_io.hpp",
+      "before_sha256": "0a6beb911cc212377f245149281d0c1348cf2e91601db83e480e0a8bb01f473d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/app/azureus_profile_io.hpp",
+      "after_sha256": "6063f4700751db3ec9b0afcba84103057c109fdac46fc90aecbe1e41af12b3a2"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/app/azureus_profile_io_owner.inc",
+      "before_sha256": "e08d1cba5f3791485b1499c73527ebd8154948d4e4520497110c60c9205b186f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/app/azureus_profile_io_owner.inc",
+      "after_sha256": "ac23da0f9f7bde8630e2fbc875e868495258f6401409b724c6bfc73bb3c5b9d9"
+    },
+    "preview/native/app/azureus_public_owner.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/app/azureus_public_owner.inc",
+      "after_sha256": "ba89062167be84b623c000b57830a073ca7a93710e94cd458e7ec11aecd158ff"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "a6c8d83a99098397501cab664d55a8ddb1f71f55b893138fdbab622be395f33c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "18739aab6073ac0251daff8b5f06558293f1637d0a8b931b94b9c1781a7dbd22"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "2addade9fed7e2d3681af6dedc76c1852d9276a739545f6cd75f3de619d838ca",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "2887f1a519659c838ea0a64f75314f28799c8750a654a1f3a19bfaed2e042013"
+    },
+    "preview/native/core/include/biglybtc/azureus_endpoint.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/core/include/biglybtc/azureus_endpoint.hpp",
+      "after_sha256": "de028f9b0837c5c6cc0806f7c3e3dfca07d5d7064beff7341372b692eea933e6"
+    },
+    "preview/native/services/azureus_control/lookup.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/services/azureus_control/lookup.cpp",
+      "before_sha256": "711334215f3c83c1e96ae9885066c816b055e84dcc669e28508ef24423969fe5",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/services/azureus_control/lookup.cpp",
+      "after_sha256": "8471cab7f0e9022bba79d94aea4c90e35e604941a2fe9190b6cd43e5419ab92f"
+    },
+    "preview/native/services/azureus_control/lookup.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/services/azureus_control/lookup.hpp",
+      "before_sha256": "fc38049295f881f2a54b1f29534c9e2be15d038208d6eed19ca8fa88e1c9c8c1",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/services/azureus_control/lookup.hpp",
+      "after_sha256": "b49932fcd39107c2b97d34d60f6b42bc47dde20a154ec945cfeedf7c0f78cf9f"
+    },
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/services/azureus_udp/owned_routing.inc",
+      "before_sha256": "c506818df045a515ac2f3e49d94085baab0babe05d191e6ed55fc13a9f4d8a88",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/services/azureus_udp/owned_routing.inc",
+      "after_sha256": "e74574468929762d85e3d2bf2fe659abc0c70fb716d4498de93411dd38a57994"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/services/azureus_udp/owned_transport.cpp",
+      "before_sha256": "690df7af3dc3329cdf4e2eda7d872b35013cad2bf5de653c2c72fab47da4992c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+      "after_sha256": "43093e8fe5a2ef3daac0cd76a7e2f53d35b24872b1f9012033735ee7a6ef3726"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/services/azureus_udp/owned_transport.hpp",
+      "before_sha256": "4472ecd4204da84cc25ab8b5c462ecd059cc4a0a76088d59c2de47fec04863bf",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+      "after_sha256": "de02a807c9b00028ab8262d4c1bc19dba3c4a3c53d361fe58622f36dcd1bf822"
+    },
+    "preview/native/tests/azureus_public_bound_namespace.py": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/tests/azureus_public_bound_namespace.py",
+      "after_sha256": "58c0b339d5c2732b0cfa54e5737c7030d506808dbb07c5abeb5a43485d8be92b"
+    },
+    "preview/native/tests/azureus_public_bound_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/tests/azureus_public_bound_tests.cpp",
+      "after_sha256": "7afc81a498a9eab59cda319685c888fa6c7c3d8a90f23f7a3cea0e2d1c3fa6b2"
+    }
+  },
+  "delta_paths": [
+    "preview/native/adapters/azureus_public_policy.cpp",
+    "preview/native/app/azureus_profile_io_owner.inc",
+    "preview/native/app/azureus_public_owner.inc",
+    "preview/native/app/owned_azureus_service.cpp",
+    "preview/native/services/azureus_udp/owned_transport.cpp",
+    "preview/native/services/azureus_udp/owned_transport.hpp",
+    "preview/native/tests/azureus_public_bound_tests.cpp"
+  ],
+  "cmake_fragments": [
+    {
+      "destination": "preview/native/adapters/CMakeLists.txt",
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/cmake/adapters.append.cmake",
+      "sha256": "1e258666bbac4f7c96ccab641122748f379ddab76d57c730114a11cd1b4519d3"
+    },
+    {
+      "destination": "preview/native/services/CMakeLists.txt",
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/cmake/services.append.cmake",
+      "sha256": "c396a58adf0f226a2ac2fd48b9c61b83e605574ec7f6f31e380101f1e0509d96"
+    },
+    {
+      "destination": "preview/native/tests/CMakeLists.txt",
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/cmake/tests.append.cmake",
+      "sha256": "0a4a115a7520ebde8f0df20f7790de618a1684c6bb3776fd4288b6ad08e779a7"
+    }
+  ],
+  "artifacts_sha256": {
+    "ADOPTION.txt": "fb5bbc0b3f10932f7f11d9cdc706e3dfd428235ae8b3b6cc690c895b0cbd8aa5",
+    "changes.patch": "abf8f126b46f8209e35fa710f0318a01814604cbc48e3a20ca88465330695a40",
+    "delta.patch": "9a28c862df874d15973e2c9177d4330580061e9b2421523e6ee194a9c803d107",
+    "source-pins.json": "02eec1a4ea28b405a37f1dfab8e5633b68f0be799d7d22a101e6be80e200708f",
+    "staging/preview/native/adapters/azureus_public_policy.cpp": "4eb6b28fb8bf11ea7ccc49698561f4a2eeba9ca1cf6f10aa215586a2131f7ae7",
+    "staging/preview/native/app/azureus_profile_io_owner.inc": "ac23da0f9f7bde8630e2fbc875e868495258f6401409b724c6bfc73bb3c5b9d9",
+    "staging/preview/native/app/azureus_public_owner.inc": "ba89062167be84b623c000b57830a073ca7a93710e94cd458e7ec11aecd158ff",
+    "staging/preview/native/app/owned_azureus_service.cpp": "18739aab6073ac0251daff8b5f06558293f1637d0a8b931b94b9c1781a7dbd22",
+    "staging/preview/native/services/azureus_udp/owned_transport.cpp": "43093e8fe5a2ef3daac0cd76a7e2f53d35b24872b1f9012033735ee7a6ef3726",
+    "staging/preview/native/services/azureus_udp/owned_transport.hpp": "de02a807c9b00028ab8262d4c1bc19dba3c4a3c53d361fe58622f36dcd1bf822",
+    "staging/preview/native/tests/azureus_public_bound_tests.cpp": "7afc81a498a9eab59cda319685c888fa6c7c3d8a90f23f7a3cea0e2d1c3fa6b2"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/manifest.json": "2f6620ffd44a80bdaa78606d05a314af30ad074412e560f1a37c9ed8a09cc9be",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029-review/parent-review.json": "889c710e196609a06c037c66e3e8fc8d888f5ee214c2369f6640325e16f17ca5",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/owned-blocking-access/manifest.json": "4fc728c35615c84b00d97bacfccc673dc88186d2d25d9d753145e92fd42a9f0e",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/owned-blocking-access-review.json": "80a5ca1deb6a90e74046e68ed849f7cddc23a6dcf6e118ccbc5341e9d85bf838"
+  },
+  "test": {
+    "target": "biglybtc-azureus-public-bound-tests",
+    "suite": "azureus-public-bound",
+    "timeout_seconds": 240,
+    "namespace_recipe_execution_requires_root_review": true
+  },
+  "author_execution": false,
+  "native_mutations": false,
+  "public_or_default_activation": false
+}

@@ -1,0 +1,53 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+Connected to MAKE jobserver
+      Start 178: azureus-owned-service
+ 1/16 Test #178: azureus-owned-service ................   Passed    5.50 sec
+      Start 182: azureus-router-owner
+ 2/16 Test #182: azureus-router-owner .................   Passed    0.01 sec
+      Start 189: owned-dht-bytes
+ 3/16 Test #189: owned-dht-bytes ......................   Passed    0.06 sec
+      Start 192: owned-ddb-control
+ 4/16 Test #192: owned-ddb-control ....................   Passed    0.00 sec
+      Start 263: azureus-database-runtime
+ 5/16 Test #263: azureus-database-runtime .............   Passed    2.09 sec
+      Start 285: i2cp-initial-channel
+ 6/16 Test #285: i2cp-initial-channel .................   Passed   13.99 sec
+      Start 289: i2cp-lease-backed-datagram-channel
+ 7/16 Test #289: i2cp-lease-backed-datagram-channel ...   Passed    7.50 sec
+      Start 291: i2cp-bounded-datagram-receiver
+ 8/16 Test #291: i2cp-bounded-datagram-receiver .......   Passed   11.24 sec
+      Start 292: azureus-profile-io
+ 9/16 Test #292: azureus-profile-io ...................   Passed    4.60 sec
+      Start 294: i2cp-explicit-tracker-channel
+10/16 Test #294: i2cp-explicit-tracker-channel ........   Passed    5.31 sec
+      Start 296: azureus-routing
+11/16 Test #296: azureus-routing ......................   Passed    1.44 sec
+      Start 297: pure-i2p-streaming
+12/16 Test #297: pure-i2p-streaming ...................   Passed    0.08 sec
+      Start 298: i2p-original-streaming-peer
+13/16 Test #298: i2p-original-streaming-peer ..........   Passed   10.55 sec
+      Start 299: i2p-original-streaming-upload
+14/16 Test #299: i2p-original-streaming-upload ........   Passed    7.25 sec
+      Start 300: azureus-maintenance
+15/16 Test #300: azureus-maintenance ..................   Passed   80.88 sec
+      Start 301: azureus-public-bound
+16/16 Test #301: azureus-public-bound .................   Passed   37.87 sec
+
+100% tests passed, 0 tests failed out of 16
+
+Label Time Summary:
+database          =   2.09 sec*proc (1 test)
+explicit-i2p      =  17.80 sec*proc (2 tests)
+i2p               =  38.11 sec*proc (5 tests)
+loopback          =  94.58 sec*proc (6 tests)
+namespace         =  37.87 sec*proc (1 test)
+no-network        =   0.08 sec*proc (1 test)
+owned-loopback    =  38.04 sec*proc (4 tests)
+profile           = 124.79 sec*proc (4 tests)
+reference         =  17.80 sec*proc (2 tests)
+router            =   0.01 sec*proc (1 test)
+routing           = 120.19 sec*proc (3 tests)
+statistics        =   5.58 sec*proc (4 tests)
+unit              = 170.58 sec*proc (14 tests)
+
+Total Test time (real) = 188.41 sec

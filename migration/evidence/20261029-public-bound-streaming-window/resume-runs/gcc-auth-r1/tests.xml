@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="1"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="36"
+	timestamp="2026-10-30T00:36:05"
+	>
+	<testcase name="azureus-public-bound" classname="azureus-public-bound" time="36.5195" status="run">
+		<properties>
+			<property name="cmake_labels" value="namespace;profile;routing;unit"/>
+		</properties>
+		<system-out>BBPUB_DROP uid=1000 gid=1000 groups=0 capabilities=0 bounding=0 ambient=0 nnp=1
+********* Start testing of AzureusPublicBoundTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusPublicBoundTests::initTestCase()
+PASS   : AzureusPublicBoundTests::numericEnvelopeNeverAcceptsPrivateWildcardMappedOrMulticast()
+PASS   : AzureusPublicBoundTests::publicNodeControllerScopeCannotGrantLegacyValueOrLoopbackAdmission()
+PASS   : AzureusPublicBoundTests::enabledFilterProxyWrongTupleAndChangedSourceRefuseBeforeAnyRebind()
+PASS   : AzureusPublicBoundTests::savedBindEmbeddedNulCannotGrantNumericPrefixOrChangeSourceBytes()
+PASS   : AzureusPublicBoundTests::foreignCacheScopeAndUnapprovedSourcesNeverAcquirePublicAuthority()
+PASS   : AzureusPublicBoundTests::realPublicTupleRoutingPublicationAndCacheOnlyRestart(IPv4-original-network0)
+PASS   : AzureusPublicBoundTests::realPublicTupleRoutingPu...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

@@ -1,0 +1,24 @@
+--- a/preview/native/services/i2p_streaming/stream.cpp
++++ b/preview/native/services/i2p_streaming/stream.cpp
+@@ -146,7 +146,7 @@
+         if((pending.sends==1||samples_==0)&&now>=pending.created){highestRtt=std::max(highestRtt,now-pending.created);}observed_.acknowledgedBytes+=pending.packet.payload.size();if(pending.packet.flags&Close){localFinAcked_=true;}slot.reset();++acked;
+       }
+     }
+-    if(acked){ackSinceCongestion_=true;bandwidth_.sample(acked,now,rtt_);sample(highestRtt);if(flight()){retryAt_=now+rto_;}else{retryAt_.reset();timeoutArmPending_=false;}}
++    if(acked){ackSinceCongestion_=true;bandwidth_.sample(acked,now,rtt_);if(flight()){retryAt_=now+rto_;}else{retryAt_.reset();timeoutArmPending_=false;}sample(highestRtt);}
+     adjustWindow(isNew,p.sequence,acked);
+   }
+   if(sequenceBearing){
+--- a/preview/native/tests/i2p_streaming_tests.cpp
++++ b/preview/native/tests/i2p_streaming_tests.cpp
+@@ -105,4 +105,9 @@
+   st::Connection age(29,100,*local.destination(),*peer.destination());establish(age,local,peer);require(bool(age.write(p::Bytes(2*st::DefaultSegment,10))),"Cannot queue packet-age control");auto old=age.next(210);require(old&&old->sequence==1,"Missing older packet reservation");age.dispatched(*old,300);auto recent=age.next(301);require(recent&&recent->sequence==2,"Missing newer packet reservation");age.dispatched(*recent,301);age.receive(acknowledgement(peer,2),400);require(age.observation().rtoMilliseconds==351,"ACK batch failed highest190ms packet-creation sample");
+ }
+ 
+-int main(){try{auto local=identity("dsa"),peer=identity("ed25519");codec(local,peer);codec(peer,local);ordered(local,peer);capacity(local,peer);timers(local,peer);closed(local,peer);slidingCredit(local,peer);undispatchedAndSelectiveAcknowledgements(local,peer);oneTimerBackoffAndFreshRtt(local,peer);chokeAndFinWithSelectiveHole(local,peer);originalPacketBandwidthEstimator();firstAckAndCreatedPacketAge(local,peer);std::cout<<"PASS original online Streaming codec/order/capacity/retry/reset and bounded sliding-window/ACK/Westwood controls\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}
++void partialAcknowledgementRestartsBeforeRttUpdate(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  st::Connection c(30,100,*local.destination(),*peer.destination());establish(c,local,peer);require(c.observation().rtoMilliseconds==150,"Initial measured RTO differs");require(bool(c.write(p::Bytes(3*st::DefaultSegment,11))),"Cannot queue partial-ACK timer control");for(unsigned i=0;i<3;++i){auto packet=c.next(210+i);require(packet&&packet->sequence==1+i,"Missing partial-ACK flight");c.dispatched(*packet,210+i);}
++  c.receive(acknowledgement(peer,1),250);require(c.observation().rtoMilliseconds==300&&c.observation().inFlightPackets==2&&c.wakeup()==400,"Partial new ACK did not restart with pre-sample150ms RTO before updating to300ms");c.receive(acknowledgement(peer,1),251);require(c.wakeup()==400&&!c.next(399),"Duplicate ACK changed original partial-flight retry deadline");auto retry=c.next(400);require(retry&&retry->sequence==2&&c.transmitTimeout(*retry)==600,"Original400ms retry did not back off current300ms RTO once");c.dispatched(*retry,400);require(c.wakeup()==1000&&c.observation().retransmissions==1,"Partial-flight retry failed actual-dispatch600ms backoff");
++}
++
++int main(){try{auto local=identity("dsa"),peer=identity("ed25519");codec(local,peer);codec(peer,local);ordered(local,peer);capacity(local,peer);timers(local,peer);closed(local,peer);slidingCredit(local,peer);undispatchedAndSelectiveAcknowledgements(local,peer);oneTimerBackoffAndFreshRtt(local,peer);chokeAndFinWithSelectiveHole(local,peer);originalPacketBandwidthEstimator();firstAckAndCreatedPacketAge(local,peer);partialAcknowledgementRestartsBeforeRttUpdate(local,peer);std::cout<<"PASS original online Streaming codec/order/capacity/retry/reset and bounded sliding-window/ACK/Westwood controls\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}

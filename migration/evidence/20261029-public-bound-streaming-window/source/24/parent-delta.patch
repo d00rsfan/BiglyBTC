@@ -1,0 +1,25 @@
+--- a/preview/native/tests/CMakeLists.txt
++++ b/preview/native/tests/CMakeLists.txt
+@@ -2224,7 +2224,9 @@
+   enable_language(C)
+   add_executable(biglybtc-public-netns-admin public_namespace_fixture/public_netns_admin.c)
+   set_target_properties(biglybtc-public-netns-admin PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)
+-  target_compile_options(biglybtc-public-netns-admin PRIVATE -Wall -Wextra -Wpedantic -Werror)
++  # This privileged fixture is libc-only even in a sanitizer subject build.
++  target_compile_options(biglybtc-public-netns-admin PRIVATE -fno-sanitize=all -Wall -Wextra -Wpedantic -Werror)
++  target_link_options(biglybtc-public-netns-admin PRIVATE -fno-sanitize=all)
+   add_executable(biglybtc-azureus-public-bound-tests azureus_public_bound_tests.cpp)
+   add_dependencies(biglybtc-azureus-public-bound-tests biglybtc-public-netns-admin)
+   set_target_properties(biglybtc-azureus-public-bound-tests PROPERTIES AUTOMOC ON)
+--- a/preview/native/tests/public_namespace_fixture/preflight.py
++++ b/preview/native/tests/public_namespace_fixture/preflight.py
+@@ -43,7 +43,8 @@
+             break
+         require(result == 0 and libc.prctl(47, 1, cap_count, 0, 0) == 0, "Runtime bounding/ambient set differs")
+         cap_count += 1
+-    require(0 < cap_count < 1024 and libc.prctl(27, 0, 0, 0, 0) & 3 == 3, "Runtime caps/NOROOT lock missing")
++    securebits = libc.prctl(27, 0, 0, 0, 0)
++    require(0 < cap_count < 1024 and securebits >= 0 and securebits & 3 == 3, "Runtime caps/NOROOT lock missing")
+     parent_net = int(os.environ["BIGLYBTC_OWNED_PUBLIC_NET_FD"])
+     parent_user = int(os.environ["BIGLYBTC_OWNED_PUBLIC_USER_FD"])
+     current_net = os.open("/proc/self/ns/net", os.O_RDONLY | os.O_CLOEXEC)

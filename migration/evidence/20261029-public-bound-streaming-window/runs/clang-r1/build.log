@@ -1,0 +1,41 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2367853 -- ATTEMPT=r1 REFERENCE=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/java-runs/r1/result.json ADOPTION=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/root-adoption.json SOURCE_COMMIT=049c92e931e279af1ab66f8ff8ddcdf70d1247b6
+[1/68] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_public_policy.cpp.o
+[2/68] Building CXX object services/CMakeFiles/biglybtc_i2p_streaming.dir/i2p_streaming/stream.cpp.o
+[3/68] Linking CXX static library services/libbiglybtc_i2p_streaming.a
+[4/68] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_contacts.cpp.o
+[5/68] Linking CXX static library adapters/libbiglybtc_profile.a
+[6/68] Automatic MOC for target biglybtc_i2cp_initial_channel
+[7/68] Building CXX object services/CMakeFiles/biglybtc_azureus_control.dir/azureus_control/lookup.cpp.o
+[8/68] Linking CXX static library services/libbiglybtc_azureus_control.a
+[9/68] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o
+FAILED: [code=1] services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o 
+/usr/bin/clang++-24 -DQT_CORE_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_dht -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_ping -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_positions -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_contacts -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_nodes -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_values -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_packets -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_node -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_value -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_error -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_auth -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store_policy -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_router -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_value -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_mapping -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_runtime -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_control -isystem /opt/Qt/6.12.0/gcc_64/include/QtCore -isystem /opt/Qt/6.12.0/gcc_64/include -isystem /opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++ -isystem /opt/Qt/6.12.0/gcc_64/include/QtNetwork -O3 -DNDEBUG -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Werror -fPIC -MD -MT services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o -MF services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o.d -o services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o -c /home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp/owned_transport.cpp
+/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp/owned_transport.cpp:3:10: fatal error: 'biglybtc/azureus_endpoint.hpp' file not found
+    3 | #include "biglybtc/azureus_endpoint.hpp"
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 error generated.
+[10/68] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/biglybtc_i2cp_initial_channel_autogen/mocs_compilation.cpp.o
+[11/68] Building CXX object tests/CMakeFiles/biglybtc-owned-ddb-control-tests.dir/owned_ddb_control_tests.cpp.o
+[12/68] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/i2cp_channel/channel.cpp.o
+[13/68] Linking CXX static library services/libbiglybtc_i2cp_initial_channel.a
+[14/68] Automatic MOC for target biglybtc-i2cp-initial-channel-tests
+[15/67] Automatic MOC for target biglybtc-i2cp-datagram-channel-tests
+[16/66] Automatic MOC for target biglybtc-i2cp-receive-channel-tests
+[17/65] Automatic MOC for target biglybtc-i2cp-tracker-channel-tests
+[18/64] Automatic MOC for target biglybtc-i2p-streaming-interop-tests
+[19/64] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-tests.dir/i2p_streaming_tests.cpp.o
+[20/64] Building CXX object app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o
+[21/64] Building CXX object tests/CMakeFiles/biglybtc-i2cp-datagram-channel-tests.dir/i2cp_datagram_channel_tests.cpp.o
+[22/64] Building CXX object tests/CMakeFiles/biglybtc-i2cp-initial-channel-tests.dir/i2cp_initial_channel_tests.cpp.o
+[23/64] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-interop-tests.dir/biglybtc-i2p-streaming-interop-tests_autogen/mocs_compilation.cpp.o
+[24/64] Building CXX object tests/CMakeFiles/biglybtc-i2cp-receive-channel-tests.dir/i2cp_receive_channel_tests.cpp.o
+[25/64] Linking CXX executable tests/biglybtc-owned-ddb-control-tests
+[26/64] Linking CXX executable tests/biglybtc-i2cp-initial-channel-tests
+[27/64] Linking CXX executable tests/biglybtc-i2cp-datagram-channel-tests
+[28/64] Linking CXX executable tests/biglybtc-i2cp-receive-channel-tests
+[29/64] Linking CXX executable tests/biglybtc-i2p-streaming-tests
+[30/64] Building CXX object tests/CMakeFiles/biglybtc-i2cp-tracker-channel-tests.dir/i2cp_tracker_channel_tests.cpp.o
+[31/64] Linking CXX executable tests/biglybtc-i2cp-tracker-channel-tests
+[32/64] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-interop-tests.dir/i2p_streaming_interop_tests.cpp.o
+[33/64] Linking CXX executable tests/biglybtc-i2p-streaming-interop-tests
+ninja: build stopped: cannot make progress due to previous errors.

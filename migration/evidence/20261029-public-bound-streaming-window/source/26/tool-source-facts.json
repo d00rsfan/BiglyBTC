@@ -1,0 +1,31 @@
+{
+  "status": "READ_ONLY_TOOL_AND_SOURCE_INSPECTION_NO_NAMESPACE",
+  "installed_bubblewrap": "0.11.1-1ubuntu0.1",
+  "installed_util_linux": "2.41.3-3ubuntu2.2",
+  "tools": {
+    "/usr/bin/bwrap": {
+      "sha256": "0abea81db798ebf6b4742ac0664802d97521547a353c2a0dbdc21d76cbbfd2c0",
+      "bytes": 80424
+    },
+    "/usr/bin/setpriv": {
+      "sha256": "86965a019d37dc11d176ce8cbe9f5f5f8f37027c95e03cb4a8cad4c73d940993",
+      "bytes": 47576
+    },
+    "/usr/bin/ip": {
+      "sha256": "2829deca72cff655d6d1290646abb9cc829da2e2db615eec8bc0ccd283acf3a7",
+      "bytes": 808000
+    },
+    "/usr/include/linux/capability.h": {
+      "sha256": "7b351dd906edb3609e1242cdcc23c8cf490bf7118e1c2a1938cfb623034f6114",
+      "bytes": 13624
+    }
+  },
+  "source_url": "https://raw.githubusercontent.com/containers/bubblewrap/v0.11.1/bubblewrap.c",
+  "source_sections": {
+    "487-496": "monitor closes extras; passed FDs reach child",
+    "3318-3348": "init closes extras, child retains inherited descriptors; sync-fd specifically closes in executable"
+  },
+  "unsupported_option": "--preserve-fds absent actual --help",
+  "kernel_capability_abi": "Linux v3 0x20080522; NET_ADMIN12; prctl PR_SET_NO_NEW_PRIVS38 and PR_CAP_AMBIENT47/CLEAR_ALL4",
+  "preflight": "root pending, no author execution"
+}

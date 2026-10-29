@@ -1,0 +1,50 @@
+{
+  "commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "objects": [
+    {
+      "path": "apps/streaming/java/src/net/i2p/client/streaming/impl/PacketLocal.java",
+      "blob": "e03075a08fd9c6e0a85688c4c38a0b847559a47c",
+      "sha256": "620447a2ed621d09f702bbbf0e3187d35eb8cd5d43edfa76e3da81fe219a15d1"
+    },
+    {
+      "path": "apps/streaming/java/src/net/i2p/client/streaming/impl/PacketQueue.java",
+      "blob": "dcbdb300bbc65297cd4425ff2b48c9dd2a621d39",
+      "sha256": "31a9ca981486582b18aba0a7360c6a33ed6eb1284ada048f3beaaaa6a95f9ebf"
+    },
+    {
+      "path": "apps/streaming/java/src/net/i2p/client/streaming/impl/Connection.java",
+      "blob": "e0b46214bc2e085835d66185e5fcd8d071edde39",
+      "sha256": "51c5a7cd753fb16b60eb1835d8ee24f3446ea79d742a03e9ebd7b71e210e3052"
+    },
+    {
+      "path": "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionOptions.java",
+      "blob": "9b81a286ea29253387945d18baed57de336db7d5",
+      "sha256": "95b2d48a3ed14e4e73babc2c73798789f65e6c1046e43e2abc6d849c405150f5"
+    },
+    {
+      "path": "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionPacketHandler.java",
+      "blob": "72ade38f0bf0e0dfecc29938eaec5322a816be68",
+      "sha256": "dd2948c8b75791fe9a68d23aac58db8390398c54ab44b8a191850bb512bb58ab"
+    },
+    {
+      "path": "apps/streaming/java/src/net/i2p/client/streaming/impl/MessageInputStream.java",
+      "blob": "eed12b44444c01963ff817669a0a1912aa168118",
+      "sha256": "e9125cb3ee13818b6c829fd623606ad8a0a09f9cdec09f8af002ea27296262f1"
+    },
+    {
+      "path": "apps/streaming/java/src/net/i2p/client/streaming/impl/MessageOutputStream.java",
+      "blob": "f66a03cfbd244e21fd99f96a9406bbbb80292f22",
+      "sha256": "3323209d479d93a3b80031d64bb6b812e5afaacfa625d8a2e915ed1d607313c2"
+    },
+    {
+      "path": "apps/streaming/java/src/net/i2p/client/streaming/impl/SimpleBandwidthEstimator.java",
+      "blob": "dae414a3c6fba99e7cae4796a1d9678b4270fb2a",
+      "sha256": "334de4d8ca9ad588bc7ff8591f3a7743a841b10ec0f0d109b3f6f929c8d7658d"
+    },
+    {
+      "path": "core/java/src/net/i2p/util/BandwidthEstimator.java",
+      "blob": "6262c1c7753e835b09e6a9f7563485696d9d9124",
+      "sha256": "11f94e5faa8f62ba76206a3cf1a3cd64d470d8dc6256d55fd2f18851f42f6292"
+    }
+  ]
+}

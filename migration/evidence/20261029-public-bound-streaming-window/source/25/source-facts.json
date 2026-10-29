@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY",
+  "source_headers_sha256": {
+    "/usr/include/linux/nsfs.h": "29e45774f75a0288a4bf72efdddec5caebbf5382327c13628c4dfa9611e1329f",
+    "/usr/include/linux/capability.h": "7b351dd906edb3609e1242cdcc23c8cf490bf7118e1c2a1938cfb623034f6114",
+    "/usr/include/linux/securebits.h": "56e4dccde50b5e917b06635fa849bd65e74b391c76d81dcb62ef18686660e09c",
+    "/usr/include/linux/rtnetlink.h": "6afea4cecd7aef6fa5977188dba13b42b45d182339fb905b4048aa278c0d68d8",
+    "/usr/include/net/route.h": "8aa62c257872d8f00a63380179b056d24508d6de5557b334cd0632f76eeb2927",
+    "/usr/include/x86_64-linux-gnu/bits/fcntl-linux.h": "6a810521494b60bbf1bae3bfca122753641344716d26218b6b3230e8156c0951"
+  },
+  "route_sentinel": {
+    "source": "read-only actual /proc/net/ipv6_route",
+    "interface": "lo",
+    "destination": "::/0",
+    "flags": "00200200",
+    "accepted_only": "RTF_REJECT set and RTF_UP clear"
+  },
+  "implementation_sources": {
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/public_netns_admin.c": "3d0aeaa1aae49716950d2d7a96d8e1a60879ed3586a582438700affb1fe5728d",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/launch.py": "dd3a78140d08ad0342e73e4534a4ad3fdad58c585cc103137e233c19b3903bda",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight.py": "a75e543e4bef00759153f1c6c28308a0f1f664df412be0963769553f14a79746"
+  },
+  "static_checks": [
+    "Python ast.parse only; no imports",
+    "No C compilation or namespace/admin invocation"
+  ],
+  "compiler_or_subject_execution": false
+}

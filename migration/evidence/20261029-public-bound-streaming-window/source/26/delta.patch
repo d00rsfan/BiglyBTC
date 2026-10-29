@@ -1,0 +1,159 @@
+--- a/preview/native/tests/azureus_public_bound_namespace.py
++++ b/preview/native/tests/azureus_public_bound_namespace.py
+@@ -1,12 +1,17 @@
+ #!/usr/bin/env python3
+ # SPDX-License-Identifier: GPL-2.0-or-later
+-"""Owned namespace fixture only. Root must review/schedule; never falls back."""
++"""Owned strict bubblewrap namespace fixture. Never falls back or skips."""
++import ctypes
+ import os
+ import pathlib
+ import shutil
+ import socket
++import stat
+ import subprocess
+ import sys
++
++
++NET_ADMIN = 1 << 12
+ 
+ 
+ def identity(path):
+@@ -14,44 +19,115 @@
+     return value.st_dev, value.st_ino
+ 
+ 
++def privileges():
++    fields = dict(line.split(":", 1) for line in pathlib.Path("/proc/self/status").read_text().splitlines() if ":" in line)
++    return {name: int(fields[name].strip(), 16 if name.startswith("Cap") else 10)
++            for name in ("CapInh", "CapPrm", "CapEff", "CapBnd", "CapAmb", "NoNewPrivs")}
++
++
++def fence(net_fd, user_fd):
++    if (os.geteuid() != 0 or not os.readlink(f"/proc/self/fd/{net_fd}").startswith("net:[")
++            or not os.readlink(f"/proc/self/fd/{user_fd}").startswith("user:[")
++            or identity(f"/proc/self/fd/{net_fd}") == identity("/proc/self/ns/net")
++            or identity(f"/proc/self/fd/{user_fd}") == identity("/proc/self/ns/user")
++            or {name for _, name in socket.if_nameindex()} != {"lo"}):
++        raise RuntimeError("Require actual distinct owned user/net namespace with retained parent FDs and only lo")
++    ip = shutil.which("ip")
++    if not ip:
++        raise RuntimeError("Owned namespace requires iproute2; no fallback")
++    for family in ("-4", "-6"):
++        if subprocess.check_output([ip, family, "route", "show", "default"]).strip():
++            raise RuntimeError("Owned namespace must have no default route")
++    return ip
++
++
++def drop_setup_privileges():
++    class Header(ctypes.Structure):
++        _fields_ = [("version", ctypes.c_uint32), ("pid", ctypes.c_int)]
++
++    class Data(ctypes.Structure):
++        _fields_ = [("effective", ctypes.c_uint32), ("permitted", ctypes.c_uint32), ("inheritable", ctypes.c_uint32)]
++
++    libc = ctypes.CDLL(None, use_errno=True)
++    if not hasattr(libc, "capset") or not hasattr(libc, "prctl"):
++        raise RuntimeError("Require actual Linux capset/prctl; no privileged-driver fallback")
++    libc.prctl.argtypes = [ctypes.c_int, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong]
++    libc.prctl.restype = ctypes.c_int
++    libc.capset.argtypes = [ctypes.POINTER(Header), ctypes.POINTER(Data)]
++    libc.capset.restype = ctypes.c_int
++    # PR_SET_NO_NEW_PRIVS, PR_CAP_AMBIENT/CLEAR_ALL, Linux capability ABI v3.
++    if libc.prctl(38, 1, 0, 0, 0) != 0 or libc.prctl(47, 4, 0, 0, 0) != 0:
++        raise OSError(ctypes.get_errno(), "Cannot seal privilege/ambient state")
++    header, data = Header(0x20080522, 0), (Data * 2)()
++    if libc.capset(ctypes.byref(header), data) != 0:
++        raise OSError(ctypes.get_errno(), "Cannot discard setup capabilities")
++    verify_unprivileged()
++
++
++def verify_unprivileged():
++    actual = privileges()
++    if (any(actual[name] != 0 for name in ("CapInh", "CapPrm", "CapEff", "CapAmb"))
++            or actual["NoNewPrivs"] != 1 or actual["CapBnd"] & ~NET_ADMIN):
++        raise RuntimeError("Native driver requires zero active/permitted/inherited/ambient capabilities and NoNewPrivs")
++
++
+ def main():
+-    if len(sys.argv) >= 5 and sys.argv[1] == "--inside":
++    if len(sys.argv) >= 5 and sys.argv[1] in ("--inside", "--driver"):
++        mode = sys.argv[1]
+         net_fd, user_fd = int(sys.argv[2]), int(sys.argv[3])
+         driver, arguments = sys.argv[4], sys.argv[5:]
+-        if (os.geteuid() != 0 or not os.readlink(f"/proc/self/fd/{net_fd}").startswith("net:[")
+-                or not os.readlink(f"/proc/self/fd/{user_fd}").startswith("user:[") or identity(f"/proc/self/fd/{net_fd}") == identity("/proc/self/ns/net")
+-                or identity(f"/proc/self/fd/{user_fd}") == identity("/proc/self/ns/user")
+-                or {name for _, name in socket.if_nameindex()} != {"lo"}):
+-            raise RuntimeError("PublicBound requires a distinct owned user/network namespace containing only lo")
+-        ip = shutil.which("ip")
+-        if not ip:
+-            raise RuntimeError("Owned namespace fixture requires iproute2; no fallback")
+-        for family in ("-4", "-6"):
+-            if subprocess.check_output([ip, family, "route", "show", "default"]).strip():
+-                raise RuntimeError("Owned namespace must have no default route")
+-        # Only after both namespace identities and interface/route fences pass.
++        ip = fence(net_fd, user_fd)
++        if mode == "--driver":
++            # Actual post-exec observation: the Python stage did not reacquire
++            # capabilities. Ordinary test ELF has neither set-ID nor file caps.
++            verify_unprivileged()
++            value = os.stat(driver)
++            if not stat.S_ISREG(value.st_mode) or value.st_mode & (stat.S_ISUID | stat.S_ISGID):
++                raise RuntimeError("Refuse privileged or nonregular fixture image")
++            try:
++                capability = os.getxattr(driver, "security.capability")
++            except OSError as error:
++                import errno
++                if error.errno not in (errno.ENODATA, errno.ENOTSUP):
++                    raise
++            else:
++                if capability:
++                    raise RuntimeError("Refuse file-capability fixture image")
++            print("Owned distinct user/net FD fence, lo only, no default routes; native CapEff/Prm/Inh/Amb=0 NoNewPrivs=1", flush=True)
++            os.execv(driver, [driver, *arguments])
++        actual = privileges()
++        if (actual["CapEff"] != NET_ADMIN or actual["CapPrm"] != NET_ADMIN
++                or any(actual[name] & ~NET_ADMIN for name in ("CapInh", "CapBnd", "CapAmb"))):
++            raise RuntimeError("Only private-namespace NET_ADMIN may configure fixture addresses")
++        # Both retained namespace identities, lo and route checks precede every
++        # address operation. Shared filesystem and environment stay unchanged.
+         subprocess.run([ip, "link", "set", "dev", "lo", "up"], check=True)
+         for address in ("203.0.113.1/32", "203.0.113.2/32", "203.0.113.3/32"):
+             subprocess.run([ip, "-4", "address", "add", address, "dev", "lo"], check=True)
+         for address in ("2001:db8::1/128", "2001:db8::2/128", "2001:db8::3/128"):
+             subprocess.run([ip, "-6", "address", "add", address, "dev", "lo", "nodad"], check=True)
++        fence(net_fd, user_fd)
++        drop_setup_privileges()
+         environment = os.environ.copy()
+         environment["BIGLYBTC_OWNED_PUBLIC_NET_FD"] = str(net_fd)
+         environment["BIGLYBTC_OWNED_PUBLIC_USER_FD"] = str(user_fd)
+-        print("Owned distinct user/net namespace, lo only, no default route; documentation-prefix addresses only", flush=True)
+-        return subprocess.run([driver, *arguments], env=environment, stdin=subprocess.DEVNULL,
+-                              pass_fds=(net_fd, user_fd)).returncode
++        command = [sys.executable, str(pathlib.Path(__file__).resolve()), "--driver", str(net_fd), str(user_fd), driver, *arguments]
++        return subprocess.run(command, env=environment, stdin=subprocess.DEVNULL, pass_fds=(net_fd, user_fd)).returncode
+     if len(sys.argv) < 2:
+-        raise RuntimeError("Expected the explicitly supplied owned test ELF")
++        raise RuntimeError("Explicit owned test ELF required")
+     driver = str(pathlib.Path(sys.argv[1]).resolve(strict=True))
+     net_fd = os.open("/proc/self/ns/net", os.O_RDONLY | os.O_CLOEXEC)
+     user_fd = os.open("/proc/self/ns/user", os.O_RDONLY | os.O_CLOEXEC)
+     try:
+-        unshare = shutil.which("unshare")
+-        if not unshare:
+-            raise RuntimeError("Owned namespace fixture requires unshare; no fallback")
+-        command = [unshare, "--user", "--map-root-user", "--net", "--", sys.executable,
+-                   str(pathlib.Path(__file__).resolve()), "--inside", str(net_fd), str(user_fd),
++        bwrap = shutil.which("bwrap")
++        if not bwrap:
++            raise RuntimeError("Owned namespace requires bubblewrap; no fallback")
++        # bubblewrap0.11.1 preserves passed descriptors to its executable;
++        # --sync-fd instead closes one there. No --preserve-fds exists in it.
++        command = [bwrap, "--unshare-user", "--unshare-net", "--uid", "0", "--gid", "0",
++                   "--bind", "/", "/", "--die-with-parent", "--new-session",
++                   "--cap-drop", "ALL", "--cap-add", "CAP_NET_ADMIN", "--",
++                   sys.executable, str(pathlib.Path(__file__).resolve()), "--inside", str(net_fd), str(user_fd),
+                    driver, *sys.argv[2:]]
+         return subprocess.run(command, stdin=subprocess.DEVNULL, pass_fds=(net_fd, user_fd)).returncode
+     finally:

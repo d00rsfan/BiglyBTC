@@ -1,0 +1,30 @@
+{
+  "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar": {
+    "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+    "bytes": 4288652
+  },
+  "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/StreamingPeer.java": {
+    "sha256": "8c78205c17273122b381b30cb8ad6aadbd59105dfccbaad9fed0df5ac351e8cd",
+    "bytes": 15229
+  },
+  "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/prepare.py": {
+    "sha256": "821753b7c7f80597b61f30db8007d3e2942f53478479ae76e3f0ae8eb93f792c",
+    "bytes": 3354
+  },
+  "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/run.py": {
+    "sha256": "c9c847d8fa810307d38fdc6a7065616ee087dc0d44e193a954d364ab64578a2f",
+    "bytes": 16746
+  },
+  "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/run-r3.py": {
+    "sha256": "4c6e88b37330605cf0fbf13504317792a776b2ce84f3da8b6ed74f815c3a16c2",
+    "bytes": 11282
+  },
+  "/usr/lib/jvm/java-26-openjdk-amd64/bin/java": {
+    "sha256": "347282b66d7dfa462f84190f4254b3f5647c791b4250fe84ed0028fc9343f9ae",
+    "bytes": 14536
+  },
+  "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac": {
+    "sha256": "4d08eaac44a80fb0142bc001123ebfbc8aa4121801d4cd24711d1394733767f4",
+    "bytes": 14592
+  }
+}

@@ -1,0 +1,239 @@
+{
+  "status": "ADOPTED_REVIEWED_SOURCE_ONLY",
+  "source_commit": "ad4854e920d86a511cc90cd52e4ab161adcb0fec",
+  "previous_native_commit": "f1973f944e9640fe0eb2b3b0bb42557c3324bed3",
+  "source_paths": {
+    "preview/native/adapters/azureus_contacts.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/adapters/azureus_contacts.cpp",
+      "before_sha256": "9c4707a4cfc956e8268b466fed506ce664609e1f32c199418a86ff0d5591a21f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/adapters/azureus_contacts.cpp",
+      "after_sha256": "ceb05b6ccc628090014535861e58785b0cdbc0f88ed07a11360a7e04246ff14b"
+    },
+    "preview/native/adapters/azureus_contacts.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/adapters/azureus_contacts.hpp",
+      "before_sha256": "05528b5d507c30b83d8d2ad5521e76352d2c32ce2e34b617fbf58b7f49d3c82e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/adapters/azureus_contacts.hpp",
+      "after_sha256": "a3cb3c15d3ad1bc7609e78151a515e499910a54bf29ce58650059ac861b6cfc5"
+    },
+    "preview/native/adapters/azureus_public_policy.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/adapters/azureus_public_policy.cpp",
+      "after_sha256": "4eb6b28fb8bf11ea7ccc49698561f4a2eeba9ca1cf6f10aa215586a2131f7ae7"
+    },
+    "preview/native/adapters/azureus_public_policy.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/adapters/azureus_public_policy.hpp",
+      "after_sha256": "20b5283e9699e9df6b265e8d4d574c546dbceb9c90962d7587d7fa5ce1f42352"
+    },
+    "preview/native/app/azureus_profile_io.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/app/azureus_profile_io.hpp",
+      "before_sha256": "0a6beb911cc212377f245149281d0c1348cf2e91601db83e480e0a8bb01f473d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/app/azureus_profile_io.hpp",
+      "after_sha256": "6063f4700751db3ec9b0afcba84103057c109fdac46fc90aecbe1e41af12b3a2"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/app/azureus_profile_io_owner.inc",
+      "before_sha256": "e08d1cba5f3791485b1499c73527ebd8154948d4e4520497110c60c9205b186f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/app/azureus_profile_io_owner.inc",
+      "after_sha256": "ac23da0f9f7bde8630e2fbc875e868495258f6401409b724c6bfc73bb3c5b9d9"
+    },
+    "preview/native/app/azureus_public_owner.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/app/azureus_public_owner.inc",
+      "after_sha256": "ba89062167be84b623c000b57830a073ca7a93710e94cd458e7ec11aecd158ff"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "a6c8d83a99098397501cab664d55a8ddb1f71f55b893138fdbab622be395f33c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "18739aab6073ac0251daff8b5f06558293f1637d0a8b931b94b9c1781a7dbd22"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "2addade9fed7e2d3681af6dedc76c1852d9276a739545f6cd75f3de619d838ca",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "2887f1a519659c838ea0a64f75314f28799c8750a654a1f3a19bfaed2e042013"
+    },
+    "preview/native/core/include/biglybtc/azureus_endpoint.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/core/include/biglybtc/azureus_endpoint.hpp",
+      "after_sha256": "de028f9b0837c5c6cc0806f7c3e3dfca07d5d7064beff7341372b692eea933e6"
+    },
+    "preview/native/services/azureus_control/lookup.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/services/azureus_control/lookup.cpp",
+      "before_sha256": "711334215f3c83c1e96ae9885066c816b055e84dcc669e28508ef24423969fe5",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/services/azureus_control/lookup.cpp",
+      "after_sha256": "8471cab7f0e9022bba79d94aea4c90e35e604941a2fe9190b6cd43e5419ab92f"
+    },
+    "preview/native/services/azureus_control/lookup.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/services/azureus_control/lookup.hpp",
+      "before_sha256": "fc38049295f881f2a54b1f29534c9e2be15d038208d6eed19ca8fa88e1c9c8c1",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/services/azureus_control/lookup.hpp",
+      "after_sha256": "b49932fcd39107c2b97d34d60f6b42bc47dde20a154ec945cfeedf7c0f78cf9f"
+    },
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/services/azureus_udp/owned_routing.inc",
+      "before_sha256": "c506818df045a515ac2f3e49d94085baab0babe05d191e6ed55fc13a9f4d8a88",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/services/azureus_udp/owned_routing.inc",
+      "after_sha256": "e74574468929762d85e3d2bf2fe659abc0c70fb716d4498de93411dd38a57994"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/services/azureus_udp/owned_transport.cpp",
+      "before_sha256": "690df7af3dc3329cdf4e2eda7d872b35013cad2bf5de653c2c72fab47da4992c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+      "after_sha256": "43093e8fe5a2ef3daac0cd76a7e2f53d35b24872b1f9012033735ee7a6ef3726"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/before/preview/native/services/azureus_udp/owned_transport.hpp",
+      "before_sha256": "4472ecd4204da84cc25ab8b5c462ecd059cc4a0a76088d59c2de47fec04863bf",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+      "after_sha256": "de02a807c9b00028ab8262d4c1bc19dba3c4a3c53d361fe58622f36dcd1bf822"
+    },
+    "preview/native/tests/azureus_public_bound_namespace.py": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/tests/azureus_public_bound_namespace.py",
+      "after_sha256": "58c0b339d5c2732b0cfa54e5737c7030d506808dbb07c5abeb5a43485d8be92b"
+    },
+    "preview/native/tests/azureus_public_bound_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/tests/azureus_public_bound_tests.cpp",
+      "after_sha256": "7afc81a498a9eab59cda319685c888fa6c7c3d8a90f23f7a3cea0e2d1c3fa6b2"
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/before/preview/native/services/i2cp_channel/channel.hpp",
+      "before_sha256": "d375e697cbf856eab2a3f74b7526ca469b8cad8aba1179ac6f23451598f5b0e4",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/staging/preview/native/services/i2cp_channel/channel.hpp",
+      "after_sha256": "023df0fe5a26eb9dce6c96d4c4afec4c9f3b2e4a037eb77e9632335587befd38"
+    },
+    "preview/native/services/i2cp_channel/streaming.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/before/preview/native/services/i2cp_channel/streaming.inc",
+      "before_sha256": "3b846b3eff75034467f6db1be28f7ca141f55e76e63c453d2bc5b67ebd64f3ff",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/staging/preview/native/services/i2cp_channel/streaming.inc",
+      "after_sha256": "93f5cd7121631d80eb63fba413f08dd7449a4ebc5dfe3028b5d82afc74205a27"
+    },
+    "preview/native/services/i2p_streaming/stream.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/before/preview/native/services/i2p_streaming/stream.cpp",
+      "before_sha256": "794bcd4e6ae32755c69f10d5f4e8ba00708b8de7bc4a7afc0fca8db6b149f3d6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/staging/preview/native/services/i2p_streaming/stream.cpp",
+      "after_sha256": "92ea0864f7147772b35470fa8b04082481c294f699f16e5629b46d89a404c3b1"
+    },
+    "preview/native/services/i2p_streaming/stream.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/before/preview/native/services/i2p_streaming/stream.hpp",
+      "before_sha256": "b2dfcda91d55fb520853d02c7872650b6e6b56a5fa79e69c63142ddc73a3bf99",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/staging/preview/native/services/i2p_streaming/stream.hpp",
+      "after_sha256": "4106b327a0f397ae56d0dc21bcc50e3f3bb4e1d58e336c49cc3be48a66659807"
+    },
+    "preview/native/tests/i2p_streaming_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/before/preview/native/tests/i2p_streaming_tests.cpp",
+      "before_sha256": "d4b98a5d2748a20dabb1a40736df2dcf790dab695d8de2456098b4c9a521757d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/staging/preview/native/tests/i2p_streaming_tests.cpp",
+      "after_sha256": "5dadc9e9405f95a35778ff10ee7b8502fd333ec1295cb80c5f483b474576fc7b"
+    },
+    "preview/native/tests/i2p_streaming_interop_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/before/preview/native/tests/i2p_streaming_interop_tests.cpp",
+      "before_sha256": "11b51b87a15b6518b2d89849242f42c375cae1fce8e2f0ac5f042bd81557f529",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/staging/preview/native/tests/i2p_streaming_interop_tests.cpp",
+      "after_sha256": "7b81e9b1bcafd2365220dc0bd21f9cfcfc0796ad5c710e723967caa7102c9caa"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/before/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "7286db4f2c70ce3a9a10a23bfabb8ece66009bd54c4e08e389805a1a4c616c2c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/staging/preview/native/tests/CMakeLists.txt",
+      "after_sha256": "6115e5e6f2d45ee5325c274f6ef664fcf5fa8a36f93ae3b4cabfbeee8c8c0cbf"
+    },
+    "preview/native/adapters/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/before/preview/native/adapters/CMakeLists.txt",
+      "before_sha256": "946ca6f41b206bb1fbafe45bad3b1a23c29921cc221bb1246f89baac5180f391",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/staging/preview/native/adapters/CMakeLists.txt",
+      "after_sha256": "da7bc24589ba67b80e5a01584825310340d9f359e616be7ceee898ffab58d38c"
+    },
+    "preview/native/services/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/before/preview/native/services/CMakeLists.txt",
+      "before_sha256": "bdb44aa563e35a6b96ec19f24413431a53f4d33c3f6c132b3340745e91408075",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/udp-core-dependency/after.cmake",
+      "after_sha256": "4568f0479386d02a58c17e0e42cc17ec685e8c03371a6e7c65099e55ad28fec5"
+    }
+  },
+  "source_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/manifest.json",
+      "sha256": "122e845c0bbdd2edc499932d260b807df3c6c9c52a37251b885042c2943fde3a"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/manifest.json",
+      "sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/manifest.json",
+      "sha256": "fec3012f2abcda6ba8be92ff9ea767bbd291f1dd52019f8cb8ef441554c896dc"
+    }
+  ],
+  "source_reviews": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029-review/review.json",
+      "sha256": "803384933d6ee11eee1949e3c11ca3c912178fd074319adbf39567043fd10adb"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029-review/review.json",
+      "sha256": "49b742d56e3623d351bb5ef72c023f5159e91b90a49e600a1c5ad7d565a8a5ea"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029-acceptance-review/review.json",
+      "sha256": "d471b7cbbae292729e0f1228c25025698db9d2b64c3d383cddcc660866e4653e"
+    }
+  ],
+  "acceptance_recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/manifest.json",
+    "sha256": "a650175bab2d67a57c79c6196d0d37c15c8db5418fa05a10f1e60d7f30c61c4a"
+  },
+  "cmake_fragments": [
+    {
+      "destination": "preview/native/adapters/CMakeLists.txt",
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/cmake/adapters.append.cmake",
+      "sha256": "1e258666bbac4f7c96ccab641122748f379ddab76d57c730114a11cd1b4519d3"
+    },
+    {
+      "destination": "preview/native/services/CMakeLists.txt",
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/cmake/services.append.cmake",
+      "sha256": "c396a58adf0f226a2ac2fd48b9c61b83e605574ec7f6f31e380101f1e0509d96"
+    },
+    {
+      "destination": "preview/native/tests/CMakeLists.txt",
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/cmake/tests.append.cmake",
+      "sha256": "0a4a115a7520ebde8f0df20f7790de618a1684c6bb3776fd4288b6ad08e779a7"
+    },
+    {
+      "destination": "preview/native/services/CMakeLists.txt",
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/cmake/services.append.cmake",
+      "sha256": "5e7dc69f0c0517b88baa292dde0f2b56e28e0e29226b5f8abadb80b83cb17a39"
+    }
+  ],
+  "adopter_sha256": "3d43b6560cdec8579a82c959af2fe3e448e2c38aa4ab53022fa0548a1a8a8cc4",
+  "runtime_executed": false,
+  "previous_adoption": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/root-adoption.json",
+    "sha256": "d874199ddaee829089a68682e790357ffa8d7e5afa82dc6d5c0b398d0f9af0ab"
+  },
+  "correction_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/udp-core-dependency/manifest.json",
+      "sha256": "2470e3d23861b16d2080c137017f24bc89935df5292a5f1ad7ed0d24d4714bd2"
+    }
+  ],
+  "failed_first_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/source-before.json": "8d291ab6dc34b1e1140ecb485bf5cfbe12d6f2b5ce3b5514d7b0f7dd30aa5c36",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/tool-inputs.json": "f927cc953e3d097dcfc91b42e549e765e5c9c2d53baf7b2958aa91d566db8764",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/build.log": "731ca5bf234ee5285635e7f962adc188154addb76178dafe7587281cc0fcb294",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/configure.log": "e5ce662cdd1ca3d937df21ee3f794ca558b46186f466de6a589cc4794ffe9547",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/result.json": "0eabdbfa7e3e5f71fb98d960883956716744afc00f2f5dbb649a5b155aa97b46",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/java-reference.json": "033cee5b0b3612b572b29026b0becb15a5b2c9b8e397b3ecb7f3dc8fed2b12a5",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/commands.json": "5c6203c48e968049d07bdefd8567100ac0df962f98568786c655d160bfccae24",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-r1/native-source-map.json": "6007ee59949a2bd2dd3caec8345e67e32de10f53ab419fafce4460a98e5ded4c"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "status": "ROOT_REVIEWED_READONLY_ENVIRONMENT_AND_APPROVED_UNCHANGED_PUBLIC_SUBJECTS",
+  "mode": "pkexec",
+  "helper": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/public-netns-admin",
+    "sha256": "900ffe42f48a5452a78160e254ea8f21575b995ba2a7d3a0c6d066be80826d86",
+    "bytes": 41232,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "authorizer": {
+    "path": "/usr/bin/pkexec",
+    "sha256": "0bb6bcf53221e1704e747f7c555065452f12ea0a4454ff721f3a6bc7f8196a50",
+    "bytes": 31024
+  },
+  "source_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/manifest.json",
+    "sha256": "9c781e5bebea7841cc7d574894367be4460c486f5a9abb99aed7580325f65edb"
+  },
+  "source_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-admin-boundary-20261029-review/amendments/sealed-stdin-payload/review.json",
+    "sha256": "e37dae03cd8990634ae7ff25b2ae7577858d6bd216dbc9c90993652eb6c04a18"
+  },
+  "environment_preflight": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/result.json",
+    "sha256": "85cccf770fd80ef15d2a01dc5d6687755e8897da7863f80202cb3f0747b910aa"
+  },
+  "preflight": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/preflight.json",
+    "sha256": "bac6b5a3e1aa5a4bb7879179ddc14e095a56041e9e4d2295710737cb65b220c7"
+  },
+  "launch": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/launch.json",
+    "sha256": "038e83079378ea306f32e2dbd60ecf66a12c6390c738ba0848f3849341ce5934"
+  },
+  "logs_sha256": {
+    "stdout.log": "99d2db46983e9101dd2f09065c98dc873b81f14885d31f27bea11006c2c2e40f",
+    "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "functional_subject_already_executed": false,
+  "policy_settings_modified": false
+}

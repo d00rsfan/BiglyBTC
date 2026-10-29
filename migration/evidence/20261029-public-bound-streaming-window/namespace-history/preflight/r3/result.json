@@ -1,0 +1,334 @@
+{
+  "status": "PASS_READONLY_NAMESPACE_ENVIRONMENT",
+  "exit": 0,
+  "source_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/manifest.json",
+    "sha256": "9c781e5bebea7841cc7d574894367be4460c486f5a9abb99aed7580325f65edb"
+  },
+  "source_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-admin-boundary-20261029-review/amendments/sealed-stdin-payload/review.json",
+    "sha256": "e37dae03cd8990634ae7ff25b2ae7577858d6bd216dbc9c90993652eb6c04a18"
+  },
+  "compiled_receipt": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/result.json",
+    "sha256": "6dd5ff8a3a5bf3fc9756ba4a9960d17446b542f0167a636d9b265c050e6f7122"
+  },
+  "helper": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/public-netns-admin",
+    "sha256": "900ffe42f48a5452a78160e254ea8f21575b995ba2a7d3a0c6d066be80826d86",
+    "bytes": 41232,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "command": [
+    "/usr/bin/python3",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/staging/preview/native/tests/azureus_public_admin_launcher.py",
+    "--mode",
+    "pkexec",
+    "--helper",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/public-netns-admin",
+    "--sha256",
+    "900ffe42f48a5452a78160e254ea8f21575b995ba2a7d3a0c6d066be80826d86",
+    "--receipt",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/launch.json",
+    "--",
+    "/usr/bin/python3",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/staging/preview/native/tests/public_namespace_fixture/preflight.py",
+    "--uid",
+    "1000",
+    "--gid",
+    "1000"
+  ],
+  "launch": {
+    "argv": [
+      "/usr/bin/python3.14",
+      "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/staging/preview/native/tests/public_namespace_fixture/preflight.py",
+      "--uid",
+      "1000",
+      "--gid",
+      "1000"
+    ],
+    "caller_gid": 1000,
+    "caller_uid": 1000,
+    "command": [
+      "/usr/bin/pkexec",
+      "--disable-internal-agent",
+      "/proc/2378198/fd/5",
+      "pkexec",
+      "2378198",
+      "5",
+      "6",
+      "666856138",
+      "fixed-public-fixture-v1"
+    ],
+    "elapsed_milliseconds": 6533,
+    "helper": {
+      "bytes": 41232,
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/public-netns-admin",
+      "sha256": "900ffe42f48a5452a78160e254ea8f21575b995ba2a7d3a0c6d066be80826d86"
+    },
+    "invoker": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/staging/preview/native/tests/azureus_public_admin_launcher.py",
+      "sha256": "355271b706c964f3edf041b613f5d938fc59b8dd90911ee75c54fe942183e7f3"
+    },
+    "invoker_metadata": {
+      "dumpable": 1,
+      "gid": [
+        1000,
+        1000,
+        1000
+      ],
+      "namespaces": {
+        "net": {
+          "device": 5,
+          "inode": 4026531833,
+          "link": "net:[4026531833]"
+        },
+        "user": {
+          "device": 5,
+          "inode": 4026531837,
+          "link": "user:[4026531837]"
+        }
+      },
+      "uid": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    "launch_environment": {},
+    "memfd_seals": 15,
+    "mode": "pkexec",
+    "no_fallback": true,
+    "output_bytes": [
+      2488,
+      0
+    ],
+    "payload_transport": "sealed-fixed-stdin-after-verified-drop",
+    "schema": 1,
+    "status": "PASS_AUTHENTICATED_NAMESPACE_SUBJECT",
+    "subject_exit": 0,
+    "verified_drop_marker": true
+  },
+  "preflight": [
+    {
+      "NoNewPrivs": 1,
+      "addresses": [
+        [
+          "127.0.0.1",
+          8
+        ],
+        [
+          "2001:db8::1",
+          128
+        ],
+        [
+          "2001:db8::2",
+          128
+        ],
+        [
+          "2001:db8::3",
+          128
+        ],
+        [
+          "203.0.113.1",
+          32
+        ],
+        [
+          "203.0.113.2",
+          32
+        ],
+        [
+          "203.0.113.3",
+          32
+        ],
+        [
+          "::1",
+          128
+        ]
+      ],
+      "capabilities": {
+        "CapAmb": 0,
+        "CapBnd": 0,
+        "CapEff": 0,
+        "CapInh": 0,
+        "CapPrm": 0
+      },
+      "current_net": [
+        5,
+        4026532873
+      ],
+      "current_user": [
+        5,
+        4026532872
+      ],
+      "functional_test_credit": false,
+      "gid": [
+        1000,
+        1000,
+        1000
+      ],
+      "groups": [],
+      "net_owning_user": [
+        5,
+        4026532872
+      ],
+      "parent_net": [
+        5,
+        4026531833
+      ],
+      "parent_user": [
+        5,
+        4026531837
+      ],
+      "routes": {
+        "-4": [
+          {
+            "dev": "lo",
+            "dst": "127.0.0.0/8",
+            "flags": [],
+            "prefsrc": "127.0.0.1",
+            "protocol": "kernel",
+            "scope": "host",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "127.0.0.1",
+            "flags": [],
+            "prefsrc": "127.0.0.1",
+            "protocol": "kernel",
+            "scope": "host",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "127.255.255.255",
+            "flags": [],
+            "prefsrc": "127.0.0.1",
+            "protocol": "kernel",
+            "scope": "link",
+            "table": "local",
+            "type": "broadcast"
+          },
+          {
+            "dev": "lo",
+            "dst": "203.0.113.1",
+            "flags": [],
+            "prefsrc": "203.0.113.1",
+            "protocol": "kernel",
+            "scope": "host",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "203.0.113.2",
+            "flags": [],
+            "prefsrc": "203.0.113.2",
+            "protocol": "kernel",
+            "scope": "host",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "203.0.113.3",
+            "flags": [],
+            "prefsrc": "203.0.113.3",
+            "protocol": "kernel",
+            "scope": "host",
+            "table": "local",
+            "type": "local"
+          }
+        ],
+        "-6": [
+          {
+            "dev": "lo",
+            "dst": "2001:db8::1",
+            "flags": [],
+            "metric": 256,
+            "pref": "medium",
+            "protocol": "kernel"
+          },
+          {
+            "dev": "lo",
+            "dst": "2001:db8::2",
+            "flags": [],
+            "metric": 256,
+            "pref": "medium",
+            "protocol": "kernel"
+          },
+          {
+            "dev": "lo",
+            "dst": "2001:db8::3",
+            "flags": [],
+            "metric": 256,
+            "pref": "medium",
+            "protocol": "kernel"
+          },
+          {
+            "dev": "lo",
+            "dst": "::1",
+            "flags": [],
+            "metric": 0,
+            "pref": "medium",
+            "protocol": "kernel",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "2001:db8::1",
+            "flags": [],
+            "metric": 0,
+            "pref": "medium",
+            "protocol": "kernel",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "2001:db8::2",
+            "flags": [],
+            "metric": 0,
+            "pref": "medium",
+            "protocol": "kernel",
+            "table": "local",
+            "type": "local"
+          },
+          {
+            "dev": "lo",
+            "dst": "2001:db8::3",
+            "flags": [],
+            "metric": 0,
+            "pref": "medium",
+            "protocol": "kernel",
+            "table": "local",
+            "type": "local"
+          }
+        ]
+      },
+      "runtime_capabilities": 41,
+      "status": "PASS_OWNED_CALLER_NAMESPACE_PREFLIGHT",
+      "uid": [
+        1000,
+        1000,
+        1000
+      ]
+    }
+  ],
+  "logs_sha256": {
+    "stdout.log": "99d2db46983e9101dd2f09065c98dc873b81f14885d31f27bea11006c2c2e40f",
+    "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "elapsed_ms": 6644,
+  "previous_failed_preflight": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r2/result.json",
+    "sha256": "5293ad5efba5595fd14a72ac55e6e0c80768bf3216fbcdd8c39cde8dfaccb4f9"
+  },
+  "functional_test_credit": false,
+  "source_unchanged": true
+}

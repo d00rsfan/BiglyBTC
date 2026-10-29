@@ -1,0 +1,58 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop
+Connected to MAKE jobserver
+      Start 178: azureus-owned-service
+ 1/16 Test #178: azureus-owned-service ................   Passed    5.84 sec
+      Start 182: azureus-router-owner
+ 2/16 Test #182: azureus-router-owner .................   Passed    0.12 sec
+      Start 189: owned-dht-bytes
+ 3/16 Test #189: owned-dht-bytes ......................   Passed    0.12 sec
+      Start 192: owned-ddb-control
+ 4/16 Test #192: owned-ddb-control ....................   Passed    0.03 sec
+      Start 263: azureus-database-runtime
+ 5/16 Test #263: azureus-database-runtime .............   Passed    2.27 sec
+      Start 285: i2cp-initial-channel
+ 6/16 Test #285: i2cp-initial-channel .................   Passed   14.42 sec
+      Start 289: i2cp-lease-backed-datagram-channel
+ 7/16 Test #289: i2cp-lease-backed-datagram-channel ...   Passed    7.56 sec
+      Start 291: i2cp-bounded-datagram-receiver
+ 8/16 Test #291: i2cp-bounded-datagram-receiver .......   Passed   11.56 sec
+      Start 292: azureus-profile-io
+ 9/16 Test #292: azureus-profile-io ...................   Passed    4.11 sec
+      Start 294: i2cp-explicit-tracker-channel
+10/16 Test #294: i2cp-explicit-tracker-channel ........   Passed    5.60 sec
+      Start 296: azureus-routing
+11/16 Test #296: azureus-routing ......................   Passed    1.62 sec
+      Start 297: pure-i2p-streaming
+12/16 Test #297: pure-i2p-streaming ...................   Passed    0.21 sec
+      Start 298: i2p-original-streaming-peer
+13/16 Test #298: i2p-original-streaming-peer ..........   Passed   21.57 sec
+      Start 299: i2p-original-streaming-upload
+14/16 Test #299: i2p-original-streaming-upload ........   Passed   12.31 sec
+      Start 300: azureus-maintenance
+15/16 Test #300: azureus-maintenance ..................   Passed   81.37 sec
+      Start 301: azureus-public-bound
+16/16 Test #301: azureus-public-bound .................***Timeout 240.11 sec
+
+
+94% tests passed, 1 tests failed out of 16
+
+Label Time Summary:
+database          =   2.27 sec*proc (1 test)
+explicit-i2p      =  33.88 sec*proc (2 tests)
+i2p               =  39.35 sec*proc (5 tests)
+loopback          =  95.33 sec*proc (6 tests)
+namespace         = 240.11 sec*proc (1 test)
+no-network        =   0.21 sec*proc (1 test)
+owned-loopback    =  39.14 sec*proc (4 tests)
+profile           = 327.22 sec*proc (4 tests)
+reference         =  33.88 sec*proc (2 tests)
+router            =   0.12 sec*proc (1 test)
+routing           = 323.11 sec*proc (3 tests)
+statistics        =   6.10 sec*proc (4 tests)
+unit              = 374.94 sec*proc (14 tests)
+
+Total Test time (real) = 408.84 sec
+
+The following tests FAILED:
+	301 - azureus-public-bound (Timeout)                    namespace profile routing unit
+Errors while running CTest

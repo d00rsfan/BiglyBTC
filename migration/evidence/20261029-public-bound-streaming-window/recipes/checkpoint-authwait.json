@@ -1,0 +1,27 @@
+{
+  "branch": "refs/heads/biglybtc/native-20261017",
+  "parent": "1ff99507d9313fc9c4f2c7571014f5b157b1163a",
+  "commit": "786e1b5a8eea1a6b453bcbd9ca603bd58ee2231c",
+  "tree": "de5bdbe67ba4953441de1ed5738de0f82e13a5be",
+  "original_head_unchanged": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256_unchanged": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "isolated_index": "/tmp/biglybtc-review-index-psr79w_k/index",
+  "changed_paths": [
+    "migration/ACTIVE.md",
+    "migration/QUESTIONS.md",
+    "migration/archive/20261029-before-public-window.md",
+    "migration/continuation.json",
+    "migration/tools/continuation_status.py",
+    "migration/tools/hosted_preview_dependencies.sh"
+  ],
+  "scope": [
+    "native",
+    "migration",
+    "MIGRATION_PLAN.md",
+    "PLUGIN_MIGRATION_AUDIT.md",
+    "PLUGIN_SOURCES.md",
+    ".github/workflows/biglybtc-linux-packaging.yml",
+    ".github/workflows/biglybtc-linux-deb.yml"
+  ],
+  "published": false
+}

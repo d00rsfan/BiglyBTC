@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "observation": "OWNED_CURRENT_COHORT_PROCESS_SNAPSHOT_ONLY",
+  "utc": "2026-10-29T22:08:01Z",
+  "processes": [
+    {
+      "pid": 2380445,
+      "argv": [
+        "make",
+        "--jobserver-style=fifo",
+        "-j3",
+        "--no-print-directory",
+        "-f",
+        "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/jobs-admin.mk",
+        "SOURCE_COMMIT=04b6287a38cec6bd123e2648ada278ea348b85db",
+        "ADOPTION=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/root-adoption-admin-r1.json",
+        "REFERENCE=/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/java-runs/admin-r1/result.json",
+        "NAMESPACE_PREFLIGHT=/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/result.json",
+        "ATTEMPT=admin-r1"
+      ],
+      "status": {
+        "Name": "make",
+        "State": "S (sleeping)",
+        "PPid": "3953288",
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000"
+      }
+    },
+    {
+      "pid": 2381900,
+      "argv": [
+        "/bin/sh",
+        "-c",
+        "python3 -B \"/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/run-admin.py\" gcc --attempt \"admin-r1\" --source-commit \"04b6287a38cec6bd123e2648ada278ea348b85db\" --adoption \"/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/root-adoption-admin-r1.json\" --reference \"/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/java-runs/admin-r1/result.json\" --namespace-preflight \"/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/result.json\""
+      ],
+      "status": {
+        "Name": "sh",
+        "State": "S (sleeping)",
+        "PPid": "2380445",
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000"
+      }
+    },
+    {
+      "pid": 2381902,
+      "argv": [
+        "python3",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/run-admin.py",
+        "gcc",
+        "--attempt",
+        "admin-r1",
+        "--source-commit",
+        "04b6287a38cec6bd123e2648ada278ea348b85db",
+        "--adoption",
+        "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/root-adoption-admin-r1.json",
+        "--reference",
+        "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/java-runs/admin-r1/result.json",
+        "--namespace-preflight",
+        "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/result.json"
+      ],
+      "status": {
+        "Name": "python3",
+        "State": "S (sleeping)",
+        "PPid": "2381900",
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000"
+      }
+    },
+    {
+      "pid": 2386040,
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "1",
+        "-R",
+        "^(azureus\\-routing|owned\\-ddb\\-control|azureus\\-router\\-owner|azureus\\-owned\\-service|azureus\\-profile\\-io|azureus\\-maintenance|azureus\\-database\\-runtime|owned\\-dht\\-bytes|azureus\\-public\\-bound|i2cp\\-initial\\-channel|i2cp\\-lease\\-backed\\-datagram\\-channel|i2cp\\-bounded\\-datagram\\-receiver|i2cp\\-explicit\\-tracker\\-channel|pure\\-i2p\\-streaming|i2p\\-original\\-streaming\\-peer|i2p\\-original\\-streaming\\-upload|azureus\\-router\\-binding|owned\\-ddb\\-binding|owned\\-lookup\\-tree\\-ui)$",
+        "--output-on-failure",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/tests.xml"
+      ],
+      "status": {
+        "Name": "ctest",
+        "State": "S (sleeping)",
+        "PPid": "2381902",
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000"
+      }
+    },
+    {
+      "pid": 2386963,
+      "argv": [
+        "/usr/bin/python3",
+        "/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_public_bound_namespace.py",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-public-bound-tests"
+      ],
+      "status": {
+        "Name": "python3",
+        "State": "S (sleeping)",
+        "PPid": "2386040",
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000"
+      }
+    },
+    {
+      "pid": 2386964,
+      "argv": [
+        "/usr/bin/pkexec",
+        "--disable-internal-agent",
+        "/proc/2386963/fd/6",
+        "pkexec",
+        "2386963",
+        "6",
+        "7",
+        "667097223",
+        "fixed-public-fixture-v1"
+      ],
+      "status": {
+        "Name": "pkexec",
+        "State": "S (sleeping)",
+        "PPid": "2386963",
+        "Uid": "1000\t0\t0\t0",
+        "Gid": "1000\t1000\t1000\t1000"
+      }
+    }
+  ],
+  "previous_sanitizer_observation": {
+    "kind": "ROOT_REPORTED_PREVIOUS_DIRECT_PROC_INSPECTION",
+    "ctest_pid": 2384181,
+    "wrapper_pid": 2385110,
+    "pkexec_pid": 2385111,
+    "reported_state": "pkexec waiting local authorisation, no native Public subject present",
+    "limitation": "previous proc bytes not retained; this field is a root observation, not a replayable process snapshot"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "argv": [
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-public-bound-tests"
+  ],
+  "caller_gid": 1000,
+  "caller_uid": 1000,
+  "command": [
+    "/usr/bin/pkexec",
+    "--disable-internal-agent",
+    "/proc/2392645/fd/6",
+    "pkexec",
+    "2392645",
+    "6",
+    "7",
+    "667282663",
+    "fixed-public-fixture-v1"
+  ],
+  "elapsed_milliseconds": 36445,
+  "helper": {
+    "bytes": 41232,
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/public-netns-admin",
+    "sha256": "900ffe42f48a5452a78160e254ea8f21575b995ba2a7d3a0c6d066be80826d86"
+  },
+  "invoker": {
+    "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_public_admin_launcher.py",
+    "sha256": "355271b706c964f3edf041b613f5d938fc59b8dd90911ee75c54fe942183e7f3"
+  },
+  "invoker_metadata": {
+    "dumpable": 1,
+    "gid": [
+      1000,
+      1000,
+      1000
+    ],
+    "namespaces": {
+      "net": {
+        "device": 5,
+        "inode": 4026531833,
+        "link": "net:[4026531833]"
+      },
+      "user": {
+        "device": 5,
+        "inode": 4026531837,
+        "link": "user:[4026531837]"
+      }
+    },
+    "uid": [
+      1000,
+      1000,
+      1000
+    ]
+  },
+  "launch_environment": {
+    "BIGLYBTC_PUBLIC_ADMIN_HELPER": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/public-netns-admin",
+    "BIGLYBTC_PUBLIC_ADMIN_MODE": "pkexec",
+    "BIGLYBTC_PUBLIC_ADMIN_RECEIPT": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/resume-runs/gcc-auth-r1/public-namespace-launch.json",
+    "BIGLYBTC_PUBLIC_ADMIN_SHA256": "900ffe42f48a5452a78160e254ea8f21575b995ba2a7d3a0c6d066be80826d86"
+  },
+  "memfd_seals": 15,
+  "mode": "pkexec",
+  "no_fallback": true,
+  "output_bytes": [
+    1363,
+    0
+  ],
+  "payload_transport": "sealed-fixed-stdin-after-verified-drop",
+  "schema": 1,
+  "status": "PASS_AUTHENTICATED_NAMESPACE_SUBJECT",
+  "subject_exit": 0,
+  "verified_drop_marker": true
+}

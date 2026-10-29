@@ -1,0 +1,52 @@
+diff --git a/preview/native/services/i2p_streaming/stream.cpp b/preview/native/services/i2p_streaming/stream.cpp
+--- a/preview/native/services/i2p_streaming/stream.cpp
++++ b/preview/native/services/i2p_streaming/stream.cpp
+@@ -140,7 +140,10 @@
+         if(pending.nacks<std::numeric_limits<unsigned>::max()){++pending.nacks;}
+         if(pending.nacks>=3&&!pending.fastUsed&&(pending.sends==1||(now>=pending.sent&&now-pending.sent>4000))){pending.fastUsed=true;pending.fast=true;pending.retry=true;}
+       }else{
+-        if(pending.sends==1&&now>=pending.sent){highestRtt=std::max(highestRtt,now-pending.sent);}observed_.acknowledgedBytes+=pending.packet.payload.size();if(pending.packet.flags&Close){localFinAcked_=true;}slot.reset();++acked;
++        // ConnectionPacketHandler captures receivedAck before the whole batch:
++        // only the first measured ACK may sample an already retransmitted
++        // packet. PacketLocal.getAckTime starts at creation, not last send.
++        if((pending.sends==1||samples_==0)&&now>=pending.created){highestRtt=std::max(highestRtt,now-pending.created);}observed_.acknowledgedBytes+=pending.packet.payload.size();if(pending.packet.flags&Close){localFinAcked_=true;}slot.reset();++acked;
+       }
+     }
+     if(acked){ackSinceCongestion_=true;bandwidth_.sample(acked,now,rtt_);sample(highestRtt);if(flight()){retryAt_=now+rto_;}else{retryAt_.reset();timeoutArmPending_=false;}}
+@@ -180,7 +183,7 @@
+     auto p=base();p.sequence=nextSequence_++;
+     if(p.sequence==0){p.flags|=Syn|From|MaxSize|NoAck;p.from=local_;p.maxSize=DefaultSegment;p.nacks.clear();for(unsigned i=0;i<8;++i){std::uint32_t value=0;for(unsigned j=0;j<4;++j){value=(value<<8)|peer_.hash[4*i+j];}p.nacks.push_back(value);}}
+     else{const auto count=std::min<std::size_t>(segment_,tx_.size());for(std::size_t i=0;i<count;++i){p.payload.push_back(tx_.front());tx_.pop_front();}if(finish_&&tx_.empty()){p.flags|=Close;localFinSent_=true;}}
+-    free->emplace(Pending{std::move(p)});return (*free)->packet;
++    Pending prepared;prepared.packet=std::move(p);prepared.created=now;free->emplace(std::move(prepared));return (*free)->packet;
+   }
+   if(ackWanted_&&remoteId_){return base();}return std::nullopt;
+ }
+diff --git a/preview/native/services/i2p_streaming/stream.hpp b/preview/native/services/i2p_streaming/stream.hpp
+--- a/preview/native/services/i2p_streaming/stream.hpp
++++ b/preview/native/services/i2p_streaming/stream.hpp
+@@ -79,7 +79,7 @@
+   std::optional<unsigned> transmitTimeout(const Packet&)const noexcept;
+   std::optional<std::uint64_t> wakeup()const noexcept;
+ private:
+-  struct Pending {Packet packet;unsigned sends=0,nacks=0;std::uint64_t sent=0;bool retry=false,fast=false,fastUsed=false;};
++  struct Pending {Packet packet;unsigned sends=0,nacks=0;std::uint64_t sent=0,created=0;bool retry=false,fast=false,fastUsed=false;};
+   Packet base()const;
+   void acknowledgements(Packet&)const;
+   void reject()noexcept;
+diff --git a/preview/native/tests/i2p_streaming_tests.cpp b/preview/native/tests/i2p_streaming_tests.cpp
+--- a/preview/native/tests/i2p_streaming_tests.cpp
++++ b/preview/native/tests/i2p_streaming_tests.cpp
+@@ -98,4 +98,11 @@
+   auto afterIdle=estimator.estimate(18100,100);require(afterIdle>0.001F&&afterIdle<0.003F,"Bounded virtual-null decay failed after long idle");require(estimator.estimate(18100,100)==afterIdle,"Repeated same-time estimator query decayed twice");
+ }
+ 
+-int main(){try{auto local=identity("dsa"),peer=identity("ed25519");codec(local,peer);codec(peer,local);ordered(local,peer);capacity(local,peer);timers(local,peer);closed(local,peer);slidingCredit(local,peer);undispatchedAndSelectiveAcknowledgements(local,peer);oneTimerBackoffAndFreshRtt(local,peer);chokeAndFinWithSelectiveHole(local,peer);originalPacketBandwidthEstimator();std::cout<<"PASS original online Streaming codec/order/capacity/retry/reset and bounded sliding-window/ACK/Westwood controls\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}
++
++void firstAckAndCreatedPacketAge(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  st::Connection first(28,100,*local.destination(),*peer.destination());auto syn=first.next(0);require(bool(syn),"Missing first-ACK SYN");first.dispatched(*syn,0);auto retry=first.next(9000);require(bool(retry),"Missing first-ACK retry");first.dispatched(*retry,9000);
++  st::Packet reply;reply.send=100;reply.receive=200;reply.flags=st::Syn|st::From|st::Signature;reply.from=*peer.destination();first.receive(checked(std::move(reply),peer),10000);require(first.observation().phase==st::Phase::Established&&first.observation().rtoMilliseconds==15000,"First measured ACK lost original retransmitted packet-age exception");
++  st::Connection age(29,100,*local.destination(),*peer.destination());establish(age,local,peer);require(bool(age.write(p::Bytes(2*st::DefaultSegment,10))),"Cannot queue packet-age control");auto old=age.next(210);require(old&&old->sequence==1,"Missing older packet reservation");age.dispatched(*old,300);auto recent=age.next(301);require(recent&&recent->sequence==2,"Missing newer packet reservation");age.dispatched(*recent,301);age.receive(acknowledgement(peer,2),400);require(age.observation().rtoMilliseconds==351,"ACK batch failed highest190ms packet-creation sample");
++}
++
++int main(){try{auto local=identity("dsa"),peer=identity("ed25519");codec(local,peer);codec(peer,local);ordered(local,peer);capacity(local,peer);timers(local,peer);closed(local,peer);slidingCredit(local,peer);undispatchedAndSelectiveAcknowledgements(local,peer);oneTimerBackoffAndFreshRtt(local,peer);chokeAndFinWithSelectiveHole(local,peer);originalPacketBandwidthEstimator();firstAckAndCreatedPacketAge(local,peer);std::cout<<"PASS original online Streaming codec/order/capacity/retry/reset and bounded sliding-window/ACK/Westwood controls\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}

@@ -1,0 +1,1 @@
+BBPUB_DROP uid=1000 gid=1000 groups=0 capabilities=0 bounding=0 ambient=0 nnp=1

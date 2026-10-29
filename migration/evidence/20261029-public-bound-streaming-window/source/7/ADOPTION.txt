@@ -1,0 +1,20 @@
+SOURCE-ONLY two-file semantic child. Actual readonly r2 proved all auth/setup/drop
+fences reached, then foreign invoker/procFD read refused in dropped-user-payload.
+
+Launcher now rewinds the alreadysealed inert payload memfd to offset0 and
+passes it as fixed stdin through explicit pkexec-disable-internal-agent or
+sudo-n. Helper parent never reads/parses it. Only after verify_dropped does the
+owned child validate FD0 as caller-owned regular/sealed/bounded and require
+its offset still0, then read the same bounded payload/parser. The sealed-object
+metadata predicate is shared unchanged with the existing actual-image proof.
+After reading, the alreadyunprivileged child restores /dev/null on subject
+stdin; no payload descriptor is leaked into user code. Original image/proc
+invoker identity checks, namespace/addresses/groups/caps/NNP, authorization,
+timeout/cancellation and diagnostic logging are unchanged. No root preopen,
+dumpability/ptrace/policy change or retry/fallback. All namespace_admin keys
+remain stable; launcher additionally records payload_transport.
+
+All21 other source maps byte-exact87435df7. A new measured helper image and
+Codec source review are required before root's ONE readonly r3 preflight.
+Parents, old images and actual r1/r2 refusal logs remain immutable. W full
+recipes stay actual-PASS gated. No author compile/admin/namespace/subject/N.

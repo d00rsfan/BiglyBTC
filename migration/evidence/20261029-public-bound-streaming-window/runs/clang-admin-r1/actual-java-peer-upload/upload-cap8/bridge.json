@@ -1,0 +1,11 @@
+{
+    "dropped_native": false,
+    "failure": "",
+    "java_data_frames": "1",
+    "java_frames": "50",
+    "native_choke": false,
+    "native_frames": "80",
+    "native_unchoke": false,
+    "reordered_java": false,
+    "retried_native": false
+}
