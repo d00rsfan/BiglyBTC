@@ -68,7 +68,7 @@ public:
     });if(!submitted){return false;}if(!submitted->result().get()){return false;}return result->value_or(false);
   }
   std::expected<Handle,core::SubmitError> submit(Operation operation){
-    std::lock_guard slots(slotsMutex_);
+    std::lock_guard slotGuard(slotsMutex_);
     if(stopping_){return std::unexpected(core::SubmitError::Stopped);}
     Handle* free=nullptr;for(auto& item:slots_){if(!item){free=&item;break;}}
     if(!free){return std::unexpected(core::SubmitError::Overloaded);}
@@ -120,7 +120,7 @@ public:
   }
   struct Facts {std::size_t pending=0,running=0,ready=0,highWater=0;};
   Facts facts(){
-    std::lock_guard slots(slotsMutex_);Facts result;result.highWater=highWater_;
+    std::lock_guard slotGuard(slotsMutex_);Facts result;result.highWater=highWater_;
     for(const auto& slot:slots_){if(!slot){continue;}++result.pending;std::lock_guard lock(slot->mutex);result.running+=slot->phase==Phase::Running;result.ready+=slot->phase==Phase::Ready||slot->phase==Phase::Executing;}
     return result;
   }

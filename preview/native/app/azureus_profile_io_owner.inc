@@ -18,7 +18,7 @@
       try{
         auto earliest=std::chrono::steady_clock::time_point::max();for(const auto& slot:ioSlots_){if(slot.job&&!slot.expiryNotified){earliest=std::min(earliest,slot.deadline);}}
         if(earliest==std::chrono::steady_clock::time_point::max()){ioDeadline_.stop();return;}
-        ioDeadline_.start(std::max(std::chrono::nanoseconds{1},std::chrono::duration_cast<std::chrono::nanoseconds>(earliest-std::chrono::steady_clock::now())));
+        ioDeadline_.setInterval(std::max(std::chrono::nanoseconds{1},std::chrono::duration_cast<std::chrono::nanoseconds>(earliest-std::chrono::steady_clock::now())));ioDeadline_.start();
       }catch(...){try{ioDeadline_.stop();}catch(...){}publicationMemoryFailure();}
     }
     bool profilePermit_=false,passiveIo_=false,drainingIo_=false;
