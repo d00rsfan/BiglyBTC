@@ -111,7 +111,8 @@ struct GeneratedServiceState {
   policy::State admission{};
   std::size_t receiptCount=0;
 };
-enum class RoutingScope {ExactPeers,OwnedLoopback};
+enum class RoutingScope {ExactPeers,OwnedLoopback,PublicBound};
+inline constexpr bool dynamicRoutingScope(RoutingScope scope)noexcept{return scope==RoutingScope::OwnedLoopback||scope==RoutingScope::PublicBound;}
 struct RoutingSnapshot {
   std::uint64_t generation=0,operation=0,revision=0;
   bool finished=false;
@@ -145,7 +146,7 @@ class OwnedPingTransport final : public QObject {
 public:
   explicit OwnedPingTransport(Config,QObject* parent=nullptr);
   ~OwnedPingTransport() override;
-  std::expected<void,Failure> start(const QHostAddress& bindAddress=QHostAddress::LocalHost,quint16 bindPort=0);
+  std::expected<void,Failure> start(const QHostAddress& bindAddress=QHostAddress::LocalHost,quint16 bindPort=0,std::function<bool()> publicPermit={});
   std::expected<void,Failure> allowPeer(Peer);
   std::expected<Ticket,Failure> ping(Peer,std::int8_t remoteVersion,QObject* receiver,Callback,
       std::chrono::nanoseconds deadline=std::chrono::seconds(30));
@@ -210,6 +211,8 @@ private:
   using Result=std::expected<Value,Failure>;
   using CompletionCallback=std::move_only_function<void(Result)>;
   using Encoder=std::move_only_function<std::expected<std::string,Failure>(packet::udp::EncodeFields)>;
+  // Every physical PublicBound write consumes the still-held source permit.
+  std::expected<qint64,Failure> writePacket(std::string_view,const Peer&,Clock::time_point end=Clock::time_point::max());
   template<class T,class CallbackType> static CompletionCallback detailedCallback(CallbackType callback) {
     if (!callback) { return {}; }
     return [callback=std::move(callback)](Result result) mutable {
@@ -295,6 +298,7 @@ private:
   std::function<bool(std::move_only_function<void(bool)>)> normalPreflight_;
   bool normalResuming_=false;
   std::vector<find::nodes::Contact> normalContacts_; // Actual request sources or explicitly scoped reply candidates.
+  std::function<bool()> publicPermit_; // Existing owner one-shot source permit, PublicBound only.
   Config config_;
   std::unique_ptr<find::nodes::NodeCache> nodeCache_;
   std::unique_ptr<auth::Authority> authority_;

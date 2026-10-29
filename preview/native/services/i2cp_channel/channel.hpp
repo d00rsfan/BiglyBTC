@@ -93,7 +93,7 @@ public:
   [[nodiscard]] ConfigResult<std::uint64_t> scrapeTracker(const TrackerRequest&);
   bool cancelTracker(std::uint64_t operation);
   [[nodiscard]] std::optional<TrackerObservation> trackerObservation()const;
-  struct StreamOptions {std::uint16_t fromPort=0,toPort=0;int deadlineMilliseconds=120000;};
+  struct StreamOptions {std::uint16_t fromPort=0,toPort=0;int deadlineMilliseconds=120000;unsigned maximumWindow=streaming::MaximumWindow;};
   // Explicit full resolved peer only; no DNS, default router or Host activation.
   // Requires retained owned signer/current LS2; one bounded outbound stream.
   [[nodiscard]] ConfigResult<std::uint64_t> connectStream(View destination,const StreamOptions&);

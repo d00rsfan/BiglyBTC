@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "azureus_contacts.hpp"
+#include "biglybtc/azureus_endpoint.hpp"
 #include "file_io.hpp"
 #include <bit>
 #include <cerrno>
@@ -52,16 +53,17 @@ std::expected<std::string,Error> encodeAzureusContactState(std::span<const Azure
   for(const auto& value:values){if(value.length!=4&&value.length!=16){return error(ErrorCode::InvalidFormat,"Invalid original contact family");}put(static_cast<std::uint64_t>(value.timeAlive),8);put(1,1);put(static_cast<std::uint8_t>(value.protocol),1);put(value.length,1);for(std::size_t j=0;j<value.length;++j){put(value.address[j],1);}put(value.port,2);}return out;
 }
 namespace {
-bool writable(std::span<const AzureusSavedContact> contacts,std::uint8_t family){
+bool writable(std::span<const AzureusSavedContact> contacts,std::uint8_t family,AzureusContactScope scope){
   for(const auto& value:contacts){
     if(value.length!=family||!value.port||value.protocol<51||value.protocol>55){return false;}
+    if(scope==AzureusContactScope::PublicBound){if(!core::azureusPublicAddress(std::span(value.address).first(family))){return false;}continue;}
     if(family==4){if(value.address[0]!=127){return false;}}
     else{for(std::size_t i=0;i<15;++i){if(value.address[i]){return false;}}if(value.address[15]!=1){return false;}}
   }return true;
 }
 }
 struct AzureusContacts::Impl {
-  std::shared_ptr<const ProfileLease> lease;Descriptor dht{-1},net{-1};std::int32_t network=0;std::uint8_t family=4;std::string netName;
+  std::shared_ptr<const ProfileLease> lease;Descriptor dht{-1},net{-1};std::int32_t network=0;std::uint8_t family=4;AzureusContactScope scope=AzureusContactScope::OwnedLoopback;std::string netName;
   Capture primary,pending;std::vector<AzureusSavedContact> contacts;bool canWrite=false,poisoned=false;mutable std::mutex mutex;
   int dir()const{return network?net.get():dht.get();}
   std::expected<void,Error> validate()const{
@@ -75,16 +77,17 @@ AzureusContacts::AzureusContacts(std::unique_ptr<Impl> p):impl_(std::move(p)){}
 AzureusContacts::~AzureusContacts()=default;
 std::int32_t AzureusContacts::network()const noexcept{return impl_->network;}
 std::uint8_t AzureusContacts::family()const noexcept{return impl_->family;}
+AzureusContactScope AzureusContacts::scope()const noexcept{return impl_->scope;}
 std::shared_ptr<const ProfileLease> AzureusContacts::profileOwnership()const noexcept{return impl_->lease;}
-std::expected<std::shared_ptr<AzureusContacts>,Error> AzureusContacts::open(const ProfileLease& source,std::int32_t network,std::uint8_t family){
+std::expected<std::shared_ptr<AzureusContacts>,Error> AzureusContacts::open(const ProfileLease& source,std::int32_t network,std::uint8_t family,AzureusContactScope scope){
   try{
-    if(network<0||(family!=4&&family!=16)){return error(ErrorCode::InvalidFormat,"Invalid contact profile network/family");}auto access=source.sourceAccess(true);if(!access){return std::unexpected(access.error());}auto held=source.retain();if(!held){return std::unexpected(held.error());}
-    auto out=std::make_unique<Impl>();out->lease=std::move(*held);out->network=network;out->family=family;auto dht=directory(out->lease->directoryHandle(),"dht");if(!dht){return std::unexpected(dht.error());}out->dht=std::move(*dht);
+    if((scope!=AzureusContactScope::OwnedLoopback&&scope!=AzureusContactScope::PublicBound)||(scope==AzureusContactScope::PublicBound&&!((network==0&&family==4)||(network==3&&family==16)))||network<0||(family!=4&&family!=16)){return error(ErrorCode::InvalidFormat,"Invalid contact profile network/family");}auto access=source.sourceAccess(true);if(!access){return std::unexpected(access.error());}auto held=source.retain();if(!held){return std::unexpected(held.error());}
+    auto out=std::make_unique<Impl>();out->lease=std::move(*held);out->network=network;out->family=family;out->scope=scope;auto dht=directory(out->lease->directoryHandle(),"dht");if(!dht){return std::unexpected(dht.error());}out->dht=std::move(*dht);
     if(network){out->netName="net"+std::to_string(network);auto net=directory(out->dht.get(),out->netName);if(!net){return std::unexpected(net.error());}out->net=std::move(*net);}
     auto primary=capture(out->dir(),"contacts.dat"),pending=capture(out->dir(),"contacts.saving");if(!primary){return std::unexpected(primary.error());}if(!pending){return std::unexpected(pending.error());}
     const auto selected=primary->bytes?primary->bytes:pending->bytes;
     if(selected){auto decoded=decodeAzureusContactState(*selected);if(!decoded){return std::unexpected(decoded.error());}out->contacts=std::move(*decoded);}
-    out->canWrite=writable(out->contacts,family)&&!(primary->bytes&&pending->bytes);
+    out->canWrite=writable(out->contacts,family,scope)&&!(primary->bytes&&pending->bytes);
     if(!primary->bytes&&pending->bytes&&out->canWrite){
       auto fresh=out->lease->retain();if(!fresh){return std::unexpected(fresh.error());}Descriptor fd(::openat(out->dir(),"contacts.saving",O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_NOFOLLOW));struct stat actual{};auto latest=capture(out->dir(),"contacts.saving");
       if(fd.get()<0||::fstat(fd.get(),&actual)!=0||!latest||!latest->stamp||!same(actual,*latest->stamp)||!equal(*latest,*pending)||!namedDirectory(out->lease->directoryHandle(),"dht",out->dht.get())||(network&&!namedDirectory(out->dht.get(),out->netName,out->net.get()))){return error(ErrorCode::Conflict,"Contact pending recovery changed");}
@@ -99,7 +102,7 @@ std::expected<std::shared_ptr<const AzureusContactsSnapshot>,Error> AzureusConta
 std::expected<void,Error> AzureusContacts::save(std::span<const AzureusSavedContact> values,std::stop_token stop,std::chrono::steady_clock::time_point deadline){
   try{
     auto access=impl_->lease->sourceAccess(true);if(!access){return std::unexpected(access.error());}std::lock_guard lock(impl_->mutex);auto valid=impl_->validate();if(!valid){return std::unexpected(valid.error());}
-    if(!impl_->canWrite||!writable(values,impl_->family)){return error(ErrorCode::Unsupported,"Foreign/ambiguous original cache remains unchanged");}auto bytes=encodeAzureusContactState(values);if(!bytes){return std::unexpected(bytes.error());}if(stop.stop_requested()||std::chrono::steady_clock::now()>=deadline){return error(ErrorCode::Cancelled,"Contact export cancelled/expired");}
+    if(!impl_->canWrite||!writable(values,impl_->family,impl_->scope)){return error(ErrorCode::Unsupported,"Foreign/ambiguous original cache remains unchanged");}auto bytes=encodeAzureusContactState(values);if(!bytes){return std::unexpected(bytes.error());}if(stop.stop_requested()||std::chrono::steady_clock::now()>=deadline){return error(ErrorCode::Cancelled,"Contact export cancelled/expired");}
     impl_->poisoned=true;auto created=detail::writeExclusiveOwned(impl_->dir(),"contacts.saving",*bytes,0600);if(!created){return std::unexpected(created.error());}
     auto held=impl_->lease->retain();if(!held){return std::unexpected(held.error());}auto primary=capture(impl_->dir(),"contacts.dat"),pending=capture(impl_->dir(),"contacts.saving");struct stat fd{};
     if(stop.stop_requested()||std::chrono::steady_clock::now()>=deadline){return error(ErrorCode::Cancelled,"Contact export cancelled/expired before publication");}

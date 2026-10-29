@@ -97,17 +97,21 @@ public:
         {
           std::lock_guard lock(job->mutex);job->result=std::move(result);
           if(stop.stop_requested()){job->revoked=true;}
-          job->phase=Phase::Ready;
+          job->phase=Phase::Ready;job->changed.notify_all();
         }
         signal();
         std::unique_lock lock(job->mutex);
         std::stop_callback stopped(stop,[&]{job->revoked.store(true);job->changed.notify_all();});
         job->changed.wait(lock,[&]{return job->phase==Phase::Committed||(job->revoked&&job->phase!=Phase::Executing);});
       }}catch(...){job->revoked.store(true);} // Source gate released first.
-      {std::lock_guard lock(job->mutex);job->phase=Phase::Released;}signal();return {};
+      {std::lock_guard lock(job->mutex);job->phase=Phase::Released;job->changed.notify_all();}signal();return {};
     });
     if(!submitted){free->reset();return std::unexpected(submitted.error());}
     job->ticket.emplace(std::move(*submitted));return job;
+  }
+  // External service creation only. The actor never waits for this handshake.
+  static bool waitReady(const Handle& job,std::chrono::steady_clock::time_point end){
+    std::unique_lock lock(job->mutex);return job->changed.wait_until(lock,end,[&]{return job->phase==Phase::Ready||job->phase==Phase::Released;})&&job->phase==Phase::Ready&&!job->revoked&&job->result&&bool(*job->result);
   }
   static std::optional<Result> take(const Handle& job){
     std::lock_guard lock(job->mutex);if(job->phase!=Phase::Ready||job->revoked||!job->result){return {};}

@@ -2196,7 +2196,14 @@ if(BIGLYBTC_I2P_STREAMING_JAVA_ACCEPTANCE)
     BIGLYBTC_I2P_STREAMING_JAR="${BIGLYBTC_I2P_STREAMING_JAR}"
     BIGLYBTC_I2P_STREAMING_CLASSES="${BIGLYBTC_I2P_STREAMING_CLASSES}"
     BIGLYBTC_I2P_STREAMING_KEYS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
-  add_test(NAME i2p-original-streaming-peer COMMAND biglybtc-i2p-streaming-interop-tests)
+  add_test(NAME i2p-original-streaming-peer COMMAND biglybtc-i2p-streaming-interop-tests
+    actualOriginalManagerCarriesHttpAndRecoverablePackets
+    actualOriginalResetHasTypedNativeTerminal
+    localCancelRejectsGenuineLatePeerBytesBeforeUpdatedBarrier)
+  add_test(NAME i2p-original-streaming-upload COMMAND biglybtc-i2p-streaming-interop-tests
+    actualOriginalManagerReceives128KiBWithBoundedNativeWindow)
+  set_tests_properties(i2p-original-streaming-upload PROPERTIES TIMEOUT 300 LABELS "reference;explicit-i2p"
+    ENVIRONMENT_MODIFICATION "BIGLYBTC_I2P_STREAMING_ACCEPTANCE_ROOT=string_append:-upload")
   set_tests_properties(i2p-original-streaming-peer PROPERTIES TIMEOUT 480 LABELS "reference;explicit-i2p")
 endif()
 
@@ -2209,4 +2216,15 @@ if(TARGET biglybtc_owned_azureus_service)
   target_compile_options(biglybtc-azureus-maintenance-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_test(NAME azureus-maintenance COMMAND biglybtc-azureus-maintenance-tests)
   set_tests_properties(azureus-maintenance PROPERTIES TIMEOUT 240 LABELS "unit;loopback;profile;routing" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
+if(TARGET biglybtc_owned_azureus_service)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_executable(biglybtc-azureus-public-bound-tests azureus_public_bound_tests.cpp)
+  set_target_properties(biglybtc-azureus-public-bound-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-azureus-public-bound-tests PRIVATE biglybtc_owned_azureus_service Qt6::Test)
+  target_compile_features(biglybtc-azureus-public-bound-tests PRIVATE cxx_std_23)
+  target_compile_options(biglybtc-azureus-public-bound-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME azureus-public-bound COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/azureus_public_bound_namespace.py" "$<TARGET_FILE:biglybtc-azureus-public-bound-tests>")
+  set_tests_properties(azureus-public-bound PROPERTIES TIMEOUT 240 LABELS "unit;namespace;profile;routing" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()

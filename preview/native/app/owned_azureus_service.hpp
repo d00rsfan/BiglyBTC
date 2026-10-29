@@ -3,6 +3,7 @@
 #include "router.hpp"
 #include "azureus_value_versions.hpp"
 #include "azureus_contacts.hpp"
+#include "azureus_public_policy.hpp"
 #include "../adapters/local_rating.hpp"
 #include "../services/azureus_control/lookup.hpp"
 #include <chrono>
@@ -38,6 +39,8 @@ struct AzureusServiceOptions {
   // Requires valueVersions; direct values only until genuine seeded support.
   bool serveValues=false;
   azureus::RoutingScope routingScope=azureus::RoutingScope::ExactPeers;
+  // Explicit PublicBound only: exact SAME-OFD/network/version/bind source.
+  std::shared_ptr<storage::AzureusPublicPolicy> publicPolicy{};
 
 };
 struct AzureusServiceResult {
@@ -111,15 +114,14 @@ struct AzureusServiceObservation {
   // Passive bounded IO progress only; no source/packet permission is exposed.
   std::size_t profileIoPending=0,profileIoRunning=0,profileIoReady=0,profileIoHighWater=0;
 };
-// Explicit Host-owned development service. create(enabled=false) returns before
-// any Qt thread/socket exists. A dedicated Qt event loop exclusively constructs,
-// calls and destroys the existing numeric-loopback actor. No bootstrap/public
-// peer, full DHT controller/DB activation, observer timer or GUI callback is added.
-// Optional explicit local publication performs only version reservations on its
-// held profile. Explicit serveValues uses the actual same router/local DB;
-// generated receiving DB facts never become normal routing authority.
-// The optional bounded router records explicit known contacts and qualified
-// replies/timeouts only. Its Ping/NodeAdded intents are never executed here.
+// Explicit opt-in service; no default Host/public activation. create(false)
+// returns before a Qt thread/socket exists. One private Qt event loop owns the
+// actor/router/DB. ExactPeers and OwnedLoopback retain their loopback defaults.
+// PublicBound requires a held-profile policy matching an actual numeric local
+// interface/port, direct routing and disabled saved IP filter. Its packet
+// effects consume fresh existing worker permits; unknown inbound peers refuse.
+// Compatible contacts are inert until actual correlated routing replies.
+// Generated receiving facts never become normal routing authority.
 class OwnedAzureusService final {
 public:
   static std::expected<std::unique_ptr<OwnedAzureusService>,AzureusServiceError>

@@ -152,3 +152,10 @@ if(TARGET biglybtc_i2cp_initial_channel)
   target_sources(biglybtc_i2cp_initial_channel PRIVATE i2cp_channel/streaming.inc)
   target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2p_streaming)
 endif()
+
+target_link_libraries(biglybtc_azureus_control PRIVATE BiglyBTC::Core)
+
+# Java's float Westwood filters round each operation; never contract to FMA.
+if(TARGET biglybtc_i2p_streaming)
+  target_compile_options(biglybtc_i2p_streaming PRIVATE -ffp-contract=off)
+endif()

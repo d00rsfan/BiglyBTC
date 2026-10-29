@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "lookup.hpp"
+#include "biglybtc/azureus_endpoint.hpp"
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -15,8 +16,13 @@ bool loopback(const Contact& c)noexcept{
   if(c.address.length!=16||c.address.bytes[15]!=1){return false;}
   for(unsigned i=0;i<15;++i){if(c.address.bytes[i]){return false;}}return true;
 }
+bool permittedOwned(const LookupOptions& options,const Contact& contact)noexcept{
+  return options.addressScope==LookupAddressScope::OwnedLoopback?loopback(contact):
+      options.addressScope==LookupAddressScope::PublicNode&&options.kind==LookupKind::Node
+          &&core::azureusPublicAddress(std::span(contact.address.bytes).first(contact.address.length));
+}
 bool validOptions(const LookupOptions& o)noexcept{
-  return (o.kind==LookupKind::Value||o.kind==LookupKind::Node)&&(o.kind!=LookupKind::Node||o.flags==0)&&o.parallelism>0&&o.parallelism<=LookupController::MaximumParallelism&&o.accuracy>0&&o.accuracy<=20&&o.maximumContacts>=o.parallelism&&o.maximumContacts<=LookupController::MaximumContacts&&o.maximumValues>0&&o.maximumValues<=LookupController::MaximumValues&&o.timeoutMillis>0&&o.timeoutMillis<=300000&&(o.flags==0||o.flags==8);
+  return (o.addressScope==LookupAddressScope::OwnedLoopback||(o.addressScope==LookupAddressScope::PublicNode&&o.kind==LookupKind::Node))&&(o.kind==LookupKind::Value||o.kind==LookupKind::Node)&&(o.kind!=LookupKind::Node||o.flags==0)&&o.parallelism>0&&o.parallelism<=LookupController::MaximumParallelism&&o.accuracy>0&&o.accuracy<=20&&o.maximumContacts>=o.parallelism&&o.maximumContacts<=LookupController::MaximumContacts&&o.maximumValues>0&&o.maximumValues<=LookupController::MaximumValues&&o.timeoutMillis>0&&o.timeoutMillis<=300000&&(o.flags==0||o.flags==8);
 }
 int distance(const NodeId& a,const NodeId& b,const NodeId& target)noexcept{
   for(std::size_t i=0;i<a.size();++i){const auto x=a[i]^target[i],y=b[i]^target[i];if(x<y){return -1;}if(x>y){return 1;}}return 0;
@@ -41,7 +47,7 @@ bool validLookupSnapshot(const LookupSnapshot& s)noexcept{
   std::size_t count=0,values=0;
   for(std::size_t i=0;i<s.nodes.size();++i){const auto& n=s.nodes[i];
     if(n.id!=i+1||n.parent>=n.id||!validContact(n.contact)||n.contact.id==s.options.localId||n.discoveredMillis<s.startedMillis||n.discoveredMillis>s.updatedMillis||n.slices>LookupController::MaximumSlices||n.values>s.results.size()){return false;}
-    if(n.owned&&!loopback(n.contact)){return false;}
+    if(n.owned&&!permittedOwned(s.options,n.contact)){return false;}
     if(n.parent){if(n.depth!=s.nodes[n.parent-1].depth+1){return false;}}else if(n.depth){return false;}
     for(std::size_t j=0;j<i;++j){if(same(n.contact,s.nodes[j].contact)){return false;}}
     if(n.intentMillis&&(*n.intentMillis<n.discoveredMillis||*n.intentMillis>s.updatedMillis)){return false;}
@@ -107,7 +113,7 @@ std::expected<void,LookupError> LookupController::offer(std::span<const Admitted
   if(contacts.size()>MaximumContacts){return std::unexpected(LookupError::Limit);}
   std::array<LookupNode,MaximumContacts> additions{};std::size_t count=0;std::uint64_t duplicates=0,rejected=0;
   for(const auto& offered:contacts){const auto& contact=offered.contact;
-    if(!validContact(contact)||(offered.owned&&!loopback(contact))){return std::unexpected(LookupError::Invalid);}
+    if(!validContact(contact)||(offered.owned&&!permittedOwned(data_.options,contact))){return std::unexpected(LookupError::Invalid);}
     if(contact.id==data_.options.localId||std::any_of(data_.nodes.begin(),data_.nodes.end(),[&](const auto& old){return same(contact,old.contact);})||std::any_of(additions.begin(),additions.begin()+count,[&](const auto& old){return same(contact,old.contact);})){++duplicates;continue;}
     if(data_.nodes.size()+count==data_.options.maximumContacts){return std::unexpected(LookupError::Limit);}
     auto& value=additions[count++];value.id=data_.nodes.size()+count;value.parent=parent;value.contact=contact;value.owned=offered.owned;value.discoveredMillis=now;

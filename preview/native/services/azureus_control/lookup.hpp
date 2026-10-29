@@ -16,12 +16,15 @@ enum class LookupState {Idle,Running,Stopping,Complete,TimedOut,Cancelled,Closed
 enum class LookupStop {Exhausted,Closest,ValueLimit,TwoValueReplies,Deadline,Cancelled,Closed,Capacity,Unsupported,Clock,Memory,Overflow};
 enum class LookupNodeState {Candidate,Reserved,Sent,Partial,Replied,Timeout,Cancelled,Closed,Failed,Rejected,Skipped};
 enum class LookupKind {Value,Node};
+// A typed adapter scope, never source/endpoint admission by itself.
+enum class LookupAddressScope {OwnedLoopback,PublicNode};
 struct LookupOptions {
   NodeId target{},localId{};
   std::size_t parallelism=3,accuracy=20,maximumContacts=128,maximumValues=32;
   std::int64_t timeoutMillis=30000;
   LookupKind kind=LookupKind::Value;
   std::uint8_t flags=0; // Normal0 or source FLAG_STATS8; no obfuscation/diversification.
+  LookupAddressScope addressScope=LookupAddressScope::OwnedLoopback;
 };
 // Explicit adapter policy decision; discovering a contact NEVER grants admission.
 struct AdmittedContact {Contact contact;bool owned=false;};

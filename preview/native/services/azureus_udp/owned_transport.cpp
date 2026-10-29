@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "owned_transport.hpp"
+#include "biglybtc/azureus_endpoint.hpp"
 #include <QDateTime>
 #include <QNetworkDatagram>
 #include <QNetworkProxy>
@@ -12,6 +13,11 @@
 #include <limits>
 namespace biglybtc::services::azureus_udp {
 namespace {
+bool publicAddress(const QHostAddress& address)noexcept{
+  if(!address.scopeId().isEmpty()){return false;}std::array<std::uint8_t,16> bytes{};
+  if(address.protocol()==QAbstractSocket::IPv4Protocol){const auto ip=address.toIPv4Address();for(unsigned i=0;i<4;++i){bytes[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}return core::azureusPublicAddress(std::span(bytes).first(4));}
+  if(address.protocol()==QAbstractSocket::IPv6Protocol){const auto ip=address.toIPv6Address();std::copy_n(ip.c,16,bytes.begin());return core::azureusPublicAddress(bytes);}return false;
+}
 constexpr qint64 maximumDatagram=1400;
 constexpr unsigned workPerTurn=64;
 // Process-local observation identity only; no service registration or authority.
@@ -202,14 +208,19 @@ Peer OwnedPingTransport::normalize(Peer peer) {
 }
 bool OwnedPingTransport::allowed(const Peer& peer) const { return std::ranges::find(peers_,peer)!=peers_.end(); }
 std::uint64_t OwnedPingTransport::word() { return config_.randomWord?config_.randomWord():QRandomGenerator::system()->generate64(); }
-std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAddress,quint16 bindPort) {
+std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAddress,quint16 bindPort,std::function<bool()> publicPermit) {
   if (!owner()) { return std::unexpected(Failure::Thread); }
   if (state_!=State::Idle) { return std::unexpected(Failure::State); }
   if (!bindAddress.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
   const auto address=normalize({bindAddress,0}).address;
-  if (!address.isLoopback() || !address.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
-  if(config_.routingScope!=RoutingScope::ExactPeers&&config_.routingScope!=RoutingScope::OwnedLoopback){return std::unexpected(Failure::State);}
-  if(config_.routingScope==RoutingScope::OwnedLoopback&&(config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply)){return std::unexpected(Failure::State);}
+  const bool publiclyBound=config_.routingScope==RoutingScope::PublicBound;
+  if(publiclyBound){
+    if(config_.maximumPeers>32||config_.maximumPending>32){return std::unexpected(Failure::Capacity);}
+    if(!publicAddress(bindAddress)||!bindPort||!((config_.network==0&&address.protocol()==QAbstractSocket::IPv4Protocol)||(config_.network==3&&address.protocol()==QAbstractSocket::IPv6Protocol))||!publicPermit){return std::unexpected(Failure::Peer);}
+    bool current=false;try{current=publicPermit();}catch(...){}if(!current){return std::unexpected(Failure::Authority);}
+  }else if (!address.isLoopback() || !address.scopeId().isEmpty() || publicPermit) { return std::unexpected(Failure::Peer); }
+  if(config_.routingScope!=RoutingScope::ExactPeers&&!dynamicRoutingScope(config_.routingScope)){return std::unexpected(Failure::State);}
+  if(dynamicRoutingScope(config_.routingScope)&&(config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply)){return std::unexpected(Failure::State);}
   if (config_.version<51 || config_.version>55) { return std::unexpected(Failure::Version); }
   if (config_.maximumPending==0 || config_.maximumPending>256 || config_.maximumPeers==0 || config_.maximumPeers>256) { return std::unexpected(Failure::Capacity); }
   if (config_.generatedStoreService) {
@@ -251,6 +262,7 @@ std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAd
       if(!database_->bindLocal(contact)){return std::unexpected(Failure::State);}}
   }
   statisticsFamily_=address.protocol()==QAbstractSocket::IPv6Protocol?TransportStatisticsFamily::IPv6:TransportStatisticsFamily::IPv4;
+  if(publiclyBound){bool current=false;try{current=publicPermit();}catch(...){}if(!current||socket_.localAddress()!=bindAddress||socket_.localPort()!=bindPort){return std::unexpected(Failure::Authority);}publicPermit_=std::move(publicPermit);}
   state_=State::Bound;rollback.dismiss();return {};
 }
 std::expected<void,Failure> OwnedPingTransport::allowPeer(Peer candidate) {
@@ -258,7 +270,7 @@ std::expected<void,Failure> OwnedPingTransport::allowPeer(Peer candidate) {
   if (state_!=State::Bound) { return std::unexpected(Failure::State); }
   if (!candidate.address.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
   candidate=normalize(std::move(candidate));
-  if (candidate.port==0 || !candidate.address.isLoopback() || !candidate.address.scopeId().isEmpty()
+  if (candidate.port==0 || (config_.routingScope==RoutingScope::PublicBound?!publicAddress(candidate.address):!candidate.address.isLoopback()) || !candidate.address.scopeId().isEmpty()
       || candidate.address.protocol()!=socket_.localAddress().protocol()) { return std::unexpected(Failure::Peer); }
   if (allowed(candidate)) { return {}; }
   if (peers_.size()==config_.maximumPeers) { return std::unexpected(Failure::Capacity); }
@@ -381,9 +393,22 @@ std::expected<Ticket,Failure> OwnedPingTransport::store(Peer peer,std::int8_t re
     auto wire=storage::encodeRequest(request);if (!wire) { return std::unexpected(Failure::Encode); }return std::move(*wire);
   });
 }
+std::expected<qint64,Failure> OwnedPingTransport::writePacket(std::string_view wire,const Peer& peer,Clock::time_point end){
+  if(config_.routingScope==RoutingScope::PublicBound){
+    bool current=false;try{current=state_==State::Bound&&allowed(peer)&&publicPermit_&&publicPermit_();}catch(...){}
+    // This is after all RNG/encoding/allocation and before this physical write,
+    // including each fragment/error reply. The callback checks its executing
+    // worker permit's absolute deadline after taking the current stop lock.
+    if(Clock::now()>=end){++statistics_.authorityErrors;return std::unexpected(Failure::Deadline);}
+    if(!current){++statistics_.authorityErrors;return std::unexpected(Failure::Authority);}
+  }
+  return socket_.writeDatagram(wire.data(),static_cast<qint64>(wire.size()),peer.address,peer.port);
+}
 std::expected<Ticket,Failure> OwnedPingTransport::submit(Peer peer,std::int8_t remoteVersion,QObject* receiver,CompletionCallback callback,std::chrono::nanoseconds timeout,std::int32_t action,Encoder encode) {
+  const auto entered=Clock::now();
   if (!owner()) { return std::unexpected(Failure::Thread); }
   if (state_!=State::Bound) { return std::unexpected(Failure::State); }
+  if(config_.routingScope==RoutingScope::PublicBound){bool current=false;try{current=publicPermit_&&publicPermit_();}catch(...){}if(!current){return std::unexpected(Failure::Authority);}}
   if (!peer.address.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
   peer=normalize(std::move(peer));if (!allowed(peer)) { return std::unexpected(Failure::Peer); }
   if (remoteVersion<51) { return std::unexpected(Failure::Version); }
@@ -404,13 +429,15 @@ std::expected<Ticket,Failure> OwnedPingTransport::submit(Peer peer,std::int8_t r
   const Ticket ticket{++nextTicket_};
   auto state=std::make_shared<CallbackState>(CallbackState{receiver,std::move(callback)});
   const auto started=Clock::now();
-  Pending pending{ticket,peer,connection,action+1,started+timeout,std::move(state),{},started};
+  const auto requestEnd=config_.routingScope==RoutingScope::PublicBound?entered+timeout:started+timeout;
+  Pending pending{ticket,peer,connection,action+1,requestEnd,std::move(state),{},started};
   pending.death=connect(receiver,&QObject::destroyed,this,[this,ticket] { abandon(ticket); });
   pending_.emplace(transaction,std::move(pending));
-  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
-  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
-  if (sent!=static_cast<qint64>(wire->size())) {
-    const auto found=pending_.find(transaction);observeOperation(found->second,OperationEventKind::SendFailed);disconnect(found->second.death);pending_.erase(found);armDeadline();return std::unexpected(Failure::Send);
+  const auto sent=writePacket(*wire,peer,requestEnd);
+  if(sent){observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);}
+  if (!sent||*sent!=static_cast<qint64>(wire->size())) {
+    const auto failure=sent?Failure::Send:sent.error();
+    const auto found=pending_.find(transaction);observeOperation(found->second,OperationEventKind::SendFailed);disconnect(found->second.death);pending_.erase(found);armDeadline();return std::unexpected(failure);
   }
   observeOperation(pending_.at(transaction),OperationEventKind::Sent);++statistics_.sent;armDeadline();return ticket;
 }
@@ -473,7 +500,7 @@ void OwnedPingTransport::deliver() {
 void OwnedPingTransport::close() {
   if (!owner() || state_==State::Closed) { return; }
   routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
-  routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
+  publicPermit_={};routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
   if(database_){database_->close();database_.reset();}
   state_=State::Closed;socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
   while (!pending_.empty()) { finish(pending_.begin()->first,std::unexpected(Failure::Closed)); }
@@ -489,9 +516,9 @@ void OwnedPingTransport::answer(const Peer& peer,const packet::Decoded& request,
   reply.positions=positions;
   const auto wire=packet::encodeReply(reply);
   if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) { ++statistics_.malformed;return; }
-  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
-  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
-  if (sent==static_cast<qint64>(wire->size())) { ++statistics_.sent; }
+  const auto sent=writePacket(*wire,peer);if(!sent){return;}
+  observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
+  if (*sent==static_cast<qint64>(wire->size())) { ++statistics_.sent; }
 }
 void OwnedPingTransport::answer(const Peer& peer,const find::Decoded& request,std::int64_t receivedAt) {
   if (!config_.findNodeReply) { return; }
@@ -502,9 +529,9 @@ void OwnedPingTransport::answer(const Peer& peer,const find::Decoded& request,st
   reply.randomId=snapshot.randomId;reply.status=snapshot.status;reply.estimatedSize=snapshot.estimatedSize;reply.contacts=snapshot.contacts;
   const auto wire=find::encodeReply(reply);
   if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) { ++statistics_.malformed;return; }
-  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
-  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
-  if (sent==static_cast<qint64>(wire->size())) { ++statistics_.sent; }
+  const auto sent=writePacket(*wire,peer);if(!sent){return;}
+  observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
+  if (*sent==static_cast<qint64>(wire->size())) { ++statistics_.sent; }
 }
 void OwnedPingTransport::answer(const Peer& peer,const lookup::Decoded& request,std::int64_t receivedAt) {
   if (!config_.findValueReply) { return; }const auto& incoming=request.header().fields();
@@ -519,9 +546,9 @@ void OwnedPingTransport::answer(const Peer& peer,const lookup::Decoded& request,
     }
     reply.contacts=piece.contacts;lookup::positions::Positions positions;reply.positions=positions;
     const auto wire=lookup::encodeReply(reply);if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) { ++statistics_.malformed;return; }
-    const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
-    observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
-    if (sent!=static_cast<qint64>(wire->size())) { ++statistics_.ioErrors;return; }++statistics_.sent;
+    const auto sent=writePacket(*wire,peer);if(!sent){return;}
+    observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
+    if (*sent!=static_cast<qint64>(wire->size())) { ++statistics_.ioErrors;return; }++statistics_.sent;
   }
 }
 void OwnedPingTransport::answer(const Peer& peer,const storage::Decoded& request,std::int64_t receivedAt) {
@@ -543,9 +570,9 @@ void OwnedPingTransport::answer(const Peer& peer,const storage::Decoded& request
     auto encoded=storage::encodeReply(reply);if (encoded) { wire=std::move(*encoded); }
   }
   if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) { ++statistics_.malformed;return; }
-  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
-  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
-  if (sent!=static_cast<qint64>(wire->size())) { ++statistics_.ioErrors;return; }
+  const auto sent=writePacket(*wire,peer);if(!sent){return;}
+  observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
+  if (*sent!=static_cast<qint64>(wire->size())) { ++statistics_.ioErrors;return; }
   ++statistics_.sent;
 }
 void OwnedPingTransport::sendServiceReply(ServiceReceipt& receipt,std::expected<std::string,Failure> wire) {
@@ -553,9 +580,9 @@ void OwnedPingTransport::sendServiceReply(ServiceReceipt& receipt,std::expected<
   if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) {
     receipt.status=ServiceStatus::EncodeFailed;++statistics_.malformed;return;
   }
-  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),receipt.peer.address,receipt.peer.port);
-  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
-  if (sent!=static_cast<qint64>(wire->size())) {
+  const auto sent=writePacket(*wire,receipt.peer);if(!sent){receipt.status=ServiceStatus::AuthorityFailed;return;}
+  observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
+  if (*sent!=static_cast<qint64>(wire->size())) {
     receipt.status=ServiceStatus::SendFailed;++statistics_.ioErrors;return;
   }
   receipt.sent=true;receipt.status=receipt.addressMismatch?ServiceStatus::AddressRejected:ServiceStatus::Replied;++statistics_.sent;
@@ -598,8 +625,8 @@ void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,s
   receipt.sender=sender;receipt.transportAlive=true;
   // The normal owned subset does not grant a returned routing endpoint from a
   // different claimed port. Generated original-IP projection stays unchanged.
-  if(!service&&(sender.address!=originator(peer)||(config_.routingScope==RoutingScope::OwnedLoopback?!learnRoutingContact(sender,true):!normalAlive(sender)))){++statistics_.authorityErrors;return;}
-  if(!service&&config_.routingScope==RoutingScope::OwnedLoopback){dispatchRoutingPings();captureRouting();}
+  if(!service&&(sender.address!=originator(peer)||(dynamicRoutingScope(config_.routingScope)?!learnRoutingContact(sender,true):!normalAlive(sender)))){++statistics_.authorityErrors;return;}
+  if(!service&&dynamicRoutingScope(config_.routingScope)){dispatchRoutingPings();captureRouting();}
   if (const auto* findRequest=std::get_if<find::Decoded>(&receipt.request)) {
     receipt.findNodeAlive=true;
     std::span<const find::nodes::Snapshot> contacts;std::vector<find::nodes::Snapshot> actualContacts;
@@ -713,15 +740,15 @@ void OwnedPingTransport::answerDatabase(const Peer& peer,const lookup::Decoded& 
   const auto send=[&](const std::expected<std::string,lookup::Error>& encoded){
     if(normalRouter_&&!normalCurrent()){++statistics_.authorityErrors;return false;}
     if(!encoded||encoded->size()>static_cast<std::size_t>(maximumDatagram)){++statistics_.malformed;return false;}
-    const auto sent=socket_.writeDatagram(encoded->data(),static_cast<qint64>(encoded->size()),peer.address,peer.port);
-    observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
-    if(sent!=static_cast<qint64>(encoded->size())){++statistics_.ioErrors;return false;}++statistics_.sent;return true;
+    const auto sent=writePacket(*encoded,peer);if(!sent){return false;}
+    observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
+    if(*sent!=static_cast<qint64>(encoded->size())){++statistics_.ioErrors;return false;}++statistics_.sent;return true;
   };
   if(!incoming.originator||!sameIp(originator(peer),*incoming.originator)){
     remote_error::ReplyFields reply;reply.header=header(1032);reply.type=1;reply.originator=remote_error::Endpoint{originator(peer)};
     const auto encoded=remote_error::encodeReply(reply);if(!encoded||encoded->size()>static_cast<std::size_t>(maximumDatagram)){++statistics_.malformed;return;}
-    const auto sent=socket_.writeDatagram(encoded->data(),static_cast<qint64>(encoded->size()),peer.address,peer.port);observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
-    if(sent==static_cast<qint64>(encoded->size())){++statistics_.sent;}else{++statistics_.ioErrors;}return;
+    const auto sent=writePacket(*encoded,peer);if(!sent){return;}observeSocketPayloadBytes(statistics_.sentPayloadBytes,*sent);
+    if(*sent==static_cast<qint64>(encoded->size())){++statistics_.sent;}else{++statistics_.ioErrors;}return;
   }
   const auto id=nodeCache_->lookup(find::nodes::ResolvedEndpoint{*incoming.originator,{}},incoming.originatorVersion);
   if(!id){++statistics_.authorityErrors;return;}
@@ -774,7 +801,7 @@ void OwnedPingTransport::consume() {
     if (datagram.senderPort()<=0 || datagram.senderPort()>65535) { ++statistics_.malformed;continue; }
     const auto peer=normalize({datagram.senderAddress(),static_cast<quint16>(datagram.senderPort())});
     const bool unknown=!allowed(peer);
-    if(unknown&&(!normalRouter_||!ownedRoutingPeer(peer))){++statistics_.unowned;continue;}
+    if(unknown&&(config_.routingScope==RoutingScope::PublicBound||!normalRouter_||!ownedRoutingPeer(peer))){++statistics_.unowned;continue;}
     if (data.isEmpty()) { ++statistics_.malformed;continue; }
     const auto kind=(static_cast<unsigned char>(data.front())&128)?packet::udp::Kind::Request:packet::udp::Kind::Reply;
     std::string bytes(data.constData(),static_cast<std::size_t>(data.size()));
@@ -795,7 +822,7 @@ void OwnedPingTransport::consume() {
     if (action==1024 || action==1025) {
       packet::Context context;context.header=headerContext;context.monotonicNow=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
       auto decoded=packet::decode(kind,std::move(bytes),context);if (!decoded) { ++statistics_.malformed;continue; }
-      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;if(normalRouter_&&config_.routingScope==RoutingScope::OwnedLoopback){answerRoutingPing(peer,std::move(*decoded),headerContext.now);}else{answer(peer,*decoded,headerContext.now);}continue; }
+      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;if(normalRouter_&&dynamicRoutingScope(config_.routingScope)){answerRoutingPing(peer,std::move(*decoded),headerContext.now);}else{answer(peer,*decoded,headerContext.now);}continue; }
       const auto transaction=decoded->header().fields().transaction;
       if (pending_.at(transaction).expires<=Clock::now()) { ++statistics_.timeouts;finish(transaction,std::unexpected(Failure::Timeout));continue; }
       observeVivaldi(pending_.at(transaction),*decoded);

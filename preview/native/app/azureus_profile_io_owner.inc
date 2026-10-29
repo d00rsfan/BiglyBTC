@@ -34,6 +34,7 @@
       }catch(...){try{ioDeadline_.stop();}catch(...){}publicationMemoryFailure();}
     }
     bool profilePermit_=false,passiveIo_=false,drainingIo_=false;
+    std::chrono::steady_clock::time_point profileDeadline_{};
     std::uint64_t profileCommand_=0,profileRevision_=0;
     bool passiveSkip_=false;
     std::shared_ptr<std::atomic<std::size_t>> pendingFrames_=std::make_shared<std::atomic<std::size_t>>(0);
@@ -62,9 +63,9 @@
           slot.consumed=true;passiveSkip_=true;
           if(!*ready){slot.error=ready->error();}
           else if(!slot.error&&state_->profileIo->lease()->sourceRevision()==ready->value().revision){
-            profilePermit_=true;profileCommand_=slot.command;profileRevision_=ready->value().revision;
+            profileDeadline_=slot.deadline;profilePermit_=true;profileCommand_=slot.command;profileRevision_=ready->value().revision;
             try{slot.commit(ready->value());}catch(...){publicationMemoryFailure();}
-            profilePermit_=false;profileCommand_=0;profileRevision_=0;
+            profilePermit_=false;profileDeadline_={};profileCommand_=0;profileRevision_=0;
           }else if(!slot.error){slot.error=storage::Error{storage::ErrorCode::Conflict,"Profile source permit changed"};}
           ProfileIo::acknowledge(slot.job);
         }}
@@ -76,7 +77,7 @@
           if(error){done(std::move(*error));}
         }
       }}catch(...){
-        profilePermit_=false;profileCommand_=0;profileRevision_=0;
+        profilePermit_=false;profileDeadline_={};profileCommand_=0;profileRevision_=0;
         for(auto& slot:ioSlots_){if(slot.job){ProfileIo::acknowledge(slot.job);ProfileIo::revoke(slot.job);}}
         publicationMemoryFailure();
       }
@@ -89,11 +90,11 @@
         std::move_only_function<std::expected<std::shared_ptr<const storage::AzureusContactsSnapshot>,storage::Error>(std::stop_token)> contactWork={}){
       if(!state_->profileIo){return false;}
       IoSlot* slot=nullptr;for(auto& item:ioSlots_){if(!item.job){slot=&item;break;}}if(!slot){return false;}
-      auto versions=options_.valueVersions;auto contacts=options_.contacts;auto lease=state_->profileIo->lease();const bool routingPolicy=options_.routingScope==azureus::RoutingScope::OwnedLoopback;
-      auto submitted=state_->profileIo->submit([versions,contacts,lease,command,reserve,deadline,allowExpired,routingPolicy,contactWork=std::move(contactWork)](std::stop_token stop)mutable->ProfileIo::Result{
+      auto versions=options_.valueVersions;auto contacts=options_.contacts;auto publicPolicy=options_.publicPolicy;auto lease=state_->profileIo->lease();const bool routingPolicy=options_.routingScope==azureus::RoutingScope::OwnedLoopback;
+      auto submitted=state_->profileIo->submit([versions,contacts,publicPolicy,lease,command,reserve,deadline,allowExpired,routingPolicy,contactWork=std::move(contactWork)](std::stop_token stop)mutable->ProfileIo::Result{
         const auto cancelled=[&]{return stop.stop_requested()||(!allowExpired&&std::chrono::steady_clock::now()>=deadline);};
         if(cancelled()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO expired"});}
-        auto valid=versions->validate();if(!valid){return std::unexpected(valid.error());}if(contacts){valid=contacts->validate();if(!valid){return std::unexpected(valid.error());}}
+        auto valid=publicPolicy?publicPolicy->validate():versions->validate();if(!valid){return std::unexpected(valid.error());}if(contacts){valid=contacts->validate();if(!valid){if(publicPolicy){publicPolicy->revoke();}return std::unexpected(valid.error());}}
         if(routingPolicy){
           auto config=storage::ConfigFile::load(*lease,"biglybt.config");if(!config&&config.error().code!=storage::ErrorCode::Missing){return std::unexpected(config.error());}
           if(config){if(config->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Resolve routing configuration recovery first"});}

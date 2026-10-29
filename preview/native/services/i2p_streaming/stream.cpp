@@ -60,11 +60,38 @@ Result<Mux> decodeMux(View bytes){
   if(inflate(&z,Z_FINISH)!=Z_STREAM_END||z.avail_in||z.total_out>MaximumPayload+2048){return error(ErrorCode::InvalidFormat,"Malformed/concatenated/oversize Streaming gzip");}out.resize(z.total_out);return Mux{static_cast<std::uint16_t>((static_cast<unsigned>(bytes[4])<<8)|bytes[5]),static_cast<std::uint16_t>((static_cast<unsigned>(bytes[6])<<8)|bytes[7]),std::move(out)};
 }
 
-Connection::Connection(std::uint64_t operation,std::uint32_t id,Destination local,Destination peer):local_(std::move(local)),peer_(std::move(peer)),localId_(id){observed_.operation=operation;}
+// Original SimpleBandwidthEstimator.java: packets/ms, not payload bytes/ms.
+namespace {float westwood(float a,float b)noexcept{return (7.0F*a+b)/8.0F;}}
+void BandwidthEstimator::decay()noexcept{stage_*=7.0F/8.0F;filtered_=westwood(filtered_,stage_);}
+void BandwidthEstimator::sample(unsigned packets,std::uint64_t now,unsigned rtt)noexcept{
+  if(now<at_){return;}
+  if(acked_<0){const auto dt=std::max<std::uint64_t>(now-at_,500);filtered_=stage_=static_cast<float>(packets)/static_cast<float>(dt);acked_=0;at_=now;}
+  else{acked_=std::min<std::int64_t>(0x7fffffff,acked_+packets);if(now-at_>=std::max(rtt,500U)){static_cast<void>(update(now,rtt));}}
+}
+float BandwidthEstimator::update(std::uint64_t now,unsigned rtt)noexcept{
+  if(acked_<0||now<at_){return filtered_;}auto dt=now-at_;const auto period=std::max(rtt,500U);if(dt<period){return filtered_;}
+  if(dt>2*static_cast<std::uint64_t>(period)){const auto count=std::min<std::uint64_t>(dt/period-1,16);for(std::uint64_t i=0;i<count;++i){decay();}dt-=count*period;}
+  if(acked_>0){const auto rate=static_cast<float>(acked_)/static_cast<float>(dt);stage_=westwood(stage_,rate);filtered_=westwood(filtered_,stage_);}else{decay();}
+  acked_=0;at_=now;return filtered_;
+}
+float BandwidthEstimator::estimate(std::uint64_t now,unsigned rtt)noexcept{return now>=at_&&now-at_>=std::max(rtt,500U)?update(now,rtt):filtered_;}
+
+Connection::Connection(std::uint64_t operation,std::uint32_t id,Destination local,Destination peer,unsigned maximumWindow,std::uint64_t started,Entropy entropy)
+    :local_(std::move(local)),peer_(std::move(peer)),localId_(id),maximumWindow_(maximumWindow),window_(std::min(3U,maximumWindow)),entropy_(std::move(entropy)),bandwidth_(started){
+  observed_.operation=operation;congestionWindowEnd_=static_cast<std::int64_t>(window_)-1;if(maximumWindow<2||maximumWindow>MaximumWindow){observed_.phase=Phase::Failed;}
+}
 bool Connection::active()const noexcept{return observed_.phase==Phase::Connecting||observed_.phase==Phase::Established||observed_.phase==Phase::ReadEof;}
-Observation Connection::observation()const noexcept{auto out=observed_;out.queuedTx=tx_.size()+(pending_?pending_->packet.payload.size():0);out.queuedRx=rx_.size()+reorderBytes_;return out;}
+std::size_t Connection::flight()const noexcept{std::size_t count=0;for(const auto& p:sent_){count+=p&&p->sends;}return count;}
+std::size_t Connection::activeResends()const noexcept{std::size_t count=0;for(const auto& p:sent_){count+=p&&p->sends>1;}return count;}
+Observation Connection::observation()const noexcept{
+  auto out=observed_;out.queuedTx=tx_.size();out.queuedRx=rx_.size()+reorderBytes_;out.sendWindow=window_;out.maximumWindow=maximumWindow_;out.slowStartThreshold=ssthresh_;out.rtoMilliseconds=rto_;out.peerChoked=choked_;
+  for(const auto& p:sent_){if(p){out.queuedTx+=p->packet.payload.size();if(p->sends){++out.inFlightPackets;out.inFlightBytes+=p->packet.payload.size();}}}return out;
+}
+Connection::Pending* Connection::oldest(bool unsent)noexcept{
+  Pending* result=nullptr;for(auto& p:sent_){if(p&&((p->sends==0)==unsent)&&(!result||p->packet.sequence<result->packet.sequence)){result=&*p;}}return result;
+}
 void Connection::reject()noexcept{increment(observed_.rejectedPackets);}
-void Connection::terminate(Phase phase)noexcept{observed_.phase=phase;pending_.reset();tx_.clear();reorder_.clear();reorderBytes_=0;ackWanted_=false;if(phase!=Phase::Closed){rx_.clear();}}
+void Connection::terminate(Phase phase)noexcept{observed_.phase=phase;for(auto& p:sent_){p.reset();}retryAt_.reset();timeoutArmPending_=false;tx_.clear();reorder_.clear();reorderBytes_=0;ackWanted_=false;if(phase!=Phase::Closed){rx_.clear();}}
 Result<void> Connection::write(View input){
   if(!active()||finish_){return error(ErrorCode::Unsupported,"Streaming output is closed");}if(input.size()>MaximumBuffered-observation().queuedTx){return error(ErrorCode::TooLarge,"Streaming write backpressure");}tx_.insert(tx_.end(),input.begin(),input.end());return {};
 }
@@ -72,8 +99,22 @@ Bytes Connection::read(std::size_t maximum){
   const auto count=std::min(maximum,rx_.size());Bytes out;out.reserve(count);for(std::size_t i=0;i<count;++i){out.push_back(rx_.front());rx_.pop_front();}if(count&&choking_){choking_=false;ackWanted_=true;}return out;
 }
 void Connection::sample(std::uint64_t elapsed){
-  const auto value=static_cast<unsigned>(std::clamp<std::uint64_t>(elapsed,1,120000));
+  if(!elapsed){return;}const auto value=static_cast<unsigned>(std::min<std::uint64_t>(elapsed,120000));minimumRtt_=std::min(minimumRtt_,value);
   if(samples_==0){rtt_=std::min(value,60000U);deviation_=rtt_/2;rto_=rtt_+rtt_/2;}else{const auto delta=value>rtt_?value-rtt_:rtt_-value;deviation_=(3*deviation_+delta)/4;rtt_=std::min((7*rtt_+value)/8,60000U);rto_=rtt_+4*deviation_;}samples_=std::min(samples_+1,2U);rto_=std::clamp(rto_,100U,45000U);
+}
+void Connection::congestion()noexcept{if(ackSinceCongestion_){ackSinceCongestion_=false;lastCongestionHighest_=highestSent_;}}
+void Connection::recoveryThreshold(std::uint64_t now)noexcept{
+  const float value=bandwidth_.estimate(now,rtt_)*static_cast<float>(minimumRtt_);ssthresh_=static_cast<unsigned>(std::clamp(value,2.0F,64.0F));
+}
+void Connection::adjustWindow(bool isNew,std::uint32_t sequence,unsigned acked){
+  const bool congested=choked_||(!isNew&&sequence>0);
+  if(highestAcked_>=congestionWindowEnd_||acked>1||flight()>0){
+    if(!congested&&acked){if(window_<ssthresh_){window_=std::min(ssthresh_,window_+acked);}else if(entropy_){const auto draw=entropy_(window_);if(draw>=window_){throw Error{ErrorCode::CryptoFailure,"Invalid bounded Streaming entropy"};}if(draw<acked){++window_;}}}
+    window_=std::clamp(window_,1U,maximumWindow_);congestionWindowEnd_=highestAcked_+window_;
+  }
+}
+bool Connection::sendCredit()const noexcept{
+  return !choked_&&flight()<window_&&activeResends()<(window_+1)/2&&highestSent_-highestAcked_<static_cast<std::int64_t>(std::min(128U,2*window_));
 }
 void Connection::acknowledgements(Packet& p)const{
   if(contiguous_<0&&reorder_.empty()){p.flags|=NoAck;p.ackThrough=0;return;}
@@ -85,46 +126,78 @@ void Connection::receive(Packet p,std::uint64_t now){
   if(!active()&&observed_.phase!=Phase::Closed){reject();return;}
   if(p.flags&Reset){if(p.send==localId_&&p.signatureVerified){terminate(Phase::RemoteReset);}else{reject();}return;}
   if(p.send!=localId_||!p.receive||(remoteId_&&p.receive!=remoteId_)){reject();return;}
-  if(!remoteId_){if(!pending_||!pending_->sends||!(pending_->packet.flags&Syn)||!(p.flags&Syn)||!p.from||!p.signatureVerified||p.sequence!=0||(p.flags&NoAck)||p.ackThrough!=0||!p.nacks.empty()){reject();return;}remoteId_=p.receive;segment_=p.flags&MaxSize?std::clamp<std::uint16_t>(p.maxSize,512,DefaultSegment):DefaultSegment;observed_.phase=Phase::Established;}
-  choked_=(p.flags&Delay)&&p.delay>60000;
-  if(!(p.flags&NoAck)&&pending_&&pending_->sends&&p.ackThrough>=pending_->packet.sequence&&std::find(p.nacks.begin(),p.nacks.end(),pending_->packet.sequence)==p.nacks.end()){
-    // An ACK may cover our only actually transmitted packet, never future data.
-    if(p.ackThrough>=nextSequence_){reject();return;}
-    if(pending_->sends==1&&now>=pending_->sent){sample(now-pending_->sent);}observed_.acknowledgedBytes+=pending_->packet.payload.size();if(pending_->packet.flags&Close){localFinAcked_=true;}pending_.reset();
-  }
+  if(!(p.flags&NoAck)&&(static_cast<std::int64_t>(p.ackThrough)>highestSent_||std::ranges::any_of(p.nacks,[&](auto n){return n>p.ackThrough;}))){reject();return;}
+  if(!remoteId_){const auto* syn=oldest();if(!syn||!(syn->packet.flags&Syn)||!(p.flags&Syn)||!p.from||!p.signatureVerified||p.sequence!=0||(p.flags&NoAck)||p.ackThrough!=0||!p.nacks.empty()){reject();return;}remoteId_=p.receive;segment_=p.flags&MaxSize?std::clamp<std::uint16_t>(p.maxSize,512,DefaultSegment):DefaultSegment;observed_.phase=Phase::Established;}
   const bool sequenceBearing=!p.payload.empty()||(p.flags&(Syn|Close));
+  const bool isNew=sequenceBearing&&static_cast<std::int64_t>(p.sequence)>contiguous_&&!reorder_.contains(p.sequence);
+  if(isNew&&(remoteFin_||static_cast<std::uint64_t>(p.sequence)>static_cast<std::uint64_t>(contiguous_+1)+MaximumReorder||reorder_.size()>=MaximumReorder||p.payload.size()>MaximumBuffered-rx_.size()-reorderBytes_)){choking_=true;ackWanted_=true;reject();return;}
+  choked_=(p.flags&Delay)&&p.delay>60000;if(choked_){congestion();window_=1;}
+  if(!(p.flags&NoAck)){
+    if(static_cast<std::int64_t>(p.ackThrough)>=highestAcked_){if(p.nacks.empty()){highestAcked_=p.ackThrough;}else{const auto first=*std::min_element(p.nacks.begin(),p.nacks.end());highestAcked_=std::max(highestAcked_,static_cast<std::int64_t>(first)-1);}}
+    unsigned acked=0;std::uint64_t highestRtt=0;
+    for(auto& slot:sent_){if(!slot||!slot->sends||slot->packet.sequence>p.ackThrough){continue;}auto& pending=*slot;
+      if(std::ranges::find(p.nacks,pending.packet.sequence)!=p.nacks.end()){
+        if(pending.nacks<std::numeric_limits<unsigned>::max()){++pending.nacks;}
+        if(pending.nacks>=3&&!pending.fastUsed&&(pending.sends==1||(now>=pending.sent&&now-pending.sent>4000))){pending.fastUsed=true;pending.fast=true;pending.retry=true;}
+      }else{
+        // ConnectionPacketHandler captures receivedAck before the whole batch:
+        // only the first measured ACK may sample an already retransmitted
+        // packet. PacketLocal.getAckTime starts at creation, not last send.
+        if((pending.sends==1||samples_==0)&&now>=pending.created){highestRtt=std::max(highestRtt,now-pending.created);}observed_.acknowledgedBytes+=pending.packet.payload.size();if(pending.packet.flags&Close){localFinAcked_=true;}slot.reset();++acked;
+      }
+    }
+    if(acked){ackSinceCongestion_=true;bandwidth_.sample(acked,now,rtt_);if(flight()){retryAt_=now+rto_;}else{retryAt_.reset();timeoutArmPending_=false;}sample(highestRtt);}
+    adjustWindow(isNew,p.sequence,acked);
+  }
   if(sequenceBearing){
-    if(static_cast<std::int64_t>(p.sequence)<=contiguous_||reorder_.contains(p.sequence)){ackWanted_=true;}
-    else if(remoteFin_||static_cast<std::uint64_t>(p.sequence)>static_cast<std::uint64_t>(contiguous_+1)+MaximumReorder||reorder_.size()>=MaximumReorder||p.payload.size()>MaximumBuffered-rx_.size()-reorderBytes_){choking_=true;ackWanted_=true;reject();}
+    if(!isNew){ackWanted_=true;}
     else{
-      if(!reorder_.contains(p.sequence)){reorderBytes_+=p.payload.size();reorder_.emplace(p.sequence,std::move(p));}
+      reorderBytes_+=p.payload.size();reorder_.emplace(p.sequence,std::move(p));
       while(true){auto it=reorder_.find(static_cast<std::uint32_t>(contiguous_+1));if(it==reorder_.end()){break;}if((it->second.flags&Close)&&std::next(it)!=reorder_.end()){terminate(Phase::Failed);return;}rx_.insert(rx_.end(),it->second.payload.begin(),it->second.payload.end());reorderBytes_-=it->second.payload.size();if(it->second.flags&Close){remoteFin_=true;}reorder_.erase(it);++contiguous_;}
       ackWanted_=true;
     }
   }
-  if(remoteFin_){observed_.phase=localFinAcked_?Phase::Closed:Phase::ReadEof;}
+  if(remoteFin_){observed_.phase=localFinAcked_&&flight()==0?Phase::Closed:Phase::ReadEof;}
+}
+void Connection::retryTimeout(std::uint64_t now){
+  auto* first=oldest();if(!first){retryAt_.reset();return;}congestion();rto_=std::min(45000U,rto_*2);
+  if(first->sends==1){recoveryThreshold(now);window_=1;}
+  retryAt_.reset();timeoutArmPending_=true;
+  const auto limit=std::min<std::size_t>(16,(flight()+1)/2);std::int64_t previous=-1;
+  for(std::size_t i=0;i<limit;++i){Pending* chosen=nullptr;for(auto& slot:sent_){if(slot&&slot->sends&&static_cast<std::int64_t>(slot->packet.sequence)>previous&&(!chosen||slot->packet.sequence<chosen->packet.sequence)){chosen=&*slot;}}
+    if(!chosen){break;}if(chosen->sends>=9){terminate(Phase::Timeout);return;}chosen->retry=true;chosen->fast=false;previous=chosen->packet.sequence;
+  }
 }
 std::optional<Packet> Connection::next(std::uint64_t now){
   if(!active()&&observed_.phase!=Phase::Closed){return std::nullopt;}
-  if(!pending_&&active()){
-    if(nextSequence_==std::numeric_limits<std::uint32_t>::max()){terminate(Phase::Failed);return std::nullopt;}
-    if(nextSequence_==0){auto p=base();p.sequence=nextSequence_++;p.flags|=Syn|From|MaxSize|NoAck;p.from=local_;p.maxSize=DefaultSegment;p.nacks.clear();for(unsigned i=0;i<8;++i){std::uint32_t value=0;for(unsigned j=0;j<4;++j){value=(value<<8)|peer_.hash[4*i+j];}p.nacks.push_back(value);}pending_=Pending{std::move(p)};}
-    else if(remoteId_&&!choked_&&(!tx_.empty()||(finish_&&!localFinSent_))){auto p=base();p.sequence=nextSequence_++;const auto count=std::min<std::size_t>(segment_,tx_.size());for(std::size_t i=0;i<count;++i){p.payload.push_back(tx_.front());tx_.pop_front();}if(finish_&&tx_.empty()){p.flags|=Close;localFinSent_=true;}pending_=Pending{std::move(p)};}
+  if(retryAt_&&now>=*retryAt_){retryTimeout(now);if(!active()){return std::nullopt;}}
+  Pending* selected=oldest(true);
+  if(!selected){for(auto& p:sent_){if(p&&p->retry&&(!selected||p->packet.sequence<selected->packet.sequence)){selected=&*p;}}}
+  if(selected){
+    if(selected->sends>=9){terminate(Phase::Timeout);return std::nullopt;}
+    if(selected->fast){selected->fast=false;if(choked_){congestion();window_=1;}else if(ackSinceCongestion_&&static_cast<std::int64_t>(selected->packet.sequence)>lastCongestionHighest_){congestion();rto_=std::min(45000U,rto_*2);if(selected->sends==1){recoveryThreshold(now);window_=std::min(ssthresh_,window_);}}}
+    auto p=selected->packet;if(!(p.flags&Syn)){p.nacks.clear();acknowledgements(p);p.delay=choking_?61000:0;}return p;
   }
-  if(pending_&&(!pending_->sends||now>=pending_->due)){
-    if(pending_->sends>=9){terminate(Phase::Timeout);return std::nullopt;}auto p=pending_->packet;
-    if(!(p.flags&Syn)){p.nacks.clear();acknowledgements(p);p.delay=choking_?61000:0;}return p;
+  if(active()&&(nextSequence_==0||(remoteId_&&sendCredit()&&(!tx_.empty()||(finish_&&!localFinSent_))))){
+    if(nextSequence_==std::numeric_limits<std::uint32_t>::max()){terminate(Phase::Failed);return std::nullopt;}auto free=std::ranges::find_if(sent_,[](const auto& slot){return !slot;});if(free==sent_.end()){return std::nullopt;}
+    auto p=base();p.sequence=nextSequence_++;
+    if(p.sequence==0){p.flags|=Syn|From|MaxSize|NoAck;p.from=local_;p.maxSize=DefaultSegment;p.nacks.clear();for(unsigned i=0;i<8;++i){std::uint32_t value=0;for(unsigned j=0;j<4;++j){value=(value<<8)|peer_.hash[4*i+j];}p.nacks.push_back(value);}}
+    else{const auto count=std::min<std::size_t>(segment_,tx_.size());for(std::size_t i=0;i<count;++i){p.payload.push_back(tx_.front());tx_.pop_front();}if(finish_&&tx_.empty()){p.flags|=Close;localFinSent_=true;}}
+    Pending prepared;prepared.packet=std::move(p);prepared.created=now;free->emplace(std::move(prepared));return (*free)->packet;
   }
   if(ackWanted_&&remoteId_){return base();}return std::nullopt;
 }
 void Connection::dispatched(const Packet& p,std::uint64_t now){
   increment(observed_.transmittedPackets);ackWanted_=false;
-  if(pending_&&p.sequence==pending_->packet.sequence&&(p.flags&(Syn|Close)||!p.payload.empty())){
-    if(pending_->sends){increment(observed_.retransmissions);rto_=std::min(45000U,rto_*2);}++pending_->sends;pending_->sent=now;pending_->due=now+rto_;
-  }
+  auto found=std::ranges::find_if(sent_,[&](const auto& slot){return slot&&slot->packet.sequence==p.sequence&&(p.flags&(Syn|Close)||!p.payload.empty());});
+  if(found==sent_.end()){return;}auto& pending=**found;
+  if(pending.sends){increment(observed_.retransmissions);}++pending.sends;pending.sent=now;pending.retry=false;highestSent_=std::max(highestSent_,static_cast<std::int64_t>(p.sequence));
+  if(timeoutArmPending_||!retryAt_){retryAt_=now+rto_;timeoutArmPending_=false;}observed_.maximumInFlightPackets=std::max(observed_.maximumInFlightPackets,flight());
 }
-std::optional<std::uint64_t> Connection::wakeup()const noexcept{if(pending_&&pending_->sends){return pending_->due;}return std::nullopt;}
+std::optional<std::uint64_t> Connection::wakeup()const noexcept{
+  return flight()?retryAt_:std::nullopt;
+}
 std::optional<unsigned> Connection::transmitTimeout(const Packet& p)const noexcept{
-  if(!pending_||p.sequence!=pending_->packet.sequence||(!(p.flags&(Syn|Close))&&p.payload.empty())){return std::nullopt;}return pending_->sends?std::min(45000U,2*rto_):rto_;
+  for(const auto& slot:sent_){if(slot&&slot->packet.sequence==p.sequence&&(p.flags&(Syn|Close)||!p.payload.empty())){return rto_;}}return std::nullopt;
 }
 } // namespace biglybtc::services::i2p::streaming
