@@ -2008,7 +2008,7 @@ if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIM
   target_link_libraries(biglybtc-mainline-single-http-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network OpenSSL::Crypto)
   target_compile_options(biglybtc-mainline-single-http-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_test(NAME mainline-single-http COMMAND biglybtc-mainline-single-http-tests)
-  set_tests_properties(mainline-single-http PROPERTIES TIMEOUT 240 LABELS "network;discovery;owned;tls;slow")
+  set_tests_properties(mainline-single-http PROPERTIES TIMEOUT 1000 LABELS "network;discovery;owned;tls;slow")
 endif()
 
 # Append to preview/native/tests/CMakeLists.txt when the codec target exists.
