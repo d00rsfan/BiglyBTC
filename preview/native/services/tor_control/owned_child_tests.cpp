@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "owned_child.hpp"
+#include "ownership.hpp"
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
@@ -29,6 +30,7 @@
 
 using biglybtc::services::tor::OwnedTorChild;
 using biglybtc::services::tor::OwnedTorChildOptions;
+using biglybtc::services::tor::OwnershipHandshake;
 namespace {
 QByteArray read(const QString& path) {
   QFile file(path);
@@ -117,9 +119,15 @@ private slots:
     QVERIFY(child.start(options)); QTRY_COMPARE_WITH_TIMEOUT(ready.count(),1,5000);
     const auto pid = child.processId(); const auto port = child.controlPort();
     QVERIFY(pid > 0 && port > 0 && child.sourceCurrent());
-    bool withdrewWhileAlive = false;
+    bool withdrewWhileAlive = false, revokedBeforeNotification = false, stoppingNotice = false;
+    auto* control = child.findChild<OwnershipHandshake*>(); QVERIFY(control);
+    connect(control,&OwnershipHandshake::failed,&child,[&]{
+      revokedBeforeNotification = !stoppingNotice && child.state() == OwnedTorChild::State::Stopping
+          && child.controlPort() == 0 && !child.sourceCurrent() && !child.joined() && ::kill(pid,0) == 0;
+    });
     connect(&child,&OwnedTorChild::stateChanged,&child,[&](OwnedTorChild::State state){
       if (state == OwnedTorChild::State::Stopping && child.processId() == pid) {
+        stoppingNotice = true;
         withdrewWhileAlive = child.controlPort() == 0 && !child.joined() && ::kill(pid,0) == 0;
       }
     });
@@ -130,7 +138,7 @@ private slots:
     QTRY_COMPARE_WITH_TIMEOUT(trigger.bytesToWrite(),qint64{0},2000);
     QTRY_COMPARE_WITH_TIMEOUT(failed.count(),1,5000);
     QCOMPARE(failed.at(0).at(0).toString(),QStringLiteral("Owned Tor control connection lost"));
-    QVERIFY(withdrewWhileAlive); QCOMPARE(ready.count(),1); QCOMPARE(finished.count(),1);
+    QVERIFY(revokedBeforeNotification); QVERIFY(withdrewWhileAlive); QCOMPARE(ready.count(),1); QCOMPARE(finished.count(),1);
     QCOMPARE(child.state(),OwnedTorChild::State::Failed); QCOMPARE(child.controlPort(),quint16{0});
     QVERIFY(child.joined()); QVERIFY(reaped(pid)); QVERIFY(!child.sourceCurrent());
     const auto audit = QJsonDocument::fromJson(read(options.workingDirectory+QStringLiteral("/child-audit.json"))).object();
@@ -153,9 +161,15 @@ private slots:
       QVERIFY(child->start(fixture.options(QString::number(deleting))));
       QTRY_COMPARE_WITH_TIMEOUT(ready.count(),1,5000);
       const auto pid = child->processId(); const auto port = child->controlPort();
-      bool withdrewWhileAlive = false;
+      bool withdrewWhileAlive = false, revokedBeforeNotification = false, stoppingNotice = false;
+      auto* control = child->findChild<OwnershipHandshake*>(); QVERIFY(control);
+      connect(control,&OwnershipHandshake::failed,child,[&]{
+        revokedBeforeNotification = !stoppingNotice && guard && guard->state() == OwnedTorChild::State::Stopping
+            && guard->controlPort() == 0 && !guard->sourceCurrent() && ::kill(pid,0) == 0;
+      });
       connect(child,&OwnedTorChild::stateChanged,child,[&,child](OwnedTorChild::State state){
         if (state == OwnedTorChild::State::Stopping) {
+          stoppingNotice = true;
           withdrewWhileAlive = child->controlPort() == 0 && ::kill(pid,0) == 0;
           if (deleting) { delete child; } else { child->stop(); }
         }
@@ -169,7 +183,7 @@ private slots:
         QTRY_COMPARE_WITH_TIMEOUT(failed.count(),1,5000); QVERIFY(child->joined());
         QCOMPARE(child->state(),OwnedTorChild::State::Failed); delete child;
       }
-      QVERIFY(withdrewWhileAlive); QVERIFY(reaped(pid));
+      QVERIFY(revokedBeforeNotification); QVERIFY(withdrewWhileAlive); QVERIFY(reaped(pid));
     }
   }
   void actualOwnedChildAuthenticatesStopsJoinsAndRestartsInFreshDirectory() {

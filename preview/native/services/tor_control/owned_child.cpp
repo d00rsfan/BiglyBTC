@@ -303,7 +303,7 @@ struct OwnedTorChild::Impl {
   }
   bool baseCurrent() const { return directoriesCurrent() && executable.current() && config.current(); }
   bool alive() const { return !reaped && pid > 0 && process.state() == QProcess::Running && process.processId() == pid; }
-  bool sourceCurrent() const { return alive() && baseCurrent() && cookie.current() && portFile.current(); }
+  bool sourceCurrent() const { return state != State::Stopping && alive() && baseCurrent() && cookie.current() && portFile.current(); }
   bool reconcileAuthenticatedPort(const QByteArray& selectedBytes) {
     // RESETCONF republishes ControlPortWriteToFile in real Tor. Only after the
     // SAME authenticated ownership handshake may this discovery leaf change;
@@ -435,7 +435,20 @@ struct OwnedTorChild::Impl {
     });
     QObject::connect(handshake.get(),&OwnershipHandshake::failed,q,[this,at]{
       if (at != generation) { return; }
-      if (state == State::Ready) { stopWithFailure(QStringLiteral("Owned Tor control connection lost")); }
+      if (state == State::Ready) {
+        // The failure is delivered from QAbstractSocket's notification frame.
+        // Withdraw authority now, but publish callbacks only after that frame
+        // unwinds: a listener may synchronously delete this whole controller.
+        stoppingFailure = true; reason = QStringLiteral("Owned Tor control connection lost");
+        state = State::Stopping;
+        const QPointer<OwnedTorChild> owner(q);
+        const bool queued = QMetaObject::invokeMethod(q,[owner,at]{
+          if (owner && owner->impl_->generation == at && owner->impl_->state == State::Stopping) {
+            owner->impl_->stop(true);
+          }
+        },Qt::QueuedConnection);
+        if (!queued) { process.kill(); } // Still only this owned child; no inline public callback.
+      }
       else if (state == State::Authenticating) { stopWithFailure(QStringLiteral("Owned Tor control setup failed")); }
     });
     if (!change(State::Authenticating)) { cookieBytes.fill(0); nonce.fill(0); return; }
@@ -455,8 +468,8 @@ struct OwnedTorChild::Impl {
     }
   }
   void stopWithFailure(const QString& text) { stoppingFailure = true; reason = text; stop(); }
-  void stop() {
-    if (state == State::Stopped || state == State::Failed || state == State::Stopping) { return; }
+  void stop(bool alreadyWithdrawn = false) {
+    if (state == State::Stopped || state == State::Failed || (state == State::Stopping && !alreadyWithdrawn)) { return; }
     deadline.stop(); discovery.stop();
     stopDirectoryWatch();
     if (handshake) { handshake->blockSignals(true); handshake->stop(); }
