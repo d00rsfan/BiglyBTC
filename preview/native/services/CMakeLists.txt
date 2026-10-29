@@ -127,3 +127,13 @@ target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2cp_datagra
 
 # Services section: include belongs to the existing actual channel target.
 target_sources(biglybtc_i2cp_initial_channel PRIVATE i2cp_channel/receive.inc)
+
+# Services: append after the existing channel/datagram targets. The shared
+# BEP15 model is header-only core code, with no libtorrent/provider dependency.
+add_library(biglybtc_i2cp_tracker_codec STATIC i2cp_tracker/tracker.cpp)
+target_include_directories(biglybtc_i2cp_tracker_codec PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2cp_tracker")
+target_link_libraries(biglybtc_i2cp_tracker_codec PUBLIC biglybtc_i2cp_datagram BiglyBTC::Core)
+target_compile_features(biglybtc_i2cp_tracker_codec PUBLIC cxx_std_23)
+target_compile_options(biglybtc_i2cp_tracker_codec PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_sources(biglybtc_i2cp_initial_channel PRIVATE i2cp_channel/tracker.inc)
+target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2cp_tracker_codec PRIVATE OpenSSL::Crypto)

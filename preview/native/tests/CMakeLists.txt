@@ -2108,3 +2108,39 @@ if(TARGET biglybtc_i2cp_initial_channel)
   add_test(NAME i2cp-bounded-datagram-receiver COMMAND biglybtc-i2cp-receive-channel-tests)
   set_tests_properties(i2cp-bounded-datagram-receiver PROPERTIES TIMEOUT 60 LABELS "unit;i2p;owned-loopback")
 endif()
+
+# Append to current tests/CMakeLists.txt; do not overwrite later accepted targets.
+if(BIGLYBTC_DESKTOP)
+  add_executable(biglybtc-azureus-profile-io-tests azureus_profile_io_tests.cpp)
+  set_target_properties(biglybtc-azureus-profile-io-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-azureus-profile-io-tests PRIVATE biglybtc_owned_azureus_service Qt6::Test)
+  target_compile_features(biglybtc-azureus-profile-io-tests PRIVATE cxx_std_23)
+  target_compile_options(biglybtc-azureus-profile-io-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME azureus-profile-io COMMAND biglybtc-azureus-profile-io-tests)
+  set_tests_properties(azureus-profile-io PROPERTIES TIMEOUT 60 LABELS "unit;loopback;profile" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
+# Tests: append once; no source/compiler/provider options or old tests change.
+if(TARGET biglybtc_i2cp_tracker_codec)
+  add_executable(biglybtc-i2cp-tracker-codec-tests i2cp_tracker_codec_tests.cpp)
+  target_link_libraries(biglybtc-i2cp-tracker-codec-tests PRIVATE biglybtc_i2cp_tracker_codec)
+  target_compile_options(biglybtc-i2cp-tracker-codec-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME pure-i2cp-tracker-objects COMMAND biglybtc-i2cp-tracker-codec-tests)
+  set_tests_properties(pure-i2cp-tracker-objects PROPERTIES TIMEOUT 60 LABELS "unit;i2p;no-network")
+endif()
+if(TARGET biglybtc_i2cp_initial_channel)
+  add_executable(biglybtc-i2cp-tracker-channel-tests i2cp_tracker_channel_tests.cpp)
+  set_target_properties(biglybtc-i2cp-tracker-channel-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-i2cp-tracker-channel-tests PRIVATE biglybtc_i2cp_initial_channel Qt6::Test Qt6::Network)
+  target_compile_definitions(biglybtc-i2cp-tracker-channel-tests PRIVATE BIGLYBTC_I2P_TEST_KEYS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
+  target_compile_options(biglybtc-i2cp-tracker-channel-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME i2cp-explicit-tracker-channel COMMAND biglybtc-i2cp-tracker-channel-tests)
+  set_tests_properties(i2cp-explicit-tracker-channel PROPERTIES TIMEOUT 60 LABELS "unit;i2p;owned-loopback")
+endif()
+
+# Existing native crash/conflict driver, without replaying its Java oracle.
+add_test(NAME native-torrent-state-writer-guards COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/torrent_state_writer_guards.py"
+  --driver "$<TARGET_FILE:biglybtc-torrent-state-driver>")
+set_tests_properties(native-torrent-state-writer-guards PROPERTIES
+  TIMEOUT 120 LABELS "unit;storage;locking;faults")

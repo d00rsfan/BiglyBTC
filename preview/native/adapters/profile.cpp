@@ -71,7 +71,7 @@ std::expected<ProfileLease, Error> ProfileLease::acquire(const std::filesystem::
   }
   // Allocate while both descriptors still have RAII owners. Only a successful
   // independent lock acquisition mints a lineage; retain never mints another.
-  auto ownership = std::make_shared<const unsigned char>(0);
+  auto ownership = std::make_shared<ProfileSourceState>();
   return ProfileLease(directory.release(), lock.release(), std::move(ownership));
 }
 
@@ -156,6 +156,8 @@ std::expected<ConfigFile, Error> ConfigFile::load(const ProfileLease& lease, std
 
 std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& lease,
     std::string filename, std::string_view encoded, core::Limits limits, void (*observer)(SaveStage)) {
+  auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
+  if(observer&&!access->observationsAllowed()){return error(ErrorCode::Unsupported,"Observed configuration writes require an unnested source boundary");}
   try {
     if (!lease.valid() || !validName(filename)) {
       return error(ErrorCode::UnsafePath, "Held profile lease and safe configuration filename required");
@@ -230,7 +232,7 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
     };
     auto identity = owned();
     if (!identity) { return std::unexpected(identity.error()); }
-    if (observer) { observer(SaveStage::TemporarySynced); }
+    if (observer) { access->outside([&]{observer(SaveStage::TemporarySynced);}); }
     struct stat currentDirectory{};
     if (!lease.valid() || lease.directoryHandle() != handle || ::fstat(handle, &currentDirectory) != 0
         || !S_ISDIR(currentDirectory.st_mode) || currentDirectory.st_dev != directory.st_dev
@@ -248,7 +250,7 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
           : errno == ENOSYS || errno == EINVAL || errno == EOPNOTSUPP ? ErrorCode::Unsupported : ErrorCode::Io;
       return error(code, "First configuration publication failed without replacement; saving pathname retained");
     }
-    if (observer) { observer(SaveStage::PrimaryRenamed); }
+    if (observer) { access->outside([&]{observer(SaveStage::PrimaryRenamed);}); }
     if (::fsync(handle) != 0) {
       return error(ErrorCode::Io, "Directory synchronization failed; first configuration publication already occurred");
     }
@@ -259,6 +261,8 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
 }
 
 std::expected<void, Error> ConfigFile::save(const ProfileLease& lease, void (*observer)(SaveStage)) {
+  auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
+  if(observer&&!access->observationsAllowed()){return error(ErrorCode::Unsupported,"Observed configuration writes require an unnested source boundary");}
   struct stat directory{};
   if (!lease.valid() || ::fstat(lease.directoryHandle(), &directory) != 0
       || directory.st_dev != device_ || directory.st_ino != inode_) {
@@ -291,19 +295,19 @@ std::expected<void, Error> ConfigFile::save(const ProfileLease& lease, void (*ob
   if (!written) {
     return std::unexpected(written.error());
   }
-  if (observer) { observer(SaveStage::TemporarySynced); }
+  if (observer) { access->outside([&]{observer(SaveStage::TemporarySynced);}); }
   if (source_ == RecoverySource::Primary) {
     const auto backup = filename_ + ".bak";
     if (::renameat(lease.directoryHandle(), filename_.c_str(), lease.directoryHandle(), backup.c_str()) != 0
         || ::fsync(lease.directoryHandle()) != 0) {
       return error(ErrorCode::Io, "Backup transition failed; saving file retained for recovery");
     }
-    if (observer) { observer(SaveStage::BackupRenamed); }
+    if (observer) { access->outside([&]{observer(SaveStage::BackupRenamed);}); }
   }
   if (::renameat(lease.directoryHandle(), saving.c_str(), lease.directoryHandle(), filename_.c_str()) != 0) {
     return error(ErrorCode::Io, "Configuration replacement failed; recovery files retained");
   }
-  if (observer) { observer(SaveStage::PrimaryRenamed); }
+  if (observer) { access->outside([&]{observer(SaveStage::PrimaryRenamed);}); }
   if (::fsync(lease.directoryHandle()) != 0) {
     return error(ErrorCode::Io, "Directory synchronization failed; configuration replacement already occurred");
   }

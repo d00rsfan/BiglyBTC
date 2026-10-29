@@ -34,7 +34,7 @@
     if(!fetch){return;}const auto id=fetch->messageId;removeBegin(id);fetch.reset();receiveTimer.stop();remember(id);if(release){(void)enqueueControl(false,id);}dropReceive(reason);
   }
   void receiveDeadline(){
-    if(!fetch){return;}if(!receiverEnabled){cancelFetch(ReceiveDrop::Cancelled);return;}if(!receiverCurrent()){cancelFetch(ReceiveDrop::LeaseExpired);return;}
+    if(!fetch){return;}if(!receiverEnabled&&!trackerReceives()){cancelFetch(ReceiveDrop::Cancelled);return;}if(!receiverCurrent()){cancelFetch(ReceiveDrop::LeaseExpired);return;}
     if(Clock::now()>=fetch->end){cancelFetch(ReceiveDrop::PendingTimeout);return;}const auto left=std::chrono::duration_cast<std::chrono::milliseconds>(fetch->end-Clock::now()).count();receiveTimer.start(static_cast<int>(std::max<std::int64_t>(1,left)));
   }
   void flushReceiveControls(){
@@ -45,7 +45,7 @@
         if(next.generation!=generation||!session||next.value.sessionId!=*session){popControl();continue;}
         if(next.value.begin){
           if(!fetch||fetch->messageId!=next.value.messageId||fetch->generation!=generation){popControl();continue;}
-          if(!receiverEnabled||!receiverCurrent()||Clock::now()>=fetch->end){cancelFetch(!receiverEnabled?ReceiveDrop::Cancelled:!receiverCurrent()?ReceiveDrop::LeaseExpired:ReceiveDrop::PendingTimeout);continue;}
+          if((!receiverEnabled&&!trackerReceives())||!receiverCurrent()||Clock::now()>=fetch->end){cancelFetch((!receiverEnabled&&!trackerReceives())?ReceiveDrop::Cancelled:!receiverCurrent()?ReceiveDrop::LeaseExpired:ReceiveDrop::PendingTimeout);continue;}
         }
         auto encoded=encodeReceiveControl(next.value);if(!encoded){fail(Failure::Resources);break;}const auto at=generation;
         const auto written=socket.write(reinterpret_cast<const char*>(encoded->data()),static_cast<qint64>(encoded->size()));
@@ -60,9 +60,9 @@
     if(fastReceive){remember(status.messageId);dropReceive(ReceiveDrop::UnexpectedPayload);return;} // No legacy ACKs in immutable fast mode.
     if(fetch&&fetch->messageId==status.messageId){dropReceive(ReceiveDrop::Duplicate);return;} // Don't release a live fetch.
     if(remembered(status.messageId)){(void)enqueueControl(false,status.messageId);dropReceive(ReceiveDrop::Duplicate);return;}
-    if(!receiverEnabled||!receiverCurrent()||fetch||received.size()==ReceiveQueueLimit||status.size>MaximumI2cpPayloadBytes){
+    if((!receiverEnabled&&!trackerReceives())||!receiverCurrent()||fetch||(received.size()==ReceiveQueueLimit&&!trackerReceives())||status.size>MaximumI2cpPayloadBytes){
       remember(status.messageId);(void)enqueueControl(false,status.messageId);
-      dropReceive(!receiverEnabled?ReceiveDrop::Disabled:!receiverCurrent()?ReceiveDrop::LeaseExpired:status.size>MaximumI2cpPayloadBytes?ReceiveDrop::Malformed:ReceiveDrop::QueueFull);return;
+      dropReceive((!receiverEnabled&&!trackerReceives())?ReceiveDrop::Disabled:!receiverCurrent()?ReceiveDrop::LeaseExpired:status.size>MaximumI2cpPayloadBytes?ReceiveDrop::Malformed:ReceiveDrop::QueueFull);return;
     }
     fetch=Fetch{*session,status.messageId,status.size,generation,Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds),false};receiveDeadline();
     if(fetch&&!enqueueControl(true,status.messageId)){if(fetch){cancelFetch(ReceiveDrop::ControlBackpressure,false);}}
@@ -88,8 +88,12 @@
       // or consumption. It never acknowledges application delivery/signature.
       (void)enqueueControl(false,id);
     }else{if(remembered(id)){dropReceive(ReceiveDrop::Duplicate);return;}remember(id);}
+    if(advertised&&*advertised!=decoded->payload.size()){dropReceive(ReceiveDrop::Malformed);return;}
+    // RAW18 has no general receiver permission. Only this current dispatched
+    // tracker operation may consume it, and it never enters the datagram queue.
+    if(decoded->payload.size()>9&&decoded->payload[9]==RawTrackerProtocol&&trackerReceives()){observeTrackerPayload(decoded->payload,fetchEnd);return;}
     if(!receiverEnabled){dropReceive(ReceiveDrop::Disabled);return;}if(!receiverCurrent()){dropReceive(ReceiveDrop::LeaseExpired);return;}
-    if(received.size()==ReceiveQueueLimit){dropReceive(ReceiveDrop::QueueFull);return;}if(advertised&&*advertised!=decoded->payload.size()){dropReceive(ReceiveDrop::Malformed);return;}
+    if(received.size()==ReceiveQueueLimit){dropReceive(ReceiveDrop::QueueFull);return;}
     const auto at=generation;auto mux=decodeMuxDatagram(decoded->payload);if(!mux){dropReceive(mux.error().code==::biglybtc::services::i2p::ErrorCode::Unsupported?ReceiveDrop::Unsupported:ReceiveDrop::Malformed);return;}
     ReceivedDatagram data;data.messageId=id;data.fromPort=mux->fromPort;data.toPort=mux->toPort;
     if(mux->protocol==Datagram2Protocol){auto body=decode2(mux->datagram,leaseSigner->destination()->hash);if(!body){dropReceive(ReceiveDrop::InvalidDatagram);return;}data.body=std::move(*body);}
@@ -101,5 +105,5 @@
     received.push_back(std::move(data));receiveBytes+=weight;notifyReceive();
   }
   bool enableReceive(){if(!onThread()||!leaseSigner||!leaseSigner->valid()||!active()||state==State::Connecting||state==State::WaitingDate||state==State::DateReceived){return false;}receiverEnabled=true;notifyReceive();return receiverEnabled&&active();}
-  void disableReceive(){if(!onThread()){return;}receiverEnabled=false;received.clear();receiveBytes=0;if(fetch){cancelFetch(ReceiveDrop::Cancelled);}notifyReceive();}
+  void disableReceive(){if(!onThread()){return;}receiverEnabled=false;received.clear();receiveBytes=0;if(fetch&&!trackerReceives()){cancelFetch(ReceiveDrop::Cancelled);}notifyReceive();}
   std::optional<ReceivedDatagram> takeReceive(){if(!onThread()||received.empty()){return std::nullopt;}if(!receiverCurrent()){received.clear();receiveBytes=0;dropReceive(ReceiveDrop::LeaseExpired);return std::nullopt;}auto out=std::move(received.front());received.pop_front();receiveBytes-=receiveWeight(out);remember(out.messageId);notifyReceive();return out;}

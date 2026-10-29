@@ -35,26 +35,31 @@ ConfigResult<Bytes> encodeMuxDatagram(const MuxDatagram& data,GzipMode mode){
   // mux overwrites MTIME/OS. CRC/ISIZE cover the data, not these header fields.
   out[4]=static_cast<Byte>(data.fromPort>>8);out[5]=static_cast<Byte>(data.fromPort);out[6]=static_cast<Byte>(data.toPort>>8);out[7]=static_cast<Byte>(data.toPort);out[8]=2;out[9]=data.protocol;return out;
 }
-ConfigResult<MuxDatagram> decodeMuxDatagram(View bytes){
+namespace {
+ConfigResult<MuxDatagram> inflateMux(View bytes,std::size_t maximum,Byte first,Byte second){
   if(bytes.size()<18||bytes.size()>MaximumI2cpPayloadBytes){return error(Code::TooLarge,"Bounded mux gzip length refused");}
-  if(bytes[0]!=0x1f||bytes[1]!=0x8b||bytes[2]!=8||bytes[3]!=0||(bytes[9]!=Datagram2Protocol&&bytes[9]!=Datagram3Protocol)){return error(Code::Unsupported,"Only fixed-header Datagram2/3 gzip supported");}
-  z_stream stream{};if(inflateInit2(&stream,31)!=Z_OK){return error(Code::CryptoFailure,"Gzip decoder resources unavailable");}struct End {z_stream* s;~End(){inflateEnd(s);}}end{&stream};Bytes out(MaximumMuxDatagramBytes+1);
+  if(bytes[0]!=0x1f||bytes[1]!=0x8b||bytes[2]!=8||bytes[3]!=0||(bytes[9]!=first&&bytes[9]!=second)){return error(Code::Unsupported,"Fixed-header explicitly permitted mux protocol required");}
+  z_stream stream{};if(inflateInit2(&stream,31)!=Z_OK){return error(Code::CryptoFailure,"Gzip decoder resources unavailable");}struct End {z_stream* s;~End(){inflateEnd(s);}}end{&stream};Bytes out(maximum+1);
   stream.next_in=const_cast<Byte*>(bytes.data());stream.avail_in=static_cast<uInt>(bytes.size());stream.next_out=out.data();stream.avail_out=static_cast<uInt>(out.size());const auto status=inflate(&stream,Z_FINISH);
-  if(status!=Z_STREAM_END||stream.avail_in||stream.total_out>MaximumMuxDatagramBytes){return error(Code::InvalidFormat,"Malformed/concatenated/oversize mux gzip or CRC/ISIZE mismatch");}out.resize(stream.total_out);
+  if(status!=Z_STREAM_END||stream.avail_in||stream.total_out>maximum){return error(Code::InvalidFormat,"Malformed/concatenated/oversize mux gzip or CRC/ISIZE mismatch");}out.resize(stream.total_out);
   return MuxDatagram{bytes[9],static_cast<std::uint16_t>((static_cast<unsigned>(bytes[4])<<8)|bytes[5]),static_cast<std::uint16_t>((static_cast<unsigned>(bytes[6])<<8)|bytes[7]),std::move(out)};
 }
+} // namespace
+ConfigResult<MuxDatagram> decodeMuxDatagram(View bytes){return inflateMux(bytes,MaximumMuxDatagramBytes,Datagram2Protocol,Datagram3Protocol);}
+ConfigResult<MuxDatagram> decodeRawTrackerReply(View bytes){return inflateMux(bytes,1024,18,18);}
 ConfigResult<Bytes> encodeSendDatagram(const SendDatagram& data){
   auto valid=payloadValid(data.sessionId,data.payload);if(!valid){return std::unexpected(valid.error());}auto dest=decodeDestination(data.recipient.wire);if(!dest){return std::unexpected(dest.error());}
   if(data.expirationMilliseconds&&(*data.expirationMilliseconds==0||*data.expirationMilliseconds>0xffffffffffffULL)){return error(Code::InvalidFormat,"Expires requires positive uint48 absolute milliseconds");}
+  if(data.skipLeaseSet&&!data.expirationMilliseconds){return error(Code::Unsupported,"Skip LeaseSet requires original Expires flags");}
   Bytes body;body.reserve(2+dest->wire.size()+4+data.payload.size()+4+8);put(body,data.sessionId,2);body.insert(body.end(),dest->wire.begin(),dest->wire.end());put(body,data.payload.size(),4);body.insert(body.end(),data.payload.begin(),data.payload.end());put(body,data.nonce,4);
-  if(data.expirationMilliseconds){put(body,0,2);put(body,*data.expirationMilliseconds,6);}return frame(data.expirationMilliseconds?SendMessageExpiresType:SendMessageType,body);
+  if(data.expirationMilliseconds){put(body,data.skipLeaseSet?0x0100:0,2);put(body,*data.expirationMilliseconds,6);}return frame(data.expirationMilliseconds?SendMessageExpiresType:SendMessageType,body);
 }
 ConfigResult<SendDatagram> decodeSendDatagram(const Frame& input){
   if(input.type!=SendMessageType&&input.type!=SendMessageExpiresType){return error(Code::Unsupported,"Expected Send5/Expires36");}Reader r{input.payload};std::uint64_t id=0,length=0,nonce=0;if(!r.number(2,id)||input.payload.size()-r.at<387){return error(Code::InvalidFormat,"Truncated Send destination");}
   const auto start=r.at;const auto size=387+(static_cast<std::size_t>(input.payload[start+385])<<8)+input.payload[start+386];View destBytes,payload;if(!r.take(size,destBytes)){return error(Code::InvalidFormat,"Truncated Send destination");}auto dest=decodeDestination(destBytes);if(!dest){return std::unexpected(dest.error());}
-  if(!r.number(4,length)||length>MaximumI2cpPayloadBytes||!r.take(static_cast<std::size_t>(length),payload)||!r.number(4,nonce)){return error(Code::InvalidFormat,"Invalid Send Payload/nonce");}std::optional<std::uint64_t> expires;
-  if(input.type==SendMessageExpiresType){std::uint64_t flags=0,date=0;if(!r.number(2,flags)||flags||!r.number(6,date)||!date){return error(Code::Unsupported,"Only default flags0/positive Expires date supported");}expires=date;}
-  if(r.at!=r.bytes.size()){return error(Code::InvalidFormat,"Trailing Send bytes");}SendDatagram out{static_cast<std::uint16_t>(id),std::move(*dest),Bytes(payload.begin(),payload.end()),static_cast<std::uint32_t>(nonce),expires};auto valid=payloadValid(out.sessionId,out.payload);if(!valid){return std::unexpected(valid.error());}return out;
+  if(!r.number(4,length)||length>MaximumI2cpPayloadBytes||!r.take(static_cast<std::size_t>(length),payload)||!r.number(4,nonce)){return error(Code::InvalidFormat,"Invalid Send Payload/nonce");}std::optional<std::uint64_t> expires;bool skipLeaseSet=false;
+  if(input.type==SendMessageExpiresType){std::uint64_t flags=0,date=0;if(!r.number(2,flags)||(flags!=0&&flags!=0x0100)||!r.number(6,date)||!date){return error(Code::Unsupported,"Only default/skipLeaseSet flags and positive Expires date supported");}expires=date;skipLeaseSet=flags==0x0100;}
+  if(r.at!=r.bytes.size()){return error(Code::InvalidFormat,"Trailing Send bytes");}SendDatagram out{static_cast<std::uint16_t>(id),std::move(*dest),Bytes(payload.begin(),payload.end()),static_cast<std::uint32_t>(nonce),expires,skipLeaseSet};auto valid=payloadValid(out.sessionId,out.payload);if(!valid){return std::unexpected(valid.error());}return out;
 }
 ConfigResult<StatusMeaning> messageStatusMeaning(Byte code){switch(code){case 0:return StatusMeaning::IncomingAvailable;case 1:return StatusMeaning::RouterAccepted;case 2:return StatusMeaning::UnusedLegacySuccess;case 3:case 5:return StatusMeaning::ProbableFailure;case 4:return StatusMeaning::ProbableSuccess;case 6:return StatusMeaning::LocalSuccess;default:if(code<=23){return StatusMeaning::Failure;}return error(Code::Unsupported,"Unknown original MessageStatus code");}}
 ConfigResult<Bytes> encodeMessageStatus(const MessageStatus& data){auto meaning=messageStatusMeaning(data.code);if(!meaning){return std::unexpected(meaning.error());}if(data.sessionId==65535){return error(Code::InvalidFormat,"Unknown status session");}Bytes out;put(out,data.sessionId,2);put(out,data.messageId,4);out.push_back(data.code);put(out,data.size,4);put(out,data.nonce,4);return frame(MessageStatusType,out);}

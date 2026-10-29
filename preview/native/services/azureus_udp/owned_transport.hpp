@@ -158,7 +158,8 @@ public:
   // seeded, token or value facts. Shared ownership lasts through close/join.
   // current checks the owner's held profile and stop state before each effect.
   std::expected<void,Failure> serveDatabase(std::shared_ptr<azureus_router::RouterOwner>,
-      std::shared_ptr<database::Owner>,std::function<bool()> current);
+      std::shared_ptr<database::Owner>,std::function<bool()> current,
+      std::function<bool(std::move_only_function<void()>)> preflight={});
   std::expected<GeneratedServiceState,Failure> generatedServiceState() const;
   std::expected<database::Snapshot,Failure> databaseState() const;
   // Owner-only pull. Moved receipts own the request referenced by policy indices.
@@ -238,6 +239,8 @@ private:
   std::shared_ptr<azureus_router::RouterOwner> normalRouter_;
   std::shared_ptr<database::Owner> normalDatabase_;
   std::function<bool()> normalCurrent_;
+  std::function<bool(std::move_only_function<void()>)> normalPreflight_;
+  bool normalResuming_=false;
   std::vector<find::nodes::Contact> normalContacts_; // Only actually admitted request sources.
   Config config_;
   std::unique_ptr<find::nodes::NodeCache> nodeCache_;

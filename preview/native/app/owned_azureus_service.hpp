@@ -94,6 +94,8 @@ struct AzureusServiceObservation {
   std::shared_ptr<const AzureusPublishSnapshot> publishSnapshot;
   std::shared_ptr<const services::azureus_db_runtime::Snapshot> databaseSnapshot;
   std::shared_ptr<const AzureusRatingReadSnapshot> ratingReadSnapshot;
+  // Passive bounded IO progress only; no source/packet permission is exposed.
+  std::size_t profileIoPending=0,profileIoRunning=0,profileIoReady=0,profileIoHighWater=0;
 };
 // Explicit Host-owned development service. create(enabled=false) returns before
 // any Qt thread/socket exists. A dedicated Qt event loop exclusively constructs,

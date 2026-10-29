@@ -4,6 +4,7 @@
 #include "session.hpp"
 #include "leaseset.hpp"
 #include "messages.hpp"
+#include "tracker.hpp"
 #include <QHostAddress>
 #include <QObject>
 #include <memory>
@@ -86,6 +87,11 @@ public:
   void disableDatagramReceiver();
   [[nodiscard]] std::optional<ReceivedDatagram> takeReceivedDatagram();
   [[nodiscard]] ReceiverObservation receiverObservation()const noexcept;
+  // Explicit hash-addressed UDP tracker only, no DNS/backend selection.
+  // One operation; a raw reply never authenticates its purported sender.
+  [[nodiscard]] ConfigResult<std::uint64_t> scrapeTracker(const TrackerRequest&);
+  bool cancelTracker(std::uint64_t operation);
+  [[nodiscard]] std::optional<TrackerObservation> trackerObservation()const;
   [[nodiscard]] State state()const noexcept;
   [[nodiscard]] Failure failure()const noexcept;
   [[nodiscard]] bool socketActive()const noexcept;
@@ -103,6 +109,7 @@ signals:
   void leaseSetSubmitted();
   void datagramChanged(); // Coalesced latest observation, not a result queue.
   void receiverChanged(); // Queued current bounded queue/drop observation.
+  void trackerChanged(); // Queued latest same-generation operation observation.
   void failed(Failure);
   void closed();
 private:

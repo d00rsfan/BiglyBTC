@@ -293,7 +293,8 @@ std::expected<Ticket,Failure> OwnedPingTransport::requestStoreToken(Peer peer,st
   });
 }
 std::expected<void,Failure> OwnedPingTransport::serveDatabase(std::shared_ptr<azureus_router::RouterOwner> router,
-    std::shared_ptr<database::Owner> database,std::function<bool()> current){
+    std::shared_ptr<database::Owner> database,std::function<bool()> current,
+    std::function<bool(std::move_only_function<void()>)> preflight){
   if(!owner()){return std::unexpected(Failure::Thread);}
   if(state_!=State::Bound||normalRouter_||config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply
       ||!router||!database||!current){return std::unexpected(Failure::State);}
@@ -304,7 +305,7 @@ std::expected<void,Failure> OwnedPingTransport::serveDatabase(std::shared_ptr<az
     if(!current()){return std::unexpected(Failure::Authority);}
     auto authority=auth::Authority::create(true);if(!authority){return std::unexpected(Failure::Authority);}
     auto admission=std::make_unique<policy::Admission>();normalContacts_.reserve(config_.maximumPeers);
-    normalRouter_=std::move(router);normalDatabase_=std::move(database);normalCurrent_=std::move(current);
+    normalRouter_=std::move(router);normalDatabase_=std::move(database);normalCurrent_=std::move(current);normalPreflight_=std::move(preflight);
     localId_=local->id;authority_=std::move(*authority);admission_=std::move(admission);return {};
   }catch(...){return std::unexpected(Failure::Authority);}
 }
@@ -466,7 +467,7 @@ void OwnedPingTransport::deliver() {
 }
 void OwnedPingTransport::close() {
   if (!owner() || state_==State::Closed) { return; }
-  normalCurrent_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
+  normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
   if(database_){database_->close();database_.reset();}
   state_=State::Closed;socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
   while (!pending_.empty()) { finish(pending_.begin()->first,std::unexpected(Failure::Closed)); }
@@ -553,6 +554,13 @@ void OwnedPingTransport::sendServiceReply(ServiceReceipt& receipt,std::expected<
   receipt.sent=true;receipt.status=receipt.addressMismatch?ServiceStatus::AddressRejected:ServiceStatus::Replied;++statistics_.sent;
 }
 void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,std::int64_t receivedAt) {
+  if(normalRouter_&&normalPreflight_&&!normalResuming_){
+    auto resumed=[this,peer,request=std::move(request),receivedAt]()mutable{
+      if(state_!=State::Bound||!allowed(peer)){return;}normalResuming_=true;
+      const auto reset=qScopeGuard([&]{normalResuming_=false;});answerService(peer,std::move(request),receivedAt);
+    };
+    if(!normalPreflight_(std::move(resumed))){++statistics_.serviceCapacityDrops;}return;
+  }
   const auto* service=config_.generatedStoreService?&*config_.generatedStoreService:nullptr;
   if(!service&&!normalCurrent()){++statistics_.authorityErrors;return;}
   if (service&&serviceReceipts_.size()>=service->maximumReceipts) { ++statistics_.serviceCapacityDrops;return; }
@@ -674,6 +682,13 @@ std::expected<database::Snapshot,Failure> OwnedPingTransport::databaseState()con
   const auto value=db->snapshot();if(!value){return std::unexpected(Failure::State);}return *value;
 }
 void OwnedPingTransport::answerDatabase(const Peer& peer,const lookup::Decoded& request,std::int64_t receivedAt){
+  if(normalRouter_&&normalPreflight_&&!normalResuming_){
+    auto resumed=[this,peer,request,receivedAt]{
+      if(state_!=State::Bound||!allowed(peer)){return;}normalResuming_=true;
+      const auto reset=qScopeGuard([&]{normalResuming_=false;});answerDatabase(peer,request,receivedAt);
+    };
+    if(!normalPreflight_(std::move(resumed))){++statistics_.serviceCapacityDrops;}return;
+  }
   auto* const db=activeDatabase();if(!db||!nodeCache_||(!config_.generatedStoreService&&!normalCurrent())){return;}
   const auto& incoming=request.header().fields();
   const auto header=[&](std::int32_t action){packet::udp::EncodeFields h;h.kind=packet::udp::Kind::Reply;h.action=action;

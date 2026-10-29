@@ -6,6 +6,8 @@
       std::chrono::steady_clock::time_point deadline;
       azureus::Ticket ticket;
       std::size_t readbackSlices=0;
+      std::deque<std::pair<azureus::FindValueOutcome,std::shared_ptr<void>>> pendingReadback;
+      bool readbackIo=false;
       bool finished=false,cancelled=false;
     };
     std::shared_ptr<Publishing> publishing_;
@@ -14,7 +16,6 @@
       std::int64_t nowMilliseconds()noexcept override{return QDateTime::currentMSecsSinceEpoch();}
     };
     bool initializeLocalDatabase(){
-      if(!options_.valueVersions->validate()){return false;}
       auto made=services::azureus_db_runtime::Owner::create();if(!made){return false;}
       const auto peer=actor_.endpoint();const auto id=routerIdentity(peer,options_.version);if(!id){return false;}
       nodes::Contact contact;contact.protocol=options_.version;contact.id=*id;contact.address.port=peer.port;
@@ -60,15 +61,33 @@
       if(value->cancelled){finishPublish(value,AzureusPublishState::Cancelled,AzureusServiceError::Transport,azureus::Failure::Cancelled);return false;}
       if(std::chrono::steady_clock::now()>=value->deadline){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,azureus::Failure::Timeout);return false;}
       if(!isOwned(value->command.peer)){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid,azureus::Failure::Peer);return false;}
-      auto valid=options_.valueVersions->validate();if(!valid){value->snapshot.profileFailure=valid.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return false;}
-      if(value->command.ratingSubject){auto current=validateRating(value->command);if(!current){value->snapshot.profileFailure=current.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return false;}}
       return true;
     }
     std::chrono::nanoseconds publishRemaining(const Publishing& value)const{return std::chrono::duration_cast<std::chrono::nanoseconds>(value.deadline-std::chrono::steady_clock::now());}
-    void publishReadback(const std::shared_ptr<Publishing>& value){
-      if(!validatePublish(value)){return;}value->snapshot.state=AzureusPublishState::Readback;capturePublish(value);
-      auto sent=actor_.findValue(value->command.peer,options_.version,value->snapshot.key,0,64,this,
-          [this,value](azureus::FindValueOutcome outcome){try{
+    void withPublish(const std::shared_ptr<Publishing>& value,bool reserve,
+        std::move_only_function<void(const ProfileIo::Data&)> step){
+      if(!validatePublish(value)){return;}
+      auto current=[this,value]{bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}return !stop&&livePublish(value)&&!value->cancelled;};
+      auto committed=[this,value,step=std::move(step)](const ProfileIo::Data& data)mutable{if(validatePublish(value)){step(data);}};
+      auto failed=[this,value](storage::Error error){if(!validatePublish(value)){return;}value->snapshot.profileFailure=std::move(error);finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);};
+      if(!deferProfile(value->command,reserve,value->deadline,std::move(current),std::move(committed),std::move(failed),false,
+          [this,value]{finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,azureus::Failure::Timeout);})){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Capacity);}
+    }
+    void queuePublishReadback(const std::shared_ptr<Publishing>& value,azureus::FindValueOutcome outcome){
+      if(!livePublish(value)){return;}
+      if(value->pendingReadback.size()+value->readbackSlices>=64){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Capacity);return;}
+      auto held=holdProfileFrame();if(!held){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Capacity);return;}
+      value->pendingReadback.emplace_back(std::move(outcome),std::move(held));pumpPublishReadback(value);
+    }
+    void pumpPublishReadback(const std::shared_ptr<Publishing>& value){
+      if(!livePublish(value)||value->readbackIo||value->pendingReadback.empty()){return;}
+      value->readbackIo=true;auto batch=std::move(value->pendingReadback);value->pendingReadback.clear();
+      withPublish(value,false,[this,value,batch=std::move(batch)](const auto&)mutable{
+        for(auto& outcome:batch){if(!livePublish(value)){break;}processPublishReadback(value,std::move(outcome.first));}
+        value->readbackIo=false;pumpPublishReadback(value);
+      });
+    }
+    void processPublishReadback(const std::shared_ptr<Publishing>& value,azureus::FindValueOutcome outcome){
         if(!validatePublish(value)){return;}
         if(!outcome){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,outcome.error());return;}
         const auto* reply=std::get_if<azureus::lookup::ReplyBody>(&outcome->body());
@@ -89,7 +108,12 @@
         const bool matching=origin&&bytes&&std::ranges::any_of(value->snapshot.readback,[&](const auto& item){return item.version==local.version()&&item.bytes==*bytes&&item.originator.id==origin->id&&item.originator.address==origin->address&&item.flags==local.flags()&&item.lifeHours==local.lifeTimeHours()&&item.replication==local.replicationControl();});
         if(!matching){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Readback);return;}
         finishPublish(value,AzureusPublishState::Complete);
-      }catch(...){publicationMemoryFailure();}},publishRemaining(*value));
+
+    }
+    void publishReadback(const std::shared_ptr<Publishing>& value){
+      if(!validatePublish(value)){return;}value->snapshot.state=AzureusPublishState::Readback;capturePublish(value);
+      auto sent=actor_.findValue(value->command.peer,options_.version,value->snapshot.key,0,64,this,
+          [this,value](azureus::FindValueOutcome outcome){try{queuePublishReadback(value,std::move(outcome));}catch(...){publicationMemoryFailure();}},publishRemaining(*value));
       if(!sent){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,sent.error());return;}value->ticket=*sent;
     }
     void publishStore(const std::shared_ptr<Publishing>& value,std::int32_t token){
@@ -98,30 +122,33 @@
       if(!origin||!payload){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}
       azureus::StoreRequest request;request.randomId=token;request.keys={std::string(reinterpret_cast<const char*>(value->snapshot.key.data()),value->snapshot.key.size())};
       request.valueSets={{{local.version(),local.creationTime(),std::string(*payload),*origin,local.flags(),local.lifeTimeHours(),local.replicationControl()}}};
-      auto sent=actor_.store(value->command.peer,options_.version,std::move(request),this,[this,value](azureus::StoreOutcome outcome){try{
+      auto sent=actor_.store(value->command.peer,options_.version,std::move(request),this,[this,value](azureus::StoreOutcome outcome){try{withPublish(value,false,[this,value,outcome=std::move(outcome)](const auto&)mutable{
         if(!validatePublish(value)){return;}
         if(!outcome){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,outcome.error());return;}
         const auto* decoded=std::get_if<azureus::storage::Decoded>(&*outcome);const auto* reply=decoded?std::get_if<azureus::storage::ReplyBody>(&decoded->body()):nullptr;
         if(!reply||!reply->diversification||*reply->diversification!=std::string(1,char(1))){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,azureus::Failure::Remote);return;}
         publishReadback(value);
-      }catch(...){publicationMemoryFailure();}},publishRemaining(*value));
+
+      });      }catch(...){publicationMemoryFailure();}},publishRemaining(*value));
       if(!sent){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,sent.error());return;}value->ticket=*sent;
     }
     void beginPublish(const Command& command){
       if((publishing_&&!publishing_->finished)||!localDatabase_||!options_.valueVersions){failCommand(command,AzureusServiceError::Capacity);return;}
-      auto value=std::make_shared<Publishing>();value->command=command;value->deadline=std::chrono::steady_clock::now()+command.timeout;value->snapshot.request=command.id;
+      auto value=std::make_shared<Publishing>();value->command=command;value->deadline=command.deadline;value->snapshot.request=command.id;
       const auto digest=QCryptographicHash::hash(QByteArray(command.applicationKey.data(),static_cast<qsizetype>(command.applicationKey.size())),QCryptographicHash::Sha1);
       std::copy_n(reinterpret_cast<const std::uint8_t*>(digest.constData()),value->snapshot.key.size(),value->snapshot.key.begin());publishing_=value;
-      if(!validatePublish(value)){return;}PublicationClock clock;auto version=options_.valueVersions->next(clock.nowMilliseconds());
-      if(!version){value->snapshot.profileFailure=version.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return;}
+      withPublish(value,true,[this,value,command](const ProfileIo::Data& data){
+      if(!data.version){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return;}PublicationClock clock;const auto version=*data.version;
       const auto key=std::string_view(reinterpret_cast<const char*>(value->snapshot.key.data()),value->snapshot.key.size());
-      auto local=localDatabase_->putLocal(key,command.payload,*version,clock,command.publicationFlags);if(!local){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}value->snapshot.localValue=std::move(*local);
+      auto local=localDatabase_->putLocal(key,command.payload,version,clock,command.publicationFlags);if(!local){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}value->snapshot.localValue=std::move(*local);
       if(!validatePublish(value)){return;}value->snapshot.state=AzureusPublishState::Token;capturePublish(value);
-      auto sent=actor_.requestStoreToken(command.peer,options_.version,this,[this,value](azureus::DetailedFindNodeOutcome outcome){try{
+      auto sent=actor_.requestStoreToken(command.peer,options_.version,this,[this,value](azureus::DetailedFindNodeOutcome outcome){try{withPublish(value,false,[this,value,outcome=std::move(outcome)](const auto&)mutable{
         if(!validatePublish(value)){return;}
         if(!outcome){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,outcome.error());return;}
         const auto* decoded=std::get_if<azureus::find::Decoded>(&*outcome);const auto* reply=decoded?std::get_if<azureus::find::ReplyBody>(&decoded->body()):nullptr;
         if(!reply){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,azureus::Failure::Remote);return;}publishStore(value,reply->randomId);
-      }catch(...){publicationMemoryFailure();}},publishRemaining(*value));
+
+      });      }catch(...){publicationMemoryFailure();}},publishRemaining(*value));
       if(!sent){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,sent.error());return;}value->ticket=*sent;publish();
+      });
     }

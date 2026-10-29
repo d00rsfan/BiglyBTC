@@ -60,7 +60,7 @@ private:
       : active_(active), device_(device), inode_(inode), activeDevice_(activeDevice), activeInode_(activeInode) {}
   std::expected<void, Error> validate(const ProfileLease& lease) const;
   std::expected<void, Error> saveInternal(TorrentStateFile& state,
-      void (*observer)(StateSaveStage)) const;
+      void (*observer)(StateSaveStage), ProfileSourceAccess* access=nullptr) const;
   std::expected<void, Error> removeCachedEntry(TorrentStateFile& state) const;
   int active_;
   std::uint64_t device_;

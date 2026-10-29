@@ -1,4 +1,6 @@
 #include "owned_azureus_service.hpp"
+#include "azureus_profile_io.hpp"
+#include <QScopeGuard>
 #include <QAbstractEventDispatcher>
 #include <QCoreApplication>
 #include <QCryptographicHash>
@@ -8,6 +10,7 @@
 #include <algorithm>
 #include <array>
 #include <condition_variable>
+#include <deque>
 #include <limits>
 #include <mutex>
 #include <new>
@@ -25,6 +28,7 @@ struct OwnedAzureusService::Command {
   azureus::find::nodes::NodeId node{};
   std::int32_t flags=0,maximumValues=0;
   std::chrono::nanoseconds timeout=std::chrono::seconds(2);
+  std::chrono::steady_clock::time_point deadline{};
   std::string applicationKey,payload;
   AzureusPublicationFlags publicationFlags=AzureusPublicationFlags::Normal;
   std::optional<core::TorrentHash> ratingHash;
@@ -69,28 +73,37 @@ struct OwnedAzureusService::Impl {
     azureus::Peer endpoint;
     AzureusServiceObservation value;
     bool ready=false,stop=false;
+    std::shared_ptr<detail::AzureusProfileIo> profileIo;
+    std::uint64_t ratingRevision=0;
     std::uint64_t nextRequest=0;
     void advance(){if(value.sequence!=std::numeric_limits<std::uint64_t>::max()){++value.sequence;}else{value.current=false;value.error=AzureusServiceError::Capacity;}}
   };
   class Owner final:public QObject {
   public:
     Owner(std::shared_ptr<State> state,const AzureusServiceOptions& options,QEventLoop& loop)
-        :state_(std::move(state)),options_(options),loop_(loop),actor_(configuration(options)){}
+        :state_(std::move(state)),options_(options),loop_(loop),actor_(configuration(options)){
+      ioDeadline_.setSingleShot(true);QObject::connect(&ioDeadline_,&QChronoTimer::timeout,this,[this]{drainProfileIo();});
+    }
+    bool event(QEvent* value)override{
+      if(state_->profileIo&&value->type()==ProfileIo::wakeEvent()){if(state_->profileIo){state_->profileIo->drainWake();}drainProfileIo();return true;}
+      return QObject::event(value);
+    }
     std::expected<void,azureus::Failure> start(){
+      if(state_->profileIo){state_->profileIo->bind(this);}
       auto started=actor_.start(options_.bindAddress);if(!started){return started;}initializeRouter();
       if(options_.valueVersions&&!initializeLocalDatabase()){return std::unexpected(azureus::Failure::State);}
       if(options_.serveValues){
         if(!router_||!localDatabase_){return std::unexpected(azureus::Failure::State);}
-        const auto bound=actor_.serveDatabase(router_,localDatabase_,[this]{
+        profilePermit_=true;const auto bound=actor_.serveDatabase(router_,localDatabase_,[this]{
           {std::lock_guard lock(state_->mutex);if(state_->stop){return false;}}
-          if(!router_){return false;}const auto valid=options_.valueVersions->validate();
-          std::lock_guard lock(state_->mutex);return bool(valid)&&!state_->stop;
-        });if(!bound){return bound;}
+          return bool(router_)&&profilePermit_;
+        },[this](std::move_only_function<void()> resume){return normalProfileRequest(std::move(resume));});profilePermit_=false;if(!bound){return bound;}
       }return started;
     }
     azureus::Peer endpoint()const{return actor_.endpoint();}
-    void idle(){bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}if(stop){loop_.quit();return;}publish();}
+    void idle(){drainProfileIo();bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}if(stop){loop_.quit();return;}publish();}
     void command(Command value){
+      if(value.deadline==std::chrono::steady_clock::time_point{}){value.deadline=std::chrono::steady_clock::now()+value.timeout;}
       {std::lock_guard lock(state_->mutex);if(state_->stop){releaseLocked();state_->advance();return;}}
       try{
         if(value.kind==AzureusServiceCommand::AllowPeer){auto allowed=actor_.allowPeer(value.peer);if(allowed){rememberOwned(value.peer);routerKnown(value.peer);}complete(value,allowed);return;}
@@ -99,12 +112,17 @@ struct OwnedAzureusService::Impl {
         if(value.kind==AzureusServiceCommand::PublishRating||value.kind==AzureusServiceCommand::ReadRatings){beginRating(std::move(value));return;}
         if(value.kind==AzureusServiceCommand::Cancel){
           if(ratingRead_&&ratingRead_->command.id==value.target&&!ratingRead_->finished){
-            ratingRead_->cancelled=true;const bool cancelled=actor_.cancel(ratingRead_->ticket);
+            ratingRead_->cancelled=true;const bool cancelled=actor_.cancel(ratingRead_->ticket)||bool(state_->profileIo);finishRatingRead(ratingRead_,AzureusRatingReadState::Cancelled,AzureusServiceError::Transport,azureus::Failure::Cancelled);drainProfileIo();
             complete(value,cancelled?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));return;
           }
           if(publishing_&&publishing_->command.id==value.target&&!publishing_->finished){
-            publishing_->cancelled=true;const bool cancelled=actor_.cancel(publishing_->ticket);
+            publishing_->cancelled=true;const bool cancelled=actor_.cancel(publishing_->ticket)||bool(state_->profileIo);finishPublish(publishing_,AzureusPublishState::Cancelled,AzureusServiceError::Transport,azureus::Failure::Cancelled);drainProfileIo();
             complete(value,cancelled?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));return;
+          }
+          for(auto& pending:ioSlots_){
+            if(pending.job&&pending.command==value.target&&!pending.consumed&&!pending.expiryNotified&&pending.cancelled){
+              ProfileIo::revoke(pending.job);auto cancelled=std::move(pending.cancelled);cancelled();drainProfileIo();complete(value,{});return;
+            }
           }
           if(lookupCommand_&&lookupCommand_->id==value.target&&!lookupResultPublished_){
             const auto cancelled=lookup_->cancel(lookupNow());pumpLookup();
@@ -125,7 +143,9 @@ struct OwnedAzureusService::Impl {
       }catch(...){for(auto& slot:active_){if(slot.id==value.id){slot.id=0;}}failCommand(value,AzureusServiceError::Memory);{std::lock_guard lock(state_->mutex);state_->stop=true;state_->value.current=false;state_->value.error=AzureusServiceError::Memory;state_->value.state=AzureusServiceState::Closing;state_->advance();}loop_.quit();}
     }
     void shutdown()noexcept{
+      ioDeadline_.stop();
       bool closed=true;try{actor_.close();}catch(...){closed=false;}
+      if(state_->profileIo){state_->profileIo->requestStop();}
       if(closed){
         if(publishing_&&!publishing_->finished){try{finishPublish(publishing_,AzureusPublishState::Closed,AzureusServiceError::Closed,azureus::Failure::Closed);}catch(...){publicationMemoryFailure();}}
         if(ratingRead_&&!ratingRead_->finished){try{finishRatingRead(ratingRead_,AzureusRatingReadState::Closed,AzureusServiceError::Closed,azureus::Failure::Closed);}catch(...){publicationMemoryFailure();}}
@@ -146,6 +166,7 @@ struct OwnedAzureusService::Impl {
     }
   private:
     struct Active {std::uint64_t id=0;azureus::Ticket ticket;};
+    #include "azureus_profile_io_owner.inc"
     #include "azureus_local_publish.inc"
     #include "azureus_rating_consumer.inc"
 
@@ -407,7 +428,7 @@ struct OwnedAzureusService::Impl {
   protected:
     void run()override{
       try{
-        QEventLoop loop;Owner owner(state_,options_,loop);struct Unbind{std::shared_ptr<State> state;~Unbind(){std::lock_guard lock(state->mutex);state->owner=nullptr;state->dispatcher=nullptr;}} unbind{state_};auto* dispatcher=QAbstractEventDispatcher::instance();const auto started=owner.start();
+        QEventLoop loop;Owner owner(state_,options_,loop);struct Unbind{std::shared_ptr<State> state;~Unbind(){if(state->profileIo){state->profileIo->unbind();}std::lock_guard lock(state->mutex);state->owner=nullptr;state->dispatcher=nullptr;}} unbind{state_};auto* dispatcher=QAbstractEventDispatcher::instance();const auto started=owner.start();
         if(!started||!dispatcher){failure(AzureusServiceError::Start,started?std::optional<azureus::Failure>{}:started.error());return;}
         const auto connection=QObject::connect(dispatcher,&QAbstractEventDispatcher::aboutToBlock,&owner,[&owner]{owner.idle();},Qt::DirectConnection);
         {std::lock_guard lock(state_->mutex);state_->owner=&owner;state_->dispatcher=dispatcher;state_->endpoint=owner.endpoint();state_->value.state=AzureusServiceState::Running;state_->advance();}
@@ -422,7 +443,9 @@ struct OwnedAzureusService::Impl {
     }
     std::shared_ptr<State> state_;AzureusServiceOptions options_;
   };
-  explicit Impl(AzureusServiceOptions options):options(std::move(options)),thread(state,this->options){}
+  explicit Impl(AzureusServiceOptions options):options(std::move(options)),thread(state,this->options){
+    if(this->options.valueVersions){state->profileIo=std::make_shared<detail::AzureusProfileIo>(this->options.valueVersions->profileOwnership());}
+  }
   std::shared_ptr<State> state=std::make_shared<State>();
   AzureusServiceOptions options;
   Thread thread;
@@ -431,10 +454,11 @@ struct OwnedAzureusService::Impl {
 OwnedAzureusService::OwnedAzureusService(std::unique_ptr<Impl> impl):impl_(std::move(impl)){}
 std::expected<std::unique_ptr<OwnedAzureusService>,AzureusServiceError> OwnedAzureusService::create(AzureusServiceOptions options){
   if(!options.enabled){return std::unexpected(AzureusServiceError::Disabled);}if(!validOptions(options)){return std::unexpected(AzureusServiceError::Invalid);}
-  if(options.valueVersions&&!options.valueVersions->validate()){return std::unexpected(AzureusServiceError::Profile);}
   if(!QCoreApplication::instance()||QCoreApplication::closingDown()){return std::unexpected(AzureusServiceError::NoApplication);}
   try{
-    auto service=std::unique_ptr<OwnedAzureusService>(new OwnedAzureusService(std::make_unique<Impl>(std::move(options))));service->impl_->thread.start();
+    auto service=std::unique_ptr<OwnedAzureusService>(new OwnedAzureusService(std::make_unique<Impl>(std::move(options))));
+    if(service->impl_->state->profileIo&&!service->impl_->state->profileIo->initialize(service->impl_->options.valueVersions)){return std::unexpected(AzureusServiceError::Profile);}
+    service->impl_->thread.start();
     auto& state=*service->impl_->state;std::unique_lock lock(state.mutex);
     const bool ready=state.readyCondition.wait_for(lock,std::chrono::seconds(5),[&]{return state.ready;});
     const auto error=!ready?std::optional{AzureusServiceError::Start}:state.value.state==AzureusServiceState::Failed?state.value.error:std::nullopt;lock.unlock();
@@ -443,7 +467,14 @@ std::expected<std::unique_ptr<OwnedAzureusService>,AzureusServiceError> OwnedAzu
 }
 OwnedAzureusService::~OwnedAzureusService(){(void)close();}
 azureus::Peer OwnedAzureusService::endpoint()const{std::lock_guard lock(impl_->state->mutex);return impl_->state->endpoint;}
-AzureusServiceObservation OwnedAzureusService::observation()const{std::lock_guard lock(impl_->state->mutex);return impl_->state->value;}
+AzureusServiceObservation OwnedAzureusService::observation()const{
+  std::lock_guard lock(impl_->state->mutex);auto value=impl_->state->value;
+  if(impl_->state->profileIo){const auto facts=impl_->state->profileIo->facts();value.profileIoPending=facts.pending;value.profileIoRunning=facts.running;value.profileIoReady=facts.ready;value.profileIoHighWater=facts.highWater;}
+  if(value.ratingReadSnapshot&&value.ratingReadSnapshot->current&&impl_->state->profileIo
+      &&(impl_->state->stop||impl_->state->ratingRevision!=impl_->state->profileIo->lease()->sourceRevision())){
+    auto withdrawn=std::make_shared<AzureusRatingReadSnapshot>(*value.ratingReadSnapshot);withdrawn->current=false;withdrawn->ratings=plugins::rating::RatingResults{};withdrawn->localFallback=false;withdrawn->state=AzureusRatingReadState::Failed;withdrawn->error=AzureusServiceError::Profile;value.ratingReadSnapshot=std::move(withdrawn);
+  }return value;
+}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::submit(Command value){
   auto& state=*impl_->state;std::lock_guard lock(state.mutex);
   if(state.stop||state.value.state!=AzureusServiceState::Running||!state.owner){return std::unexpected(AzureusServiceError::Closed);}
@@ -475,7 +506,9 @@ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::cancel(std
 std::expected<void,AzureusServiceError> OwnedAzureusService::close(){
   if(QThread::currentThread()==&impl_->thread){return std::unexpected(AzureusServiceError::Thread);}std::lock_guard lifecycle(impl_->closeMutex);auto& state=*impl_->state;
   {std::lock_guard lock(state.mutex);if(state.value.joined){return {}; }state.stop=true;state.value.current=false;if(state.value.state==AzureusServiceState::Running){state.value.state=AzureusServiceState::Closing;state.advance();}if(state.dispatcher){state.dispatcher->wakeUp();}}
+  if(state.profileIo){state.profileIo->requestStop();}
   if(!impl_->thread.wait()){return std::unexpected(AzureusServiceError::Thread);}
+  if(state.profileIo){state.profileIo->join();}
   std::lock_guard lock(state.mutex);state.value.joined=true;state.advance();return {};
 }
 } // namespace biglybtc::app

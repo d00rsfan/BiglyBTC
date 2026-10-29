@@ -6,6 +6,11 @@
 #include <filesystem>
 #include <optional>
 #include <memory>
+#include <atomic>
+#include <mutex>
+#include <limits>
+#include <utility>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
@@ -17,6 +22,44 @@ struct Error {
   std::string message;
 };
 
+// One cooperative source lineage, minted only by an actual OFD acquisition.
+// No filesystem access occurs while reading its revision. Hostile external
+// pathname replacement still requires the existing held-FD/CAS checks.
+struct ProfileSourceState final {
+  std::recursive_mutex mutex;
+  unsigned depth=0; // Protected by mutex; nested accesses are same-thread only.
+  std::atomic<std::uint64_t> revision{1};
+};
+class ProfileSourceAccess final {
+public:
+  ProfileSourceAccess(ProfileSourceAccess&& other)noexcept
+      :state_(std::move(other.state_)),lock_(std::move(other.lock_)),writing_(other.writing_){}
+  ProfileSourceAccess& operator=(ProfileSourceAccess&& other)noexcept{
+    if(this!=&other){if(lock_.owns_lock()){--state_->depth;}lock_=std::move(other.lock_);state_=std::move(other.state_);writing_=other.writing_;}return *this;
+  }
+  ~ProfileSourceAccess(){if(lock_.owns_lock()){--state_->depth;}}
+  ProfileSourceAccess(const ProfileSourceAccess&)=delete;
+  std::uint64_t revision()const noexcept{return state_->revision.load();}
+  bool observationsAllowed()const noexcept{return lock_.owns_lock()&&state_->depth==1;}
+  // Existing diagnostic/fault observers are reentrant user code. Never invoke
+  // them under this gate; reacquisition starts a new cooperative write epoch.
+  template<class F> void outside(F&& callback){
+    if(!observationsAllowed()){throw std::logic_error("Nested source access cannot invoke observers");}
+    --state_->depth;lock_.unlock();
+    const auto reacquire=[&]{lock_.lock();++state_->depth;if(writing_){advance();}};
+    try{std::forward<F>(callback)();}catch(...){reacquire();throw;}
+    reacquire();
+    if(!observationsAllowed()){throw std::logic_error("Observer retained another source access");}
+  }
+private:
+  friend class ProfileLease;
+  ProfileSourceAccess(std::shared_ptr<ProfileSourceState> state,bool writing)
+      :state_(std::move(state)),lock_(state_->mutex),writing_(writing){++state_->depth;if(writing_){advance();}}
+  void advance()noexcept{auto value=state_->revision.load();if(value!=std::numeric_limits<std::uint64_t>::max()){state_->revision.store(value+1);}}
+  std::shared_ptr<ProfileSourceState> state_;
+  std::unique_lock<std::recursive_mutex> lock_;
+  bool writing_;
+};
 class ProfileLease final {
 public:
   static std::expected<ProfileLease, Error> acquire(const std::filesystem::path& profile);
@@ -34,14 +77,23 @@ public:
   bool sharesOwnership(const ProfileLease& other) const noexcept {
     return valid() && other.valid() && ownership_ && ownership_ == other.ownership_;
   }
+  // Lock order: source gate, then an adapter's own writer mutex. Network code
+  // consumes an I/O-worker-held permit and must never acquire this gate.
+  std::expected<ProfileSourceAccess,Error> sourceAccess(bool writing=false)const {
+    if(!valid()||!ownership_){return std::unexpected(Error{ErrorCode::Conflict,"Profile source ownership is released"});}
+    auto result=ProfileSourceAccess(ownership_,writing);
+    if(result.revision()==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Error{ErrorCode::Conflict,"Profile source revision exhausted"});}
+    return result;
+  }
+  std::uint64_t sourceRevision()const noexcept{return ownership_?ownership_->revision.load():0;}
   int directoryHandle() const { return directory_; }
   bool valid() const { return directory_ >= 0 && lock_ >= 0; }
 private:
-  ProfileLease(int directory, int lock, std::shared_ptr<const unsigned char> ownership)
+  ProfileLease(int directory, int lock, std::shared_ptr<ProfileSourceState> ownership)
       : directory_(directory), lock_(lock), ownership_(std::move(ownership)) {}
   int directory_ = -1;
   int lock_ = -1;
-  std::shared_ptr<const unsigned char> ownership_;
+  std::shared_ptr<ProfileSourceState> ownership_;
 };
 
 enum class RecoverySource { Primary, Backup, Saving };

@@ -7,18 +7,14 @@
       std::chrono::steady_clock::time_point deadline;
       azureus::Ticket ticket;
       std::size_t slices=0;
+      std::deque<std::pair<azureus::FindValueOutcome,std::shared_ptr<void>>> pending;
+      bool profileIo=false;
       bool finished=false,cancelled=false;
     };
     std::shared_ptr<RatingRead> ratingRead_;
     std::expected<void,storage::Error> validateRating(const Command& command){
       if(!ratingLease_||!command.ratingHash||!command.ratingSubject||options_.network!=0){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"No bound rating Public DDB context"});}
-      auto valid=options_.valueVersions->validate();if(!valid){return valid;}
-      auto current=storage::readDistributedRating(*ratingLease_,*command.ratingHash);
-      if(!current){return std::unexpected(current.error());}
-      if(current->sourceRevision!=command.ratingRevision||current->sourceRevision!=command.ratingSubject->sourceRevision
-          ||current->local.attributesRevision!=command.ratingSubject->local.attributesRevision||current->key!=command.ratingSubject->key){
-        return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Saved rating identity, permissions or attributes changed"});
-      }
+      if(!profilePermit_||profileCommand_!=command.id){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"No current rating source permit"});}
       {std::lock_guard lock(state_->mutex);if(state_->stop){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Rating owner is closing"});}}
       return {};
     }
@@ -31,17 +27,31 @@
       state_->value.ratingReadSnapshot=std::move(withdrawn);state_->advance();
     }
     void refreshRatingObservation(){
+      if(profilePermit_||drainingIo_){return;}if(passiveSkip_){passiveSkip_=false;return;}
       bool current=false;{std::lock_guard lock(state_->mutex);current=state_->value.ratingReadSnapshot&&state_->value.ratingReadSnapshot->current;}
-      if(current&&ratingRead_&&ratingRead_->finished&&!validateRating(ratingRead_->command)){withdrawRatings();}
+      if(!current||!ratingRead_||!ratingRead_->finished||passiveIo_){return;}passiveIo_=true;auto value=ratingRead_;
+      const auto fresh=[this,value]{return ratingRead_==value&&value->finished;};
+      if(!deferProfile(value->command,false,std::chrono::steady_clock::time_point::max(),fresh,
+          [this](const auto& data){passiveIo_=false;std::lock_guard lock(state_->mutex);state_->ratingRevision=data.revision;},
+          [this](storage::Error){passiveIo_=false;withdrawRatings();},true)){passiveIo_=false;withdrawRatings();}
     }
     void beginRating(Command command){
       if(!options_.valueVersions||options_.network!=0||!command.ratingHash||!isOwned(command.peer)){
         failCommand(command,AzureusServiceError::Invalid);return;
       }
-      if(!ratingLease_){auto lease=options_.valueVersions->retainProfile();if(!lease){failCommand(command,AzureusServiceError::Profile);return;}ratingLease_=std::move(*lease);}
-      auto current=storage::readDistributedRating(*ratingLease_,*command.ratingHash);
-      if(!current||current->sourceRevision!=command.ratingRevision){withdrawRatings();failCommand(command,AzureusServiceError::Profile);return;}
-      command.ratingSubject=std::make_shared<const storage::DistributedRatingSnapshot>(std::move(*current));
+      ratingLease_=state_->profileIo->lease();
+      auto settled=std::make_shared<bool>(false);
+      auto current=[this,command,settled]{std::lock_guard lock(state_->mutex);return !*settled&&!state_->stop&&isOwned(command.peer);};
+      if(!deferProfile(command,false,command.deadline,std::move(current),
+          [this,command,settled](const ProfileIo::Data& data)mutable{
+            if(std::exchange(*settled,true)){return;}
+            if(!data.rating){failCommand(command,AzureusServiceError::Profile);return;}
+            command.ratingSubject=data.rating;beginRatingPrepared(std::move(command));
+          },[this,command,settled](storage::Error){if(std::exchange(*settled,true)){return;}withdrawRatings();failCommand(command,AzureusServiceError::Profile);},false,
+          [this,command,settled]{if(!std::exchange(*settled,true)){reply(command,azureus::Failure::Timeout,true);}},
+          [this,command,settled]{if(!std::exchange(*settled,true)){reply(command,azureus::Failure::Cancelled,true);}})){failCommand(command,AzureusServiceError::Capacity);}
+    }
+    void beginRatingPrepared(Command command){
       const auto& source=*command.ratingSubject;
       command.applicationKey.assign(reinterpret_cast<const char*>(source.key.data()),source.key.size());
       const auto digest=QCryptographicHash::hash(QByteArray(command.applicationKey.data(),static_cast<qsizetype>(command.applicationKey.size())),QCryptographicHash::Sha1);
@@ -54,14 +64,14 @@
         command.payload=std::move(*encoded);command.publicationFlags=AzureusPublicationFlags::Anonymous;beginPublish(command);return;
       }
       if(ratingRead_&&!ratingRead_->finished){failCommand(command,AzureusServiceError::Capacity);return;}
-      auto value=std::make_shared<RatingRead>();value->command=command;value->deadline=std::chrono::steady_clock::now()+command.timeout;
+      auto value=std::make_shared<RatingRead>();value->command=command;value->deadline=command.deadline;
       value->snapshot.request=command.id;value->snapshot.hash=command.ratingHash;value->snapshot.sourceRevision=command.ratingRevision;value->snapshot.key=command.node;ratingRead_=value;
       if(!validateRatingRead(value)){return;}
       auto snapshot=std::make_shared<const AzureusRatingReadSnapshot>(value->snapshot);
       {std::lock_guard lock(state_->mutex);state_->value.ratingReadSnapshot=std::move(snapshot);state_->advance();}
       const auto remaining=std::chrono::duration_cast<std::chrono::nanoseconds>(value->deadline-std::chrono::steady_clock::now());
       auto submitted=actor_.findValue(command.peer,options_.version,command.node,0,64,this,[this,value](azureus::FindValueOutcome outcome){
-        try{ratingReply(value,std::move(outcome));}catch(...){publicationMemoryFailure();}
+        try{queueRatingReply(value,std::move(outcome));}catch(...){publicationMemoryFailure();}
       },remaining);
       if(!submitted){finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Transport,submitted.error());return;}value->ticket=*submitted;publish();
     }
@@ -101,7 +111,26 @@
       std::lock_guard lock(state_->mutex);
       if(state_->stop){snapshot->state=AzureusRatingReadState::Closed;snapshot->error=AzureusServiceError::Closed;snapshot->transportFailure=azureus::Failure::Closed;snapshot->current=false;snapshot->ratings=plugins::rating::RatingResults{};snapshot->localFallback=false;}
       else if(result==AzureusRatingReadState::Complete&&std::chrono::steady_clock::now()>=value->deadline){snapshot->state=AzureusRatingReadState::TimedOut;snapshot->error=AzureusServiceError::Transport;snapshot->transportFailure=azureus::Failure::Timeout;}
+      if(snapshot->current){state_->ratingRevision=profileRevision_;}
       releaseLocked();state_->value.lastResult=AzureusServiceResult{value->command.id,0,AzureusServiceCommand::ReadRatings,true,snapshot->error,snapshot->transportFailure};state_->value.ratingReadSnapshot=std::move(snapshot);state_->advance();
+    }
+    void queueRatingReply(const std::shared_ptr<RatingRead>& value,azureus::FindValueOutcome outcome){
+      if(ratingRead_!=value||value->finished){return;}
+      auto held=holdProfileFrame();if(!held||value->pending.size()+value->slices>=64){finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Capacity);return;}
+      value->pending.emplace_back(std::move(outcome),std::move(held));pumpRatingReplies(value);
+    }
+    void pumpRatingReplies(const std::shared_ptr<RatingRead>& value){
+      if(ratingRead_!=value||value->finished||value->profileIo||value->pending.empty()){return;}
+      value->profileIo=true;auto batch=std::move(value->pending);value->pending.clear();
+      auto current=[this,value]{bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}return !stop&&ratingRead_==value&&!value->finished&&!value->cancelled;};
+      if(!deferProfile(value->command,false,value->deadline,std::move(current),
+          [this,value,batch=std::move(batch)](const auto&)mutable{
+            for(auto& item:batch){if(value->finished){break;}ratingReply(value,std::move(item.first));}
+            value->profileIo=false;pumpRatingReplies(value);
+          },[this,value](storage::Error error){
+            value->profileIo=false;if(value->finished){return;}value->snapshot.profileFailure=std::move(error);
+            finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Profile);
+          },true)){value->profileIo=false;finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Capacity);}
     }
     void ratingReply(const std::shared_ptr<RatingRead>& value,azureus::FindValueOutcome outcome){
       if(!validateRatingRead(value)){return;}

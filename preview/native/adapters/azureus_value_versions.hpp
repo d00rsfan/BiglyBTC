@@ -25,6 +25,8 @@ public:
   AzureusValueVersions(const AzureusValueVersions&)=delete;
   AzureusValueVersions& operator=(const AzureusValueVersions&)=delete;
   std::int32_t network()const noexcept;
+  // Owning alias only: no filesystem validation and no network authority.
+  std::shared_ptr<const ProfileLease> profileOwnership()const noexcept;
   std::expected<void,Error> validate() const;
   // Explicit retained alias of this SAME profile OFD, after current version
   // validation. Consumers own the alias; no borrowed caller lease is exposed.

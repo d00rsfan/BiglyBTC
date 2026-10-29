@@ -53,9 +53,10 @@ struct AzureusValueVersions::Impl {
 AzureusValueVersions::AzureusValueVersions(std::unique_ptr<Impl> value):impl_(std::move(value)){}
 AzureusValueVersions::~AzureusValueVersions()=default;
 std::int32_t AzureusValueVersions::network()const noexcept{return impl_->network;}
+std::shared_ptr<const ProfileLease> AzureusValueVersions::profileOwnership()const noexcept{return impl_->lease;}
 std::expected<std::shared_ptr<AzureusValueVersions>,Error> AzureusValueVersions::open(const ProfileLease& source,std::int32_t network){
   try{
-    if(network<0){return error(ErrorCode::InvalidFormat,"Invalid Azureus network");}auto held=source.retain();if(!held){return std::unexpected(held.error());}
+    if(network<0){return error(ErrorCode::InvalidFormat,"Invalid Azureus network");}auto access=source.sourceAccess(true);if(!access){return std::unexpected(access.error());}auto held=source.retain();if(!held){return std::unexpected(held.error());}
     auto out=std::make_unique<Impl>();out->lease=std::move(*held);out->network=network;auto dht=directory(out->lease->directoryHandle(),"dht");if(!dht){return std::unexpected(dht.error());}out->dht=std::move(*dht);
     if(network){out->netName="net"+std::to_string(network);auto net=directory(out->dht.get(),out->netName);if(!net){return std::unexpected(net.error());}out->net=std::move(*net);}
     auto primary=capture(out->dir(),"version.dat"),pending=capture(out->dir(),"version.saving");if(!primary){return std::unexpected(primary.error());}if(!pending){return std::unexpected(pending.error());}
@@ -75,12 +76,13 @@ std::expected<std::shared_ptr<AzureusValueVersions>,Error> AzureusValueVersions:
   }catch(...){return error(ErrorCode::Io,"Cannot allocate Azureus version owner");}
 }
 std::expected<std::shared_ptr<const ProfileLease>,Error> AzureusValueVersions::retainProfile()const{
-  try{std::lock_guard guard(impl_->mutex);auto valid=impl_->validate();if(!valid){return std::unexpected(valid.error());}return impl_->lease->retain();}
+  try{auto access=impl_->lease->sourceAccess();if(!access){return std::unexpected(access.error());}std::lock_guard guard(impl_->mutex);auto valid=impl_->validate();if(!valid){return std::unexpected(valid.error());}return impl_->lease->retain();}
   catch(...){return error(ErrorCode::Io,"Cannot retain Azureus value profile");}
 }
-std::expected<void,Error> AzureusValueVersions::validate()const {try{std::lock_guard guard(impl_->mutex);return impl_->validate();}catch(...){return error(ErrorCode::Io,"Cannot validate Azureus version owner");}}
+std::expected<void,Error> AzureusValueVersions::validate()const {try{auto access=impl_->lease->sourceAccess();if(!access){return std::unexpected(access.error());}std::lock_guard guard(impl_->mutex);return impl_->validate();}catch(...){return error(ErrorCode::Io,"Cannot validate Azureus version owner");}}
 std::expected<std::int32_t,Error> AzureusValueVersions::next(std::int64_t now){
   try{
+    auto access=impl_->lease->sourceAccess(true);if(!access){return std::unexpected(access.error());}
     std::lock_guard guard(impl_->mutex);auto valid=impl_->validate();if(!valid){return std::unexpected(valid.error());}
     if(!impl_->remaining){
       auto doc=parse(impl_->primary.bytes.value_or("de"));if(!doc){return std::unexpected(doc.error());}const auto* saved=doc->find("next");const auto reserved=originalAzureusVersionReservation(saved?std::optional{saved->integer}:std::nullopt,now);
