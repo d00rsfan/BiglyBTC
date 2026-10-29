@@ -30,6 +30,14 @@ bool sourceQueueQueuedScrapeEligible(const QueueOriginalScrapeResponse& response
 }
 namespace {
 std::int32_t trackerInt(std::int64_t value) noexcept {return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(value));}
+bool mutatesOriginalScrape(const QueueTrackerTerminal& value) noexcept {
+  if(value.kind==QueueTrackerTerminalKind::AnnounceFailed){return false;}
+  if(value.kind!=QueueTrackerTerminalKind::Announce){return true;}
+  // cb8 BTAnnouncer4184: no count branch, unknown protocol fields or negative
+  // Java-int seed/peer counts leave the existing scraper object unchanged.
+  return value.comparable&&value.present&&(!(value.present&1)||trackerInt(value.complete)>=0)
+      &&(!(value.present&2)||trackerInt(value.incomplete)>=0);
+}
 }
 QueueOriginalScrapeResponse QueueOriginalTrackerResponse::response()const noexcept {
   if(!known_){return {};}
@@ -50,6 +58,8 @@ bool QueueOriginalTrackerResponse::regularDue(std::int64_t now)const noexcept {
 }
 bool QueueOriginalTrackerResponse::observeChronological(const QueueTrackerTerminal& value,std::int64_t stamp) noexcept {
   if(stamp<=0||value.observedMillis<0||(value.present&~7u)){unavailable();return false;}
+  // An inapplicable announce cannot displace a real scrape still in the Qt mailbox.
+  if(!mutatesOriginalScrape(value)){return false;}
   const bool accepted=stamp>lastChronologicalNanos_;
   if(accepted){lastChronologicalNanos_=stamp;observe(value);}
   const bool scrape=value.kind==QueueTrackerTerminalKind::Scrape||value.kind==QueueTrackerTerminalKind::ScrapeFailed;
@@ -116,8 +126,9 @@ std::optional<std::size_t> sourceQueueTrackerSelection(
 }
 void QueueOriginalTrackerResponse::observe(const QueueTrackerTerminal& value) noexcept {
   if(value.observedMillis<0||(value.present&~7u)){unavailable();return;}
+  if(!mutatesOriginalScrape(value)){return;}
   const bool scrape=value.kind==QueueTrackerTerminalKind::Scrape||value.kind==QueueTrackerTerminalKind::ScrapeFailed;
-  const bool failed=value.kind==QueueTrackerTerminalKind::ScrapeFailed||value.kind==QueueTrackerTerminalKind::AnnounceFailed;
+  const bool failed=value.kind==QueueTrackerTerminalKind::ScrapeFailed;
   if(scrape){pending_=false;regular_=true;const auto delay=value.regularDelayMillis.value_or(600000);
     nextRegular_=delay>0&&value.observedMillis>INT64_MAX-delay?INT64_MAX:value.observedMillis+delay;}
   if(failed){

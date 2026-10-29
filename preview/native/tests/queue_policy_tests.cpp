@@ -39,6 +39,31 @@ QueueDecision decide(const QueuePolicy& p,const QueueTorrentFacts& f,const Queue
 }
 } // namespace
 int main(){try{
+  run("inapplicable announce cannot erase or time-displace a genuine BT scrape",[]{
+    QueueTrackerTerminal scrape;scrape.kind=QueueTrackerTerminalKind::Scrape;scrape.comparable=true;scrape.present=3;scrape.complete=7;scrape.incomplete=8;scrape.observedMillis=2000;scrape.observedWallMillis=3000;scrape.requestStartedWallMillis=2500;scrape.regularDelayMillis=1000;
+    std::array<QueueTrackerTerminal,7> ignored;
+    for(auto& value:ignored){value.kind=QueueTrackerTerminalKind::Announce;value.comparable=true;value.present=3;value.complete=5;value.incomplete=6;value.observedMillis=3000;value.observedWallMillis=4000;}
+    ignored[0].kind=QueueTrackerTerminalKind::AnnounceFailed;ignored[0].definitiveFailure=false;
+    ignored[1].kind=QueueTrackerTerminalKind::AnnounceFailed;ignored[1].definitiveFailure=true;
+    ignored[2].present=0;ignored[3].comparable=false;ignored[4].complete=-1;ignored[5].incomplete=-1;ignored[6].complete=2147483648LL; // Java long narrows negative.
+    for(const auto& value:ignored){
+      QueueOriginalTrackerResponse response;CHECK(response.observeChronological(scrape,2000000));
+      CHECK(!response.observeChronological(value,3000000));response.observe(value);
+      CHECK(response.response().type==QueueOriginalScrapeType::Success&&response.response().content);
+      CHECK(response.response().content->seeds==7&&response.response().content->peers==8&&response.response().content->startedWallMillis==2500);
+      CHECK(!response.regularPollDue(2999)&&response.regularPollDue(3000));
+      QueueOriginalTrackerResponse delayed;delayed.requested();CHECK(!delayed.observeChronological(value,3000000));
+      CHECK(delayed.observeChronological(scrape,2000000));delayed.cancelRequest(); // Actual scrape occurred first but arrived at worker last.
+      CHECK(delayed.response().type==QueueOriginalScrapeType::Success&&delayed.response().content->seeds==7);
+      CHECK(!delayed.regularPollDue(2999)&&delayed.regularPollDue(3000));
+      auto unknown=value;unknown.kind=QueueTrackerTerminalKind::ScrapeFailed;unknown.definitiveFailure=false;unknown.observedMillis=4000;
+      CHECK(delayed.observeChronological(unknown,4000000));CHECK(delayed.response().type==QueueOriginalScrapeType::Unknown); // Actual unknown scrape remains fail closed.
+    }
+    QueueOriginalTrackerResponse downloadedOnly;auto valid=ignored[2];valid.present=4;valid.downloaded=12;
+    CHECK(downloadedOnly.observeChronological(valid,3000000));CHECK(downloadedOnly.response().content->seeds==0&&downloadedOnly.response().content->peers==0);
+    valid.present=7;valid.complete=4294967296LL;valid.incomplete=2;valid.downloaded=-2;valid.observedMillis=4000;
+    CHECK(downloadedOnly.observeChronological(valid,4000000));CHECK(downloadedOnly.response().content->seeds==0&&downloadedOnly.response().content->peers==2); // Negative downloaded does not suppress valid seed/peer update.
+  });
   run("actual announce defers regular due without inventing response or clearing pending",[]{
     QueueOriginalTrackerResponse response;const auto initial=response.response();response.deferRegularUntil(1000);CHECK(response.response().type==initial.type);CHECK(!response.regularPollDue(999)&&response.regularPollDue(1000));
     response.deferRegularUntil(500);CHECK(!response.regularPollDue(999));response.requested();response.deferRegularUntil(2000);CHECK(!response.regularPollDue(3000));response.cancelRequest();CHECK(!response.regularPollDue(1999)&&response.regularPollDue(2000));
