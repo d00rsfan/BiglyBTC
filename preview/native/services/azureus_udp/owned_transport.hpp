@@ -120,6 +120,8 @@ struct RoutingSnapshot {
   std::optional<Failure> failure;
   std::uint64_t learned=0,rejected=0,pings=0;
 };
+struct SavedRoutingContact {find::nodes::Snapshot contact;std::int64_t timeAlive=0;};
+struct MaintenanceFacts {std::uint64_t ticks=0,refreshes=0;std::size_t pending=0;std::optional<Failure> failure;};
 struct Config {
   std::int32_t network=4,instance=0;
   std::int8_t version=55,flags=0,flags2=0;
@@ -143,7 +145,7 @@ class OwnedPingTransport final : public QObject {
 public:
   explicit OwnedPingTransport(Config,QObject* parent=nullptr);
   ~OwnedPingTransport() override;
-  std::expected<void,Failure> start(const QHostAddress& bindAddress=QHostAddress::LocalHost);
+  std::expected<void,Failure> start(const QHostAddress& bindAddress=QHostAddress::LocalHost,quint16 bindPort=0);
   std::expected<void,Failure> allowPeer(Peer);
   std::expected<Ticket,Failure> ping(Peer,std::int8_t remoteVersion,QObject* receiver,Callback,
       std::chrono::nanoseconds deadline=std::chrono::seconds(30));
@@ -179,6 +181,12 @@ public:
   // arise only inside this actor from its own actual requests/replies.
   std::expected<std::uint64_t,Failure> integrateRouting(Peer,std::chrono::nanoseconds);
   bool cancelRouting(std::uint64_t);
+  std::expected<void,Failure> restoreRoutingContacts(std::span<const SavedRoutingContact>);
+  std::expected<std::vector<SavedRoutingContact>,Failure> exportRoutingContacts();
+  std::expected<std::uint64_t,Failure> integrateKnownRouting(std::chrono::nanoseconds);
+  std::expected<void,Failure> maintainRouting(std::int64_t wallMilliseconds);
+  MaintenanceFacts maintenanceFacts()const noexcept;
+
   bool isRoutingPeer(const Peer&)const noexcept;
   std::shared_ptr<const RoutingSnapshot> routingSnapshot()const noexcept;
   std::expected<GeneratedServiceState,Failure> generatedServiceState() const;
@@ -274,6 +282,12 @@ private:
   void captureRouting()noexcept;
   void routingFailed(Failure)noexcept;
   void dispatchRoutingPings();
+  std::expected<std::uint64_t,Failure> startRouting(find::nodes::NodeId,Clock::time_point,bool integration);
+  void nextRoutingRefresh();
+  std::deque<find::nodes::NodeId> routingRefreshes_;
+  std::vector<find::nodes::NodeId> importedRouting_;
+  MaintenanceFacts maintenance_;
+
   database::Owner* activeDatabase()const noexcept{return normalDatabase_?normalDatabase_.get():database_.get();}
   std::shared_ptr<azureus_router::RouterOwner> normalRouter_;
   std::shared_ptr<database::Owner> normalDatabase_;

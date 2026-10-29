@@ -199,7 +199,9 @@ struct InitialChannel::Impl {
       if(!verified){return std::unexpected(verified.error());}
       auto merged=update?mergeSessionOptions(acceptedOptions,*projected):ConfigResult<SessionOptions>(*projected);
       if(!merged){return std::unexpected(merged.error());}
-      if(consume||leaseSigner){auto policy=leaseSetPolicy(*merged);if(!policy){return std::unexpected(policy.error());}}
+      if(consume||leaseSigner){auto policy=leaseSetPolicy(*merged);if(!policy){return std::unexpected(policy.error());}
+        if(update){auto accepted=leaseSetPolicy(acceptedOptions);if(!accepted){return std::unexpected(accepted.error());}if(policy->encryptionType!=accepted->encryptionType){return reject(Code::Unsupported,"Existing lease encryption type cannot rotate during reconfigure");}}
+      }
       auto encoded=update?encodeSessionMessage(ReconfigureSession{*session,*cfg}):encodeSessionMessage(CreateSession{*cfg});
       if(!encoded){return std::unexpected(encoded.error());}Bytes destination=cfg->destination.wire;
       if(!current(at)||state!=previous){return reject(Code::InvalidFormat,"I2CP channel changed during signing");}
@@ -230,7 +232,8 @@ struct InitialChannel::Impl {
     // One bounded outstanding private-key-bearing socket write. Never queue a
     // second secret frame behind a blocked router; fail closed instead.
     if(socket.bytesToWrite()!=0){fail(Failure::WriteFailed);return;}
-    if(!leaseKey){auto generated=LeaseEncryptionKey::generate();if(!generated){fail(Failure::Resources);return;}leaseKey.emplace(std::move(*generated));}
+    if(!leaseKey){auto generated=LeaseEncryptionKey::generate(policy->encryptionType);if(!generated){fail(Failure::Resources);return;}leaseKey.emplace(std::move(*generated));}
+    if(leaseKey->type()!=policy->encryptionType){fail(Failure::InvalidLeaseSet);return;}
     const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now()-dateObserved).count();
     if(!date||elapsed<0||static_cast<std::uint64_t>(elapsed)>0xffffffffULL*1000||date->milliseconds>0xffffffffULL*1000-static_cast<std::uint64_t>(elapsed)){fail(Failure::InvalidDate);return;}
     const auto now=date->milliseconds+static_cast<std::uint64_t>(elapsed);

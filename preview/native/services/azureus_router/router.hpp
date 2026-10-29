@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <functional>
 
 namespace biglybtc::services::azureus_router {
 using NodeId=azureus_nodes::NodeId;
@@ -34,6 +35,9 @@ struct RouterIntents {std::size_t count=0;std::array<RouterIntent,MaximumRouterI
 struct RouterBucketStatistics {
   NodeId prefix{};std::uint16_t depth=0,contacts=0,replacements=0;bool containsLocal=false;
 };
+struct RouterRefreshes {std::size_t count=0;std::array<NodeId,MaximumRouterIntents> targets{};};
+struct RouterExportContact {RouterContact contact;std::int64_t timeAlive=0;};
+struct RouterBestContacts {std::size_t count=0;std::array<RouterExportContact,MaximumRouterContacts> values{};};
 class RouterOwner;
 class RouterStatisticsSnapshot final {
 public:
@@ -62,14 +66,16 @@ private:
 enum class RouterError {Invalid,Clock,Thread,Memory,Exhausted};
 enum class RouterChange {Bucket,Replacement,Updated,Removed,Ignored,Dropped};
 // One worker, no locks/timers/network. Times are explicit monotone milliseconds.
+// Optional wall time is only original getTimeAlive metadata; routing deadlines
+// and failure policy remain monotone. Omitted wall time equals the explicit now.
 // Intents are inert; only a later policy-owning controller may execute them.
 class RouterOwner final {
 public:
   static std::expected<std::unique_ptr<RouterOwner>,RouterError> create(
-      NodeId local,RouterConfig={},std::uint64_t generation=1,std::int64_t nowMilliseconds=0);
+      NodeId local,RouterConfig={},std::uint64_t generation=1,std::int64_t nowMilliseconds=0,std::optional<std::int64_t> wallMilliseconds=std::nullopt);
   ~RouterOwner();RouterOwner(const RouterOwner&)=delete;RouterOwner& operator=(const RouterOwner&)=delete;
   std::expected<RouterChange,RouterError> contactKnown(const ContactInput&,std::int64_t nowMilliseconds,bool force=false)noexcept;
-  std::expected<RouterChange,RouterError> contactAlive(const ContactInput&,std::int64_t nowMilliseconds)noexcept;
+  std::expected<RouterChange,RouterError> contactAlive(const ContactInput&,std::int64_t nowMilliseconds,std::optional<std::int64_t> wallMilliseconds=std::nullopt)noexcept;
   std::expected<RouterChange,RouterError> contactDead(const NodeId&,std::int64_t nowMilliseconds,bool force=false)noexcept;
   std::expected<void,RouterError> setSleeping(bool,std::int64_t nowMilliseconds)noexcept;
   std::expected<void,RouterError> setSuspended(bool,std::int64_t nowMilliseconds)noexcept;
@@ -78,6 +84,14 @@ public:
   std::expected<bool,RouterError> localInClosest(const NodeId& target,std::size_t requested,bool liveOnly=true)const noexcept;
   std::expected<RouterStatisticsSnapshot,RouterError> snapshot()const noexcept;
   std::expected<RouterIntents,RouterError> takeIntents()noexcept;
+  // Explicit clocks and entropy: no timers or IO. Each maintenanceTick is one
+  // delivered owner timer turn, not an elapsed-time sampler; it never seeds.
+  std::expected<void,RouterError> lookupStarted(std::int64_t wallMilliseconds,std::int64_t nowMilliseconds)noexcept;
+  std::expected<void,RouterError> recordLookup(const NodeId&,std::int64_t wallMilliseconds,std::int64_t nowMilliseconds)noexcept;
+  std::expected<void,RouterError> scheduleSeedRefresh(std::int64_t nowMilliseconds)noexcept;
+  std::expected<RouterRefreshes,RouterError> maintenanceTick(std::int64_t nowMilliseconds,std::int64_t wallMilliseconds,const std::function<void(std::span<std::uint8_t>)>& entropy)noexcept;
+  std::expected<RouterBestContacts,RouterError> bestContacts(std::int64_t nowMilliseconds,std::optional<std::int64_t> wallMilliseconds=std::nullopt)const noexcept;
+
 private:
   struct Impl;explicit RouterOwner(std::unique_ptr<Impl>)noexcept;std::unique_ptr<Impl> impl_;
 };

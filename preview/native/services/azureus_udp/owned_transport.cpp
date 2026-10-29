@@ -91,6 +91,7 @@ OwnedPingTransport::~OwnedPingTransport() {
 }
 bool OwnedPingTransport::owner() const { return QThread::currentThread()==thread(); }
 #include "owned_routing.inc"
+#include "owned_maintenance.inc"
 std::expected<TransportStatisticsSnapshot,Failure> OwnedPingTransport::statisticsSnapshot() const noexcept {
   if(!owner()){return std::unexpected(Failure::Thread);}
   if(!statisticsGeneration_ || statisticsPublication_==std::numeric_limits<std::uint64_t>::max()) {
@@ -201,7 +202,7 @@ Peer OwnedPingTransport::normalize(Peer peer) {
 }
 bool OwnedPingTransport::allowed(const Peer& peer) const { return std::ranges::find(peers_,peer)!=peers_.end(); }
 std::uint64_t OwnedPingTransport::word() { return config_.randomWord?config_.randomWord():QRandomGenerator::system()->generate64(); }
-std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAddress) {
+std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAddress,quint16 bindPort) {
   if (!owner()) { return std::unexpected(Failure::Thread); }
   if (state_!=State::Idle) { return std::unexpected(Failure::State); }
   if (!bindAddress.scopeId().isEmpty()) { return std::unexpected(Failure::Peer); }
@@ -238,7 +239,7 @@ std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAd
     auto made=database::Owner::create(*config_.generatedStoreService->volatileDatabase);if(!made){return std::unexpected(Failure::Capacity);}
     database_=std::move(*made);
   }
-  if (!socket_.bind(address,0,QUdpSocket::DontShareAddress)) { return std::unexpected(Failure::Send); }
+  if (!socket_.bind(address,bindPort,QUdpSocket::DontShareAddress)) { return std::unexpected(Failure::Send); }
   socket_.setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption,65536);
   nodeCache_=std::make_unique<find::nodes::NodeCache>(); // Construct on the actual Qt owner, after any moveToThread.
   if (config_.generatedStoreService) {
@@ -321,7 +322,7 @@ bool OwnedPingTransport::normalAlive(const find::nodes::Contact& contact)noexcep
   if(!normalCurrent()){return false;}
   const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
   // Router time is absolute steady milliseconds for the normal receiving owner.
-  const auto accepted=normalRouter_->contactAlive({.id=contact.id,.instance=contact.instance,.sleeping=(static_cast<std::uint8_t>(contact.flags)&1U)!=0},now);
+  const auto accepted=normalRouter_->contactAlive({.id=contact.id,.instance=contact.instance,.sleeping=(static_cast<std::uint8_t>(contact.flags)&1U)!=0},now,QDateTime::currentMSecsSinceEpoch());
   if(!accepted){return false;}
   auto found=std::ranges::find(normalContacts_,contact.address,&find::nodes::Contact::address);
   if(found!=normalContacts_.end()){*found=contact;}
@@ -472,7 +473,7 @@ void OwnedPingTransport::deliver() {
 void OwnedPingTransport::close() {
   if (!owner() || state_==State::Closed) { return; }
   routingDeadline_.stop();normalSeeded_=false;routingIntents_.clear();for(auto& ping:routingPingsPending_){ping.reset();}
-  normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
+  routingRefreshes_.clear();importedRouting_.clear();normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
   if(database_){database_->close();database_.reset();}
   state_=State::Closed;socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
   while (!pending_.empty()) { finish(pending_.begin()->first,std::unexpected(Failure::Closed)); }

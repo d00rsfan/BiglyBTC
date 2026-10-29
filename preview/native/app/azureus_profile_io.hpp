@@ -3,6 +3,7 @@
 // Private to the explicit Azureus service. Concrete bounded use of the existing
 // Executor; no actor, router, DB or QObject is accessed by an I/O operation.
 #include "azureus_value_versions.hpp"
+#include "azureus_contacts.hpp"
 #include "local_rating.hpp"
 #include "biglybtc/executor.hpp"
 #include <array>
@@ -24,6 +25,7 @@ public:
   struct Data {
     std::optional<std::int32_t> version;
     std::shared_ptr<const storage::DistributedRatingSnapshot> rating;
+    std::shared_ptr<const storage::AzureusContactsSnapshot> contacts;
     std::uint64_t revision=0;
   };
   using Result=std::expected<Data,storage::Error>;
@@ -61,10 +63,10 @@ public:
   ~AzureusProfileIo(){requestStop();join();}
   AzureusProfileIo(const AzureusProfileIo&)=delete;
   // Only the external create/lifetime caller may wait. No DHT owner runs here.
-  bool initialize(const std::shared_ptr<storage::AzureusValueVersions>& versions){
+  bool initialize(const std::shared_ptr<storage::AzureusValueVersions>& versions,const std::shared_ptr<storage::AzureusContacts>& contacts={}){
     auto result=std::make_shared<std::optional<bool>>();
-    auto submitted=executor_->submit([result,versions](std::stop_token stop)->core::WorkResult{
-      *result=!stop.stop_requested()&&bool(versions->validate());return {};
+    auto submitted=executor_->submit([result,versions,contacts](std::stop_token stop)->core::WorkResult{
+      *result=!stop.stop_requested()&&bool(versions->validate())&&(!contacts||bool(contacts->validate()));return {};
     });if(!submitted){return false;}if(!submitted->result().get()){return false;}return result->value_or(false);
   }
   std::expected<Handle,core::SubmitError> submit(Operation operation){

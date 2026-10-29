@@ -73,14 +73,15 @@
         std::chrono::steady_clock::time_point deadline,std::move_only_function<bool()> current,
         std::move_only_function<void(const ProfileIo::Data&)> commit,
         std::move_only_function<void(storage::Error)> failed,bool allowExpired=false,
-        std::move_only_function<void()> expired={},std::move_only_function<void()> cancelled={}){
+        std::move_only_function<void()> expired={},std::move_only_function<void()> cancelled={},
+        std::move_only_function<std::expected<std::shared_ptr<const storage::AzureusContactsSnapshot>,storage::Error>(std::stop_token)> contactWork={}){
       if(!state_->profileIo){return false;}
       IoSlot* slot=nullptr;for(auto& item:ioSlots_){if(!item.job){slot=&item;break;}}if(!slot){return false;}
-      auto versions=options_.valueVersions;auto lease=state_->profileIo->lease();const bool routingPolicy=options_.routingScope==azureus::RoutingScope::OwnedLoopback;
-      auto submitted=state_->profileIo->submit([versions,lease,command,reserve,deadline,allowExpired,routingPolicy](std::stop_token stop)->ProfileIo::Result{
+      auto versions=options_.valueVersions;auto contacts=options_.contacts;auto lease=state_->profileIo->lease();const bool routingPolicy=options_.routingScope==azureus::RoutingScope::OwnedLoopback;
+      auto submitted=state_->profileIo->submit([versions,contacts,lease,command,reserve,deadline,allowExpired,routingPolicy,contactWork=std::move(contactWork)](std::stop_token stop)->ProfileIo::Result{
         const auto cancelled=[&]{return stop.stop_requested()||(!allowExpired&&std::chrono::steady_clock::now()>=deadline);};
         if(cancelled()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO expired"});}
-        auto valid=versions->validate();if(!valid){return std::unexpected(valid.error());}
+        auto valid=versions->validate();if(!valid){return std::unexpected(valid.error());}if(contacts){valid=contacts->validate();if(!valid){return std::unexpected(valid.error());}}
         if(routingPolicy){
           auto config=storage::ConfigFile::load(*lease,"biglybt.config");if(!config&&config.error().code!=storage::ErrorCode::Missing){return std::unexpected(config.error());}
           if(config){if(config->recoverySource()!=storage::RecoverySource::Primary){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Resolve routing configuration recovery first"});}
@@ -97,6 +98,8 @@
         };
         valid=rating();if(!valid){return std::unexpected(valid.error());}
         if(reserve){auto next=versions->next(QDateTime::currentMSecsSinceEpoch());if(!next){return std::unexpected(next.error());}result.version=*next;}
+        if(cancelled()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO expired"});}
+        if(contactWork){auto value=contactWork(stop);if(!value){return std::unexpected(value.error());}result.contacts=std::move(*value);}
         if(cancelled()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO expired"});}
         return result;
       });

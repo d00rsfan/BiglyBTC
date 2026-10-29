@@ -2,6 +2,7 @@
 #include "owned_transport.hpp"
 #include "router.hpp"
 #include "azureus_value_versions.hpp"
+#include "azureus_contacts.hpp"
 #include "../adapters/local_rating.hpp"
 #include "../services/azureus_control/lookup.hpp"
 #include <chrono>
@@ -19,10 +20,13 @@ enum class AzureusServiceError {
   Disabled,Invalid,NoApplication,Start,Closed,Capacity,Dispatch,Memory,Thread,UnknownRequest,Transport,Profile,Readback
 };
 enum class AzureusServiceState { Starting,Running,Closing,Closed,Failed };
-enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue,PublishRating,ReadRatings,IntegrateRouting,ForwardCached };
+enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue,PublishRating,ReadRatings,IntegrateRouting,ForwardCached,BootstrapSaved,FlushContacts };
 struct AzureusServiceOptions {
   bool enabled=false;
   QHostAddress bindAddress{QHostAddress::LocalHost};
+  quint16 bindPort=0; // Actual owned bind only; default remains ephemeral.
+  bool maintenance=false;
+  std::shared_ptr<storage::AzureusContacts> contacts;
   std::int32_t network=4;
   std::int8_t version=55;
   bool servePings=false,enableVivaldi=true;
@@ -75,6 +79,13 @@ struct AzureusRatingReadSnapshot {
   std::optional<azureus::Failure> transportFailure;
   std::optional<storage::Error> profileFailure;
 };
+struct AzureusMaintenanceObservation {
+  services::azureus_udp::MaintenanceFacts routing;
+  std::size_t savedRecords=0;
+  bool cacheWritable=false,ioPending=false;
+  std::uint64_t exports=0;
+  std::optional<storage::Error> error;
+};
 struct AzureusServiceObservation {
   std::uint64_t sequence=0;
   AzureusServiceState state=AzureusServiceState::Starting;
@@ -96,6 +107,7 @@ struct AzureusServiceObservation {
   std::shared_ptr<const services::azureus_db_runtime::Snapshot> databaseSnapshot;
   std::shared_ptr<const AzureusRatingReadSnapshot> ratingReadSnapshot;
   std::shared_ptr<const azureus::RoutingSnapshot> routingSnapshot;
+  std::optional<AzureusMaintenanceObservation> maintenance;
   // Passive bounded IO progress only; no source/packet permission is exposed.
   std::size_t profileIoPending=0,profileIoRunning=0,profileIoReady=0,profileIoHighWater=0;
 };
@@ -160,6 +172,13 @@ public:
   // integration; response contacts need no individual allowPeer grant.
   std::expected<std::uint64_t,AzureusServiceError> integrateRouting(azureus::Peer seed,
       std::chrono::nanoseconds timeout=std::chrono::seconds(10));
+  // Read current original-format contacts as Known, then perform genuine
+  // self integration; cached duration never restores Alive/seeded/closest.
+  std::expected<std::uint64_t,AzureusServiceError> bootstrapSavedContacts(std::chrono::nanoseconds timeout=std::chrono::seconds(5));
+  // Snapshot current actor routing under a source permit and durably export
+  // on the profile worker. Explicit acknowledged flush precedes controlled close.
+  std::expected<std::uint64_t,AzureusServiceError> flushContacts(std::chrono::nanoseconds timeout=std::chrono::seconds(5));
+
   // Select exactly one existing nonlocal value at SHA1(applicationKey), keep
   // its original origin/version/flags, and prove actual final remote readback.
   // No local version reservation, automatic republish or supplied value facts.
