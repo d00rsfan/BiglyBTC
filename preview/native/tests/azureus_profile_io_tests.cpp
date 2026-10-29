@@ -29,12 +29,12 @@ struct Normal {
   std::optional<storage::ProfileLease> lease;
   std::shared_ptr<storage::AzureusValueVersions> versions;
   std::unique_ptr<app::OwnedAzureusService> owner;
-  explicit Normal(const char* address,std::int32_t network=4){
+  explicit Normal(const char* address,std::int32_t network=4,udp::RoutingScope scope=udp::RoutingScope::ExactPeers){
     if(!root.isValid()){throw std::runtime_error("Profile fixture");}
     auto acquired=storage::ProfileLease::acquire(root.path().toStdString());if(!acquired){throw std::runtime_error("Profile lock fixture");}lease.emplace(std::move(*acquired));
     auto source=storage::ConfigFile::createMissing(*lease,"biglybt.config",std::string("d6:future1048576:")+std::string(1048576,'x')+"e");if(!source){throw std::runtime_error("Config fixture");}
     auto opened=storage::AzureusValueVersions::open(*lease,network);if(!opened){throw std::runtime_error("Version fixture");}versions=*opened;
-    app::AzureusServiceOptions options;options.network=network;options.enabled=true;options.servePings=true;options.serveValues=true;options.valueVersions=versions;options.bindAddress=QHostAddress(QString::fromLatin1(address));
+    app::AzureusServiceOptions options;options.network=network;options.routingScope=scope;options.enabled=true;options.servePings=true;options.serveValues=true;options.valueVersions=versions;options.bindAddress=QHostAddress(QString::fromLatin1(address));
     auto started=app::OwnedAzureusService::create(options);if(!started){throw std::runtime_error("Normal IO service fixture");}owner=std::move(*started);
   }
 };
@@ -126,6 +126,22 @@ private slots:
       QCOMPARE(observerCalls,0);QCOMPARE(read(root.path()+"/owned.config"),original);QVERIFY(!QFile::exists(root.path()+"/owned.config.saving"));QVERIFY(!QFile::exists(root.path()+"/new.config"));QVERIFY(!QFile::exists(root.path()+"/new.config.saving"));
     }
     QVERIFY(created->save(*lease,countedObserver));QCOMPARE(observerCalls,3);QVERIFY(read(root.path()+"/owned.config")!=original);
+  }
+  void realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose_data(){
+    QTest::addColumn<int>("change");QTest::newRow("release-current")<<0;QTest::newRow("disable-current-source")<<1;QTest::newRow("close-and-cancel-queued")<<2;
+  }
+  void realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose(){
+    QFETCH(int,change);Normal a("127.48.0.1"),b("127.49.0.1",4,udp::RoutingScope::OwnedLoopback);const auto aa=a.owner->allowPeer(b.owner->endpoint()),bb=b.owner->allowPeer(a.owner->endpoint());QVERIFY(aa&&bb);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*aa)&&successful(*b.owner,*bb),3000);
+    auto access=b.lease->sourceAccess(true);QVERIFY(access);std::optional<storage::ProfileSourceAccess> blocked;blocked.emplace(std::move(*access));const auto release=qScopeGuard([&]{blocked.reset();});
+    std::vector<std::uint64_t> requests;for(int i=0;i<12;++i){auto sent=a.owner->ping(b.owner->endpoint(),change==1?1s:5s);QVERIFY(sent);requests.push_back(*sent);}
+    QTRY_VERIFY_WITH_TIMEOUT(b.owner->observation().snapshot->transport().counters().requests==12&&b.owner->observation().profileIoPending==8,3000);QCOMPARE(b.owner->observation().profileIoHighWater,std::size_t{8});QCOMPARE(b.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(b.owner->observation().snapshot->transport().counters().serviceCapacityDrops,std::uint64_t{0});
+    if(change==2){const auto endpoint=b.owner->endpoint();auto closed=std::async(std::launch::async,[&]{return b.owner->close();});const auto releaseBeforeJoin=qScopeGuard([&]{blocked.reset();});QTRY_VERIFY_WITH_TIMEOUT(b.owner->observation().state==app::AzureusServiceState::Closed,3000);QVERIFY(!b.owner->observation().joined);QUdpSocket rebound;QVERIFY(rebound.bind(endpoint.address,endpoint.port,QUdpSocket::DontShareAddress));for(auto request:requests){QVERIFY(a.owner->cancel(request));}QTRY_COMPARE_WITH_TIMEOUT(a.owner->observation().outstandingCommands,std::size_t{0},3000);blocked.reset();QTRY_VERIFY_WITH_TIMEOUT(closed.wait_for(0ms)==std::future_status::ready,3000);QVERIFY(closed.get());QCOMPARE(b.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(a.owner->observation().snapshot->transport().counters().replies,std::uint64_t{0});QVERIFY(a.owner->close());return;}
+    if(change==1){auto config=storage::ConfigFile::load(*b.lease,"biglybt.config");QVERIFY(config);QVERIFY(config->document().setInteger("Plugin.DHT.dht.enabled",0));QVERIFY(config->save(*b.lease));}
+    blocked.reset();QTRY_COMPARE_WITH_TIMEOUT(a.owner->observation().outstandingCommands,std::size_t{0},4000);QTRY_COMPARE_WITH_TIMEOUT(b.owner->observation().profileIoPending,std::size_t{0},4000);
+    const auto av=a.owner->observation(),bv=b.owner->observation();QCOMPARE(bv.profileIoHighWater,std::size_t{8});QCOMPARE(bv.snapshot->transport().counters().serviceCapacityDrops,std::uint64_t{0});
+    if(change==0){QCOMPARE(av.snapshot->transport().counters().replies,std::uint64_t{12});QCOMPARE(av.snapshot->transport().counters().timeouts,std::uint64_t{0});QCOMPARE(bv.snapshot->transport().counters().sent,std::uint64_t{12});QVERIFY(av.lastResult&&!av.lastResult->error&&!av.lastResult->transportFailure);}
+    else{QCOMPARE(av.snapshot->transport().counters().replies,std::uint64_t{0});QCOMPARE(av.snapshot->transport().counters().timeouts,std::uint64_t{12});QCOMPARE(bv.snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(bv.snapshot->transport().counters().authorityErrors,std::uint64_t{12});}
+    QVERIFY(a.owner->close());QVERIFY(b.owner->close());
   }
   void permitsAreSingleUseBoundQueuedActiveAndReadyThenReclaimSlots(){
     QTemporaryDir root;QVERIFY(root.isValid());auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);auto versions=storage::AzureusValueVersions::open(*lease,4);QVERIFY(versions);Io io((*versions)->profileOwnership());

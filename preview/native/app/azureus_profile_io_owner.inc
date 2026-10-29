@@ -13,10 +13,22 @@
       bool consumed=false,expiryNotified=false;
     };
     std::array<IoSlot,8> ioSlots_{};
+    struct NormalPending {
+      std::shared_ptr<std::move_only_function<void(bool)>> complete;
+      std::shared_ptr<void> frame;
+      std::chrono::steady_clock::time_point deadline;
+      std::uint64_t order=0;
+    };
+    // These are the SAME held normal frames, not64 extra worker permissions.
+    // Already received replies wait here until one of the eight slots releases.
+    std::array<NormalPending,64> normalPending_{};
+    std::uint64_t normalOrder_=0;
+    bool pumpingNormal_=false;
     QChronoTimer ioDeadline_;
     void armProfileDeadline()noexcept{
       try{
-        auto earliest=std::chrono::steady_clock::time_point::max();for(const auto& slot:ioSlots_){if(slot.job&&!slot.expiryNotified){earliest=std::min(earliest,slot.deadline);}}
+        auto earliest=std::chrono::steady_clock::time_point::max();for(const auto& slot:ioSlots_){if(slot.job&&!slot.consumed&&!slot.expiryNotified){earliest=std::min(earliest,slot.deadline);}}
+        for(const auto& pending:normalPending_){if(pending.complete){earliest=std::min(earliest,pending.deadline);}}
         if(earliest==std::chrono::steady_clock::time_point::max()){ioDeadline_.stop();return;}
         ioDeadline_.setInterval(std::max(std::chrono::nanoseconds{1},std::chrono::duration_cast<std::chrono::nanoseconds>(earliest-std::chrono::steady_clock::now())));ioDeadline_.start();
       }catch(...){try{ioDeadline_.stop();}catch(...){}publicationMemoryFailure();}
@@ -37,13 +49,13 @@
     }
     void drainProfileIo(){
       if(drainingIo_||!state_->profileIo){return;}drainingIo_=true;
-      const auto leave=qScopeGuard([&]()noexcept{drainingIo_=false;armProfileDeadline();});
+      const auto leave=qScopeGuard([&]()noexcept{drainingIo_=false;pumpNormalProfiles();armProfileDeadline();});
       bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}
       try{for(auto& slot:ioSlots_){if(!slot.job){continue;}
-        if(!slot.expiryNotified&&std::chrono::steady_clock::now()>=slot.deadline){
+        if(!slot.consumed&&!slot.expiryNotified&&std::chrono::steady_clock::now()>=slot.deadline){
           slot.expiryNotified=true;ProfileIo::revoke(slot.job);if(slot.expired){slot.expired();}
         }
-        if(stop||std::chrono::steady_clock::now()>=slot.deadline||!slot.current()){
+        if(!slot.consumed&&(stop||std::chrono::steady_clock::now()>=slot.deadline||!slot.current())){
           ProfileIo::revoke(slot.job);slot.error=storage::Error{storage::ErrorCode::Cancelled,"Profile operation stopped, stale or expired"};
         }
         if(!slot.consumed){if(auto ready=ProfileIo::take(slot.job)){
@@ -106,13 +118,31 @@
       if(!submitted){return false;}
       slot->job=std::move(*submitted);slot->command=command.id;slot->deadline=allowExpired?std::chrono::steady_clock::time_point::max():deadline;slot->current=std::move(current);slot->commit=std::move(commit);slot->failed=std::move(failed);slot->expired=std::move(expired);slot->cancelled=std::move(cancelled);armProfileDeadline();return true;
     }
+    void clearNormalProfiles()noexcept{for(auto& pending:normalPending_){pending={};}}
+    void pumpNormalProfiles()noexcept{
+      if(pumpingNormal_||profilePermit_||!state_->profileIo){return;}pumpingNormal_=true;
+      const auto reset=qScopeGuard([&]()noexcept{pumpingNormal_=false;});
+      try{for(;;){
+        NormalPending* pending=nullptr;for(auto& item:normalPending_){if(item.complete&&(!pending||item.order<pending->order)){pending=&item;}}
+        if(!pending){return;}
+        bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}
+        if(stop||std::chrono::steady_clock::now()>=pending->deadline){
+          auto complete=std::move(pending->complete);auto held=std::move(pending->frame);*pending={};(*complete)(false);continue;
+        }
+        if(std::ranges::none_of(ioSlots_,[](const auto& slot){return !slot.job;})){return;}
+        const auto complete=pending->complete;const auto held=pending->frame;const auto deadline=pending->deadline;Command command;
+        // If the physical executor's tail has not released yet, keep the same
+        // frame. Its next actual Ready/Released wake retries; no timer spin.
+        if(!deferProfile(command,false,deadline,[this]{std::lock_guard lock(state_->mutex);return !state_->stop;},
+          [complete,held](const auto&){(*complete)(true);},
+          [complete](storage::Error){(*complete)(false);})){return;}
+        *pending={};
+      }}catch(...){publicationMemoryFailure();}
+    }
     bool normalProfileRequest(std::move_only_function<void(bool)> complete){try{
-      auto held=holdProfileFrame();if(!held){return false;}
-      auto completion=std::make_shared<std::move_only_function<void(bool)>>(std::move(complete));
-      Command command;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(30);
-      return deferProfile(command,false,deadline,[this]{std::lock_guard lock(state_->mutex);return !state_->stop;},
-        [completion,held=std::move(held)](const auto&){(*completion)(true);},
-        // Rejection is reported after the I/O slot has released its source
-        // gate. It never resumes the request or creates a protocol success.
-        [completion](storage::Error){(*completion)(false);});
+      if(!state_->profileIo||normalOrder_==UINT64_MAX){return false;}auto held=holdProfileFrame();if(!held){return false;}
+      NormalPending* pending=nullptr;for(auto& item:normalPending_){if(!item.complete){pending=&item;break;}}if(!pending){return false;}
+      pending->complete=std::make_shared<std::move_only_function<void(bool)>>(std::move(complete));pending->frame=std::move(held);
+      pending->deadline=std::chrono::steady_clock::now()+std::chrono::seconds(30);pending->order=++normalOrder_;
+      pumpNormalProfiles();armProfileDeadline();return true;
     }catch(...){publicationMemoryFailure();return false;}}

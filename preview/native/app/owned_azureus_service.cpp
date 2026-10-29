@@ -156,6 +156,7 @@ struct OwnedAzureusService::Impl {
     void shutdown()noexcept{
       ioDeadline_.stop();maintenanceTimer_.stop();
       bool closed=true;try{actor_.close();}catch(...){closed=false;}
+      clearNormalProfiles();
       if(state_->profileIo){state_->profileIo->requestStop();}
       if(closed){
         if(publishing_&&!publishing_->finished){try{finishPublish(publishing_,AzureusPublishState::Closed,AzureusServiceError::Closed,azureus::Failure::Closed);}catch(...){publicationMemoryFailure();}}
