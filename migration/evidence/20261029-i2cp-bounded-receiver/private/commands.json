@@ -1,0 +1,153 @@
+[
+  {
+    "name": "stage",
+    "command": [
+      "python3",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--output",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/candidate",
+      "--libtorrent-package",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+      "--source-libtorrent",
+      "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--private-mainline-routing-provider-manifest",
+      "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-runtime.json"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 6.829,
+    "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/stage.log",
+    "log_sha256": "cd53b03941be621cc2b5cdc0561f9d0bb073c83652a540e941130bebb86a3300"
+  },
+  {
+    "name": "loader-i2cp-initial-channel",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/biglybtc-i2cp-initial-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/loader-i2cp-initial-channel.log",
+    "log_sha256": "21438f3119268263d09bab5fc41e22ccfa823e0d0f3c92c7f0d0d6bc2225aabf"
+  },
+  {
+    "name": "i2cp-initial-channel",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/biglybtc-i2cp-initial-channel-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/i2cp-initial-channel.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/i2cp-initial-channel.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 13.109,
+    "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/i2cp-initial-channel.log",
+    "log_sha256": "7f96763f7d62b8bc701c932b523849fee9e64d1a5def5d9d6cbd046d24d9bb97"
+  },
+  {
+    "name": "loader-pure-i2cp-datagram-messages",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/biglybtc-i2cp-datagram-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.008,
+    "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/loader-pure-i2cp-datagram-messages.log",
+    "log_sha256": "6fa805fa8f03c73e2bdc8f82f5a605866573f51a06691ccde7f405dc53ab5582"
+  },
+  {
+    "name": "pure-i2cp-datagram-messages",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/biglybtc-i2cp-datagram-tests",
+      "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/pure-i2cp-datagram-messages.log",
+    "log_sha256": "3462cf22b4f6f6461a1c2e1b58ed0c484fe52dcce906b4273e5b503be91976c6"
+  },
+  {
+    "name": "loader-i2cp-lease-backed-datagram-channel",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/biglybtc-i2cp-datagram-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/loader-i2cp-lease-backed-datagram-channel.log",
+    "log_sha256": "1721e1273a9ae3c7945883dbe7e4f08c2b2cd0e036ffd765b5482139ad583185"
+  },
+  {
+    "name": "i2cp-lease-backed-datagram-channel",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/biglybtc-i2cp-datagram-channel-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/i2cp-lease-backed-datagram-channel.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/i2cp-lease-backed-datagram-channel.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 7.446,
+    "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/i2cp-lease-backed-datagram-channel.log",
+    "log_sha256": "54bbbf0f2081eca02f48ec02aa7ba7cff7c3b6966065b609bd5bf5c2ca771d16"
+  },
+  {
+    "name": "loader-pure-i2cp-receive-control",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/biglybtc-i2cp-receive-control-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.008,
+    "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/loader-pure-i2cp-receive-control.log",
+    "log_sha256": "231c7c7c8f15d56a4d1be70ff97da80fe965f311d4b27cc2642f4d62dc64f6c6"
+  },
+  {
+    "name": "pure-i2cp-receive-control",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/biglybtc-i2cp-receive-control-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.004,
+    "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/pure-i2cp-receive-control.log",
+    "log_sha256": "e8d78bce24d9eead94373d4c25a8dbc441e6fcc468cef91d93b91507f697c4f7"
+  },
+  {
+    "name": "loader-i2cp-bounded-datagram-receiver",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/biglybtc-i2cp-receive-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/loader-i2cp-bounded-datagram-receiver.log",
+    "log_sha256": "2dfd408a3d3a3e51abc6ad2ce0db52f7ff2eca05647969e3c4d2ec70a45085ea"
+  },
+  {
+    "name": "i2cp-bounded-datagram-receiver",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/biglybtc-i2cp-receive-channel-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/i2cp-bounded-datagram-receiver.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/i2cp-bounded-datagram-receiver.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 11.052,
+    "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/private-runs/r2/i2cp-bounded-datagram-receiver.log",
+    "log_sha256": "2f07ab737d29c77b72874b1337cad59b93893cf06c9b48ae70a67c3ecafc1d64"
+  }
+]

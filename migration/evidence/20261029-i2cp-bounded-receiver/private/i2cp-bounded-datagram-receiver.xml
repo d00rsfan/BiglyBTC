@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="ReceiveChannelTests" timestamp="2026&#x002D;10&#x002D;29T17:20:56" hostname="ubuntud" tests="16" failures="0" errors="0" skipped="0" time="11.038">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="ReceiveChannelTests" time="0.000"/>
+  <testcase name="actualLegacyAndFastWireVerifiesBeforeQueuing(legacy&#x002D;DSA0&#x002D;v4)" classname="ReceiveChannelTests" time="0.579"/>
+  <testcase name="actualLegacyAndFastWireVerifiesBeforeQueuing(fast&#x002D;Ed7&#x002D;v6)" classname="ReceiveChannelTests" time="0.519"/>
+  <testcase name="actualLegacyAndFastWireVerifiesBeforeQueuing(legacy&#x002D;claimed3&#x002D;v6)" classname="ReceiveChannelTests" time="0.568"/>
+  <testcase name="actualLegacyAndFastWireVerifiesBeforeQueuing(fast&#x002D;claimed3&#x002D;v4)" classname="ReceiveChannelTests" time="0.521"/>
+  <testcase name="invalidDatagramDropsPreserveTheActualOutboundSession(crc)" classname="ReceiveChannelTests" time="0.413"/>
+  <testcase name="invalidDatagramDropsPreserveTheActualOutboundSession(signature)" classname="ReceiveChannelTests" time="0.421"/>
+  <testcase name="invalidDatagramDropsPreserveTheActualOutboundSession(wrong&#x002D;recipient)" classname="ReceiveChannelTests" time="0.413"/>
+  <testcase name="invalidDatagramDropsPreserveTheActualOutboundSession(unsupported&#x002D;protocol)" classname="ReceiveChannelTests" time="0.413"/>
+  <testcase name="invalidDatagramDropsPreserveTheActualOutboundSession(malformed&#x002D;payload31)" classname="ReceiveChannelTests" time="0.417"/>
+  <testcase name="invalidDatagramDropsPreserveTheActualOutboundSession(wrong&#x002D;session)" classname="ReceiveChannelTests" time="0.413"/>
+  <testcase name="fullLegacyQueueReleasesWithoutBeginAndFastQueueStaysWithin160KiB" classname="ReceiveChannelTests" time="1.635"/>
+  <testcase name="timedOutAndDisabledLegacyFetchCannotFinishALaterRequest" classname="ReceiveChannelTests" time="3.751"/>
+  <testcase name="modeIsInitialAndCallbackCanConsumeDisableOrDelete(legacy&#x002D;pop&#x002D;disable)" classname="ReceiveChannelTests" time="0.564"/>
+  <testcase name="modeIsInitialAndCallbackCanConsumeDisableOrDelete(fast&#x002D;delete)" classname="ReceiveChannelTests" time="0.411"/>
+  <testcase name="cleanupTestCase" classname="ReceiveChannelTests" time="0.000"/>
+</testsuite>

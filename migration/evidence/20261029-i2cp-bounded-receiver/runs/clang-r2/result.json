@@ -1,0 +1,33 @@
+{
+  "status": "PASS_BOUNDED_I2CP_RECEIVER_COHORT",
+  "source_commit": "9fca696181291fd9a1dc7d62942c76d23afbba11",
+  "lane": "clang",
+  "cache": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+  "compiled_targets": [
+    "biglybtc-i2cp-initial-channel-tests",
+    "biglybtc-i2cp-datagram-tests",
+    "biglybtc-i2cp-datagram-channel-tests",
+    "biglybtc-i2cp-receive-control-tests",
+    "biglybtc-i2cp-receive-channel-tests"
+  ],
+  "provider_rebuilt": false,
+  "historical_passes_pooled": false,
+  "runner_sha256": "73e743b95d5845de9b4e3005cc231d597d07fc9ec2369b8c34312ffd1a7c466c",
+  "source_receipt_sha256": "09cdfdec3a3f74bba188584b4aaa6538f023d22c06cc96cc7fe6c35199359a9a",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "dist_manifest_before": "bcbcb9b9db1acc546d437659cb40e2bdc8a30e57960e00d8ab7dd6582ca462a4",
+  "suite_names": [
+    "i2cp-initial-channel",
+    "pure-i2cp-datagram-messages",
+    "i2cp-lease-backed-datagram-channel",
+    "pure-i2cp-receive-control",
+    "i2cp-bounded-datagram-receiver"
+  ],
+  "actual_suites": 5,
+  "full_ctest_log_sha256": "9343f58ce9cc07094a1f17dad1e37978c04163143b7c425b62ce9543b393912f",
+  "tests_xml_sha256": "c9777188246b4991d4c7e567272ad2f476d8583453ffaf638fc2055b8f617628",
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "sanitizer_environment": {},
+  "commands_sha256": "1c28b056d5a9167149dc829c0fa1efb00c69a1778ae510ba89417f8e98bd2aa5"
+}

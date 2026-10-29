@@ -1,0 +1,12 @@
+{
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-datagram-receive-20261029/manifest.json",
+    "sha256": "e7742616a8e9026edc63b4885b97729c9c7a2f3243ba71a298f3984a2b29a90b"
+  },
+  "review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-datagram-receive-20261029-review/review.json",
+    "sha256": "4604571de0bf892f3bfd430663d881df57e5a314578a248d812f42cce8e74423"
+  },
+  "native_parent_commit": "caafab3b3093d2d4b9dc8dc59cfcdcac6177d512",
+  "root_assessment": "Adopt9paths after independent source PASS. Five suites/three lanes cover changed receive/channel/messages plus existing outbound/lifecycle regressions. Pure identity/crypto/session/LS2 sources unchanged; no unrelated test replay. Reviewed original CMake target unconditional and exact section split; both-JAR helper4labels has no summary-prefix ambiguity."
+}

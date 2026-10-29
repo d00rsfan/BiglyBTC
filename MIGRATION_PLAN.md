@@ -1681,3 +1681,8 @@ Implementation `b998d3076cd34513ae5459adb7de03553c0b1844`, test-only qualificati
 ## 2026-10-29 explicit saved ratings and outgoing I2P datagrams
 
 Qualified source `d384a850980f1b6245230ea852d617b11c405e11`: fresh GCC7/Clang5/leak-enabled ASan+UBSan5 affected suites, private7, both original Java artefacts8send+4status+1payload/reference/direction. One dist replaced/deleted its predecessor. Raw failures and metadata-only corrections remain separate; no replay for report fixes. Explicit one-peer ratings and lease-backed outgoing datagrams remain bounded partial P06/P07 integration. [Evidence](migration/evidence/20261029-saved-ratings-i2cp-datagrams/verification.json). Continue bounded inbound I2P and profile-I/O executor work, then the remaining full plan; no chapter stop or full parity/performance claim.
+
+
+## 2026-10-29 bounded explicit I2CP datagram receiver
+
+Qualified source `9fca696181291fd9a1dc7d62942c76d23afbba11`: fresh5/5/5 affected suites, private5, actual both-JAR receive/control4cases/reference/direction. One dist promoted, predecessor/testcopies deleted; both proposed registries passed first. Scope remains explicit bounded legacy/fast2/3 datagrams, not real-router/backend/Streaming or delivery parity. [Evidence](migration/evidence/20261029-i2cp-bounded-receiver/verification.json). Continue profile-I/O executor and explicit I2P UDP tracker work, then the rest of the full plan.

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="5"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="31"
+	timestamp="2026-10-29T17:15:26"
+	>
+	<testcase name="i2cp-initial-channel" classname="i2cp-initial-channel" time="13.0515" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;owned-loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of InitialChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : InitialChannelTests::initTestCase()
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv4)
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv6)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(oversize-header)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unknown-type)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(maximum-bounded-opaque-frame)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unexpected-real-session-status)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(invalid-date-length)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(real-Java-null-date)
+PASS   : InitialChannelTests::truncatedFrameAtActualEofRefuses()
+PASS   : InitialChannelTests::r...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="pure-i2cp-datagram-messages" classname="pure-i2cp-datagram-messages" time="0.0147738" status="run">
+		<properties>
+			<property name="cmake_labels" value="crypto;i2p;no-network;unit"/>
+		</properties>
+		<system-out>PASS bounded I2CP datagram messages/mux/status
+</system-out>
+	</testcase>
+	<testcase name="i2cp-lease-backed-datagram-channel" classname="i2cp-lease-backed-datagram-channel" time="7.33782" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;owned-loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of DatagramChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : DatagramChannelTests::initTestCase()
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(DSA0-v4-signed)
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(Ed7-v6-signed)
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(DSA0-v6-claimed)
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(Ed7-v4-claimed)
+PASS   : DatagramChannelTests::createdWithoutActualLeaseCannotSubmit()
+PASS   : DatagramChannelTests::localCancelAndOldNonceCannotFinishTheNextRequest()
+PASS   : DatagramChannelTests::terminalFailureCanPrecedeAcceptedAndOldStatusesCannotRebind()
+PASS   : DatagramChannelTests::renewalCannotExtendOrCancelTheIndependentStatusBudget()
+PASS...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="pure-i2cp-receive-control" classname="pure-i2cp-receive-control" time="0.00632671" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;no-network;unit"/>
+		</properties>
+		<system-out>PASS bounded original receive controls
+</system-out>
+	</testcase>
+	<testcase name="i2cp-bounded-datagram-receiver" classname="i2cp-bounded-datagram-receiver" time="11.0314" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;owned-loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of ReceiveChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ReceiveChannelTests::initTestCase()
+PASS   : ReceiveChannelTests::actualLegacyAndFastWireVerifiesBeforeQueuing(legacy-DSA0-v4)
+PASS   : ReceiveChannelTests::actualLegacyAndFastWireVerifiesBeforeQueuing(fast-Ed7-v6)
+PASS   : ReceiveChannelTests::actualLegacyAndFastWireVerifiesBeforeQueuing(legacy-claimed3-v6)
+PASS   : ReceiveChannelTests::actualLegacyAndFastWireVerifiesBeforeQueuing(fast-claimed3-v4)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(crc)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(signature)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(wrong-recipient)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(unsupported-protocol)
+PASS ...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

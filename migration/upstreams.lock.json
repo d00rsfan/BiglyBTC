@@ -8668,7 +8668,10 @@
         "preview/native/services/i2cp_datagram/messages.cpp",
         "preview/native/services/i2cp_datagram/messages.hpp",
         "preview/native/tests/i2cp_datagram_channel_tests.cpp",
-        "preview/native/tests/i2cp_datagram_tests.cpp"
+        "preview/native/tests/i2cp_datagram_tests.cpp",
+        "preview/native/services/i2cp_channel/receive.inc",
+        "preview/native/tests/i2cp_receive_channel_tests.cpp",
+        "preview/native/tests/i2cp_receive_control_tests.cpp"
       ],
       "source_coverage": [
         {
@@ -8716,7 +8719,11 @@
             "core/java/src/net/i2p/util/ReusableGZIPOutputStream.java",
             "core/java/src/net/i2p/client/datagram/Datagram2.java",
             "core/java/src/net/i2p/client/datagram/Datagram3.java",
-            "router/java/src/net/i2p/router/client/ClientConnectionRunner.java"
+            "router/java/src/net/i2p/router/client/ClientConnectionRunner.java",
+            "core/java/src/net/i2p/data/i2cp/ReceiveMessageBeginMessage.java",
+            "core/java/src/net/i2p/data/i2cp/ReceiveMessageEndMessage.java",
+            "core/java/src/net/i2p/client/impl/MessageStatusMessageHandler.java",
+            "core/java/src/net/i2p/client/impl/MessagePayloadMessageHandler.java"
           ],
           "source_symbols": [
             "I2CPMessageImpl.readMessage/writeMessage",
@@ -8736,7 +8743,14 @@
             "Datagram2.make/load",
             "Datagram3.make/load",
             "DataHelper.compress/decompress",
-            "ClientConnectionRunner.destinationEstablished"
+            "ClientConnectionRunner.destinationEstablished",
+            "ReceiveMessageBeginMessage",
+            "ReceiveMessageEndMessage",
+            "MessageStatusMessageHandler.handleMessage",
+            "MessagePayloadMessageHandler.handleMessage",
+            "I2PSessionImpl2.receiveMessage",
+            "ClientMessageEventListener.handleReceiveBegin",
+            "ClientMessageEventListener.handleReceiveEnd"
           ],
           "baseline_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
           "first_ported_commit": null,
@@ -8774,6 +8788,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "d384a850980f1b6245230ea852d617b11c405e11",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "9fca696181291fd9a1dc7d62942c76d23afbba11",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -8781,14 +8800,16 @@
         "migration/evidence/20261029-active-trackers-i2cp-channel/REVIEW.md",
         "migration/evidence/20261029-signed-session-local-publish/REVIEW.md",
         "migration/evidence/20261029-normal-dht-leaseset2/REVIEW.md",
-        "migration/evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md"
+        "migration/evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md",
+        "migration/evidence/20261029-i2cp-bounded-receiver/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
         "migration/evidence/20261029-active-trackers-i2cp-channel/verification.json",
         "migration/evidence/20261029-signed-session-local-publish/verification.json",
         "migration/evidence/20261029-normal-dht-leaseset2/verification.json",
-        "migration/evidence/20261029-saved-ratings-i2cp-datagrams/verification.json"
+        "migration/evidence/20261029-saved-ratings-i2cp-datagrams/verification.json",
+        "migration/evidence/20261029-i2cp-bounded-receiver/verification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     }

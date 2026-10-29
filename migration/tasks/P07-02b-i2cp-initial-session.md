@@ -17,3 +17,8 @@ Source 6726a4cf7b017ac31d6aeede15f339c3ec2b71f7 adds explicit consuming createLe
 ## Lease-backed outgoing datagrams
 
 Source `d384a850980f1b6245230ea852d617b11c405e11` adds explicit Datagram2/claimed3 Send5/Expires36 with current signer/recipient and genuine unexpired LS2 socket enqueue required. CREATED alone remains insufficient. Fixed-header bounded gzip, one pending tracked nonce, immutable initial reliability mode, monotone nonreused nonce, matching ID/status, independent absolute deadline and local-failure certainty are covered. Fresh affected7/5/5 and private7 passed; both actual Java artifacts exchanged8send+4status+1payload cases/reference/direction. Payload31 DTO parsing is not a receive listener. Receive, routing/tunnel/backend/streaming and public/default activation remain open. [Review](../evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md).
+
+
+## Bounded explicit datagram receiving
+
+Source `9fca696181291fd9a1dc7d62942c76d23afbba11` qualifies legacy Available→Begin6→Payload31→End7 and immutable initial fastReceive directPayload/noEnd. Queue4/160KiB, one legacy fetch, control4/recent64, unread-ID protection beyond recent rotation, signed2/current recipient versus unsigned claimed3, corruption drops and queued reentry/delete/close fences are covered. End releases router storage, not application acceptance; finite recent history is not lifetime replay protection. Fresh5/5/5 and private5 passed, with four actual receive/control Java cases per reference/direction. R1 Clang fixture format warning was fixed by one newline; all raw attempts remain separate. [Review](../evidence/20261029-i2cp-bounded-receiver/REVIEW.md). Actual stalled-socket overflow, real router/lookup/Streaming/backend/public activation remain open.

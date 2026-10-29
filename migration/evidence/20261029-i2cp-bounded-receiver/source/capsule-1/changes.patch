@@ -1,0 +1,11 @@
+--- a/preview/native/tests/i2cp_receive_control_tests.cpp
++++ b/preview/native/tests/i2cp_receive_control_tests.cpp
+@@ -29,6 +29,7 @@
+     const auto available=take(cp::decodeMessageStatus(take(cp::decodeFrame(read(root.n,label+".java.available")))));const auto payload=take(cp::decodeMessagePayload(take(cp::decodeFrame(read(root.n,label+".java.payload")))));require(available.sessionId==7&&available.messageId==id&&available.code==0&&available.nonce==1&&available.size==payload.payload.size()&&payload.sessionId==7&&payload.messageId==id,"Actual Available/Payload fields differ");const auto mux=take(cp::decodeMuxDatagram(payload.payload));require(mux.fromPort==13&&mux.toPort==42&&mux.protocol==(claimed?i2p::Datagram3Protocol:i2p::Datagram2Protocol),"Actual original mux differs");
+     if(claimed){const auto body=take(i2p::decode3(mux.datagram));require(body.claimedSender==take(i2p::decodeDestination(from)).hash&&body.payload==expected,"Original claimed payload differs");}else{const auto body=take(i2p::decode2(mux.datagram,to.hash));require(body.sender.wire==from&&body.payload==expected,"Original verified payload differs");}
+     auto packet=take(claimed?i2p::encode3(from,expected):i2p::encode2(from,secret,to.hash,expected));auto gzip=take(cp::encodeMuxDatagram({claimed?i2p::Datagram3Protocol:i2p::Datagram2Protocol,13,42,std::move(packet)},cp::GzipMode::Deflate));write(root.n,label+".native.available",take(cp::encodeMessageStatus({7,id,0,static_cast<std::uint32_t>(gzip.size()),1})));write(root.n,label+".native.payload",take(cp::encodeMessagePayload({7,id,std::move(gzip)})));std::cout<<"PASS NATIVE VERIFIED JAVA "<<label<<" receive\n";
+-  }require(::fsync(root.n)==0,"Cannot sync vector directory");
++  }
++  require(::fsync(root.n)==0,"Cannot sync vector directory");
+ }
+ int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);return 0;}require(argc==1,"Usage: i2cp-receive-control-tests [--java-interop ROOT]");controls();std::cout<<"PASS bounded original receive controls\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}

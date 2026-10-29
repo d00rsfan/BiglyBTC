@@ -1,0 +1,22 @@
+[
+  {
+    "name": "receive-objects",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "bash",
+      "/home/yurii/Java/BiglyBT/build/i2cp-datagram-receive-20261029/OFFLINE-COMMANDS.sh",
+      "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/offline-runs/r2/vectors",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2cp-receive-control-tests",
+      "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram",
+      "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/actual-offline-interop/dependencies/i2p-2.13.0.jar",
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 5.91,
+    "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/offline-runs/r2/receive-objects.log",
+    "log_sha256": "c016d772d9686daa0a3453ed82ecb24015cede14c4127ce5e2a1b474cb1a69a3"
+  }
+]

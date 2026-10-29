@@ -1,0 +1,25 @@
+{
+  "name": "build",
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "cmake",
+    "--build",
+    "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+    "--parallel",
+    "1",
+    "--target",
+    "biglybtc-i2cp-initial-channel-tests",
+    "biglybtc-i2cp-datagram-tests",
+    "biglybtc-i2cp-datagram-channel-tests",
+    "biglybtc-i2cp-receive-control-tests",
+    "biglybtc-i2cp-receive-channel-tests"
+  ],
+  "expected_exit": 0,
+  "exit": 0,
+  "seconds": 186.432,
+  "log": "/home/yurii/Java/BiglyBT/build/i2cp-receive-followup-20261029/runs/san-r1/build.log",
+  "log_sha256": "80a2f51a6bcd5a0fd0be3f1aef3a504a42e52fc17465023e9469978e8b7cf79e",
+  "source_manifest_sha256": "becc2dcc11b5e20f2c7a31f763b4a088aaf8a52d1403e922a7039c040e715cdd"
+}

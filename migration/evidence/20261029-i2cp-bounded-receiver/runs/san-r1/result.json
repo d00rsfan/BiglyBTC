@@ -1,0 +1,36 @@
+{
+  "status": "PASS_BOUNDED_I2CP_RECEIVER_COHORT",
+  "source_commit": "61d1b53b07be81be7a98eaabe40794d8185fbfbe",
+  "lane": "san",
+  "cache": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+  "compiled_targets": [
+    "biglybtc-i2cp-initial-channel-tests",
+    "biglybtc-i2cp-datagram-tests",
+    "biglybtc-i2cp-datagram-channel-tests",
+    "biglybtc-i2cp-receive-control-tests",
+    "biglybtc-i2cp-receive-channel-tests"
+  ],
+  "provider_rebuilt": false,
+  "historical_passes_pooled": false,
+  "runner_sha256": "5e3546f1a9888bde2ef9766c0992974cacf374f6e5de8c6bee3e2e10f3a53df8",
+  "source_receipt_sha256": "9e95a88fec1d0fcdf0cb4aadd678f699ddc4c1c296269a0737aa5332e70ccf8a",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "dist_manifest_before": "bcbcb9b9db1acc546d437659cb40e2bdc8a30e57960e00d8ab7dd6582ca462a4",
+  "suite_names": [
+    "i2cp-initial-channel",
+    "pure-i2cp-datagram-messages",
+    "i2cp-lease-backed-datagram-channel",
+    "pure-i2cp-receive-control",
+    "i2cp-bounded-datagram-receiver"
+  ],
+  "actual_suites": 5,
+  "full_ctest_log_sha256": "a6336193b3af6a55ddc0e88cf425c826ee535d7c47aa41839a98a68e5e3e886b",
+  "tests_xml_sha256": "e1bc030af7dabc2a76e9368090b31ce0ea2e5ec024e00398a0a8b9e2754bceb0",
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "commands_sha256": "7f1c459f796d330b3a6ebce765350af84209289f1b3a58193d4df401673b1949"
+}

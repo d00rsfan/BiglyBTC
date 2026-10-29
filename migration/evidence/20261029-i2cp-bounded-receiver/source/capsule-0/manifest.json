@@ -1,0 +1,140 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_INDEPENDENT_REVIEW_AND_ROOT_QUALIFICATION",
+  "component": "services.i2cp_initial_session",
+  "feature": "F06.i2cp_initial_session",
+  "native_source_basis": "d384a850980f1b6245230ea852d617b11c405e11",
+  "implementation_beforeimages_also_match": "1be0a4df444e82d3c2e702782bae88f5536959ef",
+  "source_sha256": {
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before": "8e98509ecaf32bd5306bcde3d47493aab915f6db9745f6f5067312c604eff3c4",
+      "after_sha256": "c8946710addff2da95dbbac8787dc2c86bbb950e689b47f7de0a1b2ca5a5f4fc",
+      "bytes": 33651
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before": "2180cf1f9839fd4b389583103ed995875ed3af27b6d078884f4c97f2ee6fec1d",
+      "after_sha256": "24fb0ab35cb9a79cd180c2b651e68da6e819709f9def6c274bc22bf192e1da65",
+      "bytes": 6619
+    },
+    "preview/native/services/i2cp_channel/receive.inc": {
+      "before": null,
+      "after_sha256": "15aa3acbb57b31d43e7eafa2d86fa0471d36a44ff024357c57cb4a2bc6cce20e",
+      "bytes": 11479
+    },
+    "preview/native/services/i2cp_datagram/messages.cpp": {
+      "before": "52f9876eeb3b3ed545647546e7bfbae21d926127307ef53fab04e41f724dcef9",
+      "after_sha256": "225a3df60f9d1abbd6d7033c52c0907bdd7360f3b49e3d5a17d183f439bf960b",
+      "bytes": 10797
+    },
+    "preview/native/services/i2cp_datagram/messages.hpp": {
+      "before": "bc984aa49b72a7add915627d958be22beb197794aba681fa3e0af4c74e0041a0",
+      "after_sha256": "36342e03f455d34a63280ad11f428ba139afc6278b48fa50344a5fc7ef30205a",
+      "bytes": 2378
+    },
+    "preview/native/tests/i2cp_receive_channel_tests.cpp": {
+      "before": null,
+      "after_sha256": "068c49d5239ff89480d36499ad1d3472c58f741773fe5df1b6177c1affe4eec1",
+      "bytes": 15444
+    },
+    "preview/native/tests/i2cp_receive_control_tests.cpp": {
+      "before": null,
+      "after_sha256": "17ef3835fee4e07d437d7893b4c040b5df46e9a29b57b4cc6c5af2c4c6635b45",
+      "bytes": 6519
+    }
+  },
+  "composition_input_sha256": {
+    "preview/native/services/CMakeLists.txt": "d240e52f6b9b32683ef042ddc1d152b550e56e9a644678c821341c7974a49cbb",
+    "preview/native/tests/CMakeLists.txt": "8f719102d02e899d394a9cc7b9b9134b89f32edee885bc510460bd5daee61c69",
+    "preview/native/services/i2cp/protocol.hpp": "d88a9b8bb5049c8c458b47598f6627ecf85a1b3b2b10bc97d8b65397da26d9c8",
+    "preview/native/services/i2cp/protocol.cpp": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672",
+    "preview/native/services/i2p_client/identity.hpp": "117e2ac9a5ef71339dc04548209092b33af6be351919f13af28f6b64c061a33d",
+    "preview/native/services/i2p_client/identity.cpp": "99c54025953cc774bf4963aead7c7be4f296c8bac8df7eb715521e5b57899201",
+    "preview/native/services/i2p_datagram/datagram.hpp": "32c742d8e769f31bd43119f3feca6dd0e04c2a6c77644e57f868d6addcfbecf1",
+    "preview/native/services/i2p_datagram/datagram.cpp": "96eedc04c93f2250c50c4fa78671775547cfef2e464652f3b27a609d56990038",
+    "preview/native/services/i2cp_session/session.hpp": "4db98f38801fc70df592ad062980f2c911ac47839c1984c310204b4a7aae256f",
+    "preview/native/services/i2cp_session/session.cpp": "06202a53e6da512673a88c41cee7938b95c3fb4a121ea09f0974517879649b4e",
+    "preview/native/services/i2cp_leaseset/leaseset.hpp": "44bcc356a5335d1049fab6f16780e2778e0e3b86b6afb5f3b448d7be9d2a6678",
+    "preview/native/services/i2cp_leaseset/leaseset.cpp": "f4bd1989267d40a306e94a1a76e4e48d4e94d473156170f4cda1bc6cf569489f",
+    "preview/native/tests/i2cp_initial_channel_tests.cpp": "f366232d4ecabc4738c4312105c82bc1b65bc44e5ee8d51ce4ba144a7dd2d8a2",
+    "preview/native/tests/i2cp_datagram_channel_tests.cpp": "4a952687ace251b91a3b1902aa5bb4354744323ad894fcd93353d575bae93401",
+    "preview/native/tests/i2cp_datagram_tests.cpp": "c412d177295983e817fd04349c9add8dfed226d631416994c9a33865662aef40",
+    "preview/native/tests/i2cp_leaseset_tests.cpp": "f668e4e9befbbad910d5259b444a8588bf01aaed4e86feb93f6bb89bccf27d17",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.sender": "2f0554e07af3496216dd5645d91b1c65711aecfb033fd19109df59f0bd3bc1c7",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.recipient": "10cdba035bd41026a230a4d58981e0122b442d07e8c2f1038e7a5142c6c20a66",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.known-test-key": "e9ff0e6e6de95da56ff09f4e3e0f481d67585f0a68aafdeef0f86f7b8533ce17",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.sender": "0c80bed1687e0f7fcbc915eab269f9b00e5f40f77dd966eb0829b040a8c14db8",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.recipient": "c439e09b76788b0157a984d060cb0cd462bd38b16f27c1cd45c20df5c4cc9b3a",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.known-test-key": "644d50ab64864c20a12b3c4656d46b4a48f69ef7c47ecdc8415cd28316b22ef5"
+  },
+  "artifacts_sha256": {
+    "ADOPTION.md": "a583213ae0335639bcc4c8cdfbbe8094b86d64da56547aa23ed0db7c0ce95766",
+    "CMake.fragment": "b540eb3f6180596c9f0fa396de8b1f57437773bd34fc47bd8ba9f5a096e6df18",
+    "OFFLINE-COMMANDS.sh": "6ddb2d330f962f482e5dd215f70e235b9d0173dc10cf14a9e6e2f2c046b6bab4",
+    "before/preview/native/services/i2cp_channel/channel.cpp": "8e98509ecaf32bd5306bcde3d47493aab915f6db9745f6f5067312c604eff3c4",
+    "before/preview/native/services/i2cp_channel/channel.hpp": "2180cf1f9839fd4b389583103ed995875ed3af27b6d078884f4c97f2ee6fec1d",
+    "before/preview/native/services/i2cp_datagram/messages.cpp": "52f9876eeb3b3ed545647546e7bfbae21d926127307ef53fab04e41f724dcef9",
+    "before/preview/native/services/i2cp_datagram/messages.hpp": "bc984aa49b72a7add915627d958be22beb197794aba681fa3e0af4c74e0041a0",
+    "changes.patch": "524a4af991af0a9563eaab158d72c0464d7604eb152bd90afef0291dbd6a612a",
+    "interop/ReceiveVectors.java": "58cfb36829dd4f7ac3c2baf17903579e5e641dfaf876adc2413a86b6a55daf3d",
+    "original-source/core/java/src/net/i2p/client/I2PClient.java": "50b2e033b0692ed5d5a01de9b650e1dc206c273bc8169165e0cfcf831a8c057d",
+    "original-source/core/java/src/net/i2p/client/datagram/Datagram2.java": "2934bcaaaeaf977ce917b02c6d99229056ef73b4661b790fc84e7402c939bfdc",
+    "original-source/core/java/src/net/i2p/client/datagram/Datagram3.java": "8d618c7b967703cfacf1523de299662f010f0b027877b7d666522e38a5a1d70c",
+    "original-source/core/java/src/net/i2p/client/impl/I2PSessionImpl.java": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+    "original-source/core/java/src/net/i2p/client/impl/I2PSessionImpl2.java": "54df392ad6739fa8fcc35b6b4bffd8dab04c7b4d8352d72ca370bda6438e8fe8",
+    "original-source/core/java/src/net/i2p/client/impl/I2PSessionMuxedImpl.java": "aeddb9687caa895dc1d8616444b70f60a84179633c54c84b152c65348aafb4b5",
+    "original-source/core/java/src/net/i2p/client/impl/MessagePayloadMessageHandler.java": "19837663c0c20f15313fa9ebcfa4aa9bc3c2097eca6eb978d7ced71bde79c454",
+    "original-source/core/java/src/net/i2p/client/impl/MessageStatusMessageHandler.java": "3b244b1c467f766ad38e5d645104809ff004e2e328eada9f30e5be5dff3ce6eb",
+    "original-source/core/java/src/net/i2p/data/DataHelper.java": "607191330d5b5c2607b166a6174812ec94664535a46dd8f78e30d6b662e46b09",
+    "original-source/core/java/src/net/i2p/data/i2cp/MessagePayloadMessage.java": "a70ec35d09857850989d4c068a5ba1831ad5fe2083f298733cba8ec07cc1cb20",
+    "original-source/core/java/src/net/i2p/data/i2cp/MessageStatusMessage.java": "68fcf81c5e89dc285414fee9d631883c7151c66cabfe05d551203e2d90a9f629",
+    "original-source/core/java/src/net/i2p/data/i2cp/ReceiveMessageBeginMessage.java": "3ab2b9c8fdb5cf19ed8b9cacc0e955814bc1ff98277537f806a0f86d444f57a8",
+    "original-source/core/java/src/net/i2p/data/i2cp/ReceiveMessageEndMessage.java": "7c37773cf1d8af72a7dd7152416000bbfcbd5be2b8f04a8c9993071f69732ca0",
+    "original-source/router/java/src/net/i2p/router/client/ClientConnectionRunner.java": "6d596723677f8837a27822c19e06df9d2315dab53280ce2ad449adc63a4f057a",
+    "original-source/router/java/src/net/i2p/router/client/ClientMessageEventListener.java": "58df866c1edd70e1220fe9bf92508ede3bb1c230c17bb2b3e01ce6724681a674",
+    "source-pins.json": "8c04cd5b71608f51b90e6a89ea946e611bb7f7b9c96424369feaedc918a1d6fd",
+    "staging/preview/native/services/i2cp_channel/channel.cpp": "c8946710addff2da95dbbac8787dc2c86bbb950e689b47f7de0a1b2ca5a5f4fc",
+    "staging/preview/native/services/i2cp_channel/channel.hpp": "24fb0ab35cb9a79cd180c2b651e68da6e819709f9def6c274bc22bf192e1da65",
+    "staging/preview/native/services/i2cp_channel/receive.inc": "15aa3acbb57b31d43e7eafa2d86fa0471d36a44ff024357c57cb4a2bc6cce20e",
+    "staging/preview/native/services/i2cp_datagram/messages.cpp": "225a3df60f9d1abbd6d7033c52c0907bdd7360f3b49e3d5a17d183f439bf960b",
+    "staging/preview/native/services/i2cp_datagram/messages.hpp": "36342e03f455d34a63280ad11f428ba139afc6278b48fa50344a5fc7ef30205a",
+    "staging/preview/native/tests/i2cp_receive_channel_tests.cpp": "068c49d5239ff89480d36499ad1d3472c58f741773fe5df1b6177c1affe4eec1",
+    "staging/preview/native/tests/i2cp_receive_control_tests.cpp": "17ef3835fee4e07d437d7893b4c040b5df46e9a29b57b4cc6c5af2c4c6635b45"
+  },
+  "retained_original_sources": 15,
+  "actual_subject_execution": false,
+  "qualification": {
+    "new_targets": [
+      "biglybtc-i2cp-receive-control-tests",
+      "biglybtc-i2cp-receive-channel-tests"
+    ],
+    "new_ctests": [
+      "pure-i2cp-receive-control",
+      "i2cp-bounded-datagram-receiver"
+    ],
+    "new_ctest_timeout_seconds": 60,
+    "existing_checks": [
+      "pure-i2p-datagram-codec",
+      "pure-i2p-client-identity",
+      "pure-i2cp-initial-session-codec",
+      "i2cp-initial-channel",
+      "pure-i2cp-signed-session-config",
+      "pure-i2cp-leaseset2",
+      "pure-i2cp-datagram-messages",
+      "i2cp-lease-backed-datagram-channel"
+    ],
+    "offline_expected_rows_per_direction_per_reference": 4,
+    "references": [
+      "official2.13.0",
+      "modified2.13.0.1"
+    ],
+    "outer_offline_budget_seconds": 180
+  },
+  "boundaries": [
+    "No router/session endpoint/reference subject execution during authoring",
+    "No original shared profile/native checkout/default/Host/Streaming activation",
+    "I2CP storage ACK is not application acceptance or delivery",
+    "Finite recent64 is not lifetime replay protection",
+    "No actual stalled-socket control-overflow experiment credited",
+    "Modified whole-core/source equivalence remains open"
+  ]
+}

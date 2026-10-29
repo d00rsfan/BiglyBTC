@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_TEST_FORMAT_FIX",
+  "native_source_basis": "61d1b53b07be81be7a98eaabe40794d8185fbfbe",
+  "reason": "Separate the nested for-loop closing brace from the following fsync assertion to avoid Clang misleading-indentation; no predicate or runtime change.",
+  "source_sha256": {
+    "preview/native/tests/i2cp_receive_control_tests.cpp": {
+      "before": "17ef3835fee4e07d437d7893b4c040b5df46e9a29b57b4cc6c5af2c4c6635b45",
+      "after_sha256": "10c221004258c4655eb8770976771a03534cf05fbb77339f2aff221f30b2c3ab"
+    }
+  },
+  "artifacts_sha256": {
+    "before/preview/native/tests/i2cp_receive_control_tests.cpp": "17ef3835fee4e07d437d7893b4c040b5df46e9a29b57b4cc6c5af2c4c6635b45",
+    "changes.patch": "3ecaf260695719587dd22527ba9b46cfef65d0a5431d6ed2c96ef374d96bfc08",
+    "staging/preview/native/tests/i2cp_receive_control_tests.cpp": "10c221004258c4655eb8770976771a03534cf05fbb77339f2aff221f30b2c3ab"
+  },
+  "executed": false
+}

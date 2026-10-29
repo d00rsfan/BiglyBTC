@@ -1,0 +1,177 @@
+{
+  "official_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "official_tree": "b38c70fbf3f7ce6f33ca95bedaa001e1458a4c9b",
+  "plugin_context_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+  "source_jar": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/actual-offline-interop/dependencies/i2p-2.13.0-sources.jar",
+  "source_jar_sha256": "b169a9cebb58bee8b9ca2e73743418b1e9a634bdea4faa8ca6e2063d1032f23a",
+  "git_repo": "/home/yurii/Java/BiglyBT/build/dependencies/i2p-java-2.13.0",
+  "retention_no_lazy_fetch": true,
+  "modified_source_equivalence": false,
+  "sources": [
+    {
+      "path": "core/java/src/net/i2p/data/i2cp/ReceiveMessageBeginMessage.java",
+      "source_jar_entry": "net/i2p/data/i2cp/ReceiveMessageBeginMessage.java",
+      "sha256": "3ab2b9c8fdb5cf19ed8b9cacc0e955814bc1ff98277537f806a0f86d444f57a8",
+      "bytes": 3068,
+      "git_blob": "29c8a02ef93dbac5a72fa11bca55d84c7be12645",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": false,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/i2cp/ReceiveMessageEndMessage.java",
+      "source_jar_entry": "net/i2p/data/i2cp/ReceiveMessageEndMessage.java",
+      "sha256": "7c37773cf1d8af72a7dd7152416000bbfcbd5be2b8f04a8c9993071f69732ca0",
+      "bytes": 2599,
+      "git_blob": "accf9dbe3d5a48db71da14489a473dc3cce2a4ba",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": false,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/MessageStatusMessageHandler.java",
+      "source_jar_entry": "net/i2p/client/impl/MessageStatusMessageHandler.java",
+      "sha256": "3b244b1c467f766ad38e5d645104809ff004e2e328eada9f30e5be5dff3ce6eb",
+      "bytes": 2475,
+      "git_blob": "4654eafa385e65a767e80d7a887bf3fdefd0befe",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": false,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/MessagePayloadMessageHandler.java",
+      "source_jar_entry": "net/i2p/client/impl/MessagePayloadMessageHandler.java",
+      "sha256": "19837663c0c20f15313fa9ebcfa4aa9bc3c2097eca6eb978d7ced71bde79c454",
+      "bytes": 3474,
+      "git_blob": "04bf8d342dc3522d9f23af05fe9a3aa4768776c2",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": false,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/I2PSessionImpl.java",
+      "source_jar_entry": "net/i2p/client/impl/I2PSessionImpl.java",
+      "sha256": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+      "bytes": 88133,
+      "git_blob": "44123f7c26d4218902e1492e975f0a30e3ffc174",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": true,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": false
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/I2PSessionImpl2.java",
+      "source_jar_entry": "net/i2p/client/impl/I2PSessionImpl2.java",
+      "sha256": "54df392ad6739fa8fcc35b6b4bffd8dab04c7b4d8352d72ca370bda6438e8fe8",
+      "bytes": 23743,
+      "git_blob": "abd47e2de382818d853960bb246782f1c064f2dc",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": true,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": false
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/I2PSessionMuxedImpl.java",
+      "source_jar_entry": "net/i2p/client/impl/I2PSessionMuxedImpl.java",
+      "sha256": "aeddb9687caa895dc1d8616444b70f60a84179633c54c84b152c65348aafb4b5",
+      "bytes": 19968,
+      "git_blob": "42d35c5b01a30b6ba8e5978abd6883f32aac70f6",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": true,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": false
+    },
+    {
+      "path": "core/java/src/net/i2p/client/I2PClient.java",
+      "source_jar_entry": "net/i2p/client/I2PClient.java",
+      "sha256": "50b2e033b0692ed5d5a01de9b650e1dc206c273bc8169165e0cfcf831a8c057d",
+      "bytes": 5906,
+      "git_blob": "831e4c905abcd4284dcf0e325b7ec45076258391",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": true,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": false
+    },
+    {
+      "path": "core/java/src/net/i2p/data/i2cp/MessagePayloadMessage.java",
+      "source_jar_entry": "net/i2p/data/i2cp/MessagePayloadMessage.java",
+      "sha256": "a70ec35d09857850989d4c068a5ba1831ad5fe2083f298733cba8ec07cc1cb20",
+      "bytes": 4674,
+      "git_blob": "2d04fa693b02908b6f8e0668a91217442f6fa6a8",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": true,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": false
+    },
+    {
+      "path": "core/java/src/net/i2p/data/i2cp/MessageStatusMessage.java",
+      "source_jar_entry": "net/i2p/data/i2cp/MessageStatusMessage.java",
+      "sha256": "68fcf81c5e89dc285414fee9d631883c7151c66cabfe05d551203e2d90a9f629",
+      "bytes": 11569,
+      "git_blob": "2cd87d14cf2e274a93536cbc6962b5151d054598",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": true,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": false
+    },
+    {
+      "path": "core/java/src/net/i2p/data/DataHelper.java",
+      "source_jar_entry": "net/i2p/data/DataHelper.java",
+      "sha256": "607191330d5b5c2607b166a6174812ec94664535a46dd8f78e30d6b662e46b09",
+      "bytes": 88662,
+      "git_blob": "17cce3f76d7f80d18823c12b6c12637622b153c6",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": true,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": false
+    },
+    {
+      "path": "core/java/src/net/i2p/client/datagram/Datagram2.java",
+      "source_jar_entry": "net/i2p/client/datagram/Datagram2.java",
+      "sha256": "2934bcaaaeaf977ce917b02c6d99229056ef73b4661b790fc84e7402c939bfdc",
+      "bytes": 14963,
+      "git_blob": "01fad3c95f5d559440237478e104cc72cb4cc047",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": true,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": false
+    },
+    {
+      "path": "core/java/src/net/i2p/client/datagram/Datagram3.java",
+      "source_jar_entry": "net/i2p/client/datagram/Datagram3.java",
+      "sha256": "8d618c7b967703cfacf1523de299662f010f0b027877b7d666522e38a5a1d70c",
+      "bytes": 7896,
+      "git_blob": "bc8794448cff8bae772a776fd06479ece1e2b616",
+      "source_jar_tree_equal": true,
+      "git_blob_previously_retained": true,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": false
+    },
+    {
+      "path": "router/java/src/net/i2p/router/client/ClientMessageEventListener.java",
+      "source_jar_entry": null,
+      "sha256": "58df866c1edd70e1220fe9bf92508ede3bb1c230c17bb2b3e01ce6724681a674",
+      "bytes": 40632,
+      "git_blob": "8960157856bc79df37d39ab6115e48c6fc450802",
+      "source_jar_tree_equal": false,
+      "git_blob_previously_retained": true,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": false
+    },
+    {
+      "path": "router/java/src/net/i2p/router/client/ClientConnectionRunner.java",
+      "source_jar_entry": null,
+      "sha256": "6d596723677f8837a27822c19e06df9d2315dab53280ce2ad449adc63a4f057a",
+      "bytes": 51880,
+      "git_blob": "2891674fe80ded25226976f9aa041b44f56c06f1",
+      "source_jar_tree_equal": false,
+      "git_blob_previously_retained": true,
+      "exact_git_blob_retained_now": true,
+      "materialized_matching_missing_blob": false
+    }
+  ]
+}

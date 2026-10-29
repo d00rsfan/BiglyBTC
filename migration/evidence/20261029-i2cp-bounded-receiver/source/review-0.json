@@ -1,0 +1,57 @@
+{
+  "status": "PASS_SOURCE_REVIEW_ONLY",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-datagram-receive-20261029/manifest.json",
+    "sha256": "e7742616a8e9026edc63b4885b97729c9c7a2f3243ba71a298f3984a2b29a90b"
+  },
+  "native_source_basis": "d384a850980f1b6245230ea852d617b11c405e11",
+  "original_source_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "verified_inputs": {
+    "source_maps": 7,
+    "artifact_hashes": 32,
+    "composition_inputs": 22,
+    "actual_retained_git_blobs": 15,
+    "matching_pinned_source_jar_core_entries": 13,
+    "retained_router_git_blobs": 2,
+    "accepted_c412_test_guard_preserved": true,
+    "old_test_leaves_changed": 0
+  },
+  "assessment": [
+    "Admission is explicit. Current connected generation/session, exact accepted full Destination, retained valid signer and unexpired actual LS2 enqueue gate payload verification and queue delivery; CREATED alone grants no admission.",
+    "Immutable initial fastReceive mirrors the exact router Boolean predicate; later reconfigure does not change it. Raw absent=false is explicit and does not silently inject Java client default.",
+    "Legacy Available binds one current fetch with independent absolute deadline. Begin is queued/written before a matching Payload is accepted; End releases router storage before application checks. Disabled/full receiver may End without Begin, supported by actual original handler. Fast mode sends neither control.",
+    "Decoded data retains typed verified Datagram2 versus unsigned claimed Datagram3 semantics; failed gzip/signature/recipient/protocol or stale/wrong-session payload cannot become a queued authenticated datagram. Bad inner data drops separately from existing terminal outer-frame/resource fences.",
+    "Unread queue is at most4 and160KiB of owned decoded wire/key/hash/payload; control queue4/one write, one legacy fetch and finite recent64 are explicit. Unread IDs remain checked independently of recent-ring rotation.",
+    "All public receiver signals are queued/coalesced with QPointer and captured generation; no owner access follows signal emission. Socket/timer callbacks retain generation/current gates; close clears receive/control state.",
+    "New pure controls and actual owned-TCP tests have matching targets/arguments; offline helper uses actual concrete Begin/End/Available/Payload objects and writeMessage, four unambiguous receive labels per reference/direction. No earlier send-summary prefix collision exists in this helper."
+  ],
+  "minimum_qualification": {
+    "new_suites": [
+      "pure-i2cp-receive-control",
+      "i2cp-bounded-datagram-receiver"
+    ],
+    "new_targets": [
+      "biglybtc-i2cp-receive-control-tests",
+      "biglybtc-i2cp-receive-channel-tests"
+    ],
+    "affected_existing": [
+      "i2cp-initial-channel",
+      "i2cp-lease-backed-datagram-channel",
+      "pure-i2cp-datagram-messages",
+      "pure-i2cp-leaseset2",
+      "pure-i2cp-signed-session-config",
+      "pure-i2cp-initial-session-codec",
+      "pure-i2p-datagram-codec",
+      "pure-i2p-client-identity"
+    ],
+    "offline": "Fresh current pure-control ELF, both pinned references, exact four labels each direction and actual class origins; all execution pending."
+  },
+  "blockers": [],
+  "limitations": [
+    "No compiler, tests, Java/native subject, endpoints, profile or native checkout mutation performed for this review.",
+    "No router/tunnel/Host/default/Streaming/public backend activation or end-to-end delivery qualification. Storage End is not application acceptance.",
+    "Finite recent64 is not lifetime replay protection; actual stalled-socket control-overflow experiment remains unqualified.",
+    "160KiB is decoded unread data, not total process/transient memory; controlLost explicitly permits incomplete router storage release.",
+    "Modified whole-core/source equivalence remains open; current Java bridge has no actual run credit."
+  ]
+}

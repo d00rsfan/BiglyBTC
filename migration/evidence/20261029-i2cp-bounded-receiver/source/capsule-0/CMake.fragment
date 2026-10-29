@@ -1,0 +1,20 @@
+# Services section: include belongs to the existing actual channel target.
+target_sources(biglybtc_i2cp_initial_channel PRIVATE i2cp_channel/receive.inc)
+
+# Tests section; existing outbound/channel/LS2 fixtures and targets untouched.
+if(TARGET biglybtc_i2cp_datagram)
+  add_executable(biglybtc-i2cp-receive-control-tests i2cp_receive_control_tests.cpp)
+  target_link_libraries(biglybtc-i2cp-receive-control-tests PRIVATE biglybtc_i2cp_datagram)
+  target_compile_options(biglybtc-i2cp-receive-control-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME pure-i2cp-receive-control COMMAND biglybtc-i2cp-receive-control-tests)
+  set_tests_properties(pure-i2cp-receive-control PROPERTIES TIMEOUT 60 LABELS "unit;i2p;no-network")
+endif()
+if(TARGET biglybtc_i2cp_initial_channel)
+  add_executable(biglybtc-i2cp-receive-channel-tests i2cp_receive_channel_tests.cpp)
+  set_target_properties(biglybtc-i2cp-receive-channel-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-i2cp-receive-channel-tests PRIVATE biglybtc_i2cp_initial_channel Qt6::Test Qt6::Network)
+  target_compile_definitions(biglybtc-i2cp-receive-channel-tests PRIVATE BIGLYBTC_I2P_TEST_KEYS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
+  target_compile_options(biglybtc-i2cp-receive-channel-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME i2cp-bounded-datagram-receiver COMMAND biglybtc-i2cp-receive-channel-tests)
+  set_tests_properties(i2cp-bounded-datagram-receiver PROPERTIES TIMEOUT 60 LABELS "unit;i2p;owned-loopback")
+endif()

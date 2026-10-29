@@ -1,0 +1,5 @@
+Picked up JAVA_TOOL_OPTIONS: -XX:ActiveProcessorCount=2
+PASS JAVA PRODUCED dsa-2 receive
+PASS JAVA PRODUCED dsa-3 receive
+PASS JAVA PRODUCED ed25519-2 receive
+PASS JAVA PRODUCED ed25519-3 receive

@@ -1,0 +1,35 @@
+[0/1] Re-running CMake...
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable exact version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Configuring done (11.3s)
+-- Generating done (2.3s)
+-- Build files have been written to: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+[1/23] Building CXX object services/CMakeFiles/biglybtc_i2cp_datagram.dir/i2cp_datagram/messages.cpp.o
+[2/23] Linking CXX static library services/libbiglybtc_i2cp_datagram.a
+[3/23] Automatic MOC for target biglybtc_i2cp_initial_channel
+[4/23] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/biglybtc_i2cp_initial_channel_autogen/mocs_compilation.cpp.o
+[5/23] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/i2cp_channel/channel.cpp.o
+[6/23] Linking CXX static library services/libbiglybtc_i2cp_initial_channel.a
+[7/23] Automatic MOC for target biglybtc-i2cp-initial-channel-tests
+[8/22] Automatic MOC for target biglybtc-i2cp-datagram-channel-tests
+[9/21] Automatic MOC for target biglybtc-i2cp-receive-channel-tests
+[10/21] Building CXX object tests/CMakeFiles/biglybtc-i2cp-datagram-tests.dir/i2cp_datagram_tests.cpp.o
+[11/21] Building CXX object tests/CMakeFiles/biglybtc-i2cp-receive-control-tests.dir/i2cp_receive_control_tests.cpp.o
+FAILED: [code=1] tests/CMakeFiles/biglybtc-i2cp-receive-control-tests.dir/i2cp_receive_control_tests.cpp.o 
+/usr/bin/clang++-24  -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_datagram -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_session -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_client -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_datagram -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp -O3 -DNDEBUG -std=c++23 -Wall -Wextra -Wpedantic -Werror -MD -MT tests/CMakeFiles/biglybtc-i2cp-receive-control-tests.dir/i2cp_receive_control_tests.cpp.o -MF tests/CMakeFiles/biglybtc-i2cp-receive-control-tests.dir/i2cp_receive_control_tests.cpp.o.d -o tests/CMakeFiles/biglybtc-i2cp-receive-control-tests.dir/i2cp_receive_control_tests.cpp.o -c /home/yurii/Java/BiglyBTC/preview/native/tests/i2cp_receive_control_tests.cpp
+/home/yurii/Java/BiglyBTC/preview/native/tests/i2cp_receive_control_tests.cpp:32:4: error: misleading indentation; statement is not part of the previous 'for' [-Werror,-Wmisleading-indentation]
+   32 |   }require(::fsync(root.n)==0,"Cannot sync vector directory");
+      |    ^
+/home/yurii/Java/BiglyBTC/preview/native/tests/i2cp_receive_control_tests.cpp:26:3: note: previous statement is here
+   26 |   for(const std::string family:{"dsa","ed25519"})for(const bool claimed:{false,true}){
+      |   ^
+1 error generated.
+ninja: build stopped: subcommand failed.
