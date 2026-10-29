@@ -80,7 +80,8 @@ public:
   // Lock order: source gate, then an adapter's own writer mutex. Network code
   // consumes an I/O-worker-held permit and must never acquire this gate.
   std::expected<ProfileSourceAccess,Error> sourceAccess(bool writing=false)const {
-    if(!valid()||!ownership_){return std::unexpected(Error{ErrorCode::Conflict,"Profile source ownership is released"});}
+    if(!valid()){return std::unexpected(Error{ErrorCode::UnsafePath,"Held profile lease required"});}
+    if(!ownership_){return std::unexpected(Error{ErrorCode::Conflict,"Profile source ownership is released"});}
     auto result=ProfileSourceAccess(ownership_,writing);
     if(result.revision()==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Error{ErrorCode::Conflict,"Profile source revision exhausted"});}
     return result;

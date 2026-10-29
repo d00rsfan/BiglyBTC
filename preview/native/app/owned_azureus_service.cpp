@@ -97,7 +97,7 @@ struct OwnedAzureusService::Impl {
         profilePermit_=true;const auto bound=actor_.serveDatabase(router_,localDatabase_,[this]{
           {std::lock_guard lock(state_->mutex);if(state_->stop){return false;}}
           return bool(router_)&&profilePermit_;
-        },[this](std::move_only_function<void()> resume){return normalProfileRequest(std::move(resume));});profilePermit_=false;if(!bound){return bound;}
+        },[this](std::move_only_function<void(bool)> complete){return normalProfileRequest(std::move(complete));});profilePermit_=false;if(!bound){return bound;}
       }return started;
     }
     azureus::Peer endpoint()const{return actor_.endpoint();}

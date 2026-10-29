@@ -294,7 +294,7 @@ std::expected<Ticket,Failure> OwnedPingTransport::requestStoreToken(Peer peer,st
 }
 std::expected<void,Failure> OwnedPingTransport::serveDatabase(std::shared_ptr<azureus_router::RouterOwner> router,
     std::shared_ptr<database::Owner> database,std::function<bool()> current,
-    std::function<bool(std::move_only_function<void()>)> preflight){
+    std::function<bool(std::move_only_function<void(bool)>)> preflight){
   if(!owner()){return std::unexpected(Failure::Thread);}
   if(state_!=State::Bound||normalRouter_||config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply
       ||!router||!database||!current){return std::unexpected(Failure::State);}
@@ -555,8 +555,9 @@ void OwnedPingTransport::sendServiceReply(ServiceReceipt& receipt,std::expected<
 }
 void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,std::int64_t receivedAt) {
   if(normalRouter_&&normalPreflight_&&!normalResuming_){
-    auto resumed=[this,peer,request=std::move(request),receivedAt]()mutable{
-      if(state_!=State::Bound||!allowed(peer)){return;}normalResuming_=true;
+    auto resumed=[this,peer,request=std::move(request),receivedAt](bool accepted)mutable{
+      if(state_!=State::Bound||!normalRouter_||!allowed(peer)){return;}
+      if(!accepted){++statistics_.authorityErrors;return;}normalResuming_=true;
       const auto reset=qScopeGuard([&]{normalResuming_=false;});answerService(peer,std::move(request),receivedAt);
     };
     if(!normalPreflight_(std::move(resumed))){++statistics_.serviceCapacityDrops;}return;
@@ -683,8 +684,9 @@ std::expected<database::Snapshot,Failure> OwnedPingTransport::databaseState()con
 }
 void OwnedPingTransport::answerDatabase(const Peer& peer,const lookup::Decoded& request,std::int64_t receivedAt){
   if(normalRouter_&&normalPreflight_&&!normalResuming_){
-    auto resumed=[this,peer,request,receivedAt]{
-      if(state_!=State::Bound||!allowed(peer)){return;}normalResuming_=true;
+    auto resumed=[this,peer,request,receivedAt](bool accepted){
+      if(state_!=State::Bound||!normalRouter_||!allowed(peer)){return;}
+      if(!accepted){++statistics_.authorityErrors;return;}normalResuming_=true;
       const auto reset=qScopeGuard([&]{normalResuming_=false;});answerDatabase(peer,request,receivedAt);
     };
     if(!normalPreflight_(std::move(resumed))){++statistics_.serviceCapacityDrops;}return;

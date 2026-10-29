@@ -157,9 +157,11 @@ public:
   // on THIS Qt thread to THIS socket identity. No caller-supplied closest,
   // seeded, token or value facts. Shared ownership lasts through close/join.
   // current checks the owner's held profile and stop state before each effect.
+  // Async preflight completes true to resume, false on actual source rejection.
+  // The completion is returned on this actor thread after the source gate releases.
   std::expected<void,Failure> serveDatabase(std::shared_ptr<azureus_router::RouterOwner>,
       std::shared_ptr<database::Owner>,std::function<bool()> current,
-      std::function<bool(std::move_only_function<void()>)> preflight={});
+      std::function<bool(std::move_only_function<void(bool)>)> preflight={});
   std::expected<GeneratedServiceState,Failure> generatedServiceState() const;
   std::expected<database::Snapshot,Failure> databaseState() const;
   // Owner-only pull. Moved receipts own the request referenced by policy indices.
@@ -239,7 +241,7 @@ private:
   std::shared_ptr<azureus_router::RouterOwner> normalRouter_;
   std::shared_ptr<database::Owner> normalDatabase_;
   std::function<bool()> normalCurrent_;
-  std::function<bool(std::move_only_function<void()>)> normalPreflight_;
+  std::function<bool(std::move_only_function<void(bool)>)> normalPreflight_;
   bool normalResuming_=false;
   std::vector<find::nodes::Contact> normalContacts_; // Only actually admitted request sources.
   Config config_;

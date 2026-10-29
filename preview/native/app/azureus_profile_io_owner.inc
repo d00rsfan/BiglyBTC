@@ -98,9 +98,13 @@
       if(!submitted){return false;}
       slot->job=std::move(*submitted);slot->command=command.id;slot->deadline=allowExpired?std::chrono::steady_clock::time_point::max():deadline;slot->current=std::move(current);slot->commit=std::move(commit);slot->failed=std::move(failed);slot->expired=std::move(expired);slot->cancelled=std::move(cancelled);armProfileDeadline();return true;
     }
-    bool normalProfileRequest(std::move_only_function<void()> resume){try{
+    bool normalProfileRequest(std::move_only_function<void(bool)> complete){try{
       auto held=holdProfileFrame();if(!held){return false;}
+      auto completion=std::make_shared<std::move_only_function<void(bool)>>(std::move(complete));
       Command command;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(30);
       return deferProfile(command,false,deadline,[this]{std::lock_guard lock(state_->mutex);return !state_->stop;},
-        [resume=std::move(resume),held=std::move(held)](const auto&)mutable{resume();},[](storage::Error){});
+        [completion,held=std::move(held)](const auto&){(*completion)(true);},
+        // Rejection is reported after the I/O slot has released its source
+        // gate. It never resumes the request or creates a protocol success.
+        [completion](storage::Error){(*completion)(false);});
     }catch(...){publicationMemoryFailure();return false;}}
