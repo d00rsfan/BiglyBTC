@@ -1,0 +1,6 @@
+# Existing native crash/conflict driver, without replaying its Java oracle.
+add_test(NAME native-torrent-state-writer-guards COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/torrent_state_writer_guards.py"
+  --driver "$<TARGET_FILE:biglybtc-torrent-state-driver>")
+set_tests_properties(native-torrent-state-writer-guards PROPERTIES
+  TIMEOUT 120 LABELS "unit;storage;locking;faults")

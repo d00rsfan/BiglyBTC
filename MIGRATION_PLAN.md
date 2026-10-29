@@ -1686,3 +1686,9 @@ Qualified source `d384a850980f1b6245230ea852d617b11c405e11`: fresh GCC7/Clang5/l
 ## 2026-10-29 bounded explicit I2CP datagram receiver
 
 Qualified source `9fca696181291fd9a1dc7d62942c76d23afbba11`: fresh5/5/5 affected suites, private5, actual both-JAR receive/control4cases/reference/direction. One dist promoted, predecessor/testcopies deleted; both proposed registries passed first. Scope remains explicit bounded legacy/fast2/3 datagrams, not real-router/backend/Streaming or delivery parity. [Evidence](migration/evidence/20261029-i2cp-bounded-receiver/verification.json). Continue profile-I/O executor and explicit I2P UDP tracker work, then the rest of the full plan.
+
+## 2026-10-29 bounded profile I/O and explicit I2CP tracker
+
+Source `f9c72f14be1494b6d75b38288f9eff256a1a878b` qualifies bounded profile I/O off the DHT network owner and explicit I2CP hash lookup/connect/scrape. Fresh GCC17/Clang12/leak-enabled ASan+UBSan12 suites, private-runtime17 and actual official/modified Java2signing families/10frames per reference/direction pass. [Review](evidence/20261029-profile-io-i2cp-tracker/REVIEW.md).
+
+One checked dist replaces its predecessor. Both proposed registries pass before promotion; existing states/baselines/dependencies remain unchanged. Real public routing/maintenance, active router/Streaming integration and broader performance gates remain open.

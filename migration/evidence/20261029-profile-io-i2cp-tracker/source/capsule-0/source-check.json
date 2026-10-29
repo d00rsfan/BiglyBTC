@@ -1,0 +1,16 @@
+{
+  "status": "SOURCE_ONLY_APPLY_CHECK_PASS",
+  "current_native_commit": "535d6403c3b59ce3108940bba57593368745329f",
+  "native_source_basis": "d384a850980f1b6245230ea852d617b11c405e11",
+  "old_source_paths_unchanged": 12,
+  "new_paths_absent": 3,
+  "command": [
+    "git",
+    "apply",
+    "--check",
+    "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/changes.patch"
+  ],
+  "stdout": "",
+  "stderr": "",
+  "no_build_or_subject_execution": true
+}

@@ -1,0 +1,5 @@
+SOURCE ONLY: minimal2-leaf actual f02385070badd3318a250b2d8dd4146727964ac4 compile correction. Parent/source review and actual failed r1 logs remain immutable. Root will batch this after all current lanes join; no author compile/test/Java/N mutation.
+
+Qt defines the keyword macro slots. Rename only the two local std::lock_guard variables slots to slotGuard; locks, scope and order unchanged. Installed Qt6.12 QChronoTimer exposes setInterval(nanoseconds) and start() only: replace start(theExactExistingClampedDuration) with setInterval(theExactExistingClampedDuration);start(), within the existing noexcept arming try/catch. Absolute deadlines,1ns lower bound, timer/resource failure handling, tests and assertions remain unchanged. No warning disabled.
+
+Apply changes.patch or these exact two afterimages against current f023. Source-only git apply --check passes; successful compilation/runtime remain root qualification work. Qt installed API and macro source hashes are inputs.json. This is a complete2-path correction overlay, not a reapplication of the15-path feature capsule.

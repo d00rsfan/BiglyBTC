@@ -1,0 +1,15 @@
+{
+  "status": "SOURCE_ONLY_APPLY_CHECK_PASS",
+  "native_commit": "535d6403c3b59ce3108940bba57593368745329f",
+  "basis": "d384a850980f1b6245230ea852d617b11c405e11",
+  "complete_source_paths": 15,
+  "delta_paths": 1,
+  "command": [
+    "git",
+    "apply",
+    "--check",
+    "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-live-only/changes.patch"
+  ],
+  "stderr": "",
+  "no_build_or_runtime_execution": true
+}

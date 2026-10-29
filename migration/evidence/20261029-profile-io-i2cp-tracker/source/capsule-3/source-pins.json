@@ -1,0 +1,94 @@
+{
+  "official_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "official_tree": "b38c70fbf3f7ce6f33ca95bedaa001e1458a4c9b",
+  "source_jar_sha256": "b169a9cebb58bee8b9ca2e73743418b1e9a634bdea4faa8ca6e2063d1032f23a",
+  "plugin_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+  "sources": [
+    {
+      "path": "core/java/src/net/i2p/data/i2cp/HostLookupMessage.java",
+      "jar_entry": "net/i2p/data/i2cp/HostLookupMessage.java",
+      "sha256": "fc9bcefadf6c7b908861e4f4b34447aa061945a2e43c8c0731b1d01284f985f0",
+      "git_blob": "1897f77e923ea70407ec0637346f276b7f82582f",
+      "source_jar_tree_equal": true,
+      "retained": true,
+      "matching_missing_blob_materialized": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/i2cp/HostReplyMessage.java",
+      "jar_entry": "net/i2p/data/i2cp/HostReplyMessage.java",
+      "sha256": "18186fdb9f99a50c013cead9d56eff610b414bb95d640ba1218bf9a66f4ed55d",
+      "git_blob": "f1986f4e9ded367be20dd5efb76da6c1e4d2327a",
+      "source_jar_tree_equal": true,
+      "retained": true,
+      "matching_missing_blob_materialized": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/SendMessageOptions.java",
+      "jar_entry": "net/i2p/client/SendMessageOptions.java",
+      "sha256": "d63e7d89ac51bdd61667f5345f35d7183487a60bf53b82446b0b11e97e855412",
+      "git_blob": "768161422dba1182999bf9966bfeac6d4e67b7e8",
+      "source_jar_tree_equal": true,
+      "retained": true,
+      "matching_missing_blob_materialized": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/i2cp/SendMessageExpiresMessage.java",
+      "jar_entry": "net/i2p/data/i2cp/SendMessageExpiresMessage.java",
+      "sha256": "f9e13b382acaf65a16caa5b971f819514d492410150e9ce7c84a719fcdff3ce9",
+      "git_blob": "24fd67f07b312ca49fad0fe266289739b700d4bd",
+      "source_jar_tree_equal": true,
+      "retained": true,
+      "matching_missing_blob_materialized": false
+    },
+    {
+      "path": "core/java/src/net/i2p/client/I2PSession.java",
+      "jar_entry": "net/i2p/client/I2PSession.java",
+      "sha256": "c6cbe0c20fa2212e426a2886a7c107e63ecd0e857768c6d8bef56098dbe10c05",
+      "git_blob": "b9fa728077b2cb0ae160d79ed1965da4616b5bb2",
+      "source_jar_tree_equal": true,
+      "retained": true,
+      "matching_missing_blob_materialized": false
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/I2PSessionImpl.java",
+      "jar_entry": "net/i2p/client/impl/I2PSessionImpl.java",
+      "sha256": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+      "git_blob": "44123f7c26d4218902e1492e975f0a30e3ffc174",
+      "source_jar_tree_equal": true,
+      "retained": true,
+      "matching_missing_blob_materialized": false
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/I2CPMessageProducer.java",
+      "jar_entry": "net/i2p/client/impl/I2CPMessageProducer.java",
+      "sha256": "f4cd7596ddc1a9d228f25599850478500c594b1e5c3d4c8b852a550cb7c6969e",
+      "git_blob": "fdb670b19ae999406596982c7fb7f4e3df61ede0",
+      "source_jar_tree_equal": true,
+      "retained": true,
+      "matching_missing_blob_materialized": false
+    },
+    {
+      "path": "core/java/src/net/i2p/data/DataHelper.java",
+      "jar_entry": "net/i2p/data/DataHelper.java",
+      "sha256": "607191330d5b5c2607b166a6174812ec94664535a46dd8f78e30d6b662e46b09",
+      "git_blob": "17cce3f76d7f80d18823c12b6c12637622b153c6",
+      "source_jar_tree_equal": true,
+      "retained": true,
+      "matching_missing_blob_materialized": false
+    },
+    {
+      "path": "org/parg/azureus/plugins/networks/i2p/router/I2PSMHolder.java",
+      "sha256": "94a39ad5ba3290ea5600aa6a9fc4c1f12474224798cb9a7afc3f2bc2c0bdab2f",
+      "git_blob": "386fc7e84a9b7182d089d36c0f0680bb3a71c54a",
+      "retained": true
+    },
+    {
+      "path": "org/parg/azureus/plugins/networks/i2p/router/I2PHelperSocksProxy.java",
+      "sha256": "0a6967caf320856f6dea615c00bbc4a8758deb3fb2af7220988f05c3ed028a2c",
+      "git_blob": "f77abb6fdeddd12445a27229b7d4653a2a335112",
+      "retained": true
+    }
+  ],
+  "modified_source_equivalence": false,
+  "actual_subjects_run": false
+}

@@ -1,0 +1,11 @@
+--- a/preview/native/app/owned_azureus_service.cpp
++++ b/preview/native/app/owned_azureus_service.cpp
+@@ -120,7 +120,7 @@
+             complete(value,cancelled?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));return;
+           }
+           for(auto& pending:ioSlots_){
+-            if(pending.job&&pending.command==value.target&&pending.cancelled){
++            if(pending.job&&pending.command==value.target&&!pending.consumed&&!pending.expiryNotified&&pending.cancelled){
+               ProfileIo::revoke(pending.job);auto cancelled=std::move(pending.cancelled);cancelled();drainProfileIo();complete(value,{});return;
+             }
+           }

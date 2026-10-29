@@ -1,0 +1,121 @@
+   2309076:	find library=libstdc++.so.6 [0]; searching
+   2309076:	 search path=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/test-support/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/test-support/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/test-support/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/test-support/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/test-support/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	 search path=/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib		(RUNPATH from file /home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/biglybtc-classic-preferences-create-view-tests)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libstdc++.so.6
+   2309076:	    (no such file)
+   2309076:	 search cache=/etc/ld.so.cache
+   2309076:	  trying file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2309076:	
+   2309076:	find library=libgcc_s.so.1 [0]; searching
+   2309076:	 search path=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/test-support/libgcc_s.so.1
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libgcc_s.so.1
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libgcc_s.so.1
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2309076:	    (no such file)
+   2309076:	 search path=/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib		(RUNPATH from file /home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/biglybtc-classic-preferences-create-view-tests)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libgcc_s.so.1
+   2309076:	    (no such file)
+   2309076:	 search cache=/etc/ld.so.cache
+   2309076:	  trying file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2309076:	
+   2309076:	find library=libc.so.6 [0]; searching
+   2309076:	 search path=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/test-support/libc.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libc.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libc.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libc.so.6
+   2309076:	    (no such file)
+   2309076:	 search path=/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib		(RUNPATH from file /home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/biglybtc-classic-preferences-create-view-tests)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libc.so.6
+   2309076:	    (no such file)
+   2309076:	 search cache=/etc/ld.so.cache
+   2309076:	  trying file=/usr/lib/x86_64-linux-gnu/libc.so.6
+   2309076:	
+   2309076:	find library=libm.so.6 [0]; searching
+   2309076:	 search path=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/test-support:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/test-support/libm.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/lib/libm.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/usr/lib/biglybtc/qt/lib/libm.so.6
+   2309076:	    (no such file)
+   2309076:	  trying file=/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libm.so.6
+   2309076:	    (no such file)
+   2309076:	 search cache=/etc/ld.so.cache
+   2309076:	  trying file=/usr/lib/x86_64-linux-gnu/libm.so.6
+   2309076:	
+   2309076:	
+   2309076:	calling init: /lib64/ld-linux-x86-64.so.2
+   2309076:	
+   2309076:	
+   2309076:	calling init: /usr/lib/x86_64-linux-gnu/libc.so.6
+   2309076:	
+   2309076:	
+   2309076:	calling init: /usr/lib/x86_64-linux-gnu/libm.so.6
+   2309076:	
+   2309076:	
+   2309076:	calling init: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2309076:	
+   2309076:	
+   2309076:	calling init: /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2309076:	
+   2309076:	
+   2309076:	initialize program: /home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/biglybtc-classic-preferences-create-view-tests
+   2309076:	
+   2309076:	
+   2309076:	transferring control: /home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-runs/r3/biglybtc-classic-preferences-create-view-tests
+   2309076:	
+   2309076:	
+   2309076:	calling fini:  [0]
+   2309076:	
+   2309076:	
+   2309076:	calling fini: /usr/lib/x86_64-linux-gnu/libstdc++.so.6 [0]
+   2309076:	
+PASS 38 classic-preferences create-view cases; 1134 assertions
+   2309076:	
+   2309076:	calling fini: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 [0]
+   2309076:	
+   2309076:	
+   2309076:	calling fini: /usr/lib/x86_64-linux-gnu/libm.so.6 [0]
+   2309076:	
+   2309076:	
+   2309076:	calling fini: /usr/lib/x86_64-linux-gnu/libc.so.6 [0]
+   2309076:	
+   2309076:	
+   2309076:	calling fini: /lib64/ld-linux-x86-64.so.2 [0]
+   2309076:	

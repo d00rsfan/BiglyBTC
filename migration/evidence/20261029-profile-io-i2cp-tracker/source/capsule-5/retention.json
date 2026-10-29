@@ -1,0 +1,11 @@
+{
+  "test_sources_unchanged": {
+    "preview/native/tests/config_create_tests.cpp": "e0aec4419f27b3badb0cc9e90eac916c8b9e70a0a274be8201d1f3fc6a71cd55",
+    "preview/native/tests/owned_azureus_service_tests.cpp": "5c4c4fc64d0d9bac7070d50a17ef756ea1c22dc9b69d32ab5843a1ee38d9b4f7",
+    "preview/native/tests/azureus_profile_io_tests.cpp": "5f6e1c48130db72f3ec73e527e17494700318b4dc998febcea228ecebf5ab523"
+  },
+  "deadlines_changed": false,
+  "profile_CAS_checks_removed": false,
+  "request_effects_on_rejection": false,
+  "routing_source_authored": false
+}

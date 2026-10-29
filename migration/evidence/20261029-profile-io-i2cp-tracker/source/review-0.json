@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_REVIEW",
+  "scope": "Complete 15-path profile-I/O executor overlay; no runtime qualification",
+  "reviewed_manifest": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-live-only/manifest.json",
+  "reviewed_manifest_sha256": "8962c207cfa044d47fa2952b2b371324e87f981ad203104ed4b345edf9b00ef4",
+  "history": [
+    {
+      "manifest": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/manifest.json",
+      "sha256": "ad6a4f7741e1f939c02e2e6d240309ade9ced7ff6e1679f7b2beb3eb3a5c743f"
+    },
+    {
+      "manifest": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/manifest.json",
+      "sha256": "3d114576cfb86e0d16b00a6dd12e19340b3af3144aa7a9730142a39ee446a63b"
+    }
+  ],
+  "verified": {
+    "final_source_paths": 15,
+    "all_three_manifest_source_and_artifact_maps": true,
+    "parent_hash_linkage": true,
+    "current_native_beforeimages": true,
+    "final_delta": "Only excludes consumed or expiry-notified IoSlots from exact-command Cancel fallback; fourteen inherited afterimages unchanged.",
+    "parent_new_test_methods_retained_byte_exact": 3,
+    "existing_executor_sha256": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a",
+    "existing_owned_service_tests_sha256": "5c4c4fc64d0d9bac7070d50a17ef756ea1c22dc9b69d32ab5843a1ee38d9b4f7"
+  },
+  "resolved_findings": [
+    "Initial rating preflight cancellation now resolves only the live exact pending command before RatingRead/Publishing creation; terminal or expiry-notified slots cannot grant Cancel success.",
+    "Recursive source access tracks owned depth across moves and exceptions; observed nested writes refuse before effects, and outside callbacks cannot run beneath a remaining source-gate level.",
+    "Deadline-arm and cleanup paths are noexcept and convert timer setup failure to the existing fail-closed memory-failure path."
+  ],
+  "source_conclusions": [
+    "Source-gate then version-mutex order remains consistent. Network continuations use bounded atomic revisions and one-shot permits without filesystem access, gate acquisition, or future waits.",
+    "Worker jobs own immutable inputs, retained same-OFD lease, and shared job/mailbox state; actor callbacks remain owner-thread slots. Unbind serializes posting before owner destruction.",
+    "Permits remain single-use; executing permits retain worker-held authority until acknowledgment. Queued, running, ready and result storage remain bounded; close revokes network authority before external join.",
+    "Current request, peer/socket, token, router/database, source and deadline gates remain at packet effects. Cancellation, stale completion and readmission do not manufacture successful publication.",
+    "Focused new controls exercise held real gate cancellation, fresh rating read, source changes, permit reclamation, and nested-observer refusal. Existing core Executor and prior owned-service tests remain unchanged."
+  ],
+  "limitations": [
+    "Review is source-only; no build, native/Java test, endpoint, performance measurement, or kernel-stall experiment was executed.",
+    "External full join may wait for an uninterruptible filesystem syscall or an already-entered source gate; held-permit tests do not prove kernel-stall latency."
+  ],
+  "unresolved_material_blockers": [],
+  "native_source_mutated": false,
+  "provider_mutated": false,
+  "runtime_execution": false
+}

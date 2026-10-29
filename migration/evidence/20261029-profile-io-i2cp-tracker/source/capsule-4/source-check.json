@@ -1,0 +1,14 @@
+{
+  "status": "SOURCE_ONLY_APPLY_CHECK_PASS",
+  "native_source": "f02385070badd3318a250b2d8dd4146727964ac4",
+  "command": [
+    "git",
+    "apply",
+    "--check",
+    "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/qt-keyword-timer-api/changes.patch"
+  ],
+  "stderr": "",
+  "compiler_executed": false,
+  "runtime_executed": false,
+  "test_source_unchanged_sha256": "5f6e1c48130db72f3ec73e527e17494700318b4dc998febcea228ecebf5ab523"
+}

@@ -22,3 +22,9 @@ Source `d384a850980f1b6245230ea852d617b11c405e11` adds explicit Datagram2/claime
 ## Bounded explicit datagram receiving
 
 Source `9fca696181291fd9a1dc7d62942c76d23afbba11` qualifies legacy Available→Begin6→Payload31→End7 and immutable initial fastReceive directPayload/noEnd. Queue4/160KiB, one legacy fetch, control4/recent64, unread-ID protection beyond recent rotation, signed2/current recipient versus unsigned claimed3, corruption drops and queued reentry/delete/close fences are covered. End releases router storage, not application acceptance; finite recent history is not lifetime replay protection. Fresh5/5/5 and private5 passed, with four actual receive/control Java cases per reference/direction. R1 Clang fixture format warning was fixed by one newline; all raw attempts remain separate. [Review](../evidence/20261029-i2cp-bounded-receiver/REVIEW.md). Actual stalled-socket overflow, real router/lookup/Streaming/backend/public activation remain open.
+
+## 2026-10-29 executor and explicit tracker qualification
+
+Source `f9c72f14be1494b6d75b38288f9eff256a1a878b` qualifies bounded profile I/O off the DHT network owner and explicit I2CP hash lookup/connect/scrape. Fresh GCC17/Clang12/leak-enabled ASan+UBSan12 suites, private-runtime17 and actual official/modified Java2signing families/10frames per reference/direction pass. [Review](evidence/20261029-profile-io-i2cp-tracker/REVIEW.md).
+
+This closes the bounded execution slice only. Public maintenance/router/Streaming/default activation and full performance/parity remain open; consult the linked review for exact limits.

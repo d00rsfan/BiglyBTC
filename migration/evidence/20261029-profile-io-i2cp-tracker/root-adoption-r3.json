@@ -1,0 +1,314 @@
+{
+  "source_commit": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+  "parent_commit": "535d6403c3b59ce3108940bba57593368745329f",
+  "source_path_count": 31,
+  "source_paths": {
+    "preview/native/adapters/azureus_value_versions.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/adapters/azureus_value_versions.cpp",
+      "before_sha256": "f609be5b184972d8a025cf658de721d7afc3946189d620ed9e0549a184fbf733",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/adapters/azureus_value_versions.cpp",
+      "after_sha256": "d2f6b7d3f44d7e3d788cde1f5d21a769ece08511fe2a7b5b477ae7aaff095978"
+    },
+    "preview/native/adapters/azureus_value_versions.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/adapters/azureus_value_versions.hpp",
+      "before_sha256": "2a42873de80e2ff42ec4c26b7e90489481336c7ebf3544f08d9c0136ac54fd91",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/adapters/azureus_value_versions.hpp",
+      "after_sha256": "c285913a2fcba30f21016dbce62e0167c119044efa531ac91d58e269303b47b5"
+    },
+    "preview/native/adapters/profile.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/adapters/profile.cpp",
+      "before_sha256": "6d0037c0a1c2b12c9128407f352a282096b4d43eb777b5e518f39b9ab733c842",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/adapters/profile.cpp",
+      "after_sha256": "93e151e3b31eca4503ec8d33989802bac23a24f5cf8656979addd951f0c4fa31"
+    },
+    "preview/native/adapters/profile.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/adapters/profile.hpp",
+      "before_sha256": "e54ab9b6404293fea1dc476903d9a38f0ce0403ea1162c80368f737c71f919c3",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/invalid-lease-and-source-rejection/staging/preview/native/adapters/profile.hpp",
+      "after_sha256": "5e8d47cc73d10f62cc2746416c0565fca53359aec3e0a33480622f255f5fa41d"
+    },
+    "preview/native/adapters/torrent_state.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/adapters/torrent_state.cpp",
+      "before_sha256": "aa251a5b25de3353d446f5f0e4530956027b7abffd241c2b2b2b0152404f3ac7",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/adapters/torrent_state.cpp",
+      "after_sha256": "5aa54a20a19b5a788e67f801a313ce6e194cf7b58acdfb23d48e8364ff5e6abf"
+    },
+    "preview/native/adapters/torrent_state.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/adapters/torrent_state.hpp",
+      "before_sha256": "3142c9450f4d4407fccb9ac630a71ab08a73c2e73e9c5706c6696ed4bd44d3f4",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/adapters/torrent_state.hpp",
+      "after_sha256": "ed59d6d0cc31b679c21d41408aef9daf9e4814e4bed74ce552a91eaf8d42021f"
+    },
+    "preview/native/app/azureus_local_publish.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/app/azureus_local_publish.inc",
+      "before_sha256": "e174c784903f88d8cb5e5089d752a2466800b4be542d45bb1d6462d84684bd1e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/app/azureus_local_publish.inc",
+      "after_sha256": "5be8f8524c13e42690a55c2216347c18d29cd2918f8210d883490e1d14779122"
+    },
+    "preview/native/app/azureus_profile_io.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/qt-keyword-timer-api/staging/preview/native/app/azureus_profile_io.hpp",
+      "after_sha256": "7357b13f11d46cc06fc2c9bddb52bd9942d942fcce29d5804975076d6494fd30"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/invalid-lease-and-source-rejection/staging/preview/native/app/azureus_profile_io_owner.inc",
+      "after_sha256": "51825e083f0c444bb49a2708e56896a73668467fb619a16b3756395942ad502d"
+    },
+    "preview/native/app/azureus_rating_consumer.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/app/azureus_rating_consumer.inc",
+      "before_sha256": "36d4ceeabd6baaae0ad7ea8502c9ff6ad14ef6fdc04434e46a3d4c9769bf378e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/app/azureus_rating_consumer.inc",
+      "after_sha256": "669a6730bd81529630310884a5bacc592e66eba1de33c3b774e5eb4488e03a65"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "b5b5384ab843fbf3c4bf6ef691c1d1b43e91e52eec054e39c6da916724ed26f2",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/invalid-lease-and-source-rejection/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "5f41699ed737b029e345be5c8ff99600c769e1b24f0c27dcbcc5d80613bf3695"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "76742bc903f2bf109f037dbc616ea958e100df348d625687fa4ba18753546ea9",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "899ae6594404eef19cb30627e5a4312cf2a90b8ff5aba2d19dc366c6f4d0c747"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/services/azureus_udp/owned_transport.cpp",
+      "before_sha256": "b76d182088b297742a9ed7f36b2e0b833751e6e6a66d926ef407e7edfb898ef0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/invalid-lease-and-source-rejection/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+      "after_sha256": "08d589940032336a21fbec4da0521bfe3bb9bc592c81cf498d1103cd3879cd43"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/services/azureus_udp/owned_transport.hpp",
+      "before_sha256": "c82d6ee221fe23e30c26910473e57b85b10aa00246c1a356b6538f1eab5edda7",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/invalid-lease-and-source-rejection/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+      "after_sha256": "e4e1de5cb11f3d41ba223fd11996685f2501d5a4110bb3f7ac22a59265eb16ef"
+    },
+    "preview/native/tests/azureus_profile_io_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/tests/azureus_profile_io_tests.cpp",
+      "after_sha256": "5f6e1c48130db72f3ec73e527e17494700318b4dc998febcea228ecebf5ab523"
+    },
+    "preview/native/core/include/biglybtc/udp_tracker_wire.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/staging/preview/native/core/include/biglybtc/udp_tracker_wire.hpp",
+      "after_sha256": "f8423b6f8cc3b1b81f23175d63a1400b1931dbbff5f3202a79d647a932fd9977"
+    },
+    "preview/native/engine/library_udp_tracker.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/before/preview/native/engine/library_udp_tracker.hpp",
+      "before_sha256": "9924fdc30db0d711b31e767a533fd70319778945119a1e32f0847969a323e199",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/staging/preview/native/engine/library_udp_tracker.hpp",
+      "after_sha256": "f454d11734d66b16e7711c09da7e70e5a94f3316cdae4b1db03234b7a85ccb8c"
+    },
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/before/preview/native/services/i2cp_channel/channel.cpp",
+      "before_sha256": "c8946710addff2da95dbbac8787dc2c86bbb950e689b47f7de0a1b2ca5a5f4fc",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/staging/preview/native/services/i2cp_channel/channel.cpp",
+      "after_sha256": "f96cfadec04e00ccd41b2bcd3a698739a8faa73bf539d7cb4f1572935f8433de"
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/before/preview/native/services/i2cp_channel/channel.hpp",
+      "before_sha256": "24fb0ab35cb9a79cd180c2b651e68da6e819709f9def6c274bc22bf192e1da65",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/staging/preview/native/services/i2cp_channel/channel.hpp",
+      "after_sha256": "aa6f00e14cfb95b49294c564031d57bcad8d151b05fae824a348f141ba19af65"
+    },
+    "preview/native/services/i2cp_channel/receive.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/before/preview/native/services/i2cp_channel/receive.inc",
+      "before_sha256": "15aa3acbb57b31d43e7eafa2d86fa0471d36a44ff024357c57cb4a2bc6cce20e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/staging/preview/native/services/i2cp_channel/receive.inc",
+      "after_sha256": "55f23b537873bf20401d7cd022b6490ce8545cfda655df4c0c524ae24e131831"
+    },
+    "preview/native/services/i2cp_channel/tracker.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/staging/preview/native/services/i2cp_channel/tracker.inc",
+      "after_sha256": "c3fd50c904b79b256a2a817154dc8befc5c58e1b1cc05ac8f43d4cb3fecb5ad4"
+    },
+    "preview/native/services/i2cp_datagram/messages.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/before/preview/native/services/i2cp_datagram/messages.cpp",
+      "before_sha256": "225a3df60f9d1abbd6d7033c52c0907bdd7360f3b49e3d5a17d183f439bf960b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/staging/preview/native/services/i2cp_datagram/messages.cpp",
+      "after_sha256": "28081d4181de45add4a3fee6df1061111574c7cd48b6527a5fbacdcd977c5452"
+    },
+    "preview/native/services/i2cp_datagram/messages.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/before/preview/native/services/i2cp_datagram/messages.hpp",
+      "before_sha256": "36342e03f455d34a63280ad11f428ba139afc6278b48fa50344a5fc7ef30205a",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/staging/preview/native/services/i2cp_datagram/messages.hpp",
+      "after_sha256": "d9f4386e7981bfa0660780a3b23a5ad80deb2cd417d23bf728aaa0bc5541457f"
+    },
+    "preview/native/services/i2cp_tracker/tracker.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/staging/preview/native/services/i2cp_tracker/tracker.cpp",
+      "after_sha256": "fe18b64fd9c6ae71243e9e8df0abb8e9f44e78f4ad3cd7309340ad19ea2e2ad3"
+    },
+    "preview/native/services/i2cp_tracker/tracker.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/staging/preview/native/services/i2cp_tracker/tracker.hpp",
+      "after_sha256": "3232e23ba0c0557a72031c563348ab85891f86248c8d29e14daadb213346739c"
+    },
+    "preview/native/tests/i2cp_tracker_channel_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/staging/preview/native/tests/i2cp_tracker_channel_tests.cpp",
+      "after_sha256": "414c9ed93d8c0bb289b13c5d8d89ab76bbca52db0740b6ed4c61ece89d95b79c"
+    },
+    "preview/native/tests/i2cp_tracker_codec_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/staging/preview/native/tests/i2cp_tracker_codec_tests.cpp",
+      "after_sha256": "32ffa4448807df9fbfc3829b6dc03fa7d080eb6c18200d4c53d85aa5394f1ab4"
+    },
+    "preview/native/tests/torrent_state_writer_guards.py": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/amendments/state-writer-fixture/staging/preview/native/tests/torrent_state_writer_guards.py",
+      "after_sha256": "633d1228ce229f4b5814e6719f3c553585b142d327cc50e1b3e771c05edead67"
+    },
+    "preview/native/app/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/before/preview/native/app/CMakeLists.txt",
+      "before_sha256": "5f1b870db0116fb5dbea4498d531c2d9b81366a6f82eef3124974b66dfca4cc3",
+      "after_path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/composed/preview/native/app/CMakeLists.txt",
+      "after_sha256": "661f97d43c50df410aed0cad4bdfeecd4914aa2109e8fa7d7433c34ef6ca8cbf"
+    },
+    "preview/native/services/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/before/preview/native/services/CMakeLists.txt",
+      "before_sha256": "a0eaf71e4fe2c6ddf5aef19b3a0914669ee06907f0a25a93fe8f2888a93ec527",
+      "after_path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/composed/preview/native/services/CMakeLists.txt",
+      "after_sha256": "ec3f874ee61d43ffa2a842962280f8ef8dfd9984c582d1516f2f65ef09bdc968"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/before/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "5b4b0f12bcf4683765f76e0664effd07389d8add5063d1642ca18762b81cdec2",
+      "after_path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/composed/preview/native/tests/CMakeLists.txt",
+      "after_sha256": "2ed35f690e2bb7dfd9bf902bc394838a427a9f3368e093c781026c06ac8a79eb"
+    }
+  },
+  "source_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-live-only/manifest.json",
+      "sha256": "8962c207cfa044d47fa2952b2b371324e87f981ad203104ed4b345edf9b00ef4"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/manifest.json",
+      "sha256": "faf50da882975c4b3aba7b014d64af5e98c158d7d18df8942d801d3655aee59f"
+    }
+  ],
+  "source_reviews": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029-review/review.json",
+      "sha256": "0a426340a64423ed0db5326af528c7012f859214c3a8403dbac6f2f6176f565a"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029-review/review.json",
+      "sha256": "ed06750ad5100c680bbf60b161422c0f6e829fdf1c24f0efc6201ee122ba5cee"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029-review/source-rejection-review.json",
+      "sha256": "fc1552d68431e749f0e34b9eb95aa2ff156fd5f8cfb2a967d0710b1b775b6a0f"
+    }
+  ],
+  "source_history": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/manifest.json",
+      "sha256": "ad6a4f7741e1f939c02e2e6d240309ade9ced7ff6e1679f7b2beb3eb3a5c743f"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/manifest.json",
+      "sha256": "3d114576cfb86e0d16b00a6dd12e19340b3af3144aa7a9730142a39ee446a63b"
+    }
+  ],
+  "adopter_sha256": "8425362c4d545e2d354420db9805e7afe107e8e43451fedce46dd16d0482365c",
+  "approved_inputs_sha256": "364996885b6fef7e9351955ba1f02b7dfdd51fd7b7ff55553c42586d14d72427",
+  "initial_adoption": {
+    "path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/root-adoption.json",
+    "sha256": "635b979f64fcc48bff82160187574fa833645f1503ac5032f944f4d3fc99c031"
+  },
+  "correction_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/qt-keyword-timer-api/manifest.json",
+      "sha256": "dbb58ced2e25fcd9b4ad29dcf1a5a61d4df90bf5cc5eb396dacdde2b67ab783e"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/invalid-lease-and-source-rejection/manifest.json",
+      "sha256": "bd969c1554e5d7dcfe5d57189c1f4241b14c6372597235eaef18fc514d0b530d"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/amendments/state-writer-fixture/manifest.json",
+      "sha256": "f4b4f5ed6774fab322b604d9719e8bdeee0a119e2d60f683347af358d44b46ed"
+    }
+  ],
+  "adopter_r2_sha256": "f9a610e835d115b999ec7b7ba8e32df7c2212ea647a55e55753e25a8241bf4e6",
+  "failed_r1_history_sha256": {
+    "gcc": {
+      "source-before.json": "3d07c82b02863f68cdebe77a83d503440572a252cfb885f4acd6d5f6eb547dc4",
+      "build.log": "2216db4ed802108f8dc64f54eebe7fa5b8dc34057fc3f744b653d34480d331ca",
+      "result.json": "217098434c715bafdc09469dcfe0a30dc9c9efce763e127bb9babbaffe7c1593",
+      "commands.json": "66251fad1217d95cd1a6d59fc2005c62c2ae8a00a848ac5410ddf8ce8f14a398",
+      "native-source-map.json": "a08a976d256c1b0ac5507a7ec1393b7909f54d690a2077e234cdd3d20e362eb3"
+    },
+    "clang": {
+      "source-before.json": "3d07c82b02863f68cdebe77a83d503440572a252cfb885f4acd6d5f6eb547dc4",
+      "build.log": "dd91a3e6c7a3665b89242fcdc2d251d9ca56427c356264fa0e9dcd5eb0d5d43e",
+      "result.json": "f6f3616aef8f2617396eafa5a1dfa4482549fb906c20b85f3bb6c4d872e1ec63",
+      "commands.json": "164eb50ad1294bb0fa416f80fe462f36bc77f77c2ff985494fd3509d76b840ad",
+      "native-source-map.json": "a08a976d256c1b0ac5507a7ec1393b7909f54d690a2077e234cdd3d20e362eb3"
+    },
+    "san": {
+      "source-before.json": "3d07c82b02863f68cdebe77a83d503440572a252cfb885f4acd6d5f6eb547dc4",
+      "build.log": "fb4799a6a0870a77a969a3dcc663a7979d07b419ce8b47025aa323ea922a8fc8",
+      "result.json": "2556315ba7f4fd001175983812cd32b59f36e2f1550e667510983978201c7e5a",
+      "commands.json": "9d0668de9e35067f0b541c0c17515c4c3a28f587d08e23ad42bdb5929cec80f2",
+      "native-source-map.json": "a08a976d256c1b0ac5507a7ec1393b7909f54d690a2077e234cdd3d20e362eb3"
+    }
+  },
+  "previous_adoption": {
+    "path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/root-adoption-r2.json",
+    "sha256": "f5aed25f4f26bd95f6ccaa00a7104876e17bf1ebe134eee70f597bc00e5028f7"
+  },
+  "adopter_r3_sha256": "1810c3fa471548b1033e66fc0c652dfa8098c0d456369662ef212708726bdc98",
+  "failed_r2_history_sha256": {
+    "gcc": {
+      "ctest-full.log": "1f9f1eb4408f438ce7b3ab32f9676ead3c223f6d7da1b0c5ffcd62211c1476e4",
+      "tests.log": "c95437b3cb9c24b7c0b37347c25a02c75ebeb88f6f4b0cc2a568c550051429df",
+      "source-before.json": "edf0b1f49095140de8897a044bca135666b6d5ca92401c1e480d35a71fbbefe5",
+      "build-receipt.json": "a31e133581439f68f692977671f1af103144a11f20c79829787f00d098df74f4",
+      "tests.xml": "b56591c5c564552ad3be163ba1d740dbd9f4f822fac3c33ab5e3c788810db9fc",
+      "build.log": "7fcdb781555b63d02709f1d111e9e8c39c6137993d55e3f839477486bb99fe12",
+      "result.json": "78cdb36fef0580bfe4a32db63edfeb253da92ae305cd82139161ea2909b281e5",
+      "images-before.json": "ca0cd96f1caf39597d20fedc11a3ff24335c4e70390d7cf0e5b97b99099cbbf8",
+      "commands.json": "5271c31378fa4cb1e812811faa221b3b984af21f3683c0b9465a72a16daa9ce1",
+      "native-source-map.json": "188d9968534cbd27154fecd9b847a4d4f7d1d11a7e2fd651ee99d97de7b9f025"
+    },
+    "clang": {
+      "ctest-full.log": "e16e421e001cfa844afd9a78fa7e6a8d40d822db680dd61766a8e327499568d6",
+      "tests.log": "f633003528fc7e38a288d11ac7bef543909a91048f06688c12c291cb13ab3ffd",
+      "source-before.json": "edf0b1f49095140de8897a044bca135666b6d5ca92401c1e480d35a71fbbefe5",
+      "build-receipt.json": "8daad23175d9e9349f50243f1822a6b7b19277719498855efc8458354aa0482d",
+      "tests.xml": "9df15428aaabe818f909a7228299fcd701038cb01c8b6f8d57623afb3e9cb514",
+      "build.log": "4344783f127c492b05bcfa3b1371ecf352ae6fb19459357655f87dc517c7a883",
+      "result.json": "1be9abbb9e7f972b13d7f6f9a92f953c84d01252f880366c12587a9a952c9a4c",
+      "images-before.json": "9ccb24a358e8d89c75123efbaaa61a256761b936b845f2a7d75b99ed850e8ce4",
+      "commands.json": "4d8d5eac83a386fa56d3d00c1b162ddc90bcf0716ef742b338a0bc7314b99a6c",
+      "native-source-map.json": "188d9968534cbd27154fecd9b847a4d4f7d1d11a7e2fd651ee99d97de7b9f025"
+    },
+    "san": {
+      "ctest-full.log": "5372c046f0dc4e6877936d83f4f038d128b19e77259dec1026e87b26550e124d",
+      "tests.log": "c66c72b25aed7561d5a9cf19e748d6952aae7a2acfdb9d87d68c943a8ce6494d",
+      "source-before.json": "edf0b1f49095140de8897a044bca135666b6d5ca92401c1e480d35a71fbbefe5",
+      "build-receipt.json": "f2428d0159b66a41f388929add951b40a70ac9d1da4caf5642e311a6b7b30325",
+      "tests.xml": "7b06aaf0e5e41fa73e501c4d8f2640d58fe237f390d633175ad5a5cb28b69bf4",
+      "build.log": "4344783f127c492b05bcfa3b1371ecf352ae6fb19459357655f87dc517c7a883",
+      "result.json": "46b646e1ee7d805987eb5dfc766e0561a3cee50ed22ed465e30fb53fd942adae",
+      "images-before.json": "2ffc25fcb42c246e43cdf78678ac6f57b81344fe91c052e00ad026d88e4d781e",
+      "commands.json": "c22da870c28ca6cf9b29a65880eeffb884c23b36fc0a282c5fc11eb5da9dfa38",
+      "native-source-map.json": "188d9968534cbd27154fecd9b847a4d4f7d1d11a7e2fd651ee99d97de7b9f025"
+    }
+  }
+}

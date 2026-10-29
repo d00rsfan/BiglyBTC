@@ -1,0 +1,26 @@
+{
+  "status": "PASS_ACTUAL_I2CP_TRACKER_OBJECTS",
+  "source_commit": "f9c72f14be1494b6d75b38288f9eff256a1a878b",
+  "gcc_result_sha256": "534b4f1d8ecc3efd2b173c5a100b64aab44514cf715ca348f23135e215679c96",
+  "runner_sha256": "7e2ce694d0c7c96b777ce0d679cd55807b43261084da11ebf96a9ace7f4c4226",
+  "provider_rebuilt": false,
+  "old_java_replays": false,
+  "real_router_or_profile_claimed": false,
+  "cases_per_reference_per_direction": 2,
+  "message_frames_per_reference_per_direction": 10,
+  "class_origins": {
+    "official": {
+      "jar_sha256": "d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896",
+      "produce_class_log_sha256": "b48e6eb9ee2612ba96e086a8279f59f7898d1e6ea422b8ebd14eb2a301485e76",
+      "verify_class_log_sha256": "f3643c4eb73e9b8aeda7f1671942ed3529bd97399ec6ab7c71ad993b7865a59d"
+    },
+    "modified": {
+      "jar_sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+      "produce_class_log_sha256": "d7a7a41a351e6bfa2568e1eee53d09e584e7f3d755bd64fb740a907e7d239911",
+      "verify_class_log_sha256": "64e910a1b3c0f3798f6c845e6ab7d2cfb2a4633d5993f9c9dd1f837bfe2272b3"
+    }
+  },
+  "native_images_unchanged": true,
+  "source_unchanged": true,
+  "commands_sha256": "9268c2a686e84dcf2772c96737429185b864a96bed549bfd66e624d0f6554374"
+}

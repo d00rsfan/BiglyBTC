@@ -1,0 +1,184 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_INDEPENDENT_REVIEW_AND_ROOT_QUALIFICATION",
+  "component": "services.i2cp_initial_session",
+  "feature": "F06.i2cp_initial_session",
+  "native_production_beforeimage_basis": "61d1b53b07be81be7a98eaabe40794d8185fbfbe",
+  "source_sha256": {
+    "preview/native/core/include/biglybtc/udp_tracker_wire.hpp": {
+      "before": null,
+      "after_sha256": "f8423b6f8cc3b1b81f23175d63a1400b1931dbbff5f3202a79d647a932fd9977",
+      "bytes": 2282
+    },
+    "preview/native/engine/library_udp_tracker.hpp": {
+      "before": "9924fdc30db0d711b31e767a533fd70319778945119a1e32f0847969a323e199",
+      "after_sha256": "f454d11734d66b16e7711c09da7e70e5a94f3316cdae4b1db03234b7a85ccb8c",
+      "bytes": 9846
+    },
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before": "c8946710addff2da95dbbac8787dc2c86bbb950e689b47f7de0a1b2ca5a5f4fc",
+      "after_sha256": "f96cfadec04e00ccd41b2bcd3a698739a8faa73bf539d7cb4f1572935f8433de",
+      "bytes": 34718
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before": "24fb0ab35cb9a79cd180c2b651e68da6e819709f9def6c274bc22bf192e1da65",
+      "after_sha256": "aa6f00e14cfb95b49294c564031d57bcad8d151b05fae824a348f141ba19af65",
+      "bytes": 7076
+    },
+    "preview/native/services/i2cp_channel/receive.inc": {
+      "before": "15aa3acbb57b31d43e7eafa2d86fa0471d36a44ff024357c57cb4a2bc6cce20e",
+      "after_sha256": "55f23b537873bf20401d7cd022b6490ce8545cfda655df4c0c524ae24e131831",
+      "bytes": 11945
+    },
+    "preview/native/services/i2cp_channel/tracker.inc": {
+      "before": null,
+      "after_sha256": "c3fd50c904b79b256a2a817154dc8befc5c58e1b1cc05ac8f43d4cb3fecb5ad4",
+      "bytes": 11011
+    },
+    "preview/native/services/i2cp_datagram/messages.cpp": {
+      "before": "225a3df60f9d1abbd6d7033c52c0907bdd7360f3b49e3d5a17d183f439bf960b",
+      "after_sha256": "28081d4181de45add4a3fee6df1061111574c7cd48b6527a5fbacdcd977c5452",
+      "bytes": 11318
+    },
+    "preview/native/services/i2cp_datagram/messages.hpp": {
+      "before": "36342e03f455d34a63280ad11f428ba139afc6278b48fa50344a5fc7ef30205a",
+      "after_sha256": "d9f4386e7981bfa0660780a3b23a5ad80deb2cd417d23bf728aaa0bc5541457f",
+      "bytes": 2551
+    },
+    "preview/native/services/i2cp_tracker/tracker.cpp": {
+      "before": null,
+      "after_sha256": "fe18b64fd9c6ae71243e9e8df0abb8e9f44e78f4ad3cd7309340ad19ea2e2ad3",
+      "bytes": 2870
+    },
+    "preview/native/services/i2cp_tracker/tracker.hpp": {
+      "before": null,
+      "after_sha256": "3232e23ba0c0557a72031c563348ab85891f86248c8d29e14daadb213346739c",
+      "bytes": 1765
+    },
+    "preview/native/tests/i2cp_tracker_channel_tests.cpp": {
+      "before": null,
+      "after_sha256": "414c9ed93d8c0bb289b13c5d8d89ab76bbca52db0740b6ed4c61ece89d95b79c",
+      "bytes": 15591
+    },
+    "preview/native/tests/i2cp_tracker_codec_tests.cpp": {
+      "before": null,
+      "after_sha256": "32ffa4448807df9fbfc3829b6dc03fa7d080eb6c18200d4c53d85aa5394f1ab4",
+      "bytes": 8804
+    }
+  },
+  "composition_input_sha256": {
+    "preview/native/services/CMakeLists.txt": "a0eaf71e4fe2c6ddf5aef19b3a0914669ee06907f0a25a93fe8f2888a93ec527",
+    "preview/native/tests/CMakeLists.txt": "5b4b0f12bcf4683765f76e0664effd07389d8add5063d1642ca18762b81cdec2",
+    "preview/native/engine/network_policy.cpp": "f193d1bd852c0fbee49d73f56722a0d7c4effc85d669513cab23825571cad378",
+    "preview/native/services/i2cp/protocol.hpp": "d88a9b8bb5049c8c458b47598f6627ecf85a1b3b2b10bc97d8b65397da26d9c8",
+    "preview/native/services/i2cp/protocol.cpp": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672",
+    "preview/native/services/i2cp_leaseset/leaseset.hpp": "44bcc356a5335d1049fab6f16780e2778e0e3b86b6afb5f3b448d7be9d2a6678",
+    "preview/native/services/i2cp_leaseset/leaseset.cpp": "f4bd1989267d40a306e94a1a76e4e48d4e94d473156170f4cda1bc6cf569489f",
+    "preview/native/services/i2p_client/identity.hpp": "117e2ac9a5ef71339dc04548209092b33af6be351919f13af28f6b64c061a33d",
+    "preview/native/services/i2p_client/identity.cpp": "99c54025953cc774bf4963aead7c7be4f296c8bac8df7eb715521e5b57899201",
+    "preview/native/services/i2p_datagram/datagram.hpp": "32c742d8e769f31bd43119f3feca6dd0e04c2a6c77644e57f868d6addcfbecf1",
+    "preview/native/services/i2p_datagram/datagram.cpp": "96eedc04c93f2250c50c4fa78671775547cfef2e464652f3b27a609d56990038",
+    "preview/native/tests/i2cp_receive_channel_tests.cpp": "068c49d5239ff89480d36499ad1d3472c58f741773fe5df1b6177c1affe4eec1",
+    "preview/native/tests/i2cp_receive_control_tests.cpp": "10c221004258c4655eb8770976771a03534cf05fbb77339f2aff221f30b2c3ab",
+    "preview/native/tests/i2cp_datagram_tests.cpp": "c412d177295983e817fd04349c9add8dfed226d631416994c9a33865662aef40",
+    "preview/native/tests/i2cp_datagram_channel_tests.cpp": "4a952687ace251b91a3b1902aa5bb4354744323ad894fcd93353d575bae93401",
+    "preview/native/tests/mainline_single_udp_tests.cpp": "5f6366be21005de36c237a459426564b6bc1ed0aa75e436c1b8055c9acb93d4c",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.sender": "2f0554e07af3496216dd5645d91b1c65711aecfb033fd19109df59f0bd3bc1c7",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.recipient": "10cdba035bd41026a230a4d58981e0122b442d07e8c2f1038e7a5142c6c20a66",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.known-test-key": "e9ff0e6e6de95da56ff09f4e3e0f481d67585f0a68aafdeef0f86f7b8533ce17",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.sender": "0c80bed1687e0f7fcbc915eab269f9b00e5f40f77dd966eb0829b040a8c14db8",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.recipient": "c439e09b76788b0157a984d060cb0cd462bd38b16f27c1cd45c20df5c4cc9b3a",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.known-test-key": "644d50ab64864c20a12b3c4656d46b4a48f69ef7c47ecdc8415cd28316b22ef5"
+  },
+  "artifacts_sha256": {
+    "ADOPTION.md": "7086a2a390c3e5b3361beb6c3da28dd7fa823fc8d212ea88f516f8f3fbcb3fd1",
+    "CMake.fragment": "4d27fe37604d2026f6698d58973f5cb2e7cfaede3ce1c332ee4a827e5c1cd5f4",
+    "OFFLINE-COMMANDS.sh": "1e40719646f33468a032f49cccc7001fabe5dc4b2196c5aac975b749a202db15",
+    "before/preview/native/engine/library_udp_tracker.hpp": "9924fdc30db0d711b31e767a533fd70319778945119a1e32f0847969a323e199",
+    "before/preview/native/services/i2cp_channel/channel.cpp": "c8946710addff2da95dbbac8787dc2c86bbb950e689b47f7de0a1b2ca5a5f4fc",
+    "before/preview/native/services/i2cp_channel/channel.hpp": "24fb0ab35cb9a79cd180c2b651e68da6e819709f9def6c274bc22bf192e1da65",
+    "before/preview/native/services/i2cp_channel/receive.inc": "15aa3acbb57b31d43e7eafa2d86fa0471d36a44ff024357c57cb4a2bc6cce20e",
+    "before/preview/native/services/i2cp_datagram/messages.cpp": "225a3df60f9d1abbd6d7033c52c0907bdd7360f3b49e3d5a17d183f439bf960b",
+    "before/preview/native/services/i2cp_datagram/messages.hpp": "36342e03f455d34a63280ad11f428ba139afc6278b48fa50344a5fc7ef30205a",
+    "changes.patch": "a96baa59ea93a0c0be66cd6fc8c339938ae0e559478be9ac45713776ec2d4504",
+    "interop/TrackerVectors.java": "1323430630182381dffef7b46a198ba8e489779c59fb2110bed80cfc16d35a37",
+    "original-plugin/org/parg/azureus/plugins/networks/i2p/router/I2PHelperSocksProxy.java": "0a6967caf320856f6dea615c00bbc4a8758deb3fb2af7220988f05c3ed028a2c",
+    "original-plugin/org/parg/azureus/plugins/networks/i2p/router/I2PSMHolder.java": "94a39ad5ba3290ea5600aa6a9fc4c1f12474224798cb9a7afc3f2bc2c0bdab2f",
+    "original-source/core/java/src/net/i2p/client/I2PSession.java": "c6cbe0c20fa2212e426a2886a7c107e63ecd0e857768c6d8bef56098dbe10c05",
+    "original-source/core/java/src/net/i2p/client/SendMessageOptions.java": "d63e7d89ac51bdd61667f5345f35d7183487a60bf53b82446b0b11e97e855412",
+    "original-source/core/java/src/net/i2p/client/impl/I2CPMessageProducer.java": "f4cd7596ddc1a9d228f25599850478500c594b1e5c3d4c8b852a550cb7c6969e",
+    "original-source/core/java/src/net/i2p/client/impl/I2PSessionImpl.java": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+    "original-source/core/java/src/net/i2p/data/DataHelper.java": "607191330d5b5c2607b166a6174812ec94664535a46dd8f78e30d6b662e46b09",
+    "original-source/core/java/src/net/i2p/data/i2cp/HostLookupMessage.java": "fc9bcefadf6c7b908861e4f4b34447aa061945a2e43c8c0731b1d01284f985f0",
+    "original-source/core/java/src/net/i2p/data/i2cp/HostReplyMessage.java": "18186fdb9f99a50c013cead9d56eff610b414bb95d640ba1218bf9a66f4ed55d",
+    "original-source/core/java/src/net/i2p/data/i2cp/SendMessageExpiresMessage.java": "f9e13b382acaf65a16caa5b971f819514d492410150e9ce7c84a719fcdff3ce9",
+    "source-checks.json": "fce718e7292cb4ac50705cdc1db0147f144d818b124e8cef5abc5002def814fe",
+    "source-pins.json": "a9b6dfb13938f90dc5bdd91dcee698d9e137b1af34f0b768ffc2958bdd24a8da",
+    "staging/preview/native/core/include/biglybtc/udp_tracker_wire.hpp": "f8423b6f8cc3b1b81f23175d63a1400b1931dbbff5f3202a79d647a932fd9977",
+    "staging/preview/native/engine/library_udp_tracker.hpp": "f454d11734d66b16e7711c09da7e70e5a94f3316cdae4b1db03234b7a85ccb8c",
+    "staging/preview/native/services/i2cp_channel/channel.cpp": "f96cfadec04e00ccd41b2bcd3a698739a8faa73bf539d7cb4f1572935f8433de",
+    "staging/preview/native/services/i2cp_channel/channel.hpp": "aa6f00e14cfb95b49294c564031d57bcad8d151b05fae824a348f141ba19af65",
+    "staging/preview/native/services/i2cp_channel/receive.inc": "55f23b537873bf20401d7cd022b6490ce8545cfda655df4c0c524ae24e131831",
+    "staging/preview/native/services/i2cp_channel/tracker.inc": "c3fd50c904b79b256a2a817154dc8befc5c58e1b1cc05ac8f43d4cb3fecb5ad4",
+    "staging/preview/native/services/i2cp_datagram/messages.cpp": "28081d4181de45add4a3fee6df1061111574c7cd48b6527a5fbacdcd977c5452",
+    "staging/preview/native/services/i2cp_datagram/messages.hpp": "d9f4386e7981bfa0660780a3b23a5ad80deb2cd417d23bf728aaa0bc5541457f",
+    "staging/preview/native/services/i2cp_tracker/tracker.cpp": "fe18b64fd9c6ae71243e9e8df0abb8e9f44e78f4ad3cd7309340ad19ea2e2ad3",
+    "staging/preview/native/services/i2cp_tracker/tracker.hpp": "3232e23ba0c0557a72031c563348ab85891f86248c8d29e14daadb213346739c",
+    "staging/preview/native/tests/i2cp_tracker_channel_tests.cpp": "414c9ed93d8c0bb289b13c5d8d89ab76bbca52db0740b6ed4c61ece89d95b79c",
+    "staging/preview/native/tests/i2cp_tracker_codec_tests.cpp": "32ffa4448807df9fbfc3829b6dc03fa7d080eb6c18200d4c53d85aa5394f1ab4"
+  },
+  "qualification": {
+    "new_targets": [
+      "biglybtc-i2cp-tracker-codec-tests",
+      "biglybtc-i2cp-tracker-channel-tests"
+    ],
+    "new_ctests": [
+      "pure-i2cp-tracker-objects",
+      "i2cp-explicit-tracker-channel"
+    ],
+    "timeout_seconds": 60,
+    "affected_existing_ctests": [
+      "pure-i2cp-initial-session-codec",
+      "i2cp-initial-channel",
+      "pure-i2cp-signed-session-config",
+      "pure-i2cp-leaseset2",
+      "pure-i2cp-datagram-messages",
+      "i2cp-lease-backed-datagram-channel",
+      "pure-i2cp-receive-control",
+      "i2cp-bounded-datagram-receiver",
+      "pure-i2p-datagram-codec",
+      "pure-i2p-client-identity",
+      "mainline-single-udp"
+    ],
+    "offline_expected_labels": [
+      "dsa",
+      "ed25519"
+    ],
+    "offline_rows_per_reference_per_direction": 2,
+    "offline_objects_per_row": [
+      "hash lookup38",
+      "default reply39",
+      "signed connect Expires36 flags0",
+      "claimed scrape Expires36 flags256",
+      "RAW18 Payload31"
+    ],
+    "offline_outer_seconds": 180
+  },
+  "bounds": {
+    "concurrent_operations": 1,
+    "operation_milliseconds_max": 60000,
+    "lookup_timeout_milliseconds_max": 30000,
+    "decoded_raw_reply_bytes_max": 1024,
+    "lifetime_operations_max": 1024,
+    "lifetime_nonreused_transaction_ids_max": 2048,
+    "automatic_retries": 0
+  },
+  "boundaries": [
+    "No actual reference/compiler/router/native subject runs by author",
+    "RAW18 unauthenticated; counts only confined observation, no rank/peer/payload admission authority",
+    "General signed2/claimed3 receiver remains strict; explicit tracker operation has separate raw dispatch",
+    "No OS DNS/hostname lookup/SAM/Host/public/default/router activation",
+    "No actual real-router tunnel or Streaming interoperability claim",
+    "Modified core/source-fork equivalence remains open"
+  ]
+}

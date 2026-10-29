@@ -1,0 +1,13 @@
+{
+  "old_profile_io_methods_byte_exact": {
+    "heldDiskHandoffDoesNotBlockRealPingDeadlineCancellationOrSocketClose": "3ebd6973e218cae5fcca101292e52ed4da70b94c2ebe73326585f56474b1c026",
+    "currentVersionSourceIsRecheckedAfterTheHeldJobBeforeAnyPacketEffect": "6b9e2b4e4c6cb6dfd6b4387e3822fe12bf4884b468dea356a64e8920615bfd92",
+    "permitsAreSingleUseBoundQueuedActiveAndReadyThenReclaimSlots": "cd27b0cab936462def5afd3a7cf87cbbc0af0fe4d51fb23537f7ec67d0a5abf0"
+  },
+  "old_owned_service_tests_sha256": "5c4c4fc64d0d9bac7070d50a17ef756ea1c22dc9b69d32ab5843a1ee38d9b4f7",
+  "original_version_projection_unchanged": "6e4bd8d7614b01f271822bbf371c16c378a70b974e53c0e6bf9e16a3445f88a6",
+  "existing_executor_unchanged": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a",
+  "new_test_methods": 2,
+  "provider_changed": false,
+  "runtime_execution": false
+}

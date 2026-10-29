@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "status": "PROPOSAL_ONLY_NO_SOURCE_IMPLEMENTATION_OR_EXECUTION",
+  "native_read_basis": "d384a850980f1b6245230ea852d617b11c405e11",
+  "paths_sha256": {
+    "migration/tasks/P06-profile-io-executor.md": "ceeed8df8b44f1c04f7a5ba2af44cb2b58e7a542a2d0d6394643505a7ac267f2",
+    "preview/native/core/include/biglybtc/executor.hpp": "0d99cc28102acb980070efc9a72f8e0686ecf94dc43bb81198694245c6b72777",
+    "preview/native/core/src/executor.cpp": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a",
+    "preview/native/adapters/profile.hpp": "e54ab9b6404293fea1dc476903d9a38f0ce0403ea1162c80368f737c71f919c3",
+    "preview/native/adapters/profile.cpp": "6d0037c0a1c2b12c9128407f352a282096b4d43eb777b5e518f39b9ab733c842",
+    "preview/native/adapters/torrent_state.cpp": "aa251a5b25de3353d446f5f0e4530956027b7abffd241c2b2b2b0152404f3ac7",
+    "preview/native/adapters/azureus_value_versions.hpp": "2a42873de80e2ff42ec4c26b7e90489481336c7ebf3544f08d9c0136ac54fd91",
+    "preview/native/adapters/azureus_value_versions.cpp": "f609be5b184972d8a025cf658de721d7afc3946189d620ed9e0549a184fbf733",
+    "preview/native/app/owned_azureus_service.cpp": "b5b5384ab843fbf3c4bf6ef691c1d1b43e91e52eec054e39c6da916724ed26f2",
+    "preview/native/app/azureus_local_publish.inc": "e174c784903f88d8cb5e5089d752a2466800b4be542d45bb1d6462d84684bd1e",
+    "preview/native/app/azureus_rating_consumer.inc": "36d4ceeabd6baaae0ad7ea8502c9ff6ad14ef6fdc04434e46a3d4c9769bf378e",
+    "preview/native/services/azureus_udp/owned_transport.cpp": "b76d182088b297742a9ed7f36b2e0b833751e6e6a66d926ef407e7edfb898ef0",
+    "preview/native/app/session_bridge.hpp": "7d71c07f7f7cffe04d96e3c9c3a8554355df5c109cfe4da05717b09e29a12d1b",
+    "preview/native/app/session_bridge.cpp": "16534b036d0f9859703cfbeab0657a61fa98a80da78790551f4c698e6678f563"
+  },
+  "proposal_sha256": "2b123bb70d776feef281378a32ef00ff5c548b23b077e97cd6aa58b78babbc52"
+}

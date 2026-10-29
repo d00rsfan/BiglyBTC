@@ -1,0 +1,104 @@
+[0/1] Re-running CMake...
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable exact version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Configuring done (11.3s)
+-- Generating done (2.9s)
+-- Build files have been written to: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+[1/83] Building CXX object services/CMakeFiles/biglybtc_i2cp_datagram.dir/i2cp_datagram/messages.cpp.o
+[2/83] Linking CXX static library services/libbiglybtc_i2cp_datagram.a
+[3/83] Building CXX object services/CMakeFiles/biglybtc_i2cp_tracker_codec.dir/i2cp_tracker/tracker.cpp.o
+[4/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/profile.cpp.o
+[5/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_io.cpp.o
+[6/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/torrent_state.cpp.o
+[7/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/library_view.cpp.o
+[8/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/column_layout_view.cpp.o
+[9/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/statistics_view.cpp.o
+[10/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/overall_statistics_view.cpp.o
+[11/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_view.cpp.o
+[12/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_week_view.cpp.o
+[13/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_month_view.cpp.o
+[14/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_range_view.cpp.o
+[15/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/minute_history_writer.cpp.o
+[16/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/saved_download_tags_view.cpp.o
+[17/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/country_provider_binding.cpp.o
+[18/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/saved_speed_manager_view.cpp.o
+[19/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/library_commands.cpp.o
+[20/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_policy_commands.cpp.o
+[21/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/application_settings.cpp.o
+[22/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/original_file_io.cpp.o
+[23/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/original_storage_defaults.cpp.o
+[24/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/original_torrent_identity.cpp.o
+[25/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_value_versions.cpp.o
+[26/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/torrent_intake.cpp.o
+[27/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_operations.cpp.o
+[28/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_operation_io.cpp.o
+[29/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/linear_to_compact.cpp.o
+[30/83] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/queue_positions.cpp.o
+[31/83] Linking CXX static library services/libbiglybtc_i2cp_tracker_codec.a
+[32/83] Linking CXX static library adapters/libbiglybtc_profile.a
+[33/83] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o
+[34/83] Automatic MOC for target biglybtc_i2cp_initial_channel
+[35/83] Building CXX object app/CMakeFiles/biglybtc_local_rating_profile.dir/__/adapters/local_rating.cpp.o
+[36/83] Linking CXX static library services/libbiglybtc_azureus_owned_udp.a
+[37/83] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/biglybtc_i2cp_initial_channel_autogen/mocs_compilation.cpp.o
+[38/83] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/i2cp_channel/channel.cpp.o
+[39/83] Building CXX object app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o
+FAILED: [code=1] app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o 
+/usr/bin/clang++-24 -DQT_CORE_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -I/home/yurii/Java/BiglyBTC/preview/native/app -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_dht -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_ping -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_positions -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_contacts -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_nodes -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_values -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_packets -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_node -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_value -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_error -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_auth -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store_policy -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_router -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_value -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_mapping -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_runtime -I/home/yurii/Java/BiglyBTC/preview/native/adapters -I/home/yurii/Java/BiglyBTC/preview/native/core/include -I/home/yurii/Java/BiglyBTC/plugin-sdk/include -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_control -I/home/yurii/Java/BiglyBTC/preview/native/plugins/BiglyBTC-plugin-azrating -isystem /opt/Qt/6.12.0/gcc_64/include/QtCore -isystem /opt/Qt/6.12.0/gcc_64/include -isystem /opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++ -isystem /opt/Qt/6.12.0/gcc_64/include/QtNetwork -O3 -DNDEBUG -std=c++23 -Wall -Wextra -Wpedantic -Werror -fPIC -MD -MT app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o -MF app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o.d -o app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o -c /home/yurii/Java/BiglyBTC/preview/native/app/owned_azureus_service.cpp
+In file included from /home/yurii/Java/BiglyBTC/preview/native/app/owned_azureus_service.cpp:2:
+/home/yurii/Java/BiglyBTC/preview/native/app/azureus_profile_io.hpp:71:27: error: no viable constructor or deduction guide for deduction of template arguments of 'std::lock_guard'
+   71 |     std::lock_guard slots(slotsMutex_);
+      |                           ^
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:275:16: note: candidate function template not viable: requires single argument '__m', but no arguments were provided
+  275 |       explicit lock_guard(mutex_type& __m) : _M_device(__m)
+      |                ^          ~~~~~~~~~~~~~~~
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:275:16: note: implicit deduction guide declared as 'template <typename _Mutex> explicit lock_guard(mutex_type &__m) -> std::lock_guard<_Mutex>'
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:285:7: note: candidate function template not viable: requires 1 argument, but 0 were provided
+  285 |       lock_guard(const lock_guard&) = delete;
+      |       ^          ~~~~~~~~~~~~~~~~~
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:285:7: note: implicit deduction guide declared as 'template <typename _Mutex> lock_guard(const lock_guard<_Mutex> &) -> std::lock_guard<_Mutex>'
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:269:11: note: candidate function template not viable: requires 1 argument, but 0 were provided
+  269 |     class lock_guard
+      |           ^~~~~~~~~~
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:269:11: note: implicit deduction guide declared as 'template <typename _Mutex> lock_guard(std::lock_guard<_Mutex>) -> std::lock_guard<_Mutex>'
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:279:7: note: candidate function template not viable: requires 2 arguments, but 0 were provided
+  279 |       lock_guard(mutex_type& __m, adopt_lock_t) noexcept : _M_device(__m)
+      |       ^          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:279:7: note: implicit deduction guide declared as 'template <typename _Mutex> lock_guard(mutex_type &__m, adopt_lock_t) -> std::lock_guard<_Mutex>'
+In file included from /home/yurii/Java/BiglyBTC/preview/native/app/owned_azureus_service.cpp:2:
+/home/yurii/Java/BiglyBTC/preview/native/app/azureus_profile_io.hpp:123:27: error: no viable constructor or deduction guide for deduction of template arguments of 'std::lock_guard'
+  123 |     std::lock_guard slots(slotsMutex_);Facts result;result.highWater=highWater_;
+      |                           ^
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:275:16: note: candidate function template not viable: requires single argument '__m', but no arguments were provided
+  275 |       explicit lock_guard(mutex_type& __m) : _M_device(__m)
+      |                ^          ~~~~~~~~~~~~~~~
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:275:16: note: implicit deduction guide declared as 'template <typename _Mutex> explicit lock_guard(mutex_type &__m) -> std::lock_guard<_Mutex>'
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:285:7: note: candidate function template not viable: requires 1 argument, but 0 were provided
+  285 |       lock_guard(const lock_guard&) = delete;
+      |       ^          ~~~~~~~~~~~~~~~~~
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:285:7: note: implicit deduction guide declared as 'template <typename _Mutex> lock_guard(const lock_guard<_Mutex> &) -> std::lock_guard<_Mutex>'
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:269:11: note: candidate function template not viable: requires 1 argument, but 0 were provided
+  269 |     class lock_guard
+      |           ^~~~~~~~~~
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:269:11: note: implicit deduction guide declared as 'template <typename _Mutex> lock_guard(std::lock_guard<_Mutex>) -> std::lock_guard<_Mutex>'
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:279:7: note: candidate function template not viable: requires 2 arguments, but 0 were provided
+  279 |       lock_guard(mutex_type& __m, adopt_lock_t) noexcept : _M_device(__m)
+      |       ^          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/std_mutex.h:279:7: note: implicit deduction guide declared as 'template <typename _Mutex> lock_guard(mutex_type &__m, adopt_lock_t) -> std::lock_guard<_Mutex>'
+In file included from /home/yurii/Java/BiglyBTC/preview/native/app/owned_azureus_service.cpp:169:
+/home/yurii/Java/BiglyBTC/preview/native/app/azureus_profile_io_owner.inc:21:27: error: too many arguments to function call, expected 0, have 1
+   21 |         ioDeadline_.start(std::max(std::chrono::nanoseconds{1},std::chrono::duration_cast<std::chrono::nanoseconds>(earliest-std::chrono::steady_clock::now())));
+      |         ~~~~~~~~~~~~~~~~~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/opt/Qt/6.12.0/gcc_64/include/QtCore/qchronotimer.h:72:10: note: 'start' declared here
+   72 |     void start();
+      |          ^
+3 errors generated.
+ninja: build stopped: subcommand failed.

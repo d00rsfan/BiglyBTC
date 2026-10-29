@@ -1,0 +1,53 @@
+[1/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/profile.cpp.o
+[2/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_io.cpp.o
+[3/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/torrent_state.cpp.o
+[4/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/library_view.cpp.o
+[5/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/column_layout_view.cpp.o
+[6/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/statistics_view.cpp.o
+[7/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/overall_statistics_view.cpp.o
+[8/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_view.cpp.o
+[9/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_week_view.cpp.o
+[10/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_month_view.cpp.o
+[11/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_range_view.cpp.o
+[12/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/minute_history_writer.cpp.o
+[13/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/saved_download_tags_view.cpp.o
+[14/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/country_provider_binding.cpp.o
+[15/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/saved_speed_manager_view.cpp.o
+[16/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/library_commands.cpp.o
+[17/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_policy_commands.cpp.o
+[18/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/application_settings.cpp.o
+[19/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/original_file_io.cpp.o
+[20/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/original_storage_defaults.cpp.o
+[21/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/original_torrent_identity.cpp.o
+[22/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_value_versions.cpp.o
+[23/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/torrent_intake.cpp.o
+[24/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_operations.cpp.o
+[25/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_operation_io.cpp.o
+[26/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/linear_to_compact.cpp.o
+[27/63] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/queue_positions.cpp.o
+[28/63] Linking CXX static library adapters/libbiglybtc_profile.a
+[29/63] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o
+[30/63] Building CXX object app/CMakeFiles/biglybtc_local_rating_profile.dir/__/adapters/local_rating.cpp.o
+[31/63] Linking CXX static library services/libbiglybtc_azureus_owned_udp.a
+[32/63] Building CXX object app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o
+[33/63] Linking CXX static library app/libbiglybtc_local_rating_profile.a
+[34/63] Linking CXX static library app/libbiglybtc_owned_azureus_service.a
+[35/63] Automatic MOC for target biglybtc-azureus-owned-service-tests
+[36/62] Automatic MOC for target biglybtc-azureus-database-runtime-tests
+[37/61] Automatic MOC for target biglybtc-profile-lease-retention-tests
+[38/60] Automatic MOC for target biglybtc-i2cp-initial-channel-tests
+[39/58] Automatic MOC for target biglybtc-i2cp-datagram-channel-tests
+[40/56] Automatic MOC for target biglybtc-i2cp-receive-channel-tests
+[41/54] Automatic MOC for target biglybtc-azureus-profile-io-tests
+[42/53] Building CXX object tests/CMakeFiles/biglybtc-config-create-tests.dir/config_create_tests.cpp.o
+[43/53] Building CXX object tests/CMakeFiles/biglybtc-torrent-state-driver.dir/torrent_state_driver.cpp.o
+[44/53] Building CXX object tests/CMakeFiles/biglybtc-azureus-owned-service-tests.dir/owned_azureus_service_tests.cpp.o
+[45/53] Building CXX object tests/CMakeFiles/biglybtc-azureus-database-runtime-tests.dir/azureus_database_runtime_tests.cpp.o
+[46/53] Building CXX object tests/CMakeFiles/biglybtc-profile-lease-retention-tests.dir/profile_lease_retention_tests.cpp.o
+[47/53] Building CXX object tests/CMakeFiles/biglybtc-azureus-profile-io-tests.dir/azureus_profile_io_tests.cpp.o
+[48/53] Linking CXX executable tests/biglybtc-config-create-tests
+[49/53] Linking CXX executable tests/biglybtc-torrent-state-driver
+[50/53] Linking CXX executable tests/biglybtc-azureus-owned-service-tests
+[51/53] Linking CXX executable tests/biglybtc-azureus-database-runtime-tests
+[52/53] Linking CXX executable tests/biglybtc-profile-lease-retention-tests
+[53/53] Linking CXX executable tests/biglybtc-azureus-profile-io-tests

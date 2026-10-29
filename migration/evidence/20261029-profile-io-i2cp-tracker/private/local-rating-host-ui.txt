@@ -1,0 +1,19 @@
+********* Start testing of LocalRatingTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : LocalRatingTests::initTestCase()
+PASS   : LocalRatingTests::localSavePreservesInfoResumeAndUnknownFields()
+PASS   : LocalRatingTests::cachedAttributesWinAndLeaveUnrelatedCacheRows()
+PASS   : LocalRatingTests::staleWrongIdentityAndDuplicateTargetsRefuseBeforeSave()
+PASS   : LocalRatingTests::attributeSnapshotCasRejectsChangedCacheAndKeepsResume()
+PASS   : LocalRatingTests::noncanonicalRatingAndNicknameUseQualifiedOriginalTextRules()
+QWARN  : LocalRatingTests::dialogRequestsOnceAndSubmitsExactBoundDraft() This plugin does not support propagateSizeHints()
+PASS   : LocalRatingTests::dialogRequestsOnceAndSubmitsExactBoundDraft()
+QWARN  : LocalRatingTests::hiddenBeforeQueuedReadAndStalePacketsDoNotLoad() This plugin does not support propagateSizeHints()
+PASS   : LocalRatingTests::hiddenBeforeQueuedReadAndStalePacketsDoNotLoad()
+PASS   : LocalRatingTests::tooltipCallbackMayDeleteDialogOrAnIndividualControl()
+QWARN  : LocalRatingTests::synchronousSaveReceiverMayDeleteDialogAndNoReadStartsProviderAgain() This plugin does not support propagateSizeHints()
+PASS   : LocalRatingTests::synchronousSaveReceiverMayDeleteDialogAndNoReadStartsProviderAgain()
+PASS   : LocalRatingTests::failedSaveRetainsDraftAndRefusesLateReadOrAutomaticRetry()
+PASS   : LocalRatingTests::cleanupTestCase()
+Totals: 12 passed, 0 failed, 0 skipped, 0 blacklisted, 96ms
+********* Finished testing of LocalRatingTests *********

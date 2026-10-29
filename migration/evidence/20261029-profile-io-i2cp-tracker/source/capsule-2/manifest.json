@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_COMPLETE_PROFILE_IO_CHILD_PENDING_FINAL_REVIEW",
+  "native_source_basis": "d384a850980f1b6245230ea852d617b11c405e11",
+  "source_check_native_commit": "535d6403c3b59ce3108940bba57593368745329f",
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/manifest.json",
+  "parent_manifest_sha256": "3d114576cfb86e0d16b00a6dd12e19340b3af3144aa7a9730142a39ee446a63b",
+  "source_path_count": 15,
+  "source_paths": {
+    "preview/native/adapters/azureus_value_versions.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/adapters/azureus_value_versions.cpp",
+      "before_sha256": "f609be5b184972d8a025cf658de721d7afc3946189d620ed9e0549a184fbf733",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/adapters/azureus_value_versions.cpp",
+      "after_sha256": "d2f6b7d3f44d7e3d788cde1f5d21a769ece08511fe2a7b5b477ae7aaff095978"
+    },
+    "preview/native/adapters/azureus_value_versions.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/adapters/azureus_value_versions.hpp",
+      "before_sha256": "2a42873de80e2ff42ec4c26b7e90489481336c7ebf3544f08d9c0136ac54fd91",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/adapters/azureus_value_versions.hpp",
+      "after_sha256": "c285913a2fcba30f21016dbce62e0167c119044efa531ac91d58e269303b47b5"
+    },
+    "preview/native/adapters/profile.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/adapters/profile.cpp",
+      "before_sha256": "6d0037c0a1c2b12c9128407f352a282096b4d43eb777b5e518f39b9ab733c842",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/adapters/profile.cpp",
+      "after_sha256": "93e151e3b31eca4503ec8d33989802bac23a24f5cf8656979addd951f0c4fa31"
+    },
+    "preview/native/adapters/profile.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/adapters/profile.hpp",
+      "before_sha256": "e54ab9b6404293fea1dc476903d9a38f0ce0403ea1162c80368f737c71f919c3",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/adapters/profile.hpp",
+      "after_sha256": "fb867cf683c8d116d6846c568b802e2bbc4e7168c759913a181a06de8604f060"
+    },
+    "preview/native/adapters/torrent_state.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/adapters/torrent_state.cpp",
+      "before_sha256": "aa251a5b25de3353d446f5f0e4530956027b7abffd241c2b2b2b0152404f3ac7",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/adapters/torrent_state.cpp",
+      "after_sha256": "5aa54a20a19b5a788e67f801a313ce6e194cf7b58acdfb23d48e8364ff5e6abf"
+    },
+    "preview/native/adapters/torrent_state.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/adapters/torrent_state.hpp",
+      "before_sha256": "3142c9450f4d4407fccb9ac630a71ab08a73c2e73e9c5706c6696ed4bd44d3f4",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/adapters/torrent_state.hpp",
+      "after_sha256": "ed59d6d0cc31b679c21d41408aef9daf9e4814e4bed74ce552a91eaf8d42021f"
+    },
+    "preview/native/app/azureus_local_publish.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/app/azureus_local_publish.inc",
+      "before_sha256": "e174c784903f88d8cb5e5089d752a2466800b4be542d45bb1d6462d84684bd1e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/app/azureus_local_publish.inc",
+      "after_sha256": "5be8f8524c13e42690a55c2216347c18d29cd2918f8210d883490e1d14779122"
+    },
+    "preview/native/app/azureus_profile_io.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/app/azureus_profile_io.hpp",
+      "after_sha256": "50767296497690e29a61c04b26a8a5398fd760f50783f5f030867a909f430db0"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/app/azureus_profile_io_owner.inc",
+      "after_sha256": "6b9280905b0e036d20afbcc9df5163b3fd3d012b2f81295e932793749e5debbe"
+    },
+    "preview/native/app/azureus_rating_consumer.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/app/azureus_rating_consumer.inc",
+      "before_sha256": "36d4ceeabd6baaae0ad7ea8502c9ff6ad14ef6fdc04434e46a3d4c9769bf378e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/app/azureus_rating_consumer.inc",
+      "after_sha256": "669a6730bd81529630310884a5bacc592e66eba1de33c3b774e5eb4488e03a65"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "b5b5384ab843fbf3c4bf6ef691c1d1b43e91e52eec054e39c6da916724ed26f2",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-live-only/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "76d4202205ea8bcdbea3071ac35ac430516f959452b4ea2c7314b6287de2be83"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "76742bc903f2bf109f037dbc616ea958e100df348d625687fa4ba18753546ea9",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "899ae6594404eef19cb30627e5a4312cf2a90b8ff5aba2d19dc366c6f4d0c747"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/services/azureus_udp/owned_transport.cpp",
+      "before_sha256": "b76d182088b297742a9ed7f36b2e0b833751e6e6a66d926ef407e7edfb898ef0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+      "after_sha256": "f9a7f228e6a883960ca176125aab95c396b3d24cb584d1ce1cf67b365df4da91"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/before/preview/native/services/azureus_udp/owned_transport.hpp",
+      "before_sha256": "c82d6ee221fe23e30c26910473e57b85b10aa00246c1a356b6538f1eab5edda7",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+      "after_sha256": "fae7453152dd63bc875c7de41e51b4e84a83bcda952f158e88c9b822b0978c4e"
+    },
+    "preview/native/tests/azureus_profile_io_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/tests/azureus_profile_io_tests.cpp",
+      "after_sha256": "5f6e1c48130db72f3ec73e527e17494700318b4dc998febcea228ecebf5ab523"
+    }
+  },
+  "parent_delta": {
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/staging/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "cfb123878d7850ddfeb05e19cd809cc5b21d101b57fb959cbac26bfcb1abaec7",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-live-only/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "76d4202205ea8bcdbea3071ac35ac430516f959452b4ea2c7314b6287de2be83"
+    }
+  },
+  "inherited_exact_path_count": 14,
+  "artifacts": {
+    "ADOPTION.txt": "1d1dde58515cee2d2a91fcb84373e2f26fb22b3c3692fded6b413f2cae18ea8f",
+    "changes.patch": "76f192b7d05d55c0b025cdfa2b86b56912f4e66f5a5d6e5e8c3c66f01f779845",
+    "delta.patch": "3bc49b42328454846ec0a52103c7c47a911842e56e719dd08f47ad0c9e17eeb1",
+    "inputs.json": "d4f6eff362bc9aeb327249ae26b1fb64cdf2163b028099e0da08c197587551fb",
+    "source-check.json": "582ef841c8293b2981ded595b356dd63b16194b8959971d82dc5ba0da0a248f0",
+    "staging/preview/native/app/owned_azureus_service.cpp": "76d4202205ea8bcdbea3071ac35ac430516f959452b4ea2c7314b6287de2be83"
+  },
+  "cmake_append_fragments": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/app.CMake.fragment",
+      "sha256": "4f4c16e3522ce8706d6405d97f367634deac390f285b8ac537b74f1f82abd141"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/tests.CMake.fragment",
+      "sha256": "a961b101b679340dcc3ff3d98a92bf887ec819f8e2038f8b443d4514e0c1a7f9"
+    }
+  ],
+  "runtime_execution": false,
+  "public_activation": false
+}

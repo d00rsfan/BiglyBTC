@@ -1,0 +1,18 @@
+{
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/manifest.json",
+    "sha256": "ad6a4f7741e1f939c02e2e6d240309ade9ced7ff6e1679f7b2beb3eb3a5c743f"
+  },
+  "parent_source_pins": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/source-pins.json",
+    "sha256": "8cc88a8bfc710878c19e0297dedc5c262fc663ead069ce63ad6300b1a1aa3f02"
+  },
+  "parent_adoption": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/ADOPTION.txt",
+    "sha256": "c17459f7354d1f12a26676c05e92ef620ac75a2a9690e3f5fd9d89d60d450fd5"
+  },
+  "parent_inputs": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/inputs.json",
+    "sha256": "62a4c6c5e56e87aa179c02fc0006a0ef55b584c8197cc1b12b482e822c0cbb76"
+  }
+}

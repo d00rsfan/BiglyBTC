@@ -1,0 +1,27 @@
+# Services: append after the existing channel/datagram targets. The shared
+# BEP15 model is header-only core code, with no libtorrent/provider dependency.
+add_library(biglybtc_i2cp_tracker_codec STATIC i2cp_tracker/tracker.cpp)
+target_include_directories(biglybtc_i2cp_tracker_codec PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2cp_tracker")
+target_link_libraries(biglybtc_i2cp_tracker_codec PUBLIC biglybtc_i2cp_datagram BiglyBTC::Core)
+target_compile_features(biglybtc_i2cp_tracker_codec PUBLIC cxx_std_23)
+target_compile_options(biglybtc_i2cp_tracker_codec PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_sources(biglybtc_i2cp_initial_channel PRIVATE i2cp_channel/tracker.inc)
+target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2cp_tracker_codec PRIVATE OpenSSL::Crypto)
+
+# Tests: append once; no source/compiler/provider options or old tests change.
+if(TARGET biglybtc_i2cp_tracker_codec)
+  add_executable(biglybtc-i2cp-tracker-codec-tests i2cp_tracker_codec_tests.cpp)
+  target_link_libraries(biglybtc-i2cp-tracker-codec-tests PRIVATE biglybtc_i2cp_tracker_codec)
+  target_compile_options(biglybtc-i2cp-tracker-codec-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME pure-i2cp-tracker-objects COMMAND biglybtc-i2cp-tracker-codec-tests)
+  set_tests_properties(pure-i2cp-tracker-objects PROPERTIES TIMEOUT 60 LABELS "unit;i2p;no-network")
+endif()
+if(TARGET biglybtc_i2cp_initial_channel)
+  add_executable(biglybtc-i2cp-tracker-channel-tests i2cp_tracker_channel_tests.cpp)
+  set_target_properties(biglybtc-i2cp-tracker-channel-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-i2cp-tracker-channel-tests PRIVATE biglybtc_i2cp_initial_channel Qt6::Test Qt6::Network)
+  target_compile_definitions(biglybtc-i2cp-tracker-channel-tests PRIVATE BIGLYBTC_I2P_TEST_KEYS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
+  target_compile_options(biglybtc-i2cp-tracker-channel-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME i2cp-explicit-tracker-channel COMMAND biglybtc-i2cp-tracker-channel-tests)
+  set_tests_properties(i2cp-explicit-tracker-channel PROPERTIES TIMEOUT 60 LABELS "unit;i2p;owned-loopback")
+endif()

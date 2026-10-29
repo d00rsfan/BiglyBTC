@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="12"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="47"
+	timestamp="2026-10-29T18:40:15"
+	>
+	<testcase name="compatible-config-first-create" classname="compatible-config-first-create" time="0.0437475" status="run">
+		<properties>
+			<property name="cmake_labels" value="config;fixtures;unit"/>
+		</properties>
+		<system-out>PASS 61 create-missing config cases; 2366 assertions
+</system-out>
+	</testcase>
+	<testcase name="azureus-owned-service" classname="azureus-owned-service" time="5.52557" status="run">
+		<properties>
+			<property name="cmake_labels" value="loopback;statistics;unit"/>
+		</properties>
+		<system-out>********* Start testing of OwnedAzureusServiceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedAzureusServiceTests::initTestCase()
+PASS   : OwnedAzureusServiceTests::savedRatingsUseOriginalAnonymousKeyPayloadAndTwoNormalPublicOwners()
+PASS   : OwnedAzureusServiceTests::publicationReadbackWithoutTheExactValueRemainsBounded(two-final-mismatches)
+PASS   : OwnedAzureusServiceTests::publicationReadbackWithoutTheExactValueRemainsBounded(sixty-four-final-mismatches)
+PASS   : OwnedAzureusServiceTests::publicationReadbackWithoutTheExactValueRemainsBounded(continued-sixty-four-withdraws)
+PASS   : OwnedAzureusServiceTests::savedRatingPublicationRefusesUnadmittedZeroOversizeAndStaleTargets()
+PASS   : OwnedAzureusServiceTests::savedRatingMalformedRemoteValueDoesNotBecomeLocalFallback()
+PASS   : OwnedAzureusServiceTests::completedRatingValuesWithdrawAtTheNextRealWorkerSourceFence()...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="azureus-database-runtime" classname="azureus-database-runtime" time="2.07471" status="run">
+		<properties>
+			<property name="cmake_labels" value="database;loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of AzureusDatabaseRuntimeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusDatabaseRuntimeTests::initTestCase()
+PASS   : AzureusDatabaseRuntimeTests::typedLocalAnonymousFlagPersistsWithoutOpeningArbitraryFlagAuthority()
+PASS   : AzureusDatabaseRuntimeTests::localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData()
+PASS   : AzureusDatabaseRuntimeTests::qualifiedMappingOwnsVersionsForwardingAndUnknownBinaryBytes()
+PASS   : AzureusDatabaseRuntimeTests::normalFindFlagsReturnUnfilteredValuesLikeOriginalMapping()
+PASS   : AzureusDatabaseRuntimeTests::actualFindFlagsReachTheDatabaseWithoutSeedFiltering()
+PASS   : AzureusDatabaseRuntimeTests::statsValueRequiresRealAdapterAndLocalIdentity()
+PASS   : AzureusDatabaseRuntimeTests::actualStatsReadIsBoundToSocketAndRealMappingEvents()
+PASS   : AzureusDatabaseRuntimeTests::originalDiversif...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="profile-lease-retention" classname="profile-lease-retention" time="0.0198983" status="run">
+		<properties>
+			<property name="cmake_labels" value="locking;storage;unit"/>
+		</properties>
+		<system-out>********* Start testing of ProfileLeaseRetentionTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ProfileLeaseRetentionTests::initTestCase()
+PASS   : ProfileLeaseRetentionTests::retainedAliasesKeepActualJavaPosixExclusionUntilLastClose()
+PASS   : ProfileLeaseRetentionTests::rejectedIndependentAcquisitionDoesNotReleaseRetainedOFD()
+PASS   : ProfileLeaseRetentionTests::onlyGenuineRetainedAliasesShareTheAcquiredLineageAcrossMoves()
+PASS   : ProfileLeaseRetentionTests::sameDirectoryWithAReplacedLockCannotClaimTheOldOfdLineage()
+PASS   : ProfileLeaseRetentionTests::replacedLockNameCannotProduceNewAuthority()
+PASS   : ProfileLeaseRetentionTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 4ms
+********* Finished testing of ProfileLeaseRetentionTests *********
+</system-out>
+	</testcase>
+	<testcase name="i2cp-initial-channel" classname="i2cp-initial-channel" time="13.3015" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;owned-loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of InitialChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : InitialChannelTests::initTestCase()
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv4)
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv6)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(oversize-header)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unknown-type)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(maximum-bounded-opaque-frame)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unexpected-real-session-status)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(invalid-date-length)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(real-Java-null-date)
+PASS   : InitialChannelTests::truncatedFrameAtActualEofRefuses()
+PASS   : InitialChannelTests::r...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="pure-i2cp-datagram-messages" classname="pure-i2cp-datagram-messages" time="0.0368564" status="run">
+		<properties>
+			<property name="cmake_labels" value="crypto;i2p;no-network;unit"/>
+		</properties>
+		<system-out>PASS bounded I2CP datagram messages/mux/status
+</system-out>
+	</testcase>
+	<testcase name="i2cp-lease-backed-datagram-channel" classname="i2cp-lease-backed-datagram-channel" time="7.41348" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;owned-loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of DatagramChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : DatagramChannelTests::initTestCase()
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(DSA0-v4-signed)
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(Ed7-v6-signed)
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(DSA0-v6-claimed)
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(Ed7-v4-claimed)
+PASS   : DatagramChannelTests::createdWithoutActualLeaseCannotSubmit()
+PASS   : DatagramChannelTests::localCancelAndOldNonceCannotFinishTheNextRequest()
+PASS   : DatagramChannelTests::terminalFailureCanPrecedeAcceptedAndOldStatusesCannotRebind()
+PASS   : DatagramChannelTests::renewalCannotExtendOrCancelTheIndependentStatusBudget()
+PASS...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="i2cp-bounded-datagram-receiver" classname="i2cp-bounded-datagram-receiver" time="11.2504" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;owned-loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of ReceiveChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ReceiveChannelTests::initTestCase()
+PASS   : ReceiveChannelTests::actualLegacyAndFastWireVerifiesBeforeQueuing(legacy-DSA0-v4)
+PASS   : ReceiveChannelTests::actualLegacyAndFastWireVerifiesBeforeQueuing(fast-Ed7-v6)
+PASS   : ReceiveChannelTests::actualLegacyAndFastWireVerifiesBeforeQueuing(legacy-claimed3-v6)
+PASS   : ReceiveChannelTests::actualLegacyAndFastWireVerifiesBeforeQueuing(fast-claimed3-v4)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(crc)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(signature)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(wrong-recipient)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(unsupported-protocol)
+PASS ...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="azureus-profile-io" classname="azureus-profile-io" time="2.36467" status="run">
+		<properties>
+			<property name="cmake_labels" value="loopback;profile;unit"/>
+		</properties>
+		<system-out>********* Start testing of AzureusProfileIoTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusProfileIoTests::initTestCase()
+QINFO  : AzureusProfileIoTests::heldDiskHandoffDoesNotBlockRealPingDeadlineCancellationOrSocketClose() Held post-read/reservation IO: source=1048594B ping=51ms total-through-close=360ms, sockets closed before external IO join
+PASS   : AzureusProfileIoTests::heldDiskHandoffDoesNotBlockRealPingDeadlineCancellationOrSocketClose()
+PASS   : AzureusProfileIoTests::currentVersionSourceIsRecheckedAfterTheHeldJobBeforeAnyPacketEffect()
+PASS   : AzureusProfileIoTests::initialRatingIoCanBeCancelledBeforeAnySnapshotOrPacketAndFreshReadStillWorks()
+PASS   : AzureusProfileIoTests::nestedObservedWritersRefuseBeforeEffectsRatherThanCallUnderOuterGate()
+QINFO  : AzureusProfileIoTests::permitsAreSingleUseBoundQueuedActiveAndReadyThenReclaimSlots() Profile IO high...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="pure-i2cp-tracker-objects" classname="pure-i2cp-tracker-objects" time="0.00563881" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;no-network;unit"/>
+		</properties>
+		<system-out>PASS bounded original tracker lookup/raw codec
+</system-out>
+	</testcase>
+	<testcase name="i2cp-explicit-tracker-channel" classname="i2cp-explicit-tracker-channel" time="5.41215" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;owned-loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of TrackerChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : TrackerChannelTests::initTestCase()
+PASS   : TrackerChannelTests::actualHashLookupSignedConnectClaimedScrapeRawReply(legacy-v4)
+PASS   : TrackerChannelTests::actualHashLookupSignedConnectClaimedScrapeRawReply(fast-v4)
+PASS   : TrackerChannelTests::actualHashLookupSignedConnectClaimedScrapeRawReply(legacy-v6)
+PASS   : TrackerChannelTests::actualHashLookupSignedConnectClaimedScrapeRawReply(fast-v6)
+PASS   : TrackerChannelTests::wrongPortsTransactionsAndOldLookupCannotFinishCurrentOperation()
+PASS   : TrackerChannelTests::cancellationAndLateRawReplyCannotCompleteNextOperation()
+PASS   : TrackerChannelTests::actualLookupFailureMismatchAndDeadlineAreLocalAndReusable(routerfailure)
+PASS   : TrackerChannelTests::actualLookupFailureMismatchAndDeadlineAreLocalAndReusable(wrongdestination)
+PASS...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="native-torrent-state-writer-guards" classname="native-torrent-state-writer-guards" time="0.356495" status="run">
+		<properties>
+			<property name="cmake_labels" value="faults;locking;storage;unit"/>
+		</properties>
+		<system-out>PASS native state writer guards {"cases": 7, "commands": [{"command": ["begin"], "exit": 0, "stdout": ""}, {"command": ["edit", "normal"], "exit": 0, "stdout": ""}, {"command": ["load"], "exit": 0, "stdout": "LOADED 0"}, {"command": ["begin"], "exit": 0, "stdout": ""}, {"command": ["edit", "temp"], "exit": 66, "stdout": ""}, {"command": ["load"], "exit": 0, "stdout": "LOADED 0"}, {"command": ["begin"], "exit": 0, "stdout": ""}, {"command": ["edit", "backup"], "exit": 66, "stdout": ""}, {"command": ["load"], "exit": 0, "stdout": "LOADED 0"}, {"command": ["begin"], "exit": 0, "stdout": ""}, {"command": ["edit", "primary"], "exit": 66, "stdout": ""}, {"command": ["load"], "exit": 0, "stdout": "LOADED 0"}, {"command": ["begin"], "exit": 0, "stdout": ""}, {"command": ["stale"], "exit": 0, "stdout": ""}, {"command": ["begin"], "exit": 0, "stdout": ""}, {"command": ["begin"], "exit": 0, "stdout": ""}, {"command": ["other-profile", "/tmp/biglybtc-state-writer-guards-mnh0mtoz/other-target"], "exit": 0, "stdout": ""}, ...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

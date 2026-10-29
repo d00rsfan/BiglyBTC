@@ -35,3 +35,9 @@ Source 6726a4cf7b017ac31d6aeede15f339c3ec2b71f7 adds explicit serveValues backed
 ## Explicit saved-rating consumer
 
 Source `d384a850980f1b6245230ea852d617b11c405e11` binds the existing rating key/encoding/local policy to explicit one-admitted-peer publish/read commands with current saved full identity, network/DHT permission, same profile/version owner and bounded final readback. Normal and original ANON0x10 value flags stay typed; ANON is not anonymous routing. Reads are possiblyPartial,64 versus original256. Empty remote values alone allow local fallback; malformed nonempty values do not. Multi-value publication waits for FINAL and exact origin/version/payload/flags/lifetime match within64 values/slices. Current-source/config/cancel/close checks withdraw observations. Fresh7/5/5 suites and private7 passed; no automatic plugin/queue/public/UI activation. See [review](../evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md). Synchronous profile I/O remains an explicit next architecture gate.
+
+## 2026-10-29 executor and explicit tracker qualification
+
+Source `f9c72f14be1494b6d75b38288f9eff256a1a878b` qualifies bounded profile I/O off the DHT network owner and explicit I2CP hash lookup/connect/scrape. Fresh GCC17/Clang12/leak-enabled ASan+UBSan12 suites, private-runtime17 and actual official/modified Java2signing families/10frames per reference/direction pass. [Review](evidence/20261029-profile-io-i2cp-tracker/REVIEW.md).
+
+This closes the bounded execution slice only. Public maintenance/router/Streaming/default activation and full performance/parity remain open; consult the linked review for exact limits.

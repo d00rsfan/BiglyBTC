@@ -1,0 +1,28 @@
+********* Start testing of LocalRatingWiringTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : LocalRatingWiringTests::initTestCase()
+QWARN  : LocalRatingWiringTests::singleRatingActionPreservesBulkFileActions() This plugin does not support propagateSizeHints()
+QWARN  : LocalRatingWiringTests::singleRatingActionPreservesBulkFileActions() This plugin does not support propagateSizeHints()
+QWARN  : LocalRatingWiringTests::singleRatingActionPreservesBulkFileActions() This plugin does not support raise()
+QWARN  : LocalRatingWiringTests::singleRatingActionPreservesBulkFileActions() This plugin does not support propagateSizeHints()
+PASS   : LocalRatingWiringTests::singleRatingActionPreservesBulkFileActions()
+QWARN  : LocalRatingWiringTests::actualWindowBridgeSaveUsesSoleLeaseAndNoEngineOrDdb() This plugin does not support propagateSizeHints()
+QWARN  : LocalRatingWiringTests::actualWindowBridgeSaveUsesSoleLeaseAndNoEngineOrDdb() This plugin does not support propagateSizeHints()
+QWARN  : LocalRatingWiringTests::actualWindowBridgeSaveUsesSoleLeaseAndNoEngineOrDdb() This plugin does not support raise()
+QWARN  : LocalRatingWiringTests::actualWindowBridgeSaveUsesSoleLeaseAndNoEngineOrDdb() This plugin does not support propagateSizeHints()
+PASS   : LocalRatingWiringTests::actualWindowBridgeSaveUsesSoleLeaseAndNoEngineOrDdb()
+PASS   : LocalRatingWiringTests::actualBridgeRejectsStaleRevisionForgedTokenAndWrongSession()
+QWARN  : LocalRatingWiringTests::profileChangeBusyAndDirectChildCallbacksFenceOldRoutes() This plugin does not support propagateSizeHints()
+QWARN  : LocalRatingWiringTests::profileChangeBusyAndDirectChildCallbacksFenceOldRoutes() This plugin does not support propagateSizeHints()
+QWARN  : LocalRatingWiringTests::profileChangeBusyAndDirectChildCallbacksFenceOldRoutes() This plugin does not support raise()
+QWARN  : LocalRatingWiringTests::profileChangeBusyAndDirectChildCallbacksFenceOldRoutes() This plugin does not support propagateSizeHints()
+QWARN  : LocalRatingWiringTests::profileChangeBusyAndDirectChildCallbacksFenceOldRoutes() This plugin does not support propagateSizeHints()
+QWARN  : LocalRatingWiringTests::profileChangeBusyAndDirectChildCallbacksFenceOldRoutes() This plugin does not support raise()
+QWARN  : LocalRatingWiringTests::profileChangeBusyAndDirectChildCallbacksFenceOldRoutes() This plugin does not support propagateSizeHints()
+QWARN  : LocalRatingWiringTests::profileChangeBusyAndDirectChildCallbacksFenceOldRoutes() This plugin does not support propagateSizeHints()
+QWARN  : LocalRatingWiringTests::profileChangeBusyAndDirectChildCallbacksFenceOldRoutes() This plugin does not support raise()
+QWARN  : LocalRatingWiringTests::profileChangeBusyAndDirectChildCallbacksFenceOldRoutes() This plugin does not support propagateSizeHints()
+PASS   : LocalRatingWiringTests::profileChangeBusyAndDirectChildCallbacksFenceOldRoutes()
+PASS   : LocalRatingWiringTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 743ms
+********* Finished testing of LocalRatingWiringTests *********

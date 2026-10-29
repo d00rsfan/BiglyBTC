@@ -1,0 +1,56 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-azureus-profile-io-tests",
+      "biglybtc-azureus-owned-service-tests",
+      "biglybtc-azureus-database-runtime-tests",
+      "biglybtc-profile-lease-retention-tests",
+      "biglybtc-config-create-tests",
+      "biglybtc-torrent-state-driver",
+      "biglybtc-i2cp-initial-channel-tests",
+      "biglybtc-i2cp-datagram-tests",
+      "biglybtc-i2cp-datagram-channel-tests",
+      "biglybtc-i2cp-receive-channel-tests",
+      "biglybtc-i2cp-tracker-codec-tests",
+      "biglybtc-i2cp-tracker-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 353.109,
+    "log": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/runs/clang-r2/build.log",
+    "log_sha256": "4344783f127c492b05bcfa3b1371ecf352ae6fb19459357655f87dc517c7a883"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "-R",
+      "^(azureus-profile-io|azureus-owned-service|azureus-database-runtime|profile-lease-retention|compatible-config-first-create|native-torrent-state-writer-guards|i2cp-initial-channel|pure-i2cp-datagram-messages|i2cp-lease-backed-datagram-channel|i2cp-bounded-datagram-receiver|pure-i2cp-tracker-objects|i2cp-explicit-tracker-channel)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/runs/clang-r2/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 8,
+    "seconds": 59.245,
+    "log": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/runs/clang-r2/tests.log",
+    "log_sha256": "f633003528fc7e38a288d11ac7bef543909a91048f06688c12c291cb13ab3ffd"
+  }
+]

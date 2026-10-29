@@ -1,0 +1,16 @@
+{
+  "status": "PASS_SOURCE_ONLY",
+  "manifest": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/invalid-lease-and-source-rejection/manifest.json",
+  "manifest_sha256": "bd969c1554e5d7dcfe5d57189c1f4241b14c6372597235eaef18fc514d0b530d",
+  "verified_source_paths": 5,
+  "verified_artifacts": 14,
+  "findings": [],
+  "conclusions": [
+    "Invalid or moved-from lease restores UnsafePath before source-gate construction; genuine released ownership remains Conflict.",
+    "Normal preflight now distinguishes accepted resumption from actual asynchronous source failure after release. Both service/database continuations remain actor-thread only; false performs no request effect and increments authorityErrors only for still-bound normal actor and allowed endpoint.",
+    "Capacity rejection remains separate, and existing normal-current/source/stop/packet gates remain on accepted resumption. No tests or deadlines changed."
+  ],
+  "limits": [
+    "No compiler/runtime/N mutation or causal qualification by reviewer."
+  ]
+}

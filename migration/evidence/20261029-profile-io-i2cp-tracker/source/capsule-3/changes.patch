@@ -1,0 +1,622 @@
+diff --git a/preview/native/core/include/biglybtc/udp_tracker_wire.hpp b/preview/native/core/include/biglybtc/udp_tracker_wire.hpp
+--- /dev/null
++++ b/preview/native/core/include/biglybtc/udp_tracker_wire.hpp
+@@ -0,0 +1,36 @@
++#pragma once
++#include <array>
++#include <bit>
++#include <cstddef>
++#include <cstdint>
++#include <optional>
++#include <span>
++#include <string_view>
++namespace biglybtc::core {
++namespace udp_tracker_wire {
++inline std::uint32_t word(std::string_view p,std::size_t at){
++  std::uint32_t value=0;for(unsigned i=0;i<4;++i){value=(value<<8)|static_cast<unsigned char>(p[at+i]);}return value;
++}
++inline void put(std::span<char> out,std::size_t at,std::uint32_t value){for(unsigned i=0;i<4;++i){out[at+i]=static_cast<char>(value>>(24-8*i));}}
++inline std::array<char,16> connect(std::uint32_t transaction){
++  std::array<char,16> p{};put(p,0,0x417);put(p,4,0x27101980);put(p,8,0);put(p,12,transaction);return p;
++}
++inline std::array<char,36> scrape(std::uint64_t connection,std::uint32_t transaction,std::span<const std::byte,20> hash){
++  std::array<char,36> p{};put(p,0,static_cast<std::uint32_t>(connection>>32));put(p,4,static_cast<std::uint32_t>(connection));put(p,8,2);put(p,12,transaction);
++  for(unsigned i=0;i<20;++i){p[16+i]=static_cast<char>(hash[i]);}return p;
++}
++enum class ReplyKind {Connect,Scrape,Error,Unsupported};
++struct Reply {ReplyKind kind;std::uint64_t connection=0;std::int32_t seeds=0,downloaded=0,peers=0;};
++// Canonical single-hash BEP15/VERSION2 subset. Wrong transaction/action,
++// partial/multiple entries and trailing bytes are never accepted as counts.
++inline std::optional<Reply> reply(std::string_view packet,std::uint32_t transaction,bool connecting){
++  if(packet.size()<8||word(packet,4)!=transaction){return {};}
++  if(packet.size()>1024){return Reply{ReplyKind::Unsupported};} // A truncated correlated reply cannot become timeout/error authority.
++  const auto action=word(packet,0);if(action==3){return Reply{ReplyKind::Error};}
++  if(connecting&&action==0&&packet.size()==16){return Reply{ReplyKind::Connect,(static_cast<std::uint64_t>(word(packet,8))<<32)|word(packet,12)};}
++  if(!connecting&&action==2&&packet.size()==20){return Reply{ReplyKind::Scrape,0,std::bit_cast<std::int32_t>(word(packet,8)),std::bit_cast<std::int32_t>(word(packet,12)),std::bit_cast<std::int32_t>(word(packet,16))};}
++  if((connecting&&action==0)||(!connecting&&action==2)){return Reply{ReplyKind::Unsupported};}
++  return {};
++}
++} // namespace udp_tracker_wire
++} // namespace biglybtc::core
+diff --git a/preview/native/engine/library_udp_tracker.hpp b/preview/native/engine/library_udp_tracker.hpp
+--- a/preview/native/engine/library_udp_tracker.hpp
++++ b/preview/native/engine/library_udp_tracker.hpp
+@@ -1,5 +1,6 @@
+ #pragma once
+ #include "biglybtc/library.hpp"
++#include "biglybtc/udp_tracker_wire.hpp"
+ #include "biglybtc/queue_observations.hpp"
+ #include "network_policy.hpp"
+ #include "profile.hpp"
+@@ -22,32 +23,7 @@
+ #include <unistd.h>
+ 
+ namespace biglybtc::engine::detail {
+-namespace udp_tracker_wire {
+-inline std::uint32_t word(std::string_view p,std::size_t at){
+-  std::uint32_t value=0;for(unsigned i=0;i<4;++i){value=(value<<8)|static_cast<unsigned char>(p[at+i]);}return value;
+-}
+-inline void put(std::span<char> out,std::size_t at,std::uint32_t value){for(unsigned i=0;i<4;++i){out[at+i]=static_cast<char>(value>>(24-8*i));}}
+-inline std::array<char,16> connect(std::uint32_t transaction){
+-  std::array<char,16> p{};put(p,0,0x417);put(p,4,0x27101980);put(p,8,0);put(p,12,transaction);return p;
+-}
+-inline std::array<char,36> scrape(std::uint64_t connection,std::uint32_t transaction,std::span<const std::byte,20> hash){
+-  std::array<char,36> p{};put(p,0,static_cast<std::uint32_t>(connection>>32));put(p,4,static_cast<std::uint32_t>(connection));put(p,8,2);put(p,12,transaction);
+-  for(unsigned i=0;i<20;++i){p[16+i]=static_cast<char>(hash[i]);}return p;
+-}
+-enum class ReplyKind {Connect,Scrape,Error,Unsupported};
+-struct Reply {ReplyKind kind;std::uint64_t connection=0;std::int32_t seeds=0,downloaded=0,peers=0;};
+-// Canonical single-hash BEP15/VERSION2 subset. Wrong transaction/action,
+-// partial/multiple entries and trailing bytes are never accepted as counts.
+-inline std::optional<Reply> reply(std::string_view packet,std::uint32_t transaction,bool connecting){
+-  if(packet.size()<8||word(packet,4)!=transaction){return {};}
+-  if(packet.size()>1024){return Reply{ReplyKind::Unsupported};} // A truncated correlated reply cannot become timeout/error authority.
+-  const auto action=word(packet,0);if(action==3){return Reply{ReplyKind::Error};}
+-  if(connecting&&action==0&&packet.size()==16){return Reply{ReplyKind::Connect,(static_cast<std::uint64_t>(word(packet,8))<<32)|word(packet,12)};}
+-  if(!connecting&&action==2&&packet.size()==20){return Reply{ReplyKind::Scrape,0,std::bit_cast<std::int32_t>(word(packet,8)),std::bit_cast<std::int32_t>(word(packet,12)),std::bit_cast<std::int32_t>(word(packet,16))};}
+-  if((connecting&&action==0)||(!connecting&&action==2)){return Reply{ReplyKind::Unsupported};}
+-  return {};
+-}
+-} // namespace udp_tracker_wire
++namespace udp_tracker_wire=::biglybtc::core::udp_tracker_wire;
+ 
+ struct LibraryUdpRoute {
+   libtorrent::udp::endpoint remote,local;
+diff --git a/preview/native/services/i2cp_channel/channel.cpp b/preview/native/services/i2cp_channel/channel.cpp
+--- a/preview/native/services/i2cp_channel/channel.cpp
++++ b/preview/native/services/i2cp_channel/channel.cpp
+@@ -6,6 +6,7 @@
+ #include <QTcpSocket>
+ #include <QThread>
+ #include <QTimer>
++#include <openssl/rand.h>
+ #include <algorithm>
+ #include <array>
+ #include <chrono>
+@@ -13,6 +14,7 @@
+ #include <cstring>
+ #include <deque>
+ #include <limits>
++#include <type_traits>
+ 
+ namespace biglybtc::services::i2p::i2cp {
+ struct InitialChannel::Impl {
+@@ -22,6 +24,7 @@
+   QTimer timer;
+   QTimer statusTimer;
+   QTimer receiveTimer;
++  QTimer trackerTimer;
+   FrameDecoder decoder;
+   Options options;
+   QByteArray hello;
+@@ -48,12 +51,13 @@
+   Clock::time_point dateObserved{};
+   bool notificationQueued=false,drainQueued=false,reading=false,lostPending=false;
+ 
+-  explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner),statusTimer(owner),receiveTimer(owner){
++  explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner),statusTimer(owner),receiveTimer(owner),trackerTimer(owner){
+     socket.setProxy(QNetworkProxy::NoProxy); // Local I2CP control, never app proxy.
+     socket.setReadBufferSize(static_cast<qint64>(MaximumFrameBytes));
+     timer.setSingleShot(true);
+     statusTimer.setSingleShot(true);
+     receiveTimer.setSingleShot(true);
++    trackerTimer.setSingleShot(true);
+   }
+   ~Impl(){stopIo();}
+   bool active()const{return state==State::Connecting||state==State::WaitingDate||state==State::DateReceived||state==State::Creating||state==State::SessionCreated||state==State::Reconfiguring;}
+@@ -65,11 +69,12 @@
+     for(std::size_t i=0;i<3;++i){const auto dot=value.find('.');const auto part=value.substr(0,dot);if(part.empty()){return false;}const auto parsed=std::from_chars(part.data(),part.data()+part.size(),version[i]);if(parsed.ec!=std::errc{}||parsed.ptr!=part.data()+part.size()){return false;}if(i<2){if(dot==std::string_view::npos){return false;}value.remove_prefix(dot+1);}}
+     return version[0]>0||version[1]>9||(version[1]==9&&version[2]>=38);
+   }
+-  void clearSession(){clearReceive();session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;statusPending=false;datagram.reset();datagramMessageId.reset();statusReplies=true;pendingStatusReplies=true;statusTimer.stop();}
++  void clearSession(){clearTracker();clearReceive();session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;statusPending=false;datagram.reset();datagramMessageId.reset();statusReplies=true;pendingStatusReplies=true;statusTimer.stop();}
+   void stopIo(){
+     timer.stop();QObject::disconnect(&timer,nullptr,q,nullptr);
+     statusTimer.stop();QObject::disconnect(&statusTimer,nullptr,q,nullptr);
+     receiveTimer.stop();QObject::disconnect(&receiveTimer,nullptr,q,nullptr);
++    trackerTimer.stop();QObject::disconnect(&trackerTimer,nullptr,q,nullptr);
+     QObject::disconnect(&socket,nullptr,q,nullptr);socket.abort();
+   }
+   void notify(){
+@@ -120,6 +125,7 @@
+     if(!queued){drainQueued=false;fail(Failure::Resources);}
+   }
+   void message(Frame frame){
++    if(frame.type==HostReplyType){observeHostReply(frame);return;}
+     if(frame.type==MessagePayloadType){inboundPayload(std::move(frame));return;}
+     if(frame.type==MessageStatusType){observeDatagram(frame);return;}
+     if(frame.type==RequestVariableLeaseSetType){answerLease(std::move(frame));return;}
+@@ -167,6 +173,7 @@
+     if(!identity.valid()||!identity.destination()){return reject(Code::KeyMismatch,"No live client identity");}
+     if(consume&&!ls2Router()){return reject(Code::Unsupported,"Explicit LeaseSet2 requires a supported numeric router version");}
+     if(update&&waitingFirstLease){return reject(Code::Unsupported,"Initial LeaseSet request is still outstanding");}
++    if(update&&tracker){return reject(Code::Unsupported,"Explicit tracker operation is still outstanding");}
+     if(update&&statusPending){return reject(Code::Unsupported,"Datagram status request is still outstanding");}
+     if(update&&(!session||identity.destination()->wire!=acceptedDestination||revision==std::numeric_limits<std::uint64_t>::max())){
+       return reject(Code::KeyMismatch,"Reconfigure must use the same accepted identity/id");
+@@ -281,7 +288,7 @@
+   ConfigResult<std::uint32_t> submit(View recipient,View payload,const DatagramOptions& opts,bool claimed){
+     using Code=::biglybtc::services::i2p::ErrorCode;auto reject=[](Code code,const char* text)->ConfigResult<std::uint32_t>{return std::unexpected(::biglybtc::services::i2p::Error{code,text});};
+     if(!onThread()){return reject(Code::InvalidFormat,"Datagram request belongs to channel thread");}
+-    if(state!=State::SessionCreated||waitingFirstLease||statusPending||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Current unexpired owned LS2 and idle datagram/write state required");}
++    if(state!=State::SessionCreated||waitingFirstLease||statusPending||tracker||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Current unexpired owned LS2 and idle datagram/write state required");}
+     if(!statusReplies){return reject(Code::Unsupported,"Initial reliability none cannot request tracked statuses");}
+     if(nextDatagramNonce>std::numeric_limits<std::uint32_t>::max()){return reject(Code::TooLarge,"Datagram nonce lifetime exhausted; never reuse");}
+     try{
+@@ -300,6 +307,7 @@
+       notifyDatagram();if(!current(at)){return reject(Code::CryptoFailure,"Datagram notification failed");}return nonce;
+     }catch(...){if(statusPending){fail(Failure::Resources);}return reject(Code::CryptoFailure,"Datagram resources unavailable");}
+   }
++#include "tracker.inc"
+ #include "receive.inc"
+   void drain(){
+     if(reading||!active()||state==State::Connecting||expired()){return;}
+@@ -381,7 +389,8 @@
+     });
+     QObject::connect(&statusTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{armStatusDeadline();}catch(...){fail(Failure::Resources);}}});
+     QObject::connect(&receiveTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{receiveDeadline();}catch(...){fail(Failure::Resources);}}});
+-    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){flushReceiveControls();}});
++    QObject::connect(&trackerTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{trackerDeadline();}catch(...){fail(Failure::Resources);}}});
++    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){flushReceiveControls();flushTrackerWrite();}});
+     state=State::Connecting;expires=Clock::now()+std::chrono::milliseconds(next.deadlineMilliseconds);
+     timer.start(next.deadlineMilliseconds);notify();
+     if(!current(at)||state!=State::Connecting){return false;}
+@@ -422,6 +431,9 @@
+ void InitialChannel::disableDatagramReceiver(){impl_->disableReceive();}
+ std::optional<InitialChannel::ReceivedDatagram> InitialChannel::takeReceivedDatagram(){return impl_->takeReceive();}
+ InitialChannel::ReceiverObservation InitialChannel::receiverObservation()const noexcept{return impl_->receiveSnapshot();}
++ConfigResult<std::uint64_t> InitialChannel::scrapeTracker(const TrackerRequest& input){return impl_->startTracker(input);}
++bool InitialChannel::cancelTracker(std::uint64_t operation){if(!impl_->onThread()||!impl_->tracker||impl_->tracker->operation!=operation){return false;}impl_->finishTracker(TrackerPhase::LocalCancelled);return true;}
++std::optional<TrackerObservation> InitialChannel::trackerObservation()const{return sessionId()?impl_->trackerResult:std::nullopt;}
+ InitialChannel::State InitialChannel::state()const noexcept{return impl_->state;}
+ InitialChannel::Failure InitialChannel::failure()const noexcept{return impl_->failure;}
+ bool InitialChannel::socketActive()const noexcept{return impl_->socket.state()!=QAbstractSocket::UnconnectedState;}
+diff --git a/preview/native/services/i2cp_channel/channel.hpp b/preview/native/services/i2cp_channel/channel.hpp
+--- a/preview/native/services/i2cp_channel/channel.hpp
++++ b/preview/native/services/i2cp_channel/channel.hpp
+@@ -4,6 +4,7 @@
+ #include "session.hpp"
+ #include "leaseset.hpp"
+ #include "messages.hpp"
++#include "tracker.hpp"
+ #include <QHostAddress>
+ #include <QObject>
+ #include <memory>
+@@ -86,6 +87,11 @@
+   void disableDatagramReceiver();
+   [[nodiscard]] std::optional<ReceivedDatagram> takeReceivedDatagram();
+   [[nodiscard]] ReceiverObservation receiverObservation()const noexcept;
++  // Explicit hash-addressed UDP tracker only, no DNS/backend selection.
++  // One operation; a raw reply never authenticates its purported sender.
++  [[nodiscard]] ConfigResult<std::uint64_t> scrapeTracker(const TrackerRequest&);
++  bool cancelTracker(std::uint64_t operation);
++  [[nodiscard]] std::optional<TrackerObservation> trackerObservation()const;
+   [[nodiscard]] State state()const noexcept;
+   [[nodiscard]] Failure failure()const noexcept;
+   [[nodiscard]] bool socketActive()const noexcept;
+@@ -103,6 +109,7 @@
+   void leaseSetSubmitted();
+   void datagramChanged(); // Coalesced latest observation, not a result queue.
+   void receiverChanged(); // Queued current bounded queue/drop observation.
++  void trackerChanged(); // Queued latest same-generation operation observation.
+   void failed(Failure);
+   void closed();
+ private:
+diff --git a/preview/native/services/i2cp_channel/receive.inc b/preview/native/services/i2cp_channel/receive.inc
+--- a/preview/native/services/i2cp_channel/receive.inc
++++ b/preview/native/services/i2cp_channel/receive.inc
+@@ -34,7 +34,7 @@
+     if(!fetch){return;}const auto id=fetch->messageId;removeBegin(id);fetch.reset();receiveTimer.stop();remember(id);if(release){(void)enqueueControl(false,id);}dropReceive(reason);
+   }
+   void receiveDeadline(){
+-    if(!fetch){return;}if(!receiverEnabled){cancelFetch(ReceiveDrop::Cancelled);return;}if(!receiverCurrent()){cancelFetch(ReceiveDrop::LeaseExpired);return;}
++    if(!fetch){return;}if(!receiverEnabled&&!trackerReceives()){cancelFetch(ReceiveDrop::Cancelled);return;}if(!receiverCurrent()){cancelFetch(ReceiveDrop::LeaseExpired);return;}
+     if(Clock::now()>=fetch->end){cancelFetch(ReceiveDrop::PendingTimeout);return;}const auto left=std::chrono::duration_cast<std::chrono::milliseconds>(fetch->end-Clock::now()).count();receiveTimer.start(static_cast<int>(std::max<std::int64_t>(1,left)));
+   }
+   void flushReceiveControls(){
+@@ -45,7 +45,7 @@
+         if(next.generation!=generation||!session||next.value.sessionId!=*session){popControl();continue;}
+         if(next.value.begin){
+           if(!fetch||fetch->messageId!=next.value.messageId||fetch->generation!=generation){popControl();continue;}
+-          if(!receiverEnabled||!receiverCurrent()||Clock::now()>=fetch->end){cancelFetch(!receiverEnabled?ReceiveDrop::Cancelled:!receiverCurrent()?ReceiveDrop::LeaseExpired:ReceiveDrop::PendingTimeout);continue;}
++          if((!receiverEnabled&&!trackerReceives())||!receiverCurrent()||Clock::now()>=fetch->end){cancelFetch((!receiverEnabled&&!trackerReceives())?ReceiveDrop::Cancelled:!receiverCurrent()?ReceiveDrop::LeaseExpired:ReceiveDrop::PendingTimeout);continue;}
+         }
+         auto encoded=encodeReceiveControl(next.value);if(!encoded){fail(Failure::Resources);break;}const auto at=generation;
+         const auto written=socket.write(reinterpret_cast<const char*>(encoded->data()),static_cast<qint64>(encoded->size()));
+@@ -60,9 +60,9 @@
+     if(fastReceive){remember(status.messageId);dropReceive(ReceiveDrop::UnexpectedPayload);return;} // No legacy ACKs in immutable fast mode.
+     if(fetch&&fetch->messageId==status.messageId){dropReceive(ReceiveDrop::Duplicate);return;} // Don't release a live fetch.
+     if(remembered(status.messageId)){(void)enqueueControl(false,status.messageId);dropReceive(ReceiveDrop::Duplicate);return;}
+-    if(!receiverEnabled||!receiverCurrent()||fetch||received.size()==ReceiveQueueLimit||status.size>MaximumI2cpPayloadBytes){
++    if((!receiverEnabled&&!trackerReceives())||!receiverCurrent()||fetch||(received.size()==ReceiveQueueLimit&&!trackerReceives())||status.size>MaximumI2cpPayloadBytes){
+       remember(status.messageId);(void)enqueueControl(false,status.messageId);
+-      dropReceive(!receiverEnabled?ReceiveDrop::Disabled:!receiverCurrent()?ReceiveDrop::LeaseExpired:status.size>MaximumI2cpPayloadBytes?ReceiveDrop::Malformed:ReceiveDrop::QueueFull);return;
++      dropReceive((!receiverEnabled&&!trackerReceives())?ReceiveDrop::Disabled:!receiverCurrent()?ReceiveDrop::LeaseExpired:status.size>MaximumI2cpPayloadBytes?ReceiveDrop::Malformed:ReceiveDrop::QueueFull);return;
+     }
+     fetch=Fetch{*session,status.messageId,status.size,generation,Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds),false};receiveDeadline();
+     if(fetch&&!enqueueControl(true,status.messageId)){if(fetch){cancelFetch(ReceiveDrop::ControlBackpressure,false);}}
+@@ -88,8 +88,12 @@
+       // or consumption. It never acknowledges application delivery/signature.
+       (void)enqueueControl(false,id);
+     }else{if(remembered(id)){dropReceive(ReceiveDrop::Duplicate);return;}remember(id);}
++    if(advertised&&*advertised!=decoded->payload.size()){dropReceive(ReceiveDrop::Malformed);return;}
++    // RAW18 has no general receiver permission. Only this current dispatched
++    // tracker operation may consume it, and it never enters the datagram queue.
++    if(decoded->payload.size()>9&&decoded->payload[9]==RawTrackerProtocol&&trackerReceives()){observeTrackerPayload(decoded->payload,fetchEnd);return;}
+     if(!receiverEnabled){dropReceive(ReceiveDrop::Disabled);return;}if(!receiverCurrent()){dropReceive(ReceiveDrop::LeaseExpired);return;}
+-    if(received.size()==ReceiveQueueLimit){dropReceive(ReceiveDrop::QueueFull);return;}if(advertised&&*advertised!=decoded->payload.size()){dropReceive(ReceiveDrop::Malformed);return;}
++    if(received.size()==ReceiveQueueLimit){dropReceive(ReceiveDrop::QueueFull);return;}
+     const auto at=generation;auto mux=decodeMuxDatagram(decoded->payload);if(!mux){dropReceive(mux.error().code==::biglybtc::services::i2p::ErrorCode::Unsupported?ReceiveDrop::Unsupported:ReceiveDrop::Malformed);return;}
+     ReceivedDatagram data;data.messageId=id;data.fromPort=mux->fromPort;data.toPort=mux->toPort;
+     if(mux->protocol==Datagram2Protocol){auto body=decode2(mux->datagram,leaseSigner->destination()->hash);if(!body){dropReceive(ReceiveDrop::InvalidDatagram);return;}data.body=std::move(*body);}
+@@ -101,5 +105,5 @@
+     received.push_back(std::move(data));receiveBytes+=weight;notifyReceive();
+   }
+   bool enableReceive(){if(!onThread()||!leaseSigner||!leaseSigner->valid()||!active()||state==State::Connecting||state==State::WaitingDate||state==State::DateReceived){return false;}receiverEnabled=true;notifyReceive();return receiverEnabled&&active();}
+-  void disableReceive(){if(!onThread()){return;}receiverEnabled=false;received.clear();receiveBytes=0;if(fetch){cancelFetch(ReceiveDrop::Cancelled);}notifyReceive();}
++  void disableReceive(){if(!onThread()){return;}receiverEnabled=false;received.clear();receiveBytes=0;if(fetch&&!trackerReceives()){cancelFetch(ReceiveDrop::Cancelled);}notifyReceive();}
+   std::optional<ReceivedDatagram> takeReceive(){if(!onThread()||received.empty()){return std::nullopt;}if(!receiverCurrent()){received.clear();receiveBytes=0;dropReceive(ReceiveDrop::LeaseExpired);return std::nullopt;}auto out=std::move(received.front());received.pop_front();receiveBytes-=receiveWeight(out);remember(out.messageId);notifyReceive();return out;}
+diff --git a/preview/native/services/i2cp_channel/tracker.inc b/preview/native/services/i2cp_channel/tracker.inc
+--- /dev/null
++++ b/preview/native/services/i2cp_channel/tracker.inc
+@@ -0,0 +1,110 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++// Inside InitialChannel::Impl; actual owned I2CP stream, no backend selection.
++  struct TrackerRound {
++    TrackerRequest request;std::uint64_t operation=0,generation=0;
++    std::uint32_t lookup=0;std::array<std::uint32_t,2> transactions{};
++    Clock::time_point end{};std::optional<Destination> destination;
++    Bytes write;bool connecting=true,stageWritten=false;
++  };
++  static_assert(std::is_nothrow_move_constructible_v<TrackerRound>);
++  std::optional<TrackerRound> tracker;
++  std::optional<TrackerObservation> trackerResult;
++  std::uint64_t nextTrackerOperation=1,nextTrackerLookup=1;
++  bool trackerNotificationQueued=false;
++  std::array<std::uint32_t,2*MaximumTrackerOperations> trackerTransactions{};std::size_t trackerTransactionCount=0;
++  void clearTracker(){trackerTimer.stop();tracker.reset();trackerResult.reset();trackerConnection=0;trackerNotificationQueued=false;}
++  void notifyTracker(){
++    if(trackerNotificationQueued){return;}trackerNotificationQueued=true;bool queued=false;
++    try{const QPointer<InitialChannel> owner(q);const auto at=generation;queued=QMetaObject::invokeMethod(q,[owner,at]{if(!owner){return;}auto* self=owner->impl_.get();if(self->generation!=at){return;}self->trackerNotificationQueued=false;if(self->session&&self->active()&&self->trackerResult&&self->socket.state()==QAbstractSocket::ConnectedState){emit owner->trackerChanged();}},Qt::QueuedConnection);}catch(...){queued=false;}
++    if(!queued){trackerNotificationQueued=false;fail(Failure::Resources);}
++  }
++  void finishTracker(TrackerPhase phase,std::optional<TrackerCounts> counts=std::nullopt,Byte lookupResult=0){
++    if(!tracker||!trackerResult){return;}if(counts&&!trackerCurrent()){return;}tracker.reset();trackerTimer.stop();trackerResult->phase=phase;trackerResult->counts=counts;trackerResult->lookupResult=lookupResult;
++    // This is only local cancellation/release. No fabricated remote ACK/status.
++    if(!receiverEnabled&&fetch){cancelFetch(ReceiveDrop::Cancelled);}notifyTracker();
++  }
++  bool trackerCurrent(){
++    if(!tracker){return false;}
++    if(tracker->generation!=generation||!leaseCurrent()||state!=State::SessionCreated){finishTracker(TrackerPhase::LocalLeaseExpired);return false;}
++    if(Clock::now()>=tracker->end){finishTracker(TrackerPhase::LocalTimeout);return false;}return true;
++  }
++  bool trackerReceives()const{return tracker&&tracker->destination&&tracker->stageWritten&&tracker->generation==generation&&state==State::SessionCreated&&leaseCurrent()&&Clock::now()<tracker->end;}
++  void rejectTrackerReply(){if(trackerResult&&trackerResult->rejectedReplies!=std::numeric_limits<std::uint64_t>::max()){++trackerResult->rejectedReplies;}notifyTracker();}
++  void trackerDeadline(){
++    if(!trackerCurrent()){return;}const auto now=observedNow();if(!now||*now>=leaseSubmission->expiresMilliseconds){finishTracker(TrackerPhase::LocalLeaseExpired);return;}
++    const auto operationLeft=std::chrono::duration_cast<std::chrono::milliseconds>(tracker->end-Clock::now()).count();
++    const auto leaseLeft=leaseSubmission->expiresMilliseconds-*now;
++    trackerTimer.start(static_cast<int>(std::max<std::int64_t>(1,std::min(operationLeft,static_cast<std::int64_t>(leaseLeft)))));
++  }
++  void flushTrackerWrite(){
++    if(!tracker||tracker->write.empty()||socket.bytesToWrite()!=0){return;}
++    try{
++      if(!trackerCurrent()){return;}const auto at=generation;const auto operation=tracker->operation;
++      const auto written=socket.write(reinterpret_cast<const char*>(tracker->write.data()),static_cast<qint64>(tracker->write.size()));
++      if(!current(at)||!tracker||tracker->operation!=operation){return;}
++      if(written!=static_cast<qint64>(tracker->write.size())){fail(Failure::WriteFailed);return;}
++      tracker->write.clear();tracker->stageWritten=true;
++    }catch(...){fail(Failure::Resources);}
++  }
++  bool prepareTrackerPacket(){
++    if(!trackerCurrent()||!tracker->destination){return false;}
++    namespace wire=::biglybtc::core::udp_tracker_wire;
++    Bytes payload;
++    if(tracker->connecting){const auto p=wire::connect(tracker->transactions[0]);payload.assign(p.begin(),p.end());}
++    else{std::array<std::byte,20> hash{};for(std::size_t i=0;i<hash.size();++i){hash[i]=static_cast<std::byte>(tracker->request.infoHash[i]);}const auto p=wire::scrape(trackerConnection,tracker->transactions[1],hash);payload.assign(p.begin(),p.end());}
++    auto encoded=tracker->connecting?leaseSigner->makeDatagram2(tracker->destination->hash,payload):encode3(leaseSigner->destination()->wire,payload);
++    if(!encoded){fail(Failure::Resources);return false;}
++    auto mux=encodeMuxDatagram({tracker->connecting?Datagram2Protocol:Datagram3Protocol,TrackerLocalPort,tracker->request.port,std::move(*encoded)},GzipMode::Deflate);
++    const auto now=observedNow();if(!mux||!now||*now>0xffffffffffffULL-60000){fail(Failure::Resources);return false;}
++    // Original UDP tracker uses untracked I2CP sends; the actual BEP15 reply is
++    // separate from router acceptance, also with initial reliability=none.
++    auto frame=encodeSendDatagram({*session,*tracker->destination,std::move(*mux),0,*now+60000,!tracker->connecting});
++    if(!frame){fail(Failure::Resources);return false;}if(!trackerCurrent()){return false;}
++    tracker->write=std::move(*frame);tracker->stageWritten=false;return true;
++  }
++  std::uint64_t trackerConnection=0;
++  ConfigResult<std::uint64_t> startTracker(const TrackerRequest& input){
++    using Code=::biglybtc::services::i2p::ErrorCode;auto reject=[](Code c,const char* why)->ConfigResult<std::uint64_t>{return std::unexpected(::biglybtc::services::i2p::Error{c,why});};
++    if(!onThread()||tracker||statusPending||state!=State::SessionCreated||waitingFirstLease||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Tracker needs current owned LS2 and idle explicit channel");}
++    if(!input.port||input.deadlineMilliseconds<1||input.deadlineMilliseconds>60000){return reject(Code::Unsupported,"Explicit tracker port and bounded deadline required");}
++    if(trackerTransactionCount==trackerTransactions.size()||nextTrackerLookup>std::numeric_limits<std::uint32_t>::max()||nextTrackerOperation==std::numeric_limits<std::uint64_t>::max()){return reject(Code::TooLarge,"Tracker lifetime correlation exhausted");}
++    try{
++      const auto at=generation;TrackerRound prepared;prepared.request=input;prepared.operation=nextTrackerOperation;prepared.generation=at;prepared.lookup=static_cast<std::uint32_t>(nextTrackerLookup);prepared.end=Clock::now()+std::chrono::milliseconds(input.deadlineMilliseconds);
++      bool random=false;for(unsigned i=0;i<8;++i){if(RAND_bytes(reinterpret_cast<unsigned char*>(prepared.transactions.data()),sizeof(prepared.transactions))!=1){break;}if(prepared.transactions[0]!=prepared.transactions[1]&&std::none_of(trackerTransactions.begin(),trackerTransactions.begin()+static_cast<std::ptrdiff_t>(trackerTransactionCount),[&](auto prior){return prior==prepared.transactions[0]||prior==prepared.transactions[1];})){random=true;break;}}
++      if(!random){return reject(Code::CryptoFailure,"Tracker transaction entropy unavailable");}
++      auto bytes=encodeHostLookup({*session,prepared.lookup,static_cast<std::uint32_t>(std::min(input.deadlineMilliseconds,30000)),input.destination});if(!bytes){return std::unexpected(bytes.error());}
++      if(!current(at)||!leaseCurrent()||Clock::now()>=prepared.end){return reject(Code::InvalidFormat,"Tracker preparation lost lease/budget");}
++      prepared.write=std::move(*bytes);const auto operation=prepared.operation;++nextTrackerLookup;++nextTrackerOperation;
++      trackerTransactions[trackerTransactionCount++]=prepared.transactions[0];trackerTransactions[trackerTransactionCount++]=prepared.transactions[1];
++      trackerResult=TrackerObservation{operation,input,TrackerPhase::LookingUp,std::nullopt,0,0};tracker.emplace(std::move(prepared));trackerConnection=0;
++      trackerDeadline();flushTrackerWrite();if(!tracker||!current(at)){return reject(Code::InvalidFormat,"Tracker request failed before dispatch");}notifyTracker();if(!current(at)||!tracker||tracker->operation!=operation){return reject(Code::CryptoFailure,"Tracker notification failed");}return operation;
++    }catch(...){if(tracker){fail(Failure::Resources);}return reject(Code::CryptoFailure,"Tracker resources unavailable");}
++  }
++  void observeHostReply(const Frame& frame){
++    if(!tracker||trackerResult->phase!=TrackerPhase::LookingUp){return;}
++    // Correlate the fixed prefix before decoding: malformed old/wrong replies
++    // cannot finish a newer operation merely by failing a parser.
++    if(frame.payload.size()<6){rejectTrackerReply();return;}
++    const auto sid=static_cast<std::uint16_t>((static_cast<unsigned>(frame.payload[0])<<8)|frame.payload[1]);std::uint32_t request=0;for(unsigned i=2;i<6;++i){request=(request<<8)|frame.payload[i];}
++    if(!session||sid!=*session||request!=tracker->lookup||!tracker->stageWritten){rejectTrackerReply();return;}
++    auto reply=decodeHostReply(frame);if(!reply){if(trackerCurrent()){finishTracker(TrackerPhase::UnknownReply);}return;}
++    if(!trackerCurrent()){return;}
++    if(reply->result){finishTracker(TrackerPhase::LookupFailed,std::nullopt,reply->result);return;}
++    if(!reply->destination||reply->destination->hash!=tracker->request.destination){finishTracker(TrackerPhase::DestinationMismatch);return;}
++    if(reply->destination->hash==leaseSigner->destination()->hash){finishTracker(TrackerPhase::DestinationMismatch);return;}
++    tracker->destination=std::move(*reply->destination);trackerResult->phase=TrackerPhase::Connecting;
++    if(prepareTrackerPacket()){flushTrackerWrite();notifyTracker();}
++  }
++  void observeTrackerPayload(View payload,std::optional<Clock::time_point> receiveEnd){
++    if(!trackerCurrent()||!trackerReceives()){return;}
++    auto mux=decodeRawTrackerReply(payload);
++    if(!mux||mux->toPort!=TrackerLocalPort||mux->fromPort!=tracker->request.port){rejectTrackerReply();return;}
++    namespace wire=::biglybtc::core::udp_tracker_wire;
++    const auto reply=wire::reply(std::string_view(reinterpret_cast<const char*>(mux->datagram.data()),mux->datagram.size()),tracker->transactions[tracker->connecting?0:1],tracker->connecting);
++    if(!reply){rejectTrackerReply();return;}if(!trackerCurrent()){return;}
++    if(receiveEnd&&Clock::now()>=*receiveEnd){dropReceive(ReceiveDrop::PendingTimeout);return;}
++    if(reply->kind==wire::ReplyKind::Unsupported){finishTracker(TrackerPhase::UnknownReply);return;}
++    if(reply->kind==wire::ReplyKind::Error){finishTracker(TrackerPhase::TrackerError);return;}
++    if(reply->kind==wire::ReplyKind::Connect){trackerConnection=reply->connection;tracker->connecting=false;trackerResult->phase=TrackerPhase::Scraping;if(prepareTrackerPacket()){flushTrackerWrite();notifyTracker();}}
++    else{finishTracker(TrackerPhase::Counts,TrackerCounts{reply->seeds,reply->downloaded,reply->peers});}
++  }
+diff --git a/preview/native/services/i2cp_datagram/messages.cpp b/preview/native/services/i2cp_datagram/messages.cpp
+--- a/preview/native/services/i2cp_datagram/messages.cpp
++++ b/preview/native/services/i2cp_datagram/messages.cpp
+@@ -35,26 +35,31 @@
+   // mux overwrites MTIME/OS. CRC/ISIZE cover the data, not these header fields.
+   out[4]=static_cast<Byte>(data.fromPort>>8);out[5]=static_cast<Byte>(data.fromPort);out[6]=static_cast<Byte>(data.toPort>>8);out[7]=static_cast<Byte>(data.toPort);out[8]=2;out[9]=data.protocol;return out;
+ }
+-ConfigResult<MuxDatagram> decodeMuxDatagram(View bytes){
++namespace {
++ConfigResult<MuxDatagram> inflateMux(View bytes,std::size_t maximum,Byte first,Byte second){
+   if(bytes.size()<18||bytes.size()>MaximumI2cpPayloadBytes){return error(Code::TooLarge,"Bounded mux gzip length refused");}
+-  if(bytes[0]!=0x1f||bytes[1]!=0x8b||bytes[2]!=8||bytes[3]!=0||(bytes[9]!=Datagram2Protocol&&bytes[9]!=Datagram3Protocol)){return error(Code::Unsupported,"Only fixed-header Datagram2/3 gzip supported");}
+-  z_stream stream{};if(inflateInit2(&stream,31)!=Z_OK){return error(Code::CryptoFailure,"Gzip decoder resources unavailable");}struct End {z_stream* s;~End(){inflateEnd(s);}}end{&stream};Bytes out(MaximumMuxDatagramBytes+1);
++  if(bytes[0]!=0x1f||bytes[1]!=0x8b||bytes[2]!=8||bytes[3]!=0||(bytes[9]!=first&&bytes[9]!=second)){return error(Code::Unsupported,"Fixed-header explicitly permitted mux protocol required");}
++  z_stream stream{};if(inflateInit2(&stream,31)!=Z_OK){return error(Code::CryptoFailure,"Gzip decoder resources unavailable");}struct End {z_stream* s;~End(){inflateEnd(s);}}end{&stream};Bytes out(maximum+1);
+   stream.next_in=const_cast<Byte*>(bytes.data());stream.avail_in=static_cast<uInt>(bytes.size());stream.next_out=out.data();stream.avail_out=static_cast<uInt>(out.size());const auto status=inflate(&stream,Z_FINISH);
+-  if(status!=Z_STREAM_END||stream.avail_in||stream.total_out>MaximumMuxDatagramBytes){return error(Code::InvalidFormat,"Malformed/concatenated/oversize mux gzip or CRC/ISIZE mismatch");}out.resize(stream.total_out);
++  if(status!=Z_STREAM_END||stream.avail_in||stream.total_out>maximum){return error(Code::InvalidFormat,"Malformed/concatenated/oversize mux gzip or CRC/ISIZE mismatch");}out.resize(stream.total_out);
+   return MuxDatagram{bytes[9],static_cast<std::uint16_t>((static_cast<unsigned>(bytes[4])<<8)|bytes[5]),static_cast<std::uint16_t>((static_cast<unsigned>(bytes[6])<<8)|bytes[7]),std::move(out)};
+ }
++} // namespace
++ConfigResult<MuxDatagram> decodeMuxDatagram(View bytes){return inflateMux(bytes,MaximumMuxDatagramBytes,Datagram2Protocol,Datagram3Protocol);}
++ConfigResult<MuxDatagram> decodeRawTrackerReply(View bytes){return inflateMux(bytes,1024,18,18);}
+ ConfigResult<Bytes> encodeSendDatagram(const SendDatagram& data){
+   auto valid=payloadValid(data.sessionId,data.payload);if(!valid){return std::unexpected(valid.error());}auto dest=decodeDestination(data.recipient.wire);if(!dest){return std::unexpected(dest.error());}
+   if(data.expirationMilliseconds&&(*data.expirationMilliseconds==0||*data.expirationMilliseconds>0xffffffffffffULL)){return error(Code::InvalidFormat,"Expires requires positive uint48 absolute milliseconds");}
++  if(data.skipLeaseSet&&!data.expirationMilliseconds){return error(Code::Unsupported,"Skip LeaseSet requires original Expires flags");}
+   Bytes body;body.reserve(2+dest->wire.size()+4+data.payload.size()+4+8);put(body,data.sessionId,2);body.insert(body.end(),dest->wire.begin(),dest->wire.end());put(body,data.payload.size(),4);body.insert(body.end(),data.payload.begin(),data.payload.end());put(body,data.nonce,4);
+-  if(data.expirationMilliseconds){put(body,0,2);put(body,*data.expirationMilliseconds,6);}return frame(data.expirationMilliseconds?SendMessageExpiresType:SendMessageType,body);
++  if(data.expirationMilliseconds){put(body,data.skipLeaseSet?0x0100:0,2);put(body,*data.expirationMilliseconds,6);}return frame(data.expirationMilliseconds?SendMessageExpiresType:SendMessageType,body);
+ }
+ ConfigResult<SendDatagram> decodeSendDatagram(const Frame& input){
+   if(input.type!=SendMessageType&&input.type!=SendMessageExpiresType){return error(Code::Unsupported,"Expected Send5/Expires36");}Reader r{input.payload};std::uint64_t id=0,length=0,nonce=0;if(!r.number(2,id)||input.payload.size()-r.at<387){return error(Code::InvalidFormat,"Truncated Send destination");}
+   const auto start=r.at;const auto size=387+(static_cast<std::size_t>(input.payload[start+385])<<8)+input.payload[start+386];View destBytes,payload;if(!r.take(size,destBytes)){return error(Code::InvalidFormat,"Truncated Send destination");}auto dest=decodeDestination(destBytes);if(!dest){return std::unexpected(dest.error());}
+-  if(!r.number(4,length)||length>MaximumI2cpPayloadBytes||!r.take(static_cast<std::size_t>(length),payload)||!r.number(4,nonce)){return error(Code::InvalidFormat,"Invalid Send Payload/nonce");}std::optional<std::uint64_t> expires;
+-  if(input.type==SendMessageExpiresType){std::uint64_t flags=0,date=0;if(!r.number(2,flags)||flags||!r.number(6,date)||!date){return error(Code::Unsupported,"Only default flags0/positive Expires date supported");}expires=date;}
+-  if(r.at!=r.bytes.size()){return error(Code::InvalidFormat,"Trailing Send bytes");}SendDatagram out{static_cast<std::uint16_t>(id),std::move(*dest),Bytes(payload.begin(),payload.end()),static_cast<std::uint32_t>(nonce),expires};auto valid=payloadValid(out.sessionId,out.payload);if(!valid){return std::unexpected(valid.error());}return out;
++  if(!r.number(4,length)||length>MaximumI2cpPayloadBytes||!r.take(static_cast<std::size_t>(length),payload)||!r.number(4,nonce)){return error(Code::InvalidFormat,"Invalid Send Payload/nonce");}std::optional<std::uint64_t> expires;bool skipLeaseSet=false;
++  if(input.type==SendMessageExpiresType){std::uint64_t flags=0,date=0;if(!r.number(2,flags)||(flags!=0&&flags!=0x0100)||!r.number(6,date)||!date){return error(Code::Unsupported,"Only default/skipLeaseSet flags and positive Expires date supported");}expires=date;skipLeaseSet=flags==0x0100;}
++  if(r.at!=r.bytes.size()){return error(Code::InvalidFormat,"Trailing Send bytes");}SendDatagram out{static_cast<std::uint16_t>(id),std::move(*dest),Bytes(payload.begin(),payload.end()),static_cast<std::uint32_t>(nonce),expires,skipLeaseSet};auto valid=payloadValid(out.sessionId,out.payload);if(!valid){return std::unexpected(valid.error());}return out;
+ }
+ ConfigResult<StatusMeaning> messageStatusMeaning(Byte code){switch(code){case 0:return StatusMeaning::IncomingAvailable;case 1:return StatusMeaning::RouterAccepted;case 2:return StatusMeaning::UnusedLegacySuccess;case 3:case 5:return StatusMeaning::ProbableFailure;case 4:return StatusMeaning::ProbableSuccess;case 6:return StatusMeaning::LocalSuccess;default:if(code<=23){return StatusMeaning::Failure;}return error(Code::Unsupported,"Unknown original MessageStatus code");}}
+ ConfigResult<Bytes> encodeMessageStatus(const MessageStatus& data){auto meaning=messageStatusMeaning(data.code);if(!meaning){return std::unexpected(meaning.error());}if(data.sessionId==65535){return error(Code::InvalidFormat,"Unknown status session");}Bytes out;put(out,data.sessionId,2);put(out,data.messageId,4);out.push_back(data.code);put(out,data.size,4);put(out,data.nonce,4);return frame(MessageStatusType,out);}
+diff --git a/preview/native/services/i2cp_datagram/messages.hpp b/preview/native/services/i2cp_datagram/messages.hpp
+--- a/preview/native/services/i2cp_datagram/messages.hpp
++++ b/preview/native/services/i2cp_datagram/messages.hpp
+@@ -7,7 +7,7 @@
+ inline constexpr std::size_t MaximumMuxDatagramBytes=40*1024,MaximumI2cpPayloadBytes=64*1024;
+ enum class GzipMode {Stored,Deflate}; // Explicit original GZIP_OFF / level3.
+ struct MuxDatagram {Byte protocol=Datagram2Protocol;std::uint16_t fromPort=0,toPort=0;Bytes datagram;};
+-struct SendDatagram {std::uint16_t sessionId=0;Destination recipient;Bytes payload;std::uint32_t nonce=0;std::optional<std::uint64_t> expirationMilliseconds;};
++struct SendDatagram {std::uint16_t sessionId=0;Destination recipient;Bytes payload;std::uint32_t nonce=0;std::optional<std::uint64_t> expirationMilliseconds;bool skipLeaseSet=false;};
+ struct MessageStatus {std::uint16_t sessionId=0;std::uint32_t messageId=0;Byte code=0;std::uint32_t size=0,nonce=0;};
+ enum class StatusMeaning {IncomingAvailable,RouterAccepted,UnusedLegacySuccess,ProbableSuccess,LocalSuccess,ProbableFailure,Failure};
+ struct MessagePayload {std::uint16_t sessionId=0;std::uint32_t messageId=0;Bytes payload;};
+@@ -17,6 +17,8 @@
+ [[nodiscard]] bool originalFastReceiveEnabled(const SessionOptions&) noexcept;
+ [[nodiscard]] ConfigResult<Bytes> encodeMuxDatagram(const MuxDatagram&,GzipMode);
+ [[nodiscard]] ConfigResult<MuxDatagram> decodeMuxDatagram(View);
++// Separate bounded RAW18 tracker-reply codec, not general receiver permission.
++[[nodiscard]] ConfigResult<MuxDatagram> decodeRawTrackerReply(View);
+ [[nodiscard]] ConfigResult<Bytes> encodeSendDatagram(const SendDatagram&);
+ [[nodiscard]] ConfigResult<SendDatagram> decodeSendDatagram(const Frame&);
+ [[nodiscard]] ConfigResult<Bytes> encodeMessageStatus(const MessageStatus&);
+diff --git a/preview/native/services/i2cp_tracker/tracker.cpp b/preview/native/services/i2cp_tracker/tracker.cpp
+--- /dev/null
++++ b/preview/native/services/i2cp_tracker/tracker.cpp
+@@ -0,0 +1,16 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "tracker.hpp"
++#include <algorithm>
++namespace biglybtc::services::i2p::i2cp {
++namespace {
++using Code=::biglybtc::services::i2p::ErrorCode;
++auto bad(const char* why){return std::unexpected(::biglybtc::services::i2p::Error{Code::InvalidFormat,why});}
++void put(Bytes& out,std::uint64_t n,unsigned count){for(unsigned i=count;i>0;--i){out.push_back(static_cast<Byte>(n>>(8*(i-1))));}}
++std::uint64_t get(View raw,std::size_t at,unsigned count){std::uint64_t n=0;for(unsigned i=0;i<count;++i){n=(n<<8)|raw[at+i];}return n;}
++Bytes framed(Byte type,Bytes body){Bytes out;out.reserve(5+body.size());put(out,body.size(),4);out.push_back(type);out.insert(out.end(),body.begin(),body.end());return out;}
++}
++ConfigResult<Bytes> encodeHostLookup(const HostLookup& input){if(input.sessionId==65535||!input.timeoutMilliseconds){return bad("Invalid bounded HostLookup fields");}Bytes b;put(b,input.sessionId,2);put(b,input.request,4);put(b,input.timeoutMilliseconds,4);b.push_back(0);b.insert(b.end(),input.hash.begin(),input.hash.end());return framed(HostLookupType,std::move(b));}
++ConfigResult<HostLookup> decodeHostLookup(const Frame& frame){if(frame.type!=HostLookupType||frame.payload.size()!=43||frame.payload[10]!=0){return bad("Only exact original hash lookup38 supported");}const View b=frame.payload;HostLookup out;out.sessionId=static_cast<std::uint16_t>(get(b,0,2));out.request=static_cast<std::uint32_t>(get(b,2,4));out.timeoutMilliseconds=static_cast<std::uint32_t>(get(b,6,4));if(out.sessionId==65535||!out.timeoutMilliseconds){return bad("Invalid HostLookup fields");}std::copy(b.begin()+11,b.end(),out.hash.begin());return out;}
++ConfigResult<Bytes> encodeHostReply(const HostReply& input){if(input.sessionId==65535||(input.result==0)!=input.destination.has_value()){return bad("Invalid HostReply result/destination");}Bytes b;put(b,input.sessionId,2);put(b,input.request,4);b.push_back(input.result);if(input.destination){auto parsed=decodeDestination(input.destination->wire);if(!parsed){return std::unexpected(parsed.error());}b.insert(b.end(),parsed->wire.begin(),parsed->wire.end());}return framed(HostReplyType,std::move(b));}
++ConfigResult<HostReply> decodeHostReply(const Frame& frame){if(frame.type!=HostReplyType||frame.payload.size()<7||frame.payload.size()>7+MaximumWireBytes){return bad("Bounded HostReply39 required");}const View b=frame.payload;HostReply out;out.sessionId=static_cast<std::uint16_t>(get(b,0,2));out.request=static_cast<std::uint32_t>(get(b,2,4));out.result=b[6];if(out.sessionId==65535){return bad("Unknown lookup session");}if(out.result){if(b.size()!=7){return bad("Trailing failure reply bytes");}}else{auto dest=decodeDestination(b.subspan(7));if(!dest){return std::unexpected(dest.error());}out.destination=std::move(*dest);}return out;}
++} // namespace biglybtc::services::i2p::i2cp
+diff --git a/preview/native/services/i2cp_tracker/tracker.hpp b/preview/native/services/i2cp_tracker/tracker.hpp
+--- /dev/null
++++ b/preview/native/services/i2cp_tracker/tracker.hpp
+@@ -0,0 +1,22 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#pragma once
++#include "messages.hpp"
++#include "biglybtc/udp_tracker_wire.hpp"
++namespace biglybtc::services::i2p::i2cp {
++inline constexpr Byte HostLookupType=38,HostReplyType=39,RawTrackerProtocol=18;
++inline constexpr std::uint16_t TrackerLocalPort=9000;
++inline constexpr std::size_t MaximumTrackerOperations=1024; // Lifetime nonreuse of wire transaction IDs.
++struct HostLookup {std::uint16_t sessionId=0;std::uint32_t request=0,timeoutMilliseconds=0;Hash hash{};};
++struct HostReply {std::uint16_t sessionId=0;std::uint32_t request=0;Byte result=0;std::optional<Destination> destination;};
++// Exact original LOOKUP_HASH/default reply only. No hostname/OS DNS/options.
++[[nodiscard]] ConfigResult<Bytes> encodeHostLookup(const HostLookup&);
++[[nodiscard]] ConfigResult<HostLookup> decodeHostLookup(const Frame&);
++[[nodiscard]] ConfigResult<Bytes> encodeHostReply(const HostReply&);
++[[nodiscard]] ConfigResult<HostReply> decodeHostReply(const Frame&);
++struct TrackerRequest {Hash destination{};std::array<Byte,20> infoHash{};std::uint16_t port=0;int deadlineMilliseconds=30000;};
++enum class TrackerPhase {LookingUp,Connecting,Scraping,Counts,LookupFailed,TrackerError,UnknownReply,DestinationMismatch,LocalCancelled,LocalTimeout,LocalLeaseExpired};
++struct TrackerCounts {std::int32_t seeds=0,downloaded=0,peers=0;};
++struct TrackerObservation {std::uint64_t operation=0;TrackerRequest request;TrackerPhase phase=TrackerPhase::LookingUp;std::optional<TrackerCounts> counts;Byte lookupResult=0;std::uint64_t rejectedReplies=0;};
++// RAW18 has no authenticated sender field. Counts remain confined to this
++// explicit operation; never payload, peer discovery, tracker/rank authority.
++} // namespace biglybtc::services::i2p::i2cp
+diff --git a/preview/native/tests/i2cp_tracker_channel_tests.cpp b/preview/native/tests/i2cp_tracker_channel_tests.cpp
+--- /dev/null
++++ b/preview/native/tests/i2cp_tracker_channel_tests.cpp
+@@ -0,0 +1,80 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "channel.hpp"
++#include <QElapsedTimer>
++#include <QFile>
++#include <QPointer>
++#include <QSignalSpy>
++#include <QTcpServer>
++#include <QTcpSocket>
++#include <QtTest>
++#include <zlib.h>
++#include <algorithm>
++namespace i2p=biglybtc::services::i2p;namespace cp=i2p::i2cp;using Channel=cp::InitialChannel;
++namespace {
++constexpr std::uint64_t Now=1761739200123ULL;
++i2p::ClientIdentity signer(const char* family){
++  auto read=[&](const char* suffix){const auto path=QString::fromUtf8(BIGLYBTC_I2P_TEST_KEYS_DIR)+QLatin1Char('/')+QString::fromLatin1(family)+QString::fromLatin1(suffix);QFile file(path);if(!file.open(QIODevice::ReadOnly)||file.size()<1||file.size()>1024){qFatal("Cannot open bounded signer %s: %s",qPrintable(path),qPrintable(file.errorString()));}const auto bytes=file.readAll();if(file.error()!=QFileDevice::NoError){qFatal("Cannot read signer %s: %s",qPrintable(path),qPrintable(file.errorString()));}return i2p::Bytes(reinterpret_cast<const i2p::Byte*>(bytes.constData()),reinterpret_cast<const i2p::Byte*>(bytes.constData())+bytes.size());};
++  auto result=i2p::makeClientIdentity(read(".sender"),i2p::Bytes(256,0x51),read(".known-test-key"));if(!result){qFatal("Cannot import synthetic signer: %s",result.error().message.c_str());}return std::move(*result);
++}
++struct Router {
++  QTcpServer server;QPointer<QTcpSocket> peer;QByteArray bytes;qsizetype offset=1;QString failure;
++  Router(){QObject::connect(&server,&QTcpServer::newConnection,&server,[this]{if(peer){failure="Unexpected second client";return;}peer=server.nextPendingConnection();QObject::connect(peer,&QTcpSocket::readyRead,&server,[this]{collect();});collect();});}
++  ~Router(){QObject::disconnect(&server,nullptr,&server,nullptr);if(peer){QObject::disconnect(peer,nullptr,&server,nullptr);peer->abort();}}
++  void collect(){const auto n=peer->bytesAvailable();if(n<0||n>131077-bytes.size()){failure="Unbounded owned router input";peer->abort();return;}bytes+=peer->read(n);}
++  bool listen(bool ipv6=false){return server.listen(ipv6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost,0);}
++  Channel::Options options(int budget=3000)const{return {server.serverAddress(),server.serverPort(),"2.13.0",false,budget};}
++  bool send(i2p::View data){return peer&&peer->write(reinterpret_cast<const char*>(data.data()),static_cast<qint64>(data.size()))==static_cast<qint64>(data.size());}
++  std::optional<cp::Frame> next()const{if(bytes.size()-offset<5){return std::nullopt;}const auto* at=reinterpret_cast<const cp::Byte*>(bytes.constData()+offset);std::uint32_t n=0;for(unsigned i=0;i<4;++i){n=(n<<8)|at[i];}if(n>cp::MaximumPayloadBytes){qFatal("Unbounded actual client frame");}if(bytes.size()-offset<5+static_cast<qsizetype>(n)){return std::nullopt;}auto decoded=cp::decodeFrame(cp::View(at,n+5));if(!decoded){qFatal("Malformed client frame: %s",decoded.error().message.c_str());}return std::move(*decoded);}
++  cp::Frame take(){auto frame=next();if(!frame){qFatal("Missing actual client frame");}offset+=5+static_cast<qsizetype>(frame->payload.size());return std::move(*frame);}
++  bool status(std::uint32_t nonce,std::uint32_t message,cp::Byte code,std::uint16_t session=7){auto data=cp::encodeMessageStatus({session,message,code,0,nonce});return data&&send(*data);}
++  bool lease(std::uint64_t expiry=Now+600000){cp::RequestedLease l;l.gateway.fill(0x51);l.tunnelId=33;l.expiresMilliseconds=expiry;auto data=cp::encodeLeaseRequest({7,{l}});return data&&send(*data);}
++};
++}
++
++namespace {
++QByteArray words(std::initializer_list<std::uint32_t> values){QByteArray out;for(auto word:values)for(int i=3;i>=0;--i){out.append(static_cast<char>(word>>(8*i)));}return out;}
++std::uint32_t word(const i2p::Bytes& p,std::size_t at){if(p.size()<at+4){qFatal("Short independent tracker packet");}std::uint32_t n=0;for(unsigned i=0;i<4;++i){n=(n<<8)|p[at+i];}return n;}
++i2p::Bytes rawGzip(const QByteArray& bytes,std::uint16_t from=6969,std::uint16_t to=9000){
++  z_stream stream{};if(deflateInit2(&stream,3,Z_DEFLATED,31,8,Z_DEFAULT_STRATEGY)!=Z_OK){qFatal("Owned gzip init failed");}i2p::Bytes out(2048);stream.next_in=reinterpret_cast<Bytef*>(const_cast<char*>(bytes.constData()));stream.avail_in=static_cast<uInt>(bytes.size());stream.next_out=out.data();stream.avail_out=static_cast<uInt>(out.size());if(deflate(&stream,Z_FINISH)!=Z_STREAM_END){qFatal("Owned gzip failed");}out.resize(stream.total_out);deflateEnd(&stream);if(out.size()<18){qFatal("Short owned gzip");}out.at(4)=from>>8;out.at(5)=static_cast<i2p::Byte>(from);out.at(6)=to>>8;out.at(7)=static_cast<i2p::Byte>(to);out.at(9)=18;return out;
++}
++}
++class TrackerChannelTests final:public QObject {
++  Q_OBJECT
++  static constexpr std::uint64_t Connection=0x123456789abcdef0ULL;
++  void registered(Router& router,Channel& channel,bool fast,int budget=3000,bool provideLease=true){
++    QVERIFY(channel.begin(router.options(budget)));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::GetDateType);QCOMPARE(router.bytes.at(0),'*');auto date=cp::encodeMessage(cp::SetDate{Now,std::string("2.13.0")});QVERIFY(date&&router.send(*date));QTRY_VERIFY(channel.routerDate());auto id=signer("ed25519");QVERIFY(channel.createLeaseSession(std::move(id),{{"i2cp.fastReceive",fast?"true":"false"},{"i2cp.messageReliability","none"}},Now));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateSessionType);auto ack=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});QVERIFY(ack&&router.send(*ack));QTRY_VERIFY(channel.sessionId());if(!provideLease){return;}QVERIFY(router.lease());QTRY_VERIFY(router.next());QVERIFY(cp::decodeCreateLeaseSet2(router.take()));QTRY_VERIFY(channel.leaseSetSubmission());QVERIFY(!channel.receiverObservation().enabled);
++  }
++  cp::TrackerRequest request(int budget=3000){auto peer=signer("dsa");cp::TrackerRequest out;out.destination=peer.destination()->hash;out.infoHash.fill(0x51);out.port=6969;out.deadlineMilliseconds=budget;return out;}
++  cp::HostLookup lookup(Router& router){auto value=cp::decodeHostLookup(router.take());if(!value){qFatal("Actual lookup malformed: %s",value.error().message.c_str());}return *value;}
++  void answer(Router& router,const cp::HostLookup& lookup,std::uint16_t sid=7){auto peer=signer("dsa");auto reply=cp::encodeHostReply({sid,lookup.request,0,*peer.destination()});QVERIFY(reply&&router.send(*reply));}
++  cp::SendDatagram sent(Router& router){auto parsed=cp::decodeSendDatagram(router.take());if(!parsed){qFatal("Actual tracker send malformed: %s",parsed.error().message.c_str());}return std::move(*parsed);}
++  i2p::Bytes body(const cp::SendDatagram& send,bool connecting){
++    auto local=signer("ed25519"),remote=signer("dsa");if(send.sessionId!=7||send.nonce!=0||send.recipient.wire!=remote.destination()->wire||!send.expirationMilliseconds||send.skipLeaseSet==connecting){qFatal("Wrong exact tracker envelope/skipLS policy");}auto mux=cp::decodeMuxDatagram(send.payload);if(!mux||mux->protocol!=(connecting?19:20)||mux->fromPort!=9000||mux->toPort!=6969){qFatal("Wrong signed/claimed tracker protocol/ports");}if(connecting){auto d=i2p::decode2(mux->datagram,remote.destination()->hash);if(!d||d->sender.wire!=local.destination()->wire){qFatal("Wrong actual connect signing identity/recipient");}return std::move(d->payload);}auto d=i2p::decode3(mux->datagram);if(!d||d->claimedSender!=local.destination()->hash){qFatal("Wrong claimed scrape sender");}return std::move(d->payload);
++  }
++  std::uint32_t connectRequest(Router& router){const auto data=body(sent(router),true);if(data.size()!=16||word(data,0)!=0x417||word(data,4)!=0x27101980||word(data,8)!=0){qFatal("Wrong independent BEP15 connect");}return word(data,12);}
++  std::uint32_t scrapeRequest(Router& router){const auto data=body(sent(router),false);if(data.size()!=36||word(data,0)!=(Connection>>32)||word(data,4)!=static_cast<std::uint32_t>(Connection)||word(data,8)!=2||!std::all_of(data.begin()+16,data.end(),[](auto b){return b==0x51;})){qFatal("Wrong actual connection/hash-scoped scrape");}return word(data,12);}
++  void deliver(Router& router,bool fast,std::uint32_t id,const QByteArray& packet,std::uint16_t from=6969,std::uint16_t to=9000){
++    auto gzip=rawGzip(packet,from,to);if(!fast){auto available=cp::encodeMessageStatus({7,id,0,static_cast<std::uint32_t>(gzip.size()),1});QVERIFY(available&&router.send(*available));QTRY_VERIFY(router.next());auto begin=cp::decodeReceiveControl(router.take());QVERIFY(begin&&begin->begin&&begin->sessionId==7&&begin->messageId==id);}auto payload=cp::encodeMessagePayload({7,id,gzip});QVERIFY(payload&&router.send(*payload));if(!fast){QTRY_VERIFY(router.next());auto end=cp::decodeReceiveControl(router.take());QVERIFY(end&&!end->begin&&end->sessionId==7&&end->messageId==id);}
++  }
++  void counts(Channel& channel,std::uint64_t operation){QTRY_VERIFY(channel.trackerObservation()&&channel.trackerObservation()->phase==cp::TrackerPhase::Counts);auto result=channel.trackerObservation();QVERIFY(result&&result->operation==operation&&result->counts);QCOMPARE(result->counts->seeds,std::int32_t(3));QCOMPARE(result->counts->downloaded,std::int32_t(4));QCOMPARE(result->counts->peers,std::int32_t(5));QCOMPARE(channel.receiverObservation().queued,std::size_t(0));QVERIFY(!channel.receiverObservation().enabled);}
++private slots:
++  void actualHashLookupSignedConnectClaimedScrapeRawReply_data(){QTest::addColumn<bool>("fast");QTest::addColumn<bool>("ipv6");QTest::newRow("legacy-v4")<<false<<false;QTest::newRow("fast-v4")<<true<<false;QTest::newRow("legacy-v6")<<false<<true;QTest::newRow("fast-v6")<<true<<true;}
++  void actualHashLookupSignedConnectClaimedScrapeRawReply(){
++    QFETCH(bool,fast);QFETCH(bool,ipv6);Router router;QVERIFY(router.listen(ipv6));Channel channel;registered(router,channel,fast);QVERIFY(channel.leaseSetSubmission());const auto req=request();auto operation=channel.scrapeTracker(req);QVERIFY(operation);QTRY_VERIFY(router.next());const auto query=lookup(router);QVERIFY(query.sessionId==7&&query.hash==req.destination&&query.timeoutMilliseconds<=3000);answer(router,query);QTRY_VERIFY(router.next());const auto connect=connectRequest(router);deliver(router,fast,101,words({0,connect,static_cast<std::uint32_t>(Connection>>32),static_cast<std::uint32_t>(Connection)}));QTRY_VERIFY(router.next());const auto scrape=scrapeRequest(router);QVERIFY(connect!=scrape);deliver(router,fast,102,words({2,scrape,3,4,5}));counts(channel,*operation);auto next=channel.scrapeTracker(req);QVERIFY(next&&*next!=*operation);QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::HostLookupType);QVERIFY(channel.cancelTracker(*next));QCOMPARE(channel.state(),Channel::State::SessionCreated);QVERIFY(router.failure.isEmpty());
++  }
++  void wrongPortsTransactionsAndOldLookupCannotFinishCurrentOperation(){
++    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,true);auto req=request();auto old=channel.scrapeTracker(req);QVERIFY(old);QTRY_VERIFY(router.next());const auto stale=lookup(router);QVERIFY(channel.cancelTracker(*old));auto current=channel.scrapeTracker(req);QVERIFY(current);QTRY_VERIFY(router.next());const auto fresh=lookup(router);QVERIFY(stale.request!=fresh.request);answer(router,stale);auto malformed=cp::encodeHostReply({7,stale.request,1,std::nullopt});QVERIFY(malformed);malformed->push_back(0);(*malformed)[3]=8;QVERIFY(router.send(*malformed));answer(router,fresh,8);answer(router,fresh);QTRY_VERIFY(router.next());const auto transaction=connectRequest(router);const auto valid=words({0,transaction,static_cast<std::uint32_t>(Connection>>32),static_cast<std::uint32_t>(Connection)});deliver(router,true,201,valid,6970);deliver(router,true,202,valid,6969,9001);deliver(router,true,203,words({0,transaction^1,0,1}));deliver(router,true,204,valid);QTRY_VERIFY(router.next());const auto scrape=scrapeRequest(router);deliver(router,true,205,words({2,scrape,3,4,5}));counts(channel,*current);QVERIFY(channel.trackerObservation()->rejectedReplies>=6);
++  }
++  void cancellationAndLateRawReplyCannotCompleteNextOperation(){
++    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,true);auto old=channel.scrapeTracker(request());QVERIFY(old);QTRY_VERIFY(router.next());answer(router,lookup(router));QTRY_VERIFY(router.next());const auto a=connectRequest(router);deliver(router,true,301,words({0,a,static_cast<std::uint32_t>(Connection>>32),static_cast<std::uint32_t>(Connection)}));QTRY_VERIFY(router.next());const auto staleScrape=scrapeRequest(router);QVERIFY(channel.cancelTracker(*old));auto next=channel.scrapeTracker(request());QVERIFY(next);QTRY_VERIFY(router.next());answer(router,lookup(router));QTRY_VERIFY(router.next());const auto b=connectRequest(router);QVERIFY(b!=a&&b!=staleScrape);deliver(router,true,302,words({2,staleScrape,99,99,99}));deliver(router,true,303,words({0,b,static_cast<std::uint32_t>(Connection>>32),static_cast<std::uint32_t>(Connection)}));QTRY_VERIFY(router.next());const auto scrape=scrapeRequest(router);QVERIFY(scrape!=a&&scrape!=staleScrape&&scrape!=b);deliver(router,true,304,words({2,scrape,3,4,5}));counts(channel,*next);
++  }
++  void actualLookupFailureMismatchAndDeadlineAreLocalAndReusable_data(){QTest::addColumn<int>("kind");QTest::newRow("routerfailure")<<0;QTest::newRow("wrongdestination")<<1;QTest::newRow("lookup-timeout")<<2;}
++  void actualLookupFailureMismatchAndDeadlineAreLocalAndReusable(){
++    QFETCH(int,kind);Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,true);auto operation=channel.scrapeTracker(request(kind==2?100:3000));QVERIFY(operation);QTRY_VERIFY(router.next());const auto query=lookup(router);if(kind==0){auto failure=cp::encodeHostReply({7,query.request,6,std::nullopt});QVERIFY(failure&&router.send(*failure));}if(kind==1){auto wrong=signer("ed25519");auto reply=cp::encodeHostReply({7,query.request,0,*wrong.destination()});QVERIFY(reply&&router.send(*reply));}const auto expected=kind==0?cp::TrackerPhase::LookupFailed:kind==1?cp::TrackerPhase::DestinationMismatch:cp::TrackerPhase::LocalTimeout;QTRY_VERIFY(channel.trackerObservation()&&channel.trackerObservation()->phase==expected);QVERIFY(!channel.trackerObservation()->counts);auto next=channel.scrapeTracker(request());QVERIFY(next);QTRY_VERIFY(router.next());answer(router,query);const auto fresh=lookup(router);answer(router,fresh);QTRY_VERIFY(router.next());(void)connectRequest(router);QVERIFY(channel.cancelTracker(*next));QCOMPARE(channel.state(),Channel::State::SessionCreated);
++  }
++  void createdWithoutLeaseRefusesAndCallbacksMayDelete(){
++    Router router;QVERIFY(router.listen());QPointer<Channel> channel=new Channel(&router.server);QVERIFY(!channel->scrapeTracker(request()));registered(router,*channel,true,3000,false);QVERIFY(channel->sessionId());QVERIFY(!channel->scrapeTracker(request()));QVERIFY(router.lease());QTRY_VERIFY(router.next());QVERIFY(cp::decodeCreateLeaseSet2(router.take()));QTRY_VERIFY(channel->leaseSetSubmission());auto operation=channel->scrapeTracker(request());QVERIFY(operation);QTRY_VERIFY(router.next());answer(router,lookup(router));QTRY_VERIFY(router.next());const auto transaction=connectRequest(router);QObject::connect(channel,&Channel::trackerChanged,&router.server,[&]{if(channel&&channel->trackerObservation()&&channel->trackerObservation()->phase==cp::TrackerPhase::TrackerError){delete channel.data();}});deliver(router,true,401,words({3,transaction}));QTRY_VERIFY(channel.isNull());QTRY_COMPARE(router.peer->state(),QAbstractSocket::UnconnectedState);
++  }
++};
++QTEST_GUILESS_MAIN(TrackerChannelTests)
++#include "i2cp_tracker_channel_tests.moc"
+diff --git a/preview/native/tests/i2cp_tracker_codec_tests.cpp b/preview/native/tests/i2cp_tracker_codec_tests.cpp
+--- /dev/null
++++ b/preview/native/tests/i2cp_tracker_codec_tests.cpp
+@@ -0,0 +1,32 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "tracker.hpp"
++#include <cerrno>
++#include <fcntl.h>
++#include <filesystem>
++#include <iostream>
++#include <stdexcept>
++#include <string_view>
++#include <sys/stat.h>
++#include <unistd.h>
++namespace i2p=biglybtc::services::i2p;namespace cp=i2p::i2cp;
++void require(bool ok,const char* why){if(!ok){throw std::runtime_error(why);}}
++template<class T,class E>T take(std::expected<T,E> v){if(!v){throw std::runtime_error(v.error().message);}return std::move(*v);}
++struct Fd {int n;explicit Fd(int value):n(value){}~Fd(){if(n>=0){::close(n);}}};
++bool stamp(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_size==b.st_size&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
++i2p::Bytes read(int root,const std::string& leaf){Fd fd(::openat(root,leaf.c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat before{},after{},named{};require(fd.n>=0&&::fstat(fd.n,&before)==0&&S_ISREG(before.st_mode)&&before.st_uid==::geteuid()&&before.st_nlink==1&&before.st_size>=0&&before.st_size<=70000,"Unsafe/unbounded vector");i2p::Bytes out(static_cast<std::size_t>(before.st_size));std::size_t at=0;while(at<out.size()){auto n=::read(fd.n,out.data()+at,out.size()-at);if(n<0&&errno==EINTR){continue;}require(n>0,"Cannot read vector");at+=static_cast<std::size_t>(n);}require(::fstat(fd.n,&after)==0&&::fstatat(root,leaf.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&stamp(before,after)&&stamp(after,named),"Vector changed");return out;}
++void write(int root,const std::string& leaf,i2p::View bytes){Fd fd(::openat(root,leaf.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));require(fd.n>=0&&bytes.size()<=70000,"Cannot exclusively create bounded vector");std::size_t at=0;while(at<bytes.size()){auto n=::write(fd.n,bytes.data()+at,bytes.size()-at);if(n<0&&errno==EINTR){continue;}require(n>0,"Cannot write vector");at+=static_cast<std::size_t>(n);}require(::fsync(fd.n)==0,"Cannot sync vector");}
++namespace wire=biglybtc::core::udp_tracker_wire;
++i2p::Bytes rawReply(std::uint32_t transaction){const auto put=[](i2p::Bytes& out,std::uint32_t value){for(unsigned i=4;i>0;--i){out.push_back(static_cast<i2p::Byte>(value>>(8*(i-1))));}};i2p::Bytes body;for(const auto n:{2U,transaction,3U,4U,5U}){put(body,n);}auto gzip=take(cp::encodeMuxDatagram({20,6969,9000,std::move(body)},cp::GzipMode::Deflate));gzip.at(9)=18;return gzip;}
++void controls(){
++  cp::HostLookup lookup{7,0x80000000U,30000,{}};lookup.hash.fill(0x51);auto bytes=take(cp::encodeHostLookup(lookup));auto decoded=take(cp::decodeHostLookup(take(cp::decodeFrame(bytes))));require(decoded.sessionId==7&&decoded.request==lookup.request&&decoded.timeoutMilliseconds==30000&&decoded.hash==lookup.hash,"Lookup hash/unsigned ID differs");require(bytes.size()==48&&bytes.at(15)==0,"LOOKUP_HASH layout differs");auto wrong=bytes;wrong.at(15)=1;require(!cp::decodeHostLookup(take(cp::decodeFrame(wrong))),"Host lookup type accepted");require(!cp::encodeHostLookup({65535,1,30000,{}})&&!cp::encodeHostLookup({7,1,0,{}}),"Unknown session/zero lookup budget accepted");auto failure=take(cp::encodeHostReply({7,0xffffffffU,6,std::nullopt}));auto reply=take(cp::decodeHostReply(take(cp::decodeFrame(failure))));require(reply.sessionId==7&&reply.request==0xffffffffU&&reply.result==6&&!reply.destination,"Exact failure reply differs");auto badFrame=take(cp::decodeFrame(failure));badFrame.payload.push_back(0);require(!cp::decodeHostReply(badFrame),"Trailing failure bytes accepted");auto raw=rawReply(123);require(!cp::decodeMuxDatagram(raw),"General datagram codec acquired raw authority");auto mux=take(cp::decodeRawTrackerReply(raw));require(mux.protocol==18&&mux.fromPort==6969&&mux.toPort==9000,"Raw tracker ports differ");auto result=wire::reply({reinterpret_cast<const char*>(mux.datagram.data()),mux.datagram.size()},123,false);require(result&&result->kind==wire::ReplyKind::Scrape&&result->seeds==3&&result->downloaded==4&&result->peers==5,"Reused BEP15 counts differ");require(!wire::reply({reinterpret_cast<const char*>(mux.datagram.data()),mux.datagram.size()},124,false),"Wrong transaction accepted");raw.at(raw.size()-8)^=1;require(!cp::decodeRawTrackerReply(raw),"Raw gzip CRC error accepted");auto oversized=take(cp::encodeMuxDatagram({20,6969,9000,i2p::Bytes(1025,0x51)},cp::GzipMode::Deflate));oversized.at(9)=18;require(!cp::decodeRawTrackerReply(oversized),"Raw decoded tracker budget exceeded");
++}
++void interop(const std::filesystem::path& path){
++  require(path.is_absolute(),"Absolute root required");Fd root(::open(path.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));struct stat st{};require(root.n>=0&&::fstat(root.n,&st)==0&&st.st_uid==::geteuid()&&(st.st_mode&077)==0,"Private owned root required");
++  for(const std::string family:{"dsa","ed25519"}){
++    auto sender=take(i2p::decodeDestination(read(root.n,family+".sender"))),recipient=take(i2p::decodeDestination(read(root.n,family+".recipient")));auto key=read(root.n,family+".known-test-key");const auto q=take(cp::decodeHostLookup(take(cp::decodeFrame(read(root.n,family+".java.lookup")))));require(q.sessionId==7&&q.request==0x80000000U&&q.timeoutMilliseconds==30000&&q.hash==recipient.hash,"Java lookup differs");auto reply=take(cp::decodeHostReply(take(cp::decodeFrame(read(root.n,family+".java.reply")))));require(reply.sessionId==7&&reply.request==q.request&&!reply.result&&reply.destination&&reply.destination->wire==recipient.wire,"Java full lookup reply differs");const auto encoded=take(cp::encodeHostLookup(q));require(encoded==read(root.n,family+".java.lookup"),"Exact lookup writer differs");write(root.n,family+".native.lookup",encoded);auto encodedReply=take(cp::encodeHostReply(reply));require(encodedReply==read(root.n,family+".java.reply"),"Exact reply writer differs");write(root.n,family+".native.reply",encodedReply);
++    for(const bool connecting:{true,false}){const auto label=family+(connecting?".connect":".scrape");const auto send=take(cp::decodeSendDatagram(take(cp::decodeFrame(read(root.n,label+".java")))));require(send.sessionId==7&&send.nonce==0&&send.skipLeaseSet==!connecting&&send.expirationMilliseconds==1700000060123ULL&&send.recipient.wire==recipient.wire,"Original Expires/skipLS fields differ");const auto mux=take(cp::decodeMuxDatagram(send.payload));require(mux.protocol==(connecting?19:20)&&mux.fromPort==9000&&mux.toPort==6969,"Original tracker mux differs");i2p::Bytes payload;if(connecting){auto d=take(i2p::decode2(mux.datagram,recipient.hash));require(d.sender.wire==sender.wire,"Original tracker signer differs");payload=std::move(d.payload);}else{auto d=take(i2p::decode3(mux.datagram));require(d.claimedSender==sender.hash,"Original claimed tracker sender differs");payload=std::move(d.payload);}if(connecting){const auto expected=wire::connect(123);require(payload==i2p::Bytes(expected.begin(),expected.end()),"Original connect differs");}else{std::array<std::byte,20> hash;hash.fill(std::byte{0x51});const auto expected=wire::scrape(0x123456789abcdef0ULL,124,hash);require(payload==i2p::Bytes(expected.begin(),expected.end()),"Original scrape differs");}auto packet=take(connecting?i2p::encode2(sender.wire,key,recipient.hash,payload):i2p::encode3(sender.wire,payload));auto gzip=take(cp::encodeMuxDatagram({connecting?i2p::Datagram2Protocol:i2p::Datagram3Protocol,9000,6969,std::move(packet)},cp::GzipMode::Deflate));write(root.n,label+".native",take(cp::encodeSendDatagram({7,recipient,std::move(gzip),0,1700000060123ULL,!connecting})));}
++    const auto inbound=take(cp::decodeMessagePayload(take(cp::decodeFrame(read(root.n,family+".java.raw")))));auto mux=take(cp::decodeRawTrackerReply(inbound.payload));require(inbound.sessionId==7&&inbound.messageId==99&&mux.fromPort==6969&&mux.toPort==9000,"Original raw reply envelope differs");const auto counts=wire::reply({reinterpret_cast<const char*>(mux.datagram.data()),mux.datagram.size()},124,false);require(counts&&counts->kind==wire::ReplyKind::Scrape&&counts->seeds==3&&counts->downloaded==4&&counts->peers==5,"Original raw counts differ");write(root.n,family+".native.raw",take(cp::encodeMessagePayload({7,99,rawReply(124)})));std::cout<<"PASS NATIVE VERIFIED JAVA "<<family<<" tracker objects\n";
++  }
++  require(::fsync(root.n)==0,"Cannot sync vector directory");
++}
++int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);return 0;}require(argc==1,"Usage: i2cp-tracker-codec-tests [--java-interop ROOT]");controls();std::cout<<"PASS bounded original tracker lookup/raw codec\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}

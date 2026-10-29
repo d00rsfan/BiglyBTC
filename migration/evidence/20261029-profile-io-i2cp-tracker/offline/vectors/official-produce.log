@@ -1,0 +1,3 @@
+Picked up JAVA_TOOL_OPTIONS: -XX:ActiveProcessorCount=2
+PASS JAVA PRODUCED dsa tracker objects
+PASS JAVA PRODUCED ed25519 tracker objects

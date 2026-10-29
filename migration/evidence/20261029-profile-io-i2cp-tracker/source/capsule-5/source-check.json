@@ -1,0 +1,28 @@
+{
+  "status": "SOURCE_ONLY_APPLY_CHECK_PASS",
+  "native_source": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+  "command": [
+    "git",
+    "apply",
+    "--check",
+    "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/invalid-lease-and-source-rejection/changes.patch"
+  ],
+  "stderr": "",
+  "root_actual_failure_xml": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/runs/clang-r2/tests.xml",
+  "root_actual_failure_xml_sha256": "9df15428aaabe818f909a7228299fcd701038cb01c8b6f8d57623afb3e9cb514",
+  "failed_cases": {
+    "compatible-config-first-create": {
+      "test_failed": true,
+      "relevant_lines": [
+        "FAIL invalid moved-from lease refuses without consuming live lease: createMissing error category differs"
+      ]
+    },
+    "azureus-owned-service": {
+      "test_failed": true,
+      "relevant_lines": [
+        "FAIL!  : OwnedAzureusServiceTests::normalReceiverChangedProfileWithdrawsBeforeAnyRemoteStore() 'server.owner->observation().snapshot->transport().counters().authorityErrors>0' returned FALSE. ()"
+      ]
+    }
+  },
+  "author_runtime_execution": false
+}

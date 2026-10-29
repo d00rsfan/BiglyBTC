@@ -1,0 +1,62 @@
+{
+  "status": "PASS_SOURCE_REVIEW_ONLY",
+  "input_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/manifest.json",
+    "sha256": "faf50da882975c4b3aba7b014d64af5e98c158d7d18df8942d801d3655aee59f"
+  },
+  "reviewed_source_scope": "Twelve staged leaves and append-only CMake sections; exact current native beforeimages, no native writes.",
+  "verified": {
+    "artifact_pins": 35,
+    "source_maps": 12,
+    "composition_inputs": 22,
+    "exact_original_git_blobs": 10,
+    "official_source_jar_equal_blobs": 8,
+    "original_core_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+    "original_plugin_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+    "bep15_namespace_body_byte_exact_sha256": "2435d78fec001962558174602f9a9878495a8fb0816330002f1894f0c45fc83b",
+    "old_engine_route_and_tracker_tail_byte_exact": true,
+    "existing_tests_and_native_i2p_policy_unchanged": true
+  },
+  "findings": [],
+  "conclusions": [
+    "Hash-only Host38/39 default subset matches retained original layouts; unsupported options remain explicit refusals. Signed2 connect, claimed3 scrape, source port9000, skip-LS flag256 and untracked nonce0 follow the pinned original plugin sequence.",
+    "Current full local session/signer/LS2 and resolved destination binding are checked at dispatch and delivery. One operation has an absolute deadline, random transaction pairs checked against fixed lifetime history, nonreused lookup/operation IDs and bounded writes. Wrong/stale reply prefixes cannot terminate a newer round.",
+    "RAW18 is decoded only for the current explicit tracker operation with exact selected ports/transaction/phase; the general datagram decoder and queue retain their signed2/claimed3 restriction. RAW18 provides no authenticated sender identity or delivery proof.",
+    "Queued QPointer/generation notifications allow callback deletion without continuing through public callbacks. Cancellation/close clear the operation; legacy Begin/End release remains distinct from remote acceptance.",
+    "CMake target/link dependencies and fixture paths are coherent. New owned IPv4/IPv6 legacy/fast tests and independent Java object bridge are authored but unexecuted."
+  ],
+  "minimum_root_qualification": {
+    "new_targets": [
+      "biglybtc-i2cp-tracker-codec-tests",
+      "biglybtc-i2cp-tracker-channel-tests"
+    ],
+    "new_ctests": [
+      "pure-i2cp-tracker-objects",
+      "i2cp-explicit-tracker-channel"
+    ],
+    "affected_existing_ctests": [
+      "i2cp-initial-channel",
+      "pure-i2cp-datagram-messages",
+      "i2cp-lease-backed-datagram-channel",
+      "pure-i2cp-receive-control",
+      "i2cp-bounded-datagram-receiver",
+      "mainline-single-udp"
+    ],
+    "offline_reference_scope": "Two signing-family labels per direction and exact reference JAR, using actual new codec ELF and observed class origins. No old Java replay required."
+  },
+  "limits": [
+    "No C++ compilation, Java execution, native subject, router, network or profile operation by reviewer.",
+    "No real-router tunnel/routing, Streaming, automatic/saved tracker admission, public/default activation or broader P07 qualification.",
+    "Modified JAR whole-source equivalence remains open.",
+    "The explicit operation remains RAW unauthenticated observation; it grants no payload, queue or ranking authority."
+  ],
+  "inputs_sha256": {
+    "ADOPTION.md": "7086a2a390c3e5b3361beb6c3da28dd7fa823fc8d212ea88f516f8f3fbcb3fd1",
+    "CMake.fragment": "4d27fe37604d2026f6698d58973f5cb2e7cfaede3ce1c332ee4a827e5c1cd5f4",
+    "source-pins.json": "a9b6dfb13938f90dc5bdd91dcee698d9e137b1af34f0b768ffc2958bdd24a8da",
+    "source-checks.json": "fce718e7292cb4ac50705cdc1db0147f144d818b124e8cef5abc5002def814fe",
+    "changes.patch": "a96baa59ea93a0c0be66cd6fc8c339938ae0e559478be9ac45713776ec2d4504",
+    "OFFLINE-COMMANDS.sh": "1e40719646f33468a032f49cccc7001fabe5dc4b2196c5aac975b749a202db15",
+    "interop/TrackerVectors.java": "1323430630182381dffef7b46a198ba8e489779c59fb2110bed80cfc16d35a37"
+  }
+}

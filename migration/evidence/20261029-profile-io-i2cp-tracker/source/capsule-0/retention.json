@@ -1,0 +1,8 @@
+{
+  "original_version_projection_byte_exact": "6e4bd8d7614b01f271822bbf371c16c378a70b974e53c0e6bf9e16a3445f88a6",
+  "existing_owned_service_test_byte_exact": "5c4c4fc64d0d9bac7070d50a17ef756ea1c22dc9b69d32ab5843a1ee38d9b4f7",
+  "existing_executor_unchanged": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a",
+  "old_service_tests_edited": false,
+  "provider_changed": false,
+  "java_replay_needed": false
+}

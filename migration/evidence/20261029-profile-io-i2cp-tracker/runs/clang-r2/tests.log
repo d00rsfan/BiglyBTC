@@ -1,0 +1,113 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+      Start  27: compatible-config-first-create
+ 1/12 Test  #27: compatible-config-first-create .......***Failed    0.03 sec
+FAIL invalid moved-from lease refuses without consuming live lease: createMissing error category differs
+
+      Start 178: azureus-owned-service
+ 2/12 Test #178: azureus-owned-service ................***Failed   14.79 sec
+********* Start testing of OwnedAzureusServiceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedAzureusServiceTests::initTestCase()
+PASS   : OwnedAzureusServiceTests::savedRatingsUseOriginalAnonymousKeyPayloadAndTwoNormalPublicOwners()
+PASS   : OwnedAzureusServiceTests::publicationReadbackWithoutTheExactValueRemainsBounded(two-final-mismatches)
+PASS   : OwnedAzureusServiceTests::publicationReadbackWithoutTheExactValueRemainsBounded(sixty-four-final-mismatches)
+PASS   : OwnedAzureusServiceTests::publicationReadbackWithoutTheExactValueRemainsBounded(continued-sixty-four-withdraws)
+PASS   : OwnedAzureusServiceTests::savedRatingPublicationRefusesUnadmittedZeroOversizeAndStaleTargets()
+PASS   : OwnedAzureusServiceTests::savedRatingMalformedRemoteValueDoesNotBecomeLocalFallback()
+PASS   : OwnedAzureusServiceTests::completedRatingValuesWithdrawAtTheNextRealWorkerSourceFence()
+PASS   : OwnedAzureusServiceTests::savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(nickname)
+PASS   : OwnedAzureusServiceTests::savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(Public-removed)
+PASS   : OwnedAzureusServiceTests::savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(DHT-disabled)
+PASS   : OwnedAzureusServiceTests::savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(metadata-flag)
+PASS   : OwnedAzureusServiceTests::savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(full-info-changed)
+PASS   : OwnedAzureusServiceTests::savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(inventory-removed)
+PASS   : OwnedAzureusServiceTests::savedRatingDuplicateInventoryRowsCannotGrantAuthority(list-0)
+PASS   : OwnedAzureusServiceTests::savedRatingDuplicateInventoryRowsCannotGrantAuthority(list-1)
+PASS   : OwnedAzureusServiceTests::savedRatingDuplicateInventoryRowsCannotGrantAuthority(list-2)
+PASS   : OwnedAzureusServiceTests::savedRatingDuplicateInventoryRowsCannotGrantAuthority(legacy-0)
+PASS   : OwnedAzureusServiceTests::savedRatingDuplicateInventoryRowsCannotGrantAuthority(legacy-1)
+PASS   : OwnedAzureusServiceTests::savedRatingDuplicateInventoryRowsCannotGrantAuthority(legacy-2)
+PASS   : OwnedAzureusServiceTests::savedRatingActualTimeoutCancelCloseAndMetadataPermissionsRemainBounded()
+PASS   : OwnedAzureusServiceTests::twoNormalProfileOwnersExchangeDirectValuesWithoutGeneratedClosestFacts()
+PASS   : OwnedAzureusServiceTests::normalReceiverRequiresPeerTokenAndKeepsUnseededCacheForwardsOut()
+FAIL!  : OwnedAzureusServiceTests::normalReceiverChangedProfileWithdrawsBeforeAnyRemoteStore() 'server.owner->observation().snapshot->transport().counters().authorityErrors>0' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_azureus_service_tests.cpp(197)]
+PASS   : OwnedAzureusServiceTests::normalValueOwnersCancelWithoutAdmissionAndRestartWithReservedVersions()
+PASS   : OwnedAzureusServiceTests::normalReceivingCannotBeEnabledWithoutAHeldProfile()
+PASS   : OwnedAzureusServiceTests::originalVersionReservationPreservesSignedJavaWidthsAndChunkBoundary()
+PASS   : OwnedAzureusServiceTests::profileVersionsReserveBeforeUsePreserveUnknownsAndRecoverOnlyCanonicalPending()
+PASS   : OwnedAzureusServiceTests::versionOwnerRetainsCallerLeaseAndRefusesLockOrDirectoryReplacement()
+PASS   : OwnedAzureusServiceTests::localPublicationUsesActualTokenStoreAndReadbackFromGeneratedReceiver()
+PASS   : OwnedAzureusServiceTests::localPublicationCancellationAndChangedProfileNeverSendStore()
+PASS   : OwnedAzureusServiceTests::defaultAndInvalidPolicyNeverCreateAnOwner()
+PASS   : OwnedAzureusServiceTests::stdWorkerCreatesAndJoinsTheDedicatedQtOwner()
+PASS   : OwnedAzureusServiceTests::twoActualServiceOwnersExchangeRttCoordinatesAndKeepOldSnapshots()
+PASS   : OwnedAzureusServiceTests::existingActualFindNodeAndStreamingFindValueRunOnTheQtOwner()
+PASS   : OwnedAzureusServiceTests::actualTimeoutCancellationAndJoinedCloseRetainTheirOwnEvents()
+PASS   : OwnedAzureusServiceTests::boundedAdmissionAndCloseDoNotDependOnFreeCommandSlots()
+PASS   : OwnedAzureusServiceTests::invalidPublicPeersAndDeadlinesNeverSendOrChangeTheMailbox()
+PASS   : OwnedAzureusServiceTests::passiveReadsNeverQueueCommandsOrRepublishUnchangedFacts()
+PASS   : OwnedAzureusServiceTests::concurrentMailboxReadsAndImmediatePendingDestructionJoinSafely()
+PASS   : OwnedAzureusServiceTests::cleanupTestCase()
+Totals: 40 passed, 1 failed, 0 skipped, 0 blacklisted, 14715ms
+********* Finished testing of OwnedAzureusServiceTests *********
+
+      Start 263: azureus-database-runtime
+ 3/12 Test #263: azureus-database-runtime .............   Passed    2.10 sec
+      Start 271: profile-lease-retention
+ 4/12 Test #271: profile-lease-retention ..............   Passed    0.02 sec
+      Start 285: i2cp-initial-channel
+ 5/12 Test #285: i2cp-initial-channel .................   Passed   14.08 sec
+      Start 288: pure-i2cp-datagram-messages
+ 6/12 Test #288: pure-i2cp-datagram-messages ..........   Passed    0.04 sec
+      Start 289: i2cp-lease-backed-datagram-channel
+ 7/12 Test #289: i2cp-lease-backed-datagram-channel ...   Passed    7.56 sec
+      Start 291: i2cp-bounded-datagram-receiver
+ 8/12 Test #291: i2cp-bounded-datagram-receiver .......   Passed   11.53 sec
+      Start 292: azureus-profile-io
+ 9/12 Test #292: azureus-profile-io ...................   Passed    2.30 sec
+      Start 293: pure-i2cp-tracker-objects
+10/12 Test #293: pure-i2cp-tracker-objects ............   Passed    0.01 sec
+      Start 294: i2cp-explicit-tracker-channel
+11/12 Test #294: i2cp-explicit-tracker-channel ........   Passed    5.64 sec
+      Start 295: native-torrent-state-writer-guards
+12/12 Test #295: native-torrent-state-writer-guards ...***Failed    1.00 sec
+No complete compatible torrent state or backup
+Traceback (most recent call last):
+  File "/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_state_writer_guards.py", line 74, in <module>
+    main()
+    ~~~~^^
+  File "/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_state_writer_guards.py", line 52, in main
+    run(profile, "edit", stage, expected=0 if stage == "normal" else 66)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_state_writer_guards.py", line 36, in run
+    assert result.returncode == expected, (command, result.returncode, result.stdout, result.stderr)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (('edit', 'normal'), 2, '', 'No complete compatible torrent state or backup\n')
+
+
+75% tests passed, 3 tests failed out of 12
+
+Label Time Summary:
+config            =   0.03 sec*proc (1 test)
+crypto            =   0.04 sec*proc (1 test)
+database          =   2.10 sec*proc (1 test)
+faults            =   1.00 sec*proc (1 test)
+fixtures          =   0.03 sec*proc (1 test)
+i2p               =  38.86 sec*proc (6 tests)
+locking           =   1.02 sec*proc (2 tests)
+loopback          =  19.19 sec*proc (3 tests)
+no-network        =   0.05 sec*proc (2 tests)
+owned-loopback    =  38.82 sec*proc (4 tests)
+profile           =   2.30 sec*proc (1 test)
+statistics        =  14.79 sec*proc (1 test)
+storage           =   1.02 sec*proc (2 tests)
+unit              =  59.11 sec*proc (12 tests)
+
+Total Test time (real) =  59.15 sec
+
+The following tests FAILED:
+	 27 - compatible-config-first-create (Failed)           config fixtures unit
+	178 - azureus-owned-service (Failed)                    loopback statistics unit
+	295 - native-torrent-state-writer-guards (Failed)       faults locking storage unit
+Errors while running CTest

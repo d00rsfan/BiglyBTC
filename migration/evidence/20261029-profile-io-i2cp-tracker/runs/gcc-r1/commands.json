@@ -1,0 +1,41 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-azureus-profile-io-tests",
+      "biglybtc-azureus-owned-service-tests",
+      "biglybtc-azureus-database-runtime-tests",
+      "biglybtc-profile-lease-retention-tests",
+      "biglybtc-config-create-tests",
+      "biglybtc-torrent-state-driver",
+      "biglybtc-i2cp-initial-channel-tests",
+      "biglybtc-i2cp-datagram-tests",
+      "biglybtc-i2cp-datagram-channel-tests",
+      "biglybtc-i2cp-receive-channel-tests",
+      "biglybtc-i2cp-tracker-codec-tests",
+      "biglybtc-i2cp-tracker-channel-tests",
+      "biglybtc-classic-preferences-view-tests",
+      "biglybtc-classic-preferences-create-view-tests",
+      "biglybtc-local-rating-tests",
+      "biglybtc-local-rating-wiring-tests",
+      "biglybtc-mainline-single-udp-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 1,
+    "seconds": 762.672,
+    "log": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/runs/gcc-r1/build.log",
+    "log_sha256": "2216db4ed802108f8dc64f54eebe7fa5b8dc34057fc3f744b653d34480d331ca"
+  }
+]

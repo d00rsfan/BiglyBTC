@@ -1,0 +1,10 @@
+# Append to current tests/CMakeLists.txt; do not overwrite later accepted targets.
+if(BIGLYBTC_DESKTOP)
+  add_executable(biglybtc-azureus-profile-io-tests azureus_profile_io_tests.cpp)
+  set_target_properties(biglybtc-azureus-profile-io-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-azureus-profile-io-tests PRIVATE biglybtc_owned_azureus_service Qt6::Test)
+  target_compile_features(biglybtc-azureus-profile-io-tests PRIVATE cxx_std_23)
+  target_compile_options(biglybtc-azureus-profile-io-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME azureus-profile-io COMMAND biglybtc-azureus-profile-io-tests)
+  set_tests_properties(azureus-profile-io PROPERTIES TIMEOUT 60 LABELS "unit;loopback;profile" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()

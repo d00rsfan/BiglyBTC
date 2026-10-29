@@ -1,0 +1,1178 @@
+--- a/preview/native/adapters/azureus_value_versions.cpp
++++ b/preview/native/adapters/azureus_value_versions.cpp
+@@ -53,9 +53,10 @@
+ AzureusValueVersions::AzureusValueVersions(std::unique_ptr<Impl> value):impl_(std::move(value)){}
+ AzureusValueVersions::~AzureusValueVersions()=default;
+ std::int32_t AzureusValueVersions::network()const noexcept{return impl_->network;}
++std::shared_ptr<const ProfileLease> AzureusValueVersions::profileOwnership()const noexcept{return impl_->lease;}
+ std::expected<std::shared_ptr<AzureusValueVersions>,Error> AzureusValueVersions::open(const ProfileLease& source,std::int32_t network){
+   try{
+-    if(network<0){return error(ErrorCode::InvalidFormat,"Invalid Azureus network");}auto held=source.retain();if(!held){return std::unexpected(held.error());}
++    if(network<0){return error(ErrorCode::InvalidFormat,"Invalid Azureus network");}auto access=source.sourceAccess(true);if(!access){return std::unexpected(access.error());}auto held=source.retain();if(!held){return std::unexpected(held.error());}
+     auto out=std::make_unique<Impl>();out->lease=std::move(*held);out->network=network;auto dht=directory(out->lease->directoryHandle(),"dht");if(!dht){return std::unexpected(dht.error());}out->dht=std::move(*dht);
+     if(network){out->netName="net"+std::to_string(network);auto net=directory(out->dht.get(),out->netName);if(!net){return std::unexpected(net.error());}out->net=std::move(*net);}
+     auto primary=capture(out->dir(),"version.dat"),pending=capture(out->dir(),"version.saving");if(!primary){return std::unexpected(primary.error());}if(!pending){return std::unexpected(pending.error());}
+@@ -75,12 +76,13 @@
+   }catch(...){return error(ErrorCode::Io,"Cannot allocate Azureus version owner");}
+ }
+ std::expected<std::shared_ptr<const ProfileLease>,Error> AzureusValueVersions::retainProfile()const{
+-  try{std::lock_guard guard(impl_->mutex);auto valid=impl_->validate();if(!valid){return std::unexpected(valid.error());}return impl_->lease->retain();}
++  try{auto access=impl_->lease->sourceAccess();if(!access){return std::unexpected(access.error());}std::lock_guard guard(impl_->mutex);auto valid=impl_->validate();if(!valid){return std::unexpected(valid.error());}return impl_->lease->retain();}
+   catch(...){return error(ErrorCode::Io,"Cannot retain Azureus value profile");}
+ }
+-std::expected<void,Error> AzureusValueVersions::validate()const {try{std::lock_guard guard(impl_->mutex);return impl_->validate();}catch(...){return error(ErrorCode::Io,"Cannot validate Azureus version owner");}}
++std::expected<void,Error> AzureusValueVersions::validate()const {try{auto access=impl_->lease->sourceAccess();if(!access){return std::unexpected(access.error());}std::lock_guard guard(impl_->mutex);return impl_->validate();}catch(...){return error(ErrorCode::Io,"Cannot validate Azureus version owner");}}
+ std::expected<std::int32_t,Error> AzureusValueVersions::next(std::int64_t now){
+   try{
++    auto access=impl_->lease->sourceAccess(true);if(!access){return std::unexpected(access.error());}
+     std::lock_guard guard(impl_->mutex);auto valid=impl_->validate();if(!valid){return std::unexpected(valid.error());}
+     if(!impl_->remaining){
+       auto doc=parse(impl_->primary.bytes.value_or("de"));if(!doc){return std::unexpected(doc.error());}const auto* saved=doc->find("next");const auto reserved=originalAzureusVersionReservation(saved?std::optional{saved->integer}:std::nullopt,now);
+--- a/preview/native/adapters/azureus_value_versions.hpp
++++ b/preview/native/adapters/azureus_value_versions.hpp
+@@ -25,6 +25,8 @@
+   AzureusValueVersions(const AzureusValueVersions&)=delete;
+   AzureusValueVersions& operator=(const AzureusValueVersions&)=delete;
+   std::int32_t network()const noexcept;
++  // Owning alias only: no filesystem validation and no network authority.
++  std::shared_ptr<const ProfileLease> profileOwnership()const noexcept;
+   std::expected<void,Error> validate() const;
+   // Explicit retained alias of this SAME profile OFD, after current version
+   // validation. Consumers own the alias; no borrowed caller lease is exposed.
+--- a/preview/native/adapters/profile.cpp
++++ b/preview/native/adapters/profile.cpp
+@@ -71,7 +71,7 @@
+   }
+   // Allocate while both descriptors still have RAII owners. Only a successful
+   // independent lock acquisition mints a lineage; retain never mints another.
+-  auto ownership = std::make_shared<const unsigned char>(0);
++  auto ownership = std::make_shared<ProfileSourceState>();
+   return ProfileLease(directory.release(), lock.release(), std::move(ownership));
+ }
+ 
+@@ -156,6 +156,8 @@
+ 
+ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& lease,
+     std::string filename, std::string_view encoded, core::Limits limits, void (*observer)(SaveStage)) {
++  auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
++  if(observer&&!access->observationsAllowed()){return error(ErrorCode::Unsupported,"Observed configuration writes require an unnested source boundary");}
+   try {
+     if (!lease.valid() || !validName(filename)) {
+       return error(ErrorCode::UnsafePath, "Held profile lease and safe configuration filename required");
+@@ -230,7 +232,7 @@
+     };
+     auto identity = owned();
+     if (!identity) { return std::unexpected(identity.error()); }
+-    if (observer) { observer(SaveStage::TemporarySynced); }
++    if (observer) { access->outside([&]{observer(SaveStage::TemporarySynced);}); }
+     struct stat currentDirectory{};
+     if (!lease.valid() || lease.directoryHandle() != handle || ::fstat(handle, &currentDirectory) != 0
+         || !S_ISDIR(currentDirectory.st_mode) || currentDirectory.st_dev != directory.st_dev
+@@ -248,7 +250,7 @@
+           : errno == ENOSYS || errno == EINVAL || errno == EOPNOTSUPP ? ErrorCode::Unsupported : ErrorCode::Io;
+       return error(code, "First configuration publication failed without replacement; saving pathname retained");
+     }
+-    if (observer) { observer(SaveStage::PrimaryRenamed); }
++    if (observer) { access->outside([&]{observer(SaveStage::PrimaryRenamed);}); }
+     if (::fsync(handle) != 0) {
+       return error(ErrorCode::Io, "Directory synchronization failed; first configuration publication already occurred");
+     }
+@@ -259,6 +261,8 @@
+ }
+ 
+ std::expected<void, Error> ConfigFile::save(const ProfileLease& lease, void (*observer)(SaveStage)) {
++  auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
++  if(observer&&!access->observationsAllowed()){return error(ErrorCode::Unsupported,"Observed configuration writes require an unnested source boundary");}
+   struct stat directory{};
+   if (!lease.valid() || ::fstat(lease.directoryHandle(), &directory) != 0
+       || directory.st_dev != device_ || directory.st_ino != inode_) {
+@@ -291,19 +295,19 @@
+   if (!written) {
+     return std::unexpected(written.error());
+   }
+-  if (observer) { observer(SaveStage::TemporarySynced); }
++  if (observer) { access->outside([&]{observer(SaveStage::TemporarySynced);}); }
+   if (source_ == RecoverySource::Primary) {
+     const auto backup = filename_ + ".bak";
+     if (::renameat(lease.directoryHandle(), filename_.c_str(), lease.directoryHandle(), backup.c_str()) != 0
+         || ::fsync(lease.directoryHandle()) != 0) {
+       return error(ErrorCode::Io, "Backup transition failed; saving file retained for recovery");
+     }
+-    if (observer) { observer(SaveStage::BackupRenamed); }
++    if (observer) { access->outside([&]{observer(SaveStage::BackupRenamed);}); }
+   }
+   if (::renameat(lease.directoryHandle(), saving.c_str(), lease.directoryHandle(), filename_.c_str()) != 0) {
+     return error(ErrorCode::Io, "Configuration replacement failed; recovery files retained");
+   }
+-  if (observer) { observer(SaveStage::PrimaryRenamed); }
++  if (observer) { access->outside([&]{observer(SaveStage::PrimaryRenamed);}); }
+   if (::fsync(lease.directoryHandle()) != 0) {
+     return error(ErrorCode::Io, "Directory synchronization failed; configuration replacement already occurred");
+   }
+--- a/preview/native/adapters/profile.hpp
++++ b/preview/native/adapters/profile.hpp
+@@ -6,6 +6,11 @@
+ #include <filesystem>
+ #include <optional>
+ #include <memory>
++#include <atomic>
++#include <mutex>
++#include <limits>
++#include <utility>
++#include <stdexcept>
+ #include <string>
+ #include <string_view>
+ 
+@@ -17,6 +22,44 @@
+   std::string message;
+ };
+ 
++// One cooperative source lineage, minted only by an actual OFD acquisition.
++// No filesystem access occurs while reading its revision. Hostile external
++// pathname replacement still requires the existing held-FD/CAS checks.
++struct ProfileSourceState final {
++  std::recursive_mutex mutex;
++  unsigned depth=0; // Protected by mutex; nested accesses are same-thread only.
++  std::atomic<std::uint64_t> revision{1};
++};
++class ProfileSourceAccess final {
++public:
++  ProfileSourceAccess(ProfileSourceAccess&& other)noexcept
++      :state_(std::move(other.state_)),lock_(std::move(other.lock_)),writing_(other.writing_){}
++  ProfileSourceAccess& operator=(ProfileSourceAccess&& other)noexcept{
++    if(this!=&other){if(lock_.owns_lock()){--state_->depth;}lock_=std::move(other.lock_);state_=std::move(other.state_);writing_=other.writing_;}return *this;
++  }
++  ~ProfileSourceAccess(){if(lock_.owns_lock()){--state_->depth;}}
++  ProfileSourceAccess(const ProfileSourceAccess&)=delete;
++  std::uint64_t revision()const noexcept{return state_->revision.load();}
++  bool observationsAllowed()const noexcept{return lock_.owns_lock()&&state_->depth==1;}
++  // Existing diagnostic/fault observers are reentrant user code. Never invoke
++  // them under this gate; reacquisition starts a new cooperative write epoch.
++  template<class F> void outside(F&& callback){
++    if(!observationsAllowed()){throw std::logic_error("Nested source access cannot invoke observers");}
++    --state_->depth;lock_.unlock();
++    const auto reacquire=[&]{lock_.lock();++state_->depth;if(writing_){advance();}};
++    try{std::forward<F>(callback)();}catch(...){reacquire();throw;}
++    reacquire();
++    if(!observationsAllowed()){throw std::logic_error("Observer retained another source access");}
++  }
++private:
++  friend class ProfileLease;
++  ProfileSourceAccess(std::shared_ptr<ProfileSourceState> state,bool writing)
++      :state_(std::move(state)),lock_(state_->mutex),writing_(writing){++state_->depth;if(writing_){advance();}}
++  void advance()noexcept{auto value=state_->revision.load();if(value!=std::numeric_limits<std::uint64_t>::max()){state_->revision.store(value+1);}}
++  std::shared_ptr<ProfileSourceState> state_;
++  std::unique_lock<std::recursive_mutex> lock_;
++  bool writing_;
++};
+ class ProfileLease final {
+ public:
+   static std::expected<ProfileLease, Error> acquire(const std::filesystem::path& profile);
+@@ -34,14 +77,23 @@
+   bool sharesOwnership(const ProfileLease& other) const noexcept {
+     return valid() && other.valid() && ownership_ && ownership_ == other.ownership_;
+   }
++  // Lock order: source gate, then an adapter's own writer mutex. Network code
++  // consumes an I/O-worker-held permit and must never acquire this gate.
++  std::expected<ProfileSourceAccess,Error> sourceAccess(bool writing=false)const {
++    if(!valid()||!ownership_){return std::unexpected(Error{ErrorCode::Conflict,"Profile source ownership is released"});}
++    auto result=ProfileSourceAccess(ownership_,writing);
++    if(result.revision()==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Error{ErrorCode::Conflict,"Profile source revision exhausted"});}
++    return result;
++  }
++  std::uint64_t sourceRevision()const noexcept{return ownership_?ownership_->revision.load():0;}
+   int directoryHandle() const { return directory_; }
+   bool valid() const { return directory_ >= 0 && lock_ >= 0; }
+ private:
+-  ProfileLease(int directory, int lock, std::shared_ptr<const unsigned char> ownership)
++  ProfileLease(int directory, int lock, std::shared_ptr<ProfileSourceState> ownership)
+       : directory_(directory), lock_(lock), ownership_(std::move(ownership)) {}
+   int directory_ = -1;
+   int lock_ = -1;
+-  std::shared_ptr<const unsigned char> ownership_;
++  std::shared_ptr<ProfileSourceState> ownership_;
+ };
+ 
+ enum class RecoverySource { Primary, Backup, Saving };
+--- a/preview/native/adapters/torrent_state.cpp
++++ b/preview/native/adapters/torrent_state.cpp
+@@ -84,7 +84,7 @@
+ 
+ std::expected<void, Error> replace(int directory, const std::string& filename,
+     const std::optional<std::string>& original, std::string_view encoded, std::string_view backup,
+-    void (*observer)(StateSaveStage)) {
++    void (*observer)(StateSaveStage), ProfileSourceAccess* access=nullptr) {
+   auto current = readFile(directory, filename, compatibleConfigLimits().inputBytes);
+   if (!current) { return std::unexpected(current.error()); }
+   if (*current != original) { return error(ErrorCode::Conflict, "Saved state changed since loading"); }
+@@ -100,7 +100,7 @@
+   const auto saving = filename + ".saving";
+   auto written = writeExclusive(directory, saving, encoded, mode);
+   if (!written) { return written; }
+-  if (observer) { observer(StateSaveStage::TemporarySynced); }
++  if (observer) { if(access){access->outside([&]{observer(StateSaveStage::TemporarySynced);});}else{observer(StateSaveStage::TemporarySynced);} }
+   const auto backupSaving = filename + ".bak.saving";
+   written = writeExclusive(directory, backupSaving, backup, mode);
+   if (!written) { return written; }
+@@ -109,13 +109,13 @@
+   }
+   safe = sync(directory);
+   if (!safe) { return safe; }
+-  if (observer) { observer(StateSaveStage::BackupSynced); }
++  if (observer) { if(access){access->outside([&]{observer(StateSaveStage::BackupSynced);});}else{observer(StateSaveStage::BackupSynced);} }
+   // The primary stays present through backup preparation; Java can always read
+   // its old or new state, even though it ignores an unfinished .saving file.
+   if (::renameat(directory, saving.c_str(), directory, filename.c_str()) != 0) {
+     return error(ErrorCode::Io, "Unable to replace saved state; primary retained");
+   }
+-  if (observer) { observer(StateSaveStage::PrimaryRenamed); }
++  if (observer) { if(access){access->outside([&]{observer(StateSaveStage::PrimaryRenamed);});}else{observer(StateSaveStage::PrimaryRenamed);} }
+   return sync(directory);
+ }
+ } // namespace
+@@ -190,7 +190,7 @@
+ }
+ 
+ std::expected<void, Error> TorrentStateStore::saveInternal(TorrentStateFile& state,
+-    void (*observer)(StateSaveStage)) const {
++    void (*observer)(StateSaveStage), ProfileSourceAccess* access) const {
+   if (state.device_ != activeDevice_ || state.inode_ != activeInode_) {
+     return error(ErrorCode::UnsafePath, "Torrent state belongs to a different profile directory");
+   }
+@@ -201,7 +201,7 @@
+   if (!checked) { return checked; }
+   auto backupBytes = backup.serialize();
+   if (!backupBytes) { return error(ErrorCode::InvalidFormat, "Unable to encode recheck-safe state backup"); }
+-  auto written = replace(active_, state.hash_.hex() + ".dat", state.original_, *encoded, *backupBytes, observer);
++  auto written = replace(active_, state.hash_.hex() + ".dat", state.original_, *encoded, *backupBytes, observer, access);
+   if (!written) { return written; }
+   state.original_ = std::move(*encoded);
+   state.backup_ = false;
+@@ -210,10 +210,13 @@
+ 
+ std::expected<void, Error> TorrentStateStore::save(const ProfileLease& lease, TorrentStateFile& state,
+     void (*observer)(StateSaveStage)) const {
++
++  auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
++  if(observer&&!access->observationsAllowed()){return error(ErrorCode::Unsupported,"Observed state writes require an unnested source boundary");}
+   auto valid = validate(lease);
+   if (!valid) { return valid; }
+   if (!state.prepared_) { return error(ErrorCode::Conflict, "State ownership must be prepared before saving"); }
+-  return saveInternal(state, observer);
++  return saveInternal(state, observer, &*access);
+ }
+ 
+ std::expected<void, Error> TorrentStateStore::removeCachedEntry(TorrentStateFile& state) const {
+@@ -310,6 +313,7 @@
+ 
+ std::expected<void, Error> TorrentStateStore::saveAttributes(const ProfileLease& lease,
+     TorrentStateFile& state, std::string encodedAttributes) const {
++  auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
+   auto valid = validate(lease);
+   if (!valid) { return valid; }
+   if (!state.attributesOnly_ || state.prepared_ || state.device_ != activeDevice_ || state.inode_ != activeInode_) {
+@@ -370,6 +374,7 @@
+ }
+ 
+ std::expected<TorrentStateFile, Error> TorrentStateStore::beginUpdate(const ProfileLease& lease, const core::TorrentHash& hash) const {
++  auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
+   auto state = load(lease, hash);
+   if (!state) { return std::unexpected(state.error()); }
+   auto prepared = removeCachedEntry(*state);
+--- a/preview/native/adapters/torrent_state.hpp
++++ b/preview/native/adapters/torrent_state.hpp
+@@ -60,7 +60,7 @@
+       : active_(active), device_(device), inode_(inode), activeDevice_(activeDevice), activeInode_(activeInode) {}
+   std::expected<void, Error> validate(const ProfileLease& lease) const;
+   std::expected<void, Error> saveInternal(TorrentStateFile& state,
+-      void (*observer)(StateSaveStage)) const;
++      void (*observer)(StateSaveStage), ProfileSourceAccess* access=nullptr) const;
+   std::expected<void, Error> removeCachedEntry(TorrentStateFile& state) const;
+   int active_;
+   std::uint64_t device_;
+--- a/preview/native/app/azureus_local_publish.inc
++++ b/preview/native/app/azureus_local_publish.inc
+@@ -6,6 +6,8 @@
+       std::chrono::steady_clock::time_point deadline;
+       azureus::Ticket ticket;
+       std::size_t readbackSlices=0;
++      std::deque<std::pair<azureus::FindValueOutcome,std::shared_ptr<void>>> pendingReadback;
++      bool readbackIo=false;
+       bool finished=false,cancelled=false;
+     };
+     std::shared_ptr<Publishing> publishing_;
+@@ -14,7 +16,6 @@
+       std::int64_t nowMilliseconds()noexcept override{return QDateTime::currentMSecsSinceEpoch();}
+     };
+     bool initializeLocalDatabase(){
+-      if(!options_.valueVersions->validate()){return false;}
+       auto made=services::azureus_db_runtime::Owner::create();if(!made){return false;}
+       const auto peer=actor_.endpoint();const auto id=routerIdentity(peer,options_.version);if(!id){return false;}
+       nodes::Contact contact;contact.protocol=options_.version;contact.id=*id;contact.address.port=peer.port;
+@@ -60,15 +61,33 @@
+       if(value->cancelled){finishPublish(value,AzureusPublishState::Cancelled,AzureusServiceError::Transport,azureus::Failure::Cancelled);return false;}
+       if(std::chrono::steady_clock::now()>=value->deadline){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,azureus::Failure::Timeout);return false;}
+       if(!isOwned(value->command.peer)){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid,azureus::Failure::Peer);return false;}
+-      auto valid=options_.valueVersions->validate();if(!valid){value->snapshot.profileFailure=valid.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return false;}
+-      if(value->command.ratingSubject){auto current=validateRating(value->command);if(!current){value->snapshot.profileFailure=current.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return false;}}
+       return true;
+     }
+     std::chrono::nanoseconds publishRemaining(const Publishing& value)const{return std::chrono::duration_cast<std::chrono::nanoseconds>(value.deadline-std::chrono::steady_clock::now());}
+-    void publishReadback(const std::shared_ptr<Publishing>& value){
+-      if(!validatePublish(value)){return;}value->snapshot.state=AzureusPublishState::Readback;capturePublish(value);
+-      auto sent=actor_.findValue(value->command.peer,options_.version,value->snapshot.key,0,64,this,
+-          [this,value](azureus::FindValueOutcome outcome){try{
++    void withPublish(const std::shared_ptr<Publishing>& value,bool reserve,
++        std::move_only_function<void(const ProfileIo::Data&)> step){
++      if(!validatePublish(value)){return;}
++      auto current=[this,value]{bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}return !stop&&livePublish(value)&&!value->cancelled;};
++      auto committed=[this,value,step=std::move(step)](const ProfileIo::Data& data)mutable{if(validatePublish(value)){step(data);}};
++      auto failed=[this,value](storage::Error error){if(!validatePublish(value)){return;}value->snapshot.profileFailure=std::move(error);finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);};
++      if(!deferProfile(value->command,reserve,value->deadline,std::move(current),std::move(committed),std::move(failed),false,
++          [this,value]{finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,azureus::Failure::Timeout);})){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Capacity);}
++    }
++    void queuePublishReadback(const std::shared_ptr<Publishing>& value,azureus::FindValueOutcome outcome){
++      if(!livePublish(value)){return;}
++      if(value->pendingReadback.size()+value->readbackSlices>=64){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Capacity);return;}
++      auto held=holdProfileFrame();if(!held){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Capacity);return;}
++      value->pendingReadback.emplace_back(std::move(outcome),std::move(held));pumpPublishReadback(value);
++    }
++    void pumpPublishReadback(const std::shared_ptr<Publishing>& value){
++      if(!livePublish(value)||value->readbackIo||value->pendingReadback.empty()){return;}
++      value->readbackIo=true;auto batch=std::move(value->pendingReadback);value->pendingReadback.clear();
++      withPublish(value,false,[this,value,batch=std::move(batch)](const auto&)mutable{
++        for(auto& outcome:batch){if(!livePublish(value)){break;}processPublishReadback(value,std::move(outcome.first));}
++        value->readbackIo=false;pumpPublishReadback(value);
++      });
++    }
++    void processPublishReadback(const std::shared_ptr<Publishing>& value,azureus::FindValueOutcome outcome){
+         if(!validatePublish(value)){return;}
+         if(!outcome){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,outcome.error());return;}
+         const auto* reply=std::get_if<azureus::lookup::ReplyBody>(&outcome->body());
+@@ -89,7 +108,12 @@
+         const bool matching=origin&&bytes&&std::ranges::any_of(value->snapshot.readback,[&](const auto& item){return item.version==local.version()&&item.bytes==*bytes&&item.originator.id==origin->id&&item.originator.address==origin->address&&item.flags==local.flags()&&item.lifeHours==local.lifeTimeHours()&&item.replication==local.replicationControl();});
+         if(!matching){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Readback);return;}
+         finishPublish(value,AzureusPublishState::Complete);
+-      }catch(...){publicationMemoryFailure();}},publishRemaining(*value));
++
++    }
++    void publishReadback(const std::shared_ptr<Publishing>& value){
++      if(!validatePublish(value)){return;}value->snapshot.state=AzureusPublishState::Readback;capturePublish(value);
++      auto sent=actor_.findValue(value->command.peer,options_.version,value->snapshot.key,0,64,this,
++          [this,value](azureus::FindValueOutcome outcome){try{queuePublishReadback(value,std::move(outcome));}catch(...){publicationMemoryFailure();}},publishRemaining(*value));
+       if(!sent){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,sent.error());return;}value->ticket=*sent;
+     }
+     void publishStore(const std::shared_ptr<Publishing>& value,std::int32_t token){
+@@ -98,30 +122,33 @@
+       if(!origin||!payload){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}
+       azureus::StoreRequest request;request.randomId=token;request.keys={std::string(reinterpret_cast<const char*>(value->snapshot.key.data()),value->snapshot.key.size())};
+       request.valueSets={{{local.version(),local.creationTime(),std::string(*payload),*origin,local.flags(),local.lifeTimeHours(),local.replicationControl()}}};
+-      auto sent=actor_.store(value->command.peer,options_.version,std::move(request),this,[this,value](azureus::StoreOutcome outcome){try{
++      auto sent=actor_.store(value->command.peer,options_.version,std::move(request),this,[this,value](azureus::StoreOutcome outcome){try{withPublish(value,false,[this,value,outcome=std::move(outcome)](const auto&)mutable{
+         if(!validatePublish(value)){return;}
+         if(!outcome){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,outcome.error());return;}
+         const auto* decoded=std::get_if<azureus::storage::Decoded>(&*outcome);const auto* reply=decoded?std::get_if<azureus::storage::ReplyBody>(&decoded->body()):nullptr;
+         if(!reply||!reply->diversification||*reply->diversification!=std::string(1,char(1))){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,azureus::Failure::Remote);return;}
+         publishReadback(value);
+-      }catch(...){publicationMemoryFailure();}},publishRemaining(*value));
++
++      });      }catch(...){publicationMemoryFailure();}},publishRemaining(*value));
+       if(!sent){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,sent.error());return;}value->ticket=*sent;
+     }
+     void beginPublish(const Command& command){
+       if((publishing_&&!publishing_->finished)||!localDatabase_||!options_.valueVersions){failCommand(command,AzureusServiceError::Capacity);return;}
+-      auto value=std::make_shared<Publishing>();value->command=command;value->deadline=std::chrono::steady_clock::now()+command.timeout;value->snapshot.request=command.id;
++      auto value=std::make_shared<Publishing>();value->command=command;value->deadline=command.deadline;value->snapshot.request=command.id;
+       const auto digest=QCryptographicHash::hash(QByteArray(command.applicationKey.data(),static_cast<qsizetype>(command.applicationKey.size())),QCryptographicHash::Sha1);
+       std::copy_n(reinterpret_cast<const std::uint8_t*>(digest.constData()),value->snapshot.key.size(),value->snapshot.key.begin());publishing_=value;
+-      if(!validatePublish(value)){return;}PublicationClock clock;auto version=options_.valueVersions->next(clock.nowMilliseconds());
+-      if(!version){value->snapshot.profileFailure=version.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return;}
++      withPublish(value,true,[this,value,command](const ProfileIo::Data& data){
++      if(!data.version){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return;}PublicationClock clock;const auto version=*data.version;
+       const auto key=std::string_view(reinterpret_cast<const char*>(value->snapshot.key.data()),value->snapshot.key.size());
+-      auto local=localDatabase_->putLocal(key,command.payload,*version,clock,command.publicationFlags);if(!local){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}value->snapshot.localValue=std::move(*local);
++      auto local=localDatabase_->putLocal(key,command.payload,version,clock,command.publicationFlags);if(!local){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}value->snapshot.localValue=std::move(*local);
+       if(!validatePublish(value)){return;}value->snapshot.state=AzureusPublishState::Token;capturePublish(value);
+-      auto sent=actor_.requestStoreToken(command.peer,options_.version,this,[this,value](azureus::DetailedFindNodeOutcome outcome){try{
++      auto sent=actor_.requestStoreToken(command.peer,options_.version,this,[this,value](azureus::DetailedFindNodeOutcome outcome){try{withPublish(value,false,[this,value,outcome=std::move(outcome)](const auto&)mutable{
+         if(!validatePublish(value)){return;}
+         if(!outcome){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,outcome.error());return;}
+         const auto* decoded=std::get_if<azureus::find::Decoded>(&*outcome);const auto* reply=decoded?std::get_if<azureus::find::ReplyBody>(&decoded->body()):nullptr;
+         if(!reply){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,azureus::Failure::Remote);return;}publishStore(value,reply->randomId);
+-      }catch(...){publicationMemoryFailure();}},publishRemaining(*value));
++
++      });      }catch(...){publicationMemoryFailure();}},publishRemaining(*value));
+       if(!sent){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,sent.error());return;}value->ticket=*sent;publish();
++      });
+     }
+--- /dev/null
++++ b/preview/native/app/azureus_profile_io.hpp
+@@ -0,0 +1,151 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#pragma once
++// Private to the explicit Azureus service. Concrete bounded use of the existing
++// Executor; no actor, router, DB or QObject is accessed by an I/O operation.
++#include "azureus_value_versions.hpp"
++#include "local_rating.hpp"
++#include "biglybtc/executor.hpp"
++#include <array>
++#include <algorithm>
++#include <atomic>
++#include <chrono>
++#include <condition_variable>
++#include <functional>
++#include <QCoreApplication>
++#include <QEvent>
++#include <QObject>
++#include <memory>
++#include <mutex>
++#include <stdexcept>
++
++namespace biglybtc::app::detail {
++class AzureusProfileIo final {
++public:
++  struct Data {
++    std::optional<std::int32_t> version;
++    std::shared_ptr<const storage::DistributedRatingSnapshot> rating;
++    std::uint64_t revision=0;
++  };
++  using Result=std::expected<Data,storage::Error>;
++  using Operation=std::move_only_function<Result(std::stop_token)>;
++  enum class Phase {Queued,Running,Ready,Executing,Committed,Released};
++  struct Job final {
++    mutable std::mutex mutex;
++    std::condition_variable changed;
++    Phase phase=Phase::Queued;
++    std::atomic<bool> revoked{false};
++    std::optional<Result> result{std::unexpected(storage::Error{storage::ErrorCode::Io,"Profile IO did not complete"})};
++    std::optional<core::Ticket> ticket;
++  };
++  using Handle=std::shared_ptr<Job>;
++  static QEvent::Type wakeEvent(){static const auto type=[] {const int value=QEvent::registerEventType();if(value<QEvent::User){throw std::runtime_error("No profile IO event type");}return static_cast<QEvent::Type>(value);}();return type;}
++private:
++  struct Mailbox final {
++    std::mutex mutex;QObject* receiver=nullptr;bool queued=false;
++    void signal(){
++      std::lock_guard lock(mutex);if(!receiver||queued){return;}
++      // Queue only: no user/reentrant callback can run while the worker holds
++      // a source gate. Unbind serializes with posting before QObject teardown.
++      auto event=std::make_unique<QEvent>(wakeEvent());QCoreApplication::postEvent(receiver,event.release());queued=true;
++    }
++  };
++public:
++  void bind(QObject* receiver){std::lock_guard lock(mailbox_->mutex);mailbox_->receiver=receiver;}
++  void unbind()noexcept{std::lock_guard lock(mailbox_->mutex);mailbox_->receiver=nullptr;mailbox_->queued=false;}
++  void drainWake(){std::lock_guard lock(mailbox_->mutex);mailbox_->queued=false;}
++  explicit AzureusProfileIo(std::shared_ptr<const storage::ProfileLease> lease)
++      :lease_(std::move(lease)),executor_(std::make_unique<core::Executor>(7)){
++    static_cast<void>(wakeEvent());
++    if(!lease_||!executor_->start()){throw std::runtime_error("Cannot start profile IO executor");}
++  }
++  ~AzureusProfileIo(){requestStop();join();}
++  AzureusProfileIo(const AzureusProfileIo&)=delete;
++  // Only the external create/lifetime caller may wait. No DHT owner runs here.
++  bool initialize(const std::shared_ptr<storage::AzureusValueVersions>& versions){
++    auto result=std::make_shared<std::optional<bool>>();
++    auto submitted=executor_->submit([result,versions](std::stop_token stop)->core::WorkResult{
++      *result=!stop.stop_requested()&&bool(versions->validate());return {};
++    });if(!submitted){return false;}if(!submitted->result().get()){return false;}return result->value_or(false);
++  }
++  std::expected<Handle,core::SubmitError> submit(Operation operation){
++    std::lock_guard slots(slotsMutex_);
++    if(stopping_){return std::unexpected(core::SubmitError::Stopped);}
++    Handle* free=nullptr;for(auto& item:slots_){if(!item){free=&item;break;}}
++    if(!free){return std::unexpected(core::SubmitError::Overloaded);}
++    auto job=std::make_shared<Job>();*free=job;
++    std::size_t held=0;for(const auto& item:slots_){held+=bool(item);}highWater_=std::max(highWater_,held);
++    const auto lease=lease_;const auto mailbox=mailbox_;
++    auto submitted=executor_->submit([job,lease,mailbox,operation=std::move(operation)](std::stop_token stop)mutable->core::WorkResult{
++      bool entering=false;
++      {std::lock_guard lock(job->mutex);if(job->phase==Phase::Released){return {};}entering=!stop.stop_requested()&&!job->revoked.load();if(entering){job->phase=Phase::Running;}}
++      const auto signal=[&]()noexcept{try{mailbox->signal();}catch(...){std::lock_guard lock(job->mutex);job->revoked=true;job->changed.notify_all();}};
++      try{if(entering){
++        // The worker retains and releases its own lock, including while the
++        // actor consumes a one-shot permit. It never runs actor callbacks.
++        auto access=lease->sourceAccess();
++        Result result=std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO cancelled"});
++        try{if(access&&!stop.stop_requested()){
++          result=operation(stop);if(result){result->revision=access->revision();}
++        }else if(!access){result=std::unexpected(access.error());}}
++        catch(...){result=std::unexpected(storage::Error{storage::ErrorCode::Io,"Profile IO failed"});}
++        {
++          std::lock_guard lock(job->mutex);job->result=std::move(result);
++          if(stop.stop_requested()){job->revoked=true;}
++          job->phase=Phase::Ready;
++        }
++        signal();
++        std::unique_lock lock(job->mutex);
++        std::stop_callback stopped(stop,[&]{job->revoked.store(true);job->changed.notify_all();});
++        job->changed.wait(lock,[&]{return job->phase==Phase::Committed||(job->revoked&&job->phase!=Phase::Executing);});
++      }}catch(...){job->revoked.store(true);} // Source gate released first.
++      {std::lock_guard lock(job->mutex);job->phase=Phase::Released;}signal();return {};
++    });
++    if(!submitted){free->reset();return std::unexpected(submitted.error());}
++    job->ticket.emplace(std::move(*submitted));return job;
++  }
++  static std::optional<Result> take(const Handle& job){
++    std::lock_guard lock(job->mutex);if(job->phase!=Phase::Ready||job->revoked||!job->result){return {};}
++    job->phase=Phase::Executing;return *job->result;
++  }
++  static void acknowledge(const Handle& job)noexcept{
++    std::lock_guard lock(job->mutex);if(job->phase==Phase::Executing){job->phase=Phase::Committed;}job->changed.notify_all();
++  }
++  static void revoke(const Handle& job)noexcept{
++    {std::lock_guard lock(job->mutex);job->revoked=true;if(job->phase==Phase::Queued){job->phase=Phase::Released;}job->changed.notify_all();}
++    if(job->ticket){job->ticket->cancel();}
++  }
++  static storage::Error failure(const Handle& job){
++    std::lock_guard lock(job->mutex);if(job->result&&!*job->result){return job->result->error();}
++    return {storage::ErrorCode::Cancelled,"Profile completion was revoked before execution"};
++  }
++  struct Facts {std::size_t pending=0,running=0,ready=0,highWater=0;};
++  Facts facts(){
++    std::lock_guard slots(slotsMutex_);Facts result;result.highWater=highWater_;
++    for(const auto& slot:slots_){if(!slot){continue;}++result.pending;std::lock_guard lock(slot->mutex);result.running+=slot->phase==Phase::Running;result.ready+=slot->phase==Phase::Ready||slot->phase==Phase::Executing;}
++    return result;
++  }
++  std::size_t highWater(){std::lock_guard lock(slotsMutex_);return highWater_;}
++  std::size_t queued()const{return executor_?executor_->pending():0;}
++  static bool released(const Handle& job){std::lock_guard lock(job->mutex);return job->phase==Phase::Released;}
++  void release(const Handle& job){
++    if(!released(job)){return;}
++    std::lock_guard lock(slotsMutex_);for(auto& slot:slots_){if(slot==job){slot.reset();return;}}
++  }
++  void requestStop()noexcept{
++    {std::lock_guard lock(slotsMutex_);stopping_=true;for(const auto& slot:slots_){if(slot){revoke(slot);}}}
++    if(executor_){executor_->requestShutdown();}
++  }
++  // External lifetime only. An uninterruptible OS syscall can delay this join;
++  // network close/deadlines have already progressed on their separate thread.
++  void join()noexcept{executor_.reset();}
++  const std::shared_ptr<const storage::ProfileLease>& lease()const noexcept{return lease_;}
++private:
++  std::shared_ptr<Mailbox> mailbox_=std::make_shared<Mailbox>();
++  std::shared_ptr<const storage::ProfileLease> lease_;
++  std::mutex slotsMutex_;
++  std::array<Handle,8> slots_{};
++  bool stopping_=false;
++  std::size_t highWater_=0;
++  std::unique_ptr<core::Executor> executor_;
++};
++}
+--- /dev/null
++++ b/preview/native/app/azureus_profile_io_owner.inc
+@@ -0,0 +1,106 @@
++// Included in the private Qt owner. Only this thread owns these continuations;
++// disk jobs own storage values, not Qt/node-cache handles or actor callbacks.
++    using ProfileIo=detail::AzureusProfileIo;
++    struct IoSlot {
++      ProfileIo::Handle job;
++      std::uint64_t command=0;
++      std::chrono::steady_clock::time_point deadline;
++      std::move_only_function<bool()> current;
++      std::move_only_function<void(const ProfileIo::Data&)> commit;
++      std::move_only_function<void(storage::Error)> failed;
++      std::optional<storage::Error> error;
++      std::move_only_function<void()> expired,cancelled;
++      bool consumed=false,expiryNotified=false;
++    };
++    std::array<IoSlot,8> ioSlots_{};
++    QChronoTimer ioDeadline_;
++    void armProfileDeadline()noexcept{
++      try{
++        auto earliest=std::chrono::steady_clock::time_point::max();for(const auto& slot:ioSlots_){if(slot.job&&!slot.expiryNotified){earliest=std::min(earliest,slot.deadline);}}
++        if(earliest==std::chrono::steady_clock::time_point::max()){ioDeadline_.stop();return;}
++        ioDeadline_.start(std::max(std::chrono::nanoseconds{1},std::chrono::duration_cast<std::chrono::nanoseconds>(earliest-std::chrono::steady_clock::now())));
++      }catch(...){try{ioDeadline_.stop();}catch(...){}publicationMemoryFailure();}
++    }
++    bool profilePermit_=false,passiveIo_=false,drainingIo_=false;
++    std::uint64_t profileCommand_=0,profileRevision_=0;
++    bool passiveSkip_=false;
++    std::shared_ptr<std::atomic<std::size_t>> pendingFrames_=std::make_shared<std::atomic<std::size_t>>(0);
++    struct ProfileFrame final {
++      explicit ProfileFrame(std::shared_ptr<std::atomic<std::size_t>> value):count(std::move(value)){}
++      ~ProfileFrame(){count->fetch_sub(1);}
++      std::shared_ptr<std::atomic<std::size_t>> count;
++    };
++    std::shared_ptr<void> holdProfileFrame(){
++      if(pendingFrames_->fetch_add(1)>=64){pendingFrames_->fetch_sub(1);return {};}
++      try{return std::make_shared<ProfileFrame>(pendingFrames_);}
++      catch(...){pendingFrames_->fetch_sub(1);throw;}
++    }
++    void drainProfileIo(){
++      if(drainingIo_||!state_->profileIo){return;}drainingIo_=true;
++      const auto leave=qScopeGuard([&]()noexcept{drainingIo_=false;armProfileDeadline();});
++      bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}
++      try{for(auto& slot:ioSlots_){if(!slot.job){continue;}
++        if(!slot.expiryNotified&&std::chrono::steady_clock::now()>=slot.deadline){
++          slot.expiryNotified=true;ProfileIo::revoke(slot.job);if(slot.expired){slot.expired();}
++        }
++        if(stop||std::chrono::steady_clock::now()>=slot.deadline||!slot.current()){
++          ProfileIo::revoke(slot.job);slot.error=storage::Error{storage::ErrorCode::Cancelled,"Profile operation stopped, stale or expired"};
++        }
++        if(!slot.consumed){if(auto ready=ProfileIo::take(slot.job)){
++          slot.consumed=true;passiveSkip_=true;
++          if(!*ready){slot.error=ready->error();}
++          else if(!slot.error&&state_->profileIo->lease()->sourceRevision()==ready->value().revision){
++            profilePermit_=true;profileCommand_=slot.command;profileRevision_=ready->value().revision;
++            try{slot.commit(ready->value());}catch(...){publicationMemoryFailure();}
++            profilePermit_=false;profileCommand_=0;profileRevision_=0;
++          }else if(!slot.error){slot.error=storage::Error{storage::ErrorCode::Conflict,"Profile source permit changed"};}
++          ProfileIo::acknowledge(slot.job);
++        }}
++        if(ProfileIo::released(slot.job)){
++          if(!slot.consumed&&!slot.error){slot.error=ProfileIo::failure(slot.job);}
++          passiveSkip_=true;auto done=std::move(slot.failed);auto error=std::move(slot.error);state_->profileIo->release(slot.job);slot={};
++          // The worker has released the source gate. Failure notifications and
++          // any reentrant continuation destruction run only after that point.
++          if(error){done(std::move(*error));}
++        }
++      }}catch(...){
++        profilePermit_=false;profileCommand_=0;profileRevision_=0;
++        for(auto& slot:ioSlots_){if(slot.job){ProfileIo::acknowledge(slot.job);ProfileIo::revoke(slot.job);}}
++        publicationMemoryFailure();
++      }
++    }
++    bool deferProfile(Command command,bool reserve,
++        std::chrono::steady_clock::time_point deadline,std::move_only_function<bool()> current,
++        std::move_only_function<void(const ProfileIo::Data&)> commit,
++        std::move_only_function<void(storage::Error)> failed,bool allowExpired=false,
++        std::move_only_function<void()> expired={},std::move_only_function<void()> cancelled={}){
++      if(!state_->profileIo){return false;}
++      IoSlot* slot=nullptr;for(auto& item:ioSlots_){if(!item.job){slot=&item;break;}}if(!slot){return false;}
++      auto versions=options_.valueVersions;auto lease=state_->profileIo->lease();
++      auto submitted=state_->profileIo->submit([versions,lease,command,reserve,deadline,allowExpired](std::stop_token stop)->ProfileIo::Result{
++        const auto cancelled=[&]{return stop.stop_requested()||(!allowExpired&&std::chrono::steady_clock::now()>=deadline);};
++        if(cancelled()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO expired"});}
++        auto valid=versions->validate();if(!valid){return std::unexpected(valid.error());}
++        ProfileIo::Data result;
++        const auto rating=[&]()->std::expected<void,storage::Error>{
++          if(!command.ratingHash){return {};}
++          auto fresh=storage::readDistributedRating(*lease,*command.ratingHash);if(!fresh){return std::unexpected(fresh.error());}
++          if(fresh->sourceRevision!=command.ratingRevision||(command.ratingSubject&&(
++              fresh->local.attributesRevision!=command.ratingSubject->local.attributesRevision||fresh->key!=command.ratingSubject->key))){
++            return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Saved rating source changed"});}
++          result.rating=std::make_shared<const storage::DistributedRatingSnapshot>(std::move(*fresh));return {};
++        };
++        valid=rating();if(!valid){return std::unexpected(valid.error());}
++        if(reserve){auto next=versions->next(QDateTime::currentMSecsSinceEpoch());if(!next){return std::unexpected(next.error());}result.version=*next;}
++        if(cancelled()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile IO expired"});}
++        return result;
++      });
++      if(!submitted){return false;}
++      slot->job=std::move(*submitted);slot->command=command.id;slot->deadline=allowExpired?std::chrono::steady_clock::time_point::max():deadline;slot->current=std::move(current);slot->commit=std::move(commit);slot->failed=std::move(failed);slot->expired=std::move(expired);slot->cancelled=std::move(cancelled);armProfileDeadline();return true;
++    }
++    bool normalProfileRequest(std::move_only_function<void()> resume){try{
++      auto held=holdProfileFrame();if(!held){return false;}
++      Command command;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(30);
++      return deferProfile(command,false,deadline,[this]{std::lock_guard lock(state_->mutex);return !state_->stop;},
++        [resume=std::move(resume),held=std::move(held)](const auto&)mutable{resume();},[](storage::Error){});
++    }catch(...){publicationMemoryFailure();return false;}}
+--- a/preview/native/app/azureus_rating_consumer.inc
++++ b/preview/native/app/azureus_rating_consumer.inc
+@@ -7,18 +7,14 @@
+       std::chrono::steady_clock::time_point deadline;
+       azureus::Ticket ticket;
+       std::size_t slices=0;
++      std::deque<std::pair<azureus::FindValueOutcome,std::shared_ptr<void>>> pending;
++      bool profileIo=false;
+       bool finished=false,cancelled=false;
+     };
+     std::shared_ptr<RatingRead> ratingRead_;
+     std::expected<void,storage::Error> validateRating(const Command& command){
+       if(!ratingLease_||!command.ratingHash||!command.ratingSubject||options_.network!=0){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"No bound rating Public DDB context"});}
+-      auto valid=options_.valueVersions->validate();if(!valid){return valid;}
+-      auto current=storage::readDistributedRating(*ratingLease_,*command.ratingHash);
+-      if(!current){return std::unexpected(current.error());}
+-      if(current->sourceRevision!=command.ratingRevision||current->sourceRevision!=command.ratingSubject->sourceRevision
+-          ||current->local.attributesRevision!=command.ratingSubject->local.attributesRevision||current->key!=command.ratingSubject->key){
+-        return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Saved rating identity, permissions or attributes changed"});
+-      }
++      if(!profilePermit_||profileCommand_!=command.id){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"No current rating source permit"});}
+       {std::lock_guard lock(state_->mutex);if(state_->stop){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Rating owner is closing"});}}
+       return {};
+     }
+@@ -31,17 +27,31 @@
+       state_->value.ratingReadSnapshot=std::move(withdrawn);state_->advance();
+     }
+     void refreshRatingObservation(){
++      if(profilePermit_||drainingIo_){return;}if(passiveSkip_){passiveSkip_=false;return;}
+       bool current=false;{std::lock_guard lock(state_->mutex);current=state_->value.ratingReadSnapshot&&state_->value.ratingReadSnapshot->current;}
+-      if(current&&ratingRead_&&ratingRead_->finished&&!validateRating(ratingRead_->command)){withdrawRatings();}
++      if(!current||!ratingRead_||!ratingRead_->finished||passiveIo_){return;}passiveIo_=true;auto value=ratingRead_;
++      const auto fresh=[this,value]{return ratingRead_==value&&value->finished;};
++      if(!deferProfile(value->command,false,std::chrono::steady_clock::time_point::max(),fresh,
++          [this](const auto& data){passiveIo_=false;std::lock_guard lock(state_->mutex);state_->ratingRevision=data.revision;},
++          [this](storage::Error){passiveIo_=false;withdrawRatings();},true)){passiveIo_=false;withdrawRatings();}
+     }
+     void beginRating(Command command){
+       if(!options_.valueVersions||options_.network!=0||!command.ratingHash||!isOwned(command.peer)){
+         failCommand(command,AzureusServiceError::Invalid);return;
+       }
+-      if(!ratingLease_){auto lease=options_.valueVersions->retainProfile();if(!lease){failCommand(command,AzureusServiceError::Profile);return;}ratingLease_=std::move(*lease);}
+-      auto current=storage::readDistributedRating(*ratingLease_,*command.ratingHash);
+-      if(!current||current->sourceRevision!=command.ratingRevision){withdrawRatings();failCommand(command,AzureusServiceError::Profile);return;}
+-      command.ratingSubject=std::make_shared<const storage::DistributedRatingSnapshot>(std::move(*current));
++      ratingLease_=state_->profileIo->lease();
++      auto settled=std::make_shared<bool>(false);
++      auto current=[this,command,settled]{std::lock_guard lock(state_->mutex);return !*settled&&!state_->stop&&isOwned(command.peer);};
++      if(!deferProfile(command,false,command.deadline,std::move(current),
++          [this,command,settled](const ProfileIo::Data& data)mutable{
++            if(std::exchange(*settled,true)){return;}
++            if(!data.rating){failCommand(command,AzureusServiceError::Profile);return;}
++            command.ratingSubject=data.rating;beginRatingPrepared(std::move(command));
++          },[this,command,settled](storage::Error){if(std::exchange(*settled,true)){return;}withdrawRatings();failCommand(command,AzureusServiceError::Profile);},false,
++          [this,command,settled]{if(!std::exchange(*settled,true)){reply(command,azureus::Failure::Timeout,true);}},
++          [this,command,settled]{if(!std::exchange(*settled,true)){reply(command,azureus::Failure::Cancelled,true);}})){failCommand(command,AzureusServiceError::Capacity);}
++    }
++    void beginRatingPrepared(Command command){
+       const auto& source=*command.ratingSubject;
+       command.applicationKey.assign(reinterpret_cast<const char*>(source.key.data()),source.key.size());
+       const auto digest=QCryptographicHash::hash(QByteArray(command.applicationKey.data(),static_cast<qsizetype>(command.applicationKey.size())),QCryptographicHash::Sha1);
+@@ -54,14 +64,14 @@
+         command.payload=std::move(*encoded);command.publicationFlags=AzureusPublicationFlags::Anonymous;beginPublish(command);return;
+       }
+       if(ratingRead_&&!ratingRead_->finished){failCommand(command,AzureusServiceError::Capacity);return;}
+-      auto value=std::make_shared<RatingRead>();value->command=command;value->deadline=std::chrono::steady_clock::now()+command.timeout;
++      auto value=std::make_shared<RatingRead>();value->command=command;value->deadline=command.deadline;
+       value->snapshot.request=command.id;value->snapshot.hash=command.ratingHash;value->snapshot.sourceRevision=command.ratingRevision;value->snapshot.key=command.node;ratingRead_=value;
+       if(!validateRatingRead(value)){return;}
+       auto snapshot=std::make_shared<const AzureusRatingReadSnapshot>(value->snapshot);
+       {std::lock_guard lock(state_->mutex);state_->value.ratingReadSnapshot=std::move(snapshot);state_->advance();}
+       const auto remaining=std::chrono::duration_cast<std::chrono::nanoseconds>(value->deadline-std::chrono::steady_clock::now());
+       auto submitted=actor_.findValue(command.peer,options_.version,command.node,0,64,this,[this,value](azureus::FindValueOutcome outcome){
+-        try{ratingReply(value,std::move(outcome));}catch(...){publicationMemoryFailure();}
++        try{queueRatingReply(value,std::move(outcome));}catch(...){publicationMemoryFailure();}
+       },remaining);
+       if(!submitted){finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Transport,submitted.error());return;}value->ticket=*submitted;publish();
+     }
+@@ -101,7 +111,26 @@
+       std::lock_guard lock(state_->mutex);
+       if(state_->stop){snapshot->state=AzureusRatingReadState::Closed;snapshot->error=AzureusServiceError::Closed;snapshot->transportFailure=azureus::Failure::Closed;snapshot->current=false;snapshot->ratings=plugins::rating::RatingResults{};snapshot->localFallback=false;}
+       else if(result==AzureusRatingReadState::Complete&&std::chrono::steady_clock::now()>=value->deadline){snapshot->state=AzureusRatingReadState::TimedOut;snapshot->error=AzureusServiceError::Transport;snapshot->transportFailure=azureus::Failure::Timeout;}
++      if(snapshot->current){state_->ratingRevision=profileRevision_;}
+       releaseLocked();state_->value.lastResult=AzureusServiceResult{value->command.id,0,AzureusServiceCommand::ReadRatings,true,snapshot->error,snapshot->transportFailure};state_->value.ratingReadSnapshot=std::move(snapshot);state_->advance();
++    }
++    void queueRatingReply(const std::shared_ptr<RatingRead>& value,azureus::FindValueOutcome outcome){
++      if(ratingRead_!=value||value->finished){return;}
++      auto held=holdProfileFrame();if(!held||value->pending.size()+value->slices>=64){finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Capacity);return;}
++      value->pending.emplace_back(std::move(outcome),std::move(held));pumpRatingReplies(value);
++    }
++    void pumpRatingReplies(const std::shared_ptr<RatingRead>& value){
++      if(ratingRead_!=value||value->finished||value->profileIo||value->pending.empty()){return;}
++      value->profileIo=true;auto batch=std::move(value->pending);value->pending.clear();
++      auto current=[this,value]{bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}return !stop&&ratingRead_==value&&!value->finished&&!value->cancelled;};
++      if(!deferProfile(value->command,false,value->deadline,std::move(current),
++          [this,value,batch=std::move(batch)](const auto&)mutable{
++            for(auto& item:batch){if(value->finished){break;}ratingReply(value,std::move(item.first));}
++            value->profileIo=false;pumpRatingReplies(value);
++          },[this,value](storage::Error error){
++            value->profileIo=false;if(value->finished){return;}value->snapshot.profileFailure=std::move(error);
++            finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Profile);
++          },true)){value->profileIo=false;finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Capacity);}
+     }
+     void ratingReply(const std::shared_ptr<RatingRead>& value,azureus::FindValueOutcome outcome){
+       if(!validateRatingRead(value)){return;}
+--- a/preview/native/app/owned_azureus_service.cpp
++++ b/preview/native/app/owned_azureus_service.cpp
+@@ -1,4 +1,6 @@
+ #include "owned_azureus_service.hpp"
++#include "azureus_profile_io.hpp"
++#include <QScopeGuard>
+ #include <QAbstractEventDispatcher>
+ #include <QCoreApplication>
+ #include <QCryptographicHash>
+@@ -8,6 +10,7 @@
+ #include <algorithm>
+ #include <array>
+ #include <condition_variable>
++#include <deque>
+ #include <limits>
+ #include <mutex>
+ #include <new>
+@@ -25,6 +28,7 @@
+   azureus::find::nodes::NodeId node{};
+   std::int32_t flags=0,maximumValues=0;
+   std::chrono::nanoseconds timeout=std::chrono::seconds(2);
++  std::chrono::steady_clock::time_point deadline{};
+   std::string applicationKey,payload;
+   AzureusPublicationFlags publicationFlags=AzureusPublicationFlags::Normal;
+   std::optional<core::TorrentHash> ratingHash;
+@@ -69,28 +73,37 @@
+     azureus::Peer endpoint;
+     AzureusServiceObservation value;
+     bool ready=false,stop=false;
++    std::shared_ptr<detail::AzureusProfileIo> profileIo;
++    std::uint64_t ratingRevision=0;
+     std::uint64_t nextRequest=0;
+     void advance(){if(value.sequence!=std::numeric_limits<std::uint64_t>::max()){++value.sequence;}else{value.current=false;value.error=AzureusServiceError::Capacity;}}
+   };
+   class Owner final:public QObject {
+   public:
+     Owner(std::shared_ptr<State> state,const AzureusServiceOptions& options,QEventLoop& loop)
+-        :state_(std::move(state)),options_(options),loop_(loop),actor_(configuration(options)){}
++        :state_(std::move(state)),options_(options),loop_(loop),actor_(configuration(options)){
++      ioDeadline_.setSingleShot(true);QObject::connect(&ioDeadline_,&QChronoTimer::timeout,this,[this]{drainProfileIo();});
++    }
++    bool event(QEvent* value)override{
++      if(state_->profileIo&&value->type()==ProfileIo::wakeEvent()){if(state_->profileIo){state_->profileIo->drainWake();}drainProfileIo();return true;}
++      return QObject::event(value);
++    }
+     std::expected<void,azureus::Failure> start(){
++      if(state_->profileIo){state_->profileIo->bind(this);}
+       auto started=actor_.start(options_.bindAddress);if(!started){return started;}initializeRouter();
+       if(options_.valueVersions&&!initializeLocalDatabase()){return std::unexpected(azureus::Failure::State);}
+       if(options_.serveValues){
+         if(!router_||!localDatabase_){return std::unexpected(azureus::Failure::State);}
+-        const auto bound=actor_.serveDatabase(router_,localDatabase_,[this]{
++        profilePermit_=true;const auto bound=actor_.serveDatabase(router_,localDatabase_,[this]{
+           {std::lock_guard lock(state_->mutex);if(state_->stop){return false;}}
+-          if(!router_){return false;}const auto valid=options_.valueVersions->validate();
+-          std::lock_guard lock(state_->mutex);return bool(valid)&&!state_->stop;
+-        });if(!bound){return bound;}
++          return bool(router_)&&profilePermit_;
++        },[this](std::move_only_function<void()> resume){return normalProfileRequest(std::move(resume));});profilePermit_=false;if(!bound){return bound;}
+       }return started;
+     }
+     azureus::Peer endpoint()const{return actor_.endpoint();}
+-    void idle(){bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}if(stop){loop_.quit();return;}publish();}
++    void idle(){drainProfileIo();bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}if(stop){loop_.quit();return;}publish();}
+     void command(Command value){
++      if(value.deadline==std::chrono::steady_clock::time_point{}){value.deadline=std::chrono::steady_clock::now()+value.timeout;}
+       {std::lock_guard lock(state_->mutex);if(state_->stop){releaseLocked();state_->advance();return;}}
+       try{
+         if(value.kind==AzureusServiceCommand::AllowPeer){auto allowed=actor_.allowPeer(value.peer);if(allowed){rememberOwned(value.peer);routerKnown(value.peer);}complete(value,allowed);return;}
+@@ -99,12 +112,17 @@
+         if(value.kind==AzureusServiceCommand::PublishRating||value.kind==AzureusServiceCommand::ReadRatings){beginRating(std::move(value));return;}
+         if(value.kind==AzureusServiceCommand::Cancel){
+           if(ratingRead_&&ratingRead_->command.id==value.target&&!ratingRead_->finished){
+-            ratingRead_->cancelled=true;const bool cancelled=actor_.cancel(ratingRead_->ticket);
++            ratingRead_->cancelled=true;const bool cancelled=actor_.cancel(ratingRead_->ticket)||bool(state_->profileIo);finishRatingRead(ratingRead_,AzureusRatingReadState::Cancelled,AzureusServiceError::Transport,azureus::Failure::Cancelled);drainProfileIo();
+             complete(value,cancelled?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));return;
+           }
+           if(publishing_&&publishing_->command.id==value.target&&!publishing_->finished){
+-            publishing_->cancelled=true;const bool cancelled=actor_.cancel(publishing_->ticket);
++            publishing_->cancelled=true;const bool cancelled=actor_.cancel(publishing_->ticket)||bool(state_->profileIo);finishPublish(publishing_,AzureusPublishState::Cancelled,AzureusServiceError::Transport,azureus::Failure::Cancelled);drainProfileIo();
+             complete(value,cancelled?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));return;
++          }
++          for(auto& pending:ioSlots_){
++            if(pending.job&&pending.command==value.target&&!pending.consumed&&!pending.expiryNotified&&pending.cancelled){
++              ProfileIo::revoke(pending.job);auto cancelled=std::move(pending.cancelled);cancelled();drainProfileIo();complete(value,{});return;
++            }
+           }
+           if(lookupCommand_&&lookupCommand_->id==value.target&&!lookupResultPublished_){
+             const auto cancelled=lookup_->cancel(lookupNow());pumpLookup();
+@@ -125,7 +143,9 @@
+       }catch(...){for(auto& slot:active_){if(slot.id==value.id){slot.id=0;}}failCommand(value,AzureusServiceError::Memory);{std::lock_guard lock(state_->mutex);state_->stop=true;state_->value.current=false;state_->value.error=AzureusServiceError::Memory;state_->value.state=AzureusServiceState::Closing;state_->advance();}loop_.quit();}
+     }
+     void shutdown()noexcept{
++      ioDeadline_.stop();
+       bool closed=true;try{actor_.close();}catch(...){closed=false;}
++      if(state_->profileIo){state_->profileIo->requestStop();}
+       if(closed){
+         if(publishing_&&!publishing_->finished){try{finishPublish(publishing_,AzureusPublishState::Closed,AzureusServiceError::Closed,azureus::Failure::Closed);}catch(...){publicationMemoryFailure();}}
+         if(ratingRead_&&!ratingRead_->finished){try{finishRatingRead(ratingRead_,AzureusRatingReadState::Closed,AzureusServiceError::Closed,azureus::Failure::Closed);}catch(...){publicationMemoryFailure();}}
+@@ -146,6 +166,7 @@
+     }
+   private:
+     struct Active {std::uint64_t id=0;azureus::Ticket ticket;};
++    #include "azureus_profile_io_owner.inc"
+     #include "azureus_local_publish.inc"
+     #include "azureus_rating_consumer.inc"
+ 
+@@ -407,7 +428,7 @@
+   protected:
+     void run()override{
+       try{
+-        QEventLoop loop;Owner owner(state_,options_,loop);struct Unbind{std::shared_ptr<State> state;~Unbind(){std::lock_guard lock(state->mutex);state->owner=nullptr;state->dispatcher=nullptr;}} unbind{state_};auto* dispatcher=QAbstractEventDispatcher::instance();const auto started=owner.start();
++        QEventLoop loop;Owner owner(state_,options_,loop);struct Unbind{std::shared_ptr<State> state;~Unbind(){if(state->profileIo){state->profileIo->unbind();}std::lock_guard lock(state->mutex);state->owner=nullptr;state->dispatcher=nullptr;}} unbind{state_};auto* dispatcher=QAbstractEventDispatcher::instance();const auto started=owner.start();
+         if(!started||!dispatcher){failure(AzureusServiceError::Start,started?std::optional<azureus::Failure>{}:started.error());return;}
+         const auto connection=QObject::connect(dispatcher,&QAbstractEventDispatcher::aboutToBlock,&owner,[&owner]{owner.idle();},Qt::DirectConnection);
+         {std::lock_guard lock(state_->mutex);state_->owner=&owner;state_->dispatcher=dispatcher;state_->endpoint=owner.endpoint();state_->value.state=AzureusServiceState::Running;state_->advance();}
+@@ -422,7 +443,9 @@
+     }
+     std::shared_ptr<State> state_;AzureusServiceOptions options_;
+   };
+-  explicit Impl(AzureusServiceOptions options):options(std::move(options)),thread(state,this->options){}
++  explicit Impl(AzureusServiceOptions options):options(std::move(options)),thread(state,this->options){
++    if(this->options.valueVersions){state->profileIo=std::make_shared<detail::AzureusProfileIo>(this->options.valueVersions->profileOwnership());}
++  }
+   std::shared_ptr<State> state=std::make_shared<State>();
+   AzureusServiceOptions options;
+   Thread thread;
+@@ -431,10 +454,11 @@
+ OwnedAzureusService::OwnedAzureusService(std::unique_ptr<Impl> impl):impl_(std::move(impl)){}
+ std::expected<std::unique_ptr<OwnedAzureusService>,AzureusServiceError> OwnedAzureusService::create(AzureusServiceOptions options){
+   if(!options.enabled){return std::unexpected(AzureusServiceError::Disabled);}if(!validOptions(options)){return std::unexpected(AzureusServiceError::Invalid);}
+-  if(options.valueVersions&&!options.valueVersions->validate()){return std::unexpected(AzureusServiceError::Profile);}
+   if(!QCoreApplication::instance()||QCoreApplication::closingDown()){return std::unexpected(AzureusServiceError::NoApplication);}
+   try{
+-    auto service=std::unique_ptr<OwnedAzureusService>(new OwnedAzureusService(std::make_unique<Impl>(std::move(options))));service->impl_->thread.start();
++    auto service=std::unique_ptr<OwnedAzureusService>(new OwnedAzureusService(std::make_unique<Impl>(std::move(options))));
++    if(service->impl_->state->profileIo&&!service->impl_->state->profileIo->initialize(service->impl_->options.valueVersions)){return std::unexpected(AzureusServiceError::Profile);}
++    service->impl_->thread.start();
+     auto& state=*service->impl_->state;std::unique_lock lock(state.mutex);
+     const bool ready=state.readyCondition.wait_for(lock,std::chrono::seconds(5),[&]{return state.ready;});
+     const auto error=!ready?std::optional{AzureusServiceError::Start}:state.value.state==AzureusServiceState::Failed?state.value.error:std::nullopt;lock.unlock();
+@@ -443,7 +467,14 @@
+ }
+ OwnedAzureusService::~OwnedAzureusService(){(void)close();}
+ azureus::Peer OwnedAzureusService::endpoint()const{std::lock_guard lock(impl_->state->mutex);return impl_->state->endpoint;}
+-AzureusServiceObservation OwnedAzureusService::observation()const{std::lock_guard lock(impl_->state->mutex);return impl_->state->value;}
++AzureusServiceObservation OwnedAzureusService::observation()const{
++  std::lock_guard lock(impl_->state->mutex);auto value=impl_->state->value;
++  if(impl_->state->profileIo){const auto facts=impl_->state->profileIo->facts();value.profileIoPending=facts.pending;value.profileIoRunning=facts.running;value.profileIoReady=facts.ready;value.profileIoHighWater=facts.highWater;}
++  if(value.ratingReadSnapshot&&value.ratingReadSnapshot->current&&impl_->state->profileIo
++      &&(impl_->state->stop||impl_->state->ratingRevision!=impl_->state->profileIo->lease()->sourceRevision())){
++    auto withdrawn=std::make_shared<AzureusRatingReadSnapshot>(*value.ratingReadSnapshot);withdrawn->current=false;withdrawn->ratings=plugins::rating::RatingResults{};withdrawn->localFallback=false;withdrawn->state=AzureusRatingReadState::Failed;withdrawn->error=AzureusServiceError::Profile;value.ratingReadSnapshot=std::move(withdrawn);
++  }return value;
++}
+ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::submit(Command value){
+   auto& state=*impl_->state;std::lock_guard lock(state.mutex);
+   if(state.stop||state.value.state!=AzureusServiceState::Running||!state.owner){return std::unexpected(AzureusServiceError::Closed);}
+@@ -475,7 +506,9 @@
+ std::expected<void,AzureusServiceError> OwnedAzureusService::close(){
+   if(QThread::currentThread()==&impl_->thread){return std::unexpected(AzureusServiceError::Thread);}std::lock_guard lifecycle(impl_->closeMutex);auto& state=*impl_->state;
+   {std::lock_guard lock(state.mutex);if(state.value.joined){return {}; }state.stop=true;state.value.current=false;if(state.value.state==AzureusServiceState::Running){state.value.state=AzureusServiceState::Closing;state.advance();}if(state.dispatcher){state.dispatcher->wakeUp();}}
++  if(state.profileIo){state.profileIo->requestStop();}
+   if(!impl_->thread.wait()){return std::unexpected(AzureusServiceError::Thread);}
++  if(state.profileIo){state.profileIo->join();}
+   std::lock_guard lock(state.mutex);state.value.joined=true;state.advance();return {};
+ }
+ } // namespace biglybtc::app
+--- a/preview/native/app/owned_azureus_service.hpp
++++ b/preview/native/app/owned_azureus_service.hpp
+@@ -94,6 +94,8 @@
+   std::shared_ptr<const AzureusPublishSnapshot> publishSnapshot;
+   std::shared_ptr<const services::azureus_db_runtime::Snapshot> databaseSnapshot;
+   std::shared_ptr<const AzureusRatingReadSnapshot> ratingReadSnapshot;
++  // Passive bounded IO progress only; no source/packet permission is exposed.
++  std::size_t profileIoPending=0,profileIoRunning=0,profileIoReady=0,profileIoHighWater=0;
+ };
+ // Explicit Host-owned development service. create(enabled=false) returns before
+ // any Qt thread/socket exists. A dedicated Qt event loop exclusively constructs,
+--- a/preview/native/services/azureus_udp/owned_transport.cpp
++++ b/preview/native/services/azureus_udp/owned_transport.cpp
+@@ -293,7 +293,8 @@
+   });
+ }
+ std::expected<void,Failure> OwnedPingTransport::serveDatabase(std::shared_ptr<azureus_router::RouterOwner> router,
+-    std::shared_ptr<database::Owner> database,std::function<bool()> current){
++    std::shared_ptr<database::Owner> database,std::function<bool()> current,
++    std::function<bool(std::move_only_function<void()>)> preflight){
+   if(!owner()){return std::unexpected(Failure::Thread);}
+   if(state_!=State::Bound||normalRouter_||config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply
+       ||!router||!database||!current){return std::unexpected(Failure::State);}
+@@ -304,7 +305,7 @@
+     if(!current()){return std::unexpected(Failure::Authority);}
+     auto authority=auth::Authority::create(true);if(!authority){return std::unexpected(Failure::Authority);}
+     auto admission=std::make_unique<policy::Admission>();normalContacts_.reserve(config_.maximumPeers);
+-    normalRouter_=std::move(router);normalDatabase_=std::move(database);normalCurrent_=std::move(current);
++    normalRouter_=std::move(router);normalDatabase_=std::move(database);normalCurrent_=std::move(current);normalPreflight_=std::move(preflight);
+     localId_=local->id;authority_=std::move(*authority);admission_=std::move(admission);return {};
+   }catch(...){return std::unexpected(Failure::Authority);}
+ }
+@@ -466,7 +467,7 @@
+ }
+ void OwnedPingTransport::close() {
+   if (!owner() || state_==State::Closed) { return; }
+-  normalCurrent_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
++  normalCurrent_={};normalPreflight_={};normalRouter_.reset();normalDatabase_.reset();normalContacts_.clear();
+   if(database_){database_->close();database_.reset();}
+   state_=State::Closed;socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
+   while (!pending_.empty()) { finish(pending_.begin()->first,std::unexpected(Failure::Closed)); }
+@@ -553,6 +554,13 @@
+   receipt.sent=true;receipt.status=receipt.addressMismatch?ServiceStatus::AddressRejected:ServiceStatus::Replied;++statistics_.sent;
+ }
+ void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,std::int64_t receivedAt) {
++  if(normalRouter_&&normalPreflight_&&!normalResuming_){
++    auto resumed=[this,peer,request=std::move(request),receivedAt]()mutable{
++      if(state_!=State::Bound||!allowed(peer)){return;}normalResuming_=true;
++      const auto reset=qScopeGuard([&]{normalResuming_=false;});answerService(peer,std::move(request),receivedAt);
++    };
++    if(!normalPreflight_(std::move(resumed))){++statistics_.serviceCapacityDrops;}return;
++  }
+   const auto* service=config_.generatedStoreService?&*config_.generatedStoreService:nullptr;
+   if(!service&&!normalCurrent()){++statistics_.authorityErrors;return;}
+   if (service&&serviceReceipts_.size()>=service->maximumReceipts) { ++statistics_.serviceCapacityDrops;return; }
+@@ -674,6 +682,13 @@
+   const auto value=db->snapshot();if(!value){return std::unexpected(Failure::State);}return *value;
+ }
+ void OwnedPingTransport::answerDatabase(const Peer& peer,const lookup::Decoded& request,std::int64_t receivedAt){
++  if(normalRouter_&&normalPreflight_&&!normalResuming_){
++    auto resumed=[this,peer,request,receivedAt]{
++      if(state_!=State::Bound||!allowed(peer)){return;}normalResuming_=true;
++      const auto reset=qScopeGuard([&]{normalResuming_=false;});answerDatabase(peer,request,receivedAt);
++    };
++    if(!normalPreflight_(std::move(resumed))){++statistics_.serviceCapacityDrops;}return;
++  }
+   auto* const db=activeDatabase();if(!db||!nodeCache_||(!config_.generatedStoreService&&!normalCurrent())){return;}
+   const auto& incoming=request.header().fields();
+   const auto header=[&](std::int32_t action){packet::udp::EncodeFields h;h.kind=packet::udp::Kind::Reply;h.action=action;
+--- a/preview/native/services/azureus_udp/owned_transport.hpp
++++ b/preview/native/services/azureus_udp/owned_transport.hpp
+@@ -158,7 +158,8 @@
+   // seeded, token or value facts. Shared ownership lasts through close/join.
+   // current checks the owner's held profile and stop state before each effect.
+   std::expected<void,Failure> serveDatabase(std::shared_ptr<azureus_router::RouterOwner>,
+-      std::shared_ptr<database::Owner>,std::function<bool()> current);
++      std::shared_ptr<database::Owner>,std::function<bool()> current,
++      std::function<bool(std::move_only_function<void()>)> preflight={});
+   std::expected<GeneratedServiceState,Failure> generatedServiceState() const;
+   std::expected<database::Snapshot,Failure> databaseState() const;
+   // Owner-only pull. Moved receipts own the request referenced by policy indices.
+@@ -238,6 +239,8 @@
+   std::shared_ptr<azureus_router::RouterOwner> normalRouter_;
+   std::shared_ptr<database::Owner> normalDatabase_;
+   std::function<bool()> normalCurrent_;
++  std::function<bool(std::move_only_function<void()>)> normalPreflight_;
++  bool normalResuming_=false;
+   std::vector<find::nodes::Contact> normalContacts_; // Only actually admitted request sources.
+   Config config_;
+   std::unique_ptr<find::nodes::NodeCache> nodeCache_;
+--- /dev/null
++++ b/preview/native/tests/azureus_profile_io_tests.cpp
+@@ -0,0 +1,143 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "owned_azureus_service.hpp"
++#include "azureus_profile_io.hpp"
++#include <QDateTime>
++#include <QtTest>
++#include <QTemporaryDir>
++#include <QFile>
++#include <QScopeGuard>
++#include <QElapsedTimer>
++#include <QDir>
++#include <QCryptographicHash>
++#include <algorithm>
++#include <vector>
++#include <future>
++#include <thread>
++
++namespace {
++using namespace biglybtc;
++using namespace std::chrono_literals;
++using Io=app::detail::AzureusProfileIo;
++namespace udp=services::azureus_udp;
++bool terminal(const app::OwnedAzureusService& owner,std::uint64_t request){const auto v=owner.observation();return v.lastResult&&v.lastResult->request==request&&v.lastResult->terminal;}
++bool successful(const app::OwnedAzureusService& owner,std::uint64_t request){const auto v=owner.observation();return v.lastResult&&v.lastResult->request==request&&!v.lastResult->error&&!v.lastResult->transportFailure&&v.lastResult->terminal;}
++bool phase(const Io::Handle& job,Io::Phase expected){std::lock_guard lock(job->mutex);return job->phase==expected;}
++QByteArray read(const QString& path){QFile file(path);if(!file.open(QIODevice::ReadOnly)){throw std::runtime_error("Cannot read owned IO fixture");}return file.readAll();}
++void write(const QString& path,const QByteArray& bytes){QFile file(path);if(!file.open(QIODevice::WriteOnly|QIODevice::Truncate)||file.write(bytes)!=bytes.size()||!file.flush()){throw std::runtime_error("Cannot write owned IO fixture");}}
++struct Normal {
++  QTemporaryDir root;
++  std::optional<storage::ProfileLease> lease;
++  std::shared_ptr<storage::AzureusValueVersions> versions;
++  std::unique_ptr<app::OwnedAzureusService> owner;
++  explicit Normal(const char* address,std::int32_t network=4){
++    if(!root.isValid()){throw std::runtime_error("Profile fixture");}
++    auto acquired=storage::ProfileLease::acquire(root.path().toStdString());if(!acquired){throw std::runtime_error("Profile lock fixture");}lease.emplace(std::move(*acquired));
++    auto source=storage::ConfigFile::createMissing(*lease,"biglybt.config",std::string("d6:future1048576:")+std::string(1048576,'x')+"e");if(!source){throw std::runtime_error("Config fixture");}
++    auto opened=storage::AzureusValueVersions::open(*lease,network);if(!opened){throw std::runtime_error("Version fixture");}versions=*opened;
++    app::AzureusServiceOptions options;options.network=network;options.enabled=true;options.servePings=true;options.serveValues=true;options.valueVersions=versions;options.bindAddress=QHostAddress(QString::fromLatin1(address));
++    auto started=app::OwnedAzureusService::create(options);if(!started){throw std::runtime_error("Normal IO service fixture");}owner=std::move(*started);
++  }
++};
++std::string encoded(std::string_view value){return std::to_string(value.size())+':'+std::string(value);}
++std::string dictionary(std::initializer_list<std::pair<std::string,std::string>> entries){
++  std::vector<std::pair<std::string,std::string>> values(entries);std::ranges::sort(values);std::string result="d";for(const auto& [key,value]:values){result+=encoded(key)+value;}return result+'e';
++}
++storage::DistributedRatingSnapshot installRating(Normal& normal){
++  if(!QDir(normal.root.path()).mkdir("active")){throw std::runtime_error("Cannot create owned rating state");}
++  const auto info=dictionary({{"length","i3e"},{"name",encoded("io-rating.bin")},{"piece length","i16384e"},{"pieces",encoded(std::string(20,'x'))}});
++  const auto digest=QCryptographicHash::hash(QByteArray(info.data(),static_cast<qsizetype>(info.size())),QCryptographicHash::Sha1);
++  auto hash=core::TorrentHash::parse(std::string_view(digest.constData(),static_cast<std::size_t>(digest.size())));if(!hash){throw std::runtime_error("Cannot derive owned rating identity");}
++  const auto bytes=hash->bytes();
++  const auto inventory=dictionary({{"downloads","l"+dictionary({{"state","i70e"},{"save_dir",encoded("/owned/io-rating-payload-never-opened")},{"torrent",encoded("owned-rating.torrent")},{"torrent_hash",encoded(std::string(reinterpret_cast<const char*>(bytes.data()),bytes.size()))}})+"e"}});
++  const auto attributes=dictionary({{"Plugin.azrating.comment",encoded("owned IO fallback")},{"Plugin.azrating.rating",encoded("4")},{"flags","i0e"},{"networks","l"+encoded("Public")+"e"}});
++  const auto state=dictionary({{"attributes",attributes},{"info",info},{"resume",encoded("retained-resume")}});
++  write(normal.root.path()+"/downloads.config",QByteArray(inventory.data(),static_cast<qsizetype>(inventory.size())));
++  write(normal.root.path()+"/active/"+QString::fromStdString(hash->hex())+".dat",QByteArray(state.data(),static_cast<qsizetype>(state.size())));
++  auto result=storage::readDistributedRating(*normal.lease,*hash);if(!result){throw std::runtime_error(result.error().message);}return std::move(*result);
++}
++int observerCalls=0;
++void countedObserver(storage::SaveStage){++observerCalls;}
++struct HeldIo {
++  Io io;
++  Io::Handle job;
++  std::thread::id worker;
++  std::size_t sourceBytes=0;
++  explicit HeldIo(const std::shared_ptr<storage::AzureusValueVersions>& versions):io(versions->profileOwnership()){
++    auto started=io.submit([this,versions](std::stop_token stop)->Io::Result{
++      worker=std::this_thread::get_id();if(stop.stop_requested()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Cancelled owned IO"});}
++      auto current=versions->validate();if(!current){return std::unexpected(current.error());}
++      auto source=storage::ConfigFile::load(*versions->profileOwnership(),"biglybt.config");if(!source){return std::unexpected(source.error());}sourceBytes=source->document().originalBytes().size();
++      auto next=versions->next(QDateTime::currentMSecsSinceEpoch());if(!next){return std::unexpected(next.error());}
++      Io::Data data;data.version=*next;return data;
++    });if(!started){throw std::runtime_error("Cannot submit owned IO hold");}job=*started;
++  }
++  // Deliberately hold AFTER an actual source read and durable reservation,
++  // before one-shot commit. This is not a claim of a blocked kernel syscall.
++  void release(){if(!job){return;}if(auto ready=Io::take(job)){Io::acknowledge(job);}else{Io::revoke(job);}}
++  ~HeldIo(){release();io.requestStop();io.join();}
++};
++}
++
++class AzureusProfileIoTests final:public QObject {
++  Q_OBJECT
++private slots:
++  void heldDiskHandoffDoesNotBlockRealPingDeadlineCancellationOrSocketClose(){
++    Normal a("127.41.0.1"),b("127.42.0.1");const auto aa=a.owner->allowPeer(b.owner->endpoint()),bb=b.owner->allowPeer(a.owner->endpoint());QVERIFY(aa&&bb);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*aa)&&successful(*b.owner,*bb),3000);
++    HeldIo held(a.versions);QTRY_VERIFY_WITH_TIMEOUT(phase(held.job,Io::Phase::Ready),3000);QVERIFY(held.worker!=std::this_thread::get_id());QVERIFY(held.sourceBytes>1048576);
++    const auto pending=a.owner->publishValue(b.owner->endpoint(),"held-io-key","no-store-before-permit",5s);QVERIFY(pending);QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().profileIoRunning==1,3000);
++    QElapsedTimer progress;progress.start();const auto ping=a.owner->ping(b.owner->endpoint());QVERIFY(ping);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*ping),3000);const auto pingMillis=progress.elapsed();
++    QUdpSocket silent;QVERIFY(silent.bind(QHostAddress(QStringLiteral("127.43.0.1")),0,QUdpSocket::DontShareAddress));
++    const auto timeout=a.owner->findValue({silent.localAddress(),silent.localPort()},{},0,1,30ms);QVERIFY(timeout);QTRY_VERIFY_WITH_TIMEOUT(terminal(*a.owner,*timeout),3000);QCOMPARE(a.owner->observation().lastResult->transportFailure,std::optional{udp::Failure::Timeout});
++    const auto cancel=a.owner->cancel(*pending);QVERIFY(cancel);QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().publishSnapshot&&a.owner->observation().publishSnapshot->request==*pending&&a.owner->observation().publishSnapshot->state==app::AzureusPublishState::Cancelled,3000);
++    const auto expiring=a.owner->publishValue(b.owner->endpoint(),"expired-io-key","must-not-send",150ms);QVERIFY(expiring);
++    QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().publishSnapshot&&a.owner->observation().publishSnapshot->request==*expiring&&a.owner->observation().publishSnapshot->state==app::AzureusPublishState::Failed,3000);QCOMPARE(a.owner->observation().publishSnapshot->transportFailure,std::optional{udp::Failure::Timeout});QCOMPARE(a.owner->observation().databaseSnapshot->localPuts,std::uint64_t{0});
++    const auto endpoint=a.owner->endpoint();const auto sent=a.owner->observation().snapshot->transport().counters().sent;auto closed=std::async(std::launch::async,[&]{return a.owner->close();});const auto releaseOnFailure=qScopeGuard([&]{held.release();});
++    QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().state==app::AzureusServiceState::Closed,3000);QVERIFY(!a.owner->observation().joined);QVERIFY(closed.wait_for(0ms)!=std::future_status::ready);
++    QUdpSocket replacement;QVERIFY(replacement.bind(endpoint.address,endpoint.port,QUdpSocket::DontShareAddress));held.release();QTRY_VERIFY_WITH_TIMEOUT(closed.wait_for(0ms)==std::future_status::ready,3000);QVERIFY(closed.get());QVERIFY(a.owner->observation().joined);QCOMPARE(a.owner->observation().snapshot->transport().counters().sent,sent);QCOMPARE(a.owner->observation().databaseSnapshot->localPuts,std::uint64_t{0});QVERIFY(b.owner->close());qInfo("Held post-read/reservation IO: source=%zuB ping=%lldms total-through-close=%lldms, sockets closed before external IO join",held.sourceBytes,static_cast<long long>(pingMillis),static_cast<long long>(progress.elapsed()));
++  }
++  void currentVersionSourceIsRecheckedAfterTheHeldJobBeforeAnyPacketEffect(){
++    Normal a("127.44.0.1"),b("127.45.0.1");const auto aa=a.owner->allowPeer(b.owner->endpoint()),bb=b.owner->allowPeer(a.owner->endpoint());QVERIFY(aa&&bb);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*aa)&&successful(*b.owner,*bb),3000);
++    HeldIo held(a.versions);QTRY_VERIFY_WITH_TIMEOUT(phase(held.job,Io::Phase::Ready),3000);const auto request=a.owner->publishValue(b.owner->endpoint(),"changed-before-validation","unchanged-body");QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().profileIoRunning==1,3000);
++    // An external write BEFORE the service's queued check executes, not an
++    // unsupported atomic hostile swap during a consumed permit.
++    const auto path=a.root.path()+"/dht/net4/version.dat";const QByteArray foreign("d4:nexti7e6:future7:foreigne");write(path,foreign);held.release();
++    QTRY_VERIFY_WITH_TIMEOUT(terminal(*a.owner,*request),3000);const auto observation=a.owner->observation();QVERIFY(observation.publishSnapshot);QCOMPARE(observation.publishSnapshot->state,app::AzureusPublishState::Failed);QCOMPARE(observation.publishSnapshot->error,std::optional{app::AzureusServiceError::Profile});QCOMPARE(observation.snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(observation.databaseSnapshot->localPuts,std::uint64_t{0});QCOMPARE(read(path),foreign);QVERIFY(a.owner->close());QVERIFY(b.owner->close());
++  }
++  void initialRatingIoCanBeCancelledBeforeAnySnapshotOrPacketAndFreshReadStillWorks(){
++    Normal a("127.46.0.1",0),b("127.47.0.1",0);const auto source=installRating(a);
++    const auto aa=a.owner->allowPeer(b.owner->endpoint()),bb=b.owner->allowPeer(a.owner->endpoint());QVERIFY(aa&&bb);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*aa)&&successful(*b.owner,*bb),3000);
++    HeldIo held(a.versions);QTRY_VERIFY_WITH_TIMEOUT(phase(held.job,Io::Phase::Ready),3000);
++    const auto request=a.owner->readSavedRatings(b.owner->endpoint(),source.local.hash,source.sourceRevision);QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().profileIoRunning==1,3000);
++    const auto cancelled=a.owner->cancel(*request);QVERIFY(cancelled);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*cancelled)&&a.owner->observation().outstandingCommands==0,3000);
++    QVERIFY(!a.owner->observation().ratingReadSnapshot);QCOMPARE(a.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});
++    held.release();QTRY_COMPARE_WITH_TIMEOUT(a.owner->observation().profileIoPending,std::size_t{0},3000);QVERIFY(!a.owner->observation().ratingReadSnapshot);QCOMPARE(a.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});
++    const auto fresh=a.owner->readSavedRatings(b.owner->endpoint(),source.local.hash,source.sourceRevision);QVERIFY(fresh);QTRY_VERIFY_WITH_TIMEOUT(terminal(*a.owner,*fresh),3000);
++    const auto observed=a.owner->observation().ratingReadSnapshot;QVERIFY(observed);QCOMPARE(observed->request,*fresh);QCOMPARE(observed->state,app::AzureusRatingReadState::Complete);QVERIFY(observed->current&&observed->localFallback);QCOMPARE(observed->receivedValues,std::size_t{0});QCOMPARE(observed->ratings.average(),4.0F);
++    QVERIFY(a.owner->close());QVERIFY(b.owner->close());
++  }
++  void nestedObservedWritersRefuseBeforeEffectsRatherThanCallUnderOuterGate(){
++    QTemporaryDir root;QVERIFY(root.isValid());auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);
++    auto created=storage::ConfigFile::createMissing(*lease,"owned.config","d4:porti7ee");QVERIFY(created);QVERIFY(created->document().setInteger("port",8));const auto original=read(root.path()+"/owned.config");observerCalls=0;
++    {
++      auto outer=lease->sourceAccess();QVERIFY(outer);storage::ProfileSourceAccess moved(std::move(*outer));QVERIFY(moved.observationsAllowed());
++      bool observerThrew=false;try{moved.outside([]{throw std::runtime_error("owned observer fault");});}catch(const std::runtime_error&){observerThrew=true;}QVERIFY(observerThrew&&moved.observationsAllowed());
++      auto saved=created->save(*lease,countedObserver);QVERIFY(!saved);QCOMPARE(saved.error().code,storage::ErrorCode::Unsupported);
++      auto first=storage::ConfigFile::createMissing(*lease,"new.config","de",storage::compatibleConfigLimits(),countedObserver);QVERIFY(!first);QCOMPARE(first.error().code,storage::ErrorCode::Unsupported);
++      QCOMPARE(observerCalls,0);QCOMPARE(read(root.path()+"/owned.config"),original);QVERIFY(!QFile::exists(root.path()+"/owned.config.saving"));QVERIFY(!QFile::exists(root.path()+"/new.config"));QVERIFY(!QFile::exists(root.path()+"/new.config.saving"));
++    }
++    QVERIFY(created->save(*lease,countedObserver));QCOMPARE(observerCalls,3);QVERIFY(read(root.path()+"/owned.config")!=original);
++  }
++  void permitsAreSingleUseBoundQueuedActiveAndReadyThenReclaimSlots(){
++    QTemporaryDir root;QVERIFY(root.isValid());auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);auto versions=storage::AzureusValueVersions::open(*lease,4);QVERIFY(versions);Io io((*versions)->profileOwnership());
++    std::array<Io::Handle,8> jobs;
++    for(std::size_t i=0;i<jobs.size();++i){auto accepted=io.submit([v=*versions](std::stop_token)->Io::Result{auto valid=v->validate();if(!valid){return std::unexpected(valid.error());}return Io::Data{};});QVERIFY(accepted);jobs[i]=*accepted;if(i==0){QTRY_VERIFY_WITH_TIMEOUT(phase(jobs[0],Io::Phase::Ready),3000);}}
++    QCOMPARE(io.highWater(),std::size_t{8});const auto excess=io.submit([](std::stop_token)->Io::Result{return Io::Data{};});QVERIFY(!excess);QCOMPARE(excess.error(),core::SubmitError::Overloaded);
++    auto first=Io::take(jobs[0]);QVERIFY(first&&*first);QCOMPARE(first->value().revision,lease->sourceRevision());QVERIFY(!Io::take(jobs[0]));Io::revoke(jobs[0]);QVERIFY(!phase(jobs[0],Io::Phase::Released));Io::acknowledge(jobs[0]);QTRY_VERIFY_WITH_TIMEOUT(Io::released(jobs[0]),3000);QVERIFY(!Io::take(jobs[0]));io.release(jobs[0]);
++    for(std::size_t i=1;i<jobs.size();++i){Io::revoke(jobs[i]);QTRY_VERIFY_WITH_TIMEOUT(Io::released(jobs[i]),3000);io.release(jobs[i]);}
++    QTRY_COMPARE_WITH_TIMEOUT(io.queued(),std::size_t{0},3000);
++    for(int round=0;round<16;++round){auto accepted=io.submit([v=*versions](std::stop_token)->Io::Result{auto valid=v->validate();if(!valid){return std::unexpected(valid.error());}return Io::Data{};});QVERIFY(accepted);QTRY_VERIFY_WITH_TIMEOUT(phase(*accepted,Io::Phase::Ready),3000);auto result=Io::take(*accepted);QVERIFY(result&&*result);Io::acknowledge(*accepted);QTRY_VERIFY_WITH_TIMEOUT(Io::released(*accepted),3000);io.release(*accepted);QVERIFY(!Io::take(jobs[0]));}
++    qInfo("Profile IO high-water=%zu (queued+active+ready),16 later real validation rounds reclaimed",io.highWater());io.requestStop();io.join();
++  }
++};
++QTEST_GUILESS_MAIN(AzureusProfileIoTests)
++#include "azureus_profile_io_tests.moc"

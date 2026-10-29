@@ -1,0 +1,12 @@
+{
+  "status": "SOURCE_ONLY",
+  "bep15_namespace_body_byte_exact": true,
+  "bep15_body_sha256": "2435d78fec001962558174602f9a9878495a8fb0816330002f1894f0c45fc83b",
+  "old_library_route_and_tracker_class_tail_byte_exact": true,
+  "native_i2p_network_admission_fences_sha256": "f193d1bd852c0fbee49d73f56722a0d7c4effc85d669513cab23825571cad378",
+  "no_provider_files_changed": true,
+  "no_existing_test_files_changed": true,
+  "native_9fca_test_format_commit": "9fca696181291fd9a1dc7d62942c76d23afbba11",
+  "existing_control_test_sha256": "10c221004258c4655eb8770976771a03534cf05fbb77339f2aff221f30b2c3ab",
+  "actual_executions": []
+}

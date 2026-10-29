@@ -1,0 +1,100 @@
+--- a/preview/native/adapters/profile.hpp
++++ b/preview/native/adapters/profile.hpp
+@@ -80,7 +80,8 @@
+   // Lock order: source gate, then an adapter's own writer mutex. Network code
+   // consumes an I/O-worker-held permit and must never acquire this gate.
+   std::expected<ProfileSourceAccess,Error> sourceAccess(bool writing=false)const {
+-    if(!valid()||!ownership_){return std::unexpected(Error{ErrorCode::Conflict,"Profile source ownership is released"});}
++    if(!valid()){return std::unexpected(Error{ErrorCode::UnsafePath,"Held profile lease required"});}
++    if(!ownership_){return std::unexpected(Error{ErrorCode::Conflict,"Profile source ownership is released"});}
+     auto result=ProfileSourceAccess(ownership_,writing);
+     if(result.revision()==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Error{ErrorCode::Conflict,"Profile source revision exhausted"});}
+     return result;
+--- a/preview/native/services/azureus_udp/owned_transport.hpp
++++ b/preview/native/services/azureus_udp/owned_transport.hpp
+@@ -157,9 +157,11 @@
+   // on THIS Qt thread to THIS socket identity. No caller-supplied closest,
+   // seeded, token or value facts. Shared ownership lasts through close/join.
+   // current checks the owner's held profile and stop state before each effect.
++  // Async preflight completes true to resume, false on actual source rejection.
++  // The completion is returned on this actor thread after the source gate releases.
+   std::expected<void,Failure> serveDatabase(std::shared_ptr<azureus_router::RouterOwner>,
+       std::shared_ptr<database::Owner>,std::function<bool()> current,
+-      std::function<bool(std::move_only_function<void()>)> preflight={});
++      std::function<bool(std::move_only_function<void(bool)>)> preflight={});
+   std::expected<GeneratedServiceState,Failure> generatedServiceState() const;
+   std::expected<database::Snapshot,Failure> databaseState() const;
+   // Owner-only pull. Moved receipts own the request referenced by policy indices.
+@@ -239,7 +241,7 @@
+   std::shared_ptr<azureus_router::RouterOwner> normalRouter_;
+   std::shared_ptr<database::Owner> normalDatabase_;
+   std::function<bool()> normalCurrent_;
+-  std::function<bool(std::move_only_function<void()>)> normalPreflight_;
++  std::function<bool(std::move_only_function<void(bool)>)> normalPreflight_;
+   bool normalResuming_=false;
+   std::vector<find::nodes::Contact> normalContacts_; // Only actually admitted request sources.
+   Config config_;
+--- a/preview/native/services/azureus_udp/owned_transport.cpp
++++ b/preview/native/services/azureus_udp/owned_transport.cpp
+@@ -294,7 +294,7 @@
+ }
+ std::expected<void,Failure> OwnedPingTransport::serveDatabase(std::shared_ptr<azureus_router::RouterOwner> router,
+     std::shared_ptr<database::Owner> database,std::function<bool()> current,
+-    std::function<bool(std::move_only_function<void()>)> preflight){
++    std::function<bool(std::move_only_function<void(bool)>)> preflight){
+   if(!owner()){return std::unexpected(Failure::Thread);}
+   if(state_!=State::Bound||normalRouter_||config_.generatedStoreService||config_.findNodeReply||config_.findValueReply||config_.storeReply||config_.storeErrorReply
+       ||!router||!database||!current){return std::unexpected(Failure::State);}
+@@ -555,8 +555,9 @@
+ }
+ void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,std::int64_t receivedAt) {
+   if(normalRouter_&&normalPreflight_&&!normalResuming_){
+-    auto resumed=[this,peer,request=std::move(request),receivedAt]()mutable{
+-      if(state_!=State::Bound||!allowed(peer)){return;}normalResuming_=true;
++    auto resumed=[this,peer,request=std::move(request),receivedAt](bool accepted)mutable{
++      if(state_!=State::Bound||!normalRouter_||!allowed(peer)){return;}
++      if(!accepted){++statistics_.authorityErrors;return;}normalResuming_=true;
+       const auto reset=qScopeGuard([&]{normalResuming_=false;});answerService(peer,std::move(request),receivedAt);
+     };
+     if(!normalPreflight_(std::move(resumed))){++statistics_.serviceCapacityDrops;}return;
+@@ -683,8 +684,9 @@
+ }
+ void OwnedPingTransport::answerDatabase(const Peer& peer,const lookup::Decoded& request,std::int64_t receivedAt){
+   if(normalRouter_&&normalPreflight_&&!normalResuming_){
+-    auto resumed=[this,peer,request,receivedAt]{
+-      if(state_!=State::Bound||!allowed(peer)){return;}normalResuming_=true;
++    auto resumed=[this,peer,request,receivedAt](bool accepted){
++      if(state_!=State::Bound||!normalRouter_||!allowed(peer)){return;}
++      if(!accepted){++statistics_.authorityErrors;return;}normalResuming_=true;
+       const auto reset=qScopeGuard([&]{normalResuming_=false;});answerDatabase(peer,request,receivedAt);
+     };
+     if(!normalPreflight_(std::move(resumed))){++statistics_.serviceCapacityDrops;}return;
+--- a/preview/native/app/owned_azureus_service.cpp
++++ b/preview/native/app/owned_azureus_service.cpp
+@@ -97,7 +97,7 @@
+         profilePermit_=true;const auto bound=actor_.serveDatabase(router_,localDatabase_,[this]{
+           {std::lock_guard lock(state_->mutex);if(state_->stop){return false;}}
+           return bool(router_)&&profilePermit_;
+-        },[this](std::move_only_function<void()> resume){return normalProfileRequest(std::move(resume));});profilePermit_=false;if(!bound){return bound;}
++        },[this](std::move_only_function<void(bool)> complete){return normalProfileRequest(std::move(complete));});profilePermit_=false;if(!bound){return bound;}
+       }return started;
+     }
+     azureus::Peer endpoint()const{return actor_.endpoint();}
+--- a/preview/native/app/azureus_profile_io_owner.inc
++++ b/preview/native/app/azureus_profile_io_owner.inc
+@@ -98,9 +98,13 @@
+       if(!submitted){return false;}
+       slot->job=std::move(*submitted);slot->command=command.id;slot->deadline=allowExpired?std::chrono::steady_clock::time_point::max():deadline;slot->current=std::move(current);slot->commit=std::move(commit);slot->failed=std::move(failed);slot->expired=std::move(expired);slot->cancelled=std::move(cancelled);armProfileDeadline();return true;
+     }
+-    bool normalProfileRequest(std::move_only_function<void()> resume){try{
++    bool normalProfileRequest(std::move_only_function<void(bool)> complete){try{
+       auto held=holdProfileFrame();if(!held){return false;}
++      auto completion=std::make_shared<std::move_only_function<void(bool)>>(std::move(complete));
+       Command command;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(30);
+       return deferProfile(command,false,deadline,[this]{std::lock_guard lock(state_->mutex);return !state_->stop;},
+-        [resume=std::move(resume),held=std::move(held)](const auto&)mutable{resume();},[](storage::Error){});
++        [completion,held=std::move(held)](const auto&){(*completion)(true);},
++        // Rejection is reported after the I/O slot has released its source
++        // gate. It never resumes the request or creates a protocol success.
++        [completion](storage::Error){(*completion)(false);});
+     }catch(...){publicationMemoryFailure();return false;}}

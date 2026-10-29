@@ -1,0 +1,38 @@
+{
+  "native_parent_commit": "535d6403c3b59ce3108940bba57593368745329f",
+  "io": {
+    "capsule": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-live-only/manifest.json",
+      "sha256": "8962c207cfa044d47fa2952b2b371324e87f981ad203104ed4b345edf9b00ef4"
+    },
+    "review": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029-review/review.json",
+      "sha256": "0a426340a64423ed0db5326af528c7012f859214c3a8403dbac6f2f6176f565a"
+    }
+  },
+  "tracker": {
+    "capsule": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029/manifest.json",
+      "sha256": "faf50da882975c4b3aba7b014d64af5e98c158d7d18df8942d801d3655aee59f"
+    },
+    "review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-tracker-scrape-20261029-review/review.json",
+      "sha256": "ed06750ad5100c680bbf60b161422c0f6e829fdf1c24f0efc6201ee122ba5cee"
+    }
+  },
+  "source_history": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/manifest.json",
+      "sha256": "ad6a4f7741e1f939c02e2e6d240309ade9ced7ff6e1679f7b2beb3eb3a5c743f"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/pending-cancel-and-observer-nesting/manifest.json",
+      "sha256": "3d114576cfb86e0d16b00a6dd12e19340b3af3144aa7a9730142a39ee446a63b"
+    }
+  ],
+  "extra_sources": {
+    "preview/native/tests/torrent_state_writer_guards.py": "3a8e91ca3ca22e1230034aecd41a9be3587d74b43102bc06e87b4026653b21ca"
+  },
+  "native_tests_fragment_sha256": "3a27e6e14709b4f61f388fa83bdb9622f577fa73fb28d37995b47e36aa561077",
+  "root_assessment": "Adopt complete reviewed15IO+12tracker+rootnativefaulttest+CMake3. Exact31maps, no source overlap. Union17GCC/12ClangSAN selected suites,20/12/12products. Private same17actualcommands, supports Python wrapper with canonical driver replacement and forwarded actual LD_DEBUG, copiedELFinitialization required. Nativefixture/case meanings independently checked; stderr evidence correction applied. Tracker-only bothJAR2families/10frames each direction; no oldJava/provider replay. No public/realprofile/backend activation or fullparity/performanceclaim."
+}

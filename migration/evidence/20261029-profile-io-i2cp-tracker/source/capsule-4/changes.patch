@@ -1,0 +1,31 @@
+--- a/preview/native/app/azureus_profile_io.hpp
++++ b/preview/native/app/azureus_profile_io.hpp
+@@ -68,7 +68,7 @@
+     });if(!submitted){return false;}if(!submitted->result().get()){return false;}return result->value_or(false);
+   }
+   std::expected<Handle,core::SubmitError> submit(Operation operation){
+-    std::lock_guard slots(slotsMutex_);
++    std::lock_guard slotGuard(slotsMutex_);
+     if(stopping_){return std::unexpected(core::SubmitError::Stopped);}
+     Handle* free=nullptr;for(auto& item:slots_){if(!item){free=&item;break;}}
+     if(!free){return std::unexpected(core::SubmitError::Overloaded);}
+@@ -120,7 +120,7 @@
+   }
+   struct Facts {std::size_t pending=0,running=0,ready=0,highWater=0;};
+   Facts facts(){
+-    std::lock_guard slots(slotsMutex_);Facts result;result.highWater=highWater_;
++    std::lock_guard slotGuard(slotsMutex_);Facts result;result.highWater=highWater_;
+     for(const auto& slot:slots_){if(!slot){continue;}++result.pending;std::lock_guard lock(slot->mutex);result.running+=slot->phase==Phase::Running;result.ready+=slot->phase==Phase::Ready||slot->phase==Phase::Executing;}
+     return result;
+   }
+--- a/preview/native/app/azureus_profile_io_owner.inc
++++ b/preview/native/app/azureus_profile_io_owner.inc
+@@ -18,7 +18,7 @@
+       try{
+         auto earliest=std::chrono::steady_clock::time_point::max();for(const auto& slot:ioSlots_){if(slot.job&&!slot.expiryNotified){earliest=std::min(earliest,slot.deadline);}}
+         if(earliest==std::chrono::steady_clock::time_point::max()){ioDeadline_.stop();return;}
+-        ioDeadline_.start(std::max(std::chrono::nanoseconds{1},std::chrono::duration_cast<std::chrono::nanoseconds>(earliest-std::chrono::steady_clock::now())));
++        ioDeadline_.setInterval(std::max(std::chrono::nanoseconds{1},std::chrono::duration_cast<std::chrono::nanoseconds>(earliest-std::chrono::steady_clock::now())));ioDeadline_.start();
+       }catch(...){try{ioDeadline_.stop();}catch(...){}publicationMemoryFailure();}
+     }
+     bool profilePermit_=false,passiveIo_=false,drainingIo_=false;

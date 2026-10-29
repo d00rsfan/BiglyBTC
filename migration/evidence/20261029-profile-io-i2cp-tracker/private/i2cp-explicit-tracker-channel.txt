@@ -1,0 +1,16 @@
+********* Start testing of TrackerChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : TrackerChannelTests::initTestCase()
+PASS   : TrackerChannelTests::actualHashLookupSignedConnectClaimedScrapeRawReply(legacy-v4)
+PASS   : TrackerChannelTests::actualHashLookupSignedConnectClaimedScrapeRawReply(fast-v4)
+PASS   : TrackerChannelTests::actualHashLookupSignedConnectClaimedScrapeRawReply(legacy-v6)
+PASS   : TrackerChannelTests::actualHashLookupSignedConnectClaimedScrapeRawReply(fast-v6)
+PASS   : TrackerChannelTests::wrongPortsTransactionsAndOldLookupCannotFinishCurrentOperation()
+PASS   : TrackerChannelTests::cancellationAndLateRawReplyCannotCompleteNextOperation()
+PASS   : TrackerChannelTests::actualLookupFailureMismatchAndDeadlineAreLocalAndReusable(routerfailure)
+PASS   : TrackerChannelTests::actualLookupFailureMismatchAndDeadlineAreLocalAndReusable(wrongdestination)
+PASS   : TrackerChannelTests::actualLookupFailureMismatchAndDeadlineAreLocalAndReusable(lookup-timeout)
+PASS   : TrackerChannelTests::createdWithoutLeaseRefusesAndCallbacksMayDelete()
+PASS   : TrackerChannelTests::cleanupTestCase()
+Totals: 12 passed, 0 failed, 0 skipped, 0 blacklisted, 5286ms
+********* Finished testing of TrackerChannelTests *********

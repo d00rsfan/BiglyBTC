@@ -1,0 +1,13 @@
+{
+  "status": "SOURCE_REVIEW_PASS_WITH_CORRECTION",
+  "review": "Codec independently checked root7existingnativefaultcases, fixturemeaning, canonicaldriver substitution and17/12/12 inventories. Swallowedchildstderr corrected by sys.stderr.write; private now requires actualcopiedELFinitialization. Root checked exact4-to2family tracker wrapper translation and classoriginrole gates, CMakefragment splits, bothfinalindependentreviews. No subject execution.",
+  "files_sha256": {
+    "run.py": "14b1f7160d7ef5111e16b8b9322a250849fff5cafc3264df745b87b5c5914397",
+    "private.py": "11969722bc5a3a948172cef6e89ac56fc1bb751127d69ccdf29609c7feaadb60",
+    "offline.py": "bb64d9ab21275b8bac377b07595aad7cc929d4512b519d5e220845fc9455ec33",
+    "adopt.py": "8425362c4d545e2d354420db9805e7afe107e8e43451fedce46dd16d0482365c",
+    "native-tests.CMake.fragment": "3a27e6e14709b4f61f388fa83bdb9622f577fa73fb28d37995b47e36aa561077",
+    "staging/preview/native/tests/torrent_state_writer_guards.py": "3a8e91ca3ca22e1230034aecd41a9be3587d74b43102bc06e87b4026653b21ca"
+  },
+  "adopter_preexecution_correction": "Initial normalizer expected CMake fragments in deepest child directory; actual final manifest references inherited parent fragments with path+sha256. Read those declared references and verify hashes; initial stop occurred before any N mutation (clean535d). No subject execution."
+}

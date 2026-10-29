@@ -1,0 +1,19 @@
+{
+  "status": "SOURCE_ONLY_FIX_TEST_FIXTURE_IDENTITY_AND_NATIVE_PREPARATION",
+  "native_source_basis": "4b2f4b5748d8676d3436b174b94805148453cdd4",
+  "source_paths": {
+    "preview/native/tests/torrent_state_writer_guards.py": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/amendments/state-writer-fixture/before/preview/native/tests/torrent_state_writer_guards.py",
+      "before_sha256": "3a8e91ca3ca22e1230034aecd41a9be3587d74b43102bc06e87b4026653b21ca",
+      "after_path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/amendments/state-writer-fixture/staging/preview/native/tests/torrent_state_writer_guards.py",
+      "after_sha256": "633d1228ce229f4b5814e6719f3c553585b142d327cc50e1b3e771c05edead67"
+    }
+  },
+  "artifacts": {
+    "changes.patch": "0121ec68be4e48a65c1219e9cb1c6aaa5c52c8ffe95f6970034ffb28daf02367",
+    "staging/preview/native/tests/torrent_state_writer_guards.py": "633d1228ce229f4b5814e6719f3c553585b142d327cc50e1b3e771c05edead67",
+    "before/preview/native/tests/torrent_state_writer_guards.py": "3a8e91ca3ca22e1230034aecd41a9be3587d74b43102bc06e87b4026653b21ca"
+  },
+  "reason": "Native TorrentHash.hex uses upper-case filenames. Existing beginUpdate intentionally writes resume recheck preparation; compare fault boundaries with actual native prepared baseline, preserving exact full bytes except the explicitly edited attribute. No product change or weakened controls.",
+  "runtime_execution": false
+}

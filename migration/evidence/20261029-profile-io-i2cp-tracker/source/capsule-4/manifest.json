@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_ACTUAL_QT_API_COMPILE_CORRECTION",
+  "native_source_basis": "f02385070badd3318a250b2d8dd4146727964ac4",
+  "source_path_count": 2,
+  "source_paths": {
+    "preview/native/app/azureus_profile_io.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/qt-keyword-timer-api/before/preview/native/app/azureus_profile_io.hpp",
+      "before_sha256": "50767296497690e29a61c04b26a8a5398fd760f50783f5f030867a909f430db0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/qt-keyword-timer-api/staging/preview/native/app/azureus_profile_io.hpp",
+      "after_sha256": "7357b13f11d46cc06fc2c9bddb52bd9942d942fcce29d5804975076d6494fd30"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/qt-keyword-timer-api/before/preview/native/app/azureus_profile_io_owner.inc",
+      "before_sha256": "6b9280905b0e036d20afbcc9df5163b3fd3d012b2f81295e932793749e5debbe",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-profile-io-executor-20261029/amendments/qt-keyword-timer-api/staging/preview/native/app/azureus_profile_io_owner.inc",
+      "after_sha256": "86c2f75c247aa53a6f8915d30ff0ddae7a48a9a13f79d264ae43fd7ab4bde54b"
+    }
+  },
+  "artifacts": {
+    "ADOPTION.txt": "f0c3223a0541f50c3200850439af305120add914a611caa5621d40cd8cc92dee",
+    "before/preview/native/app/azureus_profile_io.hpp": "50767296497690e29a61c04b26a8a5398fd760f50783f5f030867a909f430db0",
+    "before/preview/native/app/azureus_profile_io_owner.inc": "6b9280905b0e036d20afbcc9df5163b3fd3d012b2f81295e932793749e5debbe",
+    "changes.patch": "3fc75b214a70ead45c035a354a30d719f227d45a0ea0200ab0f9f4dd974cae5b",
+    "inputs.json": "eacf472aece7ea9a0deb009952f5bbb0eb771fd60156baa6610287b70a6ba19e",
+    "source-check.json": "9d7fbf815855a73d35479c6dd09c501e03c7d959b23a51d940e311841e759396",
+    "staging/preview/native/app/azureus_profile_io.hpp": "7357b13f11d46cc06fc2c9bddb52bd9942d942fcce29d5804975076d6494fd30",
+    "staging/preview/native/app/azureus_profile_io_owner.inc": "86c2f75c247aa53a6f8915d30ff0ddae7a48a9a13f79d264ae43fd7ab4bde54b"
+  },
+  "runtime_execution": false,
+  "tests_changed": false,
+  "deadlines_changed": false,
+  "root_adoption_required": true
+}

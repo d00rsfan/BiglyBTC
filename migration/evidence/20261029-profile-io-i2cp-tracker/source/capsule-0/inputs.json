@@ -1,0 +1,34 @@
+{
+  "migration/tasks/P06-profile-io-executor.md": {
+    "source_commit": "d384a850980f1b6245230ea852d617b11c405e11",
+    "sha256": "ceeed8df8b44f1c04f7a5ba2af44cb2b58e7a542a2d0d6394643505a7ac267f2"
+  },
+  "preview/native/core/include/biglybtc/executor.hpp": {
+    "source_commit": "d384a850980f1b6245230ea852d617b11c405e11",
+    "sha256": "0d99cc28102acb980070efc9a72f8e0686ecf94dc43bb81198694245c6b72777"
+  },
+  "preview/native/core/src/executor.cpp": {
+    "source_commit": "d384a850980f1b6245230ea852d617b11c405e11",
+    "sha256": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a"
+  },
+  "preview/native/app/session_bridge.hpp": {
+    "source_commit": "d384a850980f1b6245230ea852d617b11c405e11",
+    "sha256": "7d71c07f7f7cffe04d96e3c9c3a8554355df5c109cfe4da05717b09e29a12d1b"
+  },
+  "preview/native/app/session_bridge.cpp": {
+    "source_commit": "d384a850980f1b6245230ea852d617b11c405e11",
+    "sha256": "16534b036d0f9859703cfbeab0657a61fa98a80da78790551f4c698e6678f563"
+  },
+  "preview/native/tests/owned_azureus_service_tests.cpp": {
+    "source_commit": "d384a850980f1b6245230ea852d617b11c405e11",
+    "sha256": "5c4c4fc64d0d9bac7070d50a17ef756ea1c22dc9b69d32ab5843a1ee38d9b4f7"
+  },
+  "preview/native/app/CMakeLists.txt": {
+    "source_commit": "d384a850980f1b6245230ea852d617b11c405e11",
+    "sha256": "5f1b870db0116fb5dbea4498d531c2d9b81366a6f82eef3124974b66dfca4cc3"
+  },
+  "preview/native/tests/CMakeLists.txt": {
+    "source_commit": "d384a850980f1b6245230ea852d617b11c405e11",
+    "sha256": "8f719102d02e899d394a9cc7b9b9134b89f32edee885bc510460bd5daee61c69"
+  }
+}
