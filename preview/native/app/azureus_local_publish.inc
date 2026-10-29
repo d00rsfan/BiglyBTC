@@ -5,6 +5,7 @@
       AzureusPublishSnapshot snapshot;
       std::chrono::steady_clock::time_point deadline;
       azureus::Ticket ticket;
+      std::size_t readbackSlices=0;
       bool finished=false,cancelled=false;
     };
     std::shared_ptr<Publishing> publishing_;
@@ -66,16 +67,26 @@
     std::chrono::nanoseconds publishRemaining(const Publishing& value)const{return std::chrono::duration_cast<std::chrono::nanoseconds>(value.deadline-std::chrono::steady_clock::now());}
     void publishReadback(const std::shared_ptr<Publishing>& value){
       if(!validatePublish(value)){return;}value->snapshot.state=AzureusPublishState::Readback;capturePublish(value);
-      auto sent=actor_.findValue(value->command.peer,options_.version,value->snapshot.key,0,32,this,
+      auto sent=actor_.findValue(value->command.peer,options_.version,value->snapshot.key,0,64,this,
           [this,value](azureus::FindValueOutcome outcome){try{
         if(!validatePublish(value)){return;}
         if(!outcome){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,outcome.error());return;}
         const auto* reply=std::get_if<azureus::lookup::ReplyBody>(&outcome->body());
         const auto* found=reply?std::get_if<azureus::lookup::FoundValues>(&reply->result):nullptr;
-        if(!reply||reply->continuation||!found){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Readback);return;}
+        if(!reply||!found){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Readback);return;}
+        if(++value->readbackSlices>64||found->values.size()>64-value->snapshot.readback.size()){
+          finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Capacity);return;
+        }
+        value->snapshot.readback.insert(value->snapshot.readback.end(),found->values.begin(),found->values.end());
+        // A matching partial value is not proof of a complete readback stream.
+        // Retain only bounded owned values; timeout/cancel/profile checks still
+        // apply to every part and to the final locked publication commit.
+        if(reply->continuation){
+          if(value->readbackSlices==64||value->snapshot.readback.size()==64){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Capacity);}
+          return;
+        }
         const auto& local=*value->snapshot.localValue;const auto* origin=local.originator().get();const auto bytes=local.payload().view();
-        const bool matching=origin&&bytes&&std::ranges::any_of(found->values,[&](const auto& item){return item.version==local.version()&&item.bytes==*bytes&&item.originator.id==origin->id&&item.originator.address==origin->address&&item.flags==local.flags()&&item.lifeHours==local.lifeTimeHours()&&item.replication==local.replicationControl();});
-        value->snapshot.readback=found->values;
+        const bool matching=origin&&bytes&&std::ranges::any_of(value->snapshot.readback,[&](const auto& item){return item.version==local.version()&&item.bytes==*bytes&&item.originator.id==origin->id&&item.originator.address==origin->address&&item.flags==local.flags()&&item.lifeHours==local.lifeTimeHours()&&item.replication==local.replicationControl();});
         if(!matching){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Readback);return;}
         finishPublish(value,AzureusPublishState::Complete);
       }catch(...){publicationMemoryFailure();}},publishRemaining(*value));
