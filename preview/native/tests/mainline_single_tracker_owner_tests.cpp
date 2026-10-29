@@ -133,18 +133,19 @@ class RegularUdpEndpoint final {
   void send(const Pending& p){if(socket.writeDatagram(p.bytes,p.host,p.port)!=p.bytes.size()){failure="Owned regular UDP reply failed";}}
   void receive(){while(socket.hasPendingDatagrams()){
     const auto d=socket.receiveDatagram(1025);const auto p=d.data();
-    if(d.senderAddress()!=QHostAddress::LocalHost||!d.senderPort()||p.size()<16||p.size()>1024){failure="Owned regular UDP source/size mismatch";continue;}
+    if(d.senderAddress()!=QHostAddress::LocalHost||d.senderPort()<=0||d.senderPort()>65535||p.size()<16||p.size()>1024){failure="Owned regular UDP source/size mismatch";continue;}
+    const auto sourcePort=static_cast<quint16>(d.senderPort());
     const auto action=word(p,8),transaction=word(p,12);QByteArray reply;
     if(action==0){if(p.size()!=16||wide(p,0)!=0x41727101980ULL){failure="Owned regular UDP connect mismatch";continue;}
-      ++connects;const auto id=Connection;connections[d.senderPort()]=id;put(reply,0);put(reply,transaction);put(reply,static_cast<std::uint32_t>(id>>32));put(reply,static_cast<std::uint32_t>(id));
+      ++connects;const auto id=Connection;connections[sourcePort]=id;put(reply,0);put(reply,transaction);put(reply,static_cast<std::uint32_t>(id>>32));put(reply,static_cast<std::uint32_t>(id));
     }else{
-      const auto found=connections.find(d.senderPort());if(wide(p,0)!=Connection||(action==2&&(found==connections.end()||found->second!=Connection))||p.mid(16,20)!=expectedHash){failure="Owned regular UDP connection/hash mismatch";continue;}
+      const auto found=connections.find(sourcePort);if(wide(p,0)!=Connection||(action==2&&(found==connections.end()||found->second!=Connection))||p.mid(16,20)!=expectedHash){failure="Owned regular UDP connection/hash mismatch";continue;}
       if(action==1){if(p.size()<98||!peerPort||((static_cast<unsigned char>(p[96])<<8)|static_cast<unsigned char>(p[97]))!=peerPort){failure="Owned regular UDP announce/peer-port mismatch";continue;}
         ++announces;if(failAnnounce){put(reply,3);put(reply,transaction);reply+="owned announce failure";}else{put(reply,1);put(reply,transaction);put(reply,1800);put(reply,6);put(reply,5);}
       }else if(action==2){if(p.size()!=36){failure="Owned regular UDP scrape shape mismatch";continue;}++scrapes;put(reply,2);put(reply,transaction);put(reply,7);put(reply,9);put(reply,8);}
       else{failure="Owned regular UDP unexpected action";continue;}
     }
-    Pending pending{reply,d.senderAddress(),d.senderPort()};if((action==0&&holdConnect)||(action==2&&holdScrape)){held.push_back(std::move(pending));}else{send(pending);}
+    Pending pending{reply,d.senderAddress(),sourcePort};if((action==0&&holdConnect)||(action==2&&holdScrape)){held.push_back(std::move(pending));}else{send(pending);}
   }}
 public:
   QByteArray expectedHash;QString failure;int connects=0,announces=0,scrapes=0;quint16 peerPort=0;
