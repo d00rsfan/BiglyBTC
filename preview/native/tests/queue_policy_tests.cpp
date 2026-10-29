@@ -394,7 +394,7 @@ int main(){try{
     responses[1].requested();CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{1});
     QueueTrackerTerminal good;good.kind=QueueTrackerTerminalKind::Scrape;good.comparable=true;good.present=7;good.complete=5;good.incomplete=6;good.downloaded=9;good.observedMillis=200;good.requestStartedWallMillis=900;
     good.observedMillis=500;responses[1].observe(good);CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{1}); // Later initial never replaces healthy earlier.
-    CHECK(!responses[1].regularDue(600200));CHECK(!responses[1].regularPollDue(600199));CHECK(responses[1].regularPollDue(600200));
+    CHECK(!responses[1].regularDue(600500));CHECK(!responses[1].regularPollDue(600499));CHECK(responses[1].regularPollDue(600500));
     error.observedMillis=300;responses[1].observe(error);CHECK(responses[1].response().type==QueueOriginalScrapeType::Success); // Original ERROR retains valid response content.
     CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{2});responses[2].observe(error);
     CHECK(sourceQueueTrackerSelection(rows)==std::optional<std::size_t>{0}); // All actual errors selects first error.
