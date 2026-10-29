@@ -1754,7 +1754,8 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     detail::require(detail::attachManagedPayloadCounters(parameters, value->payloadCounters, payloadBridge,value->queueObservations),
         "Exact managed transfer counters require the approved source ABI", storage::ErrorCode::Unsupported);
     if(!intent){value->trackerResponse=detail::attachManagedTrackerResponse(parameters,lease,
-        value->storage.identity(),value->status.admission,impl_->trackerResponses);}
+        value->storage.identity(),value->status.admission,impl_->trackerResponses,
+        impl_->libraryHttpProxyMode()?&detail::libraryHttpAnnounceScrapeDeadline:nullptr);}
     detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, impl_->operation);
     if(value->storage.mainlinePolicy().discover){value->mainlinePort=impl_->attachMainlinePort(parameters,value->status.admission,
         value->storage.identity().originalKey,value->storage.identity().selected==storage::OriginalSelectedHash::V1?1u:2u);}
@@ -2061,7 +2062,16 @@ std::vector<MainlineScrapeEstimate> PersistentSession::mainlineScrapeEstimates()
 std::vector<LibraryTrackerResponse> PersistentSession::libraryTrackerResponses()const {
   if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission){return {};}
   auto result=impl_->regularTrackerViews;
-  std::erase_if(result,[&](const auto& row){return !impl_->libraryUdpUnadmitted(row.hash)||impl_->mainlineScrapes.revoked(row.hash);});
+  std::erase_if(result,[&](const auto& row){
+    if(impl_->mainlineScrapes.revoked(row.hash)){return true;}
+    if(!row.admission){return !impl_->libraryUdpUnadmitted(row.hash);}
+    const auto entry=impl_->managed.find(row.hash.hex());if(entry==impl_->managed.end()){return true;}const auto& value=*entry->second;
+    return !value.token||value.token->number!=row.admission||value.status.admission!=row.admission||!value.status.retained||!value.status.checked
+        ||value.status.failure||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld
+        ||value.seedIntent||value.allocationIntent||!value.handle.is_valid()||!value.trackerResponse
+        ||!value.trackerResponse->installed.load(std::memory_order_acquire)||value.trackerResponse->lost.load(std::memory_order_acquire)
+        ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding);
+  });
   return result;
 }
 void PersistentSession::revokeMainlineScrape(const core::TorrentHash& hash) noexcept {

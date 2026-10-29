@@ -108,13 +108,21 @@ enum class QueueTrackerSelectionStatus { Unknown,Initializing,Scraping,Online,Er
 class QueueOriginalTrackerResponse final {
 public:
   void observe(const QueueTrackerTerminal&) noexcept;
-  void unavailable() noexcept {known_=false;pending_=false;}
+  // Common actual steady-clock source stamps order independent producers.
+  // Older terminal status/counts cannot replace a later accepted observation.
+  bool observeChronological(const QueueTrackerTerminal&,std::int64_t observedNanos) noexcept;
+  bool announceTimingCurrent(std::int64_t observedNanos)const noexcept;
+
+  void unavailable() noexcept {known_=false;pending_=false;pendingChronologicalRequest_=false;pendingAnnounceCount_=0;}
   bool eligible(std::int64_t nowMillis) const noexcept;
   bool regularDue(std::int64_t nowMillis) const noexcept;
   bool regularPollDue(std::int64_t nowMillis) const noexcept;
+  // Actual original announce counts postpone, never shorten, regular scraping.
+  // This affects only the retry deadline; it supplies no count/epoch authority.
+  bool deferRegularUntil(std::int64_t deadlineMillis,std::int64_t observedNanos=0) noexcept;
   QueueTrackerSelectionStatus selectionStatus() const noexcept;
-  void requested() noexcept {pending_=true;}
-  void cancelRequest() noexcept {pending_=false;} // Withdraw only this pending transport, retaining response history.
+  void requested() noexcept {pending_=true;pendingChronologicalRequest_=true;pendingAnnounceCount_=0;}
+  void cancelRequest() noexcept {pending_=false;pendingChronologicalRequest_=false;pendingAnnounceCount_=0;} // Withdraw only this pending transport, retaining response history.
   // Original skips intermediate SCRAPING notifications, retaining the same
   // last content. Caller must prove its actual scoped regular request lives.
   bool eligibleDuringOwnedRequest() const noexcept {
@@ -125,10 +133,16 @@ public:
   bool dhtBackup()const noexcept{return backup_;}
   void forgetDhtAuthority()noexcept{ownStart_.reset();}
 private:
+  // Only this one pending regular HTTP request can complete behind a later
+  // announce. Cleared on settlement; this is not lifetime event history.
+  struct PendingAnnounce {std::int64_t observedNanos,deadlineMillis;};
+  static constexpr std::size_t MaximumPendingAnnounces=256;
+  std::array<PendingAnnounce,MaximumPendingAnnounces> pendingAnnounces_{};
+  std::size_t pendingAnnounceCount_=0;bool pendingChronologicalRequest_=false;
   QueueOriginalScrapeContent current_;
   bool known_=true,visible_=false,backup_=false,error_=false;
   bool regular_=false,pending_=false;
-  std::int64_t nextRegular_=0;
+  std::int64_t nextRegular_=0,lastChronologicalNanos_=-1,lastChronologicalScrapeNanos_=-1;
   std::optional<std::int64_t> ownStart_;
 };
 // Original stable JavaRandom48 insertion shuffle within each ordered tier.

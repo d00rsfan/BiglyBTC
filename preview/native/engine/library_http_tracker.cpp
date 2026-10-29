@@ -7,6 +7,8 @@
 #include <QTcpSocket>
 #include <QTimer>
 #include <atomic>
+#include <chrono>
+#include <bit>
 #include <algorithm>
 #include <condition_variable>
 #include <mutex>
@@ -21,7 +23,7 @@ struct Mailbox {
   QList<QHostAddress> resolved,proxyResolved;
   std::vector<std::string> resolverSubmissions;
   LibraryHttpRoute proposedRoute;
-  std::uint64_t generation=0;
+  std::uint64_t generation=0;std::int64_t observedNanos=0,observedWallMillis=0;
   Proposal kind=Proposal::None;
   QByteArray body,realm;
   bool proposal=false,approved=false,done=false,unknown=false,hasBody=false,trackerHostNotFound=false;
@@ -215,7 +217,9 @@ private:
   }
   void finish(bool unknown,bool body=false){
     if(finished){return;}finished=true;deadline.stop();cancelLookup();clearSocket();
-    {std::lock_guard lock(box->mutex);box->unknown=unknown;box->hasBody=body;box->done=true;box->proposal=false;box->kind=Proposal::None;if(!body){box->body.clear();}}
+    const auto observed=std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    {std::lock_guard lock(box->mutex);box->observedNanos=observed;box->observedWallMillis=wall;box->unknown=unknown;box->hasBody=body;box->done=true;box->proposal=false;box->kind=Proposal::None;if(!body){box->body.clear();}}
   }
 };
 struct NetworkThread {
@@ -240,6 +244,9 @@ struct NetworkThread {
     }catch(...){if(reserved){--queued;}return false;}
   }
 };
+std::optional<unsigned> scrapeFuzz(){
+  static const auto jitter=[]()->std::optional<unsigned>{std::uint32_t entropy=0;for(unsigned i=0;i<8;++i){if(RAND_bytes(reinterpret_cast<unsigned char*>(&entropy),sizeof(entropy))!=1){return {};}if(entropy<UINT32_MAX-UINT32_MAX%180){return entropy%180;}}return {};}();return jitter;
+}
 QByteArray escaped(std::span<const std::byte> hash){
   constexpr char hex[]="0123456789ABCDEF";QByteArray out;
   // Java URLEncoder ISO8859-1 then '+'→'%20', including its literal '*' rule.
@@ -259,6 +266,19 @@ struct LibraryHttpTracker::Impl {
   unsigned fuzz=0;bool fuzzReady=false;
   std::vector<std::string> lastResolverSubmissions;
 };
+std::optional<std::int64_t> http_tracker_wire::announceDeadline(const core::QueueTrackerTerminal& value,unsigned fuzz){
+  if(value.kind!=core::QueueTrackerTerminalKind::Announce||!value.comparable||!value.present||(value.present&~7u)||value.observedMillis<0||fuzz>=180){return {};}
+  const auto narrow=[](std::int64_t n){return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(n));};
+  const auto seeds=(value.present&1)?narrow(value.complete):0,peers=(value.present&2)?narrow(value.incomplete):0;
+  if(seeds<0||peers<0){return {};}
+  const auto delay=interval(0,seeds,fuzz);
+  if(delay>0&&value.observedMillis>INT64_MAX-delay){return INT64_MAX;}
+  if(delay<0&&value.observedMillis<INT64_MIN-delay){return INT64_MIN;}
+  return value.observedMillis+delay; // Negative Java-int interval never shortens an existing deadline.
+}
+std::optional<std::int64_t> libraryHttpAnnounceScrapeDeadline(const core::QueueTrackerTerminal& value){
+  const auto fuzz=scrapeFuzz();return fuzz?http_tracker_wire::announceDeadline(value,*fuzz):std::nullopt;
+}
 LibraryHttpTracker::LibraryHttpTracker(LibraryHttpResolver resolver):impl_(std::make_unique<Impl>()){
   if(!resolver.submit&&!resolver.cancel){
     resolver.submit=[](const QString& host,QObject* context,LibraryHttpResolver::Completion completion){
@@ -288,7 +308,7 @@ bool LibraryHttpTracker::redirectProposalPending()const{
 bool LibraryHttpTracker::testTlsConfiguration(const QSslConfiguration& config){if(std::this_thread::get_id()!=impl_->worker||impl_->network||impl_->round){return false;}impl_->tls=config;return true;}
 std::expected<void,storage::Error> LibraryHttpTracker::start(Request request,const LibraryHttpRoute& route,std::int64_t now,std::int64_t wall,bool singleOnly,const std::optional<QList<QSslCertificate>>& trustAnchors){
   if(std::this_thread::get_id()!=impl_->worker||impl_->round||!impl_->resolver.submit||!impl_->resolver.cancel||request.hash.bytes().size()!=20||!request.nonce||request.responseKey.empty()||request.responseKey.size()>256||request.scope.empty()||request.scope.size()>256||request.configuration.size()>8192||now<0){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"HTTP scrape worker or request changed"});}
-  if(!impl_->fuzzReady){static const auto jitter=[]()->std::optional<unsigned>{std::uint32_t entropy=0;for(unsigned i=0;i<8;++i){if(RAND_bytes(reinterpret_cast<unsigned char*>(&entropy),sizeof(entropy))!=1){return {};}if(entropy<UINT32_MAX-UINT32_MAX%180){return entropy%180;}}return {};}();
+  if(!impl_->fuzzReady){const auto jitter=scrapeFuzz();
     if(!jitter){return std::unexpected(storage::Error{storage::ErrorCode::Io,"HTTP scrape entropy unavailable"});}impl_->fuzz=*jitter;impl_->fuzzReady=true;}
   auto tls=impl_->tls;if(trustAnchors){tls.setCaCertificates(*trustAnchors);}
   if(!impl_->network){impl_->network=std::make_unique<NetworkThread>();}
@@ -299,12 +319,13 @@ std::expected<void,storage::Error> LibraryHttpTracker::start(Request request,con
   }return {};
 }
 std::expected<std::optional<LibraryHttpTracker::Result>,storage::Error> LibraryHttpTracker::poll(std::int64_t now,std::int64_t wall,const std::function<bool(const Request&)>& authorise,const Authentication& authenticate){
+  (void)wall;
   if(std::this_thread::get_id()!=impl_->worker){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"HTTP scrape worker changed"});}
   if(!impl_->round){return std::optional<Result>{};}auto& r=*impl_->round;
   if(now<r.started){cancel();return std::optional<Result>{};}
   QList<QHostAddress> proposal,proxyProposal;QByteArray body,realm;bool done=false,unknown=false,hasBody=false,trackerHostNotFound=false;
-  Proposal kind=Proposal::None;std::uint64_t generation=0;LibraryHttpRoute proposedRoute;
-  {std::lock_guard lock(r.box->mutex);if(r.box->proposal&&!r.box->approved){proposal=r.box->resolved;proxyProposal=r.box->proxyResolved;trackerHostNotFound=r.box->trackerHostNotFound;kind=r.box->kind;generation=r.box->generation;proposedRoute=r.box->proposedRoute;realm=r.box->realm;r.box->approved=true;}done=r.box->done;unknown=r.box->unknown;hasBody=r.box->hasBody;if(done){body=r.box->body;}}
+  Proposal kind=Proposal::None;std::uint64_t generation=0;std::int64_t observedNanos=0,observedWall=0;LibraryHttpRoute proposedRoute;
+  {std::lock_guard lock(r.box->mutex);if(r.box->proposal&&!r.box->approved){proposal=r.box->resolved;proxyProposal=r.box->proxyResolved;trackerHostNotFound=r.box->trackerHostNotFound;kind=r.box->kind;generation=r.box->generation;proposedRoute=r.box->proposedRoute;realm=r.box->realm;r.box->approved=true;}done=r.box->done;unknown=r.box->unknown;hasBody=r.box->hasBody;if(done){body=r.box->body;observedNanos=r.box->observedNanos;observedWall=r.box->observedWallMillis;}}
   if((kind!=Proposal::None||done)&&!authorise(r.request)){cancel();return std::optional<Result>{};}
   if(kind!=Proposal::None&&!done){
     const auto checked=libraryHttpRedirectRoute(r.route,proposedRoute.scrape.toEncoded(),std::span<const std::byte,20>{r.request.hash.bytes().data(),20});
@@ -335,10 +356,11 @@ std::expected<std::optional<LibraryHttpTracker::Result>,storage::Error> LibraryH
     if(!posted){cancel();return std::unexpected(storage::Error{storage::ErrorCode::Busy,"HTTP route approval could not be queued"});}
   }
   if(!done){if(now-r.started>=60000){close();}return std::optional<Result>{};}
-  core::QueueTrackerTerminal terminal;terminal.observedMillis=now;terminal.observedWallMillis=wall;terminal.requestStartedWallMillis=r.wall;
-  if(hasBody){terminal=http_tracker_wire::scrape(body.toStdString(),std::span<const std::byte,20>{r.request.hash.bytes().data(),20},now,wall,r.wall,r.singleOnly,impl_->fuzz);}
+  if(observedNanos<=0||observedWall<0){cancel();return std::optional<Result>{};}
+  core::QueueTrackerTerminal terminal;terminal.observedMillis=observedNanos/1000000;terminal.observedWallMillis=observedWall;terminal.requestStartedWallMillis=r.wall;
+  if(hasBody){terminal=http_tracker_wire::scrape(body.toStdString(),std::span<const std::byte,20>{r.request.hash.bytes().data(),20},terminal.observedMillis,observedWall,r.wall,r.singleOnly,impl_->fuzz);}
   else{terminal.definitiveFailure=!unknown;}
-  Result result{r.request,terminal};cancel();return std::optional<Result>{std::move(result)};
+  Result result{r.request,terminal,observedNanos};cancel();return std::optional<Result>{std::move(result)};
 }
 void LibraryHttpTracker::cancel()noexcept{
   if(!impl_||!impl_->round){return;}const auto box=impl_->round->box;box->cancelled=true;

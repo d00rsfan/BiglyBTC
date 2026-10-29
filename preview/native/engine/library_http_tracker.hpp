@@ -35,7 +35,11 @@ std::optional<std::pair<QHostAddress,QHostAddress>> libraryHttpProxyEndpoint(
     const LibraryHttpRoute&,const QList<QHostAddress>&);
 // Empty address means an authorised remote-DNS name; nullopt is refusal.
 std::optional<QHostAddress> libraryHttpProxyTarget(const LibraryHttpRoute&,const QList<QHostAddress>&,bool trackerHostNotFound=false);
+// Exact BTAnnouncer count update + calcScrapeIntervalSecs(0,seeds). Uses the
+// same process-lifetime original scrape jitter as this HTTP transport.
+std::optional<std::int64_t> libraryHttpAnnounceScrapeDeadline(const core::QueueTrackerTerminal&);
 namespace http_tracker_wire {
+std::optional<std::int64_t> announceDeadline(const core::QueueTrackerTerminal&,unsigned fuzzSeconds);
 struct Body {bool complete=false,unsupported=false;QByteArray bytes;bool failed=false;QByteArray location={};
   QByteArray basicRealm={};bool basicAuthentication=false;};
 Body response(const QByteArray&,bool eof);
@@ -56,7 +60,7 @@ struct LibraryHttpResolver {
 class LibraryHttpTracker final {
 public:
   using Request=LibraryUdpTracker::Request;
-  using Result=LibraryUdpTracker::Result;
+  struct Result {Request request;core::QueueTrackerTerminal terminal;std::int64_t observedNanos=0;};
   using Authentication=std::function<std::expected<std::optional<QByteArray>,storage::Error>(
       const Request&,const LibraryHttpRoute&,const QByteArray& realm)>;
   explicit LibraryHttpTracker(LibraryHttpResolver resolver={});

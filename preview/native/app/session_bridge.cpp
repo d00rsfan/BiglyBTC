@@ -709,14 +709,15 @@ struct SessionBridge::Host {
           .received = saved.downloaded, .sent = saved.uploaded,
           .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained && !magnetRetained,
           .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions});
-      if(unique&&!retained&&!magnetRetained&&!paused&&!stopped&&!admissionFailures.contains(hash)){
-        const auto tracker=std::ranges::find_if(trackerResponses,[&](const auto& item){return item.hash.hex()==hash;});
+      if(unique&&!magnetRetained&&!paused&&!stopped&&!admissionFailures.contains(hash)){
+        const auto tracker=std::ranges::find_if(trackerResponses,[&](const auto& item){return item.hash.hex()==hash
+            &&item.admission==(retained?active->second.admission:std::uint64_t{0});});
         if(tracker!=trackerResponses.end()&&tracker->response.type!=core::QueueOriginalScrapeType::Unknown&&tracker->response.content){
           result->items.back().trackerScrape=ui::TrackerScrapeValues{tracker->response.content->seeds,tracker->response.content->peers,
               tracker->observedWallMillis,tracker->response.type==core::QueueOriginalScrapeType::Error};
         }
         const auto estimate=std::ranges::find_if(mainlineEstimates,[&](const auto& item){return item.hash.hex()==hash;});
-        if(estimate!=mainlineEstimates.end()){result->items.back().mainlineEstimate=ui::MainlineEstimateValues{
+        if(!retained&&estimate!=mainlineEstimates.end()){result->items.back().mainlineEstimate=ui::MainlineEstimateValues{
             estimate->counts.seeds,estimate->counts.peers,estimate->startedWallMillis};}
       }
     }

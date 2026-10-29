@@ -53,14 +53,15 @@ class ManagedTrackerResponse final {
 public:
   struct Value {std::uint64_t admission=0,sequence=0,request=0;unsigned protocol=0;
     std::array<unsigned char,32> tracker{};std::int64_t requestStartedNanos=0,observedNanos=0;core::QueueTrackerTerminal terminal;};
+  using AnnounceDeadline=std::optional<std::int64_t>(*)(const core::QueueTrackerTerminal&);
   static constexpr std::uint64_t Capacity=256;
   static_assert(std::atomic<std::uint64_t>::is_always_lock_free&&std::atomic_bool::is_always_lock_free);
   const std::uint64_t admission;const unsigned protocol;const std::array<unsigned char,32> tracker;
   const std::shared_ptr<core::QueueOriginalTrackerResponse> response;
   std::atomic_bool installed{false},lost{false};
   ManagedTrackerResponse(std::uint64_t id,unsigned version,std::array<unsigned char,32> url,
-      std::shared_ptr<core::QueueOriginalTrackerResponse> value)
-      :admission(id),protocol(version),tracker(url),response(std::move(value)),worker_(std::this_thread::get_id()){}
+      std::shared_ptr<core::QueueOriginalTrackerResponse> value,AnnounceDeadline deadline=nullptr)
+      :admission(id),protocol(version),tracker(url),response(std::move(value)),deadline_(deadline),worker_(std::this_thread::get_id()){}
   void observe(const Value& value)noexcept{
     if(lost.load(std::memory_order_acquire)){return;}const auto end=written_.load(std::memory_order_relaxed),begin=read_.load(std::memory_order_acquire);
     if(end==UINT64_MAX||end-begin>=Capacity){lost.store(true,std::memory_order_release);return;}events_[end%Capacity]=value;written_.store(end+1,std::memory_order_release);
@@ -74,17 +75,28 @@ public:
           ||!value.request||value.observedNanos<lastNanos_||value.requestStartedNanos<=0||value.requestStartedNanos>value.observedNanos){lost=true;break;}
       previous_=value.sequence;lastNanos_=value.observedNanos;
       if(value.protocol!=protocol){continue;}
-      if(value.tracker!=tracker){lost=true;break;}response->observe(value.terminal);
+      if(value.tracker!=tracker){lost=true;break;}
+      const bool accepted=deadline_?response->observeChronological(value.terminal,value.observedNanos):(response->observe(value.terminal),true);
+      // Projection runs only on the existing worker drain, for every accepted
+      // terminal in order. It cannot supply counts, epochs or network rights.
+      if(deadline_){try{if(const auto due=deadline_(value.terminal)){if(response->announceTimingCurrent(value.observedNanos)&&!response->deferRegularUntil(*due,value.observedNanos)){lost=true;break;}if(accepted){latest_=value;}}}
+        catch(...){lost=true;break;}}
+      if(accepted&&(value.terminal.kind==core::QueueTrackerTerminalKind::Scrape||value.terminal.kind==core::QueueTrackerTerminalKind::ScrapeFailed)
+          &&(value.terminal.comparable||value.terminal.definitiveFailure)){latest_=value;}
     }
     read_.store(begin,std::memory_order_release);if(lost.load(std::memory_order_acquire)){response->unavailable();return false;}return true;
   }
+  // Last actual response-changing selected terminal; never drains or samples.
+  std::optional<Value> latestTerminal()const noexcept{
+    if(std::this_thread::get_id()!=worker_||!installed.load(std::memory_order_acquire)||lost.load(std::memory_order_acquire)){return {};}return latest_;
+  }
 private:
-  const std::thread::id worker_;std::array<Value,Capacity> events_{};std::atomic<std::uint64_t> written_{0},read_{0};
+  std::optional<Value> latest_;const AnnounceDeadline deadline_;const std::thread::id worker_;std::array<Value,Capacity> events_{};std::atomic<std::uint64_t> written_{0},read_{0};
   std::uint64_t previous_=0;std::int64_t lastNanos_=0;
 };
 using LibraryTrackerResponses=std::map<std::string,std::shared_ptr<core::QueueOriginalTrackerResponse>>;
 inline std::shared_ptr<ManagedTrackerResponse> attachManagedTrackerResponse(libtorrent::add_torrent_params& params,
-    const storage::ProfileLease& lease,const storage::OriginalTorrentIdentity& identity,std::uint64_t admission,LibraryTrackerResponses& library)noexcept{
+    const storage::ProfileLease& lease,const storage::OriginalTorrentIdentity& identity,std::uint64_t admission,LibraryTrackerResponses& library,ManagedTrackerResponse::AnnounceDeadline deadline=nullptr)noexcept{
 #if BIGLYBTC_TRACKER_RESPONSE_BRIDGE
   namespace lt=libtorrent;
   try{
@@ -99,7 +111,7 @@ inline std::shared_ptr<ManagedTrackerResponse> attachManagedTrackerResponse(libt
     auto row=library.find(*key);if(row==library.end()){
       if(library.size()==256){return {};}row=library.emplace(*key,std::make_shared<core::QueueOriginalTrackerResponse>()).first;
     }
-    auto ring=std::make_shared<ManagedTrackerResponse>(admission,identity.selected==storage::OriginalSelectedHash::V1?1u:2u,*digest,row->second);
+    auto ring=std::make_shared<ManagedTrackerResponse>(admission,identity.selected==storage::OriginalSelectedHash::V1?1u:2u,*digest,row->second,deadline);
     struct Sink final:lt::BiglybtcTrackerResponseObserverV1 {
       std::shared_ptr<void> pin;std::shared_ptr<ManagedTrackerResponse> ring;
       Sink(std::shared_ptr<void> p,std::shared_ptr<ManagedTrackerResponse> r):pin(std::move(p)),ring(std::move(r)){}
@@ -121,7 +133,7 @@ inline std::shared_ptr<ManagedTrackerResponse> attachManagedTrackerResponse(libt
     });return ring;
   }catch(...){return {};}
 #else
-  (void)params;(void)lease;(void)identity;(void)admission;(void)library;return {};
+  (void)params;(void)lease;(void)identity;(void)admission;(void)library;(void)deadline;return {};
 #endif
 }
 } // namespace biglybtc::engine::detail

@@ -494,22 +494,33 @@ void advanceMainlineScrapes(Clock::time_point now) noexcept {
   }
 }
 
-// Saved SOCKS5 tracker scraping is independent of the unavailable Mainline
+// Saved and genuinely admitted SOCKS5 tracker scraping is independent of the unavailable Mainline
 // service. It uses only this existing worker tick and the same per-URL response
 // reducer; no DHT, lookup, PORT, announce or hidden torrent can be started here.
+std::map<std::uint64_t,std::uint64_t> regularTrackerSequences;
 void advanceProxyHttpTrackers(Clock::time_point now)noexcept {
   if(!libraryHttpProxyMode()){regularTrackerViews.clear();return;}
   try{
     advanceLibraryHttp(now);if(now<regularTrackerRefresh){return;}regularTrackerRefresh=now+10s;
     if(!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){cancelLibraryHttp();regularTrackerViews.clear();return;}
     std::vector<std::string> inventory;
-    auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,{},true,&inventory,SavedTrackerPurpose::RegularHttp);
+    auto targets=regularHttpTargets(&inventory);
     if(!targets){cancelLibraryHttp();regularTrackerViews.clear();return;}
     if(const auto* request=libraryHttp.active();request&&!libraryHttpAuthorise(*request)){cancelLibraryHttp();}
     std::erase_if(trackerSelectionSeeds,[&](const auto& row){return std::ranges::find(inventory,row.first)==inventory.end();});
+    std::erase_if(regularTrackerSequences,[&](const auto& row){return std::ranges::none_of(managed,[&](const auto& item){return item.second->status.admission==row.first;});});
     std::vector<LibraryTrackerResponse> next;
     for(auto target:*targets){
-      if(target.admission||mainlineScrapes.revoked(target.hash)||!libraryUdpUnadmitted(target.hash)||!trackerSelectionSeed(target.hash)){continue;}
+      if(mainlineScrapes.revoked(target.hash)||!libraryHttpAdmissionCurrent(target)||!trackerSelectionSeed(target.hash)){continue;}
+      if(target.admission){
+        const auto& value=*managed.at(target.hash.hex());auto& ring=*value.trackerResponse;
+        if(!ring.drain()){continue;}
+        const auto last=ring.latestTerminal();
+        if(last&&regularTrackerSequences[target.admission]!=last->sequence){
+          regularTrackerSequences[target.admission]=last->sequence;
+          observeLibraryHttpTime(target.trackerResponseKey,last->terminal,last->observedNanos);
+        }
+      }
       bool pending=false;
       if(!target.configuredTrackers.empty()){
         if(!prepareLibraryTrackerTiers(target,std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count(),pending)){continue;}
@@ -519,7 +530,7 @@ void advanceProxyHttpTrackers(Clock::time_point now)noexcept {
       const auto response=trackerResponses.find(target.trackerResponseKey);const auto observed=libraryHttpObservedWall.find(target.trackerResponseKey);
       if(response==trackerResponses.end()||observed==libraryHttpObservedWall.end()||observed->second<0){continue;}
       const auto content=response->second->response();
-      if(content.type!=core::QueueOriginalScrapeType::Unknown&&content.content){next.push_back({target.hash,content,observed->second});}
+      if(content.type!=core::QueueOriginalScrapeType::Unknown&&content.content){next.push_back({target.hash,content,observed->second,target.admission});}
     }
     regularTrackerViews=std::move(next);
   }catch(...){cancelLibraryHttp();regularTrackerViews.clear();}

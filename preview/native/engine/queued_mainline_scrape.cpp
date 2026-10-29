@@ -139,7 +139,6 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     std::vector<std::string>* authenticatedInventoryHashes,SavedTrackerPurpose purpose){
   try{
     const bool regular=purpose==SavedTrackerPurpose::RegularHttp;
-    if(regular&&!observations.empty()){return error(Code::Unsupported,"Saved regular HTTP scope does not borrow an admission");}
     if(observations.size()>256){return error(Code::Unsupported,"Active Mainline scrape target bound");}
     std::map<std::string,const ManagedMainlineScrapeObservation*> active;
     std::set<std::uint64_t> admissions;
@@ -210,7 +209,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       }
       if(regular&&!configured){continue;}
       if(observation&&configured&&configured->size()>1){continue;} // Active announcer selection is separate.
-      if(observation){
+      if(observation&&!regular){
         const auto permitted=activeScrapeOnly(*attrs);if(!permitted){return std::unexpected(permitted.error());}
         if(!*permitted){continue;} // Normal active announce mode is not a passive scrape.
       }
@@ -228,8 +227,11 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
         const auto& capturedIdentity=files.identity();
         // A fresh passive permission cannot turn an already discovery-enabled
         // admission into both consumers. Route changes require normal readmission.
-        if(files.mainlinePolicy().discover||files.mainlinePolicy().announce){continue;}
+        if(!regular&&(files.mainlinePolicy().discover||files.mainlinePolicy().announce)){continue;}
         const auto params=files.parameters();if(!params.ti){continue;}
+        if(regular){const auto url=detail::singleEffectiveTracker(params);
+          if(!configured||configured->size()!=1||!url||*url!=configured->front().url
+              ||(!url->starts_with("http://")&&!url->starts_with("https://"))){continue;}}
         const auto subject=storage::originalTorrentInfoSubject(doc);if(!subject){return std::unexpected(subject.error());}
         const auto section=params.ti->info_section();
         if(captured.hash!=row.saved.hash||!captured.persistent
@@ -270,7 +272,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
           }
         }
       }
-      if(observation){append(scope,"active-mldht-scrape");append(scope,std::to_string(observation->admission));append(scope,mapping);}
+      if(observation){append(scope,regular?"active-regular-http":"active-mldht-scrape");append(scope,std::to_string(observation->admission));append(scope,mapping);}
       auto hashed=digest(scope);if(!hashed){return error(Code::Io,observation?"Cannot authenticate managed Mainline scope":"Cannot authenticate saved Mainline scope");}
       std::string responseKey;std::vector<SavedMainlineTracker> trackers;
       if(configured){

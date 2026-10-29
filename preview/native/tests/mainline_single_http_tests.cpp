@@ -1,4 +1,7 @@
 #include "library_http_policy.hpp"
+#include "managed_storage.hpp"
+#include "managed_tracker_responses.hpp"
+#include "persistent_runtime_guard.hpp"
 #include "queued_mainline_scrape.hpp"
 #include "owned_mainline_krpc.hpp"
 #include "library_commands.hpp"
@@ -186,6 +189,57 @@ QByteArray socksSettings(const engine::NetworkPolicy& p){
   return krpc::dictionary({{"Peer Source Selection Default.DHT",p.dht?"i1e":"i0e"},{"Enable.Proxy","i1e"},{"Enable.SOCKS","i1e"},{"Proxy.Host",krpc::string(QByteArray::fromStdString(p.proxy.host))},{"Proxy.Port",krpc::string(QByteArray::number(p.proxy.port))},
       {"Proxy.Username",krpc::string(QByteArray::fromStdString(p.proxy.username))},{"Proxy.Password",krpc::string(QByteArray::fromStdString(p.proxy.password))},{"Proxy.SOCKS.Tracker.DNS.Disable",p.proxy.remoteDns?"i1e":"i0e"}});
 }
+// Independent real announce/scrape endpoint for the admitted-owner path.
+// It returns no peers and differentiates LT announces from the sole Qt scrape.
+class AdmittedHttpServer final:public QTcpServer {
+  const Certificate* tls;
+public:
+  QByteArray expectedHash;QString failure;int announces=0,scrapes=0;
+  bool failedAnnounce=false,holdScrapes=false;int completedAnnounceConnections=0;QList<QPointer<QTcpSocket>> held;
+  explicit AdmittedHttpServer(const Certificate* cert=nullptr):tls(cert){test::require(listen(QHostAddress::LocalHost,0),"Cannot bind owned admitted tracker");}
+  std::string url()const{return std::string(tls?"https://":"http://")+"localhost:"+std::to_string(serverPort())+"/announce";}
+  void release(){holdScrapes=false;const auto copy=held;held.clear();for(const auto& socket:copy){if(socket&&socket->state()==QAbstractSocket::ConnectedState){reply(socket,scrapeBody());}}}
+private:
+  QByteArray scrapeBody()const{return krpc::dictionary({{"files",krpc::dictionary({{expectedHash,krpc::dictionary({{"complete","i7e"},{"incomplete","i8e"},{"downloaded","i9e"}})}})}});}
+  void reply(QTcpSocket* socket,const QByteArray& body,bool waitForClientClose=false){const auto bytes="HTTP/1.1 200 OK\r\nContent-Length: "+QByteArray::number(body.size())+"\r\nConnection: "+(waitForClientClose?"keep-alive":"close")+"\r\n\r\n"+body;if(socket->write(bytes)!=bytes.size()){failure="Owned admitted reply failed";}if(!waitForClientClose){socket->disconnectFromHost();}}
+protected:
+  void incomingConnection(qintptr fd)override{
+    QTcpSocket* socket=tls?static_cast<QTcpSocket*>(new QSslSocket(this)):new QTcpSocket(this);
+    if(tls){auto* ssl=static_cast<QSslSocket*>(socket);ssl->setLocalCertificate(tls->certificate);ssl->setPrivateKey(tls->key);}
+    if(!socket->setSocketDescriptor(fd)){failure="Owned admitted descriptor failed";socket->deleteLater();return;}
+    auto input=std::make_shared<QByteArray>();auto complete=std::make_shared<bool>(false);
+    QObject::connect(socket,&QTcpSocket::readyRead,this,[this,socket,input,complete]{
+      *input+=socket->readAll();if(input->size()>8192){failure="Owned admitted request bound";socket->abort();return;}if(*complete||!input->contains("\r\n\r\n")){return;}*complete=true;
+      const auto line=input->left(input->indexOf("\r\n"));const auto parts=line.split(' ');if(parts.size()!=3||parts[0]!="GET"){failure="Owned admitted request line";return;}
+      const auto path=parts[1].split('?');QByteArray actual;unsigned hashes=0;
+      for(const auto& field:parts[1].mid(parts[1].indexOf('?')+1).split('&')){const auto equal=field.indexOf('=');if(field.left(equal)=="info_hash"){auto value=field.mid(equal+1);value.replace('+',' ');actual=QByteArray::fromPercentEncoding(value);++hashes;}}
+      if(hashes!=1||actual!=expectedHash||path.isEmpty()){failure="Owned admitted selected hash mismatch";return;}
+      if(path[0]=="/announce"){
+        ++announces;if(!failedAnnounce){QObject::connect(socket,&QTcpSocket::disconnected,this,[this]{++completedAnnounceConnections;});}
+        reply(socket,failedAnnounce?krpc::dictionary({{"failure reason",krpc::string("owned announce refusal")}}):krpc::dictionary({{"complete","i5e"},{"incomplete","i6e"},{"interval","i1800e"},{"peers",krpc::string({})}}),!failedAnnounce);
+      }else if(path[0]=="/scrape"){++scrapes;if(holdScrapes){held.push_back(socket);}else{reply(socket,scrapeBody());}}
+      else{failure="Unexpected owned admitted target path";}
+    });
+    QObject::connect(socket,&QTcpSocket::disconnected,socket,&QObject::deleteLater);
+    if(tls){static_cast<QSslSocket*>(socket)->startServerEncryption();}
+  }
+};
+void prepareNormalAdmittedProxy(test::OwnedEngineFixture& saved,const std::string& url,bool privateTorrent){
+  auto source=core::Document::parse(test::read(saved.stateFile).toStdString());test::require(source.has_value(),"Owned admitted source parse");
+  test::require(source->replaceValue("announce",test::encoded(libtorrent::entry(url))).has_value(),"Owned admitted announce");
+  if(privateTorrent){
+    const auto raw=core::encodeValue(*source->find("info"));test::require(raw.has_value(),"Owned private info encode");auto info=core::Document::parse(*raw);test::require(info.has_value()&&info->replaceValue("private","i1e").has_value(),"Owned private flag");
+    test::require(source->replaceValue("info",info->serialize()).has_value(),"Owned private info replace");const auto bytes=QCryptographicHash::hash(QByteArray::fromStdString(info->serialize()),QCryptographicHash::Sha1);
+    const auto key=core::TorrentHash::parse(std::string_view(bytes.constData(),static_cast<std::size_t>(bytes.size())));test::require(key.has_value(),"Owned private hash");saved.hash=*key;const auto old=saved.stateFile;saved.stateFile=saved.profile+"/active/"+QString::fromStdString(key->hex())+".dat";test::require(QFile::remove(old),"Owned old source remove");
+  }
+  const auto encoded=core::encodeValue(*source->find("attributes"));test::require(encoded.has_value(),"Owned attrs encode");auto attrs=core::Document::parse(*encoded);test::require(attrs.has_value(),"Owned attrs parse");
+  test::require(attrs->replaceValue("peersources","l7:Trackere").has_value()&&attrs->replaceValue("peersourcesdenied","l3:DHTe").has_value()
+      &&attrs->replaceValue("pluginoptions","d5:mldhtd14:enableannouncei1eee").has_value(),"Owned normal tracker permission");test::require(source->replaceValue("attributes",attrs->serialize()).has_value(),"Owned attrs replace");test::write(saved.stateFile,QByteArray::fromStdString(source->serialize()));
+  auto inventory=core::Document::parse(test::read(saved.profile+"/downloads.config").toStdString());test::require(inventory.has_value(),"Owned inventory parse");const auto rowBytes=core::encodeValue(inventory->find("downloads")->children[0]);test::require(rowBytes.has_value(),"Owned row encode");auto row=core::Document::parse(*rowBytes);test::require(row.has_value(),"Owned row parse");
+  const auto rawHash=std::string(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);
+  test::require(row->replaceValue("torrent_hash",test::encoded(libtorrent::entry(rawHash))).has_value()&&row->replaceValue("torrent",test::encoded(libtorrent::entry(saved.stateFile.toStdString()))).has_value()&&row->replaceValue("state","i50e").has_value(),"Owned live intent fields");
+  test::require(inventory->replaceValue("downloads","l"+row->serialize()+"e").has_value(),"Owned row replace");test::write(saved.profile+"/downloads.config",QByteArray::fromStdString(inventory->serialize()));
+}
 struct SavedBytes {
   QString path;QByteArray bytes;struct stat before{};
   explicit SavedBytes(QString p):path(std::move(p)),bytes(test::read(path)){test::require(::lstat(path.toStdString().c_str(),&before)==0,"Cannot snapshot owned control");}
@@ -212,6 +266,105 @@ QByteArray savedAuthentication(const QUrl& url,const QByteArray& realm,const QBy
 class MainlineSingleHttpTests final:public QObject {
   Q_OBJECT
 private slots:
+  void actualAnnounceDefersWithoutReplacingRetainedContentOrShorteningScrapeDue(){
+    core::QueueTrackerTerminal announce;announce.kind=core::QueueTrackerTerminalKind::Announce;announce.comparable=true;announce.present=3;announce.complete=5;announce.incomplete=6;announce.observedMillis=1000;announce.observedWallMillis=2000;
+    const auto due=detail::libraryHttpAnnounceScrapeDeadline(announce);QVERIFY(due);QVERIFY(*due>=951000&&*due<=1130000);QCOMPARE(detail::libraryHttpAnnounceScrapeDeadline(announce),due);
+    core::QueueOriginalTrackerResponse response;response.observe(announce);response.deferRegularUntil(*due);QVERIFY(!response.regularPollDue(*due-1));QVERIFY(response.regularPollDue(*due));QCOMPARE(response.response().content->seeds,5);
+    response.deferRegularUntil(*due-100);QVERIFY(!response.regularPollDue(*due-1));response.requested();response.deferRegularUntil(*due+100);QVERIFY(!response.regularPollDue(*due+100));response.cancelRequest();QVERIFY(response.regularPollDue(*due+100));
+    announce.kind=core::QueueTrackerTerminalKind::AnnounceFailed;announce.definitiveFailure=true;QVERIFY(!detail::libraryHttpAnnounceScrapeDeadline(announce));announce.kind=core::QueueTrackerTerminalKind::Announce;announce.complete=-1;QVERIFY(!detail::libraryHttpAnnounceScrapeDeadline(announce));
+  }
+  void chronologicalMergeRejectsOldCountStatusAndPreScrapeAnnounceDeadline(){
+    auto response=std::make_shared<core::QueueOriginalTrackerResponse>();
+    const auto deadline=+[](const core::QueueTrackerTerminal& value)->std::optional<std::int64_t>{if(value.kind!=core::QueueTrackerTerminalKind::Announce){return {};}return value.observedMillis+value.complete*1000;};
+    detail::ManagedTrackerResponse ring(9,1,{},response,deadline);ring.installed=true;
+    detail::ManagedTrackerResponse::Value old;old.admission=9;old.sequence=1;old.request=1;old.protocol=1;old.requestStartedNanos=1;old.observedNanos=1000000;
+    old.terminal.kind=core::QueueTrackerTerminalKind::Announce;old.terminal.comparable=true;old.terminal.present=3;old.terminal.complete=10000;old.terminal.incomplete=6;old.terminal.observedMillis=1000;old.terminal.observedWallMillis=2000;
+    ring.observe(old); // Actual older provider event is queued but not drained.
+    core::QueueTrackerTerminal newer;newer.kind=core::QueueTrackerTerminalKind::Scrape;newer.comparable=true;newer.present=3;newer.complete=7;newer.incomplete=8;newer.observedMillis=2000;newer.observedWallMillis=3000;newer.regularDelayMillis=100;
+    response->requested();QVERIFY(response->observeChronological(newer,2000000));QVERIFY(!response->observeChronological(newer,2000000));QVERIFY(ring.drain());QCOMPARE(response->response().content->seeds,7);QCOMPARE(response->response().content->peers,8);QVERIFY(!ring.latestTerminal());QVERIFY(!response->regularPollDue(2099));QVERIFY(response->regularPollDue(2100));
+    auto staleError=newer;staleError.kind=core::QueueTrackerTerminalKind::ScrapeFailed;staleError.definitiveFailure=true;staleError.observedMillis=1500;QVERIFY(!response->observeChronological(staleError,1500000));QCOMPARE(response->response().type,core::QueueOriginalScrapeType::Success);QVERIFY(response->regularPollDue(2100));
+    // Multiple genuine announces after that scrape still keep their maximum
+    // postponement even if the older one is drained after a later announce.
+    auto later=old;later.sequence=2;later.request=2;later.observedNanos=4000000;later.terminal.complete=5;later.terminal.observedMillis=4000;ring.observe(later);QVERIFY(ring.drain());
+    auto between=old.terminal;between.complete=100;between.observedMillis=3000;QVERIFY(!response->observeChronological(between,3000000));QVERIFY(response->announceTimingCurrent(3000000));response->deferRegularUntil(*deadline(between));QCOMPARE(response->response().content->seeds,5);QVERIFY(!response->regularPollDue(102999));QVERIFY(response->regularPollDue(103000));
+  }
+  void pendingQtScrapeCutsOldHeavyAnnounceButRetainsNewerAnnounceCountsAndTiming(){
+    auto response=std::make_shared<core::QueueOriginalTrackerResponse>();
+    const auto deadline=+[](const core::QueueTrackerTerminal& value)->std::optional<std::int64_t>{if(value.kind!=core::QueueTrackerTerminalKind::Announce){return {};}return value.observedMillis+value.complete*1000;};
+    detail::ManagedTrackerResponse ring(9,1,{},response,deadline);ring.installed=true;response->requested();
+    detail::ManagedTrackerResponse::Value first;first.admission=9;first.sequence=1;first.request=1;first.protocol=1;first.requestStartedNanos=1;first.observedNanos=1000000;
+    first.terminal.kind=core::QueueTrackerTerminalKind::Announce;first.terminal.comparable=true;first.terminal.present=3;first.terminal.complete=10000;first.terminal.incomplete=6;first.terminal.observedMillis=1000;first.terminal.observedWallMillis=2000;
+    auto third=first;third.sequence=2;third.request=2;third.observedNanos=3000000;third.terminal.complete=5;third.terminal.observedMillis=3000;third.terminal.observedWallMillis=4000;
+    ring.observe(first);ring.observe(third);QVERIFY(ring.drain());QCOMPARE(response->response().content->seeds,5);
+    core::QueueTrackerTerminal second;second.kind=core::QueueTrackerTerminalKind::Scrape;second.comparable=true;second.present=3;second.complete=7;second.incomplete=8;second.observedMillis=2000;second.observedWallMillis=3000;second.regularDelayMillis=100;
+    QVERIFY(!response->observeChronological(second,2000000));response->cancelRequest();QCOMPARE(response->response().content->seeds,5);QCOMPARE(response->response().content->peers,6);QCOMPARE(response->response().content->startedWallMillis,std::int64_t{4000});
+    QVERIFY(!response->regularPollDue(7999));QVERIFY(response->regularPollDue(8000)); // max(scrape2100,post-scrape announce8000), never pre-scrape10001000.
+    // The ledger is per job, not a256-operation lifetime limit.
+    for(int round=0;round<300;++round){response->requested();QVERIFY(response->deferRegularUntil(9000,4000000));response->cancelRequest();}
+    response->requested();for(int i=0;i<256;++i){QVERIFY(response->deferRegularUntil(10000+i,5000000+i));}QVERIFY(!response->deferRegularUntil(20000,6000000));QCOMPARE(response->response().type,core::QueueOriginalScrapeType::Unknown);QVERIFY(!response->regularPollDue(-1));
+  }
+  void providerScrapeDoesNotSettleTheSeparatePhysicalQtTimingWindow(){
+    auto response=std::make_shared<core::QueueOriginalTrackerResponse>();
+    const auto deadline=+[](const core::QueueTrackerTerminal& value)->std::optional<std::int64_t>{if(value.kind!=core::QueueTrackerTerminalKind::Announce){return {};}return value.observedMillis+value.complete*1000;};
+    detail::ManagedTrackerResponse ring(9,1,{},response,deadline);ring.installed=true;response->requested();
+    detail::ManagedTrackerResponse::Value first;first.admission=9;first.sequence=1;first.request=1;first.protocol=1;first.requestStartedNanos=1;first.observedNanos=1000000;first.terminal.kind=core::QueueTrackerTerminalKind::Announce;first.terminal.comparable=true;first.terminal.present=3;first.terminal.complete=10000;first.terminal.incomplete=6;first.terminal.observedMillis=1000;first.terminal.observedWallMillis=2000;
+    auto second=first;second.sequence=2;second.request=2;second.observedNanos=2000000;second.terminal.kind=core::QueueTrackerTerminalKind::Scrape;second.terminal.complete=2;second.terminal.observedMillis=2000;second.terminal.regularDelayMillis=1000;
+    auto fourth=first;fourth.sequence=3;fourth.request=3;fourth.observedNanos=4000000;fourth.terminal.complete=5;fourth.terminal.observedMillis=4000;fourth.terminal.observedWallMillis=5000;
+    ring.observe(first);ring.observe(second);ring.observe(fourth);QVERIFY(ring.drain());QCOMPARE(response->response().content->seeds,5);
+    auto third=second.terminal;third.complete=7;third.incomplete=8;third.observedMillis=3000;third.regularDelayMillis=100;
+    QVERIFY(!response->observeChronological(third,3000000));response->cancelRequest();QCOMPARE(response->response().content->seeds,5);QCOMPARE(response->response().content->startedWallMillis,std::int64_t{5000});QVERIFY(!response->regularPollDue(8999));QVERIFY(response->regularPollDue(9000));
+  }
+  void announceDeadlinePreservesJavaOverflowWithCheckedSignedAddition(){
+    core::QueueTrackerTerminal value;value.kind=core::QueueTrackerTerminalKind::Announce;value.comparable=true;value.present=3;value.complete=214748265;value.incomplete=1;value.observedMillis=0;
+    const auto delay=wire::interval(0,214748265,98);QVERIFY(delay<0);const auto negative=wire::announceDeadline(value,98);QVERIFY(negative);QCOMPARE(*negative,delay);
+    core::QueueOriginalTrackerResponse response;response.deferRegularUntil(5000);response.deferRegularUntil(*negative);QVERIFY(!response.regularPollDue(4999));QVERIFY(response.regularPollDue(5000));
+    value.complete=5;value.observedMillis=INT64_MAX-1;QCOMPARE(wire::announceDeadline(value,0),std::optional<std::int64_t>{INT64_MAX});value.observedMillis=10;value.present=4;value.complete=-1;value.incomplete=-1;value.downloaded=-9;QVERIFY(wire::announceDeadline(value,0));value.present=0;QVERIFY(!wire::announceDeadline(value,0));
+  }
+  void everyActualAnnouncePostponesInOrderAndLostRingWithdrawsLatestResponse(){
+    auto response=std::make_shared<core::QueueOriginalTrackerResponse>();
+    const auto deadline=+[](const core::QueueTrackerTerminal& value)->std::optional<std::int64_t>{if(value.kind!=core::QueueTrackerTerminalKind::Announce){return {};}return value.observedMillis+value.complete*1000;};
+    detail::ManagedTrackerResponse ring(9,1,{},response,deadline);ring.installed=true;
+    detail::ManagedTrackerResponse::Value one;one.admission=9;one.sequence=1;one.request=1;one.protocol=1;one.requestStartedNanos=1;one.observedNanos=1000000;
+    one.terminal.kind=core::QueueTrackerTerminalKind::Announce;one.terminal.comparable=true;one.terminal.present=3;one.terminal.complete=100;one.terminal.incomplete=6;one.terminal.observedMillis=1000;one.terminal.observedWallMillis=2000;
+    auto two=one;two.sequence=2;two.request=2;two.observedNanos=2000000;two.terminal.complete=5;two.terminal.observedMillis=2000;two.terminal.observedWallMillis=3000;
+    ring.observe(one);ring.observe(two);QVERIFY(ring.drain());QCOMPARE(response->response().content->seeds,5);QVERIFY(!response->regularPollDue(100999));QVERIFY(response->regularPollDue(101000));QVERIFY(ring.latestTerminal());QCOMPARE(ring.latestTerminal()->sequence,std::uint64_t{2});
+    auto failed=two;failed.sequence=3;failed.request=3;failed.observedNanos=3000000;failed.terminal.kind=core::QueueTrackerTerminalKind::AnnounceFailed;failed.terminal.definitiveFailure=true;ring.observe(failed);QVERIFY(ring.drain());QCOMPARE(ring.latestTerminal()->sequence,std::uint64_t{2});QCOMPARE(response->response().content->seeds,5);QVERIFY(!response->regularPollDue(100999));
+    auto wrong=two;wrong.sequence=4;wrong.request=4;wrong.observedNanos=4000000;wrong.tracker[0]=1;ring.observe(wrong);QVERIFY(!ring.drain());QVERIFY(!ring.latestTerminal());QCOMPARE(response->response().type,core::QueueOriginalScrapeType::Unknown);
+  }
+  void admittedProxyReaderRequiresActualCapturedUrlFullSubjectAndFreshTrackerPermission(){
+    test::OwnedEngineFixture saved(false);HttpServer server;SocksProxy proxy(server.serverPort());const auto selected=socksPolicy(proxy);prepareNormalAdmittedProxy(saved,server.url(),false);
+    auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);auto storage=detail::ManagedStorage::prepare(*lease,*saved.hash,selected);QVERIFY(storage);engine::ManagedMainlineScrapeObservation observation{&*storage,8831,false};
+    const auto read=[&]{return engine::readCurrentMainlineScrapeTargets(*lease,std::span(&observation,1),true,nullptr,engine::SavedTrackerPurpose::RegularHttp);};
+    auto normal=read();QVERIFY(normal);QCOMPARE(normal->size(),std::size_t{1});QCOMPARE(normal->front().admission,std::uint64_t{8831});QCOMPARE(normal->front().configuredTracker,server.url());auto old=engine::readCurrentMainlineScrapeTargets(*lease,std::span(&observation,1),true);QVERIFY(old&&old->empty());
+    const auto original=test::read(saved.stateFile);auto changed=core::Document::parse(original.toStdString());QVERIFY(changed);QVERIFY(changed->replaceValue("announce",test::encoded(libtorrent::entry("http://localhost:1/announce"))));test::write(saved.stateFile,QByteArray::fromStdString(changed->serialize()));auto different=read();QVERIFY(different&&different->empty());test::write(saved.stateFile,original);
+    auto denied=core::Document::parse(original.toStdString());QVERIFY(denied);auto raw=core::encodeValue(*denied->find("attributes"));QVERIFY(raw);auto attrs=core::Document::parse(*raw);QVERIFY(attrs);QVERIFY(attrs->replaceValue("peersourcesdenied","l7:Trackere"));QVERIFY(denied->replaceValue("attributes",attrs->serialize()));test::write(saved.stateFile,QByteArray::fromStdString(denied->serialize()));auto noPermission=read();QVERIFY(noPermission&&noPermission->empty());test::write(saved.stateFile,original);
+  }
+  void normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery_data(){
+    QTest::addColumn<int>("mode");QTest::newRow("HTTP-healthy-announce-no-redundant-scrape")<<0;QTest::newRow("HTTP-failed-announce-real-scrape")<<1;QTest::newRow("private-HTTPS-saved-JKS-real-scrape")<<2;QTest::newRow("private-HTTP-stop-before-held-scrape")<<3;
+  }
+  void normalAdmittedProxyUsesActualAnnounceOrSoleScrapeAndWithdrawsBeforeLateDelivery(){
+    QFETCH(int,mode);QVERIFY(detail::managedTrackerResponseRuntimePin());const bool encrypted=mode==2,privateTorrent=mode>=2;Certificate identity;AdmittedHttpServer server(encrypted?&identity:nullptr);server.failedAnnounce=mode!=0;server.holdScrapes=mode==3;
+    test::OwnedEngineFixture saved(false);SocksProxy proxy(server.serverPort());auto selected=socksPolicy(proxy);selected.dht=privateTorrent;QTcpServer listen;QVERIFY(listen.listen(QHostAddress::LocalHost,0));selected.listenPort=listen.serverPort();listen.close();prepareNormalAdmittedProxy(saved,server.url(),privateTorrent);server.expectedHash=QByteArray(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);test::write(saved.profile+"/biglybt.config",socksSettings(selected));
+    if(encrypted){QVERIFY(QSslSocket::supportsSsl());test::write(saved.profile+"/.certs",jksStore({{"owned",{identity.certificate.toDer()},false}}));}
+    const auto rawBefore=test::read(saved.stateFile);const auto doc=core::Document::parse(rawBefore.toStdString());QVERIFY(doc);const auto rawInfo=core::encodeValue(*doc->find("info"));QVERIFY(rawInfo);const auto payload=test::read(saved.payload+"/sample.bin");
+    auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);auto created=engine::PersistentSession::create({8841,8842,8843});QVERIFY(created);auto owner=std::move(*created);QVERIFY(owner->configureNetwork(selected));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*lease));QVERIFY(owner->startManaged(*lease,{.hash=*saved.hash,.queued=false}));QString failure;
+    if(mode==0){
+      // No owner pump runs before this actual first-announce barrier. The
+      // owned server leaves the reply socket open; LT on_response dispatches
+      // its callback BEFORE close(), so client closure proves the real ring
+      // terminal was emitted before the first regular-producer worker turn.
+      QTRY_VERIFY_WITH_TIMEOUT(server.completedAnnounceConnections>0,15000);QVERIFY(server.failure.isEmpty());QCOMPARE(server.scrapes,0);
+    }
+    const auto pump=[&]{if(!owner->poll()){failure="Normal admitted proxy poll failed";return false;}for(const auto& value:owner->managedDownloads()){if(value.failure){failure=QString::fromStdString(value.failure->message);return false;}}failure=server.failure+proxy.failure;return failure.isEmpty();};
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!pump()){return true;}const auto rows=owner->managedDownloads();return rows.size()==1&&rows[0].checked&&rows[0].retained&&rows[0].phase==engine::ManagedPhase::Downloading;}()),15000);QVERIFY2(failure.isEmpty(),qPrintable(failure));const auto admission=owner->managedDownloads()[0].admission;QVERIFY(admission);QVERIFY(!owner->managedTrackerResponse(*saved.hash,admission+1));
+    if(mode==3){
+      QTRY_VERIFY_WITH_TIMEOUT(!pump()||server.scrapes==1,15000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QVERIFY(owner->pauseManaged(*saved.hash,true));QVERIFY(owner->libraryTrackerResponses().empty());server.release();QVERIFY(pump());const auto late=owner->managedTrackerResponse(*saved.hash,admission);QVERIFY(!late||late->type!=core::QueueOriginalScrapeType::Success);QVERIFY(owner->libraryTrackerResponses().empty());
+    }else{
+      QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!pump()){return true;}const auto views=owner->libraryTrackerResponses();return views.size()==1&&views[0].admission==admission&&views[0].response.content&&views[0].response.content->seeds==(mode==0?5:7)&&views[0].response.content->peers==(mode==0?6:8);}()),20000);QVERIFY2(failure.isEmpty(),qPrintable(failure));const auto views=owner->libraryTrackerResponses();QCOMPARE(views.size(),std::size_t{1});QCOMPARE(views[0].hash,*saved.hash);QCOMPARE(views[0].admission,admission);QCOMPARE(views[0].response.type,core::QueueOriginalScrapeType::Success);const auto actual=owner->managedTrackerResponse(*saved.hash,admission);QVERIFY(actual&&actual->content);QCOMPARE(actual->content->seeds,mode==0?5:7);QCOMPARE(server.scrapes,mode==0?0:1);if(!encrypted){QVERIFY(server.announces>=1);}QVERIFY(owner->pauseManaged(*saved.hash,true));QVERIFY(owner->libraryTrackerResponses().empty());
+    }
+    const auto discovery=owner->mainlineDiscovery();QCOMPARE(discovery.lookups,std::uint64_t{0});QCOMPARE(discovery.announces,std::uint64_t{0});QCOMPARE(discovery.deliveredPeers,std::uint64_t{0});QVERIFY(owner->mainlineScrapeEstimates().empty());
+    const auto closed=owner->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(owner->libraryTrackerResponses().empty());QCOMPARE(test::read(saved.payload+"/sample.bin"),payload);const auto after=core::Document::parse(test::read(saved.stateFile).toStdString());QVERIFY(after);const auto afterInfo=core::encodeValue(*after->find("info"));QVERIFY(afterInfo);QCOMPARE(*afterInfo,*rawInfo);QVERIFY(saved.accountingIntact(false));QVERIFY(server.failure.isEmpty()&&proxy.failure.isEmpty());
+  }
   void socks5RoutesKeepExplicitProxyDnsAndSavedConfigurationAuthority(){
     HttpServer server;SocksProxy proxy(server.serverPort());auto p=socksPolicy(proxy);p.dht=false;
     auto route=detail::libraryHttpRoute(p,server.url());QVERIFY(route&&route->socks5);QVERIFY(route->socks5->remoteDns);

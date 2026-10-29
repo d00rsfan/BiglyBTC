@@ -48,11 +48,12 @@ using ApplicationObservationSink = std::function<void(ApplicationPeerObservation
 struct NetworkPolicy;
 struct PendingMagnet;
 // Last authenticated regular library response. This owns values only and
-// supplies no admission, scheduler/peer permission or synthetic queue epoch.
+// supplies no new admission, scheduler/peer permission or synthetic queue epoch.
 struct LibraryTrackerResponse {
   core::TorrentHash hash;
   core::QueueOriginalScrapeResponse response;
   std::int64_t observedWallMillis=0;
+  std::uint64_t admission=0; // Zero is saved-only; nonzero requires this exact live owner.
 };
 struct MainlineScrapeCandidateStatus {
   core::TorrentHash hash;

@@ -48,6 +48,31 @@ bool QueueOriginalTrackerResponse::regularDue(std::int64_t now)const noexcept {
       &&!sourceQueueQueuedScrapeEligible(current,ownStart_)){return false;}
   return !regular_||now>=nextRegular_;
 }
+bool QueueOriginalTrackerResponse::observeChronological(const QueueTrackerTerminal& value,std::int64_t stamp) noexcept {
+  if(stamp<=0||value.observedMillis<0||(value.present&~7u)){unavailable();return false;}
+  const bool accepted=stamp>lastChronologicalNanos_;
+  if(accepted){lastChronologicalNanos_=stamp;observe(value);}
+  const bool scrape=value.kind==QueueTrackerTerminalKind::Scrape||value.kind==QueueTrackerTerminalKind::ScrapeFailed;
+  if(scrape&&stamp>lastChronologicalScrapeNanos_){
+    // A real scrape assigns next time, even when a later announce's counts
+    // already won. Reapply only announces occurring after that scrape.
+    lastChronologicalScrapeNanos_=stamp;const auto delay=value.regularDelayMillis.value_or(600000);
+    nextRegular_=delay>0&&value.observedMillis>INT64_MAX-delay?INT64_MAX:value.observedMillis+delay;regular_=true;
+    for(std::size_t i=0;i<pendingAnnounceCount_;++i){const auto& contribution=pendingAnnounces_[i];
+      if(contribution.observedNanos>stamp){nextRegular_=std::max(nextRegular_,contribution.deadlineMillis);}}
+  }
+  return accepted;
+}
+bool QueueOriginalTrackerResponse::announceTimingCurrent(std::int64_t stamp)const noexcept {
+  return stamp>0&&stamp>lastChronologicalScrapeNanos_;
+}
+bool QueueOriginalTrackerResponse::deferRegularUntil(std::int64_t deadline,std::int64_t stamp) noexcept {
+  if(stamp>0&&pendingChronologicalRequest_){
+    if(pendingAnnounceCount_==MaximumPendingAnnounces){unavailable();return false;}
+    pendingAnnounces_[pendingAnnounceCount_++]={stamp,deadline};
+  }
+  nextRegular_=regular_?std::max(nextRegular_,deadline):std::max<std::int64_t>(0,deadline);regular_=true;return true;
+}
 bool QueueOriginalTrackerResponse::regularPollDue(std::int64_t now)const noexcept {
   return !pending_&&now>=0&&(!regular_||now>=nextRegular_);
 }

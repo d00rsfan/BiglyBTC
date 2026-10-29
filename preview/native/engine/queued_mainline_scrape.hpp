@@ -40,7 +40,9 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readSavedMainlineScrapeTargets(const storage::ProfileLease&);
 // Combines saved queued75 with actual active Downloading/Seeding observations
 // whose current explicit mlDHT enableannounce Java-int value is zero. Saved
-// row state alone can never manufacture the active branch.
+// row state alone can never manufacture the active branch. RegularHttp also
+// authenticates genuinely supplied normal admissions without DHT permission;
+// the owner must bind their actual token/handle and sole effective HTTP URL.
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readCurrentMainlineScrapeTargets(const storage::ProfileLease&,
     std::span<const ManagedMainlineScrapeObservation>,bool configuredCandidates=false,

@@ -39,6 +39,12 @@ QueueDecision decide(const QueuePolicy& p,const QueueTorrentFacts& f,const Queue
 }
 } // namespace
 int main(){try{
+  run("actual announce defers regular due without inventing response or clearing pending",[]{
+    QueueOriginalTrackerResponse response;const auto initial=response.response();response.deferRegularUntil(1000);CHECK(response.response().type==initial.type);CHECK(!response.regularPollDue(999)&&response.regularPollDue(1000));
+    response.deferRegularUntil(500);CHECK(!response.regularPollDue(999));response.requested();response.deferRegularUntil(2000);CHECK(!response.regularPollDue(3000));response.cancelRequest();CHECK(!response.regularPollDue(1999)&&response.regularPollDue(2000));
+    QueueTrackerTerminal good;good.kind=QueueTrackerTerminalKind::Announce;good.comparable=true;good.present=3;good.complete=5;good.incomplete=6;good.observedMillis=10;good.observedWallMillis=20;response.observe(good);response.deferRegularUntil(4000);CHECK(response.response().content->seeds==5);CHECK(!response.regularPollDue(3999));
+    QueueTrackerTerminal error;error.kind=QueueTrackerTerminalKind::ScrapeFailed;error.definitiveFailure=true;error.observedMillis=5000;response.observe(error);response.deferRegularUntil(100);CHECK(!response.regularPollDue(604999)&&response.regularPollDue(605000));CHECK(response.response().content->seeds==5);
+  });
   run("original defaults and modern versus az2 first priority",[]{
     const auto p=read();CHECK(p.maximumActive==4&&p.maximumDownloads==4&&p.minimumDownloads==1);
     CHECK(p.rankMode==QueueRankMode::SeedPeerRatio&&p.firstPriorityMode==QueueFirstPriorityMode::Any);
