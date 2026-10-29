@@ -361,6 +361,60 @@ private slots:
     }
     QTRY_VERIFY(channel.isNull());QTRY_COMPARE(router.peer->state(),QAbstractSocket::UnconnectedState);
   }
+  void ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests_data(){
+    QTest::addColumn<QByteArray>("family");QTest::addColumn<bool>("ipv6");
+    QTest::newRow("DSA0-v4")<<QByteArray("dsa")<<false;QTest::newRow("Ed7-v4")<<QByteArray("ed25519")<<false;
+    QTest::newRow("DSA0-v6")<<QByteArray("dsa")<<true;QTest::newRow("Ed7-v6")<<QByteArray("ed25519")<<true;
+  }
+  void ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(){
+    QFETCH(QByteArray,family);QFETCH(bool,ipv6);OwnedRouter router;QVERIFY(router.listen(ipv6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost));Channel channel;
+    QSignalSpy submitted(&channel,&Channel::leaseSetSubmitted);auto identity=signer(family.constData());const auto expected=identity.destination()->wire;
+    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate());
+    auto result=channel.createLeaseSession(std::move(identity),{{"i2cp.dontPublishLeaseSet","TrUe"}},1761739200123);QVERIFY2(result.has_value(),result?"":result.error().message.c_str());QVERIFY(!identity.valid());
+    QTRY_VERIFY(sentFrame(router.received,hello().size()));const auto create=*sentFrame(router.received,hello().size());QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId());QVERIFY(channel.deadlineActive());QVERIFY(!channel.leaseSetSubmission());
+    QVERIFY(!channel.reconfigureLeaseSession({},1761739200123)); // Cannot extend the initial lease budget with updates.
+    wire::RequestedLease lease;lease.gateway.fill(0x52);lease.tunnelId=78;lease.expiresMilliseconds=1761739800999ULL;wire::LeaseRequest request{0xabcd,{lease}};
+    auto requestBytes=wire::encodeLeaseRequest(request);QVERIFY(requestBytes);const QByteArray packet(reinterpret_cast<const char*>(requestBytes->data()),static_cast<qsizetype>(requestBytes->size()));QVERIFY(router.send(packet.left(7)));QVERIFY(!channel.leaseSetSubmission());QVERIFY(router.send(packet.mid(7)));
+    qsizetype offset=hello().size()+5+static_cast<qsizetype>(create.payload.size());QTRY_VERIFY(sentFrame(router.received,offset));const auto first=*sentFrame(router.received,offset);auto decoded=wire::decodeCreateLeaseSet2(first);QVERIFY2(decoded.has_value(),decoded?"":decoded.error().message.c_str());
+    QVERIFY(decoded->leaseSet.destination.wire==expected);QCOMPARE(decoded->sessionId,std::uint16_t(0xabcd));QVERIFY(wire::verifyLeaseSet2(decoded->leaseSet));QVERIFY(decoded->leaseSet.unpublished);QCOMPARE(decoded->leaseSet.leases.size(),std::size_t(1));QCOMPARE(decoded->leaseSet.leases[0].tunnelId,std::uint32_t(78));QCOMPARE(decoded->leaseSet.leases[0].expiresMilliseconds,std::uint64_t(1761739800000ULL));
+    const auto oldPublic=decoded->leaseSet.encryptionKey;const auto published=decoded->leaseSet.publishedMilliseconds;QTRY_COMPARE(submitted.count(),1);QCOMPARE(channel.leaseSetSubmission()->revision,std::uint64_t(1));QVERIFY(!channel.deadlineActive());QCOMPARE(channel.state(),Channel::State::SessionCreated); // No new OPEN/ready state.
+    // No duplicate private identity is needed to update an owned lease session.
+    offset+=5+static_cast<qsizetype>(first.payload.size());QVERIFY(channel.reconfigureLeaseSession({{"i2cp.dontPublishLeaseSet","false"}},1761739200123));QTRY_VERIFY(sentFrame(router.received,offset));const auto update=*sentFrame(router.received,offset);auto updateConfig=wire::decodeSessionMessage(update);QVERIFY(updateConfig);const auto& updateFields=std::get<wire::ReconfigureSession>(*updateConfig);QVERIFY(updateFields.config.destination.wire==expected);QVERIFY(wire::verifySessionConfigSignature(updateFields.config));QVERIFY(router.send(statusFrame(0xabcd,wire::SessionState::Updated)));QTRY_COMPARE(channel.state(),Channel::State::SessionCreated);offset+=5+static_cast<qsizetype>(update.payload.size());
+    lease.tunnelId=79;lease.expiresMilliseconds+=1000;request.leases={lease};requestBytes=wire::encodeLeaseRequest(request);QVERIFY(requestBytes);QVERIFY(router.send(QByteArray(reinterpret_cast<const char*>(requestBytes->data()),static_cast<qsizetype>(requestBytes->size()))));QTRY_VERIFY(sentFrame(router.received,offset));decoded=wire::decodeCreateLeaseSet2(*sentFrame(router.received,offset));QVERIFY(decoded);QVERIFY(decoded->leaseSet.encryptionKey==oldPublic);QVERIFY(decoded->leaseSet.publishedMilliseconds>=published+1000);QVERIFY(!decoded->leaseSet.unpublished);QCOMPARE(decoded->leaseSet.leases[0].tunnelId,std::uint32_t(79));QTRY_COMPARE(submitted.count(),2);
+    router.peer->disconnectFromHost();QTRY_COMPARE(channel.state(),Channel::State::Failed);QVERIFY(!channel.leaseSetSubmission());QVERIFY(!channel.sessionId());QVERIFY(!channel.reconfigureLeaseSession({},1761739200123));
+  }
+  void leaseOptInRejectsUnsupportedPolicyAndLegacyBeforeConsumingSigner(){
+    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(legacy));QTRY_VERIFY(channel.routerDate());
+    QVERIFY(!channel.createLeaseSession(std::move(identity),{},1761739200123));QVERIFY(identity.valid());QCOMPARE(router.received,hello());channel.close();
+    // Separate owned stream for a modern router; no authority from old stream.
+    OwnedRouter modern;QVERIFY(modern.listen());QVERIFY(channel.begin(modern.options()));QTRY_COMPARE(modern.received,hello());QVERIFY(modern.send(date));QTRY_VERIFY(channel.routerDate());
+    for(const auto& opts:{wire::SessionOptions{{"i2cp.leaseSetEncType","4"}},wire::SessionOptions{{"i2cp.leaseSetType","5"}},wire::SessionOptions{{"i2cp.leaseSetPrivateKey","synthetic"}},wire::SessionOptions{{"i2cp.leaseSetOption.0","x=y"}},wire::SessionOptions{{"i2cp.username",""}}}){const auto denied=channel.createLeaseSession(std::move(identity),opts,1761739200123);QVERIFY(!denied);QVERIFY(identity.valid());QCOMPARE(modern.received,hello());}
+    const auto allowed=channel.createLeaseSession(std::move(identity),{},1761739200123);QVERIFY(allowed);QVERIFY(!identity.valid());
+  }
+  void badLeaseRequestWithdrawsOwnedCapability_data(){
+    QTest::addColumn<int>("kind");QTest::newRow("wrong-session")<<0;QTest::newRow("zero-leases")<<1;QTest::newRow("seventeen")<<2;QTest::newRow("expired")<<3;QTest::newRow("no-opt-in")<<4;QTest::newRow("zero-tunnel")<<5;
+  }
+  void badLeaseRequestWithdrawsOwnedCapability(){
+    QFETCH(int,kind);OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("dsa");QSignalSpy submitted(&channel,&Channel::leaseSetSubmitted);
+    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate());
+    auto made=kind==4?channel.createSession(identity,{},1761739200123):channel.createLeaseSession(std::move(identity),{},1761739200123);QVERIFY(made);QTRY_VERIFY(sentFrame(router.received,hello().size()));const auto created=*sentFrame(router.received,hello().size());QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId());
+    wire::RequestedLease lease;lease.gateway.fill(3);lease.tunnelId=1;lease.expiresMilliseconds=kind==3?1761739000000ULL:1761739800000ULL;wire::LeaseRequest request{static_cast<std::uint16_t>(kind==0?11:0xabcd),{lease}};auto frame=wire::encodeLeaseRequest(request);QVERIFY(frame);
+    if(kind==1||kind==2){(*frame)[7]=static_cast<wire::Byte>(kind==1?0:17);}if(kind==5){for(std::size_t i=40;i<44;++i){(*frame)[i]=0;}}
+    QVERIFY(router.send(QByteArray(reinterpret_cast<const char*>(frame->data()),static_cast<qsizetype>(frame->size()))));QTRY_COMPARE(channel.state(),Channel::State::Failed);QVERIFY(!channel.leaseSetSubmission());QVERIFY(!channel.sessionId());QCOMPARE(submitted.count(),0);QCOMPARE(router.received.size(),hello().size()+5+static_cast<qsizetype>(created.payload.size()));
+  }
+  void missingInitialLeaseRequestHasAnAbsoluteBudget(){
+    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto options=router.options();options.deadlineMilliseconds=500;auto identity=signer("dsa");
+    QVERIFY(channel.begin(options));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate());QVERIFY(channel.createLeaseSession(std::move(identity),{},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()));QVERIFY(router.send(status));QTRY_COMPARE(channel.state(),Channel::State::Failed);QCOMPARE(channel.failure(),Channel::Failure::Deadline);QVERIFY(!channel.leaseSetSubmission());QVERIFY(!channel.socketActive());
+  }
+  void closeBeforeFirstLeaseWithdrawsTheConsumedCapability(){
+    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");QSignalSpy submitted(&channel,&Channel::leaseSetSubmitted);
+    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate());QVERIFY(channel.createLeaseSession(std::move(identity),{},1761739200123));QVERIFY(!identity.valid());QTRY_VERIFY(sentFrame(router.received,hello().size()));QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId());QVERIFY(channel.deadlineActive());channel.close();QTRY_COMPARE(router.peer->state(),QAbstractSocket::UnconnectedState);QVERIFY(!channel.sessionId());QVERIFY(!channel.leaseSetSubmission());QVERIFY(!channel.reconfigureLeaseSession({},1761739200123));QCOMPARE(submitted.count(),0);QVERIFY(!channel.deadlineActive());
+  }
+  void submittedCallbackMayDeleteController(){
+    OwnedRouter router;QVERIFY(router.listen());QPointer<Channel> channel=new Channel(&router.server);auto identity=signer("ed25519");QObject::connect(channel,&Channel::leaseSetSubmitted,&router.server,[&]{delete channel.data();});
+    QVERIFY(channel->begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel->routerDate());QVERIFY(channel->createLeaseSession(std::move(identity),{},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()));QVERIFY(router.send(status));QTRY_VERIFY(channel->sessionId());
+    wire::RequestedLease lease;lease.gateway.fill(7);lease.tunnelId=8;lease.expiresMilliseconds=1761739800000ULL;auto frame=wire::encodeLeaseRequest({0xabcd,{lease}});QVERIFY(frame);QVERIFY(router.send(QByteArray(reinterpret_cast<const char*>(frame->data()),static_cast<qsizetype>(frame->size()))));QTRY_VERIFY(channel.isNull());QTRY_COMPARE(router.peer->state(),QAbstractSocket::UnconnectedState);
+  }
 };
 QTEST_GUILESS_MAIN(InitialChannelTests)
 #include "i2cp_initial_channel_tests.moc"

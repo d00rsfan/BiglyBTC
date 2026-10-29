@@ -10,6 +10,7 @@
 #include "authority.hpp"
 #include "store_policy.hpp"
 #include "database.hpp"
+#include "router.hpp"
 #include <memory>
 #include <QChronoTimer>
 #include <QHostAddress>
@@ -152,6 +153,12 @@ public:
   // Empty FIND_NODE target, without implicit contact/token persistence.
   std::expected<Ticket,Failure> requestStoreToken(Peer,std::int8_t remoteVersion,QObject* receiver,DetailedFindNodeCallback,
       std::chrono::nanoseconds deadline=std::chrono::seconds(30));
+  // Explicit normal receiver binding. Actual router/DB must already be bound
+  // on THIS Qt thread to THIS socket identity. No caller-supplied closest,
+  // seeded, token or value facts. Shared ownership lasts through close/join.
+  // current checks the owner's held profile and stop state before each effect.
+  std::expected<void,Failure> serveDatabase(std::shared_ptr<azureus_router::RouterOwner>,
+      std::shared_ptr<database::Owner>,std::function<bool()> current);
   std::expected<GeneratedServiceState,Failure> generatedServiceState() const;
   std::expected<database::Snapshot,Failure> databaseState() const;
   // Owner-only pull. Moved receipts own the request referenced by policy indices.
@@ -224,6 +231,14 @@ private:
   void answerService(const Peer&,ServiceRequest,std::int64_t receivedAt);
   void answerDatabase(const Peer&,const lookup::Decoded&,std::int64_t receivedAt);
   void sendServiceReply(ServiceReceipt&,std::expected<std::string,Failure>);
+  bool normalCurrent()noexcept;
+  bool normalAlive(const find::nodes::Contact&)noexcept;
+  std::expected<std::vector<find::nodes::Snapshot>,Failure> normalClosest(const find::nodes::NodeId&);
+  database::Owner* activeDatabase()const noexcept{return normalDatabase_?normalDatabase_.get():database_.get();}
+  std::shared_ptr<azureus_router::RouterOwner> normalRouter_;
+  std::shared_ptr<database::Owner> normalDatabase_;
+  std::function<bool()> normalCurrent_;
+  std::vector<find::nodes::Contact> normalContacts_; // Only actually admitted request sources.
   Config config_;
   std::unique_ptr<find::nodes::NodeCache> nodeCache_;
   std::unique_ptr<auth::Authority> authority_;

@@ -110,5 +110,23 @@ int main(int argc,char** argv){try{
     bool denied=false;std::thread worker([&]{const auto result=value->snapshot();denied=!result&&result.error()==RouterError::Thread;});worker.join();check(denied,"foreign snapshot escaped owner fence");
     check(!RouterOwner::create(id(0),{0,1,2,false}),"invalid K admitted");check(!RouterOwner::create(id(0),{2,0,2,false}),"invalid B admitted");
   });
+
+  run("closest traversal returns full best bucket and never replacement authority",[]{
+    auto value=far();accepted(value->contactKnown(input(0xe0),10006));
+    const auto best=value->closest(id(0x80),1,true);check(best&&best->count==2,"closest truncated source whole bucket");
+    check(best->values[0].id==id(0x80)&&best->values[1].id==id(0xc0),"best-bit bucket order changed");
+    const auto outside=value->localInClosest(id(0xc0),2,true);check(outside&&!*outside,"local outside returned closest bucket gained authority");
+    const auto inside=value->localInClosest(id(0xc0),4,true);check(inside&&*inside,"source local membership/distance predicate lost");
+    accepted(value->contactDead(id(0x80),10007));const auto live=value->closest(id(0x80),1,true);check(live&&live->count==1&&live->values[0].id==id(0xc0),"failing bucket member not filtered");
+    const auto all=value->closest(id(0x80),1,false);check(all&&all->count==2,"non-live source traversal lost failing contact");
+    check(!value->closest(id(0),0)&&!value->localInClosest(id(0),MaximumRouterContacts+1),"unbounded closest query admitted");
+  });
+  run("live-only closest includes unknown bucket members and requires local membership",[]{
+    auto value=owner({4,1,2,false});accepted(value->contactKnown(input(0x80),10002));
+    const auto result=value->closest(id(0x80),1,true);check(result&&result->count==2,"live-only incorrectly required previously alive");
+    check(!result->values[1].hasBeenAlive,"unknown setup was promoted by query");
+    const auto closest=value->localInClosest(id(0x80),1,true);check(closest&&!*closest,"closer unknown did not count against local distance");
+    const auto before=stats(*value).revision();check(bool(value->closest(id(0),2,true)),"valid closest query failed");check(stats(*value).revision()==before,"read-only closest mutated router");
+  });
   std::cout<<"PASS "<<cases<<" router policy families; "<<assertions<<" assertions; source-derived fixtures, no Java runtime equality credit\n";return 0;
 }catch(const std::exception& e){std::cerr<<"FAIL router: "<<e.what()<<'\n';return 1;}}

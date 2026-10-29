@@ -105,3 +105,11 @@ target_link_libraries(biglybtc_i2cp_session_config PUBLIC biglybtc_i2p_client_id
 target_compile_features(biglybtc_i2cp_session_config PUBLIC cxx_std_23)
 target_compile_options(biglybtc_i2cp_session_config PRIVATE -Wall -Wextra -Wpedantic -Werror)
 target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2cp_session_config)
+
+# Append to services/CMakeLists after session_config and initial_channel exist.
+add_library(biglybtc_i2cp_leaseset2 STATIC i2cp_leaseset/leaseset.cpp)
+target_include_directories(biglybtc_i2cp_leaseset2 PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2cp_leaseset")
+target_link_libraries(biglybtc_i2cp_leaseset2 PUBLIC biglybtc_i2cp_session_config)
+target_compile_features(biglybtc_i2cp_leaseset2 PUBLIC cxx_std_23)
+target_compile_options(biglybtc_i2cp_leaseset2 PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_link_libraries(biglybtc_i2cp_initial_channel PUBLIC biglybtc_i2cp_leaseset2)

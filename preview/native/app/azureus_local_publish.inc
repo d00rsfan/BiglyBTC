@@ -8,7 +8,7 @@
       bool finished=false,cancelled=false;
     };
     std::shared_ptr<Publishing> publishing_;
-    std::unique_ptr<services::azureus_db_runtime::Owner> localDatabase_;
+    std::shared_ptr<services::azureus_db_runtime::Owner> localDatabase_;
     struct PublicationClock final:services::azureus_db_value::WallClock {
       std::int64_t nowMilliseconds()noexcept override{return QDateTime::currentMSecsSinceEpoch();}
     };

@@ -97,6 +97,9 @@ std::expected<void,Error> Owner::bindLocal(const azureus_nodes::Contact& contact
   if(impl_->local||!impl_->records.empty()||!contact.address.port||(contact.address.length!=4&&contact.address.length!=16)){return std::unexpected(Error::Invalid);}
   impl_->local=contact;return {};
 }
+std::expected<std::optional<azureus_nodes::Contact>,Error> Owner::localContact()const{
+  if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}return impl_->local;
+}
 std::expected<bool,Error> Owner::contains(std::string_view key)const {
   if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}
   return impl_->records.contains(key);

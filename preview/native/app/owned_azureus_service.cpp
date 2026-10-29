@@ -54,7 +54,7 @@ bool validOptions(const AzureusServiceOptions& value){return value.bindAddress.i
     &&(value.bindAddress.protocol()==QAbstractSocket::IPv4Protocol||value.bindAddress.protocol()==QAbstractSocket::IPv6Protocol)
     &&value.network>=0&&value.version>=51&&value.version<=55&&value.maximumPending&&value.maximumPending<=32
     &&value.maximumPeers&&value.maximumPeers<=32&&value.maximumCommands&&value.maximumCommands<=64
-    &&(!value.valueVersions||value.valueVersions->network()==value.network);}
+    &&(!value.valueVersions||value.valueVersions->network()==value.network)&&(!value.serveValues||value.valueVersions);}
 }
 struct OwnedAzureusService::Impl {
   struct State {
@@ -73,7 +73,16 @@ struct OwnedAzureusService::Impl {
     Owner(std::shared_ptr<State> state,const AzureusServiceOptions& options,QEventLoop& loop)
         :state_(std::move(state)),options_(options),loop_(loop),actor_(configuration(options)){}
     std::expected<void,azureus::Failure> start(){
-      auto started=actor_.start(options_.bindAddress);if(started){initializeRouter();if(options_.valueVersions&&!initializeLocalDatabase()){return std::unexpected(azureus::Failure::State);}}return started;
+      auto started=actor_.start(options_.bindAddress);if(!started){return started;}initializeRouter();
+      if(options_.valueVersions&&!initializeLocalDatabase()){return std::unexpected(azureus::Failure::State);}
+      if(options_.serveValues){
+        if(!router_||!localDatabase_){return std::unexpected(azureus::Failure::State);}
+        const auto bound=actor_.serveDatabase(router_,localDatabase_,[this]{
+          {std::lock_guard lock(state_->mutex);if(state_->stop){return false;}}
+          if(!router_){return false;}const auto valid=options_.valueVersions->validate();
+          std::lock_guard lock(state_->mutex);return bool(valid)&&!state_->stop;
+        });if(!bound){return bound;}
+      }return started;
     }
     azureus::Peer endpoint()const{return actor_.endpoint();}
     void idle(){bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}if(stop){loop_.quit();return;}publish();}
@@ -132,7 +141,7 @@ struct OwnedAzureusService::Impl {
     struct LookupRpc {std::uint64_t node=0;azureus::Ticket ticket;azureus::Peer peer;bool cancellationRequested=false;};
     using Clock=std::chrono::steady_clock;
     std::int64_t routerNow()const noexcept{
-      return std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now()-routerStarted_).count();
+      const auto now=Clock::now();return std::chrono::duration_cast<std::chrono::milliseconds>(options_.serveValues?now.time_since_epoch():now-routerStarted_).count();
     }
     // NodeCache implements the pinned source's protocol-dependent numeric-ID
     // derivation. Different endpoints can legitimately share a restricted ID.
@@ -157,7 +166,7 @@ struct OwnedAzureusService::Impl {
         if(!id){routerFailed(id.error());return;}
         const auto transport=actor_.statisticsSnapshot();
         if(!transport){routerFailed(router::RouterError::Invalid);return;}
-        auto made=router::RouterOwner::create(*id,{},transport->generation(),0);
+        auto made=router::RouterOwner::create(*id,{},transport->generation(),routerNow());
         if(!made){routerFailed(made.error());return;}router_=std::move(*made);
       }catch(...){routerFailed(router::RouterError::Memory);}
     }
@@ -352,6 +361,7 @@ struct OwnedAzureusService::Impl {
         const auto actual=actor_.dhtStatisticsSnapshot(); // Exported getter is noexcept and fixed-state.
         if(!actual){std::lock_guard lock(state_->mutex);state_->value.current=false;state_->value.error=AzureusServiceError::Transport;state_->value.transportFailure=actual.error();state_->advance();return;}
         captureRouter();captureLookup();
+        if(localDatabase_){const auto value=localDatabase_->snapshot();if(value){auto copy=std::make_shared<const services::azureus_db_runtime::Snapshot>(*value);std::lock_guard lock(state_->mutex);state_->value.databaseSnapshot=std::move(copy);}}
         if(last_&&sameFacts(*last_,*actual)){std::lock_guard lock(state_->mutex);const bool current=!state_->stop&&state_->value.state==AzureusServiceState::Running&&actual->transport().state()==azureus::TransportStatisticsState::Bound;
           if(state_->value.current!=current||state_->value.error||state_->value.routerSnapshot!=routerSnapshot_||state_->value.routerFailure!=routerFailure_||state_->value.lookupSnapshot!=lookupSnapshot_||state_->value.lookupFailure!=lookupFailure_){
             state_->value.current=current;state_->value.error.reset();state_->value.transportFailure.reset();
@@ -376,7 +386,7 @@ struct OwnedAzureusService::Impl {
     std::shared_ptr<const azureus::OwnedDhtStatisticsSnapshot> last_;
     nodes::NodeCache nodeCache_; // Constructed, used and destroyed on this owner.
     Clock::time_point routerStarted_{};
-    std::unique_ptr<router::RouterOwner> router_;
+    std::shared_ptr<router::RouterOwner> router_;
     std::shared_ptr<const router::RouterStatisticsSnapshot> routerSnapshot_;
     std::optional<router::RouterError> routerFailure_;
   };

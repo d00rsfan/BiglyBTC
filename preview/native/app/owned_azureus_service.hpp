@@ -29,6 +29,9 @@ struct AzureusServiceOptions {
   // Explicit optional SAME-OFD original version manager; absence keeps all
   // old read-only service behavior. Its network must match this actual actor.
   std::shared_ptr<storage::AzureusValueVersions> valueVersions{};
+  // Explicit normal receiving STORE/GET using this actor's real router + DB.
+  // Requires valueVersions; direct values only until genuine seeded support.
+  bool serveValues=false;
 
 };
 struct AzureusServiceResult {
@@ -67,13 +70,15 @@ struct AzureusServiceObservation {
   std::shared_ptr<const services::azureus_control::LookupSnapshot> lookupSnapshot;
   std::optional<AzureusServiceError> lookupFailure;
   std::shared_ptr<const AzureusPublishSnapshot> publishSnapshot;
+  std::shared_ptr<const services::azureus_db_runtime::Snapshot> databaseSnapshot;
 };
 // Explicit Host-owned development service. create(enabled=false) returns before
 // any Qt thread/socket exists. A dedicated Qt event loop exclusively constructs,
 // calls and destroys the existing numeric-loopback actor. No bootstrap/public
 // peer, full DHT controller/DB activation, observer timer or GUI callback is added.
 // Optional explicit local publication performs only version reservations on its
-// held profile; generated receiving DBs never become normal routing authority.
+// held profile. Explicit serveValues uses the actual same router/local DB;
+// generated receiving DB facts never become normal routing authority.
 // The optional bounded router records explicit known contacts and qualified
 // replies/timeouts only. Its Ping/NodeAdded intents are never executed here.
 class OwnedAzureusService final {

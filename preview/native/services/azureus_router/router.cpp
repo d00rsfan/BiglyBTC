@@ -95,6 +95,16 @@ struct RouterOwner::Impl {
     if(node.replacementCount>=maximum){return RouterChange::Dropped;}
     const auto index=allocate(input,live,false);if(index==None){return RouterChange::Dropped;}node.replacements[node.replacementCount++]=index;if(tryPing){pingOldest(node);}return RouterChange::Replacement;
   }
+  void closest(std::uint16_t index,const NodeId& target,std::size_t requested,bool liveOnly,ClosestContacts& out)const noexcept{
+    const auto& node=nodes[index];
+    if(node.leaf()){
+      for(std::uint16_t i=0;i<node.count;++i){const auto& value=contacts[node.bucket[i]].state;
+        if(!(liveOnly&&value.failing())){out.values[out.count++]=value;}}
+    }else{
+      const bool one=bit(target,node.depth);closest(one?node.left:node.right,target,requested,liveOnly,out);
+      if(out.count<requested){closest(one?node.right:node.left,target,requested,liveOnly,out);}
+    }
+  }
   RouterChange add(const ContactInput& input,bool live)noexcept{
     if(input.sleeping&&input.id==local){return RouterChange::Ignored;}if(!input.sleeping&&live){consecutiveDead=0;}if(input.id==local){return RouterChange::Ignored;}
     auto index=leaf(input.id);auto existing=findContact(input.id);
@@ -136,6 +146,18 @@ std::expected<RouterChange,RouterError> RouterOwner::contactDead(const NodeId& i
 }
 std::expected<void,RouterError> RouterOwner::setSleeping(bool value,std::int64_t now)noexcept{const auto begun=impl_->begin(now);if(!begun){return begun;}impl_->sleeping=value;return {};}
 std::expected<void,RouterError> RouterOwner::setSuspended(bool value,std::int64_t now)noexcept{const auto begun=impl_->begin(now);if(!begun){return begun;}impl_->suspended=value;return {};}
+std::expected<ClosestContacts,RouterError> RouterOwner::closest(const NodeId& target,std::size_t requested,bool liveOnly)const noexcept{
+  if(!impl_->onOwner()){return std::unexpected(RouterError::Thread);}if(!requested||requested>MaximumRouterContacts){return std::unexpected(RouterError::Invalid);}
+  ClosestContacts result;impl_->closest(0,target,requested,liveOnly,result);return result;
+}
+std::expected<bool,RouterError> RouterOwner::localInClosest(const NodeId& target,std::size_t requested,bool liveOnly)const noexcept{
+  const auto result=closest(target,requested,liveOnly);if(!result){return std::unexpected(result.error());}
+  bool found=false;std::size_t closer=0;
+  for(std::size_t n=0;n<result->count;++n){const auto& contact=result->values[n];if(contact.id==impl_->local){found=true;continue;}
+    for(std::size_t i=0;i<target.size();++i){const auto a=contact.id[i]^target[i],b=impl_->local[i]^target[i];
+      if(a!=b){closer+=a<b;break;}}
+  }return found&&closer<requested;
+}
 std::expected<std::optional<RouterContact>,RouterError> RouterOwner::find(const NodeId& id)const noexcept{
   if(!impl_->onOwner()){return std::unexpected(RouterError::Thread);}const auto index=impl_->findContact(id);return index==None?std::optional<RouterContact>{}:impl_->contacts[index].state;
 }

@@ -23,10 +23,76 @@ auto make(bool reply=true){auto result=app::OwnedAzureusService::create(options(
 bool finished(const app::OwnedAzureusService& owner,std::uint64_t request){const auto value=owner.observation();return value.lastResult&&value.lastResult->request==request&&value.lastResult->terminal;}
 bool successful(const app::OwnedAzureusService& owner,std::uint64_t request){const auto value=owner.observation();return value.lastResult&&value.lastResult->request==request&&value.lastResult->terminal&&!value.lastResult->error&&!value.lastResult->transportFailure;}
 bool hasEvent(const app::AzureusServiceObservation& value,udp::OperationEventKind kind){if(!value.snapshot){return false;}for(const auto& event:value.snapshot->events()){if(event.kind==kind){return true;}}return false;}
+struct NormalValues {
+ QTemporaryDir root;
+ std::optional<storage::ProfileLease> held;
+ std::shared_ptr<storage::AzureusValueVersions> versions;
+ std::unique_ptr<app::OwnedAzureusService> owner;
+ QHostAddress address;
+ explicit NormalValues(const char* ip):address(QString::fromLatin1(ip)){
+   if(!root.isValid()){throw std::runtime_error("Cannot create normal owned profile");}
+   auto lease=storage::ProfileLease::acquire(root.path().toStdString());if(!lease){throw std::runtime_error("Cannot own normal profile");}held.emplace(std::move(*lease));restart();
+ }
+ void restart(){
+   if(owner){if(!owner->close()){throw std::runtime_error("Cannot join normal owner");}owner.reset();}versions.reset();
+   auto value=storage::AzureusValueVersions::open(*held,4);if(!value){throw std::runtime_error("Cannot open normal versions");}versions=*value;
+   auto policy=options();policy.bindAddress=address;policy.valueVersions=versions;policy.serveValues=true;
+   auto made=app::OwnedAzureusService::create(policy);if(!made){throw std::runtime_error("Cannot start normal receiving service");}owner=std::move(*made);
+ }
+};
+services::azureus_nodes::Contact actualContact(const udp::Peer& peer){
+ services::azureus_nodes::NodeCache cache;const auto address=test::ddbAddress(peer);auto id=cache.lookup({address,{}},55);
+ if(!id){throw std::runtime_error("Cannot derive actual owned contact");}services::azureus_nodes::Contact result;result.protocol=55;result.id=id->id;result.address=address;return result;
+}
 }
 class OwnedAzureusServiceTests final:public QObject {
  Q_OBJECT
 private slots:
+
+ void twoNormalProfileOwnersExchangeDirectValuesWithoutGeneratedClosestFacts(){
+   NormalValues a("127.1.0.1"),b("127.2.0.1");QVERIFY(actualContact(a.owner->endpoint()).id!=actualContact(b.owner->endpoint()).id);
+   const auto admitA=a.owner->allowPeer(b.owner->endpoint()),admitB=b.owner->allowPeer(a.owner->endpoint());QVERIFY(admitA&&admitB);
+   QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*admitA)&&successful(*b.owner,*admitB),3000);
+   const std::string bytes("owned\0normal",12);const auto first=a.owner->publishValue(b.owner->endpoint(),"normal-A",bytes);QVERIFY(first);
+   QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*first),5000);auto published=a.owner->observation().publishSnapshot;QVERIFY(published);QCOMPARE(published->state,app::AzureusPublishState::Complete);QVERIFY(published->localValue&&published->localValue->isLocal());QCOMPARE(published->readback.size(),std::size_t{1});QCOMPARE(published->readback[0].bytes,bytes);
+   QTRY_VERIFY_WITH_TIMEOUT(b.owner->observation().databaseSnapshot&&b.owner->observation().databaseSnapshot->stores==1,3000);
+   const auto before=b.owner->observation().databaseSnapshot;QCOMPARE(before->localPuts,std::uint64_t{0});QCOMPARE(before->values,std::size_t{1});QVERIFY(b.owner->observation().routerSnapshot->counts()[4]>=2);
+   const auto second=b.owner->publishValue(a.owner->endpoint(),"normal-B","other-owned-value");QVERIFY(second);QTRY_VERIFY_WITH_TIMEOUT(finished(*b.owner,*second),5000);QCOMPARE(b.owner->observation().publishSnapshot->state,app::AzureusPublishState::Complete);
+   QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().databaseSnapshot->stores==1&&b.owner->observation().databaseSnapshot->localPuts==1,3000);
+   QCOMPARE(a.owner->observation().databaseSnapshot->localPuts,std::uint64_t{1});QCOMPARE(a.owner->observation().databaseSnapshot->keys,std::size_t{2});QCOMPARE(b.owner->observation().databaseSnapshot->keys,std::size_t{2});QCOMPARE(before->localPuts,std::uint64_t{0});
+   QVERIFY(a.owner->close());QVERIFY(b.owner->close());QVERIFY(a.owner->observation().joined&&b.owner->observation().joined);QVERIFY(a.owner->observation().databaseSnapshot->closed);QCOMPARE(published->state,app::AzureusPublishState::Complete);
+ }
+ void normalReceiverRequiresPeerTokenAndKeepsUnseededCacheForwardsOut(){
+   NormalValues server("127.3.0.1");udp::Config config;config.network=4;udp::OwnedPingTransport client(std::move(config));QVERIFY(client.start(QHostAddress(QStringLiteral("127.4.0.1"))));QVERIFY(client.allowPeer(server.owner->endpoint()));QObject receiver;
+   std::optional<udp::DetailedFindNodeOutcome> token;auto ignored=client.requestStoreToken(server.owner->endpoint(),55,&receiver,[&](auto result){token.emplace(std::move(result));},100ms);QVERIFY(ignored);
+   QTRY_VERIFY_WITH_TIMEOUT(token.has_value(),3000);QVERIFY(!*token);QCOMPARE(token->error(),udp::Failure::Timeout);QVERIFY(server.owner->observation().databaseSnapshot);QCOMPARE(server.owner->observation().databaseSnapshot->stores,std::uint64_t{0});
+   const auto admitted=server.owner->allowPeer(client.endpoint());QVERIFY(admitted);QTRY_VERIFY_WITH_TIMEOUT(successful(*server.owner,*admitted),3000);
+   token.reset();QVERIFY(client.requestStoreToken(server.owner->endpoint(),55,&receiver,[&](auto result){token.emplace(std::move(result));}));QTRY_VERIFY_WITH_TIMEOUT(token.has_value(),3000);QVERIFY(bool(*token));const auto* decoded=std::get_if<udp::find::Decoded>(&**token);QVERIFY(decoded);const auto cookie=std::get<udp::find::ReplyBody>(decoded->body()).randomId;
+   const auto origin=actualContact(client.endpoint());const std::string key(20,'K');
+   const auto request=[&](std::int32_t supplied,const services::azureus_nodes::Contact& contact){udp::StoreRequest result;result.randomId=supplied;result.keys={key};result.valueSets={{{1,QDateTime::currentMSecsSinceEpoch(),"real-body",contact,0,0,-1}}};return result;};
+   std::optional<udp::StoreOutcome> reply;QVERIFY(client.store(server.owner->endpoint(),55,request(cookie^1,origin),&receiver,[&](auto result){reply.emplace(std::move(result));}));QTRY_VERIFY_WITH_TIMEOUT(reply.has_value(),3000);QVERIFY(bool(*reply));QTRY_VERIFY_WITH_TIMEOUT(server.owner->observation().snapshot->transport().counters().sent==2,3000);QCOMPARE(server.owner->observation().databaseSnapshot->stores,std::uint64_t{0});
+   auto forwarded=origin;forwarded.address.bytes[1]=9;forwarded.id=actualContact({QHostAddress(QStringLiteral("127.9.0.1")),client.endpoint().port}).id;QVERIFY(forwarded.id!=origin.id);
+   reply.reset();QVERIFY(client.store(server.owner->endpoint(),55,request(cookie,forwarded),&receiver,[&](auto result){reply.emplace(std::move(result));}));QTRY_VERIFY_WITH_TIMEOUT(reply.has_value(),3000);QVERIFY(bool(*reply));QTRY_VERIFY_WITH_TIMEOUT(server.owner->observation().snapshot->transport().counters().sent==3,3000);QCOMPARE(server.owner->observation().databaseSnapshot->stores,std::uint64_t{0});
+   reply.reset();QVERIFY(client.store(server.owner->endpoint(),55,request(cookie,origin),&receiver,[&](auto result){reply.emplace(std::move(result));}));QTRY_VERIFY_WITH_TIMEOUT(reply.has_value(),3000);QVERIFY(bool(*reply));QTRY_VERIFY_WITH_TIMEOUT(server.owner->observation().databaseSnapshot->stores==1,3000);
+   std::optional<udp::FindValueOutcome> found;services::azureus_nodes::NodeId target;target.fill('K');QVERIFY(client.findValue(server.owner->endpoint(),55,target,0,32,&receiver,[&](auto result){found.emplace(std::move(result));}));QTRY_VERIFY_WITH_TIMEOUT(found.has_value(),3000);QVERIFY(bool(*found));const auto* values=std::get_if<udp::lookup::FoundValues>(&std::get<udp::lookup::ReplyBody>((*found)->body()).result);QVERIFY(values);QCOMPARE(values->values.size(),std::size_t{1});QCOMPARE(values->values[0].bytes,std::string("real-body"));QVERIFY(server.owner->close());client.close();
+ }
+ void normalReceiverChangedProfileWithdrawsBeforeAnyRemoteStore(){
+   NormalValues server("127.5.0.1");udp::Config config;config.network=4;udp::OwnedPingTransport client(std::move(config));QVERIFY(client.start(QHostAddress(QStringLiteral("127.6.0.1"))));QVERIFY(client.allowPeer(server.owner->endpoint()));const auto admitted=server.owner->allowPeer(client.endpoint());QVERIFY(admitted);QTRY_VERIFY_WITH_TIMEOUT(successful(*server.owner,*admitted),3000);QObject receiver;
+   std::optional<udp::DetailedFindNodeOutcome> token;QVERIFY(client.requestStoreToken(server.owner->endpoint(),55,&receiver,[&](auto value){token.emplace(std::move(value));}));QTRY_VERIFY_WITH_TIMEOUT(token.has_value(),3000);QVERIFY(bool(*token));const auto* decoded=std::get_if<udp::find::Decoded>(&**token);QVERIFY(decoded);const auto cookie=std::get<udp::find::ReplyBody>(decoded->body()).randomId;
+   QFile changed(server.root.path()+"/dht/net4/version.dat");QVERIFY(changed.open(QIODevice::WriteOnly|QIODevice::Truncate));QCOMPARE(changed.write("d4:nexti1ee"),qint64{11});changed.close();
+   udp::StoreRequest request;request.randomId=cookie;request.keys={std::string(20,'S')};request.valueSets={{{1,QDateTime::currentMSecsSinceEpoch(),"must-not-store",actualContact(client.endpoint()),0,0,-1}}};std::optional<udp::StoreOutcome> reply;
+   QVERIFY(client.store(server.owner->endpoint(),55,std::move(request),&receiver,[&](auto value){reply.emplace(std::move(value));},100ms));QTRY_VERIFY_WITH_TIMEOUT(reply.has_value(),3000);QVERIFY(!*reply);QCOMPARE(reply->error(),udp::Failure::Timeout);QCOMPARE(server.owner->observation().databaseSnapshot->stores,std::uint64_t{0});QTRY_VERIFY_WITH_TIMEOUT(server.owner->observation().snapshot->transport().counters().authorityErrors>0,3000);QVERIFY(server.owner->close());QVERIFY(server.owner->observation().joined);client.close();
+ }
+ void normalValueOwnersCancelWithoutAdmissionAndRestartWithReservedVersions(){
+   NormalValues a("127.7.0.1"),b("127.8.0.1");auto admit=a.owner->allowPeer(b.owner->endpoint());QVERIFY(admit);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*admit),3000);
+   const auto cancelled=a.owner->publishValue(b.owner->endpoint(),"normal-cancel","one");QVERIFY(cancelled);QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().snapshot->transport().pending()==1,3000);const auto cancel=a.owner->cancel(*cancelled);QVERIFY(cancel);QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().outstandingCommands==0,3000);QCOMPARE(a.owner->observation().publishSnapshot->state,app::AzureusPublishState::Cancelled);QCOMPARE(b.owner->observation().databaseSnapshot->stores,std::uint64_t{0});
+   admit=b.owner->allowPeer(a.owner->endpoint());QVERIFY(admit);QTRY_VERIFY_WITH_TIMEOUT(successful(*b.owner,*admit),3000);const auto first=a.owner->publishValue(b.owner->endpoint(),"normal-restart","before");QVERIFY(first);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*first),5000);QCOMPARE(a.owner->observation().publishSnapshot->state,app::AzureusPublishState::Complete);const auto oldVersion=a.owner->observation().publishSnapshot->localValue->version();
+   a.restart();b.restart();QCOMPARE(b.owner->observation().databaseSnapshot->stores,std::uint64_t{0});QCOMPARE(b.owner->observation().databaseSnapshot->keys,std::size_t{0});const auto aa=a.owner->allowPeer(b.owner->endpoint()),bb=b.owner->allowPeer(a.owner->endpoint());QVERIFY(aa&&bb);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*aa)&&successful(*b.owner,*bb),3000);
+   const auto second=a.owner->publishValue(b.owner->endpoint(),"normal-restart","after");QVERIFY(second);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*second),5000);const auto final=a.owner->observation().publishSnapshot;QCOMPARE(final->state,app::AzureusPublishState::Complete);QVERIFY(final->localValue->version()>oldVersion);QCOMPARE(final->readback[0].bytes,std::string("after"));
+ }
+ void normalReceivingCannotBeEnabledWithoutAHeldProfile(){
+   auto invalid=options();invalid.serveValues=true;const auto result=app::OwnedAzureusService::create(invalid);QVERIFY(!result);QCOMPARE(result.error(),app::AzureusServiceError::Invalid);
+ }
  void originalVersionReservationPreservesSignedJavaWidthsAndChunkBoundary(){
    using storage::originalAzureusVersionReservation;auto first=originalAzureusVersionReservation({},1000000);QCOMPARE(first.first,1000);QCOMPARE(first.next,1128);
    auto rollback=originalAzureusVersionReservation(2000,1000000);QCOMPARE(rollback.first,2000);QCOMPARE(rollback.next,2128);

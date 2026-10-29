@@ -31,6 +31,8 @@ public:
   ~Owner();
   Owner(const Owner&)=delete;Owner& operator=(const Owner&)=delete;
   std::expected<bool,Error> contains(std::string_view)const;
+  // Immutable owning copy; used to bind a normal receiver to its actual socket.
+  std::expected<std::optional<azureus_nodes::Contact>,Error> localContact()const;
   // Source local store: actual bound contact, durable externally reserved
   // version, normal flags/lifetime/replication only. No remote quota bypass is
   // exposed through store(); explicit owner capacity still bounds local keys.

@@ -26,6 +26,10 @@ struct RouterContact {
 };
 enum class RouterIntentKind {Ping,NodeAdded};
 struct RouterIntent {RouterIntentKind kind=RouterIntentKind::Ping;NodeId id{};};
+// Source findClosestContacts returns a whole terminal bucket, possibly more
+// than requested. Replacements are excluded; liveOnly means !failing, including
+// unknown bucket members, exactly as DHTRouterImpl 744-795.
+struct ClosestContacts {std::size_t count=0;std::array<RouterContact,MaximumRouterContacts> values{};};
 struct RouterIntents {std::size_t count=0;std::array<RouterIntent,MaximumRouterIntents> values{};};
 struct RouterBucketStatistics {
   NodeId prefix{};std::uint16_t depth=0,contacts=0,replacements=0;bool containsLocal=false;
@@ -70,6 +74,8 @@ public:
   std::expected<void,RouterError> setSleeping(bool,std::int64_t nowMilliseconds)noexcept;
   std::expected<void,RouterError> setSuspended(bool,std::int64_t nowMilliseconds)noexcept;
   std::expected<std::optional<RouterContact>,RouterError> find(const NodeId&)const noexcept;
+  std::expected<ClosestContacts,RouterError> closest(const NodeId& target,std::size_t requested,bool liveOnly=true)const noexcept;
+  std::expected<bool,RouterError> localInClosest(const NodeId& target,std::size_t requested,bool liveOnly=true)const noexcept;
   std::expected<RouterStatisticsSnapshot,RouterError> snapshot()const noexcept;
   std::expected<RouterIntents,RouterError> takeIntents()noexcept;
 private:
