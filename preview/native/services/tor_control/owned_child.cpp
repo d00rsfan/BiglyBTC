@@ -434,7 +434,9 @@ struct OwnedTorChild::Impl {
       if (change(State::Ready)) { emit q->ready(); }
     });
     QObject::connect(handshake.get(),&OwnershipHandshake::failed,q,[this,at]{
-      if (at == generation && state == State::Authenticating) { stopWithFailure(QStringLiteral("Owned Tor control setup failed")); }
+      if (at != generation) { return; }
+      if (state == State::Ready) { stopWithFailure(QStringLiteral("Owned Tor control connection lost")); }
+      else if (state == State::Authenticating) { stopWithFailure(QStringLiteral("Owned Tor control setup failed")); }
     });
     if (!change(State::Authenticating)) { cookieBytes.fill(0); nonce.fill(0); return; }
     const auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>(expires-Clock::now()).count();

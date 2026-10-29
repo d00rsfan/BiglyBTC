@@ -8,6 +8,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QPointer>
+#include <QTcpSocket>
+#include <QNetworkProxy>
 #include <QRegularExpression>
 #include <QSignalSpy>
 #include <QSocketNotifier>
@@ -102,6 +104,74 @@ int queuedBytes(int fd) {
 class OwnedTorChildTests final : public QObject {
   Q_OBJECT
 private slots:
+  void postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart_data() {
+    QTest::addColumn<QByteArray>("mode");
+    QTest::newRow("control-eof") << QByteArray("post-ready-eof");
+    QTest::newRow("unsupported-post-setup-event") << QByteArray("post-ready-unsolicited");
+    QTest::newRow("control-eof-kill-escalation") << QByteArray("post-ready-eof-ignore-term");
+  }
+  void postReadyControlLossWithdrawsBeforeChildExitAndAllowsExplicitRestart() {
+    QFETCH(QByteArray,mode); Fixture fixture(mode); QVERIFY(fixture.ready);
+    const auto options = fixture.options(); OwnedTorChild child;
+    QSignalSpy ready(&child,&OwnedTorChild::ready), failed(&child,&OwnedTorChild::failed), finished(&child,&OwnedTorChild::finished);
+    QVERIFY(child.start(options)); QTRY_COMPARE_WITH_TIMEOUT(ready.count(),1,5000);
+    const auto pid = child.processId(); const auto port = child.controlPort();
+    QVERIFY(pid > 0 && port > 0 && child.sourceCurrent());
+    bool withdrewWhileAlive = false;
+    connect(&child,&OwnedTorChild::stateChanged,&child,[&](OwnedTorChild::State state){
+      if (state == OwnedTorChild::State::Stopping && child.processId() == pid) {
+        withdrewWhileAlive = child.controlPort() == 0 && !child.joined() && ::kill(pid,0) == 0;
+      }
+    });
+    QTcpSocket trigger; trigger.setProxy(QNetworkProxy::NoProxy);
+    trigger.connectToHost(QHostAddress::LocalHost,port);
+    QTRY_COMPARE_WITH_TIMEOUT(trigger.state(),QAbstractSocket::ConnectedState,2000);
+    const QByteArray instruction("owned-control-loss\n"); QCOMPARE(trigger.write(instruction),static_cast<qint64>(instruction.size()));
+    QTRY_COMPARE_WITH_TIMEOUT(trigger.bytesToWrite(),qint64{0},2000);
+    QTRY_COMPARE_WITH_TIMEOUT(failed.count(),1,5000);
+    QCOMPARE(failed.at(0).at(0).toString(),QStringLiteral("Owned Tor control connection lost"));
+    QVERIFY(withdrewWhileAlive); QCOMPARE(ready.count(),1); QCOMPARE(finished.count(),1);
+    QCOMPARE(child.state(),OwnedTorChild::State::Failed); QCOMPARE(child.controlPort(),quint16{0});
+    QVERIFY(child.joined()); QVERIFY(reaped(pid)); QVERIFY(!child.sourceCurrent());
+    const auto audit = QJsonDocument::fromJson(read(options.workingDirectory+QStringLiteral("/child-audit.json"))).object();
+    QCOMPARE(audit["commands"].toArray(),QJsonArray({"AUTHCHALLENGE","AUTHENTICATE","TAKEOWNERSHIP","RESETCONF __OwningControllerProcess","GETINFO version","POST_READY_CONTROL_LOSS"}));
+    // A fresh explicit start is allowed after actual join, with no automatic
+    // retry/fallback and no stale control failure crossing the new generation.
+    Fixture fresh; QVERIFY(fresh.ready); QVERIFY(child.start(fresh.options()));
+    QTRY_COMPARE_WITH_TIMEOUT(ready.count(),2,5000);
+    QCOMPARE(child.state(),OwnedTorChild::State::Ready); QCOMPARE(failed.count(),1); QVERIFY(child.sourceCurrent());
+    const auto freshPid = child.processId(); QVERIFY(freshPid > 0);
+    child.stop(); QTRY_VERIFY_WITH_TIMEOUT(child.joined(),5000);
+    QVERIFY(reaped(freshPid)); QCOMPARE(child.state(),OwnedTorChild::State::Stopped);
+    QCOMPARE(failed.count(),1); QCOMPARE(finished.count(),2);
+  }
+  void postReadyControlLossSupportsReentrantStopAndDeletion() {
+    Fixture fixture("post-ready-eof"); QVERIFY(fixture.ready);
+    for (const bool deleting : {false,true}) {
+      auto* child = new OwnedTorChild; QPointer<OwnedTorChild> guard(child);
+      QSignalSpy ready(child,&OwnedTorChild::ready), failed(child,&OwnedTorChild::failed);
+      QVERIFY(child->start(fixture.options(QString::number(deleting))));
+      QTRY_COMPARE_WITH_TIMEOUT(ready.count(),1,5000);
+      const auto pid = child->processId(); const auto port = child->controlPort();
+      bool withdrewWhileAlive = false;
+      connect(child,&OwnedTorChild::stateChanged,child,[&,child](OwnedTorChild::State state){
+        if (state == OwnedTorChild::State::Stopping) {
+          withdrewWhileAlive = child->controlPort() == 0 && ::kill(pid,0) == 0;
+          if (deleting) { delete child; } else { child->stop(); }
+        }
+      });
+      QTcpSocket trigger; trigger.setProxy(QNetworkProxy::NoProxy); trigger.connectToHost(QHostAddress::LocalHost,port);
+      QTRY_COMPARE_WITH_TIMEOUT(trigger.state(),QAbstractSocket::ConnectedState,2000);
+      const QByteArray instruction("owned-control-loss\n"); QCOMPARE(trigger.write(instruction),static_cast<qint64>(instruction.size()));
+      QTRY_COMPARE_WITH_TIMEOUT(trigger.bytesToWrite(),qint64{0},2000);
+      if (deleting) { QTRY_VERIFY_WITH_TIMEOUT(!guard,5000); }
+      else {
+        QTRY_COMPARE_WITH_TIMEOUT(failed.count(),1,5000); QVERIFY(child->joined());
+        QCOMPARE(child->state(),OwnedTorChild::State::Failed); delete child;
+      }
+      QVERIFY(withdrewWhileAlive); QVERIFY(reaped(pid));
+    }
+  }
   void actualOwnedChildAuthenticatesStopsJoinsAndRestartsInFreshDirectory() {
     Fixture fixture; QVERIFY(fixture.ready);
     OwnedTorChild child;

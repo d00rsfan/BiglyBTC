@@ -16,7 +16,7 @@ configuration = Path('torrc').read_text()
 for required in ('DisableNetwork 1\n', 'SocksPort 0\n', 'ControlPort 127.0.0.1:auto\n',
                  'CookieAuthentication 1\n', 'DataDirectory data\n', 'RunAsDaemon 0\n'):
     assert required in configuration
-if MODE == 'ignore-term':
+if MODE in ('ignore-term', 'post-ready-eof-ignore-term'):
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
 if MODE == 'hang':
     while True:
@@ -139,6 +139,22 @@ with client, client.makefile('rb') as lines:
     if MODE == 'crash':
         time.sleep(0.03)
         os._exit(17)
+    if MODE in ('post-ready-eof', 'post-ready-unsolicited', 'post-ready-eof-ignore-term'):
+        # A separate owned test connection triggers failure ONLY after the
+        # parent has positively observed Ready on the authenticated connection.
+        trigger, peer = server.accept()
+        with trigger, trigger.makefile('rb') as instructions:
+            assert peer[0] == '127.0.0.1'
+            assert instructions.readline(64) == b'owned-control-loss\n'
+        record('POST_READY_CONTROL_LOSS')
+        if MODE == 'post-ready-unsolicited':
+            client.sendall(b'650 NOTICE owned-unrequested-event\r\n')
+        else:
+            client.shutdown(socket.SHUT_RDWR)
+        # Deliberately keep the actual child alive: controller failure must
+        # revoke Ready without relying on QProcess::finished to detect it.
+        while True:
+            signal.pause()
     while lines.readline(1025):
         raise AssertionError('No post-setup command is authorized')
     if MODE == 'ignore-term':
