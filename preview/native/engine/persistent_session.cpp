@@ -519,6 +519,7 @@ struct PersistentSession::Impl {
     closeMainline();
     mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
     session.reset();
+    releaseRegularTrackerLease();
     for (auto& [key, entry] : managed) {
       static_cast<void>(key);
       if(entry->allocationIntent&&entry->status.retained&&!entry->allocationAttempted&&managedLease){
@@ -560,7 +561,11 @@ struct PersistentSession::Impl {
       detail::require(profile.st_dev == profileDevice && profile.st_ino == profileInode,
           "Persistent owner cannot cross profile identities", storage::ErrorCode::Conflict);
     } else { profileDevice = profile.st_dev; profileInode = profile.st_ino; profileBound = true; }
-    mainlineLease=mainlineOriginalLease?mainlineOriginalLease.get():&lease;
+    if(libraryHttpRegularMode()){
+      if(regularTrackerLease){detail::require(lease.sharesOwnership(*regularTrackerLease),"Regular tracker profile ownership changed",storage::ErrorCode::Conflict);}
+      else{auto retained=lease.retain();detail::require(retained.has_value(),"Regular tracker profile retention failed",storage::ErrorCode::Conflict);regularTrackerLease=std::move(*retained);}
+    }
+    mainlineLease=mainlineOriginalLease?mainlineOriginalLease.get():(regularTrackerLease?regularTrackerLease.get():&lease);
     detail::require(bindingHealthy(), "Explicit network binding was lost", storage::ErrorCode::Io);
   }
   #include "mainline_owner.inc"
@@ -1419,6 +1424,7 @@ PersistentSession::~PersistentSession() {
   impl_->retireMainlinePorts();
   impl_->closeMainline();
   impl_->session.reset();
+  impl_->releaseRegularTrackerLease();
 }
 std::expected<void, AccountingError> PersistentSession::startIdle(const storage::ProfileLease& lease) {
   if (!impl_->onWorker()) { return std::unexpected(AccountingError::WrongThread); }
@@ -1755,7 +1761,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
         "Exact managed transfer counters require the approved source ABI", storage::ErrorCode::Unsupported);
     if(!intent){value->trackerResponse=detail::attachManagedTrackerResponse(parameters,lease,
         value->storage.identity(),value->status.admission,impl_->trackerResponses,
-        impl_->libraryHttpProxyMode()?&detail::libraryHttpAnnounceScrapeDeadline:nullptr);}
+        impl_->libraryHttpRegularMode()?&detail::libraryHttpAnnounceScrapeDeadline:nullptr);}
     detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, impl_->operation);
     if(value->storage.mainlinePolicy().discover){value->mainlinePort=impl_->attachMainlinePort(parameters,value->status.admission,
         value->storage.identity().originalKey,value->storage.identity().selected==storage::OriginalSelectedHash::V1?1u:2u);}
@@ -2089,13 +2095,13 @@ void PersistentSession::revokeMainlineScrape(const core::TorrentHash& hash) noex
   impl_->mainlineScrapes.revoke(hash);
 }
 std::expected<void,storage::Error> PersistentSession::rearmMainlineScrape(const core::TorrentHash& hash) {
-  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||(!impl_->mainline&&!impl_->libraryHttpProxyMode())||!impl_->mainlineLease){
+  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||(!impl_->mainline&&!impl_->libraryHttpRegularMode())||!impl_->mainlineLease){
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Mainline saved-intent rearm is unavailable"});
   }
   revokeMainlineScrape(hash); // Cancel any old cookie before fresh authority IO.
   // This is independent fresh saved authority; no caller-supplied scope or
   // row cache can clear a failed command's tombstone by itself.
-  auto fresh=impl_->libraryHttpProxyMode()?readCurrentMainlineScrapeTargets(*impl_->mainlineLease,{},true,nullptr,SavedTrackerPurpose::RegularHttp)
+  auto fresh=impl_->libraryHttpRegularMode()?impl_->regularHttpTargets()
       :readSavedMainlineScrapeTargets(*impl_->mainlineLease);
   if(!fresh){impl_->mainlineScrapeFailure=fresh.error();return std::unexpected(fresh.error());}
   impl_->mainlineScrapes.settled(hash);impl_->mainlineScrapeRefresh={};impl_->regularTrackerRefresh={};return {};
@@ -2172,6 +2178,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   impl_->closeMainline();
   impl_->mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
   impl_->session.reset(); // Join may outlive the certification effort deadline.
+  impl_->releaseRegularTrackerLease();
   impl_->registered = false; impl_->outstanding = false;
   impl_->closed = true; impl_->phase = AccountingState::Closed;
   impl_->publish(); // Sink is cleared: update immutable state, no shutdown callback.

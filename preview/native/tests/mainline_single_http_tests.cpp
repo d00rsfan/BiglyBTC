@@ -249,6 +249,28 @@ struct AdmittedOwnerCleanup {
   engine::PersistentSession& owner;AdmittedHttpServer& server;SocksProxy& proxy;
   ~AdmittedOwnerCleanup(){server.release();proxy.release();static_cast<void>(owner.close(std::chrono::steady_clock::now()+10s));}
 };
+// DIRECT fixtures use the same real metadata/admission construction, with an
+// explicit choice of saved queued intent and per-download DHT permission.
+void prepareDirectHttp(test::OwnedEngineFixture& saved,const std::string& url,bool privateTorrent,bool dhtAllowed,bool savedOnly){
+  prepareNormalAdmittedProxy(saved,url,privateTorrent);
+  auto source=core::Document::parse(test::read(saved.stateFile).toStdString());test::require(source.has_value(),"Owned direct source parse");
+  const auto encoded=core::encodeValue(*source->find("attributes"));test::require(encoded.has_value(),"Owned direct attrs encode");auto attrs=core::Document::parse(*encoded);test::require(attrs.has_value(),"Owned direct attrs parse");
+  const auto sources=dhtAllowed?krpc::list({krpc::string("Tracker"),krpc::string("DHT")}):krpc::list({krpc::string("Tracker")});
+  const auto denied=dhtAllowed?krpc::list({}):krpc::list({krpc::string("DHT")});
+  test::require(attrs->replaceValue("peersources",sources.toStdString()).has_value()&&attrs->replaceValue("peersourcesdenied",denied.toStdString()).has_value()
+      &&source->replaceValue("attributes",attrs->serialize()).has_value(),"Owned direct permission fields");test::write(saved.stateFile,QByteArray::fromStdString(source->serialize()));
+  if(savedOnly){auto inventory=core::Document::parse(test::read(saved.profile+"/downloads.config").toStdString());test::require(inventory.has_value(),"Owned direct inventory parse");
+    const auto raw=core::encodeValue(inventory->find("downloads")->children[0]);test::require(raw.has_value(),"Owned direct row encode");auto row=core::Document::parse(*raw);
+    test::require(row.has_value()&&row->replaceValue("state","i75e").has_value()&&inventory->replaceValue("downloads","l"+row->serialize()+"e").has_value(),"Owned direct queued intent");test::write(saved.profile+"/downloads.config",QByteArray::fromStdString(inventory->serialize()));}
+}
+engine::NetworkPolicy directPolicy(bool dht){
+  auto p=policy();p.dht=dht;p.mainlineIpv4=true;p.mainlineIpv6=false;p.mainlinePeerBootstrapOnly=true;
+  QTcpServer transfer,discovery;QUdpSocket reserved;
+  test::require(transfer.listen(QHostAddress::LocalHost,0)&&discovery.listen(QHostAddress::LocalHost,0)
+      &&reserved.bind(QHostAddress::LocalHost,discovery.serverPort(),QUdpSocket::DontShareAddress),"Cannot reserve owned DIRECT ports");
+  p.listenPort=transfer.serverPort();p.mainlinePort=discovery.serverPort();return p;
+}
+QByteArray directSettings(bool dht){return krpc::dictionary({{"Peer Source Selection Default.DHT",dht?"i1e":"i0e"}});}
 struct SavedBytes {
   QString path;QByteArray bytes;struct stat before{};
   explicit SavedBytes(QString p):path(std::move(p)),bytes(test::read(path)){test::require(::lstat(path.toStdString().c_str(),&before)==0,"Cannot snapshot owned control");}
@@ -275,6 +297,57 @@ QByteArray savedAuthentication(const QUrl& url,const QByteArray& realm,const QBy
 class MainlineSingleHttpTests final:public QObject {
   Q_OBJECT
 private slots:
+  void directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload_data(){
+    QTest::addColumn<int>("mode");QTest::newRow("global-DHT-disabled-Public-HTTP")<<0;QTest::newRow("private-Public-HTTP")<<1;QTest::newRow("per-download-DHT-denied-Public-HTTP")<<2;
+  }
+  void directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload(){
+    QFETCH(int,mode);test::OwnedEngineFixture saved(false);HttpServer server;
+    const bool dht=mode!=0;prepareDirectHttp(saved,server.url(),mode==1,mode==0,true);
+    server.expectedHash=QByteArray(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);server.body=counts(*saved.hash);test::write(saved.profile+"/biglybt.config",directSettings(dht));
+    const SavedBytes inventory(saved.profile+"/downloads.config"),state(saved.stateFile),statistics(saved.profile+"/BiglyBT.statistics"),tables(saved.profile+"/tables.config");const auto payload=test::read(saved.payload+"/sample.bin");
+    PayloadWatch watch(saved);auto made=engine::PersistentSession::create({8931,8932,8933});QVERIFY(made);auto owner=std::move(*made);
+    QVERIFY(owner->configureNetwork(directPolicy(dht)));QVERIFY(owner->configureMainlineBootstrap({}));
+    {auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);QVERIFY(owner->startIdle(*lease));}
+    // The caller token has gone; the regular producer still owns the same OFD.
+    QVERIFY(!storage::ProfileLease::acquire(saved.native()));QString failure;
+    const auto pump=[&]{if(!owner->poll()){failure="DIRECT saved owner poll failed";return false;}if(!owner->managedDownloads().empty()||!owner->pendingMagnets().empty()){failure="DIRECT statistics acquired an admission";return false;}if(!watch.untouched()){failure="DIRECT statistics accessed payload";return false;}failure=server.failure;return failure.isEmpty();};
+    QTRY_VERIFY_WITH_TIMEOUT(!pump()||!owner->libraryTrackerResponses().empty(),20000);QVERIFY2(failure.isEmpty(),qPrintable(failure));const auto views=owner->libraryTrackerResponses();QCOMPARE(views.size(),std::size_t{1});QCOMPARE(views[0].hash,*saved.hash);QCOMPARE(views[0].admission,std::uint64_t{0});QCOMPARE(views[0].response.type,core::QueueOriginalScrapeType::Success);QVERIFY(views[0].response.content);QCOMPARE(views[0].response.content->seeds,5);QCOMPARE(views[0].response.content->peers,6);QCOMPARE(server.requests,1);
+    const auto discovery=owner->mainlineDiscovery();QCOMPARE(discovery.lookups,std::uint64_t{0});QCOMPARE(discovery.announces,std::uint64_t{0});QCOMPARE(discovery.deliveredPeers,std::uint64_t{0});QVERIFY(owner->mainlineScrapeEstimates().empty());
+    owner->revokeMainlineScrape(*saved.hash);QVERIFY(owner->libraryTrackerResponses().empty());QVERIFY(pump());QCOMPARE(server.requests,1);QVERIFY(inventory.unchanged()&&state.unchanged()&&statistics.unchanged()&&tables.unchanged());
+    const auto closed=owner->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(watch.untouched());watch.stop();QCOMPARE(test::read(saved.payload+"/sample.bin"),payload);QVERIFY(saved.intact(false));auto reacquired=storage::ProfileLease::acquire(saved.native());QVERIFY(reacquired);
+  }
+  void directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline_data(){
+    QTest::addColumn<bool>("encrypted");QTest::newRow("DHT-disabled-healthy-announce-no-redundant-scrape")<<false;QTest::newRow("private-HTTPS-saved-JKS-regular-scrape")<<true;
+  }
+  void directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(){
+    QFETCH(bool,encrypted);QVERIFY(detail::managedTrackerResponseRuntimePin());Certificate identity;AdmittedHttpServer server(encrypted?&identity:nullptr);server.failedAnnounce=encrypted;
+    test::OwnedEngineFixture saved(false);prepareDirectHttp(saved,server.url(),encrypted,!encrypted,false);server.expectedHash=QByteArray(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);test::write(saved.profile+"/biglybt.config",directSettings(encrypted));
+    if(encrypted){QVERIFY(QSslSocket::supportsSsl());test::write(saved.profile+"/.certs",jksStore({{"owned",{identity.certificate.toDer()},false}}));}
+    const auto source=core::Document::parse(test::read(saved.stateFile).toStdString());QVERIFY(source);const auto rawInfo=core::encodeValue(*source->find("info"));QVERIFY(rawInfo);const auto payload=test::read(saved.payload+"/sample.bin");
+    auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);auto made=engine::PersistentSession::create({8941,8942,8943});QVERIFY(made);auto owner=std::move(*made);QVERIFY(owner->configureNetwork(directPolicy(encrypted)));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*lease));QVERIFY(owner->startManaged(*lease,{.hash=*saved.hash,.queued=false}));QString failure;
+    if(!encrypted){
+      // The actual LT announce callback precedes its socket close. No owner
+      // poll runs until that existing keep-alive close barrier was observed.
+      QTRY_VERIFY_WITH_TIMEOUT(server.completedAnnounceConnections>0,15000);QVERIFY2(server.failure.isEmpty(),qPrintable(server.failure));QCOMPARE(server.scrapes,0);
+    }
+    const auto pump=[&]{if(!owner->poll()){failure="DIRECT admitted owner poll failed";return false;}for(const auto& row:owner->managedDownloads()){if(row.failure){failure=QString::fromStdString(row.failure->message);return false;}}failure=server.failure;return failure.isEmpty();};
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!pump()){return true;}const auto rows=owner->managedDownloads();return rows.size()==1&&rows[0].retained&&rows[0].checked&&rows[0].phase==engine::ManagedPhase::Downloading;}()),15000);QVERIFY2(failure.isEmpty(),qPrintable(failure));const auto admission=owner->managedDownloads()[0].admission;QVERIFY(admission);
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!pump()){return true;}const auto rows=owner->libraryTrackerResponses();return rows.size()==1&&rows[0].admission==admission&&rows[0].response.content&&rows[0].response.content->seeds==(encrypted?7:5)&&rows[0].response.content->peers==(encrypted?8:6);}()),20000);QVERIFY2(failure.isEmpty(),qPrintable(failure));
+    const auto actual=owner->managedTrackerResponse(*saved.hash,admission);QVERIFY(actual&&actual->content);QCOMPARE(actual->content->seeds,encrypted?7:5);QCOMPARE(actual->content->peers,encrypted?8:6);QVERIFY(!owner->managedTrackerResponse(*saved.hash,admission+1));QCOMPARE(server.scrapes,encrypted?1:0);
+    const auto discovery=owner->mainlineDiscovery();QCOMPARE(discovery.lookups,std::uint64_t{0});QCOMPARE(discovery.announces,std::uint64_t{0});QCOMPARE(discovery.deliveredPeers,std::uint64_t{0});QVERIFY(owner->mainlineScrapeEstimates().empty());
+    QVERIFY(owner->pauseManaged(*saved.hash,true));QVERIFY(owner->libraryTrackerResponses().empty());const auto closed=owner->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);const auto after=core::Document::parse(test::read(saved.stateFile).toStdString());QVERIFY(after);const auto afterInfo=core::encodeValue(*after->find("info"));QVERIFY(afterInfo);QCOMPARE(*afterInfo,*rawInfo);QCOMPARE(test::read(saved.payload+"/sample.bin"),payload);QVERIFY(saved.accountingIntact(false));QVERIFY(server.failure.isEmpty());
+  }
+  void directHeldResponseLosesAuthorityWhenCurrentTrackerPermissionChanges(){
+    test::OwnedEngineFixture saved(false);HttpServer server;server.hold=true;prepareDirectHttp(saved,server.url(),true,false,true);server.expectedHash=QByteArray(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);server.body=counts(*saved.hash);test::write(saved.profile+"/biglybt.config",directSettings(true));
+    const auto payload=test::read(saved.payload+"/sample.bin");auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);PayloadWatch watch(saved);auto made=engine::PersistentSession::create({8951,8952,8953});QVERIFY(made);auto owner=std::move(*made);QVERIFY(owner->configureNetwork(directPolicy(true)));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*lease));QString failure;
+    const auto pump=[&]{if(!owner->poll()){failure="DIRECT held owner poll failed";return false;}if(!watch.untouched()){failure="DIRECT held statistics accessed payload";return false;}failure=server.failure;return failure.isEmpty();};
+    QTRY_VERIFY_WITH_TIMEOUT(!pump()||server.requests==1,20000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QVERIFY(owner->libraryTrackerResponses().empty());
+    auto source=core::Document::parse(test::read(saved.stateFile).toStdString());QVERIFY(source);const auto raw=core::encodeValue(*source->find("attributes"));QVERIFY(raw);auto attrs=core::Document::parse(*raw);QVERIFY(attrs);QVERIFY(attrs->replaceValue("peersourcesdenied","l3:DHT7:Trackere"));QVERIFY(source->replaceValue("attributes",attrs->serialize()));test::write(saved.stateFile,QByteArray::fromStdString(source->serialize()));
+    // Revalidation cancels this exact physical operation before the held body
+    // can become an accepted terminal; a later reply cannot restore permission.
+    QVERIFY(pump());server.release();QVERIFY(pump());QVERIFY(owner->libraryTrackerResponses().empty());QCOMPARE(server.requests,1);QVERIFY(owner->managedDownloads().empty()&&owner->pendingMagnets().empty());
+    const auto closed=owner->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(watch.untouched());watch.stop();QCOMPARE(test::read(saved.payload+"/sample.bin"),payload);QVERIFY(saved.accountingIntact(false));
+  }
   void actualAnnounceDefersWithoutReplacingRetainedContentOrShorteningScrapeDue(){
     core::QueueTrackerTerminal announce;announce.kind=core::QueueTrackerTerminalKind::Announce;announce.comparable=true;announce.present=3;announce.complete=5;announce.incomplete=6;announce.observedMillis=1000;announce.observedWallMillis=2000;
     const auto due=detail::libraryHttpAnnounceScrapeDeadline(announce);QVERIFY(due);QVERIFY(*due>=951000&&*due<=1130000);QCOMPARE(detail::libraryHttpAnnounceScrapeDeadline(announce),due);

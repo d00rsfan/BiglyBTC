@@ -97,7 +97,10 @@ void retireMainlinePorts() noexcept {
 }
 void silenceMainlinePorts() noexcept {
   mainlineStatus.admittedScrapeCandidates.clear();
-  cancelLibraryUdp();cancelLibraryHttp();libraryHttp.close();regularTrackerViews.clear();
+  cancelLibraryUdp();
+  // An optional discovery failure does not revoke separately authenticated
+  // Public+Tracker HTTP authority. Whole-owner retirement still joins both.
+  if(const auto* request=libraryHttp.active();!request||!request->regularAuthority){cancelLibraryHttp();libraryHttp.close();}
   for(auto& [key,value]:managed){(void)key;if(value->mainlinePort){value->mainlinePort->advertised.store(0,std::memory_order_release);}}
   for(auto& [key,value]:magnets){(void)key;if(value->mainlinePort){value->mainlinePort->advertised.store(0,std::memory_order_release);}}
 }
@@ -264,7 +267,7 @@ void closeMainline() noexcept {
     catch(...){try{mainlineStatus.failure=storage::Error{storage::ErrorCode::Io,"Original Mainline service join could not be acknowledged"};}catch(...){}}
     mainline.reset(); // Joins before releasing the source/SAME-OFD token below.
   }
-  if(mainlineLease==mainlineOriginalLease.get()){mainlineLease=nullptr;}
+  if(mainlineLease==mainlineOriginalLease.get()){mainlineLease=regularTrackerLease.get();}
   mainlineBindCapture.reset();mainlineResolvedPolicy.reset();
   mainlineOriginalSource.reset();mainlineOriginalLease.reset();
 }
@@ -292,7 +295,7 @@ std::optional<std::int64_t> trackerSelectionSeed(const core::TorrentHash& hash){
   const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
   trackerSelectionSeeds.emplace(hash.hex(),wall);return wall;
 }
-bool prepareLibraryTrackerTiers(SavedMainlineScrapeTarget& target,std::int64_t now,bool& pendingEligibility){
+bool prepareLibraryTrackerTiers(SavedMainlineScrapeTarget& target,std::int64_t now,bool& pendingEligibility,bool regularAuthority=false){
   if(target.admission||target.configuredTrackers.size()<2||target.configuredTrackers.size()>8){return false;}
   const auto seed=trackerSelectionSeed(target.hash);if(!seed){return false;}
   std::vector<unsigned> tiers;for(const auto& url:target.configuredTrackers){tiers.push_back(url.tier);}
@@ -301,8 +304,9 @@ bool prepareLibraryTrackerTiers(SavedMainlineScrapeTarget& target,std::int64_t n
   std::optional<std::expected<std::string,storage::Error>> udpConfig;
   const auto prepare=[&](SavedMainlineScrapeTarget& member,bool& pending,bool dispatch){
     if(member.configuredTracker.starts_with("http://")||member.configuredTracker.starts_with("https://")){
-      return prepareLibraryHttp(member,now,pending,true,dispatch);
+      return prepareLibraryHttp(member,now,pending,true,dispatch,regularAuthority);
     }
+    if(regularAuthority){return false;}
     if(!udpConfig){udpConfig=detail::libraryUdpConfiguration(*mainlineLease);}
     return *udpConfig&&prepareLibraryUdp(member,now,**udpConfig,pending,true,dispatch);
   };
@@ -356,12 +360,11 @@ std::uint32_t scrapeRandom() {
 }
 bool sameMainlineProfileLease() const noexcept {
   if(managedLease==mainlineLease){return true;} // Preserve the ordinary direct-token path.
-  if(!managedLease||!mainlineOriginalLease||mainlineLease!=mainlineOriginalLease.get()
-      ||!managedLease->sharesOwnership(*mainlineOriginalLease)||!profileBound
+  if(!managedLease||!mainlineLease||!managedLease->sharesOwnership(*mainlineLease)||!profileBound
       ||!networkBinding||!networkBindingCurrent(*networkBinding)){return false;}
   struct stat managedProfile{},mainlineProfile{};
   return ::fstat(managedLease->directoryHandle(),&managedProfile)==0&&S_ISDIR(managedProfile.st_mode)
-      &&::fstat(mainlineOriginalLease->directoryHandle(),&mainlineProfile)==0&&S_ISDIR(mainlineProfile.st_mode)
+      &&::fstat(mainlineLease->directoryHandle(),&mainlineProfile)==0&&S_ISDIR(mainlineProfile.st_mode)
       &&managedProfile.st_dev==mainlineProfile.st_dev&&managedProfile.st_ino==mainlineProfile.st_ino
       &&mainlineProfile.st_dev==profileDevice&&mainlineProfile.st_ino==profileInode;
 }
@@ -494,12 +497,12 @@ void advanceMainlineScrapes(Clock::time_point now) noexcept {
   }
 }
 
-// Saved and genuinely admitted SOCKS5 tracker scraping is independent of the unavailable Mainline
+// Saved and genuinely admitted regular HTTP scraping is independent of optional Mainline
 // service. It uses only this existing worker tick and the same per-URL response
 // reducer; no DHT, lookup, PORT, announce or hidden torrent can be started here.
 std::map<std::uint64_t,std::uint64_t> regularTrackerSequences;
-void advanceProxyHttpTrackers(Clock::time_point now)noexcept {
-  if(!libraryHttpProxyMode()){regularTrackerViews.clear();return;}
+void advanceRegularHttpTrackers(Clock::time_point now)noexcept {
+  if(!libraryHttpRegularMode()){regularTrackerViews.clear();return;}
   try{
     advanceLibraryHttp(now);if(now<regularTrackerRefresh){return;}regularTrackerRefresh=now+10s;
     if(!mainlineLease||!networkBinding||!networkBindingCurrent(*networkBinding)){cancelLibraryHttp();regularTrackerViews.clear();return;}
@@ -523,9 +526,9 @@ void advanceProxyHttpTrackers(Clock::time_point now)noexcept {
       }
       bool pending=false;
       if(!target.configuredTrackers.empty()){
-        if(!prepareLibraryTrackerTiers(target,std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count(),pending)){continue;}
+        if(!prepareLibraryTrackerTiers(target,std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count(),pending,true)){continue;}
       }else{
-        if(!prepareLibraryHttp(target,std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count(),pending,true)){continue;}
+        if(!prepareLibraryHttp(target,std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count(),pending,true,true,true)){continue;}
       }
       const auto response=trackerResponses.find(target.trackerResponseKey);const auto observed=libraryHttpObservedWall.find(target.trackerResponseKey);
       if(response==trackerResponses.end()||observed==libraryHttpObservedWall.end()||observed->second<0){continue;}
@@ -628,7 +631,7 @@ bool discoverable(const Magnet& value) const {
 }
 void advanceMainline() noexcept {
   if(closingAdmission||poisoned||closed){return;}
-  advanceProxyHttpTrackers(Clock::now());
+  advanceRegularHttpTrackers(Clock::now());
   if (!mainline) { return; }
   try {
     if(!checkMainlineBind()){return;}

@@ -2020,3 +2020,12 @@ if(TARGET biglybtc_i2p_datagram)
     --java-fixtures "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
   set_tests_properties(pure-i2p-datagram-codec PROPERTIES TIMEOUT 30 LABELS "unit;crypto;i2p;no-network")
 endif()
+
+if(TARGET biglybtc_i2p_client_identity)
+  add_executable(biglybtc-i2p-client-identity-tests i2p_client_identity_tests.cpp)
+  target_link_libraries(biglybtc-i2p-client-identity-tests PRIVATE biglybtc_i2p_client_identity)
+  target_compile_options(biglybtc-i2p-client-identity-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME pure-i2p-client-identity COMMAND biglybtc-i2p-client-identity-tests
+    "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
+  set_tests_properties(pure-i2p-client-identity PROPERTIES TIMEOUT 30 LABELS "unit;crypto;i2p;no-network")
+endif()

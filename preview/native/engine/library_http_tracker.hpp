@@ -59,7 +59,9 @@ struct LibraryHttpResolver {
 // the network thread nor DNS callbacks own a ProfileLease or response object.
 class LibraryHttpTracker final {
 public:
-  using Request=LibraryUdpTracker::Request;
+  struct Request {core::TorrentHash hash;std::string responseKey,scope,configuration;std::uint64_t nonce=0;
+    bool regularAuthority=false; // Explicit producer role; network replies never choose this.
+  };
   struct Result {Request request;core::QueueTrackerTerminal terminal;std::int64_t observedNanos=0;};
   using Authentication=std::function<std::expected<std::optional<QByteArray>,storage::Error>(
       const Request&,const LibraryHttpRoute&,const QByteArray& realm)>;

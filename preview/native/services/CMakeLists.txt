@@ -77,3 +77,9 @@ target_include_directories(biglybtc_i2p_datagram PUBLIC "${CMAKE_CURRENT_SOURCE_
 target_link_libraries(biglybtc_i2p_datagram PRIVATE OpenSSL::Crypto)
 target_compile_features(biglybtc_i2p_datagram PUBLIC cxx_std_23)
 target_compile_options(biglybtc_i2p_datagram PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_i2p_client_identity STATIC i2p_client/identity.cpp)
+target_include_directories(biglybtc_i2p_client_identity PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2p_client")
+target_link_libraries(biglybtc_i2p_client_identity PUBLIC biglybtc_i2p_datagram PRIVATE OpenSSL::Crypto)
+target_compile_features(biglybtc_i2p_client_identity PUBLIC cxx_std_23)
+target_compile_options(biglybtc_i2p_client_identity PRIVATE -Wall -Wextra -Wpedantic -Werror)
