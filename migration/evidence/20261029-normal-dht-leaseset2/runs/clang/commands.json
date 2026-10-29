@@ -1,0 +1,51 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-azureus-owned-service-tests",
+      "biglybtc-azureus-router-owner-tests",
+      "biglybtc-azureus-database-runtime-tests",
+      "biglybtc-owned-dht-bytes-tests",
+      "biglybtc-azureus-storage-stats-tests",
+      "biglybtc-i2cp-initial-channel-tests",
+      "biglybtc-i2cp-leaseset-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 304.861,
+    "log": "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/runs/clang-r1/build.log",
+    "log_sha256": "630316207e48d8b0b69eed8b7d341a5f0f3c93cbf0d623f7aa024dea32fa606f"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "-R",
+      "^(azureus-owned-service|azureus-router-owner|azureus-database-runtime|owned-dht-bytes|azureus-storage-stats|i2cp-initial-channel|pure-i2cp-leaseset2)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/runs/clang-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 18.296,
+    "log": "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/runs/clang-r1/tests.log",
+    "log_sha256": "1cba06d9cb790bf96401c50b556796c7a9640f3f3cff92382ffcd10f64757fba"
+  }
+]

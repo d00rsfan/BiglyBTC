@@ -1,0 +1,243 @@
+Start testing: Oct 29 16:03 IST
+----------------------------------------------------------
+178/287 Testing: azureus-owned-service
+178/287 Test: azureus-owned-service
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-azureus-owned-service-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests
+"azureus-owned-service" start time: Oct 29 16:03 IST
+Output:
+----------------------------------------------------------
+********* Start testing of OwnedAzureusServiceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedAzureusServiceTests::initTestCase()
+PASS   : OwnedAzureusServiceTests::twoNormalProfileOwnersExchangeDirectValuesWithoutGeneratedClosestFacts()
+PASS   : OwnedAzureusServiceTests::normalReceiverRequiresPeerTokenAndKeepsUnseededCacheForwardsOut()
+PASS   : OwnedAzureusServiceTests::normalReceiverChangedProfileWithdrawsBeforeAnyRemoteStore()
+PASS   : OwnedAzureusServiceTests::normalValueOwnersCancelWithoutAdmissionAndRestartWithReservedVersions()
+PASS   : OwnedAzureusServiceTests::normalReceivingCannotBeEnabledWithoutAHeldProfile()
+PASS   : OwnedAzureusServiceTests::originalVersionReservationPreservesSignedJavaWidthsAndChunkBoundary()
+PASS   : OwnedAzureusServiceTests::profileVersionsReserveBeforeUsePreserveUnknownsAndRecoverOnlyCanonicalPending()
+PASS   : OwnedAzureusServiceTests::versionOwnerRetainsCallerLeaseAndRefusesLockOrDirectoryReplacement()
+PASS   : OwnedAzureusServiceTests::localPublicationUsesActualTokenStoreAndReadbackFromGeneratedReceiver()
+PASS   : OwnedAzureusServiceTests::localPublicationCancellationAndChangedProfileNeverSendStore()
+PASS   : OwnedAzureusServiceTests::defaultAndInvalidPolicyNeverCreateAnOwner()
+PASS   : OwnedAzureusServiceTests::stdWorkerCreatesAndJoinsTheDedicatedQtOwner()
+PASS   : OwnedAzureusServiceTests::twoActualServiceOwnersExchangeRttCoordinatesAndKeepOldSnapshots()
+PASS   : OwnedAzureusServiceTests::existingActualFindNodeAndStreamingFindValueRunOnTheQtOwner()
+PASS   : OwnedAzureusServiceTests::actualTimeoutCancellationAndJoinedCloseRetainTheirOwnEvents()
+PASS   : OwnedAzureusServiceTests::boundedAdmissionAndCloseDoNotDependOnFreeCommandSlots()
+PASS   : OwnedAzureusServiceTests::invalidPublicPeersAndDeadlinesNeverSendOrChangeTheMailbox()
+PASS   : OwnedAzureusServiceTests::passiveReadsNeverQueueCommandsOrRepublishUnchangedFacts()
+PASS   : OwnedAzureusServiceTests::concurrentMailboxReadsAndImmediatePendingDestructionJoinSafely()
+PASS   : OwnedAzureusServiceTests::cleanupTestCase()
+Totals: 21 passed, 0 failed, 0 skipped, 0 blacklisted, 2532ms
+********* Finished testing of OwnedAzureusServiceTests *********
+<end of output>
+Test time =   2.61 sec
+----------------------------------------------------------
+Test Passed.
+"azureus-owned-service" end time: Oct 29 16:03 IST
+"azureus-owned-service" time elapsed: 00:00:02
+----------------------------------------------------------
+
+182/287 Testing: azureus-router-owner
+182/287 Test: azureus-router-owner
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-azureus-router-owner-tests" "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/azureus-router/source-cases.tsv"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests
+"azureus-router-owner" start time: Oct 29 16:03 IST
+Output:
+----------------------------------------------------------
+PASS 13 router policy families; 5181 assertions; source-derived fixtures, no Java runtime equality credit
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"azureus-router-owner" end time: Oct 29 16:03 IST
+"azureus-router-owner" time elapsed: 00:00:00
+----------------------------------------------------------
+
+189/287 Testing: owned-dht-bytes
+189/287 Test: owned-dht-bytes
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-owned-dht-bytes-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests
+"owned-dht-bytes" start time: Oct 29 16:03 IST
+Output:
+----------------------------------------------------------
+********* Start testing of OwnedDhtBytesTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedDhtBytesTests::initTestCase()
+PASS   : OwnedDhtBytesTests::checkedAdditionKeepsActualZeroAndMakesOverflowStickyUnknown()
+PASS   : OwnedDhtBytesTests::actualNumericLoopbackCountsDifferentPayloadLengthsAndRejectedDatagrams()
+PASS   : OwnedDhtBytesTests::boundedOversizeDiscardLeavesUnknownReceiveTotalWithoutAffectingPacketCounters()
+PASS   : OwnedDhtBytesTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 56ms
+********* Finished testing of OwnedDhtBytesTests *********
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"owned-dht-bytes" end time: Oct 29 16:03 IST
+"owned-dht-bytes" time elapsed: 00:00:00
+----------------------------------------------------------
+
+263/287 Testing: azureus-database-runtime
+263/287 Test: azureus-database-runtime
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-azureus-database-runtime-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests
+"azureus-database-runtime" start time: Oct 29 16:03 IST
+Output:
+----------------------------------------------------------
+********* Start testing of AzureusDatabaseRuntimeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusDatabaseRuntimeTests::initTestCase()
+PASS   : AzureusDatabaseRuntimeTests::localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData()
+PASS   : AzureusDatabaseRuntimeTests::qualifiedMappingOwnsVersionsForwardingAndUnknownBinaryBytes()
+PASS   : AzureusDatabaseRuntimeTests::normalFindFlagsReturnUnfilteredValuesLikeOriginalMapping()
+PASS   : AzureusDatabaseRuntimeTests::actualFindFlagsReachTheDatabaseWithoutSeedFiltering()
+PASS   : AzureusDatabaseRuntimeTests::statsValueRequiresRealAdapterAndLocalIdentity()
+PASS   : AzureusDatabaseRuntimeTests::actualStatsReadIsBoundToSocketAndRealMappingEvents()
+PASS   : AzureusDatabaseRuntimeTests::originalDiversificationRequiresExplicitControlAndRealMappingEvents()
+PASS   : AzureusDatabaseRuntimeTests::originalFrequencyUsesActualIpBloomAndSuspensionSamples()
+PASS   : AzureusDatabaseRuntimeTests::borrowedClockCannotReenterFacadeMutation()
+PASS   : AzureusDatabaseRuntimeTests::strictExpiryBoundaryThrottleAndDelayedEmptyMappingRemoval()
+PASS   : AzureusDatabaseRuntimeTests::quotaChecksExistingFourByteOverheadAndCapacityNeverClobbers()
+PASS   : AzureusDatabaseRuntimeTests::actualTokenStoreAndRecursiveGetReadMutatedDatabase()
+PASS   : AzureusDatabaseRuntimeTests::malformedAndWrongNetworkNeverReachTheDatabase()
+PASS   : AzureusDatabaseRuntimeTests::legacyModeRemainsNonDatabaseAndUnsafeBindCannotActivateIt()
+PASS   : AzureusDatabaseRuntimeTests::cleanupTestCase()
+Totals: 16 passed, 0 failed, 0 skipped, 0 blacklisted, 2121ms
+********* Finished testing of AzureusDatabaseRuntimeTests *********
+<end of output>
+Test time =   2.24 sec
+----------------------------------------------------------
+Test Passed.
+"azureus-database-runtime" end time: Oct 29 16:03 IST
+"azureus-database-runtime" time elapsed: 00:00:02
+----------------------------------------------------------
+
+265/287 Testing: azureus-storage-stats
+265/287 Test: azureus-storage-stats
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-azureus-storage-stats-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests
+"azureus-storage-stats" start time: Oct 29 16:03 IST
+Output:
+----------------------------------------------------------
+PASS storage stats codec/source counter boundaries
+<end of output>
+Test time =   0.13 sec
+----------------------------------------------------------
+Test Passed.
+"azureus-storage-stats" end time: Oct 29 16:03 IST
+"azureus-storage-stats" time elapsed: 00:00:00
+----------------------------------------------------------
+
+285/287 Testing: i2cp-initial-channel
+285/287 Test: i2cp-initial-channel
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2cp-initial-channel-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests
+"i2cp-initial-channel" start time: Oct 29 16:03 IST
+Output:
+----------------------------------------------------------
+********* Start testing of InitialChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : InitialChannelTests::initTestCase()
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv4)
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv6)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(oversize-header)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unknown-type)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(maximum-bounded-opaque-frame)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unexpected-real-session-status)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(invalid-date-length)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(real-Java-null-date)
+PASS   : InitialChannelTests::truncatedFrameAtActualEofRefuses()
+PASS   : InitialChannelTests::realDisconnectRevokesDateAndRetainsOnlyReason()
+PASS   : InitialChannelTests::actualRemoteEofWithdrawsDate()
+PASS   : InitialChannelTests::noDateHitsAbsoluteDeadlineWithoutRetry()
+PASS   : InitialChannelTests::cancelPartialThenExplicitRestartUsesNewStream()
+PASS   : InitialChannelTests::activeBeginCannotReplaceCurrentAttempt()
+PASS   : InitialChannelTests::stateListenerRestartCannotPublishOldDate()
+PASS   : InitialChannelTests::publicNotificationMayDeleteController(date-state-listener)
+PASS   : InitialChannelTests::publicNotificationMayDeleteController(date-final-listener)
+PASS   : InitialChannelTests::publicNotificationMayDeleteController(failure-listener)
+PASS   : InitialChannelTests::unsupportedOptionsRefuseBeforeAnyTcp()
+PASS   : InitialChannelTests::actualSignedRegistrationAndMergedReconfigure(DSA0-v4)
+PASS   : InitialChannelTests::actualSignedRegistrationAndMergedReconfigure(Ed7-v4)
+PASS   : InitialChannelTests::actualSignedRegistrationAndMergedReconfigure(DSA0-v6)
+PASS   : InitialChannelTests::actualSignedRegistrationAndMergedReconfigure(Ed7-v6)
+PASS   : InitialChannelTests::terminalRegistrationStatusNeverAdmits(refused-UNKNOWN)
+PASS   : InitialChannelTests::terminalRegistrationStatusNeverAdmits(invalid)
+PASS   : InitialChannelTests::terminalRegistrationStatusNeverAdmits(destroyed)
+PASS   : InitialChannelTests::terminalRegistrationStatusNeverAdmits(unsolicited-updated)
+PASS   : InitialChannelTests::terminalRegistrationStatusNeverAdmits(created-UNKNOWN)
+PASS   : InitialChannelTests::reconfigureCannotChangeIdentityOrAcceptWrongId()
+PASS   : InitialChannelTests::pendingCreateDeadlineClosesWithoutAdmissionOrRetry()
+PASS   : InitialChannelTests::invalidSigningInputDoesNotReplaceTheDateOrWriteARequest()
+PASS   : InitialChannelTests::previouslyReadPartialStatusCannotBecomeANewCreateAcknowledgement()
+PASS   : InitialChannelTests::unsupportedTlsCannotBecomePlaintextRegistration()
+PASS   : InitialChannelTests::cancelBeforeQueuedOldStatusThenNewRegistrationCannotReuseIt()
+PASS   : InitialChannelTests::nestedRealReconfigureCannotPublishTheSupersededCreatedNotification()
+PASS   : InitialChannelTests::registrationNotificationMayDeleteController(created)
+PASS   : InitialChannelTests::registrationNotificationMayDeleteController(updated)
+PASS   : InitialChannelTests::ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(DSA0-v4)
+PASS   : InitialChannelTests::ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(Ed7-v4)
+PASS   : InitialChannelTests::ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(DSA0-v6)
+PASS   : InitialChannelTests::ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(Ed7-v6)
+PASS   : InitialChannelTests::leaseOptInRejectsUnsupportedPolicyAndLegacyBeforeConsumingSigner()
+PASS   : InitialChannelTests::badLeaseRequestWithdrawsOwnedCapability(wrong-session)
+PASS   : InitialChannelTests::badLeaseRequestWithdrawsOwnedCapability(zero-leases)
+PASS   : InitialChannelTests::badLeaseRequestWithdrawsOwnedCapability(seventeen)
+PASS   : InitialChannelTests::badLeaseRequestWithdrawsOwnedCapability(expired)
+PASS   : InitialChannelTests::badLeaseRequestWithdrawsOwnedCapability(no-opt-in)
+PASS   : InitialChannelTests::badLeaseRequestWithdrawsOwnedCapability(zero-tunnel)
+PASS   : InitialChannelTests::missingInitialLeaseRequestHasAnAbsoluteBudget()
+PASS   : InitialChannelTests::closeBeforeFirstLeaseWithdrawsTheConsumedCapability()
+PASS   : InitialChannelTests::submittedCallbackMayDeleteController()
+PASS   : InitialChannelTests::cleanupTestCase()
+Totals: 53 passed, 0 failed, 0 skipped, 0 blacklisted, 13293ms
+********* Finished testing of InitialChannelTests *********
+<end of output>
+Test time =  13.45 sec
+----------------------------------------------------------
+Test Passed.
+"i2cp-initial-channel" end time: Oct 29 16:03 IST
+"i2cp-initial-channel" time elapsed: 00:00:13
+----------------------------------------------------------
+
+287/287 Testing: pure-i2cp-leaseset2
+287/287 Test: pure-i2cp-leaseset2
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2cp-leaseset-tests" "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests
+"pure-i2cp-leaseset2" start time: Oct 29 16:03 IST
+Output:
+----------------------------------------------------------
+PASS original standard LS2 key/message/signature rules dsa
+PASS original standard LS2 key/message/signature rules ed25519
+PASS bounded original LeaseSet2 prerequisite
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"pure-i2cp-leaseset2" end time: Oct 29 16:03 IST
+"pure-i2cp-leaseset2" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 29 16:03 IST
+
+crypto =   0.12 sec*proc
+
+database =   2.38 sec*proc
+
+i2p =  13.57 sec*proc
+
+loopback =   4.97 sec*proc
+
+no-network =   0.12 sec*proc
+
+owned-loopback =  13.45 sec*proc
+
+router =   0.07 sec*proc
+
+statistics =   2.80 sec*proc
+
+unit =  18.75 sec*proc
+

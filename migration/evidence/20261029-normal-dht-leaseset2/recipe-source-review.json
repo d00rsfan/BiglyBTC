@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "scripts_sha256": {
+    "adopt.py": "e9f96a74665387ef8eb2491095afe4c11561c3f08f8aeea21e2a2647d5853959",
+    "run.py": "395932a57f84d9ac9602d4ca7342a008c696d6d6ad74bac8f766640e579ccd27",
+    "private.py": "8435678f73a1ce6943f7439da148882afe055027e88ff2eb82205607e4be4258"
+  },
+  "conclusion": "No concrete blocker in the three root-run recipes. They compose the two disjoint frozen capsules and exactly two CMake leaves into19 paths; run seven suites on all lanes with honest10/7/7 compiled products; and use current GCC products for one private seven-suite run.",
+  "checks": [
+    "All three Python ASTs parse; none was imported/executed.",
+    "Approved capsule/review/fragment pins checked. Six LS2 and11 normal receiver source maps are disjoint and match current beforeimages/afterimages. The two CMake append leaves do not overlap those17 paths.",
+    "Adopter requires exact clean a3b504 base, checks source bytes, normalises only CMake trailing whitespace, stages exactly the19 combined paths and records actual commit/maps.",
+    "Seven suite/target pairs match existing native CMake and the frozen LS2 fragment. GCC product paths match prior actual images; Clang/SAN intentionally compile only seven test targets and their dependency closure.",
+    "Private accepts exact per-lane PASS/lane/source and10/7/7 images; parses actual GCC LastTest argv including fixture arguments; checks direct Qt exact-case/zero-summary/optional-status and strict CTest status independently; unchanged actual provider/private library checks remain."
+  ],
+  "approved_inputs_sha256": "3a015eada3b04e7b29a7d873a4a4e653f8715daa89f9c27b52baee2637a4beab",
+  "source_mutations": false,
+  "execution": "Read-only source/AST/hash/map checks only; no adoption, compiler, CTest, Java, private staging, profiles or subjects executed."
+}

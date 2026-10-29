@@ -1,0 +1,5 @@
+Picked up JAVA_TOOL_OPTIONS: -XX:ActiveProcessorCount=2
+PASS JAVA PRODUCED dsa-one request create
+PASS JAVA PRODUCED dsa-sixteen request create
+PASS JAVA PRODUCED ed25519-one request create
+PASS JAVA PRODUCED ed25519-sixteen request create

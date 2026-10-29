@@ -1,0 +1,40 @@
+{
+  "status": "PASS_NORMAL_RECEIVER_LEASESET_COHORT",
+  "source_commit": "6726a4cf7b017ac31d6aeede15f339c3ec2b71f7",
+  "lane": "san",
+  "cache": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+  "compiled_targets": [
+    "biglybtc-azureus-owned-service-tests",
+    "biglybtc-azureus-router-owner-tests",
+    "biglybtc-azureus-database-runtime-tests",
+    "biglybtc-owned-dht-bytes-tests",
+    "biglybtc-azureus-storage-stats-tests",
+    "biglybtc-i2cp-initial-channel-tests",
+    "biglybtc-i2cp-leaseset-tests"
+  ],
+  "provider_rebuilt": false,
+  "historical_passes_pooled": false,
+  "runner_sha256": "395932a57f84d9ac9602d4ca7342a008c696d6d6ad74bac8f766640e579ccd27",
+  "source_receipt_sha256": "5d0e007d46d1caec19d738a558cbf2b695af53bdee01cb35de07c2de42a18b20",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "dist_manifest_before": "23dac4618b19d111be7f3b877d27648a7fa95604c66f06a67eee4e3a5b0cb5cf",
+  "suite_names": [
+    "azureus-owned-service",
+    "azureus-router-owner",
+    "owned-dht-bytes",
+    "azureus-database-runtime",
+    "azureus-storage-stats",
+    "i2cp-initial-channel",
+    "pure-i2cp-leaseset2"
+  ],
+  "actual_suites": 7,
+  "full_ctest_log_sha256": "b8b1e8f42fe64b03f4f76d250c74ab3e57f95fc8b317f2a83e42d780b78c97db",
+  "tests_xml_sha256": "a48308e05c69f2b54d39a1faafda89f553d64bfffca0d0fa0134c86c1ce484cc",
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "commands_sha256": "d9f8cd207722596f09b69fb4f57a7338a7942713ab421422cacaeff531ba29f8"
+}

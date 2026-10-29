@@ -1,0 +1,142 @@
+[
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/I2CPMessage.java",
+    "exit": 0,
+    "sha256": "d35f2514c590b6aa38f4fc729492f8442ecc11749f81e863d11221c4ea951b28"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/I2CPMessageImpl.java",
+    "exit": 0,
+    "sha256": "19351ed0bb063bbce4ae6f5c67a0092cd3f5d7e9aaae7d823420352fd1e66e2d"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/I2CPMessageHandler.java",
+    "exit": 0,
+    "sha256": "8b5fc616ed40bc63a0087f487e7c89237c58ebe6a2aa987c48c3e3f1bade18ff"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/GetDateMessage.java",
+    "exit": 0,
+    "sha256": "1ec852a8e266d9038a48aa647db8b904736f2e89f4414064ba8d57c1304d1f36"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/SetDateMessage.java",
+    "exit": 0,
+    "sha256": "d94bb903ad69b7bda1c16bab34570a0e778cfd1329a9eed2ca6a95d6e42b4c5f"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/DisconnectMessage.java",
+    "exit": 0,
+    "sha256": "ee0147f79ff0959f4ee7818357f2031c123edef0af994ca4fb4616fc28a44125"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/SessionStatusMessage.java",
+    "exit": 0,
+    "sha256": "8332229e39cde744942df3aebcf67b5cde0b6734107084cafad48fdd0699245c"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/DestroySessionMessage.java",
+    "exit": 0,
+    "sha256": "9824397ed88d5696b430419c3a0fc416e8752b4fa79297dcb62f0825bf0430f5"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/SessionId.java",
+    "exit": 0,
+    "sha256": "f0f8ce3eca495268246f9ca567a9e8ed283060d6eff075e690ce6bd8901f48f6"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/DataHelper.java",
+    "exit": 0,
+    "sha256": "607191330d5b5c2607b166a6174812ec94664535a46dd8f78e30d6b662e46b09"
+  },
+  {
+    "path": "core/java/src/net/i2p/client/I2PClient.java",
+    "exit": 0,
+    "sha256": "50b2e033b0692ed5d5a01de9b650e1dc206c273bc8169165e0cfcf831a8c057d"
+  },
+  {
+    "path": "core/java/src/net/i2p/client/impl/I2PSessionImpl.java",
+    "exit": 0,
+    "sha256": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c"
+  },
+  {
+    "path": "core/java/src/net/i2p/util/Clock.java",
+    "exit": 0,
+    "sha256": "f90aefe2f2d8e101f4d423060cbccb82540029637dec41e921b44317aa8e3b0a"
+  },
+  {
+    "path": "core/java/src/net/i2p/client/impl/SetDateMessageHandler.java",
+    "exit": 0,
+    "sha256": "3f7b28bc1dd0aa1775636251258095149fe86c081252979138e8e49120d4de5f"
+  },
+  {
+    "path": "core/java/src/net/i2p/client/impl/DisconnectMessageHandler.java",
+    "exit": 0,
+    "sha256": "983b980071abfaa44e42a733877f24135128552420118f70c5fa0d4635e4302c"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/SessionConfig.java",
+    "exit": 0,
+    "sha256": "b37c3291fbc3e8719cfbe0b3e86c1c9e5b56116c0d6f6013d03d94dd2be1e709"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/CreateSessionMessage.java",
+    "exit": 0,
+    "sha256": "7dd40cec3df5de8522decbdf7c4a479800bf0228036bbce12f69e0efb6470c68"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/ReconfigureSessionMessage.java",
+    "exit": 0,
+    "sha256": "9842bafb017e1a66e6f165cf5a696da8805a1d18b46c0809ed80829d7efaed77"
+  },
+  {
+    "path": "core/java/src/net/i2p/client/impl/I2CPMessageProducer.java",
+    "exit": 0,
+    "sha256": "f4cd7596ddc1a9d228f25599850478500c594b1e5c3d4c8b852a550cb7c6969e"
+  },
+  {
+    "path": "router/java/src/net/i2p/router/client/ClientMessageEventListener.java",
+    "exit": 0,
+    "sha256": "58df866c1edd70e1220fe9bf92508ede3bb1c230c17bb2b3e01ce6724681a674"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/LeaseSet2.java",
+    "exit": 0,
+    "sha256": "c023cdc228b043bddc83fcde8f04117c23fbe3d2bde66c6b93b3073c13c9c36f"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/Lease2.java",
+    "exit": 0,
+    "sha256": "e7df23cb8837ad3e5f830b9463004a20ed9c9739385dcda90f7b474e4905514b"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/RequestVariableLeaseSetMessage.java",
+    "exit": 0,
+    "sha256": "d36665dac75cf814fbee0de6b12915e6d0c29cb76ea0e4711b5e54674ba73571"
+  },
+  {
+    "path": "core/java/src/net/i2p/data/i2cp/CreateLeaseSet2Message.java",
+    "exit": 0,
+    "sha256": "d9d8daeda8f8881c55074913064f3f99cb609602998f7ef0ed7e81795e7b4b34"
+  },
+  {
+    "path": "core/java/src/net/i2p/client/impl/RequestLeaseSetMessageHandler.java",
+    "exit": 0,
+    "sha256": "4cecdb20b23ebec35ddf3260c8822ae2040ef9800393f01aad4501898aef8212"
+  },
+  {
+    "path": "core/java/src/net/i2p/client/impl/RequestVariableLeaseSetMessageHandler.java",
+    "exit": 0,
+    "sha256": "2cd4ae114d978bee017b6d42f72fdd15e90ad498b05d0595e6a4ffbe9a425909"
+  },
+  {
+    "path": "core/java/src/net/i2p/crypto/KeyGenerator.java",
+    "exit": 0,
+    "sha256": "2a821cb6808a5e697c10bbc8f5852d97dd98103622ea2a71f81dfd713bc664b9"
+  },
+  {
+    "path": "core/java/src/net/i2p/crypto/CryptoConstants.java",
+    "exit": 0,
+    "sha256": "99b8cba0036d6faab1a06b2c6aab126cc004b96355ab1370efa324e3e745215a"
+  }
+]

@@ -1,0 +1,120 @@
+{
+  "official_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "official_tree": "b38c70fbf3f7ce6f33ca95bedaa001e1458a4c9b",
+  "plugin_context_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+  "source_jar_sha256": "b169a9cebb58bee8b9ca2e73743418b1e9a634bdea4faa8ca6e2063d1032f23a",
+  "modified_source_equivalence": false,
+  "sources": [
+    {
+      "path": "core/java/src/net/i2p/data/i2cp/RequestVariableLeaseSetMessage.java",
+      "source_jar_entry": "net/i2p/data/i2cp/RequestVariableLeaseSetMessage.java",
+      "sha256": "d36665dac75cf814fbee0de6b12915e6d0c29cb76ea0e4711b5e54674ba73571",
+      "bytes": 4319,
+      "git_blob": "441fd6958f19ade44a3359a0d2e65cbcf61fac16",
+      "exact_retained_commit_tree_match": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/i2cp/CreateLeaseSet2Message.java",
+      "source_jar_entry": "net/i2p/data/i2cp/CreateLeaseSet2Message.java",
+      "sha256": "d9d8daeda8f8881c55074913064f3f99cb609602998f7ef0ed7e81795e7b4b34",
+      "bytes": 8672,
+      "git_blob": "e6918974a8ccbbb0c86a9acbd83be890b13d68aa",
+      "exact_retained_commit_tree_match": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/LeaseSet2.java",
+      "source_jar_entry": "net/i2p/data/LeaseSet2.java",
+      "sha256": "c023cdc228b043bddc83fcde8f04117c23fbe3d2bde66c6b93b3073c13c9c36f",
+      "bytes": 29668,
+      "git_blob": "3b19bf6a5198ab85ccbe971a07b389138f51a1e3",
+      "exact_retained_commit_tree_match": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/Lease2.java",
+      "source_jar_entry": "net/i2p/data/Lease2.java",
+      "sha256": "e7df23cb8837ad3e5f830b9463004a20ed9c9739385dcda90f7b474e4905514b",
+      "bytes": 1534,
+      "git_blob": "278f432acf880a6d137b737f057f94d28adc83a0",
+      "exact_retained_commit_tree_match": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/Lease.java",
+      "source_jar_entry": "net/i2p/data/Lease.java",
+      "sha256": "68cdfadc3ae0aa2cd343419a3ea002ab0f8a069fe5b4f88087eae36a3f4e8d7b",
+      "bytes": 4634,
+      "git_blob": "85ad2a58a72ae6d6d75a28734aaa19ee469f2834",
+      "exact_retained_commit_tree_match": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/LeaseSet.java",
+      "source_jar_entry": "net/i2p/data/LeaseSet.java",
+      "sha256": "b4c7ea0468a348a27f30e80b110bffc1fea6ebc34804d704187707b07f211769",
+      "bytes": 21888,
+      "git_blob": "c5f7a8e593abbce29b2dfd3c1604dba093e75847",
+      "exact_retained_commit_tree_match": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/DatabaseEntry.java",
+      "source_jar_entry": "net/i2p/data/DatabaseEntry.java",
+      "sha256": "2ea294babbd9417bc6cc0d73e09ea38583f7cdfecc3ceaf77e969fc2fce83724",
+      "bytes": 10182,
+      "git_blob": "a0b761ebaed2fd02c38a86887738fda2e593e834",
+      "exact_retained_commit_tree_match": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/RequestVariableLeaseSetMessageHandler.java",
+      "source_jar_entry": "net/i2p/client/impl/RequestVariableLeaseSetMessageHandler.java",
+      "sha256": "2cd4ae114d978bee017b6d42f72fdd15e90ad498b05d0595e6a4ffbe9a425909",
+      "bytes": 4327,
+      "git_blob": "45769ee3f4893c9786a1dc90dbb73783cdde2c63",
+      "exact_retained_commit_tree_match": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/RequestLeaseSetMessageHandler.java",
+      "source_jar_entry": "net/i2p/client/impl/RequestLeaseSetMessageHandler.java",
+      "sha256": "4cecdb20b23ebec35ddf3260c8822ae2040ef9800393f01aad4501898aef8212",
+      "bytes": 28381,
+      "git_blob": "8647e54c0fc544a7cdfbddd67c4c58cf2e71ab28",
+      "exact_retained_commit_tree_match": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/I2PSessionImpl.java",
+      "source_jar_entry": "net/i2p/client/impl/I2PSessionImpl.java",
+      "sha256": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+      "bytes": 88133,
+      "git_blob": "44123f7c26d4218902e1492e975f0a30e3ffc174",
+      "exact_retained_commit_tree_match": true
+    },
+    {
+      "path": "core/java/src/net/i2p/crypto/CryptoConstants.java",
+      "source_jar_entry": "net/i2p/crypto/CryptoConstants.java",
+      "sha256": "99b8cba0036d6faab1a06b2c6aab126cc004b96355ab1370efa324e3e745215a",
+      "bytes": 6274,
+      "git_blob": "05efe426cb88e4a879f977148804be7a4c7ce5ed",
+      "exact_retained_commit_tree_match": true
+    },
+    {
+      "path": "core/java/src/net/i2p/crypto/KeyGenerator.java",
+      "source_jar_entry": "net/i2p/crypto/KeyGenerator.java",
+      "sha256": "2a821cb6808a5e697c10bbc8f5852d97dd98103622ea2a71f81dfd713bc664b9",
+      "bytes": 23064,
+      "git_blob": "cb0503eee94d81fa8094e998bd7509f6919bb611",
+      "exact_retained_commit_tree_match": true
+    },
+    {
+      "path": "core/java/src/net/i2p/crypto/EncType.java",
+      "source_jar_entry": "net/i2p/crypto/EncType.java",
+      "sha256": "7abbd6dec89dfee9ecf92a68e5f3c341310257dd6ae2a6a46c9708295ff5736d",
+      "bytes": 8340,
+      "git_blob": "f9699d433a41ad224b4ef68c655040a4ed7de9a7",
+      "exact_retained_commit_tree_match": true
+    }
+  ],
+  "source_rules": {
+    "CryptoConstants.java": "RFC3526 group14 2048-bit prime, generator2",
+    "KeyGenerator.java": "original random exponent226 or2048 bits, fixed256-byte big-endian; native deliberately uses secure uniform2..p-2 subset, same public derivation",
+    "LeaseSet2.java": "type3 prefix inside signature; published nearest second; perlease expiry floor second; header expiry latest-publication in uint16 seconds",
+    "RequestVariableLeaseSetMessageHandler.java": "max(now,lastRaw+1000), standard LS2/default Enc0 independent key reused, setLeaseSet only after signing+enqueue",
+    "I2PSessionImpl.java": "original OPEN after local signed LeaseSet submission; no CreateLeaseSet router acknowledgement"
+  }
+}

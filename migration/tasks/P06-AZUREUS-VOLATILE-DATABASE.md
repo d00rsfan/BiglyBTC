@@ -25,3 +25,8 @@ in_progress. No source-only test was counted as execution.
 ## Qualified local publication prerequisite
 
 Source e124abb90ab846c4b057a6b868004c0acb737118 adds original dht[/netN]/version.dat reservation of128 signed32 versions under the held profile lock/OFD, local=true values at the actual contact/time, and one explicit admitted-peer token→STORE→readback command. All7 affected suites passed each of three lanes and private runtime; original retained3version/1value field projections matched with explicit stub persistence. See ../evidence/20261029-signed-session-local-publish/REVIEW.md. Receiver remains a generated fixture; next source work is two normal owned services with real router/DB admission and original direct-vs-forwarded seeded semantics. No default/public/Host activation or full DDB/chat/ratings completion.
+
+
+## Normal direct receiver
+
+Source 6726a4cf7b017ac31d6aeede15f339c3ec2b71f7 adds explicit serveValues backed by actual bound DB/router and held profile. Two normal services on separate generated profiles exchange actual direct values both ways; no generated closest/seeded inputs. Original token/source/exists-or-local-closest and whole-bucket rules apply. Fixed unseeded state refuses forwarded caches; explicit endpoint equality is a narrower owned boundary. Volatile remote/local DB values stay distinct, durable version.dat unchanged. Current7-suite three-lane/private evidence ../evidence/20261029-normal-dht-leaseset2/verification.json; no old Java field/version replay. Public/routing/maintenance/republish/plugin activation and synchronous profile I/O task remain open.

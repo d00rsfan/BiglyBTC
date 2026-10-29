@@ -1,0 +1,544 @@
+--- a/preview/native/services/i2cp_channel/channel.cpp
++++ b/preview/native/services/i2cp_channel/channel.cpp
+@@ -9,6 +9,7 @@
+ #include <algorithm>
+ #include <array>
+ #include <chrono>
++#include <charconv>
+ #include <cstring>
+ #include <limits>
+ 
+@@ -28,6 +29,11 @@
+   std::optional<std::uint16_t> session;
+   SessionOptions acceptedOptions,pendingOptions;
+   Bytes acceptedDestination,pendingDestination;
++  std::optional<ClientIdentity> leaseSigner;
++  std::optional<LeaseEncryptionKey> leaseKey;
++  std::optional<LeaseSubmission> leaseSubmission;
++  std::uint64_t lastRawLeasePublished=0;
++  bool waitingFirstLease=false,leaseNotificationQueued=false;
+   std::uint64_t revision=0;
+   std::uint64_t generation=0;
+   Clock::time_point expires{};
+@@ -41,10 +47,15 @@
+   }
+   ~Impl(){stopIo();}
+   bool active()const{return state==State::Connecting||state==State::WaitingDate||state==State::DateReceived||state==State::Creating||state==State::SessionCreated||state==State::Reconfiguring;}
+-  bool datedPhase()const{return state==State::Connecting||state==State::WaitingDate||state==State::Creating||state==State::Reconfiguring;}
++  bool datedPhase()const{return state==State::Connecting||state==State::WaitingDate||state==State::Creating||state==State::Reconfiguring||waitingFirstLease;}
+   bool current(std::uint64_t at)const{return generation==at&&active();}
+   bool onThread()const{return QThread::currentThread()==q->thread();}
+-  void clearSession(){session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;}
++  bool ls2Router()const{
++    if(!date||!date->version){return false;}std::string_view value=*date->version;std::array<unsigned,3> version{};
++    for(std::size_t i=0;i<3;++i){const auto dot=value.find('.');const auto part=value.substr(0,dot);if(part.empty()){return false;}const auto parsed=std::from_chars(part.data(),part.data()+part.size(),version[i]);if(parsed.ec!=std::errc{}||parsed.ptr!=part.data()+part.size()){return false;}if(i<2){if(dot==std::string_view::npos){return false;}value.remove_prefix(dot+1);}}
++    return version[0]>0||version[1]>9||(version[1]==9&&version[2]>=38);
++  }
++  void clearSession(){session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;}
+   void stopIo(){
+     timer.stop();QObject::disconnect(&timer,nullptr,q,nullptr);
+     QObject::disconnect(&socket,nullptr,q,nullptr);socket.abort();
+@@ -72,6 +83,15 @@
+     if(state==State::Failed||state==State::Closed){return;}
+     failure=error;date.reset();clearSession();hello.clear();state=State::Failed;stopIo();notify();
+   }
++  void notifyLease(){
++    if(leaseNotificationQueued){return;}leaseNotificationQueued=true;bool queued=false;
++    try{const QPointer<InitialChannel> owner(q);queued=QMetaObject::invokeMethod(q,[owner]{
++      if(!owner){return;}auto* self=owner->impl_.get();self->leaseNotificationQueued=false;
++      if(self->active()&&self->leaseSubmission&&self->session&&self->socket.state()==QAbstractSocket::ConnectedState){emit owner->leaseSetSubmitted();}
++      // No access after a public callback that may close/restart/delete owner.
++    },Qt::QueuedConnection);}catch(...){queued=false;}
++    if(!queued){leaseNotificationQueued=false;fail(Failure::Resources);}
++  }
+   bool expired(){
+     if(datedPhase()&&Clock::now()>=expires){fail(Failure::Deadline);return true;}return false;
+   }
+@@ -88,6 +108,7 @@
+     if(!queued){drainQueued=false;fail(Failure::Resources);}
+   }
+   void message(Frame frame){
++    if(frame.type==RequestVariableLeaseSetType){answerLease(std::move(frame));return;}
+     auto decoded=decodeMessage(frame);
+     if(!decoded){fail(decoded.error().code==ErrorCode::Unsupported?Failure::UnsupportedMessage:Failure::Framing);return;}
+     if(auto* reason=std::get_if<Disconnect>(&*decoded)){
+@@ -115,9 +136,12 @@
+       if(expired()){return;}
+       acceptedOptions=std::move(pendingOptions);pendingDestination.clear();++revision;
+     }else{fail(Failure::UnexpectedMessage);return;}
+-    state=State::SessionCreated;timer.stop();notify();
+-  }
+-  ConfigResult<void> request(const ClientIdentity& identity,const SessionOptions& input,std::uint64_t creation,bool update){
++    const bool initial=state==State::Creating;
++    state=State::SessionCreated;timer.stop();
++    if(initial&&leaseSigner){waitingFirstLease=true;expires=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);timer.start(options.deadlineMilliseconds);}
++    notify();
++  }
++  ConfigResult<void> request(const ClientIdentity& identity,const SessionOptions& input,std::uint64_t creation,bool update,ClientIdentity* consume=nullptr){
+     using Code=::biglybtc::services::i2p::ErrorCode;
+     auto reject=[](Code code,const char* text)->ConfigResult<void>{return std::unexpected(::biglybtc::services::i2p::Error{code,text});};
+     if(!onThread()){return reject(Code::InvalidFormat,"I2CP request belongs to channel thread");}
+@@ -125,11 +149,14 @@
+       return reject(Code::InvalidFormat,"I2CP channel phase/request/write is not available");
+     }
+     if(!identity.valid()||!identity.destination()){return reject(Code::KeyMismatch,"No live client identity");}
++    if(consume&&!ls2Router()){return reject(Code::Unsupported,"Explicit LeaseSet2 requires a supported numeric router version");}
++    if(update&&waitingFirstLease){return reject(Code::Unsupported,"Initial LeaseSet request is still outstanding");}
+     if(update&&(!session||identity.destination()->wire!=acceptedDestination||revision==std::numeric_limits<std::uint64_t>::max())){
+       return reject(Code::KeyMismatch,"Reconfigure must use the same accepted identity/id");
+     }
+     try{
+       const auto at=generation;const auto previous=state;const auto requestEnd=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);
++      if(consume||leaseSigner){auto policy=leaseSetPolicy(input);if(!policy){return std::unexpected(policy.error());}}
+       auto projected=projectRouterOptions(input);if(!projected){return std::unexpected(projected.error());}
+       for(const auto& [key,value]:input){
+         if(key=="i2cp.SSL"&&value.size()==4&&(value[0]=='t'||value[0]=='T')&&(value[1]=='r'||value[1]=='R')&&(value[2]=='u'||value[2]=='U')&&(value[3]=='e'||value[3]=='E')){
+@@ -144,11 +171,13 @@
+       if(!verified){return std::unexpected(verified.error());}
+       auto merged=update?mergeSessionOptions(acceptedOptions,*projected):ConfigResult<SessionOptions>(*projected);
+       if(!merged){return std::unexpected(merged.error());}
++      if(consume||leaseSigner){auto policy=leaseSetPolicy(*merged);if(!policy){return std::unexpected(policy.error());}}
+       auto encoded=update?encodeSessionMessage(ReconfigureSession{*session,*cfg}):encodeSessionMessage(CreateSession{*cfg});
+       if(!encoded){return std::unexpected(encoded.error());}Bytes destination=cfg->destination.wire;
+       if(!current(at)||state!=previous){return reject(Code::InvalidFormat,"I2CP channel changed during signing");}
+       if(Clock::now()>=requestEnd){return reject(Code::InvalidFormat,"I2CP request preparation exceeded deadline");}
+       pendingOptions=std::move(*merged);pendingDestination=std::move(destination);state=update?State::Reconfiguring:State::Creating;
++      if(consume){leaseSigner.emplace(std::move(*consume));}
+       const auto phase=state;expires=requestEnd;
+       const auto remaining=std::chrono::duration_cast<std::chrono::milliseconds>(expires-Clock::now()).count();
+       timer.start(static_cast<int>(std::max<std::int64_t>(1,remaining)));notify();
+@@ -159,6 +188,34 @@
+       if(written!=static_cast<qint64>(encoded->size())){fail(Failure::WriteFailed);return reject(Code::InvalidFormat,"I2CP request write failed");}
+       return {};
+     }catch(...){if(state==State::Creating||state==State::Reconfiguring){fail(Failure::Resources);}return reject(Code::CryptoFailure,"I2CP request resources unavailable");}
++  }
++  void answerLease(Frame frame){
++    if(!leaseSigner||!session||(state!=State::SessionCreated&&state!=State::Reconfiguring)){fail(Failure::UnsupportedMessage);return;}
++    if(expired()){return;}
++    const auto end=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);const auto at=generation;
++    auto requested=decodeLeaseRequest(frame);
++    if(!requested||requested->sessionId!=*session||!leaseSigner->valid()||!leaseSigner->destination()||leaseSigner->destination()->wire!=acceptedDestination){fail(Failure::InvalidLeaseSet);return;}
++    auto policy=leaseSetPolicy(acceptedOptions);if(!policy){fail(Failure::InvalidLeaseSet);return;}
++    if(leaseSubmission&&leaseSubmission->revision==std::numeric_limits<std::uint64_t>::max()){fail(Failure::InvalidLeaseSet);return;}
++    // One bounded outstanding private-key-bearing socket write. Never queue a
++    // second secret frame behind a blocked router; fail closed instead.
++    if(socket.bytesToWrite()!=0){fail(Failure::WriteFailed);return;}
++    if(!leaseKey){auto generated=LeaseEncryptionKey::generate();if(!generated){fail(Failure::Resources);return;}leaseKey.emplace(std::move(*generated));}
++    const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now()-dateObserved).count();
++    if(!date||elapsed<0||static_cast<std::uint64_t>(elapsed)>0xffffffffULL*1000||date->milliseconds>0xffffffffULL*1000-static_cast<std::uint64_t>(elapsed)){fail(Failure::InvalidDate);return;}
++    const auto now=date->milliseconds+static_cast<std::uint64_t>(elapsed);
++    auto signedLs=signLeaseSet2(*leaseSigner,*leaseKey,*requested,*policy,now,lastRawLeasePublished);
++    if(!signedLs){fail(Failure::InvalidLeaseSet);return;}
++    auto encoded=encodeCreateLeaseSet2(*session,*signedLs,*leaseKey);if(!encoded){fail(Failure::InvalidLeaseSet);return;}
++    if(!current(at)||Clock::now()>=end||expired()){if(current(at)){fail(Failure::Deadline);}return;}
++    // Signed local submission is the same original client-side completion
++    // boundary as setLeaseSet(), not a fabricated router response/OPEN claim.
++    const auto bytes=encoded->bytes();const auto written=socket.write(reinterpret_cast<const char*>(bytes.data()),static_cast<qint64>(bytes.size()));
++    if(!current(at)){return;}if(written!=static_cast<qint64>(bytes.size())){fail(Failure::WriteFailed);return;}
++    lastRawLeasePublished=std::max(now,lastRawLeasePublished?lastRawLeasePublished+1000:now);
++    const auto next=leaseSubmission?leaseSubmission->revision+1:1;
++    leaseSubmission=LeaseSubmission{next,signedLs->publishedMilliseconds,signedLs->expiresMilliseconds,signedLs->leases.size(),signedLs->unpublished};
++    waitingFirstLease=false;if(state==State::SessionCreated){timer.stop();}notifyLease();
+   }
+   void drain(){
+     if(reading||!active()||state==State::Connecting||expired()){return;}
+@@ -257,11 +314,18 @@
+ bool InitialChannel::begin(const Options& options){return impl_->begin(options);}
+ void InitialChannel::close(){impl_->close();}
+ ConfigResult<void> InitialChannel::createSession(const ClientIdentity& identity,const SessionOptions& options,std::uint64_t date){return impl_->request(identity,options,date,false);}
++ConfigResult<void> InitialChannel::createLeaseSession(ClientIdentity&& identity,const SessionOptions& options,std::uint64_t date){return impl_->request(identity,options,date,false,&identity);}
++ConfigResult<void> InitialChannel::reconfigureLeaseSession(const SessionOptions& options,std::uint64_t date){
++  if(!impl_->onThread()){return std::unexpected(::biglybtc::services::i2p::Error{::biglybtc::services::i2p::ErrorCode::InvalidFormat,"I2CP request belongs to channel thread"});}
++  if(!impl_->leaseSigner){return std::unexpected(::biglybtc::services::i2p::Error{::biglybtc::services::i2p::ErrorCode::KeyMismatch,"No retained LeaseSet signing capability"});}
++  return impl_->request(*impl_->leaseSigner,options,date,true);
++}
+ ConfigResult<void> InitialChannel::reconfigureSession(const ClientIdentity& identity,const SessionOptions& options,std::uint64_t date){return impl_->request(identity,options,date,true);}
+ std::optional<std::uint16_t> InitialChannel::sessionId()const noexcept{
+   return impl_->socket.state()==QAbstractSocket::ConnectedState&&(impl_->state==State::SessionCreated||impl_->state==State::Reconfiguring)?impl_->session:std::nullopt;
+ }
+ SessionOptions InitialChannel::sessionOptions()const{return sessionId()?impl_->acceptedOptions:SessionOptions{};}
++std::optional<InitialChannel::LeaseSubmission> InitialChannel::leaseSetSubmission()const noexcept{return sessionId()?impl_->leaseSubmission:std::nullopt;}
+ InitialChannel::State InitialChannel::state()const noexcept{return impl_->state;}
+ InitialChannel::Failure InitialChannel::failure()const noexcept{return impl_->failure;}
+ bool InitialChannel::socketActive()const noexcept{return impl_->socket.state()!=QAbstractSocket::UnconnectedState;}
+--- a/preview/native/services/i2cp_channel/channel.hpp
++++ b/preview/native/services/i2cp_channel/channel.hpp
+@@ -2,6 +2,7 @@
+ #pragma once
+ #include "protocol.hpp"
+ #include "session.hpp"
++#include "leaseset.hpp"
+ #include <QHostAddress>
+ #include <QObject>
+ #include <memory>
+@@ -18,7 +19,7 @@
+   Q_ENUM(State)
+   enum class Failure {None,InvalidEndpoint,InvalidVersion,InvalidDeadline,UnsupportedAuthentication,
+     ConnectFailed,WriteFailed,ReadFailed,Deadline,Framing,UnsupportedMessage,UnexpectedMessage,
+-    InvalidDate,RouterDisconnected,TransportClosed,Resources,SessionRejected,SessionDestroyed,InvalidSessionId,UnsupportedTransport};
++    InvalidDate,RouterDisconnected,TransportClosed,Resources,SessionRejected,SessionDestroyed,InvalidSessionId,UnsupportedTransport,InvalidLeaseSet};
+   Q_ENUM(Failure)
+   struct Options {
+     QHostAddress address; // Explicit numeric loopback only, no host resolution.
+@@ -38,9 +39,21 @@
+   // current date/registration, explicit date and no pending write/request.
+   // Completion means only queued I/O; actual CREATED/UPDATED is separate.
+   [[nodiscard]] ConfigResult<void> createSession(const ClientIdentity&,const SessionOptions& clientOptions,std::uint64_t creationMilliseconds);
++  // Explicit LS2 opt-in consumes the capability only when the create request
++  // is armed. It stays owned through renewals and is wiped on close/failure.
++  // Existing borrowed registration never automatically signs LeaseSets.
++  [[nodiscard]] ConfigResult<void> createLeaseSession(ClientIdentity&&,const SessionOptions& clientOptions,std::uint64_t creationMilliseconds);
++  [[nodiscard]] ConfigResult<void> reconfigureLeaseSession(const SessionOptions& clientOptions,std::uint64_t creationMilliseconds);
+   [[nodiscard]] ConfigResult<void> reconfigureSession(const ClientIdentity&,const SessionOptions& clientOptions,std::uint64_t creationMilliseconds);
+   [[nodiscard]] std::optional<std::uint16_t> sessionId()const noexcept;
+   [[nodiscard]] SessionOptions sessionOptions()const; // Last actual ack only.
++  struct LeaseSubmission {
++    std::uint64_t revision=0,publishedMilliseconds=0,expiresMilliseconds=0;
++    std::size_t leases=0;bool unpublished=false;
++  };
++  // Historical signing+successful socket enqueue only. No router ack, OPEN,
++  // tunnel health, delivery or right to submit application payload is implied.
++  [[nodiscard]] std::optional<LeaseSubmission> leaseSetSubmission()const noexcept;
+   [[nodiscard]] State state()const noexcept;
+   [[nodiscard]] Failure failure()const noexcept;
+   [[nodiscard]] bool socketActive()const noexcept;
+@@ -55,6 +68,7 @@
+   void dateReceived();
+   void sessionCreated();
+   void sessionUpdated();
++  void leaseSetSubmitted();
+   void failed(Failure);
+   void closed();
+ private:
+--- /dev/null
++++ b/preview/native/services/i2cp_leaseset/leaseset.cpp
+@@ -0,0 +1,127 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "leaseset.hpp"
++#include <openssl/bn.h>
++#include <openssl/crypto.h>
++#include <algorithm>
++#include <limits>
++#include <memory>
++
++namespace biglybtc::services::i2p::i2cp {
++namespace {
++using Code=::biglybtc::services::i2p::ErrorCode;
++auto error(Code code,const char* text){return std::unexpected(::biglybtc::services::i2p::Error{code,text});}
++using Bn=std::unique_ptr<BIGNUM,decltype(&BN_clear_free)>;
++using Context=std::unique_ptr<BN_CTX,decltype(&BN_CTX_free)>;
++Bn bn(){return Bn(BN_secure_new(),BN_clear_free);}
++Bn prime(){return Bn(BN_get_rfc3526_prime_2048(nullptr),BN_clear_free);}
++bool equal(View a,View b){return a.size()==b.size()&&CRYPTO_memcmp(a.data(),b.data(),a.size())==0;}
++void put(Bytes& out,std::uint64_t n,unsigned width){for(unsigned i=width;i>0;--i){out.push_back(static_cast<Byte>(n>>((i-1)*8)));}}
++struct Reader {View in;std::size_t at=0;bool take(std::size_t n,View& out){if(n>in.size()-at){return false;}out=in.subspan(at,n);at+=n;return true;}bool number(unsigned n,std::uint64_t& out){View b;if(!take(n,b)){return false;}out=0;for(auto c:b){out=(out<<8)|c;}return true;}};
++bool javaTrue(std::string_view s){return s.size()==4&&(s[0]=='t'||s[0]=='T')&&(s[1]=='r'||s[1]=='R')&&(s[2]=='u'||s[2]=='U')&&(s[3]=='e'||s[3]=='E');}
++ConfigResult<void> leasesValid(const std::vector<RequestedLease>& leases){
++  if(leases.empty()||leases.size()>MaximumLeaseCount){return error(Code::Unsupported,"LeaseSet2 requires1..16 actual leases");}
++  for(const auto& l:leases){if(l.tunnelId==0||l.expiresMilliseconds==0||l.expiresMilliseconds>static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())||l.expiresMilliseconds/1000>0xffffffffULL){return error(Code::InvalidFormat,"Invalid LeaseSet2 tunnel/expiration");}}
++  return {};
++}
++ConfigResult<Bytes> preimage(const SignedLeaseSet2& ls){
++  auto actual=decodeDestination(ls.destination.wire);if(!actual){return std::unexpected(actual.error());}
++  if(actual->encryptionType!=0){return error(Code::Unsupported,"LeaseSet2 Destination must use default Enc0/signing0 or7");}
++  auto valid=leasesValid(ls.leases);if(!valid){return std::unexpected(valid.error());}
++  if(ls.publishedMilliseconds==0||ls.publishedMilliseconds%1000||ls.publishedMilliseconds/1000>0xffffffffULL){return error(Code::InvalidFormat,"Invalid LeaseSet2 published time");}
++  std::uint64_t latest=0;for(const auto& lease:ls.leases){latest=std::max(latest,lease.expiresMilliseconds/1000);}
++  const auto pub=ls.publishedMilliseconds/1000;
++  if(latest<pub||latest-pub>65535||ls.expiresMilliseconds!=latest*1000){return error(Code::InvalidFormat,"LeaseSet2 expiration/delta mismatch");}
++  // Enforce a genuine group element (not a zero/one placeholder). Exact pair
++  // ownership is checked separately before secret I2CP serialization.
++  auto p=prime();Bn y(BN_bin2bn(ls.encryptionKey.data(),LeaseEncryptionBytes,nullptr),BN_clear_free);auto upper=bn();
++  if(!p||!y||!upper||!BN_copy(upper.get(),p.get())||!BN_sub_word(upper.get(),1)){return error(Code::CryptoFailure,"Lease key validation resources unavailable");}
++  if(BN_cmp(y.get(),BN_value_one())<=0||BN_cmp(y.get(),upper.get())>=0){return error(Code::KeyMismatch,"Invalid LeaseSet2 encryption public key");}
++  Bytes out;out.reserve(MaximumLeaseSetBytes);out.push_back(StandardLeaseSet2Type);
++  out.insert(out.end(),actual->wire.begin(),actual->wire.end());put(out,pub,4);put(out,latest-pub,2);put(out,ls.unpublished?2:0,2);
++  put(out,0,2);out.push_back(1);put(out,0,2);put(out,LeaseEncryptionBytes,2);out.insert(out.end(),ls.encryptionKey.begin(),ls.encryptionKey.end());out.push_back(static_cast<Byte>(ls.leases.size()));
++  for(const auto& lease:ls.leases){out.insert(out.end(),lease.gateway.begin(),lease.gateway.end());put(out,lease.tunnelId,4);put(out,lease.expiresMilliseconds/1000,4);}
++  if(out.size()+64>MaximumLeaseSetBytes){return error(Code::TooLarge,"LeaseSet2 exceeds finite bound");}return out;
++}
++}
++LeaseEncryptionKey::~LeaseEncryptionKey(){clear();}
++void LeaseEncryptionKey::clear()noexcept{OPENSSL_cleanse(private_.data(),private_.size());OPENSSL_cleanse(public_.data(),public_.size());valid_=false;}
++LeaseEncryptionKey::LeaseEncryptionKey(LeaseEncryptionKey&& x)noexcept:private_(x.private_),public_(x.public_),valid_(x.valid_){x.clear();}
++LeaseEncryptionKey& LeaseEncryptionKey::operator=(LeaseEncryptionKey&& x)noexcept{if(this!=&x){clear();private_=x.private_;public_=x.public_;valid_=x.valid_;x.clear();}return *this;}
++ConfigResult<LeaseEncryptionKey> LeaseEncryptionKey::fromPrivateKey(View bytes){
++  if(bytes.size()!=LeaseEncryptionBytes){return error(Code::InvalidFormat,"ElGamal private key must be256 bytes");}
++  auto p=prime(),g=bn(),x=bn(),y=bn(),upper=bn();Context ctx(BN_CTX_secure_new(),BN_CTX_free);
++  if(!p||!g||!x||!y||!upper||!ctx||!BN_bin2bn(bytes.data(),static_cast<int>(bytes.size()),x.get())||!BN_copy(upper.get(),p.get())||!BN_sub_word(upper.get(),1)||!BN_set_word(g.get(),2)){return error(Code::CryptoFailure,"ElGamal resources unavailable");}
++  if(BN_cmp(x.get(),BN_value_one())<=0||BN_cmp(x.get(),upper.get())>=0){return error(Code::KeyMismatch,"ElGamal private exponent outside2..p-2");}
++  BN_set_flags(x.get(),BN_FLG_CONSTTIME);
++  if(BN_mod_exp_mont_consttime(y.get(),g.get(),x.get(),p.get(),ctx.get(),nullptr)!=1){return error(Code::CryptoFailure,"ElGamal public derivation failed");}
++  if(BN_cmp(y.get(),BN_value_one())<=0||BN_cmp(y.get(),upper.get())>=0){return error(Code::KeyMismatch,"Degenerate ElGamal public key refused");}
++  LeaseEncryptionKey key;if(BN_bn2binpad(y.get(),key.public_.data(),LeaseEncryptionBytes)!=static_cast<int>(LeaseEncryptionBytes)){return error(Code::CryptoFailure,"ElGamal public width failed");}
++  std::copy(bytes.begin(),bytes.end(),key.private_.begin());key.valid_=true;return key;
++}
++ConfigResult<LeaseEncryptionKey> LeaseEncryptionKey::generate(){
++  auto p=prime(),range=bn(),x=bn();
++  if(!p||!range||!x||!BN_copy(range.get(),p.get())||!BN_sub_word(range.get(),3)||!BN_priv_rand_range(x.get(),range.get())||!BN_add_word(x.get(),2)){return error(Code::CryptoFailure,"Secure independent ElGamal generation failed");}
++  LeaseEncryptionKey scratch;
++  if(BN_bn2binpad(x.get(),scratch.private_.data(),LeaseEncryptionBytes)!=static_cast<int>(LeaseEncryptionBytes)){return error(Code::CryptoFailure,"ElGamal private width failed");}
++  return fromPrivateKey(scratch.private_);
++}
++SecretLeaseFrame::~SecretLeaseFrame(){clear();}
++void SecretLeaseFrame::clear()noexcept{OPENSSL_cleanse(bytes_.data(),bytes_.size());size_=0;}
++SecretLeaseFrame::SecretLeaseFrame(SecretLeaseFrame&& x)noexcept:bytes_(x.bytes_),size_(x.size_){x.clear();}
++SecretLeaseFrame& SecretLeaseFrame::operator=(SecretLeaseFrame&& x)noexcept{if(this!=&x){clear();bytes_=x.bytes_;size_=x.size_;x.clear();}return *this;}
++ConfigResult<LeaseSetPolicy> leaseSetPolicy(const SessionOptions& options){
++  auto canonical=canonicalSessionOptions(options);if(!canonical){return std::unexpected(canonical.error());}LeaseSetPolicy out;
++  for(const auto& [key,value]:*canonical){
++    if(key=="i2cp.dontPublishLeaseSet"){out.unpublished=javaTrue(value);continue;}
++    if(key=="i2cp.leaseSetType"&&(value=="3"||value=="1")){continue;} // original upgrades1 to3
++    if(key=="i2cp.leaseSetEncType"&&value=="0"){continue;}
++    if(key.starts_with("i2cp.leaseSet")||key=="i2cp.encryptLeaseSet"){return error(Code::Unsupported,"Unsupported LeaseSet2 type/encryption/keys/options");}
++  }return out;
++}
++ConfigResult<LeaseRequest> decodeLeaseRequest(const Frame& frame){
++  if(frame.type!=RequestVariableLeaseSetType){return error(Code::Unsupported,"Expected variable LeaseSet request37");}
++  Reader r{frame.payload};std::uint64_t id=0,count=0;if(!r.number(2,id)||!r.number(1,count)||count<1||count>MaximumLeaseCount||r.in.size()!=3+count*44||id==65535){return error(Code::InvalidFormat,"Malformed/bounded variable LeaseSet request");}
++  LeaseRequest out;out.sessionId=static_cast<std::uint16_t>(id);out.leases.reserve(count);
++  for(std::uint64_t i=0;i<count;++i){View gateway;std::uint64_t tunnel=0,expiry=0;if(!r.take(32,gateway)||!r.number(4,tunnel)||!r.number(8,expiry)){return error(Code::InvalidFormat,"Truncated variable lease");}RequestedLease l;std::copy(gateway.begin(),gateway.end(),l.gateway.begin());l.tunnelId=static_cast<std::uint32_t>(tunnel);l.expiresMilliseconds=expiry;out.leases.push_back(l);}
++  auto valid=leasesValid(out.leases);if(!valid){return std::unexpected(valid.error());}return out;
++}
++ConfigResult<Bytes> encodeLeaseRequest(const LeaseRequest& request){
++  auto valid=leasesValid(request.leases);if(!valid){return std::unexpected(valid.error());}if(request.sessionId==65535){return error(Code::InvalidFormat,"Unknown session id");}
++  Bytes out;put(out,3+request.leases.size()*44,4);out.push_back(RequestVariableLeaseSetType);put(out,request.sessionId,2);out.push_back(static_cast<Byte>(request.leases.size()));
++  for(const auto& l:request.leases){out.insert(out.end(),l.gateway.begin(),l.gateway.end());put(out,l.tunnelId,4);put(out,l.expiresMilliseconds,8);}return out;
++}
++ConfigResult<SignedLeaseSet2> signLeaseSet2(const ClientIdentity& identity,const LeaseEncryptionKey& key,const LeaseRequest& request,LeaseSetPolicy policy,std::uint64_t now,std::uint64_t previous){
++  if(!identity.valid()||!identity.destination()||!key.valid()){return error(Code::KeyMismatch,"No owned live signing/encryption capability");}
++  auto valid=leasesValid(request.leases);if(!valid){return std::unexpected(valid.error());}
++  if(now==0||now>0xffffffffULL*1000-500||previous>0xffffffffULL*1000-1500){return error(Code::InvalidFormat,"LeaseSet2 published clock overflow");}
++  const auto raw=std::max(now,previous?previous+1000:now);const auto published=((raw+500)/1000)*1000;
++  SignedLeaseSet2 out;out.destination=*identity.destination();out.unpublished=policy.unpublished;out.publishedMilliseconds=published;out.leases=request.leases;
++  for(const auto& l:out.leases){if(l.expiresMilliseconds/1000<=now/1000){return error(Code::InvalidFormat,"Expired requested lease cannot establish current submission");}out.expiresMilliseconds=std::max(out.expiresMilliseconds,(l.expiresMilliseconds/1000)*1000);}
++  std::copy(key.publicKey().begin(),key.publicKey().end(),out.encryptionKey.begin());auto data=preimage(out);if(!data){return std::unexpected(data.error());}
++  auto signature=signData(out.destination.signingType,identity.signingPrivateKey(),*data);if(!signature){return std::unexpected(signature.error());}out.signature=std::move(*signature);return out;
++}
++ConfigResult<void> verifyLeaseSet2(const SignedLeaseSet2& ls){auto actual=decodeDestination(ls.destination.wire);if(!actual){return std::unexpected(actual.error());}auto data=preimage(ls);if(!data){return std::unexpected(data.error());}return verifyData(actual->signingType,actual->signingPublicKey,ls.signature,*data);}
++ConfigResult<Bytes> encodeLeaseSet2(const SignedLeaseSet2& ls){auto valid=verifyLeaseSet2(ls);if(!valid){return std::unexpected(valid.error());}auto bytes=preimage(ls);if(!bytes){return std::unexpected(bytes.error());}bytes->erase(bytes->begin());bytes->insert(bytes->end(),ls.signature.begin(),ls.signature.end());return bytes;}
++ConfigResult<SignedLeaseSet2> decodeLeaseSet2(View wire){
++  if(wire.size()>MaximumLeaseSetBytes||wire.size()<387+8+2+1+4+256+1+40+40){return error(Code::InvalidFormat,"Bounded LeaseSet2 length refused");}
++  const std::size_t destinationSize=387+(static_cast<std::size_t>(wire[385])<<8)+wire[386];if(destinationSize>wire.size()){return error(Code::InvalidFormat,"Truncated LeaseSet2 Destination");}
++  auto dest=decodeDestination(wire.first(destinationSize));if(!dest){return std::unexpected(dest.error());}Reader r{wire,destinationSize};std::uint64_t pub=0,delta=0,flags=0,properties=0,keys=0,type=0,length=0,count=0;View publicKey;
++  if(!r.number(4,pub)||!r.number(2,delta)||!r.number(2,flags)||flags>2||flags==1||!r.number(2,properties)||properties!=0||!r.number(1,keys)||keys!=1||!r.number(2,type)||type!=0||!r.number(2,length)||length!=256||!r.take(256,publicKey)||!r.number(1,count)||count<1||count>MaximumLeaseCount){return error(Code::Unsupported,"LeaseSet2 requires online standard/empty options/one Enc0 key");}
++  SignedLeaseSet2 out;out.destination=std::move(*dest);out.publishedMilliseconds=pub*1000;out.expiresMilliseconds=(pub+delta)*1000;out.unpublished=flags==2;std::copy(publicKey.begin(),publicKey.end(),out.encryptionKey.begin());out.leases.reserve(count);
++  for(std::uint64_t i=0;i<count;++i){View hash;std::uint64_t tunnel=0,expiry=0;if(!r.take(32,hash)||!r.number(4,tunnel)||!r.number(4,expiry)){return error(Code::InvalidFormat,"Truncated LeaseSet2 lease");}RequestedLease l;std::copy(hash.begin(),hash.end(),l.gateway.begin());l.tunnelId=static_cast<std::uint32_t>(tunnel);l.expiresMilliseconds=expiry*1000;out.leases.push_back(l);}
++  View sig;const auto width=out.destination.signingType==SigningType::DsaSha1?40U:64U;if(!r.take(width,sig)||r.at!=wire.size()){return error(Code::InvalidFormat,"LeaseSet2 signature/trailing bytes mismatch");}out.signature.assign(sig.begin(),sig.end());auto valid=verifyLeaseSet2(out);if(!valid){return std::unexpected(valid.error());}return out;
++}
++ConfigResult<SecretLeaseFrame> encodeCreateLeaseSet2(std::uint16_t session,const SignedLeaseSet2& ls,const LeaseEncryptionKey& key){
++  if(session==65535||!key.valid()||!equal(key.publicKey(),ls.encryptionKey)){return error(Code::KeyMismatch,"CreateLeaseSet2 requires exact owned independent pair/session");}
++  auto encoded=encodeLeaseSet2(ls);if(!encoded){return std::unexpected(encoded.error());}const auto size=5+3+encoded->size()+1+4+LeaseEncryptionBytes;if(size>MaximumSecretLeaseFrameBytes){return error(Code::TooLarge,"CreateLeaseSet2 exceeds secret buffer");}
++  SecretLeaseFrame out;Bytes prefix;put(prefix,size-5,4);prefix.push_back(CreateLeaseSet2Type);put(prefix,session,2);prefix.push_back(StandardLeaseSet2Type);std::size_t at=0;
++  const auto append=[&](View bytes){std::copy(bytes.begin(),bytes.end(),out.bytes_.begin()+static_cast<std::ptrdiff_t>(at));at+=bytes.size();};append(prefix);append(*encoded);
++  const std::array<Byte,5> trailer{1,0,0,1,0};append(trailer);append(key.privateKey());out.size_=at;return out;
++}
++ConfigResult<DecodedCreateLeaseSet2> decodeCreateLeaseSet2(const Frame& frame){
++  if(frame.type!=CreateLeaseSet2Type){return error(Code::Unsupported,"Expected CreateLeaseSet2 message41");}const auto bytes=View(frame.payload);if(bytes.size()<3+5+LeaseEncryptionBytes){return error(Code::InvalidFormat,"Truncated CreateLeaseSet2");}
++  const auto session=static_cast<std::uint16_t>((static_cast<unsigned>(bytes[0])<<8)|bytes[1]);if(session==65535||bytes[2]!=StandardLeaseSet2Type){return error(Code::Unsupported,"CreateLeaseSet2 session/type refused");}
++  const auto keyAt=bytes.size()-LeaseEncryptionBytes-5;const std::array<Byte,5> expected{1,0,0,1,0};if(!std::equal(expected.begin(),expected.end(),bytes.begin()+static_cast<std::ptrdiff_t>(keyAt))){return error(Code::Unsupported,"CreateLeaseSet2 private key header mismatch");}
++  auto ls=decodeLeaseSet2(bytes.subspan(3,keyAt-3));if(!ls){return std::unexpected(ls.error());}auto key=LeaseEncryptionKey::fromPrivateKey(bytes.last(LeaseEncryptionBytes));if(!key){return std::unexpected(key.error());}if(!equal(key->publicKey(),ls->encryptionKey)){return error(Code::KeyMismatch,"CreateLeaseSet2 public/private mismatch");}return DecodedCreateLeaseSet2{session,std::move(*ls),std::move(*key)};
++}
++} // namespace biglybtc::services::i2p::i2cp
+--- /dev/null
++++ b/preview/native/services/i2cp_leaseset/leaseset.hpp
+@@ -0,0 +1,61 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#pragma once
++#include "session.hpp"
++#include <array>
++
++namespace biglybtc::services::i2p::i2cp {
++inline constexpr Byte RequestVariableLeaseSetType=37,CreateLeaseSet2Type=41,StandardLeaseSet2Type=3;
++inline constexpr std::size_t MaximumLeaseCount=16,LeaseEncryptionBytes=256,MaximumLeaseSetBytes=2048,MaximumSecretLeaseFrameBytes=4096;
++struct RequestedLease {Hash gateway{};std::uint32_t tunnelId=0;std::uint64_t expiresMilliseconds=0;};
++struct LeaseRequest {std::uint16_t sessionId=0;std::vector<RequestedLease> leases;};
++struct LeaseSetPolicy {bool unpublished=false;};
++// Exactly one independent Enc0 key, standard online LS2, empty LS options.
++// This never treats the Destination's deliberately opaque Enc0 bytes as a pair.
++class LeaseEncryptionKey final {
++public:
++  LeaseEncryptionKey() noexcept=default;~LeaseEncryptionKey();
++  LeaseEncryptionKey(const LeaseEncryptionKey&)=delete;LeaseEncryptionKey& operator=(const LeaseEncryptionKey&)=delete;
++  LeaseEncryptionKey(LeaseEncryptionKey&&) noexcept;LeaseEncryptionKey& operator=(LeaseEncryptionKey&&) noexcept;
++  [[nodiscard]] static ConfigResult<LeaseEncryptionKey> generate();
++  [[nodiscard]] static ConfigResult<LeaseEncryptionKey> fromPrivateKey(View);
++  [[nodiscard]] bool valid()const noexcept{return valid_;}
++  [[nodiscard]] View publicKey()const noexcept{return valid_?View(public_):View{};}
++  // Secret borrowed view: explicit I2CP transfer only, never log/persist it.
++  [[nodiscard]] View privateKey()const noexcept{return valid_?View(private_):View{};}
++  void clear() noexcept;
++private:
++  std::array<Byte,LeaseEncryptionBytes> private_{},public_{};bool valid_=false;
++};
++struct SignedLeaseSet2 {
++  Destination destination;std::uint64_t publishedMilliseconds=0,expiresMilliseconds=0;
++  bool unpublished=false;std::array<Byte,LeaseEncryptionBytes> encryptionKey{};
++  std::vector<RequestedLease> leases;Bytes signature;
++};
++// A fixed owned secret buffer: wipe on move/clear/destruction, never implicit
++// copy. Qt's internal TCP write buffer is outside this object's ownership.
++class SecretLeaseFrame final {
++public:
++  SecretLeaseFrame() noexcept=default;~SecretLeaseFrame();
++  SecretLeaseFrame(const SecretLeaseFrame&)=delete;SecretLeaseFrame& operator=(const SecretLeaseFrame&)=delete;
++  SecretLeaseFrame(SecretLeaseFrame&&) noexcept;SecretLeaseFrame& operator=(SecretLeaseFrame&&) noexcept;
++  [[nodiscard]] View bytes()const noexcept{return View(bytes_).first(size_);}
++  void clear() noexcept;
++private:
++  std::array<Byte,MaximumSecretLeaseFrameBytes> bytes_{};std::size_t size_=0;
++  friend ConfigResult<SecretLeaseFrame> encodeCreateLeaseSet2(std::uint16_t,const SignedLeaseSet2&,const LeaseEncryptionKey&);
++};
++struct DecodedCreateLeaseSet2 {std::uint16_t sessionId=0;SignedLeaseSet2 leaseSet;LeaseEncryptionKey key;};
++[[nodiscard]] ConfigResult<LeaseSetPolicy> leaseSetPolicy(const SessionOptions&);
++[[nodiscard]] ConfigResult<LeaseRequest> decodeLeaseRequest(const Frame&);
++[[nodiscard]] ConfigResult<Bytes> encodeLeaseRequest(const LeaseRequest&);
++// Matches original max(now,lastRaw+1000), nearest-second published rounding;
++// no clock read and no implicit identity/key generation in the codec.
++[[nodiscard]] ConfigResult<SignedLeaseSet2> signLeaseSet2(const ClientIdentity&,const LeaseEncryptionKey&,const LeaseRequest&,LeaseSetPolicy,std::uint64_t nowMilliseconds,std::uint64_t previousRawPublished=0);
++[[nodiscard]] ConfigResult<void> verifyLeaseSet2(const SignedLeaseSet2&);
++[[nodiscard]] ConfigResult<Bytes> encodeLeaseSet2(const SignedLeaseSet2&);
++[[nodiscard]] ConfigResult<SignedLeaseSet2> decodeLeaseSet2(View);
++[[nodiscard]] ConfigResult<SecretLeaseFrame> encodeCreateLeaseSet2(std::uint16_t,const SignedLeaseSet2&,const LeaseEncryptionKey&);
++// Explicit offline/import diagnostic only; the borrowed Frame contains secret
++// bytes, so its owner remains responsible for erasing that source buffer.
++[[nodiscard]] ConfigResult<DecodedCreateLeaseSet2> decodeCreateLeaseSet2(const Frame&);
++} // namespace biglybtc::services::i2p::i2cp
+--- a/preview/native/tests/i2cp_initial_channel_tests.cpp
++++ b/preview/native/tests/i2cp_initial_channel_tests.cpp
+@@ -361,6 +361,60 @@
+     }
+     QTRY_VERIFY(channel.isNull());QTRY_COMPARE(router.peer->state(),QAbstractSocket::UnconnectedState);
+   }
++  void ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests_data(){
++    QTest::addColumn<QByteArray>("family");QTest::addColumn<bool>("ipv6");
++    QTest::newRow("DSA0-v4")<<QByteArray("dsa")<<false;QTest::newRow("Ed7-v4")<<QByteArray("ed25519")<<false;
++    QTest::newRow("DSA0-v6")<<QByteArray("dsa")<<true;QTest::newRow("Ed7-v6")<<QByteArray("ed25519")<<true;
++  }
++  void ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(){
++    QFETCH(QByteArray,family);QFETCH(bool,ipv6);OwnedRouter router;QVERIFY(router.listen(ipv6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost));Channel channel;
++    QSignalSpy submitted(&channel,&Channel::leaseSetSubmitted);auto identity=signer(family.constData());const auto expected=identity.destination()->wire;
++    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate());
++    auto result=channel.createLeaseSession(std::move(identity),{{"i2cp.dontPublishLeaseSet","TrUe"}},1761739200123);QVERIFY2(result.has_value(),result?"":result.error().message.c_str());QVERIFY(!identity.valid());
++    QTRY_VERIFY(sentFrame(router.received,hello().size()));const auto create=*sentFrame(router.received,hello().size());QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId());QVERIFY(channel.deadlineActive());QVERIFY(!channel.leaseSetSubmission());
++    QVERIFY(!channel.reconfigureLeaseSession({},1761739200123)); // Cannot extend the initial lease budget with updates.
++    wire::RequestedLease lease;lease.gateway.fill(0x52);lease.tunnelId=78;lease.expiresMilliseconds=1761739800999ULL;wire::LeaseRequest request{0xabcd,{lease}};
++    auto requestBytes=wire::encodeLeaseRequest(request);QVERIFY(requestBytes);const QByteArray packet(reinterpret_cast<const char*>(requestBytes->data()),static_cast<qsizetype>(requestBytes->size()));QVERIFY(router.send(packet.left(7)));QVERIFY(!channel.leaseSetSubmission());QVERIFY(router.send(packet.mid(7)));
++    qsizetype offset=hello().size()+5+static_cast<qsizetype>(create.payload.size());QTRY_VERIFY(sentFrame(router.received,offset));const auto first=*sentFrame(router.received,offset);auto decoded=wire::decodeCreateLeaseSet2(first);QVERIFY2(decoded.has_value(),decoded?"":decoded.error().message.c_str());
++    QVERIFY(decoded->leaseSet.destination.wire==expected);QCOMPARE(decoded->sessionId,std::uint16_t(0xabcd));QVERIFY(wire::verifyLeaseSet2(decoded->leaseSet));QVERIFY(decoded->leaseSet.unpublished);QCOMPARE(decoded->leaseSet.leases.size(),std::size_t(1));QCOMPARE(decoded->leaseSet.leases[0].tunnelId,std::uint32_t(78));QCOMPARE(decoded->leaseSet.leases[0].expiresMilliseconds,std::uint64_t(1761739800000ULL));
++    const auto oldPublic=decoded->leaseSet.encryptionKey;const auto published=decoded->leaseSet.publishedMilliseconds;QTRY_COMPARE(submitted.count(),1);QCOMPARE(channel.leaseSetSubmission()->revision,std::uint64_t(1));QVERIFY(!channel.deadlineActive());QCOMPARE(channel.state(),Channel::State::SessionCreated); // No new OPEN/ready state.
++    // No duplicate private identity is needed to update an owned lease session.
++    offset+=5+static_cast<qsizetype>(first.payload.size());QVERIFY(channel.reconfigureLeaseSession({{"i2cp.dontPublishLeaseSet","false"}},1761739200123));QTRY_VERIFY(sentFrame(router.received,offset));const auto update=*sentFrame(router.received,offset);auto updateConfig=wire::decodeSessionMessage(update);QVERIFY(updateConfig);const auto& updateFields=std::get<wire::ReconfigureSession>(*updateConfig);QVERIFY(updateFields.config.destination.wire==expected);QVERIFY(wire::verifySessionConfigSignature(updateFields.config));QVERIFY(router.send(statusFrame(0xabcd,wire::SessionState::Updated)));QTRY_COMPARE(channel.state(),Channel::State::SessionCreated);offset+=5+static_cast<qsizetype>(update.payload.size());
++    lease.tunnelId=79;lease.expiresMilliseconds+=1000;request.leases={lease};requestBytes=wire::encodeLeaseRequest(request);QVERIFY(requestBytes);QVERIFY(router.send(QByteArray(reinterpret_cast<const char*>(requestBytes->data()),static_cast<qsizetype>(requestBytes->size()))));QTRY_VERIFY(sentFrame(router.received,offset));decoded=wire::decodeCreateLeaseSet2(*sentFrame(router.received,offset));QVERIFY(decoded);QVERIFY(decoded->leaseSet.encryptionKey==oldPublic);QVERIFY(decoded->leaseSet.publishedMilliseconds>=published+1000);QVERIFY(!decoded->leaseSet.unpublished);QCOMPARE(decoded->leaseSet.leases[0].tunnelId,std::uint32_t(79));QTRY_COMPARE(submitted.count(),2);
++    router.peer->disconnectFromHost();QTRY_COMPARE(channel.state(),Channel::State::Failed);QVERIFY(!channel.leaseSetSubmission());QVERIFY(!channel.sessionId());QVERIFY(!channel.reconfigureLeaseSession({},1761739200123));
++  }
++  void leaseOptInRejectsUnsupportedPolicyAndLegacyBeforeConsumingSigner(){
++    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(legacy));QTRY_VERIFY(channel.routerDate());
++    QVERIFY(!channel.createLeaseSession(std::move(identity),{},1761739200123));QVERIFY(identity.valid());QCOMPARE(router.received,hello());channel.close();
++    // Separate owned stream for a modern router; no authority from old stream.
++    OwnedRouter modern;QVERIFY(modern.listen());QVERIFY(channel.begin(modern.options()));QTRY_COMPARE(modern.received,hello());QVERIFY(modern.send(date));QTRY_VERIFY(channel.routerDate());
++    for(const auto& opts:{wire::SessionOptions{{"i2cp.leaseSetEncType","4"}},wire::SessionOptions{{"i2cp.leaseSetType","5"}},wire::SessionOptions{{"i2cp.leaseSetPrivateKey","synthetic"}},wire::SessionOptions{{"i2cp.leaseSetOption.0","x=y"}},wire::SessionOptions{{"i2cp.username",""}}}){const auto denied=channel.createLeaseSession(std::move(identity),opts,1761739200123);QVERIFY(!denied);QVERIFY(identity.valid());QCOMPARE(modern.received,hello());}
++    const auto allowed=channel.createLeaseSession(std::move(identity),{},1761739200123);QVERIFY(allowed);QVERIFY(!identity.valid());
++  }
++  void badLeaseRequestWithdrawsOwnedCapability_data(){
++    QTest::addColumn<int>("kind");QTest::newRow("wrong-session")<<0;QTest::newRow("zero-leases")<<1;QTest::newRow("seventeen")<<2;QTest::newRow("expired")<<3;QTest::newRow("no-opt-in")<<4;QTest::newRow("zero-tunnel")<<5;
++  }
++  void badLeaseRequestWithdrawsOwnedCapability(){
++    QFETCH(int,kind);OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("dsa");QSignalSpy submitted(&channel,&Channel::leaseSetSubmitted);
++    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate());
++    auto made=kind==4?channel.createSession(identity,{},1761739200123):channel.createLeaseSession(std::move(identity),{},1761739200123);QVERIFY(made);QTRY_VERIFY(sentFrame(router.received,hello().size()));const auto created=*sentFrame(router.received,hello().size());QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId());
++    wire::RequestedLease lease;lease.gateway.fill(3);lease.tunnelId=1;lease.expiresMilliseconds=kind==3?1761739000000ULL:1761739800000ULL;wire::LeaseRequest request{static_cast<std::uint16_t>(kind==0?11:0xabcd),{lease}};auto frame=wire::encodeLeaseRequest(request);QVERIFY(frame);
++    if(kind==1||kind==2){(*frame)[7]=static_cast<wire::Byte>(kind==1?0:17);}if(kind==5){for(std::size_t i=40;i<44;++i){(*frame)[i]=0;}}
++    QVERIFY(router.send(QByteArray(reinterpret_cast<const char*>(frame->data()),static_cast<qsizetype>(frame->size()))));QTRY_COMPARE(channel.state(),Channel::State::Failed);QVERIFY(!channel.leaseSetSubmission());QVERIFY(!channel.sessionId());QCOMPARE(submitted.count(),0);QCOMPARE(router.received.size(),hello().size()+5+static_cast<qsizetype>(created.payload.size()));
++  }
++  void missingInitialLeaseRequestHasAnAbsoluteBudget(){
++    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto options=router.options();options.deadlineMilliseconds=500;auto identity=signer("dsa");
++    QVERIFY(channel.begin(options));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate());QVERIFY(channel.createLeaseSession(std::move(identity),{},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()));QVERIFY(router.send(status));QTRY_COMPARE(channel.state(),Channel::State::Failed);QCOMPARE(channel.failure(),Channel::Failure::Deadline);QVERIFY(!channel.leaseSetSubmission());QVERIFY(!channel.socketActive());
++  }
++  void closeBeforeFirstLeaseWithdrawsTheConsumedCapability(){
++    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");QSignalSpy submitted(&channel,&Channel::leaseSetSubmitted);
++    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate());QVERIFY(channel.createLeaseSession(std::move(identity),{},1761739200123));QVERIFY(!identity.valid());QTRY_VERIFY(sentFrame(router.received,hello().size()));QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId());QVERIFY(channel.deadlineActive());channel.close();QTRY_COMPARE(router.peer->state(),QAbstractSocket::UnconnectedState);QVERIFY(!channel.sessionId());QVERIFY(!channel.leaseSetSubmission());QVERIFY(!channel.reconfigureLeaseSession({},1761739200123));QCOMPARE(submitted.count(),0);QVERIFY(!channel.deadlineActive());
++  }
++  void submittedCallbackMayDeleteController(){
++    OwnedRouter router;QVERIFY(router.listen());QPointer<Channel> channel=new Channel(&router.server);auto identity=signer("ed25519");QObject::connect(channel,&Channel::leaseSetSubmitted,&router.server,[&]{delete channel.data();});
++    QVERIFY(channel->begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel->routerDate());QVERIFY(channel->createLeaseSession(std::move(identity),{},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()));QVERIFY(router.send(status));QTRY_VERIFY(channel->sessionId());
++    wire::RequestedLease lease;lease.gateway.fill(7);lease.tunnelId=8;lease.expiresMilliseconds=1761739800000ULL;auto frame=wire::encodeLeaseRequest({0xabcd,{lease}});QVERIFY(frame);QVERIFY(router.send(QByteArray(reinterpret_cast<const char*>(frame->data()),static_cast<qsizetype>(frame->size()))));QTRY_VERIFY(channel.isNull());QTRY_COMPARE(router.peer->state(),QAbstractSocket::UnconnectedState);
++  }
+ };
+ QTEST_GUILESS_MAIN(InitialChannelTests)
+ #include "i2cp_initial_channel_tests.moc"
+--- /dev/null
++++ b/preview/native/tests/i2cp_leaseset_tests.cpp
+@@ -0,0 +1,72 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "leaseset.hpp"
++#include <algorithm>
++#include <cerrno>
++#include <fcntl.h>
++#include <filesystem>
++#include <fstream>
++#include <iostream>
++#include <stdexcept>
++#include <sys/stat.h>
++#include <unistd.h>
++
++namespace i2p=biglybtc::services::i2p;
++namespace cp=i2p::i2cp;
++void require(bool ok,const char* why){if(!ok){throw std::runtime_error(why);}}
++template<class T,class E>T take(std::expected<T,E> value){if(!value){throw std::runtime_error(value.error().message);}return std::move(*value);}
++i2p::Bytes read(const std::filesystem::path& path){require(std::filesystem::file_size(path)<=1024,"Unbounded synthetic fixture");std::ifstream in(path,std::ios::binary);require(in.good(),"Cannot read bounded synthetic fixture");i2p::Bytes out(std::istreambuf_iterator<char>(in),{});require(!in.bad()&&out.size()<=1024,"Invalid fixture read");return out;}
++i2p::ClientIdentity identity(const std::filesystem::path& path,const std::string& family){return take(i2p::makeClientIdentity(read(path/(family+".sender")),i2p::Bytes(256,0x51),read(path/(family+".known-test-key"))));}
++cp::LeaseRequest request(std::uint16_t id,std::size_t count,std::uint64_t now){cp::LeaseRequest out;out.sessionId=id;for(std::size_t i=0;i<count;++i){cp::RequestedLease lease;lease.gateway.fill(static_cast<i2p::Byte>(i+1));lease.tunnelId=static_cast<std::uint32_t>(100+i);lease.expiresMilliseconds=now+600001+i*1000;out.leases.push_back(lease);}return out;}
++void keyRules(){
++  std::array<i2p::Byte,256> x{};x.back()=2;auto fixed=take(cp::LeaseEncryptionKey::fromPrivateKey(x));require(fixed.publicKey().size()==256&&fixed.publicKey().back()==4,"I2P group/generator/private endian mismatch");
++  require(std::all_of(fixed.publicKey().begin(),fixed.publicKey().end()-1,[](auto c){return c==0;}),"I2P public width mismatch");
++  auto key=take(cp::LeaseEncryptionKey::generate());auto same=take(cp::LeaseEncryptionKey::fromPrivateKey(key.privateKey()));require(std::equal(key.publicKey().begin(),key.publicKey().end(),same.publicKey().begin()),"Generated pair does not derive");
++  auto moved=std::move(key);require(!key.valid()&&key.privateKey().empty()&&moved.valid(),"Moved key retained authority");moved.clear();require(!moved.valid()&&moved.privateKey().empty(),"Cleared key remains live");
++  x.fill(0);require(!cp::LeaseEncryptionKey::fromPrivateKey(x),"Zero exponent accepted");x.back()=1;require(!cp::LeaseEncryptionKey::fromPrivateKey(x),"One exponent accepted");x.fill(255);require(!cp::LeaseEncryptionKey::fromPrivateKey(x),"Out of range exponent accepted");require(!cp::LeaseEncryptionKey::fromPrivateKey(i2p::View(x).first(255)),"Wrong-width exponent accepted");
++}
++void messages(const std::filesystem::path& fixtures){
++  constexpr std::uint64_t now=1700000000499ULL;
++  for(const std::string family:{"dsa","ed25519"}){
++    auto signer=identity(fixtures,family);auto key=take(cp::LeaseEncryptionKey::generate());
++    for(const std::size_t count:{1U,16U}){
++      const auto req=request(7,count,now);auto wire=take(cp::encodeLeaseRequest(req));const auto parsed=take(cp::decodeLeaseRequest(take(cp::decodeFrame(wire))));require(parsed.sessionId==7&&parsed.leases.size()==count&&parsed.leases[0].expiresMilliseconds==req.leases[0].expiresMilliseconds,"Original request milliseconds changed");
++      auto ls=take(cp::signLeaseSet2(signer,key,req,cp::LeaseSetPolicy{count==16},now));require(ls.publishedMilliseconds==1700000000000ULL&&ls.expiresMilliseconds==(req.leases.back().expiresMilliseconds/1000)*1000,"Original published rounding/latest floor expiry differs");
++      auto next=take(cp::signLeaseSet2(signer,key,req,{},now,now));require(next.publishedMilliseconds==1700000001000ULL,"Monotone original published timestamp differs");
++      const auto encoded=take(cp::encodeLeaseSet2(ls));const auto decoded=take(cp::decodeLeaseSet2(encoded));require(decoded.destination.wire==signer.destination()->wire&&decoded.leases.size()==count&&decoded.unpublished==(count==16),"LS2 roundtrip fields differ");
++      auto secret=take(cp::encodeCreateLeaseSet2(7,ls,key));const auto copied=secret.bytes();const auto frame=take(cp::decodeFrame(copied));auto reply=take(cp::decodeCreateLeaseSet2(frame));require(reply.sessionId==7&&std::equal(reply.key.privateKey().begin(),reply.key.privateKey().end(),key.privateKey().begin()),"Original private key trailer/pair mismatch");
++      auto moved=std::move(secret);require(secret.bytes().empty()&&!moved.bytes().empty(),"Secret frame move retained source");moved.clear();require(moved.bytes().empty(),"Secret frame clear retained bytes");
++      auto changed=ls;changed.leases[0].gateway[0]^=1;require(!cp::verifyLeaseSet2(changed),"Changed gateway authenticated");changed=ls;changed.encryptionKey[30]^=1;require(!cp::verifyLeaseSet2(changed),"Changed encryption key authenticated");changed=ls;changed.signature.back()^=1;require(!cp::verifyLeaseSet2(changed),"Changed signature authenticated");changed=ls;changed.unpublished=!changed.unpublished;require(!cp::verifyLeaseSet2(changed),"Changed flags authenticated");
++      auto altered=frame;altered.payload.back()^=1;require(!cp::decodeCreateLeaseSet2(altered),"Wrong private key accepted");altered=frame;altered.payload.push_back(0);require(!cp::decodeCreateLeaseSet2(altered),"Trailing data accepted");altered=frame;altered.payload[2]=5;require(!cp::decodeCreateLeaseSet2(altered),"Encrypted/meta LeaseSet accepted");
++      auto wrongKey=take(cp::LeaseEncryptionKey::generate());require(!cp::encodeCreateLeaseSet2(7,ls,wrongKey),"Different encryption pair accepted");require(!cp::encodeCreateLeaseSet2(65535,ls,key),"Unknown session accepted");
++    }
++    auto req=request(7,1,now);req.leases.clear();require(!cp::signLeaseSet2(signer,key,req,{},now),"Zero lease readiness accepted");req=request(7,17,now);require(!cp::encodeLeaseRequest(req),"17 leases accepted");req=request(7,1,now);req.leases[0].expiresMilliseconds=now;require(!cp::signLeaseSet2(signer,key,req,{},now),"Expired lease accepted");req=request(7,1,now);req.leases[0].tunnelId=0;require(!cp::encodeLeaseRequest(req),"Zero tunnel accepted");req=request(7,1,now);require(!cp::signLeaseSet2(signer,key,req,{},0xffffffffULL*1000),"Published overflow accepted");
++    auto reqWire=take(cp::encodeLeaseRequest(req));reqWire.pop_back();require(!cp::decodeFrame(reqWire),"Truncated request frame accepted");
++    std::cout<<"PASS original standard LS2 key/message/signature rules "<<family<<'\n';
++  }
++  require(take(cp::leaseSetPolicy({{"i2cp.dontPublishLeaseSet","TrUe"}})).unpublished,"Original boolean spelling differs");require(!take(cp::leaseSetPolicy({{"i2cp.dontPublishLeaseSet"," true "}})).unpublished,"Original boolean trimming invented");
++  for(const auto& opts:{cp::SessionOptions{{"i2cp.leaseSetType","5"}},cp::SessionOptions{{"i2cp.leaseSetEncType","4"}},cp::SessionOptions{{"i2cp.leaseSetPrivateKey","secret"}},cp::SessionOptions{{"i2cp.leaseSetOption.0","a=b"}},cp::SessionOptions{{"i2cp.username",""}}}){require(!cp::leaseSetPolicy(opts),"Unsupported policy silently downgraded");}
++}
++struct Fd {int value=-1;explicit Fd(int n):value(n){}~Fd(){if(value>=0){::close(value);}}Fd(const Fd&)=delete;Fd& operator=(const Fd&)=delete;};
++bool stamp(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_size==b.st_size&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
++i2p::Bytes ownedRead(int root,const char* name){
++  Fd fd(::openat(root,name,O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));require(fd.value>=0,"Cannot read fixed offline vector");struct stat before{},after{},named{};require(::fstat(fd.value,&before)==0&&S_ISREG(before.st_mode)&&before.st_uid==::geteuid()&&before.st_nlink==1&&before.st_size>=0&&before.st_size<=4096,"Unsafe/unbounded offline vector");
++  i2p::Bytes out(static_cast<std::size_t>(before.st_size));std::size_t at=0;while(at<out.size()){auto n=::read(fd.value,out.data()+at,out.size()-at);if(n<0&&errno==EINTR){continue;}require(n>0,"Cannot read offline vector bytes");at+=static_cast<std::size_t>(n);}require(::fstat(fd.value,&after)==0&&::fstatat(root,name,&named,AT_SYMLINK_NOFOLLOW)==0&&stamp(before,after)&&stamp(after,named),"Offline vector changed");return out;
++}
++void ownedWrite(int root,const char* name,i2p::View bytes){Fd fd(::openat(root,name,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));require(fd.value>=0&&bytes.size()<=4096,"Cannot exclusively create offline vector");std::size_t at=0;while(at<bytes.size()){auto n=::write(fd.value,bytes.data()+at,bytes.size()-at);if(n<0&&errno==EINTR){continue;}require(n>0,"Cannot write offline vector");at+=static_cast<std::size_t>(n);}require(::fsync(fd.value)==0,"Cannot sync offline vector");}
++void interop(const std::filesystem::path& path){
++  require(path.is_absolute(),"Offline root must be absolute");Fd root(::open(path.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));struct stat st{};require(root.value>=0&&::fstat(root.value,&st)==0&&st.st_uid==::geteuid()&&(st.st_mode&077)==0,"Private owned offline root required");
++  auto clock=ownedRead(root.value,"creation.clock");require(clock.size()==8,"Wrong original clock width");std::uint64_t now=0;for(auto c:clock){now=(now<<8)|c;}require(now>0&&now<0xffffffffULL*1000-1000,"Wrong original clock range");
++  const std::array<const char*,4> labels{"dsa-one","dsa-sixteen","ed25519-one","ed25519-sixteen"};
++  for(std::size_t row=0;row<labels.size();++row){
++    const std::string label=labels[row],family=row<2?"dsa":"ed25519";const auto count=row%2==0?1U:16U;
++    auto dest=ownedRead(root.value,(family+".sender").c_str()),signing=ownedRead(root.value,(family+".known-test-key").c_str());auto signer=take(i2p::makeClientIdentity(dest,i2p::Bytes(256,0x51),signing));
++    const auto req=take(cp::decodeLeaseRequest(take(cp::decodeFrame(ownedRead(root.value,(label+".java.request").c_str())))));require(req.sessionId==7&&req.leases.size()==count,"Java actual request fields differ");const auto expected=request(7,count,now);for(std::size_t i=0;i<count;++i){require(req.leases[i].gateway==expected.leases[i].gateway&&req.leases[i].tunnelId==expected.leases[i].tunnelId&&req.leases[i].expiresMilliseconds==expected.leases[i].expiresMilliseconds,"Java request exact fields differ");}
++    auto actual=take(cp::decodeCreateLeaseSet2(take(cp::decodeFrame(ownedRead(root.value,(label+".java.create").c_str())))));require(actual.sessionId==7&&actual.leaseSet.destination.wire==dest&&actual.leaseSet.leases.size()==count&&actual.leaseSet.publishedMilliseconds==((now+500)/1000)*1000&&actual.leaseSet.unpublished==(count==16),"Java LS2 fields differ");
++    for(std::size_t i=0;i<count;++i){require(actual.leaseSet.leases[i].gateway==req.leases[i].gateway&&actual.leaseSet.leases[i].tunnelId==req.leases[i].tunnelId&&actual.leaseSet.leases[i].expiresMilliseconds==(req.leases[i].expiresMilliseconds/1000)*1000,"Java Lease2 second projection differs");}
++    auto key=take(cp::LeaseEncryptionKey::generate());auto ls=take(cp::signLeaseSet2(signer,key,req,{count==16},now));auto encoded=take(cp::encodeCreateLeaseSet2(7,ls,key));ownedWrite(root.value,(label+".native.create").c_str(),encoded.bytes());
++    if(row==0){auto bad=ls;bad.signature.back()^=1;auto frame=take(cp::decodeFrame(encoded.bytes()));const auto at=3+take(cp::encodeLeaseSet2(ls)).size()-1;frame.payload[at]^=1;auto wire=cp::encodeFrame(frame.type,frame.payload);require(wire.has_value(),"Cannot encode altered fixture");ownedWrite(root.value,"native.bad-signature.create",*wire);require(!cp::verifyLeaseSet2(bad),"Changed native signature accepted");}
++    std::cout<<"PASS NATIVE VERIFIED JAVA "<<label<<" request create\n";
++  }
++  require(::fsync(root.value)==0,"Cannot sync offline vector directory");
++}
++int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);return 0;}require(argc==2,"Usage: i2cp-leaseset-tests SYNTHETIC_FIXTURES | --java-interop PRIVATE_DIR");keyRules();messages(argv[1]);std::cout<<"PASS bounded original LeaseSet2 prerequisite\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}

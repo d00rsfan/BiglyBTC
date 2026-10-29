@@ -1,0 +1,30 @@
+{
+  "capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-leaseset2-20261029/manifest.json",
+      "sha256": "14281940e754b94519bce36aff31a5ca45b207a489dc149f0bacdef9d4da80a7"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-normal-store-20261029/amendments/closest-tree-positive/manifest.json",
+      "sha256": "b5fa55093b886cbb071173a7b5c8a8700b45e05459d74a905e647f22c772ad72"
+    }
+  ],
+  "reviews": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/i2cp-source-review.json",
+      "sha256": "c2837f0d29a21ae1fc962b26c731cd7e9aa9b6c17f3e410033e37b8203a4051c"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-normal-store-20261029-review/manifest.json",
+      "sha256": "abd0def5fac13439ebac0c209e7d837a88e32c988ffae2f1e5a019af610be4a3"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/recipe-source-review.json",
+      "sha256": "78b8aeeb40395bdf11c56ca07692dec11c6ffd366344704cc2bd29865e89deeb"
+    }
+  ],
+  "cmake_fragment": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-leaseset2-20261029/CMake.fragment",
+    "sha256": "5d460f135fc66beb0d8286555430f79a61625c140d646561597ce8e919315c85"
+  }
+}

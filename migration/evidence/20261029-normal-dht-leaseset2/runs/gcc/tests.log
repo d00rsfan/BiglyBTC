@@ -1,0 +1,30 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+    Start 178: azureus-owned-service
+1/7 Test #178: azureus-owned-service ............   Passed    2.43 sec
+    Start 182: azureus-router-owner
+2/7 Test #182: azureus-router-owner .............   Passed    0.01 sec
+    Start 189: owned-dht-bytes
+3/7 Test #189: owned-dht-bytes ..................   Passed    0.06 sec
+    Start 263: azureus-database-runtime
+4/7 Test #263: azureus-database-runtime .........   Passed    2.06 sec
+    Start 265: azureus-storage-stats
+5/7 Test #265: azureus-storage-stats ............   Passed    0.01 sec
+    Start 285: i2cp-initial-channel
+6/7 Test #285: i2cp-initial-channel .............   Passed   13.04 sec
+    Start 287: pure-i2cp-leaseset2
+7/7 Test #287: pure-i2cp-leaseset2 ..............   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+crypto            =   0.06 sec*proc (1 test)
+database          =   2.06 sec*proc (2 tests)
+i2p               =  13.10 sec*proc (2 tests)
+loopback          =   4.55 sec*proc (3 tests)
+no-network        =   0.06 sec*proc (1 test)
+owned-loopback    =  13.04 sec*proc (1 test)
+router            =   0.01 sec*proc (1 test)
+statistics        =   2.50 sec*proc (3 tests)
+unit              =  17.66 sec*proc (7 tests)
+
+Total Test time (real) =  17.68 sec

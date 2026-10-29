@@ -1,0 +1,30 @@
+{
+  "name": "build",
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "cmake",
+    "--build",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+    "--parallel",
+    "1",
+    "--target",
+    "biglybtc-azureus-owned-service-tests",
+    "biglybtc-azureus-router-owner-tests",
+    "biglybtc-azureus-database-runtime-tests",
+    "biglybtc-owned-dht-bytes-tests",
+    "biglybtc-azureus-storage-stats-tests",
+    "biglybtc-i2cp-initial-channel-tests",
+    "biglybtc-i2cp-leaseset-tests",
+    "BiglyBTC",
+    "BiglyBTC-headless",
+    "biglybtc-preview-smoke"
+  ],
+  "expected_exit": 0,
+  "exit": 0,
+  "seconds": 607.224,
+  "log": "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/runs/gcc-r1/build.log",
+  "log_sha256": "467d89cf0b3805cb23ffa0da202d2a0b9557f778aaba8be55e1bf07ff6547b49",
+  "source_manifest_sha256": "864f2fb7b2a52b11a57d668b49c364bfb9a60257056c7996233d7a943539f292"
+}

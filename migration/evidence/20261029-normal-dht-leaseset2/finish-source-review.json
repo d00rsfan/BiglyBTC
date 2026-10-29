@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "reviewed_script": "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/finish.py",
+  "script_sha256": "bcad8eb606323fa388f4c4f1ba24db08864010521e6c442af5cf61d3dd40b979",
+  "source_commit": "6726a4cf7b017ac31d6aeede15f339c3ec2b71f7",
+  "conclusion": "No concrete blocker found in this one-time closeout derivative. It remains gated on actual three-lane seven-suite, private seven-suite and new finite LS2 Java results; source review does not grant pending runtime credit.",
+  "checks": [
+    "Python AST valid; helper not imported/executed.",
+    "Final19-path adoption/capsule/review pins match. Per-lane actual results require expected source/lane and seven suites, unchanged images/source, successful command/log/XML evidence. Private producer independently enforces10/7/7 compiled image scope.",
+    "New LS2-only offline status/counters match the reviewed wrapper: four finite cases/reference/direction, eight Java messages and four native messages/reference. No prior signed-session/value/version Java evidence is relabelled as rerun.",
+    "Atomic exchange is bounded to the private candidate and current dist whose old manifest is pinned23dac. Proc mapping guard precedes exchange; only old tree/private copied tests/QtTest support are removed. No cache/provider/source cleanup occurs.",
+    "Only two existing in_progress registry records append actual source/evidence references. Existing states and upstream baseline/first/integrated/last-reviewed hashes, upstream records and external dependencies remain unchanged.",
+    "Evidence keeps current raw receipts/logs/source references and exact new finite LS2 outputs, excludes successful compiled Java classes and ordinary test ELFs; both root registries run their validators after exact-preimage updates."
+  ],
+  "limits": "Read-only source/AST/static pin checks only. Actual GCC/SAN/private/offline final gates remain root-owned and are required before execution; no mutation of N/cache/dist, source, profiles or registry by reviewer."
+}

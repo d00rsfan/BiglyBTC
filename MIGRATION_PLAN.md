@@ -2,7 +2,7 @@
 
 Continue the entire plan autonomously without chapter or milestone stops, as requested on 2026-10-28. Preserve the running Java application and real profile/payload. Read [the compact active state](migration/ACTIVE.md) first; batch related implementation and focused validation, retain build logs and inspect failures/status only.
 
-Latest qualified native source `e124abb90ab846c4b057a6b868004c0acb737118` passed the focused seven-suite GCC/Clang/sanitizer batch, private runtime and original-object compatibility checks; see [current state](migration/STATE.md). The whole migration and release/performance gates remain open.
+Latest qualified native source `6726a4cf7b017ac31d6aeede15f339c3ec2b71f7` adds normal direct DHT receiving and owned LeaseSet2 submission; seven affected suites passed on three compiler/sanitizer lanes, plus private runtime and actual Java-object checks. Whole-application products were freshly built on GCC only. See [current state](migration/STATE.md); whole migration and release/performance gates remain open.
 
 Earlier progress and stop-boundary notes are preserved verbatim in [the historical status archive](migration/history/plan-status-prefix-through-20261028.md); those stops are superseded. The objective, phase definitions and acceptance requirements below are unchanged.
 

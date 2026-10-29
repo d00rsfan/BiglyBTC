@@ -1,0 +1,285 @@
+{
+  "status": "PASS_PRIVATE_NORMAL_RECEIVER_LEASESET",
+  "source_commit": "6726a4cf7b017ac31d6aeede15f339c3ec2b71f7",
+  "lane_inputs": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/runs/gcc-r1/result.json",
+      "sha256": "73b95c0ba9602163b0f10cae65ff8ad674bb722e503c6b8f11532573bfa35221"
+    },
+    "clang": {
+      "path": "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/runs/clang-r1/result.json",
+      "sha256": "14c01c7e76c3efdf8945b82e8d4d47c5f494c64d85b9bb2da6d7ab1442dda169"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/runs/san-r1/result.json",
+      "sha256": "c5c8306f3c66171e3980a3331bcc9028ae59a090ac20636f34f8b44be46d3cfd"
+    }
+  },
+  "builds_executed": false,
+  "provider_rebuilt": false,
+  "historical_passes_pooled": false,
+  "runner_sha256": "8435678f73a1ce6943f7439da148882afe055027e88ff2eb82205607e4be4258",
+  "candidate": "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/candidate",
+  "candidate_manifest_sha256": "92e3b83ba74ee2ec3b1886521914370a31074533daed7f2ed11d058804f2ab68",
+  "actual_leaf_count": 119,
+  "actual_tests": [
+    {
+      "suite": "azureus-owned-service",
+      "target": "biglybtc-azureus-owned-service-tests",
+      "exit": 0,
+      "arguments": [
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/biglybtc-azureus-owned-service-tests",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/azureus-owned-service.txt,txt",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/azureus-owned-service.xml,junitxml"
+      ],
+      "log_sha256": "a7e2c850f13cdde2c0e51e7da6da5133eb9424fae5fce5a88e92ab09fe6d6fef",
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975"
+      },
+      "case_names": [
+        "initTestCase",
+        "twoNormalProfileOwnersExchangeDirectValuesWithoutGeneratedClosestFacts",
+        "normalReceiverRequiresPeerTokenAndKeepsUnseededCacheForwardsOut",
+        "normalReceiverChangedProfileWithdrawsBeforeAnyRemoteStore",
+        "normalValueOwnersCancelWithoutAdmissionAndRestartWithReservedVersions",
+        "normalReceivingCannotBeEnabledWithoutAHeldProfile",
+        "originalVersionReservationPreservesSignedJavaWidthsAndChunkBoundary",
+        "profileVersionsReserveBeforeUsePreserveUnknownsAndRecoverOnlyCanonicalPending",
+        "versionOwnerRetainsCallerLeaseAndRefusesLockOrDirectoryReplacement",
+        "localPublicationUsesActualTokenStoreAndReadbackFromGeneratedReceiver",
+        "localPublicationCancellationAndChangedProfileNeverSendStore",
+        "defaultAndInvalidPolicyNeverCreateAnOwner",
+        "stdWorkerCreatesAndJoinsTheDedicatedQtOwner",
+        "twoActualServiceOwnersExchangeRttCoordinatesAndKeepOldSnapshots",
+        "existingActualFindNodeAndStreamingFindValueRunOnTheQtOwner",
+        "actualTimeoutCancellationAndJoinedCloseRetainTheirOwnEvents",
+        "boundedAdmissionAndCloseDoNotDependOnFreeCommandSlots",
+        "invalidPublicPeersAndDeadlinesNeverSendOrChangeTheMailbox",
+        "passiveReadsNeverQueueCommandsOrRepublishUnchangedFacts",
+        "concurrentMailboxReadsAndImmediatePendingDestructionJoinSafely",
+        "cleanupTestCase"
+      ],
+      "xml_sha256": "718c75b73c9e320b90a979fa00f8d5e7cbac98a962049020c042a65189cb3ccb"
+    },
+    {
+      "suite": "azureus-router-owner",
+      "target": "biglybtc-azureus-router-owner-tests",
+      "exit": 0,
+      "arguments": [
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/biglybtc-azureus-router-owner-tests",
+        "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/azureus-router/source-cases.tsv"
+      ],
+      "log_sha256": "fdae16566056d8f117277c1ec10064b26dd5c39b8859e9327914abb85773a929",
+      "initialized_images_sha256": {}
+    },
+    {
+      "suite": "azureus-database-runtime",
+      "target": "biglybtc-azureus-database-runtime-tests",
+      "exit": 0,
+      "arguments": [
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/biglybtc-azureus-database-runtime-tests",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/azureus-database-runtime.txt,txt",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/azureus-database-runtime.xml,junitxml"
+      ],
+      "log_sha256": "ed3d7d215875f35ea06938c92cfb2a8e72630cef7fe2234a3d7ce5df03201005",
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975"
+      },
+      "case_names": [
+        "initTestCase",
+        "localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData",
+        "qualifiedMappingOwnsVersionsForwardingAndUnknownBinaryBytes",
+        "normalFindFlagsReturnUnfilteredValuesLikeOriginalMapping",
+        "actualFindFlagsReachTheDatabaseWithoutSeedFiltering",
+        "statsValueRequiresRealAdapterAndLocalIdentity",
+        "actualStatsReadIsBoundToSocketAndRealMappingEvents",
+        "originalDiversificationRequiresExplicitControlAndRealMappingEvents",
+        "originalFrequencyUsesActualIpBloomAndSuspensionSamples",
+        "borrowedClockCannotReenterFacadeMutation",
+        "strictExpiryBoundaryThrottleAndDelayedEmptyMappingRemoval",
+        "quotaChecksExistingFourByteOverheadAndCapacityNeverClobbers",
+        "actualTokenStoreAndRecursiveGetReadMutatedDatabase",
+        "malformedAndWrongNetworkNeverReachTheDatabase",
+        "legacyModeRemainsNonDatabaseAndUnsafeBindCannotActivateIt",
+        "cleanupTestCase"
+      ],
+      "xml_sha256": "366e81be8c950886f4f68471004dd6c3200e564cf0418d33f4e6207097d643f3"
+    },
+    {
+      "suite": "owned-dht-bytes",
+      "target": "biglybtc-owned-dht-bytes-tests",
+      "exit": 0,
+      "arguments": [
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/biglybtc-owned-dht-bytes-tests",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/owned-dht-bytes.txt,txt",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/owned-dht-bytes.xml,junitxml"
+      ],
+      "log_sha256": "90d90964750e1ddb3b34753db212db628283d65c203db4453ed9a59c856370d3",
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975"
+      },
+      "case_names": [
+        "initTestCase",
+        "checkedAdditionKeepsActualZeroAndMakesOverflowStickyUnknown",
+        "actualNumericLoopbackCountsDifferentPayloadLengthsAndRejectedDatagrams",
+        "boundedOversizeDiscardLeavesUnknownReceiveTotalWithoutAffectingPacketCounters",
+        "cleanupTestCase"
+      ],
+      "xml_sha256": "b262c3a1532bda7cff3686291d124ba87595665561314de2f989281538425ef3"
+    },
+    {
+      "suite": "azureus-storage-stats",
+      "target": "biglybtc-azureus-storage-stats-tests",
+      "exit": 0,
+      "arguments": [
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/biglybtc-azureus-storage-stats-tests"
+      ],
+      "log_sha256": "568cd25b55e32e10e674fee817ccd40e6c9f7d925154f432fbde821df66517a1",
+      "initialized_images_sha256": {}
+    },
+    {
+      "suite": "i2cp-initial-channel",
+      "target": "biglybtc-i2cp-initial-channel-tests",
+      "exit": 0,
+      "arguments": [
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/biglybtc-i2cp-initial-channel-tests",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/i2cp-initial-channel.txt,txt",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/i2cp-initial-channel.xml,junitxml"
+      ],
+      "log_sha256": "7f45277bd748ca6e7af4d95a0efca601a8554182184b54903870e752431badf8",
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975"
+      },
+      "case_names": [
+        "initTestCase",
+        "actualJavaDateOverOwnedTcp(ipv4)",
+        "actualJavaDateOverOwnedTcp(ipv6)",
+        "invalidRepliesWithdrawAllObservation(oversize-header)",
+        "invalidRepliesWithdrawAllObservation(unknown-type)",
+        "invalidRepliesWithdrawAllObservation(maximum-bounded-opaque-frame)",
+        "invalidRepliesWithdrawAllObservation(unexpected-real-session-status)",
+        "invalidRepliesWithdrawAllObservation(invalid-date-length)",
+        "invalidRepliesWithdrawAllObservation(real-Java-null-date)",
+        "truncatedFrameAtActualEofRefuses",
+        "realDisconnectRevokesDateAndRetainsOnlyReason",
+        "actualRemoteEofWithdrawsDate",
+        "noDateHitsAbsoluteDeadlineWithoutRetry",
+        "cancelPartialThenExplicitRestartUsesNewStream",
+        "activeBeginCannotReplaceCurrentAttempt",
+        "stateListenerRestartCannotPublishOldDate",
+        "publicNotificationMayDeleteController(date-state-listener)",
+        "publicNotificationMayDeleteController(date-final-listener)",
+        "publicNotificationMayDeleteController(failure-listener)",
+        "unsupportedOptionsRefuseBeforeAnyTcp",
+        "actualSignedRegistrationAndMergedReconfigure(DSA0-v4)",
+        "actualSignedRegistrationAndMergedReconfigure(Ed7-v4)",
+        "actualSignedRegistrationAndMergedReconfigure(DSA0-v6)",
+        "actualSignedRegistrationAndMergedReconfigure(Ed7-v6)",
+        "terminalRegistrationStatusNeverAdmits(refused-UNKNOWN)",
+        "terminalRegistrationStatusNeverAdmits(invalid)",
+        "terminalRegistrationStatusNeverAdmits(destroyed)",
+        "terminalRegistrationStatusNeverAdmits(unsolicited-updated)",
+        "terminalRegistrationStatusNeverAdmits(created-UNKNOWN)",
+        "reconfigureCannotChangeIdentityOrAcceptWrongId",
+        "pendingCreateDeadlineClosesWithoutAdmissionOrRetry",
+        "invalidSigningInputDoesNotReplaceTheDateOrWriteARequest",
+        "previouslyReadPartialStatusCannotBecomeANewCreateAcknowledgement",
+        "unsupportedTlsCannotBecomePlaintextRegistration",
+        "cancelBeforeQueuedOldStatusThenNewRegistrationCannotReuseIt",
+        "nestedRealReconfigureCannotPublishTheSupersededCreatedNotification",
+        "registrationNotificationMayDeleteController(created)",
+        "registrationNotificationMayDeleteController(updated)",
+        "ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(DSA0-v4)",
+        "ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(Ed7-v4)",
+        "ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(DSA0-v6)",
+        "ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(Ed7-v6)",
+        "leaseOptInRejectsUnsupportedPolicyAndLegacyBeforeConsumingSigner",
+        "badLeaseRequestWithdrawsOwnedCapability(wrong-session)",
+        "badLeaseRequestWithdrawsOwnedCapability(zero-leases)",
+        "badLeaseRequestWithdrawsOwnedCapability(seventeen)",
+        "badLeaseRequestWithdrawsOwnedCapability(expired)",
+        "badLeaseRequestWithdrawsOwnedCapability(no-opt-in)",
+        "badLeaseRequestWithdrawsOwnedCapability(zero-tunnel)",
+        "missingInitialLeaseRequestHasAnAbsoluteBudget",
+        "closeBeforeFirstLeaseWithdrawsTheConsumedCapability",
+        "submittedCallbackMayDeleteController",
+        "cleanupTestCase"
+      ],
+      "xml_sha256": "027a1f67886db051c298c7fa5bd5b9caec69b85eeb5a4dad549c307da43cc7ac"
+    },
+    {
+      "suite": "pure-i2cp-leaseset2",
+      "target": "biglybtc-i2cp-leaseset-tests",
+      "exit": 0,
+      "arguments": [
+        "/home/yurii/Java/BiglyBT/build/normal-receiver-leaseset-followup-20261029/private-runs/r1/biglybtc-i2cp-leaseset-tests",
+        "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram"
+      ],
+      "log_sha256": "9a3c0f6e73350eaa8e6ec3ea59752264a20f18675e48aae4e69e4cfa6596207d",
+      "initialized_images_sha256": {
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f"
+      }
+    }
+  ],
+  "copied_images": {
+    "biglybtc-azureus-owned-service-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-owned-service-tests",
+      "sha256": "82fa60ce00223897179844ab4937a9a51327a4e37c3bdf11ead84ab041601ec9",
+      "bytes": 1398896
+    },
+    "biglybtc-azureus-router-owner-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-router-owner-tests",
+      "sha256": "946675a8fd26804fff325d40cbc6aa57ff4b2802a431e0c477aa60dc82a92137",
+      "bytes": 97424
+    },
+    "biglybtc-azureus-database-runtime-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-database-runtime-tests",
+      "sha256": "e523def6fd34f092ff8dc8e7efb7f8eeb57114eb47f46f1689277b9a43364d32",
+      "bytes": 1352184
+    },
+    "biglybtc-owned-dht-bytes-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-owned-dht-bytes-tests",
+      "sha256": "ba3efeb740f7b165b6b3180b1c08427f68b020cf979df286aca725062b4182e9",
+      "bytes": 861144
+    },
+    "biglybtc-azureus-storage-stats-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-storage-stats-tests",
+      "sha256": "86b8a1665df4073e7ae40eeb6babc7a907c44ba60bb3bbbc2de40601b89363f1",
+      "bytes": 53240
+    },
+    "biglybtc-i2cp-initial-channel-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2cp-initial-channel-tests",
+      "sha256": "2809dbf6452394c72436de6e16e4bd9857d502ddd9c830d399b9320b8166b04a",
+      "bytes": 702704
+    },
+    "biglybtc-i2cp-leaseset-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2cp-leaseset-tests",
+      "sha256": "db68ded29ce689772adc8a52eba27ad4562cf178422157b6499005ccfafe6fc4",
+      "bytes": 372608
+    }
+  },
+  "old_dist_unchanged": "23dac4618b19d111be7f3b877d27648a7fa95604c66f06a67eee4e3a5b0cb5cf",
+  "source_unchanged": true,
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "commands_sha256": "088efb345b5d0c854d3867441cb2bf0e8d1e1d47e0d75862c048ce664e187b93"
+}

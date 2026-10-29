@@ -1,0 +1,27 @@
+{
+  "status": "PASS_ACTUAL_LEASESET2_OBJECTS",
+  "source_commit": "6726a4cf7b017ac31d6aeede15f339c3ec2b71f7",
+  "gcc_result_sha256": "73b95c0ba9602163b0f10cae65ff8ad674bb722e503c6b8f11532573bfa35221",
+  "runner_sha256": "5bc15ca833c40255fd5833df1880c8f4e69174770890c0b2b3c956f069567532",
+  "provider_rebuilt": false,
+  "old_java_replays": false,
+  "router_or_profile_interoperability_claimed": false,
+  "cases_per_reference_per_direction": 4,
+  "java_messages_per_reference": 8,
+  "native_messages_per_reference": 4,
+  "class_origins": {
+    "official": {
+      "jar_sha256": "d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896",
+      "produce_class_log_sha256": "978485ec1219616530d7d32c1fe5f107bca8b167383b95ae654e984bc485b047",
+      "verify_class_log_sha256": "18b3d6328bbef8fdcaf974765ea9c21c4e5de379902f329f7a521cdeeeb2003d"
+    },
+    "modified": {
+      "jar_sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+      "produce_class_log_sha256": "d27ae73dcf3f0c5367f874c8bb13eba14adbe5696558dcd6394f9413a727a1de",
+      "verify_class_log_sha256": "c0f4d0b7dc212407c76b3a139bda1a3261d901f432108b8cf6c7312cad5a0893"
+    }
+  },
+  "native_images_unchanged": true,
+  "source_unchanged": true,
+  "commands_sha256": "e31ac7f1ecfb2ba108133c6954827a45d7c3b8480351152ab6123a1ade7ba988"
+}

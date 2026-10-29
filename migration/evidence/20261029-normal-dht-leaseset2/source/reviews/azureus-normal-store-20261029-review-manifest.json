@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "review": "review.json",
+  "review_sha256": "cbde7cd58d6e98adf5a348300a6252b9fb22ec7a719d8ec248548233bf1df928",
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/azureus-normal-store-20261029/manifest.json": "0eaad8ebb82b9b6cd291328b8991cd73b7e7405dda4b62b5f832d2b1ef139d99",
+    "/home/yurii/Java/BiglyBT/build/azureus-normal-store-20261029/amendments/closest-tree-positive/manifest.json": "b5fa55093b886cbb071173a7b5c8a8700b45e05459d74a905e647f22c772ad72"
+  }
+}

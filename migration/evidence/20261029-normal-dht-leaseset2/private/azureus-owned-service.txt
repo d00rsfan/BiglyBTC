@@ -1,0 +1,25 @@
+********* Start testing of OwnedAzureusServiceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedAzureusServiceTests::initTestCase()
+PASS   : OwnedAzureusServiceTests::twoNormalProfileOwnersExchangeDirectValuesWithoutGeneratedClosestFacts()
+PASS   : OwnedAzureusServiceTests::normalReceiverRequiresPeerTokenAndKeepsUnseededCacheForwardsOut()
+PASS   : OwnedAzureusServiceTests::normalReceiverChangedProfileWithdrawsBeforeAnyRemoteStore()
+PASS   : OwnedAzureusServiceTests::normalValueOwnersCancelWithoutAdmissionAndRestartWithReservedVersions()
+PASS   : OwnedAzureusServiceTests::normalReceivingCannotBeEnabledWithoutAHeldProfile()
+PASS   : OwnedAzureusServiceTests::originalVersionReservationPreservesSignedJavaWidthsAndChunkBoundary()
+PASS   : OwnedAzureusServiceTests::profileVersionsReserveBeforeUsePreserveUnknownsAndRecoverOnlyCanonicalPending()
+PASS   : OwnedAzureusServiceTests::versionOwnerRetainsCallerLeaseAndRefusesLockOrDirectoryReplacement()
+PASS   : OwnedAzureusServiceTests::localPublicationUsesActualTokenStoreAndReadbackFromGeneratedReceiver()
+PASS   : OwnedAzureusServiceTests::localPublicationCancellationAndChangedProfileNeverSendStore()
+PASS   : OwnedAzureusServiceTests::defaultAndInvalidPolicyNeverCreateAnOwner()
+PASS   : OwnedAzureusServiceTests::stdWorkerCreatesAndJoinsTheDedicatedQtOwner()
+PASS   : OwnedAzureusServiceTests::twoActualServiceOwnersExchangeRttCoordinatesAndKeepOldSnapshots()
+PASS   : OwnedAzureusServiceTests::existingActualFindNodeAndStreamingFindValueRunOnTheQtOwner()
+PASS   : OwnedAzureusServiceTests::actualTimeoutCancellationAndJoinedCloseRetainTheirOwnEvents()
+PASS   : OwnedAzureusServiceTests::boundedAdmissionAndCloseDoNotDependOnFreeCommandSlots()
+PASS   : OwnedAzureusServiceTests::invalidPublicPeersAndDeadlinesNeverSendOrChangeTheMailbox()
+PASS   : OwnedAzureusServiceTests::passiveReadsNeverQueueCommandsOrRepublishUnchangedFacts()
+PASS   : OwnedAzureusServiceTests::concurrentMailboxReadsAndImmediatePendingDestructionJoinSafely()
+PASS   : OwnedAzureusServiceTests::cleanupTestCase()
+Totals: 21 passed, 0 failed, 0 skipped, 0 blacklisted, 2410ms
+********* Finished testing of OwnedAzureusServiceTests *********

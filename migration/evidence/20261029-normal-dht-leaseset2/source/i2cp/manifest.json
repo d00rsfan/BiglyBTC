@@ -1,0 +1,168 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_ROOT_REVIEW_AND_QUALIFICATION",
+  "component": "services.i2cp_initial_session",
+  "feature": "F06.i2cp_initial_session",
+  "native_base_commit": "a3b504c51255d3039b9b1e5ca605895aed895ab2",
+  "implementation_source_basis": "e124abb90ab846c4b057a6b868004c0acb737118",
+  "source_sha256": {
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before": "1a80c61b513f8d87901e492542d441ffbec8ed5eebdfc729707ba93909e173c7",
+      "after_sha256": "c88078c061e4de004490735b08391fd653a207414a8acc08e80e04c861a289c5",
+      "bytes": 23320
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before": "86b74bcb7cbe36bab380c6a52fa53a83f725c3fc7cb6f243748e2452631d9ce1",
+      "after_sha256": "dca63e7a2cf8f9660717f006040fd10f950982d499bd85f40c9f7724c375a227",
+      "bytes": 4195
+    },
+    "preview/native/services/i2cp_leaseset/leaseset.cpp": {
+      "before": null,
+      "after_sha256": "f4bd1989267d40a306e94a1a76e4e48d4e94d473156170f4cda1bc6cf569489f",
+      "bytes": 15480
+    },
+    "preview/native/services/i2cp_leaseset/leaseset.hpp": {
+      "before": null,
+      "after_sha256": "44bcc356a5335d1049fab6f16780e2778e0e3b86b6afb5f3b448d7be9d2a6678",
+      "bytes": 4053
+    },
+    "preview/native/tests/i2cp_initial_channel_tests.cpp": {
+      "before": "d368948bfbeaf4350972d92f3e71369c4e84678c4a0cdfac8439fd6f3fea093d",
+      "after_sha256": "f366232d4ecabc4738c4312105c82bc1b65bc44e5ee8d51ce4ba144a7dd2d8a2",
+      "bytes": 43171
+    },
+    "preview/native/tests/i2cp_leaseset_tests.cpp": {
+      "before": null,
+      "after_sha256": "f668e4e9befbbad910d5259b444a8588bf01aaed4e86feb93f6bb89bccf27d17",
+      "bytes": 12265
+    }
+  },
+  "composition_input_sha256": {
+    "preview/native/services/CMakeLists.txt": "25a683c77b98b7be3855d92c8429f0c8955349eef1c007bee0c80b6be631ecfa",
+    "preview/native/tests/CMakeLists.txt": "e3a8c3f3b3914183f16a16823c68af7c49035bb95e0c5e291448e886ae8fada7",
+    "preview/native/services/i2p_datagram/datagram.hpp": "32c742d8e769f31bd43119f3feca6dd0e04c2a6c77644e57f868d6addcfbecf1",
+    "preview/native/services/i2p_datagram/datagram.cpp": "96eedc04c93f2250c50c4fa78671775547cfef2e464652f3b27a609d56990038",
+    "preview/native/services/i2p_client/identity.hpp": "117e2ac9a5ef71339dc04548209092b33af6be351919f13af28f6b64c061a33d",
+    "preview/native/services/i2p_client/identity.cpp": "99c54025953cc774bf4963aead7c7be4f296c8bac8df7eb715521e5b57899201",
+    "preview/native/services/i2cp/protocol.hpp": "d88a9b8bb5049c8c458b47598f6627ecf85a1b3b2b10bc97d8b65397da26d9c8",
+    "preview/native/services/i2cp/protocol.cpp": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672",
+    "preview/native/services/i2cp_session/session.hpp": "4db98f38801fc70df592ad062980f2c911ac47839c1984c310204b4a7aae256f",
+    "preview/native/services/i2cp_session/session.cpp": "06202a53e6da512673a88c41cee7938b95c3fb4a121ea09f0974517879649b4e",
+    "preview/native/tests/fixtures/i2p-datagram/README.txt": "30ef11a879e183fd874ac27b86de0e8de3ecd157cdc223954aac819dae40a909",
+    "preview/native/tests/fixtures/i2p-datagram/SOURCE.json": "eb525a7643365b4a052a368d1cbd036d368195bf47f1e2569c0bcc66222c5259",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-1024.java2": "16eda66aa83db1bf00e5df202c4a1588275b124293a1c33368d23311142f60ae",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-1024.java3": "de658c8610caa184262fbea9ce442a743f318ab1384e944d3aab89bd128b2390",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-1024.payload": "2f4be09e2869bec4db144cc27130220f26570ddc8a6320c6f7472ccbc5decfb1",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-binary.java2": "5d42afc6dbffa6dbc21e5faded09316b0dcb5cb423e28418c8c3c109f0c9c903",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-binary.java3": "849ea45a93dc5336f767c7110df71cfe1561912d822065b5b6bc03f35575bf98",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-binary.payload": "fdf92fc77b380f006e39fe28bbc224476a2c442f1e6d766f6e9c9342d392bee4",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-empty.java2": "3a616a7037ab78bee6abfb4ce7c96ea12d78e6962fd52046f18f821aa013bf12",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-empty.java3": "5ba53f531e7e8fed5908e119adeb9c8d1eb192d24aaa7f3adac6765cb74227e8",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-empty.payload": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-maximum.java2": "58a153e16e2f042b01a19a0ae099a2bf3490a2098f896467bada9fa61c14ca6c",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-maximum.java3": "77bddc09f576d20b912f2592056f0a0db1afab38d2171ca74ee039a08e543eed",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-maximum.payload": "a8e8fb45f4a127ae98708d30ef684ac473f9b38b8e0d9c37696befb4254b0c9d",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.known-test-key": "e9ff0e6e6de95da56ff09f4e3e0f481d67585f0a68aafdeef0f86f7b8533ce17",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.recipient": "10cdba035bd41026a230a4d58981e0122b442d07e8c2f1038e7a5142c6c20a66",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.sender": "2f0554e07af3496216dd5645d91b1c65711aecfb033fd19109df59f0bd3bc1c7",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-1024.java2": "b376a2d5ba17659dda706a51bc3f0d894f2970c70a86047215f4cb4e252ae77c",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-1024.java3": "e87d9add32f734a719fdf420ad371ab6a317dd72cc9dbbaa5be15d0c74b741bc",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-1024.payload": "2f4be09e2869bec4db144cc27130220f26570ddc8a6320c6f7472ccbc5decfb1",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-binary.java2": "cf130b2401eb98a91fc1bd4cc96b976072cabbed4272faeba4fbf0ac926def97",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-binary.java3": "68339e9f5c8f1834762c3e083790e53efe0cd516afc32bf540a4cc1018d05cdc",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-binary.payload": "fdf92fc77b380f006e39fe28bbc224476a2c442f1e6d766f6e9c9342d392bee4",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-empty.java2": "31fbb273545d64ac329fb3ef55ae07c4275b82e63d348d10e53a6169c831dab3",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-empty.java3": "414176eddc1aba1d43203041da689bec9e81a4d3990c9ee48034d69d8cb18f21",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-empty.payload": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.java2": "31eec7ffaad1abce5cceb5433b82d8eeb87ab0c4fa22254871f3ed2fdd6555d0",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.java3": "21697f5cc46c2e55c4f30627450bf9b9335a7cb5447c4cd4b24e5007c9d9b80a",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.payload": "8ba8239bc33b8e8d1734a61550be6c4ce64b0fd2003f87fd48a4cf6b265812c9",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.known-test-key": "644d50ab64864c20a12b3c4656d46b4a48f69ef7c47ecdc8415cd28316b22ef5",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.recipient": "c439e09b76788b0157a984d060cb0cd462bd38b16f27c1cd45c20df5c4cc9b3a",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.sender": "0c80bed1687e0f7fcbc915eab269f9b00e5f40f77dd966eb0829b040a8c14db8",
+    "preview/native/tests/fixtures/i2cp-channel/disconnect-control.frame": "8b3943f8afaad6700ffe27c4fb7dd2f13ee48017d0a650055bf8ae5dc3bad6ab",
+    "preview/native/tests/fixtures/i2cp-channel/get-date-version.frame": "94d5883ad183e2a229db95231cfd94b341552f58d8dbe67138f7b8a06ecc7b5f",
+    "preview/native/tests/fixtures/i2cp-channel/greeting.frame": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
+    "preview/native/tests/fixtures/i2cp-channel/set-date-legacy.frame": "ca50fcb11d8caf39c8b14d3deeb8e406776cd227c6d10f8b7062305de262f292",
+    "preview/native/tests/fixtures/i2cp-channel/set-date-version.frame": "25b1006e1e14b1cdbb14208ddca2211f6b1f8ee30b8ef9dad41bc0f7b41f4ea3",
+    "preview/native/tests/fixtures/i2cp-channel/set-date-zero.frame": "4da1b064774f9150773f879a7329c39726faed64b7ab08f70fd2e66ee42a84b7",
+    "preview/native/tests/fixtures/i2cp-channel/status-created.frame": "dc2fbbf3f0dabbde1e80910c6681bc6a862c800f376fce995484e8c4de5e4112"
+  },
+  "artifacts_sha256": {
+    "ADOPTION.md": "668922ac2887b8227e2903036050fc04a38d0c29a21c895fdb813e8ea5c950f7",
+    "CMake.fragment": "5d460f135fc66beb0d8286555430f79a61625c140d646561597ce8e919315c85",
+    "OFFLINE-COMMANDS.sh": "e3951ce3f59e14e96ee7116fba78c2e8720fb1d1addf10bef79daa1d5b289014",
+    "changes.patch": "bf23e64fd82cdeddb0423ba1f37c726e91a72c69031278ce7814ff0a1d9f7825",
+    "interop/LeaseSetVectors.java": "62de18812b39b2bc93a61574482ec9fdf36ac4eacf5382676361ea0b41420e69",
+    "original-source/core/java/src/net/i2p/client/impl/I2PSessionImpl.java": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+    "original-source/core/java/src/net/i2p/client/impl/RequestLeaseSetMessageHandler.java": "4cecdb20b23ebec35ddf3260c8822ae2040ef9800393f01aad4501898aef8212",
+    "original-source/core/java/src/net/i2p/client/impl/RequestVariableLeaseSetMessageHandler.java": "2cd4ae114d978bee017b6d42f72fdd15e90ad498b05d0595e6a4ffbe9a425909",
+    "original-source/core/java/src/net/i2p/crypto/CryptoConstants.java": "99b8cba0036d6faab1a06b2c6aab126cc004b96355ab1370efa324e3e745215a",
+    "original-source/core/java/src/net/i2p/crypto/EncType.java": "7abbd6dec89dfee9ecf92a68e5f3c341310257dd6ae2a6a46c9708295ff5736d",
+    "original-source/core/java/src/net/i2p/crypto/KeyGenerator.java": "2a821cb6808a5e697c10bbc8f5852d97dd98103622ea2a71f81dfd713bc664b9",
+    "original-source/core/java/src/net/i2p/data/DatabaseEntry.java": "2ea294babbd9417bc6cc0d73e09ea38583f7cdfecc3ceaf77e969fc2fce83724",
+    "original-source/core/java/src/net/i2p/data/Lease.java": "68cdfadc3ae0aa2cd343419a3ea002ab0f8a069fe5b4f88087eae36a3f4e8d7b",
+    "original-source/core/java/src/net/i2p/data/Lease2.java": "e7df23cb8837ad3e5f830b9463004a20ed9c9739385dcda90f7b474e4905514b",
+    "original-source/core/java/src/net/i2p/data/LeaseSet.java": "b4c7ea0468a348a27f30e80b110bffc1fea6ebc34804d704187707b07f211769",
+    "original-source/core/java/src/net/i2p/data/LeaseSet2.java": "c023cdc228b043bddc83fcde8f04117c23fbe3d2bde66c6b93b3073c13c9c36f",
+    "original-source/core/java/src/net/i2p/data/i2cp/CreateLeaseSet2Message.java": "d9d8daeda8f8881c55074913064f3f99cb609602998f7ef0ed7e81795e7b4b34",
+    "original-source/core/java/src/net/i2p/data/i2cp/RequestVariableLeaseSetMessage.java": "d36665dac75cf814fbee0de6b12915e6d0c29cb76ea0e4711b5e54674ba73571",
+    "retention.json": "d4e94c74263545f1e96e63387de5f630369754bacb2e0e3a8c31d2ffdbf83013",
+    "source-pins.json": "1ef25e49d69c7f87774260a4bc1fd2c0485667c606458c69024b9d7d527a038c"
+  },
+  "cmake_fragment": "CMake.fragment",
+  "source_pins": "source-pins.json",
+  "retention": "retention.json",
+  "tests": [
+    {
+      "target": "biglybtc-i2cp-leaseset-tests",
+      "suite": "pure-i2cp-leaseset2",
+      "timeout_seconds": 60
+    },
+    {
+      "target": "biglybtc-i2cp-initial-channel-tests",
+      "suite": "i2cp-initial-channel",
+      "timeout_seconds": 60
+    }
+  ],
+  "offline_recipe": "OFFLINE-COMMANDS.sh",
+  "offline_scope": {
+    "case_labels": [
+      "dsa-one",
+      "dsa-sixteen",
+      "ed25519-one",
+      "ed25519-sixteen"
+    ],
+    "references": {
+      "official_jar_sha256": "d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896",
+      "modified_jar_sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5"
+    },
+    "actual_java_object_cases_per_reference_per_direction": 4,
+    "negative_marker": "PASS JAVA REFUSED CHANGED LEASESET SIGNATURE",
+    "outer_timeout_seconds": 180,
+    "one_javac": true,
+    "execution_pending": true
+  },
+  "native_mutations": false,
+  "author_execution": "none; shell syntax/source retention/format checks only",
+  "bounds": {
+    "standard_ls2_only": true,
+    "request_type": 37,
+    "create_type": 41,
+    "signed_netdb_type": 3,
+    "maximum_leases": 16,
+    "encryption_type": 0,
+    "maximum_key_bytes": 256,
+    "maximum_secret_frame_bytes": 4096,
+    "maximum_public_ls_bytes": 2048,
+    "new_automatic_activation": false,
+    "router_ack_or_readiness_claimed": false
+  },
+  "explicit_boundaries": [
+    "Original opaque destination Enc0 bytes are not treated as encryption keypair",
+    "Private exponent uniform2..p-2 excluding degenerate public differs from original226/2048 random-bit generation policy",
+    "Only explicit owned opt-in answers LeaseSet requests; borrowed registration unchanged",
+    "LeaseSetSubmitted means local signing and actual socket enqueue, not OPEN/router acceptance/delivery",
+    "Expired individual requested leases refused; no options/encrypted/meta/offline/multikey/TLS/auth fallback"
+  ]
+}

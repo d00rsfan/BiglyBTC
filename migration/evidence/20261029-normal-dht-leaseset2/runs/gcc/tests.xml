@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="7"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="17"
+	timestamp="2026-10-29T16:05:57"
+	>
+	<testcase name="azureus-owned-service" classname="azureus-owned-service" time="2.4285" status="run">
+		<properties>
+			<property name="cmake_labels" value="loopback;statistics;unit"/>
+		</properties>
+		<system-out>********* Start testing of OwnedAzureusServiceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedAzureusServiceTests::initTestCase()
+PASS   : OwnedAzureusServiceTests::twoNormalProfileOwnersExchangeDirectValuesWithoutGeneratedClosestFacts()
+PASS   : OwnedAzureusServiceTests::normalReceiverRequiresPeerTokenAndKeepsUnseededCacheForwardsOut()
+PASS   : OwnedAzureusServiceTests::normalReceiverChangedProfileWithdrawsBeforeAnyRemoteStore()
+PASS   : OwnedAzureusServiceTests::normalValueOwnersCancelWithoutAdmissionAndRestartWithReservedVersions()
+PASS   : OwnedAzureusServiceTests::normalReceivingCannotBeEnabledWithoutAHeldProfile()
+PASS   : OwnedAzureusServiceTests::originalVersionReservationPreservesSignedJavaWidthsAndChunkBoundary()
+PASS   : OwnedAzureusServiceTests::profileVersionsReserveBeforeUsePreserveUnknownsAndRecoverOnlyCanonicalPending()
+PASS   : OwnedAzureusServiceTes...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="azureus-router-owner" classname="azureus-router-owner" time="0.0112588" status="run">
+		<properties>
+			<property name="cmake_labels" value="router;statistics;unit"/>
+		</properties>
+		<system-out>PASS 13 router policy families; 5181 assertions; source-derived fixtures, no Java runtime equality credit
+</system-out>
+	</testcase>
+	<testcase name="owned-dht-bytes" classname="owned-dht-bytes" time="0.0626334" status="run">
+		<properties>
+			<property name="cmake_labels" value="loopback;statistics;unit"/>
+		</properties>
+		<system-out>********* Start testing of OwnedDhtBytesTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedDhtBytesTests::initTestCase()
+PASS   : OwnedDhtBytesTests::checkedAdditionKeepsActualZeroAndMakesOverflowStickyUnknown()
+PASS   : OwnedDhtBytesTests::actualNumericLoopbackCountsDifferentPayloadLengthsAndRejectedDatagrams()
+PASS   : OwnedDhtBytesTests::boundedOversizeDiscardLeavesUnknownReceiveTotalWithoutAffectingPacketCounters()
+PASS   : OwnedDhtBytesTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 52ms
+********* Finished testing of OwnedDhtBytesTests *********
+</system-out>
+	</testcase>
+	<testcase name="azureus-database-runtime" classname="azureus-database-runtime" time="2.05632" status="run">
+		<properties>
+			<property name="cmake_labels" value="database;loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of AzureusDatabaseRuntimeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusDatabaseRuntimeTests::initTestCase()
+PASS   : AzureusDatabaseRuntimeTests::localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData()
+PASS   : AzureusDatabaseRuntimeTests::qualifiedMappingOwnsVersionsForwardingAndUnknownBinaryBytes()
+PASS   : AzureusDatabaseRuntimeTests::normalFindFlagsReturnUnfilteredValuesLikeOriginalMapping()
+PASS   : AzureusDatabaseRuntimeTests::actualFindFlagsReachTheDatabaseWithoutSeedFiltering()
+PASS   : AzureusDatabaseRuntimeTests::statsValueRequiresRealAdapterAndLocalIdentity()
+PASS   : AzureusDatabaseRuntimeTests::actualStatsReadIsBoundToSocketAndRealMappingEvents()
+PASS   : AzureusDatabaseRuntimeTests::originalDiversificationRequiresExplicitControlAndRealMappingEvents()
+PASS   : AzureusDatabaseRuntimeTests::originalFrequency...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="azureus-storage-stats" classname="azureus-storage-stats" time="0.00723851" status="run">
+		<properties>
+			<property name="cmake_labels" value="database;unit"/>
+		</properties>
+		<system-out>PASS storage stats codec/source counter boundaries
+</system-out>
+	</testcase>
+	<testcase name="i2cp-initial-channel" classname="i2cp-initial-channel" time="13.0389" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;owned-loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of InitialChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : InitialChannelTests::initTestCase()
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv4)
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv6)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(oversize-header)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unknown-type)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(maximum-bounded-opaque-frame)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unexpected-real-session-status)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(invalid-date-length)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(real-Java-null-date)
+PASS   : InitialChannelTests::truncatedFrameAtActualEofRefuses()
+PASS   : InitialChannelTests::r...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="pure-i2cp-leaseset2" classname="pure-i2cp-leaseset2" time="0.0568016" status="run">
+		<properties>
+			<property name="cmake_labels" value="crypto;i2p;no-network;unit"/>
+		</properties>
+		<system-out>PASS original standard LS2 key/message/signature rules dsa
+PASS original standard LS2 key/message/signature rules ed25519
+PASS bounded original LeaseSet2 prerequisite
+</system-out>
+	</testcase>
+</testsuite>

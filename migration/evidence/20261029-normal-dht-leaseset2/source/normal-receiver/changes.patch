@@ -1,0 +1,11 @@
+--- parent/preview/native/tests/azureus_router_tests.cpp
++++ child/preview/native/tests/azureus_router_tests.cpp
+@@ -116,7 +116,7 @@
+     const auto best=value->closest(id(0x80),1,true);check(best&&best->count==2,"closest truncated source whole bucket");
+     check(best->values[0].id==id(0x80)&&best->values[1].id==id(0xc0),"best-bit bucket order changed");
+     const auto outside=value->localInClosest(id(0xc0),2,true);check(outside&&!*outside,"local outside returned closest bucket gained authority");
+-    const auto inside=value->localInClosest(id(0xc0),3,true);check(inside&&*inside,"source local membership/distance predicate lost");
++    const auto inside=value->localInClosest(id(0xc0),4,true);check(inside&&*inside,"source local membership/distance predicate lost");
+     accepted(value->contactDead(id(0x80),10007));const auto live=value->closest(id(0x80),1,true);check(live&&live->count==1&&live->values[0].id==id(0xc0),"failing bucket member not filtered");
+     const auto all=value->closest(id(0x80),1,false);check(all&&all->count==2,"non-live source traversal lost failing contact");
+     check(!value->closest(id(0),0)&&!value->localInClosest(id(0),MaximumRouterContacts+1),"unbounded closest query admitted");

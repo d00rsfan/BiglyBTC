@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "script_sha256": "5bc15ca833c40255fd5833df1880c8f4e69174770890c0b2b3c956f069567532",
+  "conclusion": "No concrete wrapper blocker. Exact four finite labels/markers align with the frozen original-object helper and native interop mode; per-class file origins and changed-signature refusal are required in both reference runs.",
+  "checks": [
+    "Same-source GCC PASS/image snapshot required before invoking actual native LS2 test driver.",
+    "Pinned original/modified JARs and frozen LS2 artifact map checked before execution.",
+    "Actual five-argument offline recipe call matches its shell contract; current I2CP serialization helper uses writeMessage(OutputStream), not the previously corrected session helper API error.",
+    "Four required classes are actually used in both produce and verify source paths, including KeyGenerator and RequestVariableLeaseSetMessage.",
+    "Reads exact four produce/native/verify success marker rows and negative signature marker, then requires source and all native images unchanged. No old session/version/value Java replay."
+  ],
+  "execution": "AST/source/marker/API contract checks only; no wrapper/Java/native subject executed."
+}

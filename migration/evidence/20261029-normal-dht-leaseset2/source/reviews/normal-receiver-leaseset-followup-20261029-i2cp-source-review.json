@@ -1,0 +1,8 @@
+{
+  "status": "PASS_SOURCE_ONLY",
+  "reviewer": "root",
+  "manifest_sha256": "14281940e754b94519bce36aff31a5ca45b207a489dc149f0bacdef9d4da80a7",
+  "findings": "Reviewed fixed owned key/frame buffers, OpenSSL secure valid private exponent/public derivation, exact LS2 signature/serialization/time bounds, owned signer consumption/update/renewal/current socket/deadline lifecycle, unsupported variants, source-pinned original rules and Java object recipe APIs. No concrete blocker; independent native valid RNG subset and Qt buffer erasure limits explicit. No runtime credit.",
+  "native_mutation": false,
+  "runtime_executed": false
+}
