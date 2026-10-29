@@ -1,0 +1,71 @@
+{
+  "status": "PASS_SOURCE_REVIEW_ONLY",
+  "native_source_basis": "6726a4cf7b017ac31d6aeede15f339c3ec2b71f7",
+  "effective_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/amendments/inventory-row-authority/manifest.json",
+    "sha256": "0efba32301b41f1c5ccedf8322457bbc6349e04606b890241706c79750dc55d7"
+  },
+  "parent_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/manifest.json",
+    "sha256": "43e0aa8830323ec307ad07d773761eddc0ce346940a353d28d744dc64a0dc709"
+  },
+  "prior_blocker_history": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029-review/parent-review.json",
+    "sha256": "eaa4199735c1896f4f3984133d19438f712f57450dd4ac3c2597726597ca62ca"
+  },
+  "source_path_count": 13,
+  "verified": {
+    "parent_artifact_pins": 31,
+    "child_artifact_pins": 5,
+    "original_and_previous_native_source_pins": 26,
+    "changed_parent_paths": [
+      "preview/native/adapters/local_rating.cpp",
+      "preview/native/tests/owned_azureus_service_tests.cpp"
+    ],
+    "inherited_parent_paths": 11,
+    "delta_patch_byte_exact": true,
+    "old_owner_slot_bodies_retained": 19,
+    "old_db_slot_bodies_retained": 14,
+    "all_parent_owner_void_definitions_retained": 32,
+    "new_child_slots": 2,
+    "new_duplicate_row_cases": 6
+  },
+  "assessment": [
+    "Distributed-only inventory checks now reject ambiguous list rows and relevant legacy dictionaries before granting membership authority; ordinary local-rating reads remain unchanged.",
+    "SAME retained version-profile OFD, current raw/full identity, inventory/attributes/nickname/config scopes and Public/original-DHT source gates remain bound to actual worker operations.",
+    "Original rating application key and core SHA1, ANON0x10, qualified encode/partial-decode/aggregate behavior and zero-remote-value-only local fallback match the finite saved-download branch.",
+    "One-peer bounded read and actual token/STORE/readback publication retain real deadline, exception, cancellation, close, immutable snapshot and next-observed-source withdrawal behavior.",
+    "No material source blocker remains."
+  ],
+  "minimum_qualification": {
+    "targets": [
+      "biglybtc-azureus-owned-service-tests",
+      "biglybtc-azureus-database-runtime-tests",
+      "biglybtc-local-rating-tests",
+      "biglybtc-local-rating-wiring-tests"
+    ],
+    "suites": [
+      "azureus-owned-service",
+      "azureus-database-runtime",
+      "local-rating-host-ui",
+      "local-rating-wiring"
+    ],
+    "also": "Normal product link validation; unchanged rating primitive/field golden observations may remain labelled prior proof."
+  },
+  "limitations": [
+    "Source review only; no build, Java, runtime or original-profile access.",
+    "One already-admitted peer, at most 64 values versus original 256; explicitly partial, not a global average.",
+    "Explicit saved Public selection only; no Host/default/public bootstrap or automatic publication activation.",
+    "ANON0x10 is the original flag, not an anonymous-routing guarantee.",
+    "Current source is last observed at existing worker fences; no instantaneous filesystem monitoring.",
+    "Fresh profile validation and version fsync remain synchronous on network owner."
+  ],
+  "author_execution": {
+    "build": false,
+    "tests": false,
+    "java": false,
+    "network": false,
+    "native_mutation": false,
+    "original_profile_access": false
+  }
+}

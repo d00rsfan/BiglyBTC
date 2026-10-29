@@ -1,0 +1,30 @@
+{
+  "status": "PASS_SOURCE_REVIEW_ONLY",
+  "offline_py_sha256": "215d79123bb77613552a2e654840c6e97ebeea62722d8a0f5734c99b9661ccaa",
+  "run_py_sha256": "aa1360577eb7ac1933d8b63dfe1a95bf540ce1a4d46a9143ef3796286cc1f8bb",
+  "root_adoption_sha256": "7fd1229ef9b4fa3ed238ec0d7c20883e0398ead0530e89b88874af07cc844471",
+  "native_source_commit": "1be0a4df444e82d3c2e702782bae88f5536959ef",
+  "frozen_bridge_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-datagram-submit-20261029/manifest.json",
+    "sha256": "a72cbacb75b4b431f173f5c7262e634aad4b25e9285d012660d06e65b17529d8"
+  },
+  "shell_recipe_sha256": "45eb2bc9879b43713c0da49f273011dd9e8a8ee72cb2d503fd862699de49d1b0",
+  "java_helper_sha256": "c8a37b5498602e55af5b4486e0ce779e68282eab1268a95c32969a875cc5e238",
+  "verified_scope": [
+    "Current successful GCC cohort and exact source/image-before binding required before invocation; source and all measured GCC image hashes rechecked after.",
+    "One frozen command script invokes one javac17 helper compilation and two exact pinned reference JARs. Environment clears injected Java options/classpath/compiler selectors and uses fresh owned HOME/config/vector directories.",
+    "Eight ordered send labels match Java/native loops exactly: DSA/Ed25519 x Datagram2/3 x stored/deflate. All three direction/provenance marker lists must match.",
+    "Four status cases (1/4/6/15) and one inbound Payload31 DTO per reference/direction are asserted by actual helper/native logic and both positive DTO completion markers.",
+    "Seven required class origins checked in both produce/verify logs against exact file:JAR.",
+    "Frozen parent a72 bridge and current timer child49 are consistent: the message codec/header/native interop driver afterimages are identical; only channel resource timing differs.",
+    "No old LS2, sessionconfig or Azureus field Java replay, router/network/backend readiness claim."
+  ],
+  "blockers": [],
+  "execution": {
+    "compiler": false,
+    "java": false,
+    "tests": false,
+    "network": false,
+    "native_mutation": false
+  }
+}

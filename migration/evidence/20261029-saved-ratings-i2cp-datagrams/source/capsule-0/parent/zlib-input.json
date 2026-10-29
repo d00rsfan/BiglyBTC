@@ -1,0 +1,73 @@
+{
+  "dependency_id": "development-zlib-codec",
+  "new_dependency": false,
+  "installed_input_matches_all_existing_registry_artifact_hashes": true,
+  "registry_entry": {
+    "id": "development-zlib-codec",
+    "name": "Installed zlib development/runtime input",
+    "version": "1.3.1; Ubuntu package 1:1.3.dfsg+really1.3.1-1ubuntu3.1",
+    "repository_url": "https://github.com/madler/zlib",
+    "source_commit": null,
+    "artifacts": [
+      {
+        "url": "file:///usr/lib/x86_64-linux-gnu/libz.so.1.3.1",
+        "sha256": "47b61967895b30e8c0c6818dd633ffeb87711cf637c688f981896f0dd84ce23b"
+      },
+      {
+        "url": "file:///usr/include/zlib.h",
+        "sha256": "8a5579af72ea4f427ff00a4150f0ccb3fc5c1e4379f726e101133b1ab9fc600c"
+      },
+      {
+        "url": "file:///usr/include/zconf.h",
+        "sha256": "44e543ff4514c7a9a01d648019c2c9a81d1105cbfa3c77f1faf6cd86eafa8abd"
+      }
+    ],
+    "build_recipe": "Installed host development input only, no global installation performed. Native adapters require exact ZLIB 1.3.1 through CMake. Local file artifact hashes identify this experiment; downloadable source/package closure remains required before release.",
+    "patches": [],
+    "notices": [
+      "migration/notices/zlib-1.3.1-debian-copyright"
+    ]
+  },
+  "registry_path": "/home/yurii/Java/BiglyBT/migration/upstreams.lock.json",
+  "registry_sha256_at_check": "33bdebd3660ef42da5f064f943454e3bb1422b897f2af9fa8006e105d8ec96ef",
+  "existing_build_cache_inputs": [
+    {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/CMakeCache.txt",
+      "sha256": "9e1648a433ec2e029e6aaacbb9341c8f601390027a1e71d8126af0215c591825",
+      "zlib_cache_fields": {
+        "ZLIB_INCLUDE_DIR": "/usr/include",
+        "ZLIB_LIBRARY_DEBUG": "ZLIB_LIBRARY_DEBUG-NOTFOUND",
+        "ZLIB_LIBRARY_RELEASE": "/usr/lib/x86_64-linux-gnu/libz.so",
+        "ZLIB_INCLUDE_DIR-ADVANCED": "1",
+        "ZLIB_LIBRARY_DEBUG-ADVANCED": "1",
+        "ZLIB_LIBRARY_RELEASE-ADVANCED": "1"
+      }
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/CMakeCache.txt",
+      "sha256": "4b9cb5d30a6c63d4406f8ae908c0d7dbe482f96062e81afefcdea8ed69f828d2",
+      "zlib_cache_fields": {
+        "ZLIB_INCLUDE_DIR": "/usr/include",
+        "ZLIB_LIBRARY_DEBUG": "ZLIB_LIBRARY_DEBUG-NOTFOUND",
+        "ZLIB_LIBRARY_RELEASE": "/usr/lib/x86_64-linux-gnu/libz.so",
+        "ZLIB_INCLUDE_DIR-ADVANCED": "1",
+        "ZLIB_LIBRARY_DEBUG-ADVANCED": "1",
+        "ZLIB_LIBRARY_RELEASE-ADVANCED": "1"
+      }
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/CMakeCache.txt",
+      "sha256": "8214c4a687cf40285e95ebe8003d88e27595bd047d3477f162812d4a1f18f965",
+      "zlib_cache_fields": {
+        "ZLIB_INCLUDE_DIR": "/usr/include",
+        "ZLIB_LIBRARY_DEBUG": "ZLIB_LIBRARY_DEBUG-NOTFOUND",
+        "ZLIB_LIBRARY_RELEASE": "/usr/lib/x86_64-linux-gnu/libz.so",
+        "ZLIB_INCLUDE_DIR-ADVANCED": "1",
+        "ZLIB_LIBRARY_DEBUG-ADVANCED": "1",
+        "ZLIB_LIBRARY_RELEASE-ADVANCED": "1"
+      }
+    }
+  ],
+  "new_linkage": "biglybtc_i2cp_datagram PUBLIC ZLIB::ZLIB; source-only CMake.fragment, actual future link command pending root build",
+  "no_build_or_install": true
+}

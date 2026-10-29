@@ -1,0 +1,165 @@
+   2278962:	find library=libcrypto.so.3 [0]; searching
+   2278962:	 search path=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support/glibc-hwcaps/x86-64-v3/libcrypto.so.3
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support/glibc-hwcaps/x86-64-v2/libcrypto.so.3
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support/libcrypto.so.3
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3/libcrypto.so.3
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2/libcrypto.so.3
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib/libcrypto.so.3
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3/libcrypto.so.3
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2/libcrypto.so.3
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib/libcrypto.so.3
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3/libcrypto.so.3
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2/libcrypto.so.3
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libcrypto.so.3
+   2278962:	    (no such file)
+   2278962:	 search cache=/etc/ld.so.cache
+   2278962:	  trying file=/usr/lib/x86_64-linux-gnu/libcrypto.so.3
+   2278962:	
+   2278962:	find library=libz.so.1 [0]; searching
+   2278962:	 search path=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support/libz.so.1
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib/libz.so.1
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib/libz.so.1
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libz.so.1
+   2278962:	    (no such file)
+   2278962:	 search cache=/etc/ld.so.cache
+   2278962:	  trying file=/usr/lib/x86_64-linux-gnu/libz.so.1
+   2278962:	
+   2278962:	find library=libstdc++.so.6 [0]; searching
+   2278962:	 search path=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support/libstdc++.so.6
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib/libstdc++.so.6
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib/libstdc++.so.6
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2278962:	    (no such file)
+   2278962:	 search cache=/etc/ld.so.cache
+   2278962:	  trying file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2278962:	
+   2278962:	find library=libgcc_s.so.1 [0]; searching
+   2278962:	 search path=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support/libgcc_s.so.1
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib/libgcc_s.so.1
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib/libgcc_s.so.1
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2278962:	    (no such file)
+   2278962:	 search cache=/etc/ld.so.cache
+   2278962:	  trying file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2278962:	
+   2278962:	find library=libc.so.6 [0]; searching
+   2278962:	 search path=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support/libc.so.6
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib/libc.so.6
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib/libc.so.6
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libc.so.6
+   2278962:	    (no such file)
+   2278962:	 search cache=/etc/ld.so.cache
+   2278962:	  trying file=/usr/lib/x86_64-linux-gnu/libc.so.6
+   2278962:	
+   2278962:	find library=libzstd.so.1 [0]; searching
+   2278962:	 search path=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support/libzstd.so.1
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib/libzstd.so.1
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib/libzstd.so.1
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libzstd.so.1
+   2278962:	    (no such file)
+   2278962:	 search cache=/etc/ld.so.cache
+   2278962:	  trying file=/usr/lib/x86_64-linux-gnu/libzstd.so.1
+   2278962:	
+   2278962:	find library=libm.so.6 [0]; searching
+   2278962:	 search path=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/test-support/libm.so.6
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/lib/libm.so.6
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/usr/lib/biglybtc/qt/lib/libm.so.6
+   2278962:	    (no such file)
+   2278962:	  trying file=/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libm.so.6
+   2278962:	    (no such file)
+   2278962:	 search cache=/etc/ld.so.cache
+   2278962:	  trying file=/usr/lib/x86_64-linux-gnu/libm.so.6
+   2278962:	
+   2278962:	
+   2278962:	calling init: /lib64/ld-linux-x86-64.so.2
+   2278962:	
+   2278962:	
+   2278962:	calling init: /usr/lib/x86_64-linux-gnu/libc.so.6
+   2278962:	
+   2278962:	
+   2278962:	calling init: /usr/lib/x86_64-linux-gnu/libm.so.6
+   2278962:	
+   2278962:	
+   2278962:	calling init: /usr/lib/x86_64-linux-gnu/libzstd.so.1
+   2278962:	
+   2278962:	
+   2278962:	calling init: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2278962:	
+   2278962:	
+   2278962:	calling init: /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2278962:	
+   2278962:	
+   2278962:	calling init: /usr/lib/x86_64-linux-gnu/libz.so.1
+   2278962:	
+   2278962:	
+   2278962:	calling init: /usr/lib/x86_64-linux-gnu/libcrypto.so.3
+   2278962:	
+   2278962:	
+   2278962:	initialize program: /home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/biglybtc-i2cp-datagram-tests
+   2278962:	
+   2278962:	
+   2278962:	transferring control: /home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/private-runs/r2/biglybtc-i2cp-datagram-tests
+   2278962:	
+   2278962:	
+   2278962:	calling fini:  [0]
+   2278962:	
+   2278962:	
+   2278962:	calling fini: /usr/lib/x86_64-linux-gnu/libcrypto.so.3 [0]
+   2278962:	
+   2278962:	
+   2278962:	calling fini: /usr/lib/x86_64-linux-gnu/libz.so.1 [0]
+   2278962:	
+   2278962:	
+   2278962:	calling fini: /usr/lib/x86_64-linux-gnu/libstdc++.so.6 [0]
+   2278962:	
+PASS bounded I2CP datagram messages/mux/status
+   2278962:	
+   2278962:	calling fini: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 [0]
+   2278962:	
+   2278962:	
+   2278962:	calling fini: /usr/lib/x86_64-linux-gnu/libzstd.so.1 [0]
+   2278962:	
+   2278962:	
+   2278962:	calling fini: /usr/lib/x86_64-linux-gnu/libm.so.6 [0]
+   2278962:	
+   2278962:	
+   2278962:	calling fini: /usr/lib/x86_64-linux-gnu/libc.so.6 [0]
+   2278962:	
+   2278962:	
+   2278962:	calling fini: /lib64/ld-linux-x86-64.so.2 [0]
+   2278962:	

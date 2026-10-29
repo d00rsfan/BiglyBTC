@@ -1,0 +1,30 @@
+{
+  "capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-datagram-submit-20261029/amendments/status-timer-resource-boundary/manifest.json",
+      "sha256": "49a34b281b9ec49c98d202842f9cb277205f1f616d2f114f556bd755947d14e1"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/amendments/inventory-row-authority/manifest.json",
+      "sha256": "0efba32301b41f1c5ccedf8322457bbc6349e04606b890241706c79750dc55d7"
+    }
+  ],
+  "reviews": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/i2cp-source-review.json",
+      "sha256": "5863405c36b5d4f3076e04c32a3df864088e53ce44a6edf02ca48154e563d88b"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029-review/manifest.json",
+      "sha256": "8adcfd9b062b68b451d6a50a72eccfe057ff477d186928d043c8ccd0ff24253a"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/recipe-source-review.json",
+      "sha256": "c81707425d0dd4668d5c0485e3073a7fffe1ab16a20057270bc7c1d350d1bb74"
+    }
+  ],
+  "cmake_fragment": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-datagram-submit-20261029/CMake.fragment",
+    "sha256": "679d78c15e22f8aa0dcdca9639484eaa391f5b8575e53f6056363c86f0446c1e"
+  }
+}

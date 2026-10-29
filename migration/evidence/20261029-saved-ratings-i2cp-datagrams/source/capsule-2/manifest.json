@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_ROOT_REVIEW_AND_GCC_QUALIFICATION",
+  "native_base_commit": "1be0a4df444e82d3c2e702782bae88f5536959ef",
+  "source_sha256": {
+    "preview/native/tests/i2cp_datagram_tests.cpp": {
+      "before": "ab7ef12d961c4978e4c38689617ac3d026fc49b10b7d39eaf37a4c54c5ca86e3",
+      "after_sha256": "c412d177295983e817fd04349c9add8dfed226d631416994c9a33865662aef40",
+      "bytes": 11204
+    }
+  },
+  "artifacts_sha256": {
+    "changes.patch": "98bfd7f45974b228256388fc22e676010ec8bcf8e2746f8fbbffab11c009a348",
+    "ADOPTION.md": "a3bf0ce77fc2198e2ba5cb4de2800c192f78610fb34f7993285cc53b28dce987"
+  },
+  "production_changes": false,
+  "test_assertions_or_deadlines_removed": false,
+  "execution": "none"
+}

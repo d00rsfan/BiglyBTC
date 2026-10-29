@@ -1,0 +1,26 @@
+{
+  "status": "PASS_SOURCE_REVIEW_ONLY",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-datagram-submit-20261029/amendments/test-mutation-bounds/manifest.json",
+    "sha256": "1481a13c1eec3678b2b25114e6e31cc3c76d448cedd75c6da104e4568fcfe845"
+  },
+  "source_base": "1be0a4df444e82d3c2e702782bae88f5536959ef",
+  "single_source_path": "preview/native/tests/i2cp_datagram_tests.cpp",
+  "before_sha256": "ab7ef12d961c4978e4c38689617ac3d026fc49b10b7d39eaf37a4c54c5ca86e3",
+  "after_sha256": "c412d177295983e817fd04349c9add8dfed226d631416994c9a33865662aef40",
+  "assessment": [
+    "Exactly one test-only line changed: assert gzip length at least18 then use checked vector access for existing last-byte ISIZE, size-minus8 CRC and flags-byte3 corruption.",
+    "Corruption offsets, decoder calls, all four rejection assertions, remaining test bodies/fixtures/CLI and production bytes are unchanged. No warning suppression or deadline change.",
+    "This matches the actual GCC-r1 optimized changed.back() array-bounds diagnostic; actual recompilation remains pending."
+  ],
+  "failed_origin": {
+    "path": "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/runs/gcc-r1/build.log",
+    "sha256": "df5dd10fe5ecefb3eb2f0fc9e1b887581eb16dce445db2752da47f08b97eebed"
+  },
+  "execution": {
+    "compiler": false,
+    "tests": false,
+    "native_mutation": false
+  },
+  "blockers": []
+}

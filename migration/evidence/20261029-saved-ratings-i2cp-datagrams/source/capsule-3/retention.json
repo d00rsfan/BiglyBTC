@@ -1,0 +1,44 @@
+{
+  "old_slots": 32,
+  "retained_slots": 30,
+  "changed_slots": [
+    "savedRatingsUseOriginalAnonymousKeyPayloadAndTwoNormalPublicOwners",
+    "savedRatingDuplicateInventoryRowsCannotGrantAuthority"
+  ],
+  "added_slots": [
+    "publicationReadbackWithoutTheExactValueRemainsBounded_data",
+    "publicationReadbackWithoutTheExactValueRemainsBounded"
+  ],
+  "retained_sha256": {
+    "restart": "204419a2dc7917f7511ee2efc0f3d40534025aa5667aaf38c264d65e0b34088f",
+    "files": "f86486a7b927a859cfb4a0e780e330486083b26dbff8440ce11d51b9757bc098",
+    "state": "220f460622faab2acbe12f519adb4ee25f6588a2ca8276ee48058a7f04502de5",
+    "config": "cfef2f77dce881e5919f9c3f74fec6a23e3b6bc9000cb699d3db9448ecc2b629",
+    "savedRatingPublicationRefusesUnadmittedZeroOversizeAndStaleTargets": "d91896e54981897bc938a1fb5e1364b68cf6779994ccf8409d5181419fd71c2d",
+    "savedRatingMalformedRemoteValueDoesNotBecomeLocalFallback": "5192e67e867db5cced148ebe6f6bb7993d55253263b171b6bfb169bb047a72a0",
+    "completedRatingValuesWithdrawAtTheNextRealWorkerSourceFence": "a8dcc9d1853f839b2fae6e3fa887f29fe2cb4f80165681a6e2f9b8b5a6e54ff1",
+    "savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies_data": "b0e20542e73b9d0bc6c28d690c87dceb0ff5752832f9b4d7b778ad3eff2cb23a",
+    "savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies": "c57dc017857ce73e0706098b448f55cd3dab4145883df9c83737072698b5bd43",
+    "savedRatingDuplicateInventoryRowsCannotGrantAuthority_data": "9da976d806565905d7efa440db16cf44e308fff10baa71a3137fd51d33f97d08",
+    "savedRatingActualTimeoutCancelCloseAndMetadataPermissionsRemainBounded": "8e79c278477ef505da4ddb87209bf4df28b8573464e44453bea77acb53586cf7",
+    "twoNormalProfileOwnersExchangeDirectValuesWithoutGeneratedClosestFacts": "8a55ddf5f044c44c7b505a256fe96c5968ccceefc6d9200e9340d84bfa496a0e",
+    "normalReceiverRequiresPeerTokenAndKeepsUnseededCacheForwardsOut": "99e0deb281df0448cca0a0a1a018ca6b7c8663b3d103681487345b2f25b78b50",
+    "normalReceiverChangedProfileWithdrawsBeforeAnyRemoteStore": "333184814f06b5369129d7945b020cde84ee4e75b33723597b23c8c5994517c6",
+    "normalValueOwnersCancelWithoutAdmissionAndRestartWithReservedVersions": "4f88d725abc44cc1a0871efeff6e5e63c7438be1f26f78cd6ad884f15a4e2cd0",
+    "normalReceivingCannotBeEnabledWithoutAHeldProfile": "c926699b1d2ddad3484fa170a2b493cf61d34cd4c930cccae67bf43a10d6f224",
+    "originalVersionReservationPreservesSignedJavaWidthsAndChunkBoundary": "81d061cf810f9895f09810f10285f493633ac144dc86318c96672a7547f98cb2",
+    "profileVersionsReserveBeforeUsePreserveUnknownsAndRecoverOnlyCanonicalPending": "40efb8c0672564cbcffb9a00dc714c2dc9f5d0d381f3c0a4fbef2ab0aadd37f7",
+    "versionOwnerRetainsCallerLeaseAndRefusesLockOrDirectoryReplacement": "4fe904224729377fd7388fc5229f81d6b33d7a283ae1a52387687878d22ce539",
+    "localPublicationUsesActualTokenStoreAndReadbackFromGeneratedReceiver": "aacb9023ac690e6acb0a66655b902ee34e76434ecac225ad40fcd150ab7a8513",
+    "localPublicationCancellationAndChangedProfileNeverSendStore": "870751ec146e1237858225326bdf663d952b8f75fd8e4c08e37c2f61d632d2eb",
+    "defaultAndInvalidPolicyNeverCreateAnOwner": "8ca62206ec0abdbb533ba0f23ea262fd8edd9d29f6a62c6868102048c27ac87c",
+    "stdWorkerCreatesAndJoinsTheDedicatedQtOwner": "36387d3c77030bb61e2f82ab935fe75c336e7d73b2e439cd6c10f4e6beed9d13",
+    "twoActualServiceOwnersExchangeRttCoordinatesAndKeepOldSnapshots": "a19189cbf3a9122c07f052b891f97a98ad298f92b80d38845b6eec7e2bd77149",
+    "existingActualFindNodeAndStreamingFindValueRunOnTheQtOwner": "472b48c6ee00b02a0c085c506d49508e19a53f1b1f3956c8ab5fd9bb409cf59e",
+    "actualTimeoutCancellationAndJoinedCloseRetainTheirOwnEvents": "01690b04b45ba9f3aaa9dc217f6aec957504c356de664df028aa80097a884c9b",
+    "boundedAdmissionAndCloseDoNotDependOnFreeCommandSlots": "0ad5bad1a02d273f50fd6b2cc82ae48d7ab7ae93472a7fb16c86a94718a90688",
+    "invalidPublicPeersAndDeadlinesNeverSendOrChangeTheMailbox": "ac608ddd6b10b03913af88d0322eeed2c6e61063176ea20573abb4ffb61ef462",
+    "passiveReadsNeverQueueCommandsOrRepublishUnchangedFacts": "03e32bf70f7f314c1d33873c40eb40d93b721d1890590340d267a49081ed150f",
+    "concurrentMailboxReadsAndImmediatePendingDestructionJoinSafely": "40be2e836fde174775d42479ce55810d0657c1be7d8837babd922a166682d975"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "status": "ACTUAL_FAILED_R1_NO_FINAL_PASS_CREDIT",
+  "source_commit": "1be0a4df444e82d3c2e702782bae88f5536959ef",
+  "failures": {
+    "gcc": "Werror array-bounds in pure datagram corruption fixture; no CTest execution",
+    "clang": "Owned service7newrating failures;4other planned suitespassed",
+    "san": "Same7newrating failures;4other suitespassed; notfinalqualification"
+  },
+  "artifacts_sha256": {
+    "gcc": {
+      "runs/gcc-r1/source-before.json": "d72f1a678e54bc85d68993abffbc1bd88137df7a5fc7dcfab06eab1e2d7d7149",
+      "runs/gcc-r1/build.log": "df5dd10fe5ecefb3eb2f0fc9e1b887581eb16dce445db2752da47f08b97eebed",
+      "runs/gcc-r1/result.json": "39306448726d139bc701596f2e4c6caa20b916ac77082e1a9ae553cc12f362ad",
+      "runs/gcc-r1/commands.json": "36aac446f243f12cbda5250dce01d18be154f5995369386a8110705057fb2379",
+      "runs/gcc-r1/native-source-map.json": "4d588d5cfe4bca68c25cf1f27819c85cec5dca614c897b3ad3e4f1fe4e64fe51"
+    },
+    "clang": {
+      "runs/clang-r1/ctest-full.log": "28481da5dde7134ff35c78f18324b0d7286a1bc26fdf05ea8c94cc467db5f3ae",
+      "runs/clang-r1/tests.log": "88a5ccc610de7fd6cbd8b778b10da7ebdff526acafb7d2fa5c7f52f2c996faa1",
+      "runs/clang-r1/source-before.json": "d72f1a678e54bc85d68993abffbc1bd88137df7a5fc7dcfab06eab1e2d7d7149",
+      "runs/clang-r1/build-receipt.json": "ebf1c3c682a5d3729c805b47a2daa3f82118eb270f75c10283f4456583225d81",
+      "runs/clang-r1/tests.xml": "c66ad8ac5efd077ac75d3d070ff9a8c2d0db9f3d78430597882461854fccd693",
+      "runs/clang-r1/build.log": "0e8879e2f8adef64f56e62bcac58960680754853c6fdf62f5229bce7807d43e7",
+      "runs/clang-r1/result.json": "7d8cd19f8313e6e0a740e56f50f4fc0af0df25b41a85b44ec2ed68feea50b496",
+      "runs/clang-r1/images-before.json": "706e4a4dba9ba801e8c5c19d973a9fd5d8dde435b6b4eba8d84046a0014e58b4",
+      "runs/clang-r1/commands.json": "0f614b584bdc0310aac9434e2d99832d5cdb23766fb2e3562a2433ceac0f0ad6",
+      "runs/clang-r1/native-source-map.json": "4d588d5cfe4bca68c25cf1f27819c85cec5dca614c897b3ad3e4f1fe4e64fe51"
+    },
+    "san": {
+      "runs/san-r1/ctest-full.log": "ba7d0c609ed92c316bcaf600a54bddeec3ef01f79c7f20b7e91108bf55d26358",
+      "runs/san-r1/tests.log": "237585956762a688ddeb4650d5a4f3dd5f8c2785c3d43bd75a04d69433bbf929",
+      "runs/san-r1/source-before.json": "d72f1a678e54bc85d68993abffbc1bd88137df7a5fc7dcfab06eab1e2d7d7149",
+      "runs/san-r1/build-receipt.json": "23db39fcc31d9a3605a9a06ddd2aaddfa23272e561dd3f152900e4be61b89662",
+      "runs/san-r1/tests.xml": "bda9ad6ad7a15daa4dcf1bb7bfe3f2cb1e85bae4167e9b184022046d51edcd06",
+      "runs/san-r1/build.log": "625d422687b76b374a9856f67305167ee8fa3713648cb7b31d4a35e08f13efc9",
+      "runs/san-r1/result.json": "e81ba1beedf5b8b0b91db8b82082fe2fb62c3252facf35fb326c2004d01a2eb3",
+      "runs/san-r1/images-before.json": "1899e8140b0806e6b2e077559a82cbb823fe27601d07478d7d1abb0df6186839",
+      "runs/san-r1/commands.json": "23019e5d600c5de8eee086b3ec6be98ab48d1e43c9cbb73e0cd1ef94c814c578",
+      "runs/san-r1/native-source-map.json": "4d588d5cfe4bca68c25cf1f27819c85cec5dca614c897b3ad3e4f1fe4e64fe51"
+    }
+  },
+  "dist_promoted": false
+}

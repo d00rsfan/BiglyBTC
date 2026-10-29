@@ -1,0 +1,279 @@
+{
+  "schema": 1,
+  "status": "PROPOSAL_ONLY_NO_IMPLEMENTATION_OR_EXECUTION",
+  "normal_receiver_dependency": {
+    "manifest": "/home/yurii/Java/BiglyBT/build/azureus-normal-store-20261029/amendments/closest-tree-positive/manifest.json",
+    "sha256": "b5fa55093b886cbb071173a7b5c8a8700b45e05459d74a905e647f22c772ad72"
+  },
+  "pins": [
+    {
+      "repository": "/home/yurii/Java/BiglyBT-plugin-azrating",
+      "commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+      "path": "com/aelitis/azureus/plugins/rating/updater/KeyGenUtils.java",
+      "git_blob": "ac903780d7775deff5dc09e24c261fef7b327828",
+      "sha256": "4725714fbd9fc49f5997ed7d698b264a16b39cddc1182aaca30d024cd5cb5ea1",
+      "lines": [
+        [
+          29,
+          48
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT-plugin-azrating",
+      "commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+      "path": "com/aelitis/azureus/plugins/rating/updater/RatingData.java",
+      "git_blob": "dbb85a36bd5681bf2cb0af477da1a73575c05916",
+      "sha256": "4c8ddf99ef6b59fdd5a1ab6ba86da41a4e39710a7deef19590d3598a32386d26",
+      "lines": [
+        [
+          45,
+          103
+        ],
+        [
+          120,
+          125
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT-plugin-azrating",
+      "commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+      "path": "com/aelitis/azureus/plugins/rating/updater/RatingResults.java",
+      "git_blob": "a873c09fc34e24b80a4cbecb271d085ab2eb4ba6",
+      "sha256": "8ee1b597f79a38c888e880f1a8a9053a5800ca4e1a25b6d243e529a3c433231a",
+      "lines": [
+        [
+          43,
+          66
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT-plugin-azrating",
+      "commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+      "path": "com/aelitis/azureus/plugins/rating/updater/RatingsUpdater.java",
+      "git_blob": "b23a76674d6fde0aff84290b692d1d0f702994cc",
+      "sha256": "a5a74e1ccfdc81eefb3b30e8cd12a7c51f420d7e77936c9a2044e8853a299ba6",
+      "lines": [
+        [
+          1631,
+          1746
+        ],
+        [
+          1757,
+          1905
+        ],
+        [
+          1909,
+          1934
+        ],
+        [
+          2058,
+          2111
+        ],
+        [
+          247,
+          261
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT-plugin-azrating",
+      "commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+      "path": "com/aelitis/azureus/plugins/rating/RatingPlugin.java",
+      "git_blob": "c62b6fe7d6bf78003714dc0c61cff4c70486b4e6",
+      "sha256": "451ff160d70e0885ef5dea837bd06da0c16563d089a6126fec79ca3277223f91",
+      "lines": [
+        [
+          154,
+          242
+        ],
+        [
+          254,
+          268
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/pifimpl/local/ddb/DDBaseImpl.java",
+      "git_blob": "469fffdf16f7a86a2b96359a94b2d772a91d52a7",
+      "sha256": "c7611a5ac0b5a8add4bbdda80f789a3cd1f8ad6fa8041720ce150de9cd333bc8",
+      "lines": [
+        [
+          589,
+          645
+        ],
+        [
+          749,
+          795
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/pifimpl/local/ddb/DDBaseKeyImpl.java",
+      "git_blob": "3103894c13feb50717419c8329759d61616a7e62",
+      "sha256": "e983da8d1a44f32304a1f6beceaa7499234904d89c4c3f4495a3e727dcb5d456",
+      "lines": [
+        [
+          44,
+          65
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/pifimpl/local/ddb/DDBaseHelpers.java",
+      "git_blob": "979915fc20751f57461d83d144e21b0f1739682d",
+      "sha256": "8ba82935f81488980484185171e4de921dd8ae250d72b1469def0475013e9876",
+      "lines": [
+        [
+          44,
+          61
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/dht/DHT.java",
+      "git_blob": "ec5d68220b26e8fcb480a48753e26956b8903594",
+      "sha256": "0a56d60ddafdd35441e53ae3bcc3d9c4f9a674b3a118d5ab6fd6a6fc1543b0cf",
+      "lines": [
+        [
+          57,
+          69
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/dht/control/DHTControl.java",
+      "git_blob": "cc1111767811b43c3a3a3e3194cc47c7e2a2dfe6",
+      "sha256": "6caf8491793107f98c6b83f30449c38a6702556be477673f920f744b20154c64",
+      "lines": [
+        [
+          30,
+          110
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/dht/impl/DHTImpl.java",
+      "git_blob": "919f256e1150acd3625d77218d2417cf4ac0b0a2",
+      "sha256": "5e794f31e066fe95c077b958439217edab53de4789200c87efad794595374180",
+      "lines": [
+        [
+          86,
+          97
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java",
+      "git_blob": "a895f11be8bf2e7e00d15a841a8de975e63663d6",
+      "sha256": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+      "lines": [
+        [
+          4149,
+          4163
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT-plugin-azmsgsync",
+      "commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+      "path": "com/vuze/plugins/azmsgsync/MsgSyncHandler.java",
+      "git_blob": "e4f14f6f28bf193f52557e6850b14a7f3412f0e8",
+      "sha256": "1d12f6ec192b6409f8fd9ff5fa749b6927ddefd2cbe590b397f828bc7466a454",
+      "lines": [
+        [
+          639,
+          735
+        ],
+        [
+          1454,
+          1472
+        ],
+        [
+          1815,
+          1829
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBTC",
+      "commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+      "path": "preview/native/app/local_rating_bridge.inc",
+      "git_blob": "1a3b5daf35034b8e18aa4a662c0ff7038cb15fc3",
+      "sha256": "57bd089a68c4ff43785d44eb9cf28a2b122fd4b906d52af56d4f43c7fe2b6fd9",
+      "lines": []
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBTC",
+      "commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+      "path": "preview/native/adapters/local_rating.hpp",
+      "git_blob": "56bc8d6d0655128766165dcff85bad428c4fce44",
+      "sha256": "64efd290de86b72f13f174f15b5cfde458de3b9b16ab5044cf5e2ce65a1ad688",
+      "lines": []
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBTC",
+      "commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+      "path": "preview/native/adapters/local_rating.cpp",
+      "git_blob": "2e32849a1349485b49a8450d80fb0f11e40100f8",
+      "sha256": "281eb240075c64ab02b05368768243978c426aa3332735f43ce9b61326b22e9d",
+      "lines": []
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBTC",
+      "commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+      "path": "preview/native/plugins/BiglyBTC-plugin-azrating/rating_data.hpp",
+      "git_blob": "d794df60452c5fde15a73ad1d6483008d08ca46a",
+      "sha256": "eed047ad5da07ccf60fb625689438090717bb3f2a50486df164166e0a914b243",
+      "lines": []
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBTC",
+      "commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+      "path": "preview/native/plugins/BiglyBTC-plugin-azrating/local_rating.hpp",
+      "git_blob": "6b8664882e213e375a11a44956fa2cb69ed28ab8",
+      "sha256": "17b2d6739d0f1e5e2594185dd948448ed4584e0890b679213501ec45506a49f3",
+      "lines": []
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBTC",
+      "commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+      "path": "preview/native/app/azureus_local_publish.inc",
+      "git_blob": "02ec7cee505ee6e8145b7b00ad547d8a1c46815b",
+      "sha256": "9f3ddf4e086b3f84a597878ffc06ac3622b5d929a7c3e7fdef2a9f29e8e2d3f8",
+      "lines": []
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBTC",
+      "commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+      "path": "preview/native/app/owned_azureus_service.hpp",
+      "git_blob": "e1214b371025cc0692a5ee8778c24f8ade7f1072",
+      "sha256": "cbf876fc19f4487f663a08d73a05967951922571e32ee15551741479df40e5c2",
+      "lines": []
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBTC",
+      "commit": "e124abb90ab846c4b057a6b868004c0acb737118",
+      "path": "preview/native/services/azureus_control/lookup.hpp",
+      "git_blob": "d66c5fafa1ad0e7a6bfc4bd7407a10cc89fdad80",
+      "sha256": "cddf32183bbab7d83336c652474c9d861729149456e167dd10826b28fcf75081",
+      "lines": []
+    }
+  ]
+}

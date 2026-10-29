@@ -1,0 +1,21 @@
+{
+  "status": "FAIL",
+  "source_commit": "1be0a4df444e82d3c2e702782bae88f5536959ef",
+  "lane": "san",
+  "cache": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+  "compiled_targets": [
+    "biglybtc-azureus-owned-service-tests",
+    "biglybtc-azureus-database-runtime-tests",
+    "biglybtc-i2cp-initial-channel-tests",
+    "biglybtc-i2cp-datagram-tests",
+    "biglybtc-i2cp-datagram-channel-tests"
+  ],
+  "provider_rebuilt": false,
+  "historical_passes_pooled": false,
+  "runner_sha256": "aa1360577eb7ac1933d8b63dfe1a95bf540ce1a4d46a9143ef3796286cc1f8bb",
+  "source_receipt_sha256": "7fd1229ef9b4fa3ed238ec0d7c20883e0398ead0530e89b88874af07cc844471",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "dist_manifest_before": "92e3b83ba74ee2ec3b1886521914370a31074533daed7f2ed11d058804f2ab68",
+  "failure": "AssertionError('tests')",
+  "commands_sha256": "23019e5d600c5de8eee086b3ec6be98ab48d1e43c9cbb73e0cd1ef94c814c578"
+}

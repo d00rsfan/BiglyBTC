@@ -1,0 +1,32 @@
+{
+  "status": "PASS_ACTUAL_DATAGRAM_SUBMISSION_OBJECTS",
+  "source_commit": "d384a850980f1b6245230ea852d617b11c405e11",
+  "runner_sha256": "44b7530dd2291fadd6f5df40c666d7b06e2b7af4a409cdd7ee1713a25c518693",
+  "original_failed_result_sha256": "2df6e3984074a24ecab83848767fd1d830eed2c28cb2ae8b16f6d27759b2ed08",
+  "report_only_correction": "Separate eight send rows from the ninth status/payload summary sharing its prefix.",
+  "executions_replayed": false,
+  "provider_rebuilt": false,
+  "old_java_replays": false,
+  "router_or_profile_interoperability_claimed": false,
+  "gcc_result_sha256": "429f4e464a396bf5fd3319498ae67028ece9d467bb3bcfe224457a7c9034895e",
+  "send_cases_per_reference_per_direction": 8,
+  "status_cases_per_reference_per_direction": 4,
+  "payload_cases_per_reference_per_direction": 1,
+  "class_origins": {
+    "official": {
+      "jar_sha256": "d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896",
+      "produce_class_log_sha256": "bf8a965d5160ebde699c7fbe1efe92976d3c1394fee1bf9af310e278b735b2aa",
+      "verify_class_log_sha256": "75ea1719d245dbd3a99ee08d151be603613f84eb715b5cafb7ef5e7d6a5ff84b"
+    },
+    "modified": {
+      "jar_sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+      "produce_class_log_sha256": "f869a41e547ddbde35132cdfae64d59d0a92d66159900d6eddf40358fb293f30",
+      "verify_class_log_sha256": "bfda14e5fe14f775e8b91dff5c5baf8fedb161c969387ff2e8828979d692c905"
+    }
+  },
+  "native_images_unchanged": true,
+  "source_unchanged": true,
+  "commands_sha256": "ce0b324ffda8e45c4d822067f6a2c3fd79ff56f40eaa93e16ef0db9ca34088c3",
+  "original_output_inventory_sha256": "a5c89e8c33c2c1f65a23245f69070bf3fba6466165e9a75e567c47095bf9ecb3",
+  "original_execution_directory": "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/offline-runs/r2"
+}

@@ -1,0 +1,45 @@
+--- parent/preview/native/adapters/local_rating.cpp
++++ child/preview/native/adapters/local_rating.cpp
+@@ -126,6 +126,17 @@
+     };
+     auto inventory=savedTarget(lease,hash);if(!inventory){return std::unexpected(inventory.error());}
+     if(inventory->recoverySource()!=RecoverySource::Primary||!unique(inventory->document().root())){return bad(ErrorCode::Conflict,"Resolve rating inventory recovery first");}
++    const auto& root=inventory->document().root();
++    if(const auto* rows=inventory->document().find("downloads")){
++      if(rows->type!=core::Node::Type::List){return bad(ErrorCode::InvalidFormat,"Invalid rating inventory list");}
++      for(const auto& row:rows->children){if(!unique(row)){return bad(ErrorCode::InvalidFormat,"Duplicate or invalid rating inventory row");}}
++    }else{
++      for(std::size_t i=0;i<root.children.size();i+=2){const auto& row=root.children[i+1];
++        if(row.type==core::Node::Type::Dictionary&&(row.find("torrent")||row.find("torrent_hash")||row.find("save_dir")||row.find("path"))&&!unique(row)){
++          return bad(ErrorCode::InvalidFormat,"Duplicate legacy rating inventory row");
++        }
++      }
++    }
+     auto store=TorrentStateStore::open(lease);if(!store){return std::unexpected(store.error());}
+     auto state=store->loadAttributes(lease,hash);if(!state){return std::unexpected(state.error());}
+     if(state->recoveredBackup()||!unique(state->document().root())){return bad(ErrorCode::Conflict,"Resolve rating state recovery first");}
+--- parent/preview/native/tests/owned_azureus_service_tests.cpp
++++ child/preview/native/tests/owned_azureus_service_tests.cpp
+@@ -121,6 +121,22 @@
+    if(change==0){a.nick="new";a.config();}else if(change==1){a.network="I2P";a.state();}else if(change==2){a.dht=false;a.config();}else if(change==3){a.flags=0x200;a.state();}else if(change==4){a.info=ratingDictionary({{"length","i4e"},{"name",ratingBytes("changed")},{"piece length","i16384e"},{"pieces",ratingBytes(std::string(20,'z'))}});a.state();}else{writeRatingFixture(a.root.path()+"/downloads.config","d9:downloadslee");}
+    emptyRatingReply(server,received);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*request),3000);const auto result=a.owner->observation().ratingReadSnapshot;QVERIFY(result);QCOMPARE(result->state,app::AzureusRatingReadState::Failed);QCOMPARE(result->error,std::optional{app::AzureusServiceError::Profile});QCOMPARE(result->ratings.count(),std::size_t{0});QVERIFY(!result->localFallback);QCOMPARE(a.owner->observation().snapshot->transport().counters().sent,std::uint64_t{1});
+  }
++
++ void savedRatingDuplicateInventoryRowsCannotGrantAuthority_data(){
++   QTest::addColumn<bool>("legacy");QTest::addColumn<int>("field");
++   for(const bool legacy:{false,true}){for(int field=0;field<3;++field){QTest::newRow(qPrintable(QStringLiteral("%1-%2").arg(legacy?"legacy":"list").arg(field)))<<legacy<<field;}}
++ }
++ void savedRatingDuplicateInventoryRowsCannotGrantAuthority(){
++   QFETCH(bool,legacy);QFETCH(int,field);RatingOwner a("127.23.0.1",4,"Owned","unchanged");const auto source=a.target();const auto bytes=a.hash.bytes();
++   auto row=ratingDictionary({{"persistent","i1e"},{"save_dir",ratingBytes("/owned/rating-payload-never-opened")},{"state","i70e"},{"torrent",ratingBytes("owned-rating.torrent")},{"torrent_hash",ratingBytes(std::string(reinterpret_cast<const char*>(bytes.data()),bytes.size()))}});
++   const std::string name=field==0?"torrent_hash":field==1?"state":"persistent";const auto original=ratingBytes(name)+(field==0?ratingBytes(std::string(reinterpret_cast<const char*>(bytes.data()),bytes.size())):field==1?"i70e":"i1e");const auto extra=ratingBytes(name)+(field==0?ratingBytes(std::string(20,'z')):field==1?"i75e":"i0e");const auto pos=row.find(original);QVERIFY(pos!=std::string::npos);row.insert(pos+original.size(),extra);
++   writeRatingFixture(a.root.path()+"/downloads.config",legacy?ratingDictionary({{a.hash.hex(),row}}):ratingDictionary({{"downloads","l"+row+"e"}}));
++   // Existing ordinary local read deliberately retains its old first-value
++   // policy. Only distributed authority rejects ambiguity.
++   QVERIFY(storage::readLocalRating(*a.held,a.hash));const auto refused=storage::readDistributedRating(*a.held,a.hash);QVERIFY(!refused);QCOMPARE(refused.error().code,storage::ErrorCode::InvalidFormat);
++   QUdpSocket peer;QVERIFY(peer.bind(QHostAddress(QStringLiteral("127.24.0.1")),0,QUdpSocket::DontShareAddress));const udp::Peer endpoint{peer.localAddress(),peer.localPort()};const auto admitted=a.owner->allowPeer(endpoint);QVERIFY(admitted);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*admitted),3000);
++   const auto request=a.owner->publishSavedRating(endpoint,a.hash,source.sourceRevision);QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*request),3000);QCOMPARE(a.owner->observation().lastResult->error,std::optional{app::AzureusServiceError::Profile});QCOMPARE(a.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});
++ }
+  void savedRatingActualTimeoutCancelCloseAndMetadataPermissionsRemainBounded(){
+    RatingOwner a("127.19.0.1",3,"Owned","fallback");QUdpSocket server;QVERIFY(server.bind(QHostAddress(QStringLiteral("127.20.0.1")),0,QUdpSocket::DontShareAddress));const udp::Peer peer{server.localAddress(),server.localPort()};const auto admitted=a.owner->allowPeer(peer);QVERIFY(admitted);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*admitted),3000);auto source=a.target();
+    const auto timed=a.owner->readSavedRatings(peer,a.hash,source.sourceRevision,100ms);QVERIFY(timed);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*timed),3000);QCOMPARE(a.owner->observation().ratingReadSnapshot->state,app::AzureusRatingReadState::TimedOut);QVERIFY(a.owner->observation().ratingReadSnapshot->localFallback);

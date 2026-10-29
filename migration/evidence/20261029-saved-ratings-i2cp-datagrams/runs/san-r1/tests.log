@@ -1,0 +1,81 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop
+    Start 178: azureus-owned-service
+1/5 Test #178: azureus-owned-service ................***Failed    4.88 sec
+********* Start testing of OwnedAzureusServiceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedAzureusServiceTests::initTestCase()
+FAIL!  : OwnedAzureusServiceTests::savedRatingsUseOriginalAnonymousKeyPayloadAndTwoNormalPublicOwners() Compared values are not the same
+   Actual   (b.owner->observation().publishSnapshot->state): 5
+   Expected (app::AzureusPublishState::Complete)           : 4
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_azureus_service_tests.cpp(93)]
+PASS   : OwnedAzureusServiceTests::savedRatingPublicationRefusesUnadmittedZeroOversizeAndStaleTargets()
+PASS   : OwnedAzureusServiceTests::savedRatingMalformedRemoteValueDoesNotBecomeLocalFallback()
+PASS   : OwnedAzureusServiceTests::completedRatingValuesWithdrawAtTheNextRealWorkerSourceFence()
+PASS   : OwnedAzureusServiceTests::savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(nickname)
+PASS   : OwnedAzureusServiceTests::savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(Public-removed)
+PASS   : OwnedAzureusServiceTests::savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(DHT-disabled)
+PASS   : OwnedAzureusServiceTests::savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(metadata-flag)
+PASS   : OwnedAzureusServiceTests::savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(full-info-changed)
+PASS   : OwnedAzureusServiceTests::savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(inventory-removed)
+FAIL!  : OwnedAzureusServiceTests::savedRatingDuplicateInventoryRowsCannotGrantAuthority(list-0) 'storage::readLocalRating(*a.held,a.hash)' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_azureus_service_tests.cpp(136)]
+FAIL!  : OwnedAzureusServiceTests::savedRatingDuplicateInventoryRowsCannotGrantAuthority(list-1) 'storage::readLocalRating(*a.held,a.hash)' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_azureus_service_tests.cpp(136)]
+FAIL!  : OwnedAzureusServiceTests::savedRatingDuplicateInventoryRowsCannotGrantAuthority(list-2) 'storage::readLocalRating(*a.held,a.hash)' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_azureus_service_tests.cpp(136)]
+FAIL!  : OwnedAzureusServiceTests::savedRatingDuplicateInventoryRowsCannotGrantAuthority(legacy-0) 'storage::readLocalRating(*a.held,a.hash)' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_azureus_service_tests.cpp(136)]
+FAIL!  : OwnedAzureusServiceTests::savedRatingDuplicateInventoryRowsCannotGrantAuthority(legacy-1) 'storage::readLocalRating(*a.held,a.hash)' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_azureus_service_tests.cpp(136)]
+FAIL!  : OwnedAzureusServiceTests::savedRatingDuplicateInventoryRowsCannotGrantAuthority(legacy-2) 'storage::readLocalRating(*a.held,a.hash)' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_azureus_service_tests.cpp(136)]
+PASS   : OwnedAzureusServiceTests::savedRatingActualTimeoutCancelCloseAndMetadataPermissionsRemainBounded()
+PASS   : OwnedAzureusServiceTests::twoNormalProfileOwnersExchangeDirectValuesWithoutGeneratedClosestFacts()
+PASS   : OwnedAzureusServiceTests::normalReceiverRequiresPeerTokenAndKeepsUnseededCacheForwardsOut()
+PASS   : OwnedAzureusServiceTests::normalReceiverChangedProfileWithdrawsBeforeAnyRemoteStore()
+PASS   : OwnedAzureusServiceTests::normalValueOwnersCancelWithoutAdmissionAndRestartWithReservedVersions()
+PASS   : OwnedAzureusServiceTests::normalReceivingCannotBeEnabledWithoutAHeldProfile()
+PASS   : OwnedAzureusServiceTests::originalVersionReservationPreservesSignedJavaWidthsAndChunkBoundary()
+PASS   : OwnedAzureusServiceTests::profileVersionsReserveBeforeUsePreserveUnknownsAndRecoverOnlyCanonicalPending()
+PASS   : OwnedAzureusServiceTests::versionOwnerRetainsCallerLeaseAndRefusesLockOrDirectoryReplacement()
+PASS   : OwnedAzureusServiceTests::localPublicationUsesActualTokenStoreAndReadbackFromGeneratedReceiver()
+PASS   : OwnedAzureusServiceTests::localPublicationCancellationAndChangedProfileNeverSendStore()
+PASS   : OwnedAzureusServiceTests::defaultAndInvalidPolicyNeverCreateAnOwner()
+PASS   : OwnedAzureusServiceTests::stdWorkerCreatesAndJoinsTheDedicatedQtOwner()
+PASS   : OwnedAzureusServiceTests::twoActualServiceOwnersExchangeRttCoordinatesAndKeepOldSnapshots()
+PASS   : OwnedAzureusServiceTests::existingActualFindNodeAndStreamingFindValueRunOnTheQtOwner()
+PASS   : OwnedAzureusServiceTests::actualTimeoutCancellationAndJoinedCloseRetainTheirOwnEvents()
+PASS   : OwnedAzureusServiceTests::boundedAdmissionAndCloseDoNotDependOnFreeCommandSlots()
+PASS   : OwnedAzureusServiceTests::invalidPublicPeersAndDeadlinesNeverSendOrChangeTheMailbox()
+PASS   : OwnedAzureusServiceTests::passiveReadsNeverQueueCommandsOrRepublishUnchangedFacts()
+PASS   : OwnedAzureusServiceTests::concurrentMailboxReadsAndImmediatePendingDestructionJoinSafely()
+PASS   : OwnedAzureusServiceTests::cleanupTestCase()
+Totals: 31 passed, 7 failed, 0 skipped, 0 blacklisted, 4827ms
+********* Finished testing of OwnedAzureusServiceTests *********
+
+    Start 263: azureus-database-runtime
+2/5 Test #263: azureus-database-runtime .............   Passed    2.15 sec
+    Start 285: i2cp-initial-channel
+3/5 Test #285: i2cp-initial-channel .................   Passed   13.39 sec
+    Start 288: pure-i2cp-datagram-messages
+4/5 Test #288: pure-i2cp-datagram-messages ..........   Passed    0.04 sec
+    Start 289: i2cp-lease-backed-datagram-channel
+5/5 Test #289: i2cp-lease-backed-datagram-channel ...   Passed    7.58 sec
+
+80% tests passed, 1 tests failed out of 5
+
+Label Time Summary:
+crypto            =   0.04 sec*proc (1 test)
+database          =   2.15 sec*proc (1 test)
+i2p               =  21.01 sec*proc (3 tests)
+loopback          =   7.03 sec*proc (2 tests)
+no-network        =   0.04 sec*proc (1 test)
+owned-loopback    =  20.97 sec*proc (2 tests)
+statistics        =   4.88 sec*proc (1 test)
+unit              =  28.04 sec*proc (5 tests)
+
+Total Test time (real) =  28.05 sec
+
+The following tests FAILED:
+	178 - azureus-owned-service (Failed)                    loopback statistics unit
+Errors while running CTest

@@ -1,0 +1,20 @@
+{
+  "source_only": true,
+  "old_channel_and_leaseset_test_files_unmodified": {
+    "preview/native/tests/i2cp_initial_channel_tests.cpp": "f366232d4ecabc4738c4312105c82bc1b65bc44e5ee8d51ce4ba144a7dd2d8a2",
+    "preview/native/tests/i2cp_leaseset_tests.cpp": "f668e4e9befbbad910d5259b444a8588bf01aaed4e86feb93f6bb89bccf27d17"
+  },
+  "shared_crypto_identity_session_and_leaseset_implementations_unmodified": {
+    "preview/native/services/i2p_datagram/datagram.hpp": "32c742d8e769f31bd43119f3feca6dd0e04c2a6c77644e57f868d6addcfbecf1",
+    "preview/native/services/i2p_datagram/datagram.cpp": "96eedc04c93f2250c50c4fa78671775547cfef2e464652f3b27a609d56990038",
+    "preview/native/services/i2p_client/identity.hpp": "117e2ac9a5ef71339dc04548209092b33af6be351919f13af28f6b64c061a33d",
+    "preview/native/services/i2p_client/identity.cpp": "99c54025953cc774bf4963aead7c7be4f296c8bac8df7eb715521e5b57899201",
+    "preview/native/services/i2cp/protocol.hpp": "d88a9b8bb5049c8c458b47598f6627ecf85a1b3b2b10bc97d8b65397da26d9c8",
+    "preview/native/services/i2cp/protocol.cpp": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672",
+    "preview/native/services/i2cp_session/session.hpp": "4db98f38801fc70df592ad062980f2c911ac47839c1984c310204b4a7aae256f",
+    "preview/native/services/i2cp_session/session.cpp": "06202a53e6da512673a88c41cee7938b95c3fb4a121ea09f0974517879649b4e",
+    "preview/native/services/i2cp_leaseset/leaseset.hpp": "44bcc356a5335d1049fab6f16780e2778e0e3b86b6afb5f3b448d7be9d2a6678",
+    "preview/native/services/i2cp_leaseset/leaseset.cpp": "f4bd1989267d40a306e94a1a76e4e48d4e94d473156170f4cda1bc6cf569489f"
+  },
+  "no_old_pass_claimed_as_new": true
+}

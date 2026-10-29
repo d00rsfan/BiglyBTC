@@ -1,0 +1,53 @@
+[0/1] Re-running CMake...
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable exact version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Configuring done (12.7s)
+-- Generating done (2.6s)
+-- Build files have been written to: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+[1/53] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o
+[2/53] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_runtime/database.cpp.o
+[3/53] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_value_versions.cpp.o
+[4/53] Linking CXX static library services/libbiglybtc_azureus_owned_udp.a
+[5/53] Linking CXX static library adapters/libbiglybtc_profile.a
+[6/53] Building CXX object app/CMakeFiles/biglybtc_local_rating_profile.dir/__/adapters/local_rating.cpp.o
+[7/53] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[8/53] Building CXX object services/CMakeFiles/biglybtc_i2cp_datagram.dir/i2cp_datagram/messages.cpp.o
+[9/53] Building CXX object app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o
+[10/53] Linking CXX static library app/libbiglybtc_local_rating_profile.a
+[11/53] Linking CXX static library engine/libbiglybtc_local_engine.a
+[12/53] Linking CXX static library services/libbiglybtc_i2cp_datagram.a
+[13/53] Linking CXX static library app/libbiglybtc_owned_azureus_service.a
+[14/53] Automatic MOC for target biglybtc_i2cp_initial_channel
+[15/53] Automatic MOC for target biglybtc_desktop_host
+[16/53] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/biglybtc_i2cp_initial_channel_autogen/mocs_compilation.cpp.o
+[17/53] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/i2cp_channel/channel.cpp.o
+[18/53] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/biglybtc_desktop_host_autogen/mocs_compilation.cpp.o
+[19/53] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/session_bridge.cpp.o
+[20/53] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/live_speed_mapper_binding.cpp.o
+[21/53] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/owned_dht_accounting.cpp.o
+[22/53] Linking CXX static library services/libbiglybtc_i2cp_initial_channel.a
+[23/53] Linking CXX static library app/libbiglybtc_desktop_host.a
+[24/53] Automatic MOC for target biglybtc-azureus-owned-service-tests
+[25/53] Automatic MOC for target biglybtc-local-rating-tests
+[26/53] Automatic MOC for target biglybtc-local-rating-wiring-tests
+[27/53] Automatic MOC for target biglybtc-azureus-database-runtime-tests
+[28/53] Automatic MOC for target biglybtc-i2cp-initial-channel-tests
+[29/53] Automatic MOC for target biglybtc-i2cp-datagram-channel-tests
+[30/53] Building CXX object tests/CMakeFiles/biglybtc-i2cp-datagram-tests.dir/i2cp_datagram_tests.cpp.o
+FAILED: [code=1] tests/CMakeFiles/biglybtc-i2cp-datagram-tests.dir/i2cp_datagram_tests.cpp.o 
+/usr/bin/g++-16  -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_datagram -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_session -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_client -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_datagram -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp -O3 -DNDEBUG -std=c++23 -Wall -Wextra -Wpedantic -Werror -MD -MT tests/CMakeFiles/biglybtc-i2cp-datagram-tests.dir/i2cp_datagram_tests.cpp.o -MF tests/CMakeFiles/biglybtc-i2cp-datagram-tests.dir/i2cp_datagram_tests.cpp.o.d -o tests/CMakeFiles/biglybtc-i2cp-datagram-tests.dir/i2cp_datagram_tests.cpp.o -c /home/yurii/Java/BiglyBTC/preview/native/tests/i2cp_datagram_tests.cpp
+/home/yurii/Java/BiglyBTC/preview/native/tests/i2cp_datagram_tests.cpp: In function ‘void cases(const std::filesystem::__cxx11::path&)’:
+/home/yurii/Java/BiglyBTC/preview/native/tests/i2cp_datagram_tests.cpp:26:39: error: array subscript -1 is outside array bounds of ‘unsigned char []’ [-Werror=array-bounds=]
+   26 |         auto changed=gzip;changed.back()^=1;require(!cp::decodeMuxDatagram(changed),"Changed gzip ISIZE accepted");changed=gzip;changed[changed.size()-8]^=1;require(!cp::decodeMuxDatagram(changed),"Changed gzip CRC accepted");changed=gzip;changed.insert(changed.end(),gzip.begin(),gzip.end());require(!cp::decodeMuxDatagram(changed),"Concatenated gzip accepted");changed=gzip;changed[3]=8;require(!cp::decodeMuxDatagram(changed),"Unbounded optional gzip name accepted");
+      |                           ~~~~~~~~~~~~^~
+/home/yurii/Java/BiglyBTC/preview/native/tests/i2cp_datagram_tests.cpp:26:39: error: array subscript -1 is outside array bounds of ‘unsigned char []’ [-Werror=array-bounds=]
+cc1plus: all warnings being treated as errors
+ninja: build stopped: subcommand failed.

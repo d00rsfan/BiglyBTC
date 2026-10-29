@@ -1,0 +1,49 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-azureus-owned-service-tests",
+      "biglybtc-azureus-database-runtime-tests",
+      "biglybtc-i2cp-initial-channel-tests",
+      "biglybtc-i2cp-datagram-tests",
+      "biglybtc-i2cp-datagram-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 307.323,
+    "log": "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/runs/clang-r1/build.log",
+    "log_sha256": "0e8879e2f8adef64f56e62bcac58960680754853c6fdf62f5229bce7807d43e7"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "-R",
+      "^(azureus-owned-service|azureus-database-runtime|i2cp-initial-channel|pure-i2cp-datagram-messages|i2cp-lease-backed-datagram-channel)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/runs/clang-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 8,
+    "seconds": 27.213,
+    "log": "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/runs/clang-r1/tests.log",
+    "log_sha256": "88a5ccc610de7fd6cbd8b778b10da7ebdff526acafb7d2fa5c7f52f2c996faa1"
+  }
+]

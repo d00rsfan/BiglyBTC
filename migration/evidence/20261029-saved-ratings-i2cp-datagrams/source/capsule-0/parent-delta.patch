@@ -1,0 +1,11 @@
+--- a/preview/native/services/i2cp_channel/channel.cpp
++++ b/preview/native/services/i2cp_channel/channel.cpp
+@@ -370,7 +370,7 @@
+         timer.start(static_cast<int>(std::max<std::int64_t>(1,left)));
+       }
+     });
+-    QObject::connect(&statusTimer,&QTimer::timeout,q,[this,at]{if(current(at)){armStatusDeadline();}});
++    QObject::connect(&statusTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{armStatusDeadline();}catch(...){fail(Failure::Resources);}}});
+     state=State::Connecting;expires=Clock::now()+std::chrono::milliseconds(next.deadlineMilliseconds);
+     timer.start(next.deadlineMilliseconds);notify();
+     if(!current(at)||state!=State::Connecting){return false;}

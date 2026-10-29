@@ -1,0 +1,6 @@
+{
+  "status": "PASS_SOURCE_ONLY",
+  "reviewer": "root",
+  "manifest_sha256": "49a34b281b9ec49c98d202842f9cb277205f1f616d2f114f556bd755947d14e1",
+  "findings": "Reviewed bounded mux gzip/40KiB inflation/64KiBPayload, original Send/Expires/status/payload widths, full recipient/current signer/unexpired lease gate, immutable none policy, monotone nonce/messageID correlation, separate statusdeadline and late/cancel/close withdrawal. Corrected exception guard on statusTimer callback verified; all five siblings/Java/tests/deadlines inherited exactly. Existing zlib dependency reused. No native/runtime credit."
+}

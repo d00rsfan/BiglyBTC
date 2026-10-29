@@ -1,0 +1,183 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_ROOT_DELTA_REVIEW_AND_QUALIFICATION",
+  "component": "services.i2cp_initial_session",
+  "feature": "F06.i2cp_initial_session",
+  "native_base_commit": "da7ee87bcd459718929bed834c855ced371b1065",
+  "implementation_source_basis": "6726a4cf7b017ac31d6aeede15f339c3ec2b71f7",
+  "source_sha256": {
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before": "c88078c061e4de004490735b08391fd653a207414a8acc08e80e04c861a289c5",
+      "after_sha256": "8e98509ecaf32bd5306bcde3d47493aab915f6db9745f6f5067312c604eff3c4",
+      "bytes": 32480
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before": "dca63e7a2cf8f9660717f006040fd10f950982d499bd85f40c9f7724c375a227",
+      "after_sha256": "2180cf1f9839fd4b389583103ed995875ed3af27b6d078884f4c97f2ee6fec1d",
+      "bytes": 5450
+    },
+    "preview/native/services/i2cp_datagram/messages.cpp": {
+      "before": null,
+      "after_sha256": "52f9876eeb3b3ed545647546e7bfbae21d926127307ef53fab04e41f724dcef9",
+      "bytes": 9619
+    },
+    "preview/native/services/i2cp_datagram/messages.hpp": {
+      "before": null,
+      "after_sha256": "bc984aa49b72a7add915627d958be22beb197794aba681fa3e0af4c74e0041a0",
+      "bytes": 1973
+    },
+    "preview/native/tests/i2cp_datagram_channel_tests.cpp": {
+      "before": null,
+      "after_sha256": "4a952687ace251b91a3b1902aa5bb4354744323ad894fcd93353d575bae93401",
+      "bytes": 15145
+    },
+    "preview/native/tests/i2cp_datagram_tests.cpp": {
+      "before": null,
+      "after_sha256": "ab7ef12d961c4978e4c38689617ac3d026fc49b10b7d39eaf37a4c54c5ca86e3",
+      "bytes": 11115
+    }
+  },
+  "composition_input_sha256": {
+    "preview/native/services/CMakeLists.txt": "7b05b48c44e066d7542de71f77105ea7afbb7c284c7a6a54d166c1c99514fa9d",
+    "preview/native/tests/CMakeLists.txt": "43b7cc19cdd7c6c13909d75cde88979afdf411aab892eeaf21212f5a0f2096d0",
+    "preview/native/adapters/CMakeLists.txt": "d4a631d722b1dc10d66cbf15dc9635fc6b9037e186048bdc29caf671f2d4e4f2",
+    "preview/native/services/i2p_datagram/datagram.hpp": "32c742d8e769f31bd43119f3feca6dd0e04c2a6c77644e57f868d6addcfbecf1",
+    "preview/native/services/i2p_datagram/datagram.cpp": "96eedc04c93f2250c50c4fa78671775547cfef2e464652f3b27a609d56990038",
+    "preview/native/services/i2p_client/identity.hpp": "117e2ac9a5ef71339dc04548209092b33af6be351919f13af28f6b64c061a33d",
+    "preview/native/services/i2p_client/identity.cpp": "99c54025953cc774bf4963aead7c7be4f296c8bac8df7eb715521e5b57899201",
+    "preview/native/services/i2cp/protocol.hpp": "d88a9b8bb5049c8c458b47598f6627ecf85a1b3b2b10bc97d8b65397da26d9c8",
+    "preview/native/services/i2cp/protocol.cpp": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672",
+    "preview/native/services/i2cp_session/session.hpp": "4db98f38801fc70df592ad062980f2c911ac47839c1984c310204b4a7aae256f",
+    "preview/native/services/i2cp_session/session.cpp": "06202a53e6da512673a88c41cee7938b95c3fb4a121ea09f0974517879649b4e",
+    "preview/native/services/i2cp_leaseset/leaseset.hpp": "44bcc356a5335d1049fab6f16780e2778e0e3b86b6afb5f3b448d7be9d2a6678",
+    "preview/native/services/i2cp_leaseset/leaseset.cpp": "f4bd1989267d40a306e94a1a76e4e48d4e94d473156170f4cda1bc6cf569489f",
+    "preview/native/tests/i2cp_initial_channel_tests.cpp": "f366232d4ecabc4738c4312105c82bc1b65bc44e5ee8d51ce4ba144a7dd2d8a2",
+    "preview/native/tests/i2cp_leaseset_tests.cpp": "f668e4e9befbbad910d5259b444a8588bf01aaed4e86feb93f6bb89bccf27d17",
+    "preview/native/tests/fixtures/i2p-datagram/README.txt": "30ef11a879e183fd874ac27b86de0e8de3ecd157cdc223954aac819dae40a909",
+    "preview/native/tests/fixtures/i2p-datagram/SOURCE.json": "eb525a7643365b4a052a368d1cbd036d368195bf47f1e2569c0bcc66222c5259",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-1024.java2": "16eda66aa83db1bf00e5df202c4a1588275b124293a1c33368d23311142f60ae",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-1024.java3": "de658c8610caa184262fbea9ce442a743f318ab1384e944d3aab89bd128b2390",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-1024.payload": "2f4be09e2869bec4db144cc27130220f26570ddc8a6320c6f7472ccbc5decfb1",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-binary.java2": "5d42afc6dbffa6dbc21e5faded09316b0dcb5cb423e28418c8c3c109f0c9c903",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-binary.java3": "849ea45a93dc5336f767c7110df71cfe1561912d822065b5b6bc03f35575bf98",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-binary.payload": "fdf92fc77b380f006e39fe28bbc224476a2c442f1e6d766f6e9c9342d392bee4",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-empty.java2": "3a616a7037ab78bee6abfb4ce7c96ea12d78e6962fd52046f18f821aa013bf12",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-empty.java3": "5ba53f531e7e8fed5908e119adeb9c8d1eb192d24aaa7f3adac6765cb74227e8",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-empty.payload": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-maximum.java2": "58a153e16e2f042b01a19a0ae099a2bf3490a2098f896467bada9fa61c14ca6c",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-maximum.java3": "77bddc09f576d20b912f2592056f0a0db1afab38d2171ca74ee039a08e543eed",
+    "preview/native/tests/fixtures/i2p-datagram/dsa-maximum.payload": "a8e8fb45f4a127ae98708d30ef684ac473f9b38b8e0d9c37696befb4254b0c9d",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.known-test-key": "e9ff0e6e6de95da56ff09f4e3e0f481d67585f0a68aafdeef0f86f7b8533ce17",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.recipient": "10cdba035bd41026a230a4d58981e0122b442d07e8c2f1038e7a5142c6c20a66",
+    "preview/native/tests/fixtures/i2p-datagram/dsa.sender": "2f0554e07af3496216dd5645d91b1c65711aecfb033fd19109df59f0bd3bc1c7",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-1024.java2": "b376a2d5ba17659dda706a51bc3f0d894f2970c70a86047215f4cb4e252ae77c",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-1024.java3": "e87d9add32f734a719fdf420ad371ab6a317dd72cc9dbbaa5be15d0c74b741bc",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-1024.payload": "2f4be09e2869bec4db144cc27130220f26570ddc8a6320c6f7472ccbc5decfb1",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-binary.java2": "cf130b2401eb98a91fc1bd4cc96b976072cabbed4272faeba4fbf0ac926def97",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-binary.java3": "68339e9f5c8f1834762c3e083790e53efe0cd516afc32bf540a4cc1018d05cdc",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-binary.payload": "fdf92fc77b380f006e39fe28bbc224476a2c442f1e6d766f6e9c9342d392bee4",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-empty.java2": "31fbb273545d64ac329fb3ef55ae07c4275b82e63d348d10e53a6169c831dab3",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-empty.java3": "414176eddc1aba1d43203041da689bec9e81a4d3990c9ee48034d69d8cb18f21",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-empty.payload": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.java2": "31eec7ffaad1abce5cceb5433b82d8eeb87ab0c4fa22254871f3ed2fdd6555d0",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.java3": "21697f5cc46c2e55c4f30627450bf9b9335a7cb5447c4cd4b24e5007c9d9b80a",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519-maximum.payload": "8ba8239bc33b8e8d1734a61550be6c4ce64b0fd2003f87fd48a4cf6b265812c9",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.known-test-key": "644d50ab64864c20a12b3c4656d46b4a48f69ef7c47ecdc8415cd28316b22ef5",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.recipient": "c439e09b76788b0157a984d060cb0cd462bd38b16f27c1cd45c20df5c4cc9b3a",
+    "preview/native/tests/fixtures/i2p-datagram/ed25519.sender": "0c80bed1687e0f7fcbc915eab269f9b00e5f40f77dd966eb0829b040a8c14db8"
+  },
+  "cmake_fragment": "CMake.fragment",
+  "source_pins": "/home/yurii/Java/BiglyBT/build/i2cp-datagram-submit-20261029/source-pins.json",
+  "external_dependency": "development-zlib-codec",
+  "new_external_dependency": false,
+  "zlib_binding": "/home/yurii/Java/BiglyBT/build/i2cp-datagram-submit-20261029/zlib-input.json",
+  "tests": [
+    {
+      "target": "biglybtc-i2cp-datagram-tests",
+      "suite": "pure-i2cp-datagram-messages",
+      "timeout_seconds": 60
+    },
+    {
+      "target": "biglybtc-i2cp-datagram-channel-tests",
+      "suite": "i2cp-lease-backed-datagram-channel",
+      "timeout_seconds": 60
+    }
+  ],
+  "offline_recipe": "/home/yurii/Java/BiglyBT/build/i2cp-datagram-submit-20261029/OFFLINE-COMMANDS.sh",
+  "offline_scope": {
+    "cases_per_reference_per_direction": 8,
+    "case_axes": [
+      "signer DSA0/Ed7",
+      "protocol Datagram2/claimed Datagram3",
+      "gzip stored/deflate3"
+    ],
+    "additional_status_cases": 4,
+    "additional_inbound_payload_dto_cases": 1,
+    "one_javac": true,
+    "outer_budget_seconds": 180,
+    "references": {
+      "official": "d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896",
+      "modified": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5"
+    },
+    "execution_pending": true
+  },
+  "bounds": {
+    "max_pending_datagram": 1,
+    "max_latest_observations": 1,
+    "max_uncompressed_mux_bytes": 40960,
+    "max_payload_bytes": 65536,
+    "max_status_nonce": 4294967295,
+    "nonce_never_reused_across_restart": true,
+    "status_deadline_independent_of_lease_and_reconfigure": true,
+    "default_activation": false,
+    "receive_listener": false,
+    "router_acceptance_or_delivery_fabricated": false
+  },
+  "source_only": true,
+  "native_mutations": false,
+  "author_execution": "No compiler/Java/test/router/endpoints. Shell syntax/source checks; exact source blob retention only.",
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/i2cp-datagram-submit-20261029/manifest.json",
+  "parent_manifest_sha256": "a72cbacb75b4b431f173f5c7262e634aad4b25e9285d012660d06e65b17529d8",
+  "inherited_parent_artifacts_sha256": {
+    "ADOPTION.md": "afa5b5aec402a2937cfb25309f40f9fceff35b4d62b3035bb65bc8ae3f13abca",
+    "CMake.fragment": "679d78c15e22f8aa0dcdca9639484eaa391f5b8575e53f6056363c86f0446c1e",
+    "OFFLINE-COMMANDS.sh": "45eb2bc9879b43713c0da49f273011dd9e8a8ee72cb2d503fd862699de49d1b0",
+    "changes.patch": "347efa819228bb3abf309347d356f798b75e6075abb5d965e6738381dd69e2da",
+    "interop/SendVectors.java": "c8a37b5498602e55af5b4486e0ce779e68282eab1268a95c32969a875cc5e238",
+    "original-source/core/java/src/net/i2p/client/I2PClient.java": "50b2e033b0692ed5d5a01de9b650e1dc206c273bc8169165e0cfcf831a8c057d",
+    "original-source/core/java/src/net/i2p/client/SendMessageStatusListener.java": "2e847d14e8376ec81bc5684e1fc45b9b15a83e60bfa3a8e398703536bb36d16f",
+    "original-source/core/java/src/net/i2p/client/datagram/Datagram2.java": "2934bcaaaeaf977ce917b02c6d99229056ef73b4661b790fc84e7402c939bfdc",
+    "original-source/core/java/src/net/i2p/client/datagram/Datagram3.java": "8d618c7b967703cfacf1523de299662f010f0b027877b7d666522e38a5a1d70c",
+    "original-source/core/java/src/net/i2p/client/impl/I2CPMessageProducer.java": "f4cd7596ddc1a9d228f25599850478500c594b1e5c3d4c8b852a550cb7c6969e",
+    "original-source/core/java/src/net/i2p/client/impl/I2PSessionImpl.java": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+    "original-source/core/java/src/net/i2p/client/impl/I2PSessionImpl2.java": "54df392ad6739fa8fcc35b6b4bffd8dab04c7b4d8352d72ca370bda6438e8fe8",
+    "original-source/core/java/src/net/i2p/client/impl/I2PSessionMuxedImpl.java": "aeddb9687caa895dc1d8616444b70f60a84179633c54c84b152c65348aafb4b5",
+    "original-source/core/java/src/net/i2p/client/impl/MessageState.java": "93e2d3e26d4cd0d4649869f07f2155d7c343eab04cdad534d3d9e3f64b8bfa31",
+    "original-source/core/java/src/net/i2p/data/DataHelper.java": "607191330d5b5c2607b166a6174812ec94664535a46dd8f78e30d6b662e46b09",
+    "original-source/core/java/src/net/i2p/data/DateAndFlags.java": "e08a2113e272f849b2c394d959de02666b23ad386fc61ac520e5c0ed0461da66",
+    "original-source/core/java/src/net/i2p/data/Payload.java": "8a73fd96cdbf9911b966745247ad9966123555ce365b89a5b24dbaf85502d18f",
+    "original-source/core/java/src/net/i2p/data/i2cp/MessagePayloadMessage.java": "a70ec35d09857850989d4c068a5ba1831ad5fe2083f298733cba8ec07cc1cb20",
+    "original-source/core/java/src/net/i2p/data/i2cp/MessageStatusMessage.java": "68fcf81c5e89dc285414fee9d631883c7151c66cabfe05d551203e2d90a9f629",
+    "original-source/core/java/src/net/i2p/data/i2cp/SendMessageExpiresMessage.java": "f9e13b382acaf65a16caa5b971f819514d492410150e9ce7c84a719fcdff3ce9",
+    "original-source/core/java/src/net/i2p/data/i2cp/SendMessageMessage.java": "7994612521700d8d23b9bd478ff830b67ebc5c02ee07d1de441e5a5a0e4ef97b",
+    "original-source/core/java/src/net/i2p/util/ResettableGZIPOutputStream.java": "793e79d9072bb8f8cd01ec2b8e97d78aad9fa8f12ab9f93e69fa0e04063479c3",
+    "original-source/core/java/src/net/i2p/util/ReusableGZIPOutputStream.java": "be1d0322728516c72d259813c667a3b0273777890c057891d303cbc9426b43fc",
+    "original-source/router/java/src/net/i2p/router/client/ClientConnectionRunner.java": "6d596723677f8837a27822c19e06df9d2315dab53280ce2ad449adc63a4f057a",
+    "retention.json": "f15a687ae83e297059fc753a14c0eb6562337f397340646d62226e66873973ce",
+    "source-pins.json": "ace15100cd1a64908a81ab7acc9c2d8a1344ec1200f4a4048097ee16d339a40c",
+    "zlib-input.json": "94daf0cee93f81aec049f3470a10ae62aa37357593d0000b0fc78aa5f9b0cf97"
+  },
+  "artifacts_sha256": {
+    "ADOPTION.md": "257a25ba8c26605b46c08dfcaeb572128ff1c8188dddbf10c16896bb14b2caf2",
+    "CMake.fragment": "679d78c15e22f8aa0dcdca9639484eaa391f5b8575e53f6056363c86f0446c1e",
+    "parent-delta.patch": "d7bce7354c722f99f6fa0a91c6359713a244576b1f1656538b2e023f27d670a5",
+    "changes.patch": "081920ef9f51156b784143306dc7b48768aabc118d9927ddd4d7f1b87c1ed253"
+  },
+  "changed_parent_paths": [
+    "preview/native/services/i2cp_channel/channel.cpp"
+  ],
+  "source_only_findings_fixed": [
+    "Status timer allocation/resource exception boundary before Qt frame return"
+  ],
+  "retention": "/home/yurii/Java/BiglyBT/build/i2cp-datagram-submit-20261029/retention.json"
+}

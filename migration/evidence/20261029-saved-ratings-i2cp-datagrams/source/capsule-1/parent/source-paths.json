@@ -1,0 +1,15 @@
+[
+  "preview/native/adapters/azureus_value_versions.hpp",
+  "preview/native/adapters/azureus_value_versions.cpp",
+  "preview/native/adapters/local_rating.hpp",
+  "preview/native/adapters/local_rating.cpp",
+  "preview/native/services/azureus_db_runtime/database.hpp",
+  "preview/native/services/azureus_db_runtime/database.cpp",
+  "preview/native/app/owned_azureus_service.hpp",
+  "preview/native/app/owned_azureus_service.cpp",
+  "preview/native/app/azureus_local_publish.inc",
+  "preview/native/app/CMakeLists.txt",
+  "preview/native/tests/owned_azureus_service_tests.cpp",
+  "preview/native/tests/azureus_database_runtime_tests.cpp",
+  "preview/native/app/azureus_rating_consumer.inc"
+]

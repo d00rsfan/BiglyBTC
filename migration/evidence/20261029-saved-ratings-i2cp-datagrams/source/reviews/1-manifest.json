@@ -1,0 +1,15 @@
+{
+  "status": "PASS_SOURCE_REVIEW_ONLY",
+  "effective_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/amendments/inventory-row-authority/manifest.json",
+    "sha256": "0efba32301b41f1c5ccedf8322457bbc6349e04606b890241706c79750dc55d7"
+  },
+  "review": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029-review/review.json",
+    "sha256": "c73db793f40c10523aed393a59afc5ab58acf689c306ba82d98229e3df969e7b"
+  },
+  "history": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029-review/parent-review.json",
+    "sha256": "eaa4199735c1896f4f3984133d19438f712f57450dd4ac3c2597726597ca62ca"
+  }
+}

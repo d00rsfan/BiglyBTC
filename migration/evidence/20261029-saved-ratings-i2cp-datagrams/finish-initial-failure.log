@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/finish.py", line 184, in <module>
+    if __name__=='__main__': main()
+                             ~~~~^^
+  File "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/finish.py", line 75, in main
+    assert (N/'migration/upstreams.lock.json').read_bytes()==oldlock; lock=json.loads(oldlock); lockbefore=json.loads(oldlock)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

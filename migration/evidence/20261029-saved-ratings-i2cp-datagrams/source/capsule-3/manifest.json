@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_CURRENT_H4_MULTIVALUE_READBACK_AND_FIXTURE_CORRECTION_PENDING_INDEPENDENT_REVIEW",
+  "native_source_basis": "1be0a4df444e82d3c2e702782bae88f5536959ef",
+  "source_path_count": 2,
+  "source_paths": {
+    "preview/native/app/azureus_local_publish.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/amendments/multivalue-publication-readback/before/preview/native/app/azureus_local_publish.inc",
+      "before_sha256": "5af70d8f24d4a8529f3ce247ba7dd0d6a00f12c4f58f088d2885d964908db050",
+      "after_path": "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/amendments/multivalue-publication-readback/staging/preview/native/app/azureus_local_publish.inc",
+      "after_sha256": "e174c784903f88d8cb5e5089d752a2466800b4be542d45bb1d6462d84684bd1e"
+    },
+    "preview/native/tests/owned_azureus_service_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/amendments/multivalue-publication-readback/before/preview/native/tests/owned_azureus_service_tests.cpp",
+      "before_sha256": "051bbc573a6c4749cbac9ba28c0366667544bb1f31400bead7c06f58f70a0e12",
+      "after_path": "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/amendments/multivalue-publication-readback/staging/preview/native/tests/owned_azureus_service_tests.cpp",
+      "after_sha256": "5c4c4fc64d0d9bac7070d50a17ef756ea1c22dc9b69d32ab5843a1ee38d9b4f7"
+    }
+  },
+  "inputs": {
+    "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/amendments/inventory-row-authority/manifest.json": "0efba32301b41f1c5ccedf8322457bbc6349e04606b890241706c79750dc55d7",
+    "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029-review/manifest.json": "8adcfd9b062b68b451d6a50a72eccfe057ff477d186928d043c8ccd0ff24253a",
+    "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/runs/clang-r1/ctest-full.log": "28481da5dde7134ff35c78f18324b0d7286a1bc26fdf05ea8c94cc467db5f3ae"
+  },
+  "artifacts": {
+    "ADOPTION.txt": "ca20e7d975d322bdbcc37f3d13ec3a47f5d6722703a508a064f9cfbd35d55971",
+    "before/preview/native/app/azureus_local_publish.inc": "5af70d8f24d4a8529f3ce247ba7dd0d6a00f12c4f58f088d2885d964908db050",
+    "before/preview/native/tests/owned_azureus_service_tests.cpp": "051bbc573a6c4749cbac9ba28c0366667544bb1f31400bead7c06f58f70a0e12",
+    "changes.patch": "1d309ee3e1286da6253997fd28d173a713cfa53aaa8346341aa9aa810b78e09b",
+    "retention.json": "9d1d90ceb6bd533a0ab441bcabb727de6c1902f8529c380082f5e3c86f3845fc",
+    "source-proof.json": "af9459cd32416c70f59f65058a864566575328a2c338d0d6eadb5f189508f417",
+    "staging/preview/native/app/azureus_local_publish.inc": "e174c784903f88d8cb5e5089d752a2466800b4be542d45bb1d6462d84684bd1e",
+    "staging/preview/native/tests/owned_azureus_service_tests.cpp": "5c4c4fc64d0d9bac7070d50a17ef756ea1c22dc9b69d32ab5843a1ee38d9b4f7"
+  },
+  "runtime_execution": false,
+  "scope": {
+    "readback_maximum_values": 64,
+    "readback_maximum_slices": 64,
+    "requires_final_stream_and_exact_value": true,
+    "ordinary_local_reader_changed": false,
+    "duplicate_inventory_refusal_retained": true,
+    "failed_history_untouched": true
+  }
+}

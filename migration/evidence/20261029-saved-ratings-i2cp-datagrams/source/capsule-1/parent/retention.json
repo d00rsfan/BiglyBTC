@@ -1,0 +1,57 @@
+{
+  "owned_azureus_service_tests.cpp": {
+    "retained_method_count": 19,
+    "retained_method_sha256": {
+      "twoNormalProfileOwnersExchangeDirectValuesWithoutGeneratedClosestFacts": "8a55ddf5f044c44c7b505a256fe96c5968ccceefc6d9200e9340d84bfa496a0e",
+      "normalReceiverRequiresPeerTokenAndKeepsUnseededCacheForwardsOut": "99e0deb281df0448cca0a0a1a018ca6b7c8663b3d103681487345b2f25b78b50",
+      "normalReceiverChangedProfileWithdrawsBeforeAnyRemoteStore": "333184814f06b5369129d7945b020cde84ee4e75b33723597b23c8c5994517c6",
+      "normalValueOwnersCancelWithoutAdmissionAndRestartWithReservedVersions": "4f88d725abc44cc1a0871efeff6e5e63c7438be1f26f78cd6ad884f15a4e2cd0",
+      "normalReceivingCannotBeEnabledWithoutAHeldProfile": "c926699b1d2ddad3484fa170a2b493cf61d34cd4c930cccae67bf43a10d6f224",
+      "originalVersionReservationPreservesSignedJavaWidthsAndChunkBoundary": "81d061cf810f9895f09810f10285f493633ac144dc86318c96672a7547f98cb2",
+      "profileVersionsReserveBeforeUsePreserveUnknownsAndRecoverOnlyCanonicalPending": "40efb8c0672564cbcffb9a00dc714c2dc9f5d0d381f3c0a4fbef2ab0aadd37f7",
+      "versionOwnerRetainsCallerLeaseAndRefusesLockOrDirectoryReplacement": "4fe904224729377fd7388fc5229f81d6b33d7a283ae1a52387687878d22ce539",
+      "localPublicationUsesActualTokenStoreAndReadbackFromGeneratedReceiver": "aacb9023ac690e6acb0a66655b902ee34e76434ecac225ad40fcd150ab7a8513",
+      "localPublicationCancellationAndChangedProfileNeverSendStore": "870751ec146e1237858225326bdf663d952b8f75fd8e4c08e37c2f61d632d2eb",
+      "defaultAndInvalidPolicyNeverCreateAnOwner": "8ca62206ec0abdbb533ba0f23ea262fd8edd9d29f6a62c6868102048c27ac87c",
+      "stdWorkerCreatesAndJoinsTheDedicatedQtOwner": "36387d3c77030bb61e2f82ab935fe75c336e7d73b2e439cd6c10f4e6beed9d13",
+      "twoActualServiceOwnersExchangeRttCoordinatesAndKeepOldSnapshots": "a19189cbf3a9122c07f052b891f97a98ad298f92b80d38845b6eec7e2bd77149",
+      "existingActualFindNodeAndStreamingFindValueRunOnTheQtOwner": "472b48c6ee00b02a0c085c506d49508e19a53f1b1f3956c8ab5fd9bb409cf59e",
+      "actualTimeoutCancellationAndJoinedCloseRetainTheirOwnEvents": "01690b04b45ba9f3aaa9dc217f6aec957504c356de664df028aa80097a884c9b",
+      "boundedAdmissionAndCloseDoNotDependOnFreeCommandSlots": "0ad5bad1a02d273f50fd6b2cc82ae48d7ab7ae93472a7fb16c86a94718a90688",
+      "invalidPublicPeersAndDeadlinesNeverSendOrChangeTheMailbox": "ac608ddd6b10b03913af88d0322eeed2c6e61063176ea20573abb4ffb61ef462",
+      "passiveReadsNeverQueueCommandsOrRepublishUnchangedFacts": "03e32bf70f7f314c1d33873c40eb40d93b721d1890590340d267a49081ed150f",
+      "concurrentMailboxReadsAndImmediatePendingDestructionJoinSafely": "40be2e836fde174775d42479ce55810d0657c1be7d8837babd922a166682d975"
+    },
+    "added_methods": [
+      "savedRatingsUseOriginalAnonymousKeyPayloadAndTwoNormalPublicOwners",
+      "savedRatingPublicationRefusesUnadmittedZeroOversizeAndStaleTargets",
+      "savedRatingMalformedRemoteValueDoesNotBecomeLocalFallback",
+      "completedRatingValuesWithdrawAtTheNextRealWorkerSourceFence",
+      "savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies_data",
+      "savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies",
+      "savedRatingActualTimeoutCancelCloseAndMetadataPermissionsRemainBounded"
+    ]
+  },
+  "azureus_database_runtime_tests.cpp": {
+    "retained_method_count": 14,
+    "retained_method_sha256": {
+      "localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData": "2fb3495f013ff355ad9d6bbf040f37bb641ed02128b72492b4c8a1bc4ffa3248",
+      "qualifiedMappingOwnsVersionsForwardingAndUnknownBinaryBytes": "ac74ea778480307e6d5d3d9dc24f93f6623b5d877eeb0bde037d30afdf80932e",
+      "normalFindFlagsReturnUnfilteredValuesLikeOriginalMapping": "9fecea3ea493e35e84bb6df18a990fb03ad86d0a2c9275b227c041485f1bfc30",
+      "actualFindFlagsReachTheDatabaseWithoutSeedFiltering": "8fce3d97553e662cd0e627052e93abcd096d9be1b9620bb097b0a3bff9313e71",
+      "statsValueRequiresRealAdapterAndLocalIdentity": "a6193a4eb3f2d6d51a09c8642c85952365b26d3f75de7429926c11640ac854be",
+      "actualStatsReadIsBoundToSocketAndRealMappingEvents": "1b06316c50eed73f6e07f59d166a25e29a6ce175bd1d0589ce45669c07a2bc16",
+      "originalDiversificationRequiresExplicitControlAndRealMappingEvents": "f4708e6532a1f9c4b112153674517836e46c597da3dbd7720e20f7e2154c2609",
+      "originalFrequencyUsesActualIpBloomAndSuspensionSamples": "96a8e8b2bfdbe34170d5f2839861da6b248443defd124d5da35d017c56d4d76b",
+      "borrowedClockCannotReenterFacadeMutation": "803331cdfb04fd8f183c00bc980a6631cb8d49aeecaa04053e5251c1cbb8a52c",
+      "strictExpiryBoundaryThrottleAndDelayedEmptyMappingRemoval": "0d1ae78bcb66d5e39ac376e7e1ff7fd837ef871d6df8f6a175d1e79c459c7dbf",
+      "quotaChecksExistingFourByteOverheadAndCapacityNeverClobbers": "f97a8cea37cfe1fc52a3f437dd9b37912983cbe59d4aaad96c19ed5e745cf854",
+      "actualTokenStoreAndRecursiveGetReadMutatedDatabase": "a32b9e794918390da3e342aadb051b2cbeb9aadb67aad4c23b6648566044d801",
+      "malformedAndWrongNetworkNeverReachTheDatabase": "dc15aca176425d810ec7710d1b4c59348f5f9731bf65e4722df833bde88d3cdb",
+      "legacyModeRemainsNonDatabaseAndUnsafeBindCannotActivateIt": "88c5154d96ed6901446c843e00e6f560fa986800e8f16712960b434d0af2db75"
+    },
+    "added_methods": [
+      "typedLocalAnonymousFlagPersistsWithoutOpeningArbitraryFlagAuthority"
+    ]
+  }
+}

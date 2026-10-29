@@ -1,0 +1,14 @@
+{
+  "status": "EXACT_ACCEPTED_PREVIOUS_MILESTONE_METADATA_LAG",
+  "R_before_sha256": "33bdebd3660ef42da5f064f943454e3bb1422b897f2af9fa8006e105d8ec96ef",
+  "N_before_sha256": "05ea05dcbff3e3b1599fe514d33a0976713cbdbdc74b7e1a546731da198ebd40",
+  "expected_delta_script_sha256": "bcad8eb606323fa388f4c4f1ba24db08864010521e6c442af5cf61d3dd40b979",
+  "previous_source_commit": "6726a4cf7b017ac31d6aeede15f339c3ec2b71f7",
+  "exactly_affected_components": [
+    "transport.azureus_volatile_database",
+    "services.i2cp_initial_session"
+  ],
+  "reconstructed_N_plus_J_equals_R": true,
+  "source_runtime_or_test_changes": false,
+  "cause": "Previous J finisher wrote R lock then missing-object validator failed before N lock write; followup validated both independently without alignment. Proposed new lock preserves accepted R entries and both current baselines."
+}

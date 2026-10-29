@@ -1,0 +1,9 @@
+Picked up JAVA_TOOL_OPTIONS: -XX:ActiveProcessorCount=2
+PASS JAVA PRODUCED dsa-2-stored send
+PASS JAVA PRODUCED dsa-2-deflate send
+PASS JAVA PRODUCED dsa-3-stored send
+PASS JAVA PRODUCED dsa-3-deflate send
+PASS JAVA PRODUCED ed25519-2-stored send
+PASS JAVA PRODUCED ed25519-2-deflate send
+PASS JAVA PRODUCED ed25519-3-stored send
+PASS JAVA PRODUCED ed25519-3-deflate send

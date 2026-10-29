@@ -1,0 +1,31 @@
+{
+  "status": "SOURCE_REVIEW_BLOCKED_PENDING_ROW_AUTHORITY_CHILD",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/manifest.json",
+    "sha256": "43e0aa8830323ec307ad07d773761eddc0ce346940a353d28d744dc64a0dc709"
+  },
+  "reviewed_scope": [
+    "Same-OFD profile ownership and version-profile retention",
+    "raw/full target, saved inventory, Public and original DHT source gates",
+    "original key SHA1, anonymous flag and retained rating decode/aggregate behavior",
+    "bounded real one-peer read/publication, callback exceptions, deadline/cancel/close and source withdrawal",
+    "all 13 source maps, 31 artifact hashes, 26 original/previous-native source pins",
+    "all 19 owner and 14 DB old slot bodies plus old restart helper retained byte-exact"
+  ],
+  "blockers": [
+    {
+      "path": "preview/native/adapters/local_rating.cpp",
+      "issue": "Distributed authority checks inventory root uniqueness but not row-dictionary uniqueness. Duplicate saved-row keys can authenticate an ambiguous membership record.",
+      "required_change": "Reject duplicates in relevant list/legacy row dictionaries in distributed reader only; preserve old local reader; add focused negative controls.",
+      "author_acknowledged": true
+    }
+  ],
+  "limits": [
+    "Source review only; no build, Java, runtime or original-profile access.",
+    "One already-admitted peer, at most 64 values versus original 256; explicitly partial, not a global average.",
+    "Explicit saved Public selection only; no Host/default/public bootstrap or automatic publication activation.",
+    "ANON0x10 is the original flag, not an anonymous-routing guarantee.",
+    "Current source is last observed at existing worker fences; no instantaneous filesystem monitoring.",
+    "Fresh profile validation and version fsync remain synchronous on network owner."
+  ]
+}

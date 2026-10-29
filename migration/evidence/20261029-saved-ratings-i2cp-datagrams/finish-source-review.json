@@ -1,0 +1,6 @@
+{
+  "status": "SOURCE_REVIEW_PASS_NO_EXECUTION_YET",
+  "script_sha256": "04591a4299d12c47bab24b966c0ab8751559e0cc13401a0fd6541b44736420b5",
+  "review": "Root reviewed all184 lines against actual source/adoption/image/command/failure schemas, both validator API and source snapshot scope. Bounded source and partial registry states retained; preflight both proposed registries before atomic dist replacement. One-shot execution authorised.",
+  "source_commit": "d384a850980f1b6245230ea852d617b11c405e11"
+}

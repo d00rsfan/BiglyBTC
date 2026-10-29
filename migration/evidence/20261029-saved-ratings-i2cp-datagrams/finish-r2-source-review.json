@@ -1,0 +1,6 @@
+{
+  "status": "SOURCE_REVIEW_PASS",
+  "script_sha256": "9632e65d187037041cc3366c14c237d7f78b112cb28b0320783de3388c838d4e",
+  "correction": "Per-root preexisting registry bytes held unchanged through both preflights and promotion; expected old hashes and exact previous-J delta independently reconstructed before authoring. No source/build/test/Java change or replay. Initial failed finisher immutable.",
+  "alignment_proof_sha256": "0b81aa340739229a314173561b2799e17c0d7e8471f985551d2d29fa7e0abb5c"
+}

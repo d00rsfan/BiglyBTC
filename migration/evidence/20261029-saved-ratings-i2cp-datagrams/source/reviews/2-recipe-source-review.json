@@ -1,0 +1,37 @@
+{
+  "status": "PASS_SOURCE_REVIEW_ONLY",
+  "files_sha256": {
+    "adopt.py": "7b067ed404dcddd5e9e6d09361cff2a98fac498ac57b9f3a2b935cd16de351f5",
+    "run.py": "aa1360577eb7ac1933d8b63dfe1a95bf540ce1a4d46a9143ef3796286cc1f8bb",
+    "private.py": "d6a8c493eda49353aa3b1fd46d90c340862ef84d3fa3bb95bffe8d1416e802b6"
+  },
+  "approved_inputs_sha256": "03104d0be1b6cd1b027b44215ad9e42fd0729ec6663642e88e4fbe52c6cf7e5e",
+  "reviewed": [
+    "Adopter validates exact clean da7e basis, both parent-manifest schemas and parent/artifact pins, 19 nonoverlapping source maps and exactly two CMake compositions before writing the approved 21 paths.",
+    "New I2CP target, suite, fixture argument and timeout names agree with approved fragment; existing owner/database/local-rating targets agree with native CMake.",
+    "GCC executes seven suites and builds ten products; Clang/SAN execute five backend/data suites/products, explicitly excluding unchanged rating UI/wiring. No older pass pooling.",
+    "Producer requires actual build/test success, exact CTest named inventory/run status, no inner skip/failure, unchanged source/five-or-ten image maps as applicable, same provider and dist.",
+    "Private consumes actual lane receipts/logs/XML/current images and captured CTest argument lists; executes exact GCC seven suites, checks direct Qt summary/case inventories with optional Qt status, keeps CTest status strict, and checks actual loaded Qt/provider paths.",
+    "Pure datagram CLI retains its required synthetic fixture argument and does not receive Qt-only output flags."
+  ],
+  "source_checked_counts": {
+    "non_cmake_paths": 19,
+    "composed_cmake_paths": 2,
+    "gcc_suites": 7,
+    "clang_suites": 5,
+    "san_suites": 5,
+    "gcc_products": 10,
+    "clang_products": 5,
+    "san_products": 5,
+    "private_executables": 7
+  },
+  "corrected_during_review": [
+    "Rating child parent_manifest dictionary versus datagram string schema mismatch.",
+    "CMake fragment split marker mismatch."
+  ],
+  "blockers": [],
+  "limitations": [
+    "Source review and AST/hash/map checks only; no adoption, compiler, tests, Java, candidate staging or native mutation executed.",
+    "Fresh runtime results and any new Java interop remain root qualification gates."
+  ]
+}

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="5"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="28"
+	timestamp="2026-10-29T16:50:20"
+	>
+	<testcase name="azureus-owned-service" classname="azureus-owned-service" time="5.69017" status="run">
+		<properties>
+			<property name="cmake_labels" value="loopback;statistics;unit"/>
+		</properties>
+		<system-out>********* Start testing of OwnedAzureusServiceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedAzureusServiceTests::initTestCase()
+PASS   : OwnedAzureusServiceTests::savedRatingsUseOriginalAnonymousKeyPayloadAndTwoNormalPublicOwners()
+PASS   : OwnedAzureusServiceTests::publicationReadbackWithoutTheExactValueRemainsBounded(two-final-mismatches)
+PASS   : OwnedAzureusServiceTests::publicationReadbackWithoutTheExactValueRemainsBounded(sixty-four-final-mismatches)
+PASS   : OwnedAzureusServiceTests::publicationReadbackWithoutTheExactValueRemainsBounded(continued-sixty-four-withdraws)
+PASS   : OwnedAzureusServiceTests::savedRatingPublicationRefusesUnadmittedZeroOversizeAndStaleTargets()
+PASS   : OwnedAzureusServiceTests::savedRatingMalformedRemoteValueDoesNotBecomeLocalFallback()
+PASS   : OwnedAzureusServiceTests::completedRatingValuesWithdrawAtTheNextRealWorkerSourceFence()...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="azureus-database-runtime" classname="azureus-database-runtime" time="2.16531" status="run">
+		<properties>
+			<property name="cmake_labels" value="database;loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of AzureusDatabaseRuntimeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusDatabaseRuntimeTests::initTestCase()
+PASS   : AzureusDatabaseRuntimeTests::typedLocalAnonymousFlagPersistsWithoutOpeningArbitraryFlagAuthority()
+PASS   : AzureusDatabaseRuntimeTests::localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData()
+PASS   : AzureusDatabaseRuntimeTests::qualifiedMappingOwnsVersionsForwardingAndUnknownBinaryBytes()
+PASS   : AzureusDatabaseRuntimeTests::normalFindFlagsReturnUnfilteredValuesLikeOriginalMapping()
+PASS   : AzureusDatabaseRuntimeTests::actualFindFlagsReachTheDatabaseWithoutSeedFiltering()
+PASS   : AzureusDatabaseRuntimeTests::statsValueRequiresRealAdapterAndLocalIdentity()
+PASS   : AzureusDatabaseRuntimeTests::actualStatsReadIsBoundToSocketAndRealMappingEvents()
+PASS   : AzureusDatabaseRuntimeTests::originalDiversif...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="i2cp-initial-channel" classname="i2cp-initial-channel" time="13.1469" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;owned-loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of InitialChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : InitialChannelTests::initTestCase()
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv4)
+PASS   : InitialChannelTests::actualJavaDateOverOwnedTcp(ipv6)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(oversize-header)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unknown-type)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(maximum-bounded-opaque-frame)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(unexpected-real-session-status)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(invalid-date-length)
+PASS   : InitialChannelTests::invalidRepliesWithdrawAllObservation(real-Java-null-date)
+PASS   : InitialChannelTests::truncatedFrameAtActualEofRefuses()
+PASS   : InitialChannelTests::r...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="pure-i2cp-datagram-messages" classname="pure-i2cp-datagram-messages" time="0.0478977" status="run">
+		<properties>
+			<property name="cmake_labels" value="crypto;i2p;no-network;unit"/>
+		</properties>
+		<system-out>PASS bounded I2CP datagram messages/mux/status
+</system-out>
+	</testcase>
+	<testcase name="i2cp-lease-backed-datagram-channel" classname="i2cp-lease-backed-datagram-channel" time="7.48814" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;owned-loopback;unit"/>
+		</properties>
+		<system-out>********* Start testing of DatagramChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : DatagramChannelTests::initTestCase()
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(DSA0-v4-signed)
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(Ed7-v6-signed)
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(DSA0-v6-claimed)
+PASS   : DatagramChannelTests::actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(Ed7-v4-claimed)
+PASS   : DatagramChannelTests::createdWithoutActualLeaseCannotSubmit()
+PASS   : DatagramChannelTests::localCancelAndOldNonceCannotFinishTheNextRequest()
+PASS   : DatagramChannelTests::terminalFailureCanPrecedeAcceptedAndOldStatusesCannotRebind()
+PASS   : DatagramChannelTests::renewalCannotExtendOrCancelTheIndependentStatusBudget()
+PASS...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

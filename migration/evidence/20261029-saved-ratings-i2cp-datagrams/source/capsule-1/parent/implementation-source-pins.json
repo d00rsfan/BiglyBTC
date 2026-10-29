@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "original_and_previous_native_pins": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/source-pins.json",
+    "sha256": "62ba0add6d37c54cafe8ea1b2ba12c6a71d641e580218071b6677a708db6c3b7"
+  },
+  "new_original_context_pins": [
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/pif/download/Download.java",
+      "git_blob": "d8db4041424ab4ef6e68cb76c109285ca0d37bb2",
+      "sha256": "3e6484279df6215385591a0f7f297920fe234fb9e9baf7a57a0ba09d86a2e74e",
+      "lines": [
+        [
+          168,
+          175
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/pifimpl/local/download/DownloadImpl.java",
+      "git_blob": "59234cacd658e8ecec176b76baf2e2e9e5735a1f",
+      "sha256": "83d6c7140d01f26b82389da036253d5dd52ba71867b9faf54b75ad132236de29",
+      "lines": [
+        [
+          284,
+          290
+        ],
+        [
+          2550,
+          2556
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "git_blob": "12c9b2e45ab7fa3a9839672087ec207ef83d9e35",
+      "sha256": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "lines": [
+        [
+          2110,
+          2137
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/pifimpl/local/PluginInitializer.java",
+      "git_blob": "5b93c4bdcb65bef81b4fd9d79f66f7004bd1574b",
+      "sha256": "e5c8147d51ea5e8dbfc5b934af84453d007d00353a67444a0f69c9c37c6c4049",
+      "lines": [
+        [
+          125,
+          132
+        ]
+      ]
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/plugin/dht/DHTPlugin.java",
+      "git_blob": "cd5cd9f90f9fea18b5dc555e2f4ac5354071fea3",
+      "sha256": "3af95cb144c85a02fcede7fda881f03e887286ec51574ac13fbb219c68b37748",
+      "lines": [
+        [
+          188,
+          194
+        ]
+      ]
+    }
+  ],
+  "native_source_basis": "6726a4cf7b017ac31d6aeede15f339c3ec2b71f7",
+  "runtime_java_or_subject_execution": false
+}

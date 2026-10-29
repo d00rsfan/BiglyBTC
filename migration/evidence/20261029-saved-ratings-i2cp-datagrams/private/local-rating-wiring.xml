@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="LocalRatingWiringTests" timestamp="2026&#x002D;10&#x002D;29T16:53:15" hostname="ubuntud" tests="6" failures="0" errors="0" skipped="0" time="0.732">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="LocalRatingWiringTests" time="0.000"/>
+  <testcase name="singleRatingActionPreservesBulkFileActions" classname="LocalRatingWiringTests" time="0.106">
+    <system-err>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support raise()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+    </system-err>
+  </testcase>
+  <testcase name="actualWindowBridgeSaveUsesSoleLeaseAndNoEngineOrDdb" classname="LocalRatingWiringTests" time="0.230">
+    <system-err>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support raise()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+    </system-err>
+  </testcase>
+  <testcase name="actualBridgeRejectsStaleRevisionForgedTokenAndWrongSession" classname="LocalRatingWiringTests" time="0.307"/>
+  <testcase name="profileChangeBusyAndDirectChildCallbacksFenceOldRoutes" classname="LocalRatingWiringTests" time="0.088">
+    <system-err>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support raise()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support raise()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+      <![CDATA[This plugin does not support raise()]]>
+      <![CDATA[This plugin does not support propagateSizeHints()]]>
+    </system-err>
+  </testcase>
+  <testcase name="cleanupTestCase" classname="LocalRatingWiringTests" time="0.000"/>
+</testsuite>

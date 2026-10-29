@@ -1,0 +1,5 @@
+SOURCE ONLY effective complete13 overlay on6726. Parent43e0 remains immutable. Only two delta paths: distributed-only inventory row uniqueness and its focused regression. All11 other effective paths are inherited exactly. Original ordinary readLocalRating/saveLocalRating behavior is unchanged.
+
+List inventory checks every row dictionary; legacy inventory checks each relevant download dictionary. Ambiguous duplicate torrent_hash/state/persistent cannot grant rating authority. Six generated list/legacy controls prove the ordinary local read still follows its qualified prior policy, whereas readDistributedRating refuses InvalidFormat and the actual publish command sends0 packets. Two new Qt slots (data/body); every parent old/new slot body remains byte-exact. No timeouts, key/payload, transport/owner/default or permission predicate was relaxed.
+
+Apply only this complete effective overlay. Parent ADOPTION scope, minimal four existing suites, source pins, performance debt and no-execution limits remain required. Pending independent review; no runtime claim.

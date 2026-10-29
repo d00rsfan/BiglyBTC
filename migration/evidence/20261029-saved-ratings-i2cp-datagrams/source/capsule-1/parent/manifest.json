@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_SAVED_RATING_CONSUMER_PENDING_INDEPENDENT_REVIEW",
+  "native_source_basis": "6726a4cf7b017ac31d6aeede15f339c3ec2b71f7",
+  "source_path_count": 13,
+  "source_paths": {
+    "preview/native/adapters/azureus_value_versions.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/before/preview/native/adapters/azureus_value_versions.hpp",
+      "before_sha256": "64b7a12d0699ee4696e86084e83699e01b354374141c6a9bb1c4bb1084fede66",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/adapters/azureus_value_versions.hpp",
+      "after_sha256": "2a42873de80e2ff42ec4c26b7e90489481336c7ebf3544f08d9c0136ac54fd91"
+    },
+    "preview/native/adapters/azureus_value_versions.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/before/preview/native/adapters/azureus_value_versions.cpp",
+      "before_sha256": "221dae34a09259a5377bb106d7e5ceb24591d0b20e8488392ec935c0fd619c75",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/adapters/azureus_value_versions.cpp",
+      "after_sha256": "f609be5b184972d8a025cf658de721d7afc3946189d620ed9e0549a184fbf733"
+    },
+    "preview/native/adapters/local_rating.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/before/preview/native/adapters/local_rating.hpp",
+      "before_sha256": "64efd290de86b72f13f174f15b5cfde458de3b9b16ab5044cf5e2ce65a1ad688",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/adapters/local_rating.hpp",
+      "after_sha256": "1ba0eae2c7cba043106524436950472790b869268d3cd2b0d2216fef091ffaae"
+    },
+    "preview/native/adapters/local_rating.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/before/preview/native/adapters/local_rating.cpp",
+      "before_sha256": "281eb240075c64ab02b05368768243978c426aa3332735f43ce9b61326b22e9d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/adapters/local_rating.cpp",
+      "after_sha256": "3efc17bbf3b5f7fb59236e6c1b18ab69ac7a4c18e1042cb025e21046c5c6b38f"
+    },
+    "preview/native/services/azureus_db_runtime/database.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/before/preview/native/services/azureus_db_runtime/database.hpp",
+      "before_sha256": "d21cbcf235d85b04e60dc8d120046b4e45ef351828b42ff9445846ef0c371fa8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/services/azureus_db_runtime/database.hpp",
+      "after_sha256": "184ae7cf79ad3449fc052a9c22c61b95f628ddbb1897bf98c76fc33eaf2835ed"
+    },
+    "preview/native/services/azureus_db_runtime/database.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/before/preview/native/services/azureus_db_runtime/database.cpp",
+      "before_sha256": "d8a677d85420a29a48f19c258ae1865eda265122abbbd71f565925cae9372bfe",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/services/azureus_db_runtime/database.cpp",
+      "after_sha256": "38eaf22d94386dd54ecfb9100a2b83caadceae3f169b65be4bcdd113f07e7eaf"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "0c5f670a7a3cbb14729b8e5923ba3da8d79526dc15ce414e5ef55befe75ec91c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "76742bc903f2bf109f037dbc616ea958e100df348d625687fa4ba18753546ea9"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "5841a28617f60782959c2827c5409665bfff9f3b70c55ae9fae61a3854aed358",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "b5b5384ab843fbf3c4bf6ef691c1d1b43e91e52eec054e39c6da916724ed26f2"
+    },
+    "preview/native/app/azureus_local_publish.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/before/preview/native/app/azureus_local_publish.inc",
+      "before_sha256": "591750f3ef0c6cf756eba04b3168566aa67241c5cde8dfe51e080592104ae0f1",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/app/azureus_local_publish.inc",
+      "after_sha256": "5af70d8f24d4a8529f3ce247ba7dd0d6a00f12c4f58f088d2885d964908db050"
+    },
+    "preview/native/app/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/before/preview/native/app/CMakeLists.txt",
+      "before_sha256": "062a39b4fcbbb08a74b3a8a2e7ec37562b8c3ebb34a26b30962389f092546b27",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/app/CMakeLists.txt",
+      "after_sha256": "5f1b870db0116fb5dbea4498d531c2d9b81366a6f82eef3124974b66dfca4cc3"
+    },
+    "preview/native/tests/owned_azureus_service_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/before/preview/native/tests/owned_azureus_service_tests.cpp",
+      "before_sha256": "51c0eea9dfe96e122abdd42f81bb249418be5fca3f4bd94e6107c3882b82be0d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/tests/owned_azureus_service_tests.cpp",
+      "after_sha256": "30b8340f9f3761b77343601babce3d81b25af3c3d9cc710a1dd35a0885da2985"
+    },
+    "preview/native/tests/azureus_database_runtime_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/before/preview/native/tests/azureus_database_runtime_tests.cpp",
+      "before_sha256": "a28fc4d0c4669010948fd7a649cadfb405370e9a590a857ee63746647ed78cb3",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/tests/azureus_database_runtime_tests.cpp",
+      "after_sha256": "0b71a03678473785e0ac44c35d5016d6224d8e6099b05b715abb6ff0e9ad4b44"
+    },
+    "preview/native/app/azureus_rating_consumer.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029/staging/preview/native/app/azureus_rating_consumer.inc",
+      "after_sha256": "36d4ceeabd6baaae0ad7ea8502c9ff6ad14ef6fdc04434e46a3d4c9769bf378e"
+    }
+  },
+  "artifacts": {
+    "ADOPTION.txt": "d50248f24395fc17f27d16b102a4c4dc6aba17d66ce3531ee6e5da105a4b398d",
+    "PROPOSAL.txt": "4ab921610dc8748594149808b5f05fb03a4c763d93460d65e88c234e122d7aaa",
+    "before/preview/native/adapters/azureus_value_versions.cpp": "221dae34a09259a5377bb106d7e5ceb24591d0b20e8488392ec935c0fd619c75",
+    "before/preview/native/adapters/azureus_value_versions.hpp": "64b7a12d0699ee4696e86084e83699e01b354374141c6a9bb1c4bb1084fede66",
+    "before/preview/native/adapters/local_rating.cpp": "281eb240075c64ab02b05368768243978c426aa3332735f43ce9b61326b22e9d",
+    "before/preview/native/adapters/local_rating.hpp": "64efd290de86b72f13f174f15b5cfde458de3b9b16ab5044cf5e2ce65a1ad688",
+    "before/preview/native/app/CMakeLists.txt": "062a39b4fcbbb08a74b3a8a2e7ec37562b8c3ebb34a26b30962389f092546b27",
+    "before/preview/native/app/azureus_local_publish.inc": "591750f3ef0c6cf756eba04b3168566aa67241c5cde8dfe51e080592104ae0f1",
+    "before/preview/native/app/owned_azureus_service.cpp": "5841a28617f60782959c2827c5409665bfff9f3b70c55ae9fae61a3854aed358",
+    "before/preview/native/app/owned_azureus_service.hpp": "0c5f670a7a3cbb14729b8e5923ba3da8d79526dc15ce414e5ef55befe75ec91c",
+    "before/preview/native/services/azureus_db_runtime/database.cpp": "d8a677d85420a29a48f19c258ae1865eda265122abbbd71f565925cae9372bfe",
+    "before/preview/native/services/azureus_db_runtime/database.hpp": "d21cbcf235d85b04e60dc8d120046b4e45ef351828b42ff9445846ef0c371fa8",
+    "before/preview/native/tests/azureus_database_runtime_tests.cpp": "a28fc4d0c4669010948fd7a649cadfb405370e9a590a857ee63746647ed78cb3",
+    "before/preview/native/tests/owned_azureus_service_tests.cpp": "51c0eea9dfe96e122abdd42f81bb249418be5fca3f4bd94e6107c3882b82be0d",
+    "changes.patch": "ca8eff2166ad7980087b182f445d45c4e13aecad3a9c325fbb1edadef6f7c066",
+    "implementation-source-pins.json": "8db7a3651bd0949df899c7e64fb391f18c2ba89ae1361b362ebfbab2a3db86b4",
+    "retention.json": "1617d08d13e50b641af5fea0bfa98e83bf8a7d7974e4b782cdda8f6dedd3cca2",
+    "source-paths.json": "3f309510f88ab2f6e3e5f824e8cef0f846c00cb4e7518949cd71e67bc7a17000",
+    "source-pins.json": "62ba0add6d37c54cafe8ea1b2ba12c6a71d641e580218071b6677a708db6c3b7",
+    "staging/preview/native/adapters/azureus_value_versions.cpp": "f609be5b184972d8a025cf658de721d7afc3946189d620ed9e0549a184fbf733",
+    "staging/preview/native/adapters/azureus_value_versions.hpp": "2a42873de80e2ff42ec4c26b7e90489481336c7ebf3544f08d9c0136ac54fd91",
+    "staging/preview/native/adapters/local_rating.cpp": "3efc17bbf3b5f7fb59236e6c1b18ab69ac7a4c18e1042cb025e21046c5c6b38f",
+    "staging/preview/native/adapters/local_rating.hpp": "1ba0eae2c7cba043106524436950472790b869268d3cd2b0d2216fef091ffaae",
+    "staging/preview/native/app/CMakeLists.txt": "5f1b870db0116fb5dbea4498d531c2d9b81366a6f82eef3124974b66dfca4cc3",
+    "staging/preview/native/app/azureus_local_publish.inc": "5af70d8f24d4a8529f3ce247ba7dd0d6a00f12c4f58f088d2885d964908db050",
+    "staging/preview/native/app/azureus_rating_consumer.inc": "36d4ceeabd6baaae0ad7ea8502c9ff6ad14ef6fdc04434e46a3d4c9769bf378e",
+    "staging/preview/native/app/owned_azureus_service.cpp": "b5b5384ab843fbf3c4bf6ef691c1d1b43e91e52eec054e39c6da916724ed26f2",
+    "staging/preview/native/app/owned_azureus_service.hpp": "76742bc903f2bf109f037dbc616ea958e100df348d625687fa4ba18753546ea9",
+    "staging/preview/native/services/azureus_db_runtime/database.cpp": "38eaf22d94386dd54ecfb9100a2b83caadceae3f169b65be4bcdd113f07e7eaf",
+    "staging/preview/native/services/azureus_db_runtime/database.hpp": "184ae7cf79ad3449fc052a9c22c61b95f628ddbb1897bf98c76fc33eaf2835ed",
+    "staging/preview/native/tests/azureus_database_runtime_tests.cpp": "0b71a03678473785e0ac44c35d5016d6224d8e6099b05b715abb6ff0e9ad4b44",
+    "staging/preview/native/tests/owned_azureus_service_tests.cpp": "30b8340f9f3761b77343601babce3d81b25af3c3d9cc710a1dd35a0885da2985"
+  },
+  "original_plugin_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+  "original_core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "scope": {
+    "saved_profile_rating_publish_and_read": true,
+    "typed_anonymous_flags": 16,
+    "normal_publication_default_flags": 0,
+    "normal_owned_network": 0,
+    "read_peer_count": 1,
+    "read_maximum_values": 64,
+    "original_read_maximum_values": 256,
+    "read_timeout_seconds": 20,
+    "automatic_queue_or_Host_activation": false,
+    "public_endpoints": false,
+    "author_build_or_subject_execution": false
+  }
+}

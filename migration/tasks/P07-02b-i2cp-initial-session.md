@@ -12,3 +12,8 @@ CREATED is registration only, not original OPEN. LeaseSet2 genuine independent e
 ## Owned LeaseSet2 prerequisite
 
 Source 6726a4cf7b017ac31d6aeede15f339c3ec2b71f7 adds explicit consuming createLeaseSession and retained-signer reconfigureLeaseSession. Real RequestVariableLeaseSet37 creates signed standard LS2/type3/Create41 with independent OpenSSL-generated Enc0 ElGamal pair.1..16 actual leases, original publication/expiry encoding, current generation/ID/acknowledged policy, renewals, deadlines and secret cleanup are covered. New actual both-JAR objects4cases/reference/direction; all7 affected suites passed each lane/private, full product buildGCC only. See ../evidence/20261029-normal-dht-leaseset2/verification.json. LeaseSetSubmitted is sign+socket-enqueue, no router ACK/OPEN/delivery. Other keys/LSvariants, auth/TLS/streaming/receive/public/default activation remain open.
+
+
+## Lease-backed outgoing datagrams
+
+Source `d384a850980f1b6245230ea852d617b11c405e11` adds explicit Datagram2/claimed3 Send5/Expires36 with current signer/recipient and genuine unexpired LS2 socket enqueue required. CREATED alone remains insufficient. Fixed-header bounded gzip, one pending tracked nonce, immutable initial reliability mode, monotone nonreused nonce, matching ID/status, independent absolute deadline and local-failure certainty are covered. Fresh affected7/5/5 and private7 passed; both actual Java artifacts exchanged8send+4status+1payload cases/reference/direction. Payload31 DTO parsing is not a receive listener. Receive, routing/tunnel/backend/streaming and public/default activation remain open. [Review](../evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md).

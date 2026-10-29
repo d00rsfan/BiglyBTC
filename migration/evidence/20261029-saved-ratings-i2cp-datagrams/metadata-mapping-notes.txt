@@ -1,0 +1,16 @@
+Metadata recommendation; no registry edits, no new execution claims.
+
+Primary record: transport.azureus_volatile_database; retain state=in_progress.
+Append native integration commit 1be0a4df444e82d3c2e702782bae88f5536959ef and, only after successful qualification, current task/review/evidence. Add runtime target azureus_rating_consumer.inc and held-profile adapter local_rating.hpp/.cpp to this bounded integration scope. Existing database/owner/version files are already represented. No new component is necessary.
+
+Secondary record: plugins.azrating_local_policy; retain state=implemented and existing loadRatingsFromDownload/storeRatingsToDownload source coverage. Append the native integration commit and downstream consumer evidence, explicitly reuse of the already qualified local policy. This does not qualify full RatingsUpdater or a new operational plugin. Its pure plugin target/source/first/integrated baselines stay unchanged.
+
+Leave plugins.azrating_data and plugins.azrating_publication_queue unchanged. This slice neither changes rating encoding/aggregation/key algorithms nor connects the qualified dispatcher/timer queue; automatic scheduling/Host/plugin activation remains open.
+
+Exact new attribution belongs in the primary in-progress transport record:
+- Add an azrating coverage entry for RatingsUpdater.readRating(Download,CompletionListener), writeRating's saved-download DDB branch and RatingPlugin.getDDBs, at 1629340340d0bc391d9e582f9ee989a93d550581. State explicitly one admitted peer, 64 vs 256 and explicit Public subset; first_ported_commit/integrated_through_commit remain null. Existing plugin baseline is not advanced.
+- Extend its EXISTING BiglyBT coverage (cb8c6cb9bb97916cbc7e80338a017200ffc3e71f) with DDBaseImpl.read/write, DDBaseKeyImpl byte-array handling, DDBaseHelpers.encode and DHT.FLAG_ANON source paths/symbols where missing. The current entry already has core DB/control/plugin context. Preserve its baseline, last-reviewed and null first/integrated fields. Additional metadata/network/config context remains traceable through the two exact source-pin JSONs rather than claiming entire core classes migrated.
+
+Source anchors: RatingsUpdater 1757-1905 saved-download read/zero-remote-value fallback; 1909-1934 publication gate; 2058-2111 key/value/FL_ANON write; DDBaseImpl 589-645 and749-795; full exact pins at build/azureus-rating-consumer-20261029/{source-pins,implementation-source-pins}.json. Native effective capsule 0efba32301b41f1c5ccedf8322457bbc6349e04606b890241706c79750dc55d7; independent source review 8adcfd9b062b68b451d6a50a72eccfe057ff477d186928d043c8ccd0ff24253a.
+
+Review wording: explicit saved Public rating publish/read over the held-profile volatile DB, actual endpoint/token/STORE/readback and bounded single-peer read, original key/ANON flag, current-source withdrawal. No whole-network average, public/bootstrap/default/automatic queue/plugin completion or anonymous-routing claim. Preserve every old native/evidence entry and all null/coverage baselines. Current build outcomes remain pending; this note grants no runtime PASS.

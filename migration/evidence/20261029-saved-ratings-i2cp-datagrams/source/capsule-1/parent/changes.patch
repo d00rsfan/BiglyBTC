@@ -1,0 +1,615 @@
+--- a/preview/native/adapters/azureus_value_versions.hpp
++++ b/preview/native/adapters/azureus_value_versions.hpp
+@@ -26,6 +26,9 @@
+   AzureusValueVersions& operator=(const AzureusValueVersions&)=delete;
+   std::int32_t network()const noexcept;
+   std::expected<void,Error> validate() const;
++  // Explicit retained alias of this SAME profile OFD, after current version
++  // validation. Consumers own the alias; no borrowed caller lease is exposed.
++  std::expected<std::shared_ptr<const ProfileLease>,Error> retainProfile() const;
+   // A version is returned only AFTER its128-value chunk's durable reservation.
+   // Indeterminate publication poisons this owner; never replay after an error.
+   std::expected<std::int32_t,Error> next(std::int64_t nowMillis);
+--- a/preview/native/adapters/azureus_value_versions.cpp
++++ b/preview/native/adapters/azureus_value_versions.cpp
+@@ -74,6 +74,10 @@
+     out->primary=std::move(*primary);auto valid=out->validate();if(!valid){return std::unexpected(valid.error());}return std::shared_ptr<AzureusValueVersions>(new AzureusValueVersions(std::move(out)));
+   }catch(...){return error(ErrorCode::Io,"Cannot allocate Azureus version owner");}
+ }
++std::expected<std::shared_ptr<const ProfileLease>,Error> AzureusValueVersions::retainProfile()const{
++  try{std::lock_guard guard(impl_->mutex);auto valid=impl_->validate();if(!valid){return std::unexpected(valid.error());}return impl_->lease->retain();}
++  catch(...){return error(ErrorCode::Io,"Cannot retain Azureus value profile");}
++}
+ std::expected<void,Error> AzureusValueVersions::validate()const {try{std::lock_guard guard(impl_->mutex);return impl_->validate();}catch(...){return error(ErrorCode::Io,"Cannot validate Azureus version owner");}}
+ std::expected<std::int32_t,Error> AzureusValueVersions::next(std::int64_t now){
+   try{
+--- a/preview/native/adapters/local_rating.hpp
++++ b/preview/native/adapters/local_rating.hpp
+@@ -20,6 +20,15 @@
+   // Local-only host binding. Never reports a DDB write/queue as performed.
+   bool publicationPerformed = false;
+ };
++// Explicit Public-DDB target. The revision binds full original info bytes,
++// selected identity, actual inventory, cached attributes/nickname and saved
++// DHT availability config. No runtime/service or publication authority itself.
++struct DistributedRatingSnapshot {
++  LocalRatingSnapshot local;
++  std::array<std::uint8_t,32> sourceRevision{};
++  std::array<std::uint8_t,27> key{};
++};
++std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const ProfileLease&,const core::TorrentHash&);
+ std::expected<LocalRatingSnapshot, Error> readLocalRating(const ProfileLease&, const core::TorrentHash&);
+ std::expected<LocalRatingSaved, Error> saveLocalRating(const ProfileLease&, const core::TorrentHash&,
+     const std::array<std::uint8_t, 32>& expectedAttributesRevision,
+--- a/preview/native/adapters/local_rating.cpp
++++ b/preview/native/adapters/local_rating.cpp
+@@ -15,7 +15,7 @@
+ constexpr std::string_view CommentKey = "Plugin.azrating.comment";
+ std::unexpected<Error> bad(ErrorCode code, const char* message) { return std::unexpected(Error{code,message}); }
+ std::string encoded(std::string_view value) { return std::to_string(value.size()) + ':' + std::string(value); }
+-std::expected<void, Error> savedTarget(const ProfileLease& lease, const core::TorrentHash& hash) {
++std::expected<ConfigFile, Error> savedTarget(const ProfileLease& lease, const core::TorrentHash& hash) {
+   auto file = ConfigFile::load(lease, "downloads.config");
+   if (!file) { return std::unexpected(file.error()); }
+   if (file->recoverySource() == RecoverySource::Saving) { return bad(ErrorCode::Conflict,"Resolve saved library recovery before editing a rating"); }
+@@ -36,7 +36,7 @@
+     found |= *item.hash == hash;
+   }
+   if (!found) { return bad(ErrorCode::Conflict,"Rating download is no longer in the saved library"); }
+-  return {};
++  return std::move(*file);
+ }
+ template<std::size_t N>
+ std::expected<std::array<std::byte,N>, Error> hashInfo(std::string_view raw, const EVP_MD* method) {
+@@ -63,10 +63,8 @@
+   if (!selected) { return std::unexpected(selected.error()); }
+   return validateOriginalTorrentKey(*selected,state.hash(),true);
+ }
+-std::expected<std::u16string, Error> nickname(const ProfileLease& lease) {
+-  auto config = ConfigFile::load(lease,"biglybt.config");
+-  if (!config && config.error().code != ErrorCode::Missing) { return std::unexpected(config.error()); }
+-  const auto* value = config ? config->document().find("Plugin.azrating.nick") : nullptr;
++std::expected<std::u16string, Error> nicknameValue(const core::Document* config) {
++  const auto* value = config ? config->find("Plugin.azrating.nick") : nullptr;
+   if (value && value->type != core::Node::Type::Bytes) { return bad(ErrorCode::InvalidFormat,"Invalid saved rating nickname"); }
+   auto text = rating::decodeAttributeText(value ? value->bytes : std::string_view{});
+   if (!text) { return bad(ErrorCode::InvalidFormat,"Saved rating nickname exceeds limits"); }
+@@ -75,6 +73,11 @@
+   if (begin == text->size()) { return std::u16string(u"Anonymous"); }
+   auto end = text->size(); while (end > begin && (*text)[end-1] <= 0x20) { --end; }
+   return text->substr(begin,end-begin);
++}
++std::expected<std::u16string, Error> nickname(const ProfileLease& lease) {
++  auto config=ConfigFile::load(lease,"biglybt.config");
++  if(!config&&config.error().code!=ErrorCode::Missing){return std::unexpected(config.error());}
++  return nicknameValue(config?&config->document():nullptr);
+ }
+ std::expected<core::Document, Error> attributes(const TorrentStateFile& state) {
+   const auto* node = state.document().find("attributes");
+@@ -114,6 +117,46 @@
+   std::transform(revision->begin(),revision->end(),token.begin(),[](std::byte b) { return std::to_integer<std::uint8_t>(b); });
+   return LocalRatingSnapshot{state.hash(),std::move(*local),token,state.recoveredBackup()};
+ }
++}
++std::expected<DistributedRatingSnapshot,Error> readDistributedRating(const ProfileLease& lease,const core::TorrentHash& hash){
++  try{
++    const auto unique=[](const core::Node& node){
++      if(node.type!=core::Node::Type::Dictionary||node.children.size()%2){return false;}
++      std::unordered_set<std::string_view> seen;for(std::size_t i=0;i<node.children.size();i+=2){if(node.children[i].type!=core::Node::Type::Bytes||!seen.insert(node.children[i].bytes).second){return false;}}return true;
++    };
++    auto inventory=savedTarget(lease,hash);if(!inventory){return std::unexpected(inventory.error());}
++    if(inventory->recoverySource()!=RecoverySource::Primary||!unique(inventory->document().root())){return bad(ErrorCode::Conflict,"Resolve rating inventory recovery first");}
++    auto store=TorrentStateStore::open(lease);if(!store){return std::unexpected(store.error());}
++    auto state=store->loadAttributes(lease,hash);if(!state){return std::unexpected(state.error());}
++    if(state->recoveredBackup()||!unique(state->document().root())){return bad(ErrorCode::Conflict,"Resolve rating state recovery first");}
++    auto valid=identity(*state);if(!valid){return std::unexpected(valid.error());}
++    auto attrs=attributes(*state);if(!attrs){return std::unexpected(attrs.error());}
++    const auto* info=state->document().find("info");if(!info||!unique(*info)||!unique(attrs->root())){return bad(ErrorCode::InvalidFormat,"Invalid distributed rating metadata");}
++    if(const auto* flags=attrs->find("flags")){if(flags->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid rating download flags");}
++      if((static_cast<std::uint64_t>(flags->integer)&0x200U)!=0){return bad(ErrorCode::Unsupported,"Metadata downloads cannot publish ratings");}}
++    // DDBaseImpl selects Public by the exact canonical saved network constant.
++    // No private-torrent or Mainline peer-source gate is invented here. The
++    // initial explicit branch requires present saved networks, not an inferred
++    // chooser/default from an uninitialised original DownloadManager.
++    const auto* networks=attrs->find("networks");if(!networks||networks->type!=core::Node::Type::List||networks->children.size()>16){return bad(ErrorCode::Unsupported,"Explicit saved Public DDB network required");}
++    bool publicNetwork=false;for(const auto& item:networks->children){if(item.type!=core::Node::Type::Bytes){return bad(ErrorCode::InvalidFormat,"Invalid rating network value");}publicNetwork|=item.bytes=="Public";}
++    if(!publicNetwork){return bad(ErrorCode::Unsupported,"Rating Public DDB is not enabled");}
++    auto config=ConfigFile::load(lease,"biglybt.config");if(!config&&config.error().code!=ErrorCode::Missing){return std::unexpected(config.error());}
++    if(config&&(config->recoverySource()!=RecoverySource::Primary||!unique(config->document().root()))){return bad(ErrorCode::Conflict,"Resolve rating configuration recovery first");}
++    if(const auto* enabled=config?config->document().find("Plugin.DHT.dht.enabled"):nullptr){
++      if(enabled->type!=core::Node::Type::Integer){return bad(ErrorCode::InvalidFormat,"Invalid original DHT availability");}
++      if(static_cast<std::uint32_t>(enabled->integer)==0){return bad(ErrorCode::Unsupported,"Original Azureus DHT is disabled");}}
++    auto nick=nicknameValue(config?&config->document():nullptr);if(!nick){return std::unexpected(nick.error());}
++    auto local=snapshot(*state,*attrs,*nick);if(!local){return std::unexpected(local.error());}
++    const auto hashBytes=hash.bytes();auto key=rating::lookupKey({reinterpret_cast<const std::uint8_t*>(hashBytes.data()),hashBytes.size()});if(!key){return bad(ErrorCode::InvalidFormat,"Invalid selected rating hash");}
++    auto infoBytes=originalTorrentInfoSubject(state->document());if(!infoBytes){return std::unexpected(infoBytes.error());}
++    std::string scope=encoded(inventory->document().serialize())+encoded(*infoBytes)+encoded(attrs->serialize())
++        +encoded(config?config->document().serialize():std::string("missing"));
++    const auto digest=hashInfo<32>(scope,EVP_sha256());if(!digest){return std::unexpected(digest.error());}
++    std::array<std::uint8_t,32> revision{};std::transform(digest->begin(),digest->end(),revision.begin(),[](std::byte v){return std::to_integer<std::uint8_t>(v);});
++    auto held=lease.retain();if(!held){return std::unexpected(held.error());}
++    return DistributedRatingSnapshot{std::move(*local),revision,*key};
++  }catch(const std::bad_alloc&){return bad(ErrorCode::Io,"Insufficient memory for distributed rating");}
+ }
+ std::expected<LocalRatingSnapshot, Error> readLocalRating(const ProfileLease& lease, const core::TorrentHash& hash) {
+   try {
+--- a/preview/native/services/azureus_db_runtime/database.hpp
++++ b/preview/native/services/azureus_db_runtime/database.hpp
+@@ -20,6 +20,9 @@
+   // no implicit entropy, suspension deadline, file persistence or activation.
+   std::shared_ptr<azureus_storage_stats::DiversificationControl> diversificationControl;
+ };
++// Original DDB single-value flags only. ANON is protocol0x10, not anonymous
++// network routing, and never permits arbitrary flag/replication overrides.
++enum class LocalPublicationFlags:std::uint8_t {Normal=0,Anonymous=0x10};
+ struct Snapshot {std::size_t keys=0,values=0,bytes=0;std::uint64_t stores=0,reads=0,expired=0,localPuts=0;bool closed=false;};
+ struct Read {std::int8_t diversification=1;std::vector<azureus_values::Value> values;};
+ // Serialized volatile facade, no network/profile/timer/retained clock/provider.
+@@ -34,10 +37,12 @@
+   // Immutable owning copy; used to bind a normal receiver to its actual socket.
+   std::expected<std::optional<azureus_nodes::Contact>,Error> localContact()const;
+   // Source local store: actual bound contact, durable externally reserved
+-  // version, normal flags/lifetime/replication only. No remote quota bypass is
++  // version, typed normal/anonymous flags and normal lifetime/replication. No remote quota bypass is
+   // exposed through store(); explicit owner capacity still bounds local keys.
+   std::expected<lifecycle::DbValue,Error> putLocal(std::string_view key,
+       std::string_view payload,std::int32_t reservedVersion,lifecycle::WallClock&);
++  std::expected<lifecycle::DbValue,Error> putLocal(std::string_view key,
++      std::string_view payload,std::int32_t reservedVersion,lifecycle::WallClock&,LocalPublicationFlags);
+ 
+   // Bind exactly once before records exist; transport supplies actual bound socket/NodeCache contact.
+   std::expected<void,Error> bindLocal(const azureus_nodes::Contact&);
+--- a/preview/native/services/azureus_db_runtime/database.cpp
++++ b/preview/native/services/azureus_db_runtime/database.cpp
+@@ -164,9 +164,11 @@
+   }catch(...){return std::unexpected(Error::Memory);}
+ }
+ std::expected<lifecycle::DbValue,Error> Owner::putLocal(std::string_view key,
+-    std::string_view bytes,std::int32_t version,lifecycle::WallClock& clock){
+-  if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}
+-  if(!impl_->local||key.size()!=20||bytes.empty()||bytes.size()>512){return std::unexpected(Error::Invalid);}
++    std::string_view bytes,std::int32_t version,lifecycle::WallClock& clock){return putLocal(key,bytes,version,clock,LocalPublicationFlags::Normal);}
++std::expected<lifecycle::DbValue,Error> Owner::putLocal(std::string_view key,
++    std::string_view bytes,std::int32_t version,lifecycle::WallClock& clock,LocalPublicationFlags flags){
++  if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}
++  if((flags!=LocalPublicationFlags::Normal&&flags!=LocalPublicationFlags::Anonymous)||!impl_->local||key.size()!=20||bytes.empty()||bytes.size()>512){return std::unexpected(Error::Invalid);}
+   try{
+     Impl::Guard guard(*impl_);if(impl_->localPuts==UINT64_MAX){return std::unexpected(Error::Capacity);}
+     auto found=impl_->records.find(key);
+@@ -183,7 +185,7 @@
+     auto& record=*found->second;KeyPort::Borrow borrowed(record.port,clock);
+     auto origin=record.owner.contact(*impl_->local);auto payload=lifecycle::Payload::copy(bytes);
+     if(!origin||!payload){return std::unexpected(Error::Memory);}
+-    mapping::ValueFields fields{clock.nowMilliseconds(),std::move(*payload),version,*origin,*origin,true,0,0,-1};
++    mapping::ValueFields fields{clock.nowMilliseconds(),std::move(*payload),version,*origin,*origin,true,static_cast<std::int32_t>(flags),0,-1};
+     auto value=record.owner.value(std::move(fields),clock);
+     if(!value||!record.owner.add(value->value,clock,record.port)||record.port.failed){return std::unexpected(Error::Mapping);}
+     auto actual=value->value.snapshot();if(!actual){return std::unexpected(Error::Mapping);}
+--- a/preview/native/app/owned_azureus_service.hpp
++++ b/preview/native/app/owned_azureus_service.hpp
+@@ -2,6 +2,7 @@
+ #include "owned_transport.hpp"
+ #include "router.hpp"
+ #include "azureus_value_versions.hpp"
++#include "../adapters/local_rating.hpp"
+ #include "../services/azureus_control/lookup.hpp"
+ #include <chrono>
+ #include <cstddef>
+@@ -18,7 +19,7 @@
+   Disabled,Invalid,NoApplication,Start,Closed,Capacity,Dispatch,Memory,Thread,UnknownRequest,Transport,Profile,Readback
+ };
+ enum class AzureusServiceState { Starting,Running,Closing,Closed,Failed };
+-enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue };
++enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue,PublishRating,ReadRatings };
+ struct AzureusServiceOptions {
+   bool enabled=false;
+   QHostAddress bindAddress{QHostAddress::LocalHost};
+@@ -41,6 +42,7 @@
+   std::optional<AzureusServiceError> error;
+   std::optional<azureus::Failure> transportFailure;
+ };
++using AzureusPublicationFlags=services::azureus_db_runtime::LocalPublicationFlags;
+ enum class AzureusPublishState {Local,Token,Store,Readback,Complete,Failed,Cancelled,Closed};
+ struct AzureusPublishSnapshot {
+   std::uint64_t request=0;
+@@ -48,6 +50,26 @@
+   services::azureus_nodes::NodeId key{};
+   std::optional<services::azureus_db_value::DbValue> localValue;
+   std::vector<services::azureus_values::Value> readback;
++  std::optional<AzureusServiceError> error;
++  std::optional<azureus::Failure> transportFailure;
++  std::optional<storage::Error> profileFailure;
++};
++enum class AzureusRatingReadState {Reading,Complete,TimedOut,Cancelled,Closed,Failed};
++struct AzureusRatingReadSnapshot {
++  std::uint64_t request=0;
++  AzureusRatingReadState state=AzureusRatingReadState::Reading;
++  std::optional<core::TorrentHash> hash;
++  std::array<std::uint8_t,32> sourceRevision{};
++  services::azureus_nodes::NodeId key{};
++  plugins::rating::RatingResults ratings;
++  std::size_t receivedValues=0,decodeErrors=0,ignoredMalformedValues=0;
++  // Explicit single owned peer sample, never a complete global rating.
++  std::size_t maximumValues=64,originalMaximumValues=256;
++  bool wholeNetwork=false,possiblyPartial=true;
++  // Last worker-validated source only. No IO is performed by observation().
++  // Current values are withdrawn when a subsequent worker fence sees a change;
++  // retained old snapshot pointers remain historical receipts, not authority.
++  bool current=false,localFallback=false;
+   std::optional<AzureusServiceError> error;
+   std::optional<azureus::Failure> transportFailure;
+   std::optional<storage::Error> profileFailure;
+@@ -71,6 +93,7 @@
+   std::optional<AzureusServiceError> lookupFailure;
+   std::shared_ptr<const AzureusPublishSnapshot> publishSnapshot;
+   std::shared_ptr<const services::azureus_db_runtime::Snapshot> databaseSnapshot;
++  std::shared_ptr<const AzureusRatingReadSnapshot> ratingReadSnapshot;
+ };
+ // Explicit Host-owned development service. create(enabled=false) returns before
+ // any Qt thread/socket exists. A dedicated Qt event loop exclusively constructs,
+@@ -116,6 +139,19 @@
+   std::expected<std::uint64_t,AzureusServiceError> publishValue(azureus::Peer,
+       std::string applicationKey,std::string payload,
+       std::chrono::nanoseconds timeout=std::chrono::seconds(5));
++  std::expected<std::uint64_t,AzureusServiceError> publishValue(azureus::Peer,
++      std::string applicationKey,std::string payload,std::chrono::nanoseconds timeout,
++      AzureusPublicationFlags);
++  // Explicit single already-admitted peer, held-profile Public network0 only.
++  // The source revision must come from readDistributedRating on this SAME OFD.
++  // Publish uses saved RatingData + original ANON0x10, <=512B; no queue/timer.
++  // Read preserves actual partial/timeout status, max64 values (original256).
++  std::expected<std::uint64_t,AzureusServiceError> publishSavedRating(azureus::Peer,
++      core::TorrentHash,std::array<std::uint8_t,32> sourceRevision,
++      std::chrono::nanoseconds timeout=std::chrono::seconds(5));
++  std::expected<std::uint64_t,AzureusServiceError> readSavedRatings(azureus::Peer,
++      core::TorrentHash,std::array<std::uint8_t,32> sourceRevision,
++      std::chrono::nanoseconds timeout=std::chrono::seconds(20));
+   std::expected<std::uint64_t,AzureusServiceError> cancel(std::uint64_t request);
+   // Seals admission and joins even with queued/active work; idempotent. No forced
+   // termination or detached actor. Call/destruction must not race object lifetime.
+--- a/preview/native/app/owned_azureus_service.cpp
++++ b/preview/native/app/owned_azureus_service.cpp
+@@ -26,6 +26,10 @@
+   std::int32_t flags=0,maximumValues=0;
+   std::chrono::nanoseconds timeout=std::chrono::seconds(2);
+   std::string applicationKey,payload;
++  AzureusPublicationFlags publicationFlags=AzureusPublicationFlags::Normal;
++  std::optional<core::TorrentHash> ratingHash;
++  std::array<std::uint8_t,32> ratingRevision{};
++  std::shared_ptr<const storage::DistributedRatingSnapshot> ratingSubject;
+ };
+ namespace {
+ bool sameCounters(const azureus::Statistics& a,const azureus::Statistics& b){
+@@ -92,7 +96,12 @@
+         if(value.kind==AzureusServiceCommand::AllowPeer){auto allowed=actor_.allowPeer(value.peer);if(allowed){rememberOwned(value.peer);routerKnown(value.peer);}complete(value,allowed);return;}
+         if(value.kind==AzureusServiceCommand::LookupValue){beginLookup(value);return;}
+         if(value.kind==AzureusServiceCommand::PublishValue){beginPublish(value);return;}
++        if(value.kind==AzureusServiceCommand::PublishRating||value.kind==AzureusServiceCommand::ReadRatings){beginRating(std::move(value));return;}
+         if(value.kind==AzureusServiceCommand::Cancel){
++          if(ratingRead_&&ratingRead_->command.id==value.target&&!ratingRead_->finished){
++            ratingRead_->cancelled=true;const bool cancelled=actor_.cancel(ratingRead_->ticket);
++            complete(value,cancelled?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));return;
++          }
+           if(publishing_&&publishing_->command.id==value.target&&!publishing_->finished){
+             publishing_->cancelled=true;const bool cancelled=actor_.cancel(publishing_->ticket);
+             complete(value,cancelled?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));return;
+@@ -119,6 +128,7 @@
+       bool closed=true;try{actor_.close();}catch(...){closed=false;}
+       if(closed){
+         if(publishing_&&!publishing_->finished){try{finishPublish(publishing_,AzureusPublishState::Closed,AzureusServiceError::Closed,azureus::Failure::Closed);}catch(...){publicationMemoryFailure();}}
++        if(ratingRead_&&!ratingRead_->finished){try{finishRatingRead(ratingRead_,AzureusRatingReadState::Closed,AzureusServiceError::Closed,azureus::Failure::Closed);}catch(...){publicationMemoryFailure();}}
+         if(localDatabase_){localDatabase_->close();}
+         // actor.close() actually closes all outstanding tickets. Its queued
+         // callbacks need not run after the event loop stops; record only that
+@@ -137,6 +147,7 @@
+   private:
+     struct Active {std::uint64_t id=0;azureus::Ticket ticket;};
+     #include "azureus_local_publish.inc"
++    #include "azureus_rating_consumer.inc"
+ 
+     struct LookupRpc {std::uint64_t node=0;azureus::Ticket ticket;azureus::Peer peer;bool cancellationRequested=false;};
+     using Clock=std::chrono::steady_clock;
+@@ -360,7 +371,7 @@
+       try{
+         const auto actual=actor_.dhtStatisticsSnapshot(); // Exported getter is noexcept and fixed-state.
+         if(!actual){std::lock_guard lock(state_->mutex);state_->value.current=false;state_->value.error=AzureusServiceError::Transport;state_->value.transportFailure=actual.error();state_->advance();return;}
+-        captureRouter();captureLookup();
++        captureRouter();captureLookup();refreshRatingObservation();
+         if(localDatabase_){const auto value=localDatabase_->snapshot();if(value){auto copy=std::make_shared<const services::azureus_db_runtime::Snapshot>(*value);std::lock_guard lock(state_->mutex);state_->value.databaseSnapshot=std::move(copy);}}
+         if(last_&&sameFacts(*last_,*actual)){std::lock_guard lock(state_->mutex);const bool current=!state_->stop&&state_->value.state==AzureusServiceState::Running&&actual->transport().state()==azureus::TransportStatisticsState::Bound;
+           if(state_->value.current!=current||state_->value.error||state_->value.routerSnapshot!=routerSnapshot_||state_->value.routerFailure!=routerFailure_||state_->value.lookupSnapshot!=lookupSnapshot_||state_->value.lookupFailure!=lookupFailure_){
+@@ -439,6 +450,10 @@
+   if(value.kind!=AzureusServiceCommand::Cancel&&!validPeer(value.peer,state.endpoint.address)){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind==AzureusServiceCommand::Cancel&&!value.target){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind!=AzureusServiceCommand::AllowPeer&&value.kind!=AzureusServiceCommand::Cancel&&(value.timeout<=std::chrono::nanoseconds::zero()||value.timeout>std::chrono::seconds(30))){return std::unexpected(AzureusServiceError::Invalid);}
++  if((value.kind==AzureusServiceCommand::PublishRating||value.kind==AzureusServiceCommand::ReadRatings)
++      &&(!impl_->options.valueVersions||impl_->options.network!=0||!value.ratingHash||value.timeout<std::chrono::milliseconds(1)
++          ||(value.kind==AzureusServiceCommand::ReadRatings&&value.timeout>std::chrono::seconds(20)))){return std::unexpected(AzureusServiceError::Invalid);}
++  if(value.publicationFlags!=AzureusPublicationFlags::Normal&&value.publicationFlags!=AzureusPublicationFlags::Anonymous){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind==AzureusServiceCommand::PublishValue&&(!impl_->options.valueVersions||value.applicationKey.empty()||value.applicationKey.size()>1024||value.payload.empty()||value.payload.size()>512||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind==AzureusServiceCommand::FindValue&&(value.maximumValues<0||value.maximumValues>255)){return std::unexpected(AzureusServiceError::Invalid);}
+   if(value.kind==AzureusServiceCommand::LookupValue&&((value.flags!=0&&value.flags!=8)||value.maximumValues<1||value.maximumValues>64||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
+@@ -452,7 +467,10 @@
+ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::findNode(azureus::Peer peer,azureus::find::nodes::NodeId target,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::FindNode;value.peer=std::move(peer);value.node=target;value.timeout=timeout;return submit(value);}
+ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::findValue(azureus::Peer peer,azureus::lookup::nodes::NodeId target,std::int32_t flags,std::int32_t maximumValues,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::FindValue;value.peer=std::move(peer);value.node=target;value.flags=flags;value.maximumValues=maximumValues;value.timeout=timeout;return submit(value);}
+ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::lookupValue(azureus::Peer seed,azureus::lookup::nodes::NodeId target,std::int32_t flags,std::int32_t maximumValues,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::LookupValue;value.peer=std::move(seed);value.node=target;value.flags=flags;value.maximumValues=maximumValues;value.timeout=timeout;return submit(value);}
+-std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::publishValue(azureus::Peer peer,std::string key,std::string payload,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::PublishValue;value.peer=std::move(peer);value.applicationKey=std::move(key);value.payload=std::move(payload);value.timeout=timeout;return submit(std::move(value));}
++std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::publishValue(azureus::Peer peer,std::string key,std::string payload,std::chrono::nanoseconds timeout){return publishValue(std::move(peer),std::move(key),std::move(payload),timeout,AzureusPublicationFlags::Normal);}
++std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::publishValue(azureus::Peer peer,std::string key,std::string payload,std::chrono::nanoseconds timeout,AzureusPublicationFlags flags){Command value;value.kind=AzureusServiceCommand::PublishValue;value.peer=std::move(peer);value.applicationKey=std::move(key);value.payload=std::move(payload);value.timeout=timeout;value.publicationFlags=flags;return submit(std::move(value));}
++std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::publishSavedRating(azureus::Peer peer,core::TorrentHash hash,std::array<std::uint8_t,32> revision,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::PublishRating;value.peer=std::move(peer);value.ratingHash=std::move(hash);value.ratingRevision=revision;value.timeout=timeout;return submit(std::move(value));}
++std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::readSavedRatings(azureus::Peer peer,core::TorrentHash hash,std::array<std::uint8_t,32> revision,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::ReadRatings;value.peer=std::move(peer);value.ratingHash=std::move(hash);value.ratingRevision=revision;value.timeout=timeout;return submit(std::move(value));}
+ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::cancel(std::uint64_t request){Command value;value.kind=AzureusServiceCommand::Cancel;value.target=request;return submit(value);}
+ std::expected<void,AzureusServiceError> OwnedAzureusService::close(){
+   if(QThread::currentThread()==&impl_->thread){return std::unexpected(AzureusServiceError::Thread);}std::lock_guard lifecycle(impl_->closeMutex);auto& state=*impl_->state;
+--- a/preview/native/app/azureus_local_publish.inc
++++ b/preview/native/app/azureus_local_publish.inc
+@@ -59,7 +59,9 @@
+       if(value->cancelled){finishPublish(value,AzureusPublishState::Cancelled,AzureusServiceError::Transport,azureus::Failure::Cancelled);return false;}
+       if(std::chrono::steady_clock::now()>=value->deadline){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Transport,azureus::Failure::Timeout);return false;}
+       if(!isOwned(value->command.peer)){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid,azureus::Failure::Peer);return false;}
+-      auto valid=options_.valueVersions->validate();if(!valid){value->snapshot.profileFailure=valid.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return false;}return true;
++      auto valid=options_.valueVersions->validate();if(!valid){value->snapshot.profileFailure=valid.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return false;}
++      if(value->command.ratingSubject){auto current=validateRating(value->command);if(!current){value->snapshot.profileFailure=current.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return false;}}
++      return true;
+     }
+     std::chrono::nanoseconds publishRemaining(const Publishing& value)const{return std::chrono::duration_cast<std::chrono::nanoseconds>(value.deadline-std::chrono::steady_clock::now());}
+     void publishReadback(const std::shared_ptr<Publishing>& value){
+@@ -102,7 +104,7 @@
+       if(!validatePublish(value)){return;}PublicationClock clock;auto version=options_.valueVersions->next(clock.nowMilliseconds());
+       if(!version){value->snapshot.profileFailure=version.error();finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Profile);return;}
+       const auto key=std::string_view(reinterpret_cast<const char*>(value->snapshot.key.data()),value->snapshot.key.size());
+-      auto local=localDatabase_->putLocal(key,command.payload,*version,clock);if(!local){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}value->snapshot.localValue=std::move(*local);
++      auto local=localDatabase_->putLocal(key,command.payload,*version,clock,command.publicationFlags);if(!local){finishPublish(value,AzureusPublishState::Failed,AzureusServiceError::Invalid);return;}value->snapshot.localValue=std::move(*local);
+       if(!validatePublish(value)){return;}value->snapshot.state=AzureusPublishState::Token;capturePublish(value);
+       auto sent=actor_.requestStoreToken(command.peer,options_.version,this,[this,value](azureus::DetailedFindNodeOutcome outcome){try{
+         if(!validatePublish(value)){return;}
+--- a/preview/native/app/CMakeLists.txt
++++ b/preview/native/app/CMakeLists.txt
+@@ -141,4 +141,5 @@
+     message(FATAL_ERROR "Adopt the exact local rating host library before wiring")
+   endif()
+   target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_local_rating_profile)
++  target_link_libraries(biglybtc_owned_azureus_service PUBLIC biglybtc_local_rating_profile)
+ endif()
+--- a/preview/native/tests/owned_azureus_service_tests.cpp
++++ b/preview/native/tests/owned_azureus_service_tests.cpp
+@@ -1,5 +1,6 @@
+ #include "owned_azureus_service.hpp"
+ #include "owned_ddb_fixture.hpp"
++#include "torrent_state.hpp"
+ #include <QCoreApplication>
+ #include <QtTest>
+ #include <QTemporaryDir>
+@@ -45,9 +46,88 @@
+  if(!id){throw std::runtime_error("Cannot derive actual owned contact");}services::azureus_nodes::Contact result;result.protocol=55;result.id=id->id;result.address=address;return result;
+ }
+ }
++
++std::string ratingBytes(std::string_view value){return std::to_string(value.size())+':'+std::string(value);}
++std::string ratingDictionary(std::initializer_list<std::pair<std::string,std::string>> entries){
++ std::vector<std::pair<std::string,std::string>> values(entries);std::ranges::sort(values);std::string out="d";for(const auto& [key,value]:values){out+=ratingBytes(key)+value;}return out+'e';
++}
++void writeRatingFixture(const QString& path,const std::string& bytes){QFile file(path);if(!file.open(QIODevice::WriteOnly|QIODevice::Truncate)||file.write(bytes.data(),static_cast<qint64>(bytes.size()))!=static_cast<qint64>(bytes.size())||!file.flush()){throw std::runtime_error("Cannot write generated rating fixture");}}
++QByteArray readRatingFixture(const QString& path){QFile file(path);if(!file.open(QIODevice::ReadOnly)){throw std::runtime_error("Cannot read generated rating fixture");}return file.readAll();}
++struct RatingOwner {
++ QTemporaryDir root;std::optional<storage::ProfileLease> held;std::shared_ptr<storage::AzureusValueVersions> versions;std::unique_ptr<app::OwnedAzureusService> owner;
++ std::string info=ratingDictionary({{"length","i3e"},{"name",ratingBytes("rating-fixture.bin")},{"piece length","i16384e"},{"pieces",ratingBytes(std::string(20,'x'))}});
++ core::TorrentHash hash;
++ int score;std::string nick,comment,network="Public";bool dht=true;std::int64_t flags=0;
++ QString statePath()const{return root.path()+"/active/"+QString::fromStdString(hash.hex())+".dat";}
++ static core::TorrentHash identity(std::string_view info){const auto digest=QCryptographicHash::hash(QByteArray(info.data(),static_cast<qsizetype>(info.size())),QCryptographicHash::Sha1);auto value=core::TorrentHash::parse(std::string_view(digest.constData(),static_cast<std::size_t>(digest.size())));if(!value){throw std::runtime_error("Rating info hash");}return *value;}
++ RatingOwner(const char* address,int value,std::string name,std::string text):hash(identity(info)),score(value),nick(std::move(name)),comment(std::move(text)){
++   if(!root.isValid()||!QDir(root.path()).mkdir("active")){throw std::runtime_error("Rating profile");}files();
++   auto acquired=storage::ProfileLease::acquire(root.path().toStdString());if(!acquired){throw std::runtime_error(acquired.error().message);}held.emplace(std::move(*acquired));
++   auto opened=storage::AzureusValueVersions::open(*held,0);if(!opened){throw std::runtime_error(opened.error().message);}versions=*opened;
++   auto policy=options();policy.network=0;policy.bindAddress=QHostAddress(QString::fromLatin1(address));policy.valueVersions=versions;policy.serveValues=true;auto made=app::OwnedAzureusService::create(policy);if(!made){throw std::runtime_error("Cannot create normal rating owner");}owner=std::move(*made);
++ }
++ void files(){
++   const auto id=hash.bytes();writeRatingFixture(root.path()+"/downloads.config",ratingDictionary({{"downloads","l"+ratingDictionary({{"state","i70e"},{"save_dir",ratingBytes("/owned/rating-payload-never-opened")},{"torrent",ratingBytes("owned-rating.torrent")},{"torrent_hash",ratingBytes(std::string(reinterpret_cast<const char*>(id.data()),id.size()))}})+"e"}}));
++   state();config();
++ }
++ void state(){const auto attrs=ratingDictionary({{"Plugin.azrating.comment",ratingBytes(comment)},{"Plugin.azrating.rating",ratingBytes(std::to_string(score))},{"flags","i"+std::to_string(flags)+"e"},{"networks","l"+ratingBytes(network)+"e"},{"future",ratingBytes("retained-rating-opaque")}});writeRatingFixture(statePath(),ratingDictionary({{"attributes",attrs},{"info",info},{"resume",ratingBytes("opaque-resume-untouched")}}));}
++ void config(){writeRatingFixture(root.path()+"/biglybt.config",ratingDictionary({{"Plugin.DHT.dht.enabled",dht?"i1e":"i0e"},{"Plugin.azrating.nick",ratingBytes(nick)},{"future",ratingBytes("configuration-opaque")}}));}
++ storage::DistributedRatingSnapshot target()const{auto value=storage::readDistributedRating(*held,hash);if(!value){throw std::runtime_error(value.error().message);}return std::move(*value);}
++};
++void emptyRatingReply(QUdpSocket& socket,const QNetworkDatagram& datagram){
++ const auto raw=datagram.data();udp::lookup::Context context;context.header.network=0;context.header.now=QDateTime::currentMSecsSinceEpoch();services::azureus_nodes::NodeCache cache;
++ auto decoded=udp::lookup::decode(udp::packet::udp::Kind::Request,std::string(raw.constData(),static_cast<std::size_t>(raw.size())),context,cache);if(!decoded){throw std::runtime_error("Invalid actual rating GET");}
++ const auto& incoming=decoded->header().fields();udp::lookup::ReplyFields reply;reply.header.network=0;reply.header.localVersion=55;reply.header.remoteVersion=incoming.originatorVersion;reply.header.connection=incoming.connection;reply.header.transaction=incoming.transaction;reply.header.now=context.header.now;reply.header.receivedAt=context.header.now;reply.contacts=std::span<const udp::lookup::nodes::Snapshot>{};reply.positions=std::span<const std::optional<udp::lookup::positions::WirePosition>>{};
++ const auto encoded=udp::lookup::encodeReply(reply);if(!encoded||datagram.senderPort()<=0||datagram.senderPort()>65535||socket.writeDatagram(encoded->data(),static_cast<qint64>(encoded->size()),datagram.senderAddress(),static_cast<quint16>(datagram.senderPort()))!=static_cast<qint64>(encoded->size())){throw std::runtime_error("Cannot send owned held rating GET reply");}
++}
++
+ class OwnedAzureusServiceTests final:public QObject {
+  Q_OBJECT
+ private slots:
++
++ void savedRatingsUseOriginalAnonymousKeyPayloadAndTwoNormalPublicOwners(){
++   RatingOwner a("127.11.0.1",4,"Alice","from A"),b("127.12.0.1",2,"Bob","from B");QCOMPARE(a.hash,b.hash);const auto sa=a.target(),sb=b.target();const auto stateA=readRatingFixture(a.statePath()),stateB=readRatingFixture(b.statePath());
++   auto aa=a.owner->allowPeer(b.owner->endpoint()),bb=b.owner->allowPeer(a.owner->endpoint());QVERIFY(aa&&bb);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*aa)&&successful(*b.owner,*bb),3000);
++   const auto pa=a.owner->publishSavedRating(b.owner->endpoint(),a.hash,sa.sourceRevision);QVERIFY(pa);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*pa),5000);auto published=a.owner->observation().publishSnapshot;QVERIFY(published);QCOMPARE(published->state,app::AzureusPublishState::Complete);QCOMPARE(published->localValue->flags(),std::uint8_t{0x10});QCOMPARE(published->readback[0].flags,std::uint8_t{0x10});QCOMPARE(published->readback[0].bytes,sa.local.local.value.encode().value());
++   const std::string applicationKey(reinterpret_cast<const char*>(sa.key.data()),sa.key.size());QCOMPARE(applicationKey.substr(20),std::string(".rating"));const auto digest=QCryptographicHash::hash(QByteArray(applicationKey.data(),static_cast<qsizetype>(applicationKey.size())),QCryptographicHash::Sha1);QVERIFY(std::equal(published->key.begin(),published->key.end(),reinterpret_cast<const std::uint8_t*>(digest.constData())));
++   const auto pb=b.owner->publishSavedRating(a.owner->endpoint(),b.hash,sb.sourceRevision);QVERIFY(pb);QTRY_VERIFY_WITH_TIMEOUT(finished(*b.owner,*pb),5000);QCOMPARE(b.owner->observation().publishSnapshot->state,app::AzureusPublishState::Complete);
++   const auto readA=a.owner->readSavedRatings(b.owner->endpoint(),a.hash,sa.sourceRevision);QVERIFY(readA);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*readA),5000);const auto result=a.owner->observation().ratingReadSnapshot;QVERIFY(result);QCOMPARE(result->state,app::AzureusRatingReadState::Complete);QCOMPARE(result->receivedValues,std::size_t{2});QVERIFY(result->current&&result->possiblyPartial&&!result->wholeNetwork);QCOMPARE(result->maximumValues,std::size_t{64});QCOMPARE(result->originalMaximumValues,std::size_t{256});QCOMPARE(result->ratings.count(),std::size_t{2});QCOMPARE(result->ratings.average(),3.0F);QCOMPARE(result->ratings.commentCount(),2);QVERIFY(!result->localFallback);QCOMPARE(result->decodeErrors,std::size_t{0});
++   const auto readB=b.owner->readSavedRatings(a.owner->endpoint(),b.hash,sb.sourceRevision);QVERIFY(readB);QTRY_VERIFY_WITH_TIMEOUT(finished(*b.owner,*readB),5000);QCOMPARE(b.owner->observation().ratingReadSnapshot->ratings.average(),3.0F);QCOMPARE(readRatingFixture(a.statePath()),stateA);QCOMPARE(readRatingFixture(b.statePath()),stateB);QVERIFY(a.owner->close());QVERIFY(b.owner->close());QVERIFY(a.owner->observation().joined&&b.owner->observation().joined);QCOMPARE(result->ratings.average(),3.0F);
++ }
++ void savedRatingPublicationRefusesUnadmittedZeroOversizeAndStaleTargets(){
++   RatingOwner a("127.13.0.1",0,"Owned","comment"),b("127.14.0.1",2,"Receiver","");auto source=a.target();const auto missing=a.owner->publishSavedRating(b.owner->endpoint(),a.hash,source.sourceRevision);QVERIFY(missing);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*missing),3000);QCOMPARE(a.owner->observation().lastResult->error,std::optional{app::AzureusServiceError::Invalid});
++   const auto admit=a.owner->allowPeer(b.owner->endpoint());QVERIFY(admit);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*admit),3000);const auto zero=a.owner->publishSavedRating(b.owner->endpoint(),a.hash,source.sourceRevision);QVERIFY(zero);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*zero),3000);QCOMPARE(a.owner->observation().lastResult->error,std::optional{app::AzureusServiceError::Invalid});
++   a.score=3;a.comment=std::string(600,'x');a.state();source=a.target();const auto large=a.owner->publishSavedRating(b.owner->endpoint(),a.hash,source.sourceRevision);QVERIFY(large);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*large),3000);QCOMPARE(a.owner->observation().lastResult->error,std::optional{app::AzureusServiceError::Invalid});
++   a.comment="small";a.state();source=a.target();a.nick="changed";a.config();const auto stale=a.owner->publishSavedRating(b.owner->endpoint(),a.hash,source.sourceRevision);QVERIFY(stale);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*stale),3000);QCOMPARE(a.owner->observation().lastResult->error,std::optional{app::AzureusServiceError::Profile});QCOMPARE(a.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(a.owner->observation().databaseSnapshot->localPuts,std::uint64_t{0});
++   const auto flags=a.owner->publishValue(b.owner->endpoint(),"invalid-flags","body",1s,static_cast<app::AzureusPublicationFlags>(0x40));QVERIFY(!flags);QCOMPARE(flags.error(),app::AzureusServiceError::Invalid);
++ }
++ void savedRatingMalformedRemoteValueDoesNotBecomeLocalFallback(){
++   RatingOwner a("127.15.0.1",5,"Local","fallback"),b("127.16.0.1",2,"Remote","");auto aa=a.owner->allowPeer(b.owner->endpoint()),bb=b.owner->allowPeer(a.owner->endpoint());QVERIFY(aa&&bb);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*aa)&&successful(*b.owner,*bb),3000);const auto source=a.target();
++   const auto empty=a.owner->readSavedRatings(b.owner->endpoint(),a.hash,source.sourceRevision);QVERIFY(empty);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*empty),3000);auto observed=a.owner->observation().ratingReadSnapshot;QCOMPARE(observed->receivedValues,std::size_t{0});QVERIFY(observed->localFallback);QCOMPARE(observed->ratings.average(),5.0F);
++   const std::string key(reinterpret_cast<const char*>(source.key.data()),source.key.size());const auto malformed=b.owner->publishValue(a.owner->endpoint(),key,"not-bencode");QVERIFY(malformed);QTRY_VERIFY_WITH_TIMEOUT(finished(*b.owner,*malformed),5000);QCOMPARE(b.owner->observation().publishSnapshot->state,app::AzureusPublishState::Complete);
++   const auto read=a.owner->readSavedRatings(b.owner->endpoint(),a.hash,source.sourceRevision);QVERIFY(read);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*read),3000);observed=a.owner->observation().ratingReadSnapshot;QCOMPARE(observed->state,app::AzureusRatingReadState::Complete);QCOMPARE(observed->receivedValues,std::size_t{1});QCOMPARE(observed->decodeErrors,std::size_t{1});QVERIFY(!observed->localFallback);QCOMPARE(observed->ratings.count(),std::size_t{0});
++ }
++
++ void completedRatingValuesWithdrawAtTheNextRealWorkerSourceFence(){
++   RatingOwner a("127.21.0.1",4,"Local","retained"),b("127.22.0.1",2,"Remote","");const auto aa=a.owner->allowPeer(b.owner->endpoint()),bb=b.owner->allowPeer(a.owner->endpoint());QVERIFY(aa&&bb);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*aa)&&successful(*b.owner,*bb),3000);const auto source=a.target();const auto read=a.owner->readSavedRatings(b.owner->endpoint(),a.hash,source.sourceRevision);QVERIFY(read);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*read),3000);const auto retained=a.owner->observation().ratingReadSnapshot;QVERIFY(retained->current);QCOMPARE(retained->ratings.count(),std::size_t{1});
++   a.dht=false;a.config();const auto next=a.owner->allowPeer(b.owner->endpoint());QVERIFY(next);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*next),3000);QTRY_VERIFY_WITH_TIMEOUT(!a.owner->observation().ratingReadSnapshot->current,3000);QCOMPARE(a.owner->observation().ratingReadSnapshot->ratings.count(),std::size_t{0});QCOMPARE(retained->ratings.count(),std::size_t{1});QVERIFY(!storage::readDistributedRating(*a.held,a.hash));
++ }
++ void savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies_data(){
++   QTest::addColumn<int>("change");QTest::newRow("nickname")<<0;QTest::newRow("Public-removed")<<1;QTest::newRow("DHT-disabled")<<2;QTest::newRow("metadata-flag")<<3;QTest::newRow("full-info-changed")<<4;QTest::newRow("inventory-removed")<<5;
++ }
++ void savedRatingPermissionAndIdentityChangesWithdrawHeldActualReplies(){
++   QFETCH(int,change);RatingOwner a("127.17.0.1",4,"Owned","before");QUdpSocket server;QVERIFY(server.bind(QHostAddress(QStringLiteral("127.18.0.1")),0,QUdpSocket::DontShareAddress));const udp::Peer peer{server.localAddress(),server.localPort()};const auto admitted=a.owner->allowPeer(peer);QVERIFY(admitted);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*admitted),3000);const auto source=a.target();
++   const auto request=a.owner->readSavedRatings(peer,a.hash,source.sourceRevision);QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(server.hasPendingDatagrams(),3000);const auto received=server.receiveDatagram();QVERIFY(received.isValid());
++   if(change==0){a.nick="new";a.config();}else if(change==1){a.network="I2P";a.state();}else if(change==2){a.dht=false;a.config();}else if(change==3){a.flags=0x200;a.state();}else if(change==4){a.info=ratingDictionary({{"length","i4e"},{"name",ratingBytes("changed")},{"piece length","i16384e"},{"pieces",ratingBytes(std::string(20,'z'))}});a.state();}else{writeRatingFixture(a.root.path()+"/downloads.config","d9:downloadslee");}
++   emptyRatingReply(server,received);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*request),3000);const auto result=a.owner->observation().ratingReadSnapshot;QVERIFY(result);QCOMPARE(result->state,app::AzureusRatingReadState::Failed);QCOMPARE(result->error,std::optional{app::AzureusServiceError::Profile});QCOMPARE(result->ratings.count(),std::size_t{0});QVERIFY(!result->localFallback);QCOMPARE(a.owner->observation().snapshot->transport().counters().sent,std::uint64_t{1});
++ }
++ void savedRatingActualTimeoutCancelCloseAndMetadataPermissionsRemainBounded(){
++   RatingOwner a("127.19.0.1",3,"Owned","fallback");QUdpSocket server;QVERIFY(server.bind(QHostAddress(QStringLiteral("127.20.0.1")),0,QUdpSocket::DontShareAddress));const udp::Peer peer{server.localAddress(),server.localPort()};const auto admitted=a.owner->allowPeer(peer);QVERIFY(admitted);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*admitted),3000);auto source=a.target();
++   const auto timed=a.owner->readSavedRatings(peer,a.hash,source.sourceRevision,100ms);QVERIFY(timed);QTRY_VERIFY_WITH_TIMEOUT(finished(*a.owner,*timed),3000);QCOMPARE(a.owner->observation().ratingReadSnapshot->state,app::AzureusRatingReadState::TimedOut);QVERIFY(a.owner->observation().ratingReadSnapshot->localFallback);
++   while(server.hasPendingDatagrams()){server.receiveDatagram();}const auto pending=a.owner->readSavedRatings(peer,a.hash,source.sourceRevision);QVERIFY(pending);QTRY_VERIFY_WITH_TIMEOUT(server.hasPendingDatagrams(),3000);const auto held=server.receiveDatagram();const auto cancel=a.owner->cancel(*pending);QVERIFY(cancel);QTRY_VERIFY_WITH_TIMEOUT(a.owner->observation().outstandingCommands==0,3000);QCOMPARE(a.owner->observation().ratingReadSnapshot->state,app::AzureusRatingReadState::Cancelled);emptyRatingReply(server,held);
++   const auto closing=a.owner->readSavedRatings(peer,a.hash,source.sourceRevision);QVERIFY(closing);QTRY_VERIFY_WITH_TIMEOUT(server.hasPendingDatagrams(),3000);QVERIFY(a.owner->close());QVERIFY(a.owner->observation().joined);QCOMPARE(a.owner->observation().ratingReadSnapshot->state,app::AzureusRatingReadState::Closed);
++   a.network="public";a.state();QVERIFY(!storage::readDistributedRating(*a.held,a.hash));a.network="Public";a.flags=0x200;a.state();QVERIFY(!storage::readDistributedRating(*a.held,a.hash));a.flags=0;a.dht=false;a.state();a.config();QVERIFY(!storage::readDistributedRating(*a.held,a.hash));
++ }
+ 
+  void twoNormalProfileOwnersExchangeDirectValuesWithoutGeneratedClosestFacts(){
+    NormalValues a("127.1.0.1"),b("127.2.0.1");QVERIFY(actualContact(a.owner->endpoint()).id!=actualContact(b.owner->endpoint()).id);
+--- a/preview/native/tests/azureus_database_runtime_tests.cpp
++++ b/preview/native/tests/azureus_database_runtime_tests.cpp
+@@ -47,6 +47,12 @@
+ class AzureusDatabaseRuntimeTests final:public QObject {
+  Q_OBJECT
+ private slots:
++ void typedLocalAnonymousFlagPersistsWithoutOpeningArbitraryFlagAuthority(){
++   auto owner=db::Owner::create();QVERIFY(owner);Clock clock;const auto actual=contact({QHostAddress::LocalHost,41001});QVERIFY((*owner)->bindLocal(actual));const std::string key(20,'A');
++   auto value=(*owner)->putLocal(key,"anonymous-rating",10,clock,db::LocalPublicationFlags::Anonymous);QVERIFY(value);QCOMPARE(value->flags(),std::uint8_t{0x10});QVERIFY(value->isLocal());QVERIFY(value->originator().get()->address==actual.address);
++   auto read=(*owner)->read(key,actual,64,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).values[0].flags,std::uint8_t{0x10});QCOMPARE((**read).values[0].bytes,std::string("anonymous-rating"));
++   const auto before=(*owner)->snapshot();QVERIFY(before);QVERIFY(!(*owner)->putLocal(key,"bad",11,clock,static_cast<db::LocalPublicationFlags>(0x40)));QCOMPARE((*owner)->snapshot()->localPuts,before->localPuts);
++ }
+  void localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData(){
+    auto owner=db::Owner::create();QVERIFY(owner);Clock clock;const std::string key(20,'L'),payload("rating\0binary",13);
+    QVERIFY(!(*owner)->putLocal(key,payload,100,clock));auto actual=contact({QHostAddress::LocalHost,41001});QVERIFY((*owner)->bindLocal(actual));
+--- a/preview/native/app/azureus_rating_consumer.inc
++++ b/preview/native/app/azureus_rating_consumer.inc
+@@ -0,0 +1,126 @@
++// Included inside OwnedAzureusService::Impl::Owner. Explicit single-peer rating
++// consumer only; no publication queue, automatic lookup timer or Host activation.
++    std::shared_ptr<const storage::ProfileLease> ratingLease_;
++    struct RatingRead {
++      Command command;
++      AzureusRatingReadSnapshot snapshot;
++      std::chrono::steady_clock::time_point deadline;
++      azureus::Ticket ticket;
++      std::size_t slices=0;
++      bool finished=false,cancelled=false;
++    };
++    std::shared_ptr<RatingRead> ratingRead_;
++    std::expected<void,storage::Error> validateRating(const Command& command){
++      if(!ratingLease_||!command.ratingHash||!command.ratingSubject||options_.network!=0){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"No bound rating Public DDB context"});}
++      auto valid=options_.valueVersions->validate();if(!valid){return valid;}
++      auto current=storage::readDistributedRating(*ratingLease_,*command.ratingHash);
++      if(!current){return std::unexpected(current.error());}
++      if(current->sourceRevision!=command.ratingRevision||current->sourceRevision!=command.ratingSubject->sourceRevision
++          ||current->local.attributesRevision!=command.ratingSubject->local.attributesRevision||current->key!=command.ratingSubject->key){
++        return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Saved rating identity, permissions or attributes changed"});
++      }
++      {std::lock_guard lock(state_->mutex);if(state_->stop){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Rating owner is closing"});}}
++      return {};
++    }
++    void withdrawRatings(){
++      std::lock_guard lock(state_->mutex);if(!state_->value.ratingReadSnapshot||!state_->value.ratingReadSnapshot->current){return;}
++      std::shared_ptr<AzureusRatingReadSnapshot> withdrawn;
++      try{withdrawn=std::make_shared<AzureusRatingReadSnapshot>(*state_->value.ratingReadSnapshot);}catch(...){state_->value.ratingReadSnapshot.reset();state_->advance();throw;}
++      withdrawn->current=false;withdrawn->ratings=plugins::rating::RatingResults{};withdrawn->localFallback=false;
++      withdrawn->state=state_->stop?AzureusRatingReadState::Closed:AzureusRatingReadState::Failed;withdrawn->error=state_->stop?AzureusServiceError::Closed:AzureusServiceError::Profile;
++      state_->value.ratingReadSnapshot=std::move(withdrawn);state_->advance();
++    }
++    void refreshRatingObservation(){
++      bool current=false;{std::lock_guard lock(state_->mutex);current=state_->value.ratingReadSnapshot&&state_->value.ratingReadSnapshot->current;}
++      if(current&&ratingRead_&&ratingRead_->finished&&!validateRating(ratingRead_->command)){withdrawRatings();}
++    }
++    void beginRating(Command command){
++      if(!options_.valueVersions||options_.network!=0||!command.ratingHash||!isOwned(command.peer)){
++        failCommand(command,AzureusServiceError::Invalid);return;
++      }
++      if(!ratingLease_){auto lease=options_.valueVersions->retainProfile();if(!lease){failCommand(command,AzureusServiceError::Profile);return;}ratingLease_=std::move(*lease);}
++      auto current=storage::readDistributedRating(*ratingLease_,*command.ratingHash);
++      if(!current||current->sourceRevision!=command.ratingRevision){withdrawRatings();failCommand(command,AzureusServiceError::Profile);return;}
++      command.ratingSubject=std::make_shared<const storage::DistributedRatingSnapshot>(std::move(*current));
++      const auto& source=*command.ratingSubject;
++      command.applicationKey.assign(reinterpret_cast<const char*>(source.key.data()),source.key.size());
++      const auto digest=QCryptographicHash::hash(QByteArray(command.applicationKey.data(),static_cast<qsizetype>(command.applicationKey.size())),QCryptographicHash::Sha1);
++      std::copy_n(reinterpret_cast<const std::uint8_t*>(digest.constData()),command.node.size(),command.node.begin());
++      if(command.kind==AzureusServiceCommand::PublishRating){
++        // Source writeRating skips score0. This explicit first branch supports
++        // ordinary1..5, retaining negative legacy values as unsupported.
++        if(source.local.local.value.score<1||source.local.local.value.score>5){failCommand(command,AzureusServiceError::Invalid);return;}
++        auto encoded=source.local.local.value.encode();if(!encoded||encoded->empty()||encoded->size()>512){failCommand(command,AzureusServiceError::Invalid);return;}
++        command.payload=std::move(*encoded);command.publicationFlags=AzureusPublicationFlags::Anonymous;beginPublish(command);return;
++      }
++      if(ratingRead_&&!ratingRead_->finished){failCommand(command,AzureusServiceError::Capacity);return;}
++      auto value=std::make_shared<RatingRead>();value->command=command;value->deadline=std::chrono::steady_clock::now()+command.timeout;
++      value->snapshot.request=command.id;value->snapshot.hash=command.ratingHash;value->snapshot.sourceRevision=command.ratingRevision;value->snapshot.key=command.node;ratingRead_=value;
++      if(!validateRatingRead(value)){return;}
++      auto snapshot=std::make_shared<const AzureusRatingReadSnapshot>(value->snapshot);
++      {std::lock_guard lock(state_->mutex);state_->value.ratingReadSnapshot=std::move(snapshot);state_->advance();}
++      const auto remaining=std::chrono::duration_cast<std::chrono::nanoseconds>(value->deadline-std::chrono::steady_clock::now());
++      auto submitted=actor_.findValue(command.peer,options_.version,command.node,0,64,this,[this,value](azureus::FindValueOutcome outcome){
++        try{ratingReply(value,std::move(outcome));}catch(...){publicationMemoryFailure();}
++      },remaining);
++      if(!submitted){finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Transport,submitted.error());return;}value->ticket=*submitted;publish();
++    }
++    bool validateRatingRead(const std::shared_ptr<RatingRead>& value){
++      if(ratingRead_!=value||value->finished){return false;}
++      {std::lock_guard lock(state_->mutex);if(state_->stop){value->cancelled=true;}}
++      if(value->cancelled){
++        bool closing=false;{std::lock_guard lock(state_->mutex);closing=state_->stop;}
++        finishRatingRead(value,closing?AzureusRatingReadState::Closed:AzureusRatingReadState::Cancelled,
++            closing?AzureusServiceError::Closed:AzureusServiceError::Transport,closing?azureus::Failure::Closed:azureus::Failure::Cancelled);return false;
++      }
++      if(std::chrono::steady_clock::now()>=value->deadline){finishRatingRead(value,AzureusRatingReadState::TimedOut,AzureusServiceError::Transport,azureus::Failure::Timeout);return false;}
++      if(!isOwned(value->command.peer)){finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Invalid,azureus::Failure::Peer);return false;}
++      auto valid=validateRating(value->command);if(!valid){value->snapshot.profileFailure=valid.error();finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Profile);return false;}
++      if(std::chrono::steady_clock::now()>=value->deadline){finishRatingRead(value,AzureusRatingReadState::TimedOut,AzureusServiceError::Transport,azureus::Failure::Timeout);return false;}return true;
++    }
++    void finishRatingRead(const std::shared_ptr<RatingRead>& value,AzureusRatingReadState result,
++        std::optional<AzureusServiceError> error={},std::optional<azureus::Failure> transport={}){
++      if(ratingRead_!=value||value->finished){return;}
++      if(result==AzureusRatingReadState::Complete||result==AzureusRatingReadState::TimedOut){
++        auto current=validateRating(value->command);if(!current){value->snapshot.profileFailure=current.error();result=AzureusRatingReadState::Failed;error=AzureusServiceError::Profile;transport.reset();}
++      }
++      value->finished=true;
++      if(result!=AzureusRatingReadState::Complete){static_cast<void>(actor_.cancel(value->ticket));}
++      // Original download read uses local fallback ONLY if no VALUE_READ events
++      // arrived. A nonempty malformed stream cannot turn into a local rating.
++      if((result==AzureusRatingReadState::Complete||result==AzureusRatingReadState::TimedOut)&&!value->snapshot.receivedValues){
++        const auto& local=value->command.ratingSubject->local.local.value;
++        if(local.needsPublishing()){auto added=value->snapshot.ratings.add(local,false);if(!added){++value->snapshot.decodeErrors;}value->snapshot.localFallback=true;}
++      }
++      value->snapshot.state=result;value->snapshot.error=error;value->snapshot.transportFailure=transport;
++      value->snapshot.current=result==AzureusRatingReadState::Complete||result==AzureusRatingReadState::TimedOut;
++      if(error==AzureusServiceError::Profile||result==AzureusRatingReadState::Closed||result==AzureusRatingReadState::Cancelled){
++        value->snapshot.current=false;value->snapshot.ratings=plugins::rating::RatingResults{};value->snapshot.localFallback=false;
++      }
++      auto snapshot=std::make_shared<AzureusRatingReadSnapshot>(value->snapshot);publish();
++      std::lock_guard lock(state_->mutex);
++      if(state_->stop){snapshot->state=AzureusRatingReadState::Closed;snapshot->error=AzureusServiceError::Closed;snapshot->transportFailure=azureus::Failure::Closed;snapshot->current=false;snapshot->ratings=plugins::rating::RatingResults{};snapshot->localFallback=false;}
++      else if(result==AzureusRatingReadState::Complete&&std::chrono::steady_clock::now()>=value->deadline){snapshot->state=AzureusRatingReadState::TimedOut;snapshot->error=AzureusServiceError::Transport;snapshot->transportFailure=azureus::Failure::Timeout;}
++      releaseLocked();state_->value.lastResult=AzureusServiceResult{value->command.id,0,AzureusServiceCommand::ReadRatings,true,snapshot->error,snapshot->transportFailure};state_->value.ratingReadSnapshot=std::move(snapshot);state_->advance();
++    }
++    void ratingReply(const std::shared_ptr<RatingRead>& value,azureus::FindValueOutcome outcome){
++      if(!validateRatingRead(value)){return;}
++      if(!outcome){finishRatingRead(value,outcome.error()==azureus::Failure::Timeout?AzureusRatingReadState::TimedOut:AzureusRatingReadState::Failed,AzureusServiceError::Transport,outcome.error());return;}
++      routerReply(value->command.peer,outcome);
++      const auto* body=std::get_if<azureus::lookup::ReplyBody>(&outcome->body());
++      if(!body||++value->slices>64){finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Capacity);return;}
++      if(const auto* found=std::get_if<azureus::lookup::FoundValues>(&body->result)){
++        if(found->values.size()>64-value->snapshot.receivedValues){finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Capacity);return;}
++        for(const auto& item:found->values){
++          ++value->snapshot.receivedValues;auto decoded=plugins::rating::decode(item.bytes);
++          if(!decoded){++value->snapshot.decodeErrors;++value->snapshot.ignoredMalformedValues;continue;}
++          // Preserve the qualified original partial-object/add behavior; failed
++          // add can retain its already-applied average/count mutation.
++          auto added=value->snapshot.ratings.add(decoded->value,false);if(!decoded->complete()||!added){++value->snapshot.decodeErrors;}
++        }
++      }else if(body->continuation){finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Readback);return;}
++      if(!body->continuation){finishRatingRead(value,AzureusRatingReadState::Complete);return;}
++      if(value->snapshot.receivedValues==64){finishRatingRead(value,AzureusRatingReadState::Failed,AzureusServiceError::Capacity);return;}
++      auto snapshot=std::make_shared<const AzureusRatingReadSnapshot>(value->snapshot);
++      std::lock_guard lock(state_->mutex);state_->value.ratingReadSnapshot=std::move(snapshot);state_->advance();
++    }

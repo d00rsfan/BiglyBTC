@@ -1,0 +1,437 @@
+--- a/preview/native/services/i2cp_channel/channel.cpp
++++ b/preview/native/services/i2cp_channel/channel.cpp
+@@ -19,6 +19,7 @@
+   InitialChannel* q;
+   QTcpSocket socket;
+   QTimer timer;
++  QTimer statusTimer;
+   FrameDecoder decoder;
+   Options options;
+   QByteArray hello;
+@@ -34,16 +35,22 @@
+   std::optional<LeaseSubmission> leaseSubmission;
+   std::uint64_t lastRawLeasePublished=0;
+   bool waitingFirstLease=false,leaseNotificationQueued=false;
++  bool statusReplies=true,pendingStatusReplies=true,statusPending=false,statusNotificationQueued=false;
++  std::uint64_t nextDatagramNonce=1; // Not reset by close/restart; never reused.
++  Clock::time_point statusExpires{};
++  std::optional<DatagramObservation> datagram;
++  std::optional<std::uint32_t> datagramMessageId;
+   std::uint64_t revision=0;
+   std::uint64_t generation=0;
+   Clock::time_point expires{};
+   Clock::time_point dateObserved{};
+   bool notificationQueued=false,drainQueued=false,reading=false,lostPending=false;
+ 
+-  explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner){
++  explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner),statusTimer(owner){
+     socket.setProxy(QNetworkProxy::NoProxy); // Local I2CP control, never app proxy.
+     socket.setReadBufferSize(static_cast<qint64>(MaximumFrameBytes));
+     timer.setSingleShot(true);
++    statusTimer.setSingleShot(true);
+   }
+   ~Impl(){stopIo();}
+   bool active()const{return state==State::Connecting||state==State::WaitingDate||state==State::DateReceived||state==State::Creating||state==State::SessionCreated||state==State::Reconfiguring;}
+@@ -55,9 +62,10 @@
+     for(std::size_t i=0;i<3;++i){const auto dot=value.find('.');const auto part=value.substr(0,dot);if(part.empty()){return false;}const auto parsed=std::from_chars(part.data(),part.data()+part.size(),version[i]);if(parsed.ec!=std::errc{}||parsed.ptr!=part.data()+part.size()){return false;}if(i<2){if(dot==std::string_view::npos){return false;}value.remove_prefix(dot+1);}}
+     return version[0]>0||version[1]>9||(version[1]==9&&version[2]>=38);
+   }
+-  void clearSession(){session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;}
++  void clearSession(){session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;statusPending=false;datagram.reset();datagramMessageId.reset();statusReplies=true;pendingStatusReplies=true;statusTimer.stop();}
+   void stopIo(){
+     timer.stop();QObject::disconnect(&timer,nullptr,q,nullptr);
++    statusTimer.stop();QObject::disconnect(&statusTimer,nullptr,q,nullptr);
+     QObject::disconnect(&socket,nullptr,q,nullptr);socket.abort();
+   }
+   void notify(){
+@@ -108,6 +116,7 @@
+     if(!queued){drainQueued=false;fail(Failure::Resources);}
+   }
+   void message(Frame frame){
++    if(frame.type==MessageStatusType){observeDatagram(frame);return;}
+     if(frame.type==RequestVariableLeaseSetType){answerLease(std::move(frame));return;}
+     auto decoded=decodeMessage(frame);
+     if(!decoded){fail(decoded.error().code==ErrorCode::Unsupported?Failure::UnsupportedMessage:Failure::Framing);return;}
+@@ -132,6 +141,7 @@
+       if(expired()){return;}
+       session=status.sessionId;acceptedDestination=std::move(pendingDestination);
+       acceptedOptions=std::move(pendingOptions);revision=1;
++      statusReplies=pendingStatusReplies; // Original immutable creation policy.
+     }else if(state==State::Reconfiguring&&status.state==SessionState::Updated){
+       if(expired()){return;}
+       acceptedOptions=std::move(pendingOptions);pendingDestination.clear();++revision;
+@@ -151,6 +161,7 @@
+     if(!identity.valid()||!identity.destination()){return reject(Code::KeyMismatch,"No live client identity");}
+     if(consume&&!ls2Router()){return reject(Code::Unsupported,"Explicit LeaseSet2 requires a supported numeric router version");}
+     if(update&&waitingFirstLease){return reject(Code::Unsupported,"Initial LeaseSet request is still outstanding");}
++    if(update&&statusPending){return reject(Code::Unsupported,"Datagram status request is still outstanding");}
+     if(update&&(!session||identity.destination()->wire!=acceptedDestination||revision==std::numeric_limits<std::uint64_t>::max())){
+       return reject(Code::KeyMismatch,"Reconfigure must use the same accepted identity/id");
+     }
+@@ -177,6 +188,7 @@
+       if(!current(at)||state!=previous){return reject(Code::InvalidFormat,"I2CP channel changed during signing");}
+       if(Clock::now()>=requestEnd){return reject(Code::InvalidFormat,"I2CP request preparation exceeded deadline");}
+       pendingOptions=std::move(*merged);pendingDestination=std::move(destination);state=update?State::Reconfiguring:State::Creating;
++      if(!update){pendingStatusReplies=originalStatusRepliesEnabled(pendingOptions);}
+       if(consume){leaseSigner.emplace(std::move(*consume));}
+       const auto phase=state;expires=requestEnd;
+       const auto remaining=std::chrono::duration_cast<std::chrono::milliseconds>(expires-Clock::now()).count();
+@@ -216,6 +228,69 @@
+     const auto next=leaseSubmission?leaseSubmission->revision+1:1;
+     leaseSubmission=LeaseSubmission{next,signedLs->publishedMilliseconds,signedLs->expiresMilliseconds,signedLs->leases.size(),signedLs->unpublished};
+     waitingFirstLease=false;if(state==State::SessionCreated){timer.stop();}notifyLease();
++    if(statusPending){armStatusDeadline();} // Only lease fence changes; original statusExpires is immutable.
++  }
++  ConfigResult<std::uint64_t> observedNow()const{
++    using Code=::biglybtc::services::i2p::ErrorCode;
++    const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now()-dateObserved).count();
++    if(!date||elapsed<0||static_cast<std::uint64_t>(elapsed)>0xffffffffULL*1000||date->milliseconds>0xffffffffULL*1000-static_cast<std::uint64_t>(elapsed)){return std::unexpected(::biglybtc::services::i2p::Error{Code::InvalidFormat,"Observed router clock unavailable/overflowed"});}
++    return date->milliseconds+static_cast<std::uint64_t>(elapsed);
++  }
++  bool leaseCurrent()const{
++    if(!leaseSigner||!leaseSigner->valid()||!leaseSigner->destination()||leaseSigner->destination()->wire!=acceptedDestination||!session||!leaseSubmission||socket.state()!=QAbstractSocket::ConnectedState){return false;}
++    auto now=observedNow();return now&&*now<leaseSubmission->expiresMilliseconds;
++  }
++  void notifyDatagram(){
++    if(statusNotificationQueued){return;}statusNotificationQueued=true;bool queued=false;
++    try{const QPointer<InitialChannel> owner(q);queued=QMetaObject::invokeMethod(q,[owner]{if(!owner){return;}auto* self=owner->impl_.get();self->statusNotificationQueued=false;if(self->active()&&self->datagram&&self->session&&self->socket.state()==QAbstractSocket::ConnectedState){emit owner->datagramChanged();}},Qt::QueuedConnection);}catch(...){queued=false;}
++    if(!queued){statusNotificationQueued=false;fail(Failure::Resources);}
++  }
++  void localDatagram(DatagramPhase reason){if(!statusPending||!datagram){return;}statusPending=false;statusTimer.stop();datagram->phase=reason;datagram->routerStatus.reset();notifyDatagram();}
++  void armStatusDeadline(){
++    if(!statusPending){return;}if(!leaseCurrent()){localDatagram(DatagramPhase::LocalLeaseExpired);return;}if(Clock::now()>=statusExpires){localDatagram(DatagramPhase::LocalTimeout);return;}
++    const auto now=observedNow();if(!now){localDatagram(DatagramPhase::LocalLeaseExpired);return;}
++    if(*now>=leaseSubmission->expiresMilliseconds){localDatagram(DatagramPhase::LocalLeaseExpired);return;}
++    const auto statusLeft=std::chrono::duration_cast<std::chrono::milliseconds>(statusExpires-Clock::now()).count();const auto leaseLeft=leaseSubmission->expiresMilliseconds-*now;
++    if(statusLeft<=0){localDatagram(DatagramPhase::LocalTimeout);return;}
++    statusTimer.start(static_cast<int>(std::max<std::int64_t>(1,std::min(statusLeft,static_cast<std::int64_t>(leaseLeft)))));
++  }
++  void observeDatagram(const Frame& frame){
++    auto status=decodeMessageStatus(frame);if(!status){fail(Failure::Framing);return;}
++    if(!session||status->sessionId!=*session||status->code==0){fail(Failure::UnexpectedMessage);return;}
++    // Same current session, strictly retired nonce: no stale status can finish
++    // a later request. No message-ID-only/nonce0 fallback is permitted here.
++    if(!statusPending||!datagram||status->nonce!=datagram->nonce){if(status->nonce<nextDatagramNonce){return;}fail(Failure::UnexpectedMessage);return;}
++    if(!leaseCurrent()){localDatagram(DatagramPhase::LocalLeaseExpired);return;}
++    if(Clock::now()>=statusExpires){localDatagram(DatagramPhase::LocalTimeout);return;}
++    if(datagramMessageId&&*datagramMessageId!=status->messageId){fail(Failure::UnexpectedMessage);return;}
++    datagramMessageId=status->messageId;
++    // Final fresh budget check before committing a decoded status observation.
++    if(!leaseCurrent()){localDatagram(DatagramPhase::LocalLeaseExpired);return;}
++    if(Clock::now()>=statusExpires){localDatagram(DatagramPhase::LocalTimeout);return;}
++    datagram->routerStatus=*status;datagram->phase=status->code==1?DatagramPhase::RouterAccepted:DatagramPhase::RouterStatus;
++    if(status->code!=1){statusPending=false;statusTimer.stop();}notifyDatagram();
++  }
++  ConfigResult<std::uint32_t> submit(View recipient,View payload,const DatagramOptions& opts,bool claimed){
++    using Code=::biglybtc::services::i2p::ErrorCode;auto reject=[](Code code,const char* text)->ConfigResult<std::uint32_t>{return std::unexpected(::biglybtc::services::i2p::Error{code,text});};
++    if(!onThread()){return reject(Code::InvalidFormat,"Datagram request belongs to channel thread");}
++    if(state!=State::SessionCreated||waitingFirstLease||statusPending||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Current unexpired owned LS2 and idle datagram/write state required");}
++    if(!statusReplies){return reject(Code::Unsupported,"Initial reliability none cannot request tracked statuses");}
++    if(nextDatagramNonce>std::numeric_limits<std::uint32_t>::max()){return reject(Code::TooLarge,"Datagram nonce lifetime exhausted; never reuse");}
++    try{
++      const auto at=generation;const auto end=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);auto dest=decodeDestination(recipient);if(!dest){return std::unexpected(dest.error());}
++      const auto now=observedNow();if(!now){return std::unexpected(now.error());}
++      if(opts.expirationMilliseconds&&(*opts.expirationMilliseconds<=*now||*opts.expirationMilliseconds>0xffffffffffffULL)){return reject(Code::InvalidFormat,"Datagram expiration must be future uint48 absolute time");}
++      auto bytes=claimed?encode3(leaseSigner->destination()->wire,payload):leaseSigner->makeDatagram2(dest->hash,payload);if(!bytes){return std::unexpected(bytes.error());}
++      auto mux=encodeMuxDatagram(MuxDatagram{claimed?Datagram3Protocol:Datagram2Protocol,opts.fromPort,opts.toPort,std::move(*bytes)},opts.gzip);if(!mux){return std::unexpected(mux.error());}
++      const auto nonce=static_cast<std::uint32_t>(nextDatagramNonce);auto wire=encodeSendDatagram(SendDatagram{*session,std::move(*dest),std::move(*mux),nonce,opts.expirationMilliseconds});if(!wire){return std::unexpected(wire.error());}
++      if(!current(at)||state!=State::SessionCreated||!leaseCurrent()||Clock::now()>=end){return reject(Code::InvalidFormat,"Datagram preparation lost current lease/budget");}
++      if(opts.expirationMilliseconds){const auto fresh=observedNow();if(!fresh||*opts.expirationMilliseconds<=*fresh){return reject(Code::InvalidFormat,"Datagram expired during preparation");}}
++      ++nextDatagramNonce;statusExpires=end;datagram=DatagramObservation{nonce,DatagramPhase::Pending,std::nullopt};datagramMessageId.reset();statusPending=true;armStatusDeadline();
++      if(!current(at)||!statusPending){return reject(Code::InvalidFormat,"Datagram budget/notification failed before write");}
++      const auto written=socket.write(reinterpret_cast<const char*>(wire->data()),static_cast<qint64>(wire->size()));
++      if(!current(at)){return reject(Code::InvalidFormat,"Datagram lost its transport");}if(written!=static_cast<qint64>(wire->size())){fail(Failure::WriteFailed);return reject(Code::InvalidFormat,"Datagram enqueue failed");}
++      notifyDatagram();if(!current(at)){return reject(Code::CryptoFailure,"Datagram notification failed");}return nonce;
++    }catch(...){if(statusPending){fail(Failure::Resources);}return reject(Code::CryptoFailure,"Datagram resources unavailable");}
+   }
+   void drain(){
+     if(reading||!active()||state==State::Connecting||expired()){return;}
+@@ -295,6 +370,7 @@
+         timer.start(static_cast<int>(std::max<std::int64_t>(1,left)));
+       }
+     });
++    QObject::connect(&statusTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{armStatusDeadline();}catch(...){fail(Failure::Resources);}}});
+     state=State::Connecting;expires=Clock::now()+std::chrono::milliseconds(next.deadlineMilliseconds);
+     timer.start(next.deadlineMilliseconds);notify();
+     if(!current(at)||state!=State::Connecting){return false;}
+@@ -326,6 +402,11 @@
+ }
+ SessionOptions InitialChannel::sessionOptions()const{return sessionId()?impl_->acceptedOptions:SessionOptions{};}
+ std::optional<InitialChannel::LeaseSubmission> InitialChannel::leaseSetSubmission()const noexcept{return sessionId()?impl_->leaseSubmission:std::nullopt;}
++ConfigResult<std::uint32_t> InitialChannel::submitDatagram2(View recipient,View payload,const DatagramOptions& options){return impl_->submit(recipient,payload,options,false);}
++ConfigResult<std::uint32_t> InitialChannel::submitClaimedDatagram3(View recipient,View payload,const DatagramOptions& options){return impl_->submit(recipient,payload,options,true);}
++bool InitialChannel::cancelDatagram(std::uint32_t nonce){if(!impl_->onThread()||!impl_->statusPending||!impl_->datagram||impl_->datagram->nonce!=nonce){return false;}impl_->localDatagram(DatagramPhase::LocalCancelled);return true;}
++bool InitialChannel::datagramPending()const noexcept{return impl_->statusPending;}
++std::optional<InitialChannel::DatagramObservation> InitialChannel::datagramObservation()const noexcept{return sessionId()?impl_->datagram:std::nullopt;}
+ InitialChannel::State InitialChannel::state()const noexcept{return impl_->state;}
+ InitialChannel::Failure InitialChannel::failure()const noexcept{return impl_->failure;}
+ bool InitialChannel::socketActive()const noexcept{return impl_->socket.state()!=QAbstractSocket::UnconnectedState;}
+--- a/preview/native/services/i2cp_channel/channel.hpp
++++ b/preview/native/services/i2cp_channel/channel.hpp
+@@ -3,6 +3,7 @@
+ #include "protocol.hpp"
+ #include "session.hpp"
+ #include "leaseset.hpp"
++#include "messages.hpp"
+ #include <QHostAddress>
+ #include <QObject>
+ #include <memory>
+@@ -54,6 +55,18 @@
+   // Historical signing+successful socket enqueue only. No router ack, OPEN,
+   // tunnel health, delivery or right to submit application payload is implied.
+   [[nodiscard]] std::optional<LeaseSubmission> leaseSetSubmission()const noexcept;
++  enum class DatagramPhase {Pending,RouterAccepted,RouterStatus,LocalCancelled,LocalTimeout,LocalLeaseExpired};
++  struct DatagramObservation {std::uint32_t nonce=0;DatagramPhase phase=DatagramPhase::Pending;std::optional<MessageStatus> routerStatus;};
++  struct DatagramOptions {std::uint16_t fromPort=0,toPort=0;GzipMode gzip=GzipMode::Stored;std::optional<std::uint64_t> expirationMilliseconds;};
++  // Explicit status-requesting datagrams only; initial reliability=none refuses.
++  // One pending request. Nonces never repeat within this object's lifetime.
++  // Enqueue/Accepted/probable/local success are not end-to-end delivery proof.
++  [[nodiscard]] ConfigResult<std::uint32_t> submitDatagram2(View recipientDestination,View payload,const DatagramOptions&);
++  [[nodiscard]] ConfigResult<std::uint32_t> submitClaimedDatagram3(View recipientDestination,View payload,const DatagramOptions&);
++  // Local cancellation only: I2CP has no matching remote cancel message.
++  bool cancelDatagram(std::uint32_t nonce);
++  [[nodiscard]] bool datagramPending()const noexcept;
++  [[nodiscard]] std::optional<DatagramObservation> datagramObservation()const noexcept;
+   [[nodiscard]] State state()const noexcept;
+   [[nodiscard]] Failure failure()const noexcept;
+   [[nodiscard]] bool socketActive()const noexcept;
+@@ -69,6 +82,7 @@
+   void sessionCreated();
+   void sessionUpdated();
+   void leaseSetSubmitted();
++  void datagramChanged(); // Coalesced latest observation, not a result queue.
+   void failed(Failure);
+   void closed();
+ private:
+--- /dev/null
++++ b/preview/native/services/i2cp_datagram/messages.cpp
+@@ -0,0 +1,62 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "messages.hpp"
++#include <zlib.h>
++#include <algorithm>
++#include <array>
++#include <limits>
++namespace biglybtc::services::i2p::i2cp {
++namespace {
++using Code=::biglybtc::services::i2p::ErrorCode;
++auto error(Code c,const char* why){return std::unexpected(::biglybtc::services::i2p::Error{c,why});}
++void put(Bytes& out,std::uint64_t value,unsigned n){for(unsigned i=n;i>0;--i){out.push_back(static_cast<Byte>(value>>((i-1)*8)));}}
++struct Reader {View bytes;std::size_t at=0;bool take(std::size_t n,View& out){if(n>bytes.size()-at){return false;}out=bytes.subspan(at,n);at+=n;return true;}bool number(unsigned n,std::uint64_t& out){View b;if(!take(n,b)){return false;}out=0;for(auto v:b){out=(out<<8)|v;}return true;}};
++ConfigResult<Bytes> frame(Byte type,View bytes){if(bytes.size()>MaximumPayloadBytes){return error(Code::TooLarge,"I2CP datagram frame exceeds bound");}Bytes out;out.reserve(5+bytes.size());put(out,bytes.size(),4);out.push_back(type);out.insert(out.end(),bytes.begin(),bytes.end());return out;}
++ConfigResult<void> payloadValid(std::uint16_t id,View bytes){if(id==65535){return error(Code::InvalidFormat,"Unknown session cannot submit payload");}if(bytes.size()>MaximumI2cpPayloadBytes){return error(Code::TooLarge,"I2CP Payload exceeds64KiB");}return {};}
++}
++bool originalStatusRepliesEnabled(const SessionOptions& options)noexcept{
++  for(const auto& [key,value]:options){if(key=="i2cp.messageReliability"&&value.size()==4&&(value[0]=='n'||value[0]=='N')&&(value[1]=='o'||value[1]=='O')&&(value[2]=='n'||value[2]=='N')&&(value[3]=='e'||value[3]=='E')){return false;}}return true;
++}
++ConfigResult<Bytes> encodeMuxDatagram(const MuxDatagram& data,GzipMode mode){
++  if(data.protocol!=Datagram2Protocol&&data.protocol!=Datagram3Protocol){return error(Code::Unsupported,"Only explicit Datagram2/3 mux protocols supported");}
++  if(data.datagram.size()>MaximumMuxDatagramBytes){return error(Code::TooLarge,"Original gzip input exceeds40KiB");}
++  if(mode!=GzipMode::Stored&&mode!=GzipMode::Deflate){return error(Code::Unsupported,"Unknown gzip mode");}
++  z_stream stream{};if(deflateInit2(&stream,mode==GzipMode::Stored?0:3,Z_DEFLATED,31,8,Z_DEFAULT_STRATEGY)!=Z_OK){return error(Code::CryptoFailure,"Gzip encoder resources unavailable");}
++  struct End {z_stream* s;~End(){deflateEnd(s);}}end{&stream};Bytes out(MaximumI2cpPayloadBytes);
++  stream.next_in=const_cast<Byte*>(data.datagram.data());stream.avail_in=static_cast<uInt>(data.datagram.size());stream.next_out=out.data();stream.avail_out=static_cast<uInt>(out.size());
++  if(deflate(&stream,Z_FINISH)!=Z_STREAM_END||stream.avail_in||stream.total_out>out.size()||stream.total_out<18){return error(Code::TooLarge,"Gzip output exceeds finite Payload bound");}out.resize(stream.total_out);
++  // Original ResettableGZIPOutputStream always uses XFL2, even level0/3;
++  // mux overwrites MTIME/OS. CRC/ISIZE cover the data, not these header fields.
++  out[4]=static_cast<Byte>(data.fromPort>>8);out[5]=static_cast<Byte>(data.fromPort);out[6]=static_cast<Byte>(data.toPort>>8);out[7]=static_cast<Byte>(data.toPort);out[8]=2;out[9]=data.protocol;return out;
++}
++ConfigResult<MuxDatagram> decodeMuxDatagram(View bytes){
++  if(bytes.size()<18||bytes.size()>MaximumI2cpPayloadBytes){return error(Code::TooLarge,"Bounded mux gzip length refused");}
++  if(bytes[0]!=0x1f||bytes[1]!=0x8b||bytes[2]!=8||bytes[3]!=0||(bytes[9]!=Datagram2Protocol&&bytes[9]!=Datagram3Protocol)){return error(Code::Unsupported,"Only fixed-header Datagram2/3 gzip supported");}
++  z_stream stream{};if(inflateInit2(&stream,31)!=Z_OK){return error(Code::CryptoFailure,"Gzip decoder resources unavailable");}struct End {z_stream* s;~End(){inflateEnd(s);}}end{&stream};Bytes out(MaximumMuxDatagramBytes+1);
++  stream.next_in=const_cast<Byte*>(bytes.data());stream.avail_in=static_cast<uInt>(bytes.size());stream.next_out=out.data();stream.avail_out=static_cast<uInt>(out.size());const auto status=inflate(&stream,Z_FINISH);
++  if(status!=Z_STREAM_END||stream.avail_in||stream.total_out>MaximumMuxDatagramBytes){return error(Code::InvalidFormat,"Malformed/concatenated/oversize mux gzip or CRC/ISIZE mismatch");}out.resize(stream.total_out);
++  return MuxDatagram{bytes[9],static_cast<std::uint16_t>((static_cast<unsigned>(bytes[4])<<8)|bytes[5]),static_cast<std::uint16_t>((static_cast<unsigned>(bytes[6])<<8)|bytes[7]),std::move(out)};
++}
++ConfigResult<Bytes> encodeSendDatagram(const SendDatagram& data){
++  auto valid=payloadValid(data.sessionId,data.payload);if(!valid){return std::unexpected(valid.error());}auto dest=decodeDestination(data.recipient.wire);if(!dest){return std::unexpected(dest.error());}
++  if(data.expirationMilliseconds&&(*data.expirationMilliseconds==0||*data.expirationMilliseconds>0xffffffffffffULL)){return error(Code::InvalidFormat,"Expires requires positive uint48 absolute milliseconds");}
++  Bytes body;body.reserve(2+dest->wire.size()+4+data.payload.size()+4+8);put(body,data.sessionId,2);body.insert(body.end(),dest->wire.begin(),dest->wire.end());put(body,data.payload.size(),4);body.insert(body.end(),data.payload.begin(),data.payload.end());put(body,data.nonce,4);
++  if(data.expirationMilliseconds){put(body,0,2);put(body,*data.expirationMilliseconds,6);}return frame(data.expirationMilliseconds?SendMessageExpiresType:SendMessageType,body);
++}
++ConfigResult<SendDatagram> decodeSendDatagram(const Frame& input){
++  if(input.type!=SendMessageType&&input.type!=SendMessageExpiresType){return error(Code::Unsupported,"Expected Send5/Expires36");}Reader r{input.payload};std::uint64_t id=0,length=0,nonce=0;if(!r.number(2,id)||input.payload.size()-r.at<387){return error(Code::InvalidFormat,"Truncated Send destination");}
++  const auto start=r.at;const auto size=387+(static_cast<std::size_t>(input.payload[start+385])<<8)+input.payload[start+386];View destBytes,payload;if(!r.take(size,destBytes)){return error(Code::InvalidFormat,"Truncated Send destination");}auto dest=decodeDestination(destBytes);if(!dest){return std::unexpected(dest.error());}
++  if(!r.number(4,length)||length>MaximumI2cpPayloadBytes||!r.take(static_cast<std::size_t>(length),payload)||!r.number(4,nonce)){return error(Code::InvalidFormat,"Invalid Send Payload/nonce");}std::optional<std::uint64_t> expires;
++  if(input.type==SendMessageExpiresType){std::uint64_t flags=0,date=0;if(!r.number(2,flags)||flags||!r.number(6,date)||!date){return error(Code::Unsupported,"Only default flags0/positive Expires date supported");}expires=date;}
++  if(r.at!=r.bytes.size()){return error(Code::InvalidFormat,"Trailing Send bytes");}SendDatagram out{static_cast<std::uint16_t>(id),std::move(*dest),Bytes(payload.begin(),payload.end()),static_cast<std::uint32_t>(nonce),expires};auto valid=payloadValid(out.sessionId,out.payload);if(!valid){return std::unexpected(valid.error());}return out;
++}
++ConfigResult<StatusMeaning> messageStatusMeaning(Byte code){switch(code){case 0:return StatusMeaning::IncomingAvailable;case 1:return StatusMeaning::RouterAccepted;case 2:return StatusMeaning::UnusedLegacySuccess;case 3:case 5:return StatusMeaning::ProbableFailure;case 4:return StatusMeaning::ProbableSuccess;case 6:return StatusMeaning::LocalSuccess;default:if(code<=23){return StatusMeaning::Failure;}return error(Code::Unsupported,"Unknown original MessageStatus code");}}
++ConfigResult<Bytes> encodeMessageStatus(const MessageStatus& data){auto meaning=messageStatusMeaning(data.code);if(!meaning){return std::unexpected(meaning.error());}if(data.sessionId==65535){return error(Code::InvalidFormat,"Unknown status session");}Bytes out;put(out,data.sessionId,2);put(out,data.messageId,4);out.push_back(data.code);put(out,data.size,4);put(out,data.nonce,4);return frame(MessageStatusType,out);}
++ConfigResult<MessageStatus> decodeMessageStatus(const Frame& input){
++  if(input.type!=MessageStatusType||input.payload.size()!=15){return error(Code::InvalidFormat,"MessageStatus22 must contain15 bytes");}Reader r{input.payload};std::uint64_t id=0,message=0,code=0,size=0,nonce=0;
++  if(!r.number(2,id)||!r.number(4,message)||!r.number(1,code)||!r.number(4,size)||!r.number(4,nonce)||id==65535){return error(Code::InvalidFormat,"Malformed status");}auto meaning=messageStatusMeaning(static_cast<Byte>(code));if(!meaning){return std::unexpected(meaning.error());}return MessageStatus{static_cast<std::uint16_t>(id),static_cast<std::uint32_t>(message),static_cast<Byte>(code),static_cast<std::uint32_t>(size),static_cast<std::uint32_t>(nonce)};
++}
++ConfigResult<Bytes> encodeMessagePayload(const MessagePayload& data){auto valid=payloadValid(data.sessionId,data.payload);if(!valid){return std::unexpected(valid.error());}Bytes body;put(body,data.sessionId,2);put(body,data.messageId,4);put(body,data.payload.size(),4);body.insert(body.end(),data.payload.begin(),data.payload.end());return frame(MessagePayloadType,body);}
++ConfigResult<MessagePayload> decodeMessagePayload(const Frame& input){
++  if(input.type!=MessagePayloadType){return error(Code::Unsupported,"Expected inbound Payload31");}Reader r{input.payload};std::uint64_t id=0,message=0,length=0;View payload;if(!r.number(2,id)||!r.number(4,message)||!r.number(4,length)||length>MaximumI2cpPayloadBytes||!r.take(static_cast<std::size_t>(length),payload)||r.at!=r.bytes.size()){return error(Code::InvalidFormat,"Malformed inbound Payload31");}MessagePayload out{static_cast<std::uint16_t>(id),static_cast<std::uint32_t>(message),Bytes(payload.begin(),payload.end())};auto valid=payloadValid(out.sessionId,out.payload);if(!valid){return std::unexpected(valid.error());}return out;
++}
++} // namespace biglybtc::services::i2p::i2cp
+--- /dev/null
++++ b/preview/native/services/i2cp_datagram/messages.hpp
+@@ -0,0 +1,25 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#pragma once
++#include "session.hpp"
++namespace biglybtc::services::i2p::i2cp {
++inline constexpr Byte SendMessageType=5,SendMessageExpiresType=36,MessageStatusType=22,MessagePayloadType=31;
++inline constexpr std::size_t MaximumMuxDatagramBytes=40*1024,MaximumI2cpPayloadBytes=64*1024;
++enum class GzipMode {Stored,Deflate}; // Explicit original GZIP_OFF / level3.
++struct MuxDatagram {Byte protocol=Datagram2Protocol;std::uint16_t fromPort=0,toPort=0;Bytes datagram;};
++struct SendDatagram {std::uint16_t sessionId=0;Destination recipient;Bytes payload;std::uint32_t nonce=0;std::optional<std::uint64_t> expirationMilliseconds;};
++struct MessageStatus {std::uint16_t sessionId=0;std::uint32_t messageId=0;Byte code=0;std::uint32_t size=0,nonce=0;};
++enum class StatusMeaning {IncomingAvailable,RouterAccepted,UnusedLegacySuccess,ProbableSuccess,LocalSuccess,ProbableFailure,Failure};
++struct MessagePayload {std::uint16_t sessionId=0;std::uint32_t messageId=0;Bytes payload;};
++[[nodiscard]] ConfigResult<Bytes> encodeMuxDatagram(const MuxDatagram&,GzipMode);
++[[nodiscard]] ConfigResult<MuxDatagram> decodeMuxDatagram(View);
++[[nodiscard]] ConfigResult<Bytes> encodeSendDatagram(const SendDatagram&);
++[[nodiscard]] ConfigResult<SendDatagram> decodeSendDatagram(const Frame&);
++[[nodiscard]] ConfigResult<Bytes> encodeMessageStatus(const MessageStatus&);
++[[nodiscard]] ConfigResult<MessageStatus> decodeMessageStatus(const Frame&);
++[[nodiscard]] ConfigResult<StatusMeaning> messageStatusMeaning(Byte);
++[[nodiscard]] ConfigResult<Bytes> encodeMessagePayload(const MessagePayload&);
++[[nodiscard]] ConfigResult<MessagePayload> decodeMessagePayload(const Frame&);
++// Original router captures this at initial destination creation; updates do
++// not alter it. No trimming or invented coercion. No saved defaults applied.
++[[nodiscard]] bool originalStatusRepliesEnabled(const SessionOptions&) noexcept;
++} // namespace biglybtc::services::i2p::i2cp
+--- /dev/null
++++ b/preview/native/tests/i2cp_datagram_channel_tests.cpp
+@@ -0,0 +1,78 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "channel.hpp"
++#include <QElapsedTimer>
++#include <QFile>
++#include <QPointer>
++#include <QSignalSpy>
++#include <QTcpServer>
++#include <QTcpSocket>
++#include <QtTest>
++namespace i2p=biglybtc::services::i2p;namespace cp=i2p::i2cp;using Channel=cp::InitialChannel;
++namespace {
++constexpr std::uint64_t Now=1761739200123ULL;
++i2p::ClientIdentity signer(const char* family){
++  auto read=[&](const char* suffix){const auto path=QString::fromUtf8(BIGLYBTC_I2P_TEST_KEYS_DIR)+QLatin1Char('/')+QString::fromLatin1(family)+QString::fromLatin1(suffix);QFile file(path);if(!file.open(QIODevice::ReadOnly)||file.size()<1||file.size()>1024){qFatal("Cannot open bounded signer %s: %s",qPrintable(path),qPrintable(file.errorString()));}const auto bytes=file.readAll();if(file.error()!=QFileDevice::NoError){qFatal("Cannot read signer %s: %s",qPrintable(path),qPrintable(file.errorString()));}return i2p::Bytes(reinterpret_cast<const i2p::Byte*>(bytes.constData()),reinterpret_cast<const i2p::Byte*>(bytes.constData())+bytes.size());};
++  auto result=i2p::makeClientIdentity(read(".sender"),i2p::Bytes(256,0x51),read(".known-test-key"));if(!result){qFatal("Cannot import synthetic signer: %s",result.error().message.c_str());}return std::move(*result);
++}
++struct Router {
++  QTcpServer server;QPointer<QTcpSocket> peer;QByteArray bytes;qsizetype offset=1;QString failure;
++  Router(){QObject::connect(&server,&QTcpServer::newConnection,&server,[this]{if(peer){failure="Unexpected second client";return;}peer=server.nextPendingConnection();QObject::connect(peer,&QTcpSocket::readyRead,&server,[this]{collect();});collect();});}
++  ~Router(){QObject::disconnect(&server,nullptr,&server,nullptr);if(peer){QObject::disconnect(peer,nullptr,&server,nullptr);peer->abort();}}
++  void collect(){const auto n=peer->bytesAvailable();if(n<0||n>131077-bytes.size()){failure="Unbounded owned router input";peer->abort();return;}bytes+=peer->read(n);}
++  bool listen(bool ipv6=false){return server.listen(ipv6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost,0);}
++  Channel::Options options(int budget=3000)const{return {server.serverAddress(),server.serverPort(),"2.13.0",false,budget};}
++  bool send(i2p::View data){return peer&&peer->write(reinterpret_cast<const char*>(data.data()),static_cast<qint64>(data.size()))==static_cast<qint64>(data.size());}
++  std::optional<cp::Frame> next()const{if(bytes.size()-offset<5){return std::nullopt;}const auto* at=reinterpret_cast<const cp::Byte*>(bytes.constData()+offset);std::uint32_t n=0;for(unsigned i=0;i<4;++i){n=(n<<8)|at[i];}if(n>cp::MaximumPayloadBytes){qFatal("Unbounded actual client frame");}if(bytes.size()-offset<5+static_cast<qsizetype>(n)){return std::nullopt;}auto decoded=cp::decodeFrame(cp::View(at,n+5));if(!decoded){qFatal("Malformed client frame: %s",decoded.error().message.c_str());}return std::move(*decoded);}
++  cp::Frame take(){auto frame=next();if(!frame){qFatal("Missing actual client frame");}offset+=5+static_cast<qsizetype>(frame->payload.size());return std::move(*frame);}
++  bool status(std::uint32_t nonce,std::uint32_t message,cp::Byte code,std::uint16_t session=7){auto data=cp::encodeMessageStatus({session,message,code,0,nonce});return data&&send(*data);}
++  bool lease(std::uint64_t expiry=Now+600000){cp::RequestedLease l;l.gateway.fill(0x51);l.tunnelId=33;l.expiresMilliseconds=expiry;auto data=cp::encodeLeaseRequest({7,{l}});return data&&send(*data);}
++};
++}
++class DatagramChannelTests final:public QObject {
++  Q_OBJECT
++  void registered(Router& router,Channel& channel,const char* family,const cp::SessionOptions& options={},int budget=3000,std::uint64_t expiry=Now+600000){
++    auto identity=signer(family);QVERIFY(channel.begin(router.options(budget)));QTRY_VERIFY(router.next());QCOMPARE(router.bytes[0],'*');QCOMPARE(router.take().type,cp::GetDateType);auto date=cp::encodeMessage(cp::SetDate{Now,std::string("2.13.0")});QVERIFY(date&&router.send(*date));QTRY_VERIFY(channel.routerDate());QVERIFY(channel.createLeaseSession(std::move(identity),options,Now));QVERIFY(!identity.valid());QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateSessionType);auto status=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});QVERIFY(status&&router.send(*status));QTRY_VERIFY(channel.sessionId());QVERIFY(router.lease(expiry));QTRY_VERIFY(router.next());auto created=cp::decodeCreateLeaseSet2(router.take());QVERIFY2(created.has_value(),created?"":created.error().message.c_str());QVERIFY(cp::verifyLeaseSet2(created->leaseSet));QTRY_VERIFY(channel.leaseSetSubmission());
++  }
++private slots:
++  void actualSignedAndClaimedDatagramsExposeHonestRouterStatuses_data(){
++    QTest::addColumn<QByteArray>("family");QTest::addColumn<bool>("ipv6");QTest::addColumn<bool>("claimed");
++    QTest::newRow("DSA0-v4-signed")<<QByteArray("dsa")<<false<<false;QTest::newRow("Ed7-v6-signed")<<QByteArray("ed25519")<<true<<false;
++    QTest::newRow("DSA0-v6-claimed")<<QByteArray("dsa")<<true<<true;QTest::newRow("Ed7-v4-claimed")<<QByteArray("ed25519")<<false<<true;
++  }
++  void actualSignedAndClaimedDatagramsExposeHonestRouterStatuses(){
++    QFETCH(QByteArray,family);QFETCH(bool,ipv6);QFETCH(bool,claimed);Router router;QVERIFY(router.listen(ipv6));Channel channel;registered(router,channel,family.constData());QVERIFY(channel.leaseSetSubmission());auto recipient=signer(family=="dsa"?"ed25519":"dsa");const i2p::Bytes payload{0,0xff,0x51,3};Channel::DatagramOptions options;options.fromPort=65535;options.toPort=42;options.gzip=claimed?cp::GzipMode::Stored:cp::GzipMode::Deflate;if(!claimed){options.expirationMilliseconds=Now+60000;}
++    auto sent=claimed?channel.submitClaimedDatagram3(recipient.destination()->wire,payload,options):channel.submitDatagram2(recipient.destination()->wire,payload,options);QVERIFY2(sent.has_value(),sent?"":sent.error().message.c_str());QVERIFY(channel.datagramPending());QVERIFY(!channel.submitDatagram2(recipient.destination()->wire,payload,{}));QVERIFY(!channel.reconfigureLeaseSession({},Now));QTRY_VERIFY(router.next());auto actual=cp::decodeSendDatagram(router.take());QVERIFY(actual);QCOMPARE(actual->nonce,*sent);QCOMPARE(actual->sessionId,std::uint16_t(7));QVERIFY(actual->recipient.wire==recipient.destination()->wire);QVERIFY(actual->expirationMilliseconds==options.expirationMilliseconds);auto mux=cp::decodeMuxDatagram(actual->payload);QVERIFY(mux);QCOMPARE(mux->fromPort,std::uint16_t(65535));QCOMPARE(mux->toPort,std::uint16_t(42));
++    if(claimed){auto decoded=i2p::decode3(mux->datagram);QVERIFY(decoded);QVERIFY(decoded->payload==payload);QVERIFY(decoded->claimedSender==signer(family.constData()).destination()->hash);}else{auto decoded=i2p::decode2(mux->datagram,recipient.destination()->hash);QVERIFY(decoded);QVERIFY(decoded->payload==payload);auto wrong=recipient.destination()->hash;wrong[0]^=1;QVERIFY(!i2p::decode2(mux->datagram,wrong));}
++    QVERIFY(router.status(*sent,123,1));QTRY_VERIFY(channel.datagramObservation()&&channel.datagramObservation()->phase==Channel::DatagramPhase::RouterAccepted);QVERIFY(channel.datagramPending());QCOMPARE(channel.datagramObservation()->routerStatus->code,cp::Byte(1));QVERIFY(router.status(*sent,123,claimed?6:4));QTRY_VERIFY(!channel.datagramPending());QCOMPARE(channel.datagramObservation()->phase,Channel::DatagramPhase::RouterStatus);QCOMPARE(channel.datagramObservation()->routerStatus->code,cp::Byte(claimed?6:4));QVERIFY(router.failure.isEmpty());
++  }
++  void createdWithoutActualLeaseCannotSubmit(){
++    Router router;QVERIFY(router.listen());Channel channel;auto identity=signer("dsa"),recipient=signer("ed25519");QVERIFY(channel.begin(router.options()));QTRY_VERIFY(router.next());router.take();auto date=cp::encodeMessage(cp::SetDate{Now,std::string("2.13.0")});QVERIFY(date&&router.send(*date));QTRY_VERIFY(channel.routerDate());QVERIFY(!channel.submitDatagram2(recipient.destination()->wire,{},{}));QVERIFY(channel.createLeaseSession(std::move(identity),{},Now));QTRY_VERIFY(router.next());router.take();auto ack=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});QVERIFY(ack&&router.send(*ack));QTRY_VERIFY(channel.sessionId());QVERIFY(!channel.leaseSetSubmission());QVERIFY(!channel.submitDatagram2(recipient.destination()->wire,{},{}));channel.close();QVERIFY(!channel.datagramObservation());
++  }
++  void localCancelAndOldNonceCannotFinishTheNextRequest(){
++    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,"ed25519");QVERIFY(channel.leaseSetSubmission());auto recipient=signer("dsa");auto first=channel.submitDatagram2(recipient.destination()->wire,{},{ });QVERIFY(first);QTRY_VERIFY(router.next());router.take();QVERIFY(channel.cancelDatagram(*first));QVERIFY(!channel.datagramPending());QCOMPARE(channel.datagramObservation()->phase,Channel::DatagramPhase::LocalCancelled);QVERIFY(!channel.datagramObservation()->routerStatus);
++    auto second=channel.submitDatagram2(recipient.destination()->wire,{},{});QVERIFY(second&&*second>*first);QTRY_VERIFY(router.next());router.take();QVERIFY(!channel.cancelDatagram(*first));QVERIFY(router.status(*first,77,6));QVERIFY(router.status(*second,88,1));QTRY_VERIFY(channel.datagramObservation()&&channel.datagramObservation()->phase==Channel::DatagramPhase::RouterAccepted);QCOMPARE(channel.datagramObservation()->nonce,*second);QVERIFY(channel.datagramPending());
++    QVERIFY(router.status(*second,89,6));QTRY_COMPARE(channel.state(),Channel::State::Failed);QVERIFY(!channel.datagramPending());QVERIFY(!channel.datagramObservation());QVERIFY(!channel.sessionId());
++  }
++  void terminalFailureCanPrecedeAcceptedAndOldStatusesCannotRebind(){
++    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,"dsa");QVERIFY(channel.leaseSetSubmission());auto recipient=signer("ed25519");auto first=channel.submitDatagram2(recipient.destination()->wire,{},{});QVERIFY(first);QTRY_VERIFY(router.next());router.take();QVERIFY(router.status(*first,55,15));QTRY_VERIFY(!channel.datagramPending());QCOMPARE(channel.datagramObservation()->routerStatus->code,cp::Byte(15));auto next=channel.submitDatagram2(recipient.destination()->wire,{},{});QVERIFY(next);QTRY_VERIFY(router.next());router.take();QVERIFY(router.status(*first,55,1));QVERIFY(router.status(*next,0,1));QTRY_VERIFY(channel.datagramObservation()&&channel.datagramObservation()->phase==Channel::DatagramPhase::RouterAccepted);QCOMPARE(channel.datagramObservation()->nonce,*next);QVERIFY(router.status(*next,0,6));QTRY_VERIFY(!channel.datagramPending());QCOMPARE(channel.datagramObservation()->routerStatus->code,cp::Byte(6));
++  }
++  void renewalCannotExtendOrCancelTheIndependentStatusBudget(){
++    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,"dsa",{},500);QVERIFY(channel.leaseSetSubmission());auto recipient=signer("ed25519");auto sent=channel.submitDatagram2(recipient.destination()->wire,{},{});QVERIFY(sent);QTRY_VERIFY(router.next());router.take();QVERIFY(router.lease(Now+900000));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateLeaseSet2Type);QTRY_COMPARE(channel.leaseSetSubmission()->revision,std::uint64_t(2));QTRY_VERIFY(!channel.datagramPending());QCOMPARE(channel.datagramObservation()->phase,Channel::DatagramPhase::LocalTimeout);QVERIFY(!channel.datagramObservation()->routerStatus);QCOMPARE(channel.state(),Channel::State::SessionCreated);QVERIFY(channel.sessionId());
++  }
++  void actualLeaseExpiryWithdrawsSubmissionUntilNewSignedRenewal(){
++    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,"ed25519",{},5000,(Now/1000+2)*1000);QVERIFY(channel.leaseSetSubmission());auto recipient=signer("dsa");auto sent=channel.submitDatagram2(recipient.destination()->wire,{},{});QVERIFY(sent);QTRY_VERIFY(router.next());router.take();QTRY_VERIFY(!channel.datagramPending());QCOMPARE(channel.datagramObservation()->phase,Channel::DatagramPhase::LocalLeaseExpired);QVERIFY(!channel.submitDatagram2(recipient.destination()->wire,{},{}));QVERIFY(router.lease());QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateLeaseSet2Type);QTRY_COMPARE(channel.leaseSetSubmission()->revision,std::uint64_t(2));auto next=channel.submitDatagram2(recipient.destination()->wire,{},{});QVERIFY(next&&*next>*sent);QTRY_VERIFY(router.next());router.take();QVERIFY(router.status(*sent,9,6));QVERIFY(router.status(*next,10,6));QTRY_VERIFY(!channel.datagramPending());QCOMPARE(channel.datagramObservation()->nonce,*next);QCOMPARE(channel.datagramObservation()->routerStatus->messageId,std::uint32_t(10));
++  }
++  void reliabilityPolicyRemainsTheInitialOriginalRouterSetting_data(){QTest::addColumn<bool>("none");QTest::newRow("none-cannot-upgrade")<<true;QTest::newRow("best-effort-cannot-downgrade")<<false;}
++  void reliabilityPolicyRemainsTheInitialOriginalRouterSetting(){
++    QFETCH(bool,none);Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,"dsa",{{"i2cp.messageReliability",none?"NoNe":"BestEffort"}});QVERIFY(channel.leaseSetSubmission());auto recipient=signer("ed25519");if(none){QVERIFY(!channel.submitDatagram2(recipient.destination()->wire,{},{}));}
++    QVERIFY(channel.reconfigureLeaseSession({{"i2cp.messageReliability",none?"BestEffort":"none"}},Now));QVERIFY(!channel.submitDatagram2(recipient.destination()->wire,{},{}));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::ReconfigureSessionType);auto ack=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Updated});QVERIFY(ack&&router.send(*ack));QTRY_COMPARE(channel.state(),Channel::State::SessionCreated);auto sent=channel.submitDatagram2(recipient.destination()->wire,{},{});QVERIFY(sent.has_value()!=none);if(sent){QTRY_VERIFY(router.next());router.take();QVERIFY(router.status(*sent,33,6));QTRY_VERIFY(!channel.datagramPending());}else{QVERIFY(!router.next());}
++  }
++  void wrongSessionStatusWithdrawsRatherThanCompletes(){
++    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,"dsa");QVERIFY(channel.leaseSetSubmission());auto recipient=signer("ed25519");auto sent=channel.submitDatagram2(recipient.destination()->wire,{},{});QVERIFY(sent);QTRY_VERIFY(router.next());router.take();QVERIFY(router.status(*sent,33,6,8));QTRY_COMPARE(channel.state(),Channel::State::Failed);QVERIFY(!channel.datagramObservation());
++  }
++  void publicDatagramNotificationMayDeleteTheChannel(){
++    Router router;QVERIFY(router.listen());QPointer<Channel> channel=new Channel(&router.server);registered(router,*channel,"ed25519");QVERIFY(channel->leaseSetSubmission());auto recipient=signer("dsa");QObject::connect(channel,&Channel::datagramChanged,&router.server,[&]{if(channel&&channel->datagramObservation()&&channel->datagramObservation()->phase==Channel::DatagramPhase::RouterStatus){delete channel.data();}});auto sent=channel->submitDatagram2(recipient.destination()->wire,{},{});QVERIFY(sent);QTRY_VERIFY(router.next());router.take();QVERIFY(router.status(*sent,33,6));QTRY_VERIFY(channel.isNull());QTRY_COMPARE(router.peer->state(),QAbstractSocket::UnconnectedState);
++  }
++};
++QTEST_GUILESS_MAIN(DatagramChannelTests)
++#include "i2cp_datagram_channel_tests.moc"
+--- /dev/null
++++ b/preview/native/tests/i2cp_datagram_tests.cpp
+@@ -0,0 +1,55 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "messages.hpp"
++#include <zlib.h>
++#include <cerrno>
++#include <fcntl.h>
++#include <filesystem>
++#include <fstream>
++#include <iostream>
++#include <stdexcept>
++#include <string_view>
++#include <sys/stat.h>
++#include <unistd.h>
++namespace i2p=biglybtc::services::i2p;namespace cp=i2p::i2cp;
++void require(bool ok,const char* why){if(!ok){throw std::runtime_error(why);}}
++template<class T,class E>T take(std::expected<T,E> value){if(!value){throw std::runtime_error(value.error().message);}return std::move(*value);}
++i2p::Bytes read(const std::filesystem::path& path){require(std::filesystem::file_size(path)<=1024,"Unbounded synthetic input");std::ifstream in(path,std::ios::binary);require(in.good(),"Cannot open synthetic input");i2p::Bytes out(std::istreambuf_iterator<char>(in),{});require(!in.bad()&&out.size()<=1024,"Cannot read synthetic input");return out;}
++void cases(const std::filesystem::path& fixtures){
++  const auto recipient=take(i2p::decodeDestination(read(fixtures/"ed25519.sender")));
++  for(const std::string family:{"dsa","ed25519"}){
++    const auto sender=read(fixtures/(family+".sender")),key=read(fixtures/(family+".known-test-key"));
++    for(const bool claimed:{false,true}){const i2p::Bytes payload{0,0xff,3,0x51};auto datagram=take(claimed?i2p::encode3(sender,payload):i2p::encode2(sender,key,recipient.hash,payload));
++      for(const auto mode:{cp::GzipMode::Stored,cp::GzipMode::Deflate}){
++        auto gzip=take(cp::encodeMuxDatagram({claimed?i2p::Datagram3Protocol:i2p::Datagram2Protocol,65535,0,datagram},mode));require(gzip[4]==255&&gzip[5]==255&&gzip[6]==0&&gzip[7]==0&&gzip[8]==2,"Original mux header differs");auto mux=take(cp::decodeMuxDatagram(gzip));require(mux.datagram==datagram&&mux.fromPort==65535&&mux.toPort==0,"Mux gzip roundtrip differs");
++        if(claimed){require(take(i2p::decode3(mux.datagram)).payload==payload,"Unsigned payload differs");}else{require(take(i2p::decode2(mux.datagram,recipient.hash)).payload==payload,"Signed recipient-bound payload differs");}
++        for(const auto expiration:{std::optional<std::uint64_t>{},std::optional<std::uint64_t>{1700000000123ULL}}){cp::SendDatagram send{0,recipient,gzip,0xffffffffU,expiration};auto wire=take(cp::encodeSendDatagram(send));auto parsed=take(cp::decodeSendDatagram(take(cp::decodeFrame(wire))));require(parsed.sessionId==0&&parsed.nonce==0xffffffffU&&parsed.expirationMilliseconds==expiration&&parsed.recipient.wire==recipient.wire&&parsed.payload==gzip,"Send5/Expires36 fields differ");wire.push_back(0);require(!cp::decodeFrame(wire),"Trailing frame accepted");}
++        auto changed=gzip;changed.back()^=1;require(!cp::decodeMuxDatagram(changed),"Changed gzip ISIZE accepted");changed=gzip;changed[changed.size()-8]^=1;require(!cp::decodeMuxDatagram(changed),"Changed gzip CRC accepted");changed=gzip;changed.insert(changed.end(),gzip.begin(),gzip.end());require(!cp::decodeMuxDatagram(changed),"Concatenated gzip accepted");changed=gzip;changed[3]=8;require(!cp::decodeMuxDatagram(changed),"Unbounded optional gzip name accepted");
++      }
++    }
++  }
++  for(const auto mode:{cp::GzipMode::Stored,cp::GzipMode::Deflate}){const i2p::Bytes maximum(cp::MaximumMuxDatagramBytes,0x51);auto gzip=take(cp::encodeMuxDatagram({i2p::Datagram2Protocol,1,65535,maximum},mode));require(take(cp::decodeMuxDatagram(gzip)).datagram==maximum,"40KiB gzip limit differs");require(!cp::encodeMuxDatagram({i2p::Datagram2Protocol,0,0,i2p::Bytes(cp::MaximumMuxDatagramBytes+1)},mode),"Oversize gzip input accepted");}
++  {z_stream stream{};require(deflateInit2(&stream,3,Z_DEFLATED,31,8,Z_DEFAULT_STRATEGY)==Z_OK,"Cannot author bounded gzip bomb control");i2p::Bytes expanded(cp::MaximumMuxDatagramBytes+1,0),gzip(65536);stream.next_in=expanded.data();stream.avail_in=static_cast<uInt>(expanded.size());stream.next_out=gzip.data();stream.avail_out=static_cast<uInt>(gzip.size());const auto result=deflate(&stream,Z_FINISH);const auto length=stream.total_out;deflateEnd(&stream);require(result==Z_STREAM_END,"Cannot finish gzip bomb control");gzip.resize(length);gzip[9]=i2p::Datagram2Protocol;require(!cp::decodeMuxDatagram(gzip),"Actual valid gzip expanding past40KiB accepted");}
++  for(unsigned code=0;code<=23;++code){cp::MessageStatus status{7,0xffffffffU,static_cast<i2p::Byte>(code),65536,0xffffffffU};auto decoded=take(cp::decodeMessageStatus(take(cp::decodeFrame(take(cp::encodeMessageStatus(status))))));require(decoded.code==code&&decoded.nonce==status.nonce&&decoded.messageId==status.messageId,"Status unsigned fields differ");}
++  require(take(cp::messageStatusMeaning(1))==cp::StatusMeaning::RouterAccepted&&take(cp::messageStatusMeaning(4))==cp::StatusMeaning::ProbableSuccess&&take(cp::messageStatusMeaning(6))==cp::StatusMeaning::LocalSuccess,"Status certainty invented");require(!cp::messageStatusMeaning(24),"Unknown status accepted");
++  for(const std::size_t size:{0U,65536U}){cp::MessagePayload data{7,123,i2p::Bytes(size,0x51)};auto decoded=take(cp::decodeMessagePayload(take(cp::decodeFrame(take(cp::encodeMessagePayload(data))))));require(decoded.messageId==123&&decoded.payload==data.payload,"Inbound31 DTO differs");}require(!cp::encodeMessagePayload({7,1,i2p::Bytes(65537)}),"Oversize Payload31 accepted");
++  require(!cp::originalStatusRepliesEnabled({{"i2cp.messageReliability","NoNe"}}),"Original none spelling differs");require(cp::originalStatusRepliesEnabled({{"i2cp.messageReliability"," none "}})&&cp::originalStatusRepliesEnabled({}),"Original trimming/default invented");
++}
++struct Fd {int value=-1;explicit Fd(int n):value(n){}~Fd(){if(value>=0){::close(value);}}Fd(const Fd&)=delete;Fd& operator=(const Fd&)=delete;};
++bool stamp(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_size==b.st_size&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
++i2p::Bytes ownedRead(int root,const char* name){Fd fd(::openat(root,name,O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));require(fd.value>=0,"Cannot read fixed offline vector");struct stat before{},after{},named{};require(::fstat(fd.value,&before)==0&&S_ISREG(before.st_mode)&&before.st_uid==::geteuid()&&before.st_nlink==1&&before.st_size>=0&&before.st_size<=70000,"Unsafe/unbounded offline vector");i2p::Bytes out(static_cast<std::size_t>(before.st_size));std::size_t at=0;while(at<out.size()){auto n=::read(fd.value,out.data()+at,out.size()-at);if(n<0&&errno==EINTR){continue;}require(n>0,"Cannot read offline vector bytes");at+=static_cast<std::size_t>(n);}require(::fstat(fd.value,&after)==0&&::fstatat(root,name,&named,AT_SYMLINK_NOFOLLOW)==0&&stamp(before,after)&&stamp(after,named),"Offline vector changed");return out;}
++void ownedWrite(int root,const char* name,i2p::View bytes){Fd fd(::openat(root,name,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));require(fd.value>=0&&bytes.size()<=70000,"Cannot exclusively create offline vector");std::size_t at=0;while(at<bytes.size()){auto n=::write(fd.value,bytes.data()+at,bytes.size()-at);if(n<0&&errno==EINTR){continue;}require(n>0,"Cannot write offline vector");at+=static_cast<std::size_t>(n);}require(::fsync(fd.value)==0,"Cannot sync offline vector");}
++void interop(const std::filesystem::path& path){
++  require(path.is_absolute(),"Offline root must be absolute");Fd root(::open(path.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));struct stat st{};require(root.value>=0&&::fstat(root.value,&st)==0&&st.st_uid==::geteuid()&&(st.st_mode&077)==0,"Private owned offline root required");
++  const i2p::Bytes payload{0,1,0xff,0x51,0,0x80,0};require(ownedRead(root.value,"payload")==payload,"Original payload differs");
++  for(const std::string family:{"dsa","ed25519"}){
++    auto sender=ownedRead(root.value,(family+".sender").c_str()),secret=ownedRead(root.value,(family+".known-test-key").c_str());auto recipient=take(i2p::decodeDestination(ownedRead(root.value,(family+".recipient").c_str())));
++    for(const bool claimed:{false,true})for(const bool compressed:{false,true}){
++      const auto label=family+"-"+(claimed?"3":"2")+"-"+(compressed?"deflate":"stored");auto send=take(cp::decodeSendDatagram(take(cp::decodeFrame(ownedRead(root.value,(label+".java.send").c_str())))));require(send.sessionId==7&&send.nonce==0x80000000U&&send.recipient.wire==recipient.wire&&send.expirationMilliseconds==(compressed?std::optional<std::uint64_t>(1700000030123ULL):std::nullopt),"Original Send full fields differ");auto mux=take(cp::decodeMuxDatagram(send.payload));require(mux.protocol==(claimed?i2p::Datagram3Protocol:i2p::Datagram2Protocol)&&mux.fromPort==65534&&mux.toPort==42,"Original mux fields differ");
++      if(claimed){auto decoded=take(i2p::decode3(mux.datagram));require(decoded.claimedSender==take(i2p::decodeDestination(sender)).hash&&decoded.payload==payload,"Original claimed datagram differs");}else{auto decoded=take(i2p::decode2(mux.datagram,recipient.hash));require(decoded.sender.wire==sender&&decoded.payload==payload,"Original signed datagram differs");}
++      auto packet=take(claimed?i2p::encode3(sender,payload):i2p::encode2(sender,secret,recipient.hash,payload));auto gzip=take(cp::encodeMuxDatagram({claimed?i2p::Datagram3Protocol:i2p::Datagram2Protocol,65534,42,std::move(packet)},compressed?cp::GzipMode::Deflate:cp::GzipMode::Stored));auto output=take(cp::encodeSendDatagram({7,recipient,std::move(gzip),0x80000000U,send.expirationMilliseconds}));ownedWrite(root.value,(label+".native.send").c_str(),output);std::cout<<"PASS NATIVE VERIFIED JAVA "<<label<<" send\n";
++    }
++  }
++  for(const unsigned code:{1U,4U,6U,15U}){const auto name="status"+std::to_string(code);auto raw=ownedRead(root.value,(name+".java").c_str());auto parsed=take(cp::decodeMessageStatus(take(cp::decodeFrame(raw))));require(parsed.sessionId==7&&parsed.messageId==0xffffffffU&&parsed.nonce==0x80000000U&&parsed.size==65536&&parsed.code==code,"Original Status22 fields differ");auto output=take(cp::encodeMessageStatus(parsed));require(output==raw,"Original Status22 exact bytes differ");ownedWrite(root.value,(name+".native").c_str(),output);}
++  auto raw=ownedRead(root.value,"payload.java");auto data=take(cp::decodeMessagePayload(take(cp::decodeFrame(raw))));require(data.sessionId==7&&data.messageId==0xffffffffU,"Original inbound Payload31 IDs differ");auto output=take(cp::encodeMessagePayload(data));require(output==raw,"Original Payload31 exact bytes differ");ownedWrite(root.value,"payload.native",output);require(::fsync(root.value)==0,"Cannot sync offline vector directory");std::cout<<"PASS NATIVE VERIFIED JAVA FOUR STATUSES AND INBOUND PAYLOAD\n";
++}
++int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);return 0;}require(argc==2,"Usage: i2cp-datagram-tests SYNTHETIC_FIXTURES | --java-interop PRIVATE_DIR");cases(argv[1]);std::cout<<"PASS bounded I2CP datagram messages/mux/status\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}

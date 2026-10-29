@@ -1,0 +1,47 @@
+{
+  "status": "PASS_SOURCE_REVIEW_ONLY",
+  "effective_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/amendments/multivalue-publication-readback/manifest.json",
+    "sha256": "96148caacce732f7fae0c8a77185d9e6c6a1afac9d42a06739aef4c3ef41709b"
+  },
+  "source_base": "1be0a4df444e82d3c2e702782bae88f5536959ef",
+  "reviewed_scope": [
+    "Actual normal receiver emits one real value per datagram and continuation on nonfinal pieces; previous readback immediately refused continuation. New collection is at most64 owned values/64 slices, waits for final, and searches the unchanged full exact-value predicate.",
+    "Per-part operation identity, peer, profile/rating source, stop, cancellation and absolute deadline checks remain. Final locked close/deadline commit and exception fail-closed path remain unchanged.",
+    "Continued-at-cap/over-cap, malformed/nonvalues and missing exact value cannot produce Complete. Late queued parts see finished or retired operation identity.",
+    "Three generated-wire negative cases cover two final mismatches,64 final mismatches and continued-at64; existing two-normal-owner positive now requires two actual readback values and exact published value. Existing fixture caps permit these finite cases.",
+    "Six list/legacy duplicate fixtures now assert parser duplicate_key and both local/distributed InvalidFormat plus zero network sends; production readers are unchanged."
+  ],
+  "verified": {
+    "source_paths": 2,
+    "artifacts": 8,
+    "input_pins": 3,
+    "source_proof_files": 6,
+    "exact_patch_and_source_excerpts": true,
+    "before_void_definitions": 34,
+    "unchanged_void_definitions": 32,
+    "changed_existing_test_methods": [
+      "savedRatingsUseOriginalAnonymousKeyPayloadAndTwoNormalPublicOwners",
+      "savedRatingDuplicateInventoryRowsCannotGrantAuthority"
+    ],
+    "new_test_slots": 2,
+    "new_generated_wire_cases": 3
+  },
+  "review_correction": {
+    "prior_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-rating-consumer-20261029-review/manifest.json",
+      "sha256": "8adcfd9b062b68b451d6a50a72eccfe057ff477d186928d043c8ccd0ff24253a"
+    },
+    "correction": "The earlier row-authority review missed the existing recursive Document parser duplicate_key rejection. The endorsed ordinary-reader positive assertions were wrong; no reachable dictionary ambiguity was established. Added distributed uniqueness checks are defensive. This correction preserves old reader refusal and historical failed r1 evidence.",
+    "actual_failed_log": {
+      "path": "/home/yurii/Java/BiglyBT/build/rating-datagram-followup-20261029/runs/clang-r1/ctest-full.log",
+      "sha256": "28481da5dde7134ff35c78f18324b0d7286a1bc26fdf05ea8c94cc467db5f3ae"
+    }
+  },
+  "blockers": [],
+  "limits": [
+    "Source review only; no compiler/tests/Java/runtime/N mutations.",
+    "No new routing, public/plugin/Host/automatic queue activation; finite explicit owned-peer publication/read remains partial.",
+    "Actual corrected runtime qualification remains pending."
+  ]
+}

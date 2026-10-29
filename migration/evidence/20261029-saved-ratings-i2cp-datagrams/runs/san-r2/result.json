@@ -1,0 +1,36 @@
+{
+  "status": "PASS_SAVED_RATING_DATAGRAM_COHORT",
+  "source_commit": "d384a850980f1b6245230ea852d617b11c405e11",
+  "lane": "san",
+  "cache": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+  "compiled_targets": [
+    "biglybtc-azureus-owned-service-tests",
+    "biglybtc-azureus-database-runtime-tests",
+    "biglybtc-i2cp-initial-channel-tests",
+    "biglybtc-i2cp-datagram-tests",
+    "biglybtc-i2cp-datagram-channel-tests"
+  ],
+  "provider_rebuilt": false,
+  "historical_passes_pooled": false,
+  "runner_sha256": "b36201e3cdddb9c01c9df4fb6fb8a398e7e685e8c79254f7d167b569f25b83a8",
+  "source_receipt_sha256": "22ac81bb31a005c92fbaeb826ca914bfd50eaa5db9b69008226b30e54dee2ebb",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "dist_manifest_before": "92e3b83ba74ee2ec3b1886521914370a31074533daed7f2ed11d058804f2ab68",
+  "suite_names": [
+    "azureus-owned-service",
+    "azureus-database-runtime",
+    "i2cp-initial-channel",
+    "pure-i2cp-datagram-messages",
+    "i2cp-lease-backed-datagram-channel"
+  ],
+  "actual_suites": 5,
+  "full_ctest_log_sha256": "9e7654ced51125a11388ce9aeb6683b43cf8a8e1fe682375b0d523ace4114e4f",
+  "tests_xml_sha256": "0da4a9e7270cb0ed6f6afd37ec3ee65e6a253b1db1f755e34839ced1f2f430d4",
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "commands_sha256": "ca34353e53cc7234f1e43131c50a22521be46f36f252fa833fa3402e5afbde53"
+}

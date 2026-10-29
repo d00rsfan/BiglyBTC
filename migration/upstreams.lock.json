@@ -2749,11 +2749,17 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "471ebb75fc66fefb0208b0d086a934b68aced84b",
           "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d384a850980f1b6245230ea852d617b11c405e11",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/P06-06-rating-local/review.md",
-        "migration/updates/compatibility.providers/20261025.md"
+        "migration/updates/compatibility.providers/20261025.md",
+        "migration/evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md"
       ],
       "evidence": [
         "migration/tasks/P06-06-rating-local-policy.md",
@@ -2762,7 +2768,8 @@
         "migration/evidence/P06-06-rating-local/source-verification.json",
         "migration/evidence/P06-06-rating-local/publication.json",
         "migration/evidence/P06-06-rating-local/independent-export.json",
-        "migration/evidence/20261025-compatibility-providers/completion.json"
+        "migration/evidence/20261025-compatibility-providers/completion.json",
+        "migration/evidence/20261029-saved-ratings-i2cp-datagrams/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-004.md"
     },
@@ -7868,7 +7875,14 @@
         "preview/native/app/owned_azureus_service.hpp",
         "preview/native/services/azureus_db_runtime/database.cpp",
         "preview/native/services/azureus_db_runtime/database.hpp",
-        "preview/native/tests/owned_azureus_service_tests.cpp"
+        "preview/native/tests/owned_azureus_service_tests.cpp",
+        "preview/native/services/azureus_router/router.hpp",
+        "preview/native/services/azureus_router/router.cpp",
+        "preview/native/services/azureus_udp/owned_transport.hpp",
+        "preview/native/tests/azureus_router_tests.cpp",
+        "preview/native/adapters/local_rating.hpp",
+        "preview/native/adapters/local_rating.cpp",
+        "preview/native/app/azureus_rating_consumer.inc"
       ],
       "source_coverage": [
         {
@@ -7880,7 +7894,12 @@
             "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java",
             "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java",
             "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java",
-            "core/src/com/biglybt/plugin/dht/impl/DHTPluginImpl.java"
+            "core/src/com/biglybt/plugin/dht/impl/DHTPluginImpl.java",
+            "core/src/com/biglybt/core/dht/router/impl/DHTRouterImpl.java",
+            "core/src/com/biglybt/pifimpl/local/ddb/DDBaseImpl.java",
+            "core/src/com/biglybt/pifimpl/local/ddb/DDBaseKeyImpl.java",
+            "core/src/com/biglybt/pifimpl/local/ddb/DDBaseHelpers.java",
+            "core/src/com/biglybt/core/dht/DHT.java"
           ],
           "source_symbols": [
             "DHTDBImpl.store",
@@ -7888,12 +7907,33 @@
             "DHTDBImpl.checkCacheExpiration",
             "DHTDBMapping.add",
             "DHTDBMapping.get",
-            "DHTDBValueImpl"
+            "DHTDBValueImpl",
+            "DDBaseImpl.read",
+            "DDBaseImpl.write",
+            "DDBaseKeyImpl",
+            "DDBaseHelpers.encode",
+            "DHT.FLAG_ANON"
           ],
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "first_ported_commit": null,
           "integrated_through_commit": null,
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "azrating",
+          "source_paths": [
+            "com/aelitis/azureus/plugins/rating/updater/RatingsUpdater.java",
+            "com/aelitis/azureus/plugins/rating/RatingPlugin.java"
+          ],
+          "source_symbols": [
+            "RatingsUpdater.readRating(Download,CompletionListener)",
+            "RatingsUpdater.writeRating",
+            "RatingPlugin.getDDBs"
+          ],
+          "baseline_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "1629340340d0bc391d9e582f9ee989a93d550581"
         }
       ],
       "native_commits": [
@@ -7916,16 +7956,30 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "e124abb90ab846c4b057a6b868004c0acb737118",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "6726a4cf7b017ac31d6aeede15f339c3ec2b71f7",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d384a850980f1b6245230ea852d617b11c405e11",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/transport.azureus_volatile_database/20261028-in-progress.md",
-        "migration/evidence/20261029-signed-session-local-publish/REVIEW.md"
+        "migration/evidence/20261029-signed-session-local-publish/REVIEW.md",
+        "migration/evidence/20261029-normal-dht-leaseset2/REVIEW.md",
+        "migration/evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-azureus-volatile-database/verification.json",
         "migration/evidence/20261028-azureus-volatile-database/REVIEW.md",
-        "migration/evidence/20261029-signed-session-local-publish/verification.json"
+        "migration/evidence/20261029-signed-session-local-publish/verification.json",
+        "migration/evidence/20261029-normal-dht-leaseset2/verification.json",
+        "migration/evidence/20261029-saved-ratings-i2cp-datagrams/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8607,7 +8661,14 @@
         "preview/native/tests/i2cp_initial_channel_tests.cpp",
         "preview/native/services/i2cp_session/session.cpp",
         "preview/native/services/i2cp_session/session.hpp",
-        "preview/native/tests/i2cp_session_config_tests.cpp"
+        "preview/native/tests/i2cp_session_config_tests.cpp",
+        "preview/native/services/i2cp_leaseset/leaseset.cpp",
+        "preview/native/services/i2cp_leaseset/leaseset.hpp",
+        "preview/native/tests/i2cp_leaseset_tests.cpp",
+        "preview/native/services/i2cp_datagram/messages.cpp",
+        "preview/native/services/i2cp_datagram/messages.hpp",
+        "preview/native/tests/i2cp_datagram_channel_tests.cpp",
+        "preview/native/tests/i2cp_datagram_tests.cpp"
       ],
       "source_coverage": [
         {
@@ -8632,7 +8693,30 @@
             "core/java/src/net/i2p/data/i2cp/CreateSessionMessage.java",
             "core/java/src/net/i2p/data/i2cp/ReconfigureSessionMessage.java",
             "core/java/src/net/i2p/client/impl/I2CPMessageProducer.java",
-            "router/java/src/net/i2p/router/client/ClientMessageEventListener.java"
+            "router/java/src/net/i2p/router/client/ClientMessageEventListener.java",
+            "core/java/src/net/i2p/data/LeaseSet2.java",
+            "core/java/src/net/i2p/data/Lease2.java",
+            "core/java/src/net/i2p/data/i2cp/RequestVariableLeaseSetMessage.java",
+            "core/java/src/net/i2p/data/i2cp/CreateLeaseSet2Message.java",
+            "core/java/src/net/i2p/client/impl/RequestLeaseSetMessageHandler.java",
+            "core/java/src/net/i2p/client/impl/RequestVariableLeaseSetMessageHandler.java",
+            "core/java/src/net/i2p/crypto/KeyGenerator.java",
+            "core/java/src/net/i2p/crypto/CryptoConstants.java",
+            "core/java/src/net/i2p/data/i2cp/SendMessageMessage.java",
+            "core/java/src/net/i2p/data/i2cp/SendMessageExpiresMessage.java",
+            "core/java/src/net/i2p/data/i2cp/MessageStatusMessage.java",
+            "core/java/src/net/i2p/data/i2cp/MessagePayloadMessage.java",
+            "core/java/src/net/i2p/data/Payload.java",
+            "core/java/src/net/i2p/data/DateAndFlags.java",
+            "core/java/src/net/i2p/client/impl/I2PSessionMuxedImpl.java",
+            "core/java/src/net/i2p/client/impl/I2PSessionImpl2.java",
+            "core/java/src/net/i2p/client/impl/MessageState.java",
+            "core/java/src/net/i2p/client/SendMessageStatusListener.java",
+            "core/java/src/net/i2p/util/ResettableGZIPOutputStream.java",
+            "core/java/src/net/i2p/util/ReusableGZIPOutputStream.java",
+            "core/java/src/net/i2p/client/datagram/Datagram2.java",
+            "core/java/src/net/i2p/client/datagram/Datagram3.java",
+            "router/java/src/net/i2p/router/client/ClientConnectionRunner.java"
           ],
           "source_symbols": [
             "I2CPMessageImpl.readMessage/writeMessage",
@@ -8644,7 +8728,15 @@
             "DestroySessionMessage",
             "SessionId",
             "DataHelper.readString/writeString/readDate/writeDate",
-            "I2PClient.PROTOCOL_BYTE"
+            "I2PClient.PROTOCOL_BYTE",
+            "SendMessageMessage",
+            "SendMessageExpiresMessage",
+            "MessageStatusMessage",
+            "MessagePayloadMessage",
+            "Datagram2.make/load",
+            "Datagram3.make/load",
+            "DataHelper.compress/decompress",
+            "ClientConnectionRunner.destinationEstablished"
           ],
           "baseline_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
           "first_ported_commit": null,
@@ -8672,17 +8764,31 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "e124abb90ab846c4b057a6b868004c0acb737118",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "6726a4cf7b017ac31d6aeede15f339c3ec2b71f7",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d384a850980f1b6245230ea852d617b11c405e11",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261029-mixed-i2cp/REVIEW.md",
         "migration/evidence/20261029-active-trackers-i2cp-channel/REVIEW.md",
-        "migration/evidence/20261029-signed-session-local-publish/REVIEW.md"
+        "migration/evidence/20261029-signed-session-local-publish/REVIEW.md",
+        "migration/evidence/20261029-normal-dht-leaseset2/REVIEW.md",
+        "migration/evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
         "migration/evidence/20261029-active-trackers-i2cp-channel/verification.json",
-        "migration/evidence/20261029-signed-session-local-publish/verification.json"
+        "migration/evidence/20261029-signed-session-local-publish/verification.json",
+        "migration/evidence/20261029-normal-dht-leaseset2/verification.json",
+        "migration/evidence/20261029-saved-ratings-i2cp-datagrams/verification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     }
