@@ -81,6 +81,10 @@ public:
       bool entering=false;
       {std::lock_guard lock(job->mutex);if(job->phase==Phase::Released){return {};}entering=!stop.stop_requested()&&!job->revoked.load();if(entering){job->phase=Phase::Running;}}
       const auto signal=[&]()noexcept{try{mailbox->signal();}catch(...){std::lock_guard lock(job->mutex);job->revoked=true;job->changed.notify_all();}};
+      // Executor has already popped this job. Wake the owner to retry any
+      // held frame that found its seven-job queue full, before source access
+      // can block. Running is progress only; it grants no source permit.
+      if(entering){signal();}
       try{if(entering){
         // The worker retains and releases its own lock, including while the
         // actor consumes a one-shot permit. It never runs actor callbacks.
