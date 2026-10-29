@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <zlib.h>
+#include <map>
 
 namespace {
 using namespace biglybtc;
@@ -271,6 +272,37 @@ engine::NetworkPolicy directPolicy(bool dht){
   p.listenPort=transfer.serverPort();p.mainlinePort=discovery.serverPort();return p;
 }
 QByteArray directSettings(bool dht){return krpc::dictionary({{"Peer Source Selection Default.DHT",dht?"i1e":"i0e"}});}
+// Saved-tier UDP endpoint: only actual CONNECT/SCRAPE packets are valid.
+// Independent reply bytes, exact selected hash and per-source connection IDs;
+// an announce would expose an accidental hidden admission and fails the fixture.
+class MixedTierUdp final {
+  QUdpSocket socket;std::map<quint16,std::uint64_t> connections;std::uint64_t next=0x6587901200000000ULL;
+  struct Pending {QByteArray bytes;QHostAddress host;quint16 port;};QList<Pending> pending;
+  static std::uint32_t word(const QByteArray& p,int at){std::uint32_t value=0;for(int i=0;i<4;++i){value=(value<<8)|static_cast<unsigned char>(p[at+i]);}return value;}
+  static void put(QByteArray& p,std::uint32_t value){for(int shift=24;shift>=0;shift-=8){p+=static_cast<char>(value>>shift);}}
+  void send(const Pending& p){if(socket.writeDatagram(p.bytes,p.host,p.port)!=p.bytes.size()){failure="Owned mixed UDP reply failed";}}
+  void receive(){while(socket.hasPendingDatagrams()){
+    const auto datagram=socket.receiveDatagram(1025);const auto bytes=datagram.data();const auto port=datagram.senderPort();
+    if(datagram.senderAddress()!=QHostAddress::LocalHost||port<=0||port>65535||bytes.size()<16||bytes.size()>1024){failure="Owned mixed UDP source/size mismatch";continue;}
+    const auto source=static_cast<quint16>(port);const auto action=word(bytes,8),transaction=word(bytes,12);QByteArray reply;
+    if(action==0){if(bytes.size()!=16||word(bytes,0)!=0x417||word(bytes,4)!=0x27101980){failure="Owned mixed UDP CONNECT mismatch";continue;}
+      ++connects;const auto id=++next;connections[source]=id;put(reply,0);put(reply,transaction);put(reply,static_cast<std::uint32_t>(id>>32));put(reply,static_cast<std::uint32_t>(id));
+    }else if(action==2){const auto known=connections.find(source);const auto id=(std::uint64_t(word(bytes,0))<<32)|word(bytes,4);
+      if(bytes.size()!=36||known==connections.end()||known->second!=id||bytes.mid(16,20)!=expectedHash){failure="Owned mixed UDP connection/hash mismatch";continue;}
+      ++scrapes;if(failed){put(reply,3);put(reply,transaction);reply+="owned tier unavailable";}else{put(reply,2);put(reply,transaction);put(reply,7);put(reply,9);put(reply,8);}
+    }else{failure="Saved tier emitted an unrequested UDP announce/action";continue;}
+    Pending p{reply,datagram.senderAddress(),source};if(action==2&&hold){pending.push_back(std::move(p));}else{send(p);}
+  }}
+public:
+  QByteArray expectedHash;QString failure;int connects=0,scrapes=0;bool hold=true,failed=true;
+  MixedTierUdp(){test::require(socket.bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress),"Cannot bind owned mixed UDP endpoint");QObject::connect(&socket,&QUdpSocket::readyRead,&socket,[this]{receive();});}
+  std::string url()const{return "udp://127.0.0.1:"+std::to_string(socket.localPort())+"/announce";}
+  void release(){hold=false;const auto copy=pending;pending.clear();for(const auto& p:copy){send(p);}}
+};
+struct MixedTierCleanup {
+  engine::PersistentSession& owner;HttpServer& a;HttpServer& b;MixedTierUdp& x;MixedTierUdp& y;
+  ~MixedTierCleanup(){a.release();b.release();x.release();y.release();static_cast<void>(owner.close(std::chrono::steady_clock::now()+10s));}
+};
 struct SavedBytes {
   QString path;QByteArray bytes;struct stat before{};
   explicit SavedBytes(QString p):path(std::move(p)),bytes(test::read(path)){test::require(::lstat(path.toStdString().c_str(),&before)==0,"Cannot snapshot owned control");}
@@ -297,6 +329,42 @@ QByteArray savedAuthentication(const QUrl& url,const QByteArray& realm,const QBy
 class MainlineSingleHttpTests final:public QObject {
   Q_OBJECT
 private slots:
+  void savedRegularTiersMixHttpAndNumericUdpWithOneActualRequest_data(){
+    QTest::addColumn<int>("mode");QTest::newRow("HTTP-error-then-UDP-success")<<0;QTest::newRow("UDP-error-then-HTTP-success")<<1;QTest::newRow("stable-mixed-tier-stop-before-second-reply")<<2;
+    QTest::newRow("HTTPS-saved-JKS-error-then-UDP-success")<<3;QTest::newRow("all-UDP-first-error-then-success")<<4;QTest::newRow("UDP-error-held-HTTP-revoked-by-tier-edit")<<5;
+  }
+  void savedRegularTiersMixHttpAndNumericUdpWithOneActualRequest(){
+    QFETCH(int,mode);Certificate identity;HttpServer a(mode==3?&identity:nullptr),b,thirdHttp;MixedTierUdp x,y,thirdUdp;test::OwnedEngineFixture saved(false);
+    struct Endpoint {
+      HttpServer* http=nullptr;MixedTierUdp* udp=nullptr;
+      std::string url()const{return http?http->url():udp->url();}int contacts()const{return http?http->connections:udp->connects;}int requests()const{return http?http->requests:udp->scrapes;}
+      void healthy(const core::TorrentHash& hash){if(http){http->body=counts(hash);}else{udp->failed=false;}}void release(){if(http){http->release();}else{udp->release();}}
+      bool same(const Endpoint& other)const{return http==other.http&&udp==other.udp;}
+    };
+    const Endpoint one=(mode==1||mode==4||mode==5)?Endpoint{nullptr,&x}:Endpoint{&a,nullptr};
+    const Endpoint two=mode==4?Endpoint{nullptr,&y}:(mode==1||mode==5)?Endpoint{&b,nullptr}:Endpoint{nullptr,&x};const Endpoint third=mode==4?Endpoint{nullptr,&thirdUdp}:Endpoint{&thirdHttp,nullptr};
+    prepareDirectHttp(saved,one.url(),false,true,true);test::write(saved.profile+"/biglybt.config",directSettings(false));
+    for(auto* server:{&a,&b,&thirdHttp}){server->expectedHash=QByteArray(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);server->body=krpc::dictionary({{"failure reason",krpc::string("owned first tier unavailable")}});server->hold=true;}
+    for(auto* server:{&x,&y,&thirdUdp}){server->expectedHash=QByteArray(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);}
+    if(mode==3){QVERIFY(QSslSocket::supportsSsl());test::write(saved.profile+"/.certs",jksStore({{"owned",{identity.certificate.toDer()},false}}));}
+    auto metadata=core::Document::parse(test::read(saved.stateFile).toStdString());QVERIFY(metadata);const auto tier=[](const std::string& url){return libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(url)});};
+    const auto tiers=mode==2?libtorrent::entry::list_type{libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(one.url()),libtorrent::entry(two.url())}),tier(third.url())}:libtorrent::entry::list_type{tier(one.url()),tier(two.url()),tier(third.url())};
+    QVERIFY(metadata->replaceValue("announce-list",test::encoded(libtorrent::entry(tiers))));test::write(saved.stateFile,QByteArray::fromStdString(metadata->serialize()));const auto sourceInfo=storage::originalTorrentInfoSubject(*metadata);QVERIFY(sourceInfo);const std::string originalInfo(*sourceInfo);
+    const SavedBytes state(saved.stateFile),statistics(saved.profile+"/BiglyBT.statistics"),tables(saved.profile+"/tables.config");const auto payload=test::read(saved.payload+"/sample.bin");auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);PayloadWatch watch(saved);
+    auto p=directPolicy(false);p.udpTrackers=true;auto created=engine::PersistentSession::create({9001,9002,9003});QVERIFY(created);auto owner=std::move(*created);QVERIFY(owner->configureNetwork(p));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*lease));MixedTierCleanup cleanup{*owner,a,b,x,y};QString failure;
+    const auto pump=[&]{if(!owner->poll()){failure="Saved mixed-tier poll failed";return false;}if(!owner->managedDownloads().empty()||!owner->pendingMagnets().empty()||!watch.untouched()){failure="Saved mixed tier acquired payload/admission";return false;}failure=a.failure+b.failure+thirdHttp.failure+x.failure+y.failure+thirdUdp.failure;return failure.isEmpty();};
+    QTRY_VERIFY_WITH_TIMEOUT(!pump()||one.requests()+two.requests()==1,25000);QVERIFY2(failure.isEmpty(),qPrintable(failure));auto initial=one.requests()?one:two;auto next=one.requests()?two:one;if(mode!=2){QVERIFY(initial.same(one));}QCOMPARE(next.contacts(),0);QCOMPARE(third.contacts(),0);QVERIFY(owner->libraryTrackerResponses().empty());next.healthy(*saved.hash);initial.release();
+    QTRY_VERIFY_WITH_TIMEOUT(!pump()||next.requests()==1,25000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QCOMPARE(initial.requests(),1);QCOMPARE(third.contacts(),0);QVERIFY(owner->libraryTrackerResponses().empty());
+    if(mode==2){owner->revokeMainlineScrape(*saved.hash);QVERIFY(storage::applyLibraryCommand(*lease,*saved.hash,core::DownloadAction::Stop));QVERIFY(owner->stopManaged(*saved.hash));QVERIFY(owner->rearmMainlineScrape(*saved.hash));next.release();QVERIFY(pump());QVERIFY(owner->libraryTrackerResponses().empty());QCOMPARE(third.contacts(),0);}
+    else if(mode==5){auto changed=core::Document::parse(state.bytes.toStdString());QVERIFY(changed);QVERIFY(changed->replaceValue("announce-list",test::encoded(libtorrent::entry(libtorrent::entry::list_type{tier(third.url()),tier(one.url())}))));test::write(saved.stateFile,QByteArray::fromStdString(changed->serialize()));next.release();QVERIFY(pump());QVERIFY(owner->libraryTrackerResponses().empty());}
+    else{next.release();QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!pump()){return true;}const auto views=owner->libraryTrackerResponses();return views.size()==1&&views[0].response.content&&views[0].response.content->seeds==(next.http?5:7)&&views[0].response.content->peers==(next.http?6:8);}()),25000);QVERIFY2(failure.isEmpty(),qPrintable(failure));const auto views=owner->libraryTrackerResponses();QCOMPARE(views.size(),std::size_t{1});QCOMPARE(views[0].hash,*saved.hash);QCOMPARE(views[0].admission,std::uint64_t{0});QCOMPARE(views[0].response.type,core::QueueOriginalScrapeType::Success);QCOMPARE(initial.requests(),1);QCOMPARE(next.requests(),1);QCOMPARE(third.contacts(),0);owner->revokeMainlineScrape(*saved.hash);QVERIFY(owner->libraryTrackerResponses().empty());}
+    const auto discovery=owner->mainlineDiscovery();QCOMPARE(discovery.lookups,std::uint64_t{0});QCOMPARE(discovery.announces,std::uint64_t{0});QCOMPARE(discovery.deliveredPeers,std::uint64_t{0});QVERIFY(owner->mainlineScrapeEstimates().empty());const auto closed=owner->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(statistics.unchanged()&&tables.unchanged());if(mode!=5){QVERIFY(state.unchanged());}const auto after=core::Document::parse(test::read(saved.stateFile).toStdString());QVERIFY(after);const auto afterInfo=storage::originalTorrentInfoSubject(*after);QVERIFY(afterInfo);QCOMPARE(std::string(*afterInfo),originalInfo);QVERIFY(watch.untouched());watch.stop();QCOMPARE(test::read(saved.payload+"/sample.bin"),payload);QVERIFY(saved.intact(false));
+  }
+  void unsupportedMixedTierCannotUseAWorkingHttpAsPermissionToProbeUdp(){
+    test::OwnedEngineFixture saved(false);HttpServer http;prepareDirectHttp(saved,http.url(),false,true,true);http.expectedHash=QByteArray(reinterpret_cast<const char*>(saved.hash->bytes().data()),20);http.body=counts(*saved.hash);auto metadata=core::Document::parse(test::read(saved.stateFile).toStdString());QVERIFY(metadata);
+    const auto tier=[](const std::string& url){return libtorrent::entry(libtorrent::entry::list_type{libtorrent::entry(url)});};QVERIFY(metadata->replaceValue("announce-list",test::encoded(libtorrent::entry(libtorrent::entry::list_type{tier(http.url()),tier("udp://unresolved-owned.invalid:12345/announce")}))));test::write(saved.stateFile,QByteArray::fromStdString(metadata->serialize()));test::write(saved.profile+"/biglybt.config",directSettings(false));const auto payload=test::read(saved.payload+"/sample.bin");auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);PayloadWatch watch(saved);
+    auto created=engine::PersistentSession::create({9011,9012,9013});QVERIFY(created);auto owner=std::move(*created);auto p=directPolicy(false);p.udpTrackers=true;QVERIFY(detail::libraryHttpRoute(p,http.url()));QVERIFY(!detail::libraryUdpRoute(p,"udp://unresolved-owned.invalid:12345/announce",true));auto authenticated=engine::readCurrentMainlineScrapeTargets(*lease,{},true,nullptr,engine::SavedTrackerPurpose::RegularSavedTiers);QVERIFY(authenticated&&authenticated->size()==1&&authenticated->front().configuredTrackers.size()==2);QVERIFY(owner->configureNetwork(p));QVERIFY(owner->configureMainlineBootstrap({}));QVERIFY(owner->startIdle(*lease));QVERIFY(owner->poll());QCOMPARE(http.connections,0);QVERIFY(owner->libraryTrackerResponses().empty());QVERIFY(owner->managedDownloads().empty()&&owner->pendingMagnets().empty());const auto closed=owner->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(watch.untouched());watch.stop();QCOMPARE(test::read(saved.payload+"/sample.bin"),payload);
+  }
   void directSavedRegularTrackerDoesNotRequireMainlinePermissionOrPayload_data(){
     QTest::addColumn<int>("mode");QTest::newRow("global-DHT-disabled-Public-HTTP")<<0;QTest::newRow("private-Public-HTTP")<<1;QTest::newRow("per-download-DHT-denied-Public-HTTP")<<2;
   }

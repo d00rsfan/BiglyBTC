@@ -138,7 +138,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     std::span<const ManagedMainlineScrapeObservation> observations,bool configuredCandidates,
     std::vector<std::string>* authenticatedInventoryHashes,SavedTrackerPurpose purpose){
   try{
-    if(purpose!=SavedTrackerPurpose::MainlineBackup&&purpose!=SavedTrackerPurpose::RegularHttp&&purpose!=SavedTrackerPurpose::RegularUdp){return error(Code::InvalidFormat,"Invalid saved tracker purpose");}
+    if(purpose!=SavedTrackerPurpose::MainlineBackup&&purpose!=SavedTrackerPurpose::RegularHttp&&purpose!=SavedTrackerPurpose::RegularUdp&&purpose!=SavedTrackerPurpose::RegularSavedTiers){return error(Code::InvalidFormat,"Invalid saved tracker purpose");}
     const bool regular=purpose!=SavedTrackerPurpose::MainlineBackup;
     if(observations.size()>256){return error(Code::Unsupported,"Active Mainline scrape target bound");}
     std::map<std::string,const ManagedMainlineScrapeObservation*> active;
@@ -168,7 +168,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       if(!seen.insert(key.hex()).second){return error(Code::Conflict,"Duplicate saved Mainline identity");}
       const auto admitted=active.find(key.hex());
       const auto* observation=admitted==active.end()?nullptr:admitted->second;
-      if(!row.saved.persistent||paused.contains(key.hex())){continue;}
+      if(!row.saved.persistent||paused.contains(key.hex())||(purpose==SavedTrackerPurpose::RegularSavedTiers&&observation)){continue;}
       if(observation){
         // Current checked Downloading/Seeding comes from the owner, not this
         // persisted number. Stop/error/unknown saved intent still withdraws it.
@@ -275,6 +275,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       }
       if(observation){append(scope,regular?"active-regular-http":"active-mldht-scrape");append(scope,std::to_string(observation->admission));append(scope,mapping);}
       if(purpose==SavedTrackerPurpose::RegularUdp){append(scope,"regular-udp-v1");}
+      if(purpose==SavedTrackerPurpose::RegularSavedTiers){append(scope,"regular-saved-tiers-v1");}
       auto hashed=digest(scope);if(!hashed){return error(Code::Io,observation?"Cannot authenticate managed Mainline scope":"Cannot authenticate saved Mainline scope");}
       std::string responseKey;std::vector<SavedMainlineTracker> trackers;
       if(configured){

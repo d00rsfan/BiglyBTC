@@ -19,7 +19,7 @@ struct ManagedMainlineScrapeObservation {
 };
 // Passive query authority, never a payload claim or transfer permission. Scope
 // binds selected raw/full identity, current policy and optional actual admission.
-enum class SavedTrackerPurpose {MainlineBackup,RegularHttp,RegularUdp};
+enum class SavedTrackerPurpose {MainlineBackup,RegularHttp,RegularUdp,RegularSavedTiers};
 struct SavedMainlineTracker {std::string url,responseKey;unsigned tier=0;};
 struct SavedMainlineScrapeTarget {
   core::TorrentHash hash;
@@ -44,6 +44,7 @@ readSavedMainlineScrapeTargets(const storage::ProfileLease&);
 // authenticates genuinely supplied normal admissions without DHT permission;
 // the owner must bind their actual token/handle and sole effective protocol URL.
 // RegularUdp has the same regular permission contract for a sole UDP URL.
+// RegularSavedTiers supplies saved queued rows only, with one shared group scope.
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readCurrentMainlineScrapeTargets(const storage::ProfileLease&,
     std::span<const ManagedMainlineScrapeObservation>,bool configuredCandidates=false,

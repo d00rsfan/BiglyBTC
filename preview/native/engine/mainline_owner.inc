@@ -306,9 +306,8 @@ bool prepareLibraryTrackerTiers(SavedMainlineScrapeTarget& target,std::int64_t n
     if(member.configuredTracker.starts_with("http://")||member.configuredTracker.starts_with("https://")){
       return prepareLibraryHttp(member,now,pending,true,dispatch,regularAuthority);
     }
-    if(regularAuthority){return false;}
     if(!udpConfig){udpConfig=detail::libraryUdpConfiguration(*mainlineLease,&networkBinding->effective);}
-    return *udpConfig&&prepareLibraryUdp(member,now,**udpConfig,pending,true,dispatch);
+    return *udpConfig&&prepareLibraryUdp(member,now,**udpConfig,pending,true,dispatch,regularAuthority);
   };
   // Authenticate every transport/configuration without IO first. A later
   // unsupported route must not be reported as an observed tracker failure.

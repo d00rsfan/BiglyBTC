@@ -50,23 +50,40 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTrac
   }
   return targets;
 }
-std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularHttpTargets(std::vector<std::string>* inventory=nullptr){
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTierTargets(std::vector<std::string>* inventory=nullptr){
+  auto targets=regularTrackerTargets(SavedTrackerPurpose::RegularSavedTiers,inventory);if(!targets){return targets;}
+  std::erase_if(*targets,[&](const auto& target){
+    if(target.admission||target.configuredTrackers.size()<2||target.configuredTrackers.size()>8){return true;}
+    bool udp=false;
+    for(const auto& member:target.configuredTrackers){
+      if(member.url.starts_with("udp://")){
+        udp=true;if(!libraryUdpRegularMode()||!networkBinding||!detail::libraryUdpRoute(networkBinding->effective,member.url,true)){return true;}
+      }else if(!libraryHttpRegularMode()||!networkBinding||!detail::libraryHttpRoute(networkBinding->effective,member.url)){return true;}
+    }
+    return !udp; // Existing HTTP-only tier authority keeps its original scope.
+  });return targets;
+}
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularHttpTargets(std::vector<std::string>* inventory=nullptr,bool includeTiers=true){
   auto targets=regularTrackerTargets(SavedTrackerPurpose::RegularHttp,inventory);if(!targets){return targets;}
   // This transport owns HTTP(S), never silently tries a mixed UDP tier.
   std::erase_if(*targets,[](const auto& target){const auto http=[](const auto& url){return url.starts_with("http://")||url.starts_with("https://");};
     return !http(target.configuredTracker)||std::ranges::any_of(target.configuredTrackers,[&](const auto& item){return !http(item.url);});});
+  if(includeTiers){auto tiers=regularTierTargets();if(!tiers){return tiers;}
+    for(auto& group:*tiers){if(std::ranges::any_of(group.configuredTrackers,[](const auto& member){return member.url.starts_with("http://")||member.url.starts_with("https://");})){targets->push_back(std::move(group));}}}
   return targets;
 }
-std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularUdpTargets(std::vector<std::string>* inventory=nullptr){
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularUdpTargets(std::vector<std::string>* inventory=nullptr,bool includeTiers=true){
   auto targets=regularTrackerTargets(SavedTrackerPurpose::RegularUdp,inventory);if(!targets){return targets;}
-  // Initial UDP regular slice owns one numeric URL, never mixed/UDP tiers.
+  // A single UDP URL retains its original regular scope; saved tiers are separate.
   std::erase_if(*targets,[](const auto& target){return !target.configuredTrackers.empty()||!target.configuredTracker.starts_with("udp://");});
+  if(includeTiers){auto tiers=regularTierTargets();if(!tiers){return tiers;}targets->insert(targets->end(),std::make_move_iterator(tiers->begin()),std::make_move_iterator(tiers->end()));}
   return targets;
 }
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> regularTrackerTargets(std::vector<std::string>* inventory=nullptr){
   std::vector<SavedMainlineScrapeTarget> result;
-  if(libraryHttpRegularMode()){auto rows=regularHttpTargets(inventory);if(!rows){return rows;}result=std::move(*rows);}
-  if(libraryUdpRegularMode()){auto rows=regularUdpTargets(inventory);if(!rows){return rows;}result.insert(result.end(),std::make_move_iterator(rows->begin()),std::make_move_iterator(rows->end()));}
+  if(libraryHttpRegularMode()){auto rows=regularHttpTargets(inventory,false);if(!rows){return rows;}result=std::move(*rows);}
+  if(libraryUdpRegularMode()){auto rows=regularUdpTargets(inventory,false);if(!rows){return rows;}result.insert(result.end(),std::make_move_iterator(rows->begin()),std::make_move_iterator(rows->end()));}
+  if(libraryUdpRegularMode()){auto tiers=regularTierTargets(inventory);if(!tiers){return tiers;}result.insert(result.end(),std::make_move_iterator(tiers->begin()),std::make_move_iterator(tiers->end()));}
   return result;
 }
 bool libraryHttpAdmissionCurrent(const SavedMainlineScrapeTarget& target)const noexcept{
