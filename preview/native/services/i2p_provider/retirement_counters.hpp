@@ -38,7 +38,8 @@ public:
   void on_files_checked()noexcept override {
     const auto raw=read();
     if(!raw||raw->traffic.payload.received||raw->traffic.payload.sent){counters_->payload.fail();return;}
-    counters_->checked.store(true,std::memory_order_release);
+    // The SDK also invokes this at extension attachment for known metadata.
+    // Only the owner's matched torrent_checked_alert may certify completion.
     if(!protocol(*raw)){counters_->payload.combinedUnavailable();}
     if(!bad(*raw)){counters_->payload.badUnavailable();}
   }

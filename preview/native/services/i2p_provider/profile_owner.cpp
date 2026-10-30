@@ -157,6 +157,7 @@ struct OwnedProfile::Impl {
       if(lt::alert_cast<lt::tracker_error_alert>(alert)){++m.alerts.trackerErrors;}
       if(lt::alert_cast<lt::scrape_reply_alert>(alert)||lt::alert_cast<lt::scrape_failed_alert>(alert)){m.scrapePending=false;}
       if(lt::alert_cast<lt::file_error_alert>(alert)||lt::alert_cast<lt::torrent_error_alert>(alert)||lt::alert_cast<lt::save_resume_data_failed_alert>(alert)){fail(m,{Code::Io,"Target I2P provider/storage observation failed; recheck retained"});continue;}
+      if(lt::alert_cast<lt::torrent_checked_alert>(alert)){m.counters->checked.store(true,std::memory_order_release);}
       if(lt::alert_cast<lt::torrent_paused_alert>(alert)){m.pauseSettled=true;m.pausePending=false;}
       if(!m.retired.requested||m.retired.failure){continue;}
       if(std::chrono::steady_clock::now()>=m.deadline){fail(m,{Code::Io,"Target I2P retirement deadline expired; recheck retained"});continue;}

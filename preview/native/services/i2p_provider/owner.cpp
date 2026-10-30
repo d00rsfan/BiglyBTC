@@ -167,6 +167,7 @@ struct OwnedTorrent::Impl {
     if(inspected!=alerts.size()){markRetirementUnsafe("I2P alert batch exceeded4096; original recheck marker retained");}
     for(std::size_t i=0;i<inspected;++i){
       const auto* item=alerts[i];const lt::error_code* code=nullptr;bool selected=true;
+      if(const auto* checked=lt::alert_cast<lt::torrent_checked_alert>(item);checked&&checked->handle==handle){counters->checked.store(true,std::memory_order_release);}
       if(lt::alert_cast<lt::alerts_dropped_alert>(item)){markRetirementUnsafe("I2P provider reported alerts_dropped; original recheck marker retained");}
       else if(const auto* entry=lt::alert_cast<lt::session_error_alert>(item)){markRetirementUnsafe("I2P provider reported session_error; original recheck marker retained",entry->error.value());}
       else if(const auto* entry=lt::alert_cast<lt::file_error_alert>(item)){markRetirementUnsafe("I2P provider reported file_error; original recheck marker retained",entry->error.value());}
