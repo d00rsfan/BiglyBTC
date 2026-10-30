@@ -26,6 +26,7 @@
 
 namespace biglybtc::services::i2p::provider {
 struct OwnedTorrent::Impl {
+  static constexpr int MaximumAlerts=4096;
   OwnedTorrent* q=nullptr;
   std::shared_ptr<ProfileSource> source;
   engine::detail::ManagedStorage storage;
@@ -45,7 +46,8 @@ struct OwnedTorrent::Impl {
   bool pauseSeen=false,saveRequested=false,flushSeen=false,removing=false,removed=false,checkpointAttempted=false;
   std::vector<std::uint8_t> retiredPieces;
   engine::detail::ManagedPayloadCounters::Sample retiredCounters;
-  bool retiredComplete=false,retirementUnsafe=false;
+  bool retiredComplete=false;
+  const char* retirementUnsafe=nullptr;int retirementUnsafeCode=0;
   Options options;Phase phase=Phase::Prepared;
   std::uint64_t admission=0,providerGeneration=0;bool notifyQueued=false,startRequested=false,bridgeRequested=false;
   Impl(std::shared_ptr<ProfileSource> s,engine::detail::ManagedStorage m,ClientIdentity key,std::shared_ptr<void> pin)
@@ -76,8 +78,14 @@ struct OwnedTorrent::Impl {
     // owners and SAME-OFD source authority. No successful checkpoint invented.
     joining.reset();if(bridge){bridge->joinSource();}if(permit){permit->join();}retired.joined=true;
   }
-  void retirementFailure(storage::ErrorCode code,const char* message){
-    if(!retired.failure){retired.failure=storage::Error{code,message};}close();
+  void retirementFailure(storage::ErrorCode code,const char* message,int engineCode=0){
+    if(!retired.failure){
+      auto reason=std::string(message);if(engineCode){reason+=" (engine code "+std::to_string(engineCode)+")";}
+      retired.failure=storage::Error{code,std::move(reason)};
+    }close();
+  }
+  void markRetirementUnsafe(const char* reason,int engineCode=0)noexcept{
+    if(!retirementUnsafe){retirementUnsafe=reason;retirementUnsafeCode=engineCode;}
   }
   engine::detail::ManagedPayloadCounters::Sample sampleCounters(libtorrent::torrent_status& actual,bool pieces){
     for(int attempt=0;attempt<4;++attempt){
@@ -109,13 +117,7 @@ struct OwnedTorrent::Impl {
     if(phase!=Phase::Retiring){return;}
     if(std::chrono::steady_clock::now()>=retirementDeadline){retirementFailure(storage::ErrorCode::Io,"I2P retirement deadline expired before its next fence");return;}
     namespace lt=libtorrent;
-    if(lt::alert_cast<lt::alerts_dropped_alert>(item)||lt::alert_cast<lt::session_error_alert>(item)){
-      retirementFailure(storage::ErrorCode::Io,"I2P retirement lost an essential engine observation");return;
-    }
-    if(lt::alert_cast<lt::file_error_alert>(item)||lt::alert_cast<lt::torrent_error_alert>(item)
-        ||lt::alert_cast<lt::save_resume_data_failed_alert>(item)){
-      retirementFailure(storage::ErrorCode::Io,"I2P retirement flush failed; original recheck marker retained");return;
-    }
+    if(retirementUnsafe){retirementFailure(storage::ErrorCode::Io,retirementUnsafe,retirementUnsafeCode);return;}
     if(const auto* value=lt::alert_cast<lt::torrent_paused_alert>(item);value&&value->handle==handle){
       pauseSeen=true;
       if(!saveRequested){saveRequested=true;handle.save_resume_data(lt::torrent_handle::flush_disk_cache);}
@@ -159,12 +161,17 @@ struct OwnedTorrent::Impl {
     auto& totals=diagnosticAlerts;totals.currentShown=0;totals.currentOmitted=0;
     const auto add=[](std::uint64_t& count,std::size_t amount=1){count+=std::min<std::uint64_t>(std::numeric_limits<std::uint64_t>::max()-count,amount);};
     const auto error=[](const lt::error_code& code){return ErrorObservation{code.value(),std::string(code.category().name()).substr(0,64),code.message().substr(0,160)};};
-    add(totals.drained,alerts.size());const auto inspected=std::min<std::size_t>(alerts.size(),256);add(totals.uninspected,alerts.size()-inspected);
+    // The display stays capped at16. Essential retirement observations scan
+    // the entire configured bounded queue, independently of display sampling.
+    add(totals.drained,alerts.size());const auto inspected=std::min<std::size_t>(alerts.size(),MaximumAlerts);add(totals.uninspected,alerts.size()-inspected);
+    if(inspected!=alerts.size()){markRetirementUnsafe("I2P alert batch exceeded4096; original recheck marker retained");}
     for(std::size_t i=0;i<inspected;++i){
       const auto* item=alerts[i];const lt::error_code* code=nullptr;bool selected=true;
-      if(lt::alert_cast<lt::alerts_dropped_alert>(item)||lt::alert_cast<lt::session_error_alert>(item)
-          ||lt::alert_cast<lt::file_error_alert>(item)||lt::alert_cast<lt::torrent_error_alert>(item)
-          ||lt::alert_cast<lt::save_resume_data_failed_alert>(item)){retirementUnsafe=true;}
+      if(lt::alert_cast<lt::alerts_dropped_alert>(item)){markRetirementUnsafe("I2P provider reported alerts_dropped; original recheck marker retained");}
+      else if(const auto* entry=lt::alert_cast<lt::session_error_alert>(item)){markRetirementUnsafe("I2P provider reported session_error; original recheck marker retained",entry->error.value());}
+      else if(const auto* entry=lt::alert_cast<lt::file_error_alert>(item)){markRetirementUnsafe("I2P provider reported file_error; original recheck marker retained",entry->error.value());}
+      else if(const auto* entry=lt::alert_cast<lt::torrent_error_alert>(item)){markRetirementUnsafe("I2P provider reported torrent_error; original recheck marker retained",entry->error.value());}
+      else if(const auto* entry=lt::alert_cast<lt::save_resume_data_failed_alert>(item)){markRetirementUnsafe("I2P provider reported save_resume_data_failed; original recheck marker retained",entry->error.value());}
       if(lt::alert_cast<lt::tracker_announce_alert>(item)){add(totals.announces);}
       else if(const auto* entry=lt::alert_cast<lt::tracker_error_alert>(item)){add(totals.trackerErrors);code=&entry->error;}
       else if(lt::alert_cast<lt::tracker_reply_alert>(item)){add(totals.trackerReplies);}
@@ -177,8 +184,7 @@ struct OwnedTorrent::Impl {
       // pop_alerts pointers belong to the session; a failure may have aborted it.
       if(!session){return;}
     }
-    if(inspected!=alerts.size()){retirementUnsafe=true;}
-    if(phase==Phase::Retiring&&retirementUnsafe){retirementFailure(storage::ErrorCode::Io,"I2P retirement essential observations incomplete");return;}
+    if(phase==Phase::Retiring&&retirementUnsafe){retirementFailure(storage::ErrorCode::Io,retirementUnsafe,retirementUnsafeCode);return;}
     advanceRetirement();
   }
   bool install(void* opaque){
@@ -249,7 +255,11 @@ std::expected<std::unique_ptr<OwnedTorrent>,storage::Error> OwnedTorrent::prepar
     auto identity=(*source)->takeIdentity();if(!identity){return std::unexpected(identity.error());}
     auto impl=std::make_unique<Impl>(*source,std::move(*preparedStorage),std::move(*identity),std::move(pin));
     if(RAND_bytes(reinterpret_cast<unsigned char*>(&impl->admission),sizeof(impl->admission))!=1||!impl->admission){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Owned admission entropy unavailable"});}
-    libtorrent::session_params params((*source)->policy().settings());params.disk_io_constructor=engine::detail::metadataDiskConstructor(impl->disks);
+    auto settings=(*source)->policy().settings();
+    settings.set_int(libtorrent::settings_pack::alert_mask,static_cast<int>(libtorrent::alert_category::error
+        |libtorrent::alert_category::status|libtorrent::alert_category::storage|libtorrent::alert_category::tracker));
+    settings.set_int(libtorrent::settings_pack::alert_queue_size,Impl::MaximumAlerts);
+    libtorrent::session_params params(std::move(settings));params.disk_io_constructor=engine::detail::metadataDiskConstructor(impl->disks);
     impl->session=std::make_unique<libtorrent::session>(std::move(params));
     return std::unique_ptr<OwnedTorrent>(new OwnedTorrent(std::move(impl)));
   }catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot prepare dedicated I2P owner"});}
@@ -264,7 +274,7 @@ bool OwnedTorrent::beginRetirement(std::chrono::steady_clock::time_point deadlin
   if(!s.onThread()||s.phase!=Phase::Active||s.retired.requested||!s.session||!s.handle.is_valid()||deadline<=now||deadline-now>std::chrono::seconds{30}){return false;}
   try{
     s.drainAlerts();
-    if(s.retirementUnsafe){s.retired.requested=true;s.retirementFailure(storage::ErrorCode::Io,"I2P admission has incomplete error observations; recheck remains required");return false;}
+    if(s.retirementUnsafe){s.retired.requested=true;s.retirementFailure(storage::ErrorCode::Io,s.retirementUnsafe,s.retirementUnsafeCode);return false;}
     s.beginRetirement(deadline);s.notify();return true;
   }catch(...){s.retirementFailure(storage::ErrorCode::Io,"Cannot start I2P retirement; recheck remains required");return false;}
 }

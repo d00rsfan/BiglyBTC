@@ -178,7 +178,10 @@ int main(int argc,char** argv){
     shutdown();result.insert("status",ok?"PASS":"FAIL");result.insert("reason",reason.left(512));
     result.insert("elapsed_ms",elapsed.elapsed());result.insert("last_i2p",packetJson(packet));
     try{output(work+"/native-result.json",result);}catch(...){ok=false;}
-    code=ok?0:1;application.quit();
+    // Every real owner has already joined. QApplication::quit() can ask
+    // the visible window to close and be vetoed by its unacknowledged session
+    // handshake on a FAIL path. A PASS reaches here only after that handshake.
+    code=ok?0:1;application.exit(code);
   };
   try{
     const auto all=expectedPayload();const auto tracker=QString::fromLatin1(read(work+"/tracker.url",256));
@@ -330,7 +333,7 @@ int main(int argc,char** argv){
       }catch(const std::exception& error){finish(false,QString::fromUtf8(error.what()));}
       catch(...){finish(false,"Unexpected bounded Host/UI acceptance resource failure");}
     });
-    poll.start(25);application.exec();shutdown();return code;
+    poll.start(25);application.exec();mark("application-loop-exited");shutdown();return code;
   }catch(const std::exception& error){finish(false,QString::fromUtf8(error.what()));return 1;}
   catch(...){finish(false,"Unexpected Host/UI setup resource failure");return 1;}
 }
