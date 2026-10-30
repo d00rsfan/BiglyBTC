@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "status": "FROZEN_PRIVATE_FIVE_FIN_CALLBACK_SOURCE_ONLY_PENDING_ACTUAL_A2",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/private-five/manifest.json",
+    "sha256": "677087290fff5894f494a1d905a5b6671c3a3b4871decb1bc0a59804d2fd7b5c"
+  },
+  "artifacts_sha256": {
+    "private.py": "8f953be1181e406f7193f1f48ce399b89f2765ee8dab88e44a49629aa6e73540",
+    "changes.patch": "03a5584d4e2858e15a0c6f4ea4d5cbf5570b9c6d11aef73be9f79421decd9386",
+    "ADOPTION.txt": "dff078600bbf15f8a5ee690e9c2ce9e3ea1a285f046256093c8edd454d9918b0"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/private-five/manifest.json": "677087290fff5894f494a1d905a5b6671c3a3b4871decb1bc0a59804d2fd7b5c",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/manifest.json": "d20a7fd8d07f4934d6b41a2dbd7f77f7c3258da1bafd8aa6685f4d07ca9b4892",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/run.py": "638b4fdbd678798a89c427289b6d749f098fbd8ddca9b912c03535cec0ce5232",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/manifest.json": "9496e441043d6b763dda50d3df6e95bde5b2374a07d5834ee801da47c2f365b0",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/root-adoption.json": "f919cb9b3b72b9cb15c10388b62e745b970b764d3d4aa0ab674b34d52dd13f6a",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/result.json": "f9676e191ac62abaddeebf0a29b5c2798a73738c2d2ab76c369025c3cc6b1053"
+  },
+  "required_result_paths": {
+    "gcc": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/gcc-a2/result.json",
+    "clang": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/clang-a2/result.json",
+    "san": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/san-a2/result.json"
+  },
+  "result_status": "PASS_FIVE_PRIVATE_SUBJECTS_PENDING_PUBLIC",
+  "actual_subjects_when_executed": 5,
+  "copied_images": 6,
+  "promotable": false,
+  "author_execution": false,
+  "native_mutation": false,
+  "stop_after_current_milestone": true,
+  "source_review_correction": "Runner unexecuted draftad10 replaced before execution; absent Public image snapshot read removed, existing exact original-r2 image guard retained."
+}

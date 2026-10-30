@@ -1,0 +1,162 @@
+--- a/preview/native/tests/i2p_streaming_interop_tests.cpp
++++ b/preview/native/tests/i2p_streaming_interop_tests.cpp
+@@ -8,6 +8,8 @@
+ #include <QDirIterator>
+ #include <QFile>
+ #include <QFileInfo>
++#include <QElapsedTimer>
++#include <QTimer>
+ #include <QJsonDocument>
+ #include <QJsonArray>
+ #include <QJsonObject>
+@@ -19,6 +21,7 @@
+ #include <QTcpSocket>
+ #include <QtTest>
+ #include <algorithm>
++#include <deque>
+ #include <optional>
+ #include <set>
+ namespace i2p=biglybtc::services::i2p;
+@@ -34,6 +37,12 @@
+ i2p::ClientIdentity signer(const char* family){const auto dir=QString::fromUtf8(BIGLYBTC_I2P_STREAMING_KEYS_DIR);auto d=readFile(dir+'/'+QString::fromLatin1(family)+".sender"),k=readFile(dir+'/'+QString::fromLatin1(family)+".known-test-key");auto id=i2p::makeClientIdentity(view(d),i2p::Bytes(256,0x51),view(k));if(!id){qFatal("Cannot import synthetic signer: %s",id.error().message.c_str());}return std::move(*id);}
+ struct Bridge {
+   QTcpServer server;QPointer<QTcpSocket> socket;QProcess java;QString work,failure;QByteArray input,output,errors;
++  QTimer delayedTimer;QElapsedTimer routeClock;bool upload=false;
++  struct Delayed {qint64 due=0;i2p::Bytes mux;};std::deque<Delayed> delayed;
++  static constexpr qint64 RouteDelayMilliseconds=40;
++  std::size_t delayedBytes=0,maximumDelayedBytes=0,maximumDelayedFrames=0,maximumDataFlight=0,firstAckDataFlight=0;
++  std::set<std::uint32_t> nativeOutstandingData,nativeDataSequences;
++  std::uint64_t delayedJavaFrames=0;
+   cp::FrameDecoder decoder;bool greeting=false,leaseSeen=false,closing=false,recovery=false,holdLate=false;
+   bool droppedNative=false,retriedNative=false,reorderedJava=false;std::uint32_t droppedSequence=0,droppedSend=0,droppedReceive=0,heldSequence=0,messageId=100;
+   bool nativeChoke=false,nativeUnchoke=false,readingResumed=false;
+@@ -43,10 +52,12 @@
+   std::uint64_t nativeFrames=0,javaFrames=0,javaDataFrames=0,updates=0;
+   QFile outbound,inbound,producedNative,forwardedJava;
+   i2p::Destination native=*signer("dsa").destination(),remote=*signer("ed25519").destination();
+-  explicit Bridge(QString row,QString mode,QString root):work(root+'/'+row),recovery(mode=="recovery"),holdLate(mode=="cancel"){
++  explicit Bridge(QString row,QString mode,QString root):work(root+'/'+row),upload(mode=="upload"),recovery(mode=="recovery"),holdLate(mode=="cancel"){
+     if(QFileInfo::exists(work)||!QDir().mkdir(work)||!QFile::setPermissions(work,QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ExeOwner)){fail("Fresh private owned row directory required");return;}
+     outbound.setFileName(work+"/forwarded-native-to-java.frames");inbound.setFileName(work+"/java-produced.frames");producedNative.setFileName(work+"/native-produced.frames");forwardedJava.setFileName(work+"/forwarded-java-to-native.frames");
+     if(!outbound.open(QIODevice::WriteOnly|QIODevice::NewOnly)||!inbound.open(QIODevice::WriteOnly|QIODevice::NewOnly)||!producedNative.open(QIODevice::WriteOnly|QIODevice::NewOnly)||!forwardedJava.open(QIODevice::WriteOnly|QIODevice::NewOnly)){fail("Cannot create owned packet evidence");return;}
++    routeClock.start();delayedTimer.setSingleShot(true);
++    QObject::connect(&delayedTimer,&QTimer::timeout,&server,[this]{try{flushDelayed();}catch(const std::exception& e){fail(QString::fromUtf8(e.what()));}});
+     QObject::connect(&server,&QTcpServer::newConnection,&server,[this]{if(socket){fail("Unexpected second I2CP connection");return;}socket=server.nextPendingConnection();socket->setReadBufferSize(2*static_cast<qint64>(cp::MaximumFrameBytes));QObject::connect(socket,&QTcpSocket::readyRead,&server,[this]{collectNative();});collectNative();});
+     QObject::connect(&java,&QProcess::readyReadStandardOutput,&server,[this]{collectJava();});
+     QObject::connect(&java,&QProcess::readyReadStandardError,&server,[this]{auto chunk=java.readAllStandardError();if(errors.size()+chunk.size()>65536){fail("Original peer diagnostic output exceeded bound");return;}errors+=chunk;});
+@@ -56,7 +67,7 @@
+     java.setProgram(QString::fromUtf8(BIGLYBTC_I2P_STREAMING_JAVA));
+     java.setArguments({"-Xms16m","-Xmx128m","-Djava.awt.headless=true","-Dtime.disabled=true","-Djbigi.enable=false","-Djcpuid.enable=false","-Duser.home="+work,"-Djava.io.tmpdir="+work,"-cp",QString::fromUtf8(BIGLYBTC_I2P_STREAMING_CLASSES)+':'+QString::fromUtf8(BIGLYBTC_I2P_STREAMING_JAR),"StreamingPeer",mode,work,QString::fromUtf8(BIGLYBTC_I2P_STREAMING_KEYS_DIR),QString::fromUtf8(BIGLYBTC_I2P_STREAMING_JAR)});QFile command(work+"/java-command.json");const auto data=QJsonDocument(QJsonObject{{"program",java.program()},{"arguments",QJsonArray::fromStringList(java.arguments())}}).toJson();if(!command.open(QIODevice::WriteOnly|QIODevice::NewOnly)||command.write(data)!=data.size()){fail("Cannot retain actual Java command");return;}command.close();java.start();
+   }
+-  ~Bridge(){closing=true;QObject::disconnect(&server,nullptr,&server,nullptr);QObject::disconnect(&java,nullptr,&server,nullptr);if(socket){QObject::disconnect(socket,nullptr,&server,nullptr);socket->abort();}if(java.state()!=QProcess::NotRunning){java.kill();const bool reaped=java.waitForFinished(3000);if(!reaped&&failure.isEmpty()){failure="Owned Java child did not join";}}const auto trailing=java.readAllStandardError();if(trailing.size()>65536-errors.size()){if(failure.isEmpty()){failure="Original peer final diagnostic output exceeded bound";}}else{errors+=trailing;}QFile log(work+"/java.stderr");if(log.open(QIODevice::WriteOnly)){const auto count=log.write(errors);if(count!=errors.size()&&failure.isEmpty()){failure="Cannot retain peer diagnostics";}}outbound.close();inbound.close();producedNative.close();forwardedJava.close();QFile summary(work+"/bridge.json");if(summary.open(QIODevice::WriteOnly)){const auto data=QJsonDocument(QJsonObject{{"native_frames",QString::number(nativeFrames)},{"java_frames",QString::number(javaFrames)},{"java_data_frames",QString::number(javaDataFrames)},{"dropped_native",droppedNative},{"retried_native",retriedNative},{"reordered_java",reorderedJava},{"native_choke",nativeChoke},{"native_unchoke",nativeUnchoke},{"failure",failure}}).toJson();const auto count=summary.write(data);if(count!=data.size()){qWarning("Cannot retain streaming bridge summary");}}}
++  ~Bridge(){closing=true;delayedTimer.stop();QObject::disconnect(&delayedTimer,nullptr,&server,nullptr);QObject::disconnect(&server,nullptr,&server,nullptr);QObject::disconnect(&java,nullptr,&server,nullptr);if(socket){QObject::disconnect(socket,nullptr,&server,nullptr);socket->abort();}if(java.state()!=QProcess::NotRunning){java.kill();const bool reaped=java.waitForFinished(3000);if(!reaped&&failure.isEmpty()){failure="Owned Java child did not join";}}const auto trailing=java.readAllStandardError();if(trailing.size()>65536-errors.size()){if(failure.isEmpty()){failure="Original peer final diagnostic output exceeded bound";}}else{errors+=trailing;}QFile log(work+"/java.stderr");if(log.open(QIODevice::WriteOnly)){const auto count=log.write(errors);if(count!=errors.size()&&failure.isEmpty()){failure="Cannot retain peer diagnostics";}}outbound.close();inbound.close();producedNative.close();forwardedJava.close();QFile summary(work+"/bridge.json");if(summary.open(QIODevice::WriteOnly)){const auto data=QJsonDocument(QJsonObject{{"native_frames",QString::number(nativeFrames)},{"java_frames",QString::number(javaFrames)},{"java_data_frames",QString::number(javaDataFrames)},{"dropped_native",droppedNative},{"retried_native",retriedNative},{"reordered_java",reorderedJava},{"native_choke",nativeChoke},{"native_unchoke",nativeUnchoke},{"failure",failure}}).toJson();const auto count=summary.write(data);if(count!=data.size()){qWarning("Cannot retain streaming bridge summary");}}}
+   void fail(const QString& text){if(failure.isEmpty()){failure=text;}if(socket){socket->abort();}if(java.state()!=QProcess::NotRunning){java.kill();}}
+   bool ready()const{return QFileInfo::exists(work+"/peer-ready.json");}
+   bool applicationDone()const{return QFileInfo::exists(work+"/peer-application.json");}
+@@ -64,7 +75,27 @@
+   bool send(i2p::View frame){if(!socket||socket->state()!=QAbstractSocket::ConnectedState||socket->bytesToWrite()+static_cast<qint64>(frame.size())>256*1024){fail("Owned I2CP output backpressure/state");return false;}if(socket->write(reinterpret_cast<const char*>(frame.data()),static_cast<qint64>(frame.size()))!=static_cast<qint64>(frame.size())){fail("Owned I2CP enqueue failed");return false;}return true;}
+   QByteArray frame(i2p::View mux){QByteArray b(4,Qt::Uninitialized);auto n=static_cast<std::uint32_t>(mux.size());for(int i=3;i>=0;--i){b[3-i]=static_cast<char>(n>>(8*i));}b+=bytes(mux);return b;}
+   void toJava(i2p::View mux){auto f=frame(mux);if(java.state()!=QProcess::Running||java.bytesToWrite()+f.size()>65536){fail("Original peer input backpressure/state");return;}if(outbound.write(f)!=f.size()||java.write(f)!=f.size()){fail("Original peer packet enqueue/evidence failed");}}
+-  void deliver(i2p::View mux){if(closing){return;}auto payload=cp::encodeMessagePayload({7,messageId++,i2p::Bytes(mux.begin(),mux.end())});if(!payload||!send(*payload)){fail("Cannot wrap real peer Payload31");return;}auto f=frame(mux);if(forwardedJava.write(f)!=f.size()){fail("Cannot retain forwarded peer packet");}}
++  void deliveredAcknowledgement(i2p::View mux){
++    if(!upload){return;}auto decoded=stream::decodeMux(mux);if(!decoded){fail("Wrong delayed peer mux");return;}auto packet=stream::decode(decoded->packet,remote);if(!packet){fail("Wrong delayed actual peer packet");return;}
++    if(packet->flags&stream::NoAck){return;}bool first=true;
++    for(auto it=nativeOutstandingData.begin();it!=nativeOutstandingData.end();){if(*it<=packet->ackThrough&&std::ranges::find(packet->nacks,*it)==packet->nacks.end()){
++      if(first&&firstAckDataFlight==0){firstAckDataFlight=nativeOutstandingData.size();}first=false;it=nativeOutstandingData.erase(it);
++    }else{++it;}}
++  }
++  void delayedDeliver(i2p::View mux){
++    if(!upload||nativeDataSequences.empty()){deliver(mux);return;}
++    if(delayed.size()==64||mux.size()>65536-delayedBytes){fail("Controlled actual-ACK route buffer exceeded bound");return;}
++    delayed.push_back({routeClock.elapsed()+RouteDelayMilliseconds,i2p::Bytes(mux.begin(),mux.end())});delayedBytes+=mux.size();++delayedJavaFrames;
++    maximumDelayedBytes=std::max(maximumDelayedBytes,delayedBytes);maximumDelayedFrames=std::max(maximumDelayedFrames,delayed.size());
++    if(!delayedTimer.isActive()){delayedTimer.start(static_cast<int>(RouteDelayMilliseconds));}
++  }
++  void flushDelayed(){
++    while(!delayed.empty()&&failure.isEmpty()&&delayed.front().due<=routeClock.elapsed()){
++      auto pending=std::move(delayed.front());delayed.pop_front();delayedBytes-=pending.mux.size();deliver(pending.mux);
++    }
++    if(!delayed.empty()&&failure.isEmpty()){delayedTimer.start(static_cast<int>(std::max<qint64>(0,delayed.front().due-routeClock.elapsed())));}
++  }
++  void deliver(i2p::View mux){if(closing){return;}deliveredAcknowledgement(mux);if(!failure.isEmpty()){return;}auto payload=cp::encodeMessagePayload({7,messageId++,i2p::Bytes(mux.begin(),mux.end())});if(!payload||!send(*payload)){fail("Cannot wrap real peer Payload31");return;}auto f=frame(mux);if(forwardedJava.write(f)!=f.size()){fail("Cannot retain forwarded peer packet");}}
+   void collectNative(){
+     if(!socket){return;}const auto size=socket->bytesAvailable();if(size<0||size>2*static_cast<qint64>(cp::MaximumFrameBytes)-input.size()){fail("Unbounded owned I2CP input");return;}input+=socket->read(size);
+     try{if(!greeting){if(input.isEmpty()){return;}if(input.front()!='*'){fail("Wrong actual I2CP greeting");return;}input.remove(0,1);greeting=true;}
+@@ -86,6 +117,9 @@
+     if(f.type==cp::SendMessageType||f.type==cp::SendMessageExpiresType){
+       auto message=cp::decodeSendDatagram(f);if(!message||message->sessionId!=7||message->recipient.wire!=remote.wire||message->nonce!=0||!leaseSeen){fail("Wrong actual Streaming Send recipient/session/lease");return;}
+       auto mux=stream::decodeMux(message->payload);if(!mux||mux->fromPort!=9000||mux->toPort!=80){fail("Wrong native Streaming mux");return;}auto packet=stream::decode(mux->packet,native);if(!packet){fail(QString::fromStdString(packet.error().message));return;}++nativeFrames;auto produced=frame(message->payload);if(producedNative.write(produced)!=produced.size()){fail("Cannot retain native-produced packet");return;}if(packet->flags&stream::Delay){if(packet->delay>=60001){if(!packet->signatureVerified||!(packet->flags&stream::Signature)){fail("Unverified native choke packet");return;}nativeChoke=true;}else if(nativeChoke&&readingResumed){if(!packet->signatureVerified||!(packet->flags&stream::Signature)){fail("Unverified native unchoke packet");return;}nativeUnchoke=true;}}
++      if(upload&&!packet->payload.empty()){
++        if(nativeDataSequences.insert(packet->sequence).second){nativeOutstandingData.insert(packet->sequence);maximumDataFlight=std::max(maximumDataFlight,nativeOutstandingData.size());}
++      }
+       if(recovery&&!packet->payload.empty()){
+         if(!droppedNative){droppedNative=true;droppedSequence=packet->sequence;droppedSend=packet->send;droppedReceive=packet->receive;droppedPayload=packet->payload;return;}
+         if(packet->sequence==droppedSequence&&!retriedNative){if(packet->send!=droppedSend||packet->receive!=droppedReceive||packet->payload!=droppedPayload){fail("Retransmission changed real stream/payload identity");return;}retriedNative=true;toJava(message->payload);toJava(message->payload);return;}
+@@ -109,7 +143,7 @@
+           if(heldJava&&packet->sequence>heldSequence){deliver(view(muxBytes));deliver(*heldJava);heldJava.reset();reorderedJava=true;continue;}
+         }
+       }
+-      deliver(view(muxBytes));
++      delayedDeliver(view(muxBytes));
+     }
+   }
+   void releaseLate(){holdLate=false;for(const auto& b:late){deliver(b);}late.clear();}
+@@ -145,6 +179,40 @@
+     QVERIFY(bridge.javaDataSequences.size()>1);QVERIFY(!channel.receiverObservation().enabled);QCOMPARE(channel.receiverObservation().queued,std::size_t(0));if(mode=="recovery"){QVERIFY(bridge.droppedNative&&bridge.retriedNative&&bridge.reorderedJava);QVERIFY(channel.streamObservation()->retransmissions>0);}
+     finish(bridge,channel);
+   }
++  void actualOriginalManagerReceives128KiBWithBoundedNativeWindow_data(){
++    QTest::addColumn<unsigned>("maximumWindow");QTest::newRow("cap2")<<2U;QTest::newRow("cap8")<<8U;
++  }
++  void actualOriginalManagerReceives128KiBWithBoundedNativeWindow(){
++    QFETCH(unsigned,maximumWindow);Bridge bridge(QString("upload-")+QString::fromLatin1(QTest::currentDataTag()),"upload",root);Channel channel;registered(bridge,channel);QVERIFY2(bridge.failure.isEmpty(),qPrintable(bridge.failure));
++    Channel::StreamOptions options{9000,80,60000};options.maximumWindow=maximumWindow;auto connected=channel.connectStream(bridge.remote.wire,options);QVERIFY2(connected,connected?"":connected.error().message.c_str());const auto operation=*connected;
++    QTRY_VERIFY_WITH_TIMEOUT(channel.streamObservation()&&channel.streamObservation()->phase!=stream::Phase::Connecting,15000);QVERIFY2(bridge.failure.isEmpty(),qPrintable(bridge.failure));QCOMPARE(channel.streamObservation()->phase,stream::Phase::Established);QCOMPARE(channel.streamObservation()->maximumWindow,maximumWindow);
++    constexpr qsizetype BodySize=128*1024;QByteArray body(BodySize,Qt::Uninitialized);for(qsizetype i=0;i<body.size();++i){body[i]=static_cast<char>(i*17+11);}const auto digest=QCryptographicHash::hash(body,QCryptographicHash::Sha256).toHex();
++    const auto header=QByteArray("POST /owned-upload HTTP/1.0\r\nHost: owned.i2p\r\nContent-Length: ")+QByteArray::number(static_cast<qlonglong>(BodySize))+"\r\n\r\n";const auto upload=header+body;const auto digestBody=digest+'\n';const auto expected=QByteArray("HTTP/1.0 200 OK\r\nContent-Length: ")+QByteArray::number(digestBody.size())+"\r\nConnection: close\r\n\r\n"+digestBody;
++    qsizetype sent=0;QByteArray received;bool fin=false;std::size_t maximumQueued=0,maximumObservedFlight=0;QElapsedTimer transfer;transfer.start();
++    const auto pump=[&]{
++      auto observation=channel.streamObservation();if(!observation||observation->operation!=operation){bridge.fail("Upload lost its actual stream operation");return true;}
++      maximumQueued=std::max(maximumQueued,observation->queuedTx);maximumObservedFlight=std::max(maximumObservedFlight,observation->inFlightPackets);
++      if(observation->queuedTx>stream::MaximumBuffered||observation->inFlightPackets>maximumWindow){bridge.fail("Actual upload exceeded native queue/window bound");return true;}
++      while(sent<upload.size()){
++        observation=channel.streamObservation();const auto count=std::min<qsizetype>(4096,upload.size()-sent);if(observation->queuedTx+static_cast<std::size_t>(count)>stream::MaximumBuffered){break;}
++        const auto write=channel.writeStream(operation,view(upload.sliced(sent,count)));if(!write){bridge.fail(QString::fromStdString(write.error().message));return true;}sent+=count;
++        observation=channel.streamObservation();maximumQueued=std::max(maximumQueued,observation->queuedTx);maximumObservedFlight=std::max(maximumObservedFlight,observation->inFlightPackets);
++      }
++      if(sent==upload.size()&&!fin){if(!channel.finishStreamWrite(operation)){bridge.fail("Actual upload FIN refused");return true;}fin=true;}
++      auto part=channel.takeStreamBytes(operation,4096);if(!part){bridge.fail(QString::fromStdString(part.error().message));return true;}received+=bytes(*part);if(received.size()>expected.size()){bridge.fail("Upload response exceeded exact digest body");return true;}
++      return received.size()==expected.size()||!bridge.failure.isEmpty();
++    };
++    QTRY_VERIFY_WITH_TIMEOUT(pump(),60000);const auto elapsedUs=std::max<qint64>(1,transfer.nsecsElapsed()/1000);QVERIFY2(bridge.failure.isEmpty(),qPrintable(bridge.failure+QString::fromUtf8(bridge.errors)));QCOMPARE(received,expected);QCOMPARE(sent,upload.size());QVERIFY(fin);
++    QTRY_VERIFY_WITH_TIMEOUT(channel.streamObservation()&&(channel.streamObservation()->phase==stream::Phase::ReadEof||channel.streamObservation()->phase==stream::Phase::Closed),10000);
++    const auto observation=*channel.streamObservation();QCOMPARE(observation.operation,operation);QCOMPARE(observation.maximumWindow,maximumWindow);QVERIFY(observation.acknowledgedBytes>=static_cast<std::uint64_t>(upload.size()));QVERIFY(observation.maximumInFlightPackets<=maximumWindow);QVERIFY(maximumObservedFlight<=maximumWindow);QVERIFY(maximumQueued<=stream::MaximumBuffered);
++    QVERIFY(bridge.delayedJavaFrames>0);QVERIFY(bridge.maximumDelayedBytes<=65536);QVERIFY(bridge.maximumDelayedFrames<=64);QVERIFY(bridge.nativeDataSequences.size()>8);QVERIFY(bridge.nativeOutstandingData.empty());QVERIFY(bridge.maximumDataFlight<=maximumWindow);
++    if(maximumWindow==8){QVERIFY2(bridge.firstAckDataFlight>=3,"Actual peer ACK was delivered before three distinct native data sequences were in flight");QVERIFY(observation.maximumInFlightPackets>=3);}else{QCOMPARE(bridge.firstAckDataFlight,std::size_t{2});QCOMPARE(bridge.maximumDataFlight,std::size_t{2});}
++    QTRY_VERIFY_WITH_TIMEOUT(bridge.applicationDone()||!bridge.failure.isEmpty(),10000);QVERIFY2(bridge.failure.isEmpty(),qPrintable(bridge.failure));QVERIFY(bridge.applicationDone());
++    QFile peerFile(bridge.work+"/peer-application.json");QVERIFY(peerFile.open(QIODevice::ReadOnly));const auto peer=QJsonDocument::fromJson(peerFile.readAll()).object();QCOMPARE(peer.value("upload_bytes").toInt(),static_cast<int>(BodySize));QCOMPARE(peer.value("upload_sha256").toString(),QString::fromLatin1(digest));QVERIFY(peer.value("actual_manager_socket").toBool());
++    const QJsonObject metrics{{"status","PASS"},{"body_bytes",static_cast<int>(BodySize)},{"body_sha256",QString::fromLatin1(digest)},{"maximum_window",static_cast<int>(maximumWindow)},{"fixed_peer_frame_delay_ms",static_cast<int>(Bridge::RouteDelayMilliseconds)},{"elapsed_microseconds",QString::number(elapsedUs)},{"body_bytes_per_second",QString::number(static_cast<qulonglong>(BodySize)*1000000/static_cast<qulonglong>(elapsedUs))},{"acknowledged_bytes",QString::number(observation.acknowledgedBytes)},{"retransmissions",QString::number(observation.retransmissions)},{"actual_maximum_in_flight",static_cast<int>(observation.maximumInFlightPackets)},{"actual_distinct_data_before_first_ack",static_cast<int>(bridge.firstAckDataFlight)},{"actual_maximum_unacknowledged_data",static_cast<int>(bridge.maximumDataFlight)},{"peak_observed_queue_bytes",static_cast<int>(maximumQueued)},{"rto_milliseconds",static_cast<int>(observation.rtoMilliseconds)},{"performance_parity_claimed",false}};
++    QVERIFY(!channel.receiverObservation().enabled);QCOMPARE(channel.receiverObservation().queued,std::size_t{0});finish(bridge,channel);QVERIFY(bridge.resultPass());QCOMPARE(bridge.java.state(),QProcess::NotRunning);QCOMPARE(bridge.java.exitCode(),0);
++    QFile measured(bridge.work+"/upload-metrics.json");QVERIFY(measured.open(QIODevice::WriteOnly|QIODevice::NewOnly));const auto encoded=QJsonDocument(metrics).toJson();QCOMPARE(measured.write(encoded),encoded.size());measured.close();
++  }
+   void actualOriginalResetHasTypedNativeTerminal(){
+     Bridge bridge("reset","reset",root);Channel channel;registered(bridge,channel);auto op=channel.connectStream(bridge.remote.wire,{9000,80,60000});QVERIFY(op);QTRY_VERIFY_WITH_TIMEOUT(channel.streamObservation()&&channel.streamObservation()->phase==stream::Phase::RemoteReset,15000);QVERIFY(!channel.writeStream(*op,view(QByteArray("stale"))));QVERIFY(!channel.takeStreamBytes(*op,1));finish(bridge,channel);
+   }
+--- a/preview/native/tests/CMakeLists.txt
++++ b/preview/native/tests/CMakeLists.txt
+@@ -2196,7 +2196,14 @@
+     BIGLYBTC_I2P_STREAMING_JAR="${BIGLYBTC_I2P_STREAMING_JAR}"
+     BIGLYBTC_I2P_STREAMING_CLASSES="${BIGLYBTC_I2P_STREAMING_CLASSES}"
+     BIGLYBTC_I2P_STREAMING_KEYS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
+-  add_test(NAME i2p-original-streaming-peer COMMAND biglybtc-i2p-streaming-interop-tests)
++  add_test(NAME i2p-original-streaming-peer COMMAND biglybtc-i2p-streaming-interop-tests
++    actualOriginalManagerCarriesHttpAndRecoverablePackets
++    actualOriginalResetHasTypedNativeTerminal
++    localCancelRejectsGenuineLatePeerBytesBeforeUpdatedBarrier)
++  add_test(NAME i2p-original-streaming-upload COMMAND biglybtc-i2p-streaming-interop-tests
++    actualOriginalManagerReceives128KiBWithBoundedNativeWindow)
++  set_tests_properties(i2p-original-streaming-upload PROPERTIES TIMEOUT 300 LABELS "reference;explicit-i2p"
++    ENVIRONMENT_MODIFICATION "BIGLYBTC_I2P_STREAMING_ACCEPTANCE_ROOT=string_append:-upload")
+   set_tests_properties(i2p-original-streaming-peer PROPERTIES TIMEOUT 480 LABELS "reference;explicit-i2p")
+ endif()
+ 

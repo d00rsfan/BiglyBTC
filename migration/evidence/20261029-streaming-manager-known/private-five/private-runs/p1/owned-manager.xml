@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="ManagerChannelTests" timestamp="2026&#x002D;10&#x002D;30T03:14:31" hostname="ubuntud" tests="7" failures="0" errors="0" skipped="0" time="6.601">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="ManagerChannelTests" time="0.000"/>
+  <testcase name="concurrentActualFramesAndExplicitIncomingPeerRemainIndependent" classname="ManagerChannelTests" time="0.778"/>
+  <testcase name="currentPendingSynNotificationMayDeleteTheController" classname="ManagerChannelTests" time="0.346"/>
+  <testcase name="finiteApplicationWaitDoesNotCloseOtherStreams" classname="ManagerChannelTests" time="0.502"/>
+  <testcase name="finiteHandshakesAndWaitRemainIndependentAcrossQueuedFrames" classname="ManagerChannelTests" time="1.812"/>
+  <testcase name="shortenedActualLeaseRetiresAuthorityAndRenewalCannotRestoreOldStreams" classname="ManagerChannelTests" time="3.161"/>
+  <testcase name="cleanupTestCase" classname="ManagerChannelTests" time="0.000"/>
+</testsuite>

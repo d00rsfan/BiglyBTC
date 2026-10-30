@@ -1,0 +1,62 @@
+[
+  {
+    "command": [
+      "/usr/bin/javap",
+      "-classpath",
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-p",
+      "-c",
+      "-constants",
+      "net.i2p.util.LogManager"
+    ],
+    "exit": 0,
+    "output": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-async-failures/inspection/LogManager.javap.txt",
+    "output_sha256": "6dd3cc2257d4f6d1ba39dac41b7241e882fc74ecbd3a86397bf7158730851a89",
+    "kind": "authorized bytecode inspection only"
+  },
+  {
+    "command": [
+      "/usr/bin/javap",
+      "-classpath",
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-p",
+      "-c",
+      "-constants",
+      "net.i2p.util.LogWriter"
+    ],
+    "exit": 0,
+    "output": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-async-failures/inspection/LogWriter.javap.txt",
+    "output_sha256": "73fff2f2d860fa8010b266f21e331ea0dd022ae5477006337e27e97335976f02",
+    "kind": "authorized bytecode inspection only"
+  },
+  {
+    "command": [
+      "/usr/bin/javap",
+      "-classpath",
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-p",
+      "-c",
+      "-constants",
+      "net.i2p.util.FileLogWriter"
+    ],
+    "exit": 0,
+    "output": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-async-failures/inspection/FileLogWriter.javap.txt",
+    "output_sha256": "bae698f355c4243226661d5330299ec8cf72ea29ee70595c84ee57fa9a25f278",
+    "kind": "authorized bytecode inspection only"
+  },
+  {
+    "command": [
+      "/usr/bin/javap",
+      "-classpath",
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-p",
+      "-c",
+      "-constants",
+      "net.i2p.util.Log"
+    ],
+    "exit": 0,
+    "output": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-async-failures/inspection/Log.javap.txt",
+    "output_sha256": "1a4c6c895344ce4cdcdccad878823cef9eec4661de83cd20d151e03347c465b0",
+    "kind": "authorized bytecode inspection only"
+  }
+]

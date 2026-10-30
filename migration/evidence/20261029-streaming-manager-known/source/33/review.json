@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "status": "SOURCE_REVIEW_PASS_NO_RUNTIME_CREDIT",
+  "capsule": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/amendments/idempotent-final-round/manifest.json",
+  "capsule_sha256": "7fc85aa3bfc8ece5d9c0ae0d5242ebe3442d52197cc66694f89d4ba78a21a3b6",
+  "native_basis": "43d642fb0025510c581ebdc4d7a332752c511a46",
+  "findings": [],
+  "reason": "Qt6.12 QTRY repeats the predicate after its first true result. The existing successful final round increments25 to26 without clearing its buffers, so reevaluation compares round25 bytes to round26. Guarding the already-completed round immediately after the failure guard makes that terminal state idempotent.",
+  "retained": [
+    "all26 real byte and keepalive comparisons",
+    "125000ms activity floor and all existing operation deadlines",
+    "renewal identity/key/session checks",
+    "four-stream bounds and late-cancel isolation",
+    "real FIN/EOF/close/join/Java outcome assertions",
+    "all production/Java/CMake bytes unchanged"
+  ],
+  "checks": [
+    "all capsule artifacts and declared inputs SHA pins",
+    "exact current43d beforeimage",
+    "afterimage equals beforeimage with only the single terminal guard inserted",
+    "actual pinned QTRY macro source175\u2013215",
+    "read-only patch apply check"
+  ],
+  "runtime_required": "Root must execute repaired actual manager acceptance; no future PASS assumed.",
+  "author_execution": false,
+  "native_mutation": false,
+  "other_chapters_paused": true
+}

@@ -1,0 +1,11 @@
+Root-only five private subjects; SOURCE preparation only. Execute only after actual a1 completes and root reviews this delta.
+
+  python3 -B "$TASK/private.py" --attempt five-r1 --source-commit 72b44fb182a9b97722317b6ac57a99a1601d704e --adoption "$A/effective-adoption.json" --reference "$D/java-prepared-r1/result.json" --gcc-result "$A/runs/gcc-a1/result.json" --clang-result "$A/runs/clang-a1/result.json" --san-result "$A/runs/san-a1/result.json"
+
+TASK is this private-five directory; A its parent; D the manager-known diagnostics directory. No configure/build/javac/privilege/namespace/Public invocation. The existing reviewed stager produces a candidate from exact unchanged GCC product ELFs (current source differs only in test diagnostics/outer timeout). Existing private Qt/provider per-PID native LD_DEBUG/ELF initialization proof remains exact.
+
+The prerequisite verifier replays every actual a1 per-suite association using the source/definitions/XML/image origin map, allows ONLY GCC Public BLOCKED, checks all commands/logs/artifacts/current source+images+tools+libraries and helper5af8. No synthetic fresh full-pass19/22 claim. Original r2FAIL is unchanged. Five actual selectors: owned manager; actual manager; Known hints; source-pressure; retained legacy HTTP. Their expected Qt cases come from actual successful source-bound rows, choosing fresh a1 transcripts for the two changed test images.
+
+All6 exact current GCC ELFs and approved wrapper/launcher are copied up front. Public stays unexecuted and its pinned copy/selector/source wrapper metadata is retained as pending_public for ONE later separately authenticated continuation. The fifth-subject result can only become PASS_FIVE_PRIVATE_SUBJECTS_PENDING_PUBLIC with actual_subjects5, copied_images6 and promotable=false. No dist exchange, registry update, promotion or publishing is implemented here. The current dist stays byte-identical.
+
+Intermittent SYN/final-close cause remains unresolved even if these5 pass; no fix/stability/performance-parity claim. User instruction remains finish CURRENT milestone then STOP; other work paused. Author AST/hash/delta checks only, no execution/N edits.

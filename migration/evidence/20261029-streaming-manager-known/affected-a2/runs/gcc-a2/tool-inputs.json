@@ -1,0 +1,38 @@
+{
+  "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/jobs.mk": {
+    "sha256": "e612603a8330dea32bc3dd2261eaa32197b43814b48c84fb42377644afdb89ae",
+    "bytes": 599
+  },
+  "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/run.py": {
+    "sha256": "638b4fdbd678798a89c427289b6d749f098fbd8ddca9b912c03535cec0ce5232",
+    "bytes": 18527
+  },
+  "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/amendments/java-asynchronous-causes/run.py": {
+    "sha256": "762d6ebe18493756042607cf93fb021003ca82c7c5789600a0e7b20e0b5b3bf4",
+    "bytes": 13949
+  },
+  "/usr/bin/cmake": {
+    "sha256": "6e1dccda39845415d68eabb934c598998949c99ec4668625d571aee1827b05c7",
+    "bytes": 14253272
+  },
+  "/usr/bin/ctest": {
+    "sha256": "2cf8308ae2235efcae86a2eba443444f33ab611193a84092de33ec16836f5f17",
+    "bytes": 15926040
+  },
+  "/usr/bin/make": {
+    "sha256": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49",
+    "bytes": 295120
+  },
+  "/usr/bin/ninja": {
+    "sha256": "91e9548850cda2799facfdaa7abe33f9e978832f85e98212255708a7bbe437f2",
+    "bytes": 350624
+  },
+  "/usr/bin/x86_64-linux-gnu-g++-16": {
+    "sha256": "ca3bb855e752ea0b36544ef684e542fcf04273d8c229b1a96a9c160587e41c62",
+    "bytes": 1456856
+  },
+  "/usr/bin/x86_64-linux-gnu-gcc-15": {
+    "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88",
+    "bytes": 1305304
+  }
+}

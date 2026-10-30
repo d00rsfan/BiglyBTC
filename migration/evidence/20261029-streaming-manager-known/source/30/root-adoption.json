@@ -1,0 +1,56 @@
+{
+  "status": "ADOPTED_DIAGNOSTIC_SOURCE_ONLY",
+  "source_commit": "72b44fb182a9b97722317b6ac57a99a1601d704e",
+  "basis_commit": "42d32da6a7cc42ce5aaf51f4be52e08c57ecd974",
+  "source_paths": {
+    "preview/native/tests/i2p_streaming_interop_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/packet-metadata-tail/before/preview/native/tests/i2p_streaming_interop_tests.cpp",
+      "before_sha256": "7b81e9b1bcafd2365220dc0bd21f9cfcfc0796ad5c710e723967caa7102c9caa",
+      "after_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/packet-metadata-tail/staging/preview/native/tests/i2p_streaming_interop_tests.cpp",
+      "after_sha256": "988665c6b08c5314298045352a82bd727b852d5b6df113ee9cc99ba8641b36f0"
+    },
+    "preview/native/tests/i2p_streaming_manager_interop_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/packet-metadata-tail/before/preview/native/tests/i2p_streaming_manager_interop_tests.cpp",
+      "before_sha256": "8d4d86a9dc3d7320147a356b014c54bfac6cb175992b15f39960d9b42a61dd39",
+      "after_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/packet-metadata-tail/staging/preview/native/tests/i2p_streaming_manager_interop_tests.cpp",
+      "after_sha256": "e1b851cd64ed6f79a2efd7470ec9dd5f05d2b12ea52ddf273be9422d729fee7e"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_sha256": "b5128b2e65208c4791aaee8a16e0194289cea08a94a9da459f2b69110b69733d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/public-timeout-1000.cmake",
+      "after_sha256": "e977df18513fead3adc90dae9403a4de629c6c38260f1f828f2d74e8aad3aa1c"
+    }
+  },
+  "diagnostic_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/packet-metadata-tail/manifest.json",
+    "sha256": "0db136a1b27f4fa8041589917aacf402c6f98835715163c08ecec7d575bbde80"
+  },
+  "parent_adoption": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/root-adoption.json",
+    "sha256": "9c1d0cccb27e270872c3d949619510f37cfa3ebcddf00723e5a35b34715f3ae3"
+  },
+  "r2_outcomes": {
+    "clang": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/clang-r2/result.json",
+      "sha256": "21cc58687c61660703046d5274ffc1f91e931a25a1d87116be6e4ec958afacff",
+      "status": "PASS_STREAMING_MANAGER_KNOWN_COHORT"
+    },
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/gcc-r2/result.json",
+      "sha256": "96435872c07c414b3a77f8fb0203447de6606f4b177a27857b3e772b4ef48d0b",
+      "status": "FAIL"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/result.json",
+      "sha256": "73a9ce61b2d36d8c47349fb973397b47898851cc91c538ee140b90d88e10ccbc",
+      "status": "FAIL"
+    }
+  },
+  "original_head_index_unchanged": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "production_changed": false,
+  "runtime_credit": false,
+  "stop_after_current_milestone": true
+}

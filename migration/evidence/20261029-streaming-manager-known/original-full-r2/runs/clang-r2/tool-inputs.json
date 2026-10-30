@@ -1,0 +1,59 @@
+{
+  "files": {
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/namespace-admin.py": {
+      "sha256": "fe8a101796cb5b639af98104730669dc15acd884e40d3928a52f10ffede91618",
+      "bytes": 8535
+    },
+    "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/recipe_support_followup.py": {
+      "sha256": "64e0bd2b9ec87b9babf90bdf8d1235746f7dc63c797c82c5e5a138a4c2ea893a",
+      "bytes": 6300
+    },
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/jobs.mk": {
+      "sha256": "22eca6102b408fad86de3e7de6c58dfb5ad0ecdd86f443233ef22c8b162207f0",
+      "bytes": 1024
+    },
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/run.py": {
+      "sha256": "7820a6117550615fedc30225284485859fea5012276e77c43d8a29984feb5650",
+      "bytes": 40283
+    },
+    "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/run-r3.py": {
+      "sha256": "4c6e88b37330605cf0fbf13504317792a776b2ce84f3da8b6ed74f815c3a16c2",
+      "bytes": 11282
+    },
+    "/usr/bin/cmake": {
+      "sha256": "6e1dccda39845415d68eabb934c598998949c99ec4668625d571aee1827b05c7",
+      "bytes": 14253272
+    },
+    "/usr/bin/ctest": {
+      "sha256": "2cf8308ae2235efcae86a2eba443444f33ab611193a84092de33ec16836f5f17",
+      "bytes": 15926040
+    },
+    "/usr/bin/make": {
+      "sha256": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49",
+      "bytes": 295120
+    },
+    "/usr/bin/ninja": {
+      "sha256": "91e9548850cda2799facfdaa7abe33f9e978832f85e98212255708a7bbe437f2",
+      "bytes": 350624
+    },
+    "/usr/bin/x86_64-linux-gnu-readelf": {
+      "sha256": "c857339616bbbfa5eba32733e22365048903fbaf6ed2126b897dd138bcb741fc",
+      "bytes": 818312
+    },
+    "/usr/lib/llvm-24/bin/clang": {
+      "sha256": "f283b32b557e7598ca569f3097088e7406c1d81377085b06853f5259c5460ed9",
+      "bytes": 134088
+    },
+    "/usr/bin/x86_64-linux-gnu-gcc-15": {
+      "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88",
+      "bytes": 1305304
+    }
+  },
+  "versions": {
+    "make": "GNU Make 4.4.1",
+    "ninja": "1.13.2",
+    "c_compiler": "x86_64-linux-gnu-gcc-15 (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+    "cxx_compiler": "Ubuntu clang version 24.0.0 (++20260911085248+58c46bae2118-1~exp1~20260911085258.254)"
+  },
+  "jobserver_fifo": "/tmp/GMfifo2407304"
+}

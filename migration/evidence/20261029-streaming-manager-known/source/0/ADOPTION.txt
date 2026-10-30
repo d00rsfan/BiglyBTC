@@ -1,0 +1,48 @@
+SOURCE ONLY complete eleven-map child of frozen39fac2d7. Apply the complete
+changes.patch AFTER Window6e6, or the frozen manager parent plus delta.patch.
+Six afterimages change; five are inherited exactly. The same two CMake append
+fragments and public InitialChannel API remain. No N/SDK/provider/profile,
+compiler, JVM, executable, router, namespace or network action by the author.
+
+Resolve Driver's three grouped source findings in one child:
+
+1. Manager::hardWakeup retains pending SYN, outgoing/unsent-inbound handshake,
+finite application wait and eligible idle deadlines separately from packet
+retry/output readiness. The actor uses it while the one framed write is
+blocked, alongside actual LS2/deferred-renewal deadlines. It ticks and queues
+notification BEFORE returning for blocked output, so expiry is consumed rather
+than rearmed at1ms forever. Only active inbound entries can expire; cancellation
+cannot later become Timeout. Retry/output-ready wakeups stay suppressed until
+actual bytesWritten, preserving no-spin behavior and one-frame bounds.
+
+2. Before replacing an existing LS2, old actual expired authority retires all
+old manager streams/listening; the same check runs after signing/encoding and
+before commit. Initial lease creation stays allowed. Valid same-identity
+renewal preserves streams; expired old operations cannot revive. Successful
+renewal rearms the actual manager lease deadline, including an earlier new
+expiry, while the one Create41 frame is queued. It does not fabricate router
+acknowledgement, change keys/identity, or extend application deadlines.
+
+3. Actor connect captures one absolute steady-millisecond handshake end at API
+entry before RAND/Destination preparation. Pure connect accepts that exact
+optional end without moving the Connection's actual creation time. Expired or
+oversized preparation refuses a slot; final post-signing tick enforces the
+same end. Accept continues to use its pending SYN's original3s absolute end.
+
+Two new pure families cover hard wake deadlines without output credit,
+application timeout without disconnect, pending/accepted SYN expiry,
+cancelled-unsent terminal stability, idle disconnect, exact prepared absolute
+end and refusal without a slot. Two new owned Qt methods cover concurrent
+finite handshakes/waits across actual queued frames, and an actually shortened
+LS2 followed by expiration, listener withdrawal, renewal without old-stream
+resurrection and explicit fresh operation. Pure deadlines are deterministic;
+the owned case does not claim sustained physical TCP backpressure. All six old
+pure families, all three old Qt methods and all old Router helper bodies remain
+byte-exact. No test hook, changed old deadline, new timer/thread or permission.
+
+Static patch reproduction/retention/delimiter/hash checks only. No native or
+Java test has run for this manager parent/child. Actual original-manager
+multistream, inbound peer, long-lived renewal/cancellation acceptance remains
+a separate pending source/runtime task. Legacy single-stream defaults, frozen
+Window controls, datagram/tracker behavior and public Host/admission fences
+remain inherited; no full backend, tunnel or performance claim.

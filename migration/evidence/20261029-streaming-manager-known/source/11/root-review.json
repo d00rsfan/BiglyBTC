@@ -1,0 +1,15 @@
+{
+  "status": "ROOT_REVIEWED_FIXTURE_ORDER_SOURCE_ONLY",
+  "manifest_sha256": "9496e441043d6b763dda50d3df6e95bde5b2374a07d5834ee801da47c2f365b0",
+  "patch_sha256": "902952ad2c2d87886d303c90b457e49c50fbf440e9b5de566bab919d295f7f8d",
+  "actual_modified_jar_callback_proof": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/fin-callback-order-proof.json",
+    "sha256": "28c8513363ab913c7a41496094fed5c7ae9f3e3ca93648be174c11378a8157c2"
+  },
+  "reviewed_entire_patch": true,
+  "production_changed": false,
+  "real_eof_and_actual_output_close_ack_required": true,
+  "native_change": "JVM ready allowance only 60s; stream deadlines unchanged",
+  "adopt_prepare_sha256": "c1b08cbcb5188df04033f9aae27c4f861cc1bc92316bd854ac1b5a0e42b5eff9",
+  "stop_after_current_milestone": true
+}

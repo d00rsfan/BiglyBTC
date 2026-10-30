@@ -1,0 +1,60 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+Connected to MAKE jobserver
+      Start 178: azureus-owned-service
+ 1/19 Test #178: azureus-owned-service ................   Passed    5.52 sec
+      Start 182: azureus-router-owner
+ 2/19 Test #182: azureus-router-owner .................   Passed    0.01 sec
+      Start 189: owned-dht-bytes
+ 3/19 Test #189: owned-dht-bytes ......................   Passed    0.06 sec
+      Start 192: owned-ddb-control
+ 4/19 Test #192: owned-ddb-control ....................   Passed    0.00 sec
+      Start 263: azureus-database-runtime
+ 5/19 Test #263: azureus-database-runtime .............   Passed    2.05 sec
+      Start 285: i2cp-initial-channel
+ 6/19 Test #285: i2cp-initial-channel .................   Passed   13.85 sec
+      Start 289: i2cp-lease-backed-datagram-channel
+ 7/19 Test #289: i2cp-lease-backed-datagram-channel ...   Passed    7.32 sec
+      Start 291: i2cp-bounded-datagram-receiver
+ 8/19 Test #291: i2cp-bounded-datagram-receiver .......   Passed   11.00 sec
+      Start 292: azureus-profile-io
+ 9/19 Test #292: azureus-profile-io ...................   Passed    4.41 sec
+      Start 294: i2cp-explicit-tracker-channel
+10/19 Test #294: i2cp-explicit-tracker-channel ........   Passed    5.25 sec
+      Start 296: azureus-routing
+11/19 Test #296: azureus-routing ......................   Passed    3.88 sec
+      Start 297: pure-i2p-streaming
+12/19 Test #297: pure-i2p-streaming ...................   Passed    0.05 sec
+      Start 298: i2p-original-streaming-peer
+13/19 Test #298: i2p-original-streaming-peer ..........   Passed    9.41 sec
+      Start 299: i2p-original-streaming-upload
+14/19 Test #299: i2p-original-streaming-upload ........   Passed    5.14 sec
+      Start 300: azureus-maintenance
+15/19 Test #300: azureus-maintenance ..................   Passed   80.91 sec
+      Start 301: azureus-public-bound
+16/19 Test #301: azureus-public-bound .................   Passed  114.14 sec
+      Start 302: pure-i2p-streaming-manager
+17/19 Test #302: pure-i2p-streaming-manager ...........   Passed    0.03 sec
+      Start 303: i2cp-bounded-stream-manager
+18/19 Test #303: i2cp-bounded-stream-manager ..........   Passed    6.35 sec
+      Start 304: i2p-original-streaming-manager
+19/19 Test #304: i2p-original-streaming-manager .......   Passed  128.75 sec
+
+100% tests passed, 0 tests failed out of 19
+
+Label Time Summary:
+database          =   2.05 sec*proc (1 test)
+explicit-i2p      = 143.30 sec*proc (3 tests)
+i2p               =  43.87 sec*proc (7 tests)
+long              = 128.75 sec*proc (1 test)
+loopback          =  96.82 sec*proc (6 tests)
+namespace         = 114.14 sec*proc (1 test)
+no-network        =   0.09 sec*proc (2 tests)
+owned-loopback    =  43.78 sec*proc (5 tests)
+profile           = 203.33 sec*proc (4 tests)
+reference         = 143.30 sec*proc (3 tests)
+router            =   0.01 sec*proc (1 test)
+routing           = 198.92 sec*proc (3 tests)
+statistics        =   5.59 sec*proc (4 tests)
+unit              = 254.84 sec*proc (16 tests)
+
+Total Test time (real) = 398.16 sec

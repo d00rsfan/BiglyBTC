@@ -1,0 +1,11 @@
+{
+    "dropped_native": false,
+    "failure": "Original peer input backpressure/state",
+    "java_data_frames": "0",
+    "java_frames": "0",
+    "native_choke": false,
+    "native_frames": "3",
+    "native_unchoke": false,
+    "reordered_java": false,
+    "retried_native": false
+}

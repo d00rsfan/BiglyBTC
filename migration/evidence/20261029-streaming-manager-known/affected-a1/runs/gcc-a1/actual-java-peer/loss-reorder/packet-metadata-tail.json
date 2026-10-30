@@ -1,0 +1,22 @@
+{
+    "bridge_failure": "",
+    "capacity": 256,
+    "diagnostic_errors": "0",
+    "dropped_events": "0",
+    "events": [
+    ],
+    "native_teardown": {
+        "channel_deadline_active": false,
+        "channel_failure": 0,
+        "channel_socket_active": false,
+        "channel_state": 0,
+        "elapsed_ms": "13368",
+        "java_available_output_bytes": "0",
+        "java_process_state": 2,
+        "java_queued_input_bytes": "0",
+        "router_available_bytes": "-1",
+        "router_queued_bytes": "-1",
+        "stream_present": false
+    },
+    "status": "DIAGNOSTIC_METADATA_ONLY"
+}

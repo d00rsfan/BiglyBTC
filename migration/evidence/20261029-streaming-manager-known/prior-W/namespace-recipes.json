@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_DRIVER_ROOT_REVIEW",
+  "parent_recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/admin-namespace-recipes/amendments/preserve-unchanged-mtimes/amendments/native-hosted-dependency-basis/manifest.json",
+    "sha256": "59fb92de36ab62e2df0885ab349b22f8035c80f4d58622758363b1ca694efe41"
+  },
+  "source_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/manifest.json",
+    "sha256": "9c781e5bebea7841cc7d574894367be4460c486f5a9abb99aed7580325f65edb"
+  },
+  "source_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-admin-boundary-20261029-review/amendments/sealed-stdin-payload/review.json",
+    "sha256": "e37dae03cd8990634ae7ff25b2ae7577858d6bd216dbc9c90993652eb6c04a18"
+  },
+  "actual_namespace_root_approval": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/root-approval.json",
+    "sha256": "2bb598d383588f26309341cccccfbcbac278b03cb310562c5f098db3c3c484dd"
+  },
+  "component_source_maps": 31,
+  "separate_support_maps": 1,
+  "suites": {
+    "gcc": 19,
+    "clang": 16,
+    "san": 16
+  },
+  "java_recompiled_by_recipe": false,
+  "source_static_checks": [
+    "Python AST only",
+    "Suite/constants AST match frozen parent",
+    "Exact31-map union/current beforeimages verified; no mutations",
+    "Adopter skips byte-identical writes only; Python AST checked",
+    "Native support exact30586358 basis; only bubblewrap/iproute2/util-linux added; existing snapshots validate root Git path"
+  ],
+  "recipe_files_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/namespace-admin.py": "fe8a101796cb5b639af98104730669dc15acd884e40d3928a52f10ffede91618",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/run-admin.py": "b4514f5cc1e964ad05e7fcb39c47b94b6ff109e222288d07ae56b5bc6439b5ff",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-admin.py": "2fc1ae94be1cc28684948c4deecb6f0b79cee9650005adf20b2b1d0e6f59977c",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/finish-admin.py": "5320339598836012c07249eae52cd66fcf589ee28a54e97cb3dc288388c3cad0",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/jobs-admin.mk": "2e020af51fea2011b7015a3dd972c760986c66abfbed06923c366220ce65c4e0",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/adopt-admin-supported.py": "b718ae338c11b7742cccbdd742704baef65f188f8d4361f3d9a93a513e296db0"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/admin-namespace-recipes/amendments/preserve-unchanged-mtimes/amendments/native-hosted-dependency-basis/manifest.json": "59fb92de36ab62e2df0885ab349b22f8035c80f4d58622758363b1ca694efe41",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/adopt-admin-final.py": "3e8cce8ae6691531b498f8a93492d0f98ca40d671171ce17494c8cf6df33091c",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-admin-recipes-20261029-review/parent-review.json": "12559bcc73e64b17d7822e01fe7f04a870d810fac4c5be705e08e087eb3e02be"
+  },
+  "artifacts_sha256": {
+    "parent-delta.patch": "c770237511b344aab17e5d5e27edc493edba95a7552749317e094d136fa6f603",
+    "ADOPTION.txt": "942d59c161063ff544bc101b0e0e963f9fb760f06b81f6d21d8ae55119237119",
+    "support/before.sh": "30586358e01b7bc18b9289bd301a777bc4fc7bcb3b2eb4ba011262ecfe789bc9",
+    "support/changes.patch": "6b54c3ca52a7ea16d16760afbb645275ba737354a694fad1e02d4824f3e03dd4",
+    "support/after.sh": "b83b69b3671fac9a4c240032d315b842e33639efb4777dcf51322d5f2e13d26c",
+    "support/manifest.json": "6c29eefe56ccd1c20eec0d4c90aadb25f9155e0bbfd74498773ac197b3e0557c"
+  },
+  "author_execution": false,
+  "native_mutations": false,
+  "corrected_support_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/admin-namespace-recipes/amendments/preserve-unchanged-mtimes/amendments/native-hosted-dependency-basis/amendments/required-test-tools/support/manifest.json",
+    "sha256": "6c29eefe56ccd1c20eec0d4c90aadb25f9155e0bbfd74498773ac197b3e0557c"
+  }
+}

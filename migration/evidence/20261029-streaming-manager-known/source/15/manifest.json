@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "status": "FROZEN_PRIVATE_PUBLIC_CONTINUATION_SOURCE_ONLY_PENDING_PRIVATE_FIVE",
+  "artifacts_sha256": {
+    "run.py": "877d843ca46425be55cd8de7b6c04cfc8331d0952dd74e586ca0f993bf03e923",
+    "ADOPTION.txt": "d6c9b3ea8280de4729c86abc445651fc1f3792d1244f537af351ec3e0d3e80b0"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/manifest.json": "abc45a78c0e5151b85c0383eba3c790ff94179edee46eeae4f4dd6f5b054684b",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private.py": "8f953be1181e406f7193f1f48ce399b89f2765ee8dab88e44a49629aa6e73540",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/manifest.json": "d20a7fd8d07f4934d6b41a2dbd7f77f7c3258da1bafd8aa6685f4d07ca9b4892"
+  },
+  "result_status": "PASS_SIX_PRIVATE_SUBJECTS_RESUMED_PUBLIC",
+  "fresh_subjects_when_executed": 1,
+  "retained_private_subjects": 5,
+  "new_builds": 0,
+  "new_javac_invocations": 0,
+  "candidate_mutation": false,
+  "requires_separate_cached_gcc_public": true,
+  "author_execution": false,
+  "native_mutation": false,
+  "stop_after_current_milestone": true
+}

@@ -1,0 +1,9 @@
+{
+  "status": "ROOT_REVIEWED_SOURCE_RECORD_SCHEMA_CORRECTION",
+  "manifest_sha256": "d573b07a524a5d0d61f3dbabdaa4c2532152257f7322d7731987fb8e82ea4b7f",
+  "delta_sha256": "83924cdaac1cdb6aba294e5a1ed88045dc775a2baf84ce330288554f694a4e89",
+  "source_receipts_checked": 48,
+  "artifact_pins_checked": 239,
+  "all_actual_qualification_unchanged": true,
+  "repeat_compile_or_subjects": false
+}

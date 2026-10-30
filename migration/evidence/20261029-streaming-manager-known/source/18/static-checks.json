@@ -1,0 +1,14 @@
+{
+  "status": "PASS_STATIC_SOURCE_CHECKS_ONLY",
+  "source_leaves": 11,
+  "existing_virtual_preimages": 6,
+  "new_leaves": 5,
+  "original_materialized_blob_and_sha256_pins": 13,
+  "virtual_parent_apply_check": "PASS",
+  "applying_patch_to_owned_temporary_sources_yields_exact_afterimages": true,
+  "cpp_delimiter_parse": "PASS",
+  "compiler": false,
+  "jvm": false,
+  "subject": false,
+  "native_mutation": false
+}

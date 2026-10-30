@@ -1,0 +1,13 @@
+Oct 30, 2026, 3:06:19 AM WARN  [main        ] net.i2p.util.NativeBigInteger : Native BigInteger library jbigi not loaded - using pure Java - poor performance may result - see http://i2p-projekt.i2p/jbigi for help
+Oct 30, 2026, 3:06:21 AM DEBUG [-application] reaming.impl.ConnectionManager: Validated SYN NACKS from: f4cvjyd26newefw5kzc5sgy4mvyrv3h3am75deij35m7bpj3yhdq.b32.i2p
+Oct 30, 2026, 3:06:22 AM DEBUG [-application] g.impl.ConnectionPacketHandler: New IB pkt: AAAAAA/Mmak6A: #0 SYN FROM 387 NO_ACK NACK 209764049 1753091967 3418953194 2993289648 241123575 2111399659 136949824 2831240632 DELAY 0 MS 1730 SIG DSA_SHA1 on [Connection KYXF5Q/Mmak6A from f4cvjyd26newefw5kzc5sgy4mvyrv3h3am75deij35m7bpj3yhdq.b32.i2p up 415ms wsize: 1 cwin: 1 rtt: 0 rto: 9000 unacked out: 0 unacked in: 0 sent: 0 rcvd: 1 ackThru -1 ssThresh 64 minRTT 2147483647 maxWin 4 MTU 1730]
+Oct 30, 2026, 3:06:22 AM DEBUG [-application] g.impl.ConnectionPacketHandler: Scheduling immediate ack for AAAAAA/Mmak6A: #0 SYN FROM 387 NO_ACK NACK 209764049 1753091967 3418953194 2993289648 241123575 2111399659 136949824 2831240632 DELAY 0 MS 1730 SIG DSA_SHA1
+Oct 30, 2026, 3:06:22 AM WARN  [-application] ient.streaming.impl.Connection: Hard disconnecting and sending reset, remove? true on [Connection KYXF5Q/Mmak6A from f4cvjyd26newefw5kzc5sgy4mvyrv3h3am75deij35m7bpj3yhdq.b32.i2p up 605ms wsize: 1 cwin: 1 rtt: 0 rto: 9000 unacked out: 1 unacked in: 0 sent: 1 rcvd: 1 ackThru -1 ssThresh 64 minRTT 2147483647 maxWin 4 MTU 1730]
+java.lang.Exception: cause
+	at net.i2p.client.streaming.impl.Connection.disconnect(Connection.java:786)
+	at net.i2p.client.streaming.impl.Connection.disconnect(Connection.java:745)
+	at net.i2p.client.streaming.impl.I2PSocketFull.reset(I2PSocketFull.java:88)
+	at StreamingPeer.lambda$main$2(StreamingPeer.java:150)
+	at java.base/java.lang.Thread.run(Thread.java:1516)
+Oct 30, 2026, 3:06:22 AM DEBUG [-application] reaming.impl.ConnectionManager: Connection removed? true remaining: 0: [Connection KYXF5Q/Mmak6A from f4cvjyd26newefw5kzc5sgy4mvyrv3h3am75deij35m7bpj3yhdq.b32.i2p up 623ms wsize: 1 cwin: 1 rtt: 0 rto: 9000 unacked out: 1 unacked in: 0 reset sent 17ms ago sent: 1 rcvd: 1 ackThru -1 ssThresh 64 minRTT 2147483647 maxWin 4 MTU 1730]
+Oct 30, 2026, 3:06:22 AM WARN  [main        ] t.streaming.impl.PacketHandler: Dropping pkt w/ send ID but no con found, recently disconnected? true KYXF5Q/Mmak6A: ACK 0 DELAY 0 SIG DSA_SHA1

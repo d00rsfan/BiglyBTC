@@ -1,0 +1,59 @@
+{
+  "official_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "official_sources": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketManager.java",
+      "upstream_path": "apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketManager.java",
+      "git_blob": "e8638d4a37285713e9b7c9ed658f46ec5a8ab1b6",
+      "sha256": "bced0f84184c987ff51eccb6c03490c1da2082c7c8c46e93d8309fc760a30825"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketOptions.java",
+      "upstream_path": "apps/ministreaming/java/src/net/i2p/client/streaming/I2PSocketOptions.java",
+      "git_blob": "91d840494e9c691abd94704e00e0e6b00c2ec516",
+      "sha256": "2521c7bb52dac290c49689a56b8abdd253faabeb5e85e9725ebb8851279e9cff"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionManager.java",
+      "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionManager.java",
+      "git_blob": "e52ef49404c7b6ae365367d1fd2a1590a8196b56",
+      "sha256": "dd22d79f6e3f777f29735cf1b1c7fd8d64af7a868bd33a751b0123bc79ea0fff"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/PacketQueue.java",
+      "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/PacketQueue.java",
+      "git_blob": "dcbdb300bbc65297cd4425ff2b48c9dd2a621d39",
+      "sha256": "31a9ca981486582b18aba0a7360c6a33ed6eb1284ada048f3beaaaa6a95f9ebf",
+      "sections": "87-204 dispatch/expiry; actual packet timing authority"
+    }
+  ],
+  "native_manager": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/amendments/hard-deadline-and-renewal/manifest.json",
+    "sha256": "1f911001b6a0cbf7e78bcd477a2da3b38b9f35b9a8d6b489f677c14d7ce7be66"
+  },
+  "native_manager_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029-review/review.json",
+    "sha256": "c6ab107117f1506926a713475a9298d480220e3a4ed37b185edd29abea0c8fee"
+  },
+  "modified_core": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+    "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+    "classes_sha256": {
+      "net/i2p/client/I2PSession.class": "db57cbfb0251e3850edabeabf7dec77f5ee0b76e58b2ae3ad02594721b687158",
+      "net/i2p/client/SendMessageStatusListener.class": "253cf2339d965e6512ec4b7c78c0c67d4b8113b77cd80f368838f17e2919f206",
+      "net/i2p/client/streaming/impl/I2PSocketManagerFull.class": "8c730ef1859b98209880ce84ad647823a4acc57df9e30334b02831bdf81fa4e0",
+      "net/i2p/client/streaming/impl/I2PSocketFull.class": "e10501a82a934b4dd2af994c0b253df39b167ca0749facb7496ba76c1cf74470",
+      "net/i2p/client/streaming/impl/PacketQueue.class": "16ad21f92b636e1c81bf9db1e42700d2a6a4bd57e96e0f32c62d45b037eae7f0"
+    }
+  },
+  "retained_seven_controls": {
+    "capsule": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/manifest.json",
+    "capsule_sha256": "fec3012f2abcda6ba8be92ff9ea767bbd291f1dd52019f8cb8ef441554c896dc",
+    "java_source": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/StreamingPeer.java",
+    "java_source_sha256": "8c78205c17273122b381b30cb8ad6aadbd59105dfccbaad9fed0df5ac351e8cd",
+    "native_source": "/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_interop_tests.cpp",
+    "native_source_sha256": "7b81e9b1bcafd2365220dc0bd21f9cfcfc0796ad5c710e723967caa7102c9caa",
+    "files_modified": false
+  },
+  "scope": "Real modified manager behind explicit packet-only I2PSession adapter; no router/tunnels/BT-engine admission/full core equivalence."
+}

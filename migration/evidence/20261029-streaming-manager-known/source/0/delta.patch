@@ -1,0 +1,209 @@
+--- a/preview/native/services/i2cp_channel/channel.cpp
++++ b/preview/native/services/i2cp_channel/channel.cpp
+@@ -235,6 +235,10 @@
+     if(!leaseSigner||!session||(state!=State::SessionCreated&&state!=State::Reconfiguring)){fail(Failure::UnsupportedMessage);return;}
+     if(expired()){return;}
+     if(Clock::now()>=end){fail(Failure::Deadline);return;}const auto at=generation;
++    // A late renewal may update the router submission, but cannot restore
++    // streams/listening authority whose previous actual LS2 already expired.
++    if(managedStreams&&leaseSubmission&&!leaseCurrent()){(void)managedCurrent();}
++    if(!current(at)){return;}
+     auto requested=decodeLeaseRequest(frame);
+     if(!requested||requested->sessionId!=*session||!leaseSigner->valid()||!leaseSigner->destination()||leaseSigner->destination()->wire!=acceptedDestination){fail(Failure::InvalidLeaseSet);return;}
+     auto policy=leaseSetPolicy(acceptedOptions);if(!policy){fail(Failure::InvalidLeaseSet);return;}
+@@ -250,6 +254,8 @@
+     auto signedLs=signLeaseSet2(*leaseSigner,*leaseKey,*requested,*policy,now,lastRawLeasePublished);
+     if(!signedLs){fail(Failure::InvalidLeaseSet);return;}
+     auto encoded=encodeCreateLeaseSet2(*session,*signedLs,*leaseKey);if(!encoded){fail(Failure::InvalidLeaseSet);return;}
++    // Signing/encoding may cross the old lease boundary before its Qt timer.
++    if(managedStreams&&leaseSubmission&&!leaseCurrent()){(void)managedCurrent();}
+     if(!current(at)||Clock::now()>=end||expired()){if(current(at)){fail(Failure::Deadline);}return;}
+     // Signed local submission is the same original client-side completion
+     // boundary as setLeaseSet(), not a fabricated router response/OPEN claim.
+@@ -260,6 +266,7 @@
+     leaseSubmission=LeaseSubmission{next,signedLs->publishedMilliseconds,signedLs->expiresMilliseconds,signedLs->leases.size(),signedLs->unpublished};
+     waitingFirstLease=false;if(state==State::SessionCreated){timer.stop();}notifyLease();
+     if(statusPending){armStatusDeadline();} // Only lease fence changes; original statusExpires is immutable.
++    if(managedStreams){armManagedStreams(socket.bytesToWrite()!=0);}
+   }
+   ConfigResult<std::uint64_t> observedNow()const{
+     using Code=::biglybtc::services::i2p::ErrorCode;
+--- a/preview/native/services/i2cp_channel/managed_streams.inc
++++ b/preview/native/services/i2cp_channel/managed_streams.inc
+@@ -21,7 +21,7 @@
+     const auto now=observedNow();if(!now){fail(Failure::InvalidDate);return;}
+     auto wait=static_cast<std::int64_t>(leaseSubmission->expiresMilliseconds-*now);
+     if(managedLease){wait=std::min(wait,std::chrono::duration_cast<std::chrono::milliseconds>(managedLease->end-Clock::now()).count());}
+-    if(!blocked){if(auto due=managedStreams->wakeup()){const auto stamp=streamNow();wait=std::min(wait,static_cast<std::int64_t>(*due>stamp?*due-stamp:1));}}
++    if(auto due=blocked?managedStreams->hardWakeup():managedStreams->wakeup()){const auto stamp=streamNow();wait=std::min(wait,static_cast<std::int64_t>(*due>stamp?*due-stamp:1));}
+     streamTimer.start(static_cast<int>(std::clamp<std::int64_t>(wait,1,std::numeric_limits<int>::max())));
+   }catch(...){fail(Failure::Resources);}}
+   bool reserveManagedIdentity(std::uint64_t& operation,std::uint32_t& id){
+@@ -48,6 +48,9 @@
+     if(streamFlushing||!managedStreams){return;}
+     try{
+       if(!managedCurrent()){return;}
++      // Hard deadlines settle even while the one already-queued I2CP frame
++      // waits for bytesWritten. Retry/output readiness alone stays suppressed.
++      managedStreams->tick(streamNow());notifyStream();if(!active()||!managedStreams){return;}
+       if(managedLease&&!flushManagedLease()){if(active()){armManagedStreams(true);}return;}
+       if(socket.bytesToWrite()!=0){armManagedStreams(true);return;}
+       streamFlushing=true;const auto at=generation;
+@@ -94,9 +97,13 @@
+     }catch(...){fail(Failure::Resources);return false;}
+   }
+   ConfigResult<std::uint64_t> startManagedStream(View wire,const StreamOptions& input,bool accepting=false){
++    const auto entered=streamNow();
+     using Code=::biglybtc::services::i2p::ErrorCode;
+     const auto refuse=[](Code code,const char* reason)->ConfigResult<std::uint64_t>{return std::unexpected(::biglybtc::services::i2p::Error{code,reason});};
+     if(!onThread()||!managedCurrent()||input.deadlineMilliseconds<1||input.deadlineMilliseconds>120000){return refuse(Code::Unsupported,"Current manager and finite handshake required");}
++    const auto period=static_cast<std::uint64_t>(input.deadlineMilliseconds);
++    if(entered>std::numeric_limits<std::uint64_t>::max()-period){return refuse(Code::Unsupported,"Handshake clock overflow");}
++    const auto end=entered+period;
+     std::uint64_t operation=0;std::uint32_t id=0;if(!reserveManagedIdentity(operation,id)){return refuse(Code::TooLarge,"Streaming lifetime identity budget exhausted");}
+     try{
+       ConfigResult<void> accepted;
+@@ -104,7 +111,7 @@
+       else{
+         auto peer=decodeDestination(wire);if(!peer){return std::unexpected(peer.error());}
+         if(!managedCurrent()){return refuse(Code::Unsupported,"Manager identity/lease changed");}
+-        accepted=managedStreams->connect(operation,id,std::move(*peer),{{input.fromPort,input.toPort},static_cast<unsigned>(input.deadlineMilliseconds),input.maximumWindow},streamNow());
++        accepted=managedStreams->connect(operation,id,std::move(*peer),{{input.fromPort,input.toPort},static_cast<unsigned>(input.deadlineMilliseconds),input.maximumWindow},streamNow(),end);
+       }
+       if(!accepted){return std::unexpected(accepted.error());}
+       commitManagedIdentity(operation,id);flushManagedStreams();armManagedStreams();notifyStream();
+--- a/preview/native/services/i2p_streaming/manager.cpp
++++ b/preview/native/services/i2p_streaming/manager.cpp
+@@ -27,14 +27,16 @@
+ bool Manager::receives()const noexcept{
+   return listener_.has_value()||std::ranges::any_of(streams_,[](const auto& item){return item&&(item->connection.active()||item->connection.observation().phase==Phase::Closed);});
+ }
+-Result<void> Manager::connect(std::uint64_t op,std::uint32_t id,Destination peer,const ConnectOptions& input,std::uint64_t now){
++Result<void> Manager::connect(std::uint64_t op,std::uint32_t id,Destination peer,const ConnectOptions& input,std::uint64_t now,std::optional<std::uint64_t> absoluteHandshakeEnd){
+   tick(now);
+   if(!valid()||!available(op,id)||!ports(input.ports)||!window(input.maximumWindow)||input.handshakeMilliseconds<1||input.handshakeMilliseconds>120000||!endFits(now,input.handshakeMilliseconds)||peer.wire.empty()||peer.hash==local_.hash){return refused("Bounded explicit stream connection unavailable");}
++  const auto end=absoluteHandshakeEnd.value_or(now+input.handshakeMilliseconds);
++  if(end<=now||end-now>input.handshakeMilliseconds){return refused("Original finite handshake deadline expired/invalid");}
+   Connection prepared(op,id,local_,std::move(peer),input.maximumWindow,now,entropy_);
+   if(!prepared.active()){return refused("Invalid connection options");}
+   const auto jitter=entropy_?entropy_(10000):0;if(jitter>=10000){return refused("Invalid idle jitter entropy");}
+   auto free=std::ranges::find_if(streams_,[](const auto& item){return !item;});
+-  free->emplace(Entry{std::move(prepared),input.ports,false,false,id,jitter,now+input.handshakeMilliseconds,now,{}});
++  free->emplace(Entry{std::move(prepared),input.ports,false,false,id,jitter,end,now,{}});
+   return {};
+ }
+ Result<void> Manager::listen(const ListenOptions& provided,std::uint64_t now){
+@@ -101,7 +103,7 @@
+ void Manager::tick(std::uint64_t now){
+   while(!pending_.empty()&&now>=pending_.front().end){pendingBytes_-=pending_.front().bytes;pending_.pop_front();count(expired_);}
+   for(auto& item:streams_){if(!item){continue;}auto& entry=*item;const auto observed=entry.connection.observation();
+-    if((observed.phase==Phase::Connecting||(entry.inbound&&!observed.transmittedPackets))&&now>=entry.handshakeEnd){entry.connection.terminate(Phase::Timeout);}
++    if(entry.connection.active()&&(observed.phase==Phase::Connecting||(entry.inbound&&!observed.transmittedPackets))&&now>=entry.handshakeEnd){entry.connection.terminate(Phase::Timeout);}
+     else if(entry.connection.active()&&observed.phase!=Phase::Connecting&&!entry.idlePending&&now>=entry.lastActivity&&now-entry.lastActivity>=static_cast<std::uint64_t>(options_.inactivityMilliseconds)+entry.idleJitter&&observed.inFlightPackets==0){
+       if(options_.idleAction==IdleAction::Send&&entry.connection.keepalive()){entry.idlePending=true;}
+       else{entry.connection.terminate(Phase::IdleTimeout);}
+@@ -135,13 +137,18 @@
+   item->wait=Wait{{kind,WaitState::Pending,minimum},now+period};settleWait(*item,now);return true;
+ }
+ void Manager::terminate(Phase phase)noexcept{stopListening();for(auto& item:streams_){if(item){item->connection.terminate(phase);if(item->wait&&item->wait->observed.state==WaitState::Pending){item->wait->observed.state=WaitState::Cancelled;}}}}
+-std::optional<std::uint64_t> Manager::wakeup()const noexcept{
++std::optional<std::uint64_t> Manager::hardWakeup()const noexcept{
+   std::optional<std::uint64_t> result;const auto add=[&](std::uint64_t value){if(!result||value<*result){result=value;}};
+   if(!pending_.empty()){add(pending_.front().end);}
+-  for(const auto& item:streams_){if(!item){continue;}const auto observed=item->connection.observation();if(auto at=item->connection.wakeup()){add(*at);}if(observed.phase==Phase::Connecting){add(item->handshakeEnd);}
++  for(const auto& item:streams_){if(!item){continue;}const auto observed=item->connection.observation();if(item->connection.active()&&(observed.phase==Phase::Connecting||(item->inbound&&!observed.transmittedPackets))){add(item->handshakeEnd);}
+     else if(item->connection.active()&&!item->idlePending&&!observed.inFlightPackets&&endFits(item->lastActivity,options_.inactivityMilliseconds+item->idleJitter)){add(item->lastActivity+options_.inactivityMilliseconds+item->idleJitter);}
+     if(item->wait&&item->wait->observed.state==WaitState::Pending){add(item->wait->end);}
+   }
++  return result;
++}
++std::optional<std::uint64_t> Manager::wakeup()const noexcept{
++  auto result=hardWakeup();
++  for(const auto& item:streams_){if(item){if(auto at=item->connection.wakeup();at&&(!result||*at<*result)){result=*at;}}}
+   return result;
+ }
+ std::optional<ManagedObservation> Manager::observation(std::uint64_t op)const noexcept{const auto* item=find(op);return item?std::optional(ManagedObservation{item->connection.observation(),item->ports,item->inbound,item->idleJitter,item->wait?std::optional(item->wait->observed):std::nullopt}):std::nullopt;}
+--- a/preview/native/services/i2p_streaming/manager.hpp
++++ b/preview/native/services/i2p_streaming/manager.hpp
+@@ -27,7 +27,7 @@
+   bool valid()const noexcept;
+   bool receives()const noexcept;
+   bool active()const noexcept;
+-  Result<void> connect(std::uint64_t operation,std::uint32_t id,Destination,const ConnectOptions&,std::uint64_t now);
++  Result<void> connect(std::uint64_t operation,std::uint32_t id,Destination,const ConnectOptions&,std::uint64_t now,std::optional<std::uint64_t> absoluteHandshakeEnd={});
+   Result<void> listen(const ListenOptions&,std::uint64_t now);
+   void stopListening()noexcept;
+   Result<void> accept(std::uint64_t operation,std::uint32_t id,std::uint64_t now);
+@@ -45,6 +45,8 @@
+   bool wait(std::uint64_t operation,WaitFor,std::size_t minimumBytes,unsigned timeoutMilliseconds,std::uint64_t now);
+   void tick(std::uint64_t now);
+   void terminate(Phase)noexcept;
++  // Finite authority/application deadlines remain live while output is blocked.
++  std::optional<std::uint64_t> hardWakeup()const noexcept;
+   std::optional<std::uint64_t> wakeup()const noexcept;
+   std::optional<ManagedObservation> observation(std::uint64_t operation)const noexcept;
+   ManagerObservation observation()const noexcept;
+--- a/preview/native/tests/i2cp_stream_manager_tests.cpp
++++ b/preview/native/tests/i2cp_stream_manager_tests.cpp
+@@ -20,6 +20,7 @@
+ }
+ struct Router {
+   QTcpServer server;QPointer<QTcpSocket> socket;QByteArray bytes;qsizetype offset=1;QString failure;
++  const std::uint64_t openedAt=stamp();
+   p::ClientIdentity local=identity("dsa"),remote=identity("ed25519");
+   struct Peer {std::uint16_t nativePort=0;std::optional<st::Connection> connection;p::Bytes received;};
+   std::array<Peer,3> peers{};std::uint32_t message=100;std::uint64_t leaseFrames=0;
+@@ -41,6 +42,7 @@
+   cp::Frame take(){auto frame=next();if(!frame){qFatal("Missing owned frame");}offset+=5+static_cast<qsizetype>(frame->payload.size());return std::move(*frame);}
+   bool send(p::View frame){return socket&&socket->write(reinterpret_cast<const char*>(frame.data()),static_cast<qint64>(frame.size()))==static_cast<qint64>(frame.size());}
+   bool lease(){cp::RequestedLease lease;lease.gateway.fill(0x51);lease.tunnelId=33;lease.expiresMilliseconds=Now+600000;auto frame=cp::encodeLeaseRequest({7,{lease}});return frame&&send(*frame);}
++  bool leaseUntil(std::uint64_t end){cp::RequestedLease lease;lease.gateway.fill(0x51);lease.tunnelId=33;lease.expiresMilliseconds=end;auto frame=cp::encodeLeaseRequest({7,{lease}});return frame&&send(*frame);}
+   bool deliver(const st::Packet& packet,std::uint16_t port){
+     auto encoded=st::encode(packet,remote);if(!encoded){failure="Remote packet encode failed";return false;}auto mux=st::encodeMux({80,port,std::move(*encoded)});if(!mux){failure="Remote mux failed";return false;}auto frame=cp::encodeMessagePayload({7,message++,std::move(*mux)});return frame&&send(*frame);
+   }
+@@ -103,6 +105,26 @@
+     QTRY_VERIFY(router.pump()&&channel.managedStreamObservation(*operation)->stream.phase==st::Phase::Established);QVERIFY(channel.waitStream(*operation,st::WaitFor::Readable,1,20));
+     QTRY_VERIFY(channel.managedStreamObservation(*operation)->wait&&channel.managedStreamObservation(*operation)->wait->state==st::WaitState::TimedOut);QCOMPARE(channel.managedStreamObservation(*operation)->stream.phase,st::Phase::Established);QVERIFY(channel.writeStream(*operation,p::Bytes{'A'}));QTRY_VERIFY(router.pump()&&router.peers[0].received==p::Bytes{'A'});channel.close();
+   }
++  void finiteHandshakesAndWaitRemainIndependentAcrossQueuedFrames(){
++    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel);
++    auto first=channel.connectStream(router.remote.destination()->wire,{9000,80,1000});auto second=channel.connectStream(router.remote.destination()->wire,{9001,80,1500});QVERIFY(first&&second);
++    // Both actual SYN writes share the one-frame transport. The owned router
++    // reads frames but deliberately supplies no Streaming acknowledgement.
++    QVERIFY(channel.waitStream(*first,st::WaitFor::Readable,1,20));
++    QTRY_VERIFY_WITH_TIMEOUT(channel.managedStreamObservation(*first)&&channel.managedStreamObservation(*first)->wait&&channel.managedStreamObservation(*first)->wait->state==st::WaitState::TimedOut,5000);
++    QTRY_VERIFY_WITH_TIMEOUT(channel.managedStreamObservation(*first)&&channel.managedStreamObservation(*second)&&channel.managedStreamObservation(*first)->stream.phase==st::Phase::Timeout&&channel.managedStreamObservation(*second)->stream.phase==st::Phase::Timeout,5000);
++    QVERIFY(router.next());auto firstFrame=cp::decodeSendDatagram(router.take());QVERIFY(firstFrame&&firstFrame->recipient.wire==router.remote.destination()->wire);QCOMPARE(channel.state(),Channel::State::SessionCreated);QVERIFY(router.failure.isEmpty());channel.close();
++  }
++  void shortenedActualLeaseRetiresAuthorityAndRenewalCannotRestoreOldStreams(){
++    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel);auto operation=channel.connectStream(router.remote.destination()->wire,{9000,80,3000});QVERIFY(operation);
++    QTRY_VERIFY(router.pump()&&channel.managedStreamObservation(*operation)&&channel.managedStreamObservation(*operation)->stream.phase==st::Phase::Established);QVERIFY(channel.listenStreams({{6881,80},{*router.remote.destination()},8}));
++    const auto revision=channel.leaseSetSubmission()->revision;QVERIFY(router.leaseUntil(Now+(stamp()-router.openedAt)+3000));QTRY_VERIFY(router.pump()&&channel.leaseSetSubmission()->revision>revision);const auto shortened=channel.leaseSetSubmission()->revision;QVERIFY(channel.streamManagerObservation().listening);QCOMPARE(channel.managedStreamObservation(*operation)->stream.phase,st::Phase::Established);
++    // This is actual source-authored wall/steady time, with no test clock or
++    // timeout override. Earlier LS2 expiry must replace the old long timer.
++    QTRY_VERIFY_WITH_TIMEOUT(channel.managedStreamObservation(*operation)&&channel.managedStreamObservation(*operation)->stream.phase==st::Phase::LeaseExpired,10000);QVERIFY(!channel.streamManagerObservation().listening);QVERIFY(!channel.writeStream(*operation,p::Bytes{'X'}));
++    QVERIFY(router.lease());QTRY_VERIFY(router.pump()&&channel.leaseSetSubmission()->revision>shortened);QCOMPARE(channel.managedStreamObservation(*operation)->stream.phase,st::Phase::LeaseExpired);QVERIFY(!channel.streamManagerObservation().listening);QVERIFY(!channel.writeStream(*operation,p::Bytes{'X'}));QVERIFY(channel.releaseStream(*operation));
++    auto fresh=channel.connectStream(router.remote.destination()->wire,{9001,80,3000});QVERIFY(fresh&&*fresh!=*operation);QTRY_VERIFY(router.pump()&&channel.managedStreamObservation(*fresh)&&channel.managedStreamObservation(*fresh)->stream.phase==st::Phase::Established);QVERIFY(router.failure.isEmpty());channel.close();
++  }
+ };
+ QTEST_GUILESS_MAIN(ManagerChannelTests)
+ #include "i2cp_stream_manager_tests.moc"
+--- a/preview/native/tests/i2p_streaming_manager_tests.cpp
++++ b/preview/native/tests/i2p_streaming_manager_tests.cpp
+@@ -76,4 +76,15 @@
+   st::Manager refused(*local.destination(),{});take(refused.listen({{6881,80},{*peer.destination()},8},0));st::Connection remote(1,300,*peer.destination(),*local.destination());auto request=remote.next(1);require(bool(request),"Missing current-gate SYN");refused.receive(mux(*request,peer,80,6881),1,[]{return 2;},[]{return false;});require(refused.observation().pendingSyns==0,"Post-signature source revocation admitted SYN");
+   refused.terminate(st::Phase::LeaseExpired);require(!refused.receives()&&refused.observation().pendingSyns==0,"Lease retirement left listener authority");
+ }
+-int main(){try{auto local=identity("dsa"),peer=identity("ed25519");inboundCodecAndRole(local,peer);listenerBoundsAndExpiry(local,peer);multiplexFairnessAndMemory(local,peer);finiteWaitAndLongActivity(local,peer);originalOneShotIdleJitter(local,peer);postVerificationFence(local,peer);std::cout<<"PASS bounded session Streaming manager source-authored controls\n";return 0;}catch(const std::exception& failure){std::cerr<<"FAIL "<<failure.what()<<'\n';return 1;}}
++void hardDeadlinesRemainArmedWithoutOutputCredit(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  st::Manager outgoing(*local.destination(),{});take(outgoing.connect(1,100,*peer.destination(),{{9000,80},100,8},0));auto syn=outgoing.next(1);require(bool(syn),"Missing blocked-output SYN");outgoing.dispatched(*syn,1);
++  require(outgoing.hardWakeup()==100,"Blocked output hid finite outgoing handshake");require(outgoing.wait(1,st::WaitFor::Readable,1,20,2),"Finite blocked read wait refused");require(outgoing.hardWakeup()==22,"Blocked output hid application wait");outgoing.tick(22);require(outgoing.observation(1)->wait->state==st::WaitState::TimedOut&&outgoing.observation(1)->stream.phase==st::Phase::Connecting,"Blocked wait changed connection lifetime");require(outgoing.hardWakeup()==100,"Settled wait retained a due/spinning deadline");outgoing.tick(100);require(outgoing.observation(1)->stream.phase==st::Phase::Timeout&&!outgoing.hardWakeup(),"Expired outgoing handshake retained a due/spinning deadline");
++  st::Manager incoming(*local.destination(),{});take(incoming.listen({{6881,80},{*peer.destination()},8},0));st::Connection remote(1,300,*peer.destination(),*local.destination());auto request=remote.next(1);require(bool(request),"Missing incoming deadline SYN");incoming.receive(mux(*request,peer,80,6881),1);require(incoming.hardWakeup()==3001,"Blocked output hid pending-SYN expiry");take(incoming.accept(2,200,2990));require(incoming.hardWakeup()==3001,"Accepted unsent SYN lost original absolute expiry");incoming.tick(3001);require(incoming.observation(2)->stream.phase==st::Phase::Timeout&&!incoming.hardWakeup(),"Unsent inbound handshake did not expire once");
++  st::Manager cancelled(*local.destination(),{});take(cancelled.listen({{6881,80},{*peer.destination()},8},0));cancelled.receive(mux(*request,peer,80,6881),1);take(cancelled.accept(3,201,2));require(cancelled.cancel(3),"Unsent accepted stream cancellation refused");cancelled.tick(4000);require(cancelled.observation(3)->stream.phase==st::Phase::Cancelled&&!cancelled.hardWakeup(),"Later handshake expiry relabelled a cancelled stream");
++  st::Manager idle(*local.destination(),{10,st::IdleAction::Disconnect});establish(idle,local,peer);require(idle.hardWakeup()==13,"Blocked output hid idle disconnect");idle.tick(13);require(idle.observation(1)->stream.phase==st::Phase::IdleTimeout&&!idle.hardWakeup(),"Idle disconnect left an expired timer");
++}
++void preparationCannotExtendAbsoluteHandshake(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  st::Manager prepared(*local.destination(),{});take(prepared.connect(1,100,*peer.destination(),{{9000,80},20,8},110,120));require(prepared.hardWakeup()==120,"Preparation moved API-entry absolute deadline");prepared.tick(119);require(prepared.observation(1)->stream.phase==st::Phase::Connecting,"Preparation budget fired early");prepared.tick(120);require(prepared.observation(1)->stream.phase==st::Phase::Timeout,"Preparation extended handshake lifetime");
++  st::Manager expired(*local.destination(),{});require(!expired.connect(1,100,*peer.destination(),{{9000,80},20,8},120,120)&&expired.observation().streams==0,"Expired preparation acquired a stream slot");require(!expired.connect(1,100,*peer.destination(),{{9000,80},20,8},110,131)&&expired.observation().streams==0,"Oversized absolute budget acquired a stream slot");
++}
++int main(){try{auto local=identity("dsa"),peer=identity("ed25519");inboundCodecAndRole(local,peer);listenerBoundsAndExpiry(local,peer);multiplexFairnessAndMemory(local,peer);finiteWaitAndLongActivity(local,peer);originalOneShotIdleJitter(local,peer);postVerificationFence(local,peer);hardDeadlinesRemainArmedWithoutOutputCredit(local,peer);preparationCannotExtendAbsoluteHandshake(local,peer);std::cout<<"PASS bounded session Streaming manager source-authored controls\n";return 0;}catch(const std::exception& failure){std::cerr<<"FAIL "<<failure.what()<<'\n';return 1;}}

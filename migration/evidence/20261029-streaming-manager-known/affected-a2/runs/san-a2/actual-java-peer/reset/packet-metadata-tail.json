@@ -1,0 +1,150 @@
+{
+    "bridge_failure": "",
+    "capacity": 256,
+    "diagnostic_errors": "0",
+    "dropped_events": "0",
+    "events": [
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "4562",
+            "flags": 1257,
+            "from_port": 9000,
+            "nacks": [
+                "209764049",
+                "1753091967",
+                "3418953194",
+                "2993289648",
+                "241123575",
+                "2111399659",
+                "136949824",
+                "2831240632"
+            ],
+            "payload_bytes": "0",
+            "receive": "3419285584",
+            "send": "0",
+            "sequence": "0",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "4564",
+            "flags": 1257,
+            "from_port": 9000,
+            "nacks": [
+                "209764049",
+                "1753091967",
+                "3418953194",
+                "2993289648",
+                "241123575",
+                "2111399659",
+                "136949824",
+                "2831240632"
+            ],
+            "payload_bytes": "0",
+            "receive": "3419285584",
+            "send": "0",
+            "sequence": "0",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "java-produced",
+            "elapsed_ms": "5036",
+            "flags": 233,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "2598734487",
+            "send": "3419285584",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "5040",
+            "flags": 233,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "2598734487",
+            "send": "3419285584",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "java-produced",
+            "elapsed_ms": "5055",
+            "flags": 12,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "2598734487",
+            "send": "3419285584",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "5061",
+            "flags": 12,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "2598734487",
+            "send": "3419285584",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "5066",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "3419285584",
+            "send": "2598734487",
+            "sequence": "0",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "5072",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "3419285584",
+            "send": "2598734487",
+            "sequence": "0",
+            "to_port": 80
+        }
+    ],
+    "native_teardown": {
+        "channel_deadline_active": false,
+        "channel_failure": 0,
+        "channel_socket_active": false,
+        "channel_state": 4,
+        "elapsed_ms": "5285",
+        "java_available_output_bytes": "0",
+        "java_process_state": 0,
+        "java_queued_input_bytes": "0",
+        "router_available_bytes": "0",
+        "router_queued_bytes": "0",
+        "stream_present": false
+    },
+    "status": "DIAGNOSTIC_METADATA_ONLY"
+}

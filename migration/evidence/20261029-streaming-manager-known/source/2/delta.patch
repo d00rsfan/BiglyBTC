@@ -1,0 +1,16 @@
+--- a/preview/native/tests/azureus_profile_io_tests.cpp
++++ b/preview/native/tests/azureus_profile_io_tests.cpp
+@@ -140,7 +140,12 @@
+     QTest::addColumn<int>("change");QTest::newRow("release-current")<<0;QTest::newRow("disable-current-source")<<1;QTest::newRow("close-and-cancel-queued")<<2;
+   }
+   void realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose(){
+-    QFETCH(int,change);Normal a("127.48.0.1"),b("127.49.0.1",4,udp::RoutingScope::OwnedLoopback);const auto aa=a.owner->allowPeer(b.owner->endpoint()),bb=b.owner->allowPeer(a.owner->endpoint());QVERIFY(aa&&bb);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*aa)&&successful(*b.owner,*bb),3000);
++    QFETCH(int,change);Normal a("127.48.0.1"),b("127.49.0.1",4,udp::RoutingScope::OwnedLoopback);
++    // A is ExactPeers: acknowledge its real admission BEFORE B can send the
++    // newly required NodeAdded PING. Independent owner threads have no shared
++    // command-delivery order, even if both calls originate on this test thread.
++    const auto aa=a.owner->allowPeer(b.owner->endpoint());QVERIFY(aa);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*aa),3000);
++    const auto bb=b.owner->allowPeer(a.owner->endpoint());QVERIFY(bb);QTRY_VERIFY_WITH_TIMEOUT(successful(*b.owner,*bb),3000);
+     // Normal Known import now performs its original actual NodeAdded PING.
+     // Settle that real reply/permit first, so this gate still measures exactly
+     // the twelve subsequent held normal frames and the same eight IO slots.

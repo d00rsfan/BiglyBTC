@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ORIGINAL_MANAGER_AND_ROUTER_ACCEPTANCE",
+  "native_actor": {
+    "manifest": "/home/yurii/Java/BiglyBT/build/i2p-streaming-20261029/manifest.json",
+    "sha256": "757cfa578b67533591a3dbc6880345d651708d8e0b79b25531458def13d216b7"
+  },
+  "cmake_append": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/CMake.fragment",
+    "sha256": "af4064cafbe22ced315042bb8e7ff56bd89af56c8169285d665633be3ff193be",
+    "location": "preview/native/tests/CMakeLists.txt; append after actor targets",
+    "target": "biglybtc-i2p-streaming-interop-tests",
+    "ctest": "i2p-original-streaming-peer",
+    "timeout_seconds": 480,
+    "explicit_opt_in": "BIGLYBTC_I2P_STREAMING_JAVA_ACCEPTANCE"
+  },
+  "controlled_cases": [
+    "http",
+    "loss-reorder",
+    "queue-backpressure",
+    "reset",
+    "local-cancel-late-payload-before-updated"
+  ],
+  "actual_router_positive": {
+    "entry": "real-router/run.py",
+    "java_main": "RouterStreaming",
+    "probe": "biglybtc-i2p-real-router-streaming-probe",
+    "required_future_root_result_status": "PASS_ROUTING_STREAMING_COHORT",
+    "parent_router_source_unchanged": true,
+    "fence_ast_unchanged": true,
+    "new_execution": false
+  },
+  "boundaries": [
+    "Actual modified b086 Streaming manager; no whole modified-source equivalence.",
+    "Protocol-session adapter has no router/tunnel authority; it forwards real packets only.",
+    "New real-router positive is pending; parent actual router PASS is separate immutable evidence.",
+    "Explicit full peer Destination, current owned signed LS2, no lookup/public/default/Host backend activation.",
+    "Native stream deadline60s; protocol RX/TX65536; signed actual choke/unchoke, exact bytes, real EOF and reset required.",
+    "Only synthetic public test keys and owned fresh router keys; never actual profile sources."
+  ],
+  "source_checks": [
+    "Python AST and exact inherited fence AST checked.",
+    "Official34 file SHA/Git blob bytes verified against retained objects; modified13 class images pinned.",
+    "No javac/C++ compilation, subjects, namespaces, endpoints or runtime tests by author."
+  ],
+  "compiler_execution": false,
+  "runtime_execution": false,
+  "native_mutated": false,
+  "provider_mutated": false,
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/manifest.json",
+    "sha256": "537ecfe54563417a250a3e79f174d237eacfa53ac4b08abf342921c9be063cfd"
+  },
+  "source_paths": {
+    "preview/native/tests/i2p_streaming_interop_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/amendments/trailing-peer-stderr/staging/preview/native/tests/i2p_streaming_interop_tests.cpp",
+      "after_sha256": "11b51b87a15b6518b2d89849242f42c375cae1fce8e2f0ac5f042bd81557f529"
+    }
+  },
+  "effective_artifacts": {
+    "CMake.fragment": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/CMake.fragment",
+      "sha256": "af4064cafbe22ced315042bb8e7ff56bd89af56c8169285d665633be3ff193be"
+    },
+    "README.md": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/README.md",
+      "sha256": "680e6049ebf3a631aa1b6cb2ed3e40b9fa951bb7038f0636efe06629190953c0"
+    },
+    "StreamingPeer.java": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/StreamingPeer.java",
+      "sha256": "b09fde915825727452c33d6efb129aa990fc4074f5ba8f6fe65a34d664d3dfe1"
+    },
+    "real-router/CMakeLists.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/real-router/CMakeLists.txt",
+      "sha256": "53a0fbf635eeff53b8a9fd1e4c77ca2cdaec6e06b0cf561eacb3ab63407d201a"
+    },
+    "real-router/README.md": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/real-router/README.md",
+      "sha256": "d123ea5950a4b703265f096fe219eb3ffd94d51ca9e15906077e8ddf75416db8"
+    },
+    "real-router/RouterStreaming.java": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/real-router/RouterStreaming.java",
+      "sha256": "4463f932879128fa19f4917ee62c81d7744b1f2ddb8793c1564c95d13b76ba3d"
+    },
+    "real-router/parent-runner.delta.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/real-router/parent-runner.delta.patch",
+      "sha256": "43990d3c468e3288248ee5be35423d4b8dad758a2af2581c19402f59b61bbe2b"
+    },
+    "real-router/probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/real-router/probe.cpp",
+      "sha256": "c8af75a361811d0ab7a0a55329a33c7ad7d38133cdf7e9622c3df9b366b395ab"
+    },
+    "real-router/run.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/real-router/run.py",
+      "sha256": "88a9ef531268b01d33db322de72d5ef1f2a6432668af4dd4602e4c7986dcd818"
+    },
+    "real-router/source-pins.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/real-router/source-pins.json",
+      "sha256": "e5d9222cd8a49d53e1fdc4c70bb81c524faad0a26596c7b528da98773d68e09c"
+    },
+    "source-pins.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/source-pins.json",
+      "sha256": "e305318db9b88096dae6d46e9db727d1030bc1430b9691e3274d352c4294a507"
+    },
+    "staging/preview/native/tests/i2p_streaming_interop_tests.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/amendments/trailing-peer-stderr/staging/preview/native/tests/i2p_streaming_interop_tests.cpp",
+      "sha256": "11b51b87a15b6518b2d89849242f42c375cae1fce8e2f0ac5f042bd81557f529"
+    },
+    "changes.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/amendments/trailing-peer-stderr/changes.patch",
+      "sha256": "ae4191801c0f70500eae9914af5646afd0ed959ecd3f7d486603eb8135871f42"
+    }
+  },
+  "artifacts_sha256": {
+    "ADOPTION.md": "408bc036894d1a2f156ecec74de6c2ab0fa6e7b0a9cb214a7d0d60171c39eae2",
+    "changes.patch": "ae4191801c0f70500eae9914af5646afd0ed959ecd3f7d486603eb8135871f42",
+    "delta.patch": "7b8b0a9ffedfbe24331463d61187bb19ae57e84c0e8d0603ae7916dadcbb8603",
+    "staging/preview/native/tests/i2p_streaming_interop_tests.cpp": "11b51b87a15b6518b2d89849242f42c375cae1fce8e2f0ac5f042bd81557f529"
+  },
+  "delta": "Only bounded final stderr drain after owned Java join, before diagnostic persistence."
+}

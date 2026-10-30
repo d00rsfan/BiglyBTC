@@ -1,0 +1,493 @@
+Compiled from "Log.java"
+public class net.i2p.util.Log {
+  private final java.lang.Class<?> _class;
+
+  private final java.lang.String _className;
+
+  private final java.lang.String _name;
+
+  private int _minPriority;
+
+  private final net.i2p.util.Log$LogScope _scope;
+
+  private final net.i2p.util.LogManager _manager;
+
+  public static final int DEBUG = 10;
+
+  public static final int INFO = 20;
+
+  public static final int WARN = 30;
+
+  public static final int ERROR = 40;
+
+  public static final int CRIT = 50;
+
+  public static final java.lang.String STR_DEBUG = "DEBUG";
+
+  public static final java.lang.String STR_INFO = "INFO";
+
+  public static final java.lang.String STR_WARN = "WARN";
+
+  public static final java.lang.String STR_ERROR = "ERROR";
+
+  public static final java.lang.String STR_CRIT = "CRIT";
+
+  public static int getLevel(java.lang.String);
+    Code:
+         0: aload_0
+         1: ifnonnull     7
+         4: bipush        40
+         6: ireturn
+         7: aload_0
+         8: getstatic     #42                 // Field java/util/Locale.US:Ljava/util/Locale;
+        11: invokevirtual #48                 // Method java/lang/String.toUpperCase:(Ljava/util/Locale;)Ljava/lang/String;
+        14: astore_0
+        15: ldc           #30                 // String DEBUG
+        17: aload_0
+        18: invokevirtual #54                 // Method java/lang/String.startsWith:(Ljava/lang/String;)Z
+        21: ifeq          27
+        24: bipush        10
+        26: ireturn
+        27: ldc           #32                 // String INFO
+        29: aload_0
+        30: invokevirtual #54                 // Method java/lang/String.startsWith:(Ljava/lang/String;)Z
+        33: ifeq          39
+        36: bipush        20
+        38: ireturn
+        39: ldc           #34                 // String WARN
+        41: aload_0
+        42: invokevirtual #54                 // Method java/lang/String.startsWith:(Ljava/lang/String;)Z
+        45: ifeq          51
+        48: bipush        30
+        50: ireturn
+        51: ldc           #36                 // String ERROR
+        53: aload_0
+        54: invokevirtual #54                 // Method java/lang/String.startsWith:(Ljava/lang/String;)Z
+        57: ifeq          63
+        60: bipush        40
+        62: ireturn
+        63: ldc           #38                 // String CRIT
+        65: aload_0
+        66: invokevirtual #54                 // Method java/lang/String.startsWith:(Ljava/lang/String;)Z
+        69: ifeq          75
+        72: bipush        50
+        74: ireturn
+        75: bipush        40
+        77: ireturn
+
+  public static java.lang.String toLevelString(int);
+    Code:
+         0: iload_0
+         1: lookupswitch  { // 5
+                      10: 52
+                      20: 55
+                      30: 58
+                      40: 61
+                      50: 64
+                 default: 67
+            }
+        52: ldc           #30                 // String DEBUG
+        54: areturn
+        55: ldc           #32                 // String INFO
+        57: areturn
+        58: ldc           #34                 // String WARN
+        60: areturn
+        61: ldc           #36                 // String ERROR
+        63: areturn
+        64: ldc           #38                 // String CRIT
+        66: areturn
+        67: iload_0
+        68: bipush        50
+        70: if_icmple     78
+        73: ldc           #38                 // String CRIT
+        75: goto          80
+        78: ldc           #30                 // String DEBUG
+        80: areturn
+
+  public net.i2p.util.Log(java.lang.Class<?>);
+    Code:
+         0: aload_0
+         1: invokestatic  #67                 // Method net/i2p/I2PAppContext.getGlobalContext:()Lnet/i2p/I2PAppContext;
+         4: invokevirtual #73                 // Method net/i2p/I2PAppContext.logManager:()Lnet/i2p/util/LogManager;
+         7: aload_1
+         8: aconst_null
+         9: invokespecial #77                 // Method "<init>":(Lnet/i2p/util/LogManager;Ljava/lang/Class;Ljava/lang/String;)V
+        12: aload_0
+        13: getfield      #80                 // Field _manager:Lnet/i2p/util/LogManager;
+        16: aload_0
+        17: invokevirtual #82                 // Method net/i2p/util/LogManager.addLog:(Lnet/i2p/util/Log;)V
+        20: return
+
+  public net.i2p.util.Log(java.lang.String);
+    Code:
+         0: aload_0
+         1: invokestatic  #67                 // Method net/i2p/I2PAppContext.getGlobalContext:()Lnet/i2p/I2PAppContext;
+         4: invokevirtual #73                 // Method net/i2p/I2PAppContext.logManager:()Lnet/i2p/util/LogManager;
+         7: aconst_null
+         8: aload_1
+         9: invokespecial #77                 // Method "<init>":(Lnet/i2p/util/LogManager;Ljava/lang/Class;Ljava/lang/String;)V
+        12: aload_0
+        13: getfield      #80                 // Field _manager:Lnet/i2p/util/LogManager;
+        16: aload_0
+        17: invokevirtual #82                 // Method net/i2p/util/LogManager.addLog:(Lnet/i2p/util/Log;)V
+        20: return
+
+  net.i2p.util.Log(net.i2p.util.LogManager, java.lang.Class<?>);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: aload_2
+         3: aconst_null
+         4: invokespecial #77                 // Method "<init>":(Lnet/i2p/util/LogManager;Ljava/lang/Class;Ljava/lang/String;)V
+         7: return
+
+  net.i2p.util.Log(net.i2p.util.LogManager, java.lang.String);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: aconst_null
+         3: aload_2
+         4: invokespecial #77                 // Method "<init>":(Lnet/i2p/util/LogManager;Ljava/lang/Class;Ljava/lang/String;)V
+         7: return
+
+  net.i2p.util.Log(net.i2p.util.LogManager, java.lang.Class<?>, java.lang.String);
+    Code:
+         0: aload_0
+         1: invokespecial #99                 // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: aload_1
+         6: putfield      #80                 // Field _manager:Lnet/i2p/util/LogManager;
+         9: aload_0
+        10: aload_2
+        11: putfield      #102                // Field _class:Ljava/lang/Class;
+        14: aload_0
+        15: aload_2
+        16: ifnull        26
+        19: aload_2
+        20: invokevirtual #104                // Method java/lang/Class.getName:()Ljava/lang/String;
+        23: goto          27
+        26: aconst_null
+        27: putfield      #110                // Field _className:Ljava/lang/String;
+        30: aload_0
+        31: aload_3
+        32: putfield      #112                // Field _name:Ljava/lang/String;
+        35: aload_0
+        36: bipush        10
+        38: putfield      #114                // Field _minPriority:I
+        41: aload_0
+        42: new           #116                // class net/i2p/util/Log$LogScope
+        45: dup
+        46: aload_3
+        47: aload_2
+        48: invokespecial #118                // Method net/i2p/util/Log$LogScope."<init>":(Ljava/lang/String;Ljava/lang/Class;)V
+        51: putfield      #121                // Field _scope:Lnet/i2p/util/Log$LogScope;
+        54: return
+
+  public void log(int, java.lang.String);
+    Code:
+         0: iload_1
+         1: aload_0
+         2: getfield      #114                // Field _minPriority:I
+         5: if_icmplt     39
+         8: aload_0
+         9: getfield      #80                 // Field _manager:Lnet/i2p/util/LogManager;
+        12: new           #125                // class net/i2p/util/LogRecord
+        15: dup
+        16: aload_0
+        17: getfield      #102                // Field _class:Ljava/lang/Class;
+        20: aload_0
+        21: getfield      #112                // Field _name:Ljava/lang/String;
+        24: invokestatic  #127                // Method java/lang/Thread.currentThread:()Ljava/lang/Thread;
+        27: invokevirtual #133                // Method java/lang/Thread.getName:()Ljava/lang/String;
+        30: iload_1
+        31: aload_2
+        32: aconst_null
+        33: invokespecial #134                // Method net/i2p/util/LogRecord."<init>":(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/Throwable;)V
+        36: invokevirtual #137                // Method net/i2p/util/LogManager.addRecord:(Lnet/i2p/util/LogRecord;)V
+        39: return
+
+  public void log(int, java.lang.String, java.lang.Throwable);
+    Code:
+         0: iload_1
+         1: aload_0
+         2: getfield      #114                // Field _minPriority:I
+         5: if_icmplt     39
+         8: aload_0
+         9: getfield      #80                 // Field _manager:Lnet/i2p/util/LogManager;
+        12: new           #125                // class net/i2p/util/LogRecord
+        15: dup
+        16: aload_0
+        17: getfield      #102                // Field _class:Ljava/lang/Class;
+        20: aload_0
+        21: getfield      #112                // Field _name:Ljava/lang/String;
+        24: invokestatic  #127                // Method java/lang/Thread.currentThread:()Ljava/lang/Thread;
+        27: invokevirtual #133                // Method java/lang/Thread.getName:()Ljava/lang/String;
+        30: iload_1
+        31: aload_2
+        32: aload_3
+        33: invokespecial #134                // Method net/i2p/util/LogRecord."<init>":(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/Throwable;)V
+        36: invokevirtual #137                // Method net/i2p/util/LogManager.addRecord:(Lnet/i2p/util/LogRecord;)V
+        39: return
+
+  public void logAlways(int, java.lang.String);
+    Code:
+         0: aload_0
+         1: getfield      #80                 // Field _manager:Lnet/i2p/util/LogManager;
+         4: new           #125                // class net/i2p/util/LogRecord
+         7: dup
+         8: aload_0
+         9: getfield      #102                // Field _class:Ljava/lang/Class;
+        12: aload_0
+        13: getfield      #112                // Field _name:Ljava/lang/String;
+        16: invokestatic  #127                // Method java/lang/Thread.currentThread:()Ljava/lang/Thread;
+        19: invokevirtual #133                // Method java/lang/Thread.getName:()Ljava/lang/String;
+        22: iload_1
+        23: aload_2
+        24: aconst_null
+        25: invokespecial #134                // Method net/i2p/util/LogRecord."<init>":(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/Throwable;)V
+        28: invokevirtual #137                // Method net/i2p/util/LogManager.addRecord:(Lnet/i2p/util/LogRecord;)V
+        31: return
+
+  public void debug(java.lang.String);
+    Code:
+         0: aload_0
+         1: bipush        10
+         3: aload_1
+         4: invokevirtual #148                // Method log:(ILjava/lang/String;)V
+         7: return
+
+  public void debug(java.lang.String, java.lang.Throwable);
+    Code:
+         0: aload_0
+         1: bipush        10
+         3: aload_1
+         4: aload_2
+         5: invokevirtual #151                // Method log:(ILjava/lang/String;Ljava/lang/Throwable;)V
+         8: return
+
+  public void info(java.lang.String);
+    Code:
+         0: aload_0
+         1: bipush        20
+         3: aload_1
+         4: invokevirtual #148                // Method log:(ILjava/lang/String;)V
+         7: return
+
+  public void info(java.lang.String, java.lang.Throwable);
+    Code:
+         0: aload_0
+         1: bipush        20
+         3: aload_1
+         4: aload_2
+         5: invokevirtual #151                // Method log:(ILjava/lang/String;Ljava/lang/Throwable;)V
+         8: return
+
+  public void warn(java.lang.String);
+    Code:
+         0: aload_0
+         1: bipush        30
+         3: aload_1
+         4: invokevirtual #148                // Method log:(ILjava/lang/String;)V
+         7: return
+
+  public void warn(java.lang.String, java.lang.Throwable);
+    Code:
+         0: aload_0
+         1: bipush        30
+         3: aload_1
+         4: aload_2
+         5: invokevirtual #151                // Method log:(ILjava/lang/String;Ljava/lang/Throwable;)V
+         8: return
+
+  public void error(java.lang.String);
+    Code:
+         0: aload_0
+         1: bipush        40
+         3: aload_1
+         4: invokevirtual #148                // Method log:(ILjava/lang/String;)V
+         7: return
+
+  public void error(java.lang.String, java.lang.Throwable);
+    Code:
+         0: aload_0
+         1: bipush        40
+         3: aload_1
+         4: aload_2
+         5: invokevirtual #151                // Method log:(ILjava/lang/String;Ljava/lang/Throwable;)V
+         8: return
+
+  public int getMinimumPriority();
+    Code:
+         0: aload_0
+         1: getfield      #114                // Field _minPriority:I
+         4: ireturn
+
+  public void setMinimumPriority(int);
+    Code:
+         0: aload_0
+         1: iload_1
+         2: putfield      #114                // Field _minPriority:I
+         5: return
+
+  public boolean shouldLog(int);
+    Code:
+         0: iload_1
+         1: aload_0
+         2: getfield      #114                // Field _minPriority:I
+         5: if_icmplt     10
+         8: iconst_1
+         9: ireturn
+        10: iconst_0
+        11: ireturn
+
+  public boolean shouldDebug();
+    Code:
+         0: bipush        10
+         2: aload_0
+         3: getfield      #114                // Field _minPriority:I
+         6: if_icmplt     11
+         9: iconst_1
+        10: ireturn
+        11: iconst_0
+        12: ireturn
+
+  public boolean shouldInfo();
+    Code:
+         0: bipush        20
+         2: aload_0
+         3: getfield      #114                // Field _minPriority:I
+         6: if_icmplt     11
+         9: iconst_1
+        10: ireturn
+        11: iconst_0
+        12: ireturn
+
+  public boolean shouldWarn();
+    Code:
+         0: bipush        30
+         2: aload_0
+         3: getfield      #114                // Field _minPriority:I
+         6: if_icmplt     11
+         9: iconst_1
+        10: ireturn
+        11: iconst_0
+        12: ireturn
+
+  public boolean shouldError();
+    Code:
+         0: bipush        40
+         2: aload_0
+         3: getfield      #114                // Field _minPriority:I
+         6: if_icmplt     11
+         9: iconst_1
+        10: ireturn
+        11: iconst_0
+        12: ireturn
+
+  public void logCloseLoop(java.lang.Object...);
+    Code:
+         0: aload_0
+         1: bipush        10
+         3: aload_1
+         4: invokevirtual #169                // Method logCloseLoop:(I[Ljava/lang/Object;)V
+         7: return
+
+  public void logCloseLoop(int, java.lang.Object...);
+    Code:
+         0: aload_0
+         1: iload_1
+         2: invokevirtual #174                // Method shouldLog:(I)Z
+         5: ifne          9
+         8: return
+         9: new           #176                // class java/lang/StringBuilder
+        12: dup
+        13: invokespecial #178                // Method java/lang/StringBuilder."<init>":()V
+        16: astore_3
+        17: aload_3
+        18: ldc           #179                // String close() loop in
+        20: invokevirtual #181                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        23: pop
+        24: aload_2
+        25: dup
+        26: astore        7
+        28: arraylength
+        29: istore        6
+        31: iconst_0
+        32: istore        5
+        34: goto          64
+        37: aload         7
+        39: iload         5
+        41: aaload
+        42: astore        4
+        44: aload_3
+        45: ldc           #185                // String
+        47: invokevirtual #181                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        50: pop
+        51: aload_3
+        52: aload         4
+        54: invokestatic  #187                // Method java/lang/String.valueOf:(Ljava/lang/Object;)Ljava/lang/String;
+        57: invokevirtual #181                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        60: pop
+        61: iinc          5, 1
+        64: iload         5
+        66: iload         6
+        68: if_icmplt     37
+        71: new           #191                // class java/lang/Exception
+        74: dup
+        75: ldc           #193                // String check stack trace
+        77: invokespecial #195                // Method java/lang/Exception."<init>":(Ljava/lang/String;)V
+        80: astore        4
+        82: aload_0
+        83: iload_1
+        84: aload_3
+        85: invokevirtual #197                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        88: aload         4
+        90: invokevirtual #151                // Method log:(ILjava/lang/String;Ljava/lang/Throwable;)V
+        93: return
+
+  public java.lang.String getName();
+    Code:
+         0: aload_0
+         1: getfield      #110                // Field _className:Ljava/lang/String;
+         4: ifnull        12
+         7: aload_0
+         8: getfield      #110                // Field _className:Ljava/lang/String;
+        11: areturn
+        12: aload_0
+        13: getfield      #112                // Field _name:Ljava/lang/String;
+        16: areturn
+
+  public java.lang.Object getScope();
+    Code:
+         0: aload_0
+         1: getfield      #121                // Field _scope:Lnet/i2p/util/Log$LogScope;
+         4: areturn
+
+  static java.lang.String getScope(java.lang.String, java.lang.Class<?>);
+    Code:
+         0: aload_0
+         1: ifnonnull     11
+         4: aload_1
+         5: ifnonnull     11
+         8: ldc           #211                // String f00
+        10: areturn
+        11: aload_1
+        12: ifnonnull     17
+        15: aload_0
+        16: areturn
+        17: aload_0
+        18: ifnonnull     26
+        21: aload_1
+        22: invokevirtual #104                // Method java/lang/Class.getName:()Ljava/lang/String;
+        25: areturn
+        26: new           #176                // class java/lang/StringBuilder
+        29: dup
+        30: aload_0
+        31: invokestatic  #187                // Method java/lang/String.valueOf:(Ljava/lang/Object;)Ljava/lang/String;
+        34: invokespecial #213                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        37: aload_1
+        38: invokevirtual #104                // Method java/lang/Class.getName:()Ljava/lang/String;
+        41: invokevirtual #181                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        44: invokevirtual #197                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        47: areturn
+}

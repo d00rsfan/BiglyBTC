@@ -1,0 +1,306 @@
+{
+  "status": "SOURCE_ONLY_PROPOSAL_NO_IMPLEMENTATION_OR_SUBJECTS",
+  "official_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "materialization": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/materialization-r2.json",
+    "sha256": "3ec83333d2b6cf847deae209d5150f77487bf8aa6a99dc3276208b5860963167"
+  },
+  "official_sources": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/PacketLocal.java",
+      "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/PacketLocal.java",
+      "git_blob": "e03075a08fd9c6e0a85688c4c38a0b847559a47c",
+      "sha256": "620447a2ed621d09f702bbbf0e3187d35eb8cd5d43edfa76e3da81fe219a15d1",
+      "sections": "140-161 explicit NACK threshold/anti-repeat"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/PacketQueue.java",
+      "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/PacketQueue.java",
+      "git_blob": "dcbdb300bbc65297cd4425ff2b48c9dd2a621d39",
+      "sha256": "31a9ca981486582b18aba0a7360c6a33ed6eb1284ada048f3beaaaa6a95f9ebf",
+      "sections": "87-204 dispatch/expiry; actual packet timing authority"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/Connection.java",
+      "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/Connection.java",
+      "git_blob": "e0b46214bc2e085835d66185e5fcd8d071edde39",
+      "sha256": "51c5a7cd753fb16b60eb1835d8ee24f3446ea79d742a03e9ebd7b71e210e3052",
+      "sections": "101-121 bounds;198-281 send credit;498-607 selective ACK/NACK;1091-1138 choke;1443-1588 timeout;1614-1760 fast retransmit"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionOptions.java",
+      "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionOptions.java",
+      "git_blob": "9b81a286ea29253387945d18baed57de336db7d5",
+      "sha256": "95b2d48a3ed14e4e73babc2c73798789f65e6c1046e43e2abc6d849c405150f5",
+      "sections": "85-102 RTO/options;134-144 defaults;592-604 window clamp;673-750 RTO/RTT;845-851 configured max floor2/ceiling256"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionPacketHandler.java",
+      "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/ConnectionPacketHandler.java",
+      "git_blob": "72ade38f0bf0e0dfecc29938eaec5322a816be68",
+      "sha256": "dd2948c8b75791fe9a68d23aac58db8390398c54ab44b8a191850bb512bb58ab",
+      "sections": "31 slow-start ceiling;128-160 choke;325-514 ACK sampling/window growth"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/MessageInputStream.java",
+      "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/MessageInputStream.java",
+      "git_blob": "eed12b44444c01963ff817669a0a1912aa168118",
+      "sha256": "e9125cb3ee13818b6c829fd623606ad8a0a09f9cdec09f8af002ea27296262f1",
+      "sections": "receiver out-of-order/window/choke state"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-proposal-20261029/official-source/apps/streaming/java/src/net/i2p/client/streaming/impl/MessageOutputStream.java",
+      "upstream_path": "apps/streaming/java/src/net/i2p/client/streaming/impl/MessageOutputStream.java",
+      "git_blob": "f66a03cfbd244e21fd99f96a9406bbbb80292f22",
+      "sha256": "3323209d479d93a3b80031d64bb6b812e5afaacfa625d8a2e915ed1d607313c2",
+      "sections": "bounded segmentation and writer backpressure"
+    }
+  ],
+  "modified_jar": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+    "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+    "classes": {
+      "net/i2p/client/streaming/impl/Connection.class": {
+        "sha256": "9ea76bd1420685ba0758923c4ea9f774afe98f982ae8eeeaf80dbf99faf75452",
+        "bytes": 35076,
+        "constant_fields": {
+          "MAX_RESEND_DELAY": 45000,
+          "MIN_RESEND_DELAY": 100,
+          "DISCONNECT_TIMEOUT": 300000,
+          "DEFAULT_CONNECT_TIMEOUT": 60000,
+          "MAX_CONNECT_TIMEOUT": 120000,
+          "MAX_WINDOW_SIZE": 128,
+          "UNCHOKES_TO_SEND": 8,
+          "MAX_RTX": 16,
+          "FAST_RETRANSMIT_THRESHOLD": 3
+        },
+        "selected_methods": {
+          "packetSendChoke(J)Z": {
+            "code_sha256": "44037d4792d2761f7927445bfb945c07305f23d26204e38942bb0b3326855ef5",
+            "code_bytes": 627
+          },
+          "ackPackets(J[J)Ljava/util/List;": {
+            "code_sha256": "5b96861488acc837cefdd27a9865f65da66fff0cd76ab040cd4d77bcc2d78454",
+            "code_bytes": 664
+          },
+          "setChoked(Z)V": {
+            "code_sha256": "b5412d2c01c0183d2bf5c37718645aaa7dc96dfa2483f89cadfe0d73c0bc8f2c",
+            "code_bytes": 74
+          }
+        }
+      },
+      "net/i2p/client/streaming/impl/ConnectionOptions.class": {
+        "sha256": "8fb584bd810befdbc64e8256790a5f86024aeb01c413ea0814d15c8c559cf2be",
+        "bytes": 20200,
+        "constant_fields": {
+          "INACTIVITY_ACTION_NOOP": 0,
+          "INACTIVITY_ACTION_DISCONNECT": 1,
+          "INACTIVITY_ACTION_SEND": 2,
+          "TCP_ALPHA": 0.125,
+          "TCP_BETA": 0.25,
+          "TCP_KAPPA": 4.0,
+          "PROP_INITIAL_RTO": 66,
+          "INITIAL_RTO": 9000,
+          "PROP_CONNECT_DELAY": 71,
+          "PROP_MAX_MESSAGE_SIZE": 74,
+          "PROP_MAX_RESENDS": 77,
+          "PROP_INITIAL_RESEND_DELAY": 80,
+          "PROP_INITIAL_ACK_DELAY": 83,
+          "PROP_INITIAL_WINDOW_SIZE": 86,
+          "PROP_INITIAL_RECEIVE_WINDOW": 89,
+          "PROP_INACTIVITY_TIMEOUT": 92,
+          "PROP_INACTIVITY_ACTION": 95,
+          "PROP_MAX_WINDOW_SIZE": 98,
+          "PROP_CONGESTION_AVOIDANCE_GROWTH_RATE_FACTOR": 101,
+          "PROP_SLOW_START_GROWTH_RATE_FACTOR": 104,
+          "PROP_ANSWER_PINGS": 107,
+          "PROP_ENABLE_ACCESS_LIST": 110,
+          "PROP_ENABLE_BLACKLIST": 113,
+          "PROP_ACCESS_LIST": 116,
+          "PROP_MAX_CONNS_MIN": 119,
+          "PROP_MAX_CONNS_HOUR": 122,
+          "PROP_MAX_CONNS_DAY": 125,
+          "PROP_MAX_TOTAL_CONNS_MIN": 128,
+          "PROP_MAX_TOTAL_CONNS_HOUR": 131,
+          "PROP_MAX_TOTAL_CONNS_DAY": 134,
+          "PROP_ENFORCE_PROTO": 137,
+          "PROP_MAX_STREAMS": 140,
+          "PROP_DISABLE_REJ_LOG": 143,
+          "PROP_LIMIT_ACTION": 146,
+          "PROP_TAGS_TO_SEND": 149,
+          "PROP_TAG_THRESHOLD": 152,
+          "INITIAL_WINDOW_SIZE": 3,
+          "DEFAULT_MAX_SENDS": 8,
+          "DEFAULT_INITIAL_RTT": 8000,
+          "MAX_RTT": 60000,
+          "DEFAULT_INITIAL_ACK_DELAY": 500,
+          "MIN_WINDOW_SIZE": 1,
+          "DEFAULT_ANSWER_PINGS": 1,
+          "DEFAULT_INACTIVITY_TIMEOUT": 90000,
+          "DEFAULT_INACTIVITY_ACTION": 2,
+          "DEFAULT_CONGESTION_AVOIDANCE_GROWTH_RATE_FACTOR": 1,
+          "DEFAULT_SLOW_START_GROWTH_RATE_FACTOR": 1,
+          "DEFAULT_LIMIT_ACTION": 172,
+          "DEFAULT_TAGS_TO_SEND": 40,
+          "DEFAULT_TAG_THRESHOLD": 30,
+          "DEFAULT_ENFORCE_PROTO": 1,
+          "DEFAULT_MAX_MESSAGE_SIZE": 1730,
+          "MIN_MESSAGE_SIZE": 512,
+          "DEFAULT_MAX_MESSAGE_SIZE_RATCHET": 1812
+        },
+        "selected_methods": {
+          "setWindowSize(I)V": {
+            "code_sha256": "1749270c88cf3111021c0b1cba3e231509d5dabd3c126ac3d3a0ff7ea9d4ae4f",
+            "code_bytes": 32
+          },
+          "computeRTO()V": {
+            "code_sha256": "afd3733265fec30b8db8a9bc8b8fae8b1a3c5911ef92a6c129118b60834f2951",
+            "code_bytes": 116
+          },
+          "doubleRTO()I": {
+            "code_sha256": "7566cb47b18c1111c4e4259d972e6da252491fa0c61f322d465a845496387aa5",
+            "code_bytes": 32
+          },
+          "updateRTT(I)V": {
+            "code_sha256": "acea12d2fa57dbef949beb26cf8d6f5533c71a5672db3c160a3bb07dac7469bc",
+            "code_bytes": 135
+          }
+        }
+      },
+      "net/i2p/client/streaming/impl/ConnectionPacketHandler.class": {
+        "sha256": "58ca73acac4b2de0a0a17ef856e6c75f58d9285c73c930abecc7b16d458138e6",
+        "bytes": 17179,
+        "constant_fields": {
+          "MAX_SLOW_START_WINDOW": 64,
+          "IMMEDIATE_ACK_DELAY": 120,
+          "MAX_INITIAL_PACKETS": 3
+        },
+        "selected_methods": {
+          "ack(Lnet/i2p/client/streaming/impl/Connection;J[JLnet/i2p/client/streaming/impl/Packet;ZZ)Z": {
+            "code_sha256": "534233031155ec9dc19b40e8136634d205f9f4a2a45740890e5f2eeefd37f4f3",
+            "code_bytes": 677
+          },
+          "adjustWindow(Lnet/i2p/client/streaming/impl/Connection;ZJIIZ)Z": {
+            "code_sha256": "a0aab55f3534e97af5fd8ef0ffe948fc8e6e675127fdbe6d7913305d4e37edb6",
+            "code_bytes": 604
+          }
+        }
+      },
+      "net/i2p/client/streaming/impl/PacketLocal.class": {
+        "sha256": "d9b1b3b93c070300caf918dffd51c06acdbf29e7e0a7b7b0bea78b25f92005ab",
+        "bytes": 11836,
+        "constant_fields": {},
+        "selected_methods": {
+          "incrementNACKs()V": {
+            "code_sha256": "e6de439ed2ef667d0df9cfebc269c79e96558453f85a6e633f1cb87d9b974651",
+            "code_bytes": 263
+          }
+        }
+      },
+      "net/i2p/client/streaming/impl/Connection$RetransmitEvent.class": {
+        "sha256": "1dcd0af811f0947e0b0751ecd5e291fc76926c734c2a9862ec579112f6d5dffa",
+        "bytes": 7545,
+        "constant_fields": {},
+        "selected_methods": {
+          "timeReached()V": {
+            "code_sha256": "69705ca70cdf2340df0e922160e2edf7ec2cbda7a79c5b2da27c07a28ce21297",
+            "code_bytes": 1159
+          }
+        }
+      },
+      "net/i2p/client/streaming/impl/Connection$ResendPacketEvent.class": {
+        "sha256": "880ecf23cbe44c6c29faa4fc466f18c7e077fc38c291e14d49d76d99a85fa883",
+        "bytes": 7176,
+        "constant_fields": {},
+        "selected_methods": {
+          "retransmit()Z": {
+            "code_sha256": "dc420a2f9ff67c2059d7fe03a947d9afe9a07a9e1189d395627a080252489372",
+            "code_bytes": 1113
+          }
+        }
+      },
+      "net/i2p/client/streaming/impl/SimpleBandwidthEstimator.class": {
+        "sha256": "2e236274790360b4b4f818217fc5af289c802562942d7d515ca1128ecd19280f",
+        "bytes": 3858,
+        "constant_fields": {
+          "DECAY_FACTOR": 8,
+          "WESTWOOD_RTT_MIN": 500
+        },
+        "selected_methods": {
+          "addSample(I)V": {
+            "code_sha256": "ee1af1a063e5153bedb937fb14b5d19a5da5b1c5ad72a4a059e371528a3fcd0d",
+            "code_bytes": 158
+          },
+          "getBandwidthEstimate()F": {
+            "code_sha256": "1095e7e4c1eea550eab26b1f1f8af4aabf2ff6e288e918ebe1d57bac0df8ae82",
+            "code_bytes": 46
+          },
+          "computeBWE(J)F": {
+            "code_sha256": "2a702eb596f2c2711205fed36409ee5dd4633d74f188489f38cf3f30cf578eb2",
+            "code_bytes": 28
+          }
+        }
+      }
+    },
+    "interpretation": "Selected actual classfile method Code hashes and ConstantValue fields read directly from ZIP; no JVM or class execution, and no whole official/modified source equivalence claim."
+  },
+  "native_stream_byte_preimages": {
+    "preview/native/services/i2p_streaming/stream.hpp": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/services/i2p_streaming/stream.hpp",
+      "sha256": "b2dfcda91d55fb520853d02c7872650b6e6b56a5fa79e69c63142ddc73a3bf99"
+    },
+    "preview/native/services/i2p_streaming/stream.cpp": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/services/i2p_streaming/stream.cpp",
+      "sha256": "794bcd4e6ae32755c69f10d5f4e8ba00708b8de7bc4a7afc0fca8db6b149f3d6"
+    },
+    "preview/native/services/i2cp_channel/streaming.inc": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_channel/streaming.inc",
+      "sha256": "3b846b3eff75034467f6db1be28f7ca141f55e76e63c453d2bc5b67ebd64f3ff"
+    },
+    "preview/native/tests/i2p_streaming_tests.cpp": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_tests.cpp",
+      "sha256": "d4b98a5d2748a20dabb1a40736df2dcf790dab695d8de2456098b4c9a521757d"
+    },
+    "preview/native/tests/i2p_streaming_interop_tests.cpp": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_interop_tests.cpp",
+      "sha256": "11b51b87a15b6518b2d89849242f42c375cae1fce8e2f0ac5f042bd81557f529"
+    }
+  },
+  "existing_peer": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/StreamingPeer.java",
+    "sha256": "b09fde915825727452c33d6efb129aa990fc4074f5ba8f6fe65a34d664d3dfe1",
+    "current_modes": "http/recovery/backpressure/reset/cancel; upload mode not yet authored"
+  },
+  "execution": {
+    "compiler": false,
+    "jvm": false,
+    "subject": false,
+    "native_mutation": false,
+    "provider_mutation": false
+  },
+  "additional_official_sources": [
+    {
+      "path": "apps/streaming/java/src/net/i2p/client/streaming/impl/SimpleBandwidthEstimator.java",
+      "git_blob": "dae414a3c6fba99e7cae4796a1d9678b4270fb2a",
+      "sha256": "334de4d8ca9ad588bc7ff8591f3a7743a841b10ec0f0d109b3f6f929c8d7658d",
+      "bytes": 5366,
+      "retained_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/original-source/apps/streaming/java/src/net/i2p/client/streaming/impl/SimpleBandwidthEstimator.java",
+      "url": "https://raw.githubusercontent.com/i2p/i2p.i2p/9134f808337b401e8e53c73734c81fab04280c9d/apps/streaming/java/src/net/i2p/client/streaming/impl/SimpleBandwidthEstimator.java",
+      "sections": "54-163 first sample/500ms floor/two-stage float EWMA/16-step bounded decay"
+    },
+    {
+      "path": "core/java/src/net/i2p/util/BandwidthEstimator.java",
+      "git_blob": "6262c1c7753e835b09e6a9f7563485696d9d9124",
+      "sha256": "11f94e5faa8f62ba76206a3cf1a3cd64d470d8dc6256d55fd2f18851f42f6292",
+      "bytes": 462,
+      "retained_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/original-source/core/java/src/net/i2p/util/BandwidthEstimator.java",
+      "source_jar": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/actual-offline-interop/dependencies/i2p-2.13.0-sources.jar",
+      "entry": "net/i2p/util/BandwidthEstimator.java",
+      "sections": "addSample/getBandwidthEstimate interface"
+    }
+  ],
+  "additional_materialization": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/materialization.json",
+    "sha256": "834de8d584f36e9f560fc5414ed4c9a776ce6812a96ced2d72be658a8e34b09d"
+  }
+}

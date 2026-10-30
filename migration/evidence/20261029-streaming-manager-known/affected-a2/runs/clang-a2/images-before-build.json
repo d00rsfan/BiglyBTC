@@ -1,0 +1,97 @@
+{
+  "biglybtc-i2cp-receive-channel-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2cp-receive-channel-tests",
+    "sha256": "c10b09375e1020d1b8865bcbed350ebb9190f2104bcd9601f14cd6fefc37c9fa",
+    "bytes": 568472
+  },
+  "biglybtc-i2p-streaming-interop-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2p-streaming-interop-tests",
+    "sha256": "2e1ec80fdacd91f5e64022a852f36aadbdcf2c107c1196ff6f1435500bc5b6ae",
+    "bytes": 666728
+  },
+  "biglybtc-owned-dht-bytes-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-owned-dht-bytes-tests",
+    "sha256": "2afc782a99683ccb87f4eb63debe6b451d5daf2943aacc73630db6bb6918165b",
+    "bytes": 743904
+  },
+  "biglybtc-azureus-maintenance-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-azureus-maintenance-tests",
+    "sha256": "65095577a6169119ee71e8769e143088ff89c44b5d07fd34f6a7e3147b3483a3",
+    "bytes": 1698472
+  },
+  "biglybtc-azureus-profile-io-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-azureus-profile-io-tests",
+    "sha256": "4ea40331b312d65e5a011cfa21230a37d65fa8182993416ed082e60000139f1c",
+    "bytes": 1734776
+  },
+  "biglybtc-i2cp-tracker-channel-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2cp-tracker-channel-tests",
+    "sha256": "64e22b0f1089dd091e14aa1ab404f3544ebdd7a7b6d4350c1144bbe97d29d70d",
+    "bytes": 571640
+  },
+  "biglybtc-i2p-streaming-manager-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2p-streaming-manager-tests",
+    "sha256": "a385b64194bcc10c28182cd2f8ada889995bbe05af1845cc4d4b9e5920b423b8",
+    "bytes": 241992
+  },
+  "biglybtc-public-netns-admin": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-public-netns-admin",
+    "sha256": "fde628da43ae4c0152580f93b8f20ccc97828dedd56b12a5c1bb5e7a708e1f10",
+    "bytes": 41232
+  },
+  "biglybtc-azureus-routing-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-azureus-routing-tests",
+    "sha256": "7abebd1a16403f5d8520ba264efa7837476550f6611e00e1ab0a092c47fb7987",
+    "bytes": 1684592
+  },
+  "biglybtc-i2cp-initial-channel-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2cp-initial-channel-tests",
+    "sha256": "28cb660a28eae59e871a7672abb628c8bbeab83fb755c17cae2e78a64ba0c95e",
+    "bytes": 808296
+  },
+  "biglybtc-azureus-owned-service-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-azureus-owned-service-tests",
+    "sha256": "53f8c56c6439553f1db06c97686c20efd1a8003bc899224463889501e51615c0",
+    "bytes": 1845304
+  },
+  "biglybtc-azureus-public-bound-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-azureus-public-bound-tests",
+    "sha256": "b21799e77039f0b52bd65aa36085e33539d8253a23f585c3689cf9a41da467fb",
+    "bytes": 1652664
+  },
+  "biglybtc-i2cp-stream-manager-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2cp-stream-manager-tests",
+    "sha256": "3f087e1b9236135a7bf7f895a4a0902304783b757e361c897aa691b406a9d3f2",
+    "bytes": 570200
+  },
+  "biglybtc-azureus-router-owner-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-azureus-router-owner-tests",
+    "sha256": "e70cec84168e67806a3323abfee05c3bf14a36b1359ea15ac0f4b3acae49b486",
+    "bytes": 79744
+  },
+  "biglybtc-i2p-streaming-manager-interop-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2p-streaming-manager-interop-tests",
+    "sha256": "778d97386cd31979d1b12db465238f4b52722e5429cf92bb755ca0db66c30e93",
+    "bytes": 641736
+  },
+  "biglybtc-owned-ddb-control-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-owned-ddb-control-tests",
+    "sha256": "4525f16569b12fe498499faa101ab8e5a788da4388a47345b32498cac62af9c9",
+    "bytes": 122704
+  },
+  "biglybtc-i2cp-datagram-channel-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2cp-datagram-channel-tests",
+    "sha256": "4941cb97b952a42798a96251fa10d22ffa72316fa66b83cc925039d7830850fb",
+    "bytes": 579248
+  },
+  "biglybtc-i2p-streaming-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2p-streaming-tests",
+    "sha256": "99e048511334cbc2ce26e47aa5a100eb1ff41e033e83028e433f1d748791d583",
+    "bytes": 258064
+  },
+  "biglybtc-azureus-database-runtime-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-azureus-database-runtime-tests",
+    "sha256": "cbf4a2b06628f723d6a822e399f97b02d9dc5935188f6dde38818bc337775ac5",
+    "bytes": 1683280
+  }
+}

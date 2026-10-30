@@ -1,0 +1,27 @@
+Start testing: Oct 30 02:54 IST
+----------------------------------------------------------
+301/304 Testing: azureus-public-bound
+301/304 Test: azureus-public-bound
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_public_bound_namespace.py" "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-public-bound-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"azureus-public-bound" start time: Oct 30 02:54 IST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time = 270.45 sec
+----------------------------------------------------------
+Test Failed.
+"azureus-public-bound" end time: Oct 30 02:59 IST
+"azureus-public-bound" time elapsed: 00:04:30
+----------------------------------------------------------
+
+End testing: Oct 30 02:59 IST
+
+namespace = 270.45 sec*proc
+
+profile = 270.45 sec*proc
+
+routing = 270.45 sec*proc
+
+unit = 270.45 sec*proc
+

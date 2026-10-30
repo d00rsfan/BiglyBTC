@@ -1,0 +1,38 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_sources": {
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java": {
+      "git_blob": "b756f15b7863793f320b55957b657c53196b0cba",
+      "sha256": "b1d4e38f2bc9c33bda1bd39092ea87352a6668ca41664dafe1be7011fe163092",
+      "sections": "1500-1554 explicit protocol-hint transport contact/unknown instance0/import callback"
+    },
+    "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java": {
+      "git_blob": "a895f11be8bf2e7e00d15a841a8de975e63663d6",
+      "sha256": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+      "sections": "666-670 attached Known;3608-3640 actual Ping reply Alive;3642-3678 NodeAdded Ping"
+    },
+    "core/src/com/biglybt/core/dht/router/impl/DHTRouterImpl.java": {
+      "git_blob": "90e9b2028c8f3b532848ced0b40c401f15833be2",
+      "sha256": "50b1defa8637bd435960b628c37f7f02f31a2f52c2bb357e1b081eeae637dec4",
+      "sections": "327-363 Known false versus Alive true"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java": {
+      "git_blob": "28ad1c52552f254759b82418e1cf2b3678323407",
+      "sha256": "30cd1f70c74274aec6496a2f711b5865ad1b776d028f25503ba6a52ddb3fa6af",
+      "sections": "112-142 supplied protocol and actual address-derived ID"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPUtils.java": {
+      "git_blob": "f8c0caa152881bd7abd5f330080d87c11f778914",
+      "sha256": "d852f590ca0df5361061e598be2087787ea588201f23d2fb7f826cfd62d4694b",
+      "sections": "94-140 restricted ID rules"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/DHTTransportUDP.java": {
+      "git_blob": "d9e8108ddb59594d074fa7af51a9c9f05195f258",
+      "sha256": "cffec69e83c20fac92414189e39aece9c359911c18250a0ba82d45ef42401f0f",
+      "sections": "90-98 thresholds32/33/50; supported51..55 same identity branches"
+    }
+  },
+  "native_basis": "ad4854e920d86a511cc90cd52e4ab161adcb0fec",
+  "proposal_sha256": "8bcc875a632a11e161ee12d949d7973eeab71e5ebea950e9e1a8c4c4785cb347",
+  "proposal_pins_sha256": "1687069a554775296c7bdd55d118cb0e37d0774695d9fdef0b077652ece42671"
+}

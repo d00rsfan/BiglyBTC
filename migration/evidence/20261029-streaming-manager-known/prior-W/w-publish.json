@@ -1,0 +1,41 @@
+{
+  "commit": "4314e58dee7b4d5c459fffddfec05200b6e76073",
+  "branch": "main",
+  "pushed": true,
+  "source_commit": "04b6287a38cec6bd123e2648ada278ea348b85db",
+  "original_head_index_unchanged": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "publication_resume": {
+    "reason": "Initial whitespace gate classified byte-exact LD_DEBUG logs with PID suffixes as source; preserve raw bytes and exclude only these verified retained raw logs. No qualification or dist operation repeated.",
+    "initial_publisher_sha256": "68661d87fdc97202939b0b966d541fd0e49d523cc548cb9d5ad069cfdf1f64e1",
+    "diagnostic_lines": 2619,
+    "diagnostic_log": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-followup-20261029/amendments/public-bound/publish-diff-check-failed.log",
+      "sha256": "970e96c1174580a6bf704d5f1a2252dd1e7dc3d719c60092a624e3efdaf7be6d"
+    },
+    "excluded_raw_logs": {
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-azureus-database-runtime.2394850": "06be5c68422d44dd2587ed969f6856662eac5c33e92b69b649e425be2e71678a",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-azureus-maintenance.2394359": "283617372d71a74e608956e480ffa478f7a25e214f3cf13606368de5f343065a",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-azureus-owned-service.2394125": "8e693d77af64dd159a06844d31da9c63bba9b9536f8cd627dc9ca3b5cd245867",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-azureus-profile-io.2394250": "7f14fa8b191ef66276ac62ea31ec338f3a7eebd7a75e1697e7c15cb5d60cfa40",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-azureus-public-bound.2394927": "509e73254546cba1c678beff83897495121fc2e167c7fceb68e823c17d35bc2f",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-azureus-router-binding.2395594": "f2310781084921a059342e4bf20a90ecdf5e13bb76df546cc430ed01f26a4479",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-azureus-router-owner.2394116": "d52535134aadd72f9a44eafe667bf6a7c0a124b5ba369f57c00b0edb3f620d46",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-azureus-routing.2394071": "50aa3ccca845f862f611e136248c3eaf6acca77fd755e314f046aa7b8f155d6d",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-i2cp-bounded-datagram-receiver.2395222": "8c6015c6fda82765dc77322c3b56f9637f2664866483c2b156895c174e2a67bb",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-i2cp-explicit-tracker-channel.2395257": "acef83877397bbdcbc72c077cb860baf96818194981415af87dcb820797aa300",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-i2cp-initial-channel.2395107": "c4d70d50f3f4fd5a6cdc56e733b4069736cdbd2a17146aba6675e176722fef90",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-i2cp-lease-backed-datagram-channel.2395152": "64c40d47ca0af58380a33ffdb166aea5fed8eebde66c862e74ae24bd8dad6d51",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-i2p-original-streaming-peer.2395277": "101044448a8d13faca59ca5c27ad1320a33d72fbbb64c6a6edbf944f3a103f4b",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-i2p-original-streaming-upload.2395484": "524c4ca671c65d9ebcbe9b6fcda3be11780bb1142723603e1699a735f077538c",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-owned-ddb-binding.2395613": "d95496b05d69b5a0eebdd141c57419580f19dcdd069cb0fe1672aab6c51b7d57",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-owned-ddb-control.2394108": "a3cbba2ef4fe8663d3f6e8d79584809591336b4d97dbeba36d27d667b74e3ec7",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-owned-dht-bytes.2394878": "69c03d5ca427bb142e5b343e89763e1a5c5576c150d15ac9e91e385851831b6f",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-owned-lookup-tree-ui.2395627": "ff958d8079735e06f8a8fdcef03db6d1a1c823bf57b4e2c5ebdf79307cc00fa3",
+      "migration/evidence/20261029-public-bound-streaming-window/private-runs/resumed-r1/native-loader-pure-i2p-streaming.2395269": "197d564eefc8200ec44d50fbb2e03461c61336698b6ab79167e707c80faefca8"
+    },
+    "resumed_diff_check_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

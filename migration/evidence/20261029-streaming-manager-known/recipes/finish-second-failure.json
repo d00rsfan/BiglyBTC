@@ -1,0 +1,9 @@
+{
+  "status": "FAILED_CLOSEOUT_BEFORE_ANY_EVIDENCE_OR_PROMOTION",
+  "tool_session": 4505,
+  "exit": 1,
+  "exception": "KeyError: additional_official_sources",
+  "manifest_sha256": "07062b1d7b10720f6a77b114227fa55bb88823e35b9fade0784f94c836743eda",
+  "tests_repeated": false,
+  "native_source_or_dist_changed": false
+}

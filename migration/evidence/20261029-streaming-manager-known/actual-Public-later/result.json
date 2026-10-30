@@ -1,0 +1,95 @@
+{
+  "status": "PASS_EXACT_CURRENT_PUBLIC_RECOVERY",
+  "scope": "one unchanged GCC Public subject only",
+  "source_commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+  "builds_executed": false,
+  "javac_invocations": 0,
+  "image": {
+    "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-public-bound-tests",
+    "sha256": "14cb8769bec1e740e999037fd111252b16793bf9bc0ebf087de949fbacb798d6",
+    "bytes": 2227024
+  },
+  "namespace": {
+    "mode": "pkexec",
+    "helper": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/public-netns-admin",
+      "sha256": "900ffe42f48a5452a78160e254ea8f21575b995ba2a7d3a0c6d066be80826d86",
+      "bytes": 41232,
+      "uid": 1000,
+      "gid": 1000
+    },
+    "caller_uid": 1000,
+    "caller_gid": 1000,
+    "invoker": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_public_admin_launcher.py",
+      "sha256": "355271b706c964f3edf041b613f5d938fc59b8dd90911ee75c54fe942183e7f3"
+    },
+    "authorizer": {
+      "path": "/usr/bin/pkexec",
+      "sha256": "0bb6bcf53221e1704e747f7c555065452f12ea0a4454ff721f3a6bc7f8196a50",
+      "bytes": 31024
+    },
+    "preflight": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/preflight.json",
+      "sha256": "bac6b5a3e1aa5a4bb7879179ddc14e095a56041e9e4d2295710737cb65b220c7"
+    },
+    "environment_preflight": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/result.json",
+      "sha256": "85cccf770fd80ef15d2a01dc5d6687755e8897da7863f80202cb3f0747b910aa"
+    },
+    "source_capsule": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/manifest.json",
+      "sha256": "9c781e5bebea7841cc7d574894367be4460c486f5a9abb99aed7580325f65edb"
+    },
+    "source_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-admin-boundary-20261029-review/amendments/sealed-stdin-payload/review.json",
+      "sha256": "e37dae03cd8990634ae7ff25b2ae7577858d6bd216dbc9c90993652eb6c04a18"
+    },
+    "root_approval": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/root-approval.json",
+      "sha256": "2bb598d383588f26309341cccccfbcbac278b03cb310562c5f098db3c3c484dd",
+      "bytes": 2098
+    },
+    "compiled_receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/result.json",
+      "sha256": "6dd5ff8a3a5bf3fc9756ba4a9960d17446b542f0167a636d9b265c050e6f7122"
+    },
+    "readonly_launch": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r3/launch.json",
+      "sha256": "038e83079378ea306f32e2dbd60ecf66a12c6390c738ba0848f3849341ce5934"
+    },
+    "launch_environment": {
+      "BIGLYBTC_PUBLIC_ADMIN_MODE": "pkexec",
+      "BIGLYBTC_PUBLIC_ADMIN_HELPER": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/public-netns-admin",
+      "BIGLYBTC_PUBLIC_ADMIN_SHA256": "900ffe42f48a5452a78160e254ea8f21575b995ba2a7d3a0c6d066be80826d86",
+      "BIGLYBTC_PUBLIC_ADMIN_RECEIPT": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/public-recovery-r3/namespace-admin.json"
+    },
+    "launch_receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/public-recovery-r3/namespace-admin.json",
+      "sha256": "2c3fc5c92c1517a5128e96ea89760178475f24fa1c4a2764109848067dae21b9",
+      "bytes": 2026
+    }
+  },
+  "original_head_index_unchanged": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "source_unchanged": true,
+  "dependencies_unchanged": true,
+  "prior_failure_retained": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/gcc-r2/result.json",
+  "runner_sha256": "dc84798009fd09d16e3d6fd8f27f0c12731295ac61b120a65b48f5e098f34f21",
+  "commands_sha256": "c74a7ad831a7850594f2ea875710943332447e3fb1ff47d5df15e49636696b2b",
+  "artifacts_sha256": {
+    "inventory.log": "31daee41cdeb53a25e8d467e6e4c75dbb83229e121448c11c19d0e3bc6928b80",
+    "dependency-commands.json": "2400befd59f731ad502dccc31aef16ad9cd7857e8168f1c72637182c9af1a4df",
+    "ctest-full.log": "d4a01a6082dd66a1d9b3411d21fc4826e640186e61fee793b5b6b2047300b0e2",
+    "tests.log": "974b5418cd8cd2636bc199a74b555de14114b2d4d7d2ed227613dee55af5c027",
+    "dependencies-before.json": "b006bfb8993aefef006ab3695686d82292fc1506f3abbaee2c21124ac8b73b10",
+    "source-before.json": "642285fbac7d76782aa445a42f4027badfc70fae3bef96858e3d3a4854b6cd74",
+    "tests.xml": "559ac827cf72a6df6320a66208aa0072e43ca53198f0dbeafde00ce9473cd855",
+    "subject-phase.json": "bdb870ec3046f2d05aab2efd5b838acfb47f283dc0e596e255f63ca2bfddafa0",
+    "namespace-admin.json": "2c3fc5c92c1517a5128e96ea89760178475f24fa1c4a2764109848067dae21b9",
+    "images-before.json": "a11407cf6a44872dfa5875d4dbd201f23ed472a7e26740d3dfa1ec5601225607",
+    "commands.json": "c74a7ad831a7850594f2ea875710943332447e3fb1ff47d5df15e49636696b2b"
+  }
+}

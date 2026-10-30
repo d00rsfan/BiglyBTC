@@ -1,0 +1,34 @@
+{
+  "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/run.py": {
+    "sha256": "7820a6117550615fedc30225284485859fea5012276e77c43d8a29984feb5650",
+    "bytes": 40283
+  },
+  "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/jobs.mk": {
+    "sha256": "63dd1e2b78b48acf07aaec4696efcc53b9647055d85e2a8ada32b7e8fdc098fd",
+    "bytes": 707
+  },
+  "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/run.py": {
+    "sha256": "32e8340512846be5d27e63569fa7ad98199babf96fc9e57de8e1116f85f260c8",
+    "bytes": 10925
+  },
+  "/usr/bin/cmake": {
+    "sha256": "6e1dccda39845415d68eabb934c598998949c99ec4668625d571aee1827b05c7",
+    "bytes": 14253272
+  },
+  "/usr/bin/make": {
+    "sha256": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49",
+    "bytes": 295120
+  },
+  "/usr/bin/ninja": {
+    "sha256": "91e9548850cda2799facfdaa7abe33f9e978832f85e98212255708a7bbe437f2",
+    "bytes": 350624
+  },
+  "/usr/bin/x86_64-linux-gnu-g++-16": {
+    "sha256": "ca3bb855e752ea0b36544ef684e542fcf04273d8c229b1a96a9c160587e41c62",
+    "bytes": 1456856
+  },
+  "/usr/bin/x86_64-linux-gnu-gcc-15": {
+    "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88",
+    "bytes": 1305304
+  }
+}

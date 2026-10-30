@@ -1,0 +1,2 @@
+Oct 30, 2026, 3:06:28 AM WARN  [main        ] net.i2p.util.NativeBigInteger : Native BigInteger library jbigi not loaded - using pure Java - poor performance may result - see http://i2p-projekt.i2p/jbigi for help
+Oct 30, 2026, 3:06:32 AM DEBUG [-application] reaming.impl.ConnectionManager: Validated SYN NACKS from: f4cvjyd26newefw5kzc5sgy4mvyrv3h3am75deij35m7bpj3yhdq.b32.i2p

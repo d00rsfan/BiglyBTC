@@ -1,0 +1,13 @@
+{
+  "status": "PASS_SOURCE_ONLY",
+  "manifest": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/amendments/ordered-exact-peer-grant/manifest.json",
+  "manifest_sha256": "0f89cf06925969f974d263b3467c92234091d86dd92aa9687f2a632d0b321b1e",
+  "precommit_child_sha256": "923ec334afc521248dfd691dce2c3c70f3e2507a23674562497084b87a2c8f20",
+  "parent_manifest_sha256": "ac1dd49c8902f5feb1a4b9cabbeb87cca599cdee891d485f92f785a36acaa9db",
+  "parent_review_sha256": "ddc168598281c71270a551dc3bc6e3f43556282495a51110aa3c18e908694493",
+  "checks": {"source_maps_current_and_git": 10, "artifact_counts_parent_then_children": [13,14,5], "original_git_sha256_pins": 6, "complete_and_three_patch_chain_reproduce_exact_afterimages": true, "old_test_body_retention_checked": true},
+  "resolution": "Actual Known command deadline is scoped and restored by RAII; source/current/stop/deadline is rechecked after preparation before first mutation, again after allowlist installation with rollback, and before the physical PING write. Public final-send guards remain; legacy startup/default behavior is unchanged. Attachment precedes NodeAdded, fixed capacities remain, ProbeHint cannot downgrade Packet or enter advertised/exported contacts, and matched PING uses actual header protocol. No remaining material source blocker found.",
+  "fixture_resolution": "The existing pressure row waits for ExactPeers A's actual grant before normal B can send its new PING, then settles its Packet/IO-idle barrier before capturing real counter baselines. Exact12 held frames/replies or withdrawals,8 slots, deadlines, no-capacity-drop and close-before-IO-join controls remain. Other old test bodies remain exact except the declared routing helper version option; parent new Known controls remain unchanged.",
+  "minimum_affected_suites": ["azureus-routing", "azureus-public-bound", "azureus-profile-io", "azureus-maintenance", "azureus-owned-service", "azureus-database-runtime"],
+  "limits": "No compiler, CMake, JVM, executable, namespace, network, IP assignment or profile subject executed; no native checkout mutation. Actual normal/Public/IPv6 wire and private-loader qualification remain pending. No automatic/default Host/public bootstrap or seeded injection claim."
+}

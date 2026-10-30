@@ -1,0 +1,10 @@
+{
+  "status": "ROOT_REVIEWED_CLOSEOUT_REVIEWABILITY_CORRECTION_SOURCE_ONLY",
+  "manifest_sha256": "9917319bd0b693aaf01fa2127bd7ed354b4d46ee6ec6d084e44a993571e066ed",
+  "previous_root_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/closeout/root-review.json",
+    "sha256": "3512b0ec78d7bc867c9e8c41a760be69a9f7954df0f14a447a3f01e96c9feb5b"
+  },
+  "tiny_delta_reviewed": true,
+  "runtime_or_promotion_executed": false
+}

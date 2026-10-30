@@ -1,0 +1,13 @@
+{
+  "status": "PASS_STATIC_SOURCE_CHECKS_ONLY",
+  "source_maps": 11,
+  "changed_afterimages": 6,
+  "inherited_afterimages": 5,
+  "complete_and_parent_delta_reproduce_exact_afterimages": true,
+  "cpp_delimiter_parse": true,
+  "all_old_pure_families_and_qt_methods_and_router_helper_bodies_byte_exact": true,
+  "compiler": false,
+  "jvm": false,
+  "subject": false,
+  "native_mutation": false
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "source": "ManagerPeer.java",
+    "all_parent_bytes_exact_after_inverse": true,
+    "delimiters_balanced": true,
+    "countdown_only_after_actual_callback_and_consumed_check": true
+  },
+  {
+    "source": "StreamingPeer.java",
+    "all_parent_bytes_exact_after_inverse": true,
+    "delimiters_balanced": true,
+    "countdown_only_after_actual_callback_and_consumed_check": true
+  },
+  {
+    "source": "preview/native/tests/i2p_streaming_manager_interop_tests.cpp",
+    "only_JVM_peer_ready_budget_changed_to_60000": true
+  },
+  {
+    "source": "preview/native/tests/i2p_streaming_interop_tests.cpp",
+    "only_JVM_peer_ready_budget_changed_to_60000": true
+  }
+]

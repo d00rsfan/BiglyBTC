@@ -1,0 +1,6 @@
+SOURCE only; one later authenticated Public selector continuation of the exact new private5 result/candidate. It stages/builds nothing and does not mutate that pending5 result. Strictly verifies all five origin XML/log/loader hashes, six copied current images, wrapper/launcher, candidate manifest, corrected helperf967 and all actual a2 associated rows before/after. The fresh Public wrapper gets the existing root-approved admin contract and a new receipt/output root; no fallback/policy modification. Native perPID Qt/provider loaded-image proof is mandatory. Expected Public init/selector/cleanup are exact3cases.
+
+CLI after actual private5 succeeds and root review/auth scheduling:
+python3 -B run.py --attempt private-public-r1 --source-commit 3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742 --private-five-result ABSOLUTE_CORRECTED_PRIVATE_FIVE_RESULT
+
+Only PASS_SIX_PRIVATE_SUBJECTS_RESUMED_PUBLIC means five retained private origins plus one fresh actual Public; it is not promotion/whole-cohort qualification. A separate exact current cached-GCC Public success remains required by closeout. Failed auth attempts remain failures. No private-Public result is invented here. Author AST only; no execution/native changes. Finish current milestone then STOP.

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "loader-public-known",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/biglybtc-azureus-public-bound-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-public/runs/u1/loader-public-known.log",
+    "log_sha256": "0155744ed6adb9d1f37613eea424a76eb5cbc86274778dfe3f193b1c25a1f9cf"
+  },
+  {
+    "name": "public-known",
+    "command": [
+      "/usr/bin/python3",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/azureus_public_bound_namespace.py",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/biglybtc-azureus-public-bound-tests",
+      "explicitPublicKnownHintIsNotExportedAndOnlyActualPingMakesItAlive",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-public/runs/u1/public-known.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-public/runs/u1/public-known.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 6.076,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-public/runs/u1/public-known.log",
+    "log_sha256": "efa9f78ee0fa9d0e8ec7d091a35c2efeb2685293f1659e1b299ee5c43d2fc355"
+  }
+]

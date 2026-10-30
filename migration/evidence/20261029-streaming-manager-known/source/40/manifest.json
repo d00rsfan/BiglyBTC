@@ -1,0 +1,146 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_PENDING_INDEPENDENT_REVIEW_AND_RUNTIME",
+  "native_basis": "ad4854e920d86a511cc90cd52e4ab161adcb0fec",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/manifest.json",
+    "sha256": "122e845c0bbdd2edc499932d260b807df3c6c9c52a37251b885042c2943fde3a"
+  },
+  "input_pins": {
+    "approved_proposal": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-proposal-20261029/PROPOSAL.txt",
+      "sha256": "8bcc875a632a11e161ee12d949d7973eeab71e5ebea950e9e1a8c4c4785cb347"
+    },
+    "proposal_pins": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-proposal-20261029/source-pins.json",
+      "sha256": "1687069a554775296c7bdd55d118cb0e37d0774695d9fdef0b077652ece42671"
+    },
+    "public_source_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029-review/review.json",
+      "sha256": "803384933d6ee11eee1949e3c11ca3c912178fd074319adbf39567043fd10adb"
+    }
+  },
+  "source_paths": {
+    "preview/native/app/azureus_public_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/app/azureus_public_owner.inc",
+      "before_sha256": "ba89062167be84b623c000b57830a073ca7a93710e94cd458e7ec11aecd158ff",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/staging/preview/native/app/azureus_public_owner.inc",
+      "after_sha256": "4f52b265101ebaf13ff5e03854205b0a7842d18286cc5d23db1636f755d21f9c"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "18739aab6073ac0251daff8b5f06558293f1637d0a8b931b94b9c1781a7dbd22",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "be0a4bf61a0aca6efcb3031181e8e695f16d220825ad28b2ee3b5ff17263ac2a"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "2887f1a519659c838ea0a64f75314f28799c8750a654a1f3a19bfaed2e042013",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "0a6e76bc78d4605316642e1b38d4bb2ecd05123c863ce3a364ecc989d7ed8c68"
+    },
+    "preview/native/services/azureus_udp/owned_maintenance.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/services/azureus_udp/owned_maintenance.inc",
+      "before_sha256": "d6b76f425631d83b62542b109c61eb5a3a7c17fd6289f1cefebb6a64ed2cad25",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/staging/preview/native/services/azureus_udp/owned_maintenance.inc",
+      "after_sha256": "d5fe19fd60df7f9f17c0272c2c097dc6be1b4b2a7ce75ce52223e29ad0a73e6a"
+    },
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/services/azureus_udp/owned_routing.inc",
+      "before_sha256": "e74574468929762d85e3d2bf2fe659abc0c70fb716d4498de93411dd38a57994",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/staging/preview/native/services/azureus_udp/owned_routing.inc",
+      "after_sha256": "d898858445f85707942551fce95153ff293212cac357889b5a9cc755ad3e1d69"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/services/azureus_udp/owned_transport.cpp",
+      "before_sha256": "43093e8fe5a2ef3daac0cd76a7e2f53d35b24872b1f9012033735ee7a6ef3726",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+      "after_sha256": "5d5bdf2b38a7f370bb9185519bb1658130b7a9b0b99f21b0511212fa0973c7d7"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/services/azureus_udp/owned_transport.hpp",
+      "before_sha256": "de02a807c9b00028ab8262d4c1bc19dba3c4a3c53d361fe58622f36dcd1bf822",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+      "after_sha256": "2a7e386f272ed22b434007789c4562b7bebffee524496aa856fd28d5c9f3284a"
+    },
+    "preview/native/tests/azureus_public_bound_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/tests/azureus_public_bound_tests.cpp",
+      "before_sha256": "7afc81a498a9eab59cda319685c888fa6c7c3d8a90f23f7a3cea0e2d1c3fa6b2",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/staging/preview/native/tests/azureus_public_bound_tests.cpp",
+      "after_sha256": "57a3ab470f0d0512a859523427815deecb2d4c8609a59e9108248c8c94052f2b"
+    },
+    "preview/native/tests/azureus_routing_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/tests/azureus_routing_tests.cpp",
+      "before_sha256": "ed570f848a4b0a256ecedb652f098d72f2de0b69e0cd08c6bb2faa6b46c0a3e6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/staging/preview/native/tests/azureus_routing_tests.cpp",
+      "after_sha256": "91856cffd9840912c55742914b669034de194599d8bada4ba39a51a9588efeca"
+    }
+  },
+  "cmake_fragments": [],
+  "existing_targets": [
+    "biglybtc-azureus-routing-tests",
+    "biglybtc-azureus-public-bound-tests"
+  ],
+  "existing_ctests": [
+    "azureus-routing",
+    "azureus-public-bound"
+  ],
+  "bounds": {
+    "normal_service_combined_peers": 32,
+    "raw_transport_existing_maximum_peers": 256,
+    "existing_nodeadded_pings_in_flight": 8,
+    "existing_intent_queue": 64,
+    "existing_profile_io_slots": 8,
+    "existing_shared_held_frames": 64,
+    "new_threads_or_timers": 0
+  },
+  "execution": {
+    "status": "PASS_STATIC_SOURCE_CHECKS_ONLY",
+    "source_maps": 9,
+    "current_git_beforeimages": 9,
+    "original_full_sha256_and_git_blobs": 6,
+    "read_only_patch_apply_check": true,
+    "cpp_delimiters": true,
+    "retained_test_methods": {
+      "preview/native/tests/azureus_public_bound_tests.cpp": {
+        "old_void_methods_retained": 9,
+        "appended": [
+          "explicitPublicKnownHintIsNotExportedAndOnlyActualPingMakesItAlive"
+        ],
+        "helper_changes": []
+      },
+      "preview/native/tests/azureus_routing_tests.cpp": {
+        "old_void_methods_retained": 10,
+        "appended": [
+          "explicitKnownAttachmentUsesActualPingAndReplacesOnlyItsProtocolHint",
+          "explicitKnownAttachmentUsesActualPingAndReplacesOnlyItsProtocolHint_data",
+          "knownAttachmentCannotCommitAfterSourceDisableCancelOrClose",
+          "knownAttachmentCannotCommitAfterSourceDisableCancelOrClose_data",
+          "knownPreparationRefusesAliasInvalidHintAndFullCombinedPeerEnvelope"
+        ],
+        "helper_changes": [
+          "Normal protocol parameter/start options.version only"
+        ]
+      }
+    },
+    "compiler": false,
+    "subject": false,
+    "network_namespace_or_ip_assignment": false,
+    "native_source_mutation": false
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "47b4faab89b6806483b81d439ac7fcb3549d9a1aaa4dd1f12e2b065f31bcda52",
+    "changes.patch": "b2cc4ab07ecc0e00d96e28cb993ec4022415ba8beb2cefe7d74c35c610880843",
+    "source-pins.json": "26d5e35106086ca10b85efda77483f7f65d1fd54300de95fcdac5b1989858905",
+    "static-checks.json": "964d03f236355bd71d96f7d0d7e672f06c944f4f6b7078211c4724607ee9bed3",
+    "staging/preview/native/app/azureus_public_owner.inc": "4f52b265101ebaf13ff5e03854205b0a7842d18286cc5d23db1636f755d21f9c",
+    "staging/preview/native/app/owned_azureus_service.cpp": "be0a4bf61a0aca6efcb3031181e8e695f16d220825ad28b2ee3b5ff17263ac2a",
+    "staging/preview/native/app/owned_azureus_service.hpp": "0a6e76bc78d4605316642e1b38d4bb2ecd05123c863ce3a364ecc989d7ed8c68",
+    "staging/preview/native/services/azureus_udp/owned_maintenance.inc": "d5fe19fd60df7f9f17c0272c2c097dc6be1b4b2a7ce75ce52223e29ad0a73e6a",
+    "staging/preview/native/services/azureus_udp/owned_routing.inc": "d898858445f85707942551fce95153ff293212cac357889b5a9cc755ad3e1d69",
+    "staging/preview/native/services/azureus_udp/owned_transport.cpp": "5d5bdf2b38a7f370bb9185519bb1658130b7a9b0b99f21b0511212fa0973c7d7",
+    "staging/preview/native/services/azureus_udp/owned_transport.hpp": "2a7e386f272ed22b434007789c4562b7bebffee524496aa856fd28d5c9f3284a",
+    "staging/preview/native/tests/azureus_public_bound_tests.cpp": "57a3ab470f0d0512a859523427815deecb2d4c8609a59e9108248c8c94052f2b",
+    "staging/preview/native/tests/azureus_routing_tests.cpp": "91856cffd9840912c55742914b669034de194599d8bada4ba39a51a9588efeca"
+  }
+}

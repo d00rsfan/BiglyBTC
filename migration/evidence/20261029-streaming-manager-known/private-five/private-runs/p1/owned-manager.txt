@@ -1,0 +1,11 @@
+********* Start testing of ManagerChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagerChannelTests::initTestCase()
+PASS   : ManagerChannelTests::concurrentActualFramesAndExplicitIncomingPeerRemainIndependent()
+PASS   : ManagerChannelTests::currentPendingSynNotificationMayDeleteTheController()
+PASS   : ManagerChannelTests::finiteApplicationWaitDoesNotCloseOtherStreams()
+PASS   : ManagerChannelTests::finiteHandshakesAndWaitRemainIndependentAcrossQueuedFrames()
+PASS   : ManagerChannelTests::shortenedActualLeaseRetiresAuthorityAndRenewalCannotRestoreOldStreams()
+PASS   : ManagerChannelTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 6601ms
+********* Finished testing of ManagerChannelTests *********

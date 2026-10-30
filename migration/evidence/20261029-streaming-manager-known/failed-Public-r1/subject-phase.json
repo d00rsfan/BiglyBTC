@@ -1,0 +1,8 @@
+{
+  "mechanism": "fcntl.flock",
+  "lock_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/subject-phase.lock",
+  "pid": 2416961,
+  "entered_monotonic_ns": 6654987784464645,
+  "scope": "subject phase only",
+  "left_monotonic_ns": 6655258458019161
+}

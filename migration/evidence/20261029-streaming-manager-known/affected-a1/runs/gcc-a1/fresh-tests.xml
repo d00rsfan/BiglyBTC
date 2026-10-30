@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="3"
+	failures="2"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="260"
+	timestamp="2026-10-30T02:36:43"
+	>
+	<testcase name="i2p-original-streaming-peer" classname="i2p-original-streaming-peer" time="52.6427" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="explicit-i2p;reference"/>
+		</properties>
+		<system-out>********* Start testing of StreamingInteropTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : StreamingInteropTests::initTestCase()
+PASS   : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(http)
+FAIL!  : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(loss-reorder) QTestLib: This test case check ("bridge.ready()||!bridge.failure.isEmpty()||bridge.java.state()==QProcess::NotRunning") failed because the requested timeout (10000 ms) was too short, 12850 ms would have been sufficient this time.
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_interop_tests.cpp(200)]
+FAIL!  : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(loss-reorder) 'connected' returned FALSE. (Current owned LS2 and idle explicit channel required for stream)
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_interop_tests.cpp(214)]
+PASS   : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(queue-backpressure)
+PASS   : StreamingInteropTests::actualOriginalResetHasTypedNativeTerminal()
+PASS   : StreamingInteropTests::localCancelRejectsGenuineLatePeerBytesBeforeUpdatedBarrier()
+PASS   : StreamingInteropTests::cleanupTestCase()
+Totals: 6 passed, 1 failed, 0 skipped, 0 blacklisted, 52597ms
+********* Finished testing of StreamingInteropTests *********
+</system-out>
+	</testcase>
+	<testcase name="i2p-original-streaming-upload" classname="i2p-original-streaming-upload" time="26.5051" status="run">
+		<properties>
+			<property name="cmake_labels" value="explicit-i2p;reference"/>
+		</properties>
+		<system-out>********* Start testing of StreamingInteropTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : StreamingInteropTests::initTestCase()
+PASS   : StreamingInteropTests::actualOriginalManagerReceives128KiBWithBoundedNativeWindow(cap2)
+PASS   : StreamingInteropTests::actualOriginalManagerReceives128KiBWithBoundedNativeWindow(cap8)
+PASS   : StreamingInteropTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 26459ms
+********* Finished testing of StreamingInteropTests *********
+</system-out>
+	</testcase>
+	<testcase name="i2p-original-streaming-manager" classname="i2p-original-streaming-manager" time="181.252" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="explicit-i2p;long;reference"/>
+		</properties>
+		<system-out>********* Start testing of ManagerInteropTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagerInteropTests::initTestCase()
+FAIL!  : ManagerInteropTests::actualManagerConcurrentHttpInboundBtRenewalAndCancelBeyond120Seconds() 'finished()||!bridge.failure.isEmpty()' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_manager_interop_tests.cpp(153)]
+PASS   : ManagerInteropTests::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 181174ms
+********* Finished testing of ManagerInteropTests *********
+</system-out>
+	</testcase>
+</testsuite>

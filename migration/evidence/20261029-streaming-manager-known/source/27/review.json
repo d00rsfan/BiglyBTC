@@ -1,0 +1,26 @@
+{
+  "status": "PASS_SOURCE_ONLY",
+  "capsule": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/manifest.json",
+  "capsule_sha256": "122e845c0bbdd2edc499932d260b807df3c6c9c52a37251b885042c2943fde3a",
+  "parent_manifest_sha256": "2f6620ffd44a80bdaa78606d05a314af30ad074412e560f1a37c9ed8a09cc9be",
+  "parent_review_sha256": "889c710e196609a06c037c66e3e8fc8d888f5ee214c2369f6640325e16f17ca5",
+  "checked": {
+    "parent_artifacts": 35,
+    "child_artifacts": 11,
+    "source_maps_current_and_git_preimages": 17,
+    "changed_afterimages": 7,
+    "inherited_afterimages": 10,
+    "original_git_blobs_and_sha256": 13,
+    "unchanged_cmake_fragments": 3,
+    "complete_and_parent_delta_patches_reproduce_all_afterimages": true,
+    "namespace_python_ast": true
+  },
+  "resolution": [
+    "All eight write sites use one private physical write boundary. PublicBound checks its actual executing source permit, monotone policy, endpoint, stop and absolute deadline after packet preparation; request expiry starts at submit entry. IO/startup permit deadlines are installed and cleared with the held permit. Original loopback timeout anchoring remains.",
+    "Saved Bind IP rejects embedded NUL before inet_pton; the new refusal control preserves complete original bytes. Original zero/invalid port behavior is now distinguished from the narrower native explicit-bind policy.",
+    "The root-requested source gate fixture uses unique ownership at the same release points; original assertion/deadline bodies remain."
+  ],
+  "scope": "Explicit assigned numeric PublicBound, same held profile/version owner, direct/filter-disabled source policy, PublicNode-only iterative scope, bounded existing IO/frame/peer/controller resources. Startup bind/identity/DB permit and withdrawal/close paths reviewed. No remaining material source blocker found.",
+  "qualification": {"target": "biglybtc-azureus-public-bound-tests", "suite": "azureus-public-bound", "timeout_seconds": 240},
+  "limits": "No compiler, CMake, JVM, executable, namespace, network or profile subject executed; no native checkout mutation. Namespace fixture remains separately root-review-required. Actual public-address/IPv6 runtime, private relocation and regression qualification are pending. No default/Host/Internet/full public DHT parity claim."
+}

@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_NO_EXECUTION",
+  "purpose": "Make the actual26-round manager fixture terminal idempotent under QTRY repeated evaluation",
+  "native_basis": "43d642fb0025510c581ebdc4d7a332752c511a46",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/manifest.json",
+    "sha256": "13e56c1acbbc8abc8dc70eebec36f116b94bb02900f8aefaa093c0d3aa5f188c"
+  },
+  "source_paths": {
+    "preview/native/tests/i2p_streaming_manager_interop_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/amendments/idempotent-final-round/before/preview/native/tests/i2p_streaming_manager_interop_tests.cpp",
+      "before_sha256": "a18cdfb7825c1e24c35f9199fdf673e144bfe5e5cd2b018307b49330e36be432",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/amendments/idempotent-final-round/staging/preview/native/tests/i2p_streaming_manager_interop_tests.cpp",
+      "after_sha256": "8d4d86a9dc3d7320147a356b014c54bfac6cb175992b15f39960d9b42a61dd39"
+    }
+  },
+  "artifacts_sha256": {
+    "REVIEW.txt": "0d2ca81c05536514e788de6829bde73b3b8f8e83cd928b0284342d9b663904be",
+    "changes.patch": "4cb970fff6bd21ac9b981ea69f56a19218ca0c0e4da1780fc549c1f30ac9dc90",
+    "staging/preview/native/tests/i2p_streaming_manager_interop_tests.cpp": "8d4d86a9dc3d7320147a356b014c54bfac6cb175992b15f39960d9b42a61dd39",
+    "before/preview/native/tests/i2p_streaming_manager_interop_tests.cpp": "a18cdfb7825c1e24c35f9199fdf673e144bfe5e5cd2b018307b49330e36be432"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/manifest.json": "13e56c1acbbc8abc8dc70eebec36f116b94bb02900f8aefaa093c0d3aa5f188c",
+    "/opt/Qt/6.12.0/gcc_64/include/QtTest/qtestcase.h": "8402a1fc3d17de1f3e7e82536442001dd0dbdb8bef0a47267b213c48791ff991",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/manager-pump-review-oracle.json": "56d5e7d4f4b40fe4927d9a756b4ffd23a0db4c6418ca17746e3a5b7ebbd952e1",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/runs/clang-r1/result.json": "0fc788b1a335222833753d26e78f6dc82156827ce34f549c207702759657ec82",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/runs/clang-r1/tests.xml": "471b9b0484c06b97a7e2c69c45cf191c66ab46620cffc78086a281b9deda2ba3",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/runs/clang-r1/ctest-full.log": "3dd2403b4c96c5039331d253e2e67a4075fcbaa425f8728b7e9b394e67f35a59",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/runs/clang-r1/actual-manager/manager/bridge.json": "64cf54188a192c94985d0bc08125f017e5bd4480860c0cecb4445c8757810526"
+  },
+  "production_changed": false,
+  "java_helper_changed": false,
+  "cmake_changed": false,
+  "runtime_credit": false,
+  "author_execution": false
+}

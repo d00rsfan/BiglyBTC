@@ -1,0 +1,225 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_SEALED_STDIN_REPAIR_PENDING_REVIEW_NEW_IMAGE_AND_READONLY_PREFLIGHT",
+  "native_commit": "ad4854e920d86a511cc90cd52e4ab161adcb0fec",
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/manifest.json",
+  "parent_manifest_sha256": "87435df7ed772eff6712e7c634fb5829abaadcd8ff68e20f92298845fbeb5e40",
+  "source_paths": {
+    "preview/native/adapters/azureus_contacts.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/adapters/azureus_contacts.cpp",
+      "before_sha256": "ceb05b6ccc628090014535861e58785b0cdbc0f88ed07a11360a7e04246ff14b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/adapters/azureus_contacts.cpp",
+      "after_sha256": "ceb05b6ccc628090014535861e58785b0cdbc0f88ed07a11360a7e04246ff14b"
+    },
+    "preview/native/adapters/azureus_contacts.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/adapters/azureus_contacts.hpp",
+      "before_sha256": "a3cb3c15d3ad1bc7609e78151a515e499910a54bf29ce58650059ac861b6cfc5",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/adapters/azureus_contacts.hpp",
+      "after_sha256": "a3cb3c15d3ad1bc7609e78151a515e499910a54bf29ce58650059ac861b6cfc5"
+    },
+    "preview/native/adapters/azureus_public_policy.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/adapters/azureus_public_policy.cpp",
+      "before_sha256": "4eb6b28fb8bf11ea7ccc49698561f4a2eeba9ca1cf6f10aa215586a2131f7ae7",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/adapters/azureus_public_policy.cpp",
+      "after_sha256": "4eb6b28fb8bf11ea7ccc49698561f4a2eeba9ca1cf6f10aa215586a2131f7ae7"
+    },
+    "preview/native/adapters/azureus_public_policy.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/adapters/azureus_public_policy.hpp",
+      "before_sha256": "20b5283e9699e9df6b265e8d4d574c546dbceb9c90962d7587d7fa5ce1f42352",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/adapters/azureus_public_policy.hpp",
+      "after_sha256": "20b5283e9699e9df6b265e8d4d574c546dbceb9c90962d7587d7fa5ce1f42352"
+    },
+    "preview/native/app/azureus_profile_io.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/app/azureus_profile_io.hpp",
+      "before_sha256": "6063f4700751db3ec9b0afcba84103057c109fdac46fc90aecbe1e41af12b3a2",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/app/azureus_profile_io.hpp",
+      "after_sha256": "6063f4700751db3ec9b0afcba84103057c109fdac46fc90aecbe1e41af12b3a2"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/app/azureus_profile_io_owner.inc",
+      "before_sha256": "ac23da0f9f7bde8630e2fbc875e868495258f6401409b724c6bfc73bb3c5b9d9",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/app/azureus_profile_io_owner.inc",
+      "after_sha256": "ac23da0f9f7bde8630e2fbc875e868495258f6401409b724c6bfc73bb3c5b9d9"
+    },
+    "preview/native/app/azureus_public_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/app/azureus_public_owner.inc",
+      "before_sha256": "ba89062167be84b623c000b57830a073ca7a93710e94cd458e7ec11aecd158ff",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/app/azureus_public_owner.inc",
+      "after_sha256": "ba89062167be84b623c000b57830a073ca7a93710e94cd458e7ec11aecd158ff"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "18739aab6073ac0251daff8b5f06558293f1637d0a8b931b94b9c1781a7dbd22",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "18739aab6073ac0251daff8b5f06558293f1637d0a8b931b94b9c1781a7dbd22"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "2887f1a519659c838ea0a64f75314f28799c8750a654a1f3a19bfaed2e042013",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "2887f1a519659c838ea0a64f75314f28799c8750a654a1f3a19bfaed2e042013"
+    },
+    "preview/native/core/include/biglybtc/azureus_endpoint.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/azureus_endpoint.hpp",
+      "before_sha256": "de028f9b0837c5c6cc0806f7c3e3dfca07d5d7064beff7341372b692eea933e6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/core/include/biglybtc/azureus_endpoint.hpp",
+      "after_sha256": "de028f9b0837c5c6cc0806f7c3e3dfca07d5d7064beff7341372b692eea933e6"
+    },
+    "preview/native/services/azureus_control/lookup.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/services/azureus_control/lookup.cpp",
+      "before_sha256": "8471cab7f0e9022bba79d94aea4c90e35e604941a2fe9190b6cd43e5419ab92f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/services/azureus_control/lookup.cpp",
+      "after_sha256": "8471cab7f0e9022bba79d94aea4c90e35e604941a2fe9190b6cd43e5419ab92f"
+    },
+    "preview/native/services/azureus_control/lookup.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/services/azureus_control/lookup.hpp",
+      "before_sha256": "b49932fcd39107c2b97d34d60f6b42bc47dde20a154ec945cfeedf7c0f78cf9f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/services/azureus_control/lookup.hpp",
+      "after_sha256": "b49932fcd39107c2b97d34d60f6b42bc47dde20a154ec945cfeedf7c0f78cf9f"
+    },
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp/owned_routing.inc",
+      "before_sha256": "e74574468929762d85e3d2bf2fe659abc0c70fb716d4498de93411dd38a57994",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/services/azureus_udp/owned_routing.inc",
+      "after_sha256": "e74574468929762d85e3d2bf2fe659abc0c70fb716d4498de93411dd38a57994"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp/owned_transport.cpp",
+      "before_sha256": "43093e8fe5a2ef3daac0cd76a7e2f53d35b24872b1f9012033735ee7a6ef3726",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+      "after_sha256": "43093e8fe5a2ef3daac0cd76a7e2f53d35b24872b1f9012033735ee7a6ef3726"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp/owned_transport.hpp",
+      "before_sha256": "de02a807c9b00028ab8262d4c1bc19dba3c4a3c53d361fe58622f36dcd1bf822",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+      "after_sha256": "de02a807c9b00028ab8262d4c1bc19dba3c4a3c53d361fe58622f36dcd1bf822"
+    },
+    "preview/native/tests/azureus_public_bound_namespace.py": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_public_bound_namespace.py",
+      "before_sha256": "58c0b339d5c2732b0cfa54e5737c7030d506808dbb07c5abeb5a43485d8be92b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/staging/preview/native/tests/azureus_public_bound_namespace.py",
+      "after_sha256": "e65d2faf089269c1eb94be3eaabaf398d749bdfd731b7f029ab7554dda98dfb2"
+    },
+    "preview/native/tests/azureus_public_bound_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_public_bound_tests.cpp",
+      "before_sha256": "7afc81a498a9eab59cda319685c888fa6c7c3d8a90f23f7a3cea0e2d1c3fa6b2",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/tests/azureus_public_bound_tests.cpp",
+      "after_sha256": "7afc81a498a9eab59cda319685c888fa6c7c3d8a90f23f7a3cea0e2d1c3fa6b2"
+    },
+    ".github/workflows/biglybtc-linux-deb.yml": {
+      "before_path": "/home/yurii/Java/BiglyBTC/.github/workflows/biglybtc-linux-deb.yml",
+      "before_sha256": "b88eeb7ab580ddd0792ebd386e203990aec67f3a335b167155809d7cf805e2bb",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/staging/.github/workflows/biglybtc-linux-deb.yml",
+      "after_sha256": "567b942d7ad31dde232c4bea66d61f2c7b7f4cb7adc2d8a4d8cf8b0cee7def56"
+    },
+    ".github/workflows/native-preview.yml": {
+      "before_path": "/home/yurii/Java/BiglyBTC/.github/workflows/native-preview.yml",
+      "before_sha256": "6fe7b11b265ca87dea4a60250cde2bf137e58dee6bb72cc46dde4f46b99fdc0c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/staging/.github/workflows/native-preview.yml",
+      "after_sha256": "b4ce94d00daccfcf27e00107da5da940eb8a804f460cba9f762be0f71ac31af8"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "6115e5e6f2d45ee5325c274f6ef664fcf5fa8a36f93ae3b4cabfbeee8c8c0cbf",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/staging/preview/native/tests/CMakeLists.txt",
+      "after_sha256": "2940c110043dc090a2d16433306eabd30b30befe53b8da5bbedcd6a749891bc9"
+    },
+    "preview/native/tests/azureus_public_admin_launcher.py": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/staging/preview/native/tests/azureus_public_admin_launcher.py",
+      "after_sha256": "355271b706c964f3edf041b613f5d938fc59b8dd90911ee75c54fe942183e7f3"
+    },
+    "preview/native/tests/public_namespace_fixture/preflight.py": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/staging/preview/native/tests/public_namespace_fixture/preflight.py",
+      "after_sha256": "66f4e0a1456e088b0d8e0793ab0d46fe5d8874b13874519a7ed4e5ebe0c3def8"
+    },
+    "preview/native/tests/public_namespace_fixture/public_netns_admin.c": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/staging/preview/native/tests/public_namespace_fixture/public_netns_admin.c",
+      "after_sha256": "8b57e0b88223a2fda9fe4f03d75ed757ca0682337d656b3c46813bb715d79912"
+    }
+  },
+  "delta_paths": [
+    "preview/native/tests/public_namespace_fixture/public_netns_admin.c",
+    "preview/native/tests/azureus_public_admin_launcher.py"
+  ],
+  "cmake_fragments": [],
+  "cmake_note": "One exact current tests/CMakeLists.txt before/after; inherited Public append fragments already adopted, do not append twice.",
+  "artifacts_sha256": {
+    "parent-delta.patch": "8cd392072d7d418eccf9e8dcfbf615774010a3744d2ebea1e61ada211f397e8e",
+    "ADOPTION.txt": "fc2a82c68e972681919f844666e2e25f132a5c0b3c9036faf4d3d3327cbb78d0",
+    "staging/preview/native/tests/azureus_public_admin_launcher.py": "355271b706c964f3edf041b613f5d938fc59b8dd90911ee75c54fe942183e7f3",
+    "staging/preview/native/tests/public_namespace_fixture/public_netns_admin.c": "8b57e0b88223a2fda9fe4f03d75ed757ca0682337d656b3c46813bb715d79912"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/manifest.json": "87435df7ed772eff6712e7c634fb5829abaadcd8ff68e20f92298845fbeb5e40",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/preflight/r2/result.json": "5293ad5efba5595fd14a72ac55e6e0c80768bf3216fbcdd8c39cde8dfaccb4f9"
+  },
+  "namespace_admin_contract": {
+    "mode": [
+      "pkexec",
+      "sudo"
+    ],
+    "helper_image": "NEW_ROOT_COMPILE_MEASUREMENT_REVIEW_REQUIRED",
+    "helper_source": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/staging/preview/native/tests/public_namespace_fixture/public_netns_admin.c",
+      "after_sha256": "8b57e0b88223a2fda9fe4f03d75ed757ca0682337d656b3c46813bb715d79912"
+    },
+    "launch_environment_keys": [
+      "BIGLYBTC_PUBLIC_ADMIN_MODE",
+      "BIGLYBTC_PUBLIC_ADMIN_HELPER",
+      "BIGLYBTC_PUBLIC_ADMIN_SHA256",
+      "BIGLYBTC_PUBLIC_ADMIN_RECEIPT"
+    ],
+    "per_invocation_value": "Only fresh owned RECEIPT path varies; mode/helper/SHA remain pinned.",
+    "receipt_status_pass": "PASS_AUTHENTICATED_NAMESPACE_SUBJECT",
+    "preflight_status": "PASS_OWNED_CALLER_NAMESPACE_PREFLIGHT",
+    "auth_or_setup_refusal": "BLOCKED_AUTH_OR_NAMESPACE_SETUP; no functional credit",
+    "capabilities_before_user_exec": "All sets including runtime bounding/ambient zero; caller UID/GID triples; groups empty; NoNewPrivs1",
+    "no_fallback": true,
+    "readonly_preflight_source": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/staging/preview/native/tests/public_namespace_fixture/preflight.py",
+      "sha256": "66f4e0a1456e088b0d8e0793ab0d46fe5d8874b13874519a7ed4e5ebe0c3def8"
+    },
+    "payload_transport": "sealed FD0; no privileged read or foreign proc access after drop"
+  },
+  "test": {
+    "target": "biglybtc-azureus-public-bound-tests",
+    "suite": "azureus-public-bound",
+    "timeout_seconds": 240,
+    "helper_target": "biglybtc-public-netns-admin"
+  },
+  "author_execution": false,
+  "native_mutations": false,
+  "root_review_required_before_any_privileged_invocation": true,
+  "inherited_paths": [
+    "preview/native/adapters/azureus_contacts.cpp",
+    "preview/native/adapters/azureus_contacts.hpp",
+    "preview/native/adapters/azureus_public_policy.cpp",
+    "preview/native/adapters/azureus_public_policy.hpp",
+    "preview/native/app/azureus_profile_io.hpp",
+    "preview/native/app/azureus_profile_io_owner.inc",
+    "preview/native/app/azureus_public_owner.inc",
+    "preview/native/app/owned_azureus_service.cpp",
+    "preview/native/app/owned_azureus_service.hpp",
+    "preview/native/core/include/biglybtc/azureus_endpoint.hpp",
+    "preview/native/services/azureus_control/lookup.cpp",
+    "preview/native/services/azureus_control/lookup.hpp",
+    "preview/native/services/azureus_udp/owned_routing.inc",
+    "preview/native/services/azureus_udp/owned_transport.cpp",
+    "preview/native/services/azureus_udp/owned_transport.hpp",
+    "preview/native/tests/azureus_public_bound_namespace.py",
+    "preview/native/tests/azureus_public_bound_tests.cpp",
+    ".github/workflows/biglybtc-linux-deb.yml",
+    ".github/workflows/native-preview.yml",
+    "preview/native/tests/CMakeLists.txt",
+    "preview/native/tests/public_namespace_fixture/preflight.py"
+  ]
+}

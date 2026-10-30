@@ -1,0 +1,8 @@
+{
+    "failure": "Actual manager application bytes differ",
+    "java_frames": "103",
+    "late_delivered": "1",
+    "leases": "2",
+    "native_frames": "165",
+    "renewals": "1"
+}

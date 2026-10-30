@@ -1,0 +1,22 @@
+{
+  "status": "PASS_PREPARED_STREAMING_MANAGER_HELPERS",
+  "source_commit": "43d642fb0025510c581ebdc4d7a332752c511a46",
+  "adoption_sha256": "3646f8623bf9d8bd46d49bb148d6301e5b5b258bdde5e2159356cb86a2fd6644",
+  "runner_sha256": "4f4c33a7942446798752e5951c8ceec3c149f1049dec148ef129f587f1cf5837",
+  "acceptance_manifest_sha256": "13e56c1acbbc8abc8dc70eebec36f116b94bb02900f8aefaa093c0d3aa5f188c",
+  "subjects_executed": false,
+  "javac_invocations": 1,
+  "java_program": "/usr/bin/java",
+  "legacy_classes": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/helpers/legacy",
+  "manager_classes": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/helpers/manager",
+  "helper_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/helpers/result.json",
+    "sha256": "1e4f933d29d7e9c405e8c66d9697191602601f0cd57d16c49692613529d315bc"
+  },
+  "original_head_index_unchanged": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "source_unchanged": true,
+  "commands_sha256": "c2328abfb417057a68d0562420dd7ae6c57fa2a93f74a8c681703255ef971e9d"
+}

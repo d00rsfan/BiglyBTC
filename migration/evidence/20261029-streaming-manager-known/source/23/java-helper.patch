@@ -1,0 +1,65 @@
+--- StreamingPeer.java (frozen H helper)
++++ StreamingPeer.java (window acceptance child)
+@@ -4,6 +4,7 @@
+ import java.lang.reflect.*;
+ import java.nio.file.*;
+ import java.nio.charset.StandardCharsets;
++import java.security.MessageDigest;
+ import java.util.*;
+ import java.util.concurrent.*;
+ import java.util.concurrent.atomic.*;
+@@ -16,6 +17,8 @@
+ 
+ public final class StreamingPeer {
+   static final int MAX_PACKET=32768,MAX_MUX=40960,MAX_FRAMES=4096;
++  static final int UPLOAD_SIZE=128*1024;
++  static final byte[] UPLOAD_HEADER=("POST /owned-upload HTTP/1.0\r\nHost: owned.i2p\r\nContent-Length: "+UPLOAD_SIZE+"\r\n\r\n").getBytes(StandardCharsets.US_ASCII);
+   static final byte[] REQUEST="GET /owned-stream HTTP/1.0\r\nHost: owned.i2p\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+   static void require(boolean ok,String why){if(!ok)throw new IllegalStateException(why);}
+   static byte[] read(Path p)throws Exception{byte[] b=Files.readAllBytes(p);require(b.length>0&&b.length<=1024,"Bounded synthetic fixture required");return b;}
+@@ -24,6 +27,14 @@
+     Path p=root.resolve(leaf+".tmp");Files.write(p,(json+"\n").getBytes(StandardCharsets.UTF_8),StandardOpenOption.CREATE_NEW);Files.move(p,root.resolve(leaf),StandardCopyOption.ATOMIC_MOVE);
+   }
+   static byte[] response(boolean backpressure){int size=backpressure?96*1024:8192;byte[] header=("HTTP/1.0 200 OK\r\nContent-Length: "+size+"\r\nConnection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII);byte[] out=Arrays.copyOf(header,header.length+size);for(int i=0;i<size;i++)out[header.length+i]=(byte)(i*31+7);return out;}
++  static String hex(byte[] bytes){StringBuilder out=new StringBuilder(bytes.length*2);for(byte value:bytes){out.append(Character.forDigit((value>>>4)&15,16));out.append(Character.forDigit(value&15,16));}return out.toString();}
++  static String receiveUpload(I2PSocket socket)throws Exception{
++    InputStream input=socket.getInputStream();require(Arrays.equals(input.readNBytes(UPLOAD_HEADER.length),UPLOAD_HEADER),"Wrong actual upload header");
++    MessageDigest digest=MessageDigest.getInstance("SHA-256");byte[] buffer=new byte[4096];int received=0;
++    while(received<UPLOAD_SIZE){int n=input.read(buffer,0,Math.min(buffer.length,UPLOAD_SIZE-received));require(n>0,"Truncated actual128KiB upload");for(int i=0;i<n;i++)require(buffer[i]==(byte)((received+i)*17+11),"Actual upload byte mismatch");digest.update(buffer,0,n);received+=n;}
++    require(input.read()==-1,"Native FIN must follow exact128KiB upload");String value=hex(digest.digest());byte[] body=(value+"\n").getBytes(StandardCharsets.US_ASCII);
++    OutputStream output=socket.getOutputStream();output.write(("HTTP/1.0 200 OK\r\nContent-Length: "+body.length+"\r\nConnection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII));output.write(body);output.flush();output.close();return value;
++  }
+   static final class Adapter implements InvocationHandler {
+     final Destination local,remote;final SigningPrivateKey key;
+     final I2PSession session;final ArrayBlockingQueue<byte[]> outgoing=new ArrayBlockingQueue<>(16);
+@@ -86,9 +97,9 @@
+   }
+   public static void main(String[] args){
+     final OutputStream wireOut=new FileOutputStream(FileDescriptor.out);System.setOut(System.err);
+-    int exit=1;I2PSocketManagerFull manager=null;Adapter adapter=null;AtomicReference<Throwable> appFailure=new AtomicReference<>();AtomicBoolean appDone=new AtomicBoolean();Path root=null;
++    int exit=1;I2PSocketManagerFull manager=null;Adapter adapter=null;AtomicReference<Throwable> appFailure=new AtomicReference<>();AtomicBoolean appDone=new AtomicBoolean();AtomicReference<String> uploadDigest=new AtomicReference<>();Path root=null;
+     try{
+-      require(args.length==4,"http|recovery|backpressure|reset|cancel OWNED_ROOT FIXTURES MODIFIED_JAR");String mode=args[0];require(mode.equals("http")||mode.equals("recovery")||mode.equals("backpressure")||mode.equals("reset")||mode.equals("cancel"),"Unsupported peer mode");
++      require(args.length==4,"http|recovery|backpressure|reset|cancel|upload OWNED_ROOT FIXTURES MODIFIED_JAR");String mode=args[0];require(mode.equals("http")||mode.equals("recovery")||mode.equals("backpressure")||mode.equals("reset")||mode.equals("cancel")||mode.equals("upload"),"Unsupported peer mode");
+       root=Paths.get(args[1]);require(root.isAbsolute()&&Files.isDirectory(root),"Owned absolute output required");Path fixtures=Paths.get(args[2]);
+       for(Class<?> c:new Class<?>[]{I2PSocketManagerFull.class,I2PSession.class,Destination.class,DataHelper.class})require(c.getProtectionDomain().getCodeSource().getLocation().toURI().equals(Paths.get(args[3]).toUri()),"Wrong modified class origin: "+c.getName());
+       Properties contextOptions=new Properties();contextOptions.setProperty("time.disabled","true");contextOptions.setProperty("i2p.dir.config",root.toString());contextOptions.setProperty("i2p.dir.base",root.toString());
+@@ -105,7 +116,8 @@
+       Thread application=new Thread(()->{try{
+         try(I2PSocket socket=server.accept()){
+           require(socket.getPeerDestination().equals(remote)&&socket.getLocalPort()==80&&socket.getPort()==9000,"Wrong actual accepted Streaming connection");socket.setReadTimeout(30000);
+-          if(mode.equals("reset")){socket.reset();}
++          if(mode.equals("upload")){uploadDigest.set(receiveUpload(socket));}
++          else if(mode.equals("reset")){socket.reset();}
+           else if(mode.equals("cancel")){
+             // Native cancellation is LOCAL ONLY. Queue genuine late peer data;
+             // the C++ fixture holds it until after cancellation. No timeout or
+@@ -117,7 +129,7 @@
+             OutputStream output=socket.getOutputStream();output.write(response(mode.equals("backpressure")));output.flush();output.close();
+           }
+         }
+-        appDone.set(true);output(outputRoot,"peer-application.json","{\"status\":\"PASS\",\"mode\":\""+mode+"\",\"actual_manager_socket\":true}");
++        appDone.set(true);output(outputRoot,"peer-application.json","{\"status\":\"PASS\",\"mode\":\""+mode+"\",\"actual_manager_socket\":true"+(mode.equals("upload")?",\"upload_bytes\":"+UPLOAD_SIZE+",\"upload_sha256\":\""+uploadDigest.get()+"\"":"")+"}");
+       }catch(Throwable t){appFailure.compareAndSet(null,t);}},"original-peer-application");application.setDaemon(true);application.start();
+       output(root,"peer-ready.json","{\"status\":\"ACTUAL_MANAGER_PROTOCOL6_LISTENER\",\"router\":false,\"session_adapter_only\":true}");
+       // Only real protocol6 payloads traverse stdin/stdout. EOF is a fixture

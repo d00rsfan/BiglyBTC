@@ -1,0 +1,17 @@
+[
+  {
+    "name": "prepare-helpers",
+    "command": [
+      "bash",
+      "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/PREPARE-HELPERS.sh",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/helpers",
+      "/usr/bin/java",
+      "/usr/bin/javac"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 2.223,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/prepare-helpers.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

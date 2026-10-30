@@ -1,0 +1,11 @@
+Possible race in the bundled I2P Streaming implementation when closing output after EOF
+
+Whilst testing native interoperability with the unmodified azi2pcore_2.13.0.1.jar bundled with the I2P helper plugin, I intermittently received java.io.IOException: disconnected from MessageOutputStream.close(), after the application had read the expected data and received EOF.
+
+The stack was PacketLocal.waitForCompletion(), MessageOutputStream.flush(), MessageOutputStream.close(). The test used OpenJDK 26, an isolated I2PSession adapter and the actual I2PSocketManagerFull. This has not been reproduced in the desktop application or against a live router.
+
+Inspection of the actual bundled bytecode shows that Connection.closeReceived() calls MessageInputStream.closeReceived() before reading _closeSentOn. The input call wakes the application reader. If that reader immediately calls output.close(), it can set _closeSentOn before the original closeReceived() call reaches its check. That call can then invoke disconnect(true), leaving the output close waiting for an acknowledgement on a disconnected connection. In the captured failure, the native peer had produced and queued its genuine final acknowledgement, but the Java manager was torn down before consuming it.
+
+Could you check whether the decision about an already pending local close should be made before waking the input reader, with suitable synchronisation? I have not changed the bundled JAR. The test fixture now orders its application output close after the genuine incoming FIN callback has returned; it still requires real EOF and the normal output-close acknowledgement.
+
+The JAR SHA-256 is b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5. Its behaviour was checked directly rather than assuming that it matches the official I2P 2.13.0 sources.

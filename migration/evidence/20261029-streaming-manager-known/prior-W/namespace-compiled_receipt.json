@@ -1,0 +1,51 @@
+{
+  "status": "PASS_COMPILED_FIXED_NAMESPACE_HELPER",
+  "compiler_exit": 0,
+  "runner_sha256": "7486c2af38b8438fdf6ca3c74db2f1e6ad36df35468e93d447792fee83ca4435",
+  "source_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/manifest.json",
+    "sha256": "9c781e5bebea7841cc7d574894367be4460c486f5a9abb99aed7580325f65edb"
+  },
+  "source": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/staging/preview/native/tests/public_namespace_fixture/public_netns_admin.c",
+    "sha256": "8b57e0b88223a2fda9fe4f03d75ed757ca0682337d656b3c46813bb715d79912"
+  },
+  "compiler": {
+    "path": "/usr/bin/x86_64-linux-gnu-gcc-15",
+    "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88",
+    "version": "x86_64-linux-gnu-gcc-15 (Ubuntu 15.2.0-16ubuntu1) 15.2.0"
+  },
+  "command": [
+    "/usr/bin/make",
+    "--jobserver-style=fifo",
+    "-j3",
+    "--no-print-directory",
+    "-f",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/compile.mk"
+  ],
+  "compiler_command": [
+    "/usr/bin/x86_64-linux-gnu-gcc-15",
+    "-std=c11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+    "-Werror",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/staging/preview/native/tests/public_namespace_fixture/public_netns_admin.c",
+    "-o",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/public-netns-admin"
+  ],
+  "makefile_sha256": "9c93916b1a5607ef353b330ab0752b1af3466b302bc6812d9719a5e26bdd30f4",
+  "compile_log_sha256": "d3e3b361eac06dd6f10418f1f165a839b56bf1b2bebb6fc92c29434943fc12c0",
+  "elapsed_ms": 630,
+  "admin_invoked": false,
+  "namespace_invoked": false,
+  "subjects_run": false,
+  "helper": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/public-netns-admin",
+    "sha256": "900ffe42f48a5452a78160e254ea8f21575b995ba2a7d3a0c6d066be80826d86",
+    "bytes": 41232,
+    "uid": 1000,
+    "gid": 1000
+  }
+}

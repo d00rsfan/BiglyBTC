@@ -1,0 +1,13 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+    Start 301: azureus-public-bound
+1/1 Test #301: azureus-public-bound .............   Passed   53.18 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+namespace    =  53.18 sec*proc (1 test)
+profile      =  53.18 sec*proc (1 test)
+routing      =  53.18 sec*proc (1 test)
+unit         =  53.18 sec*proc (1 test)
+
+Total Test time (real) =  53.19 sec

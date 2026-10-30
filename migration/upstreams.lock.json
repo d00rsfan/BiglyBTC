@@ -7957,7 +7957,8 @@
             "core/src/com/biglybt/core/dht/transport/udp/impl/packethandler/DHTUDPPacketHandler.java",
             "core/src/com/biglybt/core/networkmanager/impl/udp/UDPNetworkManager.java",
             "core/src/com/biglybt/core/util/Constants.java",
-            "core/src/com/biglybt/pifimpl/local/PluginConfigImpl.java"
+            "core/src/com/biglybt/pifimpl/local/PluginConfigImpl.java",
+            "core/src/com/biglybt/core/dht/transport/udp/DHTTransportUDP.java"
           ],
           "source_symbols": [
             "DHTDBImpl.store",
@@ -7982,7 +7983,10 @@
             "DHTPluginImpl",
             "DHTUDPPacketHandler",
             "UDPNetworkManager",
-            "IpFilterImpl"
+            "IpFilterImpl",
+            "DHTTransportUDPContactImpl",
+            "DHTControlImpl",
+            "DHTUDPUtils"
           ],
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "first_ported_commit": null,
@@ -8056,6 +8060,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "04b6287a38cec6bd123e2648ada278ea348b85db",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -8066,7 +8075,8 @@
         "migration/evidence/20261029-profile-io-i2cp-tracker/REVIEW.md",
         "migration/evidence/20261029-routing-streaming/REVIEW.md",
         "migration/evidence/20261029-contacts-enc4/REVIEW.md",
-        "migration/evidence/20261029-public-bound-streaming-window/REVIEW.md"
+        "migration/evidence/20261029-public-bound-streaming-window/REVIEW.md",
+        "migration/evidence/20261029-streaming-manager-known/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-azureus-volatile-database/verification.json",
@@ -8077,7 +8087,8 @@
         "migration/evidence/20261029-profile-io-i2cp-tracker/verification.json",
         "migration/evidence/20261029-routing-streaming/verification.json",
         "migration/evidence/20261029-contacts-enc4/verification.json",
-        "migration/evidence/20261029-public-bound-streaming-window/verification.json"
+        "migration/evidence/20261029-public-bound-streaming-window/verification.json",
+        "migration/evidence/20261029-streaming-manager-known/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8782,7 +8793,13 @@
         "preview/native/services/i2p_streaming/stream.hpp",
         "preview/native/tests/i2p_streaming_tests.cpp",
         "preview/native/tests/i2p_streaming_interop_tests.cpp",
-        "preview/native/adapters/CMakeLists.txt"
+        "preview/native/adapters/CMakeLists.txt",
+        "preview/native/services/i2cp_channel/managed_streams.inc",
+        "preview/native/services/i2p_streaming/manager.cpp",
+        "preview/native/services/i2p_streaming/manager.hpp",
+        "preview/native/tests/i2cp_stream_manager_tests.cpp",
+        "preview/native/tests/i2p_streaming_manager_interop_tests.cpp",
+        "preview/native/tests/i2p_streaming_manager_tests.cpp"
       ],
       "source_coverage": [
         {
@@ -8922,7 +8939,12 @@
             "ConnectionOptions",
             "ConnectionPacketHandler",
             "PacketLocal",
-            "SimpleBandwidthEstimator"
+            "SimpleBandwidthEstimator",
+            "ConnectionManager",
+            "ConnectionHandler",
+            "MessageHandler",
+            "I2PSocketManager",
+            "I2PServerSocket"
           ],
           "baseline_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
           "first_ported_commit": null,
@@ -9006,6 +9028,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "04b6287a38cec6bd123e2648ada278ea348b85db",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -9019,7 +9046,8 @@
         "migration/evidence/20261029-i2cp-isolated-router/REVIEW.md",
         "migration/evidence/20261029-routing-streaming/REVIEW.md",
         "migration/evidence/20261029-contacts-enc4/REVIEW.md",
-        "migration/evidence/20261029-public-bound-streaming-window/REVIEW.md"
+        "migration/evidence/20261029-public-bound-streaming-window/REVIEW.md",
+        "migration/evidence/20261029-streaming-manager-known/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
@@ -9032,7 +9060,8 @@
         "migration/evidence/20261029-i2cp-isolated-router/verification.json",
         "migration/evidence/20261029-routing-streaming/verification.json",
         "migration/evidence/20261029-contacts-enc4/verification.json",
-        "migration/evidence/20261029-public-bound-streaming-window/verification.json"
+        "migration/evidence/20261029-public-bound-streaming-window/verification.json",
+        "migration/evidence/20261029-streaming-manager-known/verification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     }

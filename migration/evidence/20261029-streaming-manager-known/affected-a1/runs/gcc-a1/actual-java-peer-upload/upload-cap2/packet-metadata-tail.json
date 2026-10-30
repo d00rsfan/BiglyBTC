@@ -1,0 +1,3594 @@
+{
+    "bridge_failure": "",
+    "capacity": 256,
+    "diagnostic_errors": "0",
+    "dropped_events": "0",
+    "events": [
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "7986",
+            "flags": 1257,
+            "from_port": 9000,
+            "nacks": [
+                "209764049",
+                "1753091967",
+                "3418953194",
+                "2993289648",
+                "241123575",
+                "2111399659",
+                "136949824",
+                "2831240632"
+            ],
+            "payload_bytes": "0",
+            "receive": "3141955084",
+            "send": "0",
+            "sequence": "0",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "7987",
+            "flags": 1257,
+            "from_port": 9000,
+            "nacks": [
+                "209764049",
+                "1753091967",
+                "3418953194",
+                "2993289648",
+                "241123575",
+                "2111399659",
+                "136949824",
+                "2831240632"
+            ],
+            "payload_bytes": "0",
+            "receive": "3141955084",
+            "send": "0",
+            "sequence": "0",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "java-produced",
+            "elapsed_ms": "8850",
+            "flags": 233,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "8854",
+            "flags": 233,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "8864",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "0",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "8865",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "0",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "8950",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "1",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "8951",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "1",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "8952",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "2",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "8953",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "2",
+            "to_port": 80
+        },
+        {
+            "ack_through": "1",
+            "direction": "java-produced",
+            "elapsed_ms": "9067",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "1",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "9119",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "9124",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "3",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "9130",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "3",
+            "to_port": 80
+        },
+        {
+            "ack_through": "2",
+            "direction": "java-produced",
+            "elapsed_ms": "9159",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "2",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "9203",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "9214",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "4",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "9215",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "4",
+            "to_port": 80
+        },
+        {
+            "ack_through": "3",
+            "direction": "java-produced",
+            "elapsed_ms": "9247",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "3",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "9293",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "9316",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "5",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "9320",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "5",
+            "to_port": 80
+        },
+        {
+            "ack_through": "4",
+            "direction": "java-produced",
+            "elapsed_ms": "9382",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "4",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "9432",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "9439",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "6",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "9440",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "6",
+            "to_port": 80
+        },
+        {
+            "ack_through": "5",
+            "direction": "java-produced",
+            "elapsed_ms": "9445",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "5",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "9495",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "9500",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "7",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "9501",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "7",
+            "to_port": 80
+        },
+        {
+            "ack_through": "7",
+            "direction": "java-produced",
+            "elapsed_ms": "9606",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "7",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "9648",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "9657",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "8",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "9659",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "8",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "9660",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "9",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "9661",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "9",
+            "to_port": 80
+        },
+        {
+            "ack_through": "9",
+            "direction": "java-produced",
+            "elapsed_ms": "9752",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "9",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "9801",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "9965",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "10",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "9966",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "10",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "9968",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "11",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "9970",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "11",
+            "to_port": 80
+        },
+        {
+            "ack_through": "11",
+            "direction": "java-produced",
+            "elapsed_ms": "10024",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "11",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "10065",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10075",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "12",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10076",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "12",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10080",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "13",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10081",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "13",
+            "to_port": 80
+        },
+        {
+            "ack_through": "12",
+            "direction": "java-produced",
+            "elapsed_ms": "10170",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "12",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "10213",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "13",
+            "direction": "java-produced",
+            "elapsed_ms": "10216",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10226",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "14",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10229",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "14",
+            "to_port": 80
+        },
+        {
+            "ack_through": "13",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "10261",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10264",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "15",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10265",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "15",
+            "to_port": 80
+        },
+        {
+            "ack_through": "14",
+            "direction": "java-produced",
+            "elapsed_ms": "10301",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "14",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "10342",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10346",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "16",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10348",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "16",
+            "to_port": 80
+        },
+        {
+            "ack_through": "16",
+            "direction": "java-produced",
+            "elapsed_ms": "10408",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "16",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "10474",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10482",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "17",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10483",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "17",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10485",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "18",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10486",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "18",
+            "to_port": 80
+        },
+        {
+            "ack_through": "18",
+            "direction": "java-produced",
+            "elapsed_ms": "10582",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "18",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "10636",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10646",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "19",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10647",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "19",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10648",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "20",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10649",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "20",
+            "to_port": 80
+        },
+        {
+            "ack_through": "20",
+            "direction": "java-produced",
+            "elapsed_ms": "10729",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "20",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "10776",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10799",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "21",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10800",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "21",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10802",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "22",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10802",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "22",
+            "to_port": 80
+        },
+        {
+            "ack_through": "22",
+            "direction": "java-produced",
+            "elapsed_ms": "10859",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "22",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "10910",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10919",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "23",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10920",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "23",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "10922",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "24",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "10923",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "24",
+            "to_port": 80
+        },
+        {
+            "ack_through": "24",
+            "direction": "java-produced",
+            "elapsed_ms": "10972",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "24",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "11014",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11025",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "25",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11027",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "25",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11030",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "26",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11031",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "26",
+            "to_port": 80
+        },
+        {
+            "ack_through": "26",
+            "direction": "java-produced",
+            "elapsed_ms": "11093",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "26",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "11134",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11170",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "27",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11180",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "27",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11201",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "28",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11206",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "28",
+            "to_port": 80
+        },
+        {
+            "ack_through": "28",
+            "direction": "java-produced",
+            "elapsed_ms": "11258",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "28",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "11301",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11305",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "29",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11307",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "29",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11309",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "30",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11310",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "30",
+            "to_port": 80
+        },
+        {
+            "ack_through": "30",
+            "direction": "java-produced",
+            "elapsed_ms": "11359",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "30",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "11411",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11418",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "31",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11422",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "31",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11426",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "32",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11427",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "32",
+            "to_port": 80
+        },
+        {
+            "ack_through": "32",
+            "direction": "java-produced",
+            "elapsed_ms": "11472",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "32",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "11523",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11529",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "33",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11530",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "33",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11531",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "34",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11532",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "34",
+            "to_port": 80
+        },
+        {
+            "ack_through": "34",
+            "direction": "java-produced",
+            "elapsed_ms": "11584",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "34",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "11624",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11631",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "35",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11632",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "35",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11633",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "36",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11635",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "36",
+            "to_port": 80
+        },
+        {
+            "ack_through": "36",
+            "direction": "java-produced",
+            "elapsed_ms": "11689",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "36",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "11730",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11738",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "37",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11739",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "37",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11741",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "38",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11742",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "38",
+            "to_port": 80
+        },
+        {
+            "ack_through": "38",
+            "direction": "java-produced",
+            "elapsed_ms": "11802",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "38",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "11852",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11859",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "39",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11860",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "39",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "11862",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "40",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "11863",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "40",
+            "to_port": 80
+        },
+        {
+            "ack_through": "40",
+            "direction": "java-produced",
+            "elapsed_ms": "11918",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "40",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "11973",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12006",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "41",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12012",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "41",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12032",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "42",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12043",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "42",
+            "to_port": 80
+        },
+        {
+            "ack_through": "42",
+            "direction": "java-produced",
+            "elapsed_ms": "12086",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "42",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "12130",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12135",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "43",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12136",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "43",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12137",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "44",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12137",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "44",
+            "to_port": 80
+        },
+        {
+            "ack_through": "44",
+            "direction": "java-produced",
+            "elapsed_ms": "12221",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "44",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "12270",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12283",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "45",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12285",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "45",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12286",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "46",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12287",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "46",
+            "to_port": 80
+        },
+        {
+            "ack_through": "46",
+            "direction": "java-produced",
+            "elapsed_ms": "12344",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "46",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "12386",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12391",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "47",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12396",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "47",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12397",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "48",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12398",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "48",
+            "to_port": 80
+        },
+        {
+            "ack_through": "48",
+            "direction": "java-produced",
+            "elapsed_ms": "12448",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "48",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "12488",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12509",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "49",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12510",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "49",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12533",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "50",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12535",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "50",
+            "to_port": 80
+        },
+        {
+            "ack_through": "49",
+            "direction": "java-produced",
+            "elapsed_ms": "12572",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "50",
+            "direction": "java-produced",
+            "elapsed_ms": "12615",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "49",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "12615",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12653",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "51",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12657",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "51",
+            "to_port": 80
+        },
+        {
+            "ack_through": "50",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "12657",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12662",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "52",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12666",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "52",
+            "to_port": 80
+        },
+        {
+            "ack_through": "52",
+            "direction": "java-produced",
+            "elapsed_ms": "12712",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "52",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "12774",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12835",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "53",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12848",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "53",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12860",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "54",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12861",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "54",
+            "to_port": 80
+        },
+        {
+            "ack_through": "54",
+            "direction": "java-produced",
+            "elapsed_ms": "12948",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "54",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "12990",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12995",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "55",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12996",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "55",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "12997",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "56",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "12998",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "56",
+            "to_port": 80
+        },
+        {
+            "ack_through": "56",
+            "direction": "java-produced",
+            "elapsed_ms": "13057",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "56",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "13104",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13109",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "57",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13110",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "57",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13111",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "58",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13112",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "58",
+            "to_port": 80
+        },
+        {
+            "ack_through": "58",
+            "direction": "java-produced",
+            "elapsed_ms": "13164",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "58",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "13215",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13221",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "59",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13222",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "59",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13223",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "60",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13224",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "60",
+            "to_port": 80
+        },
+        {
+            "ack_through": "60",
+            "direction": "java-produced",
+            "elapsed_ms": "13277",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "60",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "13326",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13333",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "61",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13334",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "61",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13378",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "62",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13379",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "62",
+            "to_port": 80
+        },
+        {
+            "ack_through": "61",
+            "direction": "java-produced",
+            "elapsed_ms": "13390",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "61",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "13435",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13438",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "63",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13439",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "63",
+            "to_port": 80
+        },
+        {
+            "ack_through": "63",
+            "direction": "java-produced",
+            "elapsed_ms": "13459",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "63",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "13500",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13513",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "64",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13514",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "64",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13515",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "65",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13516",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "65",
+            "to_port": 80
+        },
+        {
+            "ack_through": "65",
+            "direction": "java-produced",
+            "elapsed_ms": "13572",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "65",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "13623",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13631",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "66",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13633",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "66",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13634",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "67",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13636",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "67",
+            "to_port": 80
+        },
+        {
+            "ack_through": "67",
+            "direction": "java-produced",
+            "elapsed_ms": "13682",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "67",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "13722",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13726",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "68",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13727",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "68",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13851",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "69",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13852",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "69",
+            "to_port": 80
+        },
+        {
+            "ack_through": "68",
+            "direction": "java-produced",
+            "elapsed_ms": "13852",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "68",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "13896",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13907",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "70",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13917",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "70",
+            "to_port": 80
+        },
+        {
+            "ack_through": "69",
+            "direction": "java-produced",
+            "elapsed_ms": "13917",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "69",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "13962",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "13979",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "71",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "13980",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "71",
+            "to_port": 80
+        },
+        {
+            "ack_through": "71",
+            "direction": "java-produced",
+            "elapsed_ms": "13992",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "71",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "14032",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "14044",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "72",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "14045",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "72",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "14048",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "73",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "14050",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "73",
+            "to_port": 80
+        },
+        {
+            "ack_through": "73",
+            "direction": "java-produced",
+            "elapsed_ms": "14102",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "73",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "14151",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "14157",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "74",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "14157",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "74",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "14158",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "75",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "14159",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1730",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "75",
+            "to_port": 80
+        },
+        {
+            "ack_through": "75",
+            "direction": "java-produced",
+            "elapsed_ms": "14203",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "75",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "14252",
+            "flags": 0,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "0",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-produced",
+            "elapsed_ms": "14256",
+            "flags": 74,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1394",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "76",
+            "to_port": 80
+        },
+        {
+            "ack_through": "0",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "14257",
+            "flags": 74,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "1394",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "76",
+            "to_port": 80
+        },
+        {
+            "ack_through": "76",
+            "direction": "java-produced",
+            "elapsed_ms": "14295",
+            "flags": 64,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "123",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "1",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "76",
+            "direction": "java-produced",
+            "elapsed_ms": "14313",
+            "flags": 74,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "2",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "76",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "14336",
+            "flags": 64,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "123",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "1",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "1",
+            "direction": "native-produced",
+            "elapsed_ms": "14341",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "0",
+            "to_port": 80
+        },
+        {
+            "ack_through": "1",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "14342",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "0",
+            "to_port": 80
+        },
+        {
+            "ack_through": "76",
+            "direction": "java-to-native-enqueued",
+            "elapsed_ms": "14365",
+            "flags": 74,
+            "from_port": 80,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "657745424",
+            "send": "3141955084",
+            "sequence": "2",
+            "to_port": 9000
+        },
+        {
+            "ack_through": "2",
+            "direction": "native-produced",
+            "elapsed_ms": "14372",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "0",
+            "to_port": 80
+        },
+        {
+            "ack_through": "2",
+            "direction": "native-to-java-enqueued",
+            "elapsed_ms": "14373",
+            "flags": 72,
+            "from_port": 9000,
+            "nacks": [
+            ],
+            "payload_bytes": "0",
+            "receive": "3141955084",
+            "send": "657745424",
+            "sequence": "0",
+            "to_port": 80
+        }
+    ],
+    "native_teardown": {
+        "channel_deadline_active": false,
+        "channel_failure": 0,
+        "channel_socket_active": false,
+        "channel_state": 4,
+        "elapsed_ms": "14597",
+        "java_available_output_bytes": "0",
+        "java_process_state": 0,
+        "java_queued_input_bytes": "0",
+        "router_available_bytes": "0",
+        "router_queued_bytes": "0",
+        "stream_present": false
+    },
+    "status": "DIAGNOSTIC_METADATA_ONLY"
+}

@@ -1,0 +1,108 @@
+{
+  "status": "SOURCE_ONLY_NO_EXECUTION",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_sources": {
+    "core/src/com/biglybt/core/dht/DHT.java": {
+      "git_blob": "ec5d68220b26e8fcb480a48753e26956b8903594",
+      "sha256": "0a56d60ddafdd35441e53ae3bcc3d9c4f9a674b3a118d5ab6fd6a6fc1543b0cf",
+      "sections": "91\u201395 network0/v4,3/v6,4 BiglyBT"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java": {
+      "git_blob": "b756f15b7863793f320b55957b657c53196b0cba",
+      "sha256": "b1d4e38f2bc9c33bda1bd39092ea87352a6668ca41664dafe1be7011fe163092",
+      "sections": "69\u201376 change budget;116\u2013141 history bounds;944\u20131059 explicit/quorum external address;1123\u20131256 change/family;1444\u20131450 validity;1721\u20131766 IP filter"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java": {
+      "git_blob": "28ad1c52552f254759b82418e1cf2b3678323407",
+      "sha256": "30cd1f70c74274aec6496a2f711b5865ad1b776d028f25503ba6a52ddb3fa6af",
+      "sections": "112\u2013142 actual transport/external ID;222\u2013226 isValid"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPUtils.java": {
+      "git_blob": "f8c0caa152881bd7abd5f330080d87c11f778914",
+      "sha256": "d852f590ca0df5361061e598be2087787ea588201f23d2fb7f826cfd62d4694b",
+      "sections": "getNodeID and original numeric contact format"
+    },
+    "core/src/com/biglybt/plugin/dht/DHTPlugin.java": {
+      "git_blob": "cd5cd9f90f9fea18b5dc555e2f4ac5354071fea3",
+      "sha256": "3af95cb144c85a02fcede7fda881f03e887286ec51574ac13fbb219c68b37748",
+      "sections": "118\u2013121 network defaults;780 disabled;1040\u20131088 actual v4/v6 owner;261-263/815-825 enabled advanced external override"
+    },
+    "core/src/com/biglybt/plugin/dht/impl/DHTPluginImpl.java": {
+      "git_blob": "fcee4bc9d73c31cfd2e42b2bba9c345604eecd5c",
+      "sha256": "5e3912a67bfa09f1998601322a48f6624e9b20963b789ceb536bddd6dc088135",
+      "sections": "73 root8h;248\u2013274 cache/start;534\u2013749 seed sources/live32"
+    },
+    "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java": {
+      "git_blob": "a895f11be8bf2e7e00d15a841a8de975e63663d6",
+      "sha256": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+      "sections": "688\u2013849 cache Known;851\u2013934 seeded only actual self lookup;2476/2988 clocks"
+    },
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": {
+      "git_blob": "72d5cccf803da692911b9a0e56777262138d6e00",
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "sections": "263\u2013277 IP filter default enabled;382\u2013400 proxy defaults"
+    },
+    "core/src/com/biglybt/core/ipfilter/impl/IpFilterImpl.java": {
+      "git_blob": "4b1a19b4e64e40a9f6823497c6b302c5fa15f631",
+      "sha256": "a04452f4752e48d0f05ab91d4f860c2b5d343e6f03b55cf6be328730bf90eedf",
+      "sections": "90\u2013108 current filter config;183 filters.config;267\u2013307 persistence"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/packethandler/DHTUDPPacketHandler.java": {
+      "git_blob": "45de9cab504f4446de727a0f800c88a119ac80a0",
+      "sha256": "9dc8a0d37bf5f14ee4ed0860d0f5b2619d274c272092d2ebe6ef9d6c8c18ade1",
+      "sections": "108\u2013132 destination bloom;136\u2013214 correlated send/reply network"
+    },
+    "core/src/com/biglybt/core/networkmanager/impl/udp/UDPNetworkManager.java": {
+      "git_blob": "299554e977dbfd8fd7eb55581d23dde6bc65b1eb",
+      "sha256": "cd43918dd29b23c73027c4790867c17ae549b8f496ea06a840567e39d5168174",
+      "sections": "104-171 saved non-data port, reject zero/6880/invalid without mutating settings"
+    },
+    "core/src/com/biglybt/core/util/Constants.java": {
+      "git_blob": "4ddd1e96dc735f8fda4c723629f4ba9924423a8a",
+      "sha256": "d030f8eb323021ed4ca8d8d2d644d028abc3799295e16bce2785b276cdb420ea",
+      "sections": "88-101 original default instance port6880"
+    },
+    "core/src/com/biglybt/pifimpl/local/PluginConfigImpl.java": {
+      "git_blob": "2cf2320c5cfe158b8e8a3a739758420a1a902ed3",
+      "sha256": "cc94b57a6e8ec46e36003deab0c711d3698ec7b448f41c7a78447f04e24e68a0",
+      "sections": "174-214 original plugin configuration prefix"
+    }
+  },
+  "native_commit": "fe6cf7702b9c40f0975348721a8ab39e6df364f8",
+  "native_sources": {
+    "preview/native/adapters/azureus_contacts.cpp": {
+      "sha256": "9c4707a4cfc956e8268b466fed506ce664609e1f32c199418a86ff0d5591a21f"
+    },
+    "preview/native/adapters/azureus_contacts.hpp": {
+      "sha256": "05528b5d507c30b83d8d2ad5521e76352d2c32ce2e34b617fbf58b7f49d3c82e"
+    },
+    "preview/native/app/azureus_profile_io.hpp": {
+      "sha256": "0a6beb911cc212377f245149281d0c1348cf2e91601db83e480e0a8bb01f473d"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "sha256": "e08d1cba5f3791485b1499c73527ebd8154948d4e4520497110c60c9205b186f"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "sha256": "a6c8d83a99098397501cab664d55a8ddb1f71f55b893138fdbab622be395f33c"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "sha256": "2addade9fed7e2d3681af6dedc76c1852d9276a739545f6cd75f3de619d838ca"
+    },
+    "preview/native/services/azureus_control/lookup.cpp": {
+      "sha256": "711334215f3c83c1e96ae9885066c816b055e84dcc669e28508ef24423969fe5"
+    },
+    "preview/native/services/azureus_control/lookup.hpp": {
+      "sha256": "fc38049295f881f2a54b1f29534c9e2be15d038208d6eed19ca8fa88e1c9c8c1"
+    },
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "sha256": "c506818df045a515ac2f3e49d94085baab0babe05d191e6ed55fc13a9f4d8a88"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "sha256": "690df7af3dc3329cdf4e2eda7d872b35013cad2bf5de653c2c72fab47da4992c"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "sha256": "4472ecd4204da84cc25ab8b5c462ecd059cc4a0a76088d59c2de47fec04863bf"
+    }
+  },
+  "scope": "Explicit opt-in assigned numeric PublicBound client; no public/Host/default activation or Internet connectivity claim"
+}

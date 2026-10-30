@@ -1,0 +1,8 @@
+********* Start testing of ManagerInteropTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagerInteropTests::initTestCase()
+FAIL!  : ManagerInteropTests::actualManagerConcurrentHttpInboundBtRenewalAndCancelBeyond120Seconds() 'bridge.failure.isEmpty()' returned FALSE. (Actual Java packet queue/backpressure)
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_manager_interop_tests.cpp(136)]
+PASS   : ManagerInteropTests::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 11185ms
+********* Finished testing of ManagerInteropTests *********

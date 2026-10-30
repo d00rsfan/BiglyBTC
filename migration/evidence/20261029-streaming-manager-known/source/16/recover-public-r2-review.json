@@ -1,0 +1,9 @@
+{
+  "status": "ROOT_REVIEWED_ONE_EXACT_PUBLIC_SUBJECT_ONLY",
+  "parent_sha256": "b83aa377dc1e3abe714eb4bf909c347e21391df24bc556da9581bc1b6ed96ce6",
+  "runner_sha256": "cdfe791589ae99d74e664e32405716d76b4409e27057a6d9edd98b969c104d5a",
+  "no_builds_or_javac": true,
+  "source_commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+  "old_failure_retained": true,
+  "no_policy_or_namespace_scope_change": true
+}

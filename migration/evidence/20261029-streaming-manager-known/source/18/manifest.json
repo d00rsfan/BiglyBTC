@@ -1,0 +1,192 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_PENDING_INDEPENDENT_REVIEW_AND_RUNTIME",
+  "native_basis": "fe6cf7702b9c40f0975348721a8ab39e6df364f8",
+  "prerequisite_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/manifest.json",
+      "sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1"
+    }
+  ],
+  "source_paths": {
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/before/preview/native/services/i2cp_channel/channel.cpp",
+      "before_sha256": "b06f7b3b0456d948c5e90b9c768c73cf0e9d8eab4f832d433eefa5f6a5aaa611",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/staging/preview/native/services/i2cp_channel/channel.cpp",
+      "after_sha256": "8a063712848bb23ad8a1a4ec48af780b7fe1fb02c6dea4563713ffb953d02638"
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/before/preview/native/services/i2cp_channel/channel.hpp",
+      "before_sha256": "023df0fe5a26eb9dce6c96d4c4afec4c9f3b2e4a037eb77e9632335587befd38",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/staging/preview/native/services/i2cp_channel/channel.hpp",
+      "after_sha256": "3215a1b4aaffd99bc84d1876f5dd7e82b9f024af8f1ca1c1133ea8de6a79678d"
+    },
+    "preview/native/services/i2cp_channel/managed_streams.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/staging/preview/native/services/i2cp_channel/managed_streams.inc",
+      "after_sha256": "a0244a8355e61dd9134ee2fc7c8f91ab976f6ea3a5387d6cd0dd0e57bca9554c"
+    },
+    "preview/native/services/i2cp_channel/streaming.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/before/preview/native/services/i2cp_channel/streaming.inc",
+      "before_sha256": "93f5cd7121631d80eb63fba413f08dd7449a4ebc5dfe3028b5d82afc74205a27",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/staging/preview/native/services/i2cp_channel/streaming.inc",
+      "after_sha256": "e6e358c85e61587cf6469feb01a44b2afb85d9426ef201321b2be42ea27612a4"
+    },
+    "preview/native/services/i2cp_channel/tracker.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/before/preview/native/services/i2cp_channel/tracker.inc",
+      "before_sha256": "b8f85542c20181d485ece2ff8a906eaf19f732dc3eea3baf0362b03531e2f8df",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/staging/preview/native/services/i2cp_channel/tracker.inc",
+      "after_sha256": "8f860db013824fba099af9d42035f8881f26a561ba11bfc371ecd45c4907f575"
+    },
+    "preview/native/services/i2p_streaming/manager.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/staging/preview/native/services/i2p_streaming/manager.cpp",
+      "after_sha256": "41e97086abdb0ed2a6316ab15c89885d3cc8df4c5faa251e2f36e461faf82853"
+    },
+    "preview/native/services/i2p_streaming/manager.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/staging/preview/native/services/i2p_streaming/manager.hpp",
+      "after_sha256": "7c2dfe3ab21f1568287a699c98c579149cd76c6bc91d7458df247697177d67f7"
+    },
+    "preview/native/services/i2p_streaming/stream.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/before/preview/native/services/i2p_streaming/stream.cpp",
+      "before_sha256": "92ea0864f7147772b35470fa8b04082481c294f699f16e5629b46d89a404c3b1",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/staging/preview/native/services/i2p_streaming/stream.cpp",
+      "after_sha256": "666170389af4fe7b8b578a7e91f09d215706e5c09ec16896fd5cd761a26f94de"
+    },
+    "preview/native/services/i2p_streaming/stream.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/before/preview/native/services/i2p_streaming/stream.hpp",
+      "before_sha256": "4106b327a0f397ae56d0dc21bcc50e3f3bb4e1d58e336c49cc3be48a66659807",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/staging/preview/native/services/i2p_streaming/stream.hpp",
+      "after_sha256": "ebd102e1747265eb1a630cfe5edd25acf437361581f4288ffd5248af28a34df8"
+    },
+    "preview/native/tests/i2cp_stream_manager_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/staging/preview/native/tests/i2cp_stream_manager_tests.cpp",
+      "after_sha256": "0980b3c7d011c58a1b030d88cb1282ca33db4cb4d74bf33a8c2b59a6fa798f49"
+    },
+    "preview/native/tests/i2p_streaming_manager_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/staging/preview/native/tests/i2p_streaming_manager_tests.cpp",
+      "after_sha256": "d17894aaac9785ea6c3b9eae0aac61cacd4aa215d9e38ef5dc4adcc797a8c6ab"
+    }
+  },
+  "before_origins": {
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "kind": "unchanged_native_git_file"
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "kind": "reviewed_window_afterimage",
+      "manifest_sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1"
+    },
+    "preview/native/services/i2cp_channel/streaming.inc": {
+      "kind": "reviewed_window_afterimage",
+      "manifest_sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1"
+    },
+    "preview/native/services/i2cp_channel/tracker.inc": {
+      "kind": "unchanged_native_git_file"
+    },
+    "preview/native/services/i2p_streaming/stream.cpp": {
+      "kind": "reviewed_window_afterimage",
+      "manifest_sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1"
+    },
+    "preview/native/services/i2p_streaming/stream.hpp": {
+      "kind": "reviewed_window_afterimage",
+      "manifest_sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1"
+    }
+  },
+  "cmake_fragments": [
+    {
+      "path": "preview/native/services/CMakeLists.txt",
+      "target": "biglybtc_i2p_streaming",
+      "append_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/cmake/services.append.cmake",
+      "append_sha256": "75628774ed3cd722be783d86dcbf2cfa28b1f0793c208c5264a455e89dd9771b"
+    },
+    {
+      "path": "preview/native/tests/CMakeLists.txt",
+      "targets": [
+        "biglybtc-i2p-streaming-manager-tests",
+        "biglybtc-i2cp-stream-manager-tests"
+      ],
+      "ctests": [
+        "pure-i2p-streaming-manager",
+        "i2cp-bounded-stream-manager"
+      ],
+      "append_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/cmake/tests.append.cmake",
+      "append_sha256": "17f47cf34d0fa6e1e0d5b677e7206aa081becb701bbd24585f89672d3a5c8dd0"
+    }
+  ],
+  "input_pins": {
+    "proposal": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/PROPOSAL.txt",
+      "sha256": "8892f72347643729bac6a3cb45ec02227627f0d1f4668043b938c2c4eb6d427b"
+    },
+    "proposal_pins": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/source-pins.json",
+      "sha256": "bdab3f15b7e274694ba7fb94724805693643468532af3d91911242300c6a7eb6"
+    },
+    "window_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029-review/review.json",
+      "sha256": "49b742d56e3623d351bb5ef72c023f5159e91b90a49e600a1c5ad7d565a8a5ea"
+    }
+  },
+  "native_envelopes": {
+    "stream_slots": 4,
+    "pending_syn_slots": 4,
+    "pending_syn_bytes": 262144,
+    "queued_application_tx_plus_rx_bytes": 524288,
+    "per_stream_sent_table": 8,
+    "shared_lifetime_stream_ids": 1024,
+    "socket_frames": 1
+  },
+  "tests": {
+    "pure_source_families": 6,
+    "owned_qt_methods": 3,
+    "original_manager_acceptance": "SEPARATE_SOURCE_TASK_PENDING; NO EXECUTION"
+  },
+  "execution": {
+    "status": "PASS_STATIC_SOURCE_CHECKS_ONLY",
+    "source_leaves": 11,
+    "existing_virtual_preimages": 6,
+    "new_leaves": 5,
+    "original_materialized_blob_and_sha256_pins": 13,
+    "virtual_parent_apply_check": "PASS",
+    "applying_patch_to_owned_temporary_sources_yields_exact_afterimages": true,
+    "cpp_delimiter_parse": "PASS",
+    "compiler": false,
+    "jvm": false,
+    "subject": false,
+    "native_mutation": false
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "7f63153b07c33b976aaa15b3e60888f7ad5aa359a4eea76a1b630b4342a6b68e",
+    "basis.json": "021f498fea5f883738276cfa4a7ce17a04adfd1327fb80611e0687a3c31439a5",
+    "before/preview/native/services/i2cp_channel/channel.cpp": "b06f7b3b0456d948c5e90b9c768c73cf0e9d8eab4f832d433eefa5f6a5aaa611",
+    "before/preview/native/services/i2cp_channel/channel.hpp": "023df0fe5a26eb9dce6c96d4c4afec4c9f3b2e4a037eb77e9632335587befd38",
+    "before/preview/native/services/i2cp_channel/streaming.inc": "93f5cd7121631d80eb63fba413f08dd7449a4ebc5dfe3028b5d82afc74205a27",
+    "before/preview/native/services/i2cp_channel/tracker.inc": "b8f85542c20181d485ece2ff8a906eaf19f732dc3eea3baf0362b03531e2f8df",
+    "before/preview/native/services/i2p_streaming/stream.cpp": "92ea0864f7147772b35470fa8b04082481c294f699f16e5629b46d89a404c3b1",
+    "before/preview/native/services/i2p_streaming/stream.hpp": "4106b327a0f397ae56d0dc21bcc50e3f3bb4e1d58e336c49cc3be48a66659807",
+    "changes.patch": "87652a505341a3060dd5a9048d818b43dbca69e08f7809deb9064272f3979eb2",
+    "cmake/services.append.cmake": "75628774ed3cd722be783d86dcbf2cfa28b1f0793c208c5264a455e89dd9771b",
+    "cmake/tests.append.cmake": "17f47cf34d0fa6e1e0d5b677e7206aa081becb701bbd24585f89672d3a5c8dd0",
+    "original-source-pins.json": "ae1686ce5c13a48b71d2d73e90c8acaea6b3d9c01be73ba8120038df5c079813",
+    "staging/preview/native/services/i2cp_channel/channel.cpp": "8a063712848bb23ad8a1a4ec48af780b7fe1fb02c6dea4563713ffb953d02638",
+    "staging/preview/native/services/i2cp_channel/channel.hpp": "3215a1b4aaffd99bc84d1876f5dd7e82b9f024af8f1ca1c1133ea8de6a79678d",
+    "staging/preview/native/services/i2cp_channel/managed_streams.inc": "a0244a8355e61dd9134ee2fc7c8f91ab976f6ea3a5387d6cd0dd0e57bca9554c",
+    "staging/preview/native/services/i2cp_channel/streaming.inc": "e6e358c85e61587cf6469feb01a44b2afb85d9426ef201321b2be42ea27612a4",
+    "staging/preview/native/services/i2cp_channel/tracker.inc": "8f860db013824fba099af9d42035f8881f26a561ba11bfc371ecd45c4907f575",
+    "staging/preview/native/services/i2p_streaming/manager.cpp": "41e97086abdb0ed2a6316ab15c89885d3cc8df4c5faa251e2f36e461faf82853",
+    "staging/preview/native/services/i2p_streaming/manager.hpp": "7c2dfe3ab21f1568287a699c98c579149cd76c6bc91d7458df247697177d67f7",
+    "staging/preview/native/services/i2p_streaming/stream.cpp": "666170389af4fe7b8b578a7e91f09d215706e5c09ec16896fd5cd761a26f94de",
+    "staging/preview/native/services/i2p_streaming/stream.hpp": "ebd102e1747265eb1a630cfe5edd25acf437361581f4288ffd5248af28a34df8",
+    "staging/preview/native/tests/i2cp_stream_manager_tests.cpp": "0980b3c7d011c58a1b030d88cb1282ca33db4cb4d74bf33a8c2b59a6fa798f49",
+    "staging/preview/native/tests/i2p_streaming_manager_tests.cpp": "d17894aaac9785ea6c3b9eae0aac61cacd4aa215d9e38ef5dc4adcc797a8c6ab",
+    "static-checks.json": "72183cd9e5f3408739053986711713a4cfaf8b7a2543380c5efef19f1a177c35"
+  }
+}

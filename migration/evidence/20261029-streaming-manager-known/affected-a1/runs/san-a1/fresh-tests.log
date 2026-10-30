@@ -1,0 +1,36 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop
+Connected to MAKE jobserver
+    Start 298: i2p-original-streaming-peer
+1/2 Test #298: i2p-original-streaming-peer ......***Failed   62.23 sec
+********* Start testing of StreamingInteropTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : StreamingInteropTests::initTestCase()
+FAIL!  : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(http) QTestLib: This test case check ("bridge.ready()||!bridge.failure.isEmpty()||bridge.java.state()==QProcess::NotRunning") failed because the requested timeout (10000 ms) was too short, 18350 ms would have been sufficient this time.
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_interop_tests.cpp(200)]
+FAIL!  : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(http) 'connected' returned FALSE. (Current owned LS2 and idle explicit channel required for stream)
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_interop_tests.cpp(214)]
+FAIL!  : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(loss-reorder) QTestLib: This test case check ("bridge.ready()||!bridge.failure.isEmpty()||bridge.java.state()==QProcess::NotRunning") failed because the requested timeout (10000 ms) was too short, 18950 ms would have been sufficient this time.
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_interop_tests.cpp(200)]
+FAIL!  : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(loss-reorder) 'connected' returned FALSE. (Current owned LS2 and idle explicit channel required for stream)
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_interop_tests.cpp(214)]
+PASS   : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(queue-backpressure)
+PASS   : StreamingInteropTests::actualOriginalResetHasTypedNativeTerminal()
+PASS   : StreamingInteropTests::localCancelRejectsGenuineLatePeerBytesBeforeUpdatedBarrier()
+PASS   : StreamingInteropTests::cleanupTestCase()
+Totals: 5 passed, 2 failed, 0 skipped, 0 blacklisted, 61958ms
+********* Finished testing of StreamingInteropTests *********
+
+    Start 299: i2p-original-streaming-upload
+2/2 Test #299: i2p-original-streaming-upload ....   Passed   21.00 sec
+
+50% tests passed, 1 tests failed out of 2
+
+Label Time Summary:
+explicit-i2p    =  83.24 sec*proc (2 tests)
+reference       =  83.24 sec*proc (2 tests)
+
+Total Test time (real) =  83.28 sec
+
+The following tests FAILED:
+	298 - i2p-original-streaming-peer (Failed)              explicit-i2p reference
+Errors while running CTest

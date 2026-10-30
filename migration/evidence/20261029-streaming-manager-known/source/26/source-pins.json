@@ -1,0 +1,65 @@
+{
+  "status": "PROPOSAL_ONLY_NO_EXECUTION",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_sources": {
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java": {
+      "git_blob": "b756f15b7863793f320b55957b657c53196b0cba",
+      "sha256": "b1d4e38f2bc9c33bda1bd39092ea87352a6668ca41664dafe1be7011fe163092",
+      "sections": "1500-1554 explicit protocol-hint transport contact/unknown instance0/import callback"
+    },
+    "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java": {
+      "git_blob": "a895f11be8bf2e7e00d15a841a8de975e63663d6",
+      "sha256": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+      "sections": "666-670 attached Known;3608-3640 actual Ping reply Alive;3642-3678 NodeAdded Ping"
+    },
+    "core/src/com/biglybt/core/dht/router/impl/DHTRouterImpl.java": {
+      "git_blob": "90e9b2028c8f3b532848ced0b40c401f15833be2",
+      "sha256": "50b1defa8637bd435960b628c37f7f02f31a2f52c2bb357e1b081eeae637dec4",
+      "sections": "327-363 Known false versus Alive true"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java": {
+      "git_blob": "28ad1c52552f254759b82418e1cf2b3678323407",
+      "sha256": "30cd1f70c74274aec6496a2f711b5865ad1b776d028f25503ba6a52ddb3fa6af",
+      "sections": "112-142 supplied protocol and actual address-derived ID"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPUtils.java": {
+      "git_blob": "f8c0caa152881bd7abd5f330080d87c11f778914",
+      "sha256": "d852f590ca0df5361061e598be2087787ea588201f23d2fb7f826cfd62d4694b",
+      "sections": "94-140 restricted ID rules"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/DHTTransportUDP.java": {
+      "git_blob": "d9e8108ddb59594d074fa7af51a9c9f05195f258",
+      "sha256": "cffec69e83c20fac92414189e39aece9c359911c18250a0ba82d45ef42401f0f",
+      "sections": "90-98 thresholds32/33/50; supported51..55 same identity branches"
+    }
+  },
+  "virtual_parent_manifest": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/manifest.json",
+  "virtual_parent_manifest_sha256": "122e845c0bbdd2edc499932d260b807df3c6c9c52a37251b885042c2943fde3a",
+  "native_file_basis": "fe6cf7702b9c40f0975348721a8ab39e6df364f8",
+  "virtual_sources": {
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+      "sha256": "de02a807c9b00028ab8262d4c1bc19dba3c4a3c53d361fe58622f36dcd1bf822"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+      "sha256": "43093e8fe5a2ef3daac0cd76a7e2f53d35b24872b1f9012033735ee7a6ef3726"
+    },
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/staging/preview/native/services/azureus_udp/owned_routing.inc",
+      "sha256": "e74574468929762d85e3d2bf2fe659abc0c70fb716d4498de93411dd38a57994"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/app/owned_azureus_service.cpp",
+      "sha256": "18739aab6073ac0251daff8b5f06558293f1637d0a8b931b94b9c1781a7dbd22"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/final-send-authority/staging/preview/native/app/azureus_profile_io_owner.inc",
+      "sha256": "ac23da0f9f7bde8630e2fbc875e868495258f6401409b724c6bfc73bb3c5b9d9"
+    }
+  },
+  "related_source_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029-review/review.json",
+    "sha256": "803384933d6ee11eee1949e3c11ca3c912178fd074319adbf39567043fd10adb"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "status": "FAIL",
+  "scope": "one unchanged GCC Public subject only",
+  "source_commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+  "builds_executed": false,
+  "javac_invocations": 0,
+  "failure": "AssertionError('tests')",
+  "runner_sha256": "cdfe791589ae99d74e664e32405716d76b4409e27057a6d9edd98b969c104d5a",
+  "commands_sha256": "90ed2459468c1ee58205bade3b1f3bce51c5436cb05b543f485013e364260c69",
+  "artifacts_sha256": {
+    "inventory.log": "31daee41cdeb53a25e8d467e6e4c75dbb83229e121448c11c19d0e3bc6928b80",
+    "dependency-commands.json": "1591398f3b193ca26386763c2b3582eae9d6dd0bbc99781dfc0eaab08a53d37b",
+    "ctest-full.log": "49e1988c52f2c8c57e4f622b2debefd265d3f4e7d404748e22cce3a6fe89d08f",
+    "tests.log": "0c921efa02be007694b1cacf9468a31a5539413c00c16c1341e798d8abfb5b3b",
+    "dependencies-before.json": "b006bfb8993aefef006ab3695686d82292fc1506f3abbaee2c21124ac8b73b10",
+    "source-before.json": "642285fbac7d76782aa445a42f4027badfc70fae3bef96858e3d3a4854b6cd74",
+    "tests.xml": "5a648db5d9a5f00eefe2c629ee40f33aa25805159cff3e852c3ee5c5803d9dce",
+    "subject-phase.json": "b23789293b1e8dd2849538174595eea7204b402f0a4855d49f098ee85ddd1300",
+    "namespace-admin.json": "d1d7dd1fb96cc74d0d4b1c779eddc189eb0a660a4ca455623748d0b3c2af3e50",
+    "images-before.json": "a11407cf6a44872dfa5875d4dbd201f23ed472a7e26740d3dfa1ec5601225607",
+    "commands.json": "90ed2459468c1ee58205bade3b1f3bce51c5436cb05b543f485013e364260c69"
+  }
+}

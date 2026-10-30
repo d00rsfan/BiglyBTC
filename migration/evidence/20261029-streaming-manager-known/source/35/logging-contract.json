@@ -1,0 +1,36 @@
+{
+  "actual_jar": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+    "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5"
+  },
+  "class_bytes_sha256": {
+    "net/i2p/util/LogManager.class": "aed141d4823e6d226d1c8c5ba57130b430b7c6e51938c93f144bb3b030e9bb97",
+    "net/i2p/util/LogWriter.class": "0ad7276bf14cc6e4a4e21e48aba30f7371e881db3daf0a07b9007a417d061d37",
+    "net/i2p/util/FileLogWriter.class": "9dd215ecf688fcfc2c91d6ecdc82c4e4af219b4a8a0ef2fd90f90439daf56a58",
+    "net/i2p/util/Log.class": "b289d755dd6b639cf2038efdb1b84fa6155c281875ea38390109b6595cf8bec7",
+    "net/i2p/client/streaming/impl/ConnectionManager.class": "082f990f9905d03ba8f3dcfb5abd62f488e43102c114e3e0c257a4874affc6fb",
+    "net/i2p/client/streaming/impl/ConnectionPacketHandler.class": "58ca73acac4b2de0a0a17ef856e6c75f58d9285c73c930abecc7b16d458138e6"
+  },
+  "bytecode_inspection": "javap -p -c -constants; no application/helper execution or compilation",
+  "javap": {
+    "path": "/usr/lib/jvm/java-26-openjdk-amd64/bin/javap",
+    "sha256": "55fc885198b2c0a6b0e7226bb66c6e35f8cd80115999fa00948ce7b09faef2c2"
+  },
+  "config_before_context": true,
+  "owned_root_files": [
+    "owned-logger.config",
+    "owned-streaming-0.log",
+    "owned-streaming-1.log"
+  ],
+  "default_level": "WARN",
+  "class_debug": [
+    "net.i2p.client.streaming.impl.ConnectionManager",
+    "net.i2p.client.streaming.impl.ConnectionPacketHandler"
+  ],
+  "console_minimum": "CRIT",
+  "rotation_threshold": 65536,
+  "rotation_inclusive_index_limit": 1,
+  "logging_flush_interval_seconds": 1,
+  "strict_byte_quota_claimed": false,
+  "actual_writer_boundary": "FileLogWriter writes a whole record, then checks character count>=size-1024 before rotating; an unusually large/non-ASCII record can exceed the configured byte-size expectation. Two rotation slots remain bounded; no custom logging framework or protocol setting added."
+}

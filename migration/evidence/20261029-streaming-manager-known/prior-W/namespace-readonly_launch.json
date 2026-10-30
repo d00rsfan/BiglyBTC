@@ -1,0 +1,71 @@
+{
+  "argv": [
+    "/usr/bin/python3.14",
+    "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/staging/preview/native/tests/public_namespace_fixture/preflight.py",
+    "--uid",
+    "1000",
+    "--gid",
+    "1000"
+  ],
+  "caller_gid": 1000,
+  "caller_uid": 1000,
+  "command": [
+    "/usr/bin/pkexec",
+    "--disable-internal-agent",
+    "/proc/2378198/fd/5",
+    "pkexec",
+    "2378198",
+    "5",
+    "6",
+    "666856138",
+    "fixed-public-fixture-v1"
+  ],
+  "elapsed_milliseconds": 6533,
+  "helper": {
+    "bytes": 41232,
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/admin-fixture/compiled/r3/public-netns-admin",
+    "sha256": "900ffe42f48a5452a78160e254ea8f21575b995ba2a7d3a0c6d066be80826d86"
+  },
+  "invoker": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029/amendments/admin-namespace/amendments/checked-preflight-and-libc-only/amendments/proc-open-diagnostic/amendments/effective-helper-source/amendments/sealed-stdin-payload/staging/preview/native/tests/azureus_public_admin_launcher.py",
+    "sha256": "355271b706c964f3edf041b613f5d938fc59b8dd90911ee75c54fe942183e7f3"
+  },
+  "invoker_metadata": {
+    "dumpable": 1,
+    "gid": [
+      1000,
+      1000,
+      1000
+    ],
+    "namespaces": {
+      "net": {
+        "device": 5,
+        "inode": 4026531833,
+        "link": "net:[4026531833]"
+      },
+      "user": {
+        "device": 5,
+        "inode": 4026531837,
+        "link": "user:[4026531837]"
+      }
+    },
+    "uid": [
+      1000,
+      1000,
+      1000
+    ]
+  },
+  "launch_environment": {},
+  "memfd_seals": 15,
+  "mode": "pkexec",
+  "no_fallback": true,
+  "output_bytes": [
+    2488,
+    0
+  ],
+  "payload_transport": "sealed-fixed-stdin-after-verified-drop",
+  "schema": 1,
+  "status": "PASS_AUTHENTICATED_NAMESPACE_SUBJECT",
+  "subject_exit": 0,
+  "verified_drop_marker": true
+}

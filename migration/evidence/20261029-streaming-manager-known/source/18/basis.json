@@ -1,0 +1,13 @@
+{
+  "window_parent": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/manifest.json",
+  "window_sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1",
+  "sources": {
+    "preview/native/services/i2cp_channel/channel.hpp": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/staging/preview/native/services/i2cp_channel/channel.hpp",
+    "preview/native/services/i2cp_channel/streaming.inc": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/staging/preview/native/services/i2cp_channel/streaming.inc",
+    "preview/native/services/i2p_streaming/stream.cpp": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/staging/preview/native/services/i2p_streaming/stream.cpp",
+    "preview/native/services/i2p_streaming/stream.hpp": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/staging/preview/native/services/i2p_streaming/stream.hpp",
+    "preview/native/tests/i2p_streaming_tests.cpp": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/implementation/amendments/first-ack-packet-age/amendments/ack-before-rtt-timer/staging/preview/native/tests/i2p_streaming_tests.cpp",
+    "preview/native/services/i2cp_channel/channel.cpp": "/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_channel/channel.cpp",
+    "preview/native/services/i2cp_channel/tracker.inc": "/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_channel/tracker.inc"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "status": "PASS_STATIC_SOURCE_CHECKS_ONLY",
+  "maps": 10,
+  "delta_paths": [
+    "preview/native/app/owned_azureus_service.cpp",
+    "preview/native/services/azureus_udp/owned_routing.inc",
+    "preview/native/services/azureus_udp/owned_transport.cpp",
+    "preview/native/services/azureus_udp/owned_transport.hpp",
+    "preview/native/tests/azureus_profile_io_tests.cpp"
+  ],
+  "inherited_afterimages": 5,
+  "current_git_beforeimages": 10,
+  "complete_and_delta_reproduce_all_afterimages": true,
+  "readonly_apply_check": true,
+  "cpp_delimiters": true,
+  "retention": {
+    "preview/native/tests/azureus_profile_io_tests.cpp": {
+      "exact_old_void_bodies": 10,
+      "explicit_changed_helpers_or_fixture_methods": [
+        "realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose"
+      ],
+      "added": []
+    },
+    "preview/native/tests/azureus_public_bound_tests.cpp": {
+      "exact_old_void_bodies": 9,
+      "explicit_changed_helpers_or_fixture_methods": [],
+      "added": [
+        "explicitPublicKnownHintIsNotExportedAndOnlyActualPingMakesItAlive"
+      ]
+    },
+    "preview/native/tests/azureus_routing_tests.cpp": {
+      "exact_old_void_bodies": 10,
+      "explicit_changed_helpers_or_fixture_methods": [
+        "start"
+      ],
+      "added": [
+        "explicitKnownAttachmentUsesActualPingAndReplacesOnlyItsProtocolHint",
+        "explicitKnownAttachmentUsesActualPingAndReplacesOnlyItsProtocolHint_data",
+        "knownAttachmentCannotCommitAfterSourceDisableCancelOrClose",
+        "knownAttachmentCannotCommitAfterSourceDisableCancelOrClose_data",
+        "knownPreparationRefusesAliasInvalidHintAndFullCombinedPeerEnvelope"
+      ]
+    }
+  },
+  "compiler_or_subject_execution": false,
+  "native_mutation": false
+}

@@ -1,0 +1,14 @@
+{
+  "status": "ROOT_REVIEWED_CLOSEOUT_SOURCE_ONLY_PENDING_ACTUAL_GATES",
+  "manifest_sha256": "41da57fb4eb1812391b2f449fb5cf835b26aadd512e950823fe4af988956c9dc",
+  "all_delta_lines_reviewed": true,
+  "current_public_recovery_status": "FAIL_BEFORE_SUBJECT_LOCAL_AUTH_TIMEOUT",
+  "public_required_before_promotion": true,
+  "private_five_plus_one_origins_separate": true,
+  "source_paths": 25,
+  "associated_rows_only": true,
+  "full_fresh_cohort_claimed": false,
+  "runtime_execution": false,
+  "promotion_execution": false,
+  "stop_after_current_milestone": true
+}

@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_INDEPENDENT_REVIEW",
+  "native_basis_observed": "ad4854e920d86a511cc90cd52e4ab161adcb0fec",
+  "native_manager": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/amendments/hard-deadline-and-renewal/manifest.json",
+    "sha256": "1f911001b6a0cbf7e78bcd477a2da3b38b9f35b9a8d6b489f677c14d7ce7be66"
+  },
+  "native_manager_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029-review/review.json",
+    "sha256": "c6ab107117f1506926a713475a9298d480220e3a4ed37b185edd29abea0c8fee"
+  },
+  "acceptance_parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/manifest.json",
+    "sha256": "fec3012f2abcda6ba8be92ff9ea767bbd291f1dd52019f8cb8ef441554c896dc"
+  },
+  "source_paths": {
+    "preview/native/tests/i2p_streaming_manager_interop_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/staging/preview/native/tests/i2p_streaming_manager_interop_tests.cpp",
+      "after_sha256": "a18cdfb7825c1e24c35f9199fdf673e144bfe5e5cd2b018307b49330e36be432"
+    }
+  },
+  "cmake_append": {
+    "destination": "preview/native/tests/CMakeLists.txt",
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/tests.append.cmake",
+    "sha256": "a972134f7c59db466da76610b54894967a20fbc890bf740ae356c403df548b1c"
+  },
+  "target": "biglybtc-i2p-streaming-manager-interop-tests",
+  "ctest": {
+    "name": "i2p-original-streaming-manager",
+    "timeout_seconds": 360,
+    "methods": 1,
+    "minimum_actual_activity_ms": 125000,
+    "explicit_option": "BIGLYBTC_I2P_STREAMING_MANAGER_JAVA_ACCEPTANCE",
+    "required_fresh_environment": "BIGLYBTC_I2P_MANAGER_ACCEPTANCE_ROOT"
+  },
+  "java_helper": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/ManagerPeer.java",
+    "sha256": "fc795a5e013d170eb800d9e0c14a59a726c3282c2852badb42e853790e8de55d",
+    "javac_invocations": 1
+  },
+  "retention": {
+    "capsule": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/manifest.json",
+    "capsule_sha256": "fec3012f2abcda6ba8be92ff9ea767bbd291f1dd52019f8cb8ef441554c896dc",
+    "java_source": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/StreamingPeer.java",
+    "java_source_sha256": "8c78205c17273122b381b30cb8ad6aadbd59105dfccbaad9fed0df5ac351e8cd",
+    "native_source": "/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_interop_tests.cpp",
+    "native_source_sha256": "7b81e9b1bcafd2365220dc0bd21f9cfcfc0796ad5c710e723967caa7102c9caa",
+    "files_modified": false
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "18b053e0d36843b3df151676fd63ede6c37cd04bc2bd031e24535b43a6edc313",
+    "COMMANDS.txt": "9cb79544d0a9bd5962b71b569e2475e0ce39378c1aaa4a28ec55b4e20432b685",
+    "ManagerPeer.java": "fc795a5e013d170eb800d9e0c14a59a726c3282c2852badb42e853790e8de55d",
+    "PREPARE-HELPERS.sh": "8ff1fb1c97b817fe9139bb6c11ae86a47785757174d7bb77846ff6c87ccf056e",
+    "changes.patch": "1674c31d1259bea2e88ec8d78e2eebb6824a4375d497db0bb4f2cbf196c0312f",
+    "source-pins.json": "504db008094e4ae78ec92d5c3b693a903c29fb42dc5d4ce042b831cb2c9d089c",
+    "staging/preview/native/tests/i2p_streaming_manager_interop_tests.cpp": "a18cdfb7825c1e24c35f9199fdf673e144bfe5e5cd2b018307b49330e36be432",
+    "tests.append.cmake": "a972134f7c59db466da76610b54894967a20fbc890bf740ae356c403df548b1c"
+  },
+  "compiler_execution": false,
+  "runtime_execution": false,
+  "native_mutation": false
+}

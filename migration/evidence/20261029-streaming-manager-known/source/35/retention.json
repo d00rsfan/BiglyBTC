@@ -1,0 +1,12 @@
+[
+  {
+    "source": "ManagerPeer.java",
+    "replaced_first_failure_catches": 5,
+    "all_original_bytes_reconstruct_exactly": true
+  },
+  {
+    "source": "StreamingPeer.java",
+    "replaced_first_failure_catches": 3,
+    "all_original_bytes_reconstruct_exactly": true
+  }
+]

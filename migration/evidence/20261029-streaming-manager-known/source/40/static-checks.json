@@ -1,0 +1,34 @@
+{
+  "status": "PASS_STATIC_SOURCE_CHECKS_ONLY",
+  "source_maps": 9,
+  "current_git_beforeimages": 9,
+  "original_full_sha256_and_git_blobs": 6,
+  "read_only_patch_apply_check": true,
+  "cpp_delimiters": true,
+  "retained_test_methods": {
+    "preview/native/tests/azureus_public_bound_tests.cpp": {
+      "old_void_methods_retained": 9,
+      "appended": [
+        "explicitPublicKnownHintIsNotExportedAndOnlyActualPingMakesItAlive"
+      ],
+      "helper_changes": []
+    },
+    "preview/native/tests/azureus_routing_tests.cpp": {
+      "old_void_methods_retained": 10,
+      "appended": [
+        "explicitKnownAttachmentUsesActualPingAndReplacesOnlyItsProtocolHint",
+        "explicitKnownAttachmentUsesActualPingAndReplacesOnlyItsProtocolHint_data",
+        "knownAttachmentCannotCommitAfterSourceDisableCancelOrClose",
+        "knownAttachmentCannotCommitAfterSourceDisableCancelOrClose_data",
+        "knownPreparationRefusesAliasInvalidHintAndFullCombinedPeerEnvelope"
+      ],
+      "helper_changes": [
+        "Normal protocol parameter/start options.version only"
+      ]
+    }
+  },
+  "compiler": false,
+  "subject": false,
+  "network_namespace_or_ip_assignment": false,
+  "native_source_mutation": false
+}

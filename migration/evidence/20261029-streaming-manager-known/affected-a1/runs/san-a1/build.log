@@ -1,0 +1,5 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2419939 --no-print-directory -- ATTEMPT=a1 ADOPTION=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/effective-adoption.json SOURCE_COMMIT=72b44fb182a9b97722317b6ac57a99a1601d704e
+[1/4] Automatic MOC for target biglybtc-i2p-streaming-interop-tests
+[2/4] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-interop-tests.dir/biglybtc-i2p-streaming-interop-tests_autogen/mocs_compilation.cpp.o
+[3/4] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-interop-tests.dir/i2p_streaming_interop_tests.cpp.o
+[4/4] Linking CXX executable tests/biglybtc-i2p-streaming-interop-tests

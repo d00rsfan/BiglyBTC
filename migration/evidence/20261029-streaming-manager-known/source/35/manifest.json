@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "status": "FROZEN_DIAGNOSTIC_JAVA_SOURCE_ONLY",
+  "purpose": "Expose existing actual-helper asynchronous application and route causes, with owned original bounded log rotation",
+  "java_sources": {
+    "ManagerPeer.java": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/ManagerPeer.java",
+      "before_sha256": "fc795a5e013d170eb800d9e0c14a59a726c3282c2852badb42e853790e8de55d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-async-failures/staging/ManagerPeer.java",
+      "after_sha256": "a2b7d39217cf57ffb96d37414a466b4977a35b1c7c14b7abdbf5733a002a7efe"
+    },
+    "StreamingPeer.java": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/StreamingPeer.java",
+      "before_sha256": "8c78205c17273122b381b30cb8ad6aadbd59105dfccbaad9fed0df5ac351e8cd",
+      "after_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-async-failures/staging/StreamingPeer.java",
+      "after_sha256": "d170f5ec9c88074aea2f5ab1b24be22e87176586add9d02b1ae303b1439ed335"
+    }
+  },
+  "artifacts_sha256": {
+    "logging-contract.json": "5b6be8c0550301a906f4746db5d3b42bf26ba1809a8900e8d5229352e0b54f3c",
+    "retention.json": "0e15430f832ae311d068e710773ffb8e5b7ffb66e11f2aeb605afd3e636ebb5c",
+    "ADOPTION.txt": "2062ac9763c5e27da497253fb379fa60a040acf8408d84fb30a72531eaeb99dc",
+    "changes.patch": "b00022745fae38e927d5622c5face131caddedecde336dfd109f42264c4cb084",
+    "before/ManagerPeer.java": "fc795a5e013d170eb800d9e0c14a59a726c3282c2852badb42e853790e8de55d",
+    "before/StreamingPeer.java": "8c78205c17273122b381b30cb8ad6aadbd59105dfccbaad9fed0df5ac351e8cd",
+    "inspection/FileLogWriter.javap.txt": "bae698f355c4243226661d5330299ec8cf72ea29ee70595c84ee57fa9a25f278",
+    "inspection/LogWriter.javap.txt": "73fff2f2d860fa8010b266f21e331ea0dd022ae5477006337e27e97335976f02",
+    "inspection/Log.javap.txt": "1a4c6c895344ce4cdcdccad878823cef9eec4661de83cd20d151e03347c465b0",
+    "inspection/commands.json": "c4b3715a12fc9fa68dad5d9efd5c198faa3bfe90c99144e1d378f892251d6a57",
+    "inspection/LogManager.javap.txt": "6dd3cc2257d4f6d1ba39dac41b7241e882fc74ecbd3a86397bf7158730851a89",
+    "staging/ManagerPeer.java": "a2b7d39217cf57ffb96d37414a466b4977a35b1c7c14b7abdbf5733a002a7efe",
+    "staging/StreamingPeer.java": "d170f5ec9c88074aea2f5ab1b24be22e87176586add9d02b1ae303b1439ed335"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/ManagerPeer.java": "fc795a5e013d170eb800d9e0c14a59a726c3282c2852badb42e853790e8de55d",
+    "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/StreamingPeer.java": "8c78205c17273122b381b30cb8ad6aadbd59105dfccbaad9fed0df5ac351e8cd",
+    "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/manifest.json": "2d661e3105ff7a1af0ec13f8ccbfad29c44d70fee0e72b2afd8c0d245f41f2b5",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/runs/san-d1/result.json": "7a55eb5b8e8a5e3e541f25aedd106f011f3d72c4bcc139bd8aabb1458b44e739",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/runs/san-d1/selected.xml": "75f8a32882c04aee612092570c9df8a0c600ee0d89cdc6c96ad112fa8a35c12e",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/runs/san-d1/actual-manager/manager/packet-metadata-tail.json": "e8374ed38e655da934f2cdbbd426a2b9bc5e25f2d0434890724a3587b4c9ccf7",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/runs/san-d1/actual-manager/manager/java.stderr": "7c0a8dea00a7161bb60e692cc275c7ba390513520386b0cba1dc52d197146439"
+  },
+  "unchanged": [
+    "all existing packet bytes and protocol/ports",
+    "all timeouts/deadlines/assertions",
+    "all first-failure CAS selection and main-exit semantics",
+    "all native production/tests/CMake/recipes",
+    "all original/frozen helper sources and compiled origins"
+  ],
+  "diagnostics": {
+    "async_report": "winning cause on each existing atomic failure reference, immediately to stderr",
+    "config_created_before_context": true,
+    "owned_log_threshold": 65536,
+    "owned_log_slots": [
+      0,
+      1
+    ],
+    "strict_byte_quota_claimed": false,
+    "console_minimum": "CRIT",
+    "default_level": "WARN",
+    "debug_class_count": 2
+  },
+  "author_tools_executed": [
+    "authorized javap bytecode inspection",
+    "read-only/static source metadata checks"
+  ],
+  "helper_execution": false,
+  "compiler_execution": false,
+  "native_mutation": false,
+  "qualification": false,
+  "other_chapters_paused": true
+}

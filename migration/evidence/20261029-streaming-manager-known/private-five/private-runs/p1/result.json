@@ -1,0 +1,411 @@
+{
+  "status": "PASS_FIVE_PRIVATE_SUBJECTS_PENDING_PUBLIC",
+  "source_commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+  "producer_sha256": "638b4fdbd678798a89c427289b6d749f098fbd8ddca9b912c03535cec0ce5232",
+  "source_adoption_sha256": "f919cb9b3b72b9cb15c10388b62e745b970b764d3d4aa0ab674b34d52dd13f6a",
+  "reference_result_sha256": "f9676e191ac62abaddeebf0a29b5c2798a73738c2d2ab76c369025c3cc6b1053",
+  "runner_sha256": "8f953be1181e406f7193f1f48ce399b89f2765ee8dab88e44a49629aa6e73540",
+  "builds_executed": false,
+  "provider_rebuilt": false,
+  "historical_passes_pooled": false,
+  "lane_inputs": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/gcc-a2/result.json",
+      "sha256": "1bfbf7aefa35b916d00b44b9d777561549c9b2dcbe6144c57b8c120eedd2373a"
+    },
+    "clang": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/clang-a2/result.json",
+      "sha256": "2c6953a2170a031cd71bb7ed2c91957171bd6d39277619e16c04ebbe0aaefcf6"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/san-a2/result.json",
+      "sha256": "7598693e1c508c3d4c51c2a5b798ac5a293d4413b89111e8a12bd1f21e48bc99"
+    }
+  },
+  "candidate": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate",
+  "candidate_manifest_sha256": "aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b",
+  "actual_leaf_count": 119,
+  "actual_tests": [
+    {
+      "label": "owned-manager",
+      "suite": "i2cp-bounded-stream-manager",
+      "target": "biglybtc-i2cp-stream-manager-tests",
+      "selector": null,
+      "exit": 0,
+      "arguments": [
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/biglybtc-i2cp-stream-manager-tests",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/owned-manager.txt,txt",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/owned-manager.xml,junitxml"
+      ],
+      "declared_timeout_seconds": 60.0,
+      "case_names": [
+        "initTestCase",
+        "concurrentActualFramesAndExplicitIncomingPeerRemainIndependent",
+        "currentPendingSynNotificationMayDeleteTheController",
+        "finiteApplicationWaitDoesNotCloseOtherStreams",
+        "finiteHandshakesAndWaitRemainIndependentAcrossQueuedFrames",
+        "shortenedActualLeaseRetiresAuthorityAndRenewalCannotRestoreOldStreams",
+        "cleanupTestCase"
+      ],
+      "xml_sha256": "77e50a64d6103ae6822d9dfe6b997636681068de7662233f2adfb19f36672e28",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "native_loader_trace": {
+        "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/native-loader-owned-manager.2429893",
+        "sha256": "42c822d41c5ceb4dd71e061f900d214c8dc6afc35db269508dfcc246749fb2b1"
+      },
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05"
+      }
+    },
+    {
+      "label": "actual-manager",
+      "suite": "i2p-original-streaming-manager",
+      "target": "biglybtc-i2p-streaming-manager-interop-tests",
+      "selector": null,
+      "exit": 0,
+      "arguments": [
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/biglybtc-i2p-streaming-manager-interop-tests",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-manager.txt,txt",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-manager.xml,junitxml"
+      ],
+      "declared_timeout_seconds": 360.0,
+      "case_names": [
+        "initTestCase",
+        "actualManagerConcurrentHttpInboundBtRenewalAndCancelBeyond120Seconds",
+        "cleanupTestCase"
+      ],
+      "xml_sha256": "9a28a0fd9b74fc3cc4f9dfb87700b5f5f721e6426603a82692ad3ae3285bdc95",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "native_loader_trace": {
+        "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/native-loader-actual-manager.2429916",
+        "sha256": "ad8bd0fecf97c81d242cce23e30043a3cd1ae48850f2e29c3180eca9dd779f5e"
+      },
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05"
+      }
+    },
+    {
+      "label": "known-hints",
+      "suite": "azureus-routing",
+      "target": "biglybtc-azureus-routing-tests",
+      "selector": "explicitKnownAttachmentUsesActualPingAndReplacesOnlyItsProtocolHint",
+      "exit": 0,
+      "arguments": [
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/biglybtc-azureus-routing-tests",
+        "explicitKnownAttachmentUsesActualPingAndReplacesOnlyItsProtocolHint",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/known-hints.txt,txt",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/known-hints.xml,junitxml"
+      ],
+      "declared_timeout_seconds": 90.0,
+      "case_names": [
+        "initTestCase",
+        "explicitKnownAttachmentUsesActualPingAndReplacesOnlyItsProtocolHint(hint51-actual55)",
+        "explicitKnownAttachmentUsesActualPingAndReplacesOnlyItsProtocolHint(hint55-actual51)",
+        "cleanupTestCase"
+      ],
+      "xml_sha256": "ba6e9f2104418d163fc3c01f7e289655cfe4556270d501166a1b31e94975ed16",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "native_loader_trace": {
+        "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/native-loader-known-hints.2430249",
+        "sha256": "e3d9c376f5d961e120c977683aaa510aa7fcd08e547ddb90cf6ba37e5f293724"
+      },
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05"
+      }
+    },
+    {
+      "label": "profile-pressure",
+      "suite": "azureus-profile-io",
+      "target": "biglybtc-azureus-profile-io-tests",
+      "selector": "realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose",
+      "exit": 0,
+      "arguments": [
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/biglybtc-azureus-profile-io-tests",
+        "realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/profile-pressure.txt,txt",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/profile-pressure.xml,junitxml"
+      ],
+      "declared_timeout_seconds": 60.0,
+      "case_names": [
+        "initTestCase",
+        "realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose(release-current)",
+        "realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose(disable-current-source)",
+        "realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose(close-and-cancel-queued)",
+        "cleanupTestCase"
+      ],
+      "xml_sha256": "d1acfbe071d9e226d2b31bbd9a06eb8f0f5758862e46a803f8ae8fd6dfbc3b5e",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "native_loader_trace": {
+        "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/native-loader-profile-pressure.2430266",
+        "sha256": "8698981f079fa099d5251f03fa939338b7555fe0bc1ebfa6ef837b73010e696e"
+      },
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05"
+      }
+    },
+    {
+      "label": "retained-legacy-http",
+      "suite": "i2p-original-streaming-peer",
+      "target": "biglybtc-i2p-streaming-interop-tests",
+      "selector": "actualOriginalManagerCarriesHttpAndRecoverablePackets:http",
+      "exit": 0,
+      "arguments": [
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/biglybtc-i2p-streaming-interop-tests",
+        "actualOriginalManagerCarriesHttpAndRecoverablePackets:http",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/retained-legacy-http.txt,txt",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/retained-legacy-http.xml,junitxml"
+      ],
+      "declared_timeout_seconds": 480.0,
+      "case_names": [
+        "initTestCase",
+        "actualOriginalManagerCarriesHttpAndRecoverablePackets(http)",
+        "cleanupTestCase"
+      ],
+      "xml_sha256": "c6b6595656fb5ace182e7e635cb37d1589545d381f07aa57115854fe8bbcd897",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "native_loader_trace": {
+        "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/native-loader-retained-legacy-http.2430300",
+        "sha256": "f4ec4eda9ac29ee6d91018d79b8541bbd5be84e2fb8e2418c4dda8973ee3d058"
+      },
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05"
+      }
+    }
+  ],
+  "copied_images": {
+    "biglybtc-i2cp-stream-manager-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2cp-stream-manager-tests",
+      "sha256": "fd16dbac5606314f51e46a0a64c078e92b3ad93c42cba8aaf27b71eac30cddfe",
+      "bytes": 818360
+    },
+    "biglybtc-i2p-streaming-manager-interop-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2p-streaming-manager-interop-tests",
+      "sha256": "d7088cb2d86e8dfd5e42f5be1dc1aa609ff290be991ef3d28a6752fcce4df8ac",
+      "bytes": 861824
+    },
+    "biglybtc-azureus-routing-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-routing-tests",
+      "sha256": "ec16d381750b548123611b809d9672b6b9ed2c794debd6eca38057fa41f3ee34",
+      "bytes": 2265856
+    },
+    "biglybtc-azureus-profile-io-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-profile-io-tests",
+      "sha256": "55376dfaf723e6e0d62174719e098532affc2369ec7f9e1ef90ac4a4a6a66ec0",
+      "bytes": 2320040
+    },
+    "biglybtc-i2p-streaming-interop-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2p-streaming-interop-tests",
+      "sha256": "bed494a8dbe402c39118ebea181b050ce99fe90cbbff0500ee724af6b4529df0",
+      "bytes": 885520
+    },
+    "biglybtc-azureus-public-bound-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-public-bound-tests",
+      "sha256": "14cb8769bec1e740e999037fd111252b16793bf9bc0ebf087de949fbacb798d6",
+      "bytes": 2227024
+    }
+  },
+  "namespace_wrapper": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/azureus_public_bound_namespace.py",
+    "sha256": "e65d2faf089269c1eb94be3eaabaf398d749bdfd731b7f029ab7554dda98dfb2",
+    "source_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_public_bound_namespace.py"
+  },
+  "namespace_launcher": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/azureus_public_admin_launcher.py",
+    "sha256": "355271b706c964f3edf041b613f5d938fc59b8dd90911ee75c54fe942183e7f3",
+    "source_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_public_admin_launcher.py"
+  },
+  "pending_public": {
+    "executed": false,
+    "suite": "azureus-public-bound",
+    "selector": "explicitPublicKnownHintIsNotExportedAndOnlyActualPingMakesItAlive",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-public-bound-tests",
+      "sha256": "14cb8769bec1e740e999037fd111252b16793bf9bc0ebf087de949fbacb798d6",
+      "bytes": 2227024
+    },
+    "copied_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/biglybtc-azureus-public-bound-tests",
+    "wrapper": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/azureus_public_bound_namespace.py",
+      "sha256": "e65d2faf089269c1eb94be3eaabaf398d749bdfd731b7f029ab7554dda98dfb2",
+      "source_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_public_bound_namespace.py"
+    },
+    "launcher": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/azureus_public_admin_launcher.py",
+      "sha256": "355271b706c964f3edf041b613f5d938fc59b8dd90911ee75c54fe942183e7f3",
+      "source_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_public_admin_launcher.py"
+    },
+    "authentication": "pending; no authorisation or namespace invocation in this runner"
+  },
+  "promotable": false,
+  "actual_subjects": 5,
+  "source_unchanged": true,
+  "original_head_index_unchanged": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "old_dist_unchanged": "3f78d867124bdf72d132f2f647c7aaf038b3aa66fe4336ff663fb67893f0c77a",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "subject_phase_sha256": "c67cbfd0e7c60e12c8fcdf75679653c7b956bc1f04d4ac1b63cc6f6700e676be",
+  "java_reference": {
+    "status": "PREPARED_FIN_CALLBACK_FIXTURE_JAVA_ONLY",
+    "qualification": false,
+    "subjects_executed": false,
+    "javac_invocations": 1,
+    "java_program": "/usr/bin/java",
+    "legacy_classes": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/legacy",
+    "manager_classes": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/manager",
+    "source_commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+    "fixture_manifest": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/manifest.json",
+      "sha256": "9496e441043d6b763dda50d3df6e95bde5b2374a07d5834ee801da47c2f365b0"
+    },
+    "parent_reference": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-prepared-r1/result.json",
+      "sha256": "5af8dcfe7226eacf1fba0f4f8752443b9064b94ddeeba8aeef17642fd158168d"
+    },
+    "inputs_sha256": {
+      "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac": "4d08eaac44a80fb0142bc001123ebfbc8aa4121801d4cd24711d1394733767f4",
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/staging/java/StreamingPeer.java": "78cf8e40f9f6e6cb7c0520134b7e6a2c67fb971e90850ad4e8f609ca72571996",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/staging/java/ManagerPeer.java": "606267445499bc9b4429cee36871f7e97be4fbec0316a41b3edb4b2a18698555"
+    },
+    "classes_sha256": {
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/legacy/StreamingPeer$Adapter.class": "07b90aa1ad8752135b7a64466473aabcbabf6a0f1478ca6f35f380823b33789f",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/legacy/StreamingPeer.class": "7557ef5b80dd500e8160332c03204f243f094c8198b521d8cf17a0ebaedf3820",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/manager/ManagerPeer$Adapter.class": "25f80bc4024c84d8a6b41f740d464b9f05ef15068fbf451b2c0eea68e3b3180f",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/manager/ManagerPeer.class": "9f0876915bdbbd794d791fa3b7aacd224e5df839c85c4d7909c26b9aa2b340ac"
+    },
+    "commands_sha256": "7a5f11a963f0371b8d44ccdf415417acd5b3928abfe1f316bde08c9eedfe6a7e",
+    "javac_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "original_head_index_unchanged": {
+      "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+    },
+    "runner_sha256": "c1b08cbcb5188df04033f9aae27c4f861cc1bc92316bd854ac1b5a0e42b5eff9"
+  },
+  "manager_evidence": {
+    "native": {
+      "actual_activity_ms": "128809",
+      "actual_renewals": "1",
+      "cancel_late_payloads": "1",
+      "http_streams": 2,
+      "inbound_handshake_bytes": 68,
+      "native_destination_sha256": "2f0554e07af3496216dd5645d91b1c65711aecfb033fd19109df59f0bd3bc1c7",
+      "peak_rx_bytes": "1156",
+      "peak_tx_bytes": "140",
+      "real_router_or_bt_admission_claimed": false,
+      "rounds": 26,
+      "session_id": 7,
+      "status": "PASS",
+      "unchanged_lease_public_key_sha256": "cbbbf6767cd148ba4e0fbdd9b8dff78be19e702317169d7146e217ea2e19c461"
+    },
+    "peer": {
+      "status": "PASS",
+      "applications": 4,
+      "status_enqueue_ids": 2,
+      "fabricated_status_callbacks": 0,
+      "frames_sent": 110,
+      "frames_received": 175,
+      "router_or_tunnels_claimed": false
+    },
+    "public_files": {
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-manager/manager/native-acceptance.json": {
+        "sha256": "1b0f149d1eabf9dbe065d757e1ce82ddb266cd328c728de815045dff0af0affc",
+        "bytes": 536
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-manager/manager/peer-result.json": {
+        "sha256": "8927c16519a1bbbd76fe9b6d24de82c6ae5dfe6c7ba69fb996fb3798d76e6979",
+        "bytes": 164
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-manager/manager/peer-ready.json": {
+        "sha256": "e328800bbcee093b19bdacd6608c500e5716ddc6ec42665e9d0532b149801aaf",
+        "bytes": 90
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-manager/manager/bridge.json": {
+        "sha256": "e0b26a7d081a2f237e0390b31506ec5ca887a09486812b4c624caf39045459c0",
+        "bytes": 143
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-manager/manager/java-command.json": {
+        "sha256": "6b79d4c3e3ca2262107d6bed89df000a92c1ed18f2afc3cfa303eaf165bce6ff",
+        "bytes": 1267
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-manager/manager/java.stderr": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-manager/manager/http-9000.json": {
+        "sha256": "77f88099bcabda60bfa501269d62b4ed3bade80e528e56eb73a45b4bc8ca7bd4",
+        "bytes": 93
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-manager/manager/http-9001.json": {
+        "sha256": "e06831f8c2d1d70cf96cc5422481633bc812f0958122a0e5a1438711e206aab5",
+        "bytes": 93
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-manager/manager/inbound-application.json": {
+        "sha256": "73c3804c5150b995d43e6f780466f75a3a146d0f81885dd03d20c45ca461f410",
+        "bytes": 114
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-manager/manager/cancel-application.json": {
+        "sha256": "4e5990b9c06eae777f4f7bae74d5a5269eaa6dfd41f9d3df91845480b6104d9d",
+        "bytes": 47
+      }
+    },
+    "actual_applications": 4,
+    "actual_manager_methods": 1
+  },
+  "retained_legacy_http": {
+    "subject_cases": 1,
+    "public_files": {
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-java-peer/http/java-command.json": {
+        "sha256": "3a9d69b14c8c29ea5b8fb50c4b29aca440634d32e6916c5e5715d881dcca0b14",
+        "bytes": 1215
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-java-peer/http/java.stderr": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-java-peer/http/peer-ready.json": {
+        "sha256": "e328800bbcee093b19bdacd6608c500e5716ddc6ec42665e9d0532b149801aaf",
+        "bytes": 90
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-java-peer/http/peer-application.json": {
+        "sha256": "9855cf5dbf97623ec30c0bc5fb42dc5a7b3a554af0ec19f63b6316ab645f209d",
+        "bytes": 61
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-java-peer/http/peer-result.json": {
+        "sha256": "1338bc97999a98bcc5309fc625b42ab9cdddafce51151d89baeaaea0cb034b2e",
+        "bytes": 151
+      },
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/actual-java-peer/http/bridge.json": {
+        "sha256": "8710803ab10b98870d248ce22d81793969e6120237541fe07c55ce0f7a1fd5a2",
+        "bytes": 245
+      }
+    }
+  },
+  "commands_sha256": "4d9a7274862236ae6cafcd46ef52e8056073c695db5298ac49ebd20af797ea05"
+}

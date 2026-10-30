@@ -1,0 +1,68 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBTC/preview/native",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "-DBIGLYBTC_I2P_STREAMING_JAVA_ACCEPTANCE=ON",
+      "-DBIGLYBTC_I2P_STREAMING_JAVA=/usr/bin/java",
+      "-DBIGLYBTC_I2P_STREAMING_JAR=/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-DBIGLYBTC_I2P_STREAMING_CLASSES=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/helpers/legacy",
+      "-DBIGLYBTC_I2P_STREAMING_MANAGER_JAVA_ACCEPTANCE=ON",
+      "-DBIGLYBTC_I2P_MANAGER_JAVA=/usr/bin/java",
+      "-DBIGLYBTC_I2P_MANAGER_JAR=/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-DBIGLYBTC_I2P_MANAGER_CLASSES=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/helpers/manager"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 47.804,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/runs/gcc-d1/configure.log",
+    "log_sha256": "e1a529d61e6915c70f35134256a946bddb85de70a29a51e1fb4a89cc23a8d778"
+  },
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--target",
+      "biglybtc-i2p-streaming-interop-tests",
+      "--",
+      "-k",
+      "0"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 90.645,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/runs/gcc-d1/build.log",
+    "log_sha256": "c8281211f05d699119351336cc0d4aa7e4ccd0301f1a79120b3082ec6ebd7e2d"
+  },
+  {
+    "name": "selected",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2p-streaming-interop-tests",
+      "localCancelRejectsGenuineLatePeerBytesBeforeUpdatedBarrier",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/runs/gcc-d1/selected.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/runs/gcc-d1/selected.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 9.329,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/runs/gcc-d1/selected.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

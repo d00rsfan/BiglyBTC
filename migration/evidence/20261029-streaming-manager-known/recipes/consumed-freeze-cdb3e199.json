@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "status": "FROZEN_ASSOCIATED_M_CLOSEOUT_PUBLIC_PENDING_SOURCE_ONLY",
+  "source_commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+  "implementation_source_commit": "43d642fb0025510c581ebdc4d7a332752c511a46",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/manifest.json",
+    "sha256": "a34fcb679a093164d092c4984d8ee3d87a4e25061e18b8a700cbbdcab6f04fea"
+  },
+  "artifacts_sha256": {
+    "finish.py": "a02bc15688e456a0d4952805e771106118de76be3f6afea3d9c042a100bdf903",
+    "publish.py": "fedc2260abec1e2bbc7610513e751b6280f136d922ffa489eef87f15aa102997",
+    "changes.patch": "92084c4e3b34e5c07ed80d33ddb9906d27043af990ebf5189ba328ac2b3e750d",
+    "REVIEW.md": "1ad51f20ad2681b62e2e2bc94ff25b9e669df37c99187dfac619a827051c711a",
+    "ADOPTION.txt": "808cb43dd69e4a438a1dc022682879e1f91bb0e56d858536a5409bbefa8a52f6",
+    "unexecuted-freeze-41da.json": "41da57fb4eb1812391b2f449fb5cf835b26aadd512e950823fe4af988956c9dc",
+    "review-correction.patch": "aa68beb355495b4438bfe3d004ccffa0f97f111a831098553fbecfd148a6dd84",
+    "unexecuted-freeze-991731.json": "9917319bd0b693aaf01fa2127bd7ed354b4d46ee6ec6d084e44a993571e066ed",
+    "operator-export.patch": "a25c97738810846153e4a9f8df024e4b5a8dd72cf5c88f991652a735ffa811ac"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/manifest.json": "a34fcb679a093164d092c4984d8ee3d87a4e25061e18b8a700cbbdcab6f04fea",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/finish.py": "0132e6d1d3fd3427169be983d4fb2a5b5135b2140070d9fa66f383703ad9e832",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/publish.py": "19bd45a13fbd68e857683b59a32c5732ef8564705d6717383ef223ebfc5d24ef",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/root-publish-raw-loader-logs.json": "ad227ee303ac46e662e4d57da6359068cb5bf2c68e73e8a58cd678d02afeb32a",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/manifest.json": "d20a7fd8d07f4934d6b41a2dbd7f77f7c3258da1bafd8aa6685f4d07ca9b4892",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/manifest.json": "abc45a78c0e5151b85c0383eba3c790ff94179edee46eeae4f4dd6f5b054684b",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-public/manifest.json": "13143c9558e70a05537b89d1dac28c79468fc32f60b848b8a833c304356b0e3c",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/manifest.json": "9496e441043d6b763dda50d3df6e95bde5b2374a07d5834ee801da47c2f365b0",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/root-adoption.json": "f919cb9b3b72b9cb15c10388b62e745b970b764d3d4aa0ab674b34d52dd13f6a",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/result.json": "f9676e191ac62abaddeebf0a29b5c2798a73738c2d2ab76c369025c3cc6b1053",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/fin-callback-order-proof.json": "28c8513363ab913c7a41496094fed5c7ae9f3e3ca93648be174c11378a8157c2",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/recover-public-r2.py": "cdfe791589ae99d74e664e32405716d76b4409e27057a6d9edd98b969c104d5a",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/recover-public-r2-review.json": "cdc54fadcd3882bf5551425027f87b72c95dd21b77bb1a25dbd96d33799d064b",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/public-recovery-r2/result.json": "8bcfb0ba46b7909e9ae6aacecbef1d87e5e9d039145b9515d95dac3578f4ec27",
+    "/home/yurii/Java/BiglyBT/migration/reports/20261030-i2p-fin-close-race.txt": "96b13cb948945e96008fa946f6910fb6a525d610bcb66077211429fa0aa82a50",
+    "/home/yurii/Java/BiglyBT/migration/reports/20261028-empty-v2-hybrid-bug.txt": "c440a93ce53d3dc040105ae2aadc281fe3d2af3d5a389cfa15bdf4f46def8978",
+    "/home/yurii/Java/BiglyBT/migration/tools/continuation_status.py": "6d6dfb30e0ea461643f961230ae6a8bf62f91ff678304167a9823e63d9412994"
+  },
+  "source_paths": 25,
+  "fresh_actual_suites_per_lane": 3,
+  "retained_exact_r2_suites": {
+    "gcc": 18,
+    "clang": 16,
+    "san": 16
+  },
+  "private_required": {
+    "retained_subjects": 5,
+    "fresh_public_subjects": 1,
+    "exact_images": 6
+  },
+  "cached_public_required": "future actual PASS with exact-source fresh-output-only runner; current r2 FAIL preserved",
+  "fresh_full_cohort_claimed": false,
+  "original_failed_results_preserved": true,
+  "registry_counts": [
+    20,
+    108,
+    22
+  ],
+  "publisher_raw_loader_exclusion": "byte-exact reviewed parent hash-verified native-loader PID rule",
+  "author_execution": false,
+  "native_mutation": false,
+  "stop_after_current_milestone": true,
+  "unexecuted_prior_freeze": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/closeout/unexecuted-freeze-41da.json",
+    "sha256": "41da57fb4eb1812391b2f449fb5cf835b26aadd512e950823fe4af988956c9dc",
+    "execution": false
+  },
+  "source_review_correction": "Retain both actual external Java fixture sources; copy/commit two existing report files only; all gates unchanged.",
+  "operator_export_correction": "Export current milestone hand-off and the reviewed receipt-list display fix. No production/test/qualification or promotion changes; previous 991731 source freeze was never executed."
+}

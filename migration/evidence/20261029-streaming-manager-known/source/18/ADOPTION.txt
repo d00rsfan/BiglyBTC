@@ -1,0 +1,79 @@
+SOURCE ONLY. No compiler, JVM, subject, router, namespace, public network,
+profile write, provider or native-checkout mutation by the author.
+
+Apply AFTER the reviewed window6e6fe54d capsule; this patch's six existing
+beforeimages are the exact virtual afterimages of that prerequisite plus two
+unchanged native leaves. Five source leaves are new. The manifest records each
+origin. Append the two CMake fragments once after the window fragment; do not
+overwrite unrelated services/tests additions. All old pure/Qt/Java test files
+and helper bodies are unchanged. Actual qualification is pending.
+
+Explicit enableStreamManager opts an already-owned current signed I2CP/LS2
+channel into four retained streams, versus the unchanged default legacy single
+stream/total120s mode. Existing connect/write/read/finish/cancel APIs route by
+operation only in that opt-in mode. New explicit listen/accept, per-operation
+observations, finite readable/writable waits and terminal+drained release are
+additive. A listener requires exact local/remote ports and1..4 complete allowed
+peer Destinations; actor re-decodes bounded wire bytes rather than trusting
+caller hash/key metadata. It grants no torrent/Host/addressbook/proxy permission.
+
+Original anchors: PacketHandler99-110 routes actual sendStreamId;
+ConnectionManager243-286 authenticates SYN/FROM and recipient-hash NACK binding;
+475-488 excludes occupied/retired IDs. Native requires the eight-word binding
+rather than accepting the original unbound variant. The existing1024 lifetime
+ID history/monotone operation counter is shared with legacy use and never
+reset by channel close/restart; exhaustion explicitly refuses. Four stream
+slots include terminal readable states until explicit release. Pending SYNs
+are at most4 and262144 conservatively weighted bytes, expire after original3s,
+and duplicates cannot create a second accepted stream. Full/backlog/expired
+SYNs drop; original automatic rejection RESET/throttle policy is not copied.
+
+Each Connection keeps its qualified64KiB combined TX queue+sent payload,
+64KiB RX/reorder and eight-entry sent table. Four slots therefore bound queued
+application TX+RX to512KiB; pending SYNs, existing datagram queues, bounded codec
+scratch and metadata are separate finite envelopes, not a claimed RSS bound.
+Fair round-robin reservations feed only one existing bounded I2CP socket frame.
+No new thread, polling timer, provider API, Java backend or payload permission.
+
+Connection establishment and explicit application waits have separate finite
+budgets (1..120000ms). The nonblocking wait is a native counterpart to original
+read/write waiting: timeout changes the wait observation, not the connection.
+The deadline wins over a simultaneous Ready observation; original Java thread
+wake scheduling and exception objects are not replicated. Manager connections
+have no total120s lifetime. Activity is actual valid received packet/actual
+accepted dispatch, not a passive getter or scheduling event. Source Connection
+1256-1356 idle actions and once-per-connection random0..9999ms jitter at180 are
+preserved within an explicit native1ms..1h inactivity envelope; Send/Disconnect
+are supported, NOOP is refused. Idle Send is a real sequence-bearing empty
+packet (ConnectionDataReceiver171-187), owning ACK/retry credit; EOF/closed
+output falls back to idle disconnect. Java timer fuzz/wall rollback are outside
+the native monotonic envelope. Pure absent entropy means zero jitter only;
+actual actor always supplies bounded RAND_bytes, without a deterministic fallback.
+
+Current full retained identity/session/accepted options/unexpired actual local
+LS2 plus generation remain fences before effects. Post-signature source/clock
+checks precede admission and learning; signing/compression is followed by a
+fresh handshake/idle and authority check before actual socket write. Source
+retirement withdraws listener/queued SYNs/all streams. One cancellation does
+not close unrelated streams; notifications remain coalesced queued
+QPointer/generation callbacks and permit immediate controller deletion.
+
+Manager-only renewal supports one validated deferred Request37 while its
+current frame drains, with the original arrival deadline retained. It has
+priority at real bytesWritten, holds no second secret output, and refuses a
+second queued request or any stale/expired authority. Legacy renewal behavior
+is unchanged. Expired streams are never resurrected by a later lease. Submitted
+LS2 is still local sign/enqueue only, not router OPEN/tunnel or delivery proof.
+
+New source-authored pure suite pure-i2p-streaming-manager covers signed inbound
+role/recipient refusal, four-SYN cap/expiry, fair four-stream/byte bounds,
+cancel/retired-packet isolation, finite waits/long-activity model, original
+one-shot idle jitter and signature-decode deadline/source fences. New owned
+Qt suite i2cp-bounded-stream-manager has three methods: concurrent actual frames
+and explicit incoming BT-shaped68-byte data, same-identity renewal and cancel
+isolation; queued pending-SYN deletion; finite wait timeout without disconnect.
+This is a generated native peer fixture, not an original-manager oracle.
+Actual separate Java concurrent/inbound and active>120s renewal acceptance is
+Oracle/root future work, not run or implied here. Preserve the window's five
+manager controls and two upload rows. No full performance, public tunnel,
+persistent identity, automatic Host/proxy/HTTP or BitTorrent admission claim.

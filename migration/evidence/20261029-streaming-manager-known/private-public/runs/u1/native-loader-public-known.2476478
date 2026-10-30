@@ -1,0 +1,176 @@
+   2476478:	find library=libm.so.6 [0]; searching
+   2476478:	 search path=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/glibc-hwcaps/x86-64-v3/libm.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/glibc-hwcaps/x86-64-v2/libm.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/libm.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3/libm.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2/libm.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib/libm.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3/libm.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2/libm.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libm.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3/libm.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2/libm.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libm.so.6
+   2476478:	    (no such file)
+   2476478:	 search cache=/etc/ld.so.cache
+   2476478:	  trying file=/usr/lib/x86_64-linux-gnu/libm.so.6
+   2476478:	
+   2476478:	find library=libz.so.1 [0]; searching
+   2476478:	 search path=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/libz.so.1
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib/libz.so.1
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libz.so.1
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libz.so.1
+   2476478:	    (no such file)
+   2476478:	 search cache=/etc/ld.so.cache
+   2476478:	  trying file=/usr/lib/x86_64-linux-gnu/libz.so.1
+   2476478:	
+   2476478:	find library=libexpat.so.1 [0]; searching
+   2476478:	 search path=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/libexpat.so.1
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib/libexpat.so.1
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libexpat.so.1
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libexpat.so.1
+   2476478:	    (no such file)
+   2476478:	 search cache=/etc/ld.so.cache
+   2476478:	  trying file=/usr/lib/x86_64-linux-gnu/libexpat.so.1
+   2476478:	
+   2476478:	find library=libc.so.6 [0]; searching
+   2476478:	 search path=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/libc.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib/libc.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libc.so.6
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libc.so.6
+   2476478:	    (no such file)
+   2476478:	 search cache=/etc/ld.so.cache
+   2476478:	  trying file=/usr/lib/x86_64-linux-gnu/libc.so.6
+   2476478:	
+   2476478:	
+   2476478:	calling init: /lib64/ld-linux-x86-64.so.2
+   2476478:	
+   2476478:	
+   2476478:	calling init: /usr/lib/x86_64-linux-gnu/libc.so.6
+   2476478:	
+   2476478:	
+   2476478:	calling init: /usr/lib/x86_64-linux-gnu/libexpat.so.1
+   2476478:	
+   2476478:	
+   2476478:	calling init: /usr/lib/x86_64-linux-gnu/libz.so.1
+   2476478:	
+   2476478:	
+   2476478:	calling init: /usr/lib/x86_64-linux-gnu/libm.so.6
+   2476478:	
+   2476478:	
+   2476478:	initialize program: /usr/bin/python3
+   2476478:	
+   2476478:	
+   2476478:	transferring control: /usr/bin/python3
+   2476478:	
+   2476478:	find library=libffi.so.8 [0]; searching
+   2476478:	 search path=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/libffi.so.8
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib/libffi.so.8
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libffi.so.8
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libffi.so.8
+   2476478:	    (no such file)
+   2476478:	 search cache=/etc/ld.so.cache
+   2476478:	  trying file=/usr/lib/x86_64-linux-gnu/libffi.so.8
+   2476478:	
+   2476478:	
+   2476478:	calling init: /usr/lib/x86_64-linux-gnu/libffi.so.8
+   2476478:	
+   2476478:	
+   2476478:	calling init: /usr/lib/python3.14/lib-dynload/_ctypes.cpython-314-x86_64-linux-gnu.so
+   2476478:	
+   2476478:	find library=libcrypto.so.3 [0]; searching
+   2476478:	 search path=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/libcrypto.so.3
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib/libcrypto.so.3
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libcrypto.so.3
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libcrypto.so.3
+   2476478:	    (no such file)
+   2476478:	 search cache=/etc/ld.so.cache
+   2476478:	  trying file=/usr/lib/x86_64-linux-gnu/libcrypto.so.3
+   2476478:	
+   2476478:	find library=libzstd.so.1 [0]; searching
+   2476478:	 search path=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/test-support/libzstd.so.1
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/lib/libzstd.so.1
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/usr/lib/biglybtc/qt/lib/libzstd.so.1
+   2476478:	    (no such file)
+   2476478:	  trying file=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libzstd.so.1
+   2476478:	    (no such file)
+   2476478:	 search cache=/etc/ld.so.cache
+   2476478:	  trying file=/usr/lib/x86_64-linux-gnu/libzstd.so.1
+   2476478:	
+   2476478:	
+   2476478:	calling init: /usr/lib/x86_64-linux-gnu/libzstd.so.1
+   2476478:	
+   2476478:	
+   2476478:	calling init: /usr/lib/x86_64-linux-gnu/libcrypto.so.3
+   2476478:	
+   2476478:	
+   2476478:	calling init: /usr/lib/python3.14/lib-dynload/_hashlib.cpython-314-x86_64-linux-gnu.so
+   2476478:	
+   2476478:	
+   2476478:	calling fini:  [0]
+   2476478:	
+   2476478:	
+   2476478:	calling fini: /usr/lib/x86_64-linux-gnu/libm.so.6 [0]
+   2476478:	
+   2476478:	
+   2476478:	calling fini: /usr/lib/x86_64-linux-gnu/libexpat.so.1 [0]
+   2476478:	
+   2476478:	
+   2476478:	calling fini: /usr/lib/python3.14/lib-dynload/_ctypes.cpython-314-x86_64-linux-gnu.so [0]
+   2476478:	
+   2476478:	
+   2476478:	calling fini: /usr/lib/x86_64-linux-gnu/libffi.so.8 [0]
+   2476478:	
+   2476478:	
+   2476478:	calling fini: /usr/lib/python3.14/lib-dynload/_hashlib.cpython-314-x86_64-linux-gnu.so [0]
+   2476478:	
+   2476478:	
+   2476478:	calling fini: /usr/lib/x86_64-linux-gnu/libcrypto.so.3 [0]
+   2476478:	
+   2476478:	
+   2476478:	calling fini: /usr/lib/x86_64-linux-gnu/libz.so.1 [0]
+   2476478:	
+   2476478:	
+   2476478:	calling fini: /usr/lib/x86_64-linux-gnu/libzstd.so.1 [0]
+   2476478:	
+   2476478:	
+   2476478:	calling fini: /usr/lib/x86_64-linux-gnu/libc.so.6 [0]
+   2476478:	
+   2476478:	
+   2476478:	calling fini: /lib64/ld-linux-x86-64.so.2 [0]
+   2476478:	

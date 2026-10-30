@@ -1,0 +1,9 @@
+{
+  "status": "ROOT_REVIEWED_FINAL_OPERATOR_EXPORT_ONLY",
+  "manifest_sha256": "cdb3e199e5526b8aedcf1e95f251e52d5369e0fec692b5fa37a0f96781bf781c",
+  "prior_unexecuted_manifest_sha256": "9917319bd0b693aaf01fa2127bd7ed354b4d46ee6ec6d084e44a993571e066ed",
+  "delta_sha256": "a25c97738810846153e4a9f8df024e4b5a8dd72cf5c88f991652a735ffa811ac",
+  "continuation_status_fix": "Handle JSON array CI receipts; manually exercised successfully without full logs",
+  "product_or_test_changes": false,
+  "all_actual_gates_passed": true
+}

@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_PENDING_INDEPENDENT_DELTA_REVIEW_AND_RUNTIME",
+  "native_basis": "ad4854e920d86a511cc90cd52e4ab161adcb0fec",
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/manifest.json",
+  "parent_manifest_sha256": "923ec334afc521248dfd691dce2c3c70f3e2507a23674562497084b87a2c8f20",
+  "input_pins": {
+    "approved_proposal": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-proposal-20261029/PROPOSAL.txt",
+      "sha256": "8bcc875a632a11e161ee12d949d7973eeab71e5ebea950e9e1a8c4c4785cb347"
+    },
+    "proposal_pins": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-proposal-20261029/source-pins.json",
+      "sha256": "1687069a554775296c7bdd55d118cb0e37d0774695d9fdef0b077652ece42671"
+    },
+    "public_source_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-public-bound-20261029-review/review.json",
+      "sha256": "803384933d6ee11eee1949e3c11ca3c912178fd074319adbf39567043fd10adb"
+    }
+  },
+  "source_paths": {
+    "preview/native/app/azureus_public_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/app/azureus_public_owner.inc",
+      "before_sha256": "ba89062167be84b623c000b57830a073ca7a93710e94cd458e7ec11aecd158ff",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/staging/preview/native/app/azureus_public_owner.inc",
+      "after_sha256": "4f52b265101ebaf13ff5e03854205b0a7842d18286cc5d23db1636f755d21f9c"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "18739aab6073ac0251daff8b5f06558293f1637d0a8b931b94b9c1781a7dbd22",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "2472c44b04d8e37ed66458740f0a0637414efa212b4128d507c247b3661790be"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "2887f1a519659c838ea0a64f75314f28799c8750a654a1f3a19bfaed2e042013",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "0a6e76bc78d4605316642e1b38d4bb2ecd05123c863ce3a364ecc989d7ed8c68"
+    },
+    "preview/native/services/azureus_udp/owned_maintenance.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/services/azureus_udp/owned_maintenance.inc",
+      "before_sha256": "d6b76f425631d83b62542b109c61eb5a3a7c17fd6289f1cefebb6a64ed2cad25",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/staging/preview/native/services/azureus_udp/owned_maintenance.inc",
+      "after_sha256": "d5fe19fd60df7f9f17c0272c2c097dc6be1b4b2a7ce75ce52223e29ad0a73e6a"
+    },
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/services/azureus_udp/owned_routing.inc",
+      "before_sha256": "e74574468929762d85e3d2bf2fe659abc0c70fb716d4498de93411dd38a57994",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/staging/preview/native/services/azureus_udp/owned_routing.inc",
+      "after_sha256": "44674dfd7b9f474baea03003cc09c48b7680130915e462a5ae63155ed3ddc4f3"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/services/azureus_udp/owned_transport.cpp",
+      "before_sha256": "43093e8fe5a2ef3daac0cd76a7e2f53d35b24872b1f9012033735ee7a6ef3726",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+      "after_sha256": "98cf89545c5b8dcf79ca2a6b6bef6ef3b9a0f1bfd692fab34b1e40057303d7df"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/services/azureus_udp/owned_transport.hpp",
+      "before_sha256": "de02a807c9b00028ab8262d4c1bc19dba3c4a3c53d361fe58622f36dcd1bf822",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+      "after_sha256": "8621a46e1361dde18d3564925c04521076a92b7aeb2d8954a05f89226619ffb0"
+    },
+    "preview/native/tests/azureus_profile_io_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/before/preview/native/tests/azureus_profile_io_tests.cpp",
+      "before_sha256": "03fd2beaf7fbb3955e22e3018726c808f317b4f321234065074c4374a7453e9c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/amendments/ordered-exact-peer-grant/staging/preview/native/tests/azureus_profile_io_tests.cpp",
+      "after_sha256": "40481a9792a37c1be2af7327301e10e13d60117707df15711748ce3d317e07a2"
+    },
+    "preview/native/tests/azureus_public_bound_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/tests/azureus_public_bound_tests.cpp",
+      "before_sha256": "7afc81a498a9eab59cda319685c888fa6c7c3d8a90f23f7a3cea0e2d1c3fa6b2",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/staging/preview/native/tests/azureus_public_bound_tests.cpp",
+      "after_sha256": "57a3ab470f0d0512a859523427815deecb2d4c8609a59e9108248c8c94052f2b"
+    },
+    "preview/native/tests/azureus_routing_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/before/preview/native/tests/azureus_routing_tests.cpp",
+      "before_sha256": "ed570f848a4b0a256ecedb652f098d72f2de0b69e0cd08c6bb2faa6b46c0a3e6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-known-peer-attachment-20261029/amendments/final-preparation-permit/staging/preview/native/tests/azureus_routing_tests.cpp",
+      "after_sha256": "91856cffd9840912c55742914b669034de194599d8bada4ba39a51a9588efeca"
+    }
+  },
+  "cmake_fragments": [],
+  "delta_paths": [
+    "preview/native/tests/azureus_profile_io_tests.cpp"
+  ],
+  "bounds": {
+    "normal_service_combined_peers": 32,
+    "raw_transport_existing_maximum_peers": 256,
+    "existing_nodeadded_pings_in_flight": 8,
+    "existing_intent_queue": 64,
+    "existing_profile_io_slots": 8,
+    "existing_shared_held_frames": 64,
+    "new_threads_or_timers": 0
+  },
+  "execution": {
+    "status": "PASS_STATIC_ONLY",
+    "source_maps": 10,
+    "changed_afterimages": 1,
+    "inherited_afterimages": 9,
+    "exact_inverse_of_only_ordering_delta_restores_923_full_test_leaf": true,
+    "all_production_afterimages_exact_parent": true,
+    "readonly_complete_patch_apply_check": true,
+    "compiler_or_subject_execution": false
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "18cbbd84009e8ea327e8802c71c3763d9ffe2f000b5a5a2de503473c39f2b654",
+    "changes.patch": "5e46e427740e9188898f35d99f644be24d9c44f15dc456d3ce519c071dbc0323",
+    "delta.patch": "5d1b1e62d22561c40eda9c7a82d39637bd1cb97a28b1458ab204be4f09f37b59",
+    "static-checks.json": "c7ca31e10ec0f93f8e55b622d881b6aed6996d0d2f8c48b5da889a160f41877a",
+    "staging/preview/native/tests/azureus_profile_io_tests.cpp": "40481a9792a37c1be2af7327301e10e13d60117707df15711748ce3d317e07a2"
+  }
+}

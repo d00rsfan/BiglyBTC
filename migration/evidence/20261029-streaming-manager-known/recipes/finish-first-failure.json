@@ -1,0 +1,13 @@
+{
+  "status": "FAILED_CLOSEOUT_BEFORE_ANY_EVIDENCE_OR_PROMOTION",
+  "tool_session": 56603,
+  "exit": 1,
+  "exception": "KeyError: sanitizer_environment",
+  "cause": "Old failed r2 results have no success-only environment field; current A2 successes must be described from their actual pinned runner",
+  "source_commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+  "manifest_sha256": "cdb3e199e5526b8aedcf1e95f251e52d5369e0fec692b5fa37a0f96781bf781c",
+  "finish_sha256": "a02bc15688e456a0d4952805e771106118de76be3f6afea3d9c042a100bdf903",
+  "test_results_unchanged": true,
+  "native_source_unchanged": true,
+  "dist_unchanged": true
+}

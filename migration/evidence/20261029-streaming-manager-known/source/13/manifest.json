@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "status": "FROZEN_FIN_CALLBACK_AFFECTED_RECIPE_SOURCE_ONLY",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/manifest.json",
+    "sha256": "a7ff58ce046fd350a3e18aebbfb05d66db5b1156feed135bc112aac1cae9b122"
+  },
+  "source_commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+  "native_source_paths": 25,
+  "artifacts_sha256": {
+    "run.py": "638b4fdbd678798a89c427289b6d749f098fbd8ddca9b912c03535cec0ce5232",
+    "jobs.mk": "e612603a8330dea32bc3dd2261eaa32197b43814b48c84fb42377644afdb89ae",
+    "changes.patch": "8ab4e6e8033188ae8f4793bd8e130626715e4fca02140a8662ba8c72ed68330c",
+    "ADOPTION.txt": "fb400bd0da4b2126b5cf3f04fbaa42cb5e294d9726fd9db5d6e25cc40c0a718e",
+    "checks.json": "a00487171284a77f80ca4fd2fd1fb3ec1ed9afab7ef50abae0c98512f6b70109"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/manifest.json": "a7ff58ce046fd350a3e18aebbfb05d66db5b1156feed135bc112aac1cae9b122",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/effective-adoption.json": "6ee422d4befc80a56ed24f0cfc9cf8f77df8d99f24983f327993e570214cf5f4",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/manifest.json": "9496e441043d6b763dda50d3df6e95bde5b2374a07d5834ee801da47c2f365b0",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/root-adoption.json": "f919cb9b3b72b9cb15c10388b62e745b970b764d3d4aa0ab674b34d52dd13f6a",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/result.json": "f9676e191ac62abaddeebf0a29b5c2798a73738c2d2ab76c369025c3cc6b1053",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/adopt-and-prepare.py": "c1b08cbcb5188df04033f9aae27c4f861cc1bc92316bd854ac1b5a0e42b5eff9",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/runs/gcc-a1/result.json": "6c692354d03d1a75fc6c9b5ea0aaf9a844eeff57d89505db6eab76aa3785a24f",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/runs/clang-a1/result.json": "7523bbeb51bba384c2464f23437d05d1a4934c3e7222618586092aeeb7b798f4",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/runs/san-a1/result.json": "44d0cf9e327629f9e286aaab2e6c172c1e8e83af7376c9c73308c3f940cd8465"
+  },
+  "fresh_actual_suites": {
+    "gcc": 3,
+    "clang": 3,
+    "san": 3
+  },
+  "retained_exact_r2_rows": {
+    "gcc": 18,
+    "clang": 16,
+    "san": 16
+  },
+  "diagnostic_manager_reuse": false,
+  "blocked_rows": {
+    "gcc": [
+      "azureus-public-bound"
+    ]
+  },
+  "new_javac_invocations": 0,
+  "fresh_full_cohort_claimed": false,
+  "original_failed_results_preserved": true,
+  "private_adaptation": "only after actual affected outcomes pass",
+  "execution": false,
+  "native_mutation": false,
+  "stop_after_current_milestone": true,
+  "source_review_correction": {
+    "previous_unexecuted_manifest": "ad10d2e65e9c3b6aa8a45496197c865f565faa9e8a4dbaa6c07b5aa6b5bb4016",
+    "finding": "Public recovery did not write images-before.json",
+    "resolution": "retain existing exact original-r2 image equality and pinned failed pre-ELF recovery; remove nonexistent file access"
+  }
+}

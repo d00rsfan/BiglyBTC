@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "status": "BLOCKED_SOURCE_REVIEW_NO_EXECUTION",
+  "manifest": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/manifest.json",
+  "manifest_sha256": "39fac2d7a7e8b7faae234b2864cac0c65c312eea00eed44ff136fbd62170760a",
+  "reviewed_window_manifest_sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1",
+  "verified": {
+    "artifacts": 24,
+    "source_maps": 11,
+    "input_pins": 3,
+    "official_source_full_sha256_and_git_blobs": 13,
+    "modified_b086_jar_full_sha256": true,
+    "virtual_window_beforeimages": 4,
+    "actual_native_git_beforeimages": 2,
+    "append_fragments": 2,
+    "virtual_parent_patch_apply_check": true
+  },
+  "blockers": [
+    {
+      "id": "hard-deadline-wakeup",
+      "locations": [
+        "services/i2cp_channel/managed_streams.inc:armManagedStreams/flushManagedStreams",
+        "services/i2p_streaming/manager.cpp:tick/wakeup"
+      ],
+      "cause": "Blocked socket output suppresses all Manager::wakeup, including finite handshake/application wait/pending SYN expiry. Manager wakeup also omits accepted inbound first-send handshakeEnd although tick enforces it. LS2 expiry can be minutes away; blocked output must suppress retry/output readiness, not hard deadlines. Tick/notify must settle a due hard deadline before rearming, avoiding 1ms spin. Author additionally found cancelled unsent inbound can be relabelled Timeout unless handshake expiry requires active connection.",
+      "required": "Separate finite hard deadlines from retry/output readiness; preserve exact budgets and terminal cancellation. Add bounded controls."
+    },
+    {
+      "id": "old-lease-renewal",
+      "locations": [
+        "services/i2cp_channel/channel.cpp:answerLease/answerLeaseWithin"
+      ],
+      "cause": "With drained socket a renewal may replace an already expired old leaseSubmission before a due timer runs. Existing streams/listener then see the new valid LS2 and survive old authority expiry. Expensive signing can also cross old expiry. A shorter renewed expiry does not currently rearm the manager timer.",
+      "required": "Retire old manager stream/listener authority before renewal replacement if the actual old LS2 expired, recheck after preparation, and rearm to new actual expiry. Preserve initial lease and valid same-identity renewal."
+    },
+    {
+      "id": "connect-api-entry-budget",
+      "locations": [
+        "services/i2cp_channel/managed_streams.inc:startManagedStream"
+      ],
+      "cause": "The declared handshake budget starts after RAND_bytes identity selection and Destination decode, unlike legacy startStream which anchors before preparation. Slow preparation stretches the accepted finite connect budget.",
+      "required": "Carry one actor API-entry absolute handshake end through preparation/pure manager and final dispatch; accepted inbound keeps its original pending SYN end."
+    }
+  ],
+  "other_source_findings": "No additional material blocker in complete bounded reading. Signed SYN/FROM recipient binding, complete allowed Destination and ports, stream-ID demux, four stream/four pending SYN bounds, one-frame fair scheduling, same1024 nonreuse ledger, retained public peer values, queued notification deletion and default datagram/tracker paths are coherent. Tests are native generated counterparts, not original Java runtime acceptance.",
+  "author_notified": true,
+  "source_mutated": false,
+  "native_mutated": false,
+  "compiler_or_runtime_execution": false
+}

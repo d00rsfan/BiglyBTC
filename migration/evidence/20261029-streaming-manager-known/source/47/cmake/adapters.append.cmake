@@ -1,0 +1,1 @@
+target_sources(biglybtc_profile PRIVATE azureus_public_policy.cpp)

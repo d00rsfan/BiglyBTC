@@ -1,0 +1,55 @@
+SOURCE ONLY. No compiler, Java/native subject, router, network namespace,
+public network, real profile or native-checkout mutation by the author.
+
+Apply only the new tests/i2p_streaming_manager_interop_tests.cpp and append
+`tests.append.cmake` once after final manager1f911/reviewc6ab plus reviewed
+Window6e6/acceptancefec are integrated. Existing Java/helper/native seven cases
+and their method bodies remain full-file byte-exact. No production/API change.
+
+Target biglybtc-i2p-streaming-manager-interop-tests; explicit CTest
+`i2p-original-streaming-manager` TIMEOUT360. No default CTest or absent-Java skip.
+One method keeps two distinct actual original-manager HTTP keepalive sockets
+and a Java-initiated native inbound BT-shaped68-byte stream active for at least
+125s.26 exact rounds each wait at least5005ms after prior actual completion;
+the JVM checks its own first/last application observations too. Four-stream
+mode and passive observations do not earn progress without exact real bytes.
+
+A fourth real socket supplies held actual peer bytes. Local cancel is followed
+by their real Payload31 delivery and later actual responses on the other
+current operations as a positive ordered-TCP consumption barrier. Cancelled
+read/write remain refused. No fake RESET or remote cancellation/delivery claim.
+At65s the owned router sends a genuine Request37; native actual signed LS2 is
+decoded/key-pair-verified, with unchanged full Destination/session/public key,
+new requested gateway/tunnel/expiry, and later actual application progress.
+LeaseSet submission is sign/enqueue only, never invented router OPEN/ack.
+
+Exact full peer allowlist +protocol6/port tuples only. Every bridge direction
+uses actual original DataHelper mux-gzip and real manager listener/receiveMessage
+and I2PSocket IO, not app-byte echo. Native validates actual packet signatures
+and recipient/session before forwarding. Original PacketQueue uses nine-arg
+sendMessage(...options,statusListener) on outbound SYN. Adapter supports that
+exact overload by returning a nonreused local enqueue ID only AFTER bounded
+actual mux enqueue; eight-arg sends retain boolean enqueue semantics. It never
+invokes a status callback or invents Accepted/Delivered. Real manager packet
+ACKs, not I2CP status, complete connect/application/EOF. Original manager class
+origins are checked against the one exact modified b086 JAR.
+
+Finite bounds: four native streams, <=64KiB app TX/RX each; source manager's
+aggregate512KiB envelope. Adapter queue16, packet32768/mux40960/frame4096 lifetime,
+I2CP write256KiB and Java/native input65536 bounded checks, late queue16, stderr
+65536. Fresh owned loopback-only I2CP TCP server disables proxies. Native default
+receiver remains disabled. Listener/operations explicitly close/release;
+actual child exits0+joins, all four actual applications must PASS. Failure
+captures bounded final stderr; RAII aborts/kills/joins only owned socket/child.
+No Streaming Host/default/real-router/tunnel/torrent admission is activated.
+
+Root recipe: PREPARE-HELPERS.sh OUT /usr/bin/java /usr/bin/javac performs exactly
+ONE javac (release17,128MiB heap,oneCPU,nice5), compiling unchanged legacy helper
+and new ManagerPeer together. It hashes source/tools/JAR before and after;
+then copies four exact classes into separate legacy/manager two-class dirs,
+preserving strict old class inventory. No Java subject is run by preparation.
+Enable existing legacy acceptance using OUT/legacy and new manager acceptance
+using OUT/manager, SAME exact Java/JAR. All seven old controls plus one new
+method can then use same compiled helper images; do not rebuild Java/core/Qt.
+Record actual fresh source/adoption/build/image/result paths at root execution.
+No old PASS pooling or performance claim; actual acceptance pending.

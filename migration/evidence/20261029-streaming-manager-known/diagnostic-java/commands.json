@@ -1,0 +1,30 @@
+[
+  {
+    "name": "javac",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac",
+      "-J-Xms16m",
+      "-J-Xmx128m",
+      "-J-XX:ActiveProcessorCount=1",
+      "-J-XX:+UseSerialGC",
+      "-J-Duser.home=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-prepared-r1/home",
+      "-J-Djava.io.tmpdir=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-prepared-r1/tmp",
+      "--release",
+      "17",
+      "-cp",
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-d",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-prepared-r1/all",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-async-failures/staging/StreamingPeer.java",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-async-failures/staging/ManagerPeer.java"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 13.705,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-prepared-r1/javac.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

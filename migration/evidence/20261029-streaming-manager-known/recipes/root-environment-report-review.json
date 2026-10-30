@@ -1,0 +1,8 @@
+{
+  "status": "ROOT_REVIEWED_REPORT_SCHEMA_CORRECTION_ONLY",
+  "manifest_sha256": "07062b1d7b10720f6a77b114227fa55bb88823e35b9fade0784f94c836743eda",
+  "delta_sha256": "37a11f08c5268b0602a449127315447cc6ea2f8c0f48129c5d08e3ca07d0779d",
+  "proof": "Actual A2 runner sets exact ASAN/UBSAN values; Runner passes env=self.env to subprocess. No separate environment capture claimed. All source hashes validated.",
+  "repeat_subjects": false,
+  "repeat_builds": false
+}

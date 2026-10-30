@@ -1,0 +1,13 @@
+{
+  "status": "PROMOTED_ONE_CHECKED_DEVELOPMENT_DIST",
+  "source_commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+  "manifest_sha256": "aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b",
+  "leaf_count": 119,
+  "previous_manifest_sha256": "3f78d867124bdf72d132f2f647c7aaf038b3aa66fe4336ff663fb67893f0c77a",
+  "previous_dist_removed": true,
+  "atomic_exchange": true,
+  "copied_test_images_removed": 6,
+  "test_support_removed": true,
+  "namespace_wrapper_and_launcher_removed": true,
+  "both_registry_preflights_passed": true
+}

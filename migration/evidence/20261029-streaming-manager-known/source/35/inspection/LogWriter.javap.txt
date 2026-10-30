@@ -1,0 +1,551 @@
+Compiled from "LogWriter.java"
+abstract class net.i2p.util.LogWriter implements java.lang.Runnable {
+  private static final long CONFIG_READ_INTERVAL = 50000l;
+
+  static final long FLUSH_INTERVAL = 29000l;
+
+  private static final long MIN_FLUSH_INTERVAL = 2000l;
+
+  private static final long MAX_FLUSH_INTERVAL = 300000l;
+
+  private static final boolean BUFFER_DISPLAYED_REVERSE = false;
+
+  private long _lastReadConfig;
+
+  protected final net.i2p.util.LogManager _manager;
+
+  protected volatile boolean _write;
+
+  private net.i2p.util.LogRecord _last;
+
+  private long _firstTimestamp;
+
+  private volatile long _flushInterval;
+
+  private static final java.lang.String BUNDLE_NAME = "net.i2p.util.messages";
+
+  private static final java.lang.String ROUTER_BUNDLE_NAME = "net.i2p.router.web.messages";
+
+  public net.i2p.util.LogWriter(net.i2p.util.LogManager);
+    Code:
+         0: aload_0
+         1: invokespecial #42                 // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: ldc2_w        #13                 // long 29000l
+         8: putfield      #45                 // Field _flushInterval:J
+        11: aload_0
+        12: aload_1
+        13: putfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        16: aload_0
+        17: invokestatic  #49                 // Method net/i2p/util/Clock.getInstance:()Lnet/i2p/util/Clock;
+        20: invokevirtual #55                 // Method net/i2p/util/Clock.now:()J
+        23: putfield      #59                 // Field _lastReadConfig:J
+        26: return
+
+  public abstract java.lang.String currentFile();
+
+  protected abstract void writeRecord(net.i2p.util.LogRecord, java.lang.String);
+
+  protected abstract void writeRecord(int, java.lang.String);
+
+  protected abstract void flushWriter();
+
+  protected abstract void closeWriter();
+
+  public void stopWriting();
+    Code:
+         0: aload_0
+         1: iconst_0
+         2: putfield      #74                 // Field _write:Z
+         5: return
+
+  public void setFlushInterval(long);
+    Code:
+         0: aload_0
+         1: ldc2_w        #19                 // long 300000l
+         4: ldc2_w        #16                 // long 2000l
+         7: lload_1
+         8: invokestatic  #78                 // Method java/lang/Math.max:(JJ)J
+        11: invokestatic  #84                 // Method java/lang/Math.min:(JJ)J
+        14: putfield      #45                 // Field _flushInterval:J
+        17: return
+
+  public void run();
+    Code:
+         0: aload_0
+         1: iconst_1
+         2: putfield      #74                 // Field _write:Z
+         5: invokestatic  #89                 // Method net/i2p/util/SystemVersion.isAndroid:()Z
+         8: ifeq          15
+        11: iconst_0
+        12: goto          16
+        15: iconst_1
+        16: istore_1
+        17: goto          39
+        20: aload_0
+        21: invokevirtual #95                 // Method flushRecords:()V
+        24: aload_0
+        25: getfield      #74                 // Field _write:Z
+        28: ifeq          39
+        31: iload_1
+        32: ifeq          39
+        35: aload_0
+        36: invokespecial #98                 // Method rereadConfig:()V
+        39: aload_0
+        40: getfield      #74                 // Field _write:Z
+        43: ifne          20
+        46: goto          76
+        49: astore_2
+        50: getstatic     #101                // Field java/lang/System.err:Ljava/io/PrintStream;
+        53: new           #107                // class java/lang/StringBuilder
+        56: dup
+        57: ldc           #109                // String Error writing the log:
+        59: invokespecial #111                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        62: aload_2
+        63: invokevirtual #114                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+        66: invokevirtual #118                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        69: invokevirtual #121                // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        72: aload_2
+        73: invokevirtual #126                // Method java/lang/RuntimeException.printStackTrace:()V
+        76: aload_0
+        77: invokevirtual #131                // Method closeWriter:()V
+        80: return
+      Exception table:
+         from    to  target type
+            17    46    49   Class java/lang/RuntimeException
+
+  public void flushRecords();
+    Code:
+         0: aload_0
+         1: iconst_1
+         2: invokevirtual #137                // Method flushRecords:(Z)V
+         5: return
+
+  public void flushRecords(boolean);
+    Code:
+         0: aload_0
+         1: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+         4: invokevirtual #140                // Method net/i2p/util/LogManager.getQueue:()Ljava/util/Queue;
+         7: astore_2
+         8: aload_2
+         9: ifnonnull     42
+        12: iload_1
+        13: ifeq          41
+        16: aload_0
+        17: dup
+        18: astore        6
+        20: monitorenter
+        21: aload_0
+        22: aload_0
+        23: getfield      #45                 // Field _flushInterval:J
+        26: invokevirtual #146                // Method java/lang/Object.wait:(J)V
+        29: aload         6
+        31: monitorexit
+        32: goto          41
+        35: aload         6
+        37: monitorexit
+        38: athrow
+        39: astore        6
+        41: return
+        42: aload_2
+        43: invokeinterface #149,  1          // InterfaceMethod java/util/Queue.isEmpty:()Z
+        48: ifne          264
+        51: aload_0
+        52: getfield      #154                // Field _last:Lnet/i2p/util/LogRecord;
+        55: ifnull        88
+        58: aload_0
+        59: getfield      #156                // Field _firstTimestamp:J
+        62: aload_0
+        63: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        66: invokevirtual #158                // Method net/i2p/util/LogManager.getContext:()Lnet/i2p/I2PAppContext;
+        69: invokevirtual #162                // Method net/i2p/I2PAppContext.clock:()Lnet/i2p/util/Clock;
+        72: invokevirtual #55                 // Method net/i2p/util/Clock.now:()J
+        75: ldc2_w        #167                // long 1800000l
+        78: lsub
+        79: lcmp
+        80: ifge          88
+        83: aload_0
+        84: aconst_null
+        85: putfield      #154                // Field _last:Lnet/i2p/util/LogRecord;
+        88: iconst_0
+        89: istore        4
+        91: goto          157
+        94: aload_0
+        95: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        98: invokevirtual #169                // Method net/i2p/util/LogManager.shouldDropDuplicates:()Z
+       101: ifeq          121
+       104: aload_3
+       105: aload_0
+       106: getfield      #154                // Field _last:Lnet/i2p/util/LogRecord;
+       109: invokevirtual #172                // Method net/i2p/util/LogRecord.equals:(Ljava/lang/Object;)Z
+       112: ifeq          121
+       115: iinc          4, 1
+       118: goto          152
+       121: iload         4
+       123: ifle          139
+       126: aload_0
+       127: iload         4
+       129: aload_0
+       130: getfield      #154                // Field _last:Lnet/i2p/util/LogRecord;
+       133: invokespecial #178                // Method writeDupMessage:(ILnet/i2p/util/LogRecord;)V
+       136: iconst_0
+       137: istore        4
+       139: aload_0
+       140: aload_3
+       141: invokespecial #182                // Method writeRecord:(Lnet/i2p/util/LogRecord;)V
+       144: aload_0
+       145: aload_3
+       146: invokevirtual #185                // Method net/i2p/util/LogRecord.getDate:()J
+       149: putfield      #156                // Field _firstTimestamp:J
+       152: aload_0
+       153: aload_3
+       154: putfield      #154                // Field _last:Lnet/i2p/util/LogRecord;
+       157: aload_2
+       158: invokeinterface #188,  1          // InterfaceMethod java/util/Queue.poll:()Ljava/lang/Object;
+       163: checkcast     #173                // class net/i2p/util/LogRecord
+       166: dup
+       167: astore_3
+       168: ifnonnull     94
+       171: iload         4
+       173: ifle          186
+       176: aload_0
+       177: iload         4
+       179: aload_0
+       180: getfield      #154                // Field _last:Lnet/i2p/util/LogRecord;
+       183: invokespecial #178                // Method writeDupMessage:(ILnet/i2p/util/LogRecord;)V
+       186: aload_0
+       187: invokevirtual #192                // Method flushWriter:()V
+       190: goto          264
+       193: astore_2
+       194: aload_2
+       195: invokevirtual #194                // Method java/lang/Throwable.printStackTrace:()V
+       198: iload_1
+       199: ifeq          293
+       202: aload_0
+       203: dup
+       204: astore        6
+       206: monitorenter
+       207: aload_0
+       208: aload_0
+       209: getfield      #45                 // Field _flushInterval:J
+       212: invokevirtual #146                // Method java/lang/Object.wait:(J)V
+       215: aload         6
+       217: monitorexit
+       218: goto          293
+       221: aload         6
+       223: monitorexit
+       224: athrow
+       225: astore        6
+       227: goto          293
+       230: astore        5
+       232: iload_1
+       233: ifeq          261
+       236: aload_0
+       237: dup
+       238: astore        6
+       240: monitorenter
+       241: aload_0
+       242: aload_0
+       243: getfield      #45                 // Field _flushInterval:J
+       246: invokevirtual #146                // Method java/lang/Object.wait:(J)V
+       249: aload         6
+       251: monitorexit
+       252: goto          261
+       255: aload         6
+       257: monitorexit
+       258: athrow
+       259: astore        6
+       261: aload         5
+       263: athrow
+       264: iload_1
+       265: ifeq          293
+       268: aload_0
+       269: dup
+       270: astore        6
+       272: monitorenter
+       273: aload_0
+       274: aload_0
+       275: getfield      #45                 // Field _flushInterval:J
+       278: invokevirtual #146                // Method java/lang/Object.wait:(J)V
+       281: aload         6
+       283: monitorexit
+       284: goto          293
+       287: aload         6
+       289: monitorexit
+       290: athrow
+       291: astore        6
+       293: return
+      Exception table:
+         from    to  target type
+            21    32    35   any
+            35    38    35   any
+            16    39    39   Class java/lang/InterruptedException
+             0    12   193   Class java/lang/Throwable
+            42   190   193   Class java/lang/Throwable
+           207   218   221   any
+           221   224   221   any
+           202   225   225   Class java/lang/InterruptedException
+             0    12   230   any
+            42   198   230   any
+           241   252   255   any
+           255   258   255   any
+           236   259   259   Class java/lang/InterruptedException
+           273   284   287   any
+           287   290   287   any
+           268   291   291   Class java/lang/InterruptedException
+
+  private void writeDupMessage(int, net.i2p.util.LogRecord);
+    Code:
+         0: aload_0
+         1: iload_1
+         2: aload_2
+         3: iconst_0
+         4: iconst_0
+         5: invokespecial #209                // Method dupMessage:(ILnet/i2p/util/LogRecord;ZZ)Ljava/lang/String;
+         8: astore_3
+         9: aload_0
+        10: aload_2
+        11: invokevirtual #213                // Method net/i2p/util/LogRecord.getPriority:()I
+        14: aload_3
+        15: invokevirtual #217                // Method writeRecord:(ILjava/lang/String;)V
+        18: aload_0
+        19: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        22: invokevirtual #219                // Method net/i2p/util/LogManager.getDisplayOnScreenLevel:()I
+        25: aload_2
+        26: invokevirtual #213                // Method net/i2p/util/LogRecord.getPriority:()I
+        29: if_icmpgt     49
+        32: aload_0
+        33: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        36: invokevirtual #222                // Method net/i2p/util/LogManager.displayOnScreen:()Z
+        39: ifeq          49
+        42: getstatic     #225                // Field java/lang/System.out:Ljava/io/PrintStream;
+        45: aload_3
+        46: invokevirtual #228                // Method java/io/PrintStream.print:(Ljava/lang/String;)V
+        49: aload_0
+        50: iload_1
+        51: aload_2
+        52: iconst_0
+        53: iconst_1
+        54: invokespecial #209                // Method dupMessage:(ILnet/i2p/util/LogRecord;ZZ)Ljava/lang/String;
+        57: astore_3
+        58: aload_0
+        59: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        62: invokevirtual #231                // Method net/i2p/util/LogManager.getBuffer:()Lnet/i2p/util/LogConsoleBuffer;
+        65: aload_3
+        66: invokevirtual #235                // Method net/i2p/util/LogConsoleBuffer.add:(Ljava/lang/String;)V
+        69: aload_2
+        70: invokevirtual #213                // Method net/i2p/util/LogRecord.getPriority:()I
+        73: bipush        50
+        75: if_icmplt     89
+        78: aload_0
+        79: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        82: invokevirtual #231                // Method net/i2p/util/LogManager.getBuffer:()Lnet/i2p/util/LogConsoleBuffer;
+        85: aload_3
+        86: invokevirtual #242                // Method net/i2p/util/LogConsoleBuffer.addCritical:(Ljava/lang/String;)V
+        89: return
+
+  private java.lang.String dupMessage(int, net.i2p.util.LogRecord, boolean, boolean);
+    Code:
+         0: iload         4
+         2: ifeq          15
+         5: invokestatic  #89                 // Method net/i2p/util/SystemVersion.isAndroid:()Z
+         8: ifne          15
+        11: iconst_0
+        12: goto          16
+        15: iconst_1
+        16: istore        5
+        18: iload_3
+        19: ifeq          37
+        22: iload         5
+        24: ifeq          32
+        27: ldc           #249                // String vvv
+        29: goto          49
+        32: ldc           #251                // String &darr;&darr;&darr;
+        34: goto          49
+        37: iload         5
+        39: ifeq          47
+        42: ldc           #253                // String ^^^
+        44: goto          49
+        47: ldc           #255                // String &uarr;&uarr;&uarr;
+        49: astore        6
+        51: new           #107                // class java/lang/StringBuilder
+        54: dup
+        55: aload_0
+        56: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        59: aload_2
+        60: invokestatic  #257                // Method net/i2p/util/LogRecordFormatter.getWhen:(Lnet/i2p/util/LogManager;Lnet/i2p/util/LogRecord;)Ljava/lang/String;
+        63: invokestatic  #263                // Method java/lang/String.valueOf:(Ljava/lang/Object;)Ljava/lang/String;
+        66: invokespecial #111                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+        69: bipush        32
+        71: invokevirtual #267                // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+        74: aload         6
+        76: invokevirtual #270                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        79: bipush        32
+        81: invokevirtual #267                // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+        84: aload_0
+        85: ldc_w         #273                // String {0} similar message omitted
+        88: ldc_w         #275                // String {0} similar messages omitted
+        91: iload_1
+        92: invokespecial #277                // Method ngettext:(Ljava/lang/String;Ljava/lang/String;I)Ljava/lang/String;
+        95: invokevirtual #270                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        98: bipush        32
+       100: invokevirtual #267                // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+       103: aload         6
+       105: invokevirtual #270                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       108: getstatic     #281                // Field net/i2p/util/LogRecordFormatter.NL:Ljava/lang/String;
+       111: invokevirtual #270                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       114: invokevirtual #118                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       117: areturn
+
+  private java.lang.String ngettext(java.lang.String, java.lang.String, int);
+    Code:
+         0: iload_3
+         1: aload_1
+         2: aload_2
+         3: aload_0
+         4: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+         7: invokevirtual #158                // Method net/i2p/util/LogManager.getContext:()Lnet/i2p/I2PAppContext;
+        10: ldc           #34                 // String net.i2p.util.messages
+        12: invokestatic  #288                // Method net/i2p/util/Translate.getString:(ILjava/lang/String;Ljava/lang/String;Lnet/i2p/I2PAppContext;Ljava/lang/String;)Ljava/lang/String;
+        15: areturn
+
+  private void rereadConfig();
+    Code:
+         0: invokestatic  #49                 // Method net/i2p/util/Clock.getInstance:()Lnet/i2p/util/Clock;
+         3: invokevirtual #55                 // Method net/i2p/util/Clock.now:()J
+         6: lstore_1
+         7: lload_1
+         8: aload_0
+         9: getfield      #59                 // Field _lastReadConfig:J
+        12: lsub
+        13: ldc2_w        #10                 // long 50000l
+        16: lcmp
+        17: ifle          32
+        20: aload_0
+        21: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        24: invokevirtual #297                // Method net/i2p/util/LogManager.rereadConfig:()V
+        27: aload_0
+        28: lload_1
+        29: putfield      #59                 // Field _lastReadConfig:J
+        32: return
+
+  private void writeRecord(net.i2p.util.LogRecord);
+    Code:
+         0: aload_0
+         1: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+         4: aload_1
+         5: iconst_1
+         6: invokestatic  #298                // Method net/i2p/util/LogRecordFormatter.formatRecord:(Lnet/i2p/util/LogManager;Lnet/i2p/util/LogRecord;Z)Ljava/lang/String;
+         9: astore_2
+        10: aload_0
+        11: aload_1
+        12: aload_2
+        13: invokevirtual #302                // Method writeRecord:(Lnet/i2p/util/LogRecord;Ljava/lang/String;)V
+        16: aload_0
+        17: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        20: invokevirtual #231                // Method net/i2p/util/LogManager.getBuffer:()Lnet/i2p/util/LogConsoleBuffer;
+        23: aload_2
+        24: invokevirtual #235                // Method net/i2p/util/LogConsoleBuffer.add:(Ljava/lang/String;)V
+        27: aload_1
+        28: invokevirtual #213                // Method net/i2p/util/LogRecord.getPriority:()I
+        31: istore_3
+        32: iload_3
+        33: bipush        50
+        35: if_icmplt     49
+        38: aload_0
+        39: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        42: invokevirtual #231                // Method net/i2p/util/LogManager.getBuffer:()Lnet/i2p/util/LogConsoleBuffer;
+        45: aload_2
+        46: invokevirtual #242                // Method net/i2p/util/LogConsoleBuffer.addCritical:(Ljava/lang/String;)V
+        49: aload_0
+        50: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        53: invokevirtual #219                // Method net/i2p/util/LogManager.getDisplayOnScreenLevel:()I
+        56: iload_3
+        57: if_icmpgt     262
+        60: aload_0
+        61: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        64: invokevirtual #222                // Method net/i2p/util/LogManager.displayOnScreen:()Z
+        67: ifeq          262
+        70: aload_0
+        71: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        74: invokevirtual #158                // Method net/i2p/util/LogManager.getContext:()Lnet/i2p/I2PAppContext;
+        77: invokevirtual #304                // Method net/i2p/I2PAppContext.hasWrapper:()Z
+        80: ifne          89
+        83: invokestatic  #89                 // Method net/i2p/util/SystemVersion.isAndroid:()Z
+        86: ifeq          107
+        89: getstatic     #225                // Field java/lang/System.out:Ljava/io/PrintStream;
+        92: aload_0
+        93: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+        96: aload_1
+        97: iconst_0
+        98: invokestatic  #298                // Method net/i2p/util/LogRecordFormatter.formatRecord:(Lnet/i2p/util/LogManager;Lnet/i2p/util/LogRecord;Z)Ljava/lang/String;
+       101: invokevirtual #228                // Method java/io/PrintStream.print:(Ljava/lang/String;)V
+       104: goto          114
+       107: getstatic     #225                // Field java/lang/System.out:Ljava/io/PrintStream;
+       110: aload_2
+       111: invokevirtual #228                // Method java/io/PrintStream.print:(Ljava/lang/String;)V
+       114: aload_1
+       115: invokevirtual #307                // Method net/i2p/util/LogRecord.getMessage:()Ljava/lang/String;
+       118: astore        4
+       120: iload_3
+       121: bipush        40
+       123: if_icmplt     262
+       126: aload         4
+       128: ifnull        262
+       131: invokestatic  #89                 // Method net/i2p/util/SystemVersion.isAndroid:()Z
+       134: ifne          262
+       137: aload_0
+       138: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+       141: invokevirtual #158                // Method net/i2p/util/LogManager.getContext:()Lnet/i2p/I2PAppContext;
+       144: invokevirtual #310                // Method net/i2p/I2PAppContext.clientAppManager:()Lnet/i2p/app/ClientAppManager;
+       147: astore        5
+       149: aload         5
+       151: ifnull        262
+       154: aload         5
+       156: ldc_w         #314                // String desktopgui
+       159: invokeinterface #316,  2          // InterfaceMethod net/i2p/app/ClientAppManager.getRegisteredApp:(Ljava/lang/String;)Lnet/i2p/app/ClientApp;
+       164: checkcast     #322                // class net/i2p/app/NotificationService
+       167: astore        6
+       169: aload         6
+       171: ifnull        244
+       174: aload_1
+       175: invokevirtual #324                // Method net/i2p/util/LogRecord.getSource:()Ljava/lang/Class;
+       178: astore        8
+       180: aload         8
+       182: ifnull        195
+       185: aload         8
+       187: invokevirtual #328                // Method java/lang/Class.getSimpleName:()Ljava/lang/String;
+       190: astore        7
+       192: goto          211
+       195: aload_1
+       196: invokevirtual #333                // Method net/i2p/util/LogRecord.getSourceName:()Ljava/lang/String;
+       199: astore        7
+       201: aload         7
+       203: ifnonnull     211
+       206: ldc_w         #336                // String I2P
+       209: astore        7
+       211: aload         7
+       213: aload_0
+       214: getfield      #47                 // Field _manager:Lnet/i2p/util/LogManager;
+       217: invokevirtual #158                // Method net/i2p/util/LogManager.getContext:()Lnet/i2p/I2PAppContext;
+       220: ldc           #37                 // String net.i2p.router.web.messages
+       222: invokestatic  #338                // Method net/i2p/util/Translate.getString:(Ljava/lang/String;Lnet/i2p/I2PAppContext;Ljava/lang/String;)Ljava/lang/String;
+       225: astore        9
+       227: aload         6
+       229: aload         7
+       231: aconst_null
+       232: iload_3
+       233: aload         9
+       235: aload         4
+       237: aconst_null
+       238: invokeinterface #341,  7          // InterfaceMethod net/i2p/app/NotificationService.notify:(Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
+       243: pop
+       244: iload_3
+       245: bipush        50
+       247: if_icmplt     262
+       250: aload         5
+       252: ldc_w         #347                // String logs
+       255: aload         4
+       257: invokeinterface #349,  3          // InterfaceMethod net/i2p/app/ClientAppManager.addBubble:(Ljava/lang/String;Ljava/lang/String;)V
+       262: return
+}

@@ -1,0 +1,32 @@
+{
+  "acceptance_manifest_sha256": "13e56c1acbbc8abc8dc70eebec36f116b94bb02900f8aefaa093c0d3aa5f188c",
+  "java_program": "/usr/bin/java",
+  "legacy_classes": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/helpers/legacy",
+  "manager_classes": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/helpers/manager",
+  "helper_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/helpers/result.json",
+    "sha256": "1e4f933d29d7e9c405e8c66d9697191602601f0cd57d16c49692613529d315bc"
+  },
+  "original_head_index_unchanged": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "source_unchanged": true,
+  "status": "PASS_REUSED_STREAMING_MANAGER_HELPERS",
+  "source_commit": "42d32da6a7cc42ce5aaf51f4be52e08c57ecd974",
+  "adoption_sha256": "9c1d0cccb27e270872c3d949619510f37cfa3ebcddf00723e5a35b34715f3ae3",
+  "runner_sha256": "3ac0e7443702e8d2d93984f17babc4010b421ffd9169645f92934583c10a2ce3",
+  "subjects_executed": false,
+  "javac_invocations": 0,
+  "helper_classes_recompiled": false,
+  "parent_reference": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/result.json",
+    "sha256": "367bc10a4a8fbde8f716498407bfe10f72d33b575d16706b1a7df70c812622c4"
+  },
+  "prepared_helper_javac_origin": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/result.json",
+    "sha256": "367bc10a4a8fbde8f716498407bfe10f72d33b575d16706b1a7df70c812622c4",
+    "javac_invocations": 1
+  },
+  "commands_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+}

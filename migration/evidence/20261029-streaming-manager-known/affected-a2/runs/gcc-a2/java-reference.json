@@ -1,0 +1,37 @@
+{
+  "status": "PREPARED_FIN_CALLBACK_FIXTURE_JAVA_ONLY",
+  "qualification": false,
+  "subjects_executed": false,
+  "javac_invocations": 1,
+  "java_program": "/usr/bin/java",
+  "legacy_classes": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/legacy",
+  "manager_classes": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/manager",
+  "source_commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+  "fixture_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/manifest.json",
+    "sha256": "9496e441043d6b763dda50d3df6e95bde5b2374a07d5834ee801da47c2f365b0"
+  },
+  "parent_reference": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-prepared-r1/result.json",
+    "sha256": "5af8dcfe7226eacf1fba0f4f8752443b9064b94ddeeba8aeef17642fd158168d"
+  },
+  "inputs_sha256": {
+    "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac": "4d08eaac44a80fb0142bc001123ebfbc8aa4121801d4cd24711d1394733767f4",
+    "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/staging/java/StreamingPeer.java": "78cf8e40f9f6e6cb7c0520134b7e6a2c67fb971e90850ad4e8f609ca72571996",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/staging/java/ManagerPeer.java": "606267445499bc9b4429cee36871f7e97be4fbec0316a41b3edb4b2a18698555"
+  },
+  "classes_sha256": {
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/legacy/StreamingPeer$Adapter.class": "07b90aa1ad8752135b7a64466473aabcbabf6a0f1478ca6f35f380823b33789f",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/legacy/StreamingPeer.class": "7557ef5b80dd500e8160332c03204f243f094c8198b521d8cf17a0ebaedf3820",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/manager/ManagerPeer$Adapter.class": "25f80bc4024c84d8a6b41f740d464b9f05ef15068fbf451b2c0eea68e3b3180f",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/manager/ManagerPeer.class": "9f0876915bdbbd794d791fa3b7aacd224e5df839c85c4d7909c26b9aa2b340ac"
+  },
+  "commands_sha256": "7a5f11a963f0371b8d44ccdf415417acd5b3928abfe1f316bde08c9eedfe6a7e",
+  "javac_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "original_head_index_unchanged": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "runner_sha256": "c1b08cbcb5188df04033f9aae27c4f861cc1bc92316bd854ac1b5a0e42b5eff9"
+}

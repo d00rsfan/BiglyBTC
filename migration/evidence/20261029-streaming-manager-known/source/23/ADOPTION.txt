@@ -1,0 +1,46 @@
+Source only, no subjects or compilers run by author.
+
+Apply the native window capsule at the manifest pin recorded here first. This
+acceptance child changes only the existing opt-in Java acceptance test and its
+CTest registration. Use changes.patch against the two exact beforeimages;
+never overwrite the frozen H actor/helper or its actual evidence. The new Java
+helper is acceptance/StreamingPeer.java and must be compiled exactly once into
+a fresh classes directory, then retained with measured class hashes across lanes.
+The actual source/adoption/ELF receipts remain the root qualifier's authority.
+COMMANDS.sh is a finite root-only recipe, not automatic/default qualification.
+
+Target: biglybtc-i2p-streaming-interop-tests (unchanged).
+Old CTest i2p-original-streaming-peer: same five cases selected by their three
+old method names, TIMEOUT480 unchanged. All old test method bodies byte exact.
+New CTest i2p-original-streaming-upload: cap2 and cap8 data rows, TIMEOUT300.
+Each uses the existing60s operation budget; neither old budget is increased.
+CTest appends '-upload' to the explicit acceptance-root environment variable so
+its fresh directory is distinct; missing/relative roots fail, never skip.
+Root must pass this new helper/classes to the existing explicit CMake options.
+
+The modified b086 manager accepts a genuine Streaming socket and reads the
+complete deterministic128KiB POST body plus real native FIN. Java verifies every
+byte and returns SHA256 through that actual socket. The C++ actor supplies the
+real I2CP Send payloads, unchanged to the Java packet adapter. Every reverse
+frame remains an actual manager packet. There is no fabricated ACK/status/app
+reply. Its full Destination/session/LS2/ports/protocol gates remain unchanged.
+
+Both cap2 and cap8 use the same40ms FIFO delay on actual Java frames after data
+starts. Distinct native data sequences are counted until ACK bytes are really
+delivered, with NoAck/NACK handling. Require2 actual first-ACK data flight for
+cap2 and at least3 for cap8, never exceed the configured cap; ACKed bytes must
+cover header+body, exact digest/EOF and real Java process PASS must complete.
+Bounded route queue:64 frames /64KiB. Native combined TX remains64KiB, application
+feeds4096-byte chunks; no native capacity changes or production clock hooks.
+
+Actual elapsed microseconds, goodput, retransmissions, RTT deadline, queue and
+wire flight counts are recorded in each upload-metrics.json after peer PASS.
+These are controlled-route observations, not a guaranteed speedup or original
+performance parity claim. Existing loss/reorder/backpressure/reset/cancel cases
+remain and must all run; the new positive does not replace them.
+No router, tunnel, public/Host/default backend activation, profile writes or
+provider changes. Synthetic committed test keys only. The actual original
+manager and modified class/source relationship remains inherited, not whole
+modified-core source equivalence. A real external-router transfer remains the
+separately qualified H acceptance; this child claims only protocol-session
+adapter interoperability and finite window evidence.

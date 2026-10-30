@@ -1,0 +1,26 @@
+{
+  "/usr/lib/jvm/java-26-openjdk-amd64/bin/java": {
+    "sha256": "347282b66d7dfa462f84190f4254b3f5647c791b4250fe84ed0028fc9343f9ae",
+    "bytes": 14536
+  },
+  "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac": {
+    "sha256": "4d08eaac44a80fb0142bc001123ebfbc8aa4121801d4cd24711d1394733767f4",
+    "bytes": 14592
+  },
+  "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar": {
+    "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+    "bytes": 4288652
+  },
+  "/home/yurii/Java/BiglyBT/build/i2p-streaming-window-20261029/acceptance/StreamingPeer.java": {
+    "sha256": "8c78205c17273122b381b30cb8ad6aadbd59105dfccbaad9fed0df5ac351e8cd",
+    "bytes": 15229
+  },
+  "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/ManagerPeer.java": {
+    "sha256": "fc795a5e013d170eb800d9e0c14a59a726c3282c2852badb42e853790e8de55d",
+    "bytes": 15198
+  },
+  "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/PREPARE-HELPERS.sh": {
+    "sha256": "8ff1fb1c97b817fe9139bb6c11ae86a47785757174d7bb77846ff6c87ccf056e",
+    "bytes": 3312
+  }
+}

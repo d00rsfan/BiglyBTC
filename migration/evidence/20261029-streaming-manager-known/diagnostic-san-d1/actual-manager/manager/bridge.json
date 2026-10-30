@@ -1,0 +1,8 @@
+{
+    "failure": "Actual Java packet queue/backpressure",
+    "java_frames": "2",
+    "late_delivered": "0",
+    "leases": "1",
+    "native_frames": "4",
+    "renewals": "0"
+}

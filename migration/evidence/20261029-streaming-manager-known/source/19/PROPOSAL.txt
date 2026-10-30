@@ -1,0 +1,69 @@
+Next I2P milestone proposal: bounded session stream manager
+
+PROPOSAL ONLY. Current native basis9a8cf1aa2375797e368434423b8890fce1dbb09b;
+window child6e6fe54d remains staged, with original-manager upload acceptance
+pending. No code, source adoption, build, JVM, network or profile operation.
+
+Recommend one useful manager milestone: an explicitly owned I2CP session can
+carry concurrent independent byte streams and accept a verified incoming peer.
+Four live streams and four pending SYNs are proposed native envelopes, not Java
+defaults. This removes the next structural limit after the window change without
+claiming a complete torrent backend.
+
+Actual gap and exact original boundary
+
+Current channel.hpp/streaming.inc stores one optional outbound Connection,
+requires an otherwise idle channel, rejects incoming new SYNs and applies a
+single total<=120s deadline. Original9134 PacketHandler99-110 selects an existing
+connection by the packet sendStreamId, then checks peer stream-ID matching.
+ConnectionManager243-286 requires FROM+valid signature and checks the optional
+8-word recipient-hash SYN binding;475-488 allocates random IDs excluding active
+and retired IDs. Its recent cache is128 entries (118), not unlimited replay
+protection. ConnectionHandler35-52 bounds SYN backlog64 and initial accept wait3s.
+Native four-entry/256KiB pending-SYN capacity would be deliberately narrower.
+
+Connection.java1256-1356 handles inactivity from actual last send/receive,
+separately from connection establishment and application read/write timeouts.
+Options146-147 defaults to90s/send-on-idle; plugin SocksProxy335-376 overrides
+connect/read/write to120s, not120s total connection lifetime. I2PSMHolder525-605
+binds connect/accept to the current session and tears down its manager on router
+restart. These layers must stay separate; do not reinterpret90000/120000 as an
+arbitrary retry or global stream-expiry rule.
+
+Proposed scope after explicit approval
+
+Add a bounded manager to InitialChannel over the existing pure Connection actor:
+explicit connect/listen/accept/read/write/half-close/cancel by nonreused operation
+ID; signed inbound SYN creates an inbound-role Connection only after exact full
+Destination/recipient/port verification. Keep current1024 lifetime ID exclusion
+and explicit exhaustion initially, rather than weakening qualified stale-ID
+behavior. Hold no application bytes outside four64KiB TX+RX envelopes; add a
+global bound and fair packet turn across streams while retaining one bounded
+I2CP socket frame. Preserve datagram2/3, RAW18 tracker, fetch/End and queue bounds.
+
+Established connections use source-compatible activity/idle decisions; handshake
+and each explicit application wait retain finite deadlines. Retained signer,
+current generation/session/acknowledged policy/unexpired actual LS2 remain gates
+before every read/write/send. Session loss or source retirement withdraws all
+streams before queued callbacks. One-stream cancel or EOF must leave others
+usable. Lease renewal may preserve connections only under the same retained
+identity/session and actual renewed lease; no submitted-LS2 equals OPEN claim.
+
+Acceptance is one actual manager vertical: two concurrent outbound HTTP streams
+plus a Java-initiated native inbound BitTorrent handshake over the same I2CP
+session; distinct bytes/IDs, signed SYN refusal, bounded flood/pressure, one-stream
+cancel, peer reset and late/reused IDs. Reuse the real b086 manager adapter and
+its exact routing fence. One separate actual active>120s case can prove that
+traffic plus genuine lease renewal survives the former total budget; pure clock
+controls cover idle actions. A real isolated-router case exercises concurrent
+both-direction exchange. Preserve prior five manager controls and upload digest;
+measure fairness/queues, make no throughput or public-tunnel claim.
+
+Full-backend seams still open: profile key import/default Host ownership, address
+book/b32 resolution, local SOCKS or typed tracker-HTTP bridge, BT peer admission
+and incoming torrent routing. network_policy.cpp519-522/532 still disables SAM
+and rejects I2P torrent selection; this proposal grants none of those rights.
+Create41 already passes an owned independent private encryption key to the
+external router (leaseset.cpp149-155); a native router ratchet is not a prerequisite
+for this external-I2CP manager. That is an architectural inference, not native
+ratchet qualification. Official9134 sources and modifiedb086 bytes remain distinct.

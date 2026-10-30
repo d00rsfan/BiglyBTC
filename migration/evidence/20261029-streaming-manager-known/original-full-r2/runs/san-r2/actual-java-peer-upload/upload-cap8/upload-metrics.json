@@ -1,0 +1,17 @@
+{
+    "acknowledged_bytes": "131144",
+    "actual_distinct_data_before_first_ack": 3,
+    "actual_maximum_in_flight": 8,
+    "actual_maximum_unacknowledged_data": 8,
+    "body_bytes": 131072,
+    "body_bytes_per_second": "91488",
+    "body_sha256": "edf236806d7ec91a1a43d284ef264e1f0502369b649cab540c704dde6ef11318",
+    "elapsed_microseconds": "1432655",
+    "fixed_peer_frame_delay_ms": 40,
+    "maximum_window": 8,
+    "peak_observed_queue_bytes": 65536,
+    "performance_parity_claimed": false,
+    "retransmissions": "0",
+    "rto_milliseconds": 156,
+    "status": "PASS"
+}

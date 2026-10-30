@@ -1,0 +1,87 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBTC/preview/native",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "-DBIGLYBTC_I2P_STREAMING_JAVA_ACCEPTANCE=ON",
+      "-DBIGLYBTC_I2P_STREAMING_JAVA=/usr/bin/java",
+      "-DBIGLYBTC_I2P_STREAMING_JAR=/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-DBIGLYBTC_I2P_STREAMING_CLASSES=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-prepared-r1/legacy",
+      "-DBIGLYBTC_I2P_STREAMING_MANAGER_JAVA_ACCEPTANCE=ON",
+      "-DBIGLYBTC_I2P_MANAGER_JAVA=/usr/bin/java",
+      "-DBIGLYBTC_I2P_MANAGER_JAR=/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-DBIGLYBTC_I2P_MANAGER_CLASSES=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-prepared-r1/manager"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 69.734,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/runs/san-a1/configure.log",
+    "log_sha256": "de8a18714bd456682a5f60f14ed2998980056288a584d76a1dfdd7d59ba0c873"
+  },
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--target",
+      "biglybtc-i2p-streaming-interop-tests",
+      "biglybtc-i2p-streaming-manager-interop-tests",
+      "--",
+      "-k",
+      "0"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 257.061,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/runs/san-a1/build.log",
+    "log_sha256": "f8931c0986dccf990f1b352dc9b62f0b57695b24d5f5450cae4afa073fb3ba50"
+  },
+  {
+    "name": "inventory",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--show-only=json-v1"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.169,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/runs/san-a1/inventory.log",
+    "log_sha256": "f5cd97b959190f83246263e44d5bea02c30c99105fb90243d965f95758830234"
+  },
+  {
+    "name": "fresh-tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "-R",
+      "^(i2p\\-original\\-streaming\\-peer|i2p\\-original\\-streaming\\-upload)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/runs/san-a1/fresh-tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 8,
+    "seconds": 83.505,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/runs/san-a1/fresh-tests.log",
+    "log_sha256": "8e2c527cfe9a87dc5ac3c1cb8f88c4dbff0772159b0dfa0f981e1ba6b940d10a"
+  }
+]

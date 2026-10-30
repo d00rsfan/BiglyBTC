@@ -1,0 +1,15 @@
+Root-only FUTURE commands, no existing acceptance claimed:
+C=/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance
+# Fresh owned OUT under R/build; one compiler slot after current cohorts join:
+bash "$C/PREPARE-HELPERS.sh" "$OUT" /usr/bin/java /usr/bin/javac
+# Append actual new native source/CMake before configure; root supplies real cache/source:
+# Existing controls: BIGLYBTC_I2P_STREAMING_CLASSES=$OUT/legacy
+# New configure flags:
+-DBIGLYBTC_I2P_STREAMING_MANAGER_JAVA_ACCEPTANCE=ON
+-DBIGLYBTC_I2P_MANAGER_JAVA=/usr/bin/java
+-DBIGLYBTC_I2P_MANAGER_JAR=/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar
+-DBIGLYBTC_I2P_MANAGER_CLASSES=$OUT/manager
+# Build target biglybtc-i2p-streaming-manager-interop-tests under shared job budget.
+# Actual run requires fresh explicit output and no other subject using the roots:
+BIGLYBTC_I2P_MANAGER_ACCEPTANCE_ROOT="$OWNED_FRESH_ROOT" ctest --test-dir "$CACHE" -R '^i2p-original-streaming-manager$' --parallel 1 --output-on-failure --output-junit "$XML"
+# Existing seven controls remain selected separately with their unchanged roots/budgets.

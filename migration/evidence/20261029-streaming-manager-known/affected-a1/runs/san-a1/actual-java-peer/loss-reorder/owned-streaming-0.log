@@ -1,0 +1,1 @@
+Oct 30, 2026, 2:41:40 AM WARN  [main        ] net.i2p.util.NativeBigInteger : Native BigInteger library jbigi not loaded - using pure Java - poor performance may result - see http://i2p-projekt.i2p/jbigi for help

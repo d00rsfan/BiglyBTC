@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "status": "FROZEN_FIXTURE_SOURCE_ONLY_NO_EXECUTION",
+  "native_basis": "72b44fb182a9b97722317b6ac57a99a1601d704e",
+  "parent_java": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-async-failures/manifest.json",
+    "sha256": "4ed52f76fafe0cbe68716da22af296a0273270637ecfa3348b955d9abe5a7496"
+  },
+  "source_paths": {
+    "preview/native/tests/i2p_streaming_manager_interop_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/before/native/preview/native/tests/i2p_streaming_manager_interop_tests.cpp",
+      "before_sha256": "e1b851cd64ed6f79a2efd7470ec9dd5f05d2b12ea52ddf273be9422d729fee7e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/staging/native/preview/native/tests/i2p_streaming_manager_interop_tests.cpp",
+      "after_sha256": "6ae2d6f954a94c03b6f6dbfa429a7b7cb9dcd7b6c785626f03b949ab15bcf57b"
+    },
+    "preview/native/tests/i2p_streaming_interop_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/before/native/preview/native/tests/i2p_streaming_interop_tests.cpp",
+      "before_sha256": "988665c6b08c5314298045352a82bd727b852d5b6df113ee9cc99ba8641b36f0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/staging/native/preview/native/tests/i2p_streaming_interop_tests.cpp",
+      "after_sha256": "1950975df6ad76092fc618f8d17824f08f835db3ff11d1efa8e5a2da3f7c39dc"
+    }
+  },
+  "java_sources": {
+    "ManagerPeer.java": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-async-failures/staging/ManagerPeer.java",
+      "before_sha256": "a2b7d39217cf57ffb96d37414a466b4977a35b1c7c14b7abdbf5733a002a7efe",
+      "after_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/staging/java/ManagerPeer.java",
+      "after_sha256": "606267445499bc9b4429cee36871f7e97be4fbec0316a41b3edb4b2a18698555"
+    },
+    "StreamingPeer.java": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-async-failures/staging/StreamingPeer.java",
+      "before_sha256": "d170f5ec9c88074aea2f5ab1b24be22e87176586add9d02b1ae303b1439ed335",
+      "after_path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/staging/java/StreamingPeer.java",
+      "after_sha256": "78cf8e40f9f6e6cb7c0520134b7e6a2c67fb971e90850ad4e8f609ca72571996"
+    }
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "87a95df7c28ff97b2bf623db541305b9e2428006cb01155b2e03924797f73bea",
+    "checks.json": "0f34db8e6a1bc5167c843590fe76570f456e058fc37255fb7c785ca5f66bb766",
+    "changes.patch": "902952ad2c2d87886d303c90b457e49c50fbf440e9b5de566bab919d295f7f8d",
+    "staging/java/ManagerPeer.java": "606267445499bc9b4429cee36871f7e97be4fbec0316a41b3edb4b2a18698555",
+    "staging/java/StreamingPeer.java": "78cf8e40f9f6e6cb7c0520134b7e6a2c67fb971e90850ad4e8f609ca72571996",
+    "staging/native/preview/native/tests/i2p_streaming_interop_tests.cpp": "1950975df6ad76092fc618f8d17824f08f835db3ff11d1efa8e5a2da3f7c39dc",
+    "staging/native/preview/native/tests/i2p_streaming_manager_interop_tests.cpp": "6ae2d6f954a94c03b6f6dbfa429a7b7cb9dcd7b6c785626f03b949ab15bcf57b",
+    "before/java/ManagerPeer.java": "a2b7d39217cf57ffb96d37414a466b4977a35b1c7c14b7abdbf5733a002a7efe",
+    "before/java/StreamingPeer.java": "d170f5ec9c88074aea2f5ab1b24be22e87176586add9d02b1ae303b1439ed335",
+    "before/native/preview/native/tests/i2p_streaming_interop_tests.cpp": "988665c6b08c5314298045352a82bd727b852d5b6df113ee9cc99ba8641b36f0",
+    "before/native/preview/native/tests/i2p_streaming_manager_interop_tests.cpp": "e1b851cd64ed6f79a2efd7470ec9dd5f05d2b12ea52ddf273be9422d729fee7e"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-async-failures/manifest.json": "4ed52f76fafe0cbe68716da22af296a0273270637ecfa3348b955d9abe5a7496",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/fin-callback-order-proof.json": "28c8513363ab913c7a41496094fed5c7ae9f3e3ca93648be174c11378a8157c2",
+    "/home/yurii/Java/BiglyBTC/preview/native/services/i2p_streaming/stream.cpp": "666170389af4fe7b8b578a7e91f09d215706e5c09ec16896fd5cd761a26f94de",
+    "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/manifest.json": "a7ff58ce046fd350a3e18aebbfb05d66db5b1156feed135bc112aac1cae9b122",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/runs/gcc-a1/result.json": "6c692354d03d1a75fc6c9b5ea0aaf9a844eeff57d89505db6eab76aa3785a24f",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/runs/clang-a1/result.json": "7523bbeb51bba384c2464f23437d05d1a4934c3e7222618586092aeeb7b798f4",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/runs/san-a1/result.json": "44d0cf9e327629f9e286aaab2e6c172c1e8e83af7376c9c73308c3f940cd8465"
+  },
+  "original_callback_proof": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/fin-callback-order-proof.json",
+    "sha256": "28c8513363ab913c7a41496094fed5c7ae9f3e3ca93648be174c11378a8157c2"
+  },
+  "finite_callback_barrier_seconds": 30,
+  "native_JVM_ready_seconds": 60,
+  "production_changed": false,
+  "jar_changed": false,
+  "stream_handshake_budgets_changed": false,
+  "byte_assertions_changed": false,
+  "compiler_execution": false,
+  "helper_execution": false,
+  "native_mutation": false,
+  "other_work_paused": true
+}

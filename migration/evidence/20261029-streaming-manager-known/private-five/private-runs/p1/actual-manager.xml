@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="ManagerInteropTests" timestamp="2026&#x002D;10&#x002D;30T03:14:38" hostname="ubuntud" tests="3" failures="0" errors="0" skipped="0" time="135.480">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="ManagerInteropTests" time="0.217"/>
+  <testcase name="actualManagerConcurrentHttpInboundBtRenewalAndCancelBeyond120Seconds" classname="ManagerInteropTests" time="135.260"/>
+  <testcase name="cleanupTestCase" classname="ManagerInteropTests" time="0.000"/>
+</testsuite>

@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "status": "FROZEN_ASSOCIATED_M_CLOSEOUT_PUBLIC_PENDING_SOURCE_ONLY",
+  "source_commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+  "implementation_source_commit": "43d642fb0025510c581ebdc4d7a332752c511a46",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/manifest.json",
+    "sha256": "a34fcb679a093164d092c4984d8ee3d87a4e25061e18b8a700cbbdcab6f04fea"
+  },
+  "artifacts_sha256": {
+    "finish.py": "82547ce2d3e454d5d640e219d13b8dcb9190f32a10a73664b8929f97d94d8ab8",
+    "publish.py": "958ef06e56a093b09752624b1231eeda9842465a8df9053e4a540bd7ab57c00e",
+    "changes.patch": "24310dd7e6648cf3de88bcdea11fee76b7b61d609f7dd129c6a43815c13b5c24",
+    "REVIEW.md": "1ad51f20ad2681b62e2e2bc94ff25b9e669df37c99187dfac619a827051c711a",
+    "ADOPTION.txt": "8e9a5ef7f4a7b837eeadc50f845b09e052a81105d90a0b95011d615246ae2fbd"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/manifest.json": "a34fcb679a093164d092c4984d8ee3d87a4e25061e18b8a700cbbdcab6f04fea",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/finish.py": "0132e6d1d3fd3427169be983d4fb2a5b5135b2140070d9fa66f383703ad9e832",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/publish.py": "19bd45a13fbd68e857683b59a32c5732ef8564705d6717383ef223ebfc5d24ef",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/root-publish-raw-loader-logs.json": "ad227ee303ac46e662e4d57da6359068cb5bf2c68e73e8a58cd678d02afeb32a",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/manifest.json": "d20a7fd8d07f4934d6b41a2dbd7f77f7c3258da1bafd8aa6685f4d07ca9b4892",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/manifest.json": "abc45a78c0e5151b85c0383eba3c790ff94179edee46eeae4f4dd6f5b054684b",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-public/manifest.json": "13143c9558e70a05537b89d1dac28c79468fc32f60b848b8a833c304356b0e3c",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/manifest.json": "9496e441043d6b763dda50d3df6e95bde5b2374a07d5834ee801da47c2f365b0",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/root-adoption.json": "f919cb9b3b72b9cb15c10388b62e745b970b764d3d4aa0ab674b34d52dd13f6a",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/result.json": "f9676e191ac62abaddeebf0a29b5c2798a73738c2d2ab76c369025c3cc6b1053",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/fin-callback-order-proof.json": "28c8513363ab913c7a41496094fed5c7ae9f3e3ca93648be174c11378a8157c2",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/recover-public-r2.py": "cdfe791589ae99d74e664e32405716d76b4409e27057a6d9edd98b969c104d5a",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/recover-public-r2-review.json": "cdc54fadcd3882bf5551425027f87b72c95dd21b77bb1a25dbd96d33799d064b",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/public-recovery-r2/result.json": "8bcfb0ba46b7909e9ae6aacecbef1d87e5e9d039145b9515d95dac3578f4ec27"
+  },
+  "source_paths": 25,
+  "fresh_actual_suites_per_lane": 3,
+  "retained_exact_r2_suites": {
+    "gcc": 18,
+    "clang": 16,
+    "san": 16
+  },
+  "private_required": {
+    "retained_subjects": 5,
+    "fresh_public_subjects": 1,
+    "exact_images": 6
+  },
+  "cached_public_required": "future actual PASS with exact-source fresh-output-only runner; current r2 FAIL preserved",
+  "fresh_full_cohort_claimed": false,
+  "original_failed_results_preserved": true,
+  "registry_counts": [
+    20,
+    108,
+    22
+  ],
+  "publisher_raw_loader_exclusion": "byte-exact reviewed parent hash-verified native-loader PID rule",
+  "author_execution": false,
+  "native_mutation": false,
+  "stop_after_current_milestone": true
+}

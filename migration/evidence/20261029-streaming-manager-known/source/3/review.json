@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "status": "PASS_INDEPENDENT_SOURCE_REVIEW_NO_EXECUTION",
+  "manifest": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/amendments/hard-deadline-and-renewal/manifest.json",
+  "manifest_sha256": "1f911001b6a0cbf7e78bcd477a2da3b38b9f35b9a8d6b489f677c14d7ce7be66",
+  "parent_blocked_review": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029-review/parent-review.json",
+  "parent_blocked_review_sha256": "96b3378e5c503ea0272478d1bdbb7f6d823220299b13e963c24859801dd2322c",
+  "prerequisite_window_manifest_sha256": "6e6fe54d99eb26a190a53307c1d49527aeda9c6ec6217a6a73b603dd942243f1",
+  "verified": {
+    "source_maps": 11,
+    "changed_afterimages": 6,
+    "inherited_afterimages": 5,
+    "child_artifact_pins": 10,
+    "input_pins": 4,
+    "append_fragments": 2,
+    "complete_and_parent_delta_reproduce_all_afterimages": true,
+    "both_readonly_git_apply_checks": true,
+    "old_pure_test_and_helper_bodies_exact": 9,
+    "old_qt_test_and_router_helper_bodies_exact": 13,
+    "new_pure_families": 2,
+    "new_qt_methods": 2,
+    "new_router_helper": "leaseUntil"
+  },
+  "resolved_findings": [
+    {
+      "id": "hard-deadline-wakeup",
+      "resolution": "Manager hardWakeup retains pending SYN, active outgoing/unsent-inbound handshake, finite application wait and eligible idle deadlines while blocked output suppresses only packet retry/output readiness. Actor tick/queued notification runs before blocked return, so consumed hard deadlines do not create an expired-timer loop. Active-only inbound timeout preserves Cancelled. Added finite pure and owned-Qt controls."
+    },
+    {
+      "id": "old-lease-renewal",
+      "resolution": "Actual prior lease is checked before renewal preparation and after signing/encoding, before replacement. Expiry terminates old streams/listener and clears deferred lease authority; valid new LS2 cannot revive old operations. Successful submission rearms against its actual earlier expiry. Existing first-lease behavior and unexpired same-identity renewal remain intact. Added actual owned shorter-lease/expiry/later-renewal method."
+    },
+    {
+      "id": "connect-api-entry-budget",
+      "resolution": "Actor anchors one absolute steady-millisecond end before entropy/Destination preparation, passes it into pure connect, and existing post-signing tick enforces it before dispatch. Pure connect refuses exhausted/extended ends without allocating a slot. Inbound accept retains original pending SYN end. Added exact boundary controls."
+    }
+  ],
+  "remaining_material_blockers": [],
+  "scope_limits": [
+    "This is source review, with no compiler, JVM, runtime, router, or private-loader credit.",
+    "The owned queued-frame test does not establish sustained physical TCP-backpressure coverage; pure hardWakeup tests cover the policy boundary.",
+    "Native generated peers are not original-Java manager acceptance. Existing finite four-stream/four-SYN, shared lifetime1024 ID and single socket-frame bounds remain explicit.",
+    "Public/Host/default backend activation, addressbook/proxy integration and full Streaming parity are outside this capsule."
+  ],
+  "subject_execution": false,
+  "native_source_mutated": false,
+  "author_source_mutated": false
+}

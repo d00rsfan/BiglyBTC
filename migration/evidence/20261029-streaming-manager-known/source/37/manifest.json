@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "status": "FROZEN_FIVE_PRIVATE_PENDING_PUBLIC_SOURCE_ONLY",
+  "reviewed_private_basis": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/private.py",
+    "sha256": "70e9af7137c4abe7487c2f74e6151ab25773c4956e87d466eab1eb2289cabf71"
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "d748187a3df6d5e7a009b7d8e3c1c5202b4b0dc68a42e265b30883ac6dcf1583",
+    "private.py": "9f49fd789bb05b3cd0e14a438f7c5a99ef7a22d5815f2371c0d2629f145cecc7",
+    "delta.patch": "d2770345a06dc0f2e60bf570d7731faf9648a1dd62f2e07db4bda8e3f73501b7"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/private.py": "70e9af7137c4abe7487c2f74e6151ab25773c4956e87d466eab1eb2289cabf71",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/manifest.json": "a7ff58ce046fd350a3e18aebbfb05d66db5b1156feed135bc112aac1cae9b122",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/run.py": "3b7b8428207515ad75376af7647a11524e759d5cff6f173b56ac06696236decd",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/effective-adoption.json": "6ee422d4befc80a56ed24f0cfc9cf8f77df8d99f24983f327993e570214cf5f4",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/java-prepared-r1/result.json": "5af8dcfe7226eacf1fba0f4f8752443b9064b94ddeeba8aeef17642fd158168d",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/amendments/java-asynchronous-causes/run.py": "762d6ebe18493756042607cf93fb021003ca82c7c5789600a0e7b20e0b5b3bf4",
+    "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/two-selectors/amendments/java-asynchronous-causes/manifest.json": "59de8706faa41f47de1893a054c66533e5ba7555548006948113a11211d36029",
+    "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/plan.json": "2917d15b4d9890f6d881fb18b46a65c713a2a0a3dfe9c9996487d4deb6a302f3",
+    "/home/yurii/Java/BiglyBT/build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/qualification/runs/gcc-r4/runtime-images-before.json": "bacbdf657be1cfd5b9e531a3a5aa6325eb24b171baf2df33021e341e68a5ac9e"
+  },
+  "dynamic_inputs": [
+    "actual a1 gcc/clang/san result paths; no future hashes/success invented"
+  ],
+  "actual_subjects_planned": 5,
+  "copied_exact_current_images": 6,
+  "status_if_actual_five_pass": "PASS_FIVE_PRIVATE_SUBJECTS_PENDING_PUBLIC",
+  "pending_subject": "azureus-public-bound:explicitPublicKnownHintIsNotExportedAndOnlyActualPingMakesItAlive",
+  "pkexec_or_public_invocation": false,
+  "promotable": false,
+  "builds_executed": false,
+  "author_execution": false,
+  "native_mutation": false,
+  "other_work_paused": true
+}

@@ -1,0 +1,89 @@
+SOURCE ONLY. No compiler, JVM, network subject, native/provider write or runtime
+qualification by author. Approved proposal db309de9; original9134 source and
+actual modifiedb086 classfile method bytes are pinned separately. No whole
+official/modified-source equivalence is inferred.
+
+Five modified native leaves plus one services CMake append. Native f443 stream
+preimages remain unchanged by current maintenance fixes. Apply changes.patch;
+append cmake/services.append.cmake after the existing streaming target. It
+disables floating-point contraction only for this library, so the Java float
+Westwood filter rounds separate operations rather than introducing FMA.
+
+One outbound stream now owns a fixed8-entry sent table. Initial window3,
+default maximum8, explicit StreamOptions.maximumWindow2..8; invalid bounds
+refuse before session/stream effects. Existing options aggregates/default ports
+and deadline retain their behavior. No extra connection, thread, timer, route,
+source reader or peer permission is introduced. Existing protocol6 packet/mux
+codec prefix is byte-exact. Datagram2/3, RAW18, receiver and tracker sources are
+untouched. Existing actor bytesWritten supplies the next packet when its single
+bounded I2CP socket frame drains; it does not wait for a peer ACK to fill credit.
+
+Credit counts only actual accepted socket dispatches. Unsent reservations and
+future ACK-through values cannot retire bytes. ACK-through retires each sent
+payload once except explicit NACKs; packets above it are not implicitly NACKed.
+Three explicit NACKs trigger the original one-time/4s-guarded fast retry.
+Window/count, active-resend-half and twice-window sequence-span limits remain
+distinct. FIN ACK cannot discard earlier selective holes. TX queue+all pending
+payloads share65536B; RX/reorder bound remains65536B/64 entries. Cancel/close
+retires the table and retry state. Existing full peer/session/generation/current
+signer/LS2/absolute<=120s actor gates remain immediately before packet effects.
+
+One global retry clock replaces per-packet expiry. New ACKs restart it, empty
+flight cancels it; timeout backs off RTO once and retries oldest ceil(flight/2),
+not every packet. Initial9000ms, bounds100..45000, eight retries remain. Actual
+first retry dispatch arms the new backoff clock; subsequent packets in that
+batch do not multiply it. Fast retry does not postpone a running timer. RTT
+uses the highest eligible packet-creation age per ACK batch. Only the first
+measured ACK may include a retransmitted packet, as original handler354–371;
+later batches apply Karn exclusion. Retry clocks still start at real dispatch.
+
+Original Westwood+ packet estimator is ported:500ms floor, two float filters,
+at most16 virtual-null decays and actual packet ACK counts. Recovery threshold
+is estimate*minimumRTT clamped2..64. Initial/slow-start/additive window growth
+and congestion guards follow Connection/Options/ConnectionPacketHandler;
+runtime additive draws use bounded RAND_bytes rejection sampling, without a
+deterministic fallback. Pure tests can supply an inert draw; absent pure entropy
+pauses probabilistic growth (it never creates network/clock authority). Native
+time is monotonic within the existing finite operation; original wall-clock
+rollback behavior outside that envelope is not recreated.
+
+Observation appends sendWindow, maximumWindow, slowStartThreshold,
+rtoMilliseconds, inFlightPackets/Bytes, maximumInFlightPackets and peerChoked.
+Counters are passive actual-dispatch/ACK facts, not router delivery or speed
+claims. Original ten pure test/helper bodies remain byte-exact; five added
+families cover3->6->8 actual-dispatch credit, cap2/8+invalid limits, future and
+unsent ACKs, selective/duplicate NACKs, no implicit NACK, one timeout/backoff and
+oldest-half retries, fresh-only RTT, bounded entropy growth, remote choke,
+selective FIN holes and original float-estimator boundaries. These controls
+are authored source assertions, not actual Java golden qualification.
+
+Root qualification: existing pure-i2p-streaming target/test; affected I2CP actor
+channel/strict datagram/tracker/lease tests and product relinks. Separate actual
+manager acceptance child (Oracle-owned) must preserve five prior controls and
+add128KiB native upload/digest, >=3 real native data sequences while actual ACKs
+are held, loss/reorder and caps2-vs8 same-route measurements. Compile its helper
+once for the new child; no old Java corpus/provider rebuild/replay is implied.
+Actual elapsed goodput/flight/retry/buffer/deadline measurements are pending;
+no fixed speedup, multi-stream fairness, tunnel/public/default/Host activation
+or full original performance parity is claimed.
+
+Narrow child of frozen f1a93: PacketLocal146–150 fast-retry guard is permanent
+for one packet; its4s clause only permits the first fast retry after an earlier
+timeout. Original PacketLocal126–133 getAckTime uses creation age, and handler
+354–371 admits retransmitted samples before Options.receivedAck751–752 becomes
+true. This child adds reservation creation time plus that first-sample exception;
+otherwise the five original added families, ten old bodies and actor/API remain
+byte-exact. One added pure family distinguishes both details. Native reservation
+corresponds to packet construction; waiting in the unsegmented byte queue is
+not represented as an already-created Java PacketLocal. No whole Java thread
+scheduling/clock-jitter equivalence is claimed, and no new execution occurred.
+
+Narrow independent-review correction: Connection.ackPackets586-603 samples packet
+bandwidth and restarts a nonempty-flight timer with the CURRENT pre-RTT RTO;
+ConnectionPacketHandler354-396 then computes and applies highest packet RTT.
+This child preserves that ordering rather than restarting with the newly sampled
+RTO. Timer-only change in receive; actor/public APIs and five-file native basis
+are unchanged. A new pure family distinguishes a150ms pre-sample restart at
+ACK250 (deadline400) from updated RTO300; duplicate ACK does not restart, and
+actual retry400 doubles current RTO to600 and arms from dispatch400. Prior
+six added families and old test/helper bodies remain byte-exact. No execution.

@@ -1,0 +1,25 @@
+{
+  "status": "PASS_SOURCE_ONLY",
+  "manifest": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/manifest.json",
+  "manifest_sha256": "13e56c1acbbc8abc8dc70eebec36f116b94bb02900f8aefaa093c0d3aa5f188c",
+  "native_manager_manifest_sha256": "1f911001b6a0cbf7e78bcd477a2da3b38b9f35b9a8d6b489f677c14d7ce7be66",
+  "native_manager_review_sha256": "c6ab107117f1506926a713475a9298d480220e3a4ed37b185edd29abea0c8fee",
+  "checks": {
+    "artifacts": 8,
+    "official_git_blob_and_sha256_pins": 4,
+    "full_modified_jar_and_class_hashes": 5,
+    "modified_socket_options_manager_and_socket_apis_read_from_classfiles": true,
+    "old_java_and_native_acceptance_files_byte_exact": true,
+    "new_source_and_cmake_fragment_pins": true,
+    "bash_parse_only": true,
+    "git_apply_check_only": true
+  },
+  "review": "No material blocker found. Exact full peer and protocol/port routing, eight/nine-argument enqueue return types, packet-only stdout, bounded queues/frames/diagnostics, actual manager application sockets and cleanup were checked. The cancelled fourth operation receives held real peer packets before later surviving-stream responses provide the ordered consumption barrier. Both HTTP streams and initiated inbound handshake/keepalive path independently require real bytes and Java first/last activity >=125s; genuine Request37/Create41 renewal checks session, Destination, unchanged independent public key, changed tunnel and extended expiry. No fabricated status callback or router delivery claim. API names/descriptors match the pinned modified JAR. New opt-in target and strict fresh output/class inventory keep the original seven controls unchanged.",
+  "qualification_scope": {
+    "new_target": "biglybtc-i2p-streaming-manager-interop-tests",
+    "new_ctest": "i2p-original-streaming-manager",
+    "timeout_seconds": 360,
+    "requires": "Reviewed native manager/window adoption; one actual helper compilation followed by exact compiled-image and real Java/native acceptance receipts. Existing pure/owned manager tests and retained seven controls remain separately attributable."
+  },
+  "limits": "Source/hash/classfile and syntax checks only. No compiler, JVM, executable, router, namespace, network or profile subject executed; no N mutation. Actual >=125s activity, renewal, original-manager interoperability and cleanup remain unqualified until root executes the subjects. No tunnel, backend/default Host, torrent admission or performance claim."
+}

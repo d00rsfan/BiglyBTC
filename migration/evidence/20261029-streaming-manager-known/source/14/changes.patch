@@ -1,0 +1,44 @@
+--- parent/private.py
++++ child/private.py
+@@ -1,9 +1,9 @@
+ #!/usr/bin/env python3
+-"""Root-only six focused private commands; no build or subjects on import."""
++"""Root-only five private commands; Public stays pending; no build or subjects on import."""
+ import argparse,importlib.util,os,pathlib,re,shutil,xml.etree.ElementTree as ET
+ W=pathlib.Path(__file__).resolve().parent
+ A=W.parent
+-assert __import__('hashlib').sha256((A/'run.py').read_bytes()).hexdigest()=='3b7b8428207515ad75376af7647a11524e759d5cff6f173b56ac06696236decd'
++assert __import__('hashlib').sha256((A/'run.py').read_bytes()).hexdigest()=='638b4fdbd678798a89c427289b6d749f098fbd8ddca9b912c03535cec0ce5232'
+ spec=importlib.util.spec_from_file_location('associated_manager',A/'run.py');a1=importlib.util.module_from_spec(spec);spec.loader.exec_module(a1);b=a1.b;s=b.s;R=b.R;N=b.N
+ PLAN=R/'build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/private/plan.json'
+ QT_PROOF=R/'build/mainline-host-cohort-20261028/amendments/provider-r2-recipes/qualification/runs/gcc-r4/runtime-images-before.json'
+@@ -27,7 +27,7 @@
+  assert len(selected)>2;return selected
+ 
+ def verify_result(path,lane,source,adoption_path,reference_path):
+- assert path.resolve()==(A/'runs'/(lane+'-a1')/'result.json').resolve()
++ assert path.resolve()==(A/'runs'/(lane+'-a2')/'result.json').resolve()
+  cap=s.load(W/'manifest.json')
+  for name,pin in cap['artifacts_sha256'].items():assert s.sha(W/name)==pin
+  for name,pin in cap['inputs_sha256'].items():assert s.sha(name)==pin
+@@ -42,8 +42,9 @@
+  inventory={row['name']:row for row in s.load(root/'inventory.log')['tests'] if row['name'] in b.suites_for_lane(lane)}
+  associations=a1.associate(lane,root/'fresh-tests.xml',images,inventory,current);assert associations==s.load(root/'associated-suites.json') and r['association']==a1.ref(root/'associated-suites.json')
+  assert [name for name,row in associations.items() if row['outcome']=='BLOCKED']==(['azureus-public-bound'] if lane=='gcc' else []) and all(row['outcome'] in ('PASS','BLOCKED') for row in associations.values())
+- assert b.peer_evidence(root)==r['peer_evidence'] and b.manager_evidence(a1.D2 if lane=='san' else root)==r['manager_evidence'] and b.protected_original()==r['original_head_index_unchanged'] and b.provider_pins()==r['provider']
+- assert reference_path==a1.REFERENCE and a1.d.reference_pins()==s.load(root/'java-reference.json')
++ assert r['fresh_actual_suites']==3 and r['retained_r2_passed_suites']==(18 if lane=='gcc' else 16) and r['reused_current_diagnostic_suites']==0
++ assert b.peer_evidence(root)==r['peer_evidence'] and b.manager_evidence(root)==r['manager_evidence'] and b.protected_original()==r['original_head_index_unchanged'] and b.provider_pins()==r['provider']
++ assert reference_path==a1.REFERENCE and a1.reference_pins(source)==s.load(root/'java-reference.json')
+  original=s.load(a1.P/'runs/gcc-r2/images-before.json')
+  if lane=='gcc':assert all(images[target]==original[target] for target in b.PRODUCTS)
+  return dict(r,cache=str(s.CACHES[lane])),images,inventory
+@@ -109,7 +110,7 @@
+   assert s.load(legacy/'peer-result.json')['status']==s.load(legacy/'peer-application.json')['status']=='PASS'
+   assert len(actual)==5 and len(copies)==6 and s.sha(wrapper)==wrapperpin['sha256'] and s.sha(companion)==companionpin['sha256'] and bundle(candidate)==staged and bundle(N/'dist')==old and s.sha(N/'dist/BUILD_MANIFEST.json')==oldpin and b.source_snapshot(a.source_commit)==snapshot and b.protected_original()==protected
+   for lane in results:verify_result(getattr(a,lane+'_result'),lane,a.source_commit,a.adoption,a.reference)
+-  result.update(status=STATUS,candidate=str(candidate),candidate_manifest_sha256=s.sha(candidate/'BUILD_MANIFEST.json'),actual_leaf_count=len(staged['files_sha256']),actual_tests=actual,copied_images=copies,namespace_wrapper=wrapperpin,namespace_launcher=companionpin,pending_public=pending,promotable=False,actual_subjects=5,source_unchanged=True,original_head_index_unchanged=protected,old_dist_unchanged=oldpin,provider_sha256=s.sha(artifact),subject_phase_sha256=s.sha(out/'subject-phase.json'),java_reference=a1.d.reference_pins(),manager_evidence=b.manager_evidence(out),retained_legacy_http={'subject_cases':1,'public_files':legacyfiles})
++  result.update(status=STATUS,candidate=str(candidate),candidate_manifest_sha256=s.sha(candidate/'BUILD_MANIFEST.json'),actual_leaf_count=len(staged['files_sha256']),actual_tests=actual,copied_images=copies,namespace_wrapper=wrapperpin,namespace_launcher=companionpin,pending_public=pending,promotable=False,actual_subjects=5,source_unchanged=True,original_head_index_unchanged=protected,old_dist_unchanged=oldpin,provider_sha256=s.sha(artifact),subject_phase_sha256=s.sha(out/'subject-phase.json'),java_reference=a1.reference_pins(a.source_commit),manager_evidence=b.manager_evidence(out),retained_legacy_http={'subject_cases':1,'public_files':legacyfiles})
+  except BaseException as exc:result['failure']=repr(exc)
+  finally:result['commands_sha256']=s.sha(out/'commands.json') if (out/'commands.json').exists() else None;s.write(out/'result.json',result)
+  print(result['status'],out/'result.json',flush=True);return 0 if result['status']==STATUS else 1

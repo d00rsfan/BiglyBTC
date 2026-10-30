@@ -1,0 +1,62 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2402528 --no-print-directory -- ATTEMPT=r1 REFERENCE=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/result.json ADOPTION=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/root-adoption.json SOURCE_COMMIT=43d642fb0025510c581ebdc4d7a332752c511a46
+[1/72] Building CXX object services/CMakeFiles/biglybtc_i2p_streaming.dir/i2p_streaming/manager.cpp.o
+[2/72] Building CXX object services/CMakeFiles/biglybtc_i2p_streaming.dir/i2p_streaming/stream.cpp.o
+[3/72] Linking CXX static library services/libbiglybtc_i2p_streaming.a
+[4/72] Automatic MOC for target biglybtc_i2cp_initial_channel
+[5/72] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/biglybtc_i2cp_initial_channel_autogen/mocs_compilation.cpp.o
+[6/72] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o
+[7/72] Linking CXX static library services/libbiglybtc_azureus_owned_udp.a
+[8/72] Automatic MOC for target biglybtc-owned-dht-bytes-tests
+[9/71] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/i2cp_channel/channel.cpp.o
+[10/71] Building CXX object app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o
+[11/71] Linking CXX static library services/libbiglybtc_i2cp_initial_channel.a
+[12/71] Linking CXX static library app/libbiglybtc_owned_azureus_service.a
+[13/71] Automatic MOC for target biglybtc-i2cp-initial-channel-tests
+[14/70] Automatic MOC for target biglybtc-azureus-owned-service-tests
+[15/69] Automatic MOC for target biglybtc-azureus-database-runtime-tests
+[16/68] Automatic MOC for target biglybtc-i2cp-datagram-channel-tests
+[17/67] Automatic MOC for target biglybtc-i2cp-receive-channel-tests
+[18/66] Automatic MOC for target biglybtc-azureus-profile-io-tests
+[19/65] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-tests.dir/i2p_streaming_tests.cpp.o
+[20/65] Automatic MOC for target biglybtc-i2cp-tracker-channel-tests
+[21/64] Automatic MOC for target biglybtc-azureus-routing-tests
+[22/63] Automatic MOC for target biglybtc-i2p-streaming-interop-tests
+[23/63] Automatic MOC for target biglybtc-azureus-maintenance-tests
+[24/62] Automatic MOC for target biglybtc-azureus-public-bound-tests
+[25/61] Automatic MOC for target biglybtc-i2cp-stream-manager-tests
+[26/61] Automatic MOC for target biglybtc-i2p-streaming-manager-interop-tests
+[27/61] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-manager-tests.dir/i2p_streaming_manager_tests.cpp.o
+[28/61] Building CXX object tests/CMakeFiles/biglybtc-owned-dht-bytes-tests.dir/owned_dht_bytes_tests.cpp.o
+[29/61] Building CXX object tests/CMakeFiles/biglybtc-azureus-owned-service-tests.dir/owned_azureus_service_tests.cpp.o
+[30/61] Building CXX object tests/CMakeFiles/biglybtc-azureus-database-runtime-tests.dir/azureus_database_runtime_tests.cpp.o
+[31/61] Building CXX object tests/CMakeFiles/biglybtc-i2cp-initial-channel-tests.dir/i2cp_initial_channel_tests.cpp.o
+[32/61] Building CXX object tests/CMakeFiles/biglybtc-i2cp-datagram-channel-tests.dir/i2cp_datagram_channel_tests.cpp.o
+[33/61] Building CXX object tests/CMakeFiles/biglybtc-i2cp-receive-channel-tests.dir/i2cp_receive_channel_tests.cpp.o
+[34/61] Building CXX object tests/CMakeFiles/biglybtc-i2cp-tracker-channel-tests.dir/i2cp_tracker_channel_tests.cpp.o
+[35/61] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-interop-tests.dir/biglybtc-i2p-streaming-interop-tests_autogen/mocs_compilation.cpp.o
+[36/61] Building CXX object tests/CMakeFiles/biglybtc-azureus-profile-io-tests.dir/azureus_profile_io_tests.cpp.o
+[37/61] Building CXX object tests/CMakeFiles/biglybtc-azureus-routing-tests.dir/azureus_routing_tests.cpp.o
+[38/61] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-interop-tests.dir/i2p_streaming_interop_tests.cpp.o
+[39/61] Building CXX object tests/CMakeFiles/biglybtc-i2cp-stream-manager-tests.dir/biglybtc-i2cp-stream-manager-tests_autogen/mocs_compilation.cpp.o
+[40/61] Building CXX object tests/CMakeFiles/biglybtc-azureus-maintenance-tests.dir/azureus_maintenance_tests.cpp.o
+[41/61] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-manager-interop-tests.dir/biglybtc-i2p-streaming-manager-interop-tests_autogen/mocs_compilation.cpp.o
+[42/61] Building CXX object tests/CMakeFiles/biglybtc-azureus-public-bound-tests.dir/azureus_public_bound_tests.cpp.o
+[43/61] Linking CXX executable tests/biglybtc-azureus-owned-service-tests
+[44/61] Linking CXX executable tests/biglybtc-azureus-router-owner-tests
+[45/61] Linking CXX executable tests/biglybtc-owned-dht-bytes-tests
+[46/61] Linking CXX executable tests/biglybtc-azureus-database-runtime-tests
+[47/61] Linking CXX executable tests/biglybtc-i2cp-initial-channel-tests
+[48/61] Linking CXX executable tests/biglybtc-i2cp-datagram-channel-tests
+[49/61] Linking CXX executable tests/biglybtc-i2cp-receive-channel-tests
+[50/61] Linking CXX executable tests/biglybtc-azureus-profile-io-tests
+[51/61] Linking CXX executable tests/biglybtc-i2cp-tracker-channel-tests
+[52/61] Linking CXX executable tests/biglybtc-azureus-routing-tests
+[53/61] Linking CXX executable tests/biglybtc-i2p-streaming-tests
+[54/61] Linking CXX executable tests/biglybtc-i2p-streaming-interop-tests
+[55/61] Linking CXX executable tests/biglybtc-azureus-maintenance-tests
+[56/61] Linking CXX executable tests/biglybtc-azureus-public-bound-tests
+[57/61] Linking CXX executable tests/biglybtc-i2p-streaming-manager-tests
+[58/61] Building CXX object tests/CMakeFiles/biglybtc-i2cp-stream-manager-tests.dir/i2cp_stream_manager_tests.cpp.o
+[59/61] Linking CXX executable tests/biglybtc-i2cp-stream-manager-tests
+[60/61] Building CXX object tests/CMakeFiles/biglybtc-i2p-streaming-manager-interop-tests.dir/i2p_streaming_manager_interop_tests.cpp.o
+[61/61] Linking CXX executable tests/biglybtc-i2p-streaming-manager-interop-tests

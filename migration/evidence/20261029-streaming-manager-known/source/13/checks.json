@@ -1,0 +1,14 @@
+{
+  "status": "SOURCE_STATIC_ONLY",
+  "python_AST": "PASS",
+  "actual_root_adoption_effective_paths": 25,
+  "actual_root_source": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+  "actual_prepared_classes": 4,
+  "fresh_suites_each_lane": 3,
+  "diagnostic_subject_reuse": 0,
+  "source_inverse": "actual effective25 plus exact two native fixture afterimages; no production delta",
+  "helper_execution": false,
+  "runner_execution": false,
+  "compiler_execution": false,
+  "native_mutation": false
+}

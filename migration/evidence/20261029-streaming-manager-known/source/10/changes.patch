@@ -1,0 +1,156 @@
+--- before/ManagerPeer.java
++++ after/ManagerPeer.java
+@@ -36,6 +36,14 @@
+     try(OutputStream out=Files.newOutputStream(config,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE)){log.store(out,"Owned fixture diagnostic logging only");}
+     contextOptions.setProperty("loggerConfigLocation",config.toString());
+   }
++  // This is only a fixture callback-order barrier, never a peer ACK.
++  static boolean closeFlag(byte[] packet){
++    if(packet.length<22)return false;int nacks=packet[16]&255,header=22+4*nacks;
++    if(header>packet.length)return false;
++    int flags=((packet[18+4*nacks]&255)<<8)|(packet[19+4*nacks]&255);
++    int options=((packet[20+4*nacks]&255)<<8)|(packet[21+4*nacks]&255);
++    return options<=packet.length-header&&(flags&10)==10;
++  }
+   static void require(boolean ok,String reason){if(!ok)throw new IllegalStateException(reason);}
+   static byte[] bytes(Path p)throws Exception{byte[] b=Files.readAllBytes(p);require(b.length>0&&b.length<=1024,"Bounded synthetic fixture required");return b;}
+   static Destination destination(Path p)throws Exception{ByteArrayInputStream in=new ByteArrayInputStream(bytes(p));Destination d=Destination.create(in);require(in.available()==0,"Trailing Destination");return d;}
+@@ -46,6 +54,9 @@
+   static byte[] handshake(){byte[] b=new byte[68];b[0]=19;System.arraycopy(ascii("BitTorrent protocol"),0,b,1,19);for(int i=28;i<68;i++)b[i]=(byte)(i*7+3);return b;}
+   static boolean javaRoute(int from,int to){return (from==80&&(to==9000||to==9001||to==9002))||(from==8020&&to==6881);}
+   static final class Adapter implements InvocationHandler {
++    final CountDownLatch fin9000=new CountDownLatch(1),fin9001=new CountDownLatch(1),fin6881=new CountDownLatch(1);
++    CountDownLatch nativeFin(int port){switch(port){case 9000:return fin9000;case 9001:return fin9001;case 6881:return fin6881;default:return null;}}
++    void awaitNativeFin(int port)throws InterruptedException{CountDownLatch latch=nativeFin(port);require(latch!=null&&latch.await(30,TimeUnit.SECONDS),"Native FIN callback did not finish for port "+port);}
+     final Destination local,remote;final SigningPrivateKey key;final I2PSession session;
+     final ArrayBlockingQueue<byte[]> outgoing=new ArrayBlockingQueue<>(16);
+     final AtomicReference<Throwable> failure=new AtomicReference<>();
+@@ -90,18 +101,18 @@
+     void receive(byte[] mux)throws Exception{
+       require(!closed.get()&&mux.length>=20&&mux.length<=MAX_MUX&&(mux[9]&255)==6,"Wrong actual routed mux");
+       int from=((mux[4]&255)<<8)|(mux[5]&255),to=((mux[6]&255)<<8)|(mux[7]&255);require(javaRoute(to,from),"Wrong routed port tuple");
+-      byte[] packet=DataHelper.decompress(mux);require(packet!=null&&packet.length>=22&&packet.length<=MAX_PACKET,"Unbounded routed packet");
++      byte[] packet=DataHelper.decompress(mux);require(packet!=null&&packet.length>=22&&packet.length<=MAX_PACKET,"Unbounded routed packet");boolean nativeClose=closeFlag(packet);
+       I2PSessionMuxedListener target=listener;require(target!=null,"No actual manager listener");int id;
+       synchronized(this){require(pending==null&&nextMessage<=MAX_FRAMES,"Receive capacity/lifetime exhausted");pending=packet;id=pendingId=nextMessage++;rawReceived+=packet.length;}
+-      received.incrementAndGet();target.messageAvailable(session,id,packet.length,6,from,to);synchronized(this){require(pending==null,"Actual manager did not consume packet");}
++      received.incrementAndGet();target.messageAvailable(session,id,packet.length,6,from,to);synchronized(this){require(pending==null,"Actual manager did not consume packet");}if(nativeClose){CountDownLatch latch=nativeFin(from);if(latch!=null)latch.countDown();}
+     }
+   }
+-  static void http(I2PSocket socket,Path root)throws Exception{
++  static void http(I2PSocket socket,Path root,Adapter route)throws Exception{
+     int port=socket.getPort();require(socket.getLocalPort()==80&&(port==9000||port==9001||port==9002),"Wrong actual accepted ports");socket.setReadTimeout(30000);
+     InputStream in=socket.getInputStream();OutputStream out=socket.getOutputStream();
+     if(port==9002){require(in.read()=='C',"Missing cancel application byte");out.write(ascii("late-manager-peer-bytes"));out.flush();output(root,"cancel-application.json","{\"status\":\"PASS\",\"actual_manager_socket\":true}");return;}
+     long first=0,last=0;for(int round=0;round<ROUNDS;round++){byte[] expected=request(round);require(Arrays.equals(in.readNBytes(expected.length),expected),"Wrong concurrent HTTP request");long at=System.nanoTime();if(round==0)first=at;last=at;out.write(response(port,round));out.flush();}
+-    require(last-first>=MIN_ACTIVITY_NS,"HTTP activity did not cross120s");require(in.read()==-1,"Native FIN missing after final HTTP round");out.close();
++    require(last-first>=MIN_ACTIVITY_NS,"HTTP activity did not cross120s");require(in.read()==-1,"Native FIN missing after final HTTP round");route.awaitNativeFin(port);out.close();
+     output(root,"http-"+port+".json","{\"status\":\"PASS\",\"rounds\":"+ROUNDS+",\"actual_activity_ns\":"+(last-first)+",\"actual_manager_socket\":true}");
+   }
+   public static void main(String[] args){
+@@ -116,13 +127,13 @@
+       Properties options=new Properties();options.setProperty("i2p.streaming.enforceProtocol","true");options.setProperty("i2p.streaming.answerPings","false");options.setProperty("i2p.streaming.maxMessageSize","1730");options.setProperty("i2p.streaming.initialWindowSize","1");options.setProperty("i2p.streaming.maxWindowSize","8");options.setProperty("i2p.streaming.readTimeout","30000");options.setProperty("i2p.streaming.writeTimeout","30000");options.setProperty("i2p.streaming.inactivityTimeout","90000");options.setProperty("i2p.streaming.bufferSize","65536");
+       manager=new I2PSocketManagerFull(context,adapter.session,options,"ExplicitNativeManagerInterop",peer->peer.equals(remote));I2PServerSocket server=manager.getServerSocket();server.setSoTimeout(60000);final Adapter route=adapter;final I2PSocketManagerFull actual=manager;
+       Thread writer=new Thread(()->{try{DataOutputStream out=new DataOutputStream(wireOut);while(true){byte[] mux=route.outgoing.take();out.writeInt(mux.length);out.write(mux);out.flush();}}catch(Throwable t){reportAsync(route.failure,t);}},"actual-manager-packets");writer.setDaemon(true);writer.start();
+-      Thread acceptor=new Thread(()->{try{Set<Integer> ports=new HashSet<>();for(int i=0;i<3;i++){I2PSocket socket=server.accept();require(socket.getPeerDestination().equals(remote)&&ports.add(socket.getPort()),"Wrong/duplicate accepted stream");Thread worker=new Thread(()->{try(I2PSocket owned=socket){http(owned,root);completed.incrementAndGet();}catch(Throwable t){reportAsync(applicationFailure,t);}},"actual-http-"+socket.getPort());worker.setDaemon(true);synchronized(applications){applications.add(worker);}worker.start();}}catch(Throwable t){reportAsync(applicationFailure,t);}},"actual-manager-accept");acceptor.setDaemon(true);applications.add(acceptor);acceptor.start();
++      Thread acceptor=new Thread(()->{try{Set<Integer> ports=new HashSet<>();for(int i=0;i<3;i++){I2PSocket socket=server.accept();require(socket.getPeerDestination().equals(remote)&&ports.add(socket.getPort()),"Wrong/duplicate accepted stream");Thread worker=new Thread(()->{try(I2PSocket owned=socket){http(owned,root,route);completed.incrementAndGet();}catch(Throwable t){reportAsync(applicationFailure,t);}},"actual-http-"+socket.getPort());worker.setDaemon(true);synchronized(applications){applications.add(worker);}worker.start();}}catch(Throwable t){reportAsync(applicationFailure,t);}},"actual-manager-accept");acceptor.setDaemon(true);applications.add(acceptor);acceptor.start();
+       Thread incoming=new Thread(()->{try{
+         long end=System.nanoTime()+60000000000L;while(!Files.exists(root.resolve("start-inbound.json"))){require(System.nanoTime()<end,"Native listener was not armed");Thread.sleep(10);}
+         I2PSocketOptions connect=actual.buildOptions();connect.setLocalPort(8020);connect.setPort(6881);connect.setConnectTimeout(30000);connect.setReadTimeout(30000);
+         try(I2PSocket socket=actual.connect(remote,connect)){require(socket.getPeerDestination().equals(remote)&&socket.getLocalPort()==8020&&socket.getPort()==6881,"Wrong actual initiated stream");InputStream in=socket.getInputStream();OutputStream out=socket.getOutputStream();byte[] hello=handshake();out.write(hello);out.flush();require(Arrays.equals(in.readNBytes(68),hello),"Wrong native BT-shaped handshake response");long first=0,last=0;
+           for(int round=0;round<ROUNDS;round++){byte[] keep=in.readNBytes(4);require(Arrays.equals(keep,new byte[4]),"Wrong bounded BT keepalive");long at=System.nanoTime();if(round==0)first=at;last=at;out.write(keep);out.flush();}
+-          require(last-first>=MIN_ACTIVITY_NS,"Inbound actual activity did not cross120s");require(in.read()==-1,"Native FIN missing on inbound stream");out.close();output(root,"inbound-application.json","{\"status\":\"PASS\",\"handshake_bytes\":68,\"rounds\":"+ROUNDS+",\"actual_activity_ns\":"+(last-first)+",\"actual_manager_socket\":true}");completed.incrementAndGet();
++          require(last-first>=MIN_ACTIVITY_NS,"Inbound actual activity did not cross120s");require(in.read()==-1,"Native FIN missing on inbound stream");route.awaitNativeFin(6881);out.close();output(root,"inbound-application.json","{\"status\":\"PASS\",\"handshake_bytes\":68,\"rounds\":"+ROUNDS+",\"actual_activity_ns\":"+(last-first)+",\"actual_manager_socket\":true}");completed.incrementAndGet();
+         }
+       }catch(Throwable t){reportAsync(applicationFailure,t);}},"actual-manager-initiate");incoming.setDaemon(true);synchronized(applications){applications.add(incoming);}incoming.start();
+       output(root,"peer-ready.json","{\"status\":\"ACTUAL_MANAGER_PROTOCOL6_LISTENER\",\"router\":false,\"session_adapter_only\":true}");
+--- before/StreamingPeer.java
++++ after/StreamingPeer.java
+@@ -40,6 +40,14 @@
+     try(OutputStream out=Files.newOutputStream(config,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE)){log.store(out,"Owned fixture diagnostic logging only");}
+     contextOptions.setProperty("loggerConfigLocation",config.toString());
+   }
++  // This is only a fixture callback-order barrier, never a peer ACK.
++  static boolean closeFlag(byte[] packet){
++    if(packet.length<22)return false;int nacks=packet[16]&255,header=22+4*nacks;
++    if(header>packet.length)return false;
++    int flags=((packet[18+4*nacks]&255)<<8)|(packet[19+4*nacks]&255);
++    int options=((packet[20+4*nacks]&255)<<8)|(packet[21+4*nacks]&255);
++    return options<=packet.length-header&&(flags&10)==10;
++  }
+   static void require(boolean ok,String why){if(!ok)throw new IllegalStateException(why);}
+   static byte[] read(Path p)throws Exception{byte[] b=Files.readAllBytes(p);require(b.length>0&&b.length<=1024,"Bounded synthetic fixture required");return b;}
+   static Destination destination(Path p)throws Exception{ByteArrayInputStream in=new ByteArrayInputStream(read(p));Destination d=Destination.create(in);require(in.available()==0,"Trailing Destination");return d;}
+@@ -48,14 +56,16 @@
+   }
+   static byte[] response(boolean backpressure){int size=backpressure?96*1024:8192;byte[] header=("HTTP/1.0 200 OK\r\nContent-Length: "+size+"\r\nConnection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII);byte[] out=Arrays.copyOf(header,header.length+size);for(int i=0;i<size;i++)out[header.length+i]=(byte)(i*31+7);return out;}
+   static String hex(byte[] bytes){StringBuilder out=new StringBuilder(bytes.length*2);for(byte value:bytes){out.append(Character.forDigit((value>>>4)&15,16));out.append(Character.forDigit(value&15,16));}return out.toString();}
+-  static String receiveUpload(I2PSocket socket)throws Exception{
++  static String receiveUpload(I2PSocket socket,Adapter route)throws Exception{
+     InputStream input=socket.getInputStream();require(Arrays.equals(input.readNBytes(UPLOAD_HEADER.length),UPLOAD_HEADER),"Wrong actual upload header");
+     MessageDigest digest=MessageDigest.getInstance("SHA-256");byte[] buffer=new byte[4096];int received=0;
+     while(received<UPLOAD_SIZE){int n=input.read(buffer,0,Math.min(buffer.length,UPLOAD_SIZE-received));require(n>0,"Truncated actual128KiB upload");for(int i=0;i<n;i++)require(buffer[i]==(byte)((received+i)*17+11),"Actual upload byte mismatch");digest.update(buffer,0,n);received+=n;}
+-    require(input.read()==-1,"Native FIN must follow exact128KiB upload");String value=hex(digest.digest());byte[] body=(value+"\n").getBytes(StandardCharsets.US_ASCII);
++    require(input.read()==-1,"Native FIN must follow exact128KiB upload");route.awaitNativeFin();String value=hex(digest.digest());byte[] body=(value+"\n").getBytes(StandardCharsets.US_ASCII);
+     OutputStream output=socket.getOutputStream();output.write(("HTTP/1.0 200 OK\r\nContent-Length: "+body.length+"\r\nConnection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII));output.write(body);output.flush();output.close();return value;
+   }
+   static final class Adapter implements InvocationHandler {
++    final CountDownLatch nativeFinProcessed=new CountDownLatch(1);
++    void awaitNativeFin()throws InterruptedException{require(nativeFinProcessed.await(30,TimeUnit.SECONDS),"Native FIN callback did not finish for port9000");}
+     final Destination local,remote;final SigningPrivateKey key;
+     final I2PSession session;final ArrayBlockingQueue<byte[]> outgoing=new ArrayBlockingQueue<>(16);
+     final AtomicReference<Throwable> failure=new AtomicReference<>();
+@@ -108,11 +118,11 @@
+     void receive(byte[] mux)throws Exception{
+       require(!closed.get()&&mux.length>=20&&mux.length<=MAX_MUX&&(mux[9]&255)==6,"Wrong routed mux frame");
+       int from=((mux[4]&255)<<8)|(mux[5]&255),to=((mux[6]&255)<<8)|(mux[7]&255);require(from==9000&&to==80,"Wrong routed Streaming ports");
+-      byte[] packet=DataHelper.decompress(mux);require(packet!=null&&packet.length>=22&&packet.length<=MAX_PACKET,"Unbounded or empty routed packet");
++      byte[] packet=DataHelper.decompress(mux);require(packet!=null&&packet.length>=22&&packet.length<=MAX_PACKET,"Unbounded or empty routed packet");boolean nativeClose=closeFlag(packet);
+       I2PSessionMuxedListener target=listener;require(target!=null&&listenerProtocol==6&&listenerPort==0,"No actual manager protocol6 listener");
+       int id;synchronized(this){require(pending==null&&nextMessage<=MAX_FRAMES,"Inbound route capacity/lifetime bound");pending=packet;id=pendingId=nextMessage++;rawReceived+=packet.length;}
+       received.incrementAndGet();target.messageAvailable(session,id,packet.length,6,from,to);
+-      synchronized(this){require(pending==null,"Actual manager did not consume routed packet");}
++      synchronized(this){require(pending==null,"Actual manager did not consume routed packet");}if(nativeClose)nativeFinProcessed.countDown();
+     }
+   }
+   public static void main(String[] args){
+@@ -136,7 +146,7 @@
+       Thread application=new Thread(()->{try{
+         try(I2PSocket socket=server.accept()){
+           require(socket.getPeerDestination().equals(remote)&&socket.getLocalPort()==80&&socket.getPort()==9000,"Wrong actual accepted Streaming connection");socket.setReadTimeout(30000);
+-          if(mode.equals("upload")){uploadDigest.set(receiveUpload(socket));}
++          if(mode.equals("upload")){uploadDigest.set(receiveUpload(socket,route));}
+           else if(mode.equals("reset")){socket.reset();}
+           else if(mode.equals("cancel")){
+             // Native cancellation is LOCAL ONLY. Queue genuine late peer data;
+@@ -145,7 +155,7 @@
+             require(socket.getInputStream().read()=='C',"Missing actual cancel-control application byte");
+             socket.getOutputStream().write("late-peer-bytes".getBytes(StandardCharsets.US_ASCII));socket.getOutputStream().flush();
+           }else{
+-            InputStream input=socket.getInputStream();byte[] request=input.readNBytes(REQUEST.length);require(Arrays.equals(request,REQUEST),"Wrong actual HTTP-shaped request bytes");require(input.read()==-1,"Native FIN must follow exact request");
++            InputStream input=socket.getInputStream();byte[] request=input.readNBytes(REQUEST.length);require(Arrays.equals(request,REQUEST),"Wrong actual HTTP-shaped request bytes");require(input.read()==-1,"Native FIN must follow exact request");route.awaitNativeFin();
+             OutputStream output=socket.getOutputStream();output.write(response(mode.equals("backpressure")));output.flush();output.close();
+           }
+         }
+--- before/preview/native/tests/i2p_streaming_manager_interop_tests.cpp
++++ after/preview/native/tests/i2p_streaming_manager_interop_tests.cpp
+@@ -131,7 +131,7 @@
+ private slots:
+   void initTestCase(){root=qEnvironmentVariable("BIGLYBTC_I2P_MANAGER_ACCEPTANCE_ROOT");QVERIFY2(QDir::isAbsolutePath(root)&&!QFileInfo::exists(root),"Fresh explicit absolute manager output required; no skip");QVERIFY(QDir().mkdir(root));QVERIFY(QFile::setPermissions(root,QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ExeOwner));QFile jar(QString::fromUtf8(BIGLYBTC_I2P_MANAGER_JAR));QVERIFY(jar.open(QIODevice::ReadOnly));QCOMPARE(jar.size(),qint64(4288652));QCOMPARE(QCryptographicHash::hash(jar.readAll(),QCryptographicHash::Sha256).toHex(),QByteArray("b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5"));const auto classes=QString::fromUtf8(BIGLYBTC_I2P_MANAGER_CLASSES);std::set<QString> actual;QDirIterator entries(classes,{"*.class"},QDir::Files,QDirIterator::Subdirectories);while(entries.hasNext()){actual.insert(QDir(classes).relativeFilePath(entries.next()));}QVERIFY((actual==std::set<QString>{"ManagerPeer.class","ManagerPeer$Adapter.class"}));}
+   void actualManagerConcurrentHttpInboundBtRenewalAndCancelBeyond120Seconds(){
+-    Bridge bridge(root);Channel channel;const auto diagnostic=qScopeGuard([&]{bridge.observeTeardown(channel);});QVERIFY2(bridge.failure.isEmpty(),qPrintable(bridge.failure));QTRY_VERIFY_WITH_TIMEOUT(QFileInfo::exists(bridge.work+"/peer-ready.json")||!bridge.failure.isEmpty(),15000);QVERIFY2(bridge.failure.isEmpty(),qPrintable(bridge.failure));QVERIFY(channel.begin({QHostAddress::LocalHost,bridge.server.serverPort(),"2.13.0",false,3000,false}));QTRY_VERIFY(channel.routerDate());auto identity=signer("dsa");auto registration=channel.createLeaseSession(std::move(identity),{{"i2cp.fastReceive","true"},{"i2cp.messageReliability","none"}},bridge.now);QVERIFY2(registration,registration?"":registration.error().message.c_str());QTRY_VERIFY(channel.leaseSetSubmission()&&bridge.leases==1);QVERIFY(channel.sessionId()&&*channel.sessionId()==7);const auto initialLease=*channel.leaseSetSubmission();QVERIFY(channel.enableStreamManager({90000,st::IdleAction::Send}));QVERIFY(channel.listenStreams({{6881,8020},{bridge.remote},8}));
++    Bridge bridge(root);Channel channel;const auto diagnostic=qScopeGuard([&]{bridge.observeTeardown(channel);});QVERIFY2(bridge.failure.isEmpty(),qPrintable(bridge.failure));QTRY_VERIFY_WITH_TIMEOUT(QFileInfo::exists(bridge.work+"/peer-ready.json")||!bridge.failure.isEmpty(),60000);QVERIFY2(bridge.failure.isEmpty(),qPrintable(bridge.failure));QVERIFY(channel.begin({QHostAddress::LocalHost,bridge.server.serverPort(),"2.13.0",false,3000,false}));QTRY_VERIFY(channel.routerDate());auto identity=signer("dsa");auto registration=channel.createLeaseSession(std::move(identity),{{"i2cp.fastReceive","true"},{"i2cp.messageReliability","none"}},bridge.now);QVERIFY2(registration,registration?"":registration.error().message.c_str());QTRY_VERIFY(channel.leaseSetSubmission()&&bridge.leases==1);QVERIFY(channel.sessionId()&&*channel.sessionId()==7);const auto initialLease=*channel.leaseSetSubmission();QVERIFY(channel.enableStreamManager({90000,st::IdleAction::Send}));QVERIFY(channel.listenStreams({{6881,8020},{bridge.remote},8}));
+     auto a=channel.connectStream(bridge.remote.wire,{9000,80,30000}),b=channel.connectStream(bridge.remote.wire,{9001,80,30000});QVERIFY2(a,a?"":a.error().message.c_str());QVERIFY2(b,b?"":b.error().message.c_str());const std::array<std::uint64_t,2> http{*a,*b};bridge.traceOperations[0]=*a;bridge.traceOperations[1]=*b;QVERIFY(http[0]!=http[1]);
+     const auto established=[&](std::uint64_t op){auto state=channel.managedStreamObservation(op);return state&&state->stream.phase==st::Phase::Established;};QTRY_VERIFY_WITH_TIMEOUT((established(http[0])&&established(http[1]))||!bridge.failure.isEmpty(),30000);QVERIFY2(bridge.failure.isEmpty(),qPrintable(bridge.failure));QVERIFY(established(http[0])&&established(http[1]));QVERIFY(save(bridge.work+"/start-inbound.json",{{"listener_armed",true}}));QTRY_VERIFY_WITH_TIMEOUT(channel.streamManagerObservation().pendingSyns==1||!bridge.failure.isEmpty(),30000);QVERIFY2(bridge.failure.isEmpty(),qPrintable(bridge.failure));auto inbound=channel.acceptStream();QVERIFY2(inbound,inbound?"":inbound.error().message.c_str());bridge.traceOperations[2]=*inbound;QVERIFY(channel.managedStreamObservation(*inbound));QVERIFY(channel.managedStreamObservation(*inbound)->inbound);QTRY_VERIFY_WITH_TIMEOUT(established(*inbound)||!bridge.failure.isEmpty(),30000);QVERIFY2(bridge.failure.isEmpty(),qPrintable(bridge.failure));
+     QByteArray hello;QTRY_VERIFY_WITH_TIMEOUT(([&]{auto part=channel.takeStreamBytes(*inbound,68);if(!part){bridge.fail(QString::fromStdString(part.error().message));return true;}hello+=bytes(*part);return hello.size()>=68||!bridge.failure.isEmpty();})(),15000);QVERIFY2(bridge.failure.isEmpty(),qPrintable(bridge.failure));QCOMPARE(hello,handshake());QVERIFY(channel.writeStream(*inbound,view(hello)));
+--- before/preview/native/tests/i2p_streaming_interop_tests.cpp
++++ after/preview/native/tests/i2p_streaming_interop_tests.cpp
+@@ -197,7 +197,7 @@
+   Q_OBJECT
+   QString root;
+   void registered(Bridge& bridge,Channel& channel){
+-    QTRY_VERIFY_WITH_TIMEOUT(bridge.ready()||!bridge.failure.isEmpty()||bridge.java.state()==QProcess::NotRunning,10000);QVERIFY2(bridge.ready()&&bridge.failure.isEmpty(),qPrintable(bridge.failure+QString::fromUtf8(bridge.errors)));
++    QTRY_VERIFY_WITH_TIMEOUT(bridge.ready()||!bridge.failure.isEmpty()||bridge.java.state()==QProcess::NotRunning,60000);QVERIFY2(bridge.ready()&&bridge.failure.isEmpty(),qPrintable(bridge.failure+QString::fromUtf8(bridge.errors)));
+     QVERIFY(channel.begin({QHostAddress::LocalHost,bridge.server.serverPort(),"2.13.0",false,30000,false}));QTRY_VERIFY(channel.routerDate());auto id=signer("dsa");auto armed=channel.createLeaseSession(std::move(id),{{"i2cp.fastReceive","true"},{"i2cp.messageReliability","none"}},bridge.now);QVERIFY2(armed,armed?"":armed.error().message.c_str());QTRY_VERIFY(channel.sessionId()&&channel.leaseSetSubmission()&&bridge.leaseSeen);QCOMPARE(channel.state(),Channel::State::SessionCreated);
+   }
+   void finish(Bridge& bridge,Channel& channel){

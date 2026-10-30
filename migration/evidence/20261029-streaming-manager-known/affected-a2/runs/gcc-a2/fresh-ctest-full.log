@@ -1,0 +1,81 @@
+Start testing: Oct 30 03:05 IST
+----------------------------------------------------------
+298/304 Testing: i2p-original-streaming-peer
+298/304 Test: i2p-original-streaming-peer
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2p-streaming-interop-tests" "actualOriginalManagerCarriesHttpAndRecoverablePackets" "actualOriginalResetHasTypedNativeTerminal" "localCancelRejectsGenuineLatePeerBytesBeforeUpdatedBarrier"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"i2p-original-streaming-peer" start time: Oct 30 03:05 IST
+Output:
+----------------------------------------------------------
+********* Start testing of StreamingInteropTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : StreamingInteropTests::initTestCase()
+PASS   : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(http)
+PASS   : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(loss-reorder)
+PASS   : StreamingInteropTests::actualOriginalManagerCarriesHttpAndRecoverablePackets(queue-backpressure)
+PASS   : StreamingInteropTests::actualOriginalResetHasTypedNativeTerminal()
+PASS   : StreamingInteropTests::localCancelRejectsGenuineLatePeerBytesBeforeUpdatedBarrier()
+PASS   : StreamingInteropTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 56373ms
+********* Finished testing of StreamingInteropTests *********
+<end of output>
+Test time =  56.57 sec
+----------------------------------------------------------
+Test Passed.
+"i2p-original-streaming-peer" end time: Oct 30 03:06 IST
+"i2p-original-streaming-peer" time elapsed: 00:00:56
+----------------------------------------------------------
+
+299/304 Testing: i2p-original-streaming-upload
+299/304 Test: i2p-original-streaming-upload
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2p-streaming-interop-tests" "actualOriginalManagerReceives128KiBWithBoundedNativeWindow"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"i2p-original-streaming-upload" start time: Oct 30 03:06 IST
+Output:
+----------------------------------------------------------
+********* Start testing of StreamingInteropTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : StreamingInteropTests::initTestCase()
+PASS   : StreamingInteropTests::actualOriginalManagerReceives128KiBWithBoundedNativeWindow(cap2)
+PASS   : StreamingInteropTests::actualOriginalManagerReceives128KiBWithBoundedNativeWindow(cap8)
+PASS   : StreamingInteropTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 28059ms
+********* Finished testing of StreamingInteropTests *********
+<end of output>
+Test time =  28.12 sec
+----------------------------------------------------------
+Test Passed.
+"i2p-original-streaming-upload" end time: Oct 30 03:07 IST
+"i2p-original-streaming-upload" time elapsed: 00:00:28
+----------------------------------------------------------
+
+304/304 Testing: i2p-original-streaming-manager
+304/304 Test: i2p-original-streaming-manager
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2p-streaming-manager-interop-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"i2p-original-streaming-manager" start time: Oct 30 03:07 IST
+Output:
+----------------------------------------------------------
+********* Start testing of ManagerInteropTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagerInteropTests::initTestCase()
+PASS   : ManagerInteropTests::actualManagerConcurrentHttpInboundBtRenewalAndCancelBeyond120Seconds()
+PASS   : ManagerInteropTests::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 141254ms
+********* Finished testing of ManagerInteropTests *********
+<end of output>
+Test time = 141.31 sec
+----------------------------------------------------------
+Test Passed.
+"i2p-original-streaming-manager" end time: Oct 30 03:09 IST
+"i2p-original-streaming-manager" time elapsed: 00:02:21
+----------------------------------------------------------
+
+End testing: Oct 30 03:09 IST
+
+explicit-i2p = 226.00 sec*proc
+
+long = 141.31 sec*proc
+
+reference = 226.00 sec*proc
+

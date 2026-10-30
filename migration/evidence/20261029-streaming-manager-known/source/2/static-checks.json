@@ -1,0 +1,10 @@
+{
+  "status": "PASS_STATIC_ONLY",
+  "source_maps": 10,
+  "changed_afterimages": 1,
+  "inherited_afterimages": 9,
+  "exact_inverse_of_only_ordering_delta_restores_923_full_test_leaf": true,
+  "all_production_afterimages_exact_parent": true,
+  "readonly_complete_patch_apply_check": true,
+  "compiler_or_subject_execution": false
+}

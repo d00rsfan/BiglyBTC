@@ -1,0 +1,319 @@
+{
+  "azureus-routing": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "azureus-routing",
+      "case_sha256": "12d48d72970c50f0688ebf33377822b32167f7fb7fee116b18e9f13f6a6a80e7"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-azureus-routing-tests",
+      "sha256": "ab889864be51a2f4cc953e0147e2a65e63d6b3c9f10578ab65055d30de021cb4",
+      "bytes": 55710056
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "owned-ddb-control": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "owned-ddb-control",
+      "case_sha256": "d7c5ff53ff579d6753d32746a5795b302ee0bbfefa2615530c70f50c759342cb"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-owned-ddb-control-tests",
+      "sha256": "d58ce1c5b9ee1b2fe4c23c468f6c7f5b20fe7de4e634933e81cf23a7a6fba726",
+      "bytes": 2126928
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "azureus-router-owner": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "azureus-router-owner",
+      "case_sha256": "1479cef629b6f43dc28356ce7f4b49125a3fb6031dca78bd4f00c901ea1301d1"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-azureus-router-owner-tests",
+      "sha256": "a6e67f9b33a45d32299bcfeda3733129fa96fdf2fb88f4e6e4c781746d2287c7",
+      "bytes": 1600544
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "azureus-owned-service": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "azureus-owned-service",
+      "case_sha256": "59944449d436bdb2facf72bd81bfa08ce5ec62bae61a875fb510fa013b5dbef1"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-azureus-owned-service-tests",
+      "sha256": "02deb3aa4e00263e9027b9fa70ad874ce7121f08791fd13a935bc4608f6e74b8",
+      "bytes": 58318072
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "azureus-profile-io": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "azureus-profile-io",
+      "case_sha256": "e6f5009e9da12ae9112195145af7a4bdd5b90a740d01faf8e2947ca4616af584"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-azureus-profile-io-tests",
+      "sha256": "3f628381a41a9eb4098becf8ff4780a3c0578f71a02a833b092392f7cb526fe4",
+      "bytes": 56237904
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "azureus-maintenance": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "azureus-maintenance",
+      "case_sha256": "a5ab0ba37762d4457a0207df3b72ebddcbf2efbf2ab606bba8555b2961e0ab44"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-azureus-maintenance-tests",
+      "sha256": "1b11a09878513f6e6a0c5979ab993ed455024ad9e65b74200c16541ef16045a5",
+      "bytes": 55385008
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "azureus-database-runtime": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "azureus-database-runtime",
+      "case_sha256": "c5ccea833f8b1d477aab107dc1db8ff46fad101830f0dc0470cc613e64be37fd"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-azureus-database-runtime-tests",
+      "sha256": "341768ed9afd60901bf372dfc58e549c80ccb18aee3336bb7eb30d7c247921b6",
+      "bytes": 55253384
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "owned-dht-bytes": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "owned-dht-bytes",
+      "case_sha256": "b0058a3a4a1c05f6c37b654abc55c90373bcfc308253890f6fd7e4fe415afcbf"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-owned-dht-bytes-tests",
+      "sha256": "cc0cfe553f24bb18cc37c6045cc04a0fe855cfe02037f601b3bc62a0a9510d02",
+      "bytes": 29650272
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "azureus-public-bound": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "azureus-public-bound",
+      "case_sha256": "62523f16b635c86d6dacecd6f21009b85a8216cc3f7518ea94fa56f649116372"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-azureus-public-bound-tests",
+      "sha256": "012fc0d7dc51eff850d571d4ea14d2e907f39304b56db99ef0fe6ca8948379ca",
+      "bytes": 54926984
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "i2cp-initial-channel": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "i2cp-initial-channel",
+      "case_sha256": "c4771986ec20370772c9903d13bb8c0b238e9c98ef1ba1c708b76cd222723d38"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2cp-initial-channel-tests",
+      "sha256": "ce470b8dc70803508b0d32d4f56e02e0fbf30647ab6f6780883cdc1d23631643",
+      "bytes": 21083912
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "i2cp-lease-backed-datagram-channel": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "i2cp-lease-backed-datagram-channel",
+      "case_sha256": "84ea59cb41dce967172d4fe6ef7e2f8919bb32bbb339566a046e22e397af50da"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2cp-datagram-channel-tests",
+      "sha256": "6739776b21037d7d6df5e48027d5ea0d7d020c9c832354f2271476826af06066",
+      "bytes": 17498464
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "i2cp-bounded-datagram-receiver": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "i2cp-bounded-datagram-receiver",
+      "case_sha256": "6e84774254e806175afe68d02de1c8a28fc48bb8858c737e5f6cf014bf9a9331"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2cp-receive-channel-tests",
+      "sha256": "0f0322aaf23b5c97b20350618f8ece777cad7037fffe70a07eaed684e93c216a",
+      "bytes": 17284528
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "i2cp-explicit-tracker-channel": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "i2cp-explicit-tracker-channel",
+      "case_sha256": "14e727ecaccc4d79624d489c7d3a7fa4ef5031935684c4852717933f86310df8"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2cp-tracker-channel-tests",
+      "sha256": "a869c4b566ce754e53161d872619d7074feae21ccd700a5417c71f883274ea7e",
+      "bytes": 17347200
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "pure-i2p-streaming": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "pure-i2p-streaming",
+      "case_sha256": "2c5f311dc0fe1d787846c517c7321c11ebe43f8113dc1e0909dcba3c46fb267d"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2p-streaming-tests",
+      "sha256": "6866e209ec6ddcfcc8724f65a226638aaba03760121c15e3018f5c82e6d02faf",
+      "bytes": 5643424
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "i2p-original-streaming-peer": {
+    "mode": "fresh_current_ctest",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/san-a2/fresh-tests.xml",
+      "sha256": "cc8d18645e328ba699bafd91d1a769cdfde49a5a0af52a6d184b0dfc7da952ff",
+      "case_name": "i2p-original-streaming-peer",
+      "case_sha256": "983a707f187cfee58d72bfe36965dd6ffd0a82678adf71041a424324f0beaefb"
+    },
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2p-streaming-interop-tests",
+      "sha256": "35322c7fb6dc2965a6a64dad95ad0c39b09d05c483a575213d0ea4825d701b43",
+      "bytes": 19188912
+    }
+  },
+  "i2p-original-streaming-upload": {
+    "mode": "fresh_current_ctest",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/san-a2/fresh-tests.xml",
+      "sha256": "cc8d18645e328ba699bafd91d1a769cdfde49a5a0af52a6d184b0dfc7da952ff",
+      "case_name": "i2p-original-streaming-upload",
+      "case_sha256": "c6c1d049320ce1142a702afa9ba22b12ac49c0cdf5d9a3cabe09e43a18b7e7a4"
+    },
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2p-streaming-interop-tests",
+      "sha256": "35322c7fb6dc2965a6a64dad95ad0c39b09d05c483a575213d0ea4825d701b43",
+      "bytes": 19188912
+    }
+  },
+  "pure-i2p-streaming-manager": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "pure-i2p-streaming-manager",
+      "case_sha256": "9ac2085986281b4fe9da0056122cd1c66d94587ca01aeec3448886baa15f741c"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2p-streaming-manager-tests",
+      "sha256": "eeb063eacda641f1ac87ad82516c0a790153e3e65746a454077fdd9df54aff6f",
+      "bytes": 6033552
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "i2cp-bounded-stream-manager": {
+    "mode": "unchanged_current_r2_pass",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/tests.xml",
+      "sha256": "215a0d9543dc1eb2ff28d62561d80b149175edaab6ae88f62d765034b1b76a34",
+      "case_name": "i2cp-bounded-stream-manager",
+      "case_sha256": "48668a6a22f42df5f30a88dde5ea97b1d6c331c27aacc5ddf5dc64bbd370632e"
+    },
+    "original_whole_invocation_status": "FAIL",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2cp-stream-manager-tests",
+      "sha256": "475b116d64ac459b2c485b7c4184092a81526bd28eb0190435174031c36ab792",
+      "bytes": 17701536
+    },
+    "definition_unchanged_except_public_outer_budget": true
+  },
+  "i2p-original-streaming-manager": {
+    "mode": "fresh_current_ctest",
+    "outcome": "PASS",
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/san-a2/fresh-tests.xml",
+      "sha256": "cc8d18645e328ba699bafd91d1a769cdfde49a5a0af52a6d184b0dfc7da952ff",
+      "case_name": "i2p-original-streaming-manager",
+      "case_sha256": "c3b932f70aa8dc71dcf7da9a99e37252442d65302a8fb1278a3374dcd4ab1f7c"
+    },
+    "image": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2p-streaming-manager-interop-tests",
+      "sha256": "bb285146974777905f964b1cb000c3b3166984372bf6ca4f1816abcd7584fc29",
+      "bytes": 18641320
+    }
+  }
+}

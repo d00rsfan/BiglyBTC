@@ -1,0 +1,39 @@
+[
+  {
+    "name": "inventory",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--show-only=json-v1"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.065,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/public-recovery-r3/inventory.log",
+    "log_sha256": "31daee41cdeb53a25e8d467e6e4c75dbb83229e121448c11c19d0e3bc6928b80"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "-R",
+      "^azureus-public-bound$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/public-recovery-r3/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 53.258,
+    "log": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/public-recovery-r3/tests.log",
+    "log_sha256": "974b5418cd8cd2636bc199a74b555de14114b2d4d7d2ed227613dee55af5c027"
+  }
+]

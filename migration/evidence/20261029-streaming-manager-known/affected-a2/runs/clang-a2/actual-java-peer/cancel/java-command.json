@@ -1,0 +1,20 @@
+{
+    "arguments": [
+        "-Xms16m",
+        "-Xmx128m",
+        "-Djava.awt.headless=true",
+        "-Dtime.disabled=true",
+        "-Djbigi.enable=false",
+        "-Djcpuid.enable=false",
+        "-Duser.home=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/clang-a2/actual-java-peer/cancel",
+        "-Djava.io.tmpdir=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/clang-a2/actual-java-peer/cancel",
+        "-cp",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/legacy:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+        "StreamingPeer",
+        "cancel",
+        "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/clang-a2/actual-java-peer/cancel",
+        "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram",
+        "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar"
+    ],
+    "program": "/usr/bin/java"
+}

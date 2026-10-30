@@ -1,0 +1,73 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop
+Connected to MAKE jobserver
+      Start 178: azureus-owned-service
+ 1/19 Test #178: azureus-owned-service ................   Passed    5.72 sec
+      Start 182: azureus-router-owner
+ 2/19 Test #182: azureus-router-owner .................   Passed    0.09 sec
+      Start 189: owned-dht-bytes
+ 3/19 Test #189: owned-dht-bytes ......................   Passed    0.11 sec
+      Start 192: owned-ddb-control
+ 4/19 Test #192: owned-ddb-control ....................   Passed    0.03 sec
+      Start 263: azureus-database-runtime
+ 5/19 Test #263: azureus-database-runtime .............   Passed    2.28 sec
+      Start 285: i2cp-initial-channel
+ 6/19 Test #285: i2cp-initial-channel .................   Passed   14.44 sec
+      Start 289: i2cp-lease-backed-datagram-channel
+ 7/19 Test #289: i2cp-lease-backed-datagram-channel ...   Passed    7.72 sec
+      Start 291: i2cp-bounded-datagram-receiver
+ 8/19 Test #291: i2cp-bounded-datagram-receiver .......   Passed   11.38 sec
+      Start 292: azureus-profile-io
+ 9/19 Test #292: azureus-profile-io ...................   Passed    4.37 sec
+      Start 294: i2cp-explicit-tracker-channel
+10/19 Test #294: i2cp-explicit-tracker-channel ........   Passed    5.53 sec
+      Start 296: azureus-routing
+11/19 Test #296: azureus-routing ......................   Passed    4.16 sec
+      Start 297: pure-i2p-streaming
+12/19 Test #297: pure-i2p-streaming ...................   Passed    0.20 sec
+      Start 298: i2p-original-streaming-peer
+13/19 Test #298: i2p-original-streaming-peer ..........   Passed   18.07 sec
+      Start 299: i2p-original-streaming-upload
+14/19 Test #299: i2p-original-streaming-upload ........   Passed   10.56 sec
+      Start 300: azureus-maintenance
+15/19 Test #300: azureus-maintenance ..................   Passed   81.16 sec
+      Start 301: azureus-public-bound
+16/19 Test #301: azureus-public-bound .................   Passed   66.21 sec
+      Start 302: pure-i2p-streaming-manager
+17/19 Test #302: pure-i2p-streaming-manager ...........   Passed    0.35 sec
+      Start 303: i2cp-bounded-stream-manager
+18/19 Test #303: i2cp-bounded-stream-manager ..........   Passed    6.77 sec
+      Start 304: i2p-original-streaming-manager
+19/19 Test #304: i2p-original-streaming-manager .......***Failed  168.48 sec
+********* Start testing of ManagerInteropTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagerInteropTests::initTestCase()
+FAIL!  : ManagerInteropTests::actualManagerConcurrentHttpInboundBtRenewalAndCancelBeyond120Seconds() 'QFileInfo::exists(bridge.work+'/'+QString::fromLatin1(name))||!bridge.failure.isEmpty()' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_streaming_manager_interop_tests.cpp(107)]
+PASS   : ManagerInteropTests::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 168181ms
+********* Finished testing of ManagerInteropTests *********
+
+
+95% tests passed, 1 tests failed out of 19
+
+Label Time Summary:
+database          =   2.28 sec*proc (1 test)
+explicit-i2p      = 197.11 sec*proc (3 tests)
+i2p               =  46.38 sec*proc (7 tests)
+long              = 168.48 sec*proc (1 test)
+loopback          =  97.80 sec*proc (6 tests)
+namespace         =  66.21 sec*proc (1 test)
+no-network        =   0.55 sec*proc (2 tests)
+owned-loopback    =  45.83 sec*proc (5 tests)
+profile           = 155.90 sec*proc (4 tests)
+reference         = 197.11 sec*proc (3 tests)
+router            =   0.09 sec*proc (1 test)
+routing           = 151.53 sec*proc (3 tests)
+statistics        =   5.94 sec*proc (4 tests)
+unit              = 210.50 sec*proc (16 tests)
+
+Total Test time (real) = 407.64 sec
+
+The following tests FAILED:
+	304 - i2p-original-streaming-manager (Failed)           explicit-i2p long reference
+Errors while running CTest

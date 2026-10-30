@@ -1,0 +1,128 @@
+--- parent/ManagerPeer.java
++++ diagnostic/ManagerPeer.java
+@@ -16,6 +16,26 @@
+ public final class ManagerPeer {
+   static final int ROUNDS=26,MAX_PACKET=32768,MAX_MUX=40960,MAX_FRAMES=4096;
+   static final long MIN_ACTIVITY_NS=125000000000L;
++  // Diagnostic-only: keep the same first-failure CAS and existing main exit.
++  static void reportAsync(AtomicReference<Throwable> target,Throwable failure){
++    if(target.compareAndSet(null,failure))try{synchronized(System.err){
++      System.err.println("OWNED_ASYNC_FAILURE thread="+Thread.currentThread().getName());failure.printStackTrace(System.err);System.err.flush();
++    }}catch(Throwable ignored){} // Reporting must not replace the caught cause.
++  }
++  static void ownedLogging(Path root,Properties contextOptions)throws IOException{
++    Properties log=new Properties();
++    log.setProperty("logger.logFileName",root.resolve("owned-streaming-@.log").toString());
++    log.setProperty("logger.logFileSize","65536");
++    // This actual JAR rotates inclusively through0..limit, hence two slots.
++    log.setProperty("logger.logRotationLimit","1");log.setProperty("logger.gzip","false");
++    log.setProperty("logger.defaultLevel","WARN");log.setProperty("logger.minimumOnScreenLevel","CRIT");
++    log.setProperty("logger.record.net.i2p.client.streaming.impl.ConnectionManager","DEBUG");
++    log.setProperty("logger.record.net.i2p.client.streaming.impl.ConnectionPacketHandler","DEBUG");
++    log.setProperty("logger.flushInterval","1");
++    Path config=root.resolve("owned-logger.config");
++    try(OutputStream out=Files.newOutputStream(config,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE)){log.store(out,"Owned fixture diagnostic logging only");}
++    contextOptions.setProperty("loggerConfigLocation",config.toString());
++  }
+   static void require(boolean ok,String reason){if(!ok)throw new IllegalStateException(reason);}
+   static byte[] bytes(Path p)throws Exception{byte[] b=Files.readAllBytes(p);require(b.length>0&&b.length<=1024,"Bounded synthetic fixture required");return b;}
+   static Destination destination(Path p)throws Exception{ByteArrayInputStream in=new ByteArrayInputStream(bytes(p));Destination d=Destination.create(in);require(in.available()==0,"Trailing Destination");return d;}
+@@ -48,7 +68,7 @@
+         case "addMuxedSessionListener":require(a.length==3&&((Integer)a[1])==6&&((Integer)a[2])==0&&(listener==null||listener==a[0]),"Wrong actual mux listener");listener=(I2PSessionMuxedListener)a[0];return null;
+         case "removeListener":require(a.length==2&&((Integer)a[0])==6&&((Integer)a[1])==0,"Wrong listener removal");listener=null;return null;
+         case "receiveMessage":synchronized(this){require(a.length==1&&pending!=null&&((Integer)a[0])==pendingId,"Wrong/duplicate packet receive");byte[] b=pending;pending=null;pendingId=0;return b;}
+-        case "sendMessage":try{return send(a);}catch(Throwable t){failure.compareAndSet(null,t);throw new I2PSessionException("Fixture protocol6 route failed",t);}
++        case "sendMessage":try{return send(a);}catch(Throwable t){reportAsync(failure,t);throw new I2PSessionException("Fixture protocol6 route failed",t);}
+         case "destroySession":closed.set(true);return null;
+         default:throw new UnsupportedOperationException("Unexpected session API: "+method.toGenericString());
+       }
+@@ -91,12 +111,12 @@
+       require(args.length==3,"OWNED_ROOT FIXTURES MODIFIED_JAR required");Path root=Paths.get(args[0]),fixtures=Paths.get(args[1]);require(root.isAbsolute()&&Files.isDirectory(root),"Fresh owned output required");
+       for(Class<?> c:new Class<?>[]{I2PSocketManagerFull.class,I2PSession.class,SendMessageStatusListener.class,Destination.class,DataHelper.class})require(c.getProtectionDomain().getCodeSource().getLocation().toURI().equals(Paths.get(args[2]).toUri()),"Wrong actual class origin: "+c.getName());
+       for(String name:new String[]{"net.i2p.client.streaming.impl.PacketQueue","net.i2p.client.streaming.impl.I2PSocketFull"}){Class<?> c=Class.forName(name,false,I2PSocketManagerFull.class.getClassLoader());require(c.getProtectionDomain().getCodeSource().getLocation().toURI().equals(Paths.get(args[2]).toUri()),"Wrong actual manager class origin: "+name);}
+-      Properties contextOptions=new Properties();contextOptions.setProperty("time.disabled","true");contextOptions.setProperty("i2p.dir.config",root.toString());contextOptions.setProperty("i2p.dir.base",root.toString());I2PAppContext context=new I2PAppContext(contextOptions);
++      Properties contextOptions=new Properties();contextOptions.setProperty("time.disabled","true");contextOptions.setProperty("i2p.dir.config",root.toString());contextOptions.setProperty("i2p.dir.base",root.toString());ownedLogging(root,contextOptions);I2PAppContext context=new I2PAppContext(contextOptions);
+       Destination local=destination(fixtures.resolve("ed25519.sender")),remote=destination(fixtures.resolve("dsa.sender"));adapter=new Adapter(local,remote,new SigningPrivateKey(SigType.EdDSA_SHA512_Ed25519,bytes(fixtures.resolve("ed25519.known-test-key"))));
+       Properties options=new Properties();options.setProperty("i2p.streaming.enforceProtocol","true");options.setProperty("i2p.streaming.answerPings","false");options.setProperty("i2p.streaming.maxMessageSize","1730");options.setProperty("i2p.streaming.initialWindowSize","1");options.setProperty("i2p.streaming.maxWindowSize","8");options.setProperty("i2p.streaming.readTimeout","30000");options.setProperty("i2p.streaming.writeTimeout","30000");options.setProperty("i2p.streaming.inactivityTimeout","90000");options.setProperty("i2p.streaming.bufferSize","65536");
+       manager=new I2PSocketManagerFull(context,adapter.session,options,"ExplicitNativeManagerInterop",peer->peer.equals(remote));I2PServerSocket server=manager.getServerSocket();server.setSoTimeout(60000);final Adapter route=adapter;final I2PSocketManagerFull actual=manager;
+-      Thread writer=new Thread(()->{try{DataOutputStream out=new DataOutputStream(wireOut);while(true){byte[] mux=route.outgoing.take();out.writeInt(mux.length);out.write(mux);out.flush();}}catch(Throwable t){route.failure.compareAndSet(null,t);}},"actual-manager-packets");writer.setDaemon(true);writer.start();
+-      Thread acceptor=new Thread(()->{try{Set<Integer> ports=new HashSet<>();for(int i=0;i<3;i++){I2PSocket socket=server.accept();require(socket.getPeerDestination().equals(remote)&&ports.add(socket.getPort()),"Wrong/duplicate accepted stream");Thread worker=new Thread(()->{try(I2PSocket owned=socket){http(owned,root);completed.incrementAndGet();}catch(Throwable t){applicationFailure.compareAndSet(null,t);}},"actual-http-"+socket.getPort());worker.setDaemon(true);synchronized(applications){applications.add(worker);}worker.start();}}catch(Throwable t){applicationFailure.compareAndSet(null,t);}},"actual-manager-accept");acceptor.setDaemon(true);applications.add(acceptor);acceptor.start();
++      Thread writer=new Thread(()->{try{DataOutputStream out=new DataOutputStream(wireOut);while(true){byte[] mux=route.outgoing.take();out.writeInt(mux.length);out.write(mux);out.flush();}}catch(Throwable t){reportAsync(route.failure,t);}},"actual-manager-packets");writer.setDaemon(true);writer.start();
++      Thread acceptor=new Thread(()->{try{Set<Integer> ports=new HashSet<>();for(int i=0;i<3;i++){I2PSocket socket=server.accept();require(socket.getPeerDestination().equals(remote)&&ports.add(socket.getPort()),"Wrong/duplicate accepted stream");Thread worker=new Thread(()->{try(I2PSocket owned=socket){http(owned,root);completed.incrementAndGet();}catch(Throwable t){reportAsync(applicationFailure,t);}},"actual-http-"+socket.getPort());worker.setDaemon(true);synchronized(applications){applications.add(worker);}worker.start();}}catch(Throwable t){reportAsync(applicationFailure,t);}},"actual-manager-accept");acceptor.setDaemon(true);applications.add(acceptor);acceptor.start();
+       Thread incoming=new Thread(()->{try{
+         long end=System.nanoTime()+60000000000L;while(!Files.exists(root.resolve("start-inbound.json"))){require(System.nanoTime()<end,"Native listener was not armed");Thread.sleep(10);}
+         I2PSocketOptions connect=actual.buildOptions();connect.setLocalPort(8020);connect.setPort(6881);connect.setConnectTimeout(30000);connect.setReadTimeout(30000);
+@@ -104,7 +124,7 @@
+           for(int round=0;round<ROUNDS;round++){byte[] keep=in.readNBytes(4);require(Arrays.equals(keep,new byte[4]),"Wrong bounded BT keepalive");long at=System.nanoTime();if(round==0)first=at;last=at;out.write(keep);out.flush();}
+           require(last-first>=MIN_ACTIVITY_NS,"Inbound actual activity did not cross120s");require(in.read()==-1,"Native FIN missing on inbound stream");out.close();output(root,"inbound-application.json","{\"status\":\"PASS\",\"handshake_bytes\":68,\"rounds\":"+ROUNDS+",\"actual_activity_ns\":"+(last-first)+",\"actual_manager_socket\":true}");completed.incrementAndGet();
+         }
+-      }catch(Throwable t){applicationFailure.compareAndSet(null,t);}},"actual-manager-initiate");incoming.setDaemon(true);synchronized(applications){applications.add(incoming);}incoming.start();
++      }catch(Throwable t){reportAsync(applicationFailure,t);}},"actual-manager-initiate");incoming.setDaemon(true);synchronized(applications){applications.add(incoming);}incoming.start();
+       output(root,"peer-ready.json","{\"status\":\"ACTUAL_MANAGER_PROTOCOL6_LISTENER\",\"router\":false,\"session_adapter_only\":true}");
+       DataInputStream in=new DataInputStream(System.in);while(true){int first=in.read();if(first<0)break;int length=(first<<24)|(in.readUnsignedByte()<<16)|(in.readUnsignedByte()<<8)|in.readUnsignedByte();require(length>=20&&length<=MAX_MUX,"Unbounded framed protocol packet");byte[] mux=new byte[length];in.readFully(mux);adapter.receive(mux);if(adapter.failure.get()!=null)throw new IllegalStateException("Packet route failed",adapter.failure.get());if(applicationFailure.get()!=null)throw new IllegalStateException("Actual manager application failed",applicationFailure.get());}
+       List<Thread> joined;synchronized(applications){joined=new ArrayList<>(applications);}for(Thread thread:joined){thread.join(3000);require(!thread.isAlive(),"Application thread failed to join");}
+--- parent/StreamingPeer.java
++++ diagnostic/StreamingPeer.java
+@@ -20,6 +20,26 @@
+   static final int UPLOAD_SIZE=128*1024;
+   static final byte[] UPLOAD_HEADER=("POST /owned-upload HTTP/1.0\r\nHost: owned.i2p\r\nContent-Length: "+UPLOAD_SIZE+"\r\n\r\n").getBytes(StandardCharsets.US_ASCII);
+   static final byte[] REQUEST="GET /owned-stream HTTP/1.0\r\nHost: owned.i2p\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
++  // Diagnostic-only: keep the same first-failure CAS and existing main exit.
++  static void reportAsync(AtomicReference<Throwable> target,Throwable failure){
++    if(target.compareAndSet(null,failure))try{synchronized(System.err){
++      System.err.println("OWNED_ASYNC_FAILURE thread="+Thread.currentThread().getName());failure.printStackTrace(System.err);System.err.flush();
++    }}catch(Throwable ignored){} // Reporting must not replace the caught cause.
++  }
++  static void ownedLogging(Path root,Properties contextOptions)throws IOException{
++    Properties log=new Properties();
++    log.setProperty("logger.logFileName",root.resolve("owned-streaming-@.log").toString());
++    log.setProperty("logger.logFileSize","65536");
++    // This actual JAR rotates inclusively through0..limit, hence two slots.
++    log.setProperty("logger.logRotationLimit","1");log.setProperty("logger.gzip","false");
++    log.setProperty("logger.defaultLevel","WARN");log.setProperty("logger.minimumOnScreenLevel","CRIT");
++    log.setProperty("logger.record.net.i2p.client.streaming.impl.ConnectionManager","DEBUG");
++    log.setProperty("logger.record.net.i2p.client.streaming.impl.ConnectionPacketHandler","DEBUG");
++    log.setProperty("logger.flushInterval","1");
++    Path config=root.resolve("owned-logger.config");
++    try(OutputStream out=Files.newOutputStream(config,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE)){log.store(out,"Owned fixture diagnostic logging only");}
++    contextOptions.setProperty("loggerConfigLocation",config.toString());
++  }
+   static void require(boolean ok,String why){if(!ok)throw new IllegalStateException(why);}
+   static byte[] read(Path p)throws Exception{byte[] b=Files.readAllBytes(p);require(b.length>0&&b.length<=1024,"Bounded synthetic fixture required");return b;}
+   static Destination destination(Path p)throws Exception{ByteArrayInputStream in=new ByteArrayInputStream(read(p));Destination d=Destination.create(in);require(in.available()==0,"Trailing Destination");return d;}
+@@ -66,7 +86,7 @@
+         case "receiveMessage":{
+           synchronized(this){require(a.length==1&&pending!=null&&((Integer)a[0])==pendingId,"Wrong/duplicate receiveMessage");byte[] b=pending;pending=null;pendingId=0;return b;}
+         }
+-        case "sendMessage":try{return send(a);}catch(Throwable t){failure.compareAndSet(null,t);throw new I2PSessionException("Fixture protocol6 route failed",t);}
++        case "sendMessage":try{return send(a);}catch(Throwable t){reportAsync(failure,t);throw new I2PSessionException("Fixture protocol6 route failed",t);}
+         case "destroySession":closed.set(true);return null;
+         default:throw new UnsupportedOperationException("Unexpected fixture I2PSession call: "+method.toGenericString());
+       }
+@@ -103,7 +123,7 @@
+       root=Paths.get(args[1]);require(root.isAbsolute()&&Files.isDirectory(root),"Owned absolute output required");Path fixtures=Paths.get(args[2]);
+       for(Class<?> c:new Class<?>[]{I2PSocketManagerFull.class,I2PSession.class,Destination.class,DataHelper.class})require(c.getProtectionDomain().getCodeSource().getLocation().toURI().equals(Paths.get(args[3]).toUri()),"Wrong modified class origin: "+c.getName());
+       Properties contextOptions=new Properties();contextOptions.setProperty("time.disabled","true");contextOptions.setProperty("i2p.dir.config",root.toString());contextOptions.setProperty("i2p.dir.base",root.toString());
+-      I2PAppContext context=new I2PAppContext(contextOptions);Destination local=destination(fixtures.resolve("ed25519.sender")),remote=destination(fixtures.resolve("dsa.sender"));
++      ownedLogging(root,contextOptions);I2PAppContext context=new I2PAppContext(contextOptions);Destination local=destination(fixtures.resolve("ed25519.sender")),remote=destination(fixtures.resolve("dsa.sender"));
+       adapter=new Adapter(local,remote,new SigningPrivateKey(SigType.EdDSA_SHA512_Ed25519,read(fixtures.resolve("ed25519.known-test-key"))));
+       Properties options=new Properties();options.setProperty("i2p.streaming.enforceProtocol","true");options.setProperty("i2p.streaming.answerPings","false");options.setProperty("i2p.streaming.maxMessageSize","1730");options.setProperty("i2p.streaming.initialWindowSize","1");options.setProperty("i2p.streaming.maxWindowSize","4");options.setProperty("i2p.streaming.readTimeout","30000");options.setProperty("i2p.streaming.writeTimeout","30000");options.setProperty("i2p.streaming.inactivityTimeout","60000");options.setProperty("i2p.streaming.bufferSize","65536");
+       // A supported explicit test option makes genuine response packets
+@@ -112,7 +132,7 @@
+       if(mode.equals("recovery"))options.setProperty("i2p.streaming.initialWindowSize","4");
+       manager=new I2PSocketManagerFull(context,adapter.session,options,"ExplicitNativeInterop",peer->peer.equals(remote));I2PServerSocket server=manager.getServerSocket();server.setSoTimeout(60000);
+       final Adapter route=adapter;final Path outputRoot=root;
+-      Thread writer=new Thread(()->{try{DataOutputStream out=new DataOutputStream(wireOut);while(true){byte[] mux=route.outgoing.take();out.writeInt(mux.length);out.write(mux);out.flush();}}catch(Throwable t){route.failure.compareAndSet(null,t);}},"original-peer-packets");writer.setDaemon(true);writer.start();
++      Thread writer=new Thread(()->{try{DataOutputStream out=new DataOutputStream(wireOut);while(true){byte[] mux=route.outgoing.take();out.writeInt(mux.length);out.write(mux);out.flush();}}catch(Throwable t){reportAsync(route.failure,t);}},"original-peer-packets");writer.setDaemon(true);writer.start();
+       Thread application=new Thread(()->{try{
+         try(I2PSocket socket=server.accept()){
+           require(socket.getPeerDestination().equals(remote)&&socket.getLocalPort()==80&&socket.getPort()==9000,"Wrong actual accepted Streaming connection");socket.setReadTimeout(30000);
+@@ -130,7 +150,7 @@
+           }
+         }
+         appDone.set(true);output(outputRoot,"peer-application.json","{\"status\":\"PASS\",\"mode\":\""+mode+"\",\"actual_manager_socket\":true"+(mode.equals("upload")?",\"upload_bytes\":"+UPLOAD_SIZE+",\"upload_sha256\":\""+uploadDigest.get()+"\"":"")+"}");
+-      }catch(Throwable t){appFailure.compareAndSet(null,t);}},"original-peer-application");application.setDaemon(true);application.start();
++      }catch(Throwable t){reportAsync(appFailure,t);}},"original-peer-application");application.setDaemon(true);application.start();
+       output(root,"peer-ready.json","{\"status\":\"ACTUAL_MANAGER_PROTOCOL6_LISTENER\",\"router\":false,\"session_adapter_only\":true}");
+       // Only real protocol6 payloads traverse stdin/stdout. EOF is a fixture
+       // transport shutdown, not an invented application FIN or protocol ACK.

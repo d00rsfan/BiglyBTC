@@ -1,0 +1,13 @@
+Root-only current-M affected-suite association; not a fresh full19/22 run. No native/adopter/private/publisher/closeout changes.
+
+After source review:
+
+  nice -n 5 make --no-print-directory -j3 -f "$TASK/jobs.mk" SOURCE_COMMIT=72b44fb182a9b97722317b6ac57a99a1601d704e ADOPTION="$TASK/effective-adoption.json" ATTEMPT=a1
+
+TASK is this directory. effective-adoption.json derives the actual original24 source paths plus diagnostic3→25 effective paths, with original beforeimages and explicit parent receipts. It records association of already-committed source; it performs no adoption or source mutation. Production is unchanged across42d→72; the only3differences are both test diagnostic leaves and Public outer CTest budget240→1000.
+
+All lanes build only ACTOR and MANAGER in one FIFO3 pool, Clang first; subject-only flock serializes actual tests. Clang/GCC run3 fresh CTest suites (peer, upload, manager). SAN runs2 fresh suites (peer, upload), and explicitly reuses completed current D2 manager: exact current ELF, full3-case QtJUnit (init, sole actual method, cleanup), unchanged fullsource/tools/deps/reference, all4 actual Java applications/26rounds/renewal/cancel/close evidence. New runner javac count0; actual root preparation5af8 supplies reviewed4diagnostic classes, not old helper substitutes.
+
+Each result has associated-suites.json with exact per-row result/XML/canonical-row hash/image and execution mode. There is no synthetic full-pass JUnit. Retained original r2 passes are16common/18GCC with current identical ELF bytes, library/tool dependencies and test definitions; only Public outer budget differs, explicitly checked. Original r2FAIL results and all failure histories remain unchanged. GCC Public stays BLOCKED with original r2failure and later270s auth refusal (no drop marker, empty subject output); this recipe never reruns/credits Public. Successful GCC result is ASSOCIATED_CURRENT_M_BLOCKED_PUBLIC, not completed qualification. No historical different-source pooling.
+
+Current-M intermittent SYN and final-close failures remain UNRESOLVED. A later passing finite run neither establishes their cause nor claims a fix/stability/performance parity. This exact limitation belongs in eventual REVIEW. Private/closeout adaptation follows actual outcomes only. User instruction remains finish CURRENT milestone then STOP; all DATA/room/SDK work stays paused. Author checks were read-only source/hash/AST/origin counts only; no compilers/helpers/tests/admin/network/N edits.

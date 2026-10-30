@@ -1,0 +1,876 @@
+--- a/preview/native/services/i2cp_channel/channel.cpp
++++ b/preview/native/services/i2cp_channel/channel.cpp
+@@ -14,6 +14,7 @@
+ #include <cstring>
+ #include <deque>
+ #include <limits>
++#include <stdexcept>
+ #include <type_traits>
+ 
+ namespace biglybtc::services::i2p::i2cp {
+@@ -176,7 +177,7 @@
+     if(!identity.valid()||!identity.destination()){return reject(Code::KeyMismatch,"No live client identity");}
+     if(consume&&!ls2Router()){return reject(Code::Unsupported,"Explicit LeaseSet2 requires a supported numeric router version");}
+     if(update&&waitingFirstLease){return reject(Code::Unsupported,"Initial LeaseSet request is still outstanding");}
+-    if(update&&stream&&stream->active()){return reject(Code::Unsupported,"Streaming operation is still outstanding");}
++    if(update&&streamsOutstanding()){return reject(Code::Unsupported,"Streaming operation is still outstanding");}
+     if(update&&tracker){return reject(Code::Unsupported,"Explicit tracker operation is still outstanding");}
+     if(update&&statusPending){return reject(Code::Unsupported,"Datagram status request is still outstanding");}
+     if(update&&(!session||identity.destination()->wire!=acceptedDestination||revision==std::numeric_limits<std::uint64_t>::max())){
+@@ -222,9 +223,18 @@
+     }catch(...){if(state==State::Creating||state==State::Reconfiguring){fail(Failure::Resources);}return reject(Code::CryptoFailure,"I2CP request resources unavailable");}
+   }
+   void answerLease(Frame frame){
++    const auto end=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);
++    if(managedStreams&&socket.bytesToWrite()!=0){
++      auto request=decodeLeaseRequest(frame);
++      if(managedLease||!managedCurrent()||!request||request->sessionId!=*session){fail(Failure::InvalidLeaseSet);return;}
++      managedLease.emplace(DeferredLease{std::move(frame),end,generation});armManagedStreams(true);return;
++    }
++    answerLeaseWithin(std::move(frame),end);
++  }
++  void answerLeaseWithin(Frame frame,Clock::time_point end){
+     if(!leaseSigner||!session||(state!=State::SessionCreated&&state!=State::Reconfiguring)){fail(Failure::UnsupportedMessage);return;}
+     if(expired()){return;}
+-    const auto end=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);const auto at=generation;
++    if(Clock::now()>=end){fail(Failure::Deadline);return;}const auto at=generation;
+     auto requested=decodeLeaseRequest(frame);
+     if(!requested||requested->sessionId!=*session||!leaseSigner->valid()||!leaseSigner->destination()||leaseSigner->destination()->wire!=acceptedDestination){fail(Failure::InvalidLeaseSet);return;}
+     auto policy=leaseSetPolicy(acceptedOptions);if(!policy){fail(Failure::InvalidLeaseSet);return;}
+@@ -295,7 +305,7 @@
+   ConfigResult<std::uint32_t> submit(View recipient,View payload,const DatagramOptions& opts,bool claimed){
+     using Code=::biglybtc::services::i2p::ErrorCode;auto reject=[](Code code,const char* text)->ConfigResult<std::uint32_t>{return std::unexpected(::biglybtc::services::i2p::Error{code,text});};
+     if(!onThread()){return reject(Code::InvalidFormat,"Datagram request belongs to channel thread");}
+-    if(state!=State::SessionCreated||waitingFirstLease||statusPending||tracker||(stream&&stream->active())||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Current unexpired owned LS2 and idle datagram/write state required");}
++    if(state!=State::SessionCreated||waitingFirstLease||statusPending||tracker||streamsOutstanding()||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Current unexpired owned LS2 and idle datagram/write state required");}
+     if(!statusReplies){return reject(Code::Unsupported,"Initial reliability none cannot request tracked statuses");}
+     if(nextDatagramNonce>std::numeric_limits<std::uint32_t>::max()){return reject(Code::TooLarge,"Datagram nonce lifetime exhausted; never reuse");}
+     try{
+@@ -315,6 +325,7 @@
+     }catch(...){if(statusPending){fail(Failure::Resources);}return reject(Code::CryptoFailure,"Datagram resources unavailable");}
+   }
+ #include "streaming.inc"
++#include "managed_streams.inc"
+ #include "tracker.inc"
+ #include "receive.inc"
+   void drain(){
+@@ -399,7 +410,7 @@
+     QObject::connect(&receiveTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{receiveDeadline();}catch(...){fail(Failure::Resources);}}});
+     QObject::connect(&trackerTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{trackerDeadline();}catch(...){fail(Failure::Resources);}}});
+     QObject::connect(&streamTimer,&QTimer::timeout,q,[this,at]{if(current(at)){flushStream();}});
+-    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){flushReceiveControls();flushTrackerWrite();flushStream();}});
++    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){if(managedLease){(void)flushManagedLease();}if(current(at)){flushReceiveControls();flushTrackerWrite();flushStream();}}});
+     state=State::Connecting;expires=Clock::now()+std::chrono::milliseconds(next.deadlineMilliseconds);
+     timer.start(next.deadlineMilliseconds);notify();
+     if(!current(at)||state!=State::Connecting){return false;}
+@@ -443,18 +454,29 @@
+ ConfigResult<std::uint64_t> InitialChannel::scrapeTracker(const TrackerRequest& input){return impl_->startTracker(input);}
+ bool InitialChannel::cancelTracker(std::uint64_t operation){if(!impl_->onThread()||!impl_->tracker||impl_->tracker->operation!=operation){return false;}impl_->finishTracker(TrackerPhase::LocalCancelled);return true;}
+ std::optional<TrackerObservation> InitialChannel::trackerObservation()const{return sessionId()?impl_->trackerResult:std::nullopt;}
+-ConfigResult<std::uint64_t> InitialChannel::connectStream(View destination,const StreamOptions& options){return impl_->startStream(destination,options);}
+-ConfigResult<void> InitialChannel::writeStream(std::uint64_t operation,View bytes){return impl_->streamWrite(operation,bytes);}
+-ConfigResult<Bytes> InitialChannel::takeStreamBytes(std::uint64_t operation,std::size_t maximum){return impl_->streamRead(operation,maximum);}
++ConfigResult<std::uint64_t> InitialChannel::connectStream(View destination,const StreamOptions& options){return impl_->managedStreams?impl_->startManagedStream(destination,options):impl_->startStream(destination,options);}
++ConfigResult<void> InitialChannel::writeStream(std::uint64_t operation,View bytes){return impl_->managedStreams?impl_->writeManagedStream(operation,bytes):impl_->streamWrite(operation,bytes);}
++ConfigResult<Bytes> InitialChannel::takeStreamBytes(std::uint64_t operation,std::size_t maximum){return impl_->managedStreams?impl_->readManagedStream(operation,maximum):impl_->streamRead(operation,maximum);}
+ bool InitialChannel::finishStreamWrite(std::uint64_t operation){
++  if(impl_->managedStreams){if(!impl_->onThread()||!impl_->managedCurrent()){return false;}try{const bool ok=impl_->managedStreams->finishWrite(operation,impl_->streamNow());impl_->flushManagedStreams();impl_->armManagedStreams();impl_->notifyStream();return ok&&impl_->active();}catch(...){impl_->fail(Failure::Resources);return false;}}
+   if(!impl_->onThread()||!impl_->stream||impl_->stream->observation().operation!=operation||!impl_->streamCurrent()||!impl_->stream->active()){return false;}
+   impl_->stream->finishWrite();impl_->flushStream();return impl_->stream.has_value()&&(impl_->stream->active()||impl_->stream->observation().phase==streaming::Phase::Closed)&&impl_->current(impl_->streamGeneration);
+ }
+ bool InitialChannel::cancelStream(std::uint64_t operation){
++  if(impl_->managedStreams){if(!impl_->onThread()){return false;}const bool ok=impl_->managedStreams->cancel(operation);impl_->flushManagedStreams();impl_->armManagedStreams();impl_->notifyStream();return ok;}
+   if(!impl_->onThread()||!impl_->stream||impl_->stream->observation().operation!=operation||!impl_->stream->active()){return false;}
+   impl_->stream->terminate(streaming::Phase::Cancelled);impl_->streamTimer.stop();if(!impl_->receiverEnabled&&!impl_->trackerReceives()&&impl_->fetch){impl_->cancelFetch(ReceiveDrop::Cancelled);}impl_->notifyStream();return true;
+ }
+-std::optional<streaming::Observation> InitialChannel::streamObservation()const noexcept{return sessionId()&&impl_->stream?std::optional(impl_->stream->observation()):std::nullopt;}
++std::optional<streaming::Observation> InitialChannel::streamObservation()const noexcept{if(impl_->managedStreams){const auto value=managedStreamObservation(impl_->managedLastOperation);return value?std::optional(value->stream):std::nullopt;}return sessionId()&&impl_->stream?std::optional(impl_->stream->observation()):std::nullopt;}
++bool InitialChannel::enableStreamManager(const streaming::ManagerOptions& options){return impl_->enableManagedStreams(options);}
++bool InitialChannel::listenStreams(const streaming::ListenOptions& options){return impl_->listenManagedStreams(options);}
++void InitialChannel::closeStreamListener(){if(!impl_->onThread()||!impl_->managedStreams){return;}try{impl_->managedStreams->stopListening();if(!impl_->receiverEnabled&&!impl_->trackerReceives()&&!impl_->streamReceives()&&impl_->fetch){impl_->cancelFetch(ReceiveDrop::Cancelled);}impl_->armManagedStreams();impl_->notifyStream();}catch(...){impl_->fail(Failure::Resources);}}
++ConfigResult<std::uint64_t> InitialChannel::acceptStream(){return impl_->startManagedStream({},StreamOptions{},true);}
++std::optional<streaming::ManagedObservation> InitialChannel::managedStreamObservation(std::uint64_t operation)const noexcept{return sessionId()&&impl_->managedStreams?impl_->managedStreams->observation(operation):std::nullopt;}
++streaming::ManagerObservation InitialChannel::streamManagerObservation()const noexcept{return impl_->managedStreams?impl_->managedStreams->observation():streaming::ManagerObservation{};}
++bool InitialChannel::waitStream(std::uint64_t operation,streaming::WaitFor kind,std::size_t minimum,unsigned period){if(!impl_->onThread()||!impl_->managedCurrent()){return false;}try{const bool ok=impl_->managedStreams->wait(operation,kind,minimum,period,impl_->streamNow());impl_->armManagedStreams();impl_->notifyStream();return ok&&impl_->active();}catch(...){impl_->fail(Failure::Resources);return false;}}
++bool InitialChannel::releaseStream(std::uint64_t operation){if(!impl_->onThread()||!impl_->managedStreams){return false;}const bool ok=impl_->managedStreams->release(operation);impl_->armManagedStreams();impl_->notifyStream();return ok;}
++
+ InitialChannel::State InitialChannel::state()const noexcept{return impl_->state;}
+ InitialChannel::Failure InitialChannel::failure()const noexcept{return impl_->failure;}
+ bool InitialChannel::socketActive()const noexcept{return impl_->socket.state()!=QAbstractSocket::UnconnectedState;}
+--- a/preview/native/services/i2cp_channel/channel.hpp
++++ b/preview/native/services/i2cp_channel/channel.hpp
+@@ -6,6 +6,7 @@
+ #include "messages.hpp"
+ #include "tracker.hpp"
+ #include "stream.hpp"
++#include "manager.hpp"
+ #include <QHostAddress>
+ #include <QObject>
+ #include <memory>
+@@ -102,6 +103,18 @@
+   bool finishStreamWrite(std::uint64_t operation);
+   bool cancelStream(std::uint64_t operation); // Local withdrawal, no remote ACK claim.
+   [[nodiscard]] std::optional<streaming::Observation> streamObservation()const noexcept;
++  // Explicit four-stream mode, requiring a current retained identity/session/LS2.
++  // Default single-stream behavior and its total deadline remain unchanged.
++  bool enableStreamManager(const streaming::ManagerOptions&);
++  bool listenStreams(const streaming::ListenOptions&); // Full allowed peers + exact ports.
++  void closeStreamListener();
++  [[nodiscard]] ConfigResult<std::uint64_t> acceptStream();
++  [[nodiscard]] std::optional<streaming::ManagedObservation> managedStreamObservation(std::uint64_t)const noexcept;
++  [[nodiscard]] streaming::ManagerObservation streamManagerObservation()const noexcept;
++  // A finite wait reports Ready/TimedOut locally; timeout does not close a stream.
++  // Replaces only a settled prior wait. It grants no socket/session authority.
++  bool waitStream(std::uint64_t,streaming::WaitFor,std::size_t minimumBytes,unsigned timeoutMilliseconds);
++  bool releaseStream(std::uint64_t); // Terminal+drained; live operations refuse.
+   [[nodiscard]] State state()const noexcept;
+   [[nodiscard]] Failure failure()const noexcept;
+   [[nodiscard]] bool socketActive()const noexcept;
+--- /dev/null
++++ b/preview/native/services/i2cp_channel/managed_streams.inc
+@@ -0,0 +1,129 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++// Inside InitialChannel::Impl. Explicit manager only; legacy defaults unchanged.
++  std::optional<streaming::Manager> managedStreams;
++  std::uint64_t managedGeneration=0,managedLastOperation=0;
++  struct DeferredLease {Frame frame;Clock::time_point end;std::uint64_t generation=0;};
++  std::optional<DeferredLease> managedLease;
++  bool managedCurrent(){
++    if(!managedStreams){return false;}
++    if(generation!=managedGeneration||state!=State::SessionCreated||!leaseCurrent()){
++      managedStreams->terminate(streaming::Phase::LeaseExpired);managedLease.reset();streamTimer.stop();notifyStream();return false;
++    }
++    return true;
++  }
++  bool managedReceives()const{
++    return managedStreams&&generation==managedGeneration&&state==State::SessionCreated&&leaseCurrent()&&managedStreams->receives();
++  }
++  void clearManagedStreams(){managedLease.reset();managedStreams.reset();managedGeneration=0;managedLastOperation=0;}
++  bool streamsOutstanding()const{return (stream&&stream->active())||(managedStreams&&managedStreams->receives());}
++  void armManagedStreams(bool blocked=false)noexcept{try{
++    if(!managedCurrent()){return;}
++    const auto now=observedNow();if(!now){fail(Failure::InvalidDate);return;}
++    auto wait=static_cast<std::int64_t>(leaseSubmission->expiresMilliseconds-*now);
++    if(managedLease){wait=std::min(wait,std::chrono::duration_cast<std::chrono::milliseconds>(managedLease->end-Clock::now()).count());}
++    if(!blocked){if(auto due=managedStreams->wakeup()){const auto stamp=streamNow();wait=std::min(wait,static_cast<std::int64_t>(*due>stamp?*due-stamp:1));}}
++    streamTimer.start(static_cast<int>(std::clamp<std::int64_t>(wait,1,std::numeric_limits<int>::max())));
++  }catch(...){fail(Failure::Resources);}}
++  bool reserveManagedIdentity(std::uint64_t& operation,std::uint32_t& id){
++    if(streamIdCount==streamIds.size()||nextStreamOperation==std::numeric_limits<std::uint64_t>::max()){return false;}
++    bool selected=false;
++    for(unsigned attempt=0;attempt<8;++attempt){
++      if(RAND_bytes(reinterpret_cast<unsigned char*>(&id),sizeof(id))!=1){return false;}
++      if(id&&std::find(streamIds.begin(),streamIds.begin()+static_cast<std::ptrdiff_t>(streamIdCount),id)==streamIds.begin()+static_cast<std::ptrdiff_t>(streamIdCount)){selected=true;break;}
++    }
++    if(!selected){return false;}operation=nextStreamOperation;return true;
++  }
++  void commitManagedIdentity(std::uint64_t operation,std::uint32_t id)noexcept{
++    streamIds[streamIdCount++]=id;++nextStreamOperation;managedLastOperation=operation;
++  }
++  bool flushManagedLease(){
++    if(!managedLease){return true;}
++    if(!managedCurrent()){return false;}
++    if(managedLease->generation!=generation||Clock::now()>=managedLease->end){fail(Failure::Deadline);return false;}
++    if(socket.bytesToWrite()!=0){return false;}
++    auto queued=std::move(*managedLease);managedLease.reset();answerLeaseWithin(std::move(queued.frame),queued.end);
++    return active()&&socket.bytesToWrite()==0;
++  }
++  void flushManagedStreams(){
++    if(streamFlushing||!managedStreams){return;}
++    try{
++      if(!managedCurrent()){return;}
++      if(managedLease&&!flushManagedLease()){if(active()){armManagedStreams(true);}return;}
++      if(socket.bytesToWrite()!=0){armManagedStreams(true);return;}
++      streamFlushing=true;const auto at=generation;
++      for(std::size_t attempts=0;attempts<streaming::MaximumStreams;++attempts){
++      auto outbound=managedStreams->next(streamNow());
++      if(!outbound){streamFlushing=false;armManagedStreams();notifyStream();return;}
++      const auto* peer=managedStreams->peer(outbound->operation);if(!peer){streamFlushing=false;fail(Failure::Resources);return;}
++      auto encoded=streaming::encode(outbound->packet,*leaseSigner);
++      if(!encoded){streamFlushing=false;fail(Failure::Resources);return;}
++      auto mux=streaming::encodeMux({outbound->ports.local,outbound->ports.remote,std::move(*encoded)});const auto now=observedNow();
++      if(!mux||!now||*now>0xffffffffffffULL-45000){streamFlushing=false;fail(Failure::Resources);return;}
++      std::optional<std::uint64_t> expiry;if(auto timeout=managedStreams->transmitTimeout(*outbound)){expiry=*now+std::max(25U,*timeout-25);}
++      const bool final=outbound->packet.flags&(streaming::Close|streaming::Reset);
++      auto frame=encodeSendDatagram({*session,*peer,std::move(*mux),0,expiry,final});
++      if(!frame){streamFlushing=false;fail(Failure::Resources);return;}
++      if(!current(at)||!managedCurrent()){streamFlushing=false;return;}
++      // Recheck absolute handshake/wait/idle gates after signing/compression.
++      managedStreams->tick(streamNow());const auto currentStream=managedStreams->observation(outbound->operation);
++      if(!currentStream||(!managedStreams->peer(outbound->operation))||(currentStream->stream.phase!=streaming::Phase::Connecting&&currentStream->stream.phase!=streaming::Phase::Established&&currentStream->stream.phase!=streaming::Phase::ReadEof&&currentStream->stream.phase!=streaming::Phase::Closed)){continue;}
++      const auto written=socket.write(reinterpret_cast<const char*>(frame->data()),static_cast<qint64>(frame->size()));
++      if(!current(at)||!managedStreams){streamFlushing=false;return;}
++      if(written!=static_cast<qint64>(frame->size())){streamFlushing=false;fail(Failure::WriteFailed);return;}
++      managedStreams->dispatched(*outbound,streamNow());streamFlushing=false;armManagedStreams();notifyStream();return;
++      }
++      streamFlushing=false;armManagedStreams();notifyStream();
++    }catch(...){streamFlushing=false;fail(Failure::Resources);}
++  }
++  void observeManagedStream(View payload,std::optional<Clock::time_point> receiveEnd){
++    if(!managedCurrent()){return;}auto mux=streaming::decodeMux(payload);if(!mux){dropReceive(ReceiveDrop::Malformed);return;}
++    if(!managedCurrent()||(receiveEnd&&Clock::now()>=*receiveEnd)){return;}
++    const auto at=generation;managedStreams->receive(*mux,streamNow(),streamNow,[this,at,receiveEnd]{return current(at)&&state==State::SessionCreated&&leaseCurrent()&&(!receiveEnd||Clock::now()<*receiveEnd);});flushManagedStreams();armManagedStreams();notifyStream();
++  }
++  bool enableManagedStreams(const streaming::ManagerOptions& policy){
++    if(!onThread()||managedStreams||(stream&&!stream->drained())||streamsOutstanding()||tracker||statusPending||state!=State::SessionCreated||waitingFirstLease||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0||fetch){return false;}
++    try{
++      streaming::Manager prepared(*leaseSigner->destination(),policy,[](unsigned bound){
++        if(!bound){throw std::runtime_error("Invalid Streaming entropy bound");}
++        const auto limit=std::numeric_limits<std::uint32_t>::max()-(std::numeric_limits<std::uint32_t>::max()%bound);
++        for(unsigned attempt=0;attempt<8;++attempt){std::uint32_t value=0;if(RAND_bytes(reinterpret_cast<unsigned char*>(&value),sizeof(value))!=1){throw std::runtime_error("Streaming entropy unavailable");}if(value<limit){return value%bound;}}
++        throw std::runtime_error("Streaming entropy rejection exhausted");
++      });
++      if(!prepared.valid()||!leaseCurrent()){return false;}
++      managedStreams.emplace(std::move(prepared));managedGeneration=generation;armManagedStreams();notifyStream();return active()&&managedStreams.has_value();
++    }catch(...){fail(Failure::Resources);return false;}
++  }
++  ConfigResult<std::uint64_t> startManagedStream(View wire,const StreamOptions& input,bool accepting=false){
++    using Code=::biglybtc::services::i2p::ErrorCode;
++    const auto refuse=[](Code code,const char* reason)->ConfigResult<std::uint64_t>{return std::unexpected(::biglybtc::services::i2p::Error{code,reason});};
++    if(!onThread()||!managedCurrent()||input.deadlineMilliseconds<1||input.deadlineMilliseconds>120000){return refuse(Code::Unsupported,"Current manager and finite handshake required");}
++    std::uint64_t operation=0;std::uint32_t id=0;if(!reserveManagedIdentity(operation,id)){return refuse(Code::TooLarge,"Streaming lifetime identity budget exhausted");}
++    try{
++      ConfigResult<void> accepted;
++      if(accepting){accepted=managedStreams->accept(operation,id,streamNow());}
++      else{
++        auto peer=decodeDestination(wire);if(!peer){return std::unexpected(peer.error());}
++        if(!managedCurrent()){return refuse(Code::Unsupported,"Manager identity/lease changed");}
++        accepted=managedStreams->connect(operation,id,std::move(*peer),{{input.fromPort,input.toPort},static_cast<unsigned>(input.deadlineMilliseconds),input.maximumWindow},streamNow());
++      }
++      if(!accepted){return std::unexpected(accepted.error());}
++      commitManagedIdentity(operation,id);flushManagedStreams();armManagedStreams();notifyStream();
++      if(!active()||!managedStreams){return refuse(Code::CryptoFailure,"Managed stream initial dispatch failed");}return operation;
++    }catch(...){fail(Failure::Resources);return refuse(Code::CryptoFailure,"Managed stream resources unavailable");}
++  }
++  bool listenManagedStreams(const streaming::ListenOptions& provided){
++    if(!onThread()||!managedCurrent()||provided.peers.empty()||provided.peers.size()>streaming::MaximumStreams){return false;}
++    try{
++      streaming::ListenOptions input;input.ports=provided.ports;input.maximumWindow=provided.maximumWindow;
++      for(const auto& peer:provided.peers){auto decoded=decodeDestination(peer.wire);if(!decoded){return false;}input.peers.push_back(std::move(*decoded));}
++      if(!managedCurrent()){return false;}auto result=managedStreams->listen(std::move(input),streamNow());if(!result){return false;}armManagedStreams();notifyStream();return active();
++    }catch(...){fail(Failure::Resources);return false;}
++  }
++  ConfigResult<void> writeManagedStream(std::uint64_t op,View bytes){
++    if(!onThread()||!managedCurrent()){return std::unexpected(::biglybtc::services::i2p::Error{::biglybtc::services::i2p::ErrorCode::Unsupported,"Current managed stream required"});}
++    try{auto result=managedStreams->write(op,bytes,streamNow());if(!result){return result;}flushManagedStreams();armManagedStreams();notifyStream();const auto observed=managedStreams?managedStreams->observation(op):std::nullopt;if(!active()||!observed||(observed->stream.phase!=streaming::Phase::Connecting&&observed->stream.phase!=streaming::Phase::Established&&observed->stream.phase!=streaming::Phase::ReadEof)){return std::unexpected(::biglybtc::services::i2p::Error{::biglybtc::services::i2p::ErrorCode::CryptoFailure,"Managed dispatch failed"});}return {};}catch(...){fail(Failure::Resources);return std::unexpected(::biglybtc::services::i2p::Error{::biglybtc::services::i2p::ErrorCode::CryptoFailure,"Managed resources unavailable"});}
++  }
++  ConfigResult<Bytes> readManagedStream(std::uint64_t op,std::size_t maximum){
++    if(!onThread()||!managedCurrent()){return std::unexpected(::biglybtc::services::i2p::Error{::biglybtc::services::i2p::ErrorCode::Unsupported,"Current managed stream required"});}
++    try{auto result=managedStreams->read(op,maximum,streamNow());flushManagedStreams();if(!managedCurrent()){return std::unexpected(::biglybtc::services::i2p::Error{::biglybtc::services::i2p::ErrorCode::Unsupported,"Managed authority expired during read"});}managedStreams->tick(streamNow());const auto observed=managedStreams->observation(op);if(!observed||(observed->stream.phase!=streaming::Phase::Connecting&&observed->stream.phase!=streaming::Phase::Established&&observed->stream.phase!=streaming::Phase::ReadEof&&observed->stream.phase!=streaming::Phase::Closed)){return std::unexpected(::biglybtc::services::i2p::Error{::biglybtc::services::i2p::ErrorCode::Unsupported,"Managed operation expired during read"});}armManagedStreams();notifyStream();return result;}catch(...){fail(Failure::Resources);return std::unexpected(::biglybtc::services::i2p::Error{::biglybtc::services::i2p::ErrorCode::CryptoFailure,"Managed resources unavailable"});}
++  }
+--- a/preview/native/services/i2cp_channel/streaming.inc
++++ b/preview/native/services/i2cp_channel/streaming.inc
+@@ -7,13 +7,14 @@
+   std::array<std::uint32_t,1024> streamIds{};std::size_t streamIdCount=0;
+   bool streamNotificationQueued=false,streamFlushing=false;
+   static std::uint64_t streamNow(){return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count());}
+-  void clearStream(){streamTimer.stop();stream.reset();streamNotificationQueued=false;streamFlushing=false;}
++  void clearStream(){clearManagedStreams();streamTimer.stop();stream.reset();streamNotificationQueued=false;streamFlushing=false;}
+   void notifyStream(){
+     if(streamNotificationQueued){return;}streamNotificationQueued=true;bool queued=false;
+-    try{const QPointer<InitialChannel> owner(q);const auto at=generation;queued=QMetaObject::invokeMethod(q,[owner,at]{if(!owner){return;}auto* self=owner->impl_.get();if(self->generation!=at){return;}self->streamNotificationQueued=false;if(self->session&&self->stream&&self->active()&&self->socket.state()==QAbstractSocket::ConnectedState){emit owner->streamChanged();}},Qt::QueuedConnection);}catch(...){queued=false;}
++    try{const QPointer<InitialChannel> owner(q);const auto at=generation;queued=QMetaObject::invokeMethod(q,[owner,at]{if(!owner){return;}auto* self=owner->impl_.get();if(self->generation!=at){return;}self->streamNotificationQueued=false;if(self->session&&(self->stream||self->managedStreams)&&self->active()&&self->socket.state()==QAbstractSocket::ConnectedState){emit owner->streamChanged();}},Qt::QueuedConnection);}catch(...){queued=false;}
+     if(!queued){streamNotificationQueued=false;fail(Failure::Resources);}
+   }
+   bool streamReceives()const{
++    if(managedStreams){return managedReceives();}
+     if(!stream||streamGeneration!=generation||state!=State::SessionCreated||!leaseCurrent()||Clock::now()>=streamEnd){return false;}
+     const auto observation=stream->observation();return (stream->active()||observation.phase==streaming::Phase::Closed)&&observation.transmittedPackets>0;
+   }
+@@ -31,6 +32,7 @@
+     streamTimer.start(static_cast<int>(std::max<std::int64_t>(1,wait)));
+   }catch(...){fail(Failure::Resources);}}
+   void flushStream(){
++    if(managedStreams){flushManagedStreams();return;}
+     if(streamFlushing||!stream){return;}if(socket.bytesToWrite()!=0){armStream(true);return;}streamFlushing=true;
+     try{
+       if(!streamCurrent()){streamFlushing=false;return;}const auto at=generation,operation=stream->observation().operation;
+@@ -51,6 +53,7 @@
+     }catch(...){streamFlushing=false;fail(Failure::Resources);}
+   }
+   void observeStreamPayload(View payload,std::optional<Clock::time_point> receiveEnd){
++    if(managedStreams){observeManagedStream(payload,receiveEnd);return;}
+     if(!streamCurrent()||!streamReceives()){return;}auto mux=streaming::decodeMux(payload);
+     if(!mux||mux->fromPort!=streamOptions.toPort||mux->toPort!=streamOptions.fromPort){stream->rejectPacket();notifyStream();return;}
+     auto packet=streaming::decode(mux->packet,stream->peer());if(!packet){stream->rejectPacket();notifyStream();return;}
+--- a/preview/native/services/i2cp_channel/tracker.inc
++++ b/preview/native/services/i2cp_channel/tracker.inc
+@@ -65,7 +65,7 @@
+   std::uint64_t trackerConnection=0;
+   ConfigResult<std::uint64_t> startTracker(const TrackerRequest& input){
+     using Code=::biglybtc::services::i2p::ErrorCode;auto reject=[](Code c,const char* why)->ConfigResult<std::uint64_t>{return std::unexpected(::biglybtc::services::i2p::Error{c,why});};
+-    if(!onThread()||tracker||(stream&&stream->active())||statusPending||state!=State::SessionCreated||waitingFirstLease||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Tracker needs current owned LS2 and idle explicit channel");}
++    if(!onThread()||tracker||streamsOutstanding()||statusPending||state!=State::SessionCreated||waitingFirstLease||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Tracker needs current owned LS2 and idle explicit channel");}
+     if(!input.port||input.deadlineMilliseconds<1||input.deadlineMilliseconds>60000){return reject(Code::Unsupported,"Explicit tracker port and bounded deadline required");}
+     if(trackerTransactionCount==trackerTransactions.size()||nextTrackerLookup>std::numeric_limits<std::uint32_t>::max()||nextTrackerOperation==std::numeric_limits<std::uint64_t>::max()){return reject(Code::TooLarge,"Tracker lifetime correlation exhausted");}
+     try{
+--- /dev/null
++++ b/preview/native/services/i2p_streaming/manager.cpp
+@@ -0,0 +1,152 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "manager.hpp"
++#include <algorithm>
++#include <limits>
++
++namespace biglybtc::services::i2p::streaming {
++namespace {
++auto refused(const char* text){return std::unexpected(Error{ErrorCode::Unsupported,text});}
++bool window(unsigned value){return value>=2&&value<=MaximumWindow;}
++bool ports(Ports value){return value.local&&value.remote;}
++void count(std::uint64_t& value)noexcept{if(value!=std::numeric_limits<std::uint64_t>::max()){++value;}}
++bool endFits(std::uint64_t now,unsigned period){return now<=std::numeric_limits<std::uint64_t>::max()-period;}
++}
++Manager::Manager(Destination local,ManagerOptions options,Connection::Entropy entropy)
++  :local_(std::move(local)),options_(options),entropy_(std::move(entropy)){}
++bool Manager::valid()const noexcept{
++  return !local_.wire.empty()&&options_.inactivityMilliseconds>=1&&options_.inactivityMilliseconds<=3600000
++    &&(options_.idleAction==IdleAction::Send||options_.idleAction==IdleAction::Disconnect);
++}
++Manager::Entry* Manager::find(std::uint64_t op)noexcept{for(auto& item:streams_){if(item&&item->connection.observation().operation==op){return &*item;}}return nullptr;}
++const Manager::Entry* Manager::find(std::uint64_t op)const noexcept{for(const auto& item:streams_){if(item&&item->connection.observation().operation==op){return &*item;}}return nullptr;}
++bool Manager::available(std::uint64_t op,std::uint32_t id)const noexcept{
++  return op&&id&&!find(op)&&std::ranges::none_of(streams_,[&](const auto& item){return item&&item->id==id;})
++    &&std::ranges::any_of(streams_,[](const auto& item){return !item;});
++}
++bool Manager::active()const noexcept{return std::ranges::any_of(streams_,[](const auto& item){return item&&item->connection.active();});}
++bool Manager::receives()const noexcept{
++  return listener_.has_value()||std::ranges::any_of(streams_,[](const auto& item){return item&&(item->connection.active()||item->connection.observation().phase==Phase::Closed);});
++}
++Result<void> Manager::connect(std::uint64_t op,std::uint32_t id,Destination peer,const ConnectOptions& input,std::uint64_t now){
++  tick(now);
++  if(!valid()||!available(op,id)||!ports(input.ports)||!window(input.maximumWindow)||input.handshakeMilliseconds<1||input.handshakeMilliseconds>120000||!endFits(now,input.handshakeMilliseconds)||peer.wire.empty()||peer.hash==local_.hash){return refused("Bounded explicit stream connection unavailable");}
++  Connection prepared(op,id,local_,std::move(peer),input.maximumWindow,now,entropy_);
++  if(!prepared.active()){return refused("Invalid connection options");}
++  const auto jitter=entropy_?entropy_(10000):0;if(jitter>=10000){return refused("Invalid idle jitter entropy");}
++  auto free=std::ranges::find_if(streams_,[](const auto& item){return !item;});
++  free->emplace(Entry{std::move(prepared),input.ports,false,false,id,jitter,now+input.handshakeMilliseconds,now,{}});
++  return {};
++}
++Result<void> Manager::listen(const ListenOptions& provided,std::uint64_t now){
++  tick(now);
++  if(provided.peers.empty()||provided.peers.size()>MaximumStreams){return refused("Finite listener peer bound required");}
++  ListenOptions input;input.ports=provided.ports;input.maximumWindow=provided.maximumWindow;
++  for(const auto& peer:provided.peers){auto decoded=decodeDestination(peer.wire);if(!decoded){return std::unexpected(decoded.error());}input.peers.push_back(std::move(*decoded));}
++  if(!valid()||listener_||!pending_.empty()||!ports(input.ports)||!window(input.maximumWindow)||input.peers.empty()||input.peers.size()>MaximumStreams){return refused("Explicit finite listener unavailable");}
++  for(std::size_t i=0;i<input.peers.size();++i){
++    if(input.peers[i].wire.empty()||input.peers[i].hash==local_.hash){return refused("Listener peer must be an explicit other Destination");}
++    for(std::size_t j=0;j<i;++j){if(input.peers[j].hash==input.peers[i].hash){return refused("Duplicate or ambiguous listener peer");}}
++  }
++  listener_.emplace(std::move(input));return {};
++}
++void Manager::stopListening()noexcept{listener_.reset();pending_.clear();pendingBytes_=0;}
++Result<void> Manager::accept(std::uint64_t op,std::uint32_t id,std::uint64_t now){
++  tick(now);
++  if(!listener_||pending_.empty()||!available(op,id)){return refused("No current bounded SYN/stream slot");}
++  auto& first=pending_.front();const auto policy=*listener_;
++  auto prepared=Connection::accept(op,id,local_,*first.syn.from,first.syn,policy.maximumWindow,now,entropy_);
++  if(!prepared){return std::unexpected(prepared.error());}
++  const auto jitter=entropy_?entropy_(10000):0;if(jitter>=10000){return refused("Invalid idle jitter entropy");}
++  auto free=std::ranges::find_if(streams_,[](const auto& item){return !item;});
++  free->emplace(Entry{std::move(*prepared),first.ports,true,false,id,jitter,first.end,now,{}});
++  pendingBytes_-=first.bytes;pending_.pop_front();return {};
++}
++void Manager::receive(const Mux& mux,std::uint64_t now,std::function<std::uint64_t()> afterVerification,std::function<bool()> current){
++  tick(now);if(!valid()||mux.packet.size()<22){count(rejected_);return;}
++  std::uint32_t id=0;for(unsigned i=0;i<4;++i){id=(id<<8)|mux.packet[i];}
++  if(id){
++    for(auto& item:streams_){if(item&&item->id==id){
++      if(item->ports.local!=mux.toPort||item->ports.remote!=mux.fromPort||(!item->connection.active()&&item->connection.observation().phase!=Phase::Closed)){count(rejected_);return;}
++      auto decoded=decode(mux.packet,item->connection.peer());if(!decoded){count(rejected_);return;}
++      if(current&&!current()){count(rejected_);return;}if(afterVerification){now=afterVerification();tick(now);}if(current&&!current()){count(rejected_);return;}
++      if(!item->connection.active()&&item->connection.observation().phase!=Phase::Closed){count(rejected_);return;}
++      item->connection.receive(std::move(*decoded),now);
++      if(item->connection.lastReceiveAccepted()){item->lastActivity=now;item->idlePending=false;}
++      settleWait(*item,now);return;
++    }}
++    count(rejected_);return;
++  }
++  if(!listener_||listener_->ports.local!=mux.toPort||listener_->ports.remote!=mux.fromPort){count(rejected_);return;}
++  auto syn=decodeInitialSyn(mux.packet,local_);if(!syn){count(rejected_);return;}
++  if(current&&!current()){count(rejected_);return;}if(afterVerification){now=afterVerification();tick(now);}if(current&&!current()){count(rejected_);return;}
++  if(!listener_){count(rejected_);return;}
++  if(std::ranges::none_of(listener_->peers,[&](const auto& peer){return peer.wire==syn->from->wire;})){count(rejected_);return;}
++  // A duplicate SYN cannot create a second accepted stream. Its original
++  // SYN/ACK retains the ordinary retransmission clock if the peer missed it.
++  for(const auto& item:streams_){if(item&&item->inbound&&item->connection.peer().wire==syn->from->wire&&item->connection.remoteId()==syn->receive&&item->ports.local==mux.toPort&&item->ports.remote==mux.fromPort){count(rejected_);return;}}
++  for(const auto& item:pending_){if(item.syn.receive==syn->receive&&item.syn.from->wire==syn->from->wire){count(rejected_);return;}}
++  const auto weight=mux.packet.size()+syn->from->wire.size()+syn->from->signingPublicKey.size()+syn->payload.size()+4*syn->nacks.size();
++  if(pending_.size()==MaximumPendingSyns||weight>MaximumPendingSynBytes-pendingBytes_||!endFits(now,3000)){count(rejected_);return;}
++  pending_.push_back({std::move(*syn),Ports{mux.toPort,mux.fromPort},now+3000,weight});pendingBytes_+=weight;
++}
++void Manager::settleWait(Entry& entry,std::uint64_t now)noexcept{
++  if(!entry.wait||entry.wait->observed.state!=WaitState::Pending){return;}
++  auto& wait=*entry.wait;const auto observed=entry.connection.observation();
++  if(now>=wait.end){wait.observed.state=WaitState::TimedOut;return;}
++  if(!entry.connection.active()&&observed.phase!=Phase::Closed){wait.observed.state=WaitState::Cancelled;return;}
++  if(wait.observed.kind==WaitFor::Readable){
++    if(entry.connection.readableBytes()>=wait.observed.minimumBytes||observed.phase==Phase::ReadEof||observed.phase==Phase::Closed){wait.observed.state=WaitState::Ready;}
++  }else if(entry.connection.outputOpen()&&wait.observed.minimumBytes<=MaximumBuffered-observed.queuedTx){wait.observed.state=WaitState::Ready;}
++}
++void Manager::tick(std::uint64_t now){
++  while(!pending_.empty()&&now>=pending_.front().end){pendingBytes_-=pending_.front().bytes;pending_.pop_front();count(expired_);}
++  for(auto& item:streams_){if(!item){continue;}auto& entry=*item;const auto observed=entry.connection.observation();
++    if((observed.phase==Phase::Connecting||(entry.inbound&&!observed.transmittedPackets))&&now>=entry.handshakeEnd){entry.connection.terminate(Phase::Timeout);}
++    else if(entry.connection.active()&&observed.phase!=Phase::Connecting&&!entry.idlePending&&now>=entry.lastActivity&&now-entry.lastActivity>=static_cast<std::uint64_t>(options_.inactivityMilliseconds)+entry.idleJitter&&observed.inFlightPackets==0){
++      if(options_.idleAction==IdleAction::Send&&entry.connection.keepalive()){entry.idlePending=true;}
++      else{entry.connection.terminate(Phase::IdleTimeout);}
++    }
++    settleWait(entry,now);
++  }
++}
++std::optional<Outbound> Manager::next(std::uint64_t now){
++  tick(now);
++  for(std::size_t step=0;step<MaximumStreams;++step){const auto index=(cursor_+step)%MaximumStreams;auto& item=streams_[index];if(!item){continue;}
++    auto packet=item->connection.next(now);if(packet){cursor_=(index+1)%MaximumStreams;return Outbound{item->connection.observation().operation,std::move(*packet),item->ports};}
++  }
++  return std::nullopt;
++}
++void Manager::dispatched(const Outbound& outbound,std::uint64_t now){
++  if(auto* item=find(outbound.operation)){item->connection.dispatched(outbound.packet,now);item->lastActivity=now;item->idlePending=false;settleWait(*item,now);}
++}
++const Destination* Manager::peer(std::uint64_t op)const noexcept{const auto* item=find(op);return item?&item->connection.peer():nullptr;}
++std::optional<unsigned> Manager::transmitTimeout(const Outbound& outgoing)const noexcept{const auto* item=find(outgoing.operation);return item?item->connection.transmitTimeout(outgoing.packet):std::nullopt;}
++Result<void> Manager::write(std::uint64_t op,View bytes,std::uint64_t now){
++  tick(now);auto* item=find(op);if(!item){return refused("Current stream operation required");}auto result=item->connection.write(bytes);settleWait(*item,now);return result;
++}
++Result<Bytes> Manager::read(std::uint64_t op,std::size_t maximum,std::uint64_t now){
++  tick(now);auto* item=find(op);if(!item||(!item->connection.active()&&item->connection.observation().phase!=Phase::Closed)){return refused("Readable current stream required");}auto result=item->connection.read(std::min(maximum,MaximumBuffered));settleWait(*item,now);return result;
++}
++bool Manager::finishWrite(std::uint64_t op,std::uint64_t now){tick(now);auto* item=find(op);if(!item||!item->connection.active()){return false;}item->connection.finishWrite();settleWait(*item,now);return true;}
++bool Manager::cancel(std::uint64_t op)noexcept{auto* item=find(op);if(!item||!item->connection.active()){return false;}item->connection.terminate(Phase::Cancelled);if(item->wait&&item->wait->observed.state==WaitState::Pending){item->wait->observed.state=WaitState::Cancelled;}return true;}
++bool Manager::release(std::uint64_t op)noexcept{for(auto& item:streams_){if(item&&item->connection.observation().operation==op){if(!item->connection.drained()){return false;}item.reset();return true;}}return false;}
++bool Manager::wait(std::uint64_t op,WaitFor kind,std::size_t minimum,unsigned period,std::uint64_t now){
++  tick(now);auto* item=find(op);if(!item||(item->wait&&item->wait->observed.state==WaitState::Pending)||minimum<1||minimum>MaximumBuffered||period<1||period>120000||!endFits(now,period)||(kind!=WaitFor::Readable&&kind!=WaitFor::Writable)){return false;}
++  item->wait=Wait{{kind,WaitState::Pending,minimum},now+period};settleWait(*item,now);return true;
++}
++void Manager::terminate(Phase phase)noexcept{stopListening();for(auto& item:streams_){if(item){item->connection.terminate(phase);if(item->wait&&item->wait->observed.state==WaitState::Pending){item->wait->observed.state=WaitState::Cancelled;}}}}
++std::optional<std::uint64_t> Manager::wakeup()const noexcept{
++  std::optional<std::uint64_t> result;const auto add=[&](std::uint64_t value){if(!result||value<*result){result=value;}};
++  if(!pending_.empty()){add(pending_.front().end);}
++  for(const auto& item:streams_){if(!item){continue;}const auto observed=item->connection.observation();if(auto at=item->connection.wakeup()){add(*at);}if(observed.phase==Phase::Connecting){add(item->handshakeEnd);}
++    else if(item->connection.active()&&!item->idlePending&&!observed.inFlightPackets&&endFits(item->lastActivity,options_.inactivityMilliseconds+item->idleJitter)){add(item->lastActivity+options_.inactivityMilliseconds+item->idleJitter);}
++    if(item->wait&&item->wait->observed.state==WaitState::Pending){add(item->wait->end);}
++  }
++  return result;
++}
++std::optional<ManagedObservation> Manager::observation(std::uint64_t op)const noexcept{const auto* item=find(op);return item?std::optional(ManagedObservation{item->connection.observation(),item->ports,item->inbound,item->idleJitter,item->wait?std::optional(item->wait->observed):std::nullopt}):std::nullopt;}
++ManagerObservation Manager::observation()const noexcept{
++  ManagerObservation out;out.listening=listener_.has_value();out.pendingSyns=pending_.size();out.pendingSynBytes=pendingBytes_;out.rejectedPackets=rejected_;out.expiredSyns=expired_;
++  for(const auto& item:streams_){if(item){++out.streams;const auto observed=item->connection.observation();out.queuedTx+=observed.queuedTx;out.queuedRx+=observed.queuedRx;}}return out;
++}
++} // namespace biglybtc::services::i2p::streaming
+--- /dev/null
++++ b/preview/native/services/i2p_streaming/manager.hpp
+@@ -0,0 +1,70 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#pragma once
++#include "stream.hpp"
++#include <vector>
++
++namespace biglybtc::services::i2p::streaming {
++inline constexpr std::size_t MaximumStreams=4,MaximumPendingSyns=4,MaximumPendingSynBytes=262144;
++enum class IdleAction {Send,Disconnect};
++struct ManagerOptions {unsigned inactivityMilliseconds=90000;IdleAction idleAction=IdleAction::Send;};
++struct Ports {std::uint16_t local=0,remote=0;};
++struct ConnectOptions {Ports ports;unsigned handshakeMilliseconds=120000,maximumWindow=MaximumWindow;};
++struct ListenOptions {Ports ports;std::vector<Destination> peers;unsigned maximumWindow=MaximumWindow;};
++enum class WaitFor {Readable,Writable};
++enum class WaitState {Pending,Ready,TimedOut,Cancelled};
++struct WaitObservation {WaitFor kind=WaitFor::Readable;WaitState state=WaitState::Pending;std::size_t minimumBytes=1;};
++struct ManagedObservation {Observation stream;Ports ports;bool inbound=false;unsigned idleJitterMilliseconds=0;std::optional<WaitObservation> wait;};
++struct ManagerObservation {
++  std::size_t streams=0,pendingSyns=0,pendingSynBytes=0,queuedTx=0,queuedRx=0;
++  bool listening=false;std::uint64_t rejectedPackets=0,expiredSyns=0;
++};
++struct Outbound {std::uint64_t operation=0;Packet packet;Ports ports;};
++// Pure finite manager. Identity/lease/socket authority stays with its owner.
++// IDs and operation numbers come from the owner's persistent lifetime ledger.
++class Manager {
++public:
++  Manager(Destination local,ManagerOptions,Connection::Entropy={});
++  bool valid()const noexcept;
++  bool receives()const noexcept;
++  bool active()const noexcept;
++  Result<void> connect(std::uint64_t operation,std::uint32_t id,Destination,const ConnectOptions&,std::uint64_t now);
++  Result<void> listen(const ListenOptions&,std::uint64_t now);
++  void stopListening()noexcept;
++  Result<void> accept(std::uint64_t operation,std::uint32_t id,std::uint64_t now);
++  // Optional post-verification clock/current-source fence; neither grants IO.
++  void receive(const Mux&,std::uint64_t now,std::function<std::uint64_t()> afterVerification={},std::function<bool()> current={});
++  std::optional<Outbound> next(std::uint64_t now);
++  void dispatched(const Outbound&,std::uint64_t now);
++  const Destination* peer(std::uint64_t operation)const noexcept;
++  std::optional<unsigned> transmitTimeout(const Outbound&)const noexcept;
++  Result<void> write(std::uint64_t operation,View,std::uint64_t now);
++  Result<Bytes> read(std::uint64_t operation,std::size_t maximum,std::uint64_t now);
++  bool finishWrite(std::uint64_t operation,std::uint64_t now);
++  bool cancel(std::uint64_t operation)noexcept;
++  bool release(std::uint64_t operation)noexcept;
++  bool wait(std::uint64_t operation,WaitFor,std::size_t minimumBytes,unsigned timeoutMilliseconds,std::uint64_t now);
++  void tick(std::uint64_t now);
++  void terminate(Phase)noexcept;
++  std::optional<std::uint64_t> wakeup()const noexcept;
++  std::optional<ManagedObservation> observation(std::uint64_t operation)const noexcept;
++  ManagerObservation observation()const noexcept;
++private:
++  struct Wait {WaitObservation observed;std::uint64_t end=0;};
++  struct Entry {
++    Connection connection;Ports ports;bool inbound=false,idlePending=false;
++    std::uint32_t id=0;unsigned idleJitter=0;std::uint64_t handshakeEnd=0,lastActivity=0;
++    std::optional<Wait> wait;
++  };
++  struct Pending {Packet syn;Ports ports;std::uint64_t end=0;std::size_t bytes=0;};
++  Entry* find(std::uint64_t)noexcept;
++  const Entry* find(std::uint64_t)const noexcept;
++  void settleWait(Entry&,std::uint64_t now)noexcept;
++  bool available(std::uint64_t operation,std::uint32_t id)const noexcept;
++  Destination local_;ManagerOptions options_;Connection::Entropy entropy_;
++  std::array<std::optional<Entry>,MaximumStreams> streams_{};
++  std::optional<ListenOptions> listener_;
++  std::deque<Pending> pending_;
++  std::size_t pendingBytes_=0,cursor_=0;
++  std::uint64_t rejected_=0,expired_=0;
++};
++} // namespace biglybtc::services::i2p::streaming
+--- a/preview/native/services/i2p_streaming/stream.cpp
++++ b/preview/native/services/i2p_streaming/stream.cpp
+@@ -48,6 +48,25 @@
+   if((p.flags&(Syn|Close|Reset))&&!p.signatureVerified){return error(ErrorCode::BadSignature,"SYN/CLOSE/RESET requires original peer signature");}
+   p.payload.assign(wire.begin()+static_cast<std::ptrdiff_t>(payloadAt),wire.end());return p;
+ }
++namespace {
++bool initialSyn(const Packet& p,const Destination& recipient){
++  if(p.send||!p.receive||p.sequence||!(p.flags&Syn)||!(p.flags&From)||!(p.flags&Signature)||!(p.flags&NoAck)||(p.flags&(Close|Reset))||!p.from||!p.signatureVerified||p.nacks.size()!=8){return false;}
++  for(unsigned i=0;i<8;++i){std::uint32_t word=0;for(unsigned j=0;j<4;++j){word=(word<<8)|recipient.hash[4*i+j];}if(p.nacks[i]!=word){return false;}}return true;
++}
++}
++Result<Packet> decodeInitialSyn(View wire,const Destination& recipient){
++  if(wire.size()<22||wire.size()>MaximumPayload+2048){return error(ErrorCode::TooLarge,"Bounded incoming SYN required");}
++  const auto nacks=static_cast<std::size_t>(wire[16]);const auto header=22+4*nacks;if(header>wire.size()){return error(ErrorCode::InvalidFormat,"Truncated SYN header");}
++  const auto flags=(static_cast<unsigned>(wire[18+4*nacks])<<8)|wire[19+4*nacks];const auto options=(static_cast<std::size_t>(wire[20+4*nacks])<<8)|wire[21+4*nacks];
++  if(options>wire.size()-header||!(flags&From)){return error(ErrorCode::InvalidFormat,"SYN FROM options required");}
++  const auto offset=header+((flags&Delay)?2U:0U);const auto end=header+options;
++  if(offset>end||end-offset<387){return error(ErrorCode::InvalidFormat,"Truncated SYN FROM");}
++  const auto length=387+((static_cast<std::size_t>(wire[offset+385])<<8)|static_cast<std::size_t>(wire[offset+386]));
++  if(length>end-offset){return error(ErrorCode::InvalidFormat,"Truncated SYN Destination");}
++  auto peer=decodeDestination(wire.subspan(offset,length));if(!peer){return std::unexpected(peer.error());}
++  auto packet=decode(wire,*peer);if(!packet){return std::unexpected(packet.error());}
++  if(!initialSyn(*packet,recipient)||peer->hash==recipient.hash){return error(ErrorCode::BadSignature,"Incoming SYN identity/recipient binding refused");}return packet;
++}
+ Result<Bytes> encodeMux(const Mux& mux){
+   if(mux.packet.size()>MaximumPayload+2048){return error(ErrorCode::TooLarge,"Streaming mux packet exceeds bound");}
+   z_stream z{};if(deflateInit2(&z,mux.packet.size()>50?3:0,Z_DEFLATED,31,8,Z_DEFAULT_STRATEGY)!=Z_OK){return error(ErrorCode::CryptoFailure,"Streaming gzip resources unavailable");}
+@@ -80,6 +99,12 @@
+     :local_(std::move(local)),peer_(std::move(peer)),localId_(id),maximumWindow_(maximumWindow),window_(std::min(3U,maximumWindow)),entropy_(std::move(entropy)),bandwidth_(started){
+   observed_.operation=operation;congestionWindowEnd_=static_cast<std::int64_t>(window_)-1;if(maximumWindow<2||maximumWindow>MaximumWindow){observed_.phase=Phase::Failed;}
+ }
++Result<Connection> Connection::accept(std::uint64_t operation,std::uint32_t id,Destination local,Destination peer,const Packet& syn,unsigned maximumWindow,std::uint64_t now,Entropy entropy){
++  if(!operation||!id||!initialSyn(syn,local)||!syn.from||syn.from->wire!=peer.wire||peer.hash==local.hash||maximumWindow<2||maximumWindow>MaximumWindow){return error(ErrorCode::Unsupported,"Valid owned incoming SYN and bounded window required");}
++  Connection out(operation,id,std::move(local),std::move(peer),maximumWindow,now,std::move(entropy));out.inbound_=true;out.remoteId_=syn.receive;out.segment_=syn.flags&MaxSize?std::clamp<std::uint16_t>(syn.maxSize,512,DefaultSegment):DefaultSegment;out.observed_.phase=Phase::Established;
++  auto initial=syn;initial.send=id;out.receive(std::move(initial),now);if(!out.active()||out.observation().rejectedPackets){return error(ErrorCode::Unsupported,"Incoming SYN exceeds stream envelope");}return out;
++}
++bool Connection::keepalive()noexcept{if(!active()||finish_||remoteFin_){return false;}keepaliveWanted_=true;return true;}
+ bool Connection::active()const noexcept{return observed_.phase==Phase::Connecting||observed_.phase==Phase::Established||observed_.phase==Phase::ReadEof;}
+ std::size_t Connection::flight()const noexcept{std::size_t count=0;for(const auto& p:sent_){count+=p&&p->sends;}return count;}
+ std::size_t Connection::activeResends()const noexcept{std::size_t count=0;for(const auto& p:sent_){count+=p&&p->sends>1;}return count;}
+@@ -91,7 +116,7 @@
+   Pending* result=nullptr;for(auto& p:sent_){if(p&&((p->sends==0)==unsent)&&(!result||p->packet.sequence<result->packet.sequence)){result=&*p;}}return result;
+ }
+ void Connection::reject()noexcept{increment(observed_.rejectedPackets);}
+-void Connection::terminate(Phase phase)noexcept{observed_.phase=phase;for(auto& p:sent_){p.reset();}retryAt_.reset();timeoutArmPending_=false;tx_.clear();reorder_.clear();reorderBytes_=0;ackWanted_=false;if(phase!=Phase::Closed){rx_.clear();}}
++void Connection::terminate(Phase phase)noexcept{observed_.phase=phase;for(auto& p:sent_){p.reset();}retryAt_.reset();timeoutArmPending_=false;tx_.clear();reorder_.clear();reorderBytes_=0;ackWanted_=false;keepaliveWanted_=false;if(phase!=Phase::Closed){rx_.clear();}}
+ Result<void> Connection::write(View input){
+   if(!active()||finish_){return error(ErrorCode::Unsupported,"Streaming output is closed");}if(input.size()>MaximumBuffered-observation().queuedTx){return error(ErrorCode::TooLarge,"Streaming write backpressure");}tx_.insert(tx_.end(),input.begin(),input.end());return {};
+ }
+@@ -123,14 +148,16 @@
+ }
+ Packet Connection::base()const{Packet p;p.send=remoteId_;p.receive=localId_;p.resendDelay=1;p.flags=Signature|Delay;p.delay=choking_?61000:0;acknowledgements(p);return p;}
+ void Connection::receive(Packet p,std::uint64_t now){
++  lastReceiveAccepted_=false;
+   if(!active()&&observed_.phase!=Phase::Closed){reject();return;}
+   if(p.flags&Reset){if(p.send==localId_&&p.signatureVerified){terminate(Phase::RemoteReset);}else{reject();}return;}
+   if(p.send!=localId_||!p.receive||(remoteId_&&p.receive!=remoteId_)){reject();return;}
+   if(!(p.flags&NoAck)&&(static_cast<std::int64_t>(p.ackThrough)>highestSent_||std::ranges::any_of(p.nacks,[&](auto n){return n>p.ackThrough;}))){reject();return;}
+   if(!remoteId_){const auto* syn=oldest();if(!syn||!(syn->packet.flags&Syn)||!(p.flags&Syn)||!p.from||!p.signatureVerified||p.sequence!=0||(p.flags&NoAck)||p.ackThrough!=0||!p.nacks.empty()){reject();return;}remoteId_=p.receive;segment_=p.flags&MaxSize?std::clamp<std::uint16_t>(p.maxSize,512,DefaultSegment):DefaultSegment;observed_.phase=Phase::Established;}
+-  const bool sequenceBearing=!p.payload.empty()||(p.flags&(Syn|Close));
++  const bool sequenceBearing=p.sequence>0||!p.payload.empty()||(p.flags&(Syn|Close));
+   const bool isNew=sequenceBearing&&static_cast<std::int64_t>(p.sequence)>contiguous_&&!reorder_.contains(p.sequence);
+   if(isNew&&(remoteFin_||static_cast<std::uint64_t>(p.sequence)>static_cast<std::uint64_t>(contiguous_+1)+MaximumReorder||reorder_.size()>=MaximumReorder||p.payload.size()>MaximumBuffered-rx_.size()-reorderBytes_)){choking_=true;ackWanted_=true;reject();return;}
++  lastReceiveAccepted_=true;
+   choked_=(p.flags&Delay)&&p.delay>60000;if(choked_){congestion();window_=1;}
+   if(!(p.flags&NoAck)){
+     if(static_cast<std::int64_t>(p.ackThrough)>=highestAcked_){if(p.nacks.empty()){highestAcked_=p.ackThrough;}else{const auto first=*std::min_element(p.nacks.begin(),p.nacks.end());highestAcked_=std::max(highestAcked_,static_cast<std::int64_t>(first)-1);}}
+@@ -178,18 +205,18 @@
+     if(selected->fast){selected->fast=false;if(choked_){congestion();window_=1;}else if(ackSinceCongestion_&&static_cast<std::int64_t>(selected->packet.sequence)>lastCongestionHighest_){congestion();rto_=std::min(45000U,rto_*2);if(selected->sends==1){recoveryThreshold(now);window_=std::min(ssthresh_,window_);}}}
+     auto p=selected->packet;if(!(p.flags&Syn)){p.nacks.clear();acknowledgements(p);p.delay=choking_?61000:0;}return p;
+   }
+-  if(active()&&(nextSequence_==0||(remoteId_&&sendCredit()&&(!tx_.empty()||(finish_&&!localFinSent_))))){
++  if(active()&&(nextSequence_==0||(remoteId_&&sendCredit()&&(!tx_.empty()||keepaliveWanted_||(finish_&&!localFinSent_))))){
+     if(nextSequence_==std::numeric_limits<std::uint32_t>::max()){terminate(Phase::Failed);return std::nullopt;}auto free=std::ranges::find_if(sent_,[](const auto& slot){return !slot;});if(free==sent_.end()){return std::nullopt;}
+     auto p=base();p.sequence=nextSequence_++;
+-    if(p.sequence==0){p.flags|=Syn|From|MaxSize|NoAck;p.from=local_;p.maxSize=DefaultSegment;p.nacks.clear();for(unsigned i=0;i<8;++i){std::uint32_t value=0;for(unsigned j=0;j<4;++j){value=(value<<8)|peer_.hash[4*i+j];}p.nacks.push_back(value);}}
+-    else{const auto count=std::min<std::size_t>(segment_,tx_.size());for(std::size_t i=0;i<count;++i){p.payload.push_back(tx_.front());tx_.pop_front();}if(finish_&&tx_.empty()){p.flags|=Close;localFinSent_=true;}}
++    if(p.sequence==0){p.flags|=Syn|From|MaxSize;p.from=local_;p.maxSize=DefaultSegment;if(!inbound_){p.flags|=NoAck;p.nacks.clear();for(unsigned i=0;i<8;++i){std::uint32_t value=0;for(unsigned j=0;j<4;++j){value=(value<<8)|peer_.hash[4*i+j];}p.nacks.push_back(value);}}}
++    else{keepaliveWanted_=false;const auto count=std::min<std::size_t>(segment_,tx_.size());for(std::size_t i=0;i<count;++i){p.payload.push_back(tx_.front());tx_.pop_front();}if(finish_&&tx_.empty()){p.flags|=Close;localFinSent_=true;}}
+     Pending prepared;prepared.packet=std::move(p);prepared.created=now;free->emplace(std::move(prepared));return (*free)->packet;
+   }
+   if(ackWanted_&&remoteId_){return base();}return std::nullopt;
+ }
+ void Connection::dispatched(const Packet& p,std::uint64_t now){
+   increment(observed_.transmittedPackets);ackWanted_=false;
+-  auto found=std::ranges::find_if(sent_,[&](const auto& slot){return slot&&slot->packet.sequence==p.sequence&&(p.flags&(Syn|Close)||!p.payload.empty());});
++  auto found=std::ranges::find_if(sent_,[&](const auto& slot){return slot&&slot->packet.sequence==p.sequence&&(p.sequence>0||(p.flags&(Syn|Close))||!p.payload.empty());});
+   if(found==sent_.end()){return;}auto& pending=**found;
+   if(pending.sends){increment(observed_.retransmissions);}++pending.sends;pending.sent=now;pending.retry=false;highestSent_=std::max(highestSent_,static_cast<std::int64_t>(p.sequence));
+   if(timeoutArmPending_||!retryAt_){retryAt_=now+rto_;timeoutArmPending_=false;}observed_.maximumInFlightPackets=std::max(observed_.maximumInFlightPackets,flight());
+@@ -198,6 +225,6 @@
+   return flight()?retryAt_:std::nullopt;
+ }
+ std::optional<unsigned> Connection::transmitTimeout(const Packet& p)const noexcept{
+-  for(const auto& slot:sent_){if(slot&&slot->packet.sequence==p.sequence&&(p.flags&(Syn|Close)||!p.payload.empty())){return rto_;}}return std::nullopt;
++  for(const auto& slot:sent_){if(slot&&slot->packet.sequence==p.sequence&&(p.sequence>0||(p.flags&(Syn|Close))||!p.payload.empty())){return rto_;}}return std::nullopt;
+ }
+ } // namespace biglybtc::services::i2p::streaming
+--- a/preview/native/services/i2p_streaming/stream.hpp
++++ b/preview/native/services/i2p_streaming/stream.hpp
+@@ -27,12 +27,14 @@
+ // Offline signatures, ECHO and unknown flags/options are explicitly unsupported.
+ Result<Bytes> encode(const Packet&,const ClientIdentity& signer);
+ Result<Packet> decode(View,const Destination& expectedPeer);
++// Strict explicit listener subset: signed FROM plus recipient-hash-bound SYN.
++Result<Packet> decodeInitialSyn(View,const Destination& recipient);
+ struct Mux {std::uint16_t fromPort=0,toPort=0;Bytes packet;};
+ // Separate protocol6 entry points; existing datagram/RAW18 decoders stay strict.
+ Result<Bytes> encodeMux(const Mux&);
+ Result<Mux> decodeMux(View);
+ 
+-enum class Phase {Connecting,Established,ReadEof,Closed,Cancelled,Timeout,LeaseExpired,RemoteReset,Failed};
++enum class Phase {Connecting,Established,ReadEof,Closed,Cancelled,Timeout,LeaseExpired,RemoteReset,Failed,IdleTimeout};
+ struct Observation {
+   std::uint64_t operation=0;Phase phase=Phase::Connecting;
+   std::size_t queuedTx=0,queuedRx=0;
+@@ -65,7 +67,14 @@
+   using Entropy=std::function<unsigned(unsigned)>;
+   Connection(std::uint64_t operation,std::uint32_t localId,Destination local,Destination peer,
+       unsigned maximumWindow=MaximumWindow,std::uint64_t startedMilliseconds=0,Entropy={});
++  static Result<Connection> accept(std::uint64_t operation,std::uint32_t localId,Destination local,Destination peer,const Packet& signedSyn,
++      unsigned maximumWindow=MaximumWindow,std::uint64_t now=0,Entropy={});
+   const Destination& peer()const noexcept{return peer_;}
++  std::uint32_t remoteId()const noexcept{return remoteId_;}
++  std::size_t readableBytes()const noexcept{return rx_.size();}
++  bool outputOpen()const noexcept{return active()&&!finish_;}
++  bool drained()const noexcept{return !active()&&flight()==0&&!ackWanted_&&rx_.empty()&&reorder_.empty();}
++  bool keepalive()noexcept;
+   bool active()const noexcept;
+   Observation observation()const noexcept;
+   Result<void> write(View);
+@@ -74,6 +83,7 @@
+   void terminate(Phase)noexcept;
+   void rejectPacket()noexcept{reject();}
+   void receive(Packet,std::uint64_t now);
++  bool lastReceiveAccepted()const noexcept{return lastReceiveAccepted_;}
+   std::optional<Packet> next(std::uint64_t now);
+   void dispatched(const Packet&,std::uint64_t now);
+   std::optional<unsigned> transmitTimeout(const Packet&)const noexcept;
+@@ -107,7 +117,7 @@
+   std::int64_t congestionWindowEnd_=2;
+   unsigned maximumWindow_=MaximumWindow,window_=3,ssthresh_=64;
+   bool ackSinceCongestion_=true;
+-  bool timeoutArmPending_=false;
++  bool timeoutArmPending_=false,inbound_=false,keepaliveWanted_=false,lastReceiveAccepted_=false;
+   Entropy entropy_;
+   BandwidthEstimator bandwidth_;
+   unsigned samples_=0,rtt_=0,deviation_=0,rto_=9000,minimumRtt_=0x7fffffffU;
+--- /dev/null
++++ b/preview/native/tests/i2cp_stream_manager_tests.cpp
+@@ -0,0 +1,108 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "channel.hpp"
++#include <QFile>
++#include <QPointer>
++#include <QNetworkProxy>
++#include <QTcpServer>
++#include <QTcpSocket>
++#include <QtTest>
++#include <array>
++#include <chrono>
++#include <optional>
++namespace p=biglybtc::services::i2p;namespace cp=p::i2cp;namespace st=p::streaming;
++using Channel=cp::InitialChannel;
++namespace {
++constexpr std::uint64_t Now=1761739200123ULL;
++std::uint64_t stamp(){return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());}
++p::ClientIdentity identity(const char* family){
++  const auto read=[&](const char* suffix){QFile file(QString::fromUtf8(BIGLYBTC_I2P_TEST_KEYS_DIR)+'/'+QString::fromLatin1(family)+QString::fromLatin1(suffix));if(!file.open(QIODevice::ReadOnly)||file.size()<1||file.size()>1024){qFatal("Missing generated key fixture");}const auto bytes=file.readAll();return p::Bytes(reinterpret_cast<const p::Byte*>(bytes.constData()),reinterpret_cast<const p::Byte*>(bytes.constData())+bytes.size());};
++  auto value=p::makeClientIdentity(read(".sender"),p::Bytes(256,0x51),read(".known-test-key"));if(!value){qFatal("Invalid generated signer");}return std::move(*value);
++}
++struct Router {
++  QTcpServer server;QPointer<QTcpSocket> socket;QByteArray bytes;qsizetype offset=1;QString failure;
++  p::ClientIdentity local=identity("dsa"),remote=identity("ed25519");
++  struct Peer {std::uint16_t nativePort=0;std::optional<st::Connection> connection;p::Bytes received;};
++  std::array<Peer,3> peers{};std::uint32_t message=100;std::uint64_t leaseFrames=0;
++  Router(){
++    server.setProxy(QNetworkProxy::NoProxy);
++    QObject::connect(&server,&QTcpServer::newConnection,&server,[this]{
++      if(socket&&socket->state()!=QAbstractSocket::UnconnectedState){failure="Unexpected extra client";return;}
++      socket=server.nextPendingConnection();bytes.clear();offset=1;
++      QObject::connect(socket,&QTcpSocket::readyRead,&server,[this]{collect();});collect();
++    });
++  }
++  ~Router(){QObject::disconnect(&server,nullptr,&server,nullptr);if(socket){QObject::disconnect(socket,nullptr,&server,nullptr);socket->abort();}}
++  bool listen(){return server.listen(QHostAddress::LocalHost,0);}
++  Channel::Options options()const{return {QHostAddress::LocalHost,server.serverPort(),"2.13.0",false,3000,false};}
++  void collect(){if(!socket){return;}const auto n=socket->bytesAvailable();if(n<0||n>131077-bytes.size()){failure="Owned frame buffer exceeded bound";socket->abort();return;}bytes+=socket->read(n);}
++  std::optional<cp::Frame> next()const{
++    if(bytes.size()-offset<5){return std::nullopt;}const auto* data=reinterpret_cast<const cp::Byte*>(bytes.constData()+offset);std::uint32_t n=0;for(unsigned i=0;i<4;++i){n=(n<<8)|data[i];}if(n>cp::MaximumPayloadBytes){qFatal("Owned oversized frame");}if(bytes.size()-offset<5+static_cast<qsizetype>(n)){return std::nullopt;}auto decoded=cp::decodeFrame(cp::View(data,n+5));if(!decoded){qFatal("Owned malformed frame");}return std::move(*decoded);
++  }
++  cp::Frame take(){auto frame=next();if(!frame){qFatal("Missing owned frame");}offset+=5+static_cast<qsizetype>(frame->payload.size());return std::move(*frame);}
++  bool send(p::View frame){return socket&&socket->write(reinterpret_cast<const char*>(frame.data()),static_cast<qint64>(frame.size()))==static_cast<qint64>(frame.size());}
++  bool lease(){cp::RequestedLease lease;lease.gateway.fill(0x51);lease.tunnelId=33;lease.expiresMilliseconds=Now+600000;auto frame=cp::encodeLeaseRequest({7,{lease}});return frame&&send(*frame);}
++  bool deliver(const st::Packet& packet,std::uint16_t port){
++    auto encoded=st::encode(packet,remote);if(!encoded){failure="Remote packet encode failed";return false;}auto mux=st::encodeMux({80,port,std::move(*encoded)});if(!mux){failure="Remote mux failed";return false;}auto frame=cp::encodeMessagePayload({7,message++,std::move(*mux)});return frame&&send(*frame);
++  }
++  void flush(Peer& peer){
++    for(unsigned turn=0;turn<16&&peer.connection;++turn){auto packet=peer.connection->next(stamp());if(!packet){return;}if(!deliver(*packet,peer.nativePort)){failure="Remote packet dispatch failed";return;}peer.connection->dispatched(*packet,stamp());}
++  }
++  bool pump(){
++    collect();
++    while(next()&&failure.isEmpty()){
++      auto frame=take();
++      if(frame.type==cp::CreateLeaseSet2Type){auto lease=cp::decodeCreateLeaseSet2(frame);if(!lease||lease->sessionId!=7||lease->leaseSet.destination.wire!=local.destination()->wire){failure="Wrong renewed owned key/session";return false;}++leaseFrames;continue;}
++      auto sent=cp::decodeSendDatagram(frame);if(!sent||sent->sessionId!=7||sent->recipient.wire!=remote.destination()->wire||sent->nonce!=0){failure="Wrong actual manager recipient/session";return false;}
++      auto mux=st::decodeMux(sent->payload);if(!mux||mux->toPort!=80){failure="Wrong manager mux";return false;}
++      auto packet=st::decode(mux->packet,*local.destination());if(!packet){failure="Bad actual native signature";return false;}
++      Peer* selected=nullptr;for(auto& peer:peers){if(peer.nativePort==mux->fromPort){selected=&peer;break;}}
++      if(!selected){for(auto& peer:peers){if(!peer.connection){peer.nativePort=mux->fromPort;selected=&peer;break;}}}
++      if(!selected){failure="Unexpected fourth mock stream";return false;}
++      if(!selected->connection){
++        auto parsed=st::decodeInitialSyn(mux->packet,*remote.destination());if(!parsed){failure="Bad real outbound SYN";return false;}
++        const auto id=300+static_cast<std::uint32_t>(selected-peers.data());auto connection=st::Connection::accept(id,id,*remote.destination(),*local.destination(),*parsed,8,stamp());
++        if(!connection){failure="Cannot accept actual outbound stream";return false;}selected->connection.emplace(std::move(*connection));
++      }else{selected->connection->receive(std::move(*packet),stamp());}
++      auto incoming=selected->connection->read(st::MaximumBuffered);selected->received.insert(selected->received.end(),incoming.begin(),incoming.end());flush(*selected);
++    }
++    return failure.isEmpty();
++  }
++};
++}
++class ManagerChannelTests final:public QObject {
++  Q_OBJECT
++  void registered(Router& router,Channel& channel){
++    QVERIFY(channel.begin(router.options()));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::GetDateType);auto date=cp::encodeMessage(cp::SetDate{Now,std::string("2.13.0")});QVERIFY(date&&router.send(*date));QTRY_VERIFY(channel.routerDate());
++    auto signer=identity("dsa");QVERIFY(channel.createLeaseSession(std::move(signer),{{"i2cp.fastReceive","true"},{"i2cp.messageReliability","none"}},Now));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateSessionType);auto created=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});QVERIFY(created&&router.send(*created));QTRY_VERIFY(channel.sessionId());QVERIFY(router.lease());QTRY_VERIFY(router.next());QVERIFY(cp::decodeCreateLeaseSet2(router.take()));QTRY_VERIFY(channel.leaseSetSubmission());QVERIFY(channel.enableStreamManager({}));
++  }
++private slots:
++  void concurrentActualFramesAndExplicitIncomingPeerRemainIndependent(){
++    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel);
++    auto first=channel.connectStream(router.remote.destination()->wire,{9000,80,3000});auto second=channel.connectStream(router.remote.destination()->wire,{9001,80,3000});QVERIFY(first&&second&&*first!=*second);
++    QTRY_VERIFY(router.pump()&&channel.managedStreamObservation(*first)&&channel.managedStreamObservation(*second)&&channel.managedStreamObservation(*first)->stream.phase==st::Phase::Established&&channel.managedStreamObservation(*second)->stream.phase==st::Phase::Established);
++    QVERIFY(channel.writeStream(*first,p::Bytes{'A'}));QVERIFY(channel.writeStream(*second,p::Bytes{'B'}));
++    QTRY_VERIFY(router.pump()&&router.peers[0].received==p::Bytes{'A'}&&router.peers[1].received==p::Bytes{'B'});
++    QVERIFY(channel.cancelStream(*first));QVERIFY(channel.releaseStream(*first));QCOMPARE(channel.managedStreamObservation(*second)->stream.phase,st::Phase::Established);
++    QVERIFY(channel.listenStreams({{6881,80},{*router.remote.destination()},8}));
++    auto& incoming=router.peers[2];incoming.nativePort=6881;incoming.connection.emplace(500,500,*router.remote.destination(),*router.local.destination());router.flush(incoming);
++    QTRY_COMPARE(channel.streamManagerObservation().pendingSyns,std::size_t{1});auto accepted=channel.acceptStream();QVERIFY(accepted&&*accepted!=*first&&*accepted!=*second);QVERIFY(channel.managedStreamObservation(*accepted)->inbound);
++    QTRY_VERIFY(router.pump()&&incoming.connection->observation().phase==st::Phase::Established);
++    p::Bytes handshake{19};const std::string protocol="BitTorrent protocol";handshake.insert(handshake.end(),protocol.begin(),protocol.end());handshake.resize(68,0x51);QVERIFY(incoming.connection->write(handshake));router.flush(incoming);
++    QVERIFY(channel.waitStream(*accepted,st::WaitFor::Readable,68,3000));QTRY_VERIFY(channel.managedStreamObservation(*accepted)->wait&&channel.managedStreamObservation(*accepted)->wait->state==st::WaitState::Ready);auto received=channel.takeStreamBytes(*accepted,68);QVERIFY(received);QVERIFY(*received==handshake);
++    const auto revision=channel.leaseSetSubmission()->revision;QVERIFY(router.lease());QTRY_VERIFY(router.pump()&&channel.leaseSetSubmission()->revision>revision);QVERIFY(router.leaseFrames>0);QCOMPARE(channel.managedStreamObservation(*second)->stream.phase,st::Phase::Established);QCOMPARE(channel.managedStreamObservation(*accepted)->stream.phase,st::Phase::Established);
++    channel.close();QCOMPARE(channel.streamManagerObservation().streams,std::size_t{0});QVERIFY(!channel.writeStream(*second,p::Bytes{'X'}));QVERIFY(router.failure.isEmpty());
++  }
++  void currentPendingSynNotificationMayDeleteTheController(){
++    Router router;QVERIFY(router.listen());QPointer<Channel> channel=new Channel(&router.server);registered(router,*channel);QVERIFY(channel->listenStreams({{6881,80},{*router.remote.destination()},8}));
++    QObject::connect(channel,&Channel::streamChanged,&router.server,[&]{if(channel&&channel->streamManagerObservation().pendingSyns){delete channel.data();}});
++    auto& incoming=router.peers[2];incoming.nativePort=6881;incoming.connection.emplace(500,500,*router.remote.destination(),*router.local.destination());router.flush(incoming);
++    QTRY_VERIFY(channel.isNull());QTRY_COMPARE(router.socket->state(),QAbstractSocket::UnconnectedState);
++  }
++  void finiteApplicationWaitDoesNotCloseOtherStreams(){
++    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel);auto operation=channel.connectStream(router.remote.destination()->wire,{9000,80,3000});QVERIFY(operation);
++    QTRY_VERIFY(router.pump()&&channel.managedStreamObservation(*operation)->stream.phase==st::Phase::Established);QVERIFY(channel.waitStream(*operation,st::WaitFor::Readable,1,20));
++    QTRY_VERIFY(channel.managedStreamObservation(*operation)->wait&&channel.managedStreamObservation(*operation)->wait->state==st::WaitState::TimedOut);QCOMPARE(channel.managedStreamObservation(*operation)->stream.phase,st::Phase::Established);QVERIFY(channel.writeStream(*operation,p::Bytes{'A'}));QTRY_VERIFY(router.pump()&&router.peers[0].received==p::Bytes{'A'});channel.close();
++  }
++};
++QTEST_GUILESS_MAIN(ManagerChannelTests)
++#include "i2cp_stream_manager_tests.moc"
+--- /dev/null
++++ b/preview/native/tests/i2p_streaming_manager_tests.cpp
+@@ -0,0 +1,79 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "manager.hpp"
++#include <algorithm>
++#include <filesystem>
++#include <fstream>
++#include <iostream>
++#include <iterator>
++#include <stdexcept>
++
++namespace p=biglybtc::services::i2p;
++namespace st=p::streaming;
++void require(bool value,const char* why){if(!value){throw std::runtime_error(why);}}
++template<class E>void take(std::expected<void,E> value){if(!value){throw std::runtime_error(value.error().message);}}
++template<class T,class E>T take(std::expected<T,E> value){if(!value){throw std::runtime_error(value.error().message);}return std::move(*value);}
++p::ClientIdentity identity(const char* family){
++  const auto read=[&](const char* suffix){std::ifstream in(std::filesystem::path(BIGLYBTC_I2P_TEST_KEYS_DIR)/(std::string(family)+suffix),std::ios::binary);require(bool(in),"Missing synthetic key");return p::Bytes(std::istreambuf_iterator<char>(in),std::istreambuf_iterator<char>());};
++  return take(p::makeClientIdentity(read(".sender"),p::Bytes(256,0x51),read(".known-test-key")));
++}
++st::Packet checked(st::Packet packet,const p::ClientIdentity& signer){return take(st::decode(take(st::encode(packet,signer)),*signer.destination()));}
++st::Mux mux(st::Packet packet,const p::ClientIdentity& signer,std::uint16_t from,std::uint16_t to){return {from,to,take(st::encode(packet,signer))};}
++st::Packet response(const p::ClientIdentity& peer,std::uint32_t id,std::uint32_t remote,std::uint32_t sequence=0,p::Bytes bytes={}){
++  st::Packet packet;packet.send=id;packet.receive=remote;packet.sequence=sequence;packet.flags=st::Signature;packet.payload=std::move(bytes);return checked(std::move(packet),peer);
++}
++void establish(st::Manager& manager,const p::ClientIdentity& local,const p::ClientIdentity& peer,std::uint64_t operation=1,std::uint32_t id=100,std::uint16_t port=9000){
++  take(manager.connect(operation,id,*peer.destination(),{{port,80},100,8},0));
++  auto syn=manager.next(1);require(syn&&syn->operation==operation,"Missing managed SYN");manager.dispatched(*syn,1);
++  auto inbound=take(st::Connection::accept(10,200,*peer.destination(),*local.destination(),take(st::decodeInitialSyn(take(st::encode(syn->packet,local)),*peer.destination())),8,1));
++  auto reply=inbound.next(2);require(bool(reply),"Missing actual peer SYN/ACK");inbound.dispatched(*reply,2);manager.receive(mux(*reply,peer,80,port),2);
++  require(manager.observation(operation)->stream.phase==st::Phase::Established,"Manager failed signed handshake");
++  auto ack=manager.next(3);require(ack&&ack->operation==operation,"Missing final handshake ACK");manager.dispatched(*ack,3);
++}
++void inboundCodecAndRole(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  st::Connection outgoing(1,300,*peer.destination(),*local.destination());auto syn=outgoing.next(0);require(bool(syn),"Missing peer SYN");outgoing.dispatched(*syn,0);
++  const auto encoded=take(st::encode(*syn,peer));auto parsed=take(st::decodeInitialSyn(encoded,*local.destination()));require(parsed.from&&parsed.from->wire==peer.destination()->wire,"Verified incoming FROM differs");
++  auto incoming=take(st::Connection::accept(2,100,*local.destination(),*peer.destination(),parsed));auto reply=incoming.next(1);require(reply&&reply->send==300&&reply->receive==100&&(reply->flags&st::Syn)&&!(reply->flags&st::NoAck)&&reply->ackThrough==0&&reply->nacks.empty(),"Inbound SYN/ACK fields differ");
++  incoming.dispatched(*reply,1);outgoing.receive(checked(*reply,local),2);require(outgoing.observation().phase==st::Phase::Established,"Initiator failed accepted inbound handshake");
++  auto ack=outgoing.next(3);require(bool(ack),"Missing initiator handshake ACK");outgoing.dispatched(*ack,3);incoming.receive(checked(*ack,peer),3);require(incoming.observation().inFlightPackets==0,"Inbound handshake ACK did not release SYN/ACK");
++  auto tampered=encoded;tampered.back()^=1;require(!st::decodeInitialSyn(tampered,*local.destination()),"Tampered incoming SYN accepted");
++  require(!st::decodeInitialSyn(encoded,*peer.destination()),"Wrong recipient hash accepted");auto noHash=*syn;noHash.nacks.clear();require(!st::decodeInitialSyn(take(st::encode(noHash,peer)),*local.destination()),"Unbound recipient SYN accepted");
++}
++void listenerBoundsAndExpiry(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  st::Manager manager(*local.destination(),{});take(manager.listen({{6881,80},{*peer.destination()},8},0));
++  for(std::uint32_t i=1;i<=5;++i){st::Connection remote(i,300+i,*peer.destination(),*local.destination());auto syn=remote.next(1);require(bool(syn),"Missing flood fixture SYN");manager.receive(mux(*syn,peer,80,6881),1);}
++  require(manager.observation().pendingSyns==4&&manager.observation().rejectedPackets==1&&manager.observation().pendingSynBytes<=st::MaximumPendingSynBytes,"Listener exceeded fixed pending capacity");
++  manager.tick(3000);require(manager.observation().pendingSyns==4,"SYN expired before original3s boundary");manager.tick(3001);require(manager.observation().pendingSyns==0&&manager.observation().expiredSyns==4,"SYN backlog did not retire at original3s boundary");require(!manager.accept(1,100,3001),"Expired SYN acquired stream");
++  manager.stopListening();require(!manager.receives(),"Stopped listener retained receive authority");
++}
++void multiplexFairnessAndMemory(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  st::Manager manager(*local.destination(),{});
++  for(unsigned i=0;i<4;++i){take(manager.connect(i+1,100+i,*peer.destination(),{{static_cast<std::uint16_t>(9000+i),80},100,8},0));take(manager.write(i+1,p::Bytes(st::MaximumBuffered,static_cast<p::Byte>(i)),0));}
++  require(manager.observation().streams==4&&manager.observation().queuedTx==4*st::MaximumBuffered,"Global bounded TX envelope differs");require(!manager.connect(5,105,*peer.destination(),{{9010,80},100,8},0),"Fifth stream exceeded fixed capacity");
++  for(unsigned i=0;i<4;++i){auto next=manager.next(1);require(next&&next->operation==i+1,"SYN dispatch did not rotate fairly");manager.dispatched(*next,1);auto reply=response(peer,100+i,200+i);reply.flags|=st::Syn|st::From;reply.from=*peer.destination();manager.receive(mux(reply,peer,80,static_cast<std::uint16_t>(9000+i)),2);}
++  for(unsigned turn=0;turn<12;++turn){auto next=manager.next(3);require(next&&next->operation==turn%4+1&&!next->packet.payload.empty(),"Available payload credit did not rotate fairly");manager.dispatched(*next,3);}
++  require(!manager.next(3),"Global scheduler exceeded per-stream initial window");require(!manager.write(1,p::Bytes{1},4),"In-flight payload escaped per-stream TX cap");
++  for(unsigned i=0;i<4;++i){for(unsigned sequence=1;sequence<=2;++sequence){auto packet=response(peer,100+i,200+i,sequence,p::Bytes(32768,static_cast<p::Byte>(i)));packet.flags|=st::NoAck;manager.receive(mux(packet,peer,80,static_cast<std::uint16_t>(9000+i)),4);}}
++  require(manager.observation().queuedRx==4*st::MaximumBuffered,"Global bounded RX envelope differs");require(manager.cancel(1)&&manager.release(1),"Cancelled stream slot did not reclaim");require(manager.observation(2)->stream.phase==st::Phase::Established,"One stream cancel retired an unrelated peer");
++  take(manager.connect(5,105,*peer.destination(),{{9010,80},100,8},5));require(manager.observation().streams==4,"Released slot could not be reused with fresh identity");const auto rejected=manager.observation().rejectedPackets;manager.receive(mux(response(peer,100,200,3,{'X'}),peer,80,9000),6);require(manager.observation().rejectedPackets==rejected+1&&manager.observation(5)->stream.queuedRx==0,"Retired stream packet entered fresh operation");
++}
++void finiteWaitAndLongActivity(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  st::Manager manager(*local.destination(),{90000,st::IdleAction::Send});establish(manager,local,peer);
++  require(manager.wait(1,st::WaitFor::Readable,1,30,10),"Finite read wait refused");manager.tick(40);require(manager.observation(1)->wait->state==st::WaitState::TimedOut&&manager.observation(1)->stream.phase==st::Phase::Established,"Read timeout incorrectly disconnected session");
++  require(manager.wait(1,st::WaitFor::Readable,1,30,41),"Settled wait did not rearm");manager.receive(mux(response(peer,100,200,1,{'A'}),peer,80,9000),50);require(manager.observation(1)->wait->state==st::WaitState::Ready&&take(manager.read(1,1,50))==p::Bytes{'A'},"Actual ordered byte failed readable wait");
++  // Activity beyond the legacy120s total budget is legal in explicit manager
++  // mode. These pure timestamps do not constitute a real long-lived session.
++  manager.receive(mux(response(peer,100,200,2,{'B'}),peer,80,9000),130000);require(manager.observation(1)->stream.phase==st::Phase::Established,"Active manager inherited legacy total120s timeout");
++  take(manager.read(1,1,130000));auto keepalive=manager.next(220000);require(keepalive&&keepalive->packet.sequence>0&&keepalive->packet.payload.empty()&&!(keepalive->packet.flags&st::Syn),"Idle send failed original empty sequence-bearing probe");manager.dispatched(*keepalive,220000);require(manager.observation(1)->stream.inFlightPackets==1,"Empty keepalive did not own an ACK/retry slot");
++  manager.receive(mux(response(peer,100,200),peer,80,9000),220001);require(manager.observation(1)->stream.inFlightPackets==1,"Unrelated ACK incorrectly acknowledged keepalive");
++  st::Manager disconnect(*local.destination(),{10,st::IdleAction::Disconnect});establish(disconnect,local,peer);disconnect.tick(13);require(disconnect.observation(1)->stream.phase==st::Phase::IdleTimeout,"Explicit idle disconnect boundary differs");
++}
++void originalOneShotIdleJitter(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  std::vector<unsigned> draws;st::Manager manager(*local.destination(),{10,st::IdleAction::Disconnect},[&](unsigned bound){draws.push_back(bound);return bound==10000?37U:0U;});establish(manager,local,peer);require(manager.observation(1)->idleJitterMilliseconds==37&&draws==std::vector<unsigned>{10000},"Original once-per-connection idle entropy differs");require(manager.wakeup()==50,"Original base plus idle jitter deadline differs");manager.tick(49);require(manager.observation(1)->stream.phase==st::Phase::Established,"Idle jitter fired early");manager.tick(50);require(manager.observation(1)->stream.phase==st::Phase::IdleTimeout&&draws.size()==1,"Idle jitter was redrawn on timer turns");
++}
++void postVerificationFence(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  st::Manager manager(*local.destination(),{});take(manager.connect(1,100,*peer.destination(),{{9000,80},10,8},0));auto syn=manager.next(1);require(bool(syn),"Missing short-budget SYN");manager.dispatched(*syn,1);
++  auto reply=response(peer,100,200);reply.flags|=st::Syn|st::From;reply.from=*peer.destination();manager.receive(mux(reply,peer,80,9000),2,[]{return 10;},[]{return true;});require(manager.observation(1)->stream.phase==st::Phase::Timeout,"Decode crossing handshake deadline acquired Established state");
++  st::Manager refused(*local.destination(),{});take(refused.listen({{6881,80},{*peer.destination()},8},0));st::Connection remote(1,300,*peer.destination(),*local.destination());auto request=remote.next(1);require(bool(request),"Missing current-gate SYN");refused.receive(mux(*request,peer,80,6881),1,[]{return 2;},[]{return false;});require(refused.observation().pendingSyns==0,"Post-signature source revocation admitted SYN");
++  refused.terminate(st::Phase::LeaseExpired);require(!refused.receives()&&refused.observation().pendingSyns==0,"Lease retirement left listener authority");
++}
++int main(){try{auto local=identity("dsa"),peer=identity("ed25519");inboundCodecAndRole(local,peer);listenerBoundsAndExpiry(local,peer);multiplexFairnessAndMemory(local,peer);finiteWaitAndLongActivity(local,peer);originalOneShotIdleJitter(local,peer);postVerificationFence(local,peer);std::cout<<"PASS bounded session Streaming manager source-authored controls\n";return 0;}catch(const std::exception& failure){std::cerr<<"FAIL "<<failure.what()<<'\n';return 1;}}

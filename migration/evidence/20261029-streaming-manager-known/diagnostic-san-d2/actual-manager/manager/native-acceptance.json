@@ -1,0 +1,15 @@
+{
+    "actual_activity_ms": "129594",
+    "actual_renewals": "1",
+    "cancel_late_payloads": "1",
+    "http_streams": 2,
+    "inbound_handshake_bytes": 68,
+    "native_destination_sha256": "2f0554e07af3496216dd5645d91b1c65711aecfb033fd19109df59f0bd3bc1c7",
+    "peak_rx_bytes": "1156",
+    "peak_tx_bytes": "142",
+    "real_router_or_bt_admission_claimed": false,
+    "rounds": 26,
+    "session_id": 7,
+    "status": "PASS",
+    "unchanged_lease_public_key_sha256": "143ca797b1f42900bf5fb837acd2dcbb7953713179492d5c06e8644e0048cb19"
+}

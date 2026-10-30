@@ -1,0 +1,12 @@
+Root-only child of affected-followup, preserving that frozen parent and all failed r2/A1/D1/D2/Public evidence. Exact production remains unchanged; fixture9496 changes only two native JVM-ready allowances and two external Java fixture sources.
+
+Use the actual root-adoption effective25/source3d58 and actual fin-callback java-prepared-r1 receiptf967. The runner checks the full source-map inverse against72b44/A1, exact two-path Git delta, corrected helper sources/JAR/compiler/one-javac log/four classes before and after. It executes zero javac. Prebuild images are current A1 images-before; every other image remains exact.
+
+All lanes build only ACTOR+MANAGER and execute fresh peer/upload/manager CTest suites (3 each). NO diagnostic manager reuse with a changed helper. Retain only unchanged16 common/18 GCC r2 exact-image/definition rows, preserving failed whole invocations. Existing Clang/SAN Public exact-image proof is retained; GCC Public stays BLOCKED with original and later pre-ELF auth failures, never PASS. No Public invocation. Total19/22 are explicit associated rows, not a fresh full-cohort claim. Existing FIFO3, Clang-first and subject flock remain.
+
+Command, after root source review:
+make -f /home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/jobs.mk -j3 SOURCE_COMMIT=3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742 ADOPTION=/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/fixtures/fin-callback-order/root-adoption.json ATTEMPT=a2
+
+Author performed AST/hash/source-map checks only, no runner/helper/compiler/test/admin execution or N mutation. No private adaptation until actual results pass. No promotion/publication; user says finish current milestone then STOP. Other work remains paused. Callback ordering race is source-corrected; unrelated intermittent SYN causality/stability/performance parity remains unestablished.
+
+Source-review correction before any execution: prior draft manifestad10 referenced absent Public recovery images-before.json. Removed that nonexistent-file read; existing exact original-r2 Public image equality plus pinned failed pre-ELF recovery source/result/refusal remains. Prior draft was never executed.

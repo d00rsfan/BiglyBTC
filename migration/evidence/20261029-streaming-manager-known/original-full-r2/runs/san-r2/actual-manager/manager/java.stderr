@@ -1,0 +1,9 @@
+java.lang.IllegalStateException: Actual manager application failed
+	at ManagerPeer.main(ManagerPeer.java:109)
+Caused by: java.io.IOException: disconnected
+	at net.i2p.client.streaming.impl.PacketLocal.waitForCompletion(PacketLocal.java:335)
+	at net.i2p.client.streaming.impl.MessageOutputStream.flush(MessageOutputStream.java:391)
+	at net.i2p.client.streaming.impl.MessageOutputStream.close(MessageOutputStream.java:434)
+	at ManagerPeer.http(ManagerPeer.java:84)
+	at ManagerPeer.lambda$main$3(ManagerPeer.java:99)
+	at java.base/java.lang.Thread.run(Thread.java:1516)

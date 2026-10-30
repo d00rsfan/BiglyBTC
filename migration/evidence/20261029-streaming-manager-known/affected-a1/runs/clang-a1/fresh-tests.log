@@ -1,0 +1,17 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+Connected to MAKE jobserver
+    Start 298: i2p-original-streaming-peer
+1/3 Test #298: i2p-original-streaming-peer ......   Passed   29.09 sec
+    Start 299: i2p-original-streaming-upload
+2/3 Test #299: i2p-original-streaming-upload ....   Passed   16.42 sec
+    Start 304: i2p-original-streaming-manager
+3/3 Test #304: i2p-original-streaming-manager ...   Passed  133.52 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+explicit-i2p    = 179.03 sec*proc (3 tests)
+long            = 133.52 sec*proc (1 test)
+reference       = 179.03 sec*proc (3 tests)
+
+Total Test time (real) = 179.08 sec
