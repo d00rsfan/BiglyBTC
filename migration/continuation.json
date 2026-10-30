@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "updated_utc": "2026-10-30T13:02:15.292324+00:00",
+  "objective": "Completed the requested explicit private I2P provider/owner section. STOP before another chapter.",
+  "native_head": "05226c63fd46bf18cd5299e793629123a637ef52",
+  "qualified_native_source": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+  "native_source_pushed": true,
+  "current_source_qualification": "PASS: SDK9; fresh native Clang11/GCC11/leak-enabled ASan+UBSan11/default4; actual tracker-discovered two-profile131072-byte transfer, withdrawal and joins. Private optional scope only.",
+  "accepted_dist_sha256": "aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b",
+  "receipts": [
+    {
+      "name": "Complete bounded private-owner qualification",
+      "path": "migration/evidence/20261030-private-i2p-provider-transfer/verification.json",
+      "sha256": "38124da124c0eb1f2d2bfd50037f45372c57359781f26bde086e559a1dbdf147"
+    },
+    {
+      "name": "SDK direct controls",
+      "path": "migration/evidence/20261030-private-i2p-provider-transfer/sdk/runs/r3/result.json",
+      "sha256": "e68a0cc5166d7ea7b43408e36e9fb396899665932d69fbb4d35449a0418967c0"
+    },
+    {
+      "name": "Independent SDK artifact review",
+      "path": "migration/evidence/20261030-private-i2p-provider-transfer/sdk/root-artifact-review/review.json",
+      "sha256": "7f8d7fcf3c4812a0d5fff24e5bb9fcff17c8bb0f7246517d5c832ba871475f60"
+    },
+    {
+      "name": "Clang eleven fresh suites",
+      "path": "migration/evidence/20261030-private-i2p-provider-transfer/native/clang/result.json",
+      "sha256": "ce0faabceaaea1fd0e029e2fd63c2247ec88b0748f44b5118a2278972dc74231"
+    },
+    {
+      "name": "GCC eleven fresh suites",
+      "path": "migration/evidence/20261030-private-i2p-provider-transfer/native/gcc/result.json",
+      "sha256": "e7b250e2f96ef6999374a6f1b1ef550385ac9478cc334c4ebecbbd8daa29509b"
+    },
+    {
+      "name": "Leak-enabled SAN eleven fresh suites",
+      "path": "migration/evidence/20261030-private-i2p-provider-transfer/native/san/result.json",
+      "sha256": "1a66f857d4b672bb3463a11970b62e72009c4b624dcbe2ca8bec6b79e848a6de"
+    },
+    {
+      "name": "Default OFF four controls",
+      "path": "migration/evidence/20261030-private-i2p-provider-transfer/native/default/result.json",
+      "sha256": "f19f87ac48d68a8a1189bcc27ad1060d481668c21c1d97a45fa68c74c2e4dda9"
+    },
+    {
+      "name": "Actual isolated two-owner transfer",
+      "path": "migration/evidence/20261030-private-i2p-provider-transfer/acceptance/run/result.json",
+      "sha256": "f447a03d48c67bd5d6fd7565a9db13401f988495db3bf4e2a293656b04b78b04"
+    },
+    {
+      "name": "Hosted CI for qualified source",
+      "path": "migration/evidence/20261030-private-i2p-provider-transfer/gate-receipts/hosted-ci-source.json",
+      "sha256": "8999ad9806703f25a6c0f46fdb22725013f741395e817313c1b06c86cd0f082f"
+    }
+  ],
+  "active_local_sessions": [],
+  "active_sessions": [],
+  "remote_ci": {
+    "qualified_source": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+    "41053224420": "success",
+    "41053224451": "success"
+  },
+  "next_action": "STOP. Section complete; do not implement a following chapter until the user requests it.",
+  "pending_question": "None for this completed section.",
+  "original_checkpoint_expected_parent": "e62c2acedff647d8eed6f38c22a38a18efafda67",
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "parallel_source": {
+    "error_codec": "Completed source review/SDK lifecycle correction/final native recipe; no active work",
+    "error_driver": "Completed port-zero fix/SDK recipe and peer-route audit; no active work",
+    "error_oracle": "Completed bounded probe/Java and final acceptance source; no active work"
+  },
+  "details": "Completed evidence publication05226c63fd46bf18cd5299e793629123a637ef52 and qualified native source9f46cf05d133624e48c6d60d45d2c503a6141ff9 are separate. A subsequent stop/provenance commit may change metadata only; compare preview/native trees. Default355/f746 and119-leaf dist preserved; both registries20/108/22 identical, partial states/nulls preserved. Original Java live profile/payload/HEAD/index untouched. Historical operator metadata archived; raw progress remains durable in /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029. DATA/chat/rooms remain unstarted. Local original-repository review checkpoint e62c2acedff647d8eed6f38c22a38a18efafda67 is durable; ordinary HEAD/index preserved.",
+  "stop_after_current_milestone": true,
+  "stop_after_current_section": true,
+  "current_section": "Complete: explicit optional private I2P provider/owner and actual two-profile torrent transfer",
+  "effective_acceptance": "build/i2p-provider-attachment-20261029/final-transfer-live-executor",
+  "effective_native_recipe": "build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/live-executor-sdk"
+}

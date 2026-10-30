@@ -1,0 +1,368 @@
+{
+  "schema": 1,
+  "updated_utc": "2026-10-30T11:05:01.382160+00:00",
+  "objective": "Complete NEXT section only: explicit optional I2P provider/native owner and real two-profile torrent transfer, then stop. Preserve completed M and running Java/profile.",
+  "native_head": "153799b30891dcb733be28fe5472a31334141426",
+  "native_source_pushed": "8e9e248eea56f345f1bef169ea0bfcf7184cc7c3",
+  "current_source_qualification": "Probe-only153799buildPASS (ordinary11GCCimagesunchanged). Progress recipe30de actual50900: at5s bothownersActive, seedactualseeding131072, leech0, bridge2sockets each, wrongcaprejected1each. Product/SKDsame8e9/2f89. Positive transferpending; originalr1FAIL and45/155GDBdiagnosticsretained. 155GDBprovesQtfinish blocksOwnedTorrent.join/session_proxy whileLTschedulerwait,2mmapwait.",
+  "accepted_dist_sha256": "aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b",
+  "receipts": [
+    {
+      "name": "W Clang",
+      "path": "build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/clang-admin-r1/result.json",
+      "sha256": "52df5cb8a517b3f57518c9530d3286fea5da517e0d79e287c6b96301568ee36e"
+    },
+    {
+      "name": "W GCC",
+      "path": "build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/gcc-admin-r1/result.json",
+      "sha256": "3eae0fc761ccef939fe794a3d1b4f290924876d07c7f797705098b1015722612"
+    },
+    {
+      "name": "W leak-SAN",
+      "path": "build/i2p-streaming-window-followup-20261029/amendments/public-bound/runs/san-admin-r1/result.json",
+      "sha256": "1d2d7a6101b7b7acc4023dd3b6e977ac11a5f9258f23309819f920bb61c63689"
+    },
+    {
+      "name": "W source push",
+      "path": "build/i2p-streaming-window-followup-20261029/amendments/public-bound/source-push-admin-r1.json",
+      "sha256": "91727e769c365c72b21a0b857e37f5c979047c740b150d2b4610532a72c63a86"
+    },
+    {
+      "name": "Recovery SOURCE",
+      "path": "build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/auth-wait-recovery/manifest.json",
+      "sha256": "f392edbb4b41960b69c80168a266cda10dd9096b69e79e363606ef83acc6b759"
+    },
+    {
+      "name": "Resumed compact publisher SOURCE",
+      "path": "build/i2p-streaming-window-followup-20261029/amendments/public-bound/corrections/resumed-compact-publication/manifest.json",
+      "sha256": "f21d76471c9660d21b5152e60d811c3150e51b5878ee4bedf391f8396aeda5af"
+    },
+    {
+      "name": "M SOURCE",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/manifest.json",
+      "sha256": "855699e0cb89510482b6462926fd666f08fd02a303787ec1654b9b6983a5a22e"
+    },
+    {
+      "name": "Provider acceptance SOURCE",
+      "path": "build/i2p-provider-attachment-20261029/acceptance/manifest.json",
+      "sha256": "1aabe4a490323a3edaecd281942c9491d25b7323d564a5b39d6ec5fb7e1d7bb9"
+    },
+    {
+      "name": "Provider implementation SOURCE",
+      "path": "build/i2p-provider-attachment-20261029/implementation/manifest.json",
+      "sha256": "33c3bde8f972e97e44c352e1ed9784276f8310fd66baf362ce6e7940420c8cfc"
+    },
+    {
+      "name": "W resumed gcc",
+      "path": "build/i2p-streaming-window-followup-20261029/amendments/public-bound/resume-runs/gcc-auth-r1/result.json",
+      "sha256": "eea4ea810b23c6c49283b6c739378ddac61e548cfa5d485e06106747d1047fd2"
+    },
+    {
+      "name": "W resumed san",
+      "path": "build/i2p-streaming-window-followup-20261029/amendments/public-bound/resume-runs/san-auth-r1/result.json",
+      "sha256": "38da9c721bf47b47ea0cd568a31455716a2baf4d54bc2eb6dca1c4eed8a3554c"
+    },
+    {
+      "name": "W private runtime",
+      "path": "build/i2p-streaming-window-followup-20261029/amendments/public-bound/private-runs/resumed-r1/result.json",
+      "sha256": "42a697a58514c57b6cb52bf0aea399f048c82a89d65c63e099a1d1302937c8fd"
+    },
+    {
+      "name": "W final verification",
+      "path": "migration/evidence/20261029-public-bound-streaming-window/verification.json",
+      "sha256": "453ae1d6335e7ef604cc3f378398d6e1434c45cb6d9b6241928e24327d35b91c"
+    },
+    {
+      "name": "W publication",
+      "path": "build/i2p-streaming-window-followup-20261029/amendments/public-bound/publish.json"
+    },
+    {
+      "name": "M adoption",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/root-adoption.json",
+      "sha256": "3646f8623bf9d8bd46d49bb148d6301e5b5b258bdde5e2159356cb86a2fd6644"
+    },
+    {
+      "name": "M Java helper",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/java-runs/r1/result.json",
+      "sha256": "367bc10a4a8fbde8f716498407bfe10f72d33b575d16706b1a7df70c812622c4"
+    },
+    {
+      "name": "M clang",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/runs/clang-r1/result.json"
+    },
+    {
+      "name": "M gcc",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/runs/gcc-r1/result.json"
+    },
+    {
+      "name": "M san",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/runs/san-r1/result.json"
+    },
+    {
+      "name": "M repair adoption",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/root-adoption.json",
+      "sha256": "9c1d0cccb27e270872c3d949619510f37cfa3ebcddf00723e5a35b34715f3ae3"
+    },
+    {
+      "name": "M reused Java helpers",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/java-runs/reused-r2/result.json",
+      "sha256": "e56977df70a5e432f17b09b0e86fd7916390cdc22cda8b2476454c773d58f443"
+    },
+    {
+      "name": "M repair root review",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/root-review.json",
+      "sha256": "fbbe7190f668db7b54158e82107a12e7b93fff5b1114a73dfacf51364fa766a6"
+    },
+    {
+      "name": "M repair independent review",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2-review/review.json",
+      "sha256": "9d636253f47fd5910190ecb981d6f46fd0fe821ee50b33af064c1bc502dbe1ac"
+    },
+    {
+      "name": "M r2 clang",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/clang-r2/result.json",
+      "sha256": "21cc58687c61660703046d5274ffc1f91e931a25a1d87116be6e4ec958afacff"
+    },
+    {
+      "name": "M r2 gcc",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/gcc-r2/result.json"
+    },
+    {
+      "name": "M r2 san",
+      "path": "build/manager-known-followup-20261029/amendments/final-admin-authority/amendments/resumed-w-prerequisite/amendments/idempotent-manager-r2/runs/san-r2/result.json",
+      "sha256": "73a9ce61b2d36d8c47349fb973397b47898851cc91c538ee140b90d88e10ccbc"
+    },
+    {
+      "name": "M diagnostics adoption",
+      "path": "build/manager-known-followup-20261029/diagnostics/root-adoption.json",
+      "sha256": "5d4815ebe98fedbbb0a8e9b51efb2daad47a47cd6189b1f732b8d2b115d07362"
+    },
+    {
+      "name": "M two-selector root review",
+      "path": "build/manager-known-followup-20261029/diagnostics/two-selectors/root-review.json",
+      "sha256": "c8dc99ab70b4acab0b6612f3aba90d191ccb2d56ebe5ee9e43e0a2bff20be16d"
+    },
+    {
+      "name": "M diagnostic gcc",
+      "path": "build/manager-known-followup-20261029/diagnostics/two-selectors/runs/gcc-d1/result.json",
+      "sha256": "0abe3a3a1568be99895ee9012973b82b1380a2ac7977c892904931d078ced254"
+    },
+    {
+      "name": "M diagnostic san",
+      "path": "build/manager-known-followup-20261029/diagnostics/two-selectors/runs/san-d1/result.json",
+      "sha256": "7a55eb5b8e8a5e3e541f25aedd106f011f3d72c4bcc139bd8aabb1458b44e739"
+    },
+    {
+      "name": "M diagnostic Java preparation",
+      "path": "build/manager-known-followup-20261029/diagnostics/java-prepared-r1/result.json",
+      "sha256": "5af8dcfe7226eacf1fba0f4f8752443b9064b94ddeeba8aeef17642fd158168d"
+    },
+    {
+      "name": "M GCC Public auth expiry",
+      "path": "build/manager-known-followup-20261029/diagnostics/public-recovery-r1/result.json",
+      "sha256": "235b22e441dd4f70fdcdd3d52e20d4c98adb8aa3b434133d74b56877d45fbf03"
+    },
+    {
+      "name": "M SAN Java-cause diagnostic",
+      "path": "build/manager-known-followup-20261029/diagnostics/two-selectors/amendments/java-asynchronous-causes/runs/san-d2/result.json",
+      "sha256": "ad6cbdbecc2d7344fda99194d640d4c87021762e4eea909c66922af4fdb1b386"
+    },
+    {
+      "name": "M affected source review",
+      "path": "build/manager-known-followup-20261029/affected-followup/root-review.json",
+      "sha256": "b2a3dc8b3e4a476e269519668c0ebae24dc3a7e20e990644b1cb02d1a53377a0"
+    },
+    {
+      "name": "M effective25 adoption",
+      "path": "build/manager-known-followup-20261029/affected-followup/effective-adoption.json",
+      "sha256": "6ee422d4befc80a56ed24f0cfc9cf8f77df8d99f24983f327993e570214cf5f4"
+    },
+    {
+      "name": "M affected clang",
+      "path": "build/manager-known-followup-20261029/affected-followup/runs/clang-a1/result.json"
+    },
+    {
+      "name": "M affected gcc",
+      "path": "build/manager-known-followup-20261029/affected-followup/runs/gcc-a1/result.json"
+    },
+    {
+      "name": "M affected san",
+      "path": "build/manager-known-followup-20261029/affected-followup/runs/san-a1/result.json"
+    },
+    {
+      "name": "M FIN fixture adoption",
+      "path": "build/manager-known-followup-20261029/fixtures/fin-callback-order/root-adoption.json",
+      "sha256": "f919cb9b3b72b9cb15c10388b62e745b970b764d3d4aa0ab674b34d52dd13f6a"
+    },
+    {
+      "name": "M FIN helper preparation",
+      "path": "build/manager-known-followup-20261029/fixtures/fin-callback-order/java-prepared-r1/result.json",
+      "sha256": "f9676e191ac62abaddeebf0a29b5c2798a73738c2d2ab76c369025c3cc6b1053"
+    },
+    {
+      "name": "M FIN fixture independent review",
+      "path": "build/manager-known-followup-20261029/fixtures/fin-callback-order-review/review.json",
+      "sha256": "7736eef7aaafdd8d4fe57ac4227697ab42a217352426da5e8594426f44edaa75"
+    },
+    {
+      "name": "M corrected A2 clang",
+      "path": "build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/clang-a2/result.json",
+      "sha256": "2c6953a2170a031cd71bb7ed2c91957171bd6d39277619e16c04ebbe0aaefcf6"
+    },
+    {
+      "name": "M corrected A2 gcc",
+      "path": "build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/gcc-a2/result.json",
+      "sha256": "1bfbf7aefa35b916d00b44b9d777561549c9b2dcbe6144c57b8c120eedd2373a"
+    },
+    {
+      "name": "M corrected A2 san",
+      "path": "build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/runs/san-a2/result.json",
+      "sha256": "7598693e1c508c3d4c51c2a5b798ac5a293d4413b89111e8a12bd1f21e48bc99"
+    },
+    {
+      "name": "M implementation checkpoint pushed",
+      "path": "build/manager-known-followup-20261029/fixtures/fin-callback-order/source-push.json",
+      "sha256": "0e0c2231d75191e56693c51c626c83e6c534b1fe40dc10fcdab7e0ec13d0ea4c"
+    },
+    {
+      "name": "M corrected private5",
+      "path": "build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-five/private-runs/p1/result.json",
+      "sha256": "1bd93c10f29595a2ec473a9ab91dc50a51158f1ce11d2875b3a9cfa2b2c8aa28"
+    },
+    {
+      "name": "M hosted CI observation",
+      "path": "build/manager-known-followup-20261029/fixtures/fin-callback-order/hosted-ci-observation.json",
+      "sha256": "ff0a316f965960996a5da300148f1e95678cfdb9eb453ba04ce64484eba2d1d4"
+    },
+    {
+      "name": "M authenticated GCC Public r3",
+      "path": "build/manager-known-followup-20261029/diagnostics/public-recovery-r3/result.json",
+      "sha256": "b65e08c1231a53160a4436e8fcd66e36f55c6fd2f3c1efc7ccb354276fea280e"
+    },
+    {
+      "name": "M six private subjects authenticated",
+      "path": "build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/private-public/runs/u1/result.json",
+      "sha256": "8a48240fcf492b1a164dc719eed07c45f060dbdd367f8daa4716487b2a12c891"
+    },
+    {
+      "name": "M final closeout source review",
+      "path": "build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/closeout/root-operator-export-review.json",
+      "sha256": "437faba65078e5e7f5d0ff7c9f6c3f2c1b78e72ceb4a851a3fda1760ff744e24"
+    },
+    {
+      "name": "M final verification",
+      "path": "migration/evidence/20261029-streaming-manager-known/verification.json",
+      "sha256": "68a9acea510fabf5e3cc900eb6ce7d2f84a4c0932219ba30b74d4ef420ff3c38"
+    },
+    {
+      "name": "M actual promotion",
+      "path": "build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/closeout/promotion.json",
+      "sha256": "752c77a6cdaa610ce6e71cb27343c6a6c5f0a5292d7101aa540ad0091b3c273a"
+    },
+    {
+      "name": "M final main publication",
+      "path": "build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/closeout/publish.json",
+      "sha256": "739b01a8c7027e08d1d784c9cc680c5124f14e852301bcf5f16bec797bed05f0"
+    },
+    {
+      "name": "M original migration checkpoint",
+      "path": "build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/closeout/original-checkpoint.json",
+      "sha256": "d8ab5f852c99a66e08a50f86bdd405f2ea00dcc536dbba8b2599f2b48bdaab9b"
+    },
+    {
+      "name": "M completion boundary",
+      "path": "build/manager-known-followup-20261029/affected-followup/amendments/fin-callback-order/closeout/completion.json",
+      "sha256": "53fd58a9b72eb41c2dff78aa38ce17331510baa17b983621a56ddd27f08b7606"
+    },
+    {
+      "name": "SDK r1 failed",
+      "path": "build/i2p-provider-attachment-20261029/provider-candidate-r1/runs/r1/result.json",
+      "sha256": "4dde5ae702c0bcfccadf38ea96c50846789f8d9427a4a985de42617e96e5fe60"
+    },
+    {
+      "name": "Five namespace preflight PASS",
+      "path": "build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/result.json",
+      "sha256": "2edca867b5acf4b434ff37a81bdfd7254872dd1189552262719da58423bd7f01"
+    },
+    {
+      "name": "Native SOURCE root review",
+      "path": "build/i2p-provider-attachment-20261029/native-followup-20261030/root-source-review.json",
+      "sha256": "78fdf13c2eaf4af7bc5a0f1199e5432d657d4098dac54f55738ea41831257c2a"
+    },
+    {
+      "name": "Optional private owner source adopted",
+      "path": "build/i2p-provider-attachment-20261029/native-followup-20261030/root-adoption.json",
+      "sha256": "f3b96915b061f7cc0196b4dc9650c494bd3658de3f363bb95aca6fcb24bd3c5b"
+    },
+    {
+      "name": "Native clang r1 missing header failure",
+      "path": "build/i2p-provider-attachment-20261029/native-followup-20261030/runs/clang-r1/result.json",
+      "sha256": "9b0f3a56ec0a7a7eb7cc422226dd6181cb903d5595e84ffecee630f943c779d4"
+    },
+    {
+      "name": "Clang r2 fixture layout failure with10passing suites",
+      "path": "build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/public-lt-headers/runs/clang-r2/result.json",
+      "sha256": "ad8d9ea9edeeb4ce69a7b4b9f49466d301936bc62f6fe1de277356d973c7e300"
+    },
+    {
+      "name": "Clang r3 eleven fresh affected tests PASS",
+      "path": "build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/clang-r3/result.json",
+      "sha256": "8c15a1e12c9bf512125693d579e4c0bf89128e0ca8181a3e118423e54720e992"
+    },
+    {
+      "name": "Default OFF GCC four controls PASS",
+      "path": "build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/default-r3/result.json",
+      "sha256": "3430b8a00e65f42adb428825e842b1e70e4bcf57c6555495f1dd771b20ead96f"
+    },
+    {
+      "name": "GCC r3 eleven fresh affected tests PASS",
+      "path": "build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/gcc-r3/result.json",
+      "sha256": "0a13f8122ff38464b7406d0eaa2a72d14d2795b073c63c5058eba04930cb9ae6"
+    },
+    {
+      "name": "SAN r3 eleven fresh affected tests PASS",
+      "path": "build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/san-r3/result.json",
+      "sha256": "3254f398f424262d5ad8be54b23db2c7df963a556ca21f4a2c235d2ec823f065"
+    },
+    {
+      "name": "Actual I2P transfer r1 timeout FAILURE",
+      "path": "build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/runs/r1/result.json",
+      "sha256": "05f6f4709d2fe402ef736dc86524be0819d868a7c23c3e3ab7742c883ea9ec90"
+    }
+  ],
+  "active_local_sessions": [],
+  "remote_ci": {
+    "qualified_source_commit": "8e9e248eea56f345f1bef169ea0bfcf7184cc7c3",
+    "SDK41038628741": "success",
+    "desktop41038628809": "success"
+  },
+  "next_action": "Observe41075 status only; SDK53323 joined0 all9PASS, record/review/approval actualmeasured candidate-r2/root-artifact-review/review.json; noDSO/SDKrebuildaftertestfix. Finalnative11/11/11+4 underlive-executor-sdk currentlyrunning; auto thenactualfinal-transfer-live-executor/runs/r1. Onfailure inspectfinish-gates-r3/result +specificlog. OnPASS actualfiniteevidence/registry/validators/source+metadata mainpush/checkpoint97b80, stopsection.",
+  "pending_question": "None. Latest user explicitly requested next section; prior stop applies to future work after this section.",
+  "original_checkpoint_expected_parent": "97b80f5d4bfa6b30b5a76f41b2669c253ae4c2a1",
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "parallel_source": {
+    "error_codec": "SDKfixedstorage859855 andfinalnativequalificationdec734 SOURCE complete",
+    "error_driver": "Portzero8d747 andSDKrecipea90d4 SOURCE complete",
+    "error_oracle": "Finalacceptancef1fd SOURCE complete"
+  },
+  "details": "Completed scope: migration/M-CURRENT-HANDOFF.md. Mainfd2c07cpushedclean. OriginalJavaHEADcb8c6/indexac456preserved. Bothregistries20/108/22identicalpartialstates. Singleverifieddist119leaves, olddist+6copiedtestsremoved. Runtime/tmp prefixnone; temporarycheckpointindexremovedafterdurablegitcommit. No active local subjects.",
+  "stop_after_current_milestone": false,
+  "stop_after_current_section": true,
+  "current_section": "Next section: explicit private I2P provider/native owner, isolated two-profile real torrent transfer",
+  "active_sessions": [
+    {
+      "session_id": 41075,
+      "task": "finish-gates-r3.py SDKrecord+independentreview+approvalPASS; finalnative4lanesrunning FIFO3, thenrealtransfer sequential. Do notduplicate."
+    }
+  ],
+  "effective_acceptance": "build/i2p-provider-attachment-20261029/final-transfer-live-executor",
+  "effective_implementation_manifest": "build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/amendments/profile-fixture-layout/manifest.json",
+  "effective_native_recipe": "build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/live-executor-sdk",
+  "current_native_head": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+  "proven_native_bugs": [
+    "Outgoing tracker source port0 rejected: fixed797638+signedregressionPASS",
+    "Synchronous private withdraw and ~session call_abort overwrite single allocator slot: fixedSDK859855 separatefixedstage2storage; deterministic actual-session test beingbuilt"
+  ],
+  "provider_source_capsule": "build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/amendments/executor-workguard/manifest.json"
+}

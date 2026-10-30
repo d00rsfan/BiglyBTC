@@ -238,5 +238,6 @@
         ]
       }
     ]
-  }
+  },
+  "evidence_index_scope": "All regular evidence files except top-level artifacts.json"
 }

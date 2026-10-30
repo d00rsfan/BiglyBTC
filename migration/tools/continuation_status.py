@@ -17,7 +17,15 @@ def main():
         ["git", "-C", str(root.parent / "BiglyBTC"), "rev-parse", "HEAD"],
         text=True,
     ).strip()
-    print("Native actual HEAD:", actual, "MATCH" if actual == state["native_head"] else "CHANGED")
+    qualifier = state.get("qualified_native_source", state["native_head"])
+    repo = root.parent / "BiglyBTC"
+    trees = [subprocess.check_output(
+        ["git", "-C", str(repo), "rev-parse", commit + ":preview/native"],
+        text=True,
+    ).strip() for commit in (actual, qualifier)]
+    label = "MATCH" if actual == state["native_head"] else (
+        "METADATA ONLY" if trees[0] == trees[1] else "CHANGED")
+    print("Native actual HEAD:", actual, label)
     print("Qualification:", state["current_source_qualification"])
     for item in state["receipts"]:
         path = root / item["path"]
