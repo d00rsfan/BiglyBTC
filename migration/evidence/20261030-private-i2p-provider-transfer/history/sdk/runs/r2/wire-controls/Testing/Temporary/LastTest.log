@@ -1,0 +1,77 @@
+Start testing: Oct 30 11:35 IST
+----------------------------------------------------------
+1/3 Testing: id_enforcement_v4
+1/3 Test: id_enforcement_v4
+Command: "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_dht" "-n" "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_dht.cpp.id_enforcement_v4"
+Directory: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/runs/r2/wire-controls
+"id_enforcement_v4" start time: Oct 30 11:35 IST
+Output:
+----------------------------------------------------------
+test: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_dht
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/runs/r2/wire-controls/test_tmp_2489848_"
+cwd: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/runs/r2/wire-controls/test_tmp_2489848_6
+test-case: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_dht.cpp.id_enforcement_v4
+rnd = b80473f4
+msg: { 'ip': '7c1f4b150001', 'r': { 'id': '2728f125c1c438648c158798aac1854199542bf4', 'nodes': '', 'p': 1 }, 't': '10', 'y': 'r' }
+
+
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_dht.cpp.id_enforcement_v4          ] ***PASS***
+[0m
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"id_enforcement_v4" end time: Oct 30 11:35 IST
+"id_enforcement_v4" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/3 Testing: id_enforcement_v6
+2/3 Test: id_enforcement_v6
+Command: "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_dht" "-n" "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_dht.cpp.id_enforcement_v6"
+Directory: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/runs/r2/wire-controls
+"id_enforcement_v6" start time: Oct 30 11:35 IST
+Output:
+----------------------------------------------------------
+test: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_dht
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/runs/r2/wire-controls/test_tmp_2489849_"
+cwd: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/runs/r2/wire-controls/test_tmp_2489849_7
+test-case: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_dht.cpp.id_enforcement_v6
+rnd = b80473f4
+msg: { 'ip': '2001b8292123be84e16cd6ae529049f10001', 'r': { 'id': '716b057eb545626062579c5dd6f6d23f3510410e', 'nodes6': '', 'p': 1 }, 't': '10', 'y': 'r' }
+
+
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_dht.cpp.id_enforcement_v6          ] ***PASS***
+[0m
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"id_enforcement_v6" end time: Oct 30 11:35 IST
+"id_enforcement_v6" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/3 Testing: parse_i2p_peers
+3/3 Test: parse_i2p_peers
+Command: "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_tracker" "-n" "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_tracker.cpp.parse_i2p_peers"
+Directory: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/runs/r2/wire-controls
+"parse_i2p_peers" start time: Oct 30 11:35 IST
+Output:
+----------------------------------------------------------
+test: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_tracker
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/runs/r2/wire-controls/test_tmp_2489850_"
+cwd: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/runs/r2/wire-controls/test_tmp_2489850_2
+test-case: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_tracker.cpp.parse_i2p_peers
+rnd = b80473f4
+
+
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_tracker.cpp.parse_i2p_peers                  ] ***PASS***
+[0m
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"parse_i2p_peers" end time: Oct 30 11:35 IST
+"parse_i2p_peers" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 30 11:35 IST

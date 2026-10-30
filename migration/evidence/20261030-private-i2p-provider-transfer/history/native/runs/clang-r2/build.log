@@ -1,0 +1,18 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2493173 --no-print-directory -- ATTEMPT=r2 PROVIDER_REVIEW=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029-current-integration-review/measured-artifact-review.json PROVIDER_RUNTIME_MANIFEST=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/approval-proposal/private-i2p-owner-runtime.json PROVIDER_APPROVAL_SHA256=111c5a17d96939c78015683266d1bb78b0473e1b70dd82c4268a1695fd2aee00 PROVIDER_APPROVAL=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/root-private-owner-approval.json PROVIDER_RECORD=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source-build-record.json ADOPTION=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/public-lt-headers/root-adoption.json SOURCE_COMMIT=af1aef1b44cdce4423cef9f37125edae21794a7e
+[1/24] Automatic MOC for target biglybtc_i2cp_initial_channel
+[2/17] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[3/17] Linking CXX static library engine/libbiglybtc_local_engine.a
+[4/17] Linking CXX executable tests/biglybtc-network-policy-tests
+[5/17] Linking CXX executable tests/biglybtc-managed-storage-tests
+[6/17] Building CXX object services/CMakeFiles/biglybtc_owned_i2p_source.dir/i2p_provider/profile_source.cpp.o
+[7/17] Linking CXX static library services/libbiglybtc_owned_i2p_source.a
+[8/17] Automatic MOC for target biglybtc_i2p_provider_owner
+[9/17] Automatic MOC for target biglybtc-owned-i2p-source-tests
+[10/17] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/biglybtc_i2p_provider_owner_autogen/mocs_compilation.cpp.o
+[11/17] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner.cpp.o
+[12/17] Building CXX object tests/CMakeFiles/biglybtc-owned-i2p-source-tests.dir/biglybtc-owned-i2p-source-tests_autogen/mocs_compilation.cpp.o
+[13/17] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner_runtime_guard.cpp.o
+[14/17] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/bridge.cpp.o
+[15/17] Linking CXX static library services/libbiglybtc_i2p_provider_owner.a
+[16/17] Building CXX object tests/CMakeFiles/biglybtc-owned-i2p-source-tests.dir/owned_i2p_source_tests.cpp.o
+[17/17] Linking CXX executable tests/biglybtc-owned-i2p-source-tests

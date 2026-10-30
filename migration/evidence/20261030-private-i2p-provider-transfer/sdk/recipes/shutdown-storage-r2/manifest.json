@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_FRESH_SDK_SHUTDOWN_STORAGE_RECIPE",
+  "parent_recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-recipe/amendments/effective-tracker-port/manifest.json",
+    "sha256": "e74700817941e160950cb9337f0992b51a5d2eeaef49b5d0c5c857361492f0a1"
+  },
+  "hidden_test_object_parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-recipe/amendments/effective-tracker-port/amendments/hidden-test-objects/manifest.json",
+    "sha256": "e21372e7705712a4415840bb13ba61b1fb36ae02c53d9151ed713ffb264c75d4"
+  },
+  "provider_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/manifest.json",
+    "sha256": "85985542dd890cdb29323417b277922122429d0769dcf40666617567f1507494"
+  },
+  "candidate": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2",
+  "source_files": 1087,
+  "provider_source_paths": 13,
+  "exports": 31,
+  "abi": "0x42494f01",
+  "actual_ctest_suites_required": 9,
+  "extended_unit": "test_biglybtc_private_i2p_owner",
+  "new_lifecycle_method": "private_i2p_owner_withdraw_then_destroy_drains_external_executor",
+  "artifacts_sha256": {
+    "jobs.mk": "39092620dc8c97a42570ccceeee2e9af92d878c3f03ecbd4e2d5620290c69c8a",
+    "inputs.json": "6c0bbce163ffe71ec264941f211b1c021bdaf39688345d2b740a4542d51da87e",
+    "recipe-delta.patch": "c67927d35a88eda83a1e84ab605f3933fe9c0d861a6123c3b5b372fc166e7b3d",
+    "provider.py": "b79591cd23d7bce84796980495e9d47ca3f84a8bb75b8f980fe8cb5c61de810b",
+    "test-objects.cmake": "f340e9b8164824ce336996ad0872a4f506f1fd77167067a6afcc944a187be2ed",
+    "NEXT.txt": "4b28283806a1d27dbe45a8c3146f6bbfd2557388f0085df3197cb52cacdb4396"
+  },
+  "old_candidate_preserved": true,
+  "no_future_artifact_or_approval_hashes": true,
+  "author_executions": [],
+  "native_mutation": false,
+  "default_shipping_provider_unchanged": true,
+  "stop_after_this_section": true
+}

@@ -1,0 +1,21 @@
+SOURCE ONLY. This reuses existing candidate-r2 and never creates candidate-r3.
+Final complete13 source9d264115; same production2 as859855 and same31ABI.
+Root supplies actual final SOURCE review path/SHA, then:
+  TASK=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029
+  RECIPE=$TASK/provider-recipe/sdk-r2-test-repair
+  OUTPUT=$TASK/provider-candidate-r2
+  python3 -B "$RECIPE/provider.py" repair --output "$OUTPUT" --source-review "$REVIEW" --source-review-sha256 "$REVIEW_SHA"
+  make --jobserver-style=fifo -j3 -f "$RECIPE/jobs.mk" OUTPUT="$OUTPUT" ATTEMPT=r2
+  python3 -B "$RECIPE/provider.py" record --output "$OUTPUT" --attempt r2
+
+Repair changes only source/test/test_biglybtc_private_i2p_owner.cpp; saves actual
+creation-before-test-fix.json and test-before-test-fix.cpp, then updates creation
+with exact final map/recipe/review. Old runs/r1 remains FAIL and immutable.
+Other1086source leaves, installed293SDK leaves, DSO and all167provider objects
+must remain exact. Same CMake hook/cache: reconfigure is allowed only if cache
+bytes stay identical. Rebuild only existing private unit; do not install again.
+Fresh all9 direct CTests and missing fixture builds execute as new runs/r2.
+No old test pass credit. Existing SDK install uses explicit retained actualr1
+successful build/install origin; new record names final1087source/test repair.
+No guessed artifact/approval, no native source/default355/dist changes. Root
+alone executes. No author compilers/subjects. Finish optional section then STOP.

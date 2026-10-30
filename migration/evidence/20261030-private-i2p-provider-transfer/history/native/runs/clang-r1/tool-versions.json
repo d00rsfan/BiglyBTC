@@ -1,0 +1,6 @@
+{
+  "/usr/bin/clang++-24": "Ubuntu clang version 24.0.0 (++20260911085248+58c46bae2118-1~exp1~20260911085258.254)",
+  "/usr/bin/ninja": "1.13.2",
+  "/usr/bin/make": "GNU Make 4.4.1",
+  "/usr/bin/cc": "cc (Ubuntu 15.2.0-16ubuntu1) 15.2.0"
+}

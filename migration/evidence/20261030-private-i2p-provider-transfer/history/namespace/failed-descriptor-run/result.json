@@ -1,0 +1,11 @@
+{
+  "exit_code": 1,
+  "functional_subjects_executed": false,
+  "inputs_sha256": "873f688ae3ba79801ae492a2e5ae11b50bf71aabcb409ae41b36ddea5682ed8d",
+  "logs_sha256": {
+    "stderr.log": "4762b285ab86417c81f46d9f94c5b79b6f4d777ff6fa752e127aafc2799377c2",
+    "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "no_fallback": true,
+  "status": "BLOCKED_NAMESPACE_PREFLIGHT"
+}

@@ -1,0 +1,39 @@
+--- a/preview/native/services/i2p_streaming/manager.cpp
++++ b/preview/native/services/i2p_streaming/manager.cpp
+@@ -29,7 +29,9 @@
+ }
+ Result<void> Manager::connect(std::uint64_t op,std::uint32_t id,Destination peer,const ConnectOptions& input,std::uint64_t now,std::optional<std::uint64_t> absoluteHandshakeEnd){
+   tick(now);
+-  if(!valid()||!available(op,id)||!ports(input.ports)||!window(input.maximumWindow)||input.handshakeMilliseconds<1||input.handshakeMilliseconds>120000||!endFits(now,input.handshakeMilliseconds)||peer.wire.empty()||peer.hash==local_.hash){return refused("Bounded explicit stream connection unavailable");}
++  // Original outgoing Streaming defaults to local port0, including trackers.
++  // The remote port and exact reply tuple stay fixed; listener ports stay explicit.
++  if(!valid()||!available(op,id)||!input.ports.remote||!window(input.maximumWindow)||input.handshakeMilliseconds<1||input.handshakeMilliseconds>120000||!endFits(now,input.handshakeMilliseconds)||peer.wire.empty()||peer.hash==local_.hash){return refused("Bounded explicit stream connection unavailable");}
+   const auto end=absoluteHandshakeEnd.value_or(now+input.handshakeMilliseconds);
+   if(end<=now||end-now>input.handshakeMilliseconds){return refused("Original finite handshake deadline expired/invalid");}
+   Connection prepared(op,id,local_,std::move(peer),input.maximumWindow,now,entropy_);
+--- a/preview/native/tests/i2p_streaming_manager_tests.cpp
++++ b/preview/native/tests/i2p_streaming_manager_tests.cpp
+@@ -87,4 +87,22 @@
+   st::Manager prepared(*local.destination(),{});take(prepared.connect(1,100,*peer.destination(),{{9000,80},20,8},110,120));require(prepared.hardWakeup()==120,"Preparation moved API-entry absolute deadline");prepared.tick(119);require(prepared.observation(1)->stream.phase==st::Phase::Connecting,"Preparation budget fired early");prepared.tick(120);require(prepared.observation(1)->stream.phase==st::Phase::Timeout,"Preparation extended handshake lifetime");
+   st::Manager expired(*local.destination(),{});require(!expired.connect(1,100,*peer.destination(),{{9000,80},20,8},120,120)&&expired.observation().streams==0,"Expired preparation acquired a stream slot");require(!expired.connect(1,100,*peer.destination(),{{9000,80},20,8},110,131)&&expired.observation().streams==0,"Oversized absolute budget acquired a stream slot");
+ }
+-int main(){try{auto local=identity("dsa"),peer=identity("ed25519");inboundCodecAndRole(local,peer);listenerBoundsAndExpiry(local,peer);multiplexFairnessAndMemory(local,peer);finiteWaitAndLongActivity(local,peer);originalOneShotIdleJitter(local,peer);postVerificationFence(local,peer);hardDeadlinesRemainArmedWithoutOutputCredit(local,peer);preparationCannotExtendAbsoluteHandshake(local,peer);std::cout<<"PASS bounded session Streaming manager source-authored controls\n";return 0;}catch(const std::exception& failure){std::cerr<<"FAIL "<<failure.what()<<'\n';return 1;}}
++void outgoingUnspecifiedLocalPortRetainsExactRemoteAndReplyTuple(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  st::Manager manager(*local.destination(),{});take(manager.connect(1,100,*peer.destination(),{{0,80},100,8},0));
++  auto syn=manager.next(1);require(syn&&syn->operation==1&&(syn->packet.flags&st::Syn)&&syn->ports.local==0&&syn->ports.remote==80,"Original outgoing0-to80 SYN tuple was not retained");
++  const auto wire=take(st::encodeMux(mux(syn->packet,local,syn->ports.local,syn->ports.remote)));const auto sent=take(st::decodeMux(wire));
++  require(sent.fromPort==0&&sent.toPort==80,"Actual protocol6 mux changed unspecified source port");
++  auto decoded=take(st::decodeInitialSyn(sent.packet,*peer.destination()));manager.dispatched(*syn,1);
++  auto incoming=take(st::Connection::accept(2,200,*peer.destination(),*local.destination(),decoded,8,1));
++  auto reply=incoming.next(2);require(bool(reply),"Missing actual signed80-to0 SYN/ACK");incoming.dispatched(*reply,2);
++  const auto rejected=manager.observation().rejectedPackets;
++  manager.receive(mux(*reply,peer,80,1),2);manager.receive(mux(*reply,peer,81,0),3);
++  require(manager.observation().rejectedPackets==rejected+2&&manager.observation(1)->stream.phase==st::Phase::Connecting,"Unspecified local port became a wildcard for wrong reply ports");
++  auto returned=take(st::decodeMux(take(st::encodeMux(mux(*reply,peer,80,0)))));manager.receive(returned,4);
++  require(manager.observation(1)->stream.phase==st::Phase::Established,"Exact signed80-to0 response was refused");
++  auto ack=manager.next(5);require(ack&&ack->ports.local==0&&ack->ports.remote==80,"Final ACK changed exact outgoing ports");manager.dispatched(*ack,5);incoming.receive(checked(ack->packet,local),6);
++  require(incoming.observation().inFlightPackets==0,"Actual final ACK failed to release peer SYN/ACK");
++  st::Manager listener(*local.destination(),{});require(!listener.listen({{0,80},{*peer.destination()},8},0)&&!listener.receives(),"Listener acquired zero-port wildcard authority");
++  st::Manager remoteZero(*local.destination(),{});require(!remoteZero.connect(1,100,*peer.destination(),{{0,0},100,8},0)&&!remoteZero.connect(1,100,*peer.destination(),{{9000,0},100,8},0)&&remoteZero.observation().streams==0,"Unspecified remote port acquired an outgoing slot");
++}
++int main(){try{auto local=identity("dsa"),peer=identity("ed25519");inboundCodecAndRole(local,peer);listenerBoundsAndExpiry(local,peer);multiplexFairnessAndMemory(local,peer);finiteWaitAndLongActivity(local,peer);originalOneShotIdleJitter(local,peer);postVerificationFence(local,peer);hardDeadlinesRemainArmedWithoutOutputCredit(local,peer);preparationCannotExtendAbsoluteHandshake(local,peer);outgoingUnspecifiedLocalPortRetainsExactRemoteAndReplyTuple(local,peer);std::cout<<"PASS bounded session Streaming manager source-authored controls\n";return 0;}catch(const std::exception& failure){std::cerr<<"FAIL "<<failure.what()<<'\n';return 1;}}

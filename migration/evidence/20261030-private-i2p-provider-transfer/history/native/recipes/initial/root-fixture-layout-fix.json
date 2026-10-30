@@ -1,0 +1,10 @@
+{
+  "status": "APPLIED_TEST_FIXTURE_LAYOUT_CORRECTION",
+  "parent": "af1aef1b44cdce4423cef9f37125edae21794a7e",
+  "source_commit": "8e9e248eea56f345f1bef169ea0bfcf7184cc7c3",
+  "path": "preview/native/tests/owned_i2p_profile_fixture.hpp",
+  "before_sha256": "d1414a2741166180bcb9904c4911be8fd4360e938e393150dd07ab096ab2f31c",
+  "after_sha256": "1d93daf79303c9bb762e178938879e14ba7141504aa17c5fc0bee2114eedf301",
+  "production_behavior_unchanged": true,
+  "runtime_credit": false
+}

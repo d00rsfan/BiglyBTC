@@ -1,0 +1,10 @@
+{
+  "status": "ROOT_REVIEWED_PARENT_SNAPSHOT_TRANSPORT_ONLY",
+  "manifest_sha256": "72e88a4e1cb3fe052bc6c7e64a99b2b495d1c2881fbd39c94952fba3a9789b72",
+  "all_changed_lines_reviewed": true,
+  "actual_supervisor_fds_checked_before_after": true,
+  "parent_snapshot_readonly_bound_and_digest_pinned": true,
+  "all_five_namespaces_capabilities_zero_nnp_loopback_routes_preserved": true,
+  "no_privileged_helper_or_policy_change": true,
+  "prior_failure_preserved": true
+}

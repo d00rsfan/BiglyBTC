@@ -1,0 +1,215 @@
+--- parent/provider.py
++++ child/provider.py
+@@ -7,7 +7,8 @@
+ R=Path('/home/yurii/Java/BiglyBT');H=Path(__file__).resolve().parent
+ P=R/'build/mainline-dual-identity-provider-20261028/candidate-r2'
+ ROOT=R/'build/i2p-provider-attachment-20261029'
+-D=ROOT/'implementation/amendments/deadlines-and-tracker-port/provider'
++D=ROOT/'implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages'
++OLD=ROOT/'provider-candidate-r1'
+ HELPER=R/'build/mainline-dual-identity-provider-20261028/recipe/provider_child.py'
+ PINS=json.loads((H/'inputs.json').read_bytes())
+ assert hashlib.sha256(HELPER.read_bytes()).hexdigest()==PINS[str(HELPER)]
+@@ -22,6 +23,15 @@
+ def pins():
+  for name,pin in PINS.items():b.need(b.sha(name)==pin,'Pinned input changed '+name)
+  parent=b.load(P/'source-build-record.json');capsule=b.load(D/'manifest.json');b.verify_capsule(D,capsule)
++ cap=b.load(H/'manifest.json')
++ for name,pin in cap['artifacts_sha256'].items():b.need(b.sha(H/b.key(name))==pin,'Recipe changed '+name)
++ previous=b.load(OLD/'source-build-record.json');base_capsule=b.load(Path(capsule['parent_manifest']['path']))
++ b.need(capsule['parent_manifest']['sha256']==previous['source_capsule_sha256']=='8f12f51c1426d4de59c9e9df6f9c2cb767001fe2574b6bc6668b8ce4e6722dc9','Exact original private source')
++ b.need(b.tree(OLD/'source')==previous['source_inputs_sha256'] and b.tree(OLD/'install',True)==previous['installed_sha256'],'Previous private candidate changed')
++ baseline=dict(parent['source_inputs_sha256'])
++ for name,row in base_capsule['source_paths'].items():baseline[name]=row['after_sha256']
++ b.need(baseline==previous['source_inputs_sha256'] and len(baseline)==1087,'Exact retained private1087source')
++ for name,row in capsule['delta_source_paths'].items():b.need(previous['source_inputs_sha256'][name]==row['before_sha256'] and b.sha(row['after_path'])==row['after_sha256'],'Lifecycle actual preimage '+name)
+  b.need(b.tree(P/'source')==parent['source_inputs_sha256'] and b.tree(P/'install',True)==parent['installed_sha256'],'Immutable parent changed')
+  for rel,pin in parent['build_files_sha256'].items():b.need(b.sha(P/'build'/b.key(rel))==pin,'Parent build changed '+rel)
+  b.need(len(capsule['source_paths'])==13 and capsule['exports']==31 and capsule['private_abi']=='0x42494f01','Private source contract')
+@@ -37,7 +47,7 @@
+  return result
+ 
+ def candidate(value):
+- c=Path(value);b.need(c.is_absolute() and c.parent.resolve(strict=True)==c.parent and c.parent==ROOT,'Use a fresh candidate directly under the attachment task')
++ c=Path(value);b.need(c==ROOT/'provider-candidate-r2','Use only fresh corrected candidate-r2');b.need(c.is_absolute() and c.parent.resolve(strict=True)==c.parent and c.parent==ROOT,'Use a fresh candidate directly under the attachment task')
+  b.need(re.fullmatch(r'provider-candidate-[a-z0-9-]+',c.name),'Candidate name')
+  return c
+ 
+@@ -70,7 +80,7 @@
+  b.dump(c/'creation.json',dict(status='SOURCE_EXPORTED_NOT_BUILT',parent_record_sha256=b.sha(P/'source-build-record.json'),
+   provider_source_manifest_sha256=b.sha(D/'manifest.json'),source_inputs_sha256=closed,changed_source_paths=sorted(capsule['source_paths']),
+   source_review_path=str(review),source_review_sha256=a.source_review_sha256,recipe_sha256=b.sha(__file__),
+-  recipe_inputs_sha256={n:b.sha(H/n) for n in ('provider.py','jobs.mk','inputs.json','NEXT.txt')},
++  recipe_inputs_sha256={n:b.sha(H/n) for n in ('provider.py','jobs.mk','inputs.json','NEXT.txt','test-objects.cmake')},
+   parent_never_written=True,native_runtime_approved=False))
+  verify(c);print('SOURCE_EXPORTED_NOT_BUILT',c,flush=True)
+ 
+@@ -103,14 +113,25 @@
+  b.need(all(x.get('status')=='run' and not any(x.find(t) is not None for t in ('failure','error','skipped')) for x in cases),'No failed/skipped XML rows')
+ 
+ def config(c,source,build,extra):
+- return b.config(c,source,build,['-DCMAKE_FIND_USE_PACKAGE_REGISTRY=FALSE',*extra])
++ options=['-DCMAKE_FIND_USE_PACKAGE_REGISTRY=FALSE',*extra]
++ if Path(source)==c/'source':options.append('-DCMAKE_PROJECT_INCLUDE='+str(H/'test-objects.cmake'))
++ return b.config(c,source,build,options)
++
++def protected():
++ return dict(head=subprocess.check_output(['git','-C',str(R),'rev-parse','HEAD'],text=True).strip(),index_sha256=b.sha(R/'.git/index'))
++
++def hidden_objects(c):
++ result={}
++ for name in ('i2p_stream','proxy_base'):
++  path=c/('build/CMakeFiles/torrent-rasterbar.dir/src/'+name+'.cpp.o');b.need(path.is_file() and not path.is_symlink(),'Fresh same-provider object '+name);result[str(path.relative_to(c))]=b.sha(path)
++ return result
+ 
+ def build(c,a):
+  verify(c);flags=os.environ.get('MAKEFLAGS','');fifo=re.search(r'--jobserver-auth=fifo:([^\s]+)',flags)
+  b.need(fifo and re.search(r'(?:^|\s)-j3(?:\s|$)',flags) and stat.S_ISFIFO(Path(fifo[1]).stat().st_mode),'Use GNU Make4.4 FIFO -j3 jobs.mk')
+  b.need(not os.environ.get('LD_PRELOAD') and not os.environ.get('LD_AUDIT'),'No loader injection')
+- out=c/'runs'/a.attempt;out.mkdir(parents=True,exist_ok=False);(out/'home').mkdir(mode=0o700);rows=[]
+- result=dict(status='FAIL',native_runtime_approved=False,source_creation_sha256=b.sha(c/'creation.json'),jobserver_makeflags=flags)
++ out=c/'runs'/a.attempt;out.mkdir(parents=True,exist_ok=False);(out/'home').mkdir(mode=0o700);rows=[];original=protected()
++ result=dict(status='FAIL',native_runtime_approved=False,source_creation_sha256=b.sha(c/'creation.json'),jobserver_makeflags=flags,original_head_index_before=original,previous_private_record_sha256=b.sha(OLD/'source-build-record.json'))
+  try:
+   versions={n:subprocess.check_output([n,'--version'],text=True).splitlines()[0] for n in ('make','ninja')}
+   b.need(re.match(r'GNU Make 4\.4(?:\.|$)',versions['make']) and re.match(r'1\.13(?:\.|$)',versions['ninja']),'Jobserver-compatible tools')
+@@ -122,7 +143,7 @@
+   run(c,out,'build',['nice','-n','5','cmake','--build',c/'build','--target','torrent-rasterbar',*sorted(UNITS),'test_dht','test_tracker','--','-k','0'],rows,7200)
+   run(c,out,'install',['cmake','--install',c/'build'],rows)
+   images={str(p.relative_to(c)):b.sha(p) for p in [c/'install'/b.ARTIFACT,*[c/'build/test'/n for n in sorted(UNITS)],c/'build/test/test_dht',c/'build/test/test_tracker']}
+-  b.dump(out/'images-before.json',images)
++  b.dump(out/'images-before.json',images);objects=hidden_objects(c);b.dump(out/'hidden-objects-before.json',objects)
+   run(c,out,'provider-tests',['ctest','--test-dir',c/'build','-R','^('+'|'.join(sorted(UNITS))+')$','--output-on-failure','--output-junit',out/'provider-tests.xml'],rows)
+   xml(out/'provider-tests.xml',UNITS)
+   # Existing named controls only: never run all test_dht/test_tracker subjects.
+@@ -143,7 +164,7 @@
+    executable=c/(kind+'-build')/FIXTURE_IMAGES[kind];images[str(executable.relative_to(c))]=b.sha(executable);b.dump(out/'images-before.json',images)
+    run(c,out,kind+'-tests',['ctest','--test-dir',c/(kind+'-build'),'--output-on-failure','--output-junit',out/(kind+'-tests.xml')],rows);xml(out/(kind+'-tests.xml'),names)
+   b.need(all(b.sha(c/n)==pin for n,pin in images.items()),'Tested images changed');b.dump(out/'images-after.json',images)
+-  verify(c);result.update(status=STATUS,actual_ctest_suites=9,commands_sha256=b.sha(out/'commands.json'),source_unchanged=True,images_unchanged=True)
++  verify(c);b.need(hidden_objects(c)==objects and protected()==original,'Objects or original HEAD/index changed');b.dump(out/'hidden-objects-after.json',hidden_objects(c));result.update(status=STATUS,actual_ctest_suites=9,commands_sha256=b.sha(out/'commands.json'),source_unchanged=True,images_unchanged=True,hidden_test_objects_unchanged=True,original_head_index_unchanged=original)
+  except BaseException as exc:result['failure']=repr(exc)
+  b.dump(out/'result.json',result);b.need(result['status']==STATUS,'Actual attempt retained as failure')
+ 
+@@ -154,6 +175,7 @@
+  b.need([x['name'] for x in commands]==expected_names and all(x['exit']==0 and b.sha(c/x['log'])==x['log_sha256'] for x in commands),'Closed actual commands/logs')
+  for name,names in [('provider-tests',UNITS),('wire-controls',{'id_enforcement_v4','id_enforcement_v6','parse_i2p_peers'}),*[(k+'-tests',v) for k,v in FIXTURES.items()]]:xml(out/(name+'.xml'),names)
+  b.need(b.load(out/'images-before.json')==b.load(out/'images-after.json') and all(b.sha(c/n)==pin for n,pin in b.load(out/'images-before.json').items()),'Actual image pins')
++ b.need(b.load(out/'hidden-objects-before.json')==b.load(out/'hidden-objects-after.json')==hidden_objects(c) and result['hidden_test_objects_unchanged'] and result['original_head_index_unchanged']==protected(),'Same-build objects and original HEAD/index required')
+  b.need(not (c/'source-build-record.json').exists() and not (c/'approval-proposal').exists(),'Never overwrite record/proposal')
+  installed=b.tree(c/'install',True);headers={n:v for n,v in installed.items() if n.startswith('include/libtorrent/')}
+  b.need(set(installed)==set(parent['installed_sha256'])|{'include/libtorrent/biglybtc_private_i2p_owner.hpp','include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp'},'Exact installed SDK closure')
+@@ -175,7 +197,7 @@
+  b.dump(c/'control-loader.json',loader);b.dump(c/'dependencies.json',dependency_files)
+  verify(c)
+  b.dump(c/'source-build-record.json',dict(schema='BIGLYBTC_PRIVATE_I2P_OWNER_SOURCE_RECORD_V1',status='BUILT_DIRECTLY_TESTED_NOT_APPROVED',
+-  source_capsule_sha256=b.sha(D/'manifest.json'),parent_record_sha256=b.sha(P/'source-build-record.json'),upstream_commit=parent['upstream_commit'],
++  source_capsule_sha256=b.sha(D/'manifest.json'),parent_record_sha256=b.sha(P/'source-build-record.json'),previous_private_record_sha256=b.sha(OLD/'source-build-record.json'),upstream_commit=parent['upstream_commit'],
+   source_root=str(c/'source'),build_root=str(c/'build'),install_root=str(c/'install'),artifact=str(artifact),artifact_sha256=b.sha(artifact),artifact_bytes=artifact.stat().st_size,
+   reviewed_inputs_sha256=PINS,recipe_inputs_sha256=creation['recipe_inputs_sha256'],source_review_sha256=creation['source_review_sha256'],
+   source_inputs_sha256=creation['source_inputs_sha256'],installed_sha256=installed,headers_sha256={n.removeprefix('include/'):v for n,v in headers.items()},
+--- parent/jobs.mk
++++ child/jobs.mk
+@@ -2,7 +2,7 @@
+ $(error GNU Make4.4 is required)
+ endif
+ ifeq ($(strip $(OUTPUT)),)
+-$(error Supply OUTPUT=/absolute/fresh/provider-candidate-r1)
++$(error Supply OUTPUT=/absolute/fresh/provider-candidate-r2)
+ endif
+ ATTEMPT ?= r1
+ TASK := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+--- parent/NEXT.txt
++++ child/NEXT.txt
+@@ -1,40 +1,24 @@
+-SOURCE ONLY. Root reviews this recipe and the effective production/acceptance
+-source before invoking it. No command below has been run by the author.
++SOURCE ONLY. Root reviews source85985542 plus this recipe; no author execution.
++Fresh provider-candidate-r2 only. Copy retained original27 plus corrected complete13
++map to1087source leaves; preserve candidate-r1/2f89 record, SDK and failures.
++Same31ABI/default355/f746 unchanged. No automatic runtime approval or native edit.
+ 
+-SDK-only preparation/build/direct qualification is independent of the Qt
+-manager. Root may run it BEFORE native manager adoption, in a fresh candidate,
+-after all SOURCE reviews pass. It does not approve a runtime or modify the
+-355/f746 provider, its source, SDK, build cache, native tree, registry or dist.
++Root supplies the actual accepted SOURCE review receipt and full SHA:
++  TASK=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029
++  RECIPE=$TASK/provider-recipe/shutdown-storage-r2
++  OUTPUT=$TASK/provider-candidate-r2
++  python3 -B "$RECIPE/provider.py" prepare --output "$OUTPUT" --source-review "$REVIEW" --source-review-sha256 "$REVIEW_SHA"
++  make --jobserver-style=fifo -j3 -f "$RECIPE/jobs.mk" OUTPUT="$OUTPUT" ATTEMPT=r1
++  python3 -B "$RECIPE/provider.py" record --output "$OUTPUT" --attempt r1
+ 
+-Native owner adoption/enablement remains blocked until actual final manager
+-1f911 and actual original-manager acceptance13e56 qualification, plus measured
+-new SDK/ELF record, root independent artifact review and closed approval. The
+-optional owner flag remains OFF. No automatic approval file is manufactured.
+-
+-Root commands (set REVIEW and REVIEW_SHA to the ACTUAL accepted source review):
+-  TASK=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029
+-  RECIPE=$TASK/provider-recipe/amendments/effective-tracker-port
+-  OUTPUT=$TASK/provider-candidate-r1
+-  python3 "$RECIPE/provider.py" prepare --output "$OUTPUT" --source-review "$REVIEW" --source-review-sha256 "$REVIEW_SHA"
+-  make --jobserver-style=fifo -j3 -f "$RECIPE/jobs.mk" OUTPUT="$OUTPUT" ATTEMPT=r1
+-  python3 "$RECIPE/provider.py" record --output "$OUTPUT" --attempt r1
+-
+-One GNU Make4.4 FIFO has aggregate3 slots; Ninja1.13 inherits MAKEFLAGS. No
+-cmake --parallel/-j override, no CMAKE_BUILD_PARALLEL_LEVEL; compilation nice5.
+-The only source copy is the retained exact parent plus thirteen afterimages;
+-no network, cloned history or old build/object/ELF copies. Same g++16/C++23,
+-OpenSSL/Boost prefix and unchanged provider ABI options. Pinned zlib is recorded
+-as an existing runtime dependency; provider gzip itself uses retained puff.cpp.
+-
+-Fresh focused default CTests: private-owner arguments/settings/hash/withdrawal,
+-existing Mainline identity, swarm, tracker-response (4); remote BEP42v4/v6 and
+-I2P peer parser (3); owned Mainline-port bridge and default SOCKS4a (2). Exactly
+-9 named CTests, no complete test_dht/test_tracker/public tracker/Java replay.
+-All actual command logs/XML remain in runs/<attempt>. Failure remains failure.
+-Record measures new artifact/SDK/source/export31 evidence; root supplies its
+-own actual review+approval afterward, using runtime manifest SHA, record SHA,
+-complete headers_sha256 and canonical JSON sdk_tree_sha256. No guessed values.
+-
+-This additive recipe binds corrected provider8f12 (actual current HTTP port).
+-Historical e70/5e925 recipes and failed/superseded source reviews stay intact.
+-The effective SOURCE review passed to prepare must cover this correction.
++Same9 fresh directCTest rows, no new selector: the existing owner unit now also
++runs private_i2p_owner_withdraw_then_destroy_drains_external_executor. Existing
++BEP42/parser/Mainline/SOCKS controls unchanged. No old-runtime negative replay.
++Both hidden SAM objects are linked only into that unit from the fresh shared
++provider build. Configure cannot require future object hashes: actual objects
++are measured before and after tests and retained in the new source record.
++All compiler work remains nice5/oneFIFO3; no concurrent external compiler.
++New DSO/SDK/record measurements and root review/approval remain future values.
++The native expected-source SHA must later change from8f12 to85985542's full
++manifest hash together with actual approval inputs; never bypass its verifier.
++No Host/default/public activation or dist promotion. Finish this section then STOP.
+--- e213/test-objects.cmake
++++ child/test-objects.cmake
+@@ -1,4 +1,4 @@
+-# External fixture glue only. The reviewed provider/source/SDK are unchanged.
++# Test-only same-build hidden implementation objects; never another DSO copy.
+ function(_biglybtc_private_owner_test_objects)
+   if(NOT TARGET torrent-rasterbar OR NOT TARGET test_biglybtc_private_i2p_owner)
+     message(FATAL_ERROR "Exact private-owner test/provider targets required")
+@@ -8,18 +8,12 @@
+   endif()
+   set(_i2p "${CMAKE_BINARY_DIR}/CMakeFiles/torrent-rasterbar.dir/src/i2p_stream.cpp.o")
+   set(_proxy "${CMAKE_BINARY_DIR}/CMakeFiles/torrent-rasterbar.dir/src/proxy_base.cpp.o")
+-  file(SHA256 "${_i2p}" _i2p_sha)
+-  file(SHA256 "${_proxy}" _proxy_sha)
+-  if(NOT _i2p_sha STREQUAL "49352e2393199532205a20a03112a1b92b5483280e1d59c782e40b040ee6558a"
+-      OR NOT _proxy_sha STREQUAL "90250a39e6b8ace5ea1afb4604fec014fdda1a456491d410f63435f5b90ffa5d")
+-    message(FATAL_ERROR "Actual r1 hidden implementation objects changed")
+-  endif()
++  # Fresh objects do not exist at configure. The runner measures both after
++  # the successful build and requires those exact bytes through all tests.
+   set_source_files_properties("${_i2p}" "${_proxy}"
+     TARGET_DIRECTORY test_biglybtc_private_i2p_owner
+     PROPERTIES EXTERNAL_OBJECT TRUE GENERATED TRUE)
+   target_sources(test_biglybtc_private_i2p_owner PRIVATE "${_i2p}" "${_proxy}")
+   add_dependencies(test_biglybtc_private_i2p_owner torrent-rasterbar)
+ endfunction()
+-
+-# CMAKE_PROJECT_INCLUDE runs before targets exist; defer to the root end.
+ cmake_language(DEFER CALL _biglybtc_private_owner_test_objects)

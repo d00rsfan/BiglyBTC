@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_FIXTURE_LAYOUT_AND_FRESH_FULL_CLANG_RERUN",
+  "source_commit": "8e9e248eea56f345f1bef169ea0bfcf7184cc7c3",
+  "previous_source_commit": "af1aef1b44cdce4423cef9f37125edae21794a7e",
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/public-lt-headers/manifest.json",
+    "sha256": "327d6ce66a52c56d85b1da9cb04c1e76dd6f5f5906a52ff0ec3285a16f2189d0"
+  },
+  "source_paths": {
+    "preview/native/tests/owned_i2p_profile_fixture.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/before/preview/native/tests/owned_i2p_profile_fixture.hpp",
+      "before_sha256": "d1414a2741166180bcb9904c4911be8fd4360e938e393150dd07ab096ab2f31c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/staging/preview/native/tests/owned_i2p_profile_fixture.hpp",
+      "after_sha256": "1d93daf79303c9bb762e178938879e14ba7141504aa17c5fc0bee2114eedf301"
+    }
+  },
+  "cumulative_native_paths": 31,
+  "artifacts_sha256": {
+    "jobs.mk": "77884e61e74ec3ba100c0bb44e2dc47bbe20dd08a3135e5b293eb6ca3db1cdeb",
+    "root-adoption.json": "69240ac10b8c739a494f0f6b6a1a454feeaaefb3153a27e53acf8051ab6d6e8b",
+    "run.py": "4a6fb011398b94126336bd76cd0de3bebf731d7648f51c5c2cf388735efaaa53",
+    "recipe-delta.patch": "7434b3c71ee5c05f56f38590eb47d98c1f85c074a72755f82acbb4096280414c",
+    "clang-cache-continuity.json": "6616bfe6b399d01a84e77c90a1bf1465f05b1ff91a1afdaf0e8fe9ccc4cef8fe",
+    "adopt.py": "86247abd5262e09562d53f951c2e9e61375bdad2109c9ecbcecefd0ada10a5f3",
+    "source-plan.json": "f7eaad3387d8a1c38bde19d2a0b1e6ce6818c5b56b3931232862195862e52aad",
+    "source.patch": "38c92ad91aabc2777042c9e9ab369edf6e6897bd49d9b87b64930a6bba5de492",
+    "NEXT.txt": "e9c77b23d016aeec654aef43c73592f72bc5bc42e3bc1b5d3a5b3a2acb27143c",
+    "staging/preview/native/tests/owned_i2p_profile_fixture.hpp": "1d93daf79303c9bb762e178938879e14ba7141504aa17c5fc0bee2114eedf301",
+    "before/preview/native/tests/owned_i2p_profile_fixture.hpp": "d1414a2741166180bcb9904c4911be8fd4360e938e393150dd07ab096ab2f31c"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/public-lt-headers/manifest.json": "327d6ce66a52c56d85b1da9cb04c1e76dd6f5f5906a52ff0ec3285a16f2189d0",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/public-lt-headers/adopt.py": "2c58756d2c81220beeed7ede753bc40d86f9a48965b18708811e9395d5121216",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/public-lt-headers/run.py": "d3e2d278f00f0a3b9218023f05a39021a0777bdf8f0b722b21cf9dedc05ad0ea",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/public-lt-headers/jobs.mk": "0e23a7cc629d6c3e5c2ced899c40e6dbd284fa4069eb8e527601160b7e19071e",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/public-lt-headers/root-adoption.json": "8ad084c872afdb8831be976e3c3ccd7a3a91a3730346db34f161253910a71c70",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/public-lt-headers/source-plan.json": "42dfc3343f941e11981b5a19cb4bec2fe6147c03c12f769ad6130764b71566f6",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/public-lt-headers/runs/clang-r2/result.json": "ad8d9ea9edeeb4ce69a7b4b9f49466d301936bc62f6fe1de277356d973c7e300",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/root-fixture-layout-fix.json": "43e999404c4e54ffd37ec2127ca1aa34e1194d9d2bdb2c6bf000029c4f78c906"
+  },
+  "incremental_cache_allowed": [
+    "parent-owned failed r2 clang only"
+  ],
+  "all_11_clang_suites_fresh": true,
+  "previous_pass_rows_credited": false,
+  "other_private_caches_fresh": true,
+  "old_failed_results_preserved": true,
+  "qualification_scopes_unchanged": true,
+  "author_execution": false,
+  "native_or_cache_mutation": false,
+  "stop_after_this_section": true,
+  "root_pre_execution_correction": {
+    "predecessor_manifest": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout-superseded-b84/manifest.json",
+    "predecessor_sha256": "b84ba266048c9d14c9b524787ac5537d0a15f8fedc7a49c11f9e871d12e3c858",
+    "reason": "Actual dependencies-before rows are sha256/bytes objects; archive rows are digest strings. Handle both exact existing schemas.",
+    "predecessor_executed": false
+  }
+}

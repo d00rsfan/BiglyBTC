@@ -1,0 +1,11 @@
+{
+  "install/lib/libtorrent-rasterbar.so.2.0.12": "2f89e779cf11bd1ace159307d3995fe1fd3aca5e594957844a11df2df7df8e4b",
+  "build/test/test_biglybtc_mainline_identity": "388c4c0b973eb7041d110def04fa07933d5e023968ef606b7555f86386f4f105",
+  "build/test/test_biglybtc_private_i2p_owner": "2d1178e31a28be47058fd0ff2d89e7591b1992db6ad9d0d3e6115494f5c5f638",
+  "build/test/test_biglybtc_swarm": "e0f5e8a4ee3eeab4313af19ff1b671447b4035e6faad8573e1b9a7dc64c987a3",
+  "build/test/test_biglybtc_tracker_response": "6753c1cc1aba09fe36257ee373a39aff7d2667fd151333dcab476a38316311eb",
+  "build/test/test_dht": "da7f7ca6094b31c77d5e9d39e6184ad507c85cf716f9803e33199fbbfb9476d2",
+  "build/test/test_tracker": "089f0276ec88779461519ea537579d87c6038bbd2a696bae7f503b110864384d",
+  "mainline-build/owned-mainline-port-proof": "9911bb70d987f72154394d59d419ba6c6ee183c1bb70f0eb608bc2a9b9b95beb",
+  "socks4a-build/biglybtc-socks4a-provider-tests": "3b2af0379ed9bcddab06dba588aea3b16fbb9b6b27d679f547fd5df51b71580d"
+}

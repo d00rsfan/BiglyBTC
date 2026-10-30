@@ -1,0 +1,38 @@
+{
+  "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/live-executor-sdk/adopt.py": {
+    "sha256": "96867213e24a67a9955fd1b91dd1dba41f1dfe3171e6417fc19ce435515dbeaf",
+    "bytes": 3371
+  },
+  "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/live-executor-sdk/jobs.mk": {
+    "sha256": "22b12bb56463332bd14b49c25aca5912d57787cae797a102fb94f5f4c2eeb160",
+    "bytes": 728
+  },
+  "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/live-executor-sdk/run.py": {
+    "sha256": "0dba7a0de6ba9f4ad1a266c489f1ffaeebea8c0a79b3f8e4acb412fe53a3b924",
+    "bytes": 15962
+  },
+  "/usr/bin/cmake": {
+    "sha256": "6e1dccda39845415d68eabb934c598998949c99ec4668625d571aee1827b05c7",
+    "bytes": 14253272
+  },
+  "/usr/bin/ctest": {
+    "sha256": "2cf8308ae2235efcae86a2eba443444f33ab611193a84092de33ec16836f5f17",
+    "bytes": 15926040
+  },
+  "/usr/bin/make": {
+    "sha256": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49",
+    "bytes": 295120
+  },
+  "/usr/bin/ninja": {
+    "sha256": "91e9548850cda2799facfdaa7abe33f9e978832f85e98212255708a7bbe437f2",
+    "bytes": 350624
+  },
+  "/usr/bin/x86_64-linux-gnu-g++-16": {
+    "sha256": "ca3bb855e752ea0b36544ef684e542fcf04273d8c229b1a96a9c160587e41c62",
+    "bytes": 1456856
+  },
+  "/usr/bin/x86_64-linux-gnu-gcc-15": {
+    "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88",
+    "bytes": 1305304
+  }
+}

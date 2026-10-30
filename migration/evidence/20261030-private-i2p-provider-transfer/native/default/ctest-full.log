@@ -1,0 +1,149 @@
+Start testing: Oct 30 14:15 IST
+----------------------------------------------------------
+200/306 Testing: network-policy
+200/306 Test: network-policy
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-network-policy-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"network-policy" start time: Oct 30 14:15 IST
+Output:
+----------------------------------------------------------
+33 network-policy families, 501 assertions passed
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"network-policy" end time: Oct 30 14:15 IST
+"network-policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+203/306 Testing: managed-storage
+203/306 Test: managed-storage
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-storage-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"managed-storage" start time: Oct 30 14:15 IST
+Output:
+----------------------------------------------------------
+case exact-bad-byte-checkpoint-preserves-unknowns-and-sparse-zero
+case unknown-bad-tail-persists-loss-without-erasing-saved-counters
+case bad-counter-CAS-refuses-before-profile-progress-write
+case actual-intake-save-name-drives-descriptors-suffix-and-completion
+case custom-existing-approved-descriptors-remain-read-only-and-reject-new-authority
+case custom-existing-rechecks-every-ancestor-not-only-last-parent
+case selected-existing-authenticates-directory-types-and-full-ancestor-chain
+case existing-only-complete-linear-preparation-is-read-only-and-still-unverified
+case existing-only-pure-v2-reuses-exact-tail-projection-with-no-pad-descriptor
+case existing-only-unsupported-or-incomplete-scope-refuses-before-effects
+case existing-only-read-and-checkpoint-refuse-late-replacement-or-content-change
+case original-canonical-latin1-paths-preserve-raw-identity-and-checkpoint
+case windows1251-v1-paths-use-authenticated-runtime-projection-and-exact-original-checkpoint
+case koi8r-original-paths-retain-raw-hashes-owned-slots-and-checkpoints
+case ibm866-default-original-registry-context-remains-unsupported-without-effects
+case original-global-utf8-key-fallback-is-authenticated-before-runtime-names
+case filename-projection-never-admits-changed-identity-or-legacy-v2
+case unported-filename-charset-refuses-before-original-state-and-payload-effects
+case negative-original-links-use-authenticated-target-and-original-base
+case new-independent-payload-root-and-filtered-parameters
+case original-sequential-flags-project-before-admission-and-survive-checkpoint
+case per-torrent-intake-byte-limits-reach-actual-admission-parameters
+case partial-piece-progress-and-fresh-command-preservation
+case skipped-linear-sparse-file-and-boundary-piece-counts
+case single-completion-suffix-and-unknown-state-fields
+case multifile-completion-renames-only-owned-actual-paths
+case completed-target-collision-retains-incomplete-source
+case existing-single-journal-and-recognized-hardlink-recovery
+case unsafe-links-storetypes-oversize-and-symlinks-fail-before-state
+case selected-compact-expands-with-original-storetype-and-no-stale-control
+case external-explicit-link-uses-owned-descriptor-with-original-path-preserved
+case compact-conversion-replays-original-edges-at-each-durable-boundary
+case compact-conversion-refuses-replaced-journal-inode-before-any-mutation
+case unchanged-reordered-map-still-authenticates-control-at-checkpoint
+case external-file-completion-is-per-file-and-applies-original-dnd-prefix-rule
+case retained-current-path-rejected-before-compact-state-or-data-effects
+case retained-inode-rejected-despite-distinct-reserved-path
+case future-completion-and-parent-child-claims-block-before-creation
+case disjoint-real-owner-claims-and-combined-bound
+case authoritative-cache-policy-is-preflighted-without-mutation
+case policy-permitted-trackers-retained-without-engine-start
+case invalid-checkpoints-never-publish-complete-flags
+case verified-late-piece-needs-actual-file-extent
+case payload-replacement-and-cumulative-rebase-refuse
+case original-pure-v2-truncated-and-explicit-full-keys
+case wrong-profile-and-moved-storage-refuse
+case legacy-path-roots-are-captured-before-payload-creation
+case missing-store-types-use-held-original-reorder-defaults
+case missing-types-never-treat-compact-control-as-linear
+case allocation accepted intent survives each intake boundary without unsafe queued startup
+case allocation writes actual zeroes but never verifies pieces or transfers
+case interrupted new zero prefixes replay under exact inode and remain cancellable
+case allocation refuses unreviewed short data replaced inodes and nonzero replay
+case allocation preserves full preexisting leaves counters and rejects changed row CAS
+case allocation ancestor replay binds every directory and preserves unrelated state
+case allocation actual write failure leaves no false completion and safe cancel
+PASS 56 managed-storage families; 4402 assertions; generated profiles and files only; no engine activation or Java-runtime equality credit
+<end of output>
+Test time =   2.13 sec
+----------------------------------------------------------
+Test Passed.
+"managed-storage" end time: Oct 30 14:15 IST
+"managed-storage" time elapsed: 00:00:02
+----------------------------------------------------------
+
+305/306 Testing: pure-owned-sam-protocol
+305/306 Test: pure-owned-sam-protocol
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-owned-sam-protocol-tests" "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram/ed25519.sender"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"pure-owned-sam-protocol" start time: Oct 30 14:15 IST
+Output:
+----------------------------------------------------------
+PASS owned SAM parser/capability bounds
+PASS exact public Destination/name codec
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"pure-owned-sam-protocol" end time: Oct 30 14:15 IST
+"pure-owned-sam-protocol" time elapsed: 00:00:00
+----------------------------------------------------------
+
+306/306 Testing: owned-i2p-profile-source
+306/306 Test: owned-i2p-profile-source
+Command: "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-owned-i2p-source-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+"owned-i2p-profile-source" start time: Oct 30 14:15 IST
+Output:
+----------------------------------------------------------
+********* Start testing of OwnedI2pSourceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedI2pSourceTests::initTestCase()
+PASS   : OwnedI2pSourceTests::boundSourceAuthorityRefusesLegacySingleStreamPath()
+PASS   : OwnedI2pSourceTests::genuinePureSourceRetainsSameLeaseAndOriginalBytes()
+PASS   : OwnedI2pSourceTests::keyReplacementAndSourceMutationWithdrawWithoutRepair()
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(0)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(1)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(2)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(3)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(4)
+PASS   : OwnedI2pSourceTests::sourcePermitIsOneShotAndBlockedIoCannotExtendChannelDeadline()
+PASS   : OwnedI2pSourceTests::cleanupTestCase()
+Totals: 11 passed, 0 failed, 0 skipped, 0 blacklisted, 562ms
+********* Finished testing of OwnedI2pSourceTests *********
+<end of output>
+Test time =   0.61 sec
+----------------------------------------------------------
+Test Passed.
+"owned-i2p-profile-source" end time: Oct 30 14:15 IST
+"owned-i2p-profile-source" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 30 14:15 IST
+
+i2p =   0.63 sec*proc
+
+no-network =   0.02 sec*proc
+
+owned-profile =   0.61 sec*proc
+
+torrent-workflows =   2.15 sec*proc
+
+unit =   2.78 sec*proc
+

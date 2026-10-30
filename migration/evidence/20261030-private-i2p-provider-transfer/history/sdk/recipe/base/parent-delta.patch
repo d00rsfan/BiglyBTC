@@ -1,0 +1,68 @@
+diff --git a/provider.py b/provider.py
+--- a/provider.py
++++ b/provider.py
+@@ -6,7 +6,8 @@
+ sys.dont_write_bytecode=True
+ R=Path('/home/yurii/Java/BiglyBT');H=Path(__file__).resolve().parent
+ P=R/'build/mainline-dual-identity-provider-20261028/candidate-r2'
+-D=H.parent/'implementation/provider'
++ROOT=R/'build/i2p-provider-attachment-20261029'
++D=ROOT/'implementation/amendments/deadlines-and-tracker-port/provider'
+ HELPER=R/'build/mainline-dual-identity-provider-20261028/recipe/provider_child.py'
+ PINS=json.loads((H/'inputs.json').read_bytes())
+ assert hashlib.sha256(HELPER.read_bytes()).hexdigest()==PINS[str(HELPER)]
+@@ -36,12 +37,15 @@
+  return result
+ 
+ def candidate(value):
+- c=Path(value);b.need(c.is_absolute() and c.parent.resolve(strict=True)==c.parent and c.parent==H.parent,'Use a fresh candidate directly under the attachment task')
++ c=Path(value);b.need(c.is_absolute() and c.parent.resolve(strict=True)==c.parent and c.parent==ROOT,'Use a fresh candidate directly under the attachment task')
+  b.need(re.fullmatch(r'provider-candidate-[a-z0-9-]+',c.name),'Candidate name')
+  return c
+ 
+ def verify(c):
+  parent,capsule=pins();creation=b.load(c/'creation.json')
++ for name in ['source','build','install','runs',*[k+s for k in FIXTURES for s in ('-fixture','-build')]]:
++  p=c/name
++  if os.path.lexists(p):b.need(p.is_dir() and not p.is_symlink() and p.resolve()==p,'Canonical owned candidate directory '+name)
+  b.need(c.is_dir() and not c.is_symlink() and c.resolve()==c,'Canonical owned candidate')
+  b.need(creation['source_inputs_sha256']==expected(parent,capsule)==b.tree(c/'source'),'Closed candidate source changed')
+  b.need(creation['provider_source_manifest_sha256']==b.sha(D/'manifest.json') and creation['recipe_sha256']==b.sha(__file__),'Creation association')
+diff --git a/inputs.json b/inputs.json
+--- a/inputs.json
++++ b/inputs.json
+@@ -158,5 +158,7 @@
+   "/usr/bin/g++-16": "ca3bb855e752ea0b36544ef684e542fcf04273d8c229b1a96a9c160587e41c62",
+   "/usr/lib/x86_64-linux-gnu/libssl.so": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70",
+   "/usr/lib/x86_64-linux-gnu/libcrypto.so": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+-  "/usr/lib/x86_64-linux-gnu/libz.so": "47b61967895b30e8c0c6818dd633ffeb87711cf637c688f981896f0dd84ce23b"
++  "/usr/lib/x86_64-linux-gnu/libz.so": "47b61967895b30e8c0c6818dd633ffeb87711cf637c688f981896f0dd84ce23b",
++  "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/manifest.json": "8f12f51c1426d4de59c9e9df6f9c2cb767001fe2574b6bc6668b8ce4e6722dc9",
++  "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-recipe/manifest.json": "e70a97bca12e60a38646a0e37a943ef40882597a714a49759a7300d702ad4e16"
+ }
+diff --git a/NEXT.txt b/NEXT.txt
+--- a/NEXT.txt
++++ b/NEXT.txt
+@@ -13,10 +13,11 @@
+ 
+ Root commands (set REVIEW and REVIEW_SHA to the ACTUAL accepted source review):
+   TASK=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029
++  RECIPE=$TASK/provider-recipe/amendments/effective-tracker-port
+   OUTPUT=$TASK/provider-candidate-r1
+-  python3 "$TASK/provider-recipe/provider.py" prepare --output "$OUTPUT" --source-review "$REVIEW" --source-review-sha256 "$REVIEW_SHA"
+-  make --jobserver-style=fifo -j3 -f "$TASK/provider-recipe/jobs.mk" OUTPUT="$OUTPUT" ATTEMPT=r1
+-  python3 "$TASK/provider-recipe/provider.py" record --output "$OUTPUT" --attempt r1
++  python3 "$RECIPE/provider.py" prepare --output "$OUTPUT" --source-review "$REVIEW" --source-review-sha256 "$REVIEW_SHA"
++  make --jobserver-style=fifo -j3 -f "$RECIPE/jobs.mk" OUTPUT="$OUTPUT" ATTEMPT=r1
++  python3 "$RECIPE/provider.py" record --output "$OUTPUT" --attempt r1
+ 
+ One GNU Make4.4 FIFO has aggregate3 slots; Ninja1.13 inherits MAKEFLAGS. No
+ cmake --parallel/-j override, no CMAKE_BUILD_PARALLEL_LEVEL; compilation nice5.
+@@ -33,3 +34,7 @@
+ Record measures new artifact/SDK/source/export31 evidence; root supplies its
+ own actual review+approval afterward, using runtime manifest SHA, record SHA,
+ complete headers_sha256 and canonical JSON sdk_tree_sha256. No guessed values.
++
++This additive recipe binds corrected provider8f12 (actual current HTTP port).
++Historical e70/5e925 recipes and failed/superseded source reviews stay intact.
++The effective SOURCE review passed to prepare must cover this correction.

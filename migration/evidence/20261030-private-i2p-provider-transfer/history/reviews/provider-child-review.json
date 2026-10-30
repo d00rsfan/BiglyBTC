@@ -1,0 +1,30 @@
+{
+  "status": "SOURCE_PASS_PROVIDER_CHILD_ONLY",
+  "manifest": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/manifest.json",
+  "manifest_sha256": "8f12f51c1426d4de59c9e9df6f9c2cb767001fe2574b6bc6668b8ce4e6722dc9",
+  "parent_manifest_sha256": "5e925cd17bb530e9ce3dd1ac0f9057fe57906f8dba54abdf33059dd69e606e1f",
+  "supersedes_blocker": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029-review/provider-port-blocker.json",
+    "sha256": "f8c26683f27ad6ec4e9de025df142c5ea4a95aac4f456426a6264766f7606aa5"
+  },
+  "checks": {
+    "source_maps": 13,
+    "artifacts": 25,
+    "changed_paths": [
+      "src/http_connection.cpp",
+      "test/test_biglybtc_private_i2p_owner.cpp"
+    ],
+    "readonly_full_and_delta_apply_check": "PASS"
+  },
+  "findings": [],
+  "reviewed": [
+    "Current normalized local port is forwarded before m_port assignment; original role and sourcePort0 retained",
+    "Actual fresh http_connection to owned SAM command-writer regression asserts80 and18443 and ends KEY_NOT_FOUND, no transfer success credited",
+    "All11 inherited paths exact; existing closed one-torrent full-hash executor policy/same-image31 exports preserved"
+  ],
+  "limits": [
+    "Current owner supports only b32 tracker host routes; full-Destination URL path remains outside admitted scope",
+    "SDK build/control/artifact approval pending and independent of native manager/owner activation"
+  ],
+  "author_or_reviewer_subject_execution": false
+}

@@ -1,0 +1,67 @@
+{
+  "status": "PASS_SOURCE_CURRENT_BASIS_INTEGRATION_RUNTIME_PENDING",
+  "current_native_commit": "fd2c07c553dd9e092ea8812bbbbaea429a49d71f",
+  "manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/manifest.json",
+    "sha256": "88df57a668058b4b16f21f7a74d278e6d0f16a93abb5abbe997b721081dc9773"
+  },
+  "provider_child": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/manifest.json",
+    "sha256": "8f12f51c1426d4de59c9e9df6f9c2cb767001fe2574b6bc6668b8ce4e6722dc9"
+  },
+  "reused_reviews": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029-review/review.json",
+      "sha256": "d682cfc85932136d177287dc66f5540723d0a014eb315915007e66b83bd18179"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029-review/provider-child-review.json",
+      "sha256": "5502227f02b4df634330685b290105344655f16bda8cf7da7a09666ad3a58e0a"
+    }
+  ],
+  "scope": "Current-basis integration and callback/thread delta only; prior full source reviews retained.",
+  "findings": [],
+  "rebase_required": false,
+  "existing_beforeimages_matching_current": 7,
+  "new_paths_absent_from_current": 20,
+  "cmake_append_inputs": [
+    {
+      "path": "preview/native/engine/CMakeLists.txt",
+      "current_sha256": "b794b189ff001d64c456ca111b32d093ba48d1848efc42afb1b3e0f5f33630c7",
+      "fragment_sha256": "1949b294a28156375f1fa2aef766963051aadbae2aad1dab7e3d46bca72af53b"
+    },
+    {
+      "path": "preview/native/services/CMakeLists.txt",
+      "current_sha256": "d376597afb6eddf8aa18bea287dd1dc128a00f1d1f312d3ac57e74c23f647257",
+      "fragment_sha256": "0bed4419b6728a9819ff426f9907d59017c64657ec8a9a5dd091473a4595e784"
+    },
+    {
+      "path": "preview/native/tests/CMakeLists.txt",
+      "current_sha256": "e977df18513fead3adc90dae9403a4de629c6c38260f1f828f2d74e8aad3aa1c",
+      "fragment_sha256": "727c59b6a44d709f1c3d33c7926325667b79510e7d3e5f29487c6dfe6635298d"
+    }
+  ],
+  "manager_prerequisite_evidence": {
+    "path": "/home/yurii/Java/BiglyBTC/migration/evidence/20261029-streaming-manager-known/verification.json",
+    "sha256": "68a9acea510fabf5e3cc900eb6ce7d2f84a4c0932219ba30b74d4ef420ff3c38",
+    "status": "PASS_STREAMING_MANAGER_KNOWN_ASSOCIATED_ROWS",
+    "source_commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
+    "gcc_suites": 22,
+    "common_suites": 19,
+    "private_suites": 6
+  },
+  "checks": [
+    "All native/provider source/artifact/input and fragment pins verified. Native complete patch applies read-only to current fd2c07c; provider complete patch applies read-only to its retained candidate-r2 source.",
+    "All seven existing native beforeimages match exactly. Existing manager/stream implementations and corrected native/Java FIN fixtures are outside changed maps, preserving actual M behavior.",
+    "Three CMake fragments append after their current targets; no duplicate owner targets or overwritten current manager/test blocks. Optional owner remains OFF and requires separate approved SDK/artifact.",
+    "SourcePermit worker alone owns/releases sourceAccess; Ready is consumed on QObject thread; RAII acknowledgement precedes worker release. SourceEffect, channel, Bridge and owner public notifications are queued with QPointer/context lifetime guards. No native equivalent of the original Java EOF/output.close callback race found in the reachable owned path.",
+    "EffectAuthority enter changes revision only after successful nonoverlap CAS; current checks are atomic-only. Socket callbacks schedule work rather than granting authority, and actual physical effects retain the held source gate."
+  ],
+  "remaining_requirements": [
+    "Root adoption must bind current beforeimages and composed CMake bytes; historical frozen source_basis is not a new-CID receipt.",
+    "Measure and independently approve optional SDK/DSO/source/header closure and actual31-symbol ABI; no future artifact hash or approval inferred.",
+    "Focused builds/tests and actual two-provider transfer/foreign-capability/held-source acceptance remain pending."
+  ],
+  "executed_builds_or_subjects": false,
+  "native_or_dependency_mutations": false
+}

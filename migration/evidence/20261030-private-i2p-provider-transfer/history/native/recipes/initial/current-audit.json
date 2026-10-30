@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "status": "READONLY_SOURCE_USABILITY_CHECKS_NO_SUBJECT_EXECUTION",
+  "native_basis": "fd2c07c553dd9e092ea8812bbbbaea429a49d71f",
+  "sdk_recipe_sha256": "e74700817941e160950cb9337f0992b51a5d2eeaef49b5d0c5c857361492f0a1",
+  "sdk_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029-review/provider-child-review.json",
+    "sha256": "5502227f02b4df634330685b290105344655f16bda8cf7da7a09666ad3a58e0a"
+  },
+  "sdk_input_pins_checked": 162,
+  "parent_source_leaves_checked": 1082,
+  "parent_installed_leaves_checked": 291,
+  "parent_build_files_checked": 4,
+  "provider_maps_checked": 13,
+  "native_source_maps": 31,
+  "existing_native_beforeimages": 7,
+  "existing_cmake_beforeimages": 3,
+  "new_native_paths_absent": 21,
+  "cmake_current_bytes_retained_as_prefix": true,
+  "author_build_or_subject_execution": false,
+  "native_mutation": false
+}

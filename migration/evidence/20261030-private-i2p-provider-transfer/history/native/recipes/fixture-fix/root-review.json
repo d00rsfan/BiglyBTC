@@ -1,0 +1,8 @@
+{
+  "status": "ROOT_REVIEWED_INCREMENTAL_FIXTURE_CONTINUATION",
+  "manifest_sha256": "e1177afbe256f870c7b193e3e2bbfc95f4a953ab6237662e7e7e5f533697aebb",
+  "all_new_guard_and_runner_delta_read": true,
+  "typed_dependency_row_correction_before_execution": true,
+  "eleven_fresh_clang_suites": true,
+  "runtime_credit": false
+}

@@ -1,0 +1,13 @@
+{
+  "label": "original",
+  "command": [
+    "python3",
+    "-B",
+    "/home/yurii/Java/BiglyBT/migration/tools/validate.py"
+  ],
+  "exit_code": 0,
+  "log_sha256": "6fc6923bc46b92b5954fe67728dce506ed47ae38a624d06ec27178fc543f101f",
+  "summary": [
+    "PASS registry: 20 sources, 108 components, 0 reviews"
+  ]
+}

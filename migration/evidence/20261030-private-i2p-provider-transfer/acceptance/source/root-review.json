@@ -1,0 +1,7 @@
+{
+  "status": "REVIEWED_SOURCE_ONLY",
+  "manifest_sha256": "38bd11dfdc1d71c8ab8849c3aff67c43efbfb44d3e0a13db1b925ca8441e8150",
+  "source_commit": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+  "all_positive_predicates_and_budgets_unchanged": true,
+  "runtime_credit": false
+}

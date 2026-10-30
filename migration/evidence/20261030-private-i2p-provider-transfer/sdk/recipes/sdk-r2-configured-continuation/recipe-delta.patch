@@ -1,0 +1,185 @@
+--- parent/provider.py
++++ continuation/provider.py
+@@ -9,6 +9,7 @@
+ ROOT=R/'build/i2p-provider-attachment-20261029'
+ D=ROOT/'implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/amendments/executor-workguard'
+ PREVIOUS_RECIPE=ROOT/'provider-recipe/shutdown-storage-r2'
++TEST_RECIPE=ROOT/'provider-recipe/sdk-r2-test-repair'
+ OLD=ROOT/'provider-candidate-r1'
+ HELPER=R/'build/mainline-dual-identity-provider-20261028/recipe/provider_child.py'
+ PINS=json.loads((H/'inputs.json').read_bytes())
+@@ -87,31 +88,32 @@
+ 
+ def history(c):
+  fix=b.load(c/'test-source-fix.json');initial=b.load(H/'initial-state.json');before=b.load(H/'retained-creation.json')
+- b.need(fix['recipe_sha256']==b.sha(__file__) and fix['source_capsule_sha256']==b.sha(D/'manifest.json') and fix['failed_result_sha256']==initial['failed_result_sha256'],'Exact test repair association')
++ b.need(fix['recipe_sha256']==b.sha(TEST_RECIPE/'provider.py') and fix['source_capsule_sha256']==b.sha(D/'manifest.json') and fix['failed_result_sha256']==initial['failed_result_sha256'],'Exact test repair association')
+  b.need(b.sha(c/'creation-before-test-fix.json')==b.sha(H/'retained-creation.json') and b.sha(c/'test-before-test-fix.cpp')==b.sha(H/'test-before.cpp'),'Immutable old creation/test')
+  b.need(before['source_inputs_sha256']==initial['source_inputs_sha256'] and fix['old_creation_sha256']==b.sha(c/'creation-before-test-fix.json'),'Actual old1087source')
+  b.need(b.tree(c/'install',True)==initial['installed_sha256'] and all(b.sha(c/name)==pin for name,pin in initial['production_build_sha256'].items()),'All installed293/production objects/DSO unchanged')
+  b.need(b.sha(PREVIOUS_RECIPE/'test-objects.cmake')==b.sha(H/'test-objects.cmake'),'Same configured hidden-object hook')
+  return fix
+ 
+-def repair(c,a):
+- parent,capsule=pins();initial=b.load(H/'initial-state.json');old_creation=b.load(H/'retained-creation.json');name='test/test_biglybtc_private_i2p_owner.cpp';row=capsule['delta_source_paths'][name]
+- b.need(set(capsule['delta_source_paths'])=={name} and c==Path(initial['candidate']),'One exact owned test leaf')
+- b.need(b.sha(c/'creation.json')==b.sha(H/'retained-creation.json') and b.tree(c/'source')==initial['source_inputs_sha256'],'Exact failed source and creation')
+- b.need(b.sha(c/'build/CMakeCache.txt')==initial['cache_sha256'] and b.sha(c/'build/build.ninja')==initial['ninja_sha256'],'Unmodified failed cache')
+- b.need(b.tree(c/'install',True)==initial['installed_sha256'] and all(b.sha(c/n)==pin for n,pin in initial['production_build_sha256'].items()),'Existing SDK/DSO/production unchanged')
+- failed=b.load(c/'runs/r1/result.json');commands=b.load(c/'runs/r1/commands.json')
+- b.need(failed['status']=='FAIL' and failed['source_creation_sha256']==b.sha(H/'retained-creation.json') and [x['name'] for x in commands]==['configure','build','install','provider-tests'] and [x['exit'] for x in commands]==[0,0,0,8],'Retain actual failed r1 with successful build/install')
+- b.need(initial['failed_result_sha256']==b.sha(c/'runs/r1/result.json') and all(b.sha(c/x['log'])==x['log_sha256'] for x in commands),'Actual r1 logs/result')
+- review=a.source_review.resolve(strict=True);b.need(b.sha(review)==a.source_review_sha256,'Root actual final SOURCE review')
+- b.need(b.sha(c/'source'/name)==row['before_sha256']==b.sha(H/'test-before.cpp'),'Exact test beforeimage')
+- final=expected(parent,capsule);b.need(len(final)==1087 and {n for n in final if final[n]!=initial['source_inputs_sha256'][n]}=={name},'Other1086 source leaves unchanged')
+- for leaf in ('creation-before-test-fix.json','test-before-test-fix.cpp','test-source-fix.json','creation-test-fix.tmp'):b.need(not os.path.lexists(c/leaf),'Never overwrite repair history '+leaf)
+- shutil.copyfile(c/'creation.json',c/'creation-before-test-fix.json');shutil.copyfile(c/'source'/name,c/'test-before-test-fix.cpp')
+- target=c/'source'/name;temporary=target.with_suffix('.test-fix.tmp');b.need(not os.path.lexists(temporary),'No existing test staging leaf');shutil.copyfile(row['after_path'],temporary);os.replace(temporary,target)
+- creation=dict(old_creation,status='TEST_SOURCE_REPAIRED_REQUIRES_ALL_NINE_DIRECT_CONTROLS',source_inputs_sha256=final,provider_source_manifest_sha256=b.sha(D/'manifest.json'),source_review_path=str(review),source_review_sha256=a.source_review_sha256,recipe_sha256=b.sha(__file__),recipe_inputs_sha256={n:b.sha(H/n) for n in ('provider.py','jobs.mk','inputs.json','NEXT.txt','test-objects.cmake','initial-state.json','retained-creation.json','test-before.cpp')})
+- b.dump(c/'test-source-fix.json',dict(status='APPLIED_TEST_ONLY_SDK_FIX_NO_RUNTIME_CREDIT',recipe_sha256=b.sha(__file__),source_capsule_sha256=b.sha(D/'manifest.json'),old_creation_sha256=b.sha(c/'creation-before-test-fix.json'),failed_result_sha256=initial['failed_result_sha256'],test_path=name,before_sha256=row['before_sha256'],after_sha256=row['after_sha256'],installed_sdk_reused=True,production_or_abi_changed=False))
+- b.dump(c/'creation-test-fix.tmp',creation);os.replace(c/'creation-test-fix.tmp',c/'creation.json');verify(c);history(c);print('TEST_SOURCE_REPAIRED_NOT_QUALIFIED',c,flush=True)
++def configured_cache(c):
++ diagnosis=b.load(c/'runs/r2/root-cache-diagnosis.json');commands=b.load(c/'runs/r2/commands.json');failed=b.load(c/'runs/r2/result.json')
++ b.need(failed['status']=='FAIL' and failed['failure']=="RuntimeError('Exact unchanged configured cache')" and len(commands)==1 and commands[0]['name']=='configure' and commands[0]['exit']==0 and b.sha(c/commands[0]['log'])==commands[0]['log_sha256'],'Actual successful r2 configure followed only by metadata guard failure')
++ steps=[line for line in diagnosis['dry_run_stdout'].splitlines() if re.match(r'^\[\d+/\d+\] ',line)]
++ b.need(diagnosis['dry_run_exit']==0 and diagnosis['compile_executed'] is False and diagnosis['abi_differences']=={} and diagnosis['dry_run_command']==['/usr/bin/ninja','-C',str(c/'build'),'-n','test_biglybtc_private_i2p_owner'],'Root-owned actual dry-run proof')
++ b.need(steps==['[1/2] Building CXX object test/CMakeFiles/test_biglybtc_private_i2p_owner.dir/test_biglybtc_private_i2p_owner.cpp.o','[2/2] Linking CXX executable test/test_biglybtc_private_i2p_owner'],'Only unit compile/link permitted by measured dry run')
++ values=cache(c);parent=b.load(P/'source-build-record.json');b.need(values==diagnosis['values'] and {name:values.get(name) for name in parent['abi_cache']}==parent['abi_cache'],'Exact current semantic cache and original ABI')
++ b.need(values['CMAKE_CXX_COMPILER']=='/usr/bin/g++-16' and values['CMAKE_CXX_STANDARD']=='23' and values['CMAKE_PROJECT_INCLUDE']==str(PREVIOUS_RECIPE/'test-objects.cmake') and values['CMAKE_HOME_DIRECTORY']==str(c/'source') and values['CMAKE_INSTALL_PREFIX']==str(c/'install'),'Exact compiler/source/SDK/hook tuple')
++ return dict(cache_sha256=b.sha(c/'build/CMakeCache.txt'),values=values,retained_actual_configure_sha256=b.sha(c/'runs/r2/commands.json'),root_dry_run_sha256=b.sha(c/'runs/r2/root-cache-diagnosis.json'))
++
++def continue_configured(c,a):
++ pins();history(c);configured_cache(c);current=b.load(H/'retained-repaired-creation.json');b.need(b.sha(c/'creation.json')==b.sha(H/'retained-repaired-creation.json'),'Exact repaired creation before recipe continuation')
++ b.need(b.tree(c/'source')==current['source_inputs_sha256'] and current['provider_source_manifest_sha256']==b.sha(D/'manifest.json'),'Final1087 source unchanged')
++ for name in ('creation-before-configured-continuation.json','configuration-continuation.json','creation-configured.tmp'):b.need(not os.path.lexists(c/name),'Preserve prior continuation '+name)
++ review=a.source_review.resolve(strict=True);b.need(b.sha(review)==a.source_review_sha256,'Actual root continuation review')
++ shutil.copyfile(c/'creation.json',c/'creation-before-configured-continuation.json')
++ creation=dict(current,recipe_sha256=b.sha(__file__),source_review_path=str(review),source_review_sha256=a.source_review_sha256,recipe_inputs_sha256={name:b.sha(H/name) for name in ('provider.py','jobs.mk','inputs.json','NEXT.txt','test-objects.cmake','initial-state.json','retained-creation.json','test-before.cpp','retained-repaired-creation.json')})
++ b.dump(c/'configuration-continuation.json',dict(status='SOURCE_RECIPE_CONTINUED_NO_COMPILE_OR_TEST_CREDIT',recipe_sha256=b.sha(__file__),old_creation_sha256=b.sha(c/'creation-before-configured-continuation.json'),test_source_fix_sha256=b.sha(c/'test-source-fix.json'),failed_r2_result_sha256=b.sha(c/'runs/r2/result.json'),configuration=configured_cache(c)))
++ b.dump(c/'creation-configured.tmp',creation);os.replace(c/'creation-configured.tmp',c/'creation.json');verify(c);history(c);print('CONFIGURED_CANDIDATE_REQUIRES_FRESH_NINE_CONTROLS',c,flush=True)
+ 
+ def cache(c):
+  return {m[1]:m[2] for line in (c/'build/CMakeCache.txt').read_text().splitlines() if (m:=re.match(r'^([^#/][^:]*):[^=]+=(.*)$',line))}
+@@ -156,7 +158,7 @@
+  return result
+ 
+ def build(c,a):
+- verify(c);history(c);b.need(a.attempt=='r2','Only fresh resumed r2');b.need(b.sha(c/'build/CMakeCache.txt')==b.load(H/'initial-state.json')['cache_sha256'],'Existing failed cache unchanged');flags=os.environ.get('MAKEFLAGS','');fifo=re.search(r'--jobserver-auth=fifo:([^\s]+)',flags)
++ verify(c);history(c);b.need(a.attempt=='r3','Only fresh configured r3');configuration=configured_cache(c);flags=os.environ.get('MAKEFLAGS','');fifo=re.search(r'--jobserver-auth=fifo:([^\s]+)',flags)
+  b.need(fifo and re.search(r'(?:^|\s)-j3(?:\s|$)',flags) and stat.S_ISFIFO(Path(fifo[1]).stat().st_mode),'Use GNU Make4.4 FIFO -j3 jobs.mk')
+  b.need(not os.environ.get('LD_PRELOAD') and not os.environ.get('LD_AUDIT'),'No loader injection')
+  out=c/'runs'/a.attempt;out.mkdir(parents=True,exist_ok=False);(out/'home').mkdir(mode=0o700);rows=[];original=protected()
+@@ -165,10 +167,7 @@
+   versions={n:subprocess.check_output([n,'--version'],text=True).splitlines()[0] for n in ('make','ninja')}
+   b.need(re.match(r'GNU Make 4\.4(?:\.|$)',versions['make']) and re.match(r'1\.13(?:\.|$)',versions['ninja']),'Jobserver-compatible tools')
+   b.dump(out/'tool-versions.json',versions)
+-  run(c,out,'configure',config(c,c/'source',c/'build',['-DCMAKE_CXX_STANDARD=23','-DCMAKE_CXX_STANDARD_REQUIRED=ON','-DCMAKE_CXX_EXTENSIONS=OFF',
+-   '-DCMAKE_INSTALL_PREFIX='+str(c/'install'),'-DCMAKE_INSTALL_LIBDIR=lib','-DBUILD_SHARED_LIBS=ON','-Dbuild_tests=ON',
+-   '-Dbuild_examples=OFF','-Dbuild_tools=OFF','-Dpython-bindings=OFF','-Dlogging=ON','-Di2p=ON','-Ddht=ON','-Dencryption=ON','-Ddeprecated-functions=ON']),rows)
+-  b.need(cache(c)['CMAKE_GENERATOR']=='Ninja' and b.sha(c/'build/CMakeCache.txt')==b.load(H/'initial-state.json')['cache_sha256'],'Exact unchanged configured cache')
++  b.dump(out/'configuration-before.json',configuration)
+   run(c,out,'build',['nice','-n','5','cmake','--build',c/'build','--target','test_biglybtc_private_i2p_owner','--','-k','0'],rows,7200);history(c)
+   images={str(p.relative_to(c)):b.sha(p) for p in [c/'install'/b.ARTIFACT,*[c/'build/test'/n for n in sorted(UNITS)],c/'build/test/test_dht',c/'build/test/test_tracker']}
+   b.dump(out/'images-before.json',images);objects=hidden_objects(c);b.dump(out/'hidden-objects-before.json',objects)
+@@ -192,18 +191,19 @@
+    executable=c/(kind+'-build')/FIXTURE_IMAGES[kind];images[str(executable.relative_to(c))]=b.sha(executable);b.dump(out/'images-before.json',images)
+    run(c,out,kind+'-tests',['ctest','--test-dir',c/(kind+'-build'),'--output-on-failure','--output-junit',out/(kind+'-tests.xml')],rows);xml(out/(kind+'-tests.xml'),names)
+   b.need(all(b.sha(c/n)==pin for n,pin in images.items()),'Tested images changed');b.dump(out/'images-after.json',images)
+-  verify(c);history(c);b.need(hidden_objects(c)==objects and protected()==original,'Objects or original HEAD/index changed');b.dump(out/'hidden-objects-after.json',hidden_objects(c));result.update(status=STATUS,actual_ctest_suites=9,commands_sha256=b.sha(out/'commands.json'),source_unchanged=True,images_unchanged=True,hidden_test_objects_unchanged=True,original_head_index_unchanged=original)
++  b.dump(out/'configuration-after.json',configured_cache(c));b.need(configured_cache(c)['values']==configuration['values'],'Semantic configuration changed');verify(c);history(c);b.need(hidden_objects(c)==objects and protected()==original,'Objects or original HEAD/index changed');b.dump(out/'hidden-objects-after.json',hidden_objects(c));result.update(status=STATUS,actual_ctest_suites=9,commands_sha256=b.sha(out/'commands.json'),source_unchanged=True,images_unchanged=True,hidden_test_objects_unchanged=True,original_head_index_unchanged=original)
+  except BaseException as exc:result['failure']=repr(exc)
+  b.dump(out/'result.json',result);b.need(result['status']==STATUS,'Actual attempt retained as failure')
+ 
+ def record(c,a):
+- parent,creation=verify(c);history(c);b.need(a.attempt=='r2','Only actual resumed r2 record');out=c/'runs'/a.attempt;result=b.load(out/'result.json');commands=b.load(out/'commands.json')
++ parent,creation=verify(c);history(c);b.need(a.attempt=='r3','Only actual configured r3 record');out=c/'runs'/a.attempt;result=b.load(out/'result.json');commands=b.load(out/'commands.json')
+  b.need(result['status']==STATUS and result['commands_sha256']==b.sha(out/'commands.json'),'Actual successful direct controls required')
+- expected_names=['configure','build','provider-tests','test_dht-list','test_tracker-list','wire-controls',* [k+'-'+s for k in FIXTURES for s in ('configure','build','tests')]]
++ expected_names=['build','provider-tests','test_dht-list','test_tracker-list','wire-controls',* [k+'-'+s for k in FIXTURES for s in ('configure','build','tests')]]
+  b.need([x['name'] for x in commands]==expected_names and all(x['exit']==0 and b.sha(c/x['log'])==x['log_sha256'] for x in commands),'Closed actual commands/logs')
+  for name,names in [('provider-tests',UNITS),('wire-controls',{'id_enforcement_v4','id_enforcement_v6','parse_i2p_peers'}),*[(k+'-tests',v) for k,v in FIXTURES.items()]]:xml(out/(name+'.xml'),names)
+  b.need(b.load(out/'images-before.json')==b.load(out/'images-after.json') and all(b.sha(c/n)==pin for n,pin in b.load(out/'images-before.json').items()),'Actual image pins')
+  b.need(b.load(out/'hidden-objects-before.json')==b.load(out/'hidden-objects-after.json')==hidden_objects(c) and result['hidden_test_objects_unchanged'] and result['original_head_index_unchanged']==protected(),'Same-build objects and original HEAD/index required')
++ b.need(b.load(out/'configuration-before.json')['values']==b.load(out/'configuration-after.json')['values']==configured_cache(c)['values'],'Actual before/after semantic configuration')
+  b.need(not (c/'source-build-record.json').exists() and not (c/'approval-proposal').exists(),'Never overwrite record/proposal')
+  installed=b.tree(c/'install',True);headers={n:v for n,v in installed.items() if n.startswith('include/libtorrent/')}
+  b.need(set(installed)==set(parent['installed_sha256'])|{'include/libtorrent/biglybtc_private_i2p_owner.hpp','include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp'},'Exact installed SDK closure')
+@@ -225,22 +225,22 @@
+  b.dump(c/'control-loader.json',loader);b.dump(c/'dependencies.json',dependency_files)
+  verify(c)
+  b.dump(c/'source-build-record.json',dict(schema='BIGLYBTC_PRIVATE_I2P_OWNER_SOURCE_RECORD_V1',status='BUILT_DIRECTLY_TESTED_NOT_APPROVED',
+-  source_capsule_sha256=b.sha(D/'manifest.json'),test_source_repair=b.load(c/'test-source-fix.json'),retained_sdk_install_creation_sha256=b.sha(c/'creation-before-test-fix.json'),parent_record_sha256=b.sha(P/'source-build-record.json'),previous_private_record_sha256=b.sha(OLD/'source-build-record.json'),upstream_commit=parent['upstream_commit'],
++  source_capsule_sha256=b.sha(D/'manifest.json'),test_source_repair=b.load(c/'test-source-fix.json'),configuration_continuation=b.load(c/'configuration-continuation.json'),retained_sdk_install_creation_sha256=b.sha(c/'creation-before-test-fix.json'),parent_record_sha256=b.sha(P/'source-build-record.json'),previous_private_record_sha256=b.sha(OLD/'source-build-record.json'),upstream_commit=parent['upstream_commit'],
+   source_root=str(c/'source'),build_root=str(c/'build'),install_root=str(c/'install'),artifact=str(artifact),artifact_sha256=b.sha(artifact),artifact_bytes=artifact.stat().st_size,
+   reviewed_inputs_sha256=PINS,recipe_inputs_sha256=creation['recipe_inputs_sha256'],source_review_sha256=creation['source_review_sha256'],
+   source_inputs_sha256=creation['source_inputs_sha256'],installed_sha256=installed,headers_sha256={n.removeprefix('include/'):v for n,v in headers.items()},
+   sdk_tree_sha256=hashlib.sha256(json.dumps({n.removeprefix('include/'):v for n,v in headers.items()},sort_keys=True,separators=(',',':')).encode()).hexdigest(),
+   required_exports=required,abi_cache=parent['abi_cache'],compiler=parent['compiler'],actual_controls=result,
+-  evidence_sha256={str(p.relative_to(c)):b.sha(p) for p in [c/'creation.json',c/'creation-before-test-fix.json',c/'test-before-test-fix.cpp',c/'test-source-fix.json',c/'exports.txt',c/'dynamic.txt',c/'ldd.txt',c/'control-loader.json',c/'dependencies.json',*sorted(out.rglob('*'))] if p.is_file()},
++  evidence_sha256={str(p.relative_to(c)):b.sha(p) for p in [c/'creation.json',c/'creation-before-test-fix.json',c/'test-before-test-fix.cpp',c/'test-source-fix.json',c/'creation-before-configured-continuation.json',c/'configuration-continuation.json',c/'runs/r2/result.json',c/'runs/r2/commands.json',c/'runs/r2/configure.log',c/'runs/r2/root-cache-diagnosis.json',c/'exports.txt',c/'dynamic.txt',c/'ldd.txt',c/'control-loader.json',c/'dependencies.json',*sorted(out.rglob('*'))] if p.is_file()},
+   native_runtime_approved=False,shipping_approved=False))
+  proposal=c/'approval-proposal';proposal.mkdir();rec=b.load(c/'source-build-record.json')
+  b.dump(proposal/'private-i2p-owner-runtime.json',dict(schema=1,purpose='optional-sdk-only-not-approved',source_build_record=str(c/'source-build-record.json'),source_build_record_sha256=b.sha(c/'source-build-record.json'),artifact=rec['artifact'],artifact_sha256=rec['artifact_sha256'],artifact_bytes=rec['artifact_bytes'],source_root=rec['source_root'],install_root=rec['install_root'],native_runtime_approved=False))
+  print('MEASURED_CANDIDATE_NOT_APPROVED',b.sha(c/'source-build-record.json'),rec['artifact_sha256'],flush=True)
+ 
+ def main():
+- p=argparse.ArgumentParser();p.add_argument('phase',choices=('repair','build','record'));p.add_argument('--output',required=True);p.add_argument('--attempt',default='r2');p.add_argument('--source-review',type=Path);p.add_argument('--source-review-sha256');a=p.parse_args()
++ p=argparse.ArgumentParser();p.add_argument('phase',choices=('continue','build','record'));p.add_argument('--output',required=True);p.add_argument('--attempt',default='r3');p.add_argument('--source-review',type=Path);p.add_argument('--source-review-sha256');a=p.parse_args()
+  b.need(re.fullmatch('[a-z0-9][a-z0-9-]{0,40}',a.attempt),'Attempt label');c=candidate(a.output)
+- if a.phase=='repair':b.need(a.source_review and re.fullmatch('[a-f0-9]{64}',a.source_review_sha256 or ''),'Root-reviewed source receipt required');repair(c,a)
++ if a.phase=='continue':b.need(a.source_review and re.fullmatch('[a-f0-9]{64}',a.source_review_sha256 or ''),'Root-reviewed source receipt required');continue_configured(c,a)
+  elif a.phase=='build':build(c,a)
+  else:record(c,a)
+ if __name__=='__main__':main()
+--- parent/jobs.mk
++++ continuation/jobs.mk
+@@ -4,7 +4,7 @@
+ ifeq ($(strip $(OUTPUT)),)
+ $(error Supply OUTPUT=/absolute/fresh/provider-candidate-r2)
+ endif
+-ATTEMPT ?= r2
++ATTEMPT ?= r3
+ TASK := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+ unexport CMAKE_BUILD_PARALLEL_LEVEL
+ .PHONY: all
+--- parent/NEXT.txt
++++ continuation/NEXT.txt
+@@ -1,21 +1,20 @@
+-SOURCE ONLY. This reuses existing candidate-r2 and never creates candidate-r3.
+-Final complete13 source9d264115; same production2 as859855 and same31ABI.
+-Root supplies actual final SOURCE review path/SHA, then:
++SOURCE ONLY. Continue the SAME configured candidate-r2; no product/test change.
++Root actual r2 configure0 and readonly Ninja dry run prove exactly the unit's
++one compile+one link, ABI differences{}. The prior r2FAIL remains immutable.
++Skip configure and install. Validate actual current ABI/compiler/source/SDK/hook
++cache values, retain raw before/after cache hashes separately, require semantic
++values equal and installed293/167production objects/DSO unchanged.
++
+   TASK=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029
+-  RECIPE=$TASK/provider-recipe/sdk-r2-test-repair
++  RECIPE=$TASK/provider-recipe/sdk-r2-configured-continuation
+   OUTPUT=$TASK/provider-candidate-r2
+-  python3 -B "$RECIPE/provider.py" repair --output "$OUTPUT" --source-review "$REVIEW" --source-review-sha256 "$REVIEW_SHA"
+-  make --jobserver-style=fifo -j3 -f "$RECIPE/jobs.mk" OUTPUT="$OUTPUT" ATTEMPT=r2
+-  python3 -B "$RECIPE/provider.py" record --output "$OUTPUT" --attempt r2
++  python3 -B "$RECIPE/provider.py" continue --output "$OUTPUT" --source-review "$REVIEW" --source-review-sha256 "$REVIEW_SHA"
++  make --jobserver-style=fifo -j3 -f "$RECIPE/jobs.mk" OUTPUT="$OUTPUT" ATTEMPT=r3
++  python3 -B "$RECIPE/provider.py" record --output "$OUTPUT" --attempt r3
+ 
+-Repair changes only source/test/test_biglybtc_private_i2p_owner.cpp; saves actual
+-creation-before-test-fix.json and test-before-test-fix.cpp, then updates creation
+-with exact final map/recipe/review. Old runs/r1 remains FAIL and immutable.
+-Other1086source leaves, installed293SDK leaves, DSO and all167provider objects
+-must remain exact. Same CMake hook/cache: reconfigure is allowed only if cache
+-bytes stay identical. Rebuild only existing private unit; do not install again.
+-Fresh all9 direct CTests and missing fixture builds execute as new runs/r2.
+-No old test pass credit. Existing SDK install uses explicit retained actualr1
+-successful build/install origin; new record names final1087source/test repair.
+-No guessed artifact/approval, no native source/default355/dist changes. Root
+-alone executes. No author compilers/subjects. Finish optional section then STOP.
++continue saves current creation-before-configured-continuation.json before
++binding new producer pins/review. Original creation-before-test-fix.json,
++test-before-test-fix.cpp, test-source-fix.json and failed r1/r2 remain exact.
++Only unit is rebuilt; all9 direct controls run fresh plus remainingfixtures.
++Finalsource9d264/native9f46 unchanged; no SDKcandidate-r3, DSO rebuild or approval
++guess. All author checks readonly/AST; root alone executes. Finish then STOP.

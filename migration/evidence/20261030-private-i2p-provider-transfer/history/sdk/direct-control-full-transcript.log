@@ -1,0 +1,99 @@
+Start testing: Oct 30 11:35 IST
+----------------------------------------------------------
+10/112 Testing: test_biglybtc_mainline_identity
+10/112 Test: test_biglybtc_mainline_identity
+Command: "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_biglybtc_mainline_identity"
+Directory: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test
+"test_biglybtc_mainline_identity" start time: Oct 30 11:35 IST
+Output:
+----------------------------------------------------------
+test: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_biglybtc_mainline_identity
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_tmp_2489831_"
+
+
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_mainline_identity.cpp.biglybtc_original_identity_local_update                   ] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_mainline_identity.cpp.biglybtc_original_identity_actual_adoption_retirement     ] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_mainline_identity.cpp.biglybtc_original_identity_refuses_ambiguous_and_lost     ] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_mainline_identity.cpp.biglybtc_original_identity_dual_socket_routing_correlation] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_mainline_identity.cpp.biglybtc_original_identity_dual_rebind_fails_both         ] ***PASS***
+[0m
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_biglybtc_mainline_identity" end time: Oct 30 11:35 IST
+"test_biglybtc_mainline_identity" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/112 Testing: test_biglybtc_private_i2p_owner
+11/112 Test: test_biglybtc_private_i2p_owner
+Command: "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_biglybtc_private_i2p_owner"
+Directory: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test
+"test_biglybtc_private_i2p_owner" start time: Oct 30 11:35 IST
+Output:
+----------------------------------------------------------
+test: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_biglybtc_private_i2p_owner
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_tmp_2489832_"
+
+
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_owner_arguments_and_public_status_are_bounded            ] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_owner_refuses_direct_network_settings_and_foreign_torrent] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_owner_full_hash_and_withdrawal_context                   ] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_owner_fresh_http_tracker_uses_actual_normalized_port     ] ***PASS***
+[0m
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"test_biglybtc_private_i2p_owner" end time: Oct 30 11:35 IST
+"test_biglybtc_private_i2p_owner" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/112 Testing: test_biglybtc_swarm
+12/112 Test: test_biglybtc_swarm
+Command: "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_biglybtc_swarm"
+Directory: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test
+"test_biglybtc_swarm" start time: Oct 30 11:35 IST
+Output:
+----------------------------------------------------------
+test: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_biglybtc_swarm
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_tmp_2489836_"
+
+
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_swarm.cpp.biglybtc_swarm_hash_selection                         ] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_swarm.cpp.biglybtc_swarm_session_indices_and_immutable_admission] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_swarm.cpp.biglybtc_swarm_metadata_arrival_preserves_selection   ] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_swarm.cpp.biglybtc_swarm_resume_and_invalid_admission           ] ***PASS***
+[0m
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"test_biglybtc_swarm" end time: Oct 30 11:35 IST
+"test_biglybtc_swarm" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/112 Testing: test_biglybtc_tracker_response
+13/112 Test: test_biglybtc_tracker_response
+Command: "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_biglybtc_tracker_response"
+Directory: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test
+"test_biglybtc_tracker_response" start time: Oct 30 11:35 IST
+Output:
+----------------------------------------------------------
+test: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_biglybtc_tracker_response
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/test/test_tmp_2489844_"
+
+
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_tracker_response.cpp.original_tracker_fields_preserve_presence_raw_longs_and_extensions           ] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_tracker_response.cpp.original_scrape_fields_distinguish_absence_invalid_downloaded_and_wrong_types] ***PASS***
+[32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/test/test_biglybtc_tracker_response.cpp.original_tracker_unknown_shapes_cannot_be_initial_error_authority            ] ***PASS***
+[0m
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_biglybtc_tracker_response" end time: Oct 30 11:35 IST
+"test_biglybtc_tracker_response" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 30 11:35 IST

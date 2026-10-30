@@ -1,0 +1,13 @@
+SOURCE ONLY; root review before execution. Preserve failed runs/r1 unchanged.
+
+The new private test constructs intentionally hidden i2p_connection/i2p_stream/proxy_base, while the standard upstream test target links only test_common + shared torrent-rasterbar. The r1 DSO built successfully; the test link cannot resolve their hidden constructors/destructors/close. Exporting them is unnecessary.
+
+An external CMAKE_PROJECT_INCLUDE hook defers until the existing test target exists and links ONLY the exact two already-built provider objects into that test executable. No C++/header/test body/source capsule is edited; 8f12, all13 source maps, optional31 ABI and installed SDK remain unchanged. The real fresh http_connection/SAM wire control still tests default80 and explicit18443, including KEY_NOT_FOUND and actual normalized TRACKER port. Provider DSO and both existing object hashes must stay byte-exact; arbitrary object globbing/replacement is refused.
+
+repair.py imports the frozen parent recipe only at root invocation, adds only the external configure hook, and executes the same nine direct controls in a fresh attempt. It validates initial cache/build graph, exact source/toolchain, unchanged DSO/objects, and allows only CMAKE_PROJECT_INCLUDE in parsed cache values. The unchanged parent still records all actual commands/images/XML; the new record additionally pins this amendment, actual runner, two reused objects/DSO, cache and failedr1. No old PASS is pooled and no record grants runtime/shipping approval.
+
+Root commands after source review (TASK is this directory):
+nice -n 5 make --no-print-directory -j3 -f "$TASK/jobs.mk" ATTEMPT=r2
+python3 -B "$TASK/repair.py" record --output /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1 --attempt r2
+
+No prepare call, fresh candidate copy, full provider rebuild, native adoption or default enablement is requested. Actual link/control success remains pending root execution.

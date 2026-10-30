@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_ROOT_REVIEW_REQUIRED",
+  "purpose": "independent-optional-private-provider-sdk-candidate",
+  "provider_source_manifest_sha256": "8f12f51c1426d4de59c9e9df6f9c2cb767001fe2574b6bc6668b8ce4e6722dc9",
+  "source_paths": 13,
+  "required_same_image_exports": 31,
+  "actual_default_ctest_suites": 9,
+  "native_runtime_approved": false,
+  "shipping_approved": false,
+  "author_executions": [],
+  "artifacts_sha256": {
+    "provider.py": "d5a9fc98371125a4a41720edfab1b4d8d387bcbd430bcc1e8aaaf236fe6c8329",
+    "jobs.mk": "7b7952fb4d00b01fe05978ac50ec83ac2582f3d978f84f46d22265c0c41b7c54",
+    "inputs.json": "fd352c66f3038cf92ade7bb5113d5771dd8b82cc96d9234f9bf80152f5c8b8d4",
+    "NEXT.txt": "72629c11a5dc7b494c99fc216f15c9400941a1d927785ab87fb17d7e63fad873",
+    "parent-delta.patch": "12aa1e8c288c2e7a687634aa53a5a5be831a7226a4b602c358d93d316cfde09a"
+  },
+  "static_checks": [
+    "Python AST",
+    "all retained file SHA pins",
+    "exact inherited nine CTest scope",
+    "candidate child-directory canonical guards"
+  ],
+  "sequencing": "SDK source/build/record may precede native manager adoption after full source reviews; native owner enablement still requires actual final manager/acceptance plus new artifact approval.",
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-recipe/manifest.json",
+    "sha256": "e70a97bca12e60a38646a0e37a943ef40882597a714a49759a7300d702ad4e16"
+  }
+}

@@ -1,0 +1,145 @@
+--- a/preview/native/services/i2p_provider/owner.hpp
++++ b/preview/native/services/i2p_provider/owner.hpp
+@@ -5,6 +5,9 @@
+ #include <QObject>
+ #include <memory>
+ #include <cstddef>
++#include <array>
++#include <cstdint>
++#include <string>
+ 
+ namespace biglybtc::services::i2p::provider {
+ // One dedicated provider session/admission. No default Host, Public/mixed
+@@ -14,7 +17,21 @@
+ public:
+   enum class Phase {Prepared,Starting,Active,Withdrawn};
+   struct Options {i2cp::InitialChannel::Options router;i2cp::SessionOptions session;Bridge::Ports ports;};
+-  struct Observation {Phase phase=Phase::Prepared;Hash publicIdentity{};std::uint64_t admission=0,generation=0;bool seeding=false;std::int64_t verifiedBytes=0;std::uint16_t bridgePort=0;std::uint64_t rejectedClients=0;std::size_t bridgeSockets=0;};
++  // Diagnostic values only. No URL, address, tracker reason, capability or key.
++  struct ErrorObservation {int value=0;std::string category,message;};
++  struct TrackerHashObservation {bool updating=false,startSent=false;unsigned fails=0;ErrorObservation error;};
++  struct TrackerEndpointObservation {bool enabled=false;std::array<TrackerHashObservation,2> hashes{};};
++  struct TrackerObservation {std::size_t endpointCount=0,endpointsShown=0;std::array<TrackerEndpointObservation,4> endpoints{};};
++  struct AlertObservation {int type=0;ErrorObservation error;};
++  struct AlertDiagnostics {
++    std::uint64_t drained=0,uninspected=0,announces=0,trackerErrors=0,trackerReplies=0,i2pErrors=0,fileErrors=0,torrentErrors=0;
++    std::size_t currentShown=0,currentOmitted=0;std::array<AlertObservation,16> current{};
++  };
++  struct Diagnostics {
++    bool statusAvailable=false,incomplete=false,paused=false,announcingToTrackers=false;int torrentState=-1;std::uint64_t flags=0;
++    ErrorObservation error;std::size_t trackerCount=0,trackersShown=0;std::array<TrackerObservation,4> trackers{};AlertDiagnostics alerts;
++  };
++  struct Observation {Phase phase=Phase::Prepared;Hash publicIdentity{};std::uint64_t admission=0,generation=0;bool seeding=false;std::int64_t verifiedBytes=0;std::uint16_t bridgePort=0;std::uint64_t rejectedClients=0;std::size_t bridgeSockets=0;Diagnostics diagnostics{};};
+   // External preparation/lifetime caller only. Uses genuine original profile
+   // lock, key, full metadata and payload mappings; never a caller DTO grant.
+   // Requires the separately root-built/approved optional PRIVATE SDK image.
+--- a/preview/native/services/i2p_provider/owner.cpp
++++ b/preview/native/services/i2p_provider/owner.cpp
+@@ -6,6 +6,9 @@
+ #include <libtorrent/session.hpp>
+ #include <libtorrent/session_params.hpp>
+ #include <libtorrent/settings_pack.hpp>
++#include <libtorrent/alert_types.hpp>
++#include <libtorrent/announce_entry.hpp>
++#include <libtorrent/torrent_flags.hpp>
+ #include <libtorrent/biglybtc_private_i2p_owner.hpp>
+ #include <QDateTime>
+ #include <QPointer>
+@@ -17,6 +20,7 @@
+ #include <atomic>
+ #include <filesystem>
+ #include <limits>
++#include <vector>
+ 
+ namespace biglybtc::services::i2p::provider {
+ struct OwnedTorrent::Impl {
+@@ -32,6 +36,7 @@
+   std::unique_ptr<libtorrent::session> session;
+   std::optional<libtorrent::session_proxy> joining;
+   libtorrent::torrent_handle handle;
++  AlertDiagnostics diagnosticAlerts;
+   Options options;Phase phase=Phase::Prepared;
+   std::uint64_t admission=0,providerGeneration=0;bool notifyQueued=false,startRequested=false,bridgeRequested=false;
+   Impl(std::shared_ptr<ProfileSource> s,engine::detail::ManagedStorage m,ClientIdentity key,std::shared_ptr<void> pin)
+@@ -134,10 +139,42 @@
+ void OwnedTorrent::close(){if(impl_->onThread()){impl_->close();}}
+ void OwnedTorrent::join(){impl_->join();}
+ OwnedTorrent::Observation OwnedTorrent::observation()const{
+-  const auto& s=*impl_;Observation value{s.phase,s.source->destination().hash,s.admission,s.providerGeneration,false,0,0,0,0};
++  auto& s=*impl_;Observation value{s.phase,s.source->destination().hash,s.admission,s.providerGeneration,false,0,0,0,0,{}};
+   if(s.bridge){const auto bridge=s.bridge->observation();value.bridgePort=bridge.port;value.rejectedClients=bridge.rejectedClients;value.bridgeSockets=bridge.sockets;}
+   if(s.phase==Phase::Active&&s.handle.is_valid()){
+     auto actual=s.handle.status();value.seeding=actual.is_seeding;value.verifiedBytes=actual.total_done;
++    auto& diagnostic=value.diagnostics;diagnostic.statusAvailable=true;diagnostic.paused=bool(actual.flags&libtorrent::torrent_flags::paused);
++    diagnostic.announcingToTrackers=actual.announcing_to_trackers;diagnostic.torrentState=static_cast<int>(actual.state);diagnostic.flags=static_cast<std::uint64_t>(actual.flags);
++    // error_code::message is the generic category text; never copy alert.message,
++    // tracker message/failure_reason, URLs, endpoints or file names.
++    const auto error=[](const libtorrent::error_code& code){return ErrorObservation{code.value(),std::string(code.category().name()).substr(0,64),code.message().substr(0,160)};};
++    try{
++      diagnostic.error=error(actual.errc);const auto trackers=s.handle.trackers();diagnostic.trackerCount=trackers.size();diagnostic.trackersShown=std::min(trackers.size(),diagnostic.trackers.size());
++      for(std::size_t t=0;t<diagnostic.trackersShown;++t){
++        auto& output=diagnostic.trackers[t];const auto& input=trackers[t];output.endpointCount=input.endpoints.size();output.endpointsShown=std::min(input.endpoints.size(),output.endpoints.size());
++        for(std::size_t e=0;e<output.endpointsShown;++e){
++          auto& endpoint=output.endpoints[e];const auto& original=input.endpoints[e];endpoint.enabled=original.enabled;std::size_t h=0;
++          for(const auto& hash:original.info_hashes){auto& target=endpoint.hashes[h++];target.updating=hash.updating;target.startSent=hash.start_sent;target.fails=hash.fails;target.error=error(hash.last_error);}
++        }
++      }
++      // The provider already bounds its alert queue. Inspect at most256 entries
++      // per observation and retain only16 selected values; report every omission.
++      std::vector<libtorrent::alert*> alerts;s.session->pop_alerts(&alerts);auto& totals=s.diagnosticAlerts;totals.currentShown=0;totals.currentOmitted=0;
++      const auto add=[](std::uint64_t& count,std::size_t amount=1){count+=std::min<std::uint64_t>(std::numeric_limits<std::uint64_t>::max()-count,amount);};
++      add(totals.drained,alerts.size());const auto inspected=std::min<std::size_t>(alerts.size(),256);add(totals.uninspected,alerts.size()-inspected);
++      for(std::size_t i=0;i<inspected;++i){
++        const auto* item=alerts[i];const libtorrent::error_code* code=nullptr;bool selected=true;
++        if(libtorrent::alert_cast<libtorrent::tracker_announce_alert>(item)){add(totals.announces);}
++        else if(const auto* entry=libtorrent::alert_cast<libtorrent::tracker_error_alert>(item)){add(totals.trackerErrors);code=&entry->error;}
++        else if(libtorrent::alert_cast<libtorrent::tracker_reply_alert>(item)){add(totals.trackerReplies);}
++        else if(const auto* entry=libtorrent::alert_cast<libtorrent::i2p_alert>(item)){add(totals.i2pErrors);code=&entry->error;}
++        else if(const auto* entry=libtorrent::alert_cast<libtorrent::file_error_alert>(item)){add(totals.fileErrors);code=&entry->error;}
++        else if(const auto* entry=libtorrent::alert_cast<libtorrent::torrent_error_alert>(item)){add(totals.torrentErrors);code=&entry->error;}
++        else{selected=false;}
++        if(selected){if(totals.currentShown<totals.current.size()){totals.current[totals.currentShown++]={item->type(),code?error(*code):ErrorObservation{}};}else{++totals.currentOmitted;}}
++      }
++      diagnostic.alerts=totals;
++    }catch(...){diagnostic.incomplete=true;}
+   }return value;
+ }
+ bool OwnedTorrent::event(QEvent* event){
+--- a/preview/native/tests/i2p_provider_transfer_probe.cpp
++++ b/preview/native/tests/i2p_provider_transfer_probe.cpp
+@@ -12,6 +12,7 @@
+ #include <QFileInfo>
+ #include <QJsonDocument>
+ #include <QJsonObject>
++#include <QJsonArray>
+ #include <QSaveFile>
+ #include <QTcpSocket>
+ #include <QNetworkProxy>
+@@ -187,11 +188,26 @@
+     try{diagnostic("native-phase.json",{{"phase",QString::fromLatin1(phase)},{"elapsed_ms",elapsed.elapsed()}});}catch(...){}
+   };
+   const auto observe=[](const provider::OwnedTorrent::Observation& value){
++    const auto error=[](const provider::OwnedTorrent::ErrorObservation& item){return QJsonObject{{"value",item.value},{"category",QString::fromStdString(item.category)},{"message",QString::fromStdString(item.message)}};};
++    const auto& d=value.diagnostics;QJsonArray trackers,alerts;
++    for(std::size_t t=0;t<d.trackersShown;++t){
++      const auto& tracker=d.trackers[t];QJsonArray endpoints;
++      for(std::size_t e=0;e<tracker.endpointsShown;++e){const auto& endpoint=tracker.endpoints[e];QJsonArray hashes;
++        for(const auto& hash:endpoint.hashes){hashes.append(QJsonObject{{"updating",hash.updating},{"start_sent",hash.startSent},{"fails",static_cast<int>(hash.fails)},{"error",error(hash.error)}});}
++        endpoints.append(QJsonObject{{"enabled",endpoint.enabled},{"hashes",hashes}});
++      }
++      trackers.append(QJsonObject{{"endpoint_count",static_cast<qint64>(tracker.endpointCount)},{"endpoints",endpoints}});
++    }
++    for(std::size_t i=0;i<d.alerts.currentShown;++i){const auto& item=d.alerts.current[i];alerts.append(QJsonObject{{"type",item.type},{"error",error(item.error)}});}
+     return QJsonObject{{"phase",static_cast<int>(value.phase)},{"admission",QString::number(value.admission)},
+       {"generation",QString::number(value.generation)},{"bridge_port",value.bridgePort},
+       {"bridge_sockets",static_cast<qint64>(value.bridgeSockets)},
+       {"rejected_clients",QString::number(value.rejectedClients)},{"seeding",value.seeding},
+-      {"verified_bytes",QString::number(value.verifiedBytes)}};
++      {"verified_bytes",QString::number(value.verifiedBytes)},
++      {"tracker_diagnostics",QJsonObject{{"status_available",d.statusAvailable},{"incomplete",d.incomplete},{"paused",d.paused},{"announcing_to_trackers",d.announcingToTrackers},{"state",d.torrentState},{"flags",QString::number(d.flags)},{"error",error(d.error)},
++        {"tracker_count",static_cast<qint64>(d.trackerCount)},{"trackers",trackers},{"alerts_drained",QString::number(d.alerts.drained)},{"alerts_uninspected",QString::number(d.alerts.uninspected)},
++        {"announces",QString::number(d.alerts.announces)},{"tracker_errors",QString::number(d.alerts.trackerErrors)},{"tracker_replies",QString::number(d.alerts.trackerReplies)},
++        {"i2p_errors",QString::number(d.alerts.i2pErrors)},{"file_errors",QString::number(d.alerts.fileErrors)},{"torrent_errors",QString::number(d.alerts.torrentErrors)},{"current_alerts_omitted",static_cast<qint64>(d.alerts.currentOmitted)},{"current_alerts",alerts}}}};
+   };
+   QJsonObject lastProgress;QElapsedTimer progressAge;progressAge.start();
+   const auto progress=[&](const provider::OwnedTorrent::Observation& a,const provider::OwnedTorrent::Observation& b)noexcept{

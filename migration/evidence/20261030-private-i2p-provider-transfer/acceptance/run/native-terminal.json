@@ -1,0 +1,6 @@
+{
+    "elapsed_ms": 27191,
+    "intended_success": true,
+    "phase": "before-finish-shutdown",
+    "reason": "Real tracker-discovered two-provider transfer and exact joined disk bytes"
+}

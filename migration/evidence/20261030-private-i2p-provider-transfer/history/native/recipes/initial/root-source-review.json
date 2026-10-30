@@ -1,0 +1,14 @@
+{
+  "status": "ROOT_REVIEWED_CURRENT_BASIS_SOURCE_ADOPTION_AND_AFFECTED_RECIPE",
+  "manifest_sha256": "a1b19f40bed236a83424406f9156074f2e98c5956aacff184d0baf76c830cbe0",
+  "read_scripts": [
+    "adopt.py",
+    "run.py",
+    "jobs.mk",
+    "NEXT.txt"
+  ],
+  "source_paths": 31,
+  "default_shipping_guard": "355/f746 unchanged",
+  "scope": "optional31 private SDK;11 affected CTests per private lane,4 default-OFF; actual transfer separate",
+  "runtime_credit": false
+}

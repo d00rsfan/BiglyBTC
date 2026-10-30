@@ -1,0 +1,85 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBTC/preview/native",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "-DBIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER=OFF",
+      "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL=",
+      "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256="
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 23.601,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/live-executor-sdk/runs/default-r1/configure.log",
+    "log_sha256": "ef8f0c85519fd8cbff851b907264bcc018b1c8d7c29ad577bc9dc8561e08f3a7"
+  },
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--target",
+      "biglybtc-owned-sam-protocol-tests",
+      "biglybtc-owned-i2p-source-tests",
+      "biglybtc-network-policy-tests",
+      "biglybtc-managed-storage-tests",
+      "BiglyBTC",
+      "--",
+      "-k",
+      "0"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 15.659,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/live-executor-sdk/runs/default-r1/build.log",
+    "log_sha256": "80b8aa630f481cf3fcf5403e0b98be756d5ee8e0e4872f463fc8421c1a546022"
+  },
+  {
+    "name": "inventory",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--show-only=json-v1"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.118,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/live-executor-sdk/runs/default-r1/inventory.log",
+    "log_sha256": "5c382e300e9e5525137a532922154b7ea11712bb1716cae4273ac36192e553d5"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "-R",
+      "^(pure\\-owned\\-sam\\-protocol|owned\\-i2p\\-profile\\-source|network\\-policy|managed\\-storage)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/live-executor-sdk/runs/default-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 2.831,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/live-executor-sdk/runs/default-r1/tests.log",
+    "log_sha256": "6348de2a885155b390dc4da6d21d1c257b18dd8834f83ce96ced2e9e2ff218bd"
+  }
+]

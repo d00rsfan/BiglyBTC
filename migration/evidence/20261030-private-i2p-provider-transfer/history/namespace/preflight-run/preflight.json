@@ -1,0 +1,95 @@
+{
+  "capabilities": {
+    "CapAmb": 0,
+    "CapBnd": 0,
+    "CapEff": 0,
+    "CapInh": 0,
+    "CapPrm": 0
+  },
+  "functional_subjects_executed": false,
+  "interfaces": [
+    "lo"
+  ],
+  "ipv4": "127.0.0.1",
+  "ipv6": [
+    "::1/128"
+  ],
+  "label": "bwrap//&unpriv_bwrap (enforce)",
+  "loopback_up": true,
+  "namespaces": {
+    "ipc": {
+      "actual": {
+        "device": 5,
+        "inode": 4026532415
+      },
+      "link": "ipc:[4026532415]",
+      "parent": {
+        "device": 5,
+        "inode": 4026531839
+      }
+    },
+    "net": {
+      "actual": {
+        "device": 5,
+        "inode": 4026532417
+      },
+      "link": "net:[4026532417]",
+      "parent": {
+        "device": 5,
+        "inode": 4026531833
+      }
+    },
+    "pid": {
+      "actual": {
+        "device": 5,
+        "inode": 4026532416
+      },
+      "link": "pid:[4026532416]",
+      "parent": {
+        "device": 5,
+        "inode": 4026531836
+      }
+    },
+    "user": {
+      "actual": {
+        "device": 5,
+        "inode": 4026532874
+      },
+      "link": "user:[4026532874]",
+      "parent": {
+        "device": 5,
+        "inode": 4026531837
+      }
+    },
+    "uts": {
+      "actual": {
+        "device": 5,
+        "inode": 4026532413
+      },
+      "link": "uts:[4026532413]",
+      "parent": {
+        "device": 5,
+        "inode": 4026531838
+      }
+    }
+  },
+  "no_new_privileges": true,
+  "parent_sha256": "afdb0929418977f69d0e9e18f3e1b78dfccf4305d2d8ef53b903ac30070c3be3",
+  "pid": 2,
+  "proc_pid1_namespace": "pid:[4026532416]",
+  "routes": {
+    "4": [],
+    "6": [
+      "00000000000000000000000000000000 00 00000000000000000000000000000000 00 00000000000000000000000000000000 ffffffff 00000001 00000000 00200200       lo",
+      "00000000000000000000000000000001 80 00000000000000000000000000000000 00 00000000000000000000000000000000 00000000 00000002 00000000 80200001       lo",
+      "00000000000000000000000000000000 00 00000000000000000000000000000000 00 00000000000000000000000000000000 ffffffff 00000001 00000000 00200200       lo"
+    ]
+  },
+  "status": "PASS_FIVE_NAMESPACE_LOOPBACK_PREFLIGHT",
+  "unreachable_controls_errno": {
+    "10/1": 101,
+    "10/2": 101,
+    "2/1": 101,
+    "2/2": 101
+  }
+}

@@ -1,0 +1,20 @@
+SOURCE ONLY. Continue the SAME configured candidate-r2; no product/test change.
+Root actual r2 configure0 and readonly Ninja dry run prove exactly the unit's
+one compile+one link, ABI differences{}. The prior r2FAIL remains immutable.
+Skip configure and install. Validate actual current ABI/compiler/source/SDK/hook
+cache values, retain raw before/after cache hashes separately, require semantic
+values equal and installed293/167production objects/DSO unchanged.
+
+  TASK=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029
+  RECIPE=$TASK/provider-recipe/sdk-r2-configured-continuation
+  OUTPUT=$TASK/provider-candidate-r2
+  python3 -B "$RECIPE/provider.py" continue --output "$OUTPUT" --source-review "$REVIEW" --source-review-sha256 "$REVIEW_SHA"
+  make --jobserver-style=fifo -j3 -f "$RECIPE/jobs.mk" OUTPUT="$OUTPUT" ATTEMPT=r3
+  python3 -B "$RECIPE/provider.py" record --output "$OUTPUT" --attempt r3
+
+continue saves current creation-before-configured-continuation.json before
+binding new producer pins/review. Original creation-before-test-fix.json,
+test-before-test-fix.cpp, test-source-fix.json and failed r1/r2 remain exact.
+Only unit is rebuilt; all9 direct controls run fresh plus remainingfixtures.
+Finalsource9d264/native9f46 unchanged; no SDKcandidate-r3, DSO rebuild or approval
+guess. All author checks readonly/AST; root alone executes. Finish then STOP.

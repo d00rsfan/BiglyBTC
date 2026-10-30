@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="4"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="0"
+	timestamp="2026-10-30T14:07:04"
+	>
+	<testcase name="test_biglybtc_mainline_identity" classname="test_biglybtc_mainline_identity" time="0.00924594" status="run">
+		<properties/>
+		<system-out>test: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/build/test/test_biglybtc_mainline_identity
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/build/test/test_tmp_2514651_"
+
+
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_mainline_identity.cpp.biglybtc_original_identity_local_update                   ] ***PASS***
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_mainline_identity.cpp.biglybtc_original_identity_actual_adoption_retirement     ] ***PASS***
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_mainline_identity.cpp.biglybtc_original_identity_refuses_ambiguous_and_lost     ] ***PASS***
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_mainli...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="test_biglybtc_private_i2p_owner" classname="test_biglybtc_private_i2p_owner" time="0.0490246" status="run">
+		<properties/>
+		<system-out>test: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/build/test/test_biglybtc_private_i2p_owner
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/build/test/test_tmp_2514652_"
+
+
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_owner_arguments_and_public_status_are_bounded            ] ***PASS***
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_owner_refuses_direct_network_settings_and_foreign_torrent] ***PASS***
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_owner_full_hash_and_withdrawal_context                   ] ***PASS***
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="test_biglybtc_swarm" classname="test_biglybtc_swarm" time="0.0749608" status="run">
+		<properties/>
+		<system-out>test: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/build/test/test_biglybtc_swarm
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/build/test/test_tmp_2514656_"
+
+
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_swarm.cpp.biglybtc_swarm_hash_selection                         ] ***PASS***
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_swarm.cpp.biglybtc_swarm_session_indices_and_immutable_admission] ***PASS***
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_swarm.cpp.biglybtc_swarm_metadata_arrival_preserves_selection   ] ***PASS***
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_swarm.cpp.biglybtc_swarm_resume_and_invalid_admission           ] ...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="test_biglybtc_tracker_response" classname="test_biglybtc_tracker_response" time="0.00522724" status="run">
+		<properties/>
+		<system-out>test: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/build/test/test_biglybtc_tracker_response
+cwd_prefix = "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/build/test/test_tmp_2514664_"
+
+
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_tracker_response.cpp.original_tracker_fields_preserve_presence_raw_longs_and_extensions           ] ***PASS***
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_tracker_response.cpp.original_scrape_fields_distinguish_absence_invalid_downloaded_and_wrong_types] ***PASS***
+[NON-XML-CHAR-0x1B][32m[/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source/test/test_biglybtc_tracker_response.cpp.original_tracker_unknown_shapes_cannot_be_initial_error_authority            ] ***PASS***
+[NON-XML-CHAR-0x1B][0m
+</system-out>
+	</testcase>
+</testsuite>

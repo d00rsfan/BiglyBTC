@@ -1,0 +1,40 @@
+SOURCE ONLY. Root reviews this recipe and the effective production/acceptance
+source before invoking it. No command below has been run by the author.
+
+SDK-only preparation/build/direct qualification is independent of the Qt
+manager. Root may run it BEFORE native manager adoption, in a fresh candidate,
+after all SOURCE reviews pass. It does not approve a runtime or modify the
+355/f746 provider, its source, SDK, build cache, native tree, registry or dist.
+
+Native owner adoption/enablement remains blocked until actual final manager
+1f911 and actual original-manager acceptance13e56 qualification, plus measured
+new SDK/ELF record, root independent artifact review and closed approval. The
+optional owner flag remains OFF. No automatic approval file is manufactured.
+
+Root commands (set REVIEW and REVIEW_SHA to the ACTUAL accepted source review):
+  TASK=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029
+  RECIPE=$TASK/provider-recipe/amendments/effective-tracker-port
+  OUTPUT=$TASK/provider-candidate-r1
+  python3 "$RECIPE/provider.py" prepare --output "$OUTPUT" --source-review "$REVIEW" --source-review-sha256 "$REVIEW_SHA"
+  make --jobserver-style=fifo -j3 -f "$RECIPE/jobs.mk" OUTPUT="$OUTPUT" ATTEMPT=r1
+  python3 "$RECIPE/provider.py" record --output "$OUTPUT" --attempt r1
+
+One GNU Make4.4 FIFO has aggregate3 slots; Ninja1.13 inherits MAKEFLAGS. No
+cmake --parallel/-j override, no CMAKE_BUILD_PARALLEL_LEVEL; compilation nice5.
+The only source copy is the retained exact parent plus thirteen afterimages;
+no network, cloned history or old build/object/ELF copies. Same g++16/C++23,
+OpenSSL/Boost prefix and unchanged provider ABI options. Pinned zlib is recorded
+as an existing runtime dependency; provider gzip itself uses retained puff.cpp.
+
+Fresh focused default CTests: private-owner arguments/settings/hash/withdrawal,
+existing Mainline identity, swarm, tracker-response (4); remote BEP42v4/v6 and
+I2P peer parser (3); owned Mainline-port bridge and default SOCKS4a (2). Exactly
+9 named CTests, no complete test_dht/test_tracker/public tracker/Java replay.
+All actual command logs/XML remain in runs/<attempt>. Failure remains failure.
+Record measures new artifact/SDK/source/export31 evidence; root supplies its
+own actual review+approval afterward, using runtime manifest SHA, record SHA,
+complete headers_sha256 and canonical JSON sdk_tree_sha256. No guessed values.
+
+This additive recipe binds corrected provider8f12 (actual current HTTP port).
+Historical e70/5e925 recipes and failed/superseded source reviews stay intact.
+The effective SOURCE review passed to prepare must cover this correction.

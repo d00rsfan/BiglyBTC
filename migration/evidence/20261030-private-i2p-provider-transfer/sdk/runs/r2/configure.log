@@ -1,0 +1,83 @@
+CMake Warning (dev) at /usr/share/cmake-4.2/Modules/FeatureSummary.cmake:970 (message):
+  Policy CMP0183 is not set: add_feature_info() supports full Condition
+  Syntax.  Run "cmake --help-policy CMP0183" for policy details.  Use the
+  cmake_policy command to set the policy and suppress this warning.
+Call Stack (most recent call first):
+  cmake/Modules/LibtorrentMacros.cmake:10 (add_feature_info)
+  CMakeLists.txt:703 (feature_option)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at /usr/share/cmake-4.2/Modules/FeatureSummary.cmake:970 (message):
+  Policy CMP0183 is not set: add_feature_info() supports full Condition
+  Syntax.  Run "cmake --help-policy CMP0183" for policy details.  Use the
+  cmake_policy command to set the policy and suppress this warning.
+Call Stack (most recent call first):
+  cmake/Modules/LibtorrentMacros.cmake:10 (add_feature_info)
+  CMakeLists.txt:704 (feature_option)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at /usr/share/cmake-4.2/Modules/FeatureSummary.cmake:970 (message):
+  Policy CMP0183 is not set: add_feature_info() supports full Condition
+  Syntax.  Run "cmake --help-policy CMP0183" for policy details.  Use the
+  cmake_policy command to set the policy and suppress this warning.
+Call Stack (most recent call first):
+  cmake/Modules/LibtorrentMacros.cmake:10 (add_feature_info)
+  CMakeLists.txt:705 (feature_option)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at /usr/share/cmake-4.2/Modules/FeatureSummary.cmake:970 (message):
+  Policy CMP0183 is not set: add_feature_info() supports full Condition
+  Syntax.  Run "cmake --help-policy CMP0183" for policy details.  Use the
+  cmake_policy command to set the policy and suppress this warning.
+Call Stack (most recent call first):
+  cmake/Modules/LibtorrentMacros.cmake:36 (add_feature_info)
+  CMakeLists.txt:709 (target_optional_compile_definitions)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at /usr/share/cmake-4.2/Modules/FeatureSummary.cmake:970 (message):
+  Policy CMP0183 is not set: add_feature_info() supports full Condition
+  Syntax.  Run "cmake --help-policy CMP0183" for policy details.  Use the
+  cmake_policy command to set the policy and suppress this warning.
+Call Stack (most recent call first):
+  cmake/Modules/LibtorrentMacros.cmake:36 (add_feature_info)
+  CMakeLists.txt:720 (target_optional_compile_definitions)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- The following features have been enabled:
+
+ * BUILD_SHARED_LIBS, build libtorrent as a shared library
+ * build_tests, build tests
+ * dht, enable support for Mainline DHT
+ * deprecated-functions, enable deprecated functions for backwards compatibility
+ * encryption, Enables encryption in libtorrent
+ * exceptions, build with exception support
+ * extensions, Enables protocol extensions
+ * i2p, build with I2P support
+ * logging, build with logging
+ * mutable-torrents, Enables mutable torrent support
+ * streaming, Enables support for piece deadline
+
+-- The following RECOMMENDED packages have been found:
+
+ * OpenSSL, Full-strength general purpose cryptography library, <https://www.openssl.org/>
+   Provides HTTPS support to libtorrent
+
+-- The following REQUIRED packages have been found:
+
+ * Threads
+ * boost_headers (required version == 1.90.0)
+ * Boost
+
+-- The following features have been disabled:
+
+ * static_runtime, build libtorrent with static runtime
+ * build_examples, build examples
+ * build_tools, build tools
+ * python-bindings, build python bindings
+ * python-egg-info, generate python egg info
+ * python-install-system-dir, Install python bindings to the system installation directory rather than the CMake installation prefix
+ * gnutls, build using GnuTLS instead of OpenSSL
+
+-- Configuring done (0.1s)
+-- Generating done (0.2s)
+-- Build files have been written to: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/build

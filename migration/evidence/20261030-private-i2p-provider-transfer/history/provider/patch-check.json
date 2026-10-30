@@ -1,0 +1,15 @@
+{
+  "command": [
+    "git",
+    "apply",
+    "--check",
+    "--unsafe-paths",
+    "--directory=/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/source",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/public-provider-artifacts/optional-private-i2p-provider.patch"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "",
+  "patch_sha256": "0a6be4e1e683b934dbd71c53e80530dfa95a43265f83938fa376bbfc8d43bbc2",
+  "no_source_mutation": true
+}

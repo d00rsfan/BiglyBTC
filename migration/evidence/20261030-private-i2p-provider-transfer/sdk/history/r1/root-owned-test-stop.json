@@ -1,0 +1,9 @@
+[
+  {
+    "pid": 2512470,
+    "exact_executable": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/build/test/test_biglybtc_private_i2p_owner",
+    "sha256": "1148a720fe58343e67a1681dbc4961cee168731840e5804e31d1ea8f29b1a4bf",
+    "signal": "SIGTERM",
+    "reason": "Focused owner unit failed to finish; stop exact owned test for diagnosis, retain FAIL."
+  }
+]

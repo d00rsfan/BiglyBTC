@@ -1,0 +1,60 @@
+Test project /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang
+Connected to MAKE jobserver
+      Start 174: network-policy
+ 1/11 Test #174: network-policy .......................   Passed    0.02 sec
+      Start 175: managed-storage
+ 2/11 Test #175: managed-storage ......................   Passed    2.02 sec
+      Start 224: i2cp-initial-channel
+ 3/11 Test #224: i2cp-initial-channel .................   Passed   14.03 sec
+      Start 228: i2cp-lease-backed-datagram-channel
+ 4/11 Test #228: i2cp-lease-backed-datagram-channel ...   Passed    7.42 sec
+      Start 230: i2cp-bounded-datagram-receiver
+ 5/11 Test #230: i2cp-bounded-datagram-receiver .......   Passed   11.09 sec
+      Start 233: i2cp-explicit-tracker-channel
+ 6/11 Test #233: i2cp-explicit-tracker-channel ........   Passed    5.35 sec
+      Start 236: pure-i2p-streaming
+ 7/11 Test #236: pure-i2p-streaming ...................   Passed    0.05 sec
+      Start 239: pure-i2p-streaming-manager
+ 8/11 Test #239: pure-i2p-streaming-manager ...........   Passed    0.03 sec
+      Start 240: i2cp-bounded-stream-manager
+ 9/11 Test #240: i2cp-bounded-stream-manager ..........   Passed    6.37 sec
+      Start 241: pure-owned-sam-protocol
+10/11 Test #241: pure-owned-sam-protocol ..............   Passed    0.01 sec
+      Start 242: owned-i2p-profile-source
+11/11 Test #242: owned-i2p-profile-source .............***Failed    0.04 sec
+********* Start testing of OwnedI2pSourceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedI2pSourceTests::initTestCase()
+FAIL!  : OwnedI2pSourceTests::boundSourceAuthorityRefusesLegacySingleStreamPath() 'storage' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_i2p_source_tests.cpp(18)]
+FAIL!  : OwnedI2pSourceTests::genuinePureSourceRetainsSameLeaseAndOriginalBytes() 'storage' returned FALSE. (Managed payload overlaps profile)
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_i2p_source_tests.cpp(26)]
+FAIL!  : OwnedI2pSourceTests::keyReplacementAndSourceMutationWithdrawWithoutRepair() 'storage' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_i2p_source_tests.cpp(33)]
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(0)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(1)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(2)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(3)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(4)
+FAIL!  : OwnedI2pSourceTests::sourcePermitIsOneShotAndBlockedIoCannotExtendChannelDeadline() 'storage' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_i2p_source_tests.cpp(49)]
+PASS   : OwnedI2pSourceTests::cleanupTestCase()
+Totals: 7 passed, 4 failed, 0 skipped, 0 blacklisted, 24ms
+********* Finished testing of OwnedI2pSourceTests *********
+
+
+91% tests passed, 1 tests failed out of 11
+
+Label Time Summary:
+i2p                  =  44.38 sec*proc (9 tests)
+no-network           =   0.08 sec*proc (3 tests)
+owned-loopback       =  44.26 sec*proc (5 tests)
+owned-profile        =   0.04 sec*proc (1 test)
+torrent-workflows    =   2.04 sec*proc (2 tests)
+unit                 =  46.42 sec*proc (11 tests)
+
+Total Test time (real) =  46.44 sec
+
+The following tests FAILED:
+	242 - owned-i2p-profile-source (Failed)                 i2p owned-profile unit
+Errors while running CTest

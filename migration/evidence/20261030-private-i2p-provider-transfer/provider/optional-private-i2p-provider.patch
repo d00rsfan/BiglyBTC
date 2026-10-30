@@ -1,0 +1,906 @@
+--- /dev/null
++++ b/include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp
+@@ -0,0 +1,44 @@
++#pragma once
++#include "libtorrent/biglybtc_private_i2p_owner.hpp"
++#include "libtorrent/info_hash.hpp"
++#include <algorithm>
++#include <atomic>
++#include <memory>
++#include <string>
++
++namespace libtorrent { namespace aux {
++enum class i2p_owner_purpose {Control,Peer,Tracker};
++struct i2p_owner_context final {
++  explicit i2p_owner_context(BiglybtcPrivateI2pOwnerPolicyV1 const& value):policy(value){}
++  ~i2p_owner_context(){wipe();}
++  i2p_owner_context(i2p_owner_context const&)=delete;
++  void wipe()noexcept{volatile unsigned char* p=policy.capability.data();for(std::size_t i=0;i<policy.capability.size();++i){p[i]=0;}}
++  void withdraw()noexcept{active.store(false,std::memory_order_release);}
++  bool current()const noexcept{return active.load(std::memory_order_acquire);}
++  static bool valid(BiglybtcPrivateI2pOwnerPolicyV1 const& p)noexcept{
++    return p.version==1&&p.size==sizeof(p)&&p.generation&&p.admission&&p.bridge_port&&p.peer_port&&p.local_peer_port
++      &&!p.reserved&&p.hashes&&!(p.hashes&~3U)
++      &&std::any_of(p.capability.begin(),p.capability.end(),[](unsigned char v){return v!=0;});
++  }
++  bool matches(info_hash_t const& hashes)const noexcept{
++    if(!current())return false;
++    if(bool(policy.hashes&1U)!=hashes.has_v1()||bool(policy.hashes&2U)!=hashes.has_v2())return false;
++    if(hashes.has_v1()&&!std::equal(policy.torrent_v1.begin(),policy.torrent_v1.end(),reinterpret_cast<unsigned char const*>(hashes.v1.data())))return false;
++    return !hashes.has_v2()||std::equal(policy.torrent_v2.begin(),policy.torrent_v2.end(),reinterpret_cast<unsigned char const*>(hashes.v2.data()));
++  }
++  static std::string hex(unsigned char const* data,std::size_t size){
++    static constexpr char alphabet[]="0123456789abcdef";std::string result(size*2,'0');
++    for(std::size_t i=0;i<size;++i){result[2*i]=alphabet[data[i]>>4];result[2*i+1]=alphabet[data[i]&15];}return result;
++  }
++  BiglybtcPrivateI2pOwnerPolicyV1 policy;
++  std::atomic<bool> active{true};
++  bool started=false; // Actual provider executor only; no renewal/rebind after disable.
++};
++// Commands must outlive partial asynchronous writes, then erase their ephemeral
++// capability bytes. This object is never passed to logging or observations.
++struct i2p_owner_command final {
++  explicit i2p_owner_command(std::string value):bytes(std::move(value)){}
++  ~i2p_owner_command(){volatile char* p=bytes.data();for(std::size_t i=0;i<bytes.size();++i){p[i]=0;}}
++  std::string bytes;
++};
++}} // namespace libtorrent::aux
+--- a/include/libtorrent/aux_/session_impl.hpp
++++ b/include/libtorrent/aux_/session_impl.hpp
+@@ -748,6 +748,10 @@
+ #endif
+ 
+ #if TORRENT_USE_I2P
++			std::uint32_t biglybtc_configure_private_i2p_owner(BiglybtcPrivateI2pOwnerPolicyV1 const&);
++			BiglybtcPrivateI2pOwnerStatusV1 biglybtc_private_i2p_owner_status() const;
++			std::uint32_t biglybtc_withdraw_private_i2p_owner(std::uint64_t);
++			std::shared_ptr<i2p_owner_context> i2p_owned_bridge() const override { return m_i2p_conn.owned_bridge(); }
+ 			char const* i2p_session() const override { return m_i2p_conn.session_id(); }
+ 			std::string const& local_i2p_endpoint() const override { return m_i2p_conn.local_endpoint(); }
+ 
+@@ -1273,6 +1277,9 @@
+ 
+ 			// abort may not fail and cannot allocate memory
+ 			aux::handler_storage<aux::abort_handler_max_size, aux::abort_handler> m_abort_handler_storage;
++			// A synchronous private-owner withdrawal can queue stage two before
++			// session destruction queues call_abort(). These must not share a slot.
++			aux::handler_storage<aux::abort_handler_max_size, aux::abort_handler> m_abort_stage2_handler_storage;
+ 
+ 			// submit_deferred may not fail
+ 			aux::handler_storage<aux::submit_handler_max_size, aux::submit_handler> m_submit_jobs_handler_storage;
+--- a/include/libtorrent/aux_/session_interface.hpp
++++ b/include/libtorrent/aux_/session_interface.hpp
+@@ -37,6 +37,7 @@
+ #define TORRENT_SESSION_INTERFACE_HPP_INCLUDED
+ 
+ #include "libtorrent/config.hpp"
++#include "libtorrent/aux_/biglybtc_private_i2p_owner.hpp"
+ #include "libtorrent/fwd.hpp"
+ #include "libtorrent/address.hpp"
+ #include "libtorrent/io_context.hpp"
+@@ -215,6 +216,7 @@
+ #if TORRENT_USE_I2P
+ 		virtual char const* i2p_session() const = 0;
+ 		virtual std::string const& local_i2p_endpoint() const = 0;
++		virtual std::shared_ptr<i2p_owner_context> i2p_owned_bridge() const { return {}; }
+ #endif
+ 
+ 		virtual void prioritize_connections(std::weak_ptr<torrent> t) = 0;
+--- /dev/null
++++ b/include/libtorrent/biglybtc_private_i2p_owner.hpp
+@@ -0,0 +1,49 @@
++// Optional PRIVATE native-owner bridge. Not the published provider27 ABI.
++#pragma once
++#include "libtorrent/config.hpp"
++#include "libtorrent/fwd.hpp"
++#include <array>
++#include <cstdint>
++#include <type_traits>
++
++namespace libtorrent {
++inline constexpr unsigned BiglybtcPrivateI2pOwnerAbiV1=0x42494f01;
++struct BiglybtcPrivateI2pOwnerPolicyV1 {
++  std::uint32_t version=1,size=sizeof(BiglybtcPrivateI2pOwnerPolicyV1);
++  std::uint64_t generation=0,admission=0;
++  // Configuration-only ephemeral secret; never returned by observations.
++  std::array<unsigned char,32> capability{};
++  std::array<unsigned char,32> public_destination_hash{};
++  std::array<unsigned char,20> torrent_v1{};
++  std::array<unsigned char,32> torrent_v2{};
++  std::uint32_t hashes=0; // v1=1, v2=2; actual full hashes, not selected prefixes.
++  std::uint16_t bridge_port=0,peer_port=0,local_peer_port=0,reserved=0;
++};
++struct BiglybtcPrivateI2pOwnerStatusV1 {
++  std::uint32_t version=1,size=sizeof(BiglybtcPrivateI2pOwnerStatusV1);
++  std::uint64_t generation=0,admission=0;
++  std::array<unsigned char,32> public_destination_hash{};
++  std::uint32_t phase=0; // 0 absent,1 configured,2 withdrawn. No readiness claim.
++  std::uint16_t bridge_port=0,reserved=0;
++  std::uint64_t reserved_counters[2]{};
++};
++static_assert(sizeof(BiglybtcPrivateI2pOwnerPolicyV1)==152);
++static_assert(sizeof(BiglybtcPrivateI2pOwnerStatusV1)==80);
++static_assert(std::is_trivially_copyable<BiglybtcPrivateI2pOwnerPolicyV1>::value
++  &&std::is_standard_layout<BiglybtcPrivateI2pOwnerPolicyV1>::value);
++enum class BiglybtcPrivateI2pOwnerResultV1:std::uint32_t {
++  Accepted=0,InvalidArgument=1,Busy=2,InvalidHandle=3,Failed=4,Stale=5
++};
++// All three operations execute synchronously on the actual provider executor.
++// Configure once, while SAM is disabled and before any torrent exists. The
++// caller must separately hold the exact approved same-image provider pin.
++extern "C" TORRENT_EXPORT unsigned biglybtc_private_i2p_owner_abi_v1() noexcept;
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_configure_private_i2p_owner_v1(
++  session_handle const*,BiglybtcPrivateI2pOwnerPolicyV1 const*) noexcept;
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_read_private_i2p_owner_v1(
++  session_handle const*,BiglybtcPrivateI2pOwnerStatusV1*) noexcept;
++// Irreversible: invalidates shared socket contexts and aborts this dedicated
++// session. Actual session join remains the external owner's responsibility.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_withdraw_private_i2p_owner_v1(
++  session_handle const*,std::uint64_t generation) noexcept;
++} // namespace libtorrent
+--- a/include/libtorrent/i2p_stream.hpp
++++ b/include/libtorrent/i2p_stream.hpp
+@@ -42,6 +42,7 @@
+ #include <string>
+ #include <vector>
+ #include <functional>
++#include <cstring>
+ 
+ #include "libtorrent/proxy_base.hpp"
+ #include "libtorrent/string_util.hpp"
+@@ -54,6 +55,8 @@
+ #include "libtorrent/random.hpp"
+ #include "libtorrent/hex.hpp" // for to_hex
+ #include "libtorrent/debug.hpp"
++#include "libtorrent/aux_/biglybtc_private_i2p_owner.hpp"
++#include <boost/asio/post.hpp>
+ 
+ namespace libtorrent {
+ 
+@@ -141,10 +144,50 @@
+ 	std::string const& local_i2p_endpoint() const { return m_local; }
+ 	void set_destination(string_view d) { m_dest = d.to_string(); }
+ 	std::string const& destination() const { return m_dest; }
++		void set_owned_bridge(std::shared_ptr<aux::i2p_owner_context> value,
++			aux::i2p_owner_purpose purpose,std::uint16_t remote=0,std::uint16_t local=0)
++		{ m_owner=std::move(value);m_owner_purpose=purpose;m_owner_remote=remote;m_owner_local=local; }
++		bool belongs_to_owner(std::shared_ptr<aux::i2p_owner_context> const& value)const noexcept{return m_owner&&m_owner==value&&m_owner->current();}
++		template<class Buffers,class Handler> void async_read_some(Buffers const& bytes,Handler handler)
++		{
++			if(!m_owner){m_sock.async_read_some(bytes,std::move(handler));return;}
++			if(!owner_alive()){boost::asio::post(m_sock.get_executor(),[h=std::move(handler)]()mutable{h(boost::asio::error::operation_aborted,0);});return;}
++			auto owner=m_owner;m_sock.async_read_some(bytes,[owner,h=std::move(handler)](error_code ec,std::size_t n)mutable{
++				if(owner&&!owner->current()){ec=boost::asio::error::operation_aborted;n=0;}h(ec,n);
++			});
++		}
++		template<class Buffers,class Handler> void async_write_some(Buffers const& bytes,Handler handler)
++		{
++			if(!m_owner){m_sock.async_write_some(bytes,std::move(handler));return;}
++			if(!owner_alive()){boost::asio::post(m_sock.get_executor(),[h=std::move(handler)]()mutable{h(boost::asio::error::operation_aborted,0);});return;}
++			auto owner=m_owner;m_sock.async_write_some(bytes,[owner,h=std::move(handler)](error_code ec,std::size_t n)mutable{
++				if(owner&&!owner->current()){ec=boost::asio::error::operation_aborted;n=0;}h(ec,n);
++			});
++		}
++		template<class Buffers>std::size_t read_some(Buffers const& bytes,error_code& ec)
++		{if(!owner_alive()){ec=boost::asio::error::operation_aborted;return 0;}return m_sock.read_some(bytes,ec);}
++		template<class Buffers>std::size_t write_some(Buffers const& bytes,error_code& ec)
++		{if(!owner_alive()){ec=boost::asio::error::operation_aborted;return 0;}return m_sock.write_some(bytes,ec);}
++#ifndef BOOST_NO_EXCEPTIONS
++		template<class Buffers>std::size_t read_some(Buffers const& bytes)
++		{error_code ec;auto n=read_some(bytes,ec);if(ec)throw boost::system::system_error(ec);return n;}
++		template<class Buffers>std::size_t write_some(Buffers const& bytes)
++		{error_code ec;auto n=write_some(bytes,ec);if(ec)throw boost::system::system_error(ec);return n;}
++#endif
+ 
+ 	template <class Handler>
+ 	void async_connect(endpoint_type const&, Handler h)
+ 	{
++			if(m_owner){
++				if(!owner_alive()||m_hostname!="127.0.0.1"||m_port!=m_owner->policy.bridge_port){
++					boost::asio::post(m_sock.get_executor(),[h=std::move(h)]()mutable{h(error_code(boost::asio::error::operation_aborted));});return;
++				}
++				// A numeric owned endpoint bypasses the OS resolver completely.
++				ADD_OUTSTANDING_ASYNC("i2p_stream::connected");
++				m_sock.async_connect(tcp::endpoint(address_v4::loopback(),m_owner->policy.bridge_port),
++					wrap_allocator([this](error_code const& ec,Handler hn){connected(ec,std::move(hn));},std::move(h)));
++				return;
++			}
+ 		// since we don't support regular endpoints, just ignore the one
+ 		// provided and use m_dest.
+ 
+@@ -167,6 +210,11 @@
+ 	{
+ 		TORRENT_ASSERT(m_magic == 0x1337);
+ 		m_state = read_name_lookup_response;
++			if(m_owner){
++				if(!owner_alive()||!owner_name(m_name_lookup)){h(error_code(i2p_error::invalid_key,i2p_category()));return;}
++				const char* role=m_owner_purpose==aux::i2p_owner_purpose::Peer?"PEER":m_owner_purpose==aux::i2p_owner_purpose::Tracker?"TRACKER":"CONTROL";
++				send_owned("NAMING LOOKUP NAME="+m_name_lookup+" PURPOSE="+role+" TO_PORT="+std::to_string(m_owner_remote)+" FROM_PORT="+std::to_string(m_owner_local)+"\n",std::move(h));return;
++			}
+ 		char cmd[1024];
+ 		int size = std::snprintf(cmd, sizeof(cmd), "NAMING LOOKUP NAME=%s\n", m_name_lookup.c_str());
+ 		ADD_OUTSTANDING_ASYNC("i2p_stream::start_read_line");
+@@ -177,6 +225,27 @@
+ 	}
+ 
+ private:
++		bool owner_alive()const noexcept{return !m_owner||m_owner->current();}
++		static bool owner_name(std::string const& value)noexcept{
++			if(value=="ME")return true;
++			return value.size()==60&&value.compare(52,8,".b32.i2p")==0
++				&&std::all_of(value.begin(),value.begin()+52,[](char c){return (c>='a'&&c<='z')||(c>='2'&&c<='7');});
++		}
++		static bool owner_destination(std::string const& value)noexcept{
++			return !value.empty()&&value.size()<=1024&&std::all_of(value.begin(),value.end(),[](char c){
++				return (c>='a'&&c<='z')||(c>='A'&&c<='Z')||(c>='0'&&c<='9')||c=='-'||c=='~'||c=='=';
++			});
++		}
++		template<typename Handler>void send_owned(std::string bytes,Handler h){
++			if(!owner_alive()||bytes.size()>2048){h(error_code(boost::asio::error::operation_aborted));return;}
++			auto command=std::make_shared<aux::i2p_owner_command>(std::move(bytes));
++			ADD_OUTSTANDING_ASYNC("i2p_stream::start_read_line");
++			async_write(m_sock,boost::asio::buffer(command->bytes),wrap_allocator(
++				[this,command](error_code ec,std::size_t,Handler hn){
++					if(!owner_alive())ec=boost::asio::error::operation_aborted;
++					start_read_line(ec,std::move(hn));
++				},std::move(h)));
++		}
+ 
+ 	template <typename Handler>
+ 	void do_connect(error_code const& e, tcp::resolver::results_type ips, Handler h)
+@@ -204,9 +273,15 @@
+ 		TORRENT_ASSERT(m_magic == 0x1337);
+ 		COMPLETE_ASYNC("i2p_stream::connected");
+ 		if (handle_error(e, h)) return;
++			if(!owner_alive()){h(error_code(boost::asio::error::operation_aborted));return;}
+ 
+ 		// send hello command
+ 		m_state = read_hello_response;
++			if(m_owner){
++				send_owned("HELLO VERSION MIN=3.1 MAX=3.1 BIGLYBTC_OWNER="
++					+aux::i2p_owner_context::hex(m_owner->policy.capability.data(),32)
++					+" GENERATION="+std::to_string(m_owner->policy.generation)+"\n",std::move(h));return;
++			}
+ 		static const char cmd[] = "HELLO VERSION MIN=3.1 MAX=3.1\n";
+ 
+ 		ADD_OUTSTANDING_ASYNC("i2p_stream::start_read_line");
+@@ -222,6 +297,7 @@
+ 		TORRENT_ASSERT(m_magic == 0x1337);
+ 		COMPLETE_ASYNC("i2p_stream::start_read_line");
+ 		if (handle_error(e, h)) return;
++			if(!owner_alive()){h(error_code(boost::asio::error::operation_aborted));return;}
+ 
+ 		ADD_OUTSTANDING_ASYNC("i2p_stream::read_line");
+ 		m_buffer.resize(1);
+@@ -237,6 +313,8 @@
+ 		TORRENT_ASSERT(m_magic == 0x1337);
+ 		COMPLETE_ASYNC("i2p_stream::read_line");
+ 		if (handle_error(e, h)) return;
++			if(!owner_alive()){h(error_code(boost::asio::error::operation_aborted));return;}
++			if(m_owner&&m_buffer.size()>2048){h(error_code(i2p_error::parse_failed,i2p_category()));return;}
+ 
+ 		auto const read_pos = int(m_buffer.size());
+ 
+@@ -415,6 +493,13 @@
+ 	{
+ 		TORRENT_ASSERT(m_magic == 0x1337);
+ 		m_state = read_connect_response;
++			if(m_owner){
++				if(!owner_alive()||!owner_destination(m_dest)){h(error_code(i2p_error::invalid_key,i2p_category()));return;}
++				const char* role=m_owner_purpose==aux::i2p_owner_purpose::Tracker?"TRACKER":"PEER";
++				send_owned("STREAM CONNECT ID="+std::string(m_id?m_id:"")+" DESTINATION="+m_dest
++					+" PURPOSE="+role+" TO_PORT="+std::to_string(m_owner_remote)
++					+" FROM_PORT="+std::to_string(m_owner_local)+"\n",std::move(h));return;
++			}
+ 		char cmd[1024];
+ 		int size = std::snprintf(cmd, sizeof(cmd), "STREAM CONNECT ID=%s DESTINATION=%s\n"
+ 			, m_id, m_dest.c_str());
+@@ -430,6 +515,9 @@
+ 	{
+ 		TORRENT_ASSERT(m_magic == 0x1337);
+ 		m_state = read_accept_response;
++			if(m_owner){send_owned("STREAM ACCEPT ID="+std::string(m_id?m_id:"")
++				+" PURPOSE=PEER TO_PORT="+std::to_string(m_owner->policy.peer_port)
++				+" FROM_PORT="+std::to_string(m_owner->policy.local_peer_port)+"\n",std::move(h));return;}
+ 		char cmd[400];
+ 		int size = std::snprintf(cmd, sizeof(cmd), "STREAM ACCEPT ID=%s\n", m_id);
+ 		ADD_OUTSTANDING_ASYNC("i2p_stream::start_read_line");
+@@ -444,6 +532,11 @@
+ 	{
+ 		TORRENT_ASSERT(m_magic == 0x1337);
+ 		m_state = read_session_create_response;
++			if(m_owner){
++				send_owned("SESSION CREATE STYLE=STREAM ID="+std::string(m_id?m_id:"")
++					+" DESTINATION=BIGLYBTC_OWNED PUBLIC_HASH="
++					+aux::i2p_owner_context::hex(m_owner->policy.public_destination_hash.data(),32)+"\n",std::move(h));return;
++			}
+ 		char cmd[400];
+ 		int size = std::snprintf(cmd, sizeof(cmd),
+ 			"SESSION CREATE STYLE=STREAM ID=%s "
+@@ -480,6 +573,9 @@
+ 
+ 	command_t m_command;
+ 	state_t m_state;
++		std::shared_ptr<aux::i2p_owner_context> m_owner;
++		aux::i2p_owner_purpose m_owner_purpose=aux::i2p_owner_purpose::Peer;
++		std::uint16_t m_owner_remote=0,m_owner_local=0;
+ };
+ 
+ class i2p_connection
+@@ -491,6 +587,8 @@
+ 	i2p_connection& operator=(i2p_connection const&) = delete;
+ 
+ 	aux::proxy_settings proxy() const;
++	void set_owned_bridge(std::shared_ptr<aux::i2p_owner_context> value){m_owner=std::move(value);}
++	std::shared_ptr<aux::i2p_owner_context> const& owned_bridge()const noexcept{return m_owner;}
+ 
+ 	bool is_open() const
+ 	{
+@@ -525,6 +623,7 @@
+ 		m_sam_socket->set_command(i2p_stream::cmd_create_session);
+ 		m_sam_socket->set_session_id(m_session_id.c_str());
+ 		m_sam_socket->set_session_options(session_options);
++		m_sam_socket->set_owned_bridge(m_owner,aux::i2p_owner_purpose::Control);
+ 
+ 		ADD_OUTSTANDING_ASYNC("i2p_stream::on_sam_connect");
+ 		m_sam_socket->async_connect(tcp::endpoint(), wrap_allocator(
+@@ -539,13 +638,17 @@
+ 	std::string const& local_endpoint() const { return m_i2p_local_endpoint; }
+ 
+ 	template <typename Handler>
+-	void async_name_lookup(char const* name, Handler handler)
+-	{
++	void async_name_lookup(char const* name, Handler handler,
++		aux::i2p_owner_purpose purpose=aux::i2p_owner_purpose::Control,
++		std::uint16_t remote=0,std::uint16_t local=0)
++	{
++		if(m_owner&&(!m_owner->current()||!name||std::strlen(name)>60||m_name_lookup.size()>=16)){
++			post(m_io_service,[h=std::move(handler)]()mutable{h(error_code(boost::asio::error::operation_aborted),nullptr);});return;
++		}
+ 		if (m_state == sam_idle && m_name_lookup.empty() && is_open())
+-			do_name_lookup(name, std::move(handler));
++			do_name_lookup(name,std::move(handler),purpose,remote,local);
+ 		else
+-			m_name_lookup.emplace_back(std::string(name)
+-				, std::move(handler));
++			m_name_lookup.push_back(Lookup{std::string(name),std::move(handler),purpose,remote,local});
+ 	}
+ 
+ private:
+@@ -571,10 +674,11 @@
+ 	using name_lookup_handler = std::function<void(error_code const&, char const*)>;
+ 
+ 	template <typename Handler>
+-	void do_name_lookup(std::string const& name, Handler handler)
++	void do_name_lookup(std::string const& name, Handler handler,aux::i2p_owner_purpose purpose=aux::i2p_owner_purpose::Control,std::uint16_t remote=0,std::uint16_t local=0)
+ 	{
+ 		TORRENT_ASSERT(m_state == sam_idle);
+ 		m_state = sam_name_lookup;
++		m_sam_socket->set_owned_bridge(m_owner,purpose,remote,local);
+ 		m_sam_socket->set_name_lookup(name.c_str());
+ 		m_sam_socket->send_name_lookup(wrap_allocator(
+ 			[this,s=m_sam_socket](error_code const& ec, Handler hn) {
+@@ -590,8 +694,8 @@
+ 		std::string name = m_sam_socket->name_lookup();
+ 		if (!m_name_lookup.empty())
+ 		{
+-			std::pair<std::string, name_lookup_handler>& nl = m_name_lookup.front();
+-			do_name_lookup(nl.first, std::move(nl.second));
++			auto& nl=m_name_lookup.front();
++			do_name_lookup(nl.name,std::move(nl.handler),nl.purpose,nl.remote,nl.local);
+ 			m_name_lookup.pop_front();
+ 		}
+ 
+@@ -618,6 +722,7 @@
+ 
+ 	// to talk to i2p SAM bridge
+ 	std::shared_ptr<i2p_stream> m_sam_socket;
++	std::shared_ptr<aux::i2p_owner_context> m_owner;
+ 	std::string m_hostname;
+ 	int m_port;
+ 
+@@ -625,7 +730,8 @@
+ 	std::string m_i2p_local_endpoint;
+ 	std::string m_session_id;
+ 
+-	std::list<std::pair<std::string, name_lookup_handler>> m_name_lookup;
++	struct Lookup {std::string name;name_lookup_handler handler;aux::i2p_owner_purpose purpose;std::uint16_t remote=0,local=0;};
++	std::list<Lookup> m_name_lookup;
+ 
+ 	enum state_t
+ 	{
+--- a/include/libtorrent/session_handle.hpp
++++ b/include/libtorrent/session_handle.hpp
+@@ -42,6 +42,7 @@
+ #include "libtorrent/fwd.hpp"
+ #include "libtorrent/biglybtc_mainline_identity.hpp"
+ #include "libtorrent/biglybtc_mainline_routing.hpp"
++#include "libtorrent/biglybtc_private_i2p_owner.hpp"
+ #include "libtorrent/entry.hpp"
+ #include "libtorrent/torrent_handle.hpp"
+ #include "libtorrent/add_torrent_params.hpp"
+@@ -104,6 +105,11 @@
+ 		// session has been destroyed, all session_handle objects will expire and
+ 		// not be valid.
+ 		bool is_valid() const { return !m_impl.expired(); }
++#if TORRENT_USE_I2P
++		std::uint32_t biglybtc_configure_private_i2p_owner(BiglybtcPrivateI2pOwnerPolicyV1 const&) const;
++		BiglybtcPrivateI2pOwnerStatusV1 biglybtc_private_i2p_owner_status() const;
++		std::uint32_t biglybtc_withdraw_private_i2p_owner(std::uint64_t) const;
++#endif
+ #ifndef TORRENT_DISABLE_DHT
+ 		// Optional provider implementation entry points; public class layout unchanged.
+ 		std::uint32_t biglybtc_configure_mainline_identity(BiglybtcMainlineIdentityPolicyV1 const&,
+--- /dev/null
++++ b/src/biglybtc_private_i2p_owner.inc
+@@ -0,0 +1,38 @@
++// Inside libtorrent::aux. Private opt-in; no Qt object or user callback crosses
++// this executor. No capability is exposed by status or saved settings.
++#if TORRENT_USE_I2P
++std::uint32_t session_impl::biglybtc_configure_private_i2p_owner(BiglybtcPrivateI2pOwnerPolicyV1 const& policy)
++{
++  using result=BiglybtcPrivateI2pOwnerResultV1;
++  TORRENT_ASSERT(is_single_thread());
++  if(!i2p_owner_context::valid(policy))return std::uint32_t(result::InvalidArgument);
++  if(m_abort||m_i2p_conn.owned_bridge()||m_i2p_conn.is_open()||num_torrents()!=0
++    ||!m_settings.get_str(settings_pack::i2p_hostname).empty()
++    ||m_settings.get_int(settings_pack::i2p_port)!=0)return std::uint32_t(result::Busy);
++  for(int key:{settings_pack::enable_incoming_tcp,settings_pack::enable_outgoing_tcp,
++    settings_pack::enable_incoming_utp,settings_pack::enable_outgoing_utp,
++    settings_pack::enable_dht,settings_pack::enable_lsd,settings_pack::enable_upnp,
++    settings_pack::enable_natpmp,settings_pack::allow_i2p_mixed})
++    if(m_settings.get_bool(key))return std::uint32_t(result::InvalidArgument);
++  if(m_settings.get_int(settings_pack::proxy_type)!=settings_pack::none
++    ||!m_settings.get_str(settings_pack::listen_interfaces).empty())return std::uint32_t(result::InvalidArgument);
++  m_i2p_conn.set_owned_bridge(std::make_shared<i2p_owner_context>(policy));
++  return std::uint32_t(result::Accepted);
++}
++BiglybtcPrivateI2pOwnerStatusV1 session_impl::biglybtc_private_i2p_owner_status()const
++{
++  TORRENT_ASSERT(is_single_thread());BiglybtcPrivateI2pOwnerStatusV1 status;
++  if(auto owner=m_i2p_conn.owned_bridge()){
++    status.generation=owner->policy.generation;status.admission=owner->policy.admission;
++    status.public_destination_hash=owner->policy.public_destination_hash;
++    status.bridge_port=owner->policy.bridge_port;status.phase=owner->current()?1U:2U;
++  }return status;
++}
++std::uint32_t session_impl::biglybtc_withdraw_private_i2p_owner(std::uint64_t generation)
++{
++  TORRENT_ASSERT(is_single_thread());using result=BiglybtcPrivateI2pOwnerResultV1;
++  auto owner=m_i2p_conn.owned_bridge();
++  if(!owner||owner->policy.generation!=generation)return std::uint32_t(result::Stale);
++  owner->withdraw();abort();return std::uint32_t(result::Accepted);
++}
++#endif
+--- /dev/null
++++ b/src/biglybtc_private_i2p_owner_api.inc
+@@ -0,0 +1,50 @@
++#if TORRENT_USE_I2P
++std::uint32_t session_handle::biglybtc_configure_private_i2p_owner(BiglybtcPrivateI2pOwnerPolicyV1 const& policy)const
++{return sync_call_ret<std::uint32_t>(&session_impl::biglybtc_configure_private_i2p_owner,std::cref(policy));}
++BiglybtcPrivateI2pOwnerStatusV1 session_handle::biglybtc_private_i2p_owner_status()const
++{return sync_call_ret<BiglybtcPrivateI2pOwnerStatusV1>(&session_impl::biglybtc_private_i2p_owner_status);}
++std::uint32_t session_handle::biglybtc_withdraw_private_i2p_owner(std::uint64_t generation)const
++{return sync_call_ret<std::uint32_t>(&session_impl::biglybtc_withdraw_private_i2p_owner,generation);}
++#endif
++extern "C" TORRENT_EXPORT unsigned biglybtc_private_i2p_owner_abi_v1()noexcept
++{
++#if TORRENT_USE_I2P
++  return BiglybtcPrivateI2pOwnerAbiV1;
++#else
++  return 0;
++#endif
++}
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_configure_private_i2p_owner_v1(session_handle const* handle,BiglybtcPrivateI2pOwnerPolicyV1 const* policy)noexcept
++{
++  using result=BiglybtcPrivateI2pOwnerResultV1;
++  if(!handle||!policy)return std::uint32_t(result::InvalidArgument);
++  if(!handle->is_valid())return std::uint32_t(result::InvalidHandle);
++#if TORRENT_USE_I2P
++  try{return handle->biglybtc_configure_private_i2p_owner(*policy);}catch(...){return std::uint32_t(result::Failed);}
++#else
++  return std::uint32_t(result::Failed);
++#endif
++}
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_read_private_i2p_owner_v1(session_handle const* handle,BiglybtcPrivateI2pOwnerStatusV1* output)noexcept
++{
++  using result=BiglybtcPrivateI2pOwnerResultV1;
++  if(!output){return std::uint32_t(result::InvalidArgument);}
++  *output={};
++  if(!handle||!handle->is_valid())return std::uint32_t(result::InvalidHandle);
++#if TORRENT_USE_I2P
++  try{*output=handle->biglybtc_private_i2p_owner_status();return std::uint32_t(result::Accepted);}catch(...){return std::uint32_t(result::Failed);}
++#else
++  return std::uint32_t(result::Failed);
++#endif
++}
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_withdraw_private_i2p_owner_v1(session_handle const* handle,std::uint64_t generation)noexcept
++{
++  using result=BiglybtcPrivateI2pOwnerResultV1;
++  if(!handle||!generation)return std::uint32_t(result::InvalidArgument);
++  if(!handle->is_valid())return std::uint32_t(result::InvalidHandle);
++#if TORRENT_USE_I2P
++  try{return handle->biglybtc_withdraw_private_i2p_owner(generation);}catch(...){return std::uint32_t(result::Failed);}
++#else
++  return std::uint32_t(result::Failed);
++#endif
++}
+--- a/src/http_connection.cpp
++++ b/src/http_connection.cpp
+@@ -361,7 +361,7 @@
+ 			{
+ 				ADD_OUTSTANDING_ASYNC("http_connection::on_i2p_resolve");
+ 				i2p_conn->async_name_lookup(hostname.c_str(), std::bind(&http_connection::on_i2p_resolve
+-					, me, _1, _2));
++					, me, _1, _2),aux::i2p_owner_purpose::Tracker,static_cast<std::uint16_t>(port),0);
+ 			}
+ 			else
+ 				connect_i2p_tracker(hostname.c_str());
+@@ -480,6 +480,7 @@
+ 	TORRENT_ASSERT(m_ssl == false);
+ #endif
+ 	boost::get<i2p_stream>(*m_sock).set_destination(destination);
++	boost::get<i2p_stream>(*m_sock).set_owned_bridge(m_i2p_conn->owned_bridge(),aux::i2p_owner_purpose::Tracker,m_port,0);
+ 	boost::get<i2p_stream>(*m_sock).set_command(i2p_stream::cmd_connect);
+ 	boost::get<i2p_stream>(*m_sock).set_session_id(m_i2p_conn->session_id());
+ 	ADD_OUTSTANDING_ASYNC("http_connection::on_connect");
+--- a/src/session_handle.cpp
++++ b/src/session_handle.cpp
+@@ -1312,6 +1312,8 @@
+ 		return sync_call_ret<BiglybtcMainlineIdentityStatusV1>(&session_impl::biglybtc_mainline_identity_status);
+ 	}
+ #endif
++	#include "biglybtc_private_i2p_owner_api.inc"
++
+ 	extern "C" TORRENT_EXPORT unsigned biglybtc_mainline_identity_abi_v1() noexcept
+ 	{
+ #ifndef TORRENT_DISABLE_DHT
+--- a/src/session_impl.cpp
++++ b/src/session_impl.cpp
+@@ -74,6 +74,7 @@
+ #include "libtorrent/tracker_manager.hpp"
+ #include "libtorrent/bencode.hpp"
+ #include "libtorrent/hasher.hpp"
++#include "libtorrent/string_util.hpp"
+ #include "libtorrent/entry.hpp"
+ #include "libtorrent/session.hpp"
+ #include "libtorrent/fingerprint.hpp"
+@@ -1154,7 +1155,7 @@
+ 		if (m_undead_peers.empty())
+ 		{
+ 			post(m_io_context, make_handler([this] { abort_stage2(); }
+-				, m_abort_handler_storage, *this));
++				, m_abort_stage2_handler_storage, *this));
+ 		}
+ 	}
+ 
+@@ -1283,6 +1284,11 @@
+ 	void session_impl::queue_tracker_request(tracker_request req
+ 		, std::weak_ptr<request_callback> c)
+ 	{
++#if TORRENT_USE_I2P
++		if(auto owned=m_i2p_conn.owned_bridge()){
++			if(!owned->current()||!is_i2p_url(req.url)||req.url.compare(0,7,"http://")!=0){owned->withdraw();abort();return;}
++		}
++#endif
+ 		req.listen_port = 0;
+ #if TORRENT_USE_I2P
+ 		if (!m_settings.get_str(settings_pack::i2p_hostname).empty())
+@@ -1554,6 +1560,22 @@
+ 
+ 	void session_impl::apply_settings_pack_impl(settings_pack const& pack)
+ 	{
++#if TORRENT_USE_I2P
++		if(auto owned=m_i2p_conn.owned_bridge()){
++			bool invalid=!owned->current();
++			for(int key:{settings_pack::enable_incoming_tcp,settings_pack::enable_outgoing_tcp,
++				settings_pack::enable_incoming_utp,settings_pack::enable_outgoing_utp,
++				settings_pack::enable_dht,settings_pack::enable_lsd,settings_pack::enable_upnp,
++				settings_pack::enable_natpmp,settings_pack::allow_i2p_mixed})
++				invalid=invalid||(pack.has_val(key)&&pack.get_bool(key));
++			invalid=invalid||(pack.has_val(settings_pack::proxy_type)&&pack.get_int(settings_pack::proxy_type)!=settings_pack::none)
++				||(pack.has_val(settings_pack::listen_interfaces)&&!pack.get_str(settings_pack::listen_interfaces).empty());
++			const auto& host=pack.has_val(settings_pack::i2p_hostname)?pack.get_str(settings_pack::i2p_hostname):m_settings.get_str(settings_pack::i2p_hostname);
++			const int port=pack.has_val(settings_pack::i2p_port)?pack.get_int(settings_pack::i2p_port):m_settings.get_int(settings_pack::i2p_port);
++			invalid=invalid||!((!owned->started&&host.empty()&&port==0)||(host=="127.0.0.1"&&port==owned->policy.bridge_port));
++			if(invalid){owned->withdraw();abort();return;}
++		}
++#endif
+ 		bool const reopen_listen_port
+ 			= setting_changed<std::string>(pack, m_settings, settings_pack::listen_interfaces)
+ 			|| setting_changed<int>(pack, m_settings, settings_pack::proxy_type)
+@@ -2356,8 +2378,26 @@
+ 		}
+ 	}
+ 
++	#include "biglybtc_private_i2p_owner.inc"
++
+ 	void session_impl::update_i2p_bridge()
+ 	{
++#if TORRENT_USE_I2P
++		if (auto owned=m_i2p_conn.owned_bridge()) {
++			if(!owned->started&&owned->current()&&m_settings.get_str(settings_pack::i2p_hostname).empty()&&m_settings.get_int(settings_pack::i2p_port)==0)return;
++			if (!owned->current() || m_settings.get_str(settings_pack::i2p_hostname)!="127.0.0.1"
++				||m_settings.get_int(settings_pack::i2p_port)!=owned->policy.bridge_port
++				||m_settings.get_bool(settings_pack::allow_i2p_mixed)
++				||m_settings.get_bool(settings_pack::enable_incoming_tcp)||m_settings.get_bool(settings_pack::enable_outgoing_tcp)
++				||m_settings.get_bool(settings_pack::enable_incoming_utp)||m_settings.get_bool(settings_pack::enable_outgoing_utp)
++				||m_settings.get_bool(settings_pack::enable_dht)||m_settings.get_bool(settings_pack::enable_lsd)
++				||m_settings.get_bool(settings_pack::enable_upnp)||m_settings.get_bool(settings_pack::enable_natpmp)
++				||m_settings.get_int(settings_pack::proxy_type)!=settings_pack::none) {
++				owned->withdraw();abort();return;
++			}
++			owned->started=true;
++		}
++#endif
+ 		// we need this socket to be open before we
+ 		// can make name lookups for trackers for instance.
+ 		// pause the session now and resume it once we've
+@@ -2435,6 +2475,7 @@
+ 		auto& s = boost::get<i2p_stream>(*m_i2p_listen_socket);
+ 		s.set_command(i2p_stream::cmd_accept);
+ 		s.set_session_id(m_i2p_conn.session_id());
++		s.set_owned_bridge(m_i2p_conn.owned_bridge(),i2p_owner_purpose::Peer);
+ 
+ 		s.async_connect(tcp::endpoint()
+ 			, std::bind(&session_impl::on_i2p_accept, this, _1));
+@@ -2947,6 +2988,13 @@
+ 
+ 	void session_impl::incoming_connection(socket_type s)
+ 	{
++#if TORRENT_USE_I2P
++		if(auto owner=m_i2p_conn.owned_bridge()){
++			auto* stream=boost::get<i2p_stream>(&s);
++			if(!owner->current()||!stream||!stream->belongs_to_owner(owner)){return;}
++		}
++#endif
++
+ 		TORRENT_ASSERT(is_single_thread());
+ 
+ 		if (m_abort)
+@@ -3406,7 +3454,7 @@
+ 				if (m_abort)
+ 				{
+ 					post(m_io_context, make_handler([this] { abort_stage2(); }
+-						, m_abort_handler_storage, *this));
++						, m_abort_stage2_handler_storage, *this));
+ 				}
+ 			}
+ 		}
+@@ -5013,6 +5061,16 @@
+ 
+ 		using ptr_t = std::shared_ptr<torrent>;
+ 		using ret_t = std::tuple<std::shared_ptr<torrent>, info_hash_t, bool>;
++#if TORRENT_USE_I2P
++		if(auto owned=m_i2p_conn.owned_bridge()){
++			bool safe=owned->current()&&num_torrents()==0&&params.ti&&owned->matches(params.ti->info_hashes())
++				&&params.url_seeds.empty()&&params.http_seeds.empty()&&params.peers.empty()&&params.dht_nodes.empty()
++				&&params.ti->web_seeds().empty();
++			for(auto const& url:params.trackers)safe=safe&&is_i2p_url(url)&&url.compare(0,7,"http://")==0;
++			if(params.ti)for(auto const& tracker:params.ti->trackers())safe=safe&&is_i2p_url(tracker.url)&&tracker.url.compare(0,7,"http://")==0;
++			if(!safe){ec=boost::asio::error::operation_aborted;return ret_t{ptr_t(),params.info_hashes,false};}
++		}
++#endif
+ 
+ #if TORRENT_ABI_VERSION == 1
+ 		if (string_begins_no_case("magnet:", params.url.c_str()))
+--- a/src/torrent.cpp
++++ b/src/torrent.cpp
+@@ -3787,6 +3787,11 @@
+ 		TORRENT_UNUSED(tracker_ips);
+ #endif
+ 
++#if TORRENT_USE_I2P
++		if(auto owner=m_ses.i2p_owned_bridge()){
++			if(!owner->matches(torrent_file().info_hashes())||!r.i2pconn||r.i2pconn->owned_bridge()!=owner){return;}
++		}
++#endif
+ 		// for each of the peers we got from the tracker
+ 		for (auto const& i : resp.peers)
+ 		{
+@@ -3804,10 +3809,11 @@
+ 					ADD_OUTSTANDING_ASYNC("torrent::on_i2p_resolve");
+ 					r.i2pconn->async_name_lookup(i.hostname.c_str()
+ 						, [self = shared_from_this()] (error_code const& ec, char const* dest)
+-						{ self->torrent::on_i2p_resolve(ec, dest); });
++						{ self->torrent::on_i2p_resolve(ec, dest); },aux::i2p_owner_purpose::Peer,r.i2pconn->owned_bridge()?r.i2pconn->owned_bridge()->policy.peer_port:0,r.i2pconn->owned_bridge()?r.i2pconn->owned_bridge()->policy.local_peer_port:0);
+ 				}
+ 				else
+ 				{
++					if(r.i2pconn->owned_bridge()){continue;} // Private first subset requires correlated hash lookup.
+ 					torrent_state st = get_peer_list_state();
+ 					need_peer_list();
+ 					if (m_peer_list->add_i2p_peer(i.hostname, peer_info::tracker, {}, &st))
+@@ -3837,7 +3843,7 @@
+ 				ADD_OUTSTANDING_ASYNC("torrent::on_i2p_resolve");
+ 				r.i2pconn->async_name_lookup(destination.c_str()
+ 					, [self = shared_from_this()] (error_code const& ec, char const* dest)
+-					{ self->torrent::on_i2p_resolve(ec, dest); });
++					{ self->torrent::on_i2p_resolve(ec, dest); },aux::i2p_owner_purpose::Peer,r.i2pconn->owned_bridge()?r.i2pconn->owned_bridge()->policy.peer_port:0,r.i2pconn->owned_bridge()?r.i2pconn->owned_bridge()->policy.local_peer_port:0);
+ 			}
+ 		}
+ #endif
+@@ -7760,6 +7766,10 @@
+ 			str.set_destination(static_cast<i2p_peer*>(peerinfo)->dest());
+ 			str.set_command(i2p_stream::cmd_connect);
+ 			str.set_session_id(m_ses.i2p_session());
++			if(auto owned=m_ses.i2p_owned_bridge()) {
++				if(!owned->matches(torrent_file().info_hashes())) throw boost::system::system_error(error_code(boost::asio::error::operation_aborted));
++				str.set_owned_bridge(owned,aux::i2p_owner_purpose::Peer,owned->policy.peer_port,owned->policy.local_peer_port);
++			}
+ 			return ret;
+ 		}
+ 		else
+@@ -8429,7 +8439,16 @@
+ 
+ 		if (!settings().get_bool(settings_pack::enable_outgoing_tcp)
+ 			&& !settings().get_bool(settings_pack::enable_outgoing_utp))
++		{
++#if TORRENT_USE_I2P
++			// Dedicated private I2P uses its authenticated owner transport. Keep
++			// normal TCP/uTP disabled; connect_to_peer still rejects those types.
++			auto owner=m_ses.i2p_owned_bridge();
++			if(!is_i2p()||!owner||!owner->matches(torrent_file().info_hashes()))return false;
++#else
+ 			return false;
++#endif
++		}
+ 
+ 		return true;
+ 	}
+@@ -9949,6 +9968,9 @@
+ 		, web_seed_entry::headers_t const& extra_headers
+ 		, web_seed_flag_t const flags)
+ 	{
++#if TORRENT_USE_I2P
++		if(m_ses.i2p_owned_bridge())return nullptr;
++#endif
+ 		web_seed_t ent(url, type, auth, extra_headers);
+ 		ent.ephemeral = bool(flags & ephemeral);
+ 		ent.no_local_ips = bool(flags & no_local_ips);
+--- /dev/null
++++ b/test/test_biglybtc_private_i2p_owner.cpp
+@@ -0,0 +1,143 @@
++// Private optional owner controls only; no tracker/public-network subjects.
++#include "test.hpp"
++#include "libtorrent/biglybtc_private_i2p_owner.hpp"
++#include "libtorrent/aux_/biglybtc_private_i2p_owner.hpp"
++#include "libtorrent/aux_/session_impl.hpp"
++#include "libtorrent/session.hpp"
++#include "libtorrent/add_torrent_params.hpp"
++#include "libtorrent/session_params.hpp"
++#include "libtorrent/settings_pack.hpp"
++#include "libtorrent/entry.hpp"
++#include "libtorrent/bencode.hpp"
++#include "libtorrent/torrent_info.hpp"
++#include "libtorrent/http_connection.hpp"
++#include "libtorrent/aux_/resolver.hpp"
++#include "libtorrent/i2p_stream.hpp"
++#include <boost/asio/post.hpp>
++#include <boost/asio/read_until.hpp>
++#include <boost/asio/streambuf.hpp>
++#include <boost/asio/write.hpp>
++#include <boost/asio/steady_timer.hpp>
++#include <algorithm>
++#include <iterator>
++#include <istream>
++#include <chrono>
++#include <memory>
++using namespace lt;
++#if TORRENT_USE_I2P
++namespace {
++settings_pack isolated(){
++  settings_pack p;
++  for(int key:{settings_pack::enable_incoming_tcp,settings_pack::enable_outgoing_tcp,settings_pack::enable_incoming_utp,settings_pack::enable_outgoing_utp,settings_pack::enable_dht,settings_pack::enable_lsd,settings_pack::enable_upnp,settings_pack::enable_natpmp,settings_pack::allow_i2p_mixed}){p.set_bool(key,false);}
++  p.set_str(settings_pack::listen_interfaces,"");p.set_str(settings_pack::dht_bootstrap_nodes,"");p.set_str(settings_pack::i2p_hostname,"");p.set_int(settings_pack::i2p_port,0);p.set_int(settings_pack::proxy_type,settings_pack::none);return p;
++}
++BiglybtcPrivateI2pOwnerPolicyV1 policy(){BiglybtcPrivateI2pOwnerPolicyV1 p;p.generation=7;p.admission=11;p.capability.fill(0xf1);p.public_destination_hash.fill(0x41);p.torrent_v1.fill(0x11);p.hashes=1;p.bridge_port=49222;p.peer_port=6881;p.local_peer_port=6881;return p;}
++}
++TORRENT_TEST(private_i2p_owner_arguments_and_public_status_are_bounded)
++{
++  TEST_EQUAL(biglybtc_private_i2p_owner_abi_v1(),BiglybtcPrivateI2pOwnerAbiV1);
++  auto p=policy();TEST_CHECK(aux::i2p_owner_context::valid(p));p.capability.fill(0);TEST_CHECK(!aux::i2p_owner_context::valid(p));
++  p=policy();p.reserved=1;TEST_CHECK(!aux::i2p_owner_context::valid(p));p=policy();p.hashes=4;TEST_CHECK(!aux::i2p_owner_context::valid(p));
++  TEST_EQUAL(biglybtc_configure_private_i2p_owner_v1(nullptr,&p),1u);TEST_EQUAL(biglybtc_read_private_i2p_owner_v1(nullptr,nullptr),1u);
++  session ses{session_params{isolated()}};auto executor_work=make_work_guard(ses.native_handle()->get_context());p=policy();
++  TEST_EQUAL(biglybtc_configure_private_i2p_owner_v1(&ses,&p),0u);
++  BiglybtcPrivateI2pOwnerStatusV1 status;
++  TEST_EQUAL(biglybtc_read_private_i2p_owner_v1(&ses,&status),0u);TEST_EQUAL(status.phase,1u);TEST_EQUAL(status.generation,7u);TEST_EQUAL(status.admission,11u);TEST_CHECK(status.public_destination_hash==p.public_destination_hash);
++  auto const* bytes=reinterpret_cast<unsigned char const*>(&status);
++  TEST_CHECK(std::search(bytes,bytes+sizeof(status),p.capability.begin(),p.capability.end())==bytes+sizeof(status));
++  TEST_EQUAL(biglybtc_configure_private_i2p_owner_v1(&ses,&p),2u);TEST_EQUAL(biglybtc_withdraw_private_i2p_owner_v1(&ses,8),5u);
++  TEST_EQUAL(biglybtc_withdraw_private_i2p_owner_v1(&ses,7),0u);TEST_EQUAL(biglybtc_read_private_i2p_owner_v1(&ses,&status),0u);TEST_EQUAL(status.phase,2u);
++}
++TORRENT_TEST(private_i2p_owner_refuses_direct_network_settings_and_foreign_torrent)
++{
++  auto unsafe=isolated();unsafe.set_bool(settings_pack::enable_outgoing_tcp,true);session first{session_params{unsafe}};auto p=policy();TEST_EQUAL(biglybtc_configure_private_i2p_owner_v1(&first,&p),1u);
++  session ses{session_params{isolated()}};auto executor_work=make_work_guard(ses.native_handle()->get_context());TEST_EQUAL(biglybtc_configure_private_i2p_owner_v1(&ses,&p),0u);
++  entry root;root["announce"]="http://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.b32.i2p/announce";
++  root["info"]["length"]=3;root["info"]["name"]="owned.bin";root["info"]["piece length"]=16384;root["info"]["pieces"]=std::string(20,'x');
++  std::vector<char> encoded;bencode(std::back_inserter(encoded),root);error_code ec;
++  auto ti=std::make_shared<torrent_info>(span<char const>(encoded.data(),encoded.size()),ec,from_span);TEST_CHECK(!ec);
++  add_torrent_params add;add.ti=ti;add.save_path=".";auto h=ses.add_torrent(add,ec);TEST_CHECK(ec);TEST_CHECK(!h.is_valid());
++  settings_pack changed;changed.set_bool(settings_pack::enable_dht,true);ses.apply_settings(changed);
++  BiglybtcPrivateI2pOwnerStatusV1 status;TEST_EQUAL(biglybtc_read_private_i2p_owner_v1(&ses,&status),0u);TEST_EQUAL(status.phase,2u);
++}
++TORRENT_TEST(private_i2p_owner_full_hash_and_withdrawal_context)
++{
++  auto p=policy();aux::i2p_owner_context owner(p);info_hash_t h(sha1_hash(std::string(20,'\x11').data()));TEST_CHECK(owner.matches(h));
++  auto other=h;other.v1[0]^=1;TEST_CHECK(!owner.matches(other));owner.withdraw();TEST_CHECK(!owner.current());TEST_CHECK(!owner.matches(h));
++}
++namespace {
++void fresh_http_tracker_naming_port(std::uint16_t tracker_port)
++{
++  // A real http_connection and owned SAM command writer, with a strictly
++  // loopback protocol fixture. No Destination/application bytes are invented
++  // as a successful lookup: KEY_NOT_FOUND terminates this focused wire test.
++  io_context io;tcp::acceptor listener(io,tcp::endpoint(address_v4::loopback(),0));
++  tcp::socket peer(io);boost::asio::streambuf input(2048);boost::asio::steady_timer deadline(io);
++  auto p=policy();p.bridge_port=listener.local_endpoint().port();
++  i2p_connection sam(io);sam.set_owned_bridge(std::make_shared<aux::i2p_owner_context>(p));
++  aux::resolver resolver(io);std::string naming;bool opened=false,completed=false,timed_out=false;error_code result;
++  std::shared_ptr<http_connection> http;
++  http=std::make_shared<http_connection>(io,resolver,[&](error_code const& ec,http_parser const&,span<char const>,http_connection&){
++    result=ec;completed=true;deadline.cancel();error_code ignored;sam.close(ignored);peer.close(ignored);listener.close(ignored);
++  },true,1024,http_connect_handler{},http_filter_handler{},hostname_filter_handler{}
++#if TORRENT_USE_SSL
++  ,nullptr
++#endif
++  );
++  std::function<void()> next;
++  next=[&]{boost::asio::async_read_until(peer,input,'\n',[&](error_code const& ec,std::size_t){
++    if(ec){return;}std::istream stream(&input);std::string line;std::getline(stream,line);std::string reply;
++    if(line.find("HELLO VERSION ")==0){reply="HELLO REPLY RESULT=OK VERSION=3.1\n";}
++    else if(line.find("SESSION CREATE ")==0){reply="SESSION STATUS RESULT=OK DESTINATION=AAAA\n";}
++    else if(line=="NAMING LOOKUP NAME=ME PURPOSE=CONTROL TO_PORT=0 FROM_PORT=0"){reply="NAMING REPLY RESULT=OK NAME=ME VALUE=AAAA\n";}
++    else{naming=line;reply="NAMING REPLY RESULT=KEY_NOT_FOUND NAME=owned\n";}
++    auto bytes=std::make_shared<std::string>(std::move(reply));
++    boost::asio::async_write(peer,boost::asio::buffer(*bytes),[&,bytes](error_code const& written,std::size_t){if(!written){next();}});
++  });};
++  listener.async_accept(peer,[&](error_code const& ec){if(!ec){next();}});
++  deadline.expires_after(std::chrono::seconds(5));deadline.async_wait([&](error_code const& ec){if(ec){return;}timed_out=true;http->close(true);error_code ignored;sam.close(ignored);peer.close(ignored);listener.close(ignored);});
++  sam.open("127.0.0.1",p.bridge_port,i2p_session_options{},[&](error_code const& ec){
++    opened=!ec;if(ec){return;}
++    const auto host=std::string(52,'a')+".b32.i2p";
++    const auto port_text=tracker_port==80?std::string{}:":"+std::to_string(tracker_port);
++    http->get("http://"+host+port_text+"/announce",seconds(1),nullptr,0,"owned",boost::none,aux::resolver_flags{},std::string{},&sam);
++  });
++  io.run();
++  TEST_CHECK(opened);TEST_CHECK(completed);TEST_CHECK(!timed_out);TEST_EQUAL(result,error_code(i2p_error::key_not_found,i2p_category()));
++  TEST_EQUAL(naming,"NAMING LOOKUP NAME="+std::string(52,'a')+".b32.i2p PURPOSE=TRACKER TO_PORT="+std::to_string(tracker_port)+" FROM_PORT=0");
++}
++}
++TORRENT_TEST(private_i2p_owner_fresh_http_tracker_uses_actual_normalized_port)
++{
++  fresh_http_tracker_naming_port(80);fresh_http_tracker_naming_port(18443);
++}
++TORRENT_TEST(private_i2p_owner_withdraw_then_destroy_drains_external_executor)
++{
++  // The old facade controls retain executor work through their status reads.
++  // Here direct actual aux methods avoid a synchronous wait from inside the
++  // external executor; its paused pumping deterministically forces the overlap.
++  io_context io;
++  session_proxy retirement;
++  auto ses=std::make_unique<session>(session_params{isolated()},io);
++  bool withdrawn=false;
++  boost::asio::post(io,[&]{
++    auto impl=ses->native_handle();
++    auto p=policy();
++    TEST_EQUAL(impl->biglybtc_configure_private_i2p_owner(p),0u);
++    TEST_EQUAL(impl->biglybtc_withdraw_private_i2p_owner(p.generation),0u);
++    TEST_EQUAL(impl->biglybtc_private_i2p_owner_status().phase,2u);
++    withdrawn=true;
++  });
++  // Stop pumping as soon as synchronous withdrawal returns. Its stage-two
++  // callback is queued, and cannot run before actual destruction queues the
++  // normal call_abort request below.
++  for(int count=0;count<64&&!withdrawn;++count){if(io.poll_one()==0){break;}}
++  TEST_CHECK(withdrawn);
++  retirement=ses->abort();
++  ses.reset();
++  io.restart();
++  io.run_for(std::chrono::seconds(2));
++  TEST_CHECK(io.stopped()); // All real session/backend work guards released.
++  io.stop(); // Bounded cleanup if a regression leaves an outstanding guard.
++}
++#endif

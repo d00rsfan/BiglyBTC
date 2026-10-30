@@ -1,0 +1,5 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2489812 --no-print-directory -- ATTEMPT=r2
+[1/4] Automatic MOC for target biglybtc-socks4a-provider-tests
+[2/4] Building CXX object CMakeFiles/biglybtc-socks4a-provider-tests.dir/biglybtc-socks4a-provider-tests_autogen/mocs_compilation.cpp.o
+[3/4] Building CXX object CMakeFiles/biglybtc-socks4a-provider-tests.dir/socks4a_provider_tests.cpp.o
+[4/4] Linking CXX executable biglybtc-socks4a-provider-tests

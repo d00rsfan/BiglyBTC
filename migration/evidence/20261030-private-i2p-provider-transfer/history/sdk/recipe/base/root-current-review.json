@@ -1,0 +1,12 @@
+{
+  "status": "ROOT_REVIEWED_SDK_RECIPE_CURRENT_BASELINE",
+  "recipe_manifest_sha256": "e74700817941e160950cb9337f0992b51a5d2eeaef49b5d0c5c857361492f0a1",
+  "source_review_sha256": "5502227f02b4df634330685b290105344655f16bda8cf7da7a09666ad3a58e0a",
+  "native_head": "fd2c07c553dd9e092ea8812bbbbaea429a49d71f",
+  "full_recipe_and_delta_reviewed": true,
+  "sdk_build_can_precede_native_adoption": true,
+  "future_elf_approved": false,
+  "shipping_provider_or_dist_changes_authorized_by_this_receipt": false,
+  "max_compiler_jobs": 3,
+  "expected_direct_ctest_suites": 9
+}

@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_OUTGOING_LOCAL_ZERO_TRACKER_CORRECTION",
+  "basis_commit": "8b17980cc769b553375e01de53bf9ef8a5930672",
+  "source_paths": {
+    "preview/native/services/i2p_streaming/manager.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/before/preview/native/services/i2p_streaming/manager.cpp",
+      "before_sha256": "6fdf27cb3fcc8341d08337b3a06b3b728846a9efc84207df20c8b66b7854eb8a",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/staging/preview/native/services/i2p_streaming/manager.cpp",
+      "after_sha256": "4a4164a59f7572ee4c313c4def70768df1cdbdfdc048a9ee068d3f83a1a78c45"
+    },
+    "preview/native/tests/i2p_streaming_manager_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/before/preview/native/tests/i2p_streaming_manager_tests.cpp",
+      "before_sha256": "e91631539d74f81395f29c7e9ecf0ab5edc3d1e1207c30c06a389bfc9e9aa3c1",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/staging/preview/native/tests/i2p_streaming_manager_tests.cpp",
+      "after_sha256": "2b6c41a2d2e275860d502bb8fd52afd26c2e57659c78678eede5b266246778b4"
+    }
+  },
+  "artifacts_sha256": {
+    "changes.patch": "b67e0b50c28e58bab14087249b44bbf6c83ddee9ebacdeaf44c2debfc5267b3e",
+    "NOTE.txt": "42ba26cb28b5624b50518c75a274e9fc2dbf6df7c8ac7460630756ccf8b9f87a",
+    "staging/preview/native/tests/i2p_streaming_manager_tests.cpp": "2b6c41a2d2e275860d502bb8fd52afd26c2e57659c78678eede5b266246778b4",
+    "staging/preview/native/services/i2p_streaming/manager.cpp": "4a4164a59f7572ee4c313c4def70768df1cdbdfdc048a9ee068d3f83a1a78c45",
+    "before/preview/native/tests/i2p_streaming_manager_tests.cpp": "e91631539d74f81395f29c7e9ecf0ab5edc3d1e1207c30c06a389bfc9e9aa3c1",
+    "before/preview/native/services/i2p_streaming/manager.cpp": "6fdf27cb3fcc8341d08337b3a06b3b728846a9efc84207df20c8b66b7854eb8a"
+  },
+  "inputs": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/tracker-eof-source-proof.json",
+      "sha256": "f1ff4a39200ecb896b424e201e0b94fb6c16d8274815d27a23aa88d5c8cefb9a"
+    }
+  ],
+  "original_contract": "I2PSocketOptionsImpl local0 default/range; Connection retains exact ports; PacketQueue sends protocol6 exact ports (full hashes in source proof).",
+  "listener_and_receive_authority_unchanged": true,
+  "provider_or_abi_change": false,
+  "author_execution": false,
+  "native_mutation": false,
+  "stop_after_this_section": true
+}

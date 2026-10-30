@@ -1,0 +1,11 @@
+{
+  "status": "REVIEWED_SOURCE_AND_RECIPE_ONLY",
+  "provider_source_manifest_sha256": "85985542dd890cdb29323417b277922122429d0769dcf40666617567f1507494",
+  "recipe_manifest_sha256": "a90d4b97d0ae293e0303ddb1e4cc7bb07d08c05f4646fe732d1e2b37242b9d91",
+  "same_31_exports": true,
+  "fresh_candidate_only": true,
+  "same_9_ctests_extended_actual_session_lifecycle": true,
+  "shared_fifo_jobs": 3,
+  "default_shipping_unchanged": true,
+  "runtime_credit": false
+}

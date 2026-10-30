@@ -1,0 +1,25 @@
+SOURCE ONLY. Do not invoke until root approves and candidate-r2 has an actual
+closed build record, measured review, runtime manifest and separate approval.
+Reuse the four existing owned caches; root-provided SDK CLI inputs are required.
+No old tests are credited: actual fresh11 Clang/GCC/leak-SAN and4 default suites.
+Each private lane builds its owner archive; GCC additionally builds the transfer
+probe (compile only here). Default builds BiglyBTC. No Java/router/transfer/
+namespace/default-owner activation, provider build or dist promotion occurs.
+
+One GNU Make4.4 FIFO jobserver3: Clang first, then default/GCC/SAN share3 tokens.
+No nested explicit build parallel limit. Tests remain serial and globally locked.
+Invocation (all provider arguments must be actual absolute paths supplied by root):
+make --jobserver-style=fifo -j3 -f <this-directory>/jobs.mk all ATTEMPT=r1 \
+ SOURCE_COMMIT=9f46cf05d133624e48c6d60d45d2c503a6141ff9 \
+ ADOPTION=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/provider-test-lifetime-pin-adoption.json \
+ PROVIDER_RECORD=<actual-candidate-r2/source-build-record.json> \
+ PROVIDER_APPROVAL=<actual-candidate-r2/root-private-owner-approval.json> \
+ PROVIDER_APPROVAL_SHA256=<actual-sha256> \
+ PROVIDER_RUNTIME_MANIFEST=<actual-runtime-manifest> PROVIDER_REVIEW=<actual-review>
+
+Every new lane retains configure/build/inventory/test commands, full logs/XML,
+source/full-map, cache-origin, tools/dependencies, owner archive and ELF hashes.
+Prior cache/result metadata identify original ownership and compiler only; old
+images need not match because accepted diagnostic GCC probe rebuilds occurred.
+Protected original Java HEAD/index, shipping355/f746 SDK and dist are checked
+before/after. All current source files match the frozen full map and clean HEAD.

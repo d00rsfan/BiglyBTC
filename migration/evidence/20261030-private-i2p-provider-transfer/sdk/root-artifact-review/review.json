@@ -1,0 +1,29 @@
+{
+  "status": "MEASURED_PRIVATE_OWNER_ARTIFACT_REVIEW_PASS",
+  "source_build_record_sha256": "5c3653a6c628fd0f6ac6df1e75bae50dfded310dc84c89c079ec8df1a1ec28c3",
+  "source_capsule_sha256": "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671",
+  "artifact_sha256": "53ce1703a5c43f88d871c6c786c8cc8fbdb7c8c2b058c6520cf733aadded0db9",
+  "artifact_bytes": 9476640,
+  "sdk_tree_sha256": "e6e715857c0a3733932f4b68329d9cc6270f3f74e212d7bec0dee3c5e5fbbeb0",
+  "source_leaves": 1087,
+  "installed_leaves": 293,
+  "header_leaves": 284,
+  "actual_ctest_suites": 9,
+  "actual_commands": 11,
+  "required_exports": 31,
+  "loader_images": 6,
+  "same_build_hidden_objects": {
+    "build/CMakeFiles/torrent-rasterbar.dir/src/i2p_stream.cpp.o": "49352e2393199532205a20a03112a1b92b5483280e1d59c782e40b040ee6558a",
+    "build/CMakeFiles/torrent-rasterbar.dir/src/proxy_base.cpp.o": "90250a39e6b8ace5ea1afb4604fec014fdda1a456491d410f63435f5b90ffa5d"
+  },
+  "deterministic_lifecycle_source_and_full_unit_run": true,
+  "reviewer_build_or_subject_execution": false,
+  "reviewer_artifact_operations": [
+    "rehash closed source/SDK/dependencies/tools/tested images",
+    "parse fresh XML and command receipts",
+    "read actual same-image exports",
+    "ldd six qualified executables"
+  ],
+  "shipping_approved": false,
+  "default_activation": false
+}

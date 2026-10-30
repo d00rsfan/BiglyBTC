@@ -1,0 +1,85 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2515015 --no-print-directory -- PROVIDER_REVIEW=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/root-artifact-review/review.json PROVIDER_RUNTIME_MANIFEST=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/approval-proposal/private-i2p-owner-runtime.json PROVIDER_APPROVAL_SHA256=6ff4c4d044777e2d777a7b61271c804736a102be2821e65840529cc0ecf529d5 PROVIDER_APPROVAL=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/root-private-owner-approval.json PROVIDER_RECORD=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source-build-record.json ADOPTION=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/provider-test-lifetime-pin-adoption.json SOURCE_COMMIT=9f46cf05d133624e48c6d60d45d2c503a6141ff9 ATTEMPT=r1
+[1/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/profile.cpp.o
+[2/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_io.cpp.o
+[3/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/torrent_state.cpp.o
+[4/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/library_view.cpp.o
+[5/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/column_layout_view.cpp.o
+[6/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/statistics_view.cpp.o
+[7/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/overall_statistics_view.cpp.o
+[8/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_view.cpp.o
+[9/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_week_view.cpp.o
+[10/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_month_view.cpp.o
+[11/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_range_view.cpp.o
+[12/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/minute_history_writer.cpp.o
+[13/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/country_provider.cpp.o
+[14/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/saved_download_tags_view.cpp.o
+[15/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/country_provider_binding.cpp.o
+[16/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/saved_speed_manager_view.cpp.o
+[17/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_policy_commands.cpp.o
+[18/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/library_commands.cpp.o
+[19/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/application_settings.cpp.o
+[20/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/original_file_io.cpp.o
+[21/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/original_storage_defaults.cpp.o
+[22/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/original_torrent_identity.cpp.o
+[23/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_value_versions.cpp.o
+[24/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_contacts.cpp.o
+[25/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_public_policy.cpp.o
+[26/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_operations.cpp.o
+[27/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/torrent_intake.cpp.o
+[28/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_operation_io.cpp.o
+[29/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/queue_positions.cpp.o
+[30/86] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/linear_to_compact.cpp.o
+[31/86] Linking CXX static library adapters/libbiglybtc_profile.a
+[32/86] Automatic MOC for target biglybtc_i2cp_initial_channel
+[33/84] Building CXX object engine/CMakeFiles/biglybtc_mainline_bind_plan.dir/mainline_bind_plan.cpp.o
+[34/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/local_session.cpp.o
+[35/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/multifile_session.cpp.o
+[36/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/engine_statistics_sampler.cpp.o
+[37/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[38/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/runtime_metrics_sampler.cpp.o
+[39/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/effective_rate_limits.cpp.o
+[40/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/peer_payload_observer.cpp.o
+[41/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/tracker_statistics_sampler.cpp.o
+[42/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/network_policy.cpp.o
+[43/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_session.cpp.o
+[44/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/mainline_dht.cpp.o
+[45/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/managed_storage.cpp.o
+[46/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/magnet_intake.cpp.o
+[47/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/metadata_disk_router.cpp.o
+[48/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/managed_payload_counters.cpp.o
+[49/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/live_settings.cpp.o
+[50/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/torrent_creator.cpp.o
+[51/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/original_disk_io.cpp.o
+[52/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/original_control.cpp.o
+[53/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/network_binding.cpp.o
+[54/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/disk_latency.cpp.o
+[55/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/network_proxy_capability.cpp.o
+[56/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/queued_mainline_scrape.cpp.o
+[57/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/library_http_tracker.cpp.o
+[58/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/owned_i2p_policy.cpp.o
+[59/84] Linking CXX static library engine/libbiglybtc_mainline_bind_plan.a
+[60/84] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/library_http_protocol.cpp.o
+[61/84] Linking CXX static library engine/libbiglybtc_local_engine.a
+[62/84] Building CXX object services/CMakeFiles/biglybtc_owned_i2p_source.dir/i2p_provider/profile_source.cpp.o
+[63/84] Linking CXX static library services/libbiglybtc_owned_i2p_source.a
+[64/84] Automatic MOC for target biglybtc_i2p_provider_owner
+[65/84] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/biglybtc_i2p_provider_owner_autogen/mocs_compilation.cpp.o
+[66/84] Building CXX object tests/CMakeFiles/biglybtc-network-policy-tests.dir/network_policy_tests.cpp.o
+[67/84] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner.cpp.o
+[68/84] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/bridge.cpp.o
+[69/84] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner_runtime_guard.cpp.o
+[70/84] Linking CXX static library services/libbiglybtc_i2p_provider_owner.a
+[71/84] Building CXX object tests/CMakeFiles/biglybtc-i2p-provider-transfer-probe.dir/i2p_provider_transfer_probe.cpp.o
+[72/84] Building CXX object tests/CMakeFiles/biglybtc-owned-i2p-source-tests.dir/biglybtc-owned-i2p-source-tests_autogen/mocs_compilation.cpp.o
+[73/84] Building CXX object tests/CMakeFiles/biglybtc-owned-i2p-source-tests.dir/owned_i2p_source_tests.cpp.o
+[74/84] Linking CXX executable tests/biglybtc-network-policy-tests
+[75/84] Linking CXX executable tests/biglybtc-i2cp-initial-channel-tests
+[76/84] Linking CXX executable tests/biglybtc-i2cp-datagram-channel-tests
+[77/84] Linking CXX executable tests/biglybtc-i2cp-receive-channel-tests
+[78/84] Linking CXX executable tests/biglybtc-i2cp-tracker-channel-tests
+[79/84] Linking CXX executable tests/biglybtc-i2p-streaming-tests
+[80/84] Linking CXX executable tests/biglybtc-i2cp-stream-manager-tests
+[81/84] Linking CXX executable tests/biglybtc-owned-i2p-source-tests
+[82/84] Linking CXX executable tests/biglybtc-i2p-provider-transfer-probe
+[83/84] Building CXX object tests/CMakeFiles/biglybtc-managed-storage-tests.dir/managed_storage_tests.cpp.o
+[84/84] Linking CXX executable tests/biglybtc-managed-storage-tests

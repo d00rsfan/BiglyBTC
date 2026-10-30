@@ -1,0 +1,12 @@
+{
+  "status": "APPLIED_TEST_ONLY_SDK_FIX_NO_RUNTIME_CREDIT",
+  "recipe_sha256": "e6bcd83222a630642a82158ac3d833430af423081989f6dbb553bbcf079e52e2",
+  "source_capsule_sha256": "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671",
+  "old_creation_sha256": "57be236ca5244276aacb098bbcf49cc90926f549362cac352c0fc20661bf7883",
+  "failed_result_sha256": "c52709bcb3eca67eee04a11326023da2e2bbaa254c77979534b85510fd74be43",
+  "test_path": "test/test_biglybtc_private_i2p_owner.cpp",
+  "before_sha256": "66211b57d9a37effb34348055681b67e7c7ee3c9541550e5dc0f3cd0089e1cc8",
+  "after_sha256": "fff7c1c8440d59737100671315a3fb8dac15bb7452aa3793f7c95e098968f3a9",
+  "installed_sdk_reused": true,
+  "production_or_abi_changed": false
+}

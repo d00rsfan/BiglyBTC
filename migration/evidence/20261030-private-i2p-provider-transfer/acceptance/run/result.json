@@ -1,0 +1,51 @@
+{
+  "status": "PASS_REAL_ISOLATED_ROUTER_PROVIDER_TRANSFER",
+  "scope": "real-isolated-router-two-native-provider-transfer",
+  "cache_setup": "three actual accepted signature-verified Enc4 LS2 via public store",
+  "discovery_or_remote_tunnels_qualified": false,
+  "default_backend_activated": false,
+  "late_tracker_reply_qualified": false,
+  "port": 54301,
+  "native": {
+    "both_payload_inodes_preserved": true,
+    "direct_peer_injection": false,
+    "elapsed_ms": 27201,
+    "held_source_hello_expired": true,
+    "joined_before_disk_read": true,
+    "late_tracker_response_qualified": false,
+    "leech_admission": "4921563399377815196",
+    "leech_destination_sha256": "54518bddfe75ca32d404709aa93cbd405d789f17cfc4802e5299965dabb66aac",
+    "leech_generation": "13049967396759238706",
+    "negative_controls_preserved_authority": true,
+    "no_new_admission_on_source_loss": true,
+    "payload_sha256": "c094f75a988b470c822f157431f2b920bd750803225be7d89374eced4a070147",
+    "reason": "Real tracker-discovered two-provider transfer and exact joined disk bytes",
+    "scope": "two-actual-owned-provider-I2P-torrents",
+    "seed_admission": "4343445152229692677",
+    "seed_destination_sha256": "f4e5548e931721d02a7ccac00fa97026ada58c7a2a77346990e4ff630f848f1c",
+    "source_replacement_withdrew": true,
+    "status": "PASS",
+    "torrent_infohash": "84821F338303FE225D8A8B53D8B69A44EEAE89EB",
+    "verified_bytes": 131072,
+    "wrong_capability_rejected_both_owners": true
+  },
+  "tracker": {
+    "status": "PASS",
+    "seed_announces": 1,
+    "leech_announces": 1,
+    "seed_replies": 1,
+    "leech_replies": 1,
+    "http_replies": 2,
+    "withdrawn_connections": 0,
+    "late_reply_qualified": false,
+    "external_i2cp": true,
+    "application_transfer_claimed": false,
+    "session_closed": true
+  },
+  "router": {
+    "status": "PASS",
+    "scope": "warmed-three-local-clients-real-provider-transfer",
+    "public_transports": 0,
+    "remaining_clients": 0
+  }
+}

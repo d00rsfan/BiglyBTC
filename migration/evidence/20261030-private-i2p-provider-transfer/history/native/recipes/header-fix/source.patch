@@ -1,0 +1,11 @@
+--- a/preview/native/services/CMakeLists.txt
++++ b/preview/native/services/CMakeLists.txt
+@@ -180,7 +180,7 @@
+   add_library(biglybtc_owned_i2p_source STATIC i2p_provider/profile_source.cpp)
+   target_include_directories(biglybtc_owned_i2p_source PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2p_provider")
+   target_link_libraries(biglybtc_owned_i2p_source PUBLIC biglybtc_local_engine biglybtc_owned_sam_protocol
+-    biglybtc_i2p_client_identity biglybtc_i2cp_initial_channel PRIVATE biglybtc_plugin_settings OpenSSL::Crypto)
++    biglybtc_i2p_client_identity biglybtc_i2cp_initial_channel LibtorrentRasterbar::torrent-rasterbar PRIVATE biglybtc_plugin_settings OpenSSL::Crypto)
+   target_compile_features(biglybtc_owned_i2p_source PUBLIC cxx_std_23)
+   target_compile_options(biglybtc_owned_i2p_source PRIVATE -Wall -Wextra -Wpedantic -Werror)
+ endif()

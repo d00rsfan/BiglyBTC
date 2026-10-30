@@ -7208,7 +7208,8 @@
       "decision_ref": null,
       "evidence": [
         "migration/evidence/20261025-v2-workflows/verification.json",
-        "migration/evidence/20261026-compatibility-batch3/verification.json"
+        "migration/evidence/20261026-compatibility-batch3/verification.json",
+        "migration/evidence/20261030-private-i2p-provider-transfer/verification.json"
       ],
       "feature_ids": [
         "F01.original_file_geometry",
@@ -7240,11 +7241,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "78ed6ff9c18447c210c59edf980f60332d805481",
           "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "078cc91db1aff4195986beb860063aad3f8b6967",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/torrent.compatibility/20261025.md",
-        "migration/updates/compatibility.providers/20261026-batch3.md"
+        "migration/updates/compatibility.providers/20261026-batch3.md",
+        "migration/updates/services.i2cp_initial_session/20261030-private-owner-transfer.md"
       ],
       "source_coverage": [
         {
@@ -7267,10 +7279,18 @@
       "target_paths": [
         "preview/native/engine/managed_payload_counters.cpp",
         "preview/native/engine/persistent_runtime_guard.cpp",
-        "preview/native/engine/persistent_session.cpp"
+        "preview/native/engine/persistent_session.cpp",
+        "preview/native/engine/CMakeLists.txt",
+        "preview/native/engine/managed_storage.cpp",
+        "preview/native/engine/managed_storage.hpp",
+        "preview/native/engine/owned_i2p_policy.cpp",
+        "preview/native/engine/owned_i2p_policy.hpp",
+        "preview/native/services/i2p_provider/profile_source.cpp",
+        "preview/native/services/i2p_provider/profile_source.hpp"
       ],
       "task_records": [
-        "migration/tasks/P03-10-v2-hybrid-compatibility.md"
+        "migration/tasks/P03-10-v2-hybrid-compatibility.md",
+        "migration/tasks/P07-owned-i2p-streaming.md"
       ]
     },
     {
@@ -8757,7 +8777,8 @@
       ],
       "state": "in_progress",
       "task_records": [
-        "migration/tasks/P07-02b-i2cp-initial-session.md"
+        "migration/tasks/P07-02b-i2cp-initial-session.md",
+        "migration/tasks/P07-owned-i2p-streaming.md"
       ],
       "target_paths": [
         "preview/native/services/i2cp/protocol.hpp",
@@ -8799,7 +8820,31 @@
         "preview/native/services/i2p_streaming/manager.hpp",
         "preview/native/tests/i2cp_stream_manager_tests.cpp",
         "preview/native/tests/i2p_streaming_manager_interop_tests.cpp",
-        "preview/native/tests/i2p_streaming_manager_tests.cpp"
+        "preview/native/tests/i2p_streaming_manager_tests.cpp",
+        "preview/native/engine/CMakeLists.txt",
+        "preview/native/engine/managed_storage.cpp",
+        "preview/native/engine/managed_storage.hpp",
+        "preview/native/engine/owned_i2p_policy.cpp",
+        "preview/native/engine/owned_i2p_policy.hpp",
+        "preview/native/services/i2cp_channel/effect_authority.hpp",
+        "preview/native/services/i2cp_channel/owned_effects.inc",
+        "preview/native/services/i2cp_channel/owned_lookup.inc",
+        "preview/native/services/i2p_provider/bridge.cpp",
+        "preview/native/services/i2p_provider/bridge.hpp",
+        "preview/native/services/i2p_provider/owner.cpp",
+        "preview/native/services/i2p_provider/owner.hpp",
+        "preview/native/services/i2p_provider/owner_runtime_guard.cpp",
+        "preview/native/services/i2p_provider/owner_runtime_guard.hpp",
+        "preview/native/services/i2p_provider/profile_source.cpp",
+        "preview/native/services/i2p_provider/profile_source.hpp",
+        "preview/native/services/i2p_provider/sam_protocol.cpp",
+        "preview/native/services/i2p_provider/sam_protocol.hpp",
+        "preview/native/services/i2p_provider/source_permit.hpp",
+        "preview/native/services/i2p_provider/verify-owner-approval.py",
+        "preview/native/tests/i2p_provider_transfer_probe.cpp",
+        "preview/native/tests/owned_i2p_profile_fixture.hpp",
+        "preview/native/tests/owned_i2p_source_tests.cpp",
+        "preview/native/tests/owned_sam_protocol_tests.cpp"
       ],
       "source_coverage": [
         {
@@ -9033,6 +9078,46 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "078cc91db1aff4195986beb860063aad3f8b6967",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "af1aef1b44cdce4423cef9f37125edae21794a7e",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8e9e248eea56f345f1bef169ea0bfcf7184cc7c3",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "153799b30891dcb733be28fe5472a31334141426",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8b17980cc769b553375e01de53bf9ef8a5930672",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "797638b44b8f9a621e9a6d718a94472d0b242297",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "f07ea2ac16988d1a389bd61975cb6ff0ac6a9184",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -9047,7 +9132,8 @@
         "migration/evidence/20261029-routing-streaming/REVIEW.md",
         "migration/evidence/20261029-contacts-enc4/REVIEW.md",
         "migration/evidence/20261029-public-bound-streaming-window/REVIEW.md",
-        "migration/evidence/20261029-streaming-manager-known/REVIEW.md"
+        "migration/evidence/20261029-streaming-manager-known/REVIEW.md",
+        "migration/updates/services.i2cp_initial_session/20261030-private-owner-transfer.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
@@ -9061,7 +9147,8 @@
         "migration/evidence/20261029-routing-streaming/verification.json",
         "migration/evidence/20261029-contacts-enc4/verification.json",
         "migration/evidence/20261029-public-bound-streaming-window/verification.json",
-        "migration/evidence/20261029-streaming-manager-known/verification.json"
+        "migration/evidence/20261029-streaming-manager-known/verification.json",
+        "migration/evidence/20261030-private-i2p-provider-transfer/verification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     }
@@ -9836,13 +9923,21 @@
         {
           "url": "file:///home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
           "sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443"
+        },
+        {
+          "url": "file:///home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+          "sha256": "53ce1703a5c43f88d871c6c786c8cc8fbdb7c8c2b058c6520cf733aadded0db9"
         }
       ],
-      "build_recipe": "Complete additive patch against the pinned pristine public source archive: 30 modified and 15 added files, all 1082 patched files verified against source/build record623778fc3a5b25144e842a39154dab4cd107e4f115bc6474dd973f67888582d3. See migration/evidence/20261029-mainline-owned-trackers/provider/provider-r2-patch-info.json and provider/source-build-record.json for archive/source mapping, actual build flags/commands, installed SDK and28 executed provider controls; migration/evidence/20261029-mainline-owned-trackers/verification.json records actual native19/16/19 selected suites and private relocation. Upstream Git attribution is retained from earlier source audit; this patch verification establishes archive equivalence, not a fresh Git-object comparison. Development/private qualification only; shipping, public interoperability, whole-client and performance gates remain open.",
+      "build_recipe": "Complete additive patch against the pinned pristine public source archive: 30 modified and 15 added files, all 1082 patched files verified against source/build record623778fc3a5b25144e842a39154dab4cd107e4f115bc6474dd973f67888582d3. See migration/evidence/20261029-mainline-owned-trackers/provider/provider-r2-patch-info.json and provider/source-build-record.json for archive/source mapping, actual build flags/commands, installed SDK and28 executed provider controls; migration/evidence/20261029-mainline-owned-trackers/verification.json records actual native19/16/19 selected suites and private relocation. Upstream Git attribution is retained from earlier source audit; this patch verification establishes archive equivalence, not a fresh Git-object comparison. Development/private qualification only; shipping, public interoperability, whole-client and performance gates remain open. OPTIONAL PRIVATE I2P child: complete thirteen-file additive patch/source capsule 9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671 over this retained default provider, 1087 source and293 installed leaves, 31 required exports, nine fresh direct controls; DSO 53ce1703a5c43f88d871c6c786c8cc8fbdb7c8c2b058c6520cf733aadded0db9. Actual install/build origin and test-only incremental repair, source/SDK maps, exact commands, independent review/private approval and native11/11/11+default4 plus real two-profile transfer are in migration/evidence/20261030-private-i2p-provider-transfer/sdk and REVIEW.md. Default355/f746 is unchanged; optional private validation only, no shipping/default activation or performance claim.",
       "patches": [
         {
           "path": "migration/evidence/20261029-mainline-owned-trackers/provider/libtorrent-2.0.12-biglybtc-provider-r2.patch",
           "sha256": "1667cf84508a5fddccb6d6a7bc546454e6707eabd7df9766738016f1ed02cf8e"
+        },
+        {
+          "path": "migration/evidence/20261030-private-i2p-provider-transfer/provider/optional-private-i2p-provider.patch",
+          "sha256": "da1f6ed75d266efa89f7dcf460e522c0d0fca83a03fc7055a31d3ba026a448e3"
         }
       ],
       "notices": [

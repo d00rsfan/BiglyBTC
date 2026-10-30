@@ -1,0 +1,9 @@
+{
+  "dist_manifest_sha256": "aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b",
+  "dist_verified_leaves": 119,
+  "dist_extra_files": false,
+  "default_runtime_manifest_sha256": "f746fd279755ea90f31e20b0c9131c46e5f0871c4aab3665f232975f98feb56e",
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "default_artifact_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443"
+}

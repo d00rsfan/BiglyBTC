@@ -1,0 +1,26 @@
+{
+  "name": "build",
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "cmake",
+    "--build",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+    "--target",
+    "biglybtc-owned-sam-protocol-tests",
+    "biglybtc-owned-i2p-source-tests",
+    "biglybtc-network-policy-tests",
+    "biglybtc-managed-storage-tests",
+    "BiglyBTC",
+    "--",
+    "-k",
+    "0"
+  ],
+  "expected_exit": 0,
+  "exit": 0,
+  "seconds": 354.175,
+  "log": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/default-r3/build.log",
+  "log_sha256": "8aaa79e8fadc2eb57e75d9cf0462705aac373a91185ba42ed7d668fb735dcfeb",
+  "source_manifest_sha256": "80fa72695bc977b0dc4178f477c10083450e7d197858ac9c7b96ba59badf2b2d"
+}

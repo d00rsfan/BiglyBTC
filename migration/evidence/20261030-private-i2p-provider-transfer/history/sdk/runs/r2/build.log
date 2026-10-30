@@ -1,0 +1,2 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2489812 --no-print-directory -- ATTEMPT=r2
+[1/1] Linking CXX executable test/test_biglybtc_private_i2p_owner

@@ -1,0 +1,33 @@
+{
+  "name": "build",
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "cmake",
+    "--build",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang",
+    "--target",
+    "biglybtc-owned-sam-protocol-tests",
+    "biglybtc-owned-i2p-source-tests",
+    "biglybtc-network-policy-tests",
+    "biglybtc-managed-storage-tests",
+    "biglybtc-i2cp-initial-channel-tests",
+    "biglybtc-i2cp-datagram-channel-tests",
+    "biglybtc-i2cp-receive-channel-tests",
+    "biglybtc-i2cp-tracker-channel-tests",
+    "biglybtc-i2cp-stream-manager-tests",
+    "biglybtc-i2p-streaming-tests",
+    "biglybtc-i2p-streaming-manager-tests",
+    "biglybtc_i2p_provider_owner",
+    "--",
+    "-k",
+    "0"
+  ],
+  "expected_exit": 0,
+  "exit": 0,
+  "seconds": 19.014,
+  "log": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/clang-r3/build.log",
+  "log_sha256": "9b04fba039c766e0160eff4f29a63b29a2f6db8bba9e62982cb59021e5e5dfb6",
+  "source_manifest_sha256": "80fa72695bc977b0dc4178f477c10083450e7d197858ac9c7b96ba59badf2b2d"
+}

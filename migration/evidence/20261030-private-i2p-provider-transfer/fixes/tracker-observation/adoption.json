@@ -1,0 +1,26 @@
+{
+  "source_commit": "8b17980cc769b553375e01de53bf9ef8a5930672",
+  "parent": "153799b30891dcb733be28fe5472a31334141426",
+  "source_paths": {
+    "preview/native/services/i2p_provider/owner.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/before/preview/native/services/i2p_provider/owner.hpp",
+      "before_sha256": "ef8df75725528f8de8a0b387fc8649b2027cd830a4769a6eaa1ecf7835a8bf24",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/staging/preview/native/services/i2p_provider/owner.hpp",
+      "after_sha256": "614d499215cf30152c6ee421025e711be911e7e81cead8d6f7d461015fbc98b6"
+    },
+    "preview/native/services/i2p_provider/owner.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/before/preview/native/services/i2p_provider/owner.cpp",
+      "before_sha256": "0e4df41394d70a6333276611f1dcc7bbab0f5a925003ea87048795dd14568d07",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/staging/preview/native/services/i2p_provider/owner.cpp",
+      "after_sha256": "10dcda44bb55b429b4d39cb138d55ca63eb24dddf57fba82cee36a73abd37a79"
+    },
+    "preview/native/tests/i2p_provider_transfer_probe.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/before/preview/native/tests/i2p_provider_transfer_probe.cpp",
+      "before_sha256": "f90aef6406f614666579e3c045d0ab43724ce63044f67718689acc16d9d6272f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/staging/preview/native/tests/i2p_provider_transfer_probe.cpp",
+      "after_sha256": "b9332fa20cbaef7357da9695eec7adefde51fdbb8ed62c335d96f4d8408419f1"
+    }
+  },
+  "observation_only": true,
+  "runtime_credit": false
+}

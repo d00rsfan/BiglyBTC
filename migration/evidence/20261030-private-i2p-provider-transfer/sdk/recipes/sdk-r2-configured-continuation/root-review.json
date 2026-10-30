@@ -1,0 +1,9 @@
+{
+  "status": "REVIEWED_CONFIGURED_CONTINUATION_SOURCE",
+  "manifest_sha256": "58a82373434e0e60b30c7fa5de6da4661634aa7e96b914c3914ebf20d0533898",
+  "current_source_capsule_sha256": "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671",
+  "actual_semantic_abi_and_two_step_dry_run_checked": true,
+  "production_dso_sdk_object_identity_required": true,
+  "fresh_9_tests_required": true,
+  "runtime_credit": false
+}

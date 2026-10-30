@@ -1,0 +1,14 @@
+{
+  "status": "DIAGNOSTIC_THREAD_STACKS_COLLECTED",
+  "acceptance_pass": false,
+  "interrupt_seconds": 155,
+  "arguments_or_locals_requested": false,
+  "attach_or_core_requested": false,
+  "probe_sha256": "9e215f61d1e782a83ce2ce02ed470ad8e187937b5d54d543dfa5023f84fe9b49",
+  "gdb_interrupted": true,
+  "gdb_exit": 0,
+  "inferior_pid": 77,
+  "inferior_exited": true,
+  "elapsed_milliseconds": 155117,
+  "trace_sha256": "e9f3daa9793f5f7b145fcb0b58433a30f5583c914d7092ae638b7e9660215ea2"
+}

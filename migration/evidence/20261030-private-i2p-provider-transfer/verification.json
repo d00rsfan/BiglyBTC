@@ -1,0 +1,242 @@
+{
+  "schema": 1,
+  "status": "PASS_BOUNDED_PRIVATE_I2P_OWNER_TRANSFER",
+  "qualified_source_commit": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+  "upstream_java_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "upstream_libtorrent_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "provider_source_capsule_sha256": "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671",
+  "provider_artifact_sha256": "53ce1703a5c43f88d871c6c786c8cc8fbdb7c8c2b058c6520cf733aadded0db9",
+  "provider_artifact_bytes": 9476640,
+  "provider_sdk_tree_sha256": "e6e715857c0a3733932f4b68329d9cc6270f3f74e212d7bec0dee3c5e5fbbeb0",
+  "provider_actual_fresh_suites": 9,
+  "native_actual_fresh_suites": {
+    "clang": {
+      "actual_suites": 11,
+      "result_sha256": "ce0faabceaaea1fd0e029e2fd63c2247ec88b0748f44b5118a2278972dc74231"
+    },
+    "gcc": {
+      "actual_suites": 11,
+      "result_sha256": "e7b250e2f96ef6999374a6f1b1ef550385ac9478cc334c4ebecbbd8daa29509b"
+    },
+    "san": {
+      "actual_suites": 11,
+      "result_sha256": "1a66f857d4b672bb3463a11970b62e72009c4b624dcbe2ca8bec6b79e848a6de"
+    },
+    "default": {
+      "actual_suites": 4,
+      "result_sha256": "f19f87ac48d68a8a1189bcc27ad1060d481668c21c1d97a45fa68c74c2e4dda9"
+    }
+  },
+  "actual_transfer": {
+    "both_payload_inodes_preserved": true,
+    "direct_peer_injection": false,
+    "elapsed_ms": 27201,
+    "held_source_hello_expired": true,
+    "joined_before_disk_read": true,
+    "late_tracker_response_qualified": false,
+    "leech_admission": "4921563399377815196",
+    "leech_destination_sha256": "54518bddfe75ca32d404709aa93cbd405d789f17cfc4802e5299965dabb66aac",
+    "leech_generation": "13049967396759238706",
+    "negative_controls_preserved_authority": true,
+    "no_new_admission_on_source_loss": true,
+    "payload_sha256": "c094f75a988b470c822f157431f2b920bd750803225be7d89374eced4a070147",
+    "reason": "Real tracker-discovered two-provider transfer and exact joined disk bytes",
+    "scope": "two-actual-owned-provider-I2P-torrents",
+    "seed_admission": "4343445152229692677",
+    "seed_destination_sha256": "f4e5548e931721d02a7ccac00fa97026ada58c7a2a77346990e4ff630f848f1c",
+    "source_replacement_withdrew": true,
+    "status": "PASS",
+    "torrent_infohash": "84821F338303FE225D8A8B53D8B69A44EEAE89EB",
+    "verified_bytes": 131072,
+    "wrong_capability_rejected_both_owners": true
+  },
+  "router": {
+    "status": "PASS",
+    "scope": "warmed-three-local-clients-real-provider-transfer",
+    "public_transports": 0,
+    "remaining_clients": 0
+  },
+  "tracker": {
+    "status": "PASS",
+    "seed_announces": 1,
+    "leech_announces": 1,
+    "seed_replies": 1,
+    "leech_replies": 1,
+    "http_replies": 2,
+    "withdrawn_connections": 0,
+    "late_reply_qualified": false,
+    "external_i2cp": true,
+    "application_transfer_claimed": false,
+    "session_closed": true
+  },
+  "namespace_fence": {
+    "status": "PASS_FIVE_NAMESPACE_LOOPBACK_PREFLIGHT",
+    "namespaces": {
+      "user": {
+        "parent": {
+          "device": 5,
+          "inode": 4026531837
+        },
+        "actual": {
+          "device": 5,
+          "inode": 4026532874
+        },
+        "link": "user:[4026532874]"
+      },
+      "net": {
+        "parent": {
+          "device": 5,
+          "inode": 4026531833
+        },
+        "actual": {
+          "device": 5,
+          "inode": 4026532417
+        },
+        "link": "net:[4026532417]"
+      },
+      "pid": {
+        "parent": {
+          "device": 5,
+          "inode": 4026531836
+        },
+        "actual": {
+          "device": 5,
+          "inode": 4026532416
+        },
+        "link": "pid:[4026532416]"
+      },
+      "ipc": {
+        "parent": {
+          "device": 5,
+          "inode": 4026531839
+        },
+        "actual": {
+          "device": 5,
+          "inode": 4026532415
+        },
+        "link": "ipc:[4026532415]"
+      },
+      "uts": {
+        "parent": {
+          "device": 5,
+          "inode": 4026531838
+        },
+        "actual": {
+          "device": 5,
+          "inode": 4026532413
+        },
+        "link": "uts:[4026532413]"
+      }
+    },
+    "capabilities": {
+      "CapInh": 0,
+      "CapPrm": 0,
+      "CapEff": 0,
+      "CapBnd": 0,
+      "CapAmb": 0
+    },
+    "no_new_privileges": true,
+    "interfaces": [
+      "lo"
+    ],
+    "loopback_up": true,
+    "ipv4": "127.0.0.1",
+    "ipv6": [
+      "::1/128"
+    ],
+    "routes": {
+      "4": [],
+      "6": [
+        "00000000000000000000000000000000 00 00000000000000000000000000000000 00 00000000000000000000000000000000 ffffffff 00000001 00000000 00200200       lo",
+        "00000000000000000000000000000001 80 00000000000000000000000000000000 00 00000000000000000000000000000000 00000000 00000002 00000000 80200001       lo",
+        "00000000000000000000000000000000 00 00000000000000000000000000000000 00 00000000000000000000000000000000 ffffffff 00000001 00000000 00200200       lo"
+      ]
+    },
+    "unreachable_controls_errno": {
+      "2/1": 101,
+      "2/2": 101,
+      "10/1": 101,
+      "10/2": 101
+    },
+    "pid": 2,
+    "proc_pid1_namespace": "pid:[4026532416]",
+    "label": "bwrap//&unpriv_bwrap (enforce)",
+    "parent_sha256": "d6727faa1924c13780c60fc2efe81563f0e2e795d6ebd830f098802e7a4be789",
+    "scope": "actual provider acceptance environment fence"
+  },
+  "private_cleanup": {
+    "owned_private_fixture_paths_removed": true,
+    "subject_keys_published": false
+  },
+  "shipping_approved": false,
+  "default_activation": false,
+  "dist_unchanged": true,
+  "original_live_profile_touched": false,
+  "whole_plan_finished": false,
+  "components_remain_in_progress": true,
+  "stop_after_section": true,
+  "preservation": {
+    "dist_manifest_sha256": "aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b",
+    "dist_verified_leaves": 119,
+    "dist_extra_files": false,
+    "default_runtime_manifest_sha256": "f746fd279755ea90f31e20b0c9131c46e5f0871c4aab3665f232975f98feb56e",
+    "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+    "default_artifact_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443"
+  },
+  "hosted_ci": [
+    {
+      "conclusion": "success",
+      "databaseId": 41053224420,
+      "headSha": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41053224420",
+      "workflowName": "Native plugin SDK contract"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 41053224451,
+      "headSha": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41053224451",
+      "workflowName": "Native desktop preview unit and smoke tests"
+    }
+  ],
+  "registry_validation": {
+    "status": "PASS_BOTH_IDENTICAL_REGISTRIES",
+    "registry_sha256": "06e5cd56c8da8fc2ec7393d1e445d590f1c4a7606170c8065d83c996fc759282",
+    "counts": {
+      "upstreams": 20,
+      "components": 108,
+      "external_dependencies": 22
+    },
+    "checks": [
+      {
+        "label": "original",
+        "command": [
+          "python3",
+          "-B",
+          "/home/yurii/Java/BiglyBT/migration/tools/validate.py"
+        ],
+        "exit_code": 0,
+        "log_sha256": "6fc6923bc46b92b5954fe67728dce506ed47ae38a624d06ec27178fc543f101f",
+        "summary": [
+          "PASS registry: 20 sources, 108 components, 0 reviews"
+        ]
+      },
+      {
+        "label": "native",
+        "command": [
+          "python3",
+          "-B",
+          "/home/yurii/Java/BiglyBTC/migration/tools/validate.py"
+        ],
+        "exit_code": 0,
+        "log_sha256": "6fc6923bc46b92b5954fe67728dce506ed47ae38a624d06ec27178fc543f101f",
+        "summary": [
+          "PASS registry: 20 sources, 108 components, 0 reviews"
+        ]
+      }
+    ]
+  }
+}

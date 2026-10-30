@@ -1,0 +1,57 @@
+{
+  "biglybtc-owned-sam-protocol-tests": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang/tests/biglybtc-owned-sam-protocol-tests",
+    "sha256": "05db2ff2514fe3421b78d2f864361a39a3e4a74e641f9b92ad49500452306d52",
+    "bytes": 77576
+  },
+  "biglybtc-owned-i2p-source-tests": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang/tests/biglybtc-owned-i2p-source-tests",
+    "sha256": "34eb42246a8c5c075ca5a421b47361af5476c0e2dc1b8e9ddb04d5757dd29cbc",
+    "bytes": 5384184
+  },
+  "biglybtc-network-policy-tests": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang/tests/biglybtc-network-policy-tests",
+    "sha256": "2670e11e1091a0e3594b76fd5c7fb5d24d3b5f0295d7ec2b781b7433473e9588",
+    "bytes": 405840
+  },
+  "biglybtc-managed-storage-tests": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang/tests/biglybtc-managed-storage-tests",
+    "sha256": "93d80bb7d7d888cb307b3ced60d4d62b34965fe3fa2ed2f370be421ea92a7198",
+    "bytes": 5440392
+  },
+  "biglybtc-i2cp-initial-channel-tests": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang/tests/biglybtc-i2cp-initial-channel-tests",
+    "sha256": "d5f762fe82ca106b4fd5ec87c276fa8506feba84d1cd158321038f45b456e9c7",
+    "bytes": 827264
+  },
+  "biglybtc-i2cp-datagram-channel-tests": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang/tests/biglybtc-i2cp-datagram-channel-tests",
+    "sha256": "75e9ce8bc32e6a2e40e11270f7d9a90e95150e6844bb39c053e83dfee8f9366d",
+    "bytes": 602216
+  },
+  "biglybtc-i2cp-receive-channel-tests": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang/tests/biglybtc-i2cp-receive-channel-tests",
+    "sha256": "e4ccf6cc84b0553f0e7d2ebf0d40120ae157d5c5363aaf2035114fe937c51fcc",
+    "bytes": 587400
+  },
+  "biglybtc-i2cp-tracker-channel-tests": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang/tests/biglybtc-i2cp-tracker-channel-tests",
+    "sha256": "5828d858fbda534356fd9b2c7ef4750f620d7d16da9e44adf95c124b9da1480b",
+    "bytes": 594664
+  },
+  "biglybtc-i2cp-stream-manager-tests": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang/tests/biglybtc-i2cp-stream-manager-tests",
+    "sha256": "9609c3a2b4c88ce5a913dd97db58ed2822b3ff4f6504288e210b4dd7a2ffb9ff",
+    "bytes": 589088
+  },
+  "biglybtc-i2p-streaming-tests": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang/tests/biglybtc-i2p-streaming-tests",
+    "sha256": "99e048511334cbc2ce26e47aa5a100eb1ff41e033e83028e433f1d748791d583",
+    "bytes": 258064
+  },
+  "biglybtc-i2p-streaming-manager-tests": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/clang/tests/biglybtc-i2p-streaming-manager-tests",
+    "sha256": "1ff03de82ec19f4e10c3b7109b9357dd96bca3e1f57977b7257ab8d1eec078ff",
+    "bytes": 258744
+  }
+}

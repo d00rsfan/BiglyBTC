@@ -1,0 +1,54 @@
+{
+  "status": "PASS_MEASURED_OPTIONAL_SDK_ARTIFACT_REVIEW_NOT_RUNTIME_OR_SHIPPING_APPROVAL",
+  "source_build_record": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source-build-record.json",
+    "sha256": "3b559cf92cf38743573da853b05621dfb4289544a2fbe2199814544997d8657c"
+  },
+  "artifact": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+    "sha256": "2f89e779cf11bd1ace159307d3995fe1fd3aca5e594957844a11df2df7df8e4b",
+    "bytes": 9476640
+  },
+  "provider_source_capsule_sha256": "8f12f51c1426d4de59c9e9df6f9c2cb767001fe2574b6bc6668b8ce4e6722dc9",
+  "parent_record_sha256": "623778fc3a5b25144e842a39154dab4cd107e4f115bc6474dd973f67888582d3",
+  "sdk_tree_sha256": "3a4056e988becaf6129fb54354bd490622f7797bddaba73086ca1290ff9c0057",
+  "private_abi": "0x42494f01",
+  "findings": [],
+  "verified_counts": {
+    "source_files": 1087,
+    "installed_files": 293,
+    "headers": 284,
+    "required_same_image_exports": 31,
+    "fresh_actual_ctest_suites": 9,
+    "actual_successful_commands": 13,
+    "control_loader_images": 6
+  },
+  "checked": [
+    "Actual source map equals the accepted parent plus exactly13 reviewed8f12 changes; complete installed293 map equals parent closure plus exactly2private headers. All284headers byte-equal closed source and canonical SDK digest.",
+    "All required parent27+new4 symbols are defined text/weak symbols in this exact measured DSO. Actual nm/readelf output equals retained evidence, SONAME preserved, no RPATH/RUNPATH; no export visibility widening. Header ABI/layout and actual ABI/argument/withdrawal controls remain exact.",
+    "Nine distinct CTest rows all statusrun with no failure/error/skipped; all13actual commands exited0 and their log/image hashes match. Full direct-control transcript includes real fresh-http normalized-port method PASS. All6recorded control-loader maps resolve this same installed artifact; dependency/toolchain/cache hashes match.",
+    "Test-only amendment e213 pins reused49352e/90250a objects, unchanged r1 DSO2f89 and original source/creation/toolchain. Only external CMAKE_PROJECT_INCLUDE cache change; actual amendment runner/provenance embedded in final record and proposal; failedr1 retained asFAIL.",
+    "All reviewed input/evidence/recipe hashes, source-build record association and unapproved proposal closure rechecked. Prior accepted production source reviews reused."
+  ],
+  "test_link_amendment": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-recipe/amendments/effective-tracker-port/amendments/hidden-test-objects/manifest.json",
+    "sha256": "e21372e7705712a4415840bb13ba61b1fb36ae02c53d9151ed713ffb264c75d4"
+  },
+  "actual_results": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/runs/r2/result.json",
+    "sha256": "e41de65940450e0c0d5de68a700796ac4265d84b18438c436eab6c73cdf67665"
+  },
+  "direct_control_full_transcript": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/Testing/Temporary/LastTest.log",
+    "sha256": "cd45f8399f98c259ed9a48fc383a72fb30b9fb805debc6222869da71b912f57a"
+  },
+  "proposal": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/approval-proposal/private-i2p-owner-runtime.json",
+    "sha256": "3d91cd896444162967640a1afb3c8cce5712d788ac8def5d1b93a93f1cd982d8"
+  },
+  "reviewer_build_or_subject_execution": false,
+  "reviewer_artifact_operations": "Read-only nm/readelf plus file/XML/map/hash verification; no DSO loading or control execution.",
+  "native_runtime_approved": false,
+  "shipping_approved": false,
+  "remaining": "Root may issue a separate exact private approval. Native owner qualification and actual two-provider acceptance remain required."
+}

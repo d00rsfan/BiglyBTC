@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_PUBLIC_LT_HEADER_AND_FAILED_CLANG_RESUME",
+  "source_commit": "af1aef1b44cdce4423cef9f37125edae21794a7e",
+  "previous_source_commit": "078cc91db1aff4195986beb860063aad3f8b6967",
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/manifest.json",
+    "sha256": "a1b19f40bed236a83424406f9156074f2e98c5956aacff184d0baf76c830cbe0"
+  },
+  "source_paths": {
+    "preview/native/services/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/public-lt-headers/before/preview/native/services/CMakeLists.txt",
+      "before_sha256": "1c240c5d011c629aff39e50170dd0b646441938df9100fce57414cf103acc5ce",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/public-lt-headers/staging/preview/native/services/CMakeLists.txt",
+      "after_sha256": "2066bfa4fd0aaadf273ede0bae601161eaf3af90886faba1cc1ef4c96fdd8dd5"
+    }
+  },
+  "cumulative_native_paths": 31,
+  "artifacts_sha256": {
+    "adopt.py": "2c58756d2c81220beeed7ede753bc40d86f9a48965b18708811e9395d5121216",
+    "run.py": "d3e2d278f00f0a3b9218023f05a39021a0777bdf8f0b722b21cf9dedc05ad0ea",
+    "jobs.mk": "0e23a7cc629d6c3e5c2ced899c40e6dbd284fa4069eb8e527601160b7e19071e",
+    "source-plan.json": "42dfc3343f941e11981b5a19cb4bec2fe6147c03c12f769ad6130764b71566f6",
+    "root-adoption.json": "8ad084c872afdb8831be976e3c3ccd7a3a91a3730346db34f161253910a71c70",
+    "clang-cache-continuity.json": "1be6fa5935ad20724a23a091ecf895d744503e8dc4b597129c88901098c72c74",
+    "source.patch": "5a5d819eef91d2947092a9130ea5937631bf21dceb677ef65718cb15094a5a6d",
+    "recipe-delta.patch": "b7672b1636825614b9cb8f109b2e076301e92e34e621956aa3838a087c61549d",
+    "NEXT.txt": "b9acfaeaf7217bb7c28ed81bcf33cb21adcda7f46e519b5aee624e6265f07243",
+    "before/preview/native/services/CMakeLists.txt": "1c240c5d011c629aff39e50170dd0b646441938df9100fce57414cf103acc5ce",
+    "staging/preview/native/services/CMakeLists.txt": "2066bfa4fd0aaadf273ede0bae601161eaf3af90886faba1cc1ef4c96fdd8dd5"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/manifest.json": "a1b19f40bed236a83424406f9156074f2e98c5956aacff184d0baf76c830cbe0",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/run.py": "15c0ade1a3fbb448e695ce52afe4d53039bbfe2d3882fb7a0c0729942ea026a2",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/adopt.py": "e0354aec1856e8773109c2034f8224f344ac8bdd90cd59a827b90bd4507b2304",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/jobs.mk": "22b12bb56463332bd14b49c25aca5912d57787cae797a102fb94f5f4c2eeb160",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/root-adoption.json": "f3b96915b061f7cc0196b4dc9650c494bd3658de3f363bb95aca6fcb24bd3c5b",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/root-header-dependency-fix.json": "cef4a6706343ccf952c121c7cc9d0c9bc086d2b7d09e24c0364cd021d5721efb",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/runs/clang-r1/result.json": "9b0f3a56ec0a7a7eb7cc422226dd6181cb903d5595e84ffecee630f943c779d4"
+  },
+  "incremental_cache_allowed": [
+    "parent-owned failed clang only"
+  ],
+  "other_private_caches_fresh": true,
+  "old_failed_result_preserved": true,
+  "qualification_scopes_unchanged": true,
+  "author_execution": false,
+  "native_or_cache_mutation": false,
+  "stop_after_this_section": true
+}

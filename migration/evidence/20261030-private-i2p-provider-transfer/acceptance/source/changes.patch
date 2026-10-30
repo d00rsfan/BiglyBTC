@@ -1,0 +1,43 @@
+--- a/run.py
++++ b/run.py
+@@ -156,7 +156,7 @@
+     parser.add_argument('--javac',type=pathlib.Path,default=pathlib.Path('/usr/bin/javac'))
+     parser.add_argument('--acknowledge-warmed-local-cache-only',action='store_true',required=True)
+     args=parser.parse_args();assert re.fullmatch('[0-9a-f]{40}',args.source_commit)
+-    assert args.source_commit=='f07ea2ac16988d1a389bd61975cb6ff0ac6a9184'
++    assert args.source_commit=='9f46cf05d133624e48c6d60d45d2c503a6141ff9'
+     assert args.expected_native_status=='PASS_PRIVATE_I2P_OWNER_AFFECTED_COHORT'
+     assert args.output.is_absolute() and args.output.parent.resolve()==(H/'runs').resolve() and not args.output.exists()
+     pins=load(H/'source-pins.json')
+--- a/source-pins.json
++++ b/source-pins.json
+@@ -42,14 +42,14 @@
+     }
+   },
+   "implementation": {
+-    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer/implementation/manifest.json",
+-    "sha256": "1c77b9c739f359d4bc1ab8d264b03fef4092be74810a5bbb9d46488f39a96ed5",
+-    "bytes": 19544
++    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/implementation/manifest.json",
++    "sha256": "8fb1d97d83713f5baa5da103bbccdc4230d8395ea2efe1e5e262458690cc8040",
++    "bytes": 19755
+   },
+   "provider_source": {
+-    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/manifest.json",
+-    "sha256": "85985542dd890cdb29323417b277922122429d0769dcf40666617567f1507494",
+-    "bytes": 13109
++    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/amendments/executor-workguard/manifest.json",
++    "sha256": "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671",
++    "bytes": 10317
+   },
+   "namespace_preflight": {
+     "manifest": {
+@@ -103,7 +103,7 @@
+     "sha256": "28c8513363ab913c7a41496094fed5c7ae9f3e3ca93648be174c11378a8157c2",
+     "bytes": 34279
+   },
+-  "native_source_commit": "f07ea2ac16988d1a389bd61975cb6ff0ac6a9184",
++  "native_source_commit": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+   "java_diagnostic_parent": {
+     "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/amendments/progress-run/amendments/tracker-failure-stage/manifest.json",
+     "sha256": "486c44fb12544735eaa505e00fcae8d819a1c341b16b28366958a4e552b1355b",

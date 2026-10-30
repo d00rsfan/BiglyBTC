@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_EXISTING_SDK_R2_SINGLE_TEST_REPAIR",
+  "parent_recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-recipe/shutdown-storage-r2/manifest.json",
+    "sha256": "a90d4b97d0ae293e0303ddb1e4cc7bb07d08c05f4646fe732d1e2b37242b9d91"
+  },
+  "provider_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/amendments/executor-workguard/manifest.json",
+    "sha256": "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671"
+  },
+  "candidate": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2",
+  "source_paths": {
+    "test/test_biglybtc_private_i2p_owner.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-recipe/sdk-r2-test-repair/test-before.cpp",
+      "before_sha256": "66211b57d9a37effb34348055681b67e7c7ee3c9541550e5dc0f3cd0089e1cc8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/amendments/executor-workguard/staging/test/test_biglybtc_private_i2p_owner.cpp",
+      "after_sha256": "fff7c1c8440d59737100671315a3fb8dac15bb7452aa3793f7c95e098968f3a9"
+    }
+  },
+  "artifacts_sha256": {
+    "jobs.mk": "8ffab556680e8bd0cd9611ae635c043b1f088271f0e860b2eca32548c27007cc",
+    "test-before.cpp": "66211b57d9a37effb34348055681b67e7c7ee3c9541550e5dc0f3cd0089e1cc8",
+    "inputs.json": "8dfa95ef1ae6a3a7c9de74b3a9108570f616bd2c5198e2a3b2c844d539cfde64",
+    "recipe-delta.patch": "f158aa3df8b09837cead7f44d78f588fb6db68e66afc0daf6e6ca6df690d81fd",
+    "provider.py": "e6bcd83222a630642a82158ac3d833430af423081989f6dbb553bbcf079e52e2",
+    "initial-state.json": "3666c7a141947396a8ab32c6e503ba47fa2c023136896c8e14836d55243fdc78",
+    "test-objects.cmake": "f340e9b8164824ce336996ad0872a4f506f1fd77167067a6afcc944a187be2ed",
+    "retained-creation.json": "57be236ca5244276aacb098bbcf49cc90926f549362cac352c0fc20661bf7883",
+    "NEXT.txt": "d4404f0ced511af3ff5b13829af9c814184d0daa4219edf2cf85e0ce34594e55"
+  },
+  "source_files": 1087,
+  "unchanged_source_leaves": 1086,
+  "unchanged_installed_leaves": 293,
+  "unchanged_provider_objects": 167,
+  "exports": 31,
+  "actual_ctest_suites_required": 9,
+  "old_failed_result_sha256": "c52709bcb3eca67eee04a11326023da2e2bbaa254c77979534b85510fd74be43",
+  "installed_dso_sha256": "53ce1703a5c43f88d871c6c786c8cc8fbdb7c8c2b058c6520cf733aadded0db9",
+  "test_build_target_only": "test_biglybtc_private_i2p_owner",
+  "author_executions": [],
+  "native_mutation": false,
+  "new_candidate_or_sdk_install": false,
+  "stop_after_this_section": true
+}

@@ -1,0 +1,8 @@
+Test project /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/mainline-build
+Connected to MAKE jobserver
+    Start 1: mainline-port-bridge
+1/1 Test #1: mainline-port-bridge .............   Passed    0.14 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.14 sec

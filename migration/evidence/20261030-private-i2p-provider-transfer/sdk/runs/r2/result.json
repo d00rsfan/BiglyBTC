@@ -1,0 +1,12 @@
+{
+  "status": "FAIL",
+  "native_runtime_approved": false,
+  "source_creation_sha256": "c5dc563eb86c9b38403a96f5fd79a5d4db5aa5c671232f1f70cf0fef747393f5",
+  "jobserver_makeflags": " -j3 --jobserver-auth=fifo:/tmp/GMfifo2513919 --no-print-directory -- ATTEMPT=r2 OUTPUT=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2",
+  "original_head_index_before": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "previous_private_record_sha256": "3b559cf92cf38743573da853b05621dfb4289544a2fbe2199814544997d8657c",
+  "failure": "RuntimeError('Exact unchanged configured cache')"
+}

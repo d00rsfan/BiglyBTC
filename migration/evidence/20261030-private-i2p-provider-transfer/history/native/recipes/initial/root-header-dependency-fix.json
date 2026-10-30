@@ -1,0 +1,9 @@
+{
+  "status": "APPLIED_SINGLE_PUBLIC_HEADER_DEPENDENCY_FIX",
+  "parent": "078cc91db1aff4195986beb860063aad3f8b6967",
+  "source_commit": "af1aef1b44cdce4423cef9f37125edae21794a7e",
+  "path": "preview/native/services/CMakeLists.txt",
+  "before_sha256": "1c240c5d011c629aff39e50170dd0b646441938df9100fce57414cf103acc5ce",
+  "after_sha256": "2066bfa4fd0aaadf273ede0bae601161eaf3af90886faba1cc1ef4c96fdd8dd5",
+  "runtime_credit": false
+}

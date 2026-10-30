@@ -1,0 +1,144 @@
+{
+  "schema": "BIGLYBTC_PRIVATE_I2P_OWNER_PROVIDER_SOURCE_V1",
+  "status": "SOURCE_ONLY_RUNTIME_PENDING",
+  "parent_upstream_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "parent_record": {
+    "path": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/source-build-record.json",
+    "sha256": "623778fc3a5b25144e842a39154dab4cd107e4f115bc6474dd973f67888582d3"
+  },
+  "parent_runtime": {
+    "sha256": "f746fd279755ea90f31e20b0c9131c46e5f0871c4aab3665f232975f98feb56e"
+  },
+  "private_abi": "0x42494f01",
+  "exports": 31,
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/manifest.json",
+    "sha256": "85985542dd890cdb29323417b277922122429d0769dcf40666617567f1507494"
+  },
+  "source_paths": {
+    "include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/staging/include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp",
+      "after_sha256": "dd5f3ff2ceb30c8031fa036ffa83cdf3aa8c169bb177b35f2d35bff4ae9316cf"
+    },
+    "include/libtorrent/aux_/session_impl.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/before/include/libtorrent/aux_/session_impl.hpp",
+      "before_sha256": "b6770dcdbdf50aa4123e921ab8a5eeb1ebc7bbace89668384b9b0b5d0c752c68",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/staging/include/libtorrent/aux_/session_impl.hpp",
+      "after_sha256": "0b1459a6b5c7409b7647855378f7335f3aa7cc275a80249156d867489927e79a"
+    },
+    "include/libtorrent/aux_/session_interface.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/before/include/libtorrent/aux_/session_interface.hpp",
+      "before_sha256": "8bb9adf64c3e244c2317b06c6e8702ae3a764e09b0cb8cca8532bd310bad2dec",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/staging/include/libtorrent/aux_/session_interface.hpp",
+      "after_sha256": "15ced8d1fb7923f5fe279ace6b390a616e5f0b85ebff3a792703e5edbf993db9"
+    },
+    "include/libtorrent/biglybtc_private_i2p_owner.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/staging/include/libtorrent/biglybtc_private_i2p_owner.hpp",
+      "after_sha256": "ab6a2a737bf343fb2672b4f478a2f3d09db44fc88fab8c27d3ae21ebea0d7830"
+    },
+    "include/libtorrent/i2p_stream.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/before/include/libtorrent/i2p_stream.hpp",
+      "before_sha256": "d3bb9186f586ef0201b68ac1ec6c389f1e18b389d9d99eb1c027729712f2be0a",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/staging/include/libtorrent/i2p_stream.hpp",
+      "after_sha256": "d03a383c14f1e3a5d87ee5f3acc1c6c4f8e2c67d29cb1e131c323e8f0c5ba72e"
+    },
+    "include/libtorrent/session_handle.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/before/include/libtorrent/session_handle.hpp",
+      "before_sha256": "db8212e1c4795876872adc3149eba5b71a03cc5e68353e228d1d5536a5357088",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/staging/include/libtorrent/session_handle.hpp",
+      "after_sha256": "af33e725f5d0118ed25b0f0f3b35b3c79b485a9d35bdd10e451a15679844d407"
+    },
+    "src/biglybtc_private_i2p_owner.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/staging/src/biglybtc_private_i2p_owner.inc",
+      "after_sha256": "1000e44295b8d7063090b038af4d0ffbbc36f6279df42fede3c48a4a374b2b96"
+    },
+    "src/biglybtc_private_i2p_owner_api.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/staging/src/biglybtc_private_i2p_owner_api.inc",
+      "after_sha256": "6516a33c5aedcb32d8af1e14487a2f36bd5daaa4e73643f4709dd92d4d90660d"
+    },
+    "src/http_connection.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/before/src/http_connection.cpp",
+      "before_sha256": "a446dc2e042ee140b6bc27099cac690cbb8361cfe8ce5a1ee7f0ef23d904de9d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/staging/src/http_connection.cpp",
+      "after_sha256": "5ad19748f7e19f94257fdf8a7340885cf485625eabae39aa591ead7a78907c93"
+    },
+    "src/session_handle.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/before/src/session_handle.cpp",
+      "before_sha256": "509f2bc8cf0824b673b2a05906c27ca82fe2eba8f4eaa2a47a25a2880f7d37d8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/staging/src/session_handle.cpp",
+      "after_sha256": "415e6868caf0aa882d7c4fae32e3b5acd7fd17764af54a43718d0cc74eaef61e"
+    },
+    "src/session_impl.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/before/src/session_impl.cpp",
+      "before_sha256": "dc327bffc7cfc1bc4393e08894582c01070ea91affcb08c36b9e39365b3c7b91",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/staging/src/session_impl.cpp",
+      "after_sha256": "af0aef0944bfbc0ef4c991260fda72c45a9cfc90dc65d22f52c4f49c83f3bfa0"
+    },
+    "src/torrent.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/before/src/torrent.cpp",
+      "before_sha256": "79dc7e41311846a895b3a75a24addd5cc0134910b8b2cb53882b6c69c51eb0bd",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/staging/src/torrent.cpp",
+      "after_sha256": "9b300d52eeaaad24ca3908d7db97386cecb5ffbb202f04f8c4e35964e91d57c8"
+    },
+    "test/test_biglybtc_private_i2p_owner.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/amendments/executor-workguard/staging/test/test_biglybtc_private_i2p_owner.cpp",
+      "after_sha256": "fff7c1c8440d59737100671315a3fb8dac15bb7452aa3793f7c95e098968f3a9"
+    }
+  },
+  "parent_delta_paths": [
+    "test/test_biglybtc_private_i2p_owner.cpp"
+  ],
+  "delta_source_paths": {
+    "test/test_biglybtc_private_i2p_owner.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/amendments/executor-workguard/before/test/test_biglybtc_private_i2p_owner.cpp",
+      "before_sha256": "66211b57d9a37effb34348055681b67e7c7ee3c9541550e5dc0f3cd0089e1cc8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/amendments/executor-workguard/staging/test/test_biglybtc_private_i2p_owner.cpp",
+      "after_sha256": "fff7c1c8440d59737100671315a3fb8dac15bb7452aa3793f7c95e098968f3a9"
+    }
+  },
+  "unchanged_parent_paths": [
+    "include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp",
+    "include/libtorrent/aux_/session_impl.hpp",
+    "include/libtorrent/aux_/session_interface.hpp",
+    "include/libtorrent/biglybtc_private_i2p_owner.hpp",
+    "include/libtorrent/i2p_stream.hpp",
+    "include/libtorrent/session_handle.hpp",
+    "src/biglybtc_private_i2p_owner.inc",
+    "src/biglybtc_private_i2p_owner_api.inc",
+    "src/http_connection.cpp",
+    "src/session_handle.cpp",
+    "src/session_impl.cpp",
+    "src/torrent.cpp"
+  ],
+  "artifacts_sha256": {
+    "ADOPTION.txt": "e8d7e9fb801fa14fdb20a6ef32a83d86eec56de497c6093d97a3150829947c94",
+    "before/test/test_biglybtc_private_i2p_owner.cpp": "66211b57d9a37effb34348055681b67e7c7ee3c9541550e5dc0f3cd0089e1cc8",
+    "changes.patch": "da1f6ed75d266efa89f7dcf460e522c0d0fca83a03fc7055a31d3ba026a448e3",
+    "parent-delta.patch": "8459b5a1300bc484c201d41cf1ba9fba0341a955c54faf2cdedd769d54a8a81f",
+    "staging/test/test_biglybtc_private_i2p_owner.cpp": "fff7c1c8440d59737100671315a3fb8dac15bb7452aa3793f7c95e098968f3a9"
+  },
+  "inputs": {
+    "actual_failed_sdk_attempt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/runs/r1/result.json",
+      "sha256": "c52709bcb3eca67eee04a11326023da2e2bbaa254c77979534b85510fd74be43"
+    }
+  },
+  "root_execution_required": [
+    "test-only candidate-r2 repair",
+    "unit-only rebuild",
+    "fresh same9 direct CTests",
+    "new record/review/approval"
+  ],
+  "old_provider_mutated": false,
+  "author_executions": []
+}

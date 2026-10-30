@@ -1,0 +1,9 @@
+{
+  "status": "REVIEWED_TEST_ONLY_REPAIR_RECIPE",
+  "manifest_sha256": "c617728d0875791caa2c24a6b6b98320c3b9c0247aa5ca3de07ad9bd6b7a1fdf",
+  "source_capsule_sha256": "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671",
+  "one_test_leaf_only": true,
+  "production_dso_sdk_unchanged_required": true,
+  "full_nine_tests_required": true,
+  "runtime_credit": false
+}

@@ -1,0 +1,7 @@
+{
+  "status": "REVIEWED_SOURCE_ONLY",
+  "manifest_sha256": "adb039a71e4c1961e2ac38a6e292d6166a66670a9a9547e702468a5152e2a68a",
+  "source_commit": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+  "qualification_scopes_unchanged": true,
+  "runtime_credit": false
+}

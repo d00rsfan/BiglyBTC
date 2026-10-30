@@ -1,0 +1,12 @@
+{
+  "status": "ACTUAL_PRIVATE_I2P_PROVIDER_DIRECT_CONTROLS_PASS_NOT_APPROVED",
+  "native_runtime_approved": false,
+  "source_creation_sha256": "9d9b53b03f400df571a74963bbb37b07d561633eaefa21c104360c8806d98ce8",
+  "jobserver_makeflags": " -j3 --jobserver-auth=fifo:/tmp/GMfifo2489812 --no-print-directory -- ATTEMPT=r2",
+  "actual_ctest_suites": 9,
+  "commands_sha256": "9273a35d87f472385a45ccc0d769ddf9ae614a5eb86e6c0ffe081da0f35daa5c",
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "test_link_amendment_sha256": "a1823ae623273035921e13ae6450566208c399bd6263d56418663d880fd28501",
+  "amended_recipe_sha256": "cda26bb84a978c4bdef692cd7b2214d8ce301470ae1120e0f8d99ef68cad2120"
+}

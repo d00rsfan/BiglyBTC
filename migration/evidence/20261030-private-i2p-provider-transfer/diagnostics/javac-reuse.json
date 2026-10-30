@@ -1,0 +1,24 @@
+{
+  "javac_invocations": 0,
+  "reference_inputs": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/runs/r1/inputs.json",
+    "sha256": "0f011b52441cebc0eda1b2906b4abe1003e939da94c830f26cb09d706b37c5f9",
+    "bytes": 189720
+  },
+  "reference_classes": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/runs/r1/classes.json",
+    "sha256": "0459220ff33f961a72dff703aa00795cd1c4a649fee043df19ac6a30a2d9427d",
+    "bytes": 297
+  },
+  "original_javac_command": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/runs/r1/javac-command.json",
+    "sha256": "bcaabfe139a61059898fc554013e696bb6ebb5fbe7a92622f1f4270cfc5ad395",
+    "bytes": 1223
+  },
+  "classes_sha256": {
+    "RouterTorrentTracker.class": "0664ce82e892abfcb84e4e78854bfb0ce952553199020a3d39590b8d13c7268d",
+    "RouterTracker$Tracker.class": "1448a47e59e8c07b863287004c9b2a609d7d24605a44d37e4a9e5eaf12a52086",
+    "RouterTracker.class": "a86fc50ba1bb9350866b1937f4afbbce4007e445555ccdfc9b8871ac5458ef3c"
+  },
+  "reason": "Same exact Java sources/JAR and unchanged prior actual class images"
+}

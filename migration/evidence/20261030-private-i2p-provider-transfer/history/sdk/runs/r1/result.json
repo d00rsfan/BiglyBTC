@@ -1,0 +1,7 @@
+{
+  "status": "FAIL",
+  "native_runtime_approved": false,
+  "source_creation_sha256": "9d9b53b03f400df571a74963bbb37b07d561633eaefa21c104360c8806d98ce8",
+  "jobserver_makeflags": " -j3 --jobserver-auth=fifo:/tmp/GMfifo2486039 -- ATTEMPT=r1 OUTPUT=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1",
+  "failure": "RuntimeError('Actual command failed build')"
+}

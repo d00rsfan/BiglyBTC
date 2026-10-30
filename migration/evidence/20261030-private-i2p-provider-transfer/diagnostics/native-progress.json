@@ -1,0 +1,137 @@
+{
+    "elapsed_ms": 149594,
+    "leech": {
+        "admission": "5029828221656323018",
+        "bridge_port": 39767,
+        "bridge_sockets": 1,
+        "generation": "8152119985899084637",
+        "phase": 2,
+        "rejected_clients": "1",
+        "seeding": false,
+        "tracker_diagnostics": {
+            "alerts_drained": "145",
+            "alerts_uninspected": "0",
+            "announces": "3",
+            "announcing_to_trackers": true,
+            "current_alerts": [
+            ],
+            "current_alerts_omitted": 0,
+            "error": {
+                "category": "system",
+                "message": "Success",
+                "value": 0
+            },
+            "file_errors": "0",
+            "flags": "20447240",
+            "i2p_errors": "0",
+            "incomplete": false,
+            "paused": false,
+            "state": 3,
+            "status_available": true,
+            "torrent_errors": "0",
+            "tracker_count": 1,
+            "tracker_errors": "3",
+            "tracker_replies": "0",
+            "trackers": [
+                {
+                    "endpoint_count": 1,
+                    "endpoints": [
+                        {
+                            "enabled": true,
+                            "hashes": [
+                                {
+                                    "error": {
+                                        "category": "asio.misc",
+                                        "message": "End of file",
+                                        "value": 2
+                                    },
+                                    "fails": 3,
+                                    "start_sent": false,
+                                    "updating": false
+                                },
+                                {
+                                    "error": {
+                                        "category": "system",
+                                        "message": "Success",
+                                        "value": 0
+                                    },
+                                    "fails": 0,
+                                    "start_sent": false,
+                                    "updating": false
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "verified_bytes": "0"
+    },
+    "seed": {
+        "admission": "17823763455017158440",
+        "bridge_port": 41069,
+        "bridge_sockets": 1,
+        "generation": "14073407162928262072",
+        "phase": 2,
+        "rejected_clients": "2",
+        "seeding": true,
+        "tracker_diagnostics": {
+            "alerts_drained": "158",
+            "alerts_uninspected": "0",
+            "announces": "3",
+            "announcing_to_trackers": true,
+            "current_alerts": [
+            ],
+            "current_alerts_omitted": 0,
+            "error": {
+                "category": "system",
+                "message": "Success",
+                "value": 0
+            },
+            "file_errors": "0",
+            "flags": "20447240",
+            "i2p_errors": "0",
+            "incomplete": false,
+            "paused": false,
+            "state": 5,
+            "status_available": true,
+            "torrent_errors": "0",
+            "tracker_count": 1,
+            "tracker_errors": "3",
+            "tracker_replies": "0",
+            "trackers": [
+                {
+                    "endpoint_count": 1,
+                    "endpoints": [
+                        {
+                            "enabled": true,
+                            "hashes": [
+                                {
+                                    "error": {
+                                        "category": "asio.misc",
+                                        "message": "End of file",
+                                        "value": 2
+                                    },
+                                    "fails": 3,
+                                    "start_sent": false,
+                                    "updating": false
+                                },
+                                {
+                                    "error": {
+                                        "category": "system",
+                                        "message": "Success",
+                                        "value": 0
+                                    },
+                                    "fails": 0,
+                                    "start_sent": false,
+                                    "updating": false
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "verified_bytes": "131072"
+    }
+}

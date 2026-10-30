@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_BOUNDED_TRACKER_DIAGNOSTICS",
+  "basis_commit": "153799b30891dcb733be28fe5472a31334141426",
+  "source_paths": {
+    "preview/native/services/i2p_provider/owner.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/before/preview/native/services/i2p_provider/owner.hpp",
+      "before_sha256": "ef8df75725528f8de8a0b387fc8649b2027cd830a4769a6eaa1ecf7835a8bf24",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/staging/preview/native/services/i2p_provider/owner.hpp",
+      "after_sha256": "614d499215cf30152c6ee421025e711be911e7e81cead8d6f7d461015fbc98b6"
+    },
+    "preview/native/services/i2p_provider/owner.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/before/preview/native/services/i2p_provider/owner.cpp",
+      "before_sha256": "0e4df41394d70a6333276611f1dcc7bbab0f5a925003ea87048795dd14568d07",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/staging/preview/native/services/i2p_provider/owner.cpp",
+      "after_sha256": "10dcda44bb55b429b4d39cb138d55ca63eb24dddf57fba82cee36a73abd37a79"
+    },
+    "preview/native/tests/i2p_provider_transfer_probe.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/before/preview/native/tests/i2p_provider_transfer_probe.cpp",
+      "before_sha256": "f90aef6406f614666579e3c045d0ab43724ce63044f67718689acc16d9d6272f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/staging/preview/native/tests/i2p_provider_transfer_probe.cpp",
+      "after_sha256": "b9332fa20cbaef7357da9695eec7adefde51fdbb8ed62c335d96f4d8408419f1"
+    }
+  },
+  "artifacts_sha256": {
+    "changes.patch": "85179f1a7cce7582f432e1a7f150586c63769694e265aab8ae3a502a9724dcb6",
+    "NOTE.txt": "25b3d46f3135b1414f82c6b047e0b9e7060b6b84814886456fbe4b693f674ea9",
+    "staging/preview/native/tests/i2p_provider_transfer_probe.cpp": "b9332fa20cbaef7357da9695eec7adefde51fdbb8ed62c335d96f4d8408419f1",
+    "staging/preview/native/services/i2p_provider/owner.cpp": "10dcda44bb55b429b4d39cb138d55ca63eb24dddf57fba82cee36a73abd37a79",
+    "staging/preview/native/services/i2p_provider/owner.hpp": "614d499215cf30152c6ee421025e711be911e7e81cead8d6f7d461015fbc98b6",
+    "before/preview/native/tests/i2p_provider_transfer_probe.cpp": "f90aef6406f614666579e3c045d0ab43724ce63044f67718689acc16d9d6272f",
+    "before/preview/native/services/i2p_provider/owner.cpp": "0e4df41394d70a6333276611f1dcc7bbab0f5a925003ea87048795dd14568d07",
+    "before/preview/native/services/i2p_provider/owner.hpp": "ef8df75725528f8de8a0b387fc8649b2027cd830a4769a6eaa1ecf7835a8bf24"
+  },
+  "observation_only": true,
+  "assertions_deadlines_protocol_authority_unchanged": true,
+  "author_execution": false,
+  "native_mutation": false
+}

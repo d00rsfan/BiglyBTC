@@ -1,0 +1,55 @@
+--- parent/run.py
++++ child/run.py
+@@ -13,7 +13,7 @@
+ def provider(args):
+  approval=a.load(args.provider_approval);record=a.load(args.provider_record);runtime=a.load(args.provider_runtime_manifest);candidate=args.provider_record.parent
+  assert a.sha(args.provider_approval)==args.provider_approval_sha256 and approval['schema']=='BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_V1'
+- assert approval['source_capsule_sha256']==record['source_capsule_sha256']=='85985542dd890cdb29323417b277922122429d0769dcf40666617567f1507494'
++ assert approval['source_capsule_sha256']==record['source_capsule_sha256']=='9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671'
+  assert record['schema']=='BIGLYBTC_PRIVATE_I2P_OWNER_SOURCE_RECORD_V1' and record['status']=='BUILT_DIRECTLY_TESTED_NOT_APPROVED' and record['native_runtime_approved'] is False and record['shipping_approved'] is False
+  assert approval['source_build_record_sha256']==runtime['source_build_record_sha256']==a.sha(args.provider_record) and approval['runtime_manifest_sha256']==a.sha(args.provider_runtime_manifest) and approval['review_sha256']==a.sha(args.provider_review)
+  assert pathlib.Path(runtime['source_build_record']).resolve()==args.provider_record.resolve() and runtime['native_runtime_approved'] is False
+@@ -27,7 +27,7 @@
+  for name,pin in record['evidence_sha256'].items():assert a.sha(candidate/name)==pin,name
+  for name,pin in record['reviewed_inputs_sha256'].items():assert a.sha(name)==pin,name
+  source=pathlib.Path(record['source_root']);assert {str(p.relative_to(source)):a.sha(p) for p in source.rglob('*') if p.is_file()}==record['source_inputs_sha256']
+- capsule=a.load(a.R/'build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/manifest.json')
++ capsule=a.load(a.R/'build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/amendments/executor-workguard/manifest.json')
+  for name,row in capsule['source_paths'].items():assert record['source_inputs_sha256'][name]==row['after_sha256'],name
+  for name,pin in headers.items():assert a.sha(source/'include'/name)==pin,name
+  exports=(candidate/'exports.txt').read_text();assert all(re.search(r'(?m)^[0-9a-fA-F]+ [TW] '+re.escape(name)+r'$',exports) for name in record['required_exports'])
+--- parent/adopt.py
++++ child/adopt.py
+@@ -5,8 +5,8 @@
+ assert hashlib.sha256((PREVIOUS/'adopt.py').read_bytes()).hexdigest()=='86247abd5262e09562d53f951c2e9e61375bdad2109c9ecbcecefd0ada10a5f3'
+ spec=importlib.util.spec_from_file_location('previous_source_helpers',PREVIOUS/'adopt.py');p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)
+ PARENT=p.PARENT;R=p.R;N=p.N;BINDING=p.BINDING;sha=p.sha;load=p.load;write=p.write;ref=p.ref;protected=p.protected;shipping=p.shipping;snapshot=p.snapshot
+-SOURCE='f07ea2ac16988d1a389bd61975cb6ff0ac6a9184'
+-ADOPTION=pathlib.Path('/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/provider-pin-adoption.json')
++SOURCE='9f46cf05d133624e48c6d60d45d2c503a6141ff9'
++ADOPTION=pathlib.Path('/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/provider-test-lifetime-pin-adoption.json')
+ EXPECTED_ORIGINAL={'head': 'cb8c6cb9bb97916cbc7e80338a017200ffc3e71f', 'index_sha256': 'ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4'}
+ def pins():
+  cap=load(W/'manifest.json')
+@@ -16,7 +16,7 @@
+ 
+ def source_guard(source,adoption):
+  pins();assert source==SOURCE==adoption['source_commit'] and adoption==load(ADOPTION)
+- assert adoption['optional_provider_source_capsule_sha256']=='85985542dd890cdb29323417b277922122429d0769dcf40666617567f1507494'
++ assert adoption['optional_provider_source_capsule_sha256']=='9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671'
+  assert sha(N/adoption['path'])==adoption['after_sha256']
+  value=snapshot(source);assert value['files_sha256']==load(W/'source-map.json')
+  return value
+--- parent/NEXT.txt
++++ child/NEXT.txt
+@@ -10,8 +10,8 @@
+ No nested explicit build parallel limit. Tests remain serial and globally locked.
+ Invocation (all provider arguments must be actual absolute paths supplied by root):
+ make --jobserver-style=fifo -j3 -f <this-directory>/jobs.mk all ATTEMPT=r1 \
+- SOURCE_COMMIT=f07ea2ac16988d1a389bd61975cb6ff0ac6a9184 \
+- ADOPTION=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/provider-pin-adoption.json \
++ SOURCE_COMMIT=9f46cf05d133624e48c6d60d45d2c503a6141ff9 \
++ ADOPTION=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/provider-test-lifetime-pin-adoption.json \
+  PROVIDER_RECORD=<actual-candidate-r2/source-build-record.json> \
+  PROVIDER_APPROVAL=<actual-candidate-r2/root-private-owner-approval.json> \
+  PROVIDER_APPROVAL_SHA256=<actual-sha256> \

@@ -1,0 +1,168 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_NOT_BUILT_OR_EXECUTED",
+  "native_readonly_basis": "04b6287a38cec6bd123e2648ada278ea348b85db",
+  "source_paths": {
+    "preview/native/tests/i2p_provider_transfer_probe.cpp": {
+      "before": null,
+      "after": "2858c43dd8bec438894b79b00c6577352c37a48753948f3961c305af4624dd96",
+      "staged": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/probe.cpp"
+    }
+  },
+  "cmake_fragments": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/CMakeLists.txt",
+      "sha256": "df5f6cb7f976cd898a5f476cd10da73e7a2ce28b6adceb1df93581d773b0bf9e",
+      "destination": "preview/native/tests/CMakeLists.txt",
+      "basis_sha256": "2940c110043dc090a2d16433306eabd30b30befe53b8da5bbedcd6a749891bc9",
+      "append_only": true
+    }
+  ],
+  "artifacts": {
+    "RouterTorrentTracker.java": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/RouterTorrentTracker.java",
+      "sha256": "e4dae8c27052ce7e5a0286991cc0ef611c45ac7168486ce90bce8d5542c36b14",
+      "bytes": 17103
+    },
+    "probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/probe.cpp",
+      "sha256": "2858c43dd8bec438894b79b00c6577352c37a48753948f3961c305af4624dd96",
+      "bytes": 18186
+    },
+    "CMakeLists.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/CMakeLists.txt",
+      "sha256": "df5f6cb7f976cd898a5f476cd10da73e7a2ce28b6adceb1df93581d773b0bf9e",
+      "bytes": 939
+    },
+    "run.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/run.py",
+      "sha256": "61b1f7f6a3c19134f751483072cfd6fff0934b2efcec9c1122f30ce87ba65c1d",
+      "bytes": 23278
+    },
+    "ADOPTION.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/ADOPTION.txt",
+      "sha256": "a1595e4714f49919ea5a4a05759900e86ff83ebc242e530f510da48fcb78208c",
+      "bytes": 2221
+    },
+    "source-pins.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/source-pins.json",
+      "sha256": "c539d84b9c7a493e7f21b1af980c0105af1a89f74134959daf1539cff54da0a0",
+      "bytes": 6389
+    },
+    "parent-delta.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/parent-delta.patch",
+      "sha256": "e6a566eae2551807d3743dd10567c34fde035ef808e4cbf78235e12742c5753a",
+      "bytes": 799
+    }
+  },
+  "static_checks": {
+    "python_ast": "PASS",
+    "java_probe_cmake_byte_exact_parent": true,
+    "native_or_helper_compile": false,
+    "author_namespace_or_subject_execution": false,
+    "inside_subject_body_ast_exact_except_fence_arguments": true
+  },
+  "root_required_gates": [
+    "new private SDK/source/artifact review and approval",
+    "adopted actual native source with optional owner+probe target",
+    "completed GCC source/images result containing exact probe",
+    "one bounded Java helper compile and actual isolated router run",
+    "actual wrong-capability and held-gate control predicates before positive closeout"
+  ],
+  "scope": [
+    "genuine saved pure I2P profiles and actual provider admissions",
+    "two-sided tracker-discovered peer hashes with real Host38/39",
+    "actual verified file transfer and joined inode/byte readback",
+    "same-bytes key replacement withdraws same generation",
+    "actual both-owner wrong capability rejection without authority change",
+    "actual accepted unauthenticated HELLO expiry while genuine same-OFD source gate held",
+    "Actual acceptance all-five parent-vs-child namespace proof using successful72e fence; single launch/no extra auth"
+  ],
+  "unqualified": [
+    "public transports/tunnels/discovery",
+    "Host/default activation",
+    "never-discovered inbound peers",
+    "late tracker reply"
+  ],
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/manifest.json",
+    "sha256": "5ae6ca3d3a1d1672e533609d5f2a68dfeb3cd490bcf8a854a1726e9b9d63570e",
+    "bytes": 9360
+  },
+  "production_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/amendments/profile-fixture-layout/manifest.json",
+    "sha256": "a00be1d8aa94780c69253e51a09a993c960eb2333e32c7d87e0418e794a62287",
+    "bytes": 18789
+  },
+  "provider_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/manifest.json",
+    "sha256": "8f12f51c1426d4de59c9e9df6f9c2cb767001fe2574b6bc6668b8ce4e6722dc9"
+  },
+  "namespace_preflight": {
+    "manifest": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/manifest.json",
+      "sha256": "72e88a4e1cb3fe052bc6c7e64a99b2b495d1c2881fbd39c94952fba3a9789b72",
+      "bytes": 4161
+    },
+    "source": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/preflight.py",
+      "sha256": "18cf05fa18f3a624a7de2d3ae779879da21a3353b3ee1b71b0295afee979bbe4",
+      "bytes": 10004
+    },
+    "root_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/root-review.json",
+      "sha256": "8b7405231615e4dd1afb3a3d1e669704929e7cb5caa8b2aebc015b6e4496e471",
+      "bytes": 467
+    },
+    "result": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/result.json",
+      "sha256": "2edca867b5acf4b434ff37a81bdfd7254872dd1189552262719da58423bd7f01",
+      "bytes": 551
+    },
+    "inputs": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/inputs.json",
+      "sha256": "8612a6638f9777c4cb4331b20a8ac9c95668f375fa431acdef45d0920db8e241",
+      "bytes": 2299
+    },
+    "parent": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/parent.json",
+      "sha256": "afdb0929418977f69d0e9e18f3e1b78dfccf4305d2d8ef53b903ac30070c3be3",
+      "bytes": 787
+    },
+    "preflight": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/preflight.json",
+      "sha256": "593f26352fa47ed617c03d1c7ec905dcdb53e2ecf4b042ac76058763840f21c6",
+      "bytes": 2212
+    },
+    "stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  },
+  "actual_environment_credit_only": {
+    "status": "PASS_FIVE_NAMESPACE_LOOPBACK_PREFLIGHT",
+    "result": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/result.json",
+      "sha256": "2edca867b5acf4b434ff37a81bdfd7254872dd1189552262719da58423bd7f01",
+      "bytes": 551
+    },
+    "source": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/preflight.py",
+      "sha256": "18cf05fa18f3a624a7de2d3ae779879da21a3353b3ee1b71b0295afee979bbe4",
+      "bytes": 10004
+    },
+    "transfer_subject_credit": false
+  },
+  "bookkeeping_change": "Retarget implementation to root-applied test fixture layout map only; all executable acceptance/Java/native/CMake bytes remain exact5ae6. Provider8f12/fiveNS actual preflight unchanged.",
+  "root_fixture_layout_fix": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/root-fixture-layout-fix.json",
+    "sha256": "43e999404c4e54ffd37ec2127ca1aa34e1194d9d2bdb2c6bf000029c4f78c906",
+    "bytes": 481
+  }
+}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="1"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="15"
+	timestamp="2026-10-30T11:36:04"
+	>
+	<testcase name="socks4a-provider" classname="socks4a-provider" time="15.3641" status="run">
+		<properties/>
+		<system-out>********* Start testing of Socks4aProviderTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : Socks4aProviderTests::initTestCase()
+PASS   : Socks4aProviderTests::actualHttpFactoryRoutes(numeric4-USERID)
+PASS   : Socks4aProviderTests::actualHttpFactoryRoutes(remote4a-unresolvable-HTTP)
+PASS   : Socks4aProviderTests::actualHttpFactoryRoutes(remote4a-localhost-HTTP)
+PASS   : Socks4aProviderTests::actualHttpFactoryRoutes(remote4a-refused)
+PASS   : Socks4aProviderTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 15329ms
+********* Finished testing of Socks4aProviderTests *********
+</system-out>
+	</testcase>
+</testsuite>

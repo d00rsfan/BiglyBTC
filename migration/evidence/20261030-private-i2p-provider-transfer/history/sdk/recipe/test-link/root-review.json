@@ -1,0 +1,9 @@
+{
+  "status": "ROOT_REVIEWED_TEST_ONLY_HIDDEN_OBJECT_LINK_AMENDMENT",
+  "manifest_sha256": "e21372e7705712a4415840bb13ba61b1fb36ae02c53d9151ed713ffb264c75d4",
+  "all_scripts_and_hook_read": true,
+  "production_source_and_31_ABI_unchanged": true,
+  "reuses_only_exact_owned_objects": true,
+  "r1_preserved": true,
+  "runtime_credit": false
+}

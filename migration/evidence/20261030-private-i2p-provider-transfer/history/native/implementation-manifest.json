@@ -1,0 +1,271 @@
+{
+  "schema": "BIGLYBTC_I2P_PROVIDER_ATTACHMENT_SOURCE_V1",
+  "status": "SOURCE_ONLY_RUNTIME_PENDING",
+  "source_basis": "Effective88df27-path map plus root-applied test-only fixture8e9e248eea56f345f1bef169ea0bfcf7184cc7c3; separate rootaf1 CMake fixes are not this capsule.",
+  "source_paths": {
+    "preview/native/engine/managed_storage.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/before/preview/native/engine/managed_storage.cpp",
+      "before_sha256": "55c52e4c38d4ebbf2538a7998585b6d4d7f67145ee9b69bba6fa190b634de786",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/engine/managed_storage.cpp",
+      "after_sha256": "43933345c908c789989f4ff8fd00ece041c21927e6c1a93ebd1eeb03f2d33be8"
+    },
+    "preview/native/engine/managed_storage.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/before/preview/native/engine/managed_storage.hpp",
+      "before_sha256": "effe16200a3fb1d48bc0f9a1cf461cf1440d7ed184113a7600493e603fcd5a27",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/engine/managed_storage.hpp",
+      "after_sha256": "6976dac193f1f14b6572a9b32adf79649f3c70a35cfec02eed14db090e767e0c"
+    },
+    "preview/native/engine/owned_i2p_policy.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/engine/owned_i2p_policy.cpp",
+      "after_sha256": "dacab1f9cbb225861fe10a2eef1cfcc7cbf302edb0f1006da8eb25a23677d8d3"
+    },
+    "preview/native/engine/owned_i2p_policy.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/engine/owned_i2p_policy.hpp",
+      "after_sha256": "28dd592c64d747838409c081855fca97235af6aa30725f0d842f900561cfeb5b"
+    },
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/before/preview/native/services/i2cp_channel/channel.cpp",
+      "before_sha256": "ff119eb6d95644c435da11052aecc4a9ca97fb63c8b0803e03021fe7f94556b7",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2cp_channel/channel.cpp",
+      "after_sha256": "760989895b7b531f22d0629fd4dbd9f48d07f84da62ab0df12de17dbc88b707d"
+    },
+    "preview/native/services/i2cp_channel/channel.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/before/preview/native/services/i2cp_channel/channel.hpp",
+      "before_sha256": "3215a1b4aaffd99bc84d1876f5dd7e82b9f024af8f1ca1c1133ea8de6a79678d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2cp_channel/channel.hpp",
+      "after_sha256": "05a14fcad5805a978982c832c139290b7d42e1b0c79cc11b567b0e65fe339606"
+    },
+    "preview/native/services/i2cp_channel/effect_authority.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2cp_channel/effect_authority.hpp",
+      "after_sha256": "6738d96d6afeb91572e42e815a426e5da1828fef884414e97f038bdc0d67d78e"
+    },
+    "preview/native/services/i2cp_channel/managed_streams.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/before/preview/native/services/i2cp_channel/managed_streams.inc",
+      "before_sha256": "0ff6b9eae159fe131a1bad4ba84310c63339a2973d985fea52a3ed8dc1f5145f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2cp_channel/managed_streams.inc",
+      "after_sha256": "77903a286ccffbc0d1d31a1baf165a4df9383e7b950f706f4a69272a3111c8de"
+    },
+    "preview/native/services/i2cp_channel/owned_effects.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2cp_channel/owned_effects.inc",
+      "after_sha256": "3168ee8801e555e5bba8b0d2d594b74aba35e9074f8b0d0cbe9cd4474001f1e9"
+    },
+    "preview/native/services/i2cp_channel/owned_lookup.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2cp_channel/owned_lookup.inc",
+      "after_sha256": "75d14df10aba992338e4784023a8f1da11a782e25d79242cf703fb4e6fc2f0c3"
+    },
+    "preview/native/services/i2cp_channel/receive.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/before/preview/native/services/i2cp_channel/receive.inc",
+      "before_sha256": "00e158022da3a780f958cd723285257358e21b533b6975fc0d137992f4b429b5",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2cp_channel/receive.inc",
+      "after_sha256": "87c5f16f2a258549bac056996480251e68b1b98392ca5f86645c48fe0089f0d3"
+    },
+    "preview/native/services/i2cp_channel/tracker.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/before/preview/native/services/i2cp_channel/tracker.inc",
+      "before_sha256": "8f860db013824fba099af9d42035f8881f26a561ba11bfc371ecd45c4907f575",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2cp_channel/tracker.inc",
+      "after_sha256": "ee2afa60358545df49f2293b09d2f90bb9002605c228e5fb534c3026106885af"
+    },
+    "preview/native/services/i2p_provider/bridge.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/bridge.cpp",
+      "after_sha256": "04146b7645dedce9b0fd25d3bb0429d9066d82c55a53a91cf4b3f8908f2ae86b"
+    },
+    "preview/native/services/i2p_provider/bridge.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/bridge.hpp",
+      "after_sha256": "19a9dc346e42d444aa1953e4fe901c47b806a648320057f71da1b312797524b3"
+    },
+    "preview/native/services/i2p_provider/owner.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/owner.cpp",
+      "after_sha256": "0e4df41394d70a6333276611f1dcc7bbab0f5a925003ea87048795dd14568d07"
+    },
+    "preview/native/services/i2p_provider/owner.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/owner.hpp",
+      "after_sha256": "ef8df75725528f8de8a0b387fc8649b2027cd830a4769a6eaa1ecf7835a8bf24"
+    },
+    "preview/native/services/i2p_provider/owner_runtime_guard.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/owner_runtime_guard.cpp",
+      "after_sha256": "64c59a21155dcb5e6866d2ae26e4971b49f12c01f628072a032ad39308c5d11f"
+    },
+    "preview/native/services/i2p_provider/owner_runtime_guard.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/owner_runtime_guard.hpp",
+      "after_sha256": "ec7d2d9a7c5d515b5adc79fef3a735f5bdc4db62cba0398db4c9c82d0bc61f07"
+    },
+    "preview/native/services/i2p_provider/profile_source.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/profile_source.cpp",
+      "after_sha256": "4075718ceccedab65562d9f088b5be705bcccf48050043ead0cf7ebde73a9b1f"
+    },
+    "preview/native/services/i2p_provider/profile_source.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/profile_source.hpp",
+      "after_sha256": "ff575e49b0c5af878940839cec0688d76f8f7dccd0a698f2ddadf31ec949a060"
+    },
+    "preview/native/services/i2p_provider/sam_protocol.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/sam_protocol.cpp",
+      "after_sha256": "d9d8cda91210d7814aada36f64454d1acd14eeae6db20f7337d502334706b8a9"
+    },
+    "preview/native/services/i2p_provider/sam_protocol.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/sam_protocol.hpp",
+      "after_sha256": "d42567455f9b667e579ad559390e6101ffa0517f5d737999bd2a16435dbee863"
+    },
+    "preview/native/services/i2p_provider/source_permit.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/source_permit.hpp",
+      "after_sha256": "2232c9dba856d4d5ea30755f5909cb706de221a01f884e94229c7acc12bdee70"
+    },
+    "preview/native/services/i2p_provider/verify-owner-approval.py": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/verify-owner-approval.py",
+      "after_sha256": "feff3eeed5e531aeebea530d1127ef03178c33d18458b78405f9bc975a7c0b42"
+    },
+    "preview/native/tests/owned_i2p_profile_fixture.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/tests/owned_i2p_profile_fixture.hpp",
+      "before_sha256": "d1414a2741166180bcb9904c4911be8fd4360e938e393150dd07ab096ab2f31c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/amendments/profile-fixture-layout/native/staging/preview/native/tests/owned_i2p_profile_fixture.hpp",
+      "after_sha256": "1d93daf79303c9bb762e178938879e14ba7141504aa17c5fc0bee2114eedf301"
+    },
+    "preview/native/tests/owned_i2p_source_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/tests/owned_i2p_source_tests.cpp",
+      "after_sha256": "829ac7e393e292ec8b82300eac5a1e72f0de42da955fd080796e9d1c3e2dc258"
+    },
+    "preview/native/tests/owned_sam_protocol_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/tests/owned_sam_protocol_tests.cpp",
+      "after_sha256": "e626c6b3d9f6f80498ac458e525e11410580e14176b2f50e72ca554f0b4a8239"
+    }
+  },
+  "inputs": {
+    "proposal": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/PROPOSAL.txt",
+      "sha256": "870958d2f9d8b3692eb85923e0c27f4ab3320d211d3ba3d100fe2c12fa2c2416"
+    },
+    "original_source_pins": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/source-pins.json",
+      "sha256": "861b31bd4567a46b2d4fcc40fe4b78121d0614a8c25deb49cb3944c9fcd285ca"
+    },
+    "manager": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/implementation/amendments/hard-deadline-and-renewal/manifest.json",
+      "sha256": "1f911001b6a0cbf7e78bcd477a2da3b38b9f35b9a8d6b489f677c14d7ce7be66"
+    },
+    "manager_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029-review/review.json",
+      "sha256": "c6ab107117f1506926a713475a9298d480220e3a4ed37b185edd29abea0c8fee"
+    },
+    "manager_acceptance": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-manager-20261029/acceptance/manifest.json",
+      "sha256": "13e56c1acbbc8abc8dc70eebec36f116b94bb02900f8aefaa093c0d3aa5f188c"
+    },
+    "provider_child": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/manifest.json",
+      "sha256": "8f12f51c1426d4de59c9e9df6f9c2cb767001fe2574b6bc6668b8ce4e6722dc9"
+    },
+    "runtime_guard_reference": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/engine/persistent_runtime_guard.cpp",
+      "sha256": "d3cabb49ef5ffbe6e085534699f5eb11f0af10a7b8e7bcacca10395f8238729a"
+    },
+    "parent_attachment": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/manifest.json",
+      "sha256": "33c3bde8f972e97e44c352e1ed9784276f8310fd66baf362ce6e7940420c8cfc"
+    },
+    "root_fixture_layout_fix": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/root-fixture-layout-fix.json",
+      "sha256": "43e999404c4e54ffd37ec2127ca1aa34e1194d9d2bdb2c6bf000029c4f78c906",
+      "bytes": 481
+    }
+  },
+  "provider_child": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/manifest.json",
+    "sha256": "8f12f51c1426d4de59c9e9df6f9c2cb767001fe2574b6bc6668b8ce4e6722dc9"
+  },
+  "cmake_fragments": [
+    {
+      "path": "preview/native/engine/CMakeLists.txt",
+      "target": "biglybtc_local_engine",
+      "append_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/cmake/engine.CMake.fragment",
+      "append_sha256": "1949b294a28156375f1fa2aef766963051aadbae2aad1dab7e3d46bca72af53b"
+    },
+    {
+      "path": "preview/native/services/CMakeLists.txt",
+      "targets": [
+        "biglybtc_owned_sam_protocol",
+        "biglybtc_owned_i2p_source",
+        "biglybtc_i2p_provider_owner"
+      ],
+      "append_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/cmake/services.CMake.fragment",
+      "append_sha256": "0bed4419b6728a9819ff426f9907d59017c64657ec8a9a5dd091473a4595e784"
+    },
+    {
+      "path": "preview/native/tests/CMakeLists.txt",
+      "targets": [
+        "biglybtc-owned-sam-protocol-tests",
+        "biglybtc-owned-i2p-source-tests"
+      ],
+      "ctests": [
+        "pure-owned-sam-protocol",
+        "owned-i2p-profile-source"
+      ],
+      "append_path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/cmake/tests.CMake.fragment",
+      "append_sha256": "727c59b6a44d709f1c3d33c7926325667b79510e7d3e5f29487c6dfe6635298d"
+    }
+  ],
+  "artifacts_sha256": {
+    "native/staging/preview/native/tests/owned_i2p_profile_fixture.hpp": "1d93daf79303c9bb762e178938879e14ba7141504aa17c5fc0bee2114eedf301",
+    "parent-delta.patch": "a4e17be499f5e64986151ce1866b14b32a08732262fdb7c02b741e32ee8e8f14",
+    "AMENDMENT.txt": "eafdbb78d4d1044604eaa5f2e88bcbe7498d5e320c445344d355b6cf400296df"
+  },
+  "author_executions": [],
+  "qualification_prerequisites": [
+    "actual manager1f911 acceptance13e56",
+    "new exact optional31-export provider SDK/artifact root approval",
+    "native source/profile/default-path regressions",
+    "two-provider original-manager transfer acceptance"
+  ],
+  "registry_state_advanced": false,
+  "public_or_default_backend_activated": false,
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/manifest.json",
+    "sha256": "88df57a668058b4b16f21f7a74d278e6d0f16a93abb5abbe997b721081dc9773",
+    "bytes": 23681
+  },
+  "parent_delta_paths": [
+    "preview/native/tests/owned_i2p_profile_fixture.hpp"
+  ],
+  "inherited_artifacts_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/manifest.json",
+    "sha256": "88df57a668058b4b16f21f7a74d278e6d0f16a93abb5abbe997b721081dc9773",
+    "bytes": 23681
+  },
+  "actual_root_fixture_commit": "8e9e248eea56f345f1bef169ea0bfcf7184cc7c3"
+}

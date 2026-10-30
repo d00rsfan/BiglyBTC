@@ -1,10 +1,10 @@
 # Whole Solution C++ Migration Plan
 
-Continue the entire plan autonomously without chapter or milestone stops, as requested on 2026-10-28. Preserve the running Java application and real profile/payload. Read [the compact active state](migration/ACTIVE.md) first; batch related implementation and focused validation, retain build logs and inspect failures/status only.
+Latest user boundary (2026-10-30): finish the next explicit private I2P provider/owner section and stop. That section is now qualified; do not start another chapter. Preserve the running Java application/profile, main-only milestone commits and token-efficient batched checks. Read [the current state](migration/ACTIVE.md).
 
-Latest qualified native source `6726a4cf7b017ac31d6aeede15f339c3ec2b71f7` adds normal direct DHT receiving and owned LeaseSet2 submission; seven affected suites passed on three compiler/sanitizer lanes, plus private runtime and actual Java-object checks. Whole-application products were freshly built on GCC only. See [current state](migration/STATE.md); whole migration and release/performance gates remain open.
+Latest qualified native source `9f46cf05d133624e48c6d60d45d2c503a6141ff9` passes SDK9, native GCC11/Clang11/leak-enabled ASan+UBSan11/default4, both hosted workflows and a real tracker-discovered two-profile131072-byte I2P transfer with source withdrawal and joined disk/inode verification. [Review](migration/evidence/20261030-private-i2p-provider-transfer/REVIEW.md). The default runtime/dist are unchanged; full migration, Host/UI/public/multihop and performance gates remain open.
 
-Earlier progress and stop-boundary notes are preserved verbatim in [the historical status archive](migration/history/plan-status-prefix-through-20261028.md); those stops are superseded. The objective, phase definitions and acceptance requirements below are unchanged.
+Earlier progress and stop-boundary notes are preserved verbatim in [the historical status archive](migration/history/plan-status-prefix-through-20261028.md); the current stop boundary above is authoritative. The objective, phase definitions and acceptance requirements below are unchanged.
 
 ## Objective and Completion Boundary
 
@@ -1730,3 +1730,12 @@ Source `3d58f1c6f4bfe32ec4ea86aae748d39a4afdf742` qualifies explicit Known endpo
 Six focused private subjects use six exact current GCC ELFs and per-PID private Qt/provider initialization proof: five initial subjects plus a later authenticated Public continuation with the same immutable candidate. They cover owned manager, actual Java manager, Known hints, isolated Public hint/export, twelve-frame source pressure, and retained legacy HTTP. The actual four-application manager includes two concurrent HTTP streams, inbound BT-shaped handshake/keepalives, late cancelled peer bytes and genuine renewal across at least125s. The source-backed Java fixture EOF/close callback fence and measured JVM-startup allowance preserve real ACK and byte checks; earlier failed runs remain failures. Broader intermittent SYN causality, stability and performance parity remain unestablished. The b086 modified JAR remains distinct from official source.
 
 Further implementation is paused at the user’s request after this milestone. Whole plan remains incomplete. Public/default/Host and real remote tunnel activation, contact churn/alias replacement, protocol beyond51..55, broader tracker/backend integration and resource/performance parity remain open. Known import remains unseeded until actual self integration; supplied hints never become observed/persisted endpoint protocol facts. No SDK or chat milestone is advanced.
+
+
+## 2026-10-30 — Explicit private I2P owners and provider transfer
+
+Qualified source `9f46cf05d133624e48c6d60d45d2c503a6141ff9` adds explicit private I2P owners using original-profile keys/metadata/storage and real tracker-discovered torrent exchange. Nine fresh SDK controls and native11 GCC/11 Clang/11 leak-enabled ASan+UBSan plus default4 passed. A real isolated Java-router/tracker run verified both131072-byte payloads/inodes after joins and passed wrong-capability, held-source expiry and key-replacement withdrawal controls. [Review](migration/evidence/20261030-private-i2p-provider-transfer/REVIEW.md).
+
+The optional provider remains separate from default355/f746. Default Host/UI, public discovery/multihop, late tracker-response, whole plugin/client and performance parity remain open. The existing119-leaf dist remains manifest `aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b`; source qualification is not a dist promotion. Original Java HEAD/index and live profile/payload are preserved.
+
+This requested section is complete. Stop here; no next chapter, DATA or chat/rooms was started. Both registry components remain in progress with original coverage nulls/baselines unchanged.

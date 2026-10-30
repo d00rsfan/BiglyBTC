@@ -1,0 +1,66 @@
+{
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/manifest.json",
+    "sha256": "0625c0b763f4e9a9eac4ba8999fa0623f99603f4c90e06c6c6303231b6592f37",
+    "bytes": 2214
+  },
+  "failed_parent_run": {
+    "result.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/runs/r1/result.json",
+      "sha256": "5b63ae89a8cd7f324f029eb5a01a1e04eba3b1f5ed9354a9b36d6498a4a2e84f",
+      "bytes": 410
+    },
+    "inputs.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/runs/r1/inputs.json",
+      "sha256": "873f688ae3ba79801ae492a2e5ae11b50bf71aabcb409ae41b36ddea5682ed8d",
+      "bytes": 2112
+    },
+    "parent.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/runs/r1/parent.json",
+      "sha256": "afdb0929418977f69d0e9e18f3e1b78dfccf4305d2d8ef53b903ac30070c3be3",
+      "bytes": 787
+    },
+    "stdout.log": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/runs/r1/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "stderr.log": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/runs/r1/stderr.log",
+      "sha256": "4762b285ab86417c81f46d9f94c5b79b6f4d777ff6fa752e127aafc2799377c2",
+      "bytes": 73
+    }
+  },
+  "failure_scope": "bwrap could not resolve nsfs descriptor source /proc/self/fd/3; no child/fence/JVM/native/router ran. Not proof that five namespaces are unsupported.",
+  "artifacts": {
+    "preflight.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/preflight.py",
+      "sha256": "18cf05fa18f3a624a7de2d3ae779879da21a3353b3ee1b71b0295afee979bbe4",
+      "bytes": 10004
+    },
+    "parent-delta.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/parent-delta.patch",
+      "sha256": "25a908781912533abc8457d4c1074eba9dff4fdb5d142bce501fa589005d486a",
+      "bytes": 5187
+    }
+  },
+  "change": "Supervisor retains five actual parent namespace FDs, verifies fstat and NS_GET_NSTYPE before AND after bwrap. Bind their captured regular JSON read-only over /work/parent.json after work directory bind. Inside pins exact snapshot SHA from command then compares each actual own namespace inode/type against captured actual parent; no numerical FD handoff or nsfs bind.",
+  "unchanged": "Five namespace flags, all capability sets zero, NNP, loopback UP/address/routes/unreachable controls, no subjects/admin/fallback, 20s timeout.",
+  "bwrap": {
+    "path": "/usr/bin/bwrap",
+    "sha256": "0abea81db798ebf6b4742ac0664802d97521547a353c2a0dbdc21d76cbbfd2c0",
+    "bytes": 80424
+  },
+  "root_command": [
+    "/usr/bin/python3",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/preflight.py",
+    "--output",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1"
+  ],
+  "expected_status": "PASS_FIVE_NAMESPACE_LOOPBACK_PREFLIGHT",
+  "static_checks": {
+    "python_ast": "PASS",
+    "namespace_or_subject_execution": false
+  }
+}

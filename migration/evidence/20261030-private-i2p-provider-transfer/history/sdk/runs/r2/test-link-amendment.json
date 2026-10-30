@@ -1,0 +1,25 @@
+{
+  "manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-recipe/amendments/effective-tracker-port/amendments/hidden-test-objects/manifest.json",
+    "sha256": "e21372e7705712a4415840bb13ba61b1fb36ae02c53d9151ed713ffb264c75d4"
+  },
+  "runner_sha256": "cda26bb84a978c4bdef692cd7b2214d8ce301470ae1120e0f8d99ef68cad2120",
+  "parent_recipe_sha256": "d5a9fc98371125a4a41720edfab1b4d8d387bcbd430bcc1e8aaaf236fe6c8329",
+  "failed_r1_result_sha256": "4dde5ae702c0bcfccadf38ea96c50846789f8d9427a4a985de42617e96e5fe60",
+  "provider_source_manifest_sha256": "8f12f51c1426d4de59c9e9df6f9c2cb767001fe2574b6bc6668b8ce4e6722dc9",
+  "reused_files_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/CMakeFiles/torrent-rasterbar.dir/src/i2p_stream.cpp.o": "49352e2393199532205a20a03112a1b92b5483280e1d59c782e40b040ee6558a",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/CMakeFiles/torrent-rasterbar.dir/src/proxy_base.cpp.o": "90250a39e6b8ace5ea1afb4604fec014fdda1a456491d410f63435f5b90ffa5d",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/build/libtorrent-rasterbar.so.2.0.12": "2f89e779cf11bd1ace159307d3995fe1fd3aca5e594957844a11df2df7df8e4b",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/creation.json": "9d9b53b03f400df571a74963bbb37b07d561633eaefa21c104360c8806d98ce8",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/src/i2p_stream.cpp": "0b4c468c01fe2097c942e7f35ac1eb440cbaf34cc3c6a02cd3c302bdf5747e44",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source/src/proxy_base.cpp": "4f91ce2985054727e479289932b2949058a003e2b609251d258a2e1a6f23a664",
+    "/usr/bin/x86_64-linux-gnu-g++-16": "ca3bb855e752ea0b36544ef684e542fcf04273d8c229b1a96a9c160587e41c62",
+    "/usr/bin/ninja": "91e9548850cda2799facfdaa7abe33f9e978832f85e98212255708a7bbe437f2",
+    "/usr/bin/cmake": "6e1dccda39845415d68eabb934c598998949c99ec4668625d571aee1827b05c7"
+  },
+  "production_or_sdk_source_changed": false,
+  "provider_dso_relinked": false,
+  "new_test_link_only": true,
+  "cache_after_sha256": "d10edc6dfa6d737fad71e9a8d8309a880795dc9a9f00f87ab03d7db69b6bcab8"
+}

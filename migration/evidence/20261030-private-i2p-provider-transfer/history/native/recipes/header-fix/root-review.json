@@ -1,0 +1,14 @@
+{
+  "status": "ROOT_REVIEWED_ONE_LINE_HEADER_FIX_AND_INCREMENTAL_CLANG_CONTINUATION",
+  "manifest_sha256": "327d6ce66a52c56d85b1da9cb04c1e76dd6f5f5906a52ff0ec3285a16f2189d0",
+  "source_commit": "af1aef1b44cdce4423cef9f37125edae21794a7e",
+  "reviewed": [
+    "source.patch",
+    "recipe-delta.patch",
+    "adopt.py",
+    "jobs.mk"
+  ],
+  "failed_clang_cache_reused": true,
+  "other_private_caches_fresh": true,
+  "runtime_credit": false
+}

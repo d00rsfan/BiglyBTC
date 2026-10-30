@@ -1,0 +1,113 @@
+Breakpoint 1 at 0x1f680
+Function "_ZN10libtorrent3aux12session_impl5abortEv" not defined.
+Breakpoint 2 (_ZN10libtorrent3aux12session_impl5abortEv) pending.
+Function "_ZN10libtorrent3aux12session_impl12abort_stage2Ev" not defined.
+Breakpoint 3 (_ZN10libtorrent3aux12session_impl12abort_stage2Ev) pending.
+Breakpoint 4 at 0x12b4c0
+Breakpoint 5 at 0x133db0
+Function "_ZN10libtorrent12mmap_disk_io5abortEb" not defined.
+Breakpoint 6 (_ZN10libtorrent12mmap_disk_io5abortEb) pending.
+Function "_ZN10libtorrent3aux19disk_io_thread_pool5abortEb" not defined.
+Breakpoint 7 (_ZN10libtorrent3aux19disk_io_thread_pool5abortEb) pending.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/x86_64-linux-gnu/libthread_db.so.1".
+OWNED_SHUTDOWN stage=withdraw-api withdraw=1 thread=1
+[Switching to Thread 0x78b57e37e6c0 (LWP 80)]
+OWNED_SHUTDOWN stage=session-abort-entry withdraw=1 thread=2
+OWNED_SHUTDOWN stage=session-abort-entry withdraw=1 thread=2
+[Switching to Thread 0x78b582081c00 (LWP 77)]
+OWNED_SHUTDOWN stage=withdraw-api withdraw=2 thread=1
+[Switching to Thread 0x78b57d8fc6c0 (LWP 81)]
+OWNED_SHUTDOWN stage=session-abort-entry withdraw=2 thread=3
+OWNED_SHUTDOWN stage=session-abort-entry withdraw=2 thread=3
+
+Thread 1 "probe" received signal SIGINT, Interrupt.
+[Switching to Thread 0x78b582081c00 (LWP 77)]
+__syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/x86_64/syscall_cancel.S:56
+warning: 56	../sysdeps/unix/sysv/linux/x86_64/syscall_cancel.S: No such file or directory
+
+Thread 14 (Thread 0x78b56effd6c0 (LWP 101) "probe"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/x86_64/syscall_cancel.S:56
+#1  0x000078b580ea030c in __internal_syscall_cancel (a1=..., a2=..., a3=..., a4=..., a5=..., a6=..., nr=...) at ./nptl/cancellation.c:49
+#2  0x000078b580ea06e7 in __futex_abstimed_wait_common64 (private=..., futex_word=..., expected=..., op=..., abstime=..., cancel=...) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=..., expected=..., clockid=..., abstime=..., private=..., cancel=...) at ./nptl/futex-internal.c:87
+#4  __GI___futex_abstimed_wait_cancelable64 (futex_word=..., expected=..., clockid=..., abstime=..., private=...) at ./nptl/futex-internal.c:139
+#5  0x000078b580ea3689 in __pthread_cond_wait_common (cond=..., mutex=..., clockid=..., abstime=...) at ./nptl/pthread_cond_wait.c:421
+#6  ___pthread_cond_clockwait64 (cond=..., mutex=..., clockid=..., abstime=...) at ./nptl/pthread_cond_wait.c:517
+#7  ___pthread_cond_clockwait64 (cond=..., mutex=..., clockid=..., abstime=...) at ./nptl/pthread_cond_wait.c:505
+#8  0x000078b5824aae5b in libtorrent::mmap_disk_io::wait_for_job(libtorrent::mmap_disk_io::job_queue&, libtorrent::aux::disk_io_thread_pool&, std::unique_lock<std::mutex>&) () from /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+#9  0x000078b5824ad585 in libtorrent::mmap_disk_io::thread_fun(libtorrent::mmap_disk_io::job_queue&, libtorrent::aux::disk_io_thread_pool&) () from /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+#10 0x000078b5823a97dc in std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (libtorrent::aux::pool_thread_interface::*)(libtorrent::aux::disk_io_thread_pool&, boost::asio::executor_work_guard<boost::asio::io_context::basic_executor_type<std::allocator<void>, 0ul>, void, void>), libtorrent::aux::pool_thread_interface*, std::reference_wrapper<libtorrent::aux::disk_io_thread_pool>, boost::asio::executor_work_guard<boost::asio::io_context::basic_executor_type<std::allocator<void>, 0ul>, void, void> > > >::_M_run() () from /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+#11 0x000078b5812f5ef9 in ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#12 0x000078b580ea3dfa in start_thread (arg=...) at ./nptl/pthread_create.c:454
+#13 0x000078b580f375cc in __GI___clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 13 (Thread 0x78b56e7fc6c0 (LWP 100) "probe"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/x86_64/syscall_cancel.S:56
+#1  0x000078b580ea030c in __internal_syscall_cancel (a1=..., a2=..., a3=..., a4=..., a5=..., a6=..., nr=...) at ./nptl/cancellation.c:49
+#2  0x000078b580ea06e7 in __futex_abstimed_wait_common64 (private=..., futex_word=..., expected=..., op=..., abstime=..., cancel=...) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=..., expected=..., clockid=..., abstime=..., private=..., cancel=...) at ./nptl/futex-internal.c:87
+#4  __GI___futex_abstimed_wait_cancelable64 (futex_word=..., expected=..., clockid=..., abstime=..., private=...) at ./nptl/futex-internal.c:139
+#5  0x000078b580ea3689 in __pthread_cond_wait_common (cond=..., mutex=..., clockid=..., abstime=...) at ./nptl/pthread_cond_wait.c:421
+#6  ___pthread_cond_clockwait64 (cond=..., mutex=..., clockid=..., abstime=...) at ./nptl/pthread_cond_wait.c:517
+#7  ___pthread_cond_clockwait64 (cond=..., mutex=..., clockid=..., abstime=...) at ./nptl/pthread_cond_wait.c:505
+#8  0x000078b5824aae5b in libtorrent::mmap_disk_io::wait_for_job(libtorrent::mmap_disk_io::job_queue&, libtorrent::aux::disk_io_thread_pool&, std::unique_lock<std::mutex>&) () from /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+#9  0x000078b5824ad585 in libtorrent::mmap_disk_io::thread_fun(libtorrent::mmap_disk_io::job_queue&, libtorrent::aux::disk_io_thread_pool&) () from /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+#10 0x000078b5823a97dc in std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (libtorrent::aux::pool_thread_interface::*)(libtorrent::aux::disk_io_thread_pool&, boost::asio::executor_work_guard<boost::asio::io_context::basic_executor_type<std::allocator<void>, 0ul>, void, void>), libtorrent::aux::pool_thread_interface*, std::reference_wrapper<libtorrent::aux::disk_io_thread_pool>, boost::asio::executor_work_guard<boost::asio::io_context::basic_executor_type<std::allocator<void>, 0ul>, void, void> > > >::_M_run() () from /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+#11 0x000078b5812f5ef9 in ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#12 0x000078b580ea3dfa in start_thread (arg=...) at ./nptl/pthread_create.c:454
+#13 0x000078b580f375cc in __GI___clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 3 (Thread 0x78b57d8fc6c0 (LWP 81) "probe"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/x86_64/syscall_cancel.S:56
+#1  0x000078b580ea030c in __internal_syscall_cancel (a1=..., a2=..., a3=..., a4=..., a5=..., a6=..., nr=...) at ./nptl/cancellation.c:49
+#2  0x000078b580ea06e7 in __futex_abstimed_wait_common64 (private=..., futex_word=..., expected=..., op=..., abstime=..., cancel=...) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=..., expected=..., clockid=..., abstime=..., private=..., cancel=...) at ./nptl/futex-internal.c:87
+#4  __GI___futex_abstimed_wait_cancelable64 (futex_word=..., expected=..., clockid=..., abstime=..., private=...) at ./nptl/futex-internal.c:139
+#5  0x000078b580ea30c7 in __pthread_cond_wait_common (cond=..., mutex=..., clockid=..., abstime=...) at ./nptl/pthread_cond_wait.c:421
+#6  ___pthread_cond_wait (cond=..., mutex=...) at ./nptl/pthread_cond_wait.c:453
+#7  0x000078b58258e2dc in boost::asio::detail::scheduler::run(boost::system::error_code&) [clone .isra.0] () from /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+#8  0x000078b58258ea0e in std::thread::_State_impl<std::thread::_Invoker<std::tuple<libtorrent::session::start(libtorrent::flags::bitfield_flag<unsigned char, libtorrent::session_flags_tag, void>, libtorrent::session_params&&, boost::asio::io_context*)::{lambda()#1}> > >::_M_run() () from /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+#9  0x000078b5812f5ef9 in ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#10 0x000078b580ea3dfa in start_thread (arg=...) at ./nptl/pthread_create.c:454
+#11 0x000078b580f375cc in __GI___clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 2 (Thread 0x78b57e37e6c0 (LWP 80) "probe"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/x86_64/syscall_cancel.S:56
+#1  0x000078b580ea030c in __internal_syscall_cancel (a1=..., a2=..., a3=..., a4=..., a5=..., a6=..., nr=...) at ./nptl/cancellation.c:49
+#2  0x000078b580ea06e7 in __futex_abstimed_wait_common64 (private=..., futex_word=..., expected=..., op=..., abstime=..., cancel=...) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=..., expected=..., clockid=..., abstime=..., private=..., cancel=...) at ./nptl/futex-internal.c:87
+#4  __GI___futex_abstimed_wait_cancelable64 (futex_word=..., expected=..., clockid=..., abstime=..., private=...) at ./nptl/futex-internal.c:139
+#5  0x000078b580ea30c7 in __pthread_cond_wait_common (cond=..., mutex=..., clockid=..., abstime=...) at ./nptl/pthread_cond_wait.c:421
+#6  ___pthread_cond_wait (cond=..., mutex=...) at ./nptl/pthread_cond_wait.c:453
+#7  0x000078b58258e2dc in boost::asio::detail::scheduler::run(boost::system::error_code&) [clone .isra.0] () from /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+#8  0x000078b58258ea0e in std::thread::_State_impl<std::thread::_Invoker<std::tuple<libtorrent::session::start(libtorrent::flags::bitfield_flag<unsigned char, libtorrent::session_flags_tag, void>, libtorrent::session_params&&, boost::asio::io_context*)::{lambda()#1}> > >::_M_run() () from /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+#9  0x000078b5812f5ef9 in ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#10 0x000078b580ea3dfa in start_thread (arg=...) at ./nptl/pthread_create.c:454
+#11 0x000078b580f375cc in __GI___clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 1 (Thread 0x78b582081c00 (LWP 77) "probe"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/x86_64/syscall_cancel.S:56
+#1  0x000078b580ea030c in __internal_syscall_cancel (a1=..., a2=..., a3=..., a4=..., a5=..., a6=..., nr=...) at ./nptl/cancellation.c:49
+#2  0x000078b580ea06e7 in __futex_abstimed_wait_common64 (private=..., futex_word=..., expected=..., op=..., abstime=..., cancel=...) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=..., expected=..., clockid=..., abstime=..., private=..., cancel=...) at ./nptl/futex-internal.c:87
+#4  __GI___futex_abstimed_wait_cancelable64 (futex_word=..., expected=..., clockid=..., abstime=..., private=...) at ./nptl/futex-internal.c:139
+#5  0x000078b580ea5dd9 in __pthread_clockjoin_ex (threadid=..., thread_return=..., clockid=..., abstime=..., cancel=...) at ./nptl/pthread_join_common.c:66
+#6  0x000078b5812f5f73 in std::thread::join() () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#7  0x000078b58258dae9 in libtorrent::session_proxy::~session_proxy() () from /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+#8  0x0000563d49dc67a8 in biglybtc::services::i2p::provider::OwnedTorrent::join() ()
+#9  0x0000563d49dbf041 in main::{lambda(bool, QString const&)#1}::operator()(bool, QString const&) const ()
+#10 0x0000563d49dc1d38 in main::{lambda()#2}::operator()() const ()
+#11 0x000078b5817f6f40 in ?? () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#12 0x000078b581805fce in QTimer::timeout(QTimer::QPrivateSignal) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#13 0x000078b5817eb79c in QObject::event(QEvent*) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#14 0x000078b58178fd93 in QCoreApplication::notifyInternal2(QObject*, QEvent*) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#15 0x000078b58195d07a in QTimerInfoList::activateTimers() () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#16 0x000078b581ab0f94 in ?? () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#17 0x000078b581108b9b in ?? () from /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0
+#18 0x000078b58110a1d7 in ?? () from /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0
+#19 0x000078b58110a3c3 in g_main_context_iteration () from /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0
+#20 0x000078b581ab114e in QEventDispatcherGlib::processEvents(QFlags<QEventLoop::ProcessEventsFlag>) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#21 0x000078b58179bf5b in QEventLoop::exec(QFlags<QEventLoop::ProcessEventsFlag>) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#22 0x000078b58179783a in QCoreApplication::exec() () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#23 0x0000563d49db756b in main ()

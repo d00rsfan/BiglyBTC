@@ -1,0 +1,36 @@
+SOURCE ONLY final-transfer, no author execution/compile/SDK/N changes.
+Basis actual native 9f46cf05d133624e48c6d60d45d2c503a6141ff9. Exact current probe b933;
+root telemetry owner.hpp614d4992/owner.cpp10dcda44 reflected in effective27 map;
+other25 source afterimages exact previous a00 map. Full current GCC source map
+must match every source byte, including Manager port0 correction and actual
+composed CMake. Provider input is corrected9d264, never old859855/8f12. No SDK hash or
+approval is invented: actual new source record/private approval are CLI inputs.
+
+Run root-only after all real private SDK/native gates:
+python3 final-transfer-live-executor/run.py --native-result ACTUAL_GCC_RESULT --adoption ACTUAL_ADOPTION
+  --source-commit 9f46cf05d133624e48c6d60d45d2c503a6141ff9
+  --expected-native-status PASS_PRIVATE_I2P_OWNER_AFFECTED_COHORT
+  --provider-record ACTUAL_SDK_R2_SOURCE_RECORD --provider-approval ACTUAL_ROOT_APPROVAL
+  --provider-approval-sha256 ACTUAL_ROOT_APPROVED_SHA256
+  --output /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/runs/r1
+  --acknowledge-warmed-local-cache-only
+
+One bounded javac (128MiB/one CPU/--release17), original unchanged RouterTracker
+source + fixed-stage RouterTorrentTracker dd31; exactly3 actual class images.
+One mandatory USER/NET/PID/IPC/UTS isolated launch contains actual router, tracker
+and unchanged current native probe. Exact passed72e environment proof pinned;
+fresh held parent-FDs/read-only digest snapshot and before/after fiveNS/caps0/
+NNP/lo/routes checks remain. No pkexec, GDB, native wrapper, outside network,
+default backend or public transport. Cache warming is only actual accepted,
+current signed Enc4 LS2 through router public store; no discovery/tunnel claim.
+
+Positive150s/outer native160s budgets, real wrong-cap/heldHELLO controls, actual
+tracker discovery/Host38/39, provider transfer/seeding/bytes, source replacement,
+same admission/generation, joined original inode/raw disk bytes and Java real
+ACK-required close/reply counts remain mandatory. Fixed diagnostic Java logs
+only stage+Throwable class. Latest native phase/progress/terminal are optional
+public observations and never grant success. Public whitelist now exists even
+on namespace/subject failure, copying only existing fixed public files; no
+private key/profile/payload is evidence. Original failure/history stays intact.
+
+This source-only child changes only native/SDK source pins and derived manifest hashes. Provider9d264 adds TEST-ONLY scoped executor workguards; provider production/DSO sources, all27 native implementation afterimages, Java dd31, probe b933, positive/fence bodies and150/160 budgets stay byte-exact. Root adoption receipt records the sole native CMake capsule pin change. Original final-transfer and failed/runtime histories are untouched.

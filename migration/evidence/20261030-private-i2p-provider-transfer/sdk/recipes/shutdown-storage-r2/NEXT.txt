@@ -1,0 +1,24 @@
+SOURCE ONLY. Root reviews source85985542 plus this recipe; no author execution.
+Fresh provider-candidate-r2 only. Copy retained original27 plus corrected complete13
+map to1087source leaves; preserve candidate-r1/2f89 record, SDK and failures.
+Same31ABI/default355/f746 unchanged. No automatic runtime approval or native edit.
+
+Root supplies the actual accepted SOURCE review receipt and full SHA:
+  TASK=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029
+  RECIPE=$TASK/provider-recipe/shutdown-storage-r2
+  OUTPUT=$TASK/provider-candidate-r2
+  python3 -B "$RECIPE/provider.py" prepare --output "$OUTPUT" --source-review "$REVIEW" --source-review-sha256 "$REVIEW_SHA"
+  make --jobserver-style=fifo -j3 -f "$RECIPE/jobs.mk" OUTPUT="$OUTPUT" ATTEMPT=r1
+  python3 -B "$RECIPE/provider.py" record --output "$OUTPUT" --attempt r1
+
+Same9 fresh directCTest rows, no new selector: the existing owner unit now also
+runs private_i2p_owner_withdraw_then_destroy_drains_external_executor. Existing
+BEP42/parser/Mainline/SOCKS controls unchanged. No old-runtime negative replay.
+Both hidden SAM objects are linked only into that unit from the fresh shared
+provider build. Configure cannot require future object hashes: actual objects
+are measured before and after tests and retained in the new source record.
+All compiler work remains nice5/oneFIFO3; no concurrent external compiler.
+New DSO/SDK/record measurements and root review/approval remain future values.
+The native expected-source SHA must later change from8f12 to85985542's full
+manifest hash together with actual approval inputs; never bypass its verifier.
+No Host/default/public activation or dist promotion. Finish this section then STOP.

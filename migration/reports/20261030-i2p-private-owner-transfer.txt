@@ -1,0 +1,9 @@
+The explicit private I2P provider section has passed its bounded qualification at native commit 9f46cf05d133624e48c6d60d45d2c503a6141ff9.
+
+Two native libtorrent owners used separate original-compatible profiles and a real Java I2P router/tracker. Both payload files contained the exact 131,072 bytes after both sessions had joined; their original inodes were preserved. The real transfer completed in 27.201 seconds. Wrong capability, held-source HELLO expiry and saved-key replacement withdrawal controls passed. The fixture clients and temporary private files were removed.
+
+Two native defects were corrected: the Streaming manager rejected the legitimate tracker source port 0, and synchronous provider withdrawal could share and overwrite the pending shutdown allocator slot used by normal session destruction. The fixes retain exact peer/port authority and a separate preallocated shutdown slot. No new upstream Java defect was established in this section.
+
+Nine fresh SDK controls and 37 fresh native/default controls passed, including Clang, GCC and leak-enabled ASan/UBSan native coverage. Both hosted workflows passed for the exact source. The separately built provider itself was not sanitizer-instrumented. Current default runtime and the 119-leaf distribution were preserved.
+
+This is explicit private same-router interoperability with a warmed signed LeaseSet cache. Default Host/UI activation, public discovery, remote tunnels, late tracker-response qualification, complete plugin equivalence and performance parity remain open. No chat or following chapter was started. See migration/evidence/20261030-private-i2p-provider-transfer/REVIEW.md for exact commands, source/artifact hashes, failed attempts and scope.

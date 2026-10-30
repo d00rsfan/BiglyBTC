@@ -1,0 +1,10 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2515015 --no-print-directory -- PROVIDER_REVIEW=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/root-artifact-review/review.json PROVIDER_RUNTIME_MANIFEST=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/approval-proposal/private-i2p-owner-runtime.json PROVIDER_APPROVAL_SHA256=6ff4c4d044777e2d777a7b61271c804736a102be2821e65840529cc0ecf529d5 PROVIDER_APPROVAL=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/root-private-owner-approval.json PROVIDER_RECORD=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source-build-record.json ADOPTION=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/provider-test-lifetime-pin-adoption.json SOURCE_COMMIT=9f46cf05d133624e48c6d60d45d2c503a6141ff9 ATTEMPT=r1
+[1/11] Building CXX object services/CMakeFiles/biglybtc_i2p_streaming.dir/i2p_streaming/manager.cpp.o
+[2/11] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[3/11] Linking CXX static library services/libbiglybtc_i2p_streaming.a
+[4/11] Linking CXX static library engine/libbiglybtc_local_engine.a
+[5/11] Automatic MOC for target biglybtc_i2cp_initial_channel
+[6/9] Linking CXX executable app/BiglyBTC
+[7/9] Linking CXX executable tests/biglybtc-network-policy-tests
+[8/9] Linking CXX executable tests/biglybtc-managed-storage-tests
+[9/9] Linking CXX executable tests/biglybtc-owned-i2p-source-tests

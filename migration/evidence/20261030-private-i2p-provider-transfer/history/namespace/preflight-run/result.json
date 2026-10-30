@@ -1,0 +1,13 @@
+{
+  "exit_code": 0,
+  "functional_subjects_executed": false,
+  "inputs_sha256": "8612a6638f9777c4cb4331b20a8ac9c95668f375fa431acdef45d0920db8e241",
+  "logs_sha256": {
+    "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "no_fallback": true,
+  "parent_descriptors_unchanged": true,
+  "preflight_sha256": "593f26352fa47ed617c03d1c7ec905dcdb53e2ecf4b042ac76058763840f21c6",
+  "status": "PASS_FIVE_NAMESPACE_LOOPBACK_PREFLIGHT"
+}

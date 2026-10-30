@@ -1,5 +1,11 @@
 # Explicit outbound I2P Streaming
 
+## Current bounded result — 2026-10-30
+
+State: in progress overall; the explicit private provider/owner section is qualified at `9f46cf05d133624e48c6d60d45d2c503a6141ff9`. Nine SDK and37 native/default controls plus actual two-profile tracker-discovered131072-byte transfer/withdrawal/join passed. [Review](../evidence/20261030-private-i2p-provider-transfer/REVIEW.md). Default Host/UI/public/multihop/late tracker response/performance parity remain open; stop before the next chapter.
+
+## Earlier qualification history
+
 State: bounded interoperability slice qualified; complete backend/transport integration remains open.
 
 Source `514a238f0efa749e7a7fb1e68f8123af78e766da` qualifies opt-in owned Azureus self-lookup/contact discovery/cached forwarding and bounded outbound I2P Streaming. Fresh GCC14/Clang11/leak-enabled ASan+UBSan11 default suites, separate original Java manager acceptance on Clang/SAN, private14+GCC actor1 and actual isolated-router HTTP transfer pass. [Review](evidence/20261029-routing-streaming/REVIEW.md).

@@ -1,0 +1,6 @@
+{
+    "elapsed_ms": 150002,
+    "intended_success": false,
+    "phase": "before-finish-shutdown",
+    "reason": "Absolute transfer/source-withdrawal budget exceeded"
+}

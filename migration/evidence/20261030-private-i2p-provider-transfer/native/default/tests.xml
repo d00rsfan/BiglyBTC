@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="4"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="2"
+	timestamp="2026-10-30T14:15:40"
+	>
+	<testcase name="network-policy" classname="network-policy" time="0.021048" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>33 network-policy families, 501 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="managed-storage" classname="managed-storage" time="2.12921" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>case exact-bad-byte-checkpoint-preserves-unknowns-and-sparse-zero
+case unknown-bad-tail-persists-loss-without-erasing-saved-counters
+case bad-counter-CAS-refuses-before-profile-progress-write
+case actual-intake-save-name-drives-descriptors-suffix-and-completion
+case custom-existing-approved-descriptors-remain-read-only-and-reject-new-authority
+case custom-existing-rechecks-every-ancestor-not-only-last-parent
+case selected-existing-authenticates-directory-types-and-full-ancestor-chain
+case existing-only-complete-linear-preparation-is-read-only-and-still-unverified
+case existing-only-pure-v2-reuses-exact-tail-projection-with-no-pad-descriptor
+case existing-only-unsupported-or-incomplete-scope-refuses-before-effects
+case existing-only-read-and-checkpoint-refuse-late-replacement-or-content-change
+case original-canonical-latin1-paths-preserve-raw-identity-and-checkpoint
+case windows1251-v1-paths-use-authenticated-runtime-projection-and-exact-original-checkpoint
+case koi8r-original-paths-retain-raw-hashes-owned-slo...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="pure-owned-sam-protocol" classname="pure-owned-sam-protocol" time="0.0237451" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;no-network;unit"/>
+		</properties>
+		<system-out>PASS owned SAM parser/capability bounds
+PASS exact public Destination/name codec
+</system-out>
+	</testcase>
+	<testcase name="owned-i2p-profile-source" classname="owned-i2p-profile-source" time="0.610746" status="run">
+		<properties>
+			<property name="cmake_labels" value="i2p;owned-profile;unit"/>
+		</properties>
+		<system-out>********* Start testing of OwnedI2pSourceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedI2pSourceTests::initTestCase()
+PASS   : OwnedI2pSourceTests::boundSourceAuthorityRefusesLegacySingleStreamPath()
+PASS   : OwnedI2pSourceTests::genuinePureSourceRetainsSameLeaseAndOriginalBytes()
+PASS   : OwnedI2pSourceTests::keyReplacementAndSourceMutationWithdrawWithoutRepair()
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(0)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(1)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(2)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(3)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(4)
+PASS   : OwnedI2pSourceTests::sourcePermitIsOneShotAndBlockedIoCannotExtendChannelDeadline()
+PASS   : OwnedI2p...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

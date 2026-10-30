@@ -1,0 +1,107 @@
+{
+    "elapsed_ms": 27101,
+    "leech": {
+        "admission": "4921563399377815196",
+        "bridge_port": 0,
+        "bridge_sockets": 0,
+        "generation": "13049967396759238706",
+        "phase": 3,
+        "rejected_clients": "1",
+        "seeding": false,
+        "tracker_diagnostics": {
+            "alerts_drained": "0",
+            "alerts_uninspected": "0",
+            "announces": "0",
+            "announcing_to_trackers": false,
+            "current_alerts": [
+            ],
+            "current_alerts_omitted": 0,
+            "error": {
+                "category": "",
+                "message": "",
+                "value": 0
+            },
+            "file_errors": "0",
+            "flags": "0",
+            "i2p_errors": "0",
+            "incomplete": false,
+            "paused": false,
+            "state": -1,
+            "status_available": false,
+            "torrent_errors": "0",
+            "tracker_count": 0,
+            "tracker_errors": "0",
+            "tracker_replies": "0",
+            "trackers": [
+            ]
+        },
+        "verified_bytes": "0"
+    },
+    "seed": {
+        "admission": "4343445152229692677",
+        "bridge_port": 46641,
+        "bridge_sockets": 3,
+        "generation": "10493445213833659410",
+        "phase": 2,
+        "rejected_clients": "2",
+        "seeding": true,
+        "tracker_diagnostics": {
+            "alerts_drained": "307",
+            "alerts_uninspected": "0",
+            "announces": "2",
+            "announcing_to_trackers": true,
+            "current_alerts": [
+            ],
+            "current_alerts_omitted": 0,
+            "error": {
+                "category": "system",
+                "message": "Success",
+                "value": 0
+            },
+            "file_errors": "0",
+            "flags": "20447240",
+            "i2p_errors": "0",
+            "incomplete": false,
+            "paused": false,
+            "state": 5,
+            "status_available": true,
+            "torrent_errors": "0",
+            "tracker_count": 1,
+            "tracker_errors": "1",
+            "tracker_replies": "1",
+            "trackers": [
+                {
+                    "endpoint_count": 1,
+                    "endpoints": [
+                        {
+                            "enabled": true,
+                            "hashes": [
+                                {
+                                    "error": {
+                                        "category": "system",
+                                        "message": "Success",
+                                        "value": 0
+                                    },
+                                    "fails": 0,
+                                    "start_sent": true,
+                                    "updating": false
+                                },
+                                {
+                                    "error": {
+                                        "category": "system",
+                                        "message": "Success",
+                                        "value": 0
+                                    },
+                                    "fails": 0,
+                                    "start_sent": false,
+                                    "updating": false
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "verified_bytes": "131072"
+    }
+}

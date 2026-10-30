@@ -1,0 +1,3 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2514599 --no-print-directory -- ATTEMPT=r3 OUTPUT=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2
+[1/2] Building CXX object test/CMakeFiles/test_biglybtc_private_i2p_owner.dir/test_biglybtc_private_i2p_owner.cpp.o
+[2/2] Linking CXX executable test/test_biglybtc_private_i2p_owner

@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_FINAL_NATIVE_LIVE_EXECUTOR_RECIPE",
+  "source_commit": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+  "provider_source_capsule_sha256": "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671",
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/shutdown-storage-sdk/manifest.json",
+    "sha256": "dec7349536d617fd53d7b1527ec2b6b99bc757352bf5e419defb0e38aa222c47"
+  },
+  "artifacts_sha256": {
+    "run.py": "0dba7a0de6ba9f4ad1a266c489f1ffaeebea8c0a79b3f8e4acb412fe53a3b924",
+    "adopt.py": "96867213e24a67a9955fd1b91dd1dba41f1dfe3171e6417fc19ce435515dbeaf",
+    "jobs.mk": "22b12bb56463332bd14b49c25aca5912d57787cae797a102fb94f5f4c2eeb160",
+    "source-map.json": "24241137b8de0b4b986c67112515a16707178177a0556d9f3acca22b95abb8b8",
+    "recipe-delta.patch": "cf8b9e14f54c2fb64b2e05b7f492495ecec64dd225b6a3d5a7a458dca5189d21",
+    "NEXT.txt": "956d6994bb3a35bce7eec63c8e673a0a752b3fa6e7feb4cd378c512da448696c"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/run.py": "4a6fb011398b94126336bd76cd0de3bebf731d7648f51c5c2cf388735efaaa53",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/adopt.py": "86247abd5262e09562d53f951c2e9e61375bdad2109c9ecbcecefd0ada10a5f3",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/jobs.mk": "77884e61e74ec3ba100c0bb44e2dc47bbe20dd08a3135e5b293eb6ca3db1cdeb",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/manifest.json": "e1177afbe256f870c7b193e3e2bbfc95f4a953ab6237662e7e7e5f533697aebb",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/gcc-r3/result.json": "0a13f8122ff38464b7406d0eaa2a72d14d2795b073c63c5058eba04930cb9ae6",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/gcc-r3/tool-inputs.json": "5971a02af28f7ecbbeae4730ed3d24ff2e85edc2f80c1c7749c0667fce48fa01",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/clang-r3/result.json": "8c15a1e12c9bf512125693d579e4c0bf89128e0ca8181a3e118423e54720e992",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/clang-r3/tool-inputs.json": "a048b2203cd00c90bd77c60f7c0de437aa940d554712efddbb85891c13e852f4",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/san-r3/result.json": "3254f398f424262d5ad8be54b23db2c7df963a556ca21f4a2c235d2ec823f065",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/san-r3/tool-inputs.json": "5971a02af28f7ecbbeae4730ed3d24ff2e85edc2f80c1c7749c0667fce48fa01",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/default-r3/result.json": "3430b8a00e65f42adb428825e842b1e70e4bcf57c6555495f1dd771b20ead96f",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/payload-fixture-layout/runs/default-r3/tool-inputs.json": "5971a02af28f7ecbbeae4730ed3d24ff2e85edc2f80c1c7749c0667fce48fa01",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/amendments/executor-workguard/manifest.json": "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/provider-test-lifetime-pin-adoption.json": "11435f6b66b6efe36db163fb1fabe9ee81d7a0a9878b55b20bd2d0fc3823a53c",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/shutdown-storage-sdk/manifest.json": "dec7349536d617fd53d7b1527ec2b6b99bc757352bf5e419defb0e38aa222c47",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/shutdown-storage-sdk/run.py": "414bd1e6f38a52ee33f508747770beb8e80f87acebc1b9f998508e242260e640",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/shutdown-storage-sdk/adopt.py": "b813fa8a57aa91923bc8610c74d933653b4024da690a62be32135ac7bf683924"
+  },
+  "fresh_suites": {
+    "clang": 11,
+    "gcc": 11,
+    "san": 11,
+    "default": 4
+  },
+  "provider_owner_archives": [
+    "clang",
+    "gcc",
+    "san"
+  ],
+  "gcc_probe_compile_only": true,
+  "old_tests_credited": false,
+  "author_execution": false,
+  "native_cache_mutation": false,
+  "new_provider_approval_invented": false
+}

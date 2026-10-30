@@ -1,5 +1,11 @@
 # I2CP framing, signed registration and initial channel
 
+## Current bounded result — 2026-10-30
+
+State: in progress overall; the explicit private provider/owner section is qualified at `9f46cf05d133624e48c6d60d45d2c503a6141ff9`. Nine SDK and37 native/default controls plus actual two-profile tracker-discovered131072-byte transfer/withdrawal/join passed. [Review](../evidence/20261030-private-i2p-provider-transfer/REVIEW.md). Default Host/UI/public/multihop/late tracker response/performance parity remain open; stop before the next chapter.
+
+## Earlier qualification history
+
 State: in_progress. Feature F06.i2cp_initial_session. Source e124abb90ab846c4b057a6b868004c0acb737118 extends the original pure framing/no-auth channel with exact SessionConfig/Create/Reconfigure, DSA0/Ed7 signatures and Java UTF16-sorted UTF8 options. Current CREATED stores a genuine ID; matching UPDATED commits original putAll merge. Identity is borrowed synchronously for signing; no private key persistence. Explicit numeric-loopback only, bounded request/write/read, deadlines and generation/revision guards remain.
 
 Current focused7-suite three-lane/private and actual two-artifact Java object proof: ../evidence/20261029-signed-session-local-publish/verification.json. Failed helper-only attempts and their precise corrections remain in that evidence; no native/whole-suite replay for helper fixes. Older evidence remains historical.

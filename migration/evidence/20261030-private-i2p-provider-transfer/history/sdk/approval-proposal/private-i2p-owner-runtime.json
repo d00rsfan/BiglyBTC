@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "purpose": "optional-sdk-only-not-approved",
+  "source_build_record": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source-build-record.json",
+  "source_build_record_sha256": "3b559cf92cf38743573da853b05621dfb4289544a2fbe2199814544997d8657c",
+  "artifact": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "artifact_sha256": "2f89e779cf11bd1ace159307d3995fe1fd3aca5e594957844a11df2df7df8e4b",
+  "artifact_bytes": 9476640,
+  "source_root": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/source",
+  "install_root": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r1/install",
+  "native_runtime_approved": false
+}

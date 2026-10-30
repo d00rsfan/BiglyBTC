@@ -1,0 +1,9 @@
+{
+  "source_commit": "f07ea2ac16988d1a389bd61975cb6ff0ac6a9184",
+  "parent": "797638b44b8f9a621e9a6d718a94472d0b242297",
+  "path": "preview/native/services/CMakeLists.txt",
+  "before_sha256": "2066bfa4fd0aaadf273ede0bae601161eaf3af90886faba1cc1ef4c96fdd8dd5",
+  "after_sha256": "b41bd40e1fa418b484cfa92cc0f34fbb96ade5bc7098ae5144cb52e26b425e1d",
+  "optional_provider_source_capsule_sha256": "85985542dd890cdb29323417b277922122429d0769dcf40666617567f1507494",
+  "shipping_default_unchanged": true
+}

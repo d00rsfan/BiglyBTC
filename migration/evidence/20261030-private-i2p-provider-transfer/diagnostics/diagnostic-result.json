@@ -1,0 +1,52 @@
+{
+  "status": "DIAGNOSTIC_THREAD_STACKS_COLLECTED",
+  "acceptance_pass": false,
+  "original_acceptance_failure": "AssertionError(PosixPath('/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/namespace.log'))",
+  "source_commit": "8b17980cc769b553375e01de53bf9ef8a5930672",
+  "native_image_unchanged": true,
+  "source_provider_sdk_unchanged": true,
+  "javac_invocations": 0,
+  "namespace_exit": {
+    "exit_code": 1,
+    "parent_descriptors_unchanged": true
+  },
+  "debugger": {
+    "status": "DIAGNOSTIC_THREAD_STACKS_COLLECTED",
+    "acceptance_pass": false,
+    "interrupt_seconds": 155,
+    "arguments_or_locals_requested": false,
+    "attach_or_core_requested": false,
+    "probe_sha256": "9e215f61d1e782a83ce2ce02ed470ad8e187937b5d54d543dfa5023f84fe9b49",
+    "gdb_interrupted": true,
+    "gdb_exit": 0,
+    "inferior_pid": 77,
+    "inferior_exited": true,
+    "elapsed_milliseconds": 155117,
+    "trace_sha256": "e9f3daa9793f5f7b145fcb0b58433a30f5583c914d7092ae638b7e9660215ea2"
+  },
+  "public_artifacts": {
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/inputs.json": "358732030e14f928e7691ae9da5abb5bf92a252bc0a39ecdf0a34f6acf8a258a",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/javac-reuse.json": "0ee81bcd85202a2f3c7ee8dba0ccd82a05ef5e1ca47c00cdf43872768e3544d0",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/classes.json": "0459220ff33f961a72dff703aa00795cd1c4a649fee043df19ac6a30a2d9427d",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/namespace-parent.json": "d6727faa1924c13780c60fc2efe81563f0e2e795d6ebd830f098802e7a4be789",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/namespace-command.json": "4c686ead6a587c2aca4ba586b1bbdee0de3e2478519427dd44a9789325fe7e3f",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/namespace-exit.json": "abe4c12f00169d25d38d14a6aaa8a63fca2a6cdc9592a8c2363ededdb59b80ee",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/namespace.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/commands.json": "e8c67e44802d34373d844a5e16e2e434ec31991ef9864cd09aa876f695486fbc",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/result.json": "e2a5a1c8ab2204da8a73491d7bea6e9de092c0aa168322a154ec730487089589",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/fence-before.json": "57d7e79222df08ce29839a0f881dde6109756e6b22d2cc63c85535c2d9ec6796",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/diagnostic-fence-after.json": "57d7e79222df08ce29839a0f881dde6109756e6b22d2cc63c85535c2d9ec6796",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/debugger-command.json": "f5ded87d79208492df828a557ed9973d9a097d4daf1f555461bb98a7f5d4ef87",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/debugger-result.json": "c7a781b1e5073dae75d30aec1549cf7b687ad17f829b71916cb7106a2b7fb6fa",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/native-threads.log": "e9f3daa9793f5f7b145fcb0b58433a30f5583c914d7092ae638b7e9660215ea2",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/native-started.json": "1d3154c13b65146316aa2a79f45d78526efa643d2a49ec4668fc40c3fa295cc0",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/cache-precondition.json": "1ac703ea4d884808f90e0788d09c15b88759e1cbda371c0b40a5301dc7424b62",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/native.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/tracker.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/router.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/private-cleanup.json": "bcd5a73f1c7dbeb378897eec66c7933aef80b1339d33f8598130f103c08e0424",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/native-progress.json": "0f4213a1382363c7c40c41b379fdf96c2e0cf34025bf2336f28f0d38c8e38c54",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/native-phase.json": "ee111960d81b339f2d90a4e8f278964a66fca47c1a239327bdfbab3e85d11fd5",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/diagnostics/tracker-state-observation/runtime/runs/r2/native-terminal.json": "297a33733e8d7369709fc8d696eabb1f524bec2e3252f2009cee7b8a3f496fa7"
+  }
+}

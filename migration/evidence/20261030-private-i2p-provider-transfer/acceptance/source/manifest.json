@@ -1,0 +1,95 @@
+{
+  "status": "SOURCE_ONLY_FINAL_ACCEPTANCE_RUNTIME_PENDING",
+  "native_source_commit": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+  "parent_acceptance": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/manifest.json",
+    "sha256": "3c48e83cf668e1f68e37b8103db5918206374c65799bb9feefdc41a21e558177",
+    "bytes": 10232
+  },
+  "implementation": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/implementation/manifest.json",
+    "sha256": "8fb1d97d83713f5baa5da103bbccdc4230d8395ea2efe1e5e262458690cc8040",
+    "bytes": 19755
+  },
+  "provider_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/amendments/executor-workguard/manifest.json",
+    "sha256": "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671",
+    "bytes": 10317
+  },
+  "java_diagnostic_parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/amendments/progress-run/amendments/tracker-failure-stage/manifest.json",
+    "sha256": "486c44fb12544735eaa505e00fcae8d819a1c341b16b28366958a4e552b1355b",
+    "bytes": 3368
+  },
+  "source_paths": {
+    "preview/native/tests/i2p_provider_transfer_probe.cpp": {
+      "before": "2858c43dd8bec438894b79b00c6577352c37a48753948f3961c305af4624dd96",
+      "after": "b9332fa20cbaef7357da9695eec7adefde51fdbb8ed62c335d96f4d8408419f1",
+      "staged": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/probe.cpp"
+    }
+  },
+  "cmake_fragment": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/CMakeLists.txt",
+    "sha256": "df5f6cb7f976cd898a5f476cd10da73e7a2ce28b6adceb1df93581d773b0bf9e",
+    "destination": "preview/native/tests/CMakeLists.txt",
+    "already_adopted_no_new_cmake_mutation": true
+  },
+  "artifacts": {
+    "run.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/run.py",
+      "sha256": "aaf6ffb52536090646fcf7dbf8bdd16852da768649f0fc4a348f0eb1c49571b6",
+      "bytes": 23843
+    },
+    "source-pins.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/source-pins.json",
+      "sha256": "77fbacf61817924b157fc94fd75ffc95720a35c99736f1b92fcbf6a9417d7bef",
+      "bytes": 6841
+    },
+    "RouterTorrentTracker.java": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/RouterTorrentTracker.java",
+      "sha256": "dd31f4a975fff873b441176bc5dd225f1f86e5515e6928a403a09db1b7ce47e1",
+      "bytes": 17441
+    },
+    "probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/probe.cpp",
+      "sha256": "b9332fa20cbaef7357da9695eec7adefde51fdbb8ed62c335d96f4d8408419f1",
+      "bytes": 22561
+    },
+    "CMakeLists.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/CMakeLists.txt",
+      "sha256": "df5f6cb7f976cd898a5f476cd10da73e7a2ce28b6adceb1df93581d773b0bf9e",
+      "bytes": 939
+    },
+    "changes.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/changes.patch",
+      "sha256": "6097143f2ba3b42caa9f287d9b4b4c9aa73966d37948156a15d1c09d0618d900",
+      "bytes": 2641
+    },
+    "ADOPTION.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/ADOPTION.txt",
+      "sha256": "e96b02d94f632e8fef946b9242cc8dae06571601d56104b6626a646bdb71763e",
+      "bytes": 2852
+    }
+  },
+  "expected_native_status": "PASS_PRIVATE_I2P_OWNER_AFFECTED_COHORT",
+  "expected_acceptance_status": "PASS_REAL_ISOLATED_ROUTER_PROVIDER_TRANSFER",
+  "static_checks": {
+    "python_ast": "PASS",
+    "all27_effective_native_rows_match_current_source": true,
+    "probe_byte_exact_current_N": true,
+    "java_byte_exact_dd31": true,
+    "fence_and_inside_subject_body_byte_exact_parent": true,
+    "compiler_helper_subject_or_sdk_execution": false
+  },
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer/manifest.json",
+    "sha256": "f1fd1f4bcbf4f3d7690ed0a4afc146ddb893b9433541aa1ab9dcfaa0454b13b6",
+    "bytes": 4331
+  },
+  "provider_test_lifetime_pin_adoption": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/outgoing-unspecified-port/provider-test-lifetime-pin-adoption.json",
+    "sha256": "11435f6b66b6efe36db163fb1fabe9ee81d7a0a9878b55b20bd2d0fc3823a53c",
+    "bytes": 547
+  },
+  "scope_delta": "Data-only native/source-capability pin correction; SDK test workguards do not change provider production or DSO sources. All implementation27/probe/Java/Manager/inside predicates/budgets unchanged."
+}

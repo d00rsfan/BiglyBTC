@@ -1,0 +1,6 @@
+{
+  "/usr/bin/g++-16": "g++-16 (Ubuntu 16-20260322-1ubuntu1) 16.0.1 20260322 (experimental) [trunk r16-8246-g569ace1fa50]",
+  "/usr/bin/ninja": "1.13.2",
+  "/usr/bin/make": "GNU Make 4.4.1",
+  "/usr/bin/cc": "cc (Ubuntu 15.2.0-16ubuntu1) 15.2.0"
+}

@@ -1,0 +1,8 @@
+{
+  "exit_code": 0,
+  "patch_sha256": "da1f6ed75d266efa89f7dcf460e522c0d0fca83a03fc7055a31d3ba026a448e3",
+  "parent_source": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/source",
+  "paths": 13,
+  "applied": false,
+  "runtime_credit": false
+}

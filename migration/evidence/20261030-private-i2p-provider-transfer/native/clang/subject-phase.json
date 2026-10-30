@@ -1,0 +1,5 @@
+{
+  "scope": "affected ordinary owned tests only; no Public/Java/transfer",
+  "entered_monotonic_ns": 6698882121920178,
+  "left_monotonic_ns": 6698927790230798
+}

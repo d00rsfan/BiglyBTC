@@ -1,0 +1,21 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+Connected to MAKE jobserver
+    Start 200: network-policy
+1/4 Test #200: network-policy ...................   Passed    0.01 sec
+    Start 203: managed-storage
+2/4 Test #203: managed-storage ..................   Passed    1.40 sec
+    Start 305: pure-owned-sam-protocol
+3/4 Test #305: pure-owned-sam-protocol ..........   Passed    0.01 sec
+    Start 306: owned-i2p-profile-source
+4/4 Test #306: owned-i2p-profile-source .........   Passed    0.54 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+i2p                  =   0.55 sec*proc (2 tests)
+no-network           =   0.01 sec*proc (1 test)
+owned-profile        =   0.54 sec*proc (1 test)
+torrent-workflows    =   1.41 sec*proc (2 tests)
+unit                 =   1.96 sec*proc (4 tests)
+
+Total Test time (real) =   1.97 sec

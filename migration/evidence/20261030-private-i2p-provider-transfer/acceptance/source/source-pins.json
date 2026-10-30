@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_ACCEPTANCE_NOT_EXECUTED",
+  "proposal": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/PROPOSAL.txt",
+    "sha256": "870958d2f9d8b3692eb85923e0c27f4ab3320d211d3ba3d100fe2c12fa2c2416"
+  },
+  "router_parent_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/router-ls2-static-type/staging/RouterTracker.java",
+    "sha256": "b44836e86c4a36a45a849b432cc4276b846770fd2de6c1068d08f0c73951d570",
+    "recompiled_reference_only": "Exact existing utilities/zeroHop/typedLocal/accepted LS2 checks, source remains untouched"
+  },
+  "fence_parent_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-streaming-java-peer-20261029/real-router/run.py",
+    "sha256": "88a9ef531268b01d33db322de72d5ef1f2a6432668af4dd4602e4c7986dcd818",
+    "reuse": "Historical five-namespace mount/launch policy; current fence uses exact successful72e source and its actual result, with fresh actual-run parent snapshot."
+  },
+  "modified_jar": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+    "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5"
+  },
+  "tracker_wire_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/source/src/http_tracker_connection.cpp",
+    "sha256": "fe47413e5eba505211e30608430960e8da345a67204a35550fa5a100aeb41050",
+    "lines": "660-668 compact32 I2P peer hashes"
+  },
+  "execution": false,
+  "fence_tool": {
+    "path": "/usr/bin/bwrap",
+    "sha256": "0abea81db798ebf6b4742ac0664802d97521547a353c2a0dbdc21d76cbbfd2c0"
+  },
+  "stable_native_api": {
+    "owner.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer/implementation/preview/native/services/i2p_provider/owner.hpp",
+      "sha256": "614d499215cf30152c6ee421025e711be911e7e81cead8d6f7d461015fbc98b6",
+      "bytes": 2982
+    },
+    "bridge.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/native/staging/preview/native/services/i2p_provider/bridge.hpp",
+      "sha256": "19a9dc346e42d444aa1953e4fe901c47b806a648320057f71da1b312797524b3",
+      "implementation_freeze_pending": false
+    }
+  },
+  "implementation": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/final-transfer-live-executor/implementation/manifest.json",
+    "sha256": "8fb1d97d83713f5baa5da103bbccdc4230d8395ea2efe1e5e262458690cc8040",
+    "bytes": 19755
+  },
+  "provider_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/implementation/amendments/deadlines-and-tracker-port/provider/amendments/independent-abort-stages/amendments/executor-workguard/manifest.json",
+    "sha256": "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671",
+    "bytes": 10317
+  },
+  "namespace_preflight": {
+    "manifest": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/manifest.json",
+      "sha256": "72e88a4e1cb3fe052bc6c7e64a99b2b495d1c2881fbd39c94952fba3a9789b72",
+      "bytes": 4161
+    },
+    "source": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/preflight.py",
+      "sha256": "18cf05fa18f3a624a7de2d3ae779879da21a3353b3ee1b71b0295afee979bbe4",
+      "bytes": 10004
+    },
+    "root_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/root-review.json",
+      "sha256": "8b7405231615e4dd1afb3a3d1e669704929e7cb5caa8b2aebc015b6e4496e471",
+      "bytes": 467
+    },
+    "result": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/result.json",
+      "sha256": "2edca867b5acf4b434ff37a81bdfd7254872dd1189552262719da58423bd7f01",
+      "bytes": 551
+    },
+    "inputs": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/inputs.json",
+      "sha256": "8612a6638f9777c4cb4331b20a8ac9c95668f375fa431acdef45d0920db8e241",
+      "bytes": 2299
+    },
+    "parent": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/parent.json",
+      "sha256": "afdb0929418977f69d0e9e18f3e1b78dfccf4305d2d8ef53b903ac30070c3be3",
+      "bytes": 787
+    },
+    "preflight": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/preflight.json",
+      "sha256": "593f26352fa47ed617c03d1c7ec905dcdb53e2ecf4b042ac76058763840f21c6",
+      "bytes": 2212
+    },
+    "stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  },
+  "fin_actual_modified_jar_proof": {
+    "path": "/home/yurii/Java/BiglyBT/build/manager-known-followup-20261029/diagnostics/fin-callback-order-proof.json",
+    "sha256": "28c8513363ab913c7a41496094fed5c7ae9f3e3ca93648be174c11378a8157c2",
+    "bytes": 34279
+  },
+  "native_source_commit": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
+  "java_diagnostic_parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/foreign-cap-and-held-source/amendments/five-namespace-launch/amendments/profile-fixture-layout/amendments/progress-run/amendments/tracker-failure-stage/manifest.json",
+    "sha256": "486c44fb12544735eaa505e00fcae8d819a1c341b16b28366958a4e552b1355b",
+    "bytes": 3368
+  }
+}
