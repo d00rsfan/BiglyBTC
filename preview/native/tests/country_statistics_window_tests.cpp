@@ -99,7 +99,7 @@ private slots:
     QSignalSpy libraryRefresh(&w,&ui::LibraryWindow::refreshRequested);auto& page=open(w);drain();
     const QStringList expected{QStringLiteral("Activity"),QStringLiteral("Transfers"),QStringLiteral("Cache"),
       QStringLiteral("Tracker"),QStringLiteral("Counters"),QStringLiteral("Tags"),QStringLiteral("Country")};
-    QCOMPARE(page.tabs().count(),10);for(int i=0;i<expected.size();++i){QCOMPARE(page.tabs().tabText(i),expected[i]);}
+    QCOMPARE(page.tabs().count(),11);QCOMPARE(page.tabs().tabText(10),QStringLiteral("I2P"));for(int i=0;i<expected.size();++i){QCOMPARE(page.tabs().tabText(i),expected[i]);}
     QCOMPARE(page.tabs().currentIndex(),0);QCOMPARE(child<QTabWidget>(page,"statistics-activity-views").currentIndex(),2);
     QCOMPARE(reads.count(),0);auto value=packet();w.setCountryStatistics(value);drain();QCOMPARE(reads.count(),0);
     QVERIFY(w.countryStatisticsSnapshot()==value);QVERIFY(page.countryStatisticsSnapshot()==value);

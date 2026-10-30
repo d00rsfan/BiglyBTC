@@ -67,7 +67,7 @@ private slots:
     window.beginColumnLayoutSession(Session);window.setLiveSpeedManager(first);
     QVERIFY(!window.statisticsPage());QVERIFY(window.liveSpeedManagerSnapshot()==first);
     auto& page=open(window);QVERIFY(page.liveSpeedManagerSnapshot()==first);
-    QCOMPARE(page.tabs().count(),10);page.tabs().setCurrentIndex(1);
+    QCOMPARE(page.tabs().count(),11);QCOMPARE(page.tabs().tabText(10),QStringLiteral("I2P"));page.tabs().setCurrentIndex(1);
     child<QTabWidget>(page,"statistics-transfer-tabs").setCurrentIndex(3);drain();
     auto& live=child<ui::LiveSpeedManagerView>(page,"live-speed-manager-view");
     QVERIFY(live.presentation()==first);

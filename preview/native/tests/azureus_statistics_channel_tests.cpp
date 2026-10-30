@@ -154,7 +154,7 @@ private slots:
     QTRY_COMPARE_WITH_TIMEOUT(calls, 1, 3000);
     const auto packet = owners.pull(); const auto sent = owners.client.statistics().sent;
     ui::StatisticsPage page; page.beginNativeSession(Session); show(page);
-    QCOMPARE(page.tabs().count(), 10);
+    QCOMPARE(page.tabs().count(), 11);QCOMPARE(page.tabs().tabText(10),QStringLiteral("I2P"));
     QCOMPARE(page.tabs().tabText(7), QStringLiteral("DHT"));
     QCOMPARE(page.tabs().tabText(8), QStringLiteral("DDB Operations"));
     QCOMPARE(page.tabs().tabText(9), QStringLiteral("Vivaldi"));

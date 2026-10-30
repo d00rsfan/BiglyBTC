@@ -116,7 +116,7 @@ private slots:
     QVERIFY(child<QLabel>(page, "native-session-uptime").text().startsWith(QStringLiteral("Observed owner uptime:")));
     QCOMPARE(window.nativeSessionSnapshot()->epoch, idle->epoch);
     QCOMPARE(operations.count(), 0);
-    QCOMPARE(page.tabs().count(), 10);
+    QCOMPARE(page.tabs().count(), 11);QCOMPARE(page.tabs().tabText(10),QStringLiteral("I2P"));
     auto* trackers = page.findChild<ui::TrackerStatisticsView*>(); QVERIFY(trackers);
     QTRY_VERIFY(trackers->presentation() && trackers->presentation()->snapshot);
     QCOMPARE(trackers->presentation()->snapshot->state, core::TrackerReadState::DisabledByIsolation);

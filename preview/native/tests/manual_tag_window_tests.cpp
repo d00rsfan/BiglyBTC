@@ -114,7 +114,7 @@ private slots:
     const QPersistentModelIndex selection(w.incompleteTable().currentIndex());const auto target=w.model().targetAt(0);QVERIFY(target);
     QWidget* const torrents=w.mainTabs().currentWidget();QSignalSpy reads(&w,&ui::LibraryWindow::manualTagStatisticsRequested);
     QSignalSpy libraryRefresh(&w,&ui::LibraryWindow::refreshRequested);auto& page=open(w);drain();
-    QCOMPARE(page.tabs().count(),10);QCOMPARE(page.tabs().tabText(6),QStringLiteral("Country"));const QStringList expected{QStringLiteral("Activity"),QStringLiteral("Transfers"),
+    QCOMPARE(page.tabs().count(),11);QCOMPARE(page.tabs().tabText(10),QStringLiteral("I2P"));QCOMPARE(page.tabs().tabText(6),QStringLiteral("Country"));const QStringList expected{QStringLiteral("Activity"),QStringLiteral("Transfers"),
       QStringLiteral("Cache"),QStringLiteral("Tracker"),QStringLiteral("Counters"),QStringLiteral("Tags")};
     for(int i=0;i<expected.size();++i){QCOMPARE(page.tabs().tabText(i),expected[i]);}
     QCOMPARE(page.tabs().currentIndex(),0);QCOMPARE(child<QTabWidget>(page,"statistics-activity-views").currentIndex(),2);
