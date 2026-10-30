@@ -12,6 +12,7 @@
 #include "library_commands.hpp"
 #include "network_policy.hpp"
 #include "session_bridge.hpp"
+#include "i2p_saved_settings.hpp"
 #include "application_settings.hpp"
 #include "scheduler_service.hpp"
 #include "ownership_file.hpp"
@@ -196,10 +197,70 @@ void take(std::expected<void, storage::Error> value) {
 }
 }
 struct SessionBridge::Host {
+  ~Host(){i2p.reset();} // Immediate no-throw fallback joins before the held lease.
   struct Known { QString name; std::optional<qint64> bytes{}; };
   std::filesystem::path profile;
   unsigned short peerPort;
   bool normalNetwork = false;
+  std::optional<I2pServiceOptions> i2pOptions;
+  std::unique_ptr<OwnedI2pService> i2p;
+  std::optional<core::TorrentHash> i2pHash;
+  ui::I2pPacket i2pPacket;
+  quint64 i2pSequence=0;
+  bool pureI2p(const core::TorrentHash& hash)const {
+    auto store=storage::TorrentStateStore::open(lease);if(!store){return false;}
+    auto state=store->loadAttributes(lease,hash);if(!state){return false;}
+    const auto* a=state->document().find("attributes");const auto* n=a?a->find("networks"):nullptr;
+    return n&&n->type==core::Node::Type::List&&n->children.size()==1&&n->children[0].type==core::Node::Type::Bytes&&n->children[0].bytes=="I2P";
+  }
+  void requireI2pIdle()const {
+    if(i2p){throw Failure{{storage::ErrorCode::Conflict,"Stop the I2P torrent before changing profile settings or files"}};}
+  }
+  bool i2pJoined=true;
+  std::expected<void,storage::Error> stopI2p(){
+    if(!i2p){return {};}auto stopped=i2p->close();const auto last=i2p->observation();i2pJoined=last.joined;i2p.reset();
+    i2pPacket.state=SessionBridge::tr("Stopped — I2P");i2pPacket.downloadRate=0;i2pPacket.uploadRate=0;i2pPacket.peers=0;
+    if(!stopped){i2pPacket.failure=text(stopped.error().message);return std::unexpected(stopped.error());}return {};
+  }
+  std::expected<void,storage::Error> startI2p(const core::TorrentHash& hash){
+    if(!i2pOptions||!pureI2p(hash)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"This private preview requires an explicitly saved I2P-only torrent"});}
+    if(i2p){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Only one I2P torrent may own the original identity; stop it first"});}
+    const auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}
+    auto options=readSavedI2pOptions(config->document(),*i2pOptions);if(!options){return std::unexpected(options.error());}
+    auto started=OwnedI2pService::start(lease,hash,std::move(*options));
+    if(!started){return std::unexpected(started.error());}
+    i2p=std::move(*started);i2pHash=hash;i2pPacket={};i2pPacket.hash=text(hash.hex());i2pPacket.state=SessionBridge::tr("Connecting — I2P");return {};
+  }
+  void pollI2p(){
+    if(!i2p){return;}const auto v=i2p->observation();
+    i2pPacket.verifiedBytes=v.verifiedBytes;i2pPacket.payloadDownloaded=v.payloadDownloaded;i2pPacket.payloadUploaded=v.payloadUploaded;
+    i2pPacket.downloadRate=v.downloadRate;i2pPacket.uploadRate=v.uploadRate;i2pPacket.peers=v.peers;
+    i2pPacket.trackerAnnounces=v.trackerAnnounces;i2pPacket.trackerReplies=v.trackerReplies;i2pPacket.trackerErrors=v.trackerErrors;
+    i2pPacket.failure=text(v.failure);
+    switch(v.phase){
+      case OwnedI2pService::Phase::Prepared:case OwnedI2pService::Phase::Starting:i2pPacket.state=SessionBridge::tr("Connecting — I2P");break;
+      case OwnedI2pService::Phase::Active:i2pPacket.state=!v.checked?SessionBridge::tr("Checking — I2P"):v.seeding?SessionBridge::tr("Seeding — I2P"):SessionBridge::tr("Downloading — I2P");break;
+      case OwnedI2pService::Phase::Retiring:i2pPacket.state=SessionBridge::tr("Stopping — I2P");break;
+      case OwnedI2pService::Phase::Withdrawn:
+        static_cast<void>(i2p->close());i2pJoined=i2p->observation().joined;i2p.reset();i2pPacket.state=SessionBridge::tr("Error — I2P");
+        if(i2pPacket.failure.isEmpty()){i2pPacket.failure=SessionBridge::tr("I2P identity, profile source or router connection is no longer available. Use Start to retry.");}
+        if(i2pHash){admissionFailures.insert_or_assign(i2pHash->hex(),storage::Error{storage::ErrorCode::Conflict,i2pPacket.failure.toStdString()});}break;
+    }
+  }
+  void i2pCommands(const ui::DownloadTargets& targets,core::DownloadAction action,std::stop_token stop){
+    if(fileRecoveryRequired||storage::hasPendingFileOperation(lease)||storage::hasPendingOriginalCompaction(lease)||storage::hasPendingTorrentIntake(lease)){throw Failure{{storage::ErrorCode::Conflict,"Finish pending profile recovery before changing I2P downloads"}};}
+    if(targets.size()!=1){throw Failure{{storage::ErrorCode::Unsupported,"Select one I2P torrent in this private preview"}};}
+    const auto& target=targets.front();checkpoint(stop);accepts(target);const auto hash=identity(target);
+    const auto row=std::ranges::find_if(lastSnapshot->items,[&](const auto& value){return value.hash==target.hash;});
+    if(row==lastSnapshot->items.end()||!(row->actionMask&actionBit(action))||!pureI2p(hash)){throw Failure{{storage::ErrorCode::Conflict,"Refresh the I2P torrent before applying this action"}};}
+    if(i2p&&i2pHash!=hash){throw Failure{{storage::ErrorCode::Conflict,"Stop the current I2P torrent before changing another torrent"}};}
+    take(stopI2p()); // Real provider/source joins precede ANY original saved-intent mutation.
+    const auto changed=take(storage::applyLibraryCommand(lease,hash,action,{}));admissionFailures.erase(hash.hex());
+    if(action==core::DownloadAction::Start||action==core::DownloadAction::Resume){
+      if(!changed.pauseAfter&&changed.after.startup!=core::StartupState::Stopped){auto started=startI2p(hash);if(!started){admissionFailures.insert_or_assign(hash.hex(),started.error());i2pPacket.hash=text(hash.hex());i2pPacket.state=SessionBridge::tr("Error — I2P");i2pPacket.failure=text(started.error().message);throw Failure{started.error()};}}
+    }else if(action==core::DownloadAction::Pause){i2pPacket.state=SessionBridge::tr("Paused — I2P");}
+  }
+
   engine::NetworkPolicy networkPolicy; // Member defaults keep this isolated until configure succeeds.
   std::optional<std::pair<storage::ErrorCode,std::string>> reportedMainlineFailure;
   QString mainlineNotice() {
@@ -489,7 +550,7 @@ struct SessionBridge::Host {
     }
   }
   bool compactionReady() const {
-    if (fileRecoveryRequired || storage::hasPendingFileOperation(lease)
+    if (i2p || fileRecoveryRequired || storage::hasPendingFileOperation(lease)
         || storage::hasPendingOriginalCompaction(lease)) { return false; }
     if (!engine) { return true; } // Offline/unbound: no engine was created.
     // managedAvailable also rejects registered legacy calls and poisoned/closed
@@ -702,13 +763,30 @@ struct SessionBridge::Host {
         if(retained&&active->second.phase==engine::ManagedPhase::Allocating){state=tr("Allocating %1 / %2 bytes").arg(active->second.allocationBytes).arg(active->second.allocationTotalBytes);}
         else if(!retained&&!admissionFailures.contains(hash)&&(active==live.end()||!active->second.failure)){state=tr("Allocation pending — use Start to retry");}
       }
+      const bool i2pRow=i2pOptions&&unique&&pureI2p(*saved.hash);
+      if(i2pRow&&saved.persistent&&!fileRecoveryRequired){
+        actions=0;const bool activeI2p=i2p&&i2pHash==saved.hash;
+        const bool otherI2p=i2p&&i2pHash!=saved.hash;
+        if(!otherI2p){
+          if(!activeI2p||paused){actions|=actionBit(core::DownloadAction::Start);}
+          if(!stopped||activeI2p||paused){actions|=actionBit(core::DownloadAction::Stop);}
+          if(!paused&&!stopped){actions|=actionBit(core::DownloadAction::Pause);}
+          if(paused){actions|=actionBit(core::DownloadAction::Resume);}
+        }
+        if(activeI2p){state=i2pPacket.state;}
+      }
       auto completed = saved.completedBytes && *saved.completedBytes >= 0 ? saved.completedBytes : std::nullopt;
       if (retained) { completed = active->second.completed; size = active->second.bytes; }
+      if(i2pRow&&i2p&&i2pHash==saved.hash){completed=i2pPacket.verifiedBytes;}
       result->items.push_back({.key = text(key), .hash = text(hash), .name = name, .state = state,
           .bytes = size, .completed = completed,
           .received = saved.downloaded, .sent = saved.uploaded,
           .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained && !magnetRetained,
           .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions});
+      if(i2pRow){result->items.back().networkStatus=SessionBridge::tr("Network: I2P only");
+        if(i2pHash==saved.hash&&!i2pPacket.failure.isEmpty()){result->items.back().networkStatus+='\n'+i2pPacket.failure;}
+      }
+      if(admissionFailures.contains(hash)){result->items.back().networkStatus+='\n'+text(admissionFailures.at(hash).message);}
       if(unique&&!magnetRetained&&!paused&&!stopped&&!admissionFailures.contains(hash)){
         const auto tracker=std::ranges::find_if(trackerResponses,[&](const auto& item){return item.hash.hex()==hash
             &&item.admission==(retained?active->second.admission:std::uint64_t{0});});
@@ -750,8 +828,9 @@ struct SessionBridge::Host {
   }
 };
 
-SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory)
-    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), schedulerFactory_(std::move(schedulerFactory)) {
+SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions)
+    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)) {
+  qRegisterMetaType<ui::I2pPresentation>();
   qRegisterMetaType<ui::LocalRatingRequest>();
   qRegisterMetaType<ui::LocalRatingSubmission>();
   qRegisterMetaType<ui::LocalRatingPresentation>();
@@ -827,6 +906,11 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
     }
     auto poll = worker_.submit([this](std::stop_token stop) -> core::WorkResult {
       if (!stop.stop_requested() && host_) {
+        if(host_->i2pOptions){
+          host_->pollI2p();publishI2p();const auto snapshot=host_->query(stop);const auto session=host_->columnLayoutSession;
+          QMetaObject::invokeMethod(this,[this,snapshot,session]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit snapshotReady(snapshot);}},Qt::QueuedConnection);
+          if(host_->i2p&&host_->i2pHash){const auto& p=host_->i2pPacket;progress({{text(host_->i2pHash->hex()),host_->revision},p.verifiedBytes,p.downloadRate,p.uploadRate,p.state});}
+        }
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
           static_cast<void>(host_->engine->poll()); publishMainlineFailure(); tickScheduler(); tickAccounting();
@@ -984,6 +1068,7 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
     if(!reviewOnly){static_cast<void>(take(storage::recoverTorrentIntake(lease)));}
     const auto session = reserveColumnLayoutSession();
     host_ = std::make_unique<Host>(profile, ownedPeerPort, std::move(lease), session);
+    host_->i2pOptions=i2pOptions_;
     host_->fileRecoveryRequired=reviewOnly;host_->replacementReviewOnly=reviewOnly;
     if(reviewOnly){ready(host_->query(stop),tr("Profile opened read-only. Select the torrent and review its interrupted file replacement. The uncertain directory will be kept."));return;}
     const auto snapshot = host_->query(stop); // Validate the profile before optional engine startup.
@@ -1013,7 +1098,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     // Do not let dispatch's repairable-policy fallback publish an ordinary Host
     // after storage recovery failed. Only a validated review gets a read-only Host.
     host_ = std::make_unique<Host>(profile, 0, std::move(lease), reserveColumnLayoutSession());
-    host_->normalNetwork = true;
+    host_->normalNetwork = true;host_->i2pOptions=i2pOptions_;
     host_->replacementReviewOnly=reviewOnly;host_->fileRecoveryRequired=reviewOnly;
     if(reviewOnly){ready(host_->query(stop),tr("Profile opened read-only. Select the torrent and review its interrupted file replacement. The uncertain directory will be kept."));return;}
     auto inventory = storage::ConfigFile::load(host_->lease, "downloads.config");
@@ -1023,7 +1108,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     static_cast<void>(host_->query(stop));
     host_->dhtAccounting.emplace(false);
     initializePersistentOwner(stop);
-    if (!host_->engine) { throw Failure{{storage::ErrorCode::Unsupported, "This build lacks a qualified engine runtime"}}; }
+    if (!host_->engine && !host_->i2pOptions) { throw Failure{{storage::ErrorCode::Unsupported, "This build lacks a qualified engine runtime"}}; }
     const auto source = take(storage::readLibraryView(host_->lease));
     std::set<std::string> paused;
     for (const auto& pause : source.pauses) { paused.insert(pause.hash.hex()); }
@@ -1032,18 +1117,25 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
       const auto& saved = item.saved;
       if (!saved.hash || !saved.persistent || saved.startup == core::StartupState::Stopped
           || paused.contains(saved.hash->hex()) || !host_->currentHashes.contains(saved.hash->hex())) { continue; }
-      auto started = host_->engine->startManaged(host_->lease,
-          {*saved.hash, 0, saved.forceStart, saved.startup == core::StartupState::Queued});
-      if (!started) { host_->admissionFailures.insert_or_assign(saved.hash->hex(), started.error()); }
+      auto started = host_->i2pOptions
+          ? (saved.startup==core::StartupState::Queued?std::expected<void,storage::Error>{std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Use Start for the queued I2P torrent in this private preview"})}:host_->startI2p(*saved.hash))
+          : host_->engine->startManaged(host_->lease,{*saved.hash,0,saved.forceStart,saved.startup==core::StartupState::Queued});
+      if (!started) { host_->admissionFailures.insert_or_assign(saved.hash->hex(), started.error());
+        if(host_->i2pOptions){host_->i2pPacket.hash=text(saved.hash->hex());host_->i2pPacket.state=tr("Error — I2P");host_->i2pPacket.failure=text(started.error().message);}
+      }
     }
-    host_->bootstrapMagnets(stop); // Ordinary admissions precede pending metadata recovery.
+    if(host_->engine){host_->bootstrapMagnets(stop);} // Private I2P has no Public magnet fallback.
     tickScheduler();
     ready(host_->query(stop), host_->admissionFailures.empty() ? QString{} : tr("Some torrents require attention; saved data was preserved"));
+    publishI2p();
   });
 }
 bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAction action) {
   if (profileClosed_ || targets.empty()) { return false; }
   return dispatch([this, targets = std::move(targets), action](std::stop_token stop) {
+    if(host_&&host_->i2pOptions&&host_->lastSnapshot){
+      host_->i2pCommands(targets,action,stop);publishI2p();ready(host_->query(stop));return;
+    }
     if (!host_ || !host_->engine || !host_->lastSnapshot) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
@@ -1202,6 +1294,7 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
 bool SessionBridge::torrentImport(QString metadata, QString destination, bool start) {
   if (profileClosed_ || metadata.isEmpty() || destination.isEmpty()) { return false; }
   return dispatch([this, metadata = std::move(metadata), destination = std::move(destination), start](std::stop_token stop) {
+    if(host_){host_->requireI2pIdle();}
     if (!host_ || !host_->engine || !host_->engine->managedAvailable()) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
@@ -1256,6 +1349,7 @@ bool SessionBridge::previewTorrentIntake(ui::TorrentIntakeRequest request) {
 bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
   if(profileClosed_||!submission.session||submission.session!=publishedColumnLayoutSession_||!submission.request){return false;}
   return dispatch([this,submission=std::move(submission)](std::stop_token stop){
+    if(host_){host_->requireI2pIdle();}
     auto result=std::make_shared<ui::TorrentIntakeResultPacket>();
     result->session=submission.session;result->request=submission.request;result->revision=submission.revision;
     try {
@@ -1321,6 +1415,7 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
 bool SessionBridge::magnetImport(QString uri, QString destination) {
   if (profileClosed_ || uri.isEmpty() || destination.isEmpty()) { return false; }
   return dispatch([this, uri = std::move(uri), destination = std::move(destination)](std::stop_token stop) {
+    if(host_){host_->requireI2pIdle();}
     if (!host_ || !host_->engine || !host_->engine->managedAvailable()) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
@@ -1358,6 +1453,7 @@ bool SessionBridge::magnetImport(QString uri, QString destination) {
 bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int priority, bool skipped) {
   if (profileClosed_ || selected.empty()) { return false; }
   return dispatch([this, target = std::move(target), selected = std::move(selected), priority, skipped](std::stop_token stop) {
+    if(host_){host_->requireI2pIdle();}
     if (!host_ || !host_->engine || !host_->engine->managedAvailable()) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
@@ -1432,6 +1528,7 @@ bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int 
 bool SessionBridge::compactFile(ui::Target target, int originalIndex) {
   if (profileClosed_ || originalIndex < 0) { return false; }
   return dispatch([this, target = std::move(target), originalIndex](std::stop_token stop) {
+    if(host_){host_->requireI2pIdle();}
     if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
     host_->accepts(target);
     if (host_->engine && !host_->engine->poll()) {
@@ -1993,6 +2090,7 @@ bool SessionBridge::saveColumnLayout(ui::ColumnLayoutSaveSubmission submission) 
   const auto request = submission->request;
   auto preferences = std::make_shared<const core::ClassicPreferences>(*submission->preferences);
   return dispatch([this, session, request, preferences = std::move(preferences)](std::stop_token stop) {
+    if(host_){host_->requireI2pIdle();}
     auto packet = std::make_shared<ui::ColumnLayoutSavePacket>();
     packet->session = session;
     packet->request = request;
@@ -2218,7 +2316,7 @@ void SessionBridge::publishMainlineFailure() noexcept {
   }catch(...){}
 }
 void SessionBridge::initializePersistentOwner(std::stop_token stop) {
-  if (!host_ || host_->fileRecoveryRequired || (host_->peerPort == 0 && !host_->normalNetwork) || host_->engine) { return; }
+  if (!host_ || host_->i2pOptions || host_->fileRecoveryRequired || (host_->peerPort == 0 && !host_->normalNetwork) || host_->engine) { return; }
   checkpoint(stop);
   // Preserve the exact source/runtime guard and default unbound fallback.
   auto owner = engine::PersistentSession::create({1, host_->columnLayoutSession, 1});
@@ -2569,6 +2667,7 @@ void SessionBridge::publishOverall(bool closed) {
 bool SessionBridge::markStatistics(quint64 session, bool clear) {
   if (!session || session != publishedColumnLayoutSession_) { return false; }
   return dispatch([this, session, clear](std::stop_token stop) {
+    if(host_){host_->requireI2pIdle();}
     if (!host_ || host_->columnLayoutSession != session || !host_->overall || !host_->dhtAccounting) {
       throw Failure{{storage::ErrorCode::Unsupported, "Live statistics accounting is not active"}};
     }
@@ -2623,6 +2722,10 @@ bool SessionBridge::closeSession() {
     bool released = true;
     ui::NativeSessionPresentation finalObservation;
     QString checkpointFailure;
+    if(host_){
+      const auto stopped=host_->stopI2p();joined=joined&&host_->i2pJoined;
+      if(!stopped){checkpointFailure=text(stopped.error().message);}publishI2p();
+    }
     if (host_ && host_->azureus) {
       joined = static_cast<bool>(host_->azureus->close());
       publishAzureus();
@@ -2798,6 +2901,7 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
     if (!field || !core::validApplicationSettingValue(*field, change.value)) { return false; }
   }
   return dispatch([this, submission = std::move(submission)](std::stop_token stop) {
+    if(host_){host_->requireI2pIdle();}
     auto packet = std::make_shared<ui::OptionsSavePacket>();
     packet->session = submission.session; packet->request = submission.request; packet->revision = submission.revision;
     if (!host_ || host_->fileRecoveryRequired || host_->columnLayoutSession != submission.session || !host_->optionsBaseline
@@ -2901,6 +3005,7 @@ void SessionBridge::ensureScheduler() {
 bool SessionBridge::loadScheduler(ui::SchedulerRequest request) {
   if(profileClosed_||!request.session||!request.request||request.session!=publishedColumnLayoutSession_){return false;}
   return dispatch([this,request](std::stop_token stop){
+    if(host_){host_->requireI2pIdle();}
     auto failure=std::make_shared<ui::SchedulerPacket>();failure->session=request.session;failure->request=request.request;
     ui::SchedulerPresentation result=failure;
     if(!host_||host_->columnLayoutSession!=request.session){failure->failure=tr("This scheduling session is no longer active");}
@@ -2923,6 +3028,7 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
   if(profileClosed_||!value.session||!value.request||!value.revision||value.session!=publishedColumnLayoutSession_
       ||value.schedules.size()>storage::scheduler::MaximumSchedules){return false;}
   return dispatch([this,value=std::move(value)](std::stop_token stop){
+    if(host_){host_->requireI2pIdle();}
     auto result=std::make_shared<ui::SchedulerSavePacket>();result->session=value.session;result->request=value.request;result->revision=value.revision;
     if(!host_||host_->fileRecoveryRequired||host_->columnLayoutSession!=value.session||!host_->scheduler){result->failure=tr("Reload schedules before saving");}
     else try{
@@ -3145,3 +3251,12 @@ void SessionBridge::tickScheduler() noexcept {
 #include "hybrid_alias_bridge.inc"
 #include "file_operations_bridge.inc"
 } // namespace biglybtc::app
+
+namespace biglybtc::app {
+void SessionBridge::publishI2p(){
+  if(!host_||!host_->i2pOptions){return;}auto p=std::make_shared<ui::I2pPacket>(host_->i2pPacket);
+  p->session=host_->columnLayoutSession;p->sequence=++host_->i2pSequence;
+  if(p->state.isEmpty()){p->state=tr("I2P ready — use Start on an I2P-only torrent");}
+  QMetaObject::invokeMethod(this,[this,p=std::move(p)]{if(p->session==publishedColumnLayoutSession_){emit i2pReady(p);}},Qt::QueuedConnection);
+}
+}

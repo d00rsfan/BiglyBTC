@@ -41,6 +41,7 @@ bool SessionBridge::saveLocalRating(ui::LocalRatingSubmission value) {
   if(profileClosed_||!ratingIdentity(value.identity)||value.identity.session!=publishedColumnLayoutSession_
       ||value.attributesRevision.size()!=32||value.score>5||value.comment.size()>1024*1024){return false;}
   return dispatch([this,value=std::move(value)](std::stop_token stop){
+    if(host_){host_->requireI2pIdle();}
     auto result=std::make_shared<ui::LocalRatingSavePacket>();result->identity=value.identity;
     try{
       if(!host_||host_->columnLayoutSession!=value.identity.session||!host_->ratingRequest

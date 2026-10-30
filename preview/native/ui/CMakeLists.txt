@@ -62,3 +62,5 @@ endif()
 target_sources(biglybtc_ui PRIVATE
   "${PROJECT_SOURCE_DIR}/ui/local_rating_dialog.cpp"
   "${PROJECT_SOURCE_DIR}/ui/local_rating_dialog.hpp")
+
+target_sources(biglybtc_ui PRIVATE i2p_presentation.hpp i2p_statistics_view.hpp i2p_statistics_view.cpp)

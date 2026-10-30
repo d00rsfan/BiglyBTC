@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-30T13:02:15.292324+00:00",
-  "objective": "Completed the requested explicit private I2P provider/owner section. STOP before another chapter.",
-  "native_head": "05226c63fd46bf18cd5299e793629123a637ef52",
+  "updated_utc": "2026-10-30T14:08:59.937873+00:00",
+  "objective": "Integrate explicit qualified private I2P owner with ordinary Host and classic UI; finish this chapter then stop.",
+  "native_head": "0b49607f3d5495591e6258e6b3bac9647e2512c1",
   "qualified_native_source": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
   "native_source_pushed": true,
-  "current_source_qualification": "PASS: SDK9; fresh native Clang11/GCC11/leak-enabled ASan+UBSan11/default4; actual tracker-discovered two-profile131072-byte transfer, withdrawal and joins. Private optional scope only.",
+  "current_source_qualification": "Prior owner source9f46 qualified; new chapter unqualified until actual checks.",
   "accepted_dist_sha256": "aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b",
   "receipts": [
     {
@@ -54,14 +54,21 @@
       "sha256": "8999ad9806703f25a6c0f46fdb22725013f741395e817313c1b06c86cd0f082f"
     }
   ],
-  "active_local_sessions": [],
+  "active_local_sessions": [
+    {
+      "id": 48085,
+      "purpose": "First coherent private GCC Host/UI build and4 focused CTests",
+      "receipts": "build/host-i2p-20261030/private/r1",
+      "poll": "write_stdin48085; result.json is durable if tool session gone"
+    }
+  ],
   "active_sessions": [],
   "remote_ci": {
     "qualified_source": "9f46cf05d133624e48c6d60d45d2c503a6141ff9",
     "41053224420": "success",
     "41053224451": "success"
   },
-  "next_action": "STOP. Section complete; do not implement a following chapter until the user requests it.",
+  "next_action": "Inspect first private batch result (logs only failure context). Apply staged saved-settings.py and any genuine compile fixes once source freeze ends. Rebuild incrementally, run actual acceptance with new runner, default public regressions, stage private preview, evidence/commit/push then stop.",
   "pending_question": "None for this completed section.",
   "original_checkpoint_expected_parent": "e62c2acedff647d8eed6f38c22a38a18efafda67",
   "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
@@ -72,9 +79,12 @@
     "error_oracle": "Completed bounded probe/Java and final acceptance source; no active work"
   },
   "details": "Completed evidence publication05226c63fd46bf18cd5299e793629123a637ef52 and qualified native source9f46cf05d133624e48c6d60d45d2c503a6141ff9 are separate. A subsequent stop/provenance commit may change metadata only; compare preview/native trees. Default355/f746 and119-leaf dist preserved; both registries20/108/22 identical, partial states/nulls preserved. Original Java live profile/payload/HEAD/index untouched. Historical operator metadata archived; raw progress remains durable in /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029. DATA/chat/rooms remain unstarted. Local original-repository review checkpoint e62c2acedff647d8eed6f38c22a38a18efafda67 is durable; ordinary HEAD/index preserved.",
-  "stop_after_current_milestone": true,
+  "stop_after_current_milestone": false,
   "stop_after_current_section": true,
-  "current_section": "Complete: explicit optional private I2P provider/owner and actual two-profile torrent transfer",
+  "current_section": "P07 ordinary Host/UI private I2P integration",
   "effective_acceptance": "build/i2p-provider-attachment-20261029/final-transfer-live-executor",
-  "effective_native_recipe": "build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/live-executor-sdk"
+  "effective_native_recipe": "build/i2p-provider-attachment-20261029/native-followup-20261030/amendments/live-executor-sdk",
+  "pending_review_fixes": [
+    "build/host-i2p-20261030/saved-settings.py not applied until current build ends; adds6 original pure mappings + destructor fallback cleanup"
+  ]
 }

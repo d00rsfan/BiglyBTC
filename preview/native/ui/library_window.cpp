@@ -600,6 +600,8 @@ void LibraryWindow::showStatistics() {
     const auto session = columnSession_;
     page->beginNativeSession(session);
     if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }
+    if(latestI2p_){page->setI2p(latestI2p_);}
+    if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }
     page->resetHistorySession(columnSession_);
     if (!guard || !page || statisticsPage_ != page) { return; }
     mainTabs_->addTab(statisticsPage_.data(), tr("Statistics"));
@@ -885,6 +887,10 @@ void LibraryWindow::setOverall(OverallPresentation packet) {
   latestOverall_ = std::move(packet);
   if (statisticsPage_) { statisticsPage_->setOverall(latestOverall_); }
 }
+void LibraryWindow::setI2p(I2pPresentation packet) {
+  if(closing_||!acceptI2p(latestI2p_,packet,columnSession_)){return;}latestI2p_=std::move(packet);
+  if(statisticsPage_){statisticsPage_->setI2p(latestI2p_);}
+}
 void LibraryWindow::setNativeSession(NativeSessionPresentation packet) {
   if (closing_ || !packet || packet->applicationRun < nativeApplicationRun_
       || !acceptNativeSession(latestNativeSession_, packet, columnSession_)) { return; }
@@ -1056,6 +1062,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
+  latestI2p_.reset();
   localRatingIdentity_.reset();localRatingLoading_=false;localRatingSaving_=false;
   if(localRatingDialog_){localRatingDialog_->reject();if(!guard){return;}}
   if(fileOperationSequence_){fileOperationSequence_->invalidateSession();if(!guard){return;}}

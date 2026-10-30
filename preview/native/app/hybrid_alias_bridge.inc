@@ -1,6 +1,7 @@
 bool SessionBridge::createHybridCompanion(ui::Target source,bool selectV2) {
   if(profileClosed_||!source.generation||source.hash.isEmpty()){return false;}
   return dispatch([this,source=std::move(source),selectV2](std::stop_token stop){
+    if(host_){host_->requireI2pIdle();}
     if(!host_||!host_->engine){throw Failure{{storage::ErrorCode::Unsupported,"No actual torrent owner is available"}};}
     host_->accepts(source);checkpoint(stop);
     if(host_->fileRecoveryRequired||storage::hasPendingOriginalCompaction(host_->lease)){

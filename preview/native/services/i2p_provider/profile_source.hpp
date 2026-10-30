@@ -8,6 +8,7 @@
 #include <memory>
 
 namespace biglybtc::services::i2p::provider {
+class OwnedTorrent;
 // Filesystem methods belong to an external lifetime/I/O worker, never the
 // socket thread. Public observations contain no key bytes or ephemeral auth.
 class ProfileSource final:public std::enable_shared_from_this<ProfileSource> {
@@ -32,6 +33,11 @@ public:
   void revoke()noexcept;
   std::shared_ptr<i2cp::EffectAuthority> effectAuthority()const noexcept;
 private:
+  friend class OwnedTorrent;
+  // Read-only final CAS preflight after the friend's actual flush/remove/join.
+  // Accepts intentionally revoked effects ONLY when every held named source
+  // and exact prepared snapshot still matches; never restores effect authority.
+  std::expected<void,storage::Error> validateRetiredSnapshot()const;
   friend class Bridge;
   std::vector<int> watchDescriptors()const;
   struct Impl;

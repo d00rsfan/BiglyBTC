@@ -130,4 +130,15 @@ std::expected<void,storage::Error> ProfileSource::validate()const{
     const auto now=capture(*impl_->lease,impl_->hash,impl_->directory);require(!impl_->stamp||now==*impl_->stamp,ErrorCode::Conflict,"Owned I2P profile source changed");require(impl_->namedCurrent(),ErrorCode::Conflict,"Original I2P source changed while reading");return {};
   }catch(const Rejected& error){impl_->revoked=true;return std::unexpected(error.error);}catch(...){impl_->revoked=true;return std::unexpected(Error{ErrorCode::Io,"Owned I2P source validation failed"});}
 }
+std::expected<void,storage::Error> ProfileSource::validateRetiredSnapshot()const{
+  try{auto alias=take(impl_->lease->retain());auto access=take(alias->sourceAccess());
+    require(impl_->stamp&&impl_->namedCurrent(),ErrorCode::Conflict,"Retired I2P source no longer names its exact prepared snapshot");
+    const auto now=capture(*impl_->lease,impl_->hash,impl_->directory);
+    require(now==*impl_->stamp&&impl_->namedCurrent(),ErrorCode::Conflict,"Retired I2P source changed before checkpoint");
+    // Intentionally do not inspect/clear revoked: this proves original bytes
+    // for the joined owner's CAS only, and cannot authorize a network effect.
+    return {};
+  }catch(const Rejected& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot validate retired I2P source snapshot"});}
+}
+
 }

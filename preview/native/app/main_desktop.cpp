@@ -17,9 +17,9 @@
 int main(int argc, char** argv) {
   const bool normal = argc >= 2 && std::string_view(argv[1]) == "--profile";
   const bool local = argc >= 2 && std::string_view(argv[1]) == "--experimental-local";
-  if ((!normal && !local) || (normal && argc != 3 && argc != 5) || (local && argc != 4 && argc != 6)) {
-    std::cerr << "Usage: BiglyBTC --profile ABSOLUTE_PROFILE [--country-db ABSOLUTE_DIRECTORY]\n"
-                 "       BiglyBTC --experimental-local GENERATED_PROFILE OWNED_PEER_PORT [--country-db ABSOLUTE_DIRECTORY]\n";
+  if ((!normal && !local) || (normal && argc < 3) || (local && argc < 4)) {
+    std::cerr << "Usage: BiglyBTC --profile ABSOLUTE_PROFILE [--country-db ABSOLUTE_DIRECTORY] [--private-i2p I2CP_PORT]\n"
+                 "       BiglyBTC --experimental-local GENERATED_PROFILE OWNED_PEER_PORT [--country-db ABSOLUTE_DIRECTORY] [--private-i2p I2CP_PORT]\n";
     return 2;
   }
   const std::filesystem::path profile(argv[2]);
@@ -45,13 +45,23 @@ int main(int argc, char** argv) {
   }
   std::filesystem::path countryDatabase;
   const int countryOption = normal ? 3 : 4;
-  if (argc > countryOption) {
-    countryDatabase = argv[countryOption + 1];
-    if (std::string_view(argv[countryOption]) != "--country-db" || !countryDatabase.is_absolute()) {
-      std::cerr << "Country data requires --country-db ABSOLUTE_DIRECTORY\n";
-      return 2;
-    }
+  std::optional<biglybtc::app::I2pServiceOptions> i2pOptions;
+  for(int option=countryOption;option<argc;option+=2){
+    if(option+1>=argc){std::cerr<<"Missing option value\n";return 2;}
+    if(std::string_view(argv[option])=="--country-db"&&countryDatabase.empty()){
+      countryDatabase=argv[option+1];if(!countryDatabase.is_absolute()){std::cerr<<"Country database needs an absolute directory\n";return 2;}
+    }else if(std::string_view(argv[option])=="--private-i2p"&&!i2pOptions){
+#if BIGLYBTC_HOST_I2P_OWNER
+      unsigned int routerPort=0;const std::string_view value(argv[option+1]);
+      const auto parsed=std::from_chars(value.data(),value.data()+value.size(),routerPort);
+      if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||!routerPort||routerPort>65535){std::cerr<<"Use a numeric owned loopback I2CP port\n";return 2;}
+      i2pOptions.emplace();i2pOptions->routerPort=static_cast<unsigned short>(routerPort);
+#else
+      std::cerr<<"This build has no privately approved I2P provider\n";return 2;
+#endif
+    }else{std::cerr<<"Unknown or repeated option\n";return 2;}
   }
+
   try {
     if (!std::setlocale(LC_CTYPE, "")) { throw std::runtime_error("Unable to initialize the filesystem character locale"); }
     biglybtc::app::detail::installWaylandConsoleFilter();
@@ -86,7 +96,7 @@ int main(int argc, char** argv) {
       auto loaded=biglybtc::storage::loadApprovedSchedulerService(lease,schedulerModule,schedulerApproval);
       if(!loaded){throw std::runtime_error(loaded.error().message);}return std::move(*loaded);
     };
-    biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory), {}, std::move(schedulerFactory));
+    biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory), {}, std::move(schedulerFactory),std::move(i2pOptions));
     using Window = biglybtc::ui::LibraryWindow;
     using Bridge = biglybtc::app::SessionBridge;
     QObject::connect(&bridge,&Bridge::localRatingReady,&window,&Window::setLocalRating);
@@ -117,6 +127,7 @@ int main(int argc, char** argv) {
       if (!bridge.saveOptions(submission)) { window.rejectOptionsSave(submission); }
     });
     QObject::connect(&bridge, &Bridge::snapshotReady, &window, &Window::setPresentation);
+    QObject::connect(&bridge, &Bridge::i2pReady, &window, &Window::setI2p);
     QObject::connect(&bridge, &Bridge::progressReady, &window, &Window::setTelemetry);
     QObject::connect(&bridge, &Bridge::detailsReady, &window, &Window::setDetails);
     QObject::connect(&bridge, &Bridge::savedServicesReady, &window, &Window::setSavedServices);

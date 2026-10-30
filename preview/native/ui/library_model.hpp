@@ -70,6 +70,7 @@ struct LibraryItem {
   quint16 actionMask = 0;
   std::optional<MainlineEstimateValues> mainlineEstimate{};
   std::optional<TrackerScrapeValues> trackerScrape{};
+  QString networkStatus{};
 };
 struct LibraryPresentation {
   quint64 revision = 0;

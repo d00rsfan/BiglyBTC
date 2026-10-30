@@ -268,6 +268,7 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   operationsScroll->setWidget(azureus_[1]);
   tabs_->addTab(operationsScroll, tr("DDB Operations"));
   tabs_->addTab(azureus_[2], tr("Vivaldi"));
+  i2p_=new I2pStatisticsView(tabs_);tabs_->addTab(i2p_,tr("I2P"));
   connect(manualTags_, &ManualTagStatisticsView::readRequested,
       this, &StatisticsPage::manualTagStatisticsRequested);
   auto* refresh = new QPushButton(tr("Refresh saved totals"), this); refresh->setObjectName(QStringLiteral("statistics-refresh"));
@@ -505,6 +506,8 @@ void StatisticsPage::beginNativeSession(quint64 session) {
   if (!session || session <= nativeSessionBinding_) { return; }
   nativeSessionBinding_ = session; nativeActivityFrame_.reset();
   QPointer<StatisticsPage> guard(this);
+  i2p_->beginSession(session);
+  if(!guard){return;}
   if (nativeSessionView_) { nativeSessionView_->beginSession(session); }
   if (!guard || guard->nativeSessionBinding_ != session) { return; }
   if (guard->nativeActivityView_) { guard->nativeActivityView_->beginSession(session); }

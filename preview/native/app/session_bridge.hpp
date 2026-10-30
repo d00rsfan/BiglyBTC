@@ -1,5 +1,7 @@
 #pragma once
 #include "file_operation_presentation.hpp"
+#include "owned_i2p_service.hpp"
+#include "i2p_presentation.hpp"
 #include "options_presentation.hpp"
 #include "scheduler_presentation.hpp"
 #include "local_rating_presentation.hpp"
@@ -45,7 +47,7 @@ public:
   using CountryProviderFactory = std::function<std::unique_ptr<storage::CountryProvider>(const storage::ProfileLease&)>;
   using AzureusServiceFactory = std::function<std::unique_ptr<OwnedAzureusService>(const storage::ProfileLease&)>;
   using SchedulerFactory = std::function<std::unique_ptr<storage::SchedulerService>(const storage::ProfileLease&)>;
-  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {});
+  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {});
   ~SessionBridge() override;
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool openNormal(std::filesystem::path profile);
@@ -100,6 +102,7 @@ signals:
   void optionsSaved(biglybtc::ui::OptionsSavePresentation);
   void intakeDefaultsReady(quint64 session, QString directory);
   void snapshotReady(biglybtc::ui::Presentation);
+  void i2pReady(biglybtc::ui::I2pPresentation);
   void progressReady(biglybtc::ui::Telemetry);
   void detailsReady(biglybtc::ui::Details);
   void savedServicesReady(biglybtc::ui::SavedServicesPresentation);
@@ -138,6 +141,7 @@ private:
   void tickScheduler() noexcept;
   void initializePersistentOwner(std::stop_token);
   void publishMainlineFailure() noexcept;
+  void publishI2p();
   void observeNative(const engine::ApplicationPeerObservation&) noexcept;
   void refreshDhtAccounting(bool ending = false) noexcept;
   void tickAccounting(bool force = false, bool ending = false) noexcept;
@@ -186,6 +190,7 @@ private:
   bool azureusDeliveryQueued_ = false;
   std::optional<ui::LiveSpeedManagerPresentation> latestLiveSpeed_;
   bool liveSpeedDeliveryQueued_ = false;
+  std::optional<I2pServiceOptions> i2pOptions_;
   SchedulerFactory schedulerFactory_;
   std::optional<ui::FileOperationRequest> guiFileOperation_;
   std::optional<ui::TorrentCreationRequest> guiCreation_;

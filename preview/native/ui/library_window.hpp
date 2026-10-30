@@ -1,4 +1,5 @@
 #pragma once
+#include "i2p_presentation.hpp"
 #include "file_operation_presentation.hpp"
 #include "file_operation_sequence.hpp"
 #include "options_presentation.hpp"
@@ -89,6 +90,7 @@ public:
   void setHistoryRange(HistoryRangePresentation);
   void setEngineStatistics(EngineStatisticsPresentation);
   void setNativeSession(NativeSessionPresentation);
+  void setI2p(I2pPresentation);
   void setOverall(OverallPresentation);
   void setRuntimeMetrics(RuntimeMetricsPresentation);
   void setAzureusStatistics(AzureusStatisticsPresentation);
@@ -278,6 +280,7 @@ private:
   QPointer<SavedHostingPage> hostingPage_;
   QPointer<SavedSharesPage> sharesPage_;
   QPointer<StatisticsPage> statisticsPage_;
+  I2pPresentation latestI2p_;
   struct StatisticsNavigationRecord {
     quint64 session = 0;
     StatisticsNavigation navigation{};

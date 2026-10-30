@@ -87,6 +87,7 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
   if(profileClosed_||!value.plan||value.plan->request.session!=publishedColumnLayoutSession_||!value.plan->failure.isEmpty()){return false;}
   const auto request=value.plan->request;
   const bool accepted=dispatch([this,value=std::move(value)](std::stop_token stop){
+    if(host_){host_->requireI2pIdle();}
     const auto request=value.plan->request;auto result=std::make_shared<ui::FileOperationResultPacket>();result->request=request;
     try{
       if(!host_||host_->columnLayoutSession!=request.session||!host_->filePlan||!host_->filePlanPacket||!sameFilePlan(*host_->filePlanPacket,*value.plan)){throw Failure{{storage::ErrorCode::Conflict,"This file-operation plan was replaced; prepare it again"}};}

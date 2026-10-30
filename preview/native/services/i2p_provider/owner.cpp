@@ -2,6 +2,7 @@
 #include "owner.hpp"
 #include "owner_runtime_guard.hpp"
 #include "source_permit.hpp"
+#include "retirement_counters.hpp"
 #include "metadata_disk_router.hpp"
 #include <libtorrent/session.hpp>
 #include <libtorrent/session_params.hpp>
@@ -37,6 +38,13 @@ struct OwnedTorrent::Impl {
   std::optional<libtorrent::session_proxy> joining;
   libtorrent::torrent_handle handle;
   AlertDiagnostics diagnosticAlerts;
+  std::shared_ptr<detail::RetirementCounters> counters=std::make_shared<detail::RetirementCounters>();
+  RetirementObservation retired;
+  std::chrono::steady_clock::time_point retirementDeadline{};
+  bool pauseSeen=false,saveRequested=false,flushSeen=false,removing=false,removed=false,checkpointAttempted=false;
+  std::vector<std::uint8_t> retiredPieces;
+  engine::detail::ManagedPayloadCounters::Sample retiredCounters;
+  bool retiredComplete=false,retirementUnsafe=false;
   Options options;Phase phase=Phase::Prepared;
   std::uint64_t admission=0,providerGeneration=0;bool notifyQueued=false,startRequested=false,bridgeRequested=false;
   Impl(std::shared_ptr<ProfileSource> s,engine::detail::ManagedStorage m,ClientIdentity key,std::shared_ptr<void> pin)
@@ -48,7 +56,11 @@ struct OwnedTorrent::Impl {
     if(!ok){notifyQueued=false;close();}
   }
   void close(){
-    if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;source->revoke();identity.reset();
+    // A second close after successful removal/abort is idempotent: preserve the
+    // frozen ready receipt while its external join/checkpoint is still pending.
+    if(phase==Phase::Withdrawn){if(!retired.readyForJoin||retired.checkpointed){source->revoke();}return;}
+    if(retired.requested&&!retired.readyForJoin&&!retired.failure){retired.failure=storage::Error{storage::ErrorCode::Conflict,"I2P retirement was interrupted; recheck remains required"};}
+    phase=Phase::Withdrawn;source->revoke();identity.reset();
     if(bridge){bridge->close();}if(channel){channel->close();}
     if(permit){permit->stop();}
     if(session){
@@ -61,7 +73,112 @@ struct OwnedTorrent::Impl {
     if(phase!=Phase::Withdrawn){return;}
     // Actual provider executor/disk join precedes releasing mapped payload
     // owners and SAME-OFD source authority. No successful checkpoint invented.
-    joining.reset();if(bridge){bridge->joinSource();}if(permit){permit->join();}
+    joining.reset();if(bridge){bridge->joinSource();}if(permit){permit->join();}retired.joined=true;
+  }
+  void retirementFailure(storage::ErrorCode code,const char* message){
+    if(!retired.failure){retired.failure=storage::Error{code,message};}close();
+  }
+  engine::detail::ManagedPayloadCounters::Sample sampleCounters(libtorrent::torrent_status& actual,bool pieces){
+    for(int attempt=0;attempt<4;++attempt){
+      const auto epoch=counters->payload.epoch();if(!epoch){break;}
+      actual=handle.status(pieces?libtorrent::torrent_handle::query_pieces:libtorrent::status_flags_t{});
+      std::optional<engine::detail::ManagedPayloadCounters::Bad> bad;
+      if(actual.total_redundant_bytes>=0&&actual.total_failed_bytes>=0
+          &&actual.total_redundant_bytes<std::numeric_limits<std::int64_t>::max()
+          &&actual.total_failed_bytes<std::numeric_limits<std::int64_t>::max()){
+        bad=engine::detail::ManagedPayloadCounters::Bad{actual.total_redundant_bytes,actual.total_failed_bytes};
+      }
+      std::optional<engine::detail::ManagedPayloadCounters::Protocol> protocol;
+      if(actual.total_payload_download>=0&&actual.total_payload_upload>=0&&actual.total_download>=actual.total_payload_download&&actual.total_upload>=actual.total_payload_upload){
+        protocol=engine::detail::ManagedPayloadCounters::Protocol{actual.total_download-actual.total_payload_download,actual.total_upload-actual.total_payload_upload};
+      }
+      auto value=counters->payload.combine(*epoch,actual.total_payload_download,actual.total_payload_upload,protocol,bad);
+      if(value.state!=engine::detail::ManagedPayloadCounters::Read::Retry){return value;}
+    }
+    return {};
+  }
+  void beginRetirement(std::chrono::steady_clock::time_point deadline){
+    retired.requested=true;retirementDeadline=deadline;phase=Phase::Retiring;
+    // Transport closure irreversibly revokes live effects. Only the immutable
+    // held snapshot survives, for read-only validation AFTER full removal/join.
+    if(bridge){bridge->close();}if(channel){channel->close();}if(permit){permit->stop();}
+    handle.unset_flags(libtorrent::torrent_flags::auto_managed);handle.pause();
+  }
+  void retireAlert(const libtorrent::alert* item){
+    if(phase!=Phase::Retiring){return;}
+    if(std::chrono::steady_clock::now()>=retirementDeadline){retirementFailure(storage::ErrorCode::Io,"I2P retirement deadline expired before its next fence");return;}
+    namespace lt=libtorrent;
+    if(lt::alert_cast<lt::alerts_dropped_alert>(item)||lt::alert_cast<lt::session_error_alert>(item)){
+      retirementFailure(storage::ErrorCode::Io,"I2P retirement lost an essential engine observation");return;
+    }
+    if(lt::alert_cast<lt::file_error_alert>(item)||lt::alert_cast<lt::torrent_error_alert>(item)
+        ||lt::alert_cast<lt::save_resume_data_failed_alert>(item)){
+      retirementFailure(storage::ErrorCode::Io,"I2P retirement flush failed; original recheck marker retained");return;
+    }
+    if(const auto* value=lt::alert_cast<lt::torrent_paused_alert>(item);value&&value->handle==handle){
+      pauseSeen=true;
+      if(!saveRequested){saveRequested=true;handle.save_resume_data(lt::torrent_handle::flush_disk_cache);}
+    }
+    if(const auto* value=lt::alert_cast<lt::save_resume_data_alert>(item);value&&value->handle==handle){
+      if(!pauseSeen||!saveRequested||flushSeen){retirementFailure(storage::ErrorCode::Conflict,"Unexpected I2P retirement flush observation");return;}
+      lt::torrent_status actual;auto count=sampleCounters(actual,true);
+      const int pieces=storage.parameters().ti->num_pieces();
+      if(!counters->checked.load(std::memory_order_acquire)||actual.errc||!(actual.flags&lt::torrent_flags::paused)
+          ||count.state!=engine::detail::ManagedPayloadCounters::Read::Accepted
+          ||value->params.have_pieces.size()!=pieces||actual.pieces.size()!=pieces){
+        retirementFailure(storage::ErrorCode::Io,"Exact I2P retirement pieces/counters unavailable; recheck required");return;
+      }
+      retiredPieces.assign(static_cast<std::size_t>(pieces),0);
+      for(int i=0;i<pieces;++i){
+        const auto index=lt::piece_index_t{i};
+        if(value->params.have_pieces[index]!=actual.pieces[index]){retirementFailure(storage::ErrorCode::Conflict,"I2P flushed-piece snapshot changed");return;}
+        retiredPieces[static_cast<std::size_t>(i)]=value->params.have_pieces[index]?1:0;
+      }
+      if(std::chrono::steady_clock::now()>=retirementDeadline){retirementFailure(storage::ErrorCode::Io,"I2P retirement deadline expired during its snapshot");return;}
+      retiredCounters=count;retiredComplete=actual.is_seeding;flushSeen=true;
+      session->remove_torrent(handle);removing=true;
+    }
+    if(const auto* value=lt::alert_cast<lt::torrent_removed_alert>(item);value&&value->handle==handle){if(!removing){retirementFailure(storage::ErrorCode::Conflict,"I2P torrent disappeared before its flush fence");return;}removed=true;}
+  }
+  void advanceRetirement(){
+    if(phase!=Phase::Retiring){return;}
+    if(std::chrono::steady_clock::now()>=retirementDeadline){retirementFailure(storage::ErrorCode::Io,"I2P retirement deadline expired; recheck remains required");return;}
+    if(flushSeen&&removing&&removed&&!handle.is_valid()){
+      // Full session/disk join remains an external operation. Keep the retained
+      // profile snapshot for the subsequent read-only validation+original CAS.
+      if(providerGeneration){static_cast<void>(libtorrent::biglybtc_withdraw_private_i2p_owner_v1(session.get(),providerGeneration));}
+      joining.emplace(session->abort());session.reset();handle={};
+      retired.readyForJoin=true;phase=Phase::Withdrawn;notify();
+    }
+  }
+  void drainAlerts(){
+    if(!session){return;}
+    namespace lt=libtorrent;
+    std::vector<lt::alert*> alerts;session->pop_alerts(&alerts);
+    auto& totals=diagnosticAlerts;totals.currentShown=0;totals.currentOmitted=0;
+    const auto add=[](std::uint64_t& count,std::size_t amount=1){count+=std::min<std::uint64_t>(std::numeric_limits<std::uint64_t>::max()-count,amount);};
+    const auto error=[](const lt::error_code& code){return ErrorObservation{code.value(),std::string(code.category().name()).substr(0,64),code.message().substr(0,160)};};
+    add(totals.drained,alerts.size());const auto inspected=std::min<std::size_t>(alerts.size(),256);add(totals.uninspected,alerts.size()-inspected);
+    for(std::size_t i=0;i<inspected;++i){
+      const auto* item=alerts[i];const lt::error_code* code=nullptr;bool selected=true;
+      if(lt::alert_cast<lt::alerts_dropped_alert>(item)||lt::alert_cast<lt::session_error_alert>(item)
+          ||lt::alert_cast<lt::file_error_alert>(item)||lt::alert_cast<lt::torrent_error_alert>(item)
+          ||lt::alert_cast<lt::save_resume_data_failed_alert>(item)){retirementUnsafe=true;}
+      if(lt::alert_cast<lt::tracker_announce_alert>(item)){add(totals.announces);}
+      else if(const auto* entry=lt::alert_cast<lt::tracker_error_alert>(item)){add(totals.trackerErrors);code=&entry->error;}
+      else if(lt::alert_cast<lt::tracker_reply_alert>(item)){add(totals.trackerReplies);}
+      else if(const auto* entry=lt::alert_cast<lt::i2p_alert>(item)){add(totals.i2pErrors);code=&entry->error;}
+      else if(const auto* entry=lt::alert_cast<lt::file_error_alert>(item)){add(totals.fileErrors);code=&entry->error;}
+      else if(const auto* entry=lt::alert_cast<lt::torrent_error_alert>(item)){add(totals.torrentErrors);code=&entry->error;}
+      else{selected=false;}
+      if(selected){if(totals.currentShown<totals.current.size()){totals.current[totals.currentShown++]={item->type(),code?error(*code):ErrorObservation{}};}else{++totals.currentOmitted;}}
+      retireAlert(item);
+      // pop_alerts pointers belong to the session; a failure may have aborted it.
+      if(!session){return;}
+    }
+    if(inspected!=alerts.size()){retirementUnsafe=true;}
+    if(phase==Phase::Retiring&&retirementUnsafe){retirementFailure(storage::ErrorCode::Io,"I2P retirement essential observations incomplete");return;}
+    advanceRetirement();
   }
   bool install(void* opaque){
     namespace lt=libtorrent;auto& policy=*static_cast<lt::BiglybtcPrivateI2pOwnerPolicyV1*>(opaque);
@@ -76,6 +193,11 @@ struct OwnedTorrent::Impl {
       const auto virtualPath=(std::filesystem::path(params.save_path)/".BiglyBTC-original-storage"/(source->hash().hex()+"-owned-i2p-"+std::to_string(admission))).lexically_normal();
       auto registered=disks->registerOriginalPath(virtualPath,std::move(mapped));if(!registered){return false;}params.save_path=virtualPath.string();
     }
+    if(params.total_downloaded||params.total_uploaded){return false;}
+    const auto ledger=counters;const auto pin=providerPin;
+    params.extensions.push_back([ledger,pin](const lt::torrent_handle& torrent,lt::client_data_t)->std::shared_ptr<lt::torrent_plugin>{
+      return std::make_shared<detail::RetirementCounterPlugin>(torrent,ledger,pin);
+    });
     lt::error_code error;handle=session->add_torrent(params,error);if(error||!handle.is_valid()){return false;}
     // No seed_mode, resume-piece assertion, synthetic piece or queue epoch.
     // Real LT checking authenticates existing data through qualified storage.
@@ -100,7 +222,7 @@ struct OwnedTorrent::Impl {
         bridgeRequested=false;auto actual=channel->ownedLeaseDestination();if(!actual||actual->wire!=source->destination().wire){close();return;}
         bridge=std::make_unique<Bridge>(source,*channel,q);
         QObject::connect(bridge.get(),&Bridge::changed,q,[this]{
-          if(!bridge||phase==Phase::Withdrawn){return;}const auto observed=bridge->observation();
+          if(!bridge||(phase!=Phase::Starting&&phase!=Phase::Active)){return;}const auto observed=bridge->observation();
           if(observed.phase==Bridge::Phase::Withdrawn){close();return;}
           if(observed.phase==Bridge::Phase::Ready&&phase==Phase::Starting){if(!bridge->installProvider([this](void* policy){return install(policy);})){close();}}
         });
@@ -114,8 +236,8 @@ OwnedTorrent::OwnedTorrent(std::unique_ptr<Impl> impl):impl_(std::move(impl)){
   QObject::connect(s.channel.get(),&i2cp::InitialChannel::sourceEffectRequested,this,[this]{impl_->requestStartup();});
   QObject::connect(s.channel.get(),&i2cp::InitialChannel::dateReceived,this,[this]{auto& s=*impl_;if(s.phase==Phase::Starting){s.startRequested=true;s.requestStartup();}});
   QObject::connect(s.channel.get(),&i2cp::InitialChannel::leaseSetSubmitted,this,[this]{auto& s=*impl_;if(s.phase==Phase::Starting&&!s.bridge){s.bridgeRequested=true;s.requestStartup();}});
-  QObject::connect(s.channel.get(),&i2cp::InitialChannel::failed,this,[this]{impl_->close();});
-  QObject::connect(s.channel.get(),&i2cp::InitialChannel::closed,this,[this]{if(impl_->phase!=Phase::Prepared){impl_->close();}});
+  QObject::connect(s.channel.get(),&i2cp::InitialChannel::failed,this,[this]{if(impl_->phase==Phase::Starting||impl_->phase==Phase::Active){impl_->close();}});
+  QObject::connect(s.channel.get(),&i2cp::InitialChannel::closed,this,[this]{if(impl_->phase==Phase::Starting||impl_->phase==Phase::Active){impl_->close();}});
 }
 OwnedTorrent::~OwnedTorrent(){impl_->close();impl_->join();}
 std::expected<std::unique_ptr<OwnedTorrent>,storage::Error> OwnedTorrent::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,std::string directory){
@@ -136,13 +258,49 @@ bool OwnedTorrent::begin(const Options& options){
   s.options=options;s.phase=Phase::Starting;
   try{s.permit=std::make_unique<SourcePermit>(s.source,this);if(!s.channel->bindEffectAuthority(s.source->effectAuthority())){s.close();return false;}if(!s.channel->begin(options.router)){s.close();return false;}s.notify();return true;}catch(...){s.close();return false;}
 }
+bool OwnedTorrent::beginRetirement(std::chrono::steady_clock::time_point deadline){
+  auto& s=*impl_;const auto now=std::chrono::steady_clock::now();
+  if(!s.onThread()||s.phase!=Phase::Active||s.retired.requested||!s.session||!s.handle.is_valid()||deadline<=now||deadline-now>std::chrono::seconds{30}){return false;}
+  try{
+    s.drainAlerts();
+    if(s.retirementUnsafe){s.retired.requested=true;s.retirementFailure(storage::ErrorCode::Io,"I2P admission has incomplete error observations; recheck remains required");return false;}
+    s.beginRetirement(deadline);s.notify();return true;
+  }catch(...){s.retirementFailure(storage::ErrorCode::Io,"Cannot start I2P retirement; recheck remains required");return false;}
+}
+OwnedTorrent::RetirementObservation OwnedTorrent::retirement()const{
+  auto& s=*impl_;if(s.onThread()){
+    try{s.drainAlerts();s.advanceRetirement();}catch(...){s.retirementFailure(storage::ErrorCode::Io,"I2P retirement observation failed; recheck remains required");}
+  }return s.retired;
+}
+std::expected<void,storage::Error> OwnedTorrent::checkpointRetired(){
+  auto& s=*impl_;
+  if(!s.retired.requested||!s.retired.readyForJoin||!s.retired.joined||s.retired.failure||s.checkpointAttempted){return std::unexpected(s.retired.failure.value_or(storage::Error{storage::ErrorCode::Conflict,"I2P checkpoint requires its exact flushed, removed and joined admission"}));}
+  s.checkpointAttempted=true;
+  const auto fail=[&](storage::Error error)->std::expected<void,storage::Error>{s.retired.failure=error;s.source->revoke();return std::unexpected(std::move(error));};
+  try{
+    auto access=s.source->lease()->sourceAccess();if(!access){return fail(access.error());}
+    auto current=s.source->validateRetiredSnapshot();if(!current){return fail(current.error());}
+    std::optional<engine::detail::ManagedBadPayloadBytes> bad;
+    if(s.retiredCounters.badPrefix){bad=engine::detail::ManagedBadPayloadBytes{s.retiredCounters.badPrefix->discarded,s.retiredCounters.badPrefix->hashFailed};}
+    auto saved=s.storage.checkpoint(*s.source->lease(),s.retiredPieces,s.retiredComplete,
+        s.retiredCounters.received,s.retiredCounters.sent,0,0,{},bad,s.retiredCounters.bad.has_value());
+    if(!saved){return fail(saved.error());}
+    s.retired.checkpointed=true;s.source->revoke();return {};
+  }catch(...){return fail({storage::ErrorCode::Io,"I2P checkpoint failed; original recovery/recheck state retained"});}
+}
 void OwnedTorrent::close(){if(impl_->onThread()){impl_->close();}}
 void OwnedTorrent::join(){impl_->join();}
 OwnedTorrent::Observation OwnedTorrent::observation()const{
-  auto& s=*impl_;Observation value{s.phase,s.source->destination().hash,s.admission,s.providerGeneration,false,0,0,0,0,{}};
+  auto& s=*impl_;Observation value;value.phase=s.phase;value.publicIdentity=s.source->destination().hash;value.admission=s.admission;value.generation=s.providerGeneration;
   if(s.bridge){const auto bridge=s.bridge->observation();value.bridgePort=bridge.port;value.rejectedClients=bridge.rejectedClients;value.bridgeSockets=bridge.sockets;}
-  if(s.phase==Phase::Active&&s.handle.is_valid()){
-    auto actual=s.handle.status();value.seeding=actual.is_seeding;value.verifiedBytes=actual.total_done;
+  if((s.phase==Phase::Active||s.phase==Phase::Retiring)&&s.handle.is_valid()){
+    libtorrent::torrent_status actual;const auto counts=s.sampleCounters(actual,false);
+    if(counts.state==engine::detail::ManagedPayloadCounters::Read::Accepted){value.payloadDownloaded=counts.received;value.payloadUploaded=counts.sent;}
+    else{actual=s.handle.status();}
+    value.seeding=actual.is_seeding;value.verifiedBytes=actual.total_done;
+    value.downloadRate=actual.download_payload_rate;value.uploadRate=actual.upload_payload_rate;value.peers=actual.num_peers;value.seeds=actual.num_seeds;
+    value.checked=s.counters->checked.load(std::memory_order_acquire)&&!actual.errc;
+
     auto& diagnostic=value.diagnostics;diagnostic.statusAvailable=true;diagnostic.paused=bool(actual.flags&libtorrent::torrent_flags::paused);
     diagnostic.announcingToTrackers=actual.announcing_to_trackers;diagnostic.torrentState=static_cast<int>(actual.state);diagnostic.flags=static_cast<std::uint64_t>(actual.flags);
     // error_code::message is the generic category text; never copy alert.message,
@@ -157,23 +315,7 @@ OwnedTorrent::Observation OwnedTorrent::observation()const{
           for(const auto& hash:original.info_hashes){auto& target=endpoint.hashes[h++];target.updating=hash.updating;target.startSent=hash.start_sent;target.fails=hash.fails;target.error=error(hash.last_error);}
         }
       }
-      // The provider already bounds its alert queue. Inspect at most256 entries
-      // per observation and retain only16 selected values; report every omission.
-      std::vector<libtorrent::alert*> alerts;s.session->pop_alerts(&alerts);auto& totals=s.diagnosticAlerts;totals.currentShown=0;totals.currentOmitted=0;
-      const auto add=[](std::uint64_t& count,std::size_t amount=1){count+=std::min<std::uint64_t>(std::numeric_limits<std::uint64_t>::max()-count,amount);};
-      add(totals.drained,alerts.size());const auto inspected=std::min<std::size_t>(alerts.size(),256);add(totals.uninspected,alerts.size()-inspected);
-      for(std::size_t i=0;i<inspected;++i){
-        const auto* item=alerts[i];const libtorrent::error_code* code=nullptr;bool selected=true;
-        if(libtorrent::alert_cast<libtorrent::tracker_announce_alert>(item)){add(totals.announces);}
-        else if(const auto* entry=libtorrent::alert_cast<libtorrent::tracker_error_alert>(item)){add(totals.trackerErrors);code=&entry->error;}
-        else if(libtorrent::alert_cast<libtorrent::tracker_reply_alert>(item)){add(totals.trackerReplies);}
-        else if(const auto* entry=libtorrent::alert_cast<libtorrent::i2p_alert>(item)){add(totals.i2pErrors);code=&entry->error;}
-        else if(const auto* entry=libtorrent::alert_cast<libtorrent::file_error_alert>(item)){add(totals.fileErrors);code=&entry->error;}
-        else if(const auto* entry=libtorrent::alert_cast<libtorrent::torrent_error_alert>(item)){add(totals.torrentErrors);code=&entry->error;}
-        else{selected=false;}
-        if(selected){if(totals.currentShown<totals.current.size()){totals.current[totals.currentShown++]={item->type(),code?error(*code):ErrorObservation{}};}else{++totals.currentOmitted;}}
-      }
-      diagnostic.alerts=totals;
+      s.drainAlerts();diagnostic.alerts=s.diagnosticAlerts;
     }catch(...){diagnostic.incomplete=true;}
   }return value;
 }

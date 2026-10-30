@@ -24,7 +24,7 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
   if (role == KeyRole) { return row.item.key; }
   if (role == CompletionRole) { return completionAt(index.row()).value_or(false); }
   if(role==Qt::ToolTipRole&&index.column()==1){
-    QString tooltip;
+    QString tooltip=row.item.networkStatus;
     if(row.item.trackerScrape){const auto& value=*row.item.trackerScrape;
       if(value.failed){tooltip=tr("Tracker scrape failed");}
       if(value.seeds>=0||value.peers>=0){if(!tooltip.isEmpty()){tooltip+='\n';}

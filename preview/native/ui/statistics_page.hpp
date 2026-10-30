@@ -1,4 +1,5 @@
 #pragma once
+#include "i2p_statistics_view.hpp"
 
 #include "engine_activity_presentation.hpp"
 #include "native_activity_presentation.hpp"
@@ -75,6 +76,7 @@ public:
   void setAccountingBusy(bool);
   void setNativeActivity(NativeActivityPresentation);
   NativeSessionPresentation nativeSessionSnapshot() const;
+  void setI2p(I2pPresentation p){if(i2p_){i2p_->setPresentation(std::move(p));}}
   NativeActivityPresentation nativeActivitySnapshot() const { return nativeActivityFrame_; }
   void setEngineStatistics(EngineStatisticsPresentation);
   void setEngineActivity(EngineActivityPresentation);
@@ -139,6 +141,7 @@ private:
   void refreshEngine();
   void refreshNative();
   void queueHistoryVisibility();
+  I2pStatisticsView* i2p_=nullptr;
   QTabWidget* tabs_;
   QWidget* activity_;
   QTabWidget* activityViews_ = nullptr;
