@@ -562,7 +562,8 @@ private slots:
     const QStringList families{QStringLiteral("Cache"), QStringLiteral("Tracker"),
         QStringLiteral("Counters"), QStringLiteral("Tags"), QStringLiteral("Country"),
         QStringLiteral("DHT"), QStringLiteral("DDB Operations"), QStringLiteral("Vivaldi")};
-    QCOMPARE(page->tabs().count(), 10);
+    QCOMPARE(page->tabs().count(), 11);
+    QCOMPARE(page->tabs().tabText(10), QStringLiteral("I2P"));
     for (int index = 2; index < 10; ++index) {
       page->tabs().setCurrentIndex(index); QCoreApplication::processEvents();
       QCOMPARE(page->tabs().tabText(index), families[index - 2]);
