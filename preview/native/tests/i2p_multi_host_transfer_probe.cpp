@@ -57,7 +57,7 @@ namespace i2p=biglybtc::services::i2p;
 namespace cp=i2p::i2cp;
 namespace lt=libtorrent;
 namespace {
-constexpr qsizetype PayloadBytes=524288;
+constexpr qsizetype PayloadBytes=2097152;
 constexpr int GlobalDownload=16*1024,GlobalUpload=20*1024;
 constexpr int SeedGlobalUpload=40*1024;
 void require(bool ok,const char* reason){if(!ok){throw std::runtime_error(reason);}}
@@ -274,7 +274,7 @@ int main(int argc,char** argv){
     QObject::connect(&poll,&QTimer::timeout,&application,[&]{
       if(done||inTurn){return;}inTurn=true;struct Turn{bool& value;~Turn(){value=false;}} turn{inTurn};
       try{
-        require(elapsed.elapsed()<240000,"Absolute multi-torrent Host budget exceeded");require(callbackFailure.isEmpty(),callbackFailure.toUtf8().constData());
+        require(elapsed.elapsed()<1000000,"Absolute multi-torrent Host budget exceeded");require(callbackFailure.isEmpty(),callbackFailure.toUtf8().constData());
         mark("before-seed-observations");const auto seeds=seed->observations();mark("after-seed-observations");latestSeed=seedJson(seeds);require(seeds.size()==2,"Seed lost a shared-session member");
         for(const auto& x:seeds){require(x.value.publicIdentity==a.identity&&x.value.failure.empty()&&x.value.phase!=app::OwnedI2pService::Phase::Withdrawn,"Seed shared identity/source lost");}
         require(seeds[0].value.generation==seeds[1].value.generation&&seeds[0].value.admission!=seeds[1].value.admission,"Seed did not share one generation with independent admissions");
