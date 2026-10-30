@@ -332,7 +332,7 @@ int main(int argc,char** argv){
         case Stage::WaitRetired:
           if(QFile::exists(work+"/leech-retired.json")){stage=Stage::Reopen;packet.reset();snapshot.reset();session=0;window.show();require(bridge->openNormal(b.profile.toStdString()),"Host refused real same-profile restart");}break;
         case Stage::Reopen:
-          if(!bridge->busy()&&session&&session!=initialSession&&snapshot&&x&&!y&&row(1)&&row(1)->state.startsWith("Paused")){
+          if(!bridge->busy()&&session&&session!=initialSession&&snapshot&&x&&x->generation&&!y&&row(1)&&row(1)->state.startsWith("Paused")){
             require(x->generation&&x->generation!=initialGenerations[0],"Restart did not establish a fresh actual generation");restartGeneration=x->generation;
             require(x->verifiedBytes<PayloadBytes,"Restart capacity check has no incomplete work");output(work+"/native-restarted.json",{{"status","ACTUAL_SAME_PROFILE_RESTARTED"},{"leech_destination_sha256",hex(b.identity)},{"session",QString::number(session)}});stage=Stage::Reopened;
           }break;
