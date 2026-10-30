@@ -29,7 +29,9 @@ bool Manager::receives()const noexcept{
 }
 Result<void> Manager::connect(std::uint64_t op,std::uint32_t id,Destination peer,const ConnectOptions& input,std::uint64_t now,std::optional<std::uint64_t> absoluteHandshakeEnd){
   tick(now);
-  if(!valid()||!available(op,id)||!ports(input.ports)||!window(input.maximumWindow)||input.handshakeMilliseconds<1||input.handshakeMilliseconds>120000||!endFits(now,input.handshakeMilliseconds)||peer.wire.empty()||peer.hash==local_.hash){return refused("Bounded explicit stream connection unavailable");}
+  // Original outgoing Streaming defaults to local port0, including trackers.
+  // The remote port and exact reply tuple stay fixed; listener ports stay explicit.
+  if(!valid()||!available(op,id)||!input.ports.remote||!window(input.maximumWindow)||input.handshakeMilliseconds<1||input.handshakeMilliseconds>120000||!endFits(now,input.handshakeMilliseconds)||peer.wire.empty()||peer.hash==local_.hash){return refused("Bounded explicit stream connection unavailable");}
   const auto end=absoluteHandshakeEnd.value_or(now+input.handshakeMilliseconds);
   if(end<=now||end-now>input.handshakeMilliseconds){return refused("Original finite handshake deadline expired/invalid");}
   Connection prepared(op,id,local_,std::move(peer),input.maximumWindow,now,entropy_);
