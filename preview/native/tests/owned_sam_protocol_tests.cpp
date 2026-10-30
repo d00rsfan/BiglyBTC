@@ -21,6 +21,12 @@ void commands(){
   require(!sam::hex(std::string(64,'F'),32)&&!sam::hex(std::string(63,'a'),32),"Noncanonical capability accepted");
   const Bytes a{0,1,2},b{0,1,3};require(sam::constantEqual(a,a)&&!sam::constantEqual(a,b)&&!sam::constantEqual(a,View(a).first(2)),"Capability equality failure");
 }
+void sharedCapacityKeepsTheSingletonEnvelopeExact(){
+  const auto single=sam::bridgeCapacity(false),shared=sam::bridgeCapacity(true);
+  require(single.streams==4&&single.sockets==6&&single.peers==4&&single.destinations==8,"Singleton SAM capacity changed");
+  require(shared.streams==64&&shared.sockets==shared.streams+2&&shared.peers==64&&shared.destinations==32*4+shared.peers,"Shared SAM capacity lost its finite member/tracker/peer derivation");
+  require(sam::MaximumCommandBytes==2048,"Shared capacity broadened the command parser envelope");
+}
 void publicNames(const char* path){
   Hash hash{};for(std::size_t i=0;i<hash.size();++i){hash[i]=static_cast<Byte>(i*31+7);}const auto name=sam::hashName(hash);require(sam::hashName(name)==hash,"Hash name roundtrip");auto noncanonical=name;noncanonical[51]='b';require(!sam::hashName(noncanonical),"Nonzero base32 padding accepted");
   std::ifstream input(path,std::ios::binary);require(bool(input),"Synthetic Destination fixture missing");Bytes bytes((std::istreambuf_iterator<char>(input)),{});
@@ -28,4 +34,4 @@ void publicNames(const char* path){
   require(!sam::destinationText(encoded+".i2p")&&!sam::destinationText(encoded+"\n")&&!sam::destinationText(std::string(1028,'a')),"Destination injection/bound accepted");
 }
 }
-int main(int argc,char** argv){try{require(argc==2,"Explicit synthetic Destination path required");commands();publicNames(argv[1]);std::cout<<"PASS owned SAM parser/capability bounds\nPASS exact public Destination/name codec\n";return 0;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{require(argc==2,"Explicit synthetic Destination path required");commands();publicNames(argv[1]);sharedCapacityKeepsTheSingletonEnvelopeExact();std::cout<<"PASS owned SAM parser/capability bounds\nPASS exact public Destination/name codec\n";return 0;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}

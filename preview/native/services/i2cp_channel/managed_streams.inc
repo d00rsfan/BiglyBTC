@@ -57,7 +57,7 @@
       if(managedLease&&!flushManagedLease()){if(active()){armManagedStreams(true);}return;}
       if(socket.bytesToWrite()!=0){armManagedStreams(true);return;}
       streamFlushing=true;const auto at=generation;
-      for(std::size_t attempts=0;attempts<streaming::MaximumStreams;++attempts){
+      for(std::size_t attempts=0;attempts<managedStreams->maximumStreams();++attempts){
       auto outbound=managedStreams->next(streamNow());
       if(!outbound){streamFlushing=false;armManagedStreams();notifyStream();return;}
       const auto* peer=managedStreams->peer(outbound->operation);if(!peer){streamFlushing=false;fail(Failure::Resources);return;}
@@ -123,7 +123,7 @@
     }catch(...){fail(Failure::Resources);return refuse(Code::CryptoFailure,"Managed stream resources unavailable");}
   }
   bool listenManagedStreams(const streaming::ListenOptions& provided){
-    if(!onThread()||!managedCurrent()||provided.peers.empty()||provided.peers.size()>streaming::MaximumStreams){return false;}
+    if(!onThread()||!managedCurrent()||provided.peers.empty()||provided.peers.size()>managedStreams->maximumStreams()){return false;}
     try{
       streaming::ListenOptions input;input.ports=provided.ports;input.maximumWindow=provided.maximumWindow;
       for(const auto& peer:provided.peers){auto decoded=decodeDestination(peer.wire);if(!decoded){return false;}input.peers.push_back(std::move(*decoded));}

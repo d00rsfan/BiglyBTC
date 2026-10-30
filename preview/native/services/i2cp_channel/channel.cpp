@@ -511,7 +511,7 @@ ConfigResult<std::uint64_t> InitialChannel::acceptStream(){return impl_->startMa
 std::optional<streaming::ManagedObservation> InitialChannel::managedStreamObservation(std::uint64_t operation)const noexcept{return sessionId()&&impl_->managedStreams?impl_->managedStreams->observation(operation):std::nullopt;}
 streaming::ManagerObservation InitialChannel::streamManagerObservation()const noexcept{return impl_->managedStreams?impl_->managedStreams->observation():streaming::ManagerObservation{};}
 bool InitialChannel::waitStream(std::uint64_t operation,streaming::WaitFor kind,std::size_t minimum,unsigned period){if(!impl_->onThread()||!impl_->managedCurrent()){return false;}try{const bool ok=impl_->managedStreams->wait(operation,kind,minimum,period,impl_->streamNow());impl_->armManagedStreams();impl_->notifyStream();return ok&&impl_->active();}catch(...){impl_->fail(Failure::Resources);return false;}}
-bool InitialChannel::releaseStream(std::uint64_t operation){if(!impl_->onThread()||!impl_->managedStreams){return false;}const bool ok=impl_->managedStreams->release(operation);impl_->armManagedStreams();impl_->notifyStream();return ok;}
+bool InitialChannel::releaseStream(std::uint64_t operation){if(!impl_->onThread()||!impl_->managedStreams){return false;}const bool ok=impl_->managedStreams->release(operation);if(ok){impl_->armManagedStreams();impl_->notifyStream();}return ok;}
 
 ConfigResult<std::uint64_t> InitialChannel::lookupDestination(const Hash& hash,unsigned timeout){return impl_->startOwnedLookup(hash,timeout);}
 bool InitialChannel::cancelDestinationLookup(std::uint64_t id){if(!impl_->onThread()||!impl_->ownedLookup||impl_->ownedLookup->operation!=id){return false;}impl_->finishOwnedLookup(LookupPhase::Cancelled);return true;}

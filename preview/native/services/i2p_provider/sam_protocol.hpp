@@ -8,6 +8,12 @@
 
 namespace biglybtc::services::i2p::provider {
 inline constexpr std::size_t MaximumCommandBytes=2048,MaximumBridgeSockets=6;
+struct BridgeCapacity {std::size_t streams,sockets,peers,destinations;};
+// Singleton defaults stay exact. Shared mode has at most32 admitted children,
+// four saved trackers per child and64 explicit peer Destinations.
+inline constexpr BridgeCapacity bridgeCapacity(bool shared)noexcept{
+  return shared?BridgeCapacity{64,64+2,64,32*4+64}:BridgeCapacity{4,MaximumBridgeSockets,4,8};
+}
 enum class CommandKind {Hello,Create,Naming,Connect,Accept};
 enum class Purpose {Peer,Tracker};
 struct Command {

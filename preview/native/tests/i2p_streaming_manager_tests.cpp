@@ -105,4 +105,46 @@ void outgoingUnspecifiedLocalPortRetainsExactRemoteAndReplyTuple(const p::Client
   st::Manager listener(*local.destination(),{});require(!listener.listen({{0,80},{*peer.destination()},8},0)&&!listener.receives(),"Listener acquired zero-port wildcard authority");
   st::Manager remoteZero(*local.destination(),{});require(!remoteZero.connect(1,100,*peer.destination(),{{0,0},100,8},0)&&!remoteZero.connect(1,100,*peer.destination(),{{9000,0},100,8},0)&&remoteZero.observation().streams==0,"Unspecified remote port acquired an outgoing slot");
 }
-int main(){try{auto local=identity("dsa"),peer=identity("ed25519");inboundCodecAndRole(local,peer);listenerBoundsAndExpiry(local,peer);multiplexFairnessAndMemory(local,peer);finiteWaitAndLongActivity(local,peer);originalOneShotIdleJitter(local,peer);postVerificationFence(local,peer);hardDeadlinesRemainArmedWithoutOutputCredit(local,peer);preparationCannotExtendAbsoluteHandshake(local,peer);outgoingUnspecifiedLocalPortRetainsExactRemoteAndReplyTuple(local,peer);std::cout<<"PASS bounded session Streaming manager source-authored controls\n";return 0;}catch(const std::exception& failure){std::cerr<<"FAIL "<<failure.what()<<'\n';return 1;}}
+void explicitCapacityIsBoundedAndReclaimsOnlyTheExactOperation(const p::ClientIdentity& local,const p::ClientIdentity& peer){
+  st::ManagerOptions policy;policy.maximumStreams=64;st::Manager manager(*local.destination(),policy);
+  require(manager.valid()&&manager.maximumStreams()==64,"Explicit shared capacity did not size actual storage");
+  for(unsigned i=0;i<64;++i){take(manager.connect(i+1,100+i,*peer.destination(),{{static_cast<std::uint16_t>(9000+i),80},100,8},0));}
+  require(manager.observation().streams==64&&!manager.connect(65,164,*peer.destination(),{{9100,80},100,8},0),"Configured shared stream bound was not exact");
+  for(unsigned i=0;i<64;++i){auto packet=manager.next(1);require(packet&&packet->operation==i+1&&packet->ports.local==9000+i,"Scheduler did not visit every configured stream fairly");manager.dispatched(*packet,1);}
+  auto reply=response(peer,163,263);reply.flags|=st::Syn|st::From;reply.from=*peer.destination();manager.receive(mux(reply,peer,80,9063),2);
+  require(manager.observation(64)->stream.phase==st::Phase::Established,"Signed reply beyond original four slots was not demultiplexed");
+  require(manager.cancel(17)&&manager.release(17)&&!manager.observation(17)&&manager.observation(64)->stream.phase==st::Phase::Established,"Exact release damaged an unrelated shared operation");
+  take(manager.connect(1000,1000,*peer.destination(),{{9999,80},100,8},3));require(manager.observation().streams==64,"Exact reclaimed slot was not reused");
+  const auto rejected=manager.observation().rejectedPackets;manager.receive(mux(response(peer,116,216),peer,80,9016),4);
+  require(manager.observation().rejectedPackets==rejected+1&&manager.observation(1000)->stream.phase==st::Phase::Connecting,"Old operation reply entered reused shared slot");
+  for(unsigned count:{0U,65U}){policy.maximumStreams=count;st::Manager invalid(*local.destination(),policy);require(!invalid.valid()&&invalid.maximumStreams()==0&&!invalid.connect(1,100,*peer.destination(),{{9000,80},100,8},0)&&!invalid.next(0),"Invalid capacity allocated or admitted a stream");}
+  policy.maximumStreams=1;st::Manager one(*local.destination(),policy);take(one.connect(1,100,*peer.destination(),{{9000,80},100,8},0));require(!one.connect(2,101,*peer.destination(),{{9001,80},100,8},0),"Small configured capacity was widened");
+}
+void sharedListenerExtensionPreservesSignedPendingSynAndOriginalScope(const p::ClientIdentity& local,const p::ClientIdentity& peer){
+  std::ifstream input(std::filesystem::path(BIGLYBTC_I2P_TEST_KEYS_DIR)/"ed25519.recipient",std::ios::binary);require(bool(input),"Missing additional public Destination fixture");
+  auto additional=take(p::decodeDestination(p::Bytes(std::istreambuf_iterator<char>(input),{})));require(additional.hash!=local.destination()->hash&&additional.hash!=peer.destination()->hash,"Additional listener fixture is not distinct");
+  std::ifstream otherInput(std::filesystem::path(BIGLYBTC_I2P_TEST_KEYS_DIR)/"dsa.recipient",std::ios::binary);require(bool(otherInput),"Missing second additional public Destination fixture");
+  auto third=take(p::decodeDestination(p::Bytes(std::istreambuf_iterator<char>(otherInput),{})));require(third.hash!=local.destination()->hash&&third.hash!=peer.destination()->hash&&third.hash!=additional.hash,"Second additional listener fixture is not distinct");
+  st::ManagerOptions policy;policy.maximumStreams=64;st::Manager manager(*local.destination(),policy);take(manager.listen({{6881,80},{*peer.destination()},8},0));
+  st::Connection remote(1,300,*peer.destination(),*local.destination());auto syn=remote.next(1);require(bool(syn),"Missing actual signed pending SYN");remote.dispatched(*syn,1);manager.receive(mux(*syn,peer,80,6881),1);
+  const auto before=manager.observation();require(before.pendingSyns==1,"Actual signed SYN was not pending before extension");
+  take(manager.listen({{6881,80},{*peer.destination(),additional},8},2));const auto after=manager.observation();
+  require(after.pendingSyns==before.pendingSyns&&after.pendingSynBytes==before.pendingSynBytes&&after.rejectedPackets==before.rejectedPackets&&manager.hardWakeup()==3001,"Listener extension changed original queued SYN identity/budget");
+  require(!manager.listen({{6882,80},{*peer.destination(),additional,third},8},2)&&!manager.listen({{6881,81},{*peer.destination(),additional,third},8},2)&&!manager.listen({{6881,80},{*peer.destination(),additional,third},7},2),"Shared extension changed actual ports/window");
+  require(!manager.listen({{6881,80},{additional},8},2)&&!manager.listen({{6881,80},{*peer.destination(),*peer.destination()},8},2),"Shared extension removed an old peer or accepted duplicate full identity");
+  take(manager.accept(2,100,3));auto reply=manager.next(4);require(reply&&reply->operation==2&&reply->ports.local==6881&&reply->ports.remote==80,"Preserved SYN was not accepted with exact tuple");manager.dispatched(*reply,4);remote.receive(checked(reply->packet,local),4);
+  require(remote.observation().phase==st::Phase::Established&&manager.observation(2)->inbound,"Preserved actual signed handshake lost its original peer");
+  st::Manager singleton(*local.destination(),{});take(singleton.listen({{6881,80},{*peer.destination()},8},0));require(!singleton.listen({{6881,80},{*peer.destination(),additional},8},1),"Default singleton listener scope was broadened");
+}
+void closedOperationMustWaitForRealUnreadBytesAndAckBeforeRelease(const p::ClientIdentity& local,const p::ClientIdentity& peer){
+  st::Manager manager(*local.destination(),{});establish(manager,local,peer);require(manager.finishWrite(1,4),"Local FIN refused");
+  auto fin=manager.next(4);require(fin&&(fin->packet.flags&st::Close),"Missing actual local FIN");manager.dispatched(*fin,4);
+  auto close=response(peer,100,200,1,{'R'});close.flags|=st::Close;close.ackThrough=fin->packet.sequence;manager.receive(mux(close,peer,80,9000),5);
+  require(manager.observation(1)->stream.phase==st::Phase::Closed&&manager.observation(1)->stream.queuedRx==1&&!manager.cancel(1)&&!manager.release(1),"Closed unread operation was discarded early");
+  require(take(manager.read(1,st::MaximumBuffered,5))==p::Bytes{'R'}&&!manager.release(1),"RX drain fabricated acknowledgement completion");
+  auto ack=manager.next(6);require(ack&&ack->operation==1&&ack->packet.ackThrough==1,"Closed FIN lacked its real pending ACK");
+  require(!manager.release(1),"Merely selecting ACK falsely released the operation");manager.dispatched(*ack,6);
+  require(manager.release(1)&&!manager.observation(1),"Actual Closed ACK dispatch failed to release exact operation");
+  take(manager.connect(2,101,*peer.destination(),{{9001,80},100,8},7));require(manager.observation().streams==1,"Released Closed slot was not reusable");
+}
+int main(){try{auto local=identity("dsa"),peer=identity("ed25519");inboundCodecAndRole(local,peer);listenerBoundsAndExpiry(local,peer);multiplexFairnessAndMemory(local,peer);finiteWaitAndLongActivity(local,peer);originalOneShotIdleJitter(local,peer);postVerificationFence(local,peer);hardDeadlinesRemainArmedWithoutOutputCredit(local,peer);preparationCannotExtendAbsoluteHandshake(local,peer);outgoingUnspecifiedLocalPortRetainsExactRemoteAndReplyTuple(local,peer);explicitCapacityIsBoundedAndReclaimsOnlyTheExactOperation(local,peer);sharedListenerExtensionPreservesSignedPendingSynAndOriginalScope(local,peer);closedOperationMustWaitForRealUnreadBytesAndAckBeforeRelease(local,peer);std::cout<<"PASS bounded session Streaming manager source-authored controls\n";return 0;}catch(const std::exception& failure){std::cerr<<"FAIL "<<failure.what()<<'\n';return 1;}}

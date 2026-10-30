@@ -35,15 +35,15 @@ struct Bridge::Impl {
   Bridge* q;std::shared_ptr<ProfileSource> source;QPointer<i2cp::InitialChannel> channel;
   QTcpServer server;QTimer timer;std::unique_ptr<SourcePermit> permit;
   int watch=-1;std::unique_ptr<QSocketNotifier> watcher;std::vector<int> criticalWatches;
-  std::array<std::optional<Socket>,MaximumBridgeSockets> sockets;
-  std::vector<Destination> peers;std::vector<Destination> resolved;
+  const BridgeCapacity capacity;std::vector<std::optional<Socket>> sockets;
+  std::vector<Destination> peers;std::vector<Destination> resolved;std::vector<std::uint64_t> retired;
   std::optional<std::size_t> control;
   Ports ports;Phase phase=Phase::Idle;std::string sessionId;Clock::time_point preparingEnd{};
   std::array<Byte,32> capability{};std::uint64_t generation=0,admission=0,activeRevision=0,rejectedClients=0;
   bool queued=false,notifyQueued=false,wanted=false,executing=false;
   std::function<bool(void*)> install;const char* failure=nullptr;
-  explicit Impl(Bridge* owner,std::shared_ptr<ProfileSource> s,i2cp::InitialChannel& c):q(owner),source(std::move(s)),channel(&c),server(owner),timer(owner){
-    server.setProxy(QNetworkProxy::NoProxy);server.setMaxPendingConnections(static_cast<int>(MaximumBridgeSockets));timer.setSingleShot(true);
+  explicit Impl(Bridge* owner,std::shared_ptr<ProfileSource> s,i2cp::InitialChannel& c):q(owner),source(std::move(s)),channel(&c),server(owner),timer(owner),capacity(bridgeCapacity(source->groupMode())),sockets(capacity.sockets){
+    retired.reserve(capacity.streams);server.setProxy(QNetworkProxy::NoProxy);server.setMaxPendingConnections(static_cast<int>(capacity.sockets));timer.setSingleShot(true);
     QObject::connect(&server,&QTcpServer::newConnection,q,[this]{schedule();});
     QObject::connect(&timer,&QTimer::timeout,q,[this]{schedule();});
     QObject::connect(&c,&i2cp::InitialChannel::streamChanged,q,[this]{schedule();});
@@ -65,16 +65,46 @@ struct Bridge::Impl {
     if(!ok){notifyQueued=false;close();}
   }
   void discard(std::size_t index){
-    auto& item=sockets[index];if(!item){return;}if(!item->authenticated&&rejectedClients!=std::numeric_limits<std::uint64_t>::max()){++rejectedClients;}if(channel&&item->operation){channel->cancelStream(item->operation);auto terminal=channel->managedStreamObservation(item->operation);if(executing&&current()&&terminal&&terminal->stream.phase==streaming::Phase::Closed&&terminal->stream.queuedRx){static_cast<void>(channel->takeStreamBytes(item->operation,streaming::MaximumBuffered));}channel->releaseStream(item->operation);}
-    if(channel&&item->lookup){channel->cancelDestinationLookup(item->lookup);}
+    auto& item=sockets[index];if(!item){return;}
+    if(!item->authenticated&&rejectedClients!=std::numeric_limits<std::uint64_t>::max()){++rejectedClients;}
+    const auto operation=item->operation;
+    if(channel&&operation){
+      channel->cancelStream(operation);if(phase==Phase::Withdrawn||!item||!channel){return;}
+      const auto terminal=channel->managedStreamObservation(operation);
+      if(executing&&current()&&terminal&&terminal->stream.phase==streaming::Phase::Closed&&terminal->stream.queuedRx){
+        static_cast<void>(channel->takeStreamBytes(operation,streaming::MaximumBuffered));if(phase==Phase::Withdrawn||!item||!channel){return;}
+      }
+      const bool released=channel->releaseStream(operation);if(phase==Phase::Withdrawn||!item||!channel){return;}
+      if(!released&&channel->managedStreamObservation(operation)&&std::find(retired.begin(),retired.end(),operation)==retired.end()){
+        if(retired.size()>=capacity.streams){close("I2P retired stream bound exhausted");return;}retired.push_back(operation);
+      }
+    }
+    if(channel&&item->lookup){channel->cancelDestinationLookup(item->lookup);if(phase==Phase::Withdrawn||!item){return;}}
     if(control&&*control==index){close("I2P control connection ended");return;}
     QObject::disconnect(item->tcp.get(),nullptr,q,nullptr);item->tcp->abort();item.reset();
+  }
+  void releaseRetired(){
+    // A vanished SAM consumer does not imply its Closed Streaming ACK/RX has
+    // settled. Only a fresh source-permit turn may drain its unread bytes.
+    // ACK output uses existing receive/bytesWritten/effect wakes; empty reads
+    // and failed releases must not schedule a cleanup spin.
+    for(auto at=retired.begin();at!=retired.end();){
+      if(!executing||!current()||!channel){return;}
+      const auto observed=channel->managedStreamObservation(*at);
+      if(!observed){at=retired.erase(at);continue;}
+      if(observed->stream.phase==streaming::Phase::Closed&&observed->stream.queuedRx){
+        static_cast<void>(channel->takeStreamBytes(*at,streaming::MaximumBuffered));
+        if(!current()||!channel){return;}
+      }
+      const bool released=channel->releaseStream(*at);if(!current()||!channel){return;}
+      if(released||!channel->managedStreamObservation(*at)){at=retired.erase(at);}else{++at;}
+    }
   }
   void close(const char* reason=nullptr){
     if(reason&&!failure){failure=reason;}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;wanted=false;server.close();timer.stop();if(watcher){watcher->setEnabled(false);}source->revoke();
     if(channel){channel->closeStreamListener();for(auto& item:sockets){if(item&&item->operation){channel->cancelStream(item->operation);}if(item&&item->lookup){channel->cancelDestinationLookup(item->lookup);}}}
     for(auto& item:sockets){if(item){QObject::disconnect(item->tcp.get(),nullptr,q,nullptr);item->tcp->abort();item.reset();}}
-    control.reset();peers.clear();resolved.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());notify();
+    control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());notify();
   }
   void schedule(bool work=true){
     if(phase==Phase::Idle||phase==Phase::Withdrawn){return;}wanted|=work;if(queued){return;}queued=true;bool ok=false;
@@ -94,7 +124,7 @@ struct Bridge::Impl {
     return item.tcp->write(bytes.data(),static_cast<qint64>(bytes.size()))==static_cast<qint64>(bytes.size());
   }
   void acceptSockets(){
-    for(std::size_t n=0;n<MaximumBridgeSockets&&server.hasPendingConnections();++n){
+    for(std::size_t n=0;n<sockets.size()&&server.hasPendingConnections();++n){
       std::unique_ptr<QTcpSocket> tcp(server.nextPendingConnection());if(!tcp){break;}
       auto free=std::find_if(sockets.begin(),sockets.end(),[](const auto& item){return !item;});
       if(free==sockets.end()||!tcp->peerAddress().isLoopback()||tcp->localAddress()!=QHostAddress::LocalHost){tcp->abort();continue;}
@@ -114,7 +144,7 @@ struct Bridge::Impl {
   }
   bool permitPeer(const Destination& destination){
     if(std::none_of(peers.begin(),peers.end(),[&](const auto& p){return p.wire==destination.wire;})){
-      if(peers.size()>=streaming::MaximumStreams){return false;}peers.push_back(destination);if(!updateListener()){return false;}
+      if(peers.size()>=capacity.peers){return false;}peers.push_back(destination);if(!updateListener()){return false;}
     }return true;
   }
   bool known(const Destination& destination)const{return std::any_of(resolved.begin(),resolved.end(),[&](const auto& item){return item.wire==destination.wire;});}
@@ -142,7 +172,7 @@ struct Bridge::Impl {
       else if(f.at("PURPOSE")!="TRACKER"||*from!=0||!source->trackerAllowed(*hash,static_cast<std::uint16_t>(*to))){return false;}
       auto found=std::find_if(resolved.begin(),resolved.end(),[&](const auto& d){return d.hash==*hash;});
       if(found!=resolved.end()){if(item.peer&&!permitPeer(*found)){return false;}return send(item,"NAMING REPLY RESULT=OK NAME="+name+" VALUE="+destinationText(found->wire)+"\n");}
-      if(resolved.size()>=8){return false;}
+      if(resolved.size()>=capacity.destinations){return false;}
       auto lookup=channel->lookupDestination(*hash,30000);if(!lookup){return false;}
       item.lookup=*lookup;item.requestedName=name;item.phase=SocketPhase::Lookup;item.end=Clock::now()+std::chrono::seconds(30);return true;
     }
@@ -171,7 +201,7 @@ struct Bridge::Impl {
       if(value->phase==i2cp::InitialChannel::LookupPhase::Pending){return !item.eof;}
       item.lookup=0;item.phase=SocketPhase::Control;
       if(value->phase!=i2cp::InitialChannel::LookupPhase::Resolved||!value->destination){return send(item,"NAMING REPLY RESULT=KEY_NOT_FOUND NAME="+item.requestedName+"\n");}
-      if(resolved.size()>=8||(item.peer&&!permitPeer(*value->destination))){return false;}resolved.push_back(*value->destination);
+      if(resolved.size()>=capacity.destinations||(item.peer&&!permitPeer(*value->destination))){return false;}resolved.push_back(*value->destination);
       return send(item,"NAMING REPLY RESULT=OK NAME="+item.requestedName+" VALUE="+destinationText(value->destination->wire)+"\n");
     }
     if(item.phase==SocketPhase::Accept){
@@ -236,7 +266,7 @@ struct Bridge::Impl {
         struct Wipe {decltype(policy)& value;~Wipe(){OPENSSL_cleanse(value.capability.data(),value.capability.size());}} wipe{policy};
         auto apply=std::move(install);if(!current()||!apply(&policy)||!current()){close("I2P provider installation refused");executing=false;return;}
       }
-      acceptSockets();
+      releaseRetired();if(phase==Phase::Withdrawn){executing=false;return;}acceptSockets();
       for(std::size_t i=0;i<sockets.size()&&phase==Phase::Ready;++i){if(sockets[i]&&(!current()||!pumpSocket(i))){discard(i);}}
       if(current()){channel->resumeAuthorizedEffects();}arm();
     }catch(...){close("I2P bridge operation failed");}
@@ -252,7 +282,10 @@ bool Bridge::begin(Ports ports,std::uint64_t admission){
   if(!s.source->prepared()||!ports.peer||!ports.localPeer||!admission||!s.leaseCurrent()){return false;}
   if(RAND_bytes(s.capability.data(),static_cast<int>(s.capability.size()))!=1||RAND_bytes(reinterpret_cast<unsigned char*>(&s.generation),sizeof(s.generation))!=1||!s.generation){s.close();return false;}
   s.ports=ports;s.admission=admission;
-  if(!s.channel->enableStreamManager(streaming::ManagerOptions{})){s.close();return false;}
+  static_assert(bridgeCapacity(false).streams==streaming::MaximumStreams);
+  static_assert(bridgeCapacity(true).streams==streaming::MaximumConfiguredStreams);
+  streaming::ManagerOptions managerOptions;managerOptions.maximumStreams=static_cast<unsigned>(s.capacity.streams);
+  if(!s.channel->enableStreamManager(managerOptions)){s.close();return false;}
   s.phase=Phase::Preparing;s.preparingEnd=end;
     s.watch=::inotify_init1(IN_CLOEXEC|IN_NONBLOCK);if(s.watch<0){s.close();return false;}
     const auto critical=s.source->criticalWatchDescriptors();

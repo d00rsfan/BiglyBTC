@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "channel.hpp"
 #include <QFile>
+#include <QCoreApplication>
+#include <QEvent>
 #include <QPointer>
+#include <QSignalSpy>
 #include <QNetworkProxy>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -73,9 +76,9 @@ struct Router {
 }
 class ManagerChannelTests final:public QObject {
   Q_OBJECT
-  void registered(Router& router,Channel& channel){
+  void registered(Router& router,Channel& channel,st::ManagerOptions policy={}){
     QVERIFY(channel.begin(router.options()));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::GetDateType);auto date=cp::encodeMessage(cp::SetDate{Now,std::string("2.13.0")});QVERIFY(date&&router.send(*date));QTRY_VERIFY(channel.routerDate());
-    auto signer=identity("dsa");QVERIFY(channel.createLeaseSession(std::move(signer),{{"i2cp.fastReceive","true"},{"i2cp.messageReliability","none"}},Now));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateSessionType);auto created=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});QVERIFY(created&&router.send(*created));QTRY_VERIFY(channel.sessionId());QVERIFY(router.lease());QTRY_VERIFY(router.next());QVERIFY(cp::decodeCreateLeaseSet2(router.take()));QTRY_VERIFY(channel.leaseSetSubmission());QVERIFY(channel.enableStreamManager({}));
+    auto signer=identity("dsa");QVERIFY(channel.createLeaseSession(std::move(signer),{{"i2cp.fastReceive","true"},{"i2cp.messageReliability","none"}},Now));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateSessionType);auto created=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});QVERIFY(created&&router.send(*created));QTRY_VERIFY(channel.sessionId());QVERIFY(router.lease());QTRY_VERIFY(router.next());QVERIFY(cp::decodeCreateLeaseSet2(router.take()));QTRY_VERIFY(channel.leaseSetSubmission());QVERIFY(channel.enableStreamManager(policy));
   }
 private slots:
   void concurrentActualFramesAndExplicitIncomingPeerRemainIndependent(){
@@ -124,6 +127,22 @@ private slots:
     QTRY_VERIFY_WITH_TIMEOUT(channel.managedStreamObservation(*operation)&&channel.managedStreamObservation(*operation)->stream.phase==st::Phase::LeaseExpired,10000);QVERIFY(!channel.streamManagerObservation().listening);QVERIFY(!channel.writeStream(*operation,p::Bytes{'X'}));
     QVERIFY(router.lease());QTRY_VERIFY(router.pump()&&channel.leaseSetSubmission()->revision>shortened);QCOMPARE(channel.managedStreamObservation(*operation)->stream.phase,st::Phase::LeaseExpired);QVERIFY(!channel.streamManagerObservation().listening);QVERIFY(!channel.writeStream(*operation,p::Bytes{'X'}));QVERIFY(channel.releaseStream(*operation));
     auto fresh=channel.connectStream(router.remote.destination()->wire,{9001,80,3000});QVERIFY(fresh&&*fresh!=*operation);QTRY_VERIFY(router.pump()&&channel.managedStreamObservation(*fresh)&&channel.managedStreamObservation(*fresh)->stream.phase==st::Phase::Established);QVERIFY(router.failure.isEmpty());channel.close();
+  }
+  void explicitSharedCapacityEmitsMoreThanFourSignedFramesAndFailedReleaseDoesNotWake(){
+    Router router;QVERIFY(router.listen());Channel channel;st::ManagerOptions policy;policy.maximumStreams=64;registered(router,channel,policy);
+    std::array<std::uint64_t,6> operations{};for(std::size_t i=0;i<operations.size();++i){auto op=channel.connectStream(router.remote.destination()->wire,{static_cast<std::uint16_t>(9000+i),80,10000});QVERIFY(op);operations[i]=*op;}
+    std::array<bool,6> observed{};std::size_t count=0;
+    const auto collect=[&]{router.collect();while(router.next()){
+      auto sent=cp::decodeSendDatagram(router.take());if(!sent||sent->recipient.wire!=router.remote.destination()->wire){router.failure="Wrong shared actual recipient";return false;}
+      auto mux=st::decodeMux(sent->payload);if(!mux||mux->toPort!=80||mux->fromPort<9000||mux->fromPort>=9006||!st::decodeInitialSyn(mux->packet,*router.remote.destination())){router.failure="Wrong shared actual signed SYN/ports";return false;}
+      const auto index=static_cast<std::size_t>(mux->fromPort-9000);if(!observed[index]){observed[index]=true;++count;}
+    }return router.failure.isEmpty()&&count==operations.size();};
+    QTRY_VERIFY(collect());QCOMPARE(channel.streamManagerObservation().streams,std::size_t{6});
+    QCoreApplication::sendPostedEvents(&channel,QEvent::MetaCall);QSignalSpy wakes(&channel,&Channel::streamChanged);
+    QVERIFY(!channel.releaseStream(operations[2]));QCoreApplication::sendPostedEvents(&channel,QEvent::MetaCall);QCOMPARE(wakes.count(),0);
+    QVERIFY(channel.cancelStream(operations[2]));QVERIFY(channel.releaseStream(operations[2]));QVERIFY(!channel.managedStreamObservation(operations[2]));
+    for(std::size_t i=0;i<operations.size();++i){if(i!=2){QCOMPARE(channel.managedStreamObservation(operations[i])->stream.phase,st::Phase::Connecting);}}
+    auto replacement=channel.connectStream(router.remote.destination()->wire,{9010,80,10000});QVERIFY(replacement&&*replacement!=operations[2]);QCOMPARE(channel.streamManagerObservation().streams,std::size_t{6});QVERIFY(router.failure.isEmpty());channel.close();
   }
 };
 QTEST_GUILESS_MAIN(ManagerChannelTests)

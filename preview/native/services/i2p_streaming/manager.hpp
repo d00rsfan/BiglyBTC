@@ -4,9 +4,9 @@
 #include <vector>
 
 namespace biglybtc::services::i2p::streaming {
-inline constexpr std::size_t MaximumStreams=4,MaximumPendingSyns=4,MaximumPendingSynBytes=262144;
+inline constexpr std::size_t MaximumStreams=4,MaximumConfiguredStreams=64,MaximumPendingSyns=4,MaximumPendingSynBytes=262144;
 enum class IdleAction {Send,Disconnect};
-struct ManagerOptions {unsigned inactivityMilliseconds=90000;IdleAction idleAction=IdleAction::Send;};
+struct ManagerOptions {unsigned inactivityMilliseconds=90000;IdleAction idleAction=IdleAction::Send;unsigned maximumStreams=MaximumStreams;};
 struct Ports {std::uint16_t local=0,remote=0;};
 struct ConnectOptions {Ports ports;unsigned handshakeMilliseconds=120000,maximumWindow=MaximumWindow;};
 struct ListenOptions {Ports ports;std::vector<Destination> peers;unsigned maximumWindow=MaximumWindow;};
@@ -25,6 +25,7 @@ class Manager {
 public:
   Manager(Destination local,ManagerOptions,Connection::Entropy={});
   bool valid()const noexcept;
+  std::size_t maximumStreams()const noexcept{return streams_.size();}
   bool receives()const noexcept;
   bool active()const noexcept;
   Result<void> connect(std::uint64_t operation,std::uint32_t id,Destination,const ConnectOptions&,std::uint64_t now,std::optional<std::uint64_t> absoluteHandshakeEnd={});
@@ -63,7 +64,7 @@ private:
   void settleWait(Entry&,std::uint64_t now)noexcept;
   bool available(std::uint64_t operation,std::uint32_t id)const noexcept;
   Destination local_;ManagerOptions options_;Connection::Entropy entropy_;
-  std::array<std::optional<Entry>,MaximumStreams> streams_{};
+  std::vector<std::optional<Entry>> streams_;
   std::optional<ListenOptions> listener_;
   std::deque<Pending> pending_;
   std::size_t pendingBytes_=0,cursor_=0;

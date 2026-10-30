@@ -12,9 +12,11 @@ void count(std::uint64_t& value)noexcept{if(value!=std::numeric_limits<std::uint
 bool endFits(std::uint64_t now,unsigned period){return now<=std::numeric_limits<std::uint64_t>::max()-period;}
 }
 Manager::Manager(Destination local,ManagerOptions options,Connection::Entropy entropy)
-  :local_(std::move(local)),options_(options),entropy_(std::move(entropy)){}
+  :local_(std::move(local)),options_(options),entropy_(std::move(entropy)),
+   streams_(options.maximumStreams>=1&&options.maximumStreams<=MaximumConfiguredStreams?options.maximumStreams:0){}
 bool Manager::valid()const noexcept{
-  return !local_.wire.empty()&&options_.inactivityMilliseconds>=1&&options_.inactivityMilliseconds<=3600000
+  return !local_.wire.empty()&&options_.maximumStreams>=1&&options_.maximumStreams<=MaximumConfiguredStreams
+    &&streams_.size()==options_.maximumStreams&&options_.inactivityMilliseconds>=1&&options_.inactivityMilliseconds<=3600000
     &&(options_.idleAction==IdleAction::Send||options_.idleAction==IdleAction::Disconnect);
 }
 Manager::Entry* Manager::find(std::uint64_t op)noexcept{for(auto& item:streams_){if(item&&item->connection.observation().operation==op){return &*item;}}return nullptr;}
@@ -43,13 +45,22 @@ Result<void> Manager::connect(std::uint64_t op,std::uint32_t id,Destination peer
 }
 Result<void> Manager::listen(const ListenOptions& provided,std::uint64_t now){
   tick(now);
-  if(provided.peers.empty()||provided.peers.size()>MaximumStreams){return refused("Finite listener peer bound required");}
+  if(provided.peers.empty()||provided.peers.size()>streams_.size()){return refused("Finite listener peer bound required");}
   ListenOptions input;input.ports=provided.ports;input.maximumWindow=provided.maximumWindow;
   for(const auto& peer:provided.peers){auto decoded=decodeDestination(peer.wire);if(!decoded){return std::unexpected(decoded.error());}input.peers.push_back(std::move(*decoded));}
-  if(!valid()||listener_||!pending_.empty()||!ports(input.ports)||!window(input.maximumWindow)||input.peers.empty()||input.peers.size()>MaximumStreams){return refused("Explicit finite listener unavailable");}
+  if(!valid()||(!listener_&&!pending_.empty())||!ports(input.ports)||!window(input.maximumWindow)||input.peers.empty()||input.peers.size()>streams_.size()){return refused("Explicit finite listener unavailable");}
   for(std::size_t i=0;i<input.peers.size();++i){
     if(input.peers[i].wire.empty()||input.peers[i].hash==local_.hash){return refused("Listener peer must be an explicit other Destination");}
     for(std::size_t j=0;j<i;++j){if(input.peers[j].hash==input.peers[i].hash){return refused("Duplicate or ambiguous listener peer");}}
+  }
+  if(listener_){
+    // Only the explicit shared envelope may add verified full Destinations.
+    // Existing routes, pending signed SYNs and their original deadlines survive.
+    if(options_.maximumStreams<=MaximumStreams||input.ports.local!=listener_->ports.local||input.ports.remote!=listener_->ports.remote
+      ||input.maximumWindow!=listener_->maximumWindow||input.peers.size()<=listener_->peers.size()
+      ||std::ranges::any_of(listener_->peers,[&](const auto& old){return std::ranges::none_of(input.peers,[&](const auto& peer){return peer.wire==old.wire;});})){
+      return refused("Shared listener extension must preserve exact existing scope");
+    }
   }
   listener_.emplace(std::move(input));return {};
 }
@@ -115,8 +126,8 @@ void Manager::tick(std::uint64_t now){
 }
 std::optional<Outbound> Manager::next(std::uint64_t now){
   tick(now);
-  for(std::size_t step=0;step<MaximumStreams;++step){const auto index=(cursor_+step)%MaximumStreams;auto& item=streams_[index];if(!item){continue;}
-    auto packet=item->connection.next(now);if(packet){cursor_=(index+1)%MaximumStreams;return Outbound{item->connection.observation().operation,std::move(*packet),item->ports};}
+  for(std::size_t step=0;step<streams_.size();++step){const auto index=(cursor_+step)%streams_.size();auto& item=streams_[index];if(!item){continue;}
+    auto packet=item->connection.next(now);if(packet){cursor_=(index+1)%streams_.size();return Outbound{item->connection.observation().operation,std::move(*packet),item->ports};}
   }
   return std::nullopt;
 }
