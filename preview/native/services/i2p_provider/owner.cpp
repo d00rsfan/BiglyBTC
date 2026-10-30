@@ -15,6 +15,7 @@
 #include <QPointer>
 #include <QThread>
 #include <QMetaObject>
+#include <QMetaEnum>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <algorithm>
@@ -292,6 +293,10 @@ void OwnedTorrent::close(){if(impl_->onThread()){impl_->close();}}
 void OwnedTorrent::join(){impl_->join();}
 OwnedTorrent::Observation OwnedTorrent::observation()const{
   auto& s=*impl_;Observation value;value.phase=s.phase;value.publicIdentity=s.source->destination().hash;value.admission=s.admission;value.generation=s.providerGeneration;
+  if(s.channel&&s.channel->failure()!=i2cp::InitialChannel::Failure::None){
+    const auto* reason=QMetaEnum::fromType<i2cp::InitialChannel::Failure>().valueToKey(static_cast<int>(s.channel->failure()));
+    value.failure=std::string("I2CP: ")+(reason?reason:"Unknown failure");
+  }
   if(s.bridge){const auto bridge=s.bridge->observation();value.bridgePort=bridge.port;value.rejectedClients=bridge.rejectedClients;value.bridgeSockets=bridge.sockets;}
   if((s.phase==Phase::Active||s.phase==Phase::Retiring)&&s.handle.is_valid()){
     libtorrent::torrent_status actual;const auto counts=s.sampleCounters(actual,false);

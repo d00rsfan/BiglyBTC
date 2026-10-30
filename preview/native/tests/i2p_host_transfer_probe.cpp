@@ -248,7 +248,7 @@ int main(int argc,char** argv){
         require(callbackFailure.isEmpty(),callbackFailure.toUtf8().constData());
         mark("before-seed-observation");const auto sa=seed->observation();mark("after-seed-observation");
         require(sa.publicIdentity==a.identity&&sa.phase!=provider::OwnedTorrent::Phase::Withdrawn,"Actual seed identity/authority lost");
-        if(packet){require(packet->session==session&&(packet->hash.isEmpty()||packet->hash==hash),"Host published a foreign I2P packet");require(packet->failure.isEmpty(),"Host I2P service reported failure");}
+        if(packet){require(packet->session==session&&(packet->hash.isEmpty()||packet->hash==hash),"Host published a foreign I2P packet");require(packet->failure.isEmpty(),(QStringLiteral("Host I2P service reported failure: ")+packet->failure).toUtf8().constData());}
         const auto* current=row();
         QJsonObject progress{{"stage",static_cast<int>(stage)},{"i2p",packetJson(packet)},
           {"seed_phase",static_cast<int>(sa.phase)},{"seed_verified_bytes",static_cast<qint64>(sa.verifiedBytes)},{"seed_seeding",sa.seeding},

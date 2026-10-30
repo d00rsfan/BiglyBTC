@@ -47,7 +47,8 @@ struct OwnedI2pService::Impl {
       last.trackerReplies=actual.diagnostics.alerts.trackerReplies;
       last.trackerErrors=actual.diagnostics.alerts.trackerErrors;
     }else{last.downloadRate=0;last.uploadRate=0;last.peers=0;last.seeds=0;}
-    if(actual.diagnostics.error.value){last.failure=actual.diagnostics.error.message;}
+    if(!actual.failure.empty()){last.failure=actual.failure;}
+    else if(actual.diagnostics.error.value){last.failure=actual.diagnostics.error.message;}
     else if(actual.phase==provider::OwnedTorrent::Phase::Withdrawn&&last.failure.empty()){
       last.failure="I2P owner withdrawn";
     }
@@ -151,7 +152,9 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
     auto service=std::unique_ptr<OwnedI2pService>(new OwnedI2pService(std::make_unique<Impl>(std::move(*prepared))));
     auto& state=*service->impl_;
     provider::OwnedTorrent::Options actual;
-    actual.router={QHostAddress::LocalHost,options.routerPort,"0.1.0",false,30000,false};
+    // I2CP negotiates client protocol features here; product version0.1.0
+    // requests legacy LeaseSet21. Use the already-qualified protocol profile.
+    actual.router={QHostAddress::LocalHost,options.routerPort,"2.13.0",false,30000,false};
     actual.session=std::move(options.sessionOptions);actual.ports={options.peerPort,options.peerPort};
     // Also handles a failed queued invocation: finished runs on the owning
     // thread and returns the closed QObject tree before external destruction.

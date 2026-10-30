@@ -37,6 +37,7 @@ public:
     // Actual observations, not a retirement/cumulative-counter certificate.
     std::int64_t payloadDownloaded=-1,payloadUploaded=-1;
     int downloadRate=0,uploadRate=0,peers=0,seeds=0;bool checked=false;
+    std::string failure; // Owned protocol enum name only; no remote text or secrets.
   };
   struct RetirementObservation {
     bool requested=false,readyForJoin=false,joined=false,checkpointed=false;
