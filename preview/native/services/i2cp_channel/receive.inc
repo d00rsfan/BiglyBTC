@@ -38,7 +38,7 @@
     if(Clock::now()>=fetch->end){cancelFetch(ReceiveDrop::PendingTimeout);return;}const auto left=std::chrono::duration_cast<std::chrono::milliseconds>(fetch->end-Clock::now()).count();receiveTimer.start(static_cast<int>(std::max<std::int64_t>(1,left)));
   }
   void flushReceiveControls(){
-    if(controlFlushing||!active()){return;}controlFlushing=true;
+    if(controlFlushing||!active()){return;}if(controlCount&&!effectReady()){return;}controlFlushing=true;
     try{
       for(std::size_t steps=0;steps<2*ReceiveControlLimit&&controlCount&&active()&&socket.bytesToWrite()==0;++steps){
         const auto next=receiveControls[0];
@@ -48,6 +48,7 @@
           if((!receiverEnabled&&!(trackerReceives()||streamReceives()))||!receiverCurrent()||Clock::now()>=fetch->end){cancelFetch((!receiverEnabled&&!(trackerReceives()||streamReceives()))?ReceiveDrop::Cancelled:!receiverCurrent()?ReceiveDrop::LeaseExpired:ReceiveDrop::PendingTimeout);continue;}
         }
         auto encoded=encodeReceiveControl(next.value);if(!encoded){fail(Failure::Resources);break;}const auto at=generation;
+        if(!effectReady()){break;}
         const auto written=socket.write(reinterpret_cast<const char*>(encoded->data()),static_cast<qint64>(encoded->size()));
         if(!current(at)){break;}if(written!=static_cast<qint64>(encoded->size())){fail(Failure::WriteFailed);break;}
         popControl();if(next.value.begin&&fetch&&fetch->messageId==next.value.messageId){fetch->begun=true;}

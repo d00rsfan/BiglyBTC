@@ -1,5 +1,6 @@
 #include "biglybtc/original_file_links.hpp"
 #include "managed_storage.hpp"
+#include "owned_i2p_policy.hpp"
 #include "allocation_intent.hpp"
 #include "verified_existing_scope.hpp"
 #include "selected_existing_scope.hpp"
@@ -706,6 +707,13 @@ std::span<const ManagedPayloadClaim> ManagedStorage::claims() const noexcept { r
 const storage::OriginalTorrentIdentity& ManagedStorage::identity() const {return impl_->selectedIdentity;}
 
 std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose) {
+  return prepareImpl(lease,hash,policy,claimed,retainedIdentities,std::move(swarmBridge),purpose,nullptr);
+}
+std::expected<ManagedStorage,Error> ManagedStorage::prepareOwnedI2p(const storage::ProfileLease& lease,const core::TorrentHash& hash,const OwnedI2pPolicy& owned){
+  if(!owned.matches(lease,hash)){return std::unexpected(Error{ErrorCode::Conflict,"Owned I2P storage needs SAME lease/hash"});}
+  return prepareImpl(lease,hash,NetworkPolicy{}, {}, {}, {},ManagedStoragePurpose::Download,&owned);
+}
+std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned) {
   try {
     require(purpose==ManagedStoragePurpose::Download||purpose==ManagedStoragePurpose::VerifyExistingReadOnly||purpose==ManagedStoragePurpose::VerifySelectedReadOnly||purpose==ManagedStoragePurpose::AllocateOnly,"Unknown managed preparation purpose",ErrorCode::InvalidFormat);
     const bool allocationOnly=purpose==ManagedStoragePurpose::AllocateOnly;
@@ -879,7 +887,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     auto mainline=originalMainlinePolicy(policy,attributes.root(),info->priv());
     mainline.discover=mainline.discover && selectedNetworks.publicNetwork && selectedNetworks.dhtBackup && !selectedNetworks.tor && !selectedNetworks.i2p;
     mainline.announce=mainline.announce && mainline.discover;
-    auto filtered=applyTorrentNetworkPolicy(policy,selectedNetworks,params);
+    auto filtered=owned?owned->apply(selectedNetworks,params):applyTorrentNetworkPolicy(policy,selectedNetworks,params);
     require(filtered.has_value(),"Managed torrent network selection is unsupported by the owner policy");
     auto claimPlan=payloadClaimPlan(slots,save,attributes.root(),pending);
     checkManagedClaims(claimPlan.values,claimed);
@@ -911,7 +919,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
       }
     }
     // Cache values are copied before their backing state is relinquished.
-    auto rechecked=applyTorrentNetworkPolicy(policy,networks(state.document(),actual.root()),params);
+    auto rechecked=owned?owned->apply(networks(state.document(),actual.root()),params):applyTorrentNetworkPolicy(policy,networks(state.document(),actual.root()),params);
     require(rechecked.has_value(),"Authoritative torrent network policy changed",ErrorCode::Conflict);
     // Before any payload write, Java must recheck after an interrupted owner.
     auto resume=dictionary(state.document().find("resume"));auto resumeData=dictionary(resume.find("data"));

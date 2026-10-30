@@ -91,3 +91,6 @@ target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_mainline_bind_plan)
 find_package(Qt6 6.12.0 EXACT REQUIRED COMPONENTS Network)
 target_sources(biglybtc_local_engine PRIVATE library_http_tracker.cpp library_http_protocol.cpp)
 target_link_libraries(biglybtc_local_engine PRIVATE Qt6::Network)
+
+# Separate explicit I2P-only preparation path; existing Public policy unchanged.
+target_sources(biglybtc_local_engine PRIVATE owned_i2p_policy.cpp)

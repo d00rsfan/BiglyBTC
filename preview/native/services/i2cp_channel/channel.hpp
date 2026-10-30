@@ -7,6 +7,7 @@
 #include "tracker.hpp"
 #include "stream.hpp"
 #include "manager.hpp"
+#include "effect_authority.hpp"
 #include <QHostAddress>
 #include <QObject>
 #include <memory>
@@ -24,7 +25,7 @@ public:
   Q_ENUM(State)
   enum class Failure {None,InvalidEndpoint,InvalidVersion,InvalidDeadline,UnsupportedAuthentication,
     ConnectFailed,WriteFailed,ReadFailed,Deadline,Framing,UnsupportedMessage,UnexpectedMessage,
-    InvalidDate,RouterDisconnected,TransportClosed,Resources,SessionRejected,SessionDestroyed,InvalidSessionId,UnsupportedTransport,InvalidLeaseSet};
+    InvalidDate,RouterDisconnected,TransportClosed,Resources,SessionRejected,SessionDestroyed,InvalidSessionId,UnsupportedTransport,InvalidLeaseSet,SourceChanged};
   Q_ENUM(Failure)
   struct Options {
     QHostAddress address; // Explicit numeric loopback only, no host resolution.
@@ -39,6 +40,13 @@ public:
   // Active begin refuses without changing the current attempt. Terminal/idle
   // attempts can explicitly restart. No retries or reconnects occur internally.
   bool begin(const Options&);
+  // Explicit once before begin. Only a genuine ProfileSource can mint this
+  // optional authority. Default callers install nothing and keep old behavior.
+  bool bindEffectAuthority(std::shared_ptr<EffectAuthority>);
+  bool sourceEffectsPending()const noexcept;
+  bool ownedTransportIdle()const noexcept; // Passive actual buffer fence for explicit manager startup.
+  bool resumeAuthorizedEffects(); // Only succeeds during worker-held permit.
+
   void close();
   // No private key is retained. These synchronous signing calls require a
   // current date/registration, explicit date and no pending write/request.
@@ -94,6 +102,16 @@ public:
   [[nodiscard]] ConfigResult<std::uint64_t> scrapeTracker(const TrackerRequest&);
   bool cancelTracker(std::uint64_t operation);
   [[nodiscard]] std::optional<TrackerObservation> trackerObservation()const;
+  // Explicit current-session hash lookup, no OS resolver/address book. IDs use
+  // a disjoint high range; at most1024 lifetime operations, never reused.
+  enum class LookupPhase {Pending,Resolved,Failed,Cancelled,Timeout,LeaseExpired};
+  struct LookupObservation {std::uint64_t operation=0;Hash requested{};LookupPhase phase=LookupPhase::Pending;std::optional<Destination> destination;};
+  [[nodiscard]] ConfigResult<std::uint64_t> lookupDestination(const Hash&,unsigned deadlineMilliseconds=30000);
+  bool cancelDestinationLookup(std::uint64_t);
+  [[nodiscard]] std::optional<LookupObservation> destinationLookupObservation()const;
+  // Public identity only, observed from the consumed owned signer/current LS2.
+  [[nodiscard]] std::optional<Destination> ownedLeaseDestination()const;
+  [[nodiscard]] std::optional<Destination> managedStreamPeer(std::uint64_t)const;
   struct StreamOptions {std::uint16_t fromPort=0,toPort=0;int deadlineMilliseconds=120000;unsigned maximumWindow=streaming::MaximumWindow;};
   // Explicit full resolved peer only; no DNS, default router or Host activation.
   // Requires retained owned signer/current LS2; one bounded outbound stream.
@@ -133,6 +151,8 @@ signals:
   void datagramChanged(); // Coalesced latest observation, not a result queue.
   void receiverChanged(); // Queued current bounded queue/drop observation.
   void trackerChanged(); // Queued latest same-generation operation observation.
+  void sourceEffectRequested(); // Queued coalesced need for a fresh worker permit.
+  void destinationLookupChanged();
   void streamChanged(); // Queued latest current operation; deletion/restart safe.
   void failed(Failure);
   void closed();

@@ -27,6 +27,8 @@ struct InitialChannel::Impl {
   QTimer receiveTimer;
   QTimer trackerTimer;
   QTimer streamTimer;
+  QTimer lookupTimer;
+  QTimer effectTimer;
   FrameDecoder decoder;
   Options options;
   QByteArray hello;
@@ -53,7 +55,7 @@ struct InitialChannel::Impl {
   Clock::time_point dateObserved{};
   bool notificationQueued=false,drainQueued=false,reading=false,lostPending=false;
 
-  explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner),statusTimer(owner),receiveTimer(owner),trackerTimer(owner),streamTimer(owner){
+  explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner),statusTimer(owner),receiveTimer(owner),trackerTimer(owner),streamTimer(owner),lookupTimer(owner),effectTimer(owner){
     socket.setProxy(QNetworkProxy::NoProxy); // Local I2CP control, never app proxy.
     socket.setReadBufferSize(static_cast<qint64>(MaximumFrameBytes));
     timer.setSingleShot(true);
@@ -61,6 +63,8 @@ struct InitialChannel::Impl {
     receiveTimer.setSingleShot(true);
     trackerTimer.setSingleShot(true);
     streamTimer.setSingleShot(true);
+    lookupTimer.setSingleShot(true);
+    effectTimer.setSingleShot(true);
   }
   ~Impl(){stopIo();}
   bool active()const{return state==State::Connecting||state==State::WaitingDate||state==State::DateReceived||state==State::Creating||state==State::SessionCreated||state==State::Reconfiguring;}
@@ -72,13 +76,15 @@ struct InitialChannel::Impl {
     for(std::size_t i=0;i<3;++i){const auto dot=value.find('.');const auto part=value.substr(0,dot);if(part.empty()){return false;}const auto parsed=std::from_chars(part.data(),part.data()+part.size(),version[i]);if(parsed.ec!=std::errc{}||parsed.ptr!=part.data()+part.size()){return false;}if(i<2){if(dot==std::string_view::npos){return false;}value.remove_prefix(dot+1);}}
     return version[0]>0||version[1]>9||(version[1]==9&&version[2]>=38);
   }
-  void clearSession(){clearStream();clearTracker();clearReceive();session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;statusPending=false;datagram.reset();datagramMessageId.reset();statusReplies=true;pendingStatusReplies=true;statusTimer.stop();}
+  void clearSession(){clearSourceEffects();clearLookup();clearStream();clearTracker();clearReceive();session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;statusPending=false;datagram.reset();datagramMessageId.reset();statusReplies=true;pendingStatusReplies=true;statusTimer.stop();}
   void stopIo(){
     timer.stop();QObject::disconnect(&timer,nullptr,q,nullptr);
     statusTimer.stop();QObject::disconnect(&statusTimer,nullptr,q,nullptr);
     receiveTimer.stop();QObject::disconnect(&receiveTimer,nullptr,q,nullptr);
     trackerTimer.stop();QObject::disconnect(&trackerTimer,nullptr,q,nullptr);
     streamTimer.stop();QObject::disconnect(&streamTimer,nullptr,q,nullptr);
+    lookupTimer.stop();QObject::disconnect(&lookupTimer,nullptr,q,nullptr);
+    effectTimer.stop();QObject::disconnect(&effectTimer,nullptr,q,nullptr);
     QObject::disconnect(&socket,nullptr,q,nullptr);socket.abort();
   }
   void notify(){
@@ -129,7 +135,7 @@ struct InitialChannel::Impl {
     if(!queued){drainQueued=false;fail(Failure::Resources);}
   }
   void message(Frame frame){
-    if(frame.type==HostReplyType){observeHostReply(frame);return;}
+    if(frame.type==HostReplyType){if(!observeOwnedLookup(frame)){observeHostReply(frame);}return;}
     if(frame.type==MessagePayloadType){inboundPayload(std::move(frame));return;}
     if(frame.type==MessageStatusType){observeDatagram(frame);return;}
     if(frame.type==RequestVariableLeaseSetType){answerLease(std::move(frame));return;}
@@ -171,6 +177,7 @@ struct InitialChannel::Impl {
     using Code=::biglybtc::services::i2p::ErrorCode;
     auto reject=[](Code code,const char* text)->ConfigResult<void>{return std::unexpected(::biglybtc::services::i2p::Error{code,text});};
     if(!onThread()){return reject(Code::InvalidFormat,"I2CP request belongs to channel thread");}
+    if(!effectReady()){return reject(Code::Unsupported,"Owned I2CP source permit required");}
     if(state!=(update?State::SessionCreated:State::DateReceived)||!date||socket.state()!=QAbstractSocket::ConnectedState||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){
       return reject(Code::InvalidFormat,"I2CP channel phase/request/write is not available");
     }
@@ -178,7 +185,7 @@ struct InitialChannel::Impl {
     if(consume&&!ls2Router()){return reject(Code::Unsupported,"Explicit LeaseSet2 requires a supported numeric router version");}
     if(update&&waitingFirstLease){return reject(Code::Unsupported,"Initial LeaseSet request is still outstanding");}
     if(update&&streamsOutstanding()){return reject(Code::Unsupported,"Streaming operation is still outstanding");}
-    if(update&&tracker){return reject(Code::Unsupported,"Explicit tracker operation is still outstanding");}
+    if(update&&(tracker||ownedLookup)){return reject(Code::Unsupported,"Explicit lookup/tracker operation is still outstanding");}
     if(update&&statusPending){return reject(Code::Unsupported,"Datagram status request is still outstanding");}
     if(update&&(!session||identity.destination()->wire!=acceptedDestination||revision==std::numeric_limits<std::uint64_t>::max())){
       return reject(Code::KeyMismatch,"Reconfigure must use the same accepted identity/id");
@@ -216,6 +223,7 @@ struct InitialChannel::Impl {
       timer.start(static_cast<int>(std::max<std::int64_t>(1,remaining)));notify();
       if(!current(at)||state!=phase){return reject(Code::CryptoFailure,"I2CP request notification failed");}
       if(expired()){return reject(Code::InvalidFormat,"I2CP request expired before write");}
+      if(!effectReady()){return reject(Code::Unsupported,"Owned I2CP source lost before write");}
       const auto written=socket.write(reinterpret_cast<const char*>(encoded->data()),static_cast<qint64>(encoded->size()));
       if(!current(at)||state!=phase){return reject(Code::InvalidFormat,"I2CP request lost its transport");}
       if(written!=static_cast<qint64>(encoded->size())){fail(Failure::WriteFailed);return reject(Code::InvalidFormat,"I2CP request write failed");}
@@ -224,6 +232,10 @@ struct InitialChannel::Impl {
   }
   void answerLease(Frame frame){
     const auto end=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);
+    if(sourceAuthority&&!effectReady()){
+      if(!active()){return;}auto request=decodeLeaseRequest(frame);if(sourceLease||!session||!request||request->sessionId!=*session){fail(Failure::InvalidLeaseSet);return;}
+      sourceLease.emplace(SourceLease{std::move(frame),end,generation});return;
+    }
     if(managedStreams&&socket.bytesToWrite()!=0){
       auto request=decodeLeaseRequest(frame);
       if(managedLease||!managedCurrent()||!request||request->sessionId!=*session){fail(Failure::InvalidLeaseSet);return;}
@@ -232,11 +244,13 @@ struct InitialChannel::Impl {
     answerLeaseWithin(std::move(frame),end);
   }
   void answerLeaseWithin(Frame frame,Clock::time_point end){
+    if(!effectReady()){return;}
     if(!leaseSigner||!session||(state!=State::SessionCreated&&state!=State::Reconfiguring)){fail(Failure::UnsupportedMessage);return;}
     if(expired()){return;}
     if(Clock::now()>=end){fail(Failure::Deadline);return;}const auto at=generation;
     // A late renewal may update the router submission, but cannot restore
     // streams/listening authority whose previous actual LS2 already expired.
+    if(sourceAuthority&&leaseSubmission&&!leaseCurrent()){fail(Failure::SourceChanged);return;}
     if(managedStreams&&leaseSubmission&&!leaseCurrent()){(void)managedCurrent();}
     if(!current(at)){return;}
     auto requested=decodeLeaseRequest(frame);
@@ -255,11 +269,12 @@ struct InitialChannel::Impl {
     if(!signedLs){fail(Failure::InvalidLeaseSet);return;}
     auto encoded=encodeCreateLeaseSet2(*session,*signedLs,*leaseKey);if(!encoded){fail(Failure::InvalidLeaseSet);return;}
     // Signing/encoding may cross the old lease boundary before its Qt timer.
+    if(sourceAuthority&&leaseSubmission&&!leaseCurrent()){fail(Failure::SourceChanged);return;}
     if(managedStreams&&leaseSubmission&&!leaseCurrent()){(void)managedCurrent();}
     if(!current(at)||Clock::now()>=end||expired()){if(current(at)){fail(Failure::Deadline);}return;}
     // Signed local submission is the same original client-side completion
     // boundary as setLeaseSet(), not a fabricated router response/OPEN claim.
-    const auto bytes=encoded->bytes();const auto written=socket.write(reinterpret_cast<const char*>(bytes.data()),static_cast<qint64>(bytes.size()));
+    if(!effectReady()){return;}const auto bytes=encoded->bytes();const auto written=socket.write(reinterpret_cast<const char*>(bytes.data()),static_cast<qint64>(bytes.size()));
     if(!current(at)){return;}if(written!=static_cast<qint64>(bytes.size())){fail(Failure::WriteFailed);return;}
     lastRawLeasePublished=std::max(now,lastRawLeasePublished?lastRawLeasePublished+1000:now);
     const auto next=leaseSubmission?leaseSubmission->revision+1:1;
@@ -324,6 +339,7 @@ struct InitialChannel::Impl {
       const auto nonce=static_cast<std::uint32_t>(nextDatagramNonce);auto wire=encodeSendDatagram(SendDatagram{*session,std::move(*dest),std::move(*mux),nonce,opts.expirationMilliseconds});if(!wire){return std::unexpected(wire.error());}
       if(!current(at)||state!=State::SessionCreated||!leaseCurrent()||Clock::now()>=end){return reject(Code::InvalidFormat,"Datagram preparation lost current lease/budget");}
       if(opts.expirationMilliseconds){const auto fresh=observedNow();if(!fresh||*opts.expirationMilliseconds<=*fresh){return reject(Code::InvalidFormat,"Datagram expired during preparation");}}
+      if(!effectReady()){return reject(Code::Unsupported,"Owned I2CP source permit required");}
       ++nextDatagramNonce;statusExpires=end;datagram=DatagramObservation{nonce,DatagramPhase::Pending,std::nullopt};datagramMessageId.reset();statusPending=true;armStatusDeadline();
       if(!current(at)||!statusPending){return reject(Code::InvalidFormat,"Datagram budget/notification failed before write");}
       const auto written=socket.write(reinterpret_cast<const char*>(wire->data()),static_cast<qint64>(wire->size()));
@@ -331,9 +347,11 @@ struct InitialChannel::Impl {
       notifyDatagram();if(!current(at)){return reject(Code::CryptoFailure,"Datagram notification failed");}return nonce;
     }catch(...){if(statusPending){fail(Failure::Resources);}return reject(Code::CryptoFailure,"Datagram resources unavailable");}
   }
+#include "owned_effects.inc"
 #include "streaming.inc"
 #include "managed_streams.inc"
 #include "tracker.inc"
+#include "owned_lookup.inc"
 #include "receive.inc"
   void drain(){
     if(reading||!active()||state==State::Connecting||expired()){return;}
@@ -377,8 +395,10 @@ struct InitialChannel::Impl {
     if(socket.peerAddress()!=options.address||socket.peerPort()!=options.port||!socket.localAddress().isLoopback()){
       fail(Failure::InvalidEndpoint);return;
     }
+    if(!effectReady()){return;}
     const auto at=generation;socket.setSocketOption(QAbstractSocket::KeepAliveOption,1);
     if(!current(at)||state!=State::Connecting){return;}
+    if(!effectReady()){return;}
     const auto written=socket.write(hello);
     if(!current(at)||state!=State::Connecting){return;}
     if(written!=hello.size()){fail(Failure::WriteFailed);return;}
@@ -416,13 +436,15 @@ struct InitialChannel::Impl {
     QObject::connect(&statusTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{armStatusDeadline();}catch(...){fail(Failure::Resources);}}});
     QObject::connect(&receiveTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{receiveDeadline();}catch(...){fail(Failure::Resources);}}});
     QObject::connect(&trackerTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{trackerDeadline();}catch(...){fail(Failure::Resources);}}});
+    QObject::connect(&effectTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{if(sourceEffectPending){if(Clock::now()>=sourceEffectEnd){fail(Failure::Deadline);}else{effectTimer.start(static_cast<int>(std::max<std::int64_t>(1,std::chrono::duration_cast<std::chrono::milliseconds>(sourceEffectEnd-Clock::now()).count())));}}}catch(...){fail(Failure::Resources);}}});
+    QObject::connect(&lookupTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{lookupDeadline();}catch(...){fail(Failure::Resources);}}});
     QObject::connect(&streamTimer,&QTimer::timeout,q,[this,at]{if(current(at)){flushStream();}});
-    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){if(managedLease){(void)flushManagedLease();}if(current(at)){flushReceiveControls();flushTrackerWrite();flushStream();}}});
+    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){if(sourceAuthority&&!managedStreams&&leaseSubmission&&socket.bytesToWrite()==0){static_cast<void>(effectReady());}if(sourceAuthority&&(sourceLease||state==State::Connecting)&&effectReady()){resumeSourceEffects();}if(current(at)&&managedLease){(void)flushManagedLease();}if(current(at)){flushReceiveControls();flushTrackerWrite();flushOwnedLookup();flushStream();}}});
     state=State::Connecting;expires=Clock::now()+std::chrono::milliseconds(next.deadlineMilliseconds);
     timer.start(next.deadlineMilliseconds);notify();
     if(!current(at)||state!=State::Connecting){return false;}
     if(expired()){return false;}
-    try{socket.connectToHost(next.address,next.port);}catch(...){fail(Failure::Resources);return false;}
+    try{if(sourceAuthority&&!effectReady()){return active();}socket.connectToHost(next.address,next.port);}catch(...){fail(Failure::Resources);return false;}
     return true;
   }
   void close(){
@@ -435,6 +457,10 @@ struct InitialChannel::Impl {
 InitialChannel::InitialChannel(QObject* parent):QObject(parent),impl_(std::make_unique<Impl>(this)){}
 InitialChannel::~InitialChannel()=default;
 bool InitialChannel::begin(const Options& options){return impl_->begin(options);}
+bool InitialChannel::bindEffectAuthority(std::shared_ptr<EffectAuthority> authority){if(!impl_->onThread()||impl_->state!=State::Idle||impl_->sourceAuthority||!authority||!authority->current()){return false;}impl_->sourceAuthority=std::move(authority);return true;}
+bool InitialChannel::sourceEffectsPending()const noexcept{return impl_->sourceEffectPending;}
+bool InitialChannel::ownedTransportIdle()const noexcept{return impl_->onThread()&&impl_->state==State::SessionCreated&&impl_->leaseCurrent()&&impl_->socket.bytesToWrite()==0&&impl_->socket.bytesAvailable()==0&&impl_->decoder.bufferedBytes()==0&&!impl_->sourceLease&&!impl_->managedLease&&!impl_->statusPending&&!impl_->fetch;}
+bool InitialChannel::resumeAuthorizedEffects(){return impl_->resumeSourceEffects();}
 void InitialChannel::close(){impl_->close();}
 ConfigResult<void> InitialChannel::createSession(const ClientIdentity& identity,const SessionOptions& options,std::uint64_t date){return impl_->request(identity,options,date,false);}
 ConfigResult<void> InitialChannel::createLeaseSession(ClientIdentity&& identity,const SessionOptions& options,std::uint64_t date){return impl_->request(identity,options,date,false,&identity);}
@@ -461,7 +487,10 @@ InitialChannel::ReceiverObservation InitialChannel::receiverObservation()const n
 ConfigResult<std::uint64_t> InitialChannel::scrapeTracker(const TrackerRequest& input){return impl_->startTracker(input);}
 bool InitialChannel::cancelTracker(std::uint64_t operation){if(!impl_->onThread()||!impl_->tracker||impl_->tracker->operation!=operation){return false;}impl_->finishTracker(TrackerPhase::LocalCancelled);return true;}
 std::optional<TrackerObservation> InitialChannel::trackerObservation()const{return sessionId()?impl_->trackerResult:std::nullopt;}
-ConfigResult<std::uint64_t> InitialChannel::connectStream(View destination,const StreamOptions& options){return impl_->managedStreams?impl_->startManagedStream(destination,options):impl_->startStream(destination,options);}
+ConfigResult<std::uint64_t> InitialChannel::connectStream(View destination,const StreamOptions& options){
+  if(impl_->sourceAuthority&&!impl_->managedStreams){return std::unexpected(::biglybtc::services::i2p::Error{::biglybtc::services::i2p::ErrorCode::Unsupported,"Owned source effects require the managed stream path"});}
+  return impl_->managedStreams?impl_->startManagedStream(destination,options):impl_->startStream(destination,options);
+}
 ConfigResult<void> InitialChannel::writeStream(std::uint64_t operation,View bytes){return impl_->managedStreams?impl_->writeManagedStream(operation,bytes):impl_->streamWrite(operation,bytes);}
 ConfigResult<Bytes> InitialChannel::takeStreamBytes(std::uint64_t operation,std::size_t maximum){return impl_->managedStreams?impl_->readManagedStream(operation,maximum):impl_->streamRead(operation,maximum);}
 bool InitialChannel::finishStreamWrite(std::uint64_t operation){
@@ -483,6 +512,12 @@ std::optional<streaming::ManagedObservation> InitialChannel::managedStreamObserv
 streaming::ManagerObservation InitialChannel::streamManagerObservation()const noexcept{return impl_->managedStreams?impl_->managedStreams->observation():streaming::ManagerObservation{};}
 bool InitialChannel::waitStream(std::uint64_t operation,streaming::WaitFor kind,std::size_t minimum,unsigned period){if(!impl_->onThread()||!impl_->managedCurrent()){return false;}try{const bool ok=impl_->managedStreams->wait(operation,kind,minimum,period,impl_->streamNow());impl_->armManagedStreams();impl_->notifyStream();return ok&&impl_->active();}catch(...){impl_->fail(Failure::Resources);return false;}}
 bool InitialChannel::releaseStream(std::uint64_t operation){if(!impl_->onThread()||!impl_->managedStreams){return false;}const bool ok=impl_->managedStreams->release(operation);impl_->armManagedStreams();impl_->notifyStream();return ok;}
+
+ConfigResult<std::uint64_t> InitialChannel::lookupDestination(const Hash& hash,unsigned timeout){return impl_->startOwnedLookup(hash,timeout);}
+bool InitialChannel::cancelDestinationLookup(std::uint64_t id){if(!impl_->onThread()||!impl_->ownedLookup||impl_->ownedLookup->operation!=id){return false;}impl_->finishOwnedLookup(LookupPhase::Cancelled);return true;}
+std::optional<InitialChannel::LookupObservation> InitialChannel::destinationLookupObservation()const{return impl_->ownedLookupResult;}
+std::optional<Destination> InitialChannel::ownedLeaseDestination()const{if(!impl_->onThread()||!impl_->session||!impl_->leaseSigner||!impl_->leaseCurrent()||impl_->state!=State::SessionCreated){return {};}return *impl_->leaseSigner->destination();}
+std::optional<Destination> InitialChannel::managedStreamPeer(std::uint64_t id)const{if(!impl_->onThread()||!impl_->session||!impl_->leaseCurrent()||!impl_->managedStreams){return {};}const auto* peer=impl_->managedStreams->peer(id);return peer?std::optional(*peer):std::nullopt;}
 
 InitialChannel::State InitialChannel::state()const noexcept{return impl_->state;}
 InitialChannel::Failure InitialChannel::failure()const noexcept{return impl_->failure;}

@@ -6,6 +6,7 @@
   std::optional<DeferredLease> managedLease;
   bool managedCurrent(){
     if(!managedStreams){return false;}
+    if(sourceAuthority&&!sourceAuthority->current()){fail(Failure::SourceChanged);return false;}
     if(generation!=managedGeneration||state!=State::SessionCreated||!leaseCurrent()){
       managedStreams->terminate(streaming::Phase::LeaseExpired);managedLease.reset();streamTimer.stop();notifyStream();return false;
     }
@@ -38,6 +39,7 @@
   }
   bool flushManagedLease(){
     if(!managedLease){return true;}
+    if(!effectReady()){return false;}
     if(!managedCurrent()){return false;}
     if(managedLease->generation!=generation||Clock::now()>=managedLease->end){fail(Failure::Deadline);return false;}
     if(socket.bytesToWrite()!=0){return false;}
@@ -51,6 +53,7 @@
       // Hard deadlines settle even while the one already-queued I2CP frame
       // waits for bytesWritten. Retry/output readiness alone stays suppressed.
       managedStreams->tick(streamNow());notifyStream();if(!active()||!managedStreams){return;}
+      if(!effectReady()){if(active()){armManagedStreams(true);}return;}
       if(managedLease&&!flushManagedLease()){if(active()){armManagedStreams(true);}return;}
       if(socket.bytesToWrite()!=0){armManagedStreams(true);return;}
       streamFlushing=true;const auto at=generation;
@@ -70,6 +73,7 @@
       // Recheck absolute handshake/wait/idle gates after signing/compression.
       managedStreams->tick(streamNow());const auto currentStream=managedStreams->observation(outbound->operation);
       if(!currentStream||(!managedStreams->peer(outbound->operation))||(currentStream->stream.phase!=streaming::Phase::Connecting&&currentStream->stream.phase!=streaming::Phase::Established&&currentStream->stream.phase!=streaming::Phase::ReadEof&&currentStream->stream.phase!=streaming::Phase::Closed)){continue;}
+      if(!effectReady()){streamFlushing=false;return;}
       const auto written=socket.write(reinterpret_cast<const char*>(frame->data()),static_cast<qint64>(frame->size()));
       if(!current(at)||!managedStreams){streamFlushing=false;return;}
       if(written!=static_cast<qint64>(frame->size())){streamFlushing=false;fail(Failure::WriteFailed);return;}

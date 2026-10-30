@@ -18,6 +18,7 @@
 
 namespace biglybtc::engine {
 struct NetworkPolicy;
+class OwnedI2pPolicy;
 namespace detail {
 
 class OriginalDiskFiles;
@@ -66,6 +67,9 @@ public:
       std::span<const storage::OriginalTorrentIdentity> retainedIdentities={},
       std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge={},
       ManagedStoragePurpose purpose=ManagedStoragePurpose::Download);
+  // Separate minted I2P-only policy; ordinary prepare/global policy unchanged.
+  static std::expected<ManagedStorage,storage::Error> prepareOwnedI2p(
+      const storage::ProfileLease&,const core::TorrentHash&,const OwnedI2pPolicy&);
   ManagedStorage(ManagedStorage&&) noexcept;
   ManagedStorage& operator=(ManagedStorage&&) noexcept;
   ManagedStorage(const ManagedStorage&) = delete;
@@ -109,6 +113,10 @@ public:
       std::optional<ManagedBadPayloadBytes> badPayloadBytes = {},
       bool badPayloadComplete = true);
 private:
+  static std::expected<ManagedStorage,storage::Error> prepareImpl(
+      const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,
+      std::span<const ManagedPayloadClaim>,std::span<const storage::OriginalTorrentIdentity>,
+      std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose,const OwnedI2pPolicy*);
   std::expected<void,storage::Error> beginAllocation(const storage::ProfileLease&);
   struct Impl;
   explicit ManagedStorage(std::unique_ptr<Impl>);
