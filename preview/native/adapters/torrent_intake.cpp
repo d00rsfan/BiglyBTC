@@ -472,8 +472,8 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
     std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={},TorrentIntakeNetwork network=TorrentIntakeNetwork::Public) {
   require(network==TorrentIntakeNetwork::Public||network==TorrentIntakeNetwork::I2p,ErrorCode::InvalidFormat,"Invalid intake network context");
   require(network!=TorrentIntakeNetwork::I2p||(!forceStart&&!alias
-      &&(!options||(!options->queued&&!options->verifyExisting&&options->allocation==core::TorrentAllocationMode::None))),
-      ErrorCode::Unsupported,"I2P intake requires ordinary unforced intent without queue, verification or allocation");
+      &&(!options||(!options->verifyExisting&&options->allocation==core::TorrentAllocationMode::None))),
+      ErrorCode::Unsupported,"I2P intake requires ordinary unforced intent without verification or allocation");
   require(!options||!options->queued||(!stopped&&!forceStart),ErrorCode::InvalidFormat,"Queued intake conflicts with stopped/forced intent");
   require(!options||!options->paused||(stopped&&!forceStart&&!options->queued),ErrorCode::InvalidFormat,"Paused intake requires stopped/unforced/nonqueued intent");
   require(!options||options->allocation==core::TorrentAllocationMode::None||(stopped&&!forceStart),ErrorCode::InvalidFormat,"Allocation intake must remain safely stopped and unforced");
@@ -1004,8 +1004,8 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false,const std::string* expectedConversions=nullptr,std::optional<core::TorrentIntakeFileDestinations> fileDestinations={},core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent,const bool* expectedDecoderShowAll=nullptr,core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None) {
   try {
     require(network==TorrentIntakeNetwork::Public||network==TorrentIntakeNetwork::I2p,ErrorCode::InvalidFormat,"Invalid intake network context");
-    require(network!=TorrentIntakeNetwork::I2p||(!forceStart&&!queued&&!verifyExisting&&allocation==core::TorrentAllocationMode::None),
-        ErrorCode::Unsupported,"I2P intake requires ordinary unforced intent without queue, verification or allocation");
+    require(network!=TorrentIntakeNetwork::I2p||(!forceStart&&!verifyExisting&&allocation==core::TorrentAllocationMode::None),
+        ErrorCode::Unsupported,"I2P intake requires ordinary unforced intent without verification or allocation");
     require(core::validTorrentAllocationMode(allocation)&& (allocation==core::TorrentAllocationMode::None||(stopped&&!forceStart&&!queued&&!paused&&!verifyExisting&&policies.has_value())),ErrorCode::InvalidFormat,"Allocation requires explicit selected stopped/unforced intent");
     require((goal==core::ExistingVerificationGoal::FullTorrent||goal==core::ExistingVerificationGoal::SelectedFiles)&&(verifyExisting||goal==core::ExistingVerificationGoal::FullTorrent),ErrorCode::InvalidFormat,"Invalid existing verification goal");
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Torrent import cancelled before commit");

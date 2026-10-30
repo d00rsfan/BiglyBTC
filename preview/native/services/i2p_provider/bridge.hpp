@@ -26,6 +26,7 @@ signals:
   void changed(); // Queued, coalesced, deletion/restart safe.
 private:
   friend class OwnedTorrent;
+  friend class OwnedProfile;
   struct Impl;std::unique_ptr<Impl> impl_;
   // Private ephemeral capability is transferred only into the exact measured
   // provider hook. Not exposed by a public config/read/observation interface.

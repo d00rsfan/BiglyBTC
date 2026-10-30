@@ -709,9 +709,9 @@ const storage::OriginalTorrentIdentity& ManagedStorage::identity() const {return
 std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose) {
   return prepareImpl(lease,hash,policy,claimed,retainedIdentities,std::move(swarmBridge),purpose,nullptr);
 }
-std::expected<ManagedStorage,Error> ManagedStorage::prepareOwnedI2p(const storage::ProfileLease& lease,const core::TorrentHash& hash,const OwnedI2pPolicy& owned){
+std::expected<ManagedStorage,Error> ManagedStorage::prepareOwnedI2p(const storage::ProfileLease& lease,const core::TorrentHash& hash,const OwnedI2pPolicy& owned,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> identities){
   if(!owned.matches(lease,hash)){return std::unexpected(Error{ErrorCode::Conflict,"Owned I2P storage needs SAME lease/hash"});}
-  return prepareImpl(lease,hash,NetworkPolicy{}, {}, {}, {},ManagedStoragePurpose::Download,&owned);
+  return prepareImpl(lease,hash,NetworkPolicy{},claimed,identities,{},ManagedStoragePurpose::Download,&owned);
 }
 std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned) {
   try {

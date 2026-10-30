@@ -6,7 +6,7 @@
   std::optional<DeferredLease> managedLease;
   bool managedCurrent(){
     if(!managedStreams){return false;}
-    if(sourceAuthority&&!sourceAuthority->current()){fail(Failure::SourceChanged);return false;}
+    if(sourceAuthority&&sourceAuthority->revoked()){fail(Failure::SourceChanged);return false;}
     if(generation!=managedGeneration||state!=State::SessionCreated||!leaseCurrent()){
       managedStreams->terminate(streaming::Phase::LeaseExpired);managedLease.reset();streamTimer.stop();notifyStream();return false;
     }

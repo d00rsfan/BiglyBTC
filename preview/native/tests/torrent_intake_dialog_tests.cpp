@@ -72,7 +72,7 @@ private slots:
     auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));auto* network=dialog.findChild<QLabel*>(QStringLiteral("import-network-context"));
     QVERIFY(load&&mode&&add&&network);QCOMPARE(mode->count(),8);QCOMPARE(mode->itemText(0),QStringLiteral("Queued"));
     QTRY_VERIFY(load->isEnabled());load->click();auto frame=std::make_shared<ui::TorrentIntakePacket>(*packet(request(reads)));frame->i2pOnly=true;dialog.setPreview(frame);
-    QTRY_VERIFY(add->isEnabled());QCOMPARE(mode->count(),3);QCOMPARE(mode->currentText(),QStringLiteral("Start now"));
+    QTRY_VERIFY(add->isEnabled());QCOMPARE(mode->count(),3);QCOMPARE(mode->currentText(),QStringLiteral("Queued"));
     QCOMPARE(mode->currentData().toInt(),static_cast<int>(ui::TorrentIntakeStartMode::Queued));
     QCOMPARE(mode->itemData(1).toInt(),static_cast<int>(ui::TorrentIntakeStartMode::Stopped));QCOMPARE(mode->itemData(2).toInt(),static_cast<int>(ui::TorrentIntakeStartMode::Paused));
     QVERIFY(dialog.windowTitle().contains(QStringLiteral("I2P")));QVERIFY(!network->isHidden());QCOMPARE(network->text(),QStringLiteral("Network: I2P only"));

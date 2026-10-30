@@ -10,6 +10,7 @@ namespace biglybtc::services::i2p::i2cp {
 // current() performs atomics only, never filesystem work or a Qt callback.
 class EffectAuthority final {
 public:
+  bool revoked()const noexcept{return revoked_.load();}
   bool current()const noexcept{try{return !revoked_.load()&&current_(revision_.load());}catch(...){return false;}}
   bool granted()const noexcept{return granted_.load()&&current();}
 private:

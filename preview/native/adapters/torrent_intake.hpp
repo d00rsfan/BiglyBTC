@@ -82,8 +82,8 @@ std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLeas
     std::span<const compat::FilePolicy>, void (*observer)(TorrentIntakeStage) = nullptr,
     bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false, bool queued = false, bool paused = false, std::optional<core::TorrentIntakeTrackerTiers> trackers = std::nullopt, std::optional<std::string> saveName = std::nullopt, bool verifyExisting = false, std::optional<core::TorrentIntakeFileDestinations> fileDestinations = std::nullopt, core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent, core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None, TorrentIntakeNetwork network=TorrentIntakeNetwork::Public);
 
-// I2p context is a fresh unforced ordinary import (Waiting or Stopped, optionally paused),
-// without queued, verified-seeding or allocation intent. It saves [I2P] plus
+// I2p context is a fresh unforced ordinary import (Waiting, Queued or Stopped, optionally paused),
+// without verified-seeding or allocation intent. It saves [I2P] plus
 // Tracker permission in the SAME transaction, persists context through recovery,
 // and refuses incompatible inherited networks/explicitly denied Tracker. It
 // never converts a saved Public row/alias or starts an owner; Public is default.

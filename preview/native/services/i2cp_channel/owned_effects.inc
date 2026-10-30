@@ -8,7 +8,7 @@
   void clearSourceEffects(){sourceLease.reset();sourceEffectPending=false;sourceEffectQueued=false;effectTimer.stop();}
   bool effectReady(){
     if(!sourceAuthority){return true;}
-    if(!sourceAuthority->current()){fail(Failure::SourceChanged);return false;}
+    if(sourceAuthority->revoked()){fail(Failure::SourceChanged);return false;}
     if(sourceAuthority->granted()){return true;}
     if(!sourceEffectPending){sourceEffectPending=true;sourceEffectEnd=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);effectTimer.start(options.deadlineMilliseconds);}
     if(Clock::now()>=sourceEffectEnd){fail(Failure::Deadline);return false;}

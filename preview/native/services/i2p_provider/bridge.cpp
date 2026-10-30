@@ -20,6 +20,7 @@
 #include <array>
 #include <chrono>
 #include <limits>
+#include <cstring>
 
 namespace biglybtc::services::i2p::provider {
 struct Bridge::Impl {
@@ -33,7 +34,7 @@ struct Bridge::Impl {
   };
   Bridge* q;std::shared_ptr<ProfileSource> source;QPointer<i2cp::InitialChannel> channel;
   QTcpServer server;QTimer timer;std::unique_ptr<SourcePermit> permit;
-  int watch=-1;std::unique_ptr<QSocketNotifier> watcher;
+  int watch=-1;std::unique_ptr<QSocketNotifier> watcher;std::vector<int> criticalWatches;
   std::array<std::optional<Socket>,MaximumBridgeSockets> sockets;
   std::vector<Destination> peers;std::vector<Destination> resolved;
   std::optional<std::size_t> control;
@@ -254,9 +255,29 @@ bool Bridge::begin(Ports ports,std::uint64_t admission){
   if(!s.channel->enableStreamManager(streaming::ManagerOptions{})){s.close();return false;}
   s.phase=Phase::Preparing;s.preparingEnd=end;
     s.watch=::inotify_init1(IN_CLOEXEC|IN_NONBLOCK);if(s.watch<0){s.close();return false;}
-    for(int fd:s.source->watchDescriptors()){if(fd<0||::inotify_add_watch(s.watch,("/proc/self/fd/"+std::to_string(fd)).c_str(),IN_ATTRIB|IN_CLOSE_WRITE|IN_MOVE_SELF|IN_DELETE_SELF|IN_UNMOUNT)<0){s.close();return false;}}
+    const auto critical=s.source->criticalWatchDescriptors();
+    for(int fd:s.source->watchDescriptors()){
+      const auto mask=IN_ATTRIB|IN_CLOSE_WRITE|IN_MOVE_SELF|IN_DELETE_SELF|IN_UNMOUNT
+          |(s.source->groupMode()?(IN_CREATE|IN_DELETE|IN_MOVED_FROM|IN_MOVED_TO):0);
+      const int wd=fd<0?-1: ::inotify_add_watch(s.watch,("/proc/self/fd/"+std::to_string(fd)).c_str(),mask);
+      if(wd<0){s.close();return false;}if(std::find(critical.begin(),critical.end(),fd)!=critical.end()){s.criticalWatches.push_back(wd);}
+    }
     s.watcher=std::make_unique<QSocketNotifier>(s.watch,QSocketNotifier::Read,this);
-    QObject::connect(s.watcher.get(),&QSocketNotifier::activated,this,[this]{std::array<char,4096> bytes{};const auto n=::read(impl_->watch,bytes.data(),bytes.size());if(n>0||(n<0&&errno!=EAGAIN&&errno!=EINTR)){impl_->close();}});
+    QObject::connect(s.watcher.get(),&QSocketNotifier::activated,this,[this]{
+      std::array<char,4096> bytes{};const auto n=::read(impl_->watch,bytes.data(),bytes.size());
+      if(n<0){if(errno!=EAGAIN&&errno!=EINTR){impl_->close();}return;}if(n==0){impl_->close();return;}
+      if(!impl_->source->groupMode()){impl_->close();return;}
+      for(std::size_t offset=0;offset<static_cast<std::size_t>(n);){
+        if(static_cast<std::size_t>(n)-offset<sizeof(inotify_event)){impl_->close();return;}
+        inotify_event event{};std::memcpy(&event,bytes.data()+offset,sizeof(event));
+        if(event.len>static_cast<std::size_t>(n)-offset-sizeof(event)){impl_->close();return;}
+        if((event.mask&(IN_Q_OVERFLOW|IN_UNMOUNT))||std::find(impl_->criticalWatches.begin(),impl_->criticalWatches.end(),event.wd)!=impl_->criticalWatches.end()){
+          impl_->close();return;
+        }
+        offset+=sizeof(event)+event.len;
+      }
+      impl_->source->invalidate();impl_->schedule();
+    });
     s.permit=std::make_unique<SourcePermit>(s.source,this);
     if(Impl::Clock::now()>=end){s.close();return false;}s.arm();s.schedule();return true;
   }catch(...){s.close();return false;}

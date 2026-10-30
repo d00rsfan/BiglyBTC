@@ -209,13 +209,13 @@ if(BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/i2p_provider/verify-owner-approval.py"
     "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL}" "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256}"
-    "${_owned_i2p_dso}" "${_owned_i2p_sdk}" "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671"
+    "${_owned_i2p_dso}" "${_owned_i2p_sdk}" "63e9925c8f4f3e80168425d22b62ef87b23732eccff8fa1b7714f73f3f84e9c3"
     "${CMAKE_CURRENT_BINARY_DIR}/private_i2p_runtime_config.hpp" RESULT_VARIABLE _owned_i2p_verify)
   if(NOT _owned_i2p_verify EQUAL 0)
     message(FATAL_ERROR "Private owner approval/SDK/artifact closure failed")
   endif()
   add_library(biglybtc_i2p_provider_owner STATIC
-    i2p_provider/owner.hpp i2p_provider/owner.cpp i2p_provider/bridge.hpp i2p_provider/bridge.cpp i2p_provider/owner_runtime_guard.cpp)
+    i2p_provider/owner.hpp i2p_provider/owner.cpp i2p_provider/profile_owner.hpp i2p_provider/profile_owner.cpp i2p_provider/bridge.hpp i2p_provider/bridge.cpp i2p_provider/owner_runtime_guard.cpp)
   set_target_properties(biglybtc_i2p_provider_owner PROPERTIES AUTOMOC ON)
   target_include_directories(biglybtc_i2p_provider_owner PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
   target_link_libraries(biglybtc_i2p_provider_owner PUBLIC biglybtc_owned_i2p_source Qt6::Core Qt6::Network

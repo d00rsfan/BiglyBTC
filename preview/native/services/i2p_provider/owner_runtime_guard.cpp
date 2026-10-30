@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Mapping/FD/hash proof retained from qualified persistent_runtime_guard.cpp;
-// private compiled artifact constants and all31 same-image exports required.
+// private compiled artifact constants and all34 same-image exports required.
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -190,10 +190,11 @@ bool check(std::shared_ptr<void>* retainedPin) {
       "biglybtc_tracker_response_abi_v1", "biglybtc_attach_tracker_response_observer_v1",
       "biglybtc_mainline_routing_abi_v1", "biglybtc_query_mainline_routing_v1",
       "biglybtc_private_i2p_owner_abi_v1", "biglybtc_configure_private_i2p_owner_v1",
-      "biglybtc_read_private_i2p_owner_v1", "biglybtc_withdraw_private_i2p_owner_v1"};
-  constexpr std::size_t required=31;
-  std::array<std::uintptr_t,31> addresses{};
-  std::array<Mapping,31> beforeMappings{};
+      "biglybtc_read_private_i2p_owner_v1", "biglybtc_withdraw_private_i2p_owner_v1",
+      "biglybtc_private_i2p_torrents_abi_v1", "biglybtc_admit_private_i2p_torrent_v1", "biglybtc_revoke_private_i2p_torrent_v1"};
+  constexpr std::size_t required=std::size(symbols);
+  std::array<std::uintptr_t,required> addresses{};
+  std::array<Mapping,required> beforeMappings{};
   std::size_t at = 0;
   for (; at < required; ++at) {
     const auto* name = symbols[at];

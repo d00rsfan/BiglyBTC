@@ -93,6 +93,19 @@ void i2pNetworkContexts(){
     check(read(area.profile/"BiglyBTC.torrent-import")==bytes&&read(area.profile/"downloads.config")==inventory
         &&!fs::exists(area.profile/"active")&&!fs::exists(area.destination),"Malformed recovery preserves pending proof and all original bytes");
   }
+  for(bool interruptedQueued:{false,true}){
+    Area area;write(area.input,original);const auto source=take(storage::inspectTorrentIntake(area.input));
+    interrupted=storage::TorrentIntakeStage::JournalSynced;
+    const auto result=storage::importTorrentWithFileOptions(*area.lease,source,area.destination,false,mixed,
+        interruptedQueued?interrupt:nullptr,false,{}, {8192,4096},false,true,false,{}, {},false,{},
+        core::ExistingVerificationGoal::FullTorrent,core::TorrentAllocationMode::None,Network::I2p);
+    if(interruptedQueued){check(!result,"Interrupt queued I2P before inventory publication");area.reopen();check(take(storage::recoverTorrentIntake(*area.lease)).has_value(),"Recover queued I2P context");}
+    else{check(result.has_value(),"I2P accepts ordinary queued intent");}
+    const auto library=core::readLibrary(parse(read(area.profile/"downloads.config")));
+    check(library&&library->downloads.size()==1&&library->downloads[0].startup==core::StartupState::Queued
+        &&!library->downloads[0].forceStart&&library->paused.empty(),"Queued75 remains distinct from stopped70 and paused");
+    checkI2pState(area,source.hash());
+  }
   for(int kind=0;kind<3;++kind){
     Area area;const auto source=take(storage::inspectTorrentIntake(area.input));
     const auto result=storage::importTorrentWithFileOptions(*area.lease,source,area.destination,true,mixed,nullptr,false,{}, {},

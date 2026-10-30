@@ -21,7 +21,13 @@ public:
   ~SourcePermit(){stop();join();}
   SourcePermit(const SourcePermit&)=delete;
   bool request(){std::lock_guard lock(mutex_);if(phase_!=Phase::Idle){return false;}phase_=Phase::Requested;changed_.notify_all();return true;}
-  std::optional<std::uint64_t> take(){std::lock_guard lock(mutex_);if(phase_!=Phase::Ready||stopped_){return {};}if(!source_->effectAuthority()||!source_->effectAuthority()->enter(revision_)){stopped_=true;phase_=Phase::Failed;changed_.notify_all();return {};}phase_=Phase::Executing;return revision_;}
+  std::optional<std::uint64_t> take(){std::lock_guard lock(mutex_);if(phase_!=Phase::Ready||stopped_){return {};}if(!source_->effectAuthority()){stopped_=true;phase_=Phase::Failed;changed_.notify_all();return {};}
+    if(!source_->effectAuthority()->enter(revision_)){
+      // A dirty watch/cooperative epoch can race Ready. Release this actual
+      // gate and revalidate; permanent revocation still settles Failed.
+      if(source_->effectAuthority()->revoked()){stopped_=true;phase_=Phase::Failed;}else{phase_=Phase::Consumed;}
+      changed_.notify_all();return {};
+    }phase_=Phase::Executing;return revision_;}
   void acknowledge(){if(source_->effectAuthority()){source_->effectAuthority()->leave();}std::lock_guard lock(mutex_);if(phase_==Phase::Executing){phase_=Phase::Consumed;}changed_.notify_all();}
   Phase phase()const{std::lock_guard lock(mutex_);return phase_;}
   void stop()noexcept{std::lock_guard lock(mutex_);stopped_=true;receiver_=nullptr;changed_.notify_all();worker_.request_stop();}

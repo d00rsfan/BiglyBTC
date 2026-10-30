@@ -278,7 +278,7 @@ bool TorrentIntakeDialog::setI2pContext(bool i2pOnly) {
     // Unsupported modes fall back to Stopped. Block synchronous Qt callbacks.
     QSignalBlocker blocked(mode.data());
     const auto alive=[&]{if(!mode){blocked.dismiss();}return current();};
-    mode->setItemText(0,i2pOnly?tr("Start now"):tr("Queued"));if(!alive()){return false;}
+    mode->setItemText(0,tr("Queued"));if(!alive()){return false;}
     if(i2pOnly){
       while(mode->count()>3){mode->removeItem(mode->count()-1);if(!alive()){return false;}}
     }else{
@@ -291,7 +291,7 @@ bool TorrentIntakeDialog::setI2pContext(bool i2pOnly) {
     mode->setCurrentIndex(mode->findData(selected));if(!alive()){return false;}
   }
   i2pContext_=i2pOnly;
-  mode->setToolTip(i2pOnly?tr("Start now starts over I2P. Paused waits for Resume.")
+  mode->setToolTip(i2pOnly?tr("Queued follows the original queue rules over I2P. Paused waits for Resume.")
       :tr("Queued follows queue rules. Paused waits for Resume. Forced bypasses ordinary queue limits."));if(!current()){return false;}
   setWindowTitle(i2pOnly?tr("Open Torrent File — I2P"):tr("Open Torrent File"));if(!current()){return false;}
   network_->setText(i2pOnly?tr("Network: I2P only"):QString{});if(!current()){return false;}
@@ -377,7 +377,7 @@ void TorrentIntakeDialog::render() {
   if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::VerifySeeding)){status+=tr("\nRequires every real file selected with complete existing linear data at its reviewed destination. Read-only verification never downloads or repairs missing data. Seeding starts only after every piece passes.");}
   if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::AllocateStopped)||startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::AllocatePaused)){status+=tr("\nWrites and synchronizes new zero-filled files without downloading. Requires all real files selected and absent or unchanged full-size linear data. Allocated bytes are not verified pieces.");}
   if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::VerifySelected)){status+=tr("\nChecks every piece needed by selected files, including skipped-file boundary bytes. Other gaps stay unverified. No data is created, repaired or downloaded.");}
-  if(frame&&frame->i2pOnly){status+=tr("\nI2P supports Start now, Stopped and Paused. Force start, verify-existing and allocation modes are not available.");}
+  if(frame&&frame->i2pOnly){status+=tr("\nI2P supports Queued, Stopped and Paused. Force start, verify-existing and allocation modes are not available.");}
   if(frame&&!frame->trackers){status+=tr("\nOriginal tracker fields are kept unchanged; this editor cannot represent their format or size.");}
   status_->setText(status.left(4096));
 }

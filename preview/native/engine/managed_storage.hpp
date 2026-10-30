@@ -69,7 +69,9 @@ public:
       ManagedStoragePurpose purpose=ManagedStoragePurpose::Download);
   // Separate minted I2P-only policy; ordinary prepare/global policy unchanged.
   static std::expected<ManagedStorage,storage::Error> prepareOwnedI2p(
-      const storage::ProfileLease&,const core::TorrentHash&,const OwnedI2pPolicy&);
+      const storage::ProfileLease&,const core::TorrentHash&,const OwnedI2pPolicy&,
+      std::span<const ManagedPayloadClaim> claimed={},
+      std::span<const storage::OriginalTorrentIdentity> retainedIdentities={});
   ManagedStorage(ManagedStorage&&) noexcept;
   ManagedStorage& operator=(ManagedStorage&&) noexcept;
   ManagedStorage(const ManagedStorage&) = delete;
