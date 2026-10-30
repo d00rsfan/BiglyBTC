@@ -87,7 +87,7 @@ struct OwnedProfile::Impl {
     installQueued=true;if(!bridge->installProvider([this](void* policy){installQueued=false;return installSession(policy);})){installQueued=false;close();}
   }
   void close(const char* reason=nullptr){
-    if(reason&&failure.empty()){failure=reason;}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;timer.stop();source->revoke();identity.reset();
+    if(failure.empty()){if(bridge&&bridge->observation().phase==Bridge::Phase::Withdrawn){failure=bridge->failureReason();}else if(reason){failure=reason;}}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;timer.stop();source->revoke();identity.reset();
     if(bridge){bridge->close();}if(channel){channel->close();}if(permit){permit->stop();}
     if(session){if(generation){(void)lt::biglybtc_withdraw_private_i2p_owner_v1(session.get(),generation);}joining.emplace(session->abort());session.reset();}
     for(auto& [key,m]:members){(void)key;m->handle={};if(m->retired.requested&&!m->retired.readyForJoin&&!m->retired.failure){m->retired.failure=Error{Code::Conflict,"Shared I2P session withdrew before target retirement; recheck retained"};}}
