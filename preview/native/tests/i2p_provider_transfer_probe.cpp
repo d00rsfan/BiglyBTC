@@ -12,6 +12,7 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QSaveFile>
 #include <QTcpSocket>
 #include <QNetworkProxy>
@@ -187,11 +188,26 @@ int main(int argc,char** argv){
     try{diagnostic("native-phase.json",{{"phase",QString::fromLatin1(phase)},{"elapsed_ms",elapsed.elapsed()}});}catch(...){}
   };
   const auto observe=[](const provider::OwnedTorrent::Observation& value){
+    const auto error=[](const provider::OwnedTorrent::ErrorObservation& item){return QJsonObject{{"value",item.value},{"category",QString::fromStdString(item.category)},{"message",QString::fromStdString(item.message)}};};
+    const auto& d=value.diagnostics;QJsonArray trackers,alerts;
+    for(std::size_t t=0;t<d.trackersShown;++t){
+      const auto& tracker=d.trackers[t];QJsonArray endpoints;
+      for(std::size_t e=0;e<tracker.endpointsShown;++e){const auto& endpoint=tracker.endpoints[e];QJsonArray hashes;
+        for(const auto& hash:endpoint.hashes){hashes.append(QJsonObject{{"updating",hash.updating},{"start_sent",hash.startSent},{"fails",static_cast<int>(hash.fails)},{"error",error(hash.error)}});}
+        endpoints.append(QJsonObject{{"enabled",endpoint.enabled},{"hashes",hashes}});
+      }
+      trackers.append(QJsonObject{{"endpoint_count",static_cast<qint64>(tracker.endpointCount)},{"endpoints",endpoints}});
+    }
+    for(std::size_t i=0;i<d.alerts.currentShown;++i){const auto& item=d.alerts.current[i];alerts.append(QJsonObject{{"type",item.type},{"error",error(item.error)}});}
     return QJsonObject{{"phase",static_cast<int>(value.phase)},{"admission",QString::number(value.admission)},
       {"generation",QString::number(value.generation)},{"bridge_port",value.bridgePort},
       {"bridge_sockets",static_cast<qint64>(value.bridgeSockets)},
       {"rejected_clients",QString::number(value.rejectedClients)},{"seeding",value.seeding},
-      {"verified_bytes",QString::number(value.verifiedBytes)}};
+      {"verified_bytes",QString::number(value.verifiedBytes)},
+      {"tracker_diagnostics",QJsonObject{{"status_available",d.statusAvailable},{"incomplete",d.incomplete},{"paused",d.paused},{"announcing_to_trackers",d.announcingToTrackers},{"state",d.torrentState},{"flags",QString::number(d.flags)},{"error",error(d.error)},
+        {"tracker_count",static_cast<qint64>(d.trackerCount)},{"trackers",trackers},{"alerts_drained",QString::number(d.alerts.drained)},{"alerts_uninspected",QString::number(d.alerts.uninspected)},
+        {"announces",QString::number(d.alerts.announces)},{"tracker_errors",QString::number(d.alerts.trackerErrors)},{"tracker_replies",QString::number(d.alerts.trackerReplies)},
+        {"i2p_errors",QString::number(d.alerts.i2pErrors)},{"file_errors",QString::number(d.alerts.fileErrors)},{"torrent_errors",QString::number(d.alerts.torrentErrors)},{"current_alerts_omitted",static_cast<qint64>(d.alerts.currentOmitted)},{"current_alerts",alerts}}}};
   };
   QJsonObject lastProgress;QElapsedTimer progressAge;progressAge.start();
   const auto progress=[&](const provider::OwnedTorrent::Observation& a,const provider::OwnedTorrent::Observation& b)noexcept{
