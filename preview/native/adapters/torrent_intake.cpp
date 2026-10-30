@@ -436,6 +436,26 @@ void applyTrackers(MetadataSubject& subject,const core::TorrentIntakeTrackerTier
       &&checked.hash==subject.hash&&checked.identity.selected==subject.identity.selected,ErrorCode::Conflict,"Tracker edit changed torrent identity");
   subject.torrent=std::move(checked.torrent);
 }
+void applyIntakeNetwork(core::Document& attributes,TorrentIntakeNetwork network,bool alias) {
+  if(network==TorrentIntakeNetwork::Public){if(!alias){put(attributes,"networks","l6:Publice");}return;}
+  require(network==TorrentIntakeNetwork::I2p&&!alias,ErrorCode::Unsupported,"Explicit I2P intake cannot convert a saved alias");
+  if(const auto* selected=attributes.find("networks")){
+    require(selected->type==Node::Type::List&&selected->children.size()==1
+        &&selected->children[0].type==Node::Type::Bytes&&selected->children[0].bytes=="I2P",
+        ErrorCode::Unsupported,"I2P intake refuses incompatible inherited networks");
+  }
+  if(const auto* denied=attributes.find("peersourcesdenied")){
+    require(denied->type==Node::Type::List,ErrorCode::InvalidFormat,"Malformed inherited denied peer sources");
+    for(const auto& value:denied->children){require(value.type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Malformed inherited denied peer source");
+      require(value.bytes!="Tracker",ErrorCode::Unsupported,"I2P intake cannot override denied Tracker permission");}
+  }
+  if(const auto* sources=attributes.find("peersources")){
+    require(sources->type==Node::Type::List,ErrorCode::InvalidFormat,"Malformed inherited peer sources");
+    bool tracker=false;for(const auto& value:sources->children){require(value.type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Malformed inherited peer source");tracker|=value.bytes=="Tracker";}
+    require(tracker,ErrorCode::Unsupported,"I2P intake requires inherited Tracker permission");
+  }else{put(attributes,"peersources","l7:Trackere");}
+  put(attributes,"networks","l3:I2Pe");
+}
 struct Plan {
   core::TorrentHash hash;
   std::string metadata, archive, destination, profile, state, inventory;
@@ -446,9 +466,14 @@ struct Plan {
   std::optional<HybridAliasSource> alias;
   std::optional<std::string> filenameConversions;
   std::optional<bool> decoderShowAll; // absent accepted journals retain false, never current inferred permission.
+  TorrentIntakeNetwork network=TorrentIntakeNetwork::Public;
 };
 Plan plan(std::string metadata, std::string destination, std::string profile,
-    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={}) {
+    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={},TorrentIntakeNetwork network=TorrentIntakeNetwork::Public) {
+  require(network==TorrentIntakeNetwork::Public||network==TorrentIntakeNetwork::I2p,ErrorCode::InvalidFormat,"Invalid intake network context");
+  require(network!=TorrentIntakeNetwork::I2p||(!forceStart&&!alias
+      &&(!options||(!options->queued&&!options->verifyExisting&&options->allocation==core::TorrentAllocationMode::None))),
+      ErrorCode::Unsupported,"I2P intake requires ordinary unforced intent without queue, verification or allocation");
   require(!options||!options->queued||(!stopped&&!forceStart),ErrorCode::InvalidFormat,"Queued intake conflicts with stopped/forced intent");
   require(!options||!options->paused||(stopped&&!forceStart&&!options->queued),ErrorCode::InvalidFormat,"Paused intake requires stopped/unforced/nonqueued intent");
   require(!options||options->allocation==core::TorrentAllocationMode::None||(stopped&&!forceStart),ErrorCode::InvalidFormat,"Allocation intake must remain safely stopped and unforced");
@@ -540,7 +565,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   for (std::size_t n = 0; n < original->files.size(); ++n) { stores += options ? "1:"+std::string(1,options->stores[n]) : "1:L"; }
   if(options&&options->reorderMinimumMiB){put(attributes,"reordermb",i(*options->reorderMinimumMiB));}
   put(attributes, "storetypes", stores + 'e');
-  if(!alias){put(attributes, "networks", "l6:Publice");}
+  applyIntakeNetwork(attributes,network,alias.has_value());
   put(attributes, "resumecomplete", "i1e");
   put(attributes, "filedownloaded", "de");
   if(options){
@@ -584,7 +609,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   require((pause!=verify->paused.end())==paused&&verify->paused.size()==saved->paused.size()+(paused?1U:0U)
       &&(!paused||(!pause->forceStart&&pause->owner==1)),ErrorCode::InvalidFormat,"New paused intent failed its original reader");
   return {*hash, std::move(metadata), std::move(archive), std::move(destination), std::move(profile), std::move(state), std::move(after),
-      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options),std::move(alias),std::move(filenameConversions),decoderShowAll};
+      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options),std::move(alias),std::move(filenameConversions),decoderShowAll,network};
 }
 std::string journalBytes(const Plan& p) {
   std::string optionalOptions;
@@ -609,6 +634,7 @@ std::string journalBytes(const Plan& p) {
     }
     optionalOptions=b("fileOptions")+value+'e';
   }
+  if(p.network==TorrentIntakeNetwork::I2p){optionalOptions+=b("network")+b("I2P");}
   if(p.filenameConversions){optionalOptions+=b("filenameConversions")+b(*p.filenameConversions);}
   if(p.decoderShowAll){optionalOptions+=b("decoderShowAll")+i(*p.decoderShowAll?1:0);}
   if(p.alias){
@@ -637,12 +663,15 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   uniqueKeys(document.root());
   const auto* force = document.find("forceStart");
   const auto* optionsNode=document.find("fileOptions");
+  const auto* networkNode=document.find("network");
+  require(!networkNode||text(networkNode)=="I2P",ErrorCode::InvalidFormat,"Invalid accepted intake network context");
+  const auto network=networkNode?TorrentIntakeNetwork::I2p:TorrentIntakeNetwork::Public;
   const auto* aliasNode=document.find("hybridAlias");
   const auto* conversionsNode=document.find("filenameConversions");
   const auto* decoderNode=document.find("decoderShowAll");std::optional<bool> decoderShowAll;
   if(decoderNode){const auto value=integer(decoderNode);require((value==0||value==1)&&conversionsNode,ErrorCode::InvalidFormat,"Invalid accepted decoder context");decoderShowAll=value==1;require(*decoderShowAll==take(readOriginalDecoderShowAll(lease)),ErrorCode::Conflict,"Decoder registration setting changed since intake acceptance");}
   std::optional<std::string> conversions;if(conversionsNode){conversions=text(conversionsNode);const auto current=take(readOriginalFilenameConversions(lease));require(*conversions==current,ErrorCode::Conflict,"Filename conversion policy changed since intake acceptance");}
-  require(document.root().children.size()==20+(force?2U:0U)+(optionsNode?2U:0U)+(aliasNode?2U:0U)+(conversionsNode?2U:0U)+(decoderNode?2U:0U)
+  require(document.root().children.size()==20+(force?2U:0U)+(optionsNode?2U:0U)+(aliasNode?2U:0U)+(conversionsNode?2U:0U)+(decoderNode?2U:0U)+(networkNode?2U:0U)
       && integer(document.find("version")) == 1,
       ErrorCode::Unsupported, "Unknown intake journal version or fields");
   const auto before = integer(document.find("before_present"));
@@ -709,7 +738,7 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   }
   auto result=plan(text(document.find("metadata")), std::move(destination), profile,
       before ? std::optional{std::move(old)} : std::nullopt,
-      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias),std::move(conversions),decoderShowAll);
+      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias),std::move(conversions),decoderShowAll,network);
   if(!result.filenameConversions){
     const auto current=take(readOriginalFilenameContext(lease));const auto original=metadataSubject(result.metadata);const auto projected=metadataSubject(result.metadata,current.conversions,current.decoderShowAll);
     require(original.layout.name==projected.layout.name&&original.layout.files.size()==projected.layout.files.size()
@@ -970,10 +999,13 @@ core::TorrentHash commitIntakePlan(ProfileLease& lease,Plan& p,void(*observer)(T
 
 static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     const fs::path& metadata, const fs::path& destination, bool stopped,
-    void (*observer)(TorrentIntakeStage), bool forceStart,
+    void (*observer)(TorrentIntakeStage), bool forceStart,TorrentIntakeNetwork network=TorrentIntakeNetwork::Public,
     std::optional<std::span<const compat::FilePolicy>> policies = {},const File* expected = nullptr, std::stop_token stop = {},
     core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false,const std::string* expectedConversions=nullptr,std::optional<core::TorrentIntakeFileDestinations> fileDestinations={},core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent,const bool* expectedDecoderShowAll=nullptr,core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None) {
   try {
+    require(network==TorrentIntakeNetwork::Public||network==TorrentIntakeNetwork::I2p,ErrorCode::InvalidFormat,"Invalid intake network context");
+    require(network!=TorrentIntakeNetwork::I2p||(!forceStart&&!queued&&!verifyExisting&&allocation==core::TorrentAllocationMode::None),
+        ErrorCode::Unsupported,"I2P intake requires ordinary unforced intent without queue, verification or allocation");
     require(core::validTorrentAllocationMode(allocation)&& (allocation==core::TorrentAllocationMode::None||(stopped&&!forceStart&&!queued&&!paused&&!verifyExisting&&policies.has_value())),ErrorCode::InvalidFormat,"Allocation requires explicit selected stopped/unforced intent");
     require((goal==core::ExistingVerificationGoal::FullTorrent||goal==core::ExistingVerificationGoal::SelectedFiles)&&(verifyExisting||goal==core::ExistingVerificationGoal::FullTorrent),ErrorCode::InvalidFormat,"Invalid existing verification goal");
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Torrent import cancelled before commit");
@@ -1013,7 +1045,7 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     const auto backup = read(root, "downloads.config.bak", MaximumInventory);
     require(before || !backup, ErrorCode::Conflict, "Resolve missing inventory primary before intake");
     auto p = plan(std::move(source->bytes), effectiveDestination.native(), profile, contents(before), contents(backup),
-        stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options),{},conversions,context.decoderShowAll);
+        stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options),{},conversions,context.decoderShowAll,network);
     return commitIntakePlan(lease,p,observer,stop);
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io, "Torrent intake failed; inspect pending journal before retry"}); }
@@ -1044,13 +1076,13 @@ std::expected<TorrentIntakeMetadata,Error> inspectTorrentIntake(const fs::path& 
   catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot inspect torrent metadata"});}
 }
 std::expected<core::TorrentHash,Error> importTorrent(ProfileLease& lease,const fs::path& source,
-    const fs::path& destination,bool stopped,void(*observer)(TorrentIntakeStage),bool forceStart) {
-  return importImpl(lease,source,destination,stopped,observer,forceStart);
+    const fs::path& destination,bool stopped,void(*observer)(TorrentIntakeStage),bool forceStart,TorrentIntakeNetwork network) {
+  return importImpl(lease,source,destination,stopped,observer,forceStart,network);
 }
 std::expected<core::TorrentHash,Error> importTorrentWithFileOptions(ProfileLease& lease,
     const TorrentIntakeMetadata& metadata,const fs::path& destination,bool stopped,
-    std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting,std::optional<core::TorrentIntakeFileDestinations> fileDestinations,core::ExistingVerificationGoal goal,core::TorrentAllocationMode allocation) {
-  return importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting,&metadata.data_->filenameConversions,std::move(fileDestinations),goal,&metadata.data_->decoderShowAll,allocation);
+    std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting,std::optional<core::TorrentIntakeFileDestinations> fileDestinations,core::ExistingVerificationGoal goal,core::TorrentAllocationMode allocation,TorrentIntakeNetwork network) {
+  return importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,network,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting,&metadata.data_->filenameConversions,std::move(fileDestinations),goal,&metadata.data_->decoderShowAll,allocation);
 }
 
 std::expected<std::string,Error> rewriteTorrentIntakeTrackers(std::string_view metadata,

@@ -29,6 +29,7 @@ struct TorrentIntakePacket {
   core::TorrentIntakeFileDestinations initialDestinations{};
   bool multifile=true;
   bool decoderShowAll=false; // Worker-derived sealed context, never a UI setting.
+  bool i2pOnly=false; // Worker-derived presentation context, never network authority.
 };
 using TorrentIntakePresentation=std::shared_ptr<const TorrentIntakePacket>;
 enum class TorrentIntakeStartMode { Queued, Stopped, Paused, Forced, VerifySeeding, VerifySelected, AllocateStopped, AllocatePaused };

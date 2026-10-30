@@ -478,8 +478,11 @@ void decoderContextOptions(){
   {Area area;const auto sealed=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;check(!namedImport(area,sealed,{},interrupt),"Own legacy absent context case");write(area.profile/"BiglyBTC.torrent-import",omitFilenameConversions(parse(read(area.profile/"BiglyBTC.torrent-import"))));write(area.profile/"biglybt.config","d20:File.Decoder.ShowAlli1ee");area.reopen();check(take(storage::recoverTorrentIntake(*area.lease)).has_value(),"Old absent decoder context keeps false/raw names when original paths still agree");}
 }
 
+#include "torrent_intake_i2p_tests.inc"
+
 int main(){
   try{
+    i2pNetworkContexts();
     decoderContextOptions();
     selectedExistingJournalCases();
     filenameConversionOptions();

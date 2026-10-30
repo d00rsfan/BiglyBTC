@@ -1295,7 +1295,7 @@ bool SessionBridge::torrentImport(QString metadata, QString destination, bool st
   if (profileClosed_ || metadata.isEmpty() || destination.isEmpty()) { return false; }
   return dispatch([this, metadata = std::move(metadata), destination = std::move(destination), start](std::stop_token stop) {
     if(host_){host_->requireI2pIdle();}
-    if (!host_ || !host_->engine || !host_->engine->managedAvailable()) {
+    if (!host_ || (!host_->i2pOptions && (!host_->engine || !host_->engine->managedAvailable()))) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
     checkpoint(stop);
@@ -1303,18 +1303,19 @@ bool SessionBridge::torrentImport(QString metadata, QString destination, bool st
     static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
     const auto hash = take(storage::importTorrent(host_->lease,
         std::filesystem::path(metadata.toUtf8().toStdString()),
-        std::filesystem::path(destination.toUtf8().toStdString()), !start));
+        std::filesystem::path(destination.toUtf8().toStdString()), !start, nullptr, false,
+        host_->i2pOptions?storage::TorrentIntakeNetwork::I2p:storage::TorrentIntakeNetwork::Public));
     const auto details = engine::queryTorrent(host_->lease, hash);
     if (details) { host_->known.insert_or_assign(hash.hex(), Host::Known{text(details->name), details->bytes}); }
     QString message = tr("Torrent added");
     if (start) {
-      auto admitted = host_->engine->startManaged(host_->lease, {hash, host_->peerPort, false, false});
+      auto admitted = host_->i2pOptions?host_->startI2p(hash):host_->engine->startManaged(host_->lease, {hash, host_->peerPort, false, false});
       if (!admitted) {
         host_->admissionFailures.insert_or_assign(hash.hex(), admitted.error());
         message = text(admitted.error().message);
       }
     }
-    ready(host_->query({}), message);
+    publishI2p();ready(host_->query({}), message);
   });
 }
 bool SessionBridge::previewTorrentIntake(ui::TorrentIntakeRequest request) {
@@ -1324,6 +1325,7 @@ bool SessionBridge::previewTorrentIntake(ui::TorrentIntakeRequest request) {
     try {
       if(!host_||request.session!=host_->columnLayoutSession){throw Failure{{storage::ErrorCode::Conflict,"The profile changed; load the torrent again"}};}
       if(host_->intakeRequest&&request.request<=host_->intakeRequest->request){throw Failure{{storage::ErrorCode::Conflict,"This file preview request is stale"}};}
+      packet->i2pOnly=host_->i2pOptions.has_value();
       host_->intakeRequest=request;host_->intakeMetadata.reset();
       const auto filenameContext=take(storage::readOriginalFilenameContext(host_->lease));
       auto value=take(storage::inspectTorrentIntake(std::filesystem::path(request.metadata.toUtf8().toStdString()),stop,filenameContext.conversions,filenameContext.decoderShowAll));
@@ -1384,18 +1386,20 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       const bool paused=selected&&submission.paused;
       if(paused&&(submission.start||submission.forceStart)){throw Failure{{storage::ErrorCode::InvalidFormat,"Paused import conflicts with start/force intent"}};}
       const bool start=submission.start&&selected&&!paused;
-      const bool force=start&&submission.forceStart;const bool queued=start&&!force;
-      if((start||submission.verifyExisting||allocating)&&(!host_->engine||!host_->engine->managedAvailable())){throw Failure{{storage::ErrorCode::Unsupported,"The engine is unavailable; add this torrent stopped instead"}};}
+      const bool privateI2p=host_->i2pOptions.has_value();
+      if(privateI2p&&(submission.forceStart||submission.verifyExisting||allocating||submission.goal!=core::ExistingVerificationGoal::FullTorrent)){throw Failure{{storage::ErrorCode::Unsupported,"The private I2P importer supports Start now, Stopped and Paused only"}};}
+      const bool force=start&&submission.forceStart;const bool queued=start&&!force&&!privateI2p;
+      if(!privateI2p&&(start||submission.verifyExisting||allocating)&&(!host_->engine||!host_->engine->managedAvailable())){throw Failure{{storage::ErrorCode::Unsupported,"The engine is unavailable; add this torrent stopped instead"}};}
       checkpoint(stop); // No payload/network work happens before the explicit commit.
       const auto hash=take(storage::importTorrentWithFileOptions(host_->lease,*host_->intakeMetadata,
-          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal,submission.allocation));
+          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal,submission.allocation,privateI2p?storage::TorrentIntakeNetwork::I2p:storage::TorrentIntakeNetwork::Public));
       result->imported=true;result->hash=text(hash.hex());host_->intakeMetadata.reset();
       const auto details=engine::queryTorrent(host_->lease,hash);
       if(details){host_->known.insert_or_assign(hash.hex(),Host::Known{text(details->displayName&&!details->displayName->empty()?*details->displayName:details->name),details->bytes});}
       if(start||submission.verifyExisting||allocating){
         if(allocating){host_->allocationPending.insert_or_assign(hash.hex(),submission.allocation);}
         if(submission.verifyExisting){host_->verifiedSeedPending.insert(hash.hex());}
-        const auto admitted=host_->engine->startManaged(host_->lease,
+        const auto admitted=privateI2p?host_->startI2p(hash):host_->engine->startManaged(host_->lease,
             {.hash=hash,.ownedLoopbackPeerPort=(submission.verifyExisting||allocating)?std::uint16_t{0}:host_->peerPort,.forceStart=force,.queued=queued,.verifyExisting=submission.verifyExisting,.allocationMode=submission.allocation});
         if(admitted){result->started=!submission.verifyExisting&&!allocating;result->verificationPending=submission.verifyExisting;result->allocationPending=allocating;host_->admissionFailures.erase(hash.hex());}
         else{host_->admissionFailures.insert_or_assign(hash.hex(),admitted.error());result->failure=(allocating?tr("Torrent added stopped; allocation could not start: %1"):submission.verifyExisting?tr("Torrent added stopped; existing-data verification could not start: %1"):tr("Torrent added; download could not start: %1")).arg(text(admitted.error().message));}
@@ -1407,7 +1411,7 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
     QMetaObject::invokeMethod(this,[this,packet]{
       if(!profileClosed_&&packet->session==publishedColumnLayoutSession_){emit torrentIntakeFinished(packet);}
     },Qt::QueuedConnection);
-    if(host_){ready(host_->query({}),result->failure.isEmpty()?(result->allocationPending?tr("Torrent added stopped; allocating new files without downloading"):result->verificationPending?tr("Torrent added stopped; checking existing data before seeding"):tr("Torrent added with the selected file choices")):result->failure);}
+    if(host_){publishI2p();ready(host_->query({}),result->failure.isEmpty()?(result->allocationPending?tr("Torrent added stopped; allocating new files without downloading"):result->verificationPending?tr("Torrent added stopped; checking existing data before seeding"):tr("Torrent added with the selected file choices")):result->failure);}
     else{failed(result->failure);}
   });
 }

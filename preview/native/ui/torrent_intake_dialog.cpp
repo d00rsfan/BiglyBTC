@@ -132,6 +132,7 @@ public:
 TorrentIntakeDialog::TorrentIntakeDialog(QWidget* parent):QDialog(parent) {
   setObjectName(QStringLiteral("torrent-import-dialog"));setWindowTitle(tr("Open Torrent File"));
   auto* layout=new QVBoxLayout(this);auto* form=new QFormLayout;
+  network_=new QLabel(this);network_->setObjectName(QStringLiteral("import-network-context"));network_->hide();layout->addWidget(network_);
   auto* sourceRow=new QWidget(this);auto* sourceLayout=new QHBoxLayout(sourceRow);sourceLayout->setContentsMargins(0,0,0,0);
   source_=new QLineEdit(sourceRow);source_->setObjectName(QStringLiteral("import-source"));source_->setMaxLength(4096);source_->setAccessibleName(tr("Torrent file"));
   auto* sourceBrowse=new QPushButton(tr("Browse…"),sourceRow);sourceBrowse->setObjectName(QStringLiteral("import-browse-torrent"));
@@ -236,7 +237,7 @@ bool TorrentIntakeDialog::beginSession(quint64 session,QString directory) {
         if(text!=oldText){emit mode->currentTextChanged(text);if(!same()||revision_!=revision+1){return false;}}
       }
     }
-    if(!current()){return false;}
+    if(!current()||!setI2pContext(false)){return false;}
     if(editTrackers_){editTrackers_->setChecked(false);}if(!current()){return false;}
     if(!setTrackerDraftText({})||!current()){return false;}
     if(!setSaveNameText({})||!current()){return false;}
@@ -261,7 +262,40 @@ void TorrentIntakeDialog::setPreview(TorrentIntakePresentation packet) {
   loading_=false;++revision_;
   if(!validTorrentIntake(packet)){preview_.reset();failure_=packet->failure.isEmpty()?tr("The torrent file list could not be loaded."):packet->failure;}
   else{preview_=std::make_shared<const TorrentIntakePacket>(*packet);failure_.clear();}
-  if(!setSaveNameText({})||!resetTrackerDraft()){return;}schedule();
+  if(!setI2pContext(preview_&&preview_->i2pOnly)||!setSaveNameText({})||!resetTrackerDraft()){return;}schedule();
+}
+bool TorrentIntakeDialog::setI2pContext(bool i2pOnly) {
+  if(i2pContext_==i2pOnly){return true;}
+  const auto session=session_;const auto frame=preview_;QPointer<TorrentIntakeDialog> guard(this);
+  QPointer<QComboBox> mode=startMode_;if(!mode||!network_){return false;}
+  const auto current=[&]{return guard&&session_==session&&preview_==frame&&mode&&startMode_==mode&&network_;};
+  bool validMode=false;const auto previous=mode->currentData().toInt(&validMode);
+  const bool supported=validMode&&(previous==static_cast<int>(TorrentIntakeStartMode::Queued)
+      ||previous==static_cast<int>(TorrentIntakeStartMode::Stopped)||previous==static_cast<int>(TorrentIntakeStartMode::Paused));
+  const auto selected=supported?previous:static_cast<int>(TorrentIntakeStartMode::Stopped);
+  {
+    // Preserve supported user intent across worker-derived context changes.
+    // Unsupported modes fall back to Stopped. Block synchronous Qt callbacks.
+    QSignalBlocker blocked(mode.data());
+    const auto alive=[&]{if(!mode){blocked.dismiss();}return current();};
+    mode->setItemText(0,i2pOnly?tr("Start now"):tr("Queued"));if(!alive()){return false;}
+    if(i2pOnly){
+      while(mode->count()>3){mode->removeItem(mode->count()-1);if(!alive()){return false;}}
+    }else{
+      mode->addItem(tr("Forced"),static_cast<int>(TorrentIntakeStartMode::Forced));if(!alive()){return false;}
+      mode->addItem(tr("Verify existing data, then seed"),static_cast<int>(TorrentIntakeStartMode::VerifySeeding));if(!alive()){return false;}
+      mode->addItem(tr("Verify selected existing data, then serve"),static_cast<int>(TorrentIntakeStartMode::VerifySelected));if(!alive()){return false;}
+      mode->addItem(tr("Allocate, then stop"),static_cast<int>(TorrentIntakeStartMode::AllocateStopped));if(!alive()){return false;}
+      mode->addItem(tr("Allocate, then pause"),static_cast<int>(TorrentIntakeStartMode::AllocatePaused));if(!alive()){return false;}
+    }
+    mode->setCurrentIndex(mode->findData(selected));if(!alive()){return false;}
+  }
+  i2pContext_=i2pOnly;
+  mode->setToolTip(i2pOnly?tr("Start now starts over I2P. Paused waits for Resume.")
+      :tr("Queued follows queue rules. Paused waits for Resume. Forced bypasses ordinary queue limits."));if(!current()){return false;}
+  setWindowTitle(i2pOnly?tr("Open Torrent File — I2P"):tr("Open Torrent File"));if(!current()){return false;}
+  network_->setText(i2pOnly?tr("Network: I2P only"):QString{});if(!current()){return false;}
+  network_->setVisible(i2pOnly);return current();
 }
 bool TorrentIntakeDialog::setSaveNameText(const QString& value) {
   const auto session=session_;const auto frame=preview_;QPointer<TorrentIntakeDialog> guard(this);QPointer<QLineEdit> editor=saveName_;
@@ -343,6 +377,7 @@ void TorrentIntakeDialog::render() {
   if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::VerifySeeding)){status+=tr("\nRequires every real file selected with complete existing linear data at its reviewed destination. Read-only verification never downloads or repairs missing data. Seeding starts only after every piece passes.");}
   if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::AllocateStopped)||startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::AllocatePaused)){status+=tr("\nWrites and synchronizes new zero-filled files without downloading. Requires all real files selected and absent or unchanged full-size linear data. Allocated bytes are not verified pieces.");}
   if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::VerifySelected)){status+=tr("\nChecks every piece needed by selected files, including skipped-file boundary bytes. Other gaps stay unverified. No data is created, repaired or downloaded.");}
+  if(frame&&frame->i2pOnly){status+=tr("\nI2P supports Start now, Stopped and Paused. Force start, verify-existing and allocation modes are not available.");}
   if(frame&&!frame->trackers){status+=tr("\nOriginal tracker fields are kept unchanged; this editor cannot represent their format or size.");}
   status_->setText(status.left(4096));
 }
@@ -351,6 +386,8 @@ void TorrentIntakeDialog::accept() {
       ||model_->source!=preview_||preview_->source.metadata!=source_->text()||!path(destination_->text())||!saveName(saveName_->text())){return;}
   bool validMode=false;const auto mode=startMode_->currentData().toInt(&validMode);
   if(!validMode||mode<static_cast<int>(TorrentIntakeStartMode::Queued)||mode>static_cast<int>(TorrentIntakeStartMode::AllocatePaused)){return;}
+  if(preview_->i2pOnly&&mode!=static_cast<int>(TorrentIntakeStartMode::Queued)
+      &&mode!=static_cast<int>(TorrentIntakeStartMode::Stopped)&&mode!=static_cast<int>(TorrentIntakeStartMode::Paused)){return;}
   const bool selected=model_->selectedBytes()!=0;
   const auto allocation=mode==static_cast<int>(TorrentIntakeStartMode::AllocateStopped)?core::TorrentAllocationMode::Stopped
       :mode==static_cast<int>(TorrentIntakeStartMode::AllocatePaused)?core::TorrentAllocationMode::Paused:core::TorrentAllocationMode::None;

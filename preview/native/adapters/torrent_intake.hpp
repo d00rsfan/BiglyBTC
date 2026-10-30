@@ -17,6 +17,9 @@
 
 namespace biglybtc::storage {
 
+// Explicit import context only; grants no engine, router or identity authority.
+enum class TorrentIntakeNetwork { Public, I2p };
+
 enum class TorrentIntakeStage { JournalSynced, StatePublished, ArchivePublished, InventoryPublished };
 
 // Linux, serialized profile-owner worker only. The caller borrows one held
@@ -30,7 +33,8 @@ enum class TorrentIntakeStage { JournalSynced, StatePublished, ArchivePublished,
 // stopped); the optional trailing argument preserves existing source call sites.
 std::expected<core::TorrentHash, Error> importTorrent(ProfileLease&,
     const std::filesystem::path& metadata, const std::filesystem::path& destination,
-    bool stopped, void (*observer)(TorrentIntakeStage) = nullptr, bool forceStart = false);
+    bool stopped, void (*observer)(TorrentIntakeStage) = nullptr, bool forceStart = false,
+    TorrentIntakeNetwork network = TorrentIntakeNetwork::Public);
 
 // Read-only worker preview of the same validated raw metadata. The sealed value
 // retains exact source bytes/inode/stat; no payload/profile changes or engine.
@@ -50,7 +54,7 @@ private:
   friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token,std::string,bool);
   friend std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
       const TorrentIntakeMetadata&, const std::filesystem::path&, bool, std::span<const compat::FilePolicy>,
-      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool, bool, bool, std::optional<core::TorrentIntakeTrackerTiers>, std::optional<std::string>, bool, std::optional<core::TorrentIntakeFileDestinations>, core::ExistingVerificationGoal, core::TorrentAllocationMode);
+      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool, bool, bool, std::optional<core::TorrentIntakeTrackerTiers>, std::optional<std::string>, bool, std::optional<core::TorrentIntakeFileDestinations>, core::ExistingVerificationGoal, core::TorrentAllocationMode, TorrentIntakeNetwork);
 };
 std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
     const std::filesystem::path&, std::stop_token = {},
@@ -76,8 +80,13 @@ std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
 std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
     const TorrentIntakeMetadata&, const std::filesystem::path& destination, bool stopped,
     std::span<const compat::FilePolicy>, void (*observer)(TorrentIntakeStage) = nullptr,
-    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false, bool queued = false, bool paused = false, std::optional<core::TorrentIntakeTrackerTiers> trackers = std::nullopt, std::optional<std::string> saveName = std::nullopt, bool verifyExisting = false, std::optional<core::TorrentIntakeFileDestinations> fileDestinations = std::nullopt, core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent, core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None);
+    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false, bool queued = false, bool paused = false, std::optional<core::TorrentIntakeTrackerTiers> trackers = std::nullopt, std::optional<std::string> saveName = std::nullopt, bool verifyExisting = false, std::optional<core::TorrentIntakeFileDestinations> fileDestinations = std::nullopt, core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent, core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None, TorrentIntakeNetwork network=TorrentIntakeNetwork::Public);
 
+// I2p context is a fresh unforced ordinary import (Waiting or Stopped, optionally paused),
+// without queued, verified-seeding or allocation intent. It saves [I2P] plus
+// Tracker permission in the SAME transaction, persists context through recovery,
+// and refuses incompatible inherited networks/explicitly denied Tracker. It
+// never converts a saved Public row/alias or starts an owner; Public is default.
 // Optional saveName changes only the saved destination leaf. Missing retains
 // old defaults; restoring layout.name clears manual rename intent. Changed
 // names require an absent target and disjoint original library mappings, with

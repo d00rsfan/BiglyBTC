@@ -27,6 +27,7 @@ signals:
 private:
   void requestPreview();
   bool resetTrackerDraft();
+  bool setI2pContext(bool);
   bool setSaveNameText(const QString&);
   bool setTrackerDraftText(const QString&);
   void schedule();
@@ -39,7 +40,8 @@ private:
   QPointer<QLineEdit> source_,destination_,saveName_;
   QPointer<QCheckBox> sequential_,editTrackers_;
   QPointer<QPlainTextEdit> trackers_;
-  QPointer<QLabel> status_;
+  QPointer<QLabel> status_,network_;
+  bool i2pContext_=false;
   QPointer<QPushButton> load_,add_;
   QPointer<QComboBox> priority_,startMode_;
   QPointer<QSpinBox> downloadLimit_,uploadLimit_;
