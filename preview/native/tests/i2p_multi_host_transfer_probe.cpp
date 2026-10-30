@@ -37,6 +37,7 @@
 #include <QTcpSocket>
 #include <QNetworkProxy>
 #include <QTimer>
+#include <QStatusBar>
 #include <QThread>
 #include <QMetaObject>
 #include <functional>
@@ -164,8 +165,8 @@ bool selectTorrent(ui::LibraryWindow& window,const QString& hash){
     table->selectionModel()->setCurrentIndex(index,QItemSelectionModel::ClearAndSelect|QItemSelectionModel::Rows);table->setFocus();return true;}return false;
 }
 QJsonObject packetJson(const ui::I2pPresentation& p){
-  if(!p){return {};}QJsonArray rows;for(const auto& row:p->torrents){rows.push_back(QJsonObject{{"hash",row.hash},{"state",row.state},{"verified_bytes",row.verifiedBytes},{"payload_downloaded",row.payloadDownloaded},{"payload_uploaded",row.payloadUploaded},{"queued",row.queued},{"admission",QString::number(row.admission)},{"generation",QString::number(row.generation)},{"download_limit",row.downloadLimit},{"upload_limit",row.uploadLimit},{"queue_unavailable",static_cast<qint64>(row.queueUnavailable)}});}
-  return {{"session",QString::number(p->session)},{"sequence",QString::number(p->sequence)},{"failure",p->failure},{"global_download_limit",p->globalDownloadLimit},{"global_upload_limit",p->globalUploadLimit},{"loopback_peer_classes",static_cast<qint64>(p->loopbackPeerClasses)},{"torrents",rows}};
+  if(!p){return {};}QJsonArray rows;for(const auto& row:p->torrents){rows.push_back(QJsonObject{{"hash",row.hash},{"state",row.state},{"verified_bytes",row.verifiedBytes},{"payload_downloaded",row.payloadDownloaded},{"payload_uploaded",row.payloadUploaded},{"peers",row.peers},{"download_rate",row.downloadRate},{"upload_rate",row.uploadRate},{"tracker_counters_available",false},{"queued",row.queued},{"admission",QString::number(row.admission)},{"generation",QString::number(row.generation)},{"download_limit",row.downloadLimit},{"upload_limit",row.uploadLimit},{"queue_unavailable",static_cast<qint64>(row.queueUnavailable)}});}
+  return {{"session",QString::number(p->session)},{"sequence",QString::number(p->sequence)},{"failure",p->failure},{"global_download_limit",p->globalDownloadLimit},{"global_upload_limit",p->globalUploadLimit},{"loopback_peer_classes",static_cast<qint64>(p->loopbackPeerClasses)},{"tracker_announces",QString::number(p->trackerAnnounces)},{"tracker_replies",QString::number(p->trackerReplies)},{"tracker_errors",QString::number(p->trackerErrors)},{"torrents",rows}};
 }
 QJsonArray seedJson(const std::vector<app::OwnedI2pService::TorrentObservation>& rows){
   QJsonArray result;
@@ -176,6 +177,10 @@ QJsonArray seedJson(const std::vector<app::OwnedI2pService::TorrentObservation>&
       {"admission",QString::number(value.admission)},{"generation",QString::number(value.generation)},
       {"public_identity",hex(value.publicIdentity)},
       {"verified_bytes",static_cast<qint64>(value.verifiedBytes)},
+      {"payload_downloaded",static_cast<qint64>(value.payloadDownloaded)},{"payload_uploaded",static_cast<qint64>(value.payloadUploaded)},
+      {"peers",value.peers},{"download_rate",value.downloadRate},{"upload_rate",value.uploadRate},
+      {"tracker_announces",QString::number(value.trackerAnnounces)},{"tracker_replies",QString::number(value.trackerReplies)},{"tracker_errors",QString::number(value.trackerErrors)},
+      {"queued",value.queued},{"checked",value.checked},{"seeding",value.seeding},
       {"global_download_limit",value.globalDownloadLimit},{"global_upload_limit",value.globalUploadLimit},
       {"loopback_peer_classes",static_cast<qint64>(value.loopbackPeerClasses)}});
   }return result;
@@ -183,6 +188,7 @@ QJsonArray seedJson(const std::vector<app::OwnedI2pService::TorrentObservation>&
 enum class Stage{Initial,Concurrent,PauseA,PausedA,ResumeA,ResumedA,StopA,StoppedA,QueueA,QueuedA,PauseB,PausedB,FirstClose,FirstClosed,WaitRetired,Reopen,Reopened,ResumeB,SlotLimited,StopRunning,Handoff,RestartStopped,FinishTransfers,StopFinalA,FinalStoppedA,StopFinalB,FinalStoppedB,FinalClose,FinalClosed};
 }
 int main(int argc,char** argv){
+  qputenv("BIGLYBTC_I2P_DIAGNOSTICS","1");
   QApplication application(argc,argv);application.setQuitOnLastWindowClosed(false);
   const auto args=application.arguments();if(args.size()!=3){return 2;}bool valid=false;const auto port=args[1].toUInt(&valid);
   if(!valid||port<1024||port>65535||args[2]!="/work"||QGuiApplication::platformName()!="offscreen"){return 2;}
@@ -191,17 +197,32 @@ int main(int argc,char** argv){
   ui::LibraryWindow window;window.resize(1180,820);window.enableSessionCloseHandshake();
   ui::Presentation snapshot;ui::I2pPresentation packet;quint64 session=0,initialSession=0;
   bool done=false,inTurn=false,joined=false,released=false,closeRequested=false,shutdownDone=false;int code=1;
-  QJsonArray latestSeed;QString callbackFailure;Stage stage=Stage::Initial;QJsonObject result{{"status","FAIL"},{"scope","actual-shared-profile-multi-I2P-Host-transfer"}};
+  QJsonArray latestSeed;QString latestHostMessage;QString callbackFailure;Stage stage=Stage::Initial;QJsonObject result{{"status","FAIL"},{"scope","actual-shared-profile-multi-I2P-Host-transfer"}};
   std::optional<std::pair<std::size_t,Action>> expectedAction;std::array<std::array<unsigned,10>,3> actions{};std::array<quint64,2> initialAdmissions{},initialGenerations{};
   quint64 stableAdmission=0,stableGeneration=0,restartGeneration=0,slotQueuedAdmission=0,slotRunningAdmission=0;int running=0,waiting=1;
   qint64 siblingBaseline=0,firstSessionBytes=0;QElapsedTimer slotAge;bool slotObserved=false;QJsonObject beforeRestart;std::array<qint64,3> savedReceived{};
+  const auto uiJson=[&](){
+    QJsonArray rows,counters;
+    if(snapshot){for(const auto& item:snapshot->items){const int index=window.model().rowFor(item.hash);
+      rows.push_back(QJsonObject{{"hash",item.hash},{"snapshot_state",item.state},
+        {"rendered_state",index<0?QString{}:window.model().data(window.model().index(index,1),Qt::DisplayRole).toString()},
+        {"completed",item.completed?*item.completed:qint64{-1}}});
+    }}
+    for(const auto& row:actions){QJsonArray values;for(const auto count:row){values.push_back(static_cast<qint64>(count));}counters.push_back(values);}
+    QString clientStatus;for(auto* label:window.statusBar()->findChildren<QLabel*>()){
+      if(label->accessibleName()==QStringLiteral("Client status")){clientStatus=label->text().left(512);break;}
+    }
+    return QJsonObject{{"snapshot_revision",QString::number(snapshot?snapshot->revision:0)},
+      {"rendered_revision",QString::number(window.model().revision())},{"library",rows},
+      {"client_status",clientStatus},{"last_Host_message",latestHostMessage},{"accepted_action_counts",counters}};
+  };
   const auto diagnostic=[&](const QString& name,const QJsonObject& value)noexcept{try{output(work+'/'+name,value);}catch(...){std::cerr<<"Cannot write bounded progress marker\n";}};
   const auto mark=[&](const char* value)noexcept{try{diagnostic("native-phase.json",{{"phase",QString::fromLatin1(value)},{"elapsed_ms",elapsed.elapsed()}});}catch(...){}};
   const auto shutdown=[&]{if(shutdownDone){return;}shutdownDone=true;mark("before-Host-destruction");bridge.reset();mark("after-Host-destruction");if(seed){mark("before-seed-close");seed->close();seed.reset();mark("after-seed-join");}};
   const auto finish=[&](bool ok,const QString& reason){
-    if(done){return;}done=true;poll.stop();diagnostic("native-terminal.json",{{"reason",reason.left(512)},{"intended_success",ok},{"elapsed_ms",elapsed.elapsed()},{"stage",static_cast<int>(stage)},{"seed",latestSeed}});
+    if(done){return;}done=true;poll.stop();const auto finalUi=uiJson();diagnostic("native-terminal.json",{{"reason",reason.left(512)},{"intended_success",ok},{"elapsed_ms",elapsed.elapsed()},{"stage",static_cast<int>(stage)},{"seed",latestSeed},{"i2p",packetJson(packet)},{"ui",finalUi}});
     try{shutdown();}catch(const std::exception& error){ok=false;result.insert("shutdown_error",QString::fromUtf8(error.what()).left(512));}
-    result.insert("status",ok?"PASS":"FAIL");result.insert("reason",reason.left(512));result.insert("elapsed_ms",elapsed.elapsed());result.insert("last_i2p",packetJson(packet));result.insert("last_seed",latestSeed);
+    result.insert("status",ok?"PASS":"FAIL");result.insert("reason",reason.left(512));result.insert("elapsed_ms",elapsed.elapsed());result.insert("last_i2p",packetJson(packet));result.insert("last_seed",latestSeed);result.insert("last_ui",finalUi);
     try{output(work+"/native-result.json",result);}catch(...){ok=false;}code=ok?0:1;application.exit(code);
   };
   try{
@@ -218,6 +239,7 @@ int main(int argc,char** argv){
     QObject::connect(bridge.get(),&app::SessionBridge::detailsReady,&window,&ui::LibraryWindow::setDetails);
     QObject::connect(bridge.get(),&app::SessionBridge::busyChanged,&window,&ui::LibraryWindow::setBusy);
     QObject::connect(bridge.get(),&app::SessionBridge::messageReady,&window,&ui::LibraryWindow::setMessage);
+    QObject::connect(bridge.get(),&app::SessionBridge::messageReady,&window,[&](const QString& message){latestHostMessage=message.left(512);});
     QObject::connect(bridge.get(),&app::SessionBridge::i2pReady,&window,[&](ui::I2pPresentation p){if(p&&p->session==session&&(!packet||p->sequence>packet->sequence)){packet=p;}window.setI2p(std::move(p));});
     QObject::connect(bridge.get(),&app::SessionBridge::columnLayoutSessionReady,&window,[&](quint64 value){session=value;window.beginColumnLayoutSession(value);});
     QObject::connect(&window,&ui::LibraryWindow::refreshRequested,&window,[&]{if(bridge){static_cast<void>(bridge->refresh());}});
@@ -257,7 +279,7 @@ int main(int argc,char** argv){
         for(const auto& x:seeds){require(x.value.publicIdentity==a.identity&&x.value.failure.empty()&&x.value.phase!=app::OwnedI2pService::Phase::Withdrawn,"Seed shared identity/source lost");}
         require(seeds[0].value.generation==seeds[1].value.generation&&seeds[0].value.admission!=seeds[1].value.admission,"Seed did not share one generation with independent admissions");
         if(packet){require(packet->session==session&&packet->failure.isEmpty(),"Host emitted foreign/failed I2P packet");for(const auto& x:packet->torrents){require(x.failure.isEmpty(),"Target I2P source failed");}}
-        if(progressAge.elapsed()>=1000){progressAge.restart();diagnostic("native-progress.json",{{"stage",static_cast<int>(stage)},{"elapsed_ms",elapsed.elapsed()},{"Host_busy",bridge->busy()},{"i2p",packetJson(packet)},{"seed",latestSeed}});}
+        if(progressAge.elapsed()>=1000){progressAge.restart();diagnostic("native-progress.json",{{"stage",static_cast<int>(stage)},{"elapsed_ms",elapsed.elapsed()},{"Host_busy",bridge->busy()},{"i2p",packetJson(packet)},{"seed",latestSeed},{"ui",uiJson()}});}
         const auto* x=live(0);const auto* y=live(1);const auto* z=row(2);require(!live(2),"Stopped sentinel acquired provider admission");if(z){require(z->state=="Stopped","Stopped sentinel intent changed");}
         switch(stage){
         case Stage::Initial:

@@ -15,6 +15,7 @@
 #include <libtorrent/biglybtc_queue_observer.hpp>
 #include <libtorrent/ip_filter.hpp>
 #include <QDateTime>
+#include <QDebug>
 #include <QMetaEnum>
 #include <QPointer>
 #include <QThread>
@@ -61,6 +62,7 @@ struct OwnedProfile::Impl {
     std::shared_ptr<engine::detail::ManagedQueueObservations> queue;
     core::QueueObservedFacts queueFacts;core::QueueActivityMemory activity;
     std::optional<std::int64_t> livePosition;std::optional<bool> observedComplete;
+    std::int64_t nextDiagnostic=0;
     bool forceStart=false,clearCompletedForce=false,justCompleted=false,completionPositionUnavailable=false;
     std::atomic<bool> checkpointed{false};
     std::optional<core::QueueObservedDurations> finalDurations;
@@ -327,6 +329,11 @@ std::vector<OwnedProfile::Observation> OwnedProfile::observations(){
     if(s.bridge){auto b=s.bridge->observation();v.bridgePort=b.port;v.bridgeSockets=b.sockets;v.rejectedClients=b.rejectedClients;}
     if(const auto disconnected=s.channel->routerDisconnect()){v.failure="I2CP router disconnected: "+disconnected->reason.substr(0,256);}
     int dl=0,ul=0;bool selectedComplete=false;if(m->handle.is_valid()){lt::torrent_status actual;const auto counts=s.sample(*m,actual);if(counts.state==engine::detail::ManagedPayloadCounters::Read::Accepted){v.payloadDownloaded=counts.received;v.payloadUploaded=counts.sent;}else{actual=m->handle.status();}
+      if(qEnvironmentVariableIsSet("BIGLYBTC_I2P_DIAGNOSTICS")&&nowMillis()>=m->nextDiagnostic){
+        m->nextDiagnostic=nowMillis()+1000;
+        qInfo().noquote().nospace()<<"I2P_TARGET hash="<<QString::fromStdString(m->data().hash.hex())<<" admission="<<m->data().admission<<" queued="<<m->queued<<" checked="<<m->counters->checked.load()<<" paused="<<bool(actual.flags&lt::torrent_flags::paused)<<" stop_ready="<<bool(actual.flags&lt::torrent_flags::stop_when_ready)<<" announcing="<<actual.announcing_to_trackers<<" peers="<<actual.num_peers<<" done="<<actual.total_done<<" payload="<<actual.total_payload_download<<" announces="<<m->alerts.announces<<" replies="<<m->alerts.trackerReplies<<" tracker_errors="<<m->alerts.trackerErrors<<" error="<<actual.errc.value();
+        for(const auto& tracker:m->handle.trackers()){for(const auto& endpoint:tracker.endpoints){for(const auto& hash:endpoint.info_hashes){qInfo().noquote().nospace()<<"I2P_TRACKER admission="<<m->data().admission<<" updating="<<hash.updating<<" started="<<hash.start_sent<<" fails="<<unsigned(hash.fails)<<" error="<<hash.last_error.value()<<" next="<<hash.next_announce.time_since_epoch().count()<<" minimum="<<hash.min_announce.time_since_epoch().count();}}}
+      }
       selectedComplete=actual.is_finished;v.seeding=actual.is_seeding;v.verifiedBytes=actual.total_done;v.checked=m->counters->checked.load()&&!actual.errc;v.downloadRate=actual.download_payload_rate;v.uploadRate=actual.upload_payload_rate;v.peers=actual.num_peers;v.seeds=actual.num_seeds;v.diagnostics.statusAvailable=true;v.diagnostics.paused=bool(actual.flags&lt::torrent_flags::paused);v.diagnostics.alerts=m->alerts;dl=m->handle.download_limit();ul=m->handle.upload_limit();}
     if(m->retired.requested){v.phase=Phase::Retiring;}Observation row{.hash=m->data().hash,.torrent=std::move(v),.queued=m->queued,.selectedComplete=selectedComplete,.downloadLimit=dl,.uploadLimit=ul};row.queueUnavailable=s.queueUnavailable;row.completionPositionUnavailable=m->completionPositionUnavailable;
     if(s.session){const auto settings=s.session->get_settings();row.globalDownloadLimit=settings.get_int(lt::settings_pack::download_rate_limit);row.globalUploadLimit=settings.get_int(lt::settings_pack::upload_rate_limit);row.loopbackPeerClasses=s.session->get_peer_class_filter().access(lt::address_v4::loopback());}
