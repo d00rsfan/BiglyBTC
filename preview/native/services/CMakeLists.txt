@@ -209,7 +209,7 @@ if(BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/i2p_provider/verify-owner-approval.py"
     "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL}" "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256}"
-    "${_owned_i2p_dso}" "${_owned_i2p_sdk}" "85985542dd890cdb29323417b277922122429d0769dcf40666617567f1507494"
+    "${_owned_i2p_dso}" "${_owned_i2p_sdk}" "9d264115b5964f2ed542d193697b77263f974f0d4c3f929e829bd1c4c1398671"
     "${CMAKE_CURRENT_BINARY_DIR}/private_i2p_runtime_config.hpp" RESULT_VARIABLE _owned_i2p_verify)
   if(NOT _owned_i2p_verify EQUAL 0)
     message(FATAL_ERROR "Private owner approval/SDK/artifact closure failed")
