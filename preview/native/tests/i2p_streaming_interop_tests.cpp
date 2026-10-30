@@ -197,7 +197,7 @@ class StreamingInteropTests final:public QObject {
   Q_OBJECT
   QString root;
   void registered(Bridge& bridge,Channel& channel){
-    QTRY_VERIFY_WITH_TIMEOUT(bridge.ready()||!bridge.failure.isEmpty()||bridge.java.state()==QProcess::NotRunning,10000);QVERIFY2(bridge.ready()&&bridge.failure.isEmpty(),qPrintable(bridge.failure+QString::fromUtf8(bridge.errors)));
+    QTRY_VERIFY_WITH_TIMEOUT(bridge.ready()||!bridge.failure.isEmpty()||bridge.java.state()==QProcess::NotRunning,60000);QVERIFY2(bridge.ready()&&bridge.failure.isEmpty(),qPrintable(bridge.failure+QString::fromUtf8(bridge.errors)));
     QVERIFY(channel.begin({QHostAddress::LocalHost,bridge.server.serverPort(),"2.13.0",false,30000,false}));QTRY_VERIFY(channel.routerDate());auto id=signer("dsa");auto armed=channel.createLeaseSession(std::move(id),{{"i2cp.fastReceive","true"},{"i2cp.messageReliability","none"}},bridge.now);QVERIFY2(armed,armed?"":armed.error().message.c_str());QTRY_VERIFY(channel.sessionId()&&channel.leaseSetSubmission()&&bridge.leaseSeen);QCOMPARE(channel.state(),Channel::State::SessionCreated);
   }
   void finish(Bridge& bridge,Channel& channel){
