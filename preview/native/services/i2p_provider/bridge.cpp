@@ -41,7 +41,7 @@ struct Bridge::Impl {
   Ports ports;Phase phase=Phase::Idle;std::string sessionId;Clock::time_point preparingEnd{};
   std::array<Byte,32> capability{};std::uint64_t generation=0,admission=0,activeRevision=0,rejectedClients=0;
   bool queued=false,notifyQueued=false,wanted=false,executing=false;
-  std::function<bool(void*)> install;
+  std::function<bool(void*)> install;const char* failure=nullptr;
   explicit Impl(Bridge* owner,std::shared_ptr<ProfileSource> s,i2cp::InitialChannel& c):q(owner),source(std::move(s)),channel(&c),server(owner),timer(owner){
     server.setProxy(QNetworkProxy::NoProxy);server.setMaxPendingConnections(static_cast<int>(MaximumBridgeSockets));timer.setSingleShot(true);
     QObject::connect(&server,&QTcpServer::newConnection,q,[this]{schedule();});
@@ -67,11 +67,11 @@ struct Bridge::Impl {
   void discard(std::size_t index){
     auto& item=sockets[index];if(!item){return;}if(!item->authenticated&&rejectedClients!=std::numeric_limits<std::uint64_t>::max()){++rejectedClients;}if(channel&&item->operation){channel->cancelStream(item->operation);auto terminal=channel->managedStreamObservation(item->operation);if(executing&&current()&&terminal&&terminal->stream.phase==streaming::Phase::Closed&&terminal->stream.queuedRx){static_cast<void>(channel->takeStreamBytes(item->operation,streaming::MaximumBuffered));}channel->releaseStream(item->operation);}
     if(channel&&item->lookup){channel->cancelDestinationLookup(item->lookup);}
-    if(control&&*control==index){close();return;}
+    if(control&&*control==index){close("I2P control connection ended");return;}
     QObject::disconnect(item->tcp.get(),nullptr,q,nullptr);item->tcp->abort();item.reset();
   }
-  void close(){
-    if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;wanted=false;server.close();timer.stop();if(watcher){watcher->setEnabled(false);}source->revoke();
+  void close(const char* reason=nullptr){
+    if(reason&&!failure){failure=reason;}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;wanted=false;server.close();timer.stop();if(watcher){watcher->setEnabled(false);}source->revoke();
     if(channel){channel->closeStreamListener();for(auto& item:sockets){if(item&&item->operation){channel->cancelStream(item->operation);}if(item&&item->lookup){channel->cancelDestinationLookup(item->lookup);}}}
     for(auto& item:sockets){if(item){QObject::disconnect(item->tcp.get(),nullptr,q,nullptr);item->tcp->abort();item.reset();}}
     control.reset();peers.clear();resolved.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());notify();
@@ -217,29 +217,29 @@ struct Bridge::Impl {
       // Revocation is local and never waits for a filesystem permit. In
       // particular, a blocked source read cannot extend a socket's budget.
       const auto now=Clock::now();
-      if(phase==Phase::Preparing&&now>=preparingEnd){close();return;}
+      if(phase==Phase::Preparing&&now>=preparingEnd){close("I2P bridge preparation deadline expired");return;}
       for(std::size_t i=0;i<sockets.size()&&phase!=Phase::Withdrawn;++i){
         if(sockets[i]&&sockets[i]->phase!=SocketPhase::Control&&sockets[i]->phase!=SocketPhase::Data
           &&(now>=sockets[i]->end||sockets[i]->eof)){discard(i);}
       }
-      if(phase==Phase::Withdrawn){return;}if(!leaseCurrent()){close();return;}
+      if(phase==Phase::Withdrawn){return;}if(!leaseCurrent()){close("I2P lease identity unavailable");return;}
       if(!permit){arm();return;}
-      auto revision=permit->take();if(!revision){if(permit->phase()==SourcePermit::Phase::Failed||permit->phase()==SourcePermit::Phase::Stopped){close();return;}if(wanted&&permit->phase()==SourcePermit::Phase::Idle){permit->request();}arm();return;}
+      auto revision=permit->take();if(!revision){if(permit->phase()==SourcePermit::Phase::Failed||permit->phase()==SourcePermit::Phase::Stopped){close("I2P bridge source validation failed");return;}if(wanted&&permit->phase()==SourcePermit::Phase::Idle){permit->request();}arm();return;}
       struct Ack {SourcePermit& permit;~Ack(){permit.acknowledge();}} ack{*permit};
       activeRevision=*revision;executing=true;wanted=false;
-      if(!current()||!channel->resumeAuthorizedEffects()){close();executing=false;return;}
+      if(!current()||!channel->resumeAuthorizedEffects()){close("I2P bridge effect authority refused");executing=false;return;}
       if(phase==Phase::Preparing){
         if(!server.listen(QHostAddress::LocalHost,0)||!current()){close();executing=false;return;}phase=Phase::Ready;notify();
       }
       if(install){
         libtorrent::BiglybtcPrivateI2pOwnerPolicyV1 policy;policy.generation=generation;policy.admission=admission;policy.capability=capability;policy.public_destination_hash=source->destination().hash;policy.bridge_port=server.serverPort();policy.peer_port=ports.peer;policy.local_peer_port=ports.localPeer;
         struct Wipe {decltype(policy)& value;~Wipe(){OPENSSL_cleanse(value.capability.data(),value.capability.size());}} wipe{policy};
-        auto apply=std::move(install);if(!current()||!apply(&policy)||!current()){close();executing=false;return;}
+        auto apply=std::move(install);if(!current()||!apply(&policy)||!current()){close("I2P provider installation refused");executing=false;return;}
       }
       acceptSockets();
       for(std::size_t i=0;i<sockets.size()&&phase==Phase::Ready;++i){if(sockets[i]&&(!current()||!pumpSocket(i))){discard(i);}}
       if(current()){channel->resumeAuthorizedEffects();}arm();
-    }catch(...){close();}
+    }catch(...){close("I2P bridge operation failed");}
     executing=false;
   }
 };
@@ -265,14 +265,14 @@ bool Bridge::begin(Ports ports,std::uint64_t admission){
     s.watcher=std::make_unique<QSocketNotifier>(s.watch,QSocketNotifier::Read,this);
     QObject::connect(s.watcher.get(),&QSocketNotifier::activated,this,[this]{
       std::array<char,4096> bytes{};const auto n=::read(impl_->watch,bytes.data(),bytes.size());
-      if(n<0){if(errno!=EAGAIN&&errno!=EINTR){impl_->close();}return;}if(n==0){impl_->close();return;}
+      if(n<0){if(errno!=EAGAIN&&errno!=EINTR){impl_->close("I2P source watch read failed");}return;}if(n==0){impl_->close("I2P source watch ended");return;}
       if(!impl_->source->groupMode()){impl_->close();return;}
       for(std::size_t offset=0;offset<static_cast<std::size_t>(n);){
         if(static_cast<std::size_t>(n)-offset<sizeof(inotify_event)){impl_->close();return;}
         inotify_event event{};std::memcpy(&event,bytes.data()+offset,sizeof(event));
         if(event.len>static_cast<std::size_t>(n)-offset-sizeof(event)){impl_->close();return;}
         if((event.mask&(IN_Q_OVERFLOW|IN_UNMOUNT))||std::find(impl_->criticalWatches.begin(),impl_->criticalWatches.end(),event.wd)!=impl_->criticalWatches.end()){
-          impl_->close();return;
+          impl_->close("Critical original I2P source watch event");return;
         }
         offset+=sizeof(event)+event.len;
       }
@@ -283,6 +283,7 @@ bool Bridge::begin(Ports ports,std::uint64_t admission){
   }catch(...){s.close();return false;}
 }
 void Bridge::close(){impl_->close();}
+const char* Bridge::failureReason()const noexcept{return impl_->failure?impl_->failure:"I2P bridge withdrew";}
 void Bridge::joinSource(){if(impl_->permit){impl_->permit->join();}}
 Bridge::Observation Bridge::observation()const noexcept{
   const auto& s=*impl_;Observation value{s.phase,s.generation,s.admission,s.source->destination().hash,s.server.serverPort(),0,0,s.peers.size(),s.rejectedClients};

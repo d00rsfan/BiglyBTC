@@ -20,6 +20,7 @@ public:
   ~Bridge()override;
   bool begin(Ports,std::uint64_t admission);
   void close(); // Sockets/stream authority withdrawn before external I/O join.
+  const char* failureReason()const noexcept; // Fixed public reason, no command/key bytes.
   void joinSource(); // Lifetime caller only, after close; may wait for OS I/O.
   Observation observation()const noexcept; // No capability/key/private config.
 signals:

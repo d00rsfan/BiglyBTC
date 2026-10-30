@@ -86,8 +86,8 @@ struct OwnedProfile::Impl {
     if(std::ranges::none_of(members,[](const auto& entry){return !entry.second->retired.requested;})){return;}
     installQueued=true;if(!bridge->installProvider([this](void* policy){installQueued=false;return installSession(policy);})){installQueued=false;close();}
   }
-  void close(){
-    if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;timer.stop();source->revoke();identity.reset();
+  void close(const char* reason=nullptr){
+    if(reason&&failure.empty()){failure=reason;}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;timer.stop();source->revoke();identity.reset();
     if(bridge){bridge->close();}if(channel){channel->close();}if(permit){permit->stop();}
     if(session){if(generation){(void)lt::biglybtc_withdraw_private_i2p_owner_v1(session.get(),generation);}joining.emplace(session->abort());session.reset();}
     for(auto& [key,m]:members){(void)key;m->handle={};if(m->retired.requested&&!m->retired.readyForJoin&&!m->retired.failure){m->retired.failure=Error{Code::Conflict,"Shared I2P session withdrew before target retirement; recheck retained"};}}
@@ -224,9 +224,9 @@ struct OwnedProfile::Impl {
   }
   void requestStartup(){if((phase==Phase::Starting||phase==Phase::Active)&&permit&&permit->phase()==SourcePermit::Phase::Idle){permit->request();}}
   void startup(){
-    if((phase!=Phase::Starting&&phase!=Phase::Active)||!permit){return;}auto revision=permit->take();if(!revision){if(permit->phase()==SourcePermit::Phase::Failed||permit->phase()==SourcePermit::Phase::Stopped){close();}return;}
+    if((phase!=Phase::Starting&&phase!=Phase::Active)||!permit){return;}auto revision=permit->take();if(!revision){if(permit->phase()==SourcePermit::Phase::Failed||permit->phase()==SourcePermit::Phase::Stopped){close("I2P owner source validation failed");}return;}
     struct Ack{SourcePermit& p;~Ack(){p.acknowledge();}} ack{*permit};
-    if(!source->revisionCurrent(*revision)||!channel->resumeAuthorizedEffects()){close();return;}
+    if(!source->revisionCurrent(*revision)||!channel->resumeAuthorizedEffects()){close("I2P owner effect authority refused");return;}
     if(startRequested){startRequested=false;const auto wall=QDateTime::currentMSecsSinceEpoch();if(!identity||wall<=0||!channel->createLeaseSession(std::move(*identity),options.session,static_cast<std::uint64_t>(wall))){close();return;}identity.reset();}
     if(phase==Phase::Active&&memberInstallRequested){
       memberInstallRequested=false;
@@ -234,7 +234,7 @@ struct OwnedProfile::Impl {
       catch(...){failure="I2P member installation ownership became uncertain; recheck retained";close();return;}
     }
     if(bridgeRequested){if(!channel->ownedTransportIdle()){return;}bridgeRequested=false;auto actual=channel->ownedLeaseDestination();if(!actual||actual->wire!=source->destination().wire){close();return;}
-      bridge=std::make_unique<Bridge>(source,*channel,q);QObject::connect(bridge.get(),&Bridge::changed,q,[this]{if(!bridge||(phase!=Phase::Starting&&phase!=Phase::Active)){return;}const auto v=bridge->observation();if(v.phase==Bridge::Phase::Withdrawn){close();}else if(v.phase==Bridge::Phase::Ready&&phase==Phase::Starting){requestInstall();}});
+      bridge=std::make_unique<Bridge>(source,*channel,q);QObject::connect(bridge.get(),&Bridge::changed,q,[this]{if(!bridge||(phase!=Phase::Starting&&phase!=Phase::Active)){return;}const auto v=bridge->observation();if(v.phase==Bridge::Phase::Withdrawn){close(bridge->failureReason());}else if(v.phase==Bridge::Phase::Ready&&phase==Phase::Starting){requestInstall();}});
       if(!bridge->begin(options.ports,admission)){close();}}
   }
 };
@@ -244,8 +244,8 @@ OwnedProfile::OwnedProfile(std::unique_ptr<Impl> p):impl_(std::move(p)){
   QObject::connect(s.channel.get(),&i2cp::InitialChannel::sourceEffectRequested,this,[this]{impl_->requestStartup();});
   QObject::connect(s.channel.get(),&i2cp::InitialChannel::dateReceived,this,[this]{if(impl_->phase==Phase::Starting){impl_->startRequested=true;impl_->requestStartup();}});
   QObject::connect(s.channel.get(),&i2cp::InitialChannel::leaseSetSubmitted,this,[this]{if(impl_->phase==Phase::Starting&&!impl_->bridge){impl_->bridgeRequested=true;impl_->requestStartup();}});
-  QObject::connect(s.channel.get(),&i2cp::InitialChannel::failed,this,[this]{if(impl_->phase==Phase::Starting||impl_->phase==Phase::Active){impl_->close();}});
-  QObject::connect(s.channel.get(),&i2cp::InitialChannel::closed,this,[this]{if(impl_->phase==Phase::Starting||impl_->phase==Phase::Active){impl_->close();}});
+  QObject::connect(s.channel.get(),&i2cp::InitialChannel::failed,this,[this]{if(impl_->phase==Phase::Starting||impl_->phase==Phase::Active){impl_->close("I2CP transport ended");}});
+  QObject::connect(s.channel.get(),&i2cp::InitialChannel::closed,this,[this]{if(impl_->phase==Phase::Starting||impl_->phase==Phase::Active){impl_->close("I2CP transport ended");}});
 }
 OwnedProfile::~OwnedProfile(){impl_->close();join();}
 std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash){
