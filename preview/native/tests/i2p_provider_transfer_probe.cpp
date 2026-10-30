@@ -178,9 +178,44 @@ int main(int argc,char** argv){
   bool valid=false;const auto port=args[1].toUInt(&valid);if(!valid||port<1024||port>65535||args[2]!="/work"){return 2;}
   const auto work=args[2];QJsonObject result{{"status","FAIL"},{"scope","two-actual-owned-provider-I2P-torrents"}};
   std::unique_ptr<provider::OwnedTorrent> seed,leech;std::unique_ptr<BridgeControls> controls;QTimer poll;QElapsedTimer elapsed;elapsed.start();bool done=false,stopped=false;int code=1;
-  const auto shutdown=[&]{if(stopped){return;}stopped=true;if(seed){seed->close();}if(leech){leech->close();}controls.reset();if(seed){seed->join();}if(leech){leech->join();}};
+  // Fixed latest-only observations. These fields carry no key/capability or
+  // authority; diagnostics never turn an incomplete transfer into success.
+  const auto diagnostic=[&](const QString& leaf,const QJsonObject& value)noexcept{
+    try{output(work+'/'+leaf,value);}catch(...){std::cerr<<"Cannot write bounded diagnostic marker\n";}
+  };
+  const auto mark=[&](const char* phase)noexcept{
+    try{diagnostic("native-phase.json",{{"phase",QString::fromLatin1(phase)},{"elapsed_ms",elapsed.elapsed()}});}catch(...){}
+  };
+  const auto observe=[](const provider::OwnedTorrent::Observation& value){
+    return QJsonObject{{"phase",static_cast<int>(value.phase)},{"admission",QString::number(value.admission)},
+      {"generation",QString::number(value.generation)},{"bridge_port",value.bridgePort},
+      {"bridge_sockets",static_cast<qint64>(value.bridgeSockets)},
+      {"rejected_clients",QString::number(value.rejectedClients)},{"seeding",value.seeding},
+      {"verified_bytes",QString::number(value.verifiedBytes)}};
+  };
+  QJsonObject lastProgress;QElapsedTimer progressAge;progressAge.start();
+  const auto progress=[&](const provider::OwnedTorrent::Observation& a,const provider::OwnedTorrent::Observation& b)noexcept{
+    try{QJsonObject values{{"seed",observe(a)},{"leech",observe(b)}};
+      if(values!=lastProgress||progressAge.elapsed()>=1000){
+        lastProgress=values;progressAge.restart();values.insert("elapsed_ms",elapsed.elapsed());
+        diagnostic("native-progress.json",values);
+      }
+    }catch(...){}
+  };
+  const auto shutdown=[&]{
+    if(stopped){return;}stopped=true;
+    mark("before-seed-close");if(seed){seed->close();}mark("after-seed-close");
+    mark("before-leech-close");if(leech){leech->close();}mark("after-leech-close");
+    mark("before-controls-release");controls.reset();mark("after-controls-release");
+    mark("before-seed-join");if(seed){seed->join();}mark("after-seed-join");
+    mark("before-leech-join");if(leech){leech->join();}mark("after-leech-join");
+  };
   const auto finish=[&](bool ok,const QString& reason){
-    if(done){return;}done=true;poll.stop();shutdown();result.insert("status",ok?"PASS":"FAIL");result.insert("reason",reason);result.insert("elapsed_ms",elapsed.elapsed());
+    if(done){return;}done=true;poll.stop();
+    diagnostic("native-terminal.json",{{"phase","before-finish-shutdown"},{"intended_success",ok},
+      {"reason",reason.left(512)},{"elapsed_ms",elapsed.elapsed()}});
+    mark("before-finish-shutdown");shutdown();mark("after-finish-shutdown");
+    result.insert("status",ok?"PASS":"FAIL");result.insert("reason",reason);result.insert("elapsed_ms",elapsed.elapsed());
     try{output(work+"/native-result.json",result);}catch(const std::exception& e){std::cerr<<e.what()<<'\n';ok=false;}code=ok?0:1;app.quit();
   };
   try{
@@ -199,12 +234,14 @@ int main(int argc,char** argv){
     bool replaced=false;std::uint64_t admission=0,generation=0;int afterWithdrawal=0;
     QObject::connect(&poll,&QTimer::timeout,&app,[&]{try{
       if(elapsed.elapsed()>150000){finish(false,"Absolute transfer/source-withdrawal budget exceeded");return;}
-      const auto sa=seed->observation(),sb=leech->observation();
+      mark("before-seed-observation");const auto sa=seed->observation();
+      mark("before-leech-observation");const auto sb=leech->observation();
+      progress(sa,sb);mark("after-owner-observations");
       require(sa.publicIdentity==a.identity&&sb.publicIdentity==b.identity,"Owner changed actual public identity");
       if(sa.phase==provider::OwnedTorrent::Phase::Withdrawn){finish(false,"Seed authority withdrew before completion");return;}
       if(!replaced){
         if(sb.phase==provider::OwnedTorrent::Phase::Withdrawn){finish(false,"Leech authority withdrew before completion");return;}
-        const bool controlsDone=controls->tick(sa,sb,*aLease);
+        mark("before-bridge-controls");const bool controlsDone=controls->tick(sa,sb,*aLease);mark("after-bridge-controls");
         if(controlsDone&&sa.phase==provider::OwnedTorrent::Phase::Active&&sb.phase==provider::OwnedTorrent::Phase::Active&&sa.seeding&&sb.seeding&&sa.verifiedBytes==PayloadBytes&&sb.verifiedBytes==PayloadBytes){
           require(sa.admission!=0&&sb.admission!=0&&sa.generation!=0&&sb.generation!=0,"Actual admissions/generations required");
           admission=sb.admission;generation=sb.generation;result.insert("seed_admission",QString::number(sa.admission));result.insert("leech_admission",QString::number(admission));result.insert("leech_generation",QString::number(generation));
@@ -226,6 +263,7 @@ int main(int argc,char** argv){
         result.insert("direct_peer_injection",false);result.insert("late_tracker_response_qualified",false);result.insert("joined_before_disk_read",true);
         finish(true,"Real tracker-discovered two-provider transfer and exact joined disk bytes");
       }
+      if(!done){mark("poll-returning-to-event-loop");}
     }catch(const std::exception& e){finish(false,QString::fromUtf8(e.what()));}catch(...){finish(false,"Unexpected bounded acceptance resource failure");}});
     poll.start(25);app.exec();shutdown();return code;
   }catch(const std::exception& e){shutdown();result.insert("reason",QString::fromUtf8(e.what()));try{output(work+"/native-result.json",result);}catch(...){}std::cerr<<e.what()<<'\n';return 1;}
