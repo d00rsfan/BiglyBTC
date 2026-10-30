@@ -1,0 +1,152 @@
+Test project /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc
+    Start  64: statistics-page-behavior
+1/6 Test  #64: statistics-page-behavior ..............   Passed   12.17 sec
+    Start  65: statistics-navigation-page
+2/6 Test  #65: statistics-navigation-page ............   Passed    8.55 sec
+    Start  66: statistics-navigation-window-worker
+3/6 Test  #66: statistics-navigation-window-worker ...   Passed    8.54 sec
+    Start 203: torrent-intake-file-options
+4/6 Test #203: torrent-intake-file-options ...........   Passed    0.50 sec
+    Start 204: torrent-intake-file-options-ui
+5/6 Test #204: torrent-intake-file-options-ui ........***Failed    1.09 sec
+********* Start testing of TorrentIntakeDialogTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : TorrentIntakeDialogTests::initTestCase()
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(0) This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(0) This plugin does not support propagateSizeHints()
+FAIL!  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(0) Compared values are not the same
+   Actual   (writes.size()): 0
+   Expected (1)            : 1
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_dialog_tests.cpp(57)]
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(1) This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(1) This plugin does not support propagateSizeHints()
+FAIL!  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(1) Compared values are not the same
+   Actual   (writes.size()): 0
+   Expected (1)            : 1
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_dialog_tests.cpp(57)]
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(2) This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(2) This plugin does not support propagateSizeHints()
+FAIL!  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(2) Compared values are not the same
+   Actual   (writes.size()): 0
+   Expected (1)            : 1
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_dialog_tests.cpp(57)]
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(3) This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(3) This plugin does not support propagateSizeHints()
+FAIL!  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(3) Compared values are not the same
+   Actual   (writes.size()): 0
+   Expected (1)            : 1
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_dialog_tests.cpp(57)]
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(4) This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(4) This plugin does not support propagateSizeHints()
+FAIL!  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(4) Compared values are not the same
+   Actual   (writes.size()): 0
+   Expected (1)            : 1
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_dialog_tests.cpp(57)]
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(5) This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(5) This plugin does not support propagateSizeHints()
+FAIL!  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(5) Compared values are not the same
+   Actual   (writes.size()): 0
+   Expected (1)            : 1
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_dialog_tests.cpp(57)]
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(6) This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(6) This plugin does not support propagateSizeHints()
+FAIL!  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(6) Compared values are not the same
+   Actual   (writes.size()): 0
+   Expected (1)            : 1
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_dialog_tests.cpp(57)]
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(7) This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(7) This plugin does not support propagateSizeHints()
+FAIL!  : TorrentIntakeDialogTests::i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(7) Compared values are not the same
+   Actual   (writes.size()): 0
+   Expected (1)            : 1
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_dialog_tests.cpp(57)]
+QWARN  : TorrentIntakeDialogTests::i2pPreviewRestrictsModesAndPreservesPublicImportChoices() This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::i2pPreviewRestrictsModesAndPreservesPublicImportChoices() This plugin does not support propagateSizeHints()
+FAIL!  : TorrentIntakeDialogTests::i2pPreviewRestrictsModesAndPreservesPublicImportChoices() Compared values are not the same
+   Actual   (writes.size()): 3
+   Expected (4)            : 4
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_dialog_tests.cpp(89)]
+QWARN  : TorrentIntakeDialogTests::allocationModesSubmitStoppedAllSelectedAndKeepFailedDraft() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::allocationModesSubmitStoppedAllSelectedAndKeepFailedDraft()
+QWARN  : TorrentIntakeDialogTests::decoderCapabilityEchoUsesOnlyCurrentImmutablePreview() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::decoderCapabilityEchoUsesOnlyCurrentImmutablePreview()
+QWARN  : TorrentIntakeDialogTests::selectedVerificationKeepsFullModeStrictAndPublishesTypedGoal() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::selectedVerificationKeepsFullModeStrictAndPublishesTypedGoal()
+QWARN  : TorrentIntakeDialogTests::indexedDestinationsInheritEditClearRetainFailureAndResetWithProfile() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::indexedDestinationsInheritEditClearRetainFailureAndResetWithProfile()
+QWARN  : TorrentIntakeDialogTests::indexedDestinationEditorYieldsToProfileRebindAndMissingTable() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::indexedDestinationEditorYieldsToProfileRebindAndMissingTable()
+QWARN  : TorrentIntakeDialogTests::customExistingNameKeepsVerifyIntentAcrossFailureAndRequiresLiveChild() This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::customExistingNameKeepsVerifyIntentAcrossFailureAndRequiresLiveChild() This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::customExistingNameKeepsVerifyIntentAcrossFailureAndRequiresLiveChild() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::customExistingNameKeepsVerifyIntentAcrossFailureAndRequiresLiveChild()
+QWARN  : TorrentIntakeDialogTests::verifiedSeedingIgnoresOnlyImmutablePaddingWhenRequiringEveryRealFile() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::verifiedSeedingIgnoresOnlyImmutablePaddingWhenRequiringEveryRealFile()
+QWARN  : TorrentIntakeDialogTests::verifiedSeedingModeHoldsStartAndRequiresEveryRealFile() This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::verifiedSeedingModeHoldsStartAndRequiresEveryRealFile() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::verifiedSeedingModeHoldsStartAndRequiresEveryRealFile()
+QWARN  : TorrentIntakeDialogTests::saveNameDraftPreservesDefaultAndCustomLeafAcrossFailure() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::saveNameDraftPreservesDefaultAndCustomLeafAcrossFailure()
+QWARN  : TorrentIntakeDialogTests::saveNameResetYieldsToRebindDeletionAndMissingChild() This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::saveNameResetYieldsToRebindDeletionAndMissingChild() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::saveNameResetYieldsToRebindDeletionAndMissingChild()
+QWARN  : TorrentIntakeDialogTests::trackerDraftPreservesDefaultAndExplicitTiersOrClearAcrossFailure() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::trackerDraftPreservesDefaultAndExplicitTiersOrClearAcrossFailure()
+QWARN  : TorrentIntakeDialogTests::unrepresentableSourceTrackersRemainImportableButNeverBecomeEditableEmpty() This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::unrepresentableSourceTrackersRemainImportableButNeverBecomeEditableEmpty() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::unrepresentableSourceTrackersRemainImportableButNeverBecomeEditableEmpty()
+QWARN  : TorrentIntakeDialogTests::malformedTrackerDraftAndDeletedEditorCannotSubmit() This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::malformedTrackerDraftAndDeletedEditorCannotSubmit() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::malformedTrackerDraftAndDeletedEditorCannotSubmit()
+QWARN  : TorrentIntakeDialogTests::trackerPrefillAndProfileResetYieldToReentrantBindingOrDeletion() This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::trackerPrefillAndProfileResetYieldToReentrantBindingOrDeletion() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::trackerPrefillAndProfileResetYieldToReentrantBindingOrDeletion()
+QWARN  : TorrentIntakeDialogTests::sparseWantedChoicesPaddingAndFailedCommitRetainDraft() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::sparseWantedChoicesPaddingAndFailedCommitRetainDraft()
+QWARN  : TorrentIntakeDialogTests::perTorrentLimitsAreExactRetainedDraftAndResetOnNewProfile() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::perTorrentLimitsAreExactRetainedDraftAndResetOnNewProfile()
+QWARN  : TorrentIntakeDialogTests::sequentialIntentHasDefaultDraftBusyAndProfileLifetime() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::sequentialIntentHasDefaultDraftBusyAndProfileLifetime()
+QWARN  : TorrentIntakeDialogTests::sequentialProfileResetCannotPrefillAnOvertakingProfile() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::sequentialProfileResetCannotPrefillAnOvertakingProfile()
+PASS   : TorrentIntakeDialogTests::sequentialProfileResetAllowsDeletionFromToggledCallback()
+QWARN  : TorrentIntakeDialogTests::forcedStartRequiresSelectedStartAndKeepsFailedDraft() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::forcedStartRequiresSelectedStartAndKeepsFailedDraft()
+PASS   : TorrentIntakeDialogTests::forcedStartResetCannotWriteIntoOvertakingProfile()
+PASS   : TorrentIntakeDialogTests::startModeResetForwardsExactOrderAndPreservesBlockedState()
+PASS   : TorrentIntakeDialogTests::startModeForwardedTextMayRebindOrDeleteOwnerAndIndexMayDeleteChild()
+QWARN  : TorrentIntakeDialogTests::forcedStartResetAndChildDeletionCannotDispatch() This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::forcedStartResetAndChildDeletionCannotDispatch() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::forcedStartResetAndChildDeletionCannotDispatch()
+QWARN  : TorrentIntakeDialogTests::staleSourcesMalformedIndicesAndCancelledPreviewsCannotSubmit() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::staleSourcesMalformedIndicesAndCancelledPreviewsCannotSubmit()
+QWARN  : TorrentIntakeDialogTests::allSkippedIsExplicitStoppedAndSubmissionMayDeleteDialog() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::allSkippedIsExplicitStoppedAndSubmissionMayDeleteDialog()
+QWARN  : TorrentIntakeDialogTests::windowUsesTaggedPreviewAndRejectsMissingWorkerReplyWithoutLosingChoices() This plugin does not support propagateSizeHints()
+QWARN  : TorrentIntakeDialogTests::windowUsesTaggedPreviewAndRejectsMissingWorkerReplyWithoutLosingChoices() This plugin does not support propagateSizeHints()
+PASS   : TorrentIntakeDialogTests::windowUsesTaggedPreviewAndRejectsMissingWorkerReplyWithoutLosingChoices()
+PASS   : TorrentIntakeDialogTests::cleanupTestCase()
+Totals: 29 passed, 9 failed, 0 skipped, 0 blacklisted, 982ms
+********* Finished testing of TorrentIntakeDialogTests *********
+
+    Start 243: i2p-classic-host
+6/6 Test #243: i2p-classic-host ......................   Passed    1.62 sec
+
+83% tests passed, 1 tests failed out of 6
+
+Label Time Summary:
+classic-ui    =   1.62 sec*proc (1 test)
+config        =  12.17 sec*proc (1 test)
+i2p           =   1.62 sec*proc (1 test)
+intake        =   1.60 sec*proc (2 tests)
+navigation    =  17.09 sec*proc (2 tests)
+statistics    =  29.26 sec*proc (3 tests)
+storage       =   0.50 sec*proc (1 test)
+ui            =  30.35 sec*proc (4 tests)
+unit          =  32.47 sec*proc (6 tests)
+
+Total Test time (real) =  32.48 sec
+
+The following tests FAILED:
+	204 - torrent-intake-file-options-ui (Failed)           intake ui unit
+Errors while running CTest

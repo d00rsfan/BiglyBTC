@@ -1,0 +1,62 @@
+--- a/preview/native/tests/i2p_host_transfer_probe.cpp
++++ b/preview/native/tests/i2p_host_transfer_probe.cpp
+@@ -162,8 +162,9 @@
+   ui::Presentation snapshot;ui::I2pPresentation packet;quint64 session=0;
+   QString callbackFailure;bool done=false,stopped=false,inTurn=false,started=false;
+   bool closeRequested=false,closeJoined=false,closeStorageReleased=false;
+-  bool statisticsShortcut=false,libraryShortcut=false,statisticsDelivered=false;
++  bool statisticsShortcut=false,libraryShortcut=false,statisticsDelivered=false,statisticsKeySent=false;
+   bool importedFromUi=false;quint64 statisticsRequest=0;
++  quint64 statisticsRequestCount=0,statisticsResponseCount=0,lastStatisticsResponseSession=0,lastStatisticsResponseRequest=0;
+   unsigned previewRequests=0,intakeSubmissions=0;
+   ui::TorrentIntakePresentation intakePreview;ui::TorrentIntakeResultPresentation intakeResult;
+   std::array<unsigned,4> actualActions{};int code=1;Stage stage=Stage::Open;
+@@ -246,10 +247,12 @@
+     // screenshot waits only for the already-requested Ctrl5 result delivery.
+     QObject::connect(&window,&ui::LibraryWindow::statisticsRequested,bridge.get(),&app::SessionBridge::statistics);
+     QObject::connect(&window,&ui::LibraryWindow::statisticsRequested,&window,[&](quint64 value,quint64 request){
++      ++statisticsRequestCount;
+       if(value==session){statisticsRequest=request;statisticsDelivered=false;}
+     });
+     QObject::connect(bridge.get(),&app::SessionBridge::statisticsReady,&window,&ui::LibraryWindow::setStatistics);
+     QObject::connect(bridge.get(),&app::SessionBridge::statisticsReady,&window,[&](ui::StatisticsPresentation p){
++      if(p){++statisticsResponseCount;lastStatisticsResponseSession=p->session;lastStatisticsResponseRequest=p->request;}
+       if(p&&p->session==session&&p->request==statisticsRequest){statisticsDelivered=true;}
+     });
+     QObject::connect(bridge.get(),&app::SessionBridge::i2pReady,&window,[&](ui::I2pPresentation p){
+@@ -302,7 +305,17 @@
+         QJsonObject progress{{"stage",static_cast<int>(stage)},{"i2p",packetJson(packet)},
+           {"seed_phase",static_cast<int>(sa.phase)},{"seed_verified_bytes",static_cast<qint64>(sa.verifiedBytes)},{"seed_seeding",sa.seeding},
+           {"row_state",current?current->state:QString{}},{"row_completed",current&&current->completed?*current->completed:qint64{-1}},
+-          {"Host_busy",bridge->busy()}};
++          {"Host_busy",bridge->busy()},
++          {"statistics_key_sent",statisticsKeySent},{"statistics_shortcut",statisticsShortcut},
++          {"statistics_delivered",statisticsDelivered},{"statistics_request",QString::number(statisticsRequest)},
++          {"statistics_request_count",QString::number(statisticsRequestCount)},
++          {"statistics_response_count",QString::number(statisticsResponseCount)},
++          {"last_statistics_response_session",QString::number(lastStatisticsResponseSession)},
++          {"last_statistics_response_request",QString::number(lastStatisticsResponseRequest)},
++          {"statistics_page_exists",window.statisticsPage()!=nullptr},
++          {"statistics_page_current",window.statisticsPage()!=nullptr&&window.mainTabs().currentWidget()==window.statisticsPage()},
++          {"active_window_is_main",QApplication::activeWindow()==&window},
++          {"main_window_active",window.isActiveWindow()},{"modal_window_present",QApplication::activeModalWidget()!=nullptr}};
+         if(progress!=previous||progressAge.elapsed()>=1000){previous=progress;progressAge.restart();progress.insert("elapsed_ms",elapsed.elapsed());diagnostic("native-progress.json",progress);}
+         switch(stage){
+         case Stage::Open:
+@@ -365,9 +378,15 @@
+               &&sa.seeding&&sa.verifiedBytes==PayloadBytes){
+             result.insert("transfer_i2p",packetJson(packet));result.insert("verified_bytes",PayloadBytes);
+             require(packet->payloadDownloaded>=PayloadBytes,"Host I2P traffic did not record the actual payload");
+-            stage=Stage::Statistics;window.activateWindow();window.setFocus();QTest::keyClick(&window,Qt::Key_5,Qt::ControlModifier);
++            // Intake was a real modal dialog. Activation is asynchronous;
++            // return to Qt before sending the one real window shortcut.
++            stage=Stage::Statistics;window.activateWindow();window.setFocus();
+           }break;
+         case Stage::Statistics:{
++          if(!statisticsKeySent){
++            if(QApplication::activeWindow()!=&window||!window.isActiveWindow()||QApplication::activeModalWidget()){break;}
++            statisticsKeySent=true;QTest::keyClick(&window,Qt::Key_5,Qt::ControlModifier);break;
++          }
+           auto* page=window.statisticsPage();if(!statisticsShortcut||!statisticsDelivered||bridge->busy()||!page||window.mainTabs().currentWidget()!=page){break;}
+           auto* widget=page->findChild<QWidget*>("statistics-i2p");auto* stats=dynamic_cast<ui::I2pStatisticsView*>(widget);
+           require(stats&&stats->presentation(),"Actual I2P statistics packet absent");const auto shown=stats->presentation();

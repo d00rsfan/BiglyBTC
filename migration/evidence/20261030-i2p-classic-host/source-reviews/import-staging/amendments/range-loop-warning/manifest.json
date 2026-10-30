@@ -1,0 +1,19 @@
+{
+  "status": "SOURCE_ONLY_NOT_BUILT_OR_TESTED",
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-staging/manifest.json",
+    "sha256": "12a1968c77d3b3da5bf32e693d690efe2f92d674ef13ca698bbc71ec221eb613"
+  },
+  "source_paths": {
+    "preview/native/tests/torrent_intake_i2p_tests.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-staging/amendments/range-loop-warning/before/torrent_intake_i2p_tests.inc",
+      "before_sha256": "3100b64993adb7879369cf29cb445548075c1883ba7329e4a542172a0e68a4d6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-staging/amendments/range-loop-warning/staging/preview/native/tests/torrent_intake_i2p_tests.inc",
+      "after_sha256": "449ecf9cdbc90d9f4eb1813f4efc34424af81d84460607f2155bda2b845c3cc8"
+    }
+  },
+  "artifacts_sha256": {
+    "changes.patch": "f9dad9aeeaf2d701b6100f199ae5b9cdc15b159ebde776469977ecb571f9bba6"
+  },
+  "reason": "Avoid implicit std::string temporary range binding under compiler warning-as-error; assertions and production unchanged."
+}

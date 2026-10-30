@@ -1,0 +1,112 @@
+[1/123] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[2/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_dht/headers.cpp.o
+[3/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_ping/options.cpp.o
+[4/123] Building CXX object services/CMakeFiles/biglybtc_azureus_control.dir/azureus_control/lookup.cpp.o
+[5/123] Linking CXX static library engine/libbiglybtc_local_engine.a
+[6/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_contacts/contacts.cpp.o
+[7/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_positions/positions.cpp.o
+[8/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_nodes/nodes.cpp.o
+[9/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_values/values.cpp.o
+[10/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_packets/ping.cpp.o
+[11/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_find_value/find_value.cpp.o
+[12/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_find_node/find_node.cpp.o
+[13/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_error/error.cpp.o
+[14/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_store/store.cpp.o
+[15/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_auth/authority.cpp.o
+[16/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_store_policy/store_policy.cpp.o
+[17/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_router/router.cpp.o
+[18/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_value/db_value.cpp.o
+[19/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_runtime/database.cpp.o
+[20/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_runtime/storage_stats.cpp.o
+[21/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_runtime/storage_diversification.cpp.o
+[22/123] Linking CXX static library services/libbiglybtc_azureus_control.a
+[23/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_mapping/mapping.cpp.o
+[24/123] Building CXX object plugins/BiglyBTC-plugin-azrating/CMakeFiles/biglybtc_rating_data.dir/rating_data.cpp.o
+[25/123] Building CXX object plugins/BiglyBTC-plugin-azrating/CMakeFiles/biglybtc_rating_data.dir/local_rating.cpp.o
+[26/123] Linking CXX static library plugins/BiglyBTC-plugin-azrating/libbiglybtc_rating_data.a
+[27/123] Building CXX object app/CMakeFiles/biglybtc_scheduler_policy.dir/__/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.cpp.o
+[28/123] Building CXX object services/CMakeFiles/biglybtc_owned_i2p_source.dir/i2p_provider/profile_source.cpp.o
+[29/123] Linking CXX static library services/libbiglybtc_owned_i2p_source.a
+[30/123] Automatic MOC for target biglybtc_i2p_provider_owner
+[31/123] Building CXX object app/CMakeFiles/biglybtc_scheduler_policy.dir/__/plugins/BiglyBTC-plugin-SpeedScheduler/original_xml.cpp.o
+[32/123] Building CXX object app/CMakeFiles/biglybtc_scheduler_policy.dir/__/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.cpp.o
+[33/123] Building CXX object adapters/CMakeFiles/biglybtc_saved_service_view.dir/saved_service_view.cpp.o
+[34/123] Building CXX object app/CMakeFiles/biglybtc_local_rating_profile.dir/__/adapters/local_rating.cpp.o
+[35/123] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o
+[36/123] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/biglybtc_i2p_provider_owner_autogen/mocs_compilation.cpp.o
+[37/123] Linking CXX static library services/libbiglybtc_azureus_owned_udp.a
+[38/123] Automatic MOC for target biglybtc_ui
+[39/123] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner_runtime_guard.cpp.o
+[40/123] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner.cpp.o
+[41/123] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/bridge.cpp.o
+[42/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/library_model.cpp.o
+[43/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/file_model.cpp.o
+[44/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/classic_filter.cpp.o
+[45/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/biglybtc_ui_autogen/mocs_compilation.cpp.o
+[46/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/classic_columns.cpp.o
+[47/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/saved_service_pages.cpp.o
+[48/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/engine_activity_history.cpp.o
+[49/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/engine_activity_view.cpp.o
+[50/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/statistics_page.cpp.o
+[51/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/history_view.cpp.o
+[52/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/history_week_view.cpp.o
+[53/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/library_window.cpp.o
+[54/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/history_month_view.cpp.o
+[55/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/saved_history_plot.cpp.o
+[56/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/history_range_view.cpp.o
+[57/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/overall_view.cpp.o
+[58/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/history_range_plot.cpp.o
+[59/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/native_activity_history.cpp.o
+[60/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/native_session_view.cpp.o
+[61/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/native_activity_view.cpp.o
+[62/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/runtime_metrics_view.cpp.o
+[63/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/manual_tag_view.cpp.o
+[64/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/country_statistics_view.cpp.o
+[65/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/tracker_statistics_view.cpp.o
+[66/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/azureus_statistics_view.cpp.o
+[67/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/cache_statistics_view.cpp.o
+[68/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/saved_speed_manager_view.cpp.o
+[69/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/saved_speed_map_widget.cpp.o
+[70/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/live_speed_manager_view.cpp.o
+[71/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/live_speed_map_widget.cpp.o
+[72/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/connections_history_view.cpp.o
+[73/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/owned_lookup_tree_widget.cpp.o
+[74/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/options_dialog.cpp.o
+[75/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/file_operation_dialog.cpp.o
+[76/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/torrent_creation_dialog.cpp.o
+[77/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/local_rating_dialog.cpp.o
+[78/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/torrent_intake_dialog.cpp.o
+[79/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/file_operation_sequence.cpp.o
+[80/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/i2p_statistics_view.cpp.o
+[81/123] Building CXX object app/CMakeFiles/biglybtc_source_rate_projection.dir/source_rate_projection.cpp.o
+[82/123] Building CXX object app/CMakeFiles/biglybtc_overall_service.dir/overall_statistics_service.cpp.o
+[83/123] Linking CXX static library app/libbiglybtc_scheduler_policy.a
+[84/123] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/scheduler_dialog.cpp.o
+[85/123] Building CXX object app/CMakeFiles/biglybtc_scheduler_service.dir/__/adapters/scheduler_service.cpp.o
+[86/123] Building CXX object app/CMakeFiles/biglybtc_scheduler_service.dir/__/adapters/scheduler_io.cpp.o
+[87/123] Building CXX object app/CMakeFiles/biglybtc_scheduler_service.dir/__/adapters/scheduler_xml.cpp.o
+[88/123] Linking CXX static library app/libbiglybtc_local_rating_profile.a
+[89/123] Linking CXX static library adapters/libbiglybtc_saved_service_view.a
+[90/123] Building CXX object app/CMakeFiles/biglybtc_scheduler_service.dir/__/adapters/scheduler_module.cpp.o
+[91/123] Linking CXX static library services/libbiglybtc_i2p_provider_owner.a
+[92/123] Linking CXX static library app/libbiglybtc_overall_service.a
+[93/123] Linking CXX static library app/libbiglybtc_source_rate_projection.a
+[94/123] Linking CXX static library app/libbiglybtc_scheduler_service.a
+[95/123] Building CXX object app/CMakeFiles/biglybtc_country_module.dir/__/plugins/BiglyBTC-plugin-azlocprov/location.cpp.o
+[96/123] Linking CXX static library ui/libbiglybtc_ui.a
+[97/123] Linking CXX shared module app/BiglyBTC-plugin-azlocprov.so
+[98/123] Building CXX object app/CMakeFiles/biglybtc_scheduler_module.dir/__/plugins/BiglyBTC-plugin-SpeedScheduler/module.cpp.o
+[99/123] Linking CXX shared module app/BiglyBTC-plugin-SpeedScheduler.so
+[100/123] Automatic MOC for target biglybtc-owned-i2p-source-tests
+[101/122] Building CXX object app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o
+[102/122] Linking CXX static library app/libbiglybtc_owned_azureus_service.a
+[103/122] Automatic MOC for target biglybtc_desktop_host
+[104/122] Building CXX object tests/CMakeFiles/biglybtc-owned-i2p-source-tests.dir/owned_i2p_source_tests.cpp.o
+[105/122] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/biglybtc_desktop_host_autogen/mocs_compilation.cpp.o
+[106/122] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/live_speed_mapper_binding.cpp.o
+[107/122] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/owned_dht_accounting.cpp.o
+[108/122] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/i2p_saved_settings.cpp.o
+[109/122] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/owned_i2p_service.cpp.o
+[110/122] Linking CXX executable tests/biglybtc-owned-i2p-source-tests
+[111/122] Building CXX object tests/CMakeFiles/biglybtc-i2p-host-transfer-probe.dir/i2p_host_transfer_probe.cpp.o
+[112/122] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/session_bridge.cpp.o

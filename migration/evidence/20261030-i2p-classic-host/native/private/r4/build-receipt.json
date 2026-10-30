@@ -1,0 +1,93 @@
+{
+  "status": "PASS",
+  "lane": "private",
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r4/configure.log",
+      "log_sha256": "ed9837629e71f487b660ee2d048893df1766b00bd09c517d52bde413a3010682"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-statistics-page-tests",
+        "biglybtc-statistics-navigation-page-tests",
+        "biglybtc-statistics-navigation-window-tests",
+        "biglybtc-i2p-host-transfer-probe"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r4/build.log",
+      "log_sha256": "1fd2993c67d03c3a588b29b3713d031585318aca257691e9ec4606294575f6bc"
+    },
+    {
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-R",
+        "^(i2p-classic-host|statistics-page-behavior|statistics-navigation-page|statistics-navigation-window-worker)$",
+        "--output-on-failure",
+        "--no-tests=error",
+        "-j",
+        "1"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r4/ctest.log",
+      "log_sha256": "b8a9a0a5db7fc173d45328fa00a5bece6635f3343add0ec58cd1e493bbc7f4e0"
+    }
+  ],
+  "source_map_sha256": "b0e6b0f3335f536c7d3be52529a1ab7e1c3240817abf3c89889340a323025243",
+  "images": {
+    "BiglyBTC": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/app/BiglyBTC",
+      "sha256": "5616763e399471d53f4a1fe8fb4337b646d3da6a6feb0a666794ad79e1070094",
+      "bytes": 13179584
+    },
+    "biglybtc-i2p-classic-host-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-classic-host-tests",
+      "sha256": "56c63999c4702ac820151eea88bbbb556af8bcb59aaf52b95c60ebc683caf17a",
+      "bytes": 13135632
+    },
+    "biglybtc-statistics-page-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-statistics-page-tests",
+      "sha256": "7b4dcced6c308aef88b67f9346c1efc985bed7d9a4fc054745162f1d3d7cd58f",
+      "bytes": 3140800
+    },
+    "biglybtc-statistics-navigation-page-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-statistics-navigation-page-tests",
+      "sha256": "ed39c0573663cb639164a220b229345b443e90eecd8a552a0d01e86a23d0c4b5",
+      "bytes": 3007528
+    },
+    "biglybtc-statistics-navigation-window-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-statistics-navigation-window-tests",
+      "sha256": "be49e9ff547fd3e687c275410274ce41eb90b42c78fea83bed1314e3d6bba5bf",
+      "bytes": 13163288
+    },
+    "biglybtc-i2p-host-transfer-probe": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-host-transfer-probe",
+      "sha256": "f307193c1bb5719df0301c7116e515ab0aa2ecc8c594bf9f51a38ac9c9cbf37e",
+      "bytes": 13150048
+    }
+  },
+  "elapsed_seconds": 73.77,
+  "source_commit": "c5fe6cec9003bdd690d0971df132d7321f6805c1",
+  "source_tree": "d11681e7e92258707ff8e8d3d5564e47515a5a7a"
+}

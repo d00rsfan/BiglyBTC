@@ -1,0 +1,22 @@
+{
+  "status": "FAIL",
+  "lane": "san",
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/san/r1/configure.log",
+      "log_sha256": "474661b63aebc96608af1bb8610c439d31148ccce34b619e0545c7134abd77e3"
+    }
+  ],
+  "source_map_sha256": "30743be4ed5708caff4142385c7c692bc72b03a6a08a839273d01e97fbe39dd7",
+  "failure": "Command '['nice', '-n', '5', 'cmake', '--build', '/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san', '--parallel', '3', '--target', 'BiglyBTC', 'biglybtc-i2p-classic-host-tests', 'biglybtc-owned-i2p-source-tests', 'biglybtc-i2p-host-transfer-probe']' timed out after 1000 seconds",
+  "elapsed_seconds": 1002.82
+}

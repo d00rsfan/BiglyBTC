@@ -1,0 +1,46 @@
+{
+  "status": "FAIL",
+  "lane": "private",
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r6/configure.log",
+      "log_sha256": "9aaedf441ec2c9fde75dd4f29ae925fa1d1d82cc7b2c9751a481bb89b0e3d7a2"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-statistics-page-tests",
+        "biglybtc-statistics-navigation-page-tests",
+        "biglybtc-statistics-navigation-window-tests",
+        "biglybtc-i2p-host-transfer-probe",
+        "biglybtc-torrent-intake-file-options-tests",
+        "biglybtc-torrent-intake-dialog-tests"
+      ],
+      "exit_code": 1,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r6/build.log",
+      "log_sha256": "a80fbadbfa93c9a390188301b064ecab8808bf6d84d1dae4b96fd7b41abba695"
+    }
+  ],
+  "source_map_sha256": "63a4ca74255579a00404cd2ec567c56dd4d0b3e31990abe9e6c5d4cf34a327bc",
+  "failure": "build failed",
+  "elapsed_seconds": 262.06
+}

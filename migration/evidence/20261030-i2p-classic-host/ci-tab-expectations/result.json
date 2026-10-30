@@ -1,0 +1,59 @@
+{
+  "status": "PASS",
+  "cache": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "commands": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "biglybtc-history-view-ui-tests",
+        "biglybtc-history-week-view-ui-tests",
+        "biglybtc-history-month-view-ui-tests",
+        "biglybtc-engine-activity-view-tests",
+        "biglybtc-manual-tag-window-tests",
+        "biglybtc-country-statistics-window-tests",
+        "biglybtc-azureus-statistics-channel-tests",
+        "biglybtc-live-speed-manager-channel-tests",
+        "biglybtc-startup-statistics-tests"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/ci-tab-expectations/build.log",
+      "log_sha256": "cae062fe75575e38bfb5ba1da41b1711686287565cf6b4159735f2f3d4a84f02"
+    },
+    {
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-R",
+        "^(saved-history-page|saved-history-week-page|saved-history-month-page|engine-activity-view|manual-tag-window|country-statistics-window|azureus-statistics-channel|live-speed-manager-channel|startup-statistics-worker)$",
+        "--output-on-failure",
+        "--no-tests=error",
+        "-j",
+        "1"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/ci-tab-expectations/ctest.log",
+      "log_sha256": "a4dcbc57aa0332cd364fdb040be494ef33fb5c690f5f336012907f014d1720c2"
+    }
+  ],
+  "images": {
+    "biglybtc-history-view-ui-tests": "aee8177ccf326263603538141f3eb3cf8cd3fa19491c31e884ec15d16b4f34c8",
+    "biglybtc-history-week-view-ui-tests": "77699f2fe7619ef4d570281b5c1cb67f963c2aeb171ec34945a06a7cdd5e8c90",
+    "biglybtc-history-month-view-ui-tests": "0c8295aa2643e814b4dd84779920823869a5d485f280e175de1ca30a97a0cf23",
+    "biglybtc-engine-activity-view-tests": "79bbe0b3e03e7cdf1643f5d85278c6089b469d8d6f5d38e16ea986600d6f265e",
+    "biglybtc-manual-tag-window-tests": "df1a0ab9d2673459c1589e0c4b508b39535c4dcfb739743805c3d87930f80bfe",
+    "biglybtc-country-statistics-window-tests": "1b99c8877da0aa68038795634a99646fcc7b0e7db39a624469e92e71c3ad1014",
+    "biglybtc-azureus-statistics-channel-tests": "8f4a87cf8cd6caddeb832e6fc8975898bd6428d19c7f94988c853cb112169a7d",
+    "biglybtc-live-speed-manager-channel-tests": "172a7b208c4ef000dbfbf93ac33d5e01b42a115095e621d016a7bb7b362cc17a",
+    "biglybtc-startup-statistics-tests": "c4e661b4120073b491b1a9b4febbc93a39480ddfe3fab0c6112619dd04831213"
+  },
+  "elapsed_seconds": 160.58
+}

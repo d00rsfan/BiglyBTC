@@ -1,0 +1,11 @@
+--- a/preview/native/tests/torrent_intake_i2p_tests.inc
++++ b/preview/native/tests/torrent_intake_i2p_tests.inc
+@@ -64,7 +64,7 @@
+     check(saved&&saved->paused.size()==1&&saved->paused[0].hash==*hash,"Original pause marker survives I2P transaction recovery");
+     check(read(area.input)==original&&read(area.profile/"torrents"/(hash->hex()+".torrent"))==original,"Recovery preserves exact archive/source bytes");
+   }
+-  for(const std::string& network:{"l6:Publice","l3:Tore","l3:I2P6:Publice","le","3:I2P"}){
++  for(const auto* network:{"l6:Publice","l3:Tore","l3:I2P6:Publice","le","3:I2P"}){
+     Area area;auto input=parse(original);auto attrs=parse(rawValue(input,"attributes"));
+     check(attrs.replaceValue("networks",network).has_value()&&input.replaceValue("attributes",attrs.serialize()).has_value(),"Own incompatible inherited network");
+     const auto bytes=input.serialize();write(area.input,bytes);const auto source=take(storage::inspectTorrentIntake(area.input));

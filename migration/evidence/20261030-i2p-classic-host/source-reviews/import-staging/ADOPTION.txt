@@ -1,0 +1,39 @@
+SOURCE ONLY. Four paths: two adapters, new storage regression include, and
+include+one call in existing torrent_intake_file_options_tests.cpp. No Host,
+CMake, engine, router, identity, payload authority or native source mutation.
+
+API: storage::TorrentIntakeNetwork {Public,I2p}. Both importTorrent and
+importTorrentWithFileOptions append network=Public; all prior source calls
+retain Public behavior. Sealed metadata friend signature matches the latter.
+Main passes I2p explicitly from its private-I2P context. Ordinary immediate
+start retains Waiting0; stopped retains70; paused still requires stopped.
+All-skipped normalizes to stopped/no force/no pause through the old builder.
+Host starts the genuine owner AFTER the atomic import, never inside storage.
+
+I2p refuses force/queue/verified-seeding/allocation, invalid enum, inherited
+non-I2P networks and inherited disabled/denied Tracker. A fresh absent network
+gets [I2P], absent peer sources get [Tracker]; other unknown attributes survive.
+Existing inventory/hash/alias conflicts keep their existing before-effects
+refusal. Default Public's exact old put(networks,[Public]) remains unchanged;
+Public aliases retain their previous no-reclassification behavior.
+
+Plan carries context through OPTIONAL top-level journal field network=I2P.
+Old/Public journals omit it byte-for-byte and decode as Public; present wrong
+type/value refuses instead of falling back. Recovery reuses the same ordinary
+atomic state/archive/inventory transaction, with no second saved-intent write.
+Raw info, unedited input/archive bytes, unknown metadata and temporary-torrent
+validation remain in the existing paths. Tracker URL support is checked by the
+real ProfileSource at start, not inferred as network/payload permission here.
+
+Tests: existing torrent-intake-file-options target/suite; no CMake change.
+Only include+call added to its old main; every prior method body is exact.
+New cases cover default vs explicit Public bytes, I2p stopped/immediate intent,
+all-skipped normalization, four durable-boundary recoveries with original pause
+markers/file choices, raw info/archive/unknown preservation, inherited-network
+and Tracker refusals, duplicate saved Public identity, bad accepted journal and
+unsupported force/queue/verification/allocation/enum. Owned temporary metadata
+and profiles only; no socket/key generation/provider/Java execution.
+
+Validation performed: exact current native beforeimages, manual API/journal
+flow review, original test source reconstruction, whitespace checks. No build
+or tests were executed. Root owns review/adoption/actual qualification.

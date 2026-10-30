@@ -1,0 +1,44 @@
+{
+  "status": "FAIL",
+  "lane": "private",
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r2/configure.log",
+      "log_sha256": "55bb44f73a63eb81de7daa5d17ef327d1924e504e8c8d720cca9b1b3a0e0a2b7"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-statistics-page-tests",
+        "biglybtc-statistics-navigation-page-tests",
+        "biglybtc-statistics-navigation-window-tests",
+        "biglybtc-i2p-host-transfer-probe"
+      ],
+      "exit_code": 1,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r2/build.log",
+      "log_sha256": "a1cb9e3833ba0999b7178e80203241c363e7d1eb7a956c402c081a72467877fb"
+    }
+  ],
+  "source_map_sha256": "ec789489efa0344cccf7412f8ba7daf65938167c4d13babbb9acc62b4c2cf573",
+  "failure": "build failed",
+  "elapsed_seconds": 91.53
+}

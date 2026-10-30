@@ -1,0 +1,31 @@
+[1/33] Automatic MOC for target biglybtc_ui
+[2/33] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_operations.cpp.o
+[3/33] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[4/33] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/torrent_intake.cpp.o
+[5/33] Linking CXX static library adapters/libbiglybtc_profile.a
+[6/33] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/magnet_intake.cpp.o
+[7/33] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_session.cpp.o
+[8/33] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/biglybtc_ui_autogen/mocs_compilation.cpp.o
+[9/33] Linking CXX static library engine/libbiglybtc_local_engine.a
+[10/33] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/torrent_intake_dialog.cpp.o
+[11/33] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/library_window.cpp.o
+[12/33] Linking CXX static library ui/libbiglybtc_ui.a
+[13/33] Automatic MOC for target biglybtc_desktop_host
+[14/33] Automatic MOC for target biglybtc-torrent-intake-dialog-tests
+[15/33] Building CXX object tests/CMakeFiles/biglybtc-torrent-intake-file-options-tests.dir/torrent_intake_file_options_tests.cpp.o
+[16/33] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/biglybtc_desktop_host_autogen/mocs_compilation.cpp.o
+[17/33] Building CXX object tests/CMakeFiles/biglybtc-torrent-intake-dialog-tests.dir/biglybtc-torrent-intake-dialog-tests_autogen/mocs_compilation.cpp.o
+[18/33] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/owned_i2p_service.cpp.o
+[19/33] Linking CXX executable tests/biglybtc-torrent-intake-file-options-tests
+[20/33] Building CXX object tests/CMakeFiles/biglybtc-torrent-intake-dialog-tests.dir/torrent_intake_dialog_tests.cpp.o
+[21/33] Linking CXX executable tests/biglybtc-torrent-intake-dialog-tests
+[22/33] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/session_bridge.cpp.o
+[23/33] Linking CXX static library app/libbiglybtc_desktop_host.a
+[24/33] Automatic MOC for target biglybtc-i2p-classic-host-tests
+[25/32] Automatic MOC for target biglybtc-library-commands-bridge-tests
+[26/31] Building CXX object app/CMakeFiles/BiglyBTC.dir/main_desktop.cpp.o
+[27/31] Linking CXX executable app/BiglyBTC
+[28/31] Building CXX object tests/CMakeFiles/biglybtc-i2p-classic-host-tests.dir/i2p_classic_host_tests.cpp.o
+[29/31] Linking CXX executable tests/biglybtc-i2p-classic-host-tests
+[30/31] Building CXX object tests/CMakeFiles/biglybtc-library-commands-bridge-tests.dir/library_commands_bridge_tests.cpp.o
+[31/31] Linking CXX executable tests/biglybtc-library-commands-bridge-tests

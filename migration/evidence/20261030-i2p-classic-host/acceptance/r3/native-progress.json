@@ -1,0 +1,26 @@
+{
+    "Host_busy": false,
+    "elapsed_ms": 25014,
+    "i2p": {
+        "download_rate": 0,
+        "failure": "",
+        "hash": "84821F338303FE225D8A8B53D8B69A44EEAE89EB",
+        "payload_downloaded": 0,
+        "payload_uploaded": 0,
+        "peers": 0,
+        "sequence": "29",
+        "session": "1",
+        "state": "Stopped — I2P",
+        "tracker_announces": "1",
+        "tracker_errors": "1",
+        "tracker_replies": "0",
+        "upload_rate": 0,
+        "verified_bytes": 131072
+    },
+    "row_completed": 131072,
+    "row_state": "Stopped",
+    "seed_phase": 2,
+    "seed_seeding": true,
+    "seed_verified_bytes": 131072,
+    "stage": 12
+}

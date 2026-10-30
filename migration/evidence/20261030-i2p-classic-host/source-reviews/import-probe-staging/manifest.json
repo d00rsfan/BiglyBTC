@@ -1,0 +1,35 @@
+{
+  "status": "SOURCE_ONLY_STAGED_NOT_EXECUTED",
+  "source_paths": {
+    "preview/native/tests/i2p_host_transfer_probe.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-probe-staging/before.cpp",
+      "before_sha256": "facd900d17e083c3d993628e43c2e14d2d167c68e08bef0a7c7ab6dfe225082a",
+      "after_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-probe-staging/i2p_host_transfer_probe.cpp",
+      "after_sha256": "54e1d1d14e702c1be2dd4ead6d7e841fee84d1a40d2200b85ec2f6370667da03"
+    }
+  },
+  "artifacts": {
+    "i2p_host_transfer_probe.cpp": {
+      "sha256": "54e1d1d14e702c1be2dd4ead6d7e841fee84d1a40d2200b85ec2f6370667da03",
+      "bytes": 32885
+    },
+    "before.cpp": {
+      "sha256": "facd900d17e083c3d993628e43c2e14d2d167c68e08bef0a7c7ab6dfe225082a",
+      "bytes": 25281
+    },
+    "changes.patch": {
+      "sha256": "08f8e68d9b283c329060da598aaca9d728c65eef2687e0ce2be98571ab90b557",
+      "bytes": 12913
+    },
+    "ADOPTION.txt": {
+      "sha256": "96493b8b293cf5ae72f9a341be0eda13680feb60a0f3680702929bff08f1f4ba",
+      "bytes": 2272
+    }
+  },
+  "required_ui_manifest_sha256": "dcfdf54c6e9cc09e5ff6e2d26b87b468a720d3c15367e3e87435cdad26a15198",
+  "new_outputs": [
+    "/work/input.torrent"
+  ],
+  "new_pass_field": "original-compatible-I2P-UI-import",
+  "native_tree_or_current_recipe_mutated": false
+}

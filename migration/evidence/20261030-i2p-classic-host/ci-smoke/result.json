@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "commands": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "biglybtc-preview-smoke"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/ci-smoke/build.log",
+      "log_sha256": "8c35b1682f73592d30612d7b0fabdb384fcfff35cb5a076cb48b85b1368aa794"
+    },
+    {
+      "argv": [
+        "python3",
+        "/home/yurii/Java/BiglyBTC/preview/native/packaging/preview.py",
+        "--prepare",
+        "/tmp/biglybtc-preview-535aaa81cec2486da9de6025e3674ede"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/ci-smoke/prepare.log",
+      "log_sha256": "f8f90b5b730cf4addf6d431494b639e6529f3cd496ccc5ceb49c8f4858a9918d"
+    },
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke",
+        "-o",
+        "-,txt"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/ci-smoke/smoke.log",
+      "log_sha256": "244850bc7f4d226bac3c0bfc43ae3e4ff7a157b2bcf4de9eea20bfd572c412f1"
+    }
+  ],
+  "smoke_sha256": "26d70aa2bdda33f54f18a56c471a3e4fa836afefede0c2c400254c2bd818536e",
+  "source_sha256": "e6abe3768751c7110a6eee87db6ceb07f65b218b1d43256fecab0a7fc07a01d7",
+  "owned_temporary_fixture_removed": true,
+  "elapsed_seconds": 10.6
+}

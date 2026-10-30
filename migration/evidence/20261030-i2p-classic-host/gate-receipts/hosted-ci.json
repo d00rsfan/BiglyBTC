@@ -1,0 +1,22 @@
+{
+  "source_commit": "e9546f9893ac9c23086842a49ec4d624c8af5900",
+  "runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 41088043868,
+      "name": "Native plugin SDK contract",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41088043868"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 41088043263,
+      "name": "Native desktop preview unit and smoke tests",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41088043263"
+    }
+  ],
+  "updated_utc": "2026-10-30T16:33:55.861831+00:00",
+  "current_steps": [],
+  "status": "PASS"
+}

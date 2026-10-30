@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "reason": "Sandbox denied loopback listen in initial check; repeat unchanged test with owned loopback access",
+  "commands": [
+    {
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-R",
+        "^owned-i2p-profile-source$",
+        "--output-on-failure",
+        "--no-tests=error"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r3/owned-source-test-loopback.log",
+      "log_sha256": "f0127021583854bc86d9fa300c5d2dd2613b26a8f29a9b15467bd8c0fb66a082"
+    }
+  ]
+}

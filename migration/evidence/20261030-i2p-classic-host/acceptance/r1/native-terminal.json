@@ -1,0 +1,6 @@
+{
+    "elapsed_ms": 6415,
+    "intended_success": false,
+    "phase": "before-finish-shutdown",
+    "reason": "Host I2P service reported failure"
+}

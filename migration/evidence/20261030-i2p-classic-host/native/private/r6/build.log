@@ -1,0 +1,30 @@
+[1/38] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_operations.cpp.o
+[2/38] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[3/38] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/torrent_intake.cpp.o
+[4/38] Linking CXX static library adapters/libbiglybtc_profile.a
+[5/38] Automatic MOC for target biglybtc_ui
+[6/38] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/magnet_intake.cpp.o
+[7/38] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_session.cpp.o
+[8/38] Linking CXX static library engine/libbiglybtc_local_engine.a
+[9/38] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner_runtime_guard.cpp.o
+[10/38] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/biglybtc_ui_autogen/mocs_compilation.cpp.o
+[11/38] Linking CXX static library services/libbiglybtc_i2p_provider_owner.a
+[12/38] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/torrent_intake_dialog.cpp.o
+[13/38] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/library_window.cpp.o
+[14/38] Linking CXX static library ui/libbiglybtc_ui.a
+[15/38] Automatic MOC for target biglybtc_desktop_host
+[16/38] Automatic MOC for target biglybtc-torrent-intake-dialog-tests
+[17/38] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/biglybtc_desktop_host_autogen/mocs_compilation.cpp.o
+[18/38] Building CXX object tests/CMakeFiles/biglybtc-torrent-intake-file-options-tests.dir/torrent_intake_file_options_tests.cpp.o
+FAILED: [code=1] tests/CMakeFiles/biglybtc-torrent-intake-file-options-tests.dir/torrent_intake_file_options_tests.cpp.o 
+/usr/bin/g++-16 -DBOOST_ASIO_ENABLE_CANCELIO -DBOOST_ASIO_NO_DEPRECATED -DOPENSSL_NO_DTLS1 -DOPENSSL_NO_SSL2 -DOPENSSL_NO_SSL3 -DOPENSSL_NO_TLS1 -DOPENSSL_NO_TLS1_1 -DTORRENT_EXPORT_EXTRA -DTORRENT_LINKING_SHARED -DTORRENT_SSL_PEERS -DTORRENT_USE_LIBCRYPTO -DTORRENT_USE_OPENSSL -I/home/yurii/Java/BiglyBTC/preview/native/adapters -I/home/yurii/Java/BiglyBTC/preview/native/core/include -I/home/yurii/Java/BiglyBTC/plugin-sdk/include -isystem /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/install/include -isystem /home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include -O3 -DNDEBUG -std=c++23 -Wall -Wextra -Wpedantic -Werror -fexceptions -MD -MT tests/CMakeFiles/biglybtc-torrent-intake-file-options-tests.dir/torrent_intake_file_options_tests.cpp.o -MF tests/CMakeFiles/biglybtc-torrent-intake-file-options-tests.dir/torrent_intake_file_options_tests.cpp.o.d -o tests/CMakeFiles/biglybtc-torrent-intake-file-options-tests.dir/torrent_intake_file_options_tests.cpp.o -c /home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_file_options_tests.cpp
+In file included from /home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_file_options_tests.cpp:481:
+/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_i2p_tests.inc: In function ‘void {anonymous}::i2pNetworkContexts()’:
+/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_i2p_tests.inc:67:26: error: loop variable ‘network’ of type ‘const std::string&’ {aka ‘const std::__cxx11::basic_string<char>&’} binds to a temporary constructed from type ‘const char* const’ [-Werror=range-loop-construct]
+   67 |   for(const std::string& network:{"l6:Publice","l3:Tore","l3:I2P6:Publice","le","3:I2P"}){
+      |                          ^~~~~~~
+/home/yurii/Java/BiglyBTC/preview/native/tests/torrent_intake_i2p_tests.inc:67:26: note: use non-reference type ‘const std::string’ {aka ‘const std::__cxx11::basic_string<char>’} to make the copy explicit or ‘const char* const&’ to prevent copying
+cc1plus: all warnings being treated as errors
+[19/38] Building CXX object tests/CMakeFiles/biglybtc-i2p-host-transfer-probe.dir/i2p_host_transfer_probe.cpp.o
+[20/38] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/session_bridge.cpp.o
+ninja: build stopped: subcommand failed.

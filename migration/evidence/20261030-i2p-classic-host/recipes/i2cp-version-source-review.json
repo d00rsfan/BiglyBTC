@@ -1,0 +1,29 @@
+{
+  "status": "SOURCE_CONFIRMED_I2CP_CAPABILITY_VERSION_MISMATCH",
+  "execution": "Read-only source and javap class metadata; no source changes, compiler, router, subject, network or build execution",
+  "reference_jar": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+    "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+    "classes_sha256": {
+      "net/i2p/router/client/RequestLeaseSetJob.class": "725fcdcd247d8826db4f6de7dbdbee4e46d0f9eec77b461a74137d8b2fa1dfd8",
+      "net/i2p/data/i2cp/RequestVariableLeaseSetMessage.class": "930a76cb2841e49b78d237097b747fe357426a7d0b198eaba06a2731fcd232ed"
+    }
+  },
+  "files_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/original-source/router/java/src/net/i2p/router/client/ClientMessageEventListener.java": "58df866c1edd70e1220fe9bf92508ede3bb1c230c17bb2b3e01ce6724681a674",
+    "/home/yurii/Java/BiglyBT/build/i2cp-leaseset2-20261029/original-source/core/java/src/net/i2p/data/i2cp/RequestVariableLeaseSetMessage.java": "d36665dac75cf814fbee0de6b12915e6d0c29cb76ea0e4711b5e54674ba73571",
+    "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029/original-source/core/java/src/net/i2p/client/impl/I2PSessionImpl.java": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+    "/home/yurii/Java/BiglyBTC/preview/native/app/owned_i2p_service.cpp": "da33fe8e12d7887584b036eea1609016bf225fa95ca603a8774c13963673a729",
+    "/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_channel/channel.cpp": "760989895b7b531f22d0629fd4dbd9f48d07f84da62ab0df12de17dbc88b707d",
+    "/home/yurii/Java/BiglyBTC/preview/native/services/i2cp/protocol.cpp": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672"
+  },
+  "facts": [
+    "ClientMessageEventListener.handleGetDate stores GetDate.version in runner.clientVersion (original lines192\u2013197).",
+    "Actual modified RequestLeaseSetJob.runJob offsets172\u2013192 choose RequestVariableLeaseSetMessage37 only for queued internal clients or isSupported(clientVersion); offsets302+ otherwise create legacy RequestLeaseSetMessage21.",
+    "Original and actual modified RequestVariableLeaseSetMessage.isSupported require nonnull clientVersion >=0.9.7.",
+    "Service advertises0.1.0; native channel only handles RequestVariableLeaseSet37, then generic decoder rejects unsupported legacy21.",
+    "Original Java I2PSessionImpl sends CoreVersion.PUBLISHED_VERSION (0.9.70), confirming this is I2CP compatibility negotiation rather than native application version.",
+    "Existing successful direct native provider probe advertises2.13.0."
+  ],
+  "recommendation": "Restore service GetDate compatibility version2.13.0, matching already-qualified native provider path; keep application0.1.0 separate. This source proof identifies a deterministic incompatibility; actual failure diagnostics may still be recorded before runtime causality claim."
+}

@@ -1,0 +1,6 @@
+{
+    "elapsed_ms": 150015,
+    "intended_success": false,
+    "phase": "before-finish-shutdown",
+    "reason": "Absolute Host/UI transfer/lifecycle budget exceeded"
+}

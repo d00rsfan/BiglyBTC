@@ -1,0 +1,25 @@
+[1/28] Automatic MOC for target biglybtc_ui
+[2/27] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[3/27] Linking CXX static library engine/libbiglybtc_local_engine.a
+[4/27] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner_runtime_guard.cpp.o
+[5/27] Linking CXX static library services/libbiglybtc_i2p_provider_owner.a
+[6/27] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/torrent_intake_dialog.cpp.o
+[7/27] Linking CXX static library ui/libbiglybtc_ui.a
+[8/27] Linking CXX static library app/libbiglybtc_desktop_host.a
+[9/27] Automatic MOC for target biglybtc-torrent-intake-dialog-tests
+[10/27] Automatic MOC for target biglybtc-statistics-navigation-window-tests
+[11/26] Automatic MOC for target biglybtc-i2p-classic-host-tests
+[12/25] Building CXX object app/CMakeFiles/BiglyBTC.dir/main_desktop.cpp.o
+[13/25] Building CXX object tests/CMakeFiles/biglybtc-torrent-intake-dialog-tests.dir/biglybtc-torrent-intake-dialog-tests_autogen/mocs_compilation.cpp.o
+[14/25] Building CXX object tests/CMakeFiles/biglybtc-torrent-intake-file-options-tests.dir/torrent_intake_file_options_tests.cpp.o
+[15/25] Building CXX object tests/CMakeFiles/biglybtc-statistics-navigation-window-tests.dir/statistics_navigation_window_tests.cpp.o
+[16/25] Linking CXX executable app/BiglyBTC
+[17/25] Linking CXX executable tests/biglybtc-statistics-page-tests
+[18/25] Linking CXX executable tests/biglybtc-statistics-navigation-page-tests
+[19/25] Linking CXX executable tests/biglybtc-statistics-navigation-window-tests
+[20/25] Linking CXX executable tests/biglybtc-torrent-intake-file-options-tests
+[21/25] Linking CXX executable tests/biglybtc-i2p-host-transfer-probe
+[22/25] Building CXX object tests/CMakeFiles/biglybtc-i2p-classic-host-tests.dir/i2p_classic_host_tests.cpp.o
+[23/25] Linking CXX executable tests/biglybtc-i2p-classic-host-tests
+[24/25] Building CXX object tests/CMakeFiles/biglybtc-torrent-intake-dialog-tests.dir/torrent_intake_dialog_tests.cpp.o
+[25/25] Linking CXX executable tests/biglybtc-torrent-intake-dialog-tests

@@ -1,0 +1,153 @@
+[1/130] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[2/130] Linking CXX static library engine/libbiglybtc_local_engine.a
+[3/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_dht/headers.cpp.o
+[4/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_positions/positions.cpp.o
+[5/130] Building CXX object services/CMakeFiles/biglybtc_azureus_control.dir/azureus_control/lookup.cpp.o
+[6/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_ping/options.cpp.o
+[7/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_contacts/contacts.cpp.o
+[8/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_values/values.cpp.o
+[9/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_nodes/nodes.cpp.o
+[10/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_packets/ping.cpp.o
+[11/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_find_value/find_value.cpp.o
+[12/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_find_node/find_node.cpp.o
+[13/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_store/store.cpp.o
+[14/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_error/error.cpp.o
+[15/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_auth/authority.cpp.o
+[16/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_store_policy/store_policy.cpp.o
+[17/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_value/db_value.cpp.o
+[18/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_router/router.cpp.o
+[19/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_runtime/database.cpp.o
+[20/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_mapping/mapping.cpp.o
+[21/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_runtime/storage_stats.cpp.o
+[22/130] Linking CXX static library services/libbiglybtc_azureus_control.a
+[23/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_db_runtime/storage_diversification.cpp.o
+[24/130] Building CXX object plugins/BiglyBTC-plugin-azrating/CMakeFiles/biglybtc_rating_data.dir/rating_data.cpp.o
+[25/130] Building CXX object plugins/BiglyBTC-plugin-azrating/CMakeFiles/biglybtc_rating_data.dir/local_rating.cpp.o
+[26/130] Linking CXX static library plugins/BiglyBTC-plugin-azrating/libbiglybtc_rating_data.a
+[27/130] Building CXX object app/CMakeFiles/biglybtc_scheduler_policy.dir/__/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.cpp.o
+[28/130] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o
+[29/130] Linking CXX static library services/libbiglybtc_azureus_owned_udp.a
+[30/130] Building CXX object services/CMakeFiles/biglybtc_owned_i2p_source.dir/i2p_provider/profile_source.cpp.o
+[31/130] Linking CXX static library services/libbiglybtc_owned_i2p_source.a
+[32/130] Automatic MOC for target biglybtc_i2p_provider_owner
+[33/130] Building CXX object app/CMakeFiles/biglybtc_scheduler_policy.dir/__/plugins/BiglyBTC-plugin-SpeedScheduler/original_xml.cpp.o
+[34/130] Building CXX object app/CMakeFiles/biglybtc_scheduler_policy.dir/__/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.cpp.o
+[35/130] Building CXX object adapters/CMakeFiles/biglybtc_saved_service_view.dir/saved_service_view.cpp.o
+[36/130] Building CXX object app/CMakeFiles/biglybtc_local_rating_profile.dir/__/adapters/local_rating.cpp.o
+[37/130] Automatic MOC for target biglybtc_ui
+[38/130] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/biglybtc_i2p_provider_owner_autogen/mocs_compilation.cpp.o
+[39/130] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner_runtime_guard.cpp.o
+[40/130] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/bridge.cpp.o
+[41/130] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner.cpp.o
+[42/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/library_model.cpp.o
+[43/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/biglybtc_ui_autogen/mocs_compilation.cpp.o
+[44/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/file_model.cpp.o
+[45/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/classic_filter.cpp.o
+[46/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/saved_service_pages.cpp.o
+[47/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/classic_columns.cpp.o
+[48/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/engine_activity_history.cpp.o
+[49/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/library_window.cpp.o
+[50/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/statistics_page.cpp.o
+[51/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/engine_activity_view.cpp.o
+[52/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/history_view.cpp.o
+[53/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/history_week_view.cpp.o
+[54/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/history_month_view.cpp.o
+[55/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/saved_history_plot.cpp.o
+[56/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/history_range_view.cpp.o
+[57/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/history_range_plot.cpp.o
+[58/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/overall_view.cpp.o
+[59/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/native_activity_history.cpp.o
+[60/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/native_session_view.cpp.o
+[61/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/native_activity_view.cpp.o
+[62/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/runtime_metrics_view.cpp.o
+[63/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/manual_tag_view.cpp.o
+[64/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/country_statistics_view.cpp.o
+[65/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/tracker_statistics_view.cpp.o
+[66/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/cache_statistics_view.cpp.o
+[67/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/azureus_statistics_view.cpp.o
+[68/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/saved_speed_manager_view.cpp.o
+[69/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/saved_speed_map_widget.cpp.o
+[70/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/live_speed_manager_view.cpp.o
+[71/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/live_speed_map_widget.cpp.o
+[72/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/connections_history_view.cpp.o
+[73/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/owned_lookup_tree_widget.cpp.o
+[74/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/options_dialog.cpp.o
+[75/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/file_operation_dialog.cpp.o
+[76/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/torrent_creation_dialog.cpp.o
+[77/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/local_rating_dialog.cpp.o
+[78/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/torrent_intake_dialog.cpp.o
+[79/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/file_operation_sequence.cpp.o
+[80/130] Building CXX object app/CMakeFiles/biglybtc_overall_service.dir/overall_statistics_service.cpp.o
+[81/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/i2p_statistics_view.cpp.o
+[82/130] Building CXX object app/CMakeFiles/biglybtc_source_rate_projection.dir/source_rate_projection.cpp.o
+[83/130] Linking CXX static library app/libbiglybtc_scheduler_policy.a
+[84/130] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/scheduler_dialog.cpp.o
+[85/130] Building CXX object app/CMakeFiles/biglybtc_scheduler_service.dir/__/adapters/scheduler_service.cpp.o
+[86/130] Building CXX object app/CMakeFiles/biglybtc_scheduler_service.dir/__/adapters/scheduler_io.cpp.o
+[87/130] Building CXX object app/CMakeFiles/biglybtc_scheduler_service.dir/__/adapters/scheduler_xml.cpp.o
+[88/130] Linking CXX static library app/libbiglybtc_local_rating_profile.a
+[89/130] Linking CXX static library adapters/libbiglybtc_saved_service_view.a
+[90/130] Building CXX object app/CMakeFiles/biglybtc_scheduler_service.dir/__/adapters/scheduler_module.cpp.o
+[91/130] Linking CXX static library services/libbiglybtc_i2p_provider_owner.a
+[92/130] Linking CXX static library app/libbiglybtc_overall_service.a
+[93/130] Linking CXX static library app/libbiglybtc_source_rate_projection.a
+[94/130] Linking CXX static library app/libbiglybtc_scheduler_service.a
+[95/130] Linking CXX static library ui/libbiglybtc_ui.a
+[96/130] Building CXX object app/CMakeFiles/biglybtc_scheduler_module.dir/__/plugins/BiglyBTC-plugin-SpeedScheduler/module.cpp.o
+[97/130] Linking CXX shared module app/BiglyBTC-plugin-SpeedScheduler.so
+[98/130] Building CXX object app/CMakeFiles/biglybtc_country_module.dir/__/plugins/BiglyBTC-plugin-azlocprov/location.cpp.o
+[99/130] Linking CXX shared module app/BiglyBTC-plugin-azlocprov.so
+[100/130] Building CXX object app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o
+[101/130] Automatic MOC for target biglybtc-statistics-page-tests
+[102/130] Building CXX object tests/CMakeFiles/biglybtc-statistics-page-tests.dir/biglybtc-statistics-page-tests_autogen/mocs_compilation.cpp.o
+[103/130] Linking CXX static library app/libbiglybtc_owned_azureus_service.a
+[104/130] Automatic MOC for target biglybtc_desktop_host
+[105/130] Automatic MOC for target biglybtc-statistics-navigation-page-tests
+[106/130] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/biglybtc_desktop_host_autogen/mocs_compilation.cpp.o
+[107/130] Building CXX object tests/CMakeFiles/biglybtc-statistics-page-tests.dir/statistics_page_tests.cpp.o
+[108/130] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/live_speed_mapper_binding.cpp.o
+[109/130] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/owned_dht_accounting.cpp.o
+[110/130] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/owned_i2p_service.cpp.o
+[111/130] Building CXX object tests/CMakeFiles/biglybtc-statistics-navigation-page-tests.dir/biglybtc-statistics-navigation-page-tests_autogen/mocs_compilation.cpp.o
+[112/130] Building CXX object tests/CMakeFiles/biglybtc-i2p-host-transfer-probe.dir/i2p_host_transfer_probe.cpp.o
+FAILED: [code=1] tests/CMakeFiles/biglybtc-i2p-host-transfer-probe.dir/i2p_host_transfer_probe.cpp.o 
+/usr/bin/g++-16 -DBIGLYBTC_HOST_I2P_OWNER=1 -DBOOST_ASIO_ENABLE_CANCELIO -DBOOST_ASIO_NO_DEPRECATED -DOPENSSL_NO_DTLS1 -DOPENSSL_NO_SSL2 -DOPENSSL_NO_SSL3 -DOPENSSL_NO_TLS1 -DOPENSSL_NO_TLS1_1 -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -DQT_TESTCASE_BUILDDIR=\"/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests\" -DQT_TESTCASE_SOURCEDIR=\"/home/yurii/Java/BiglyBTC/preview/native/tests\" -DQT_TESTLIB_LIB -DQT_WIDGETS_LIB -DTORRENT_EXPORT_EXTRA -DTORRENT_LINKING_SHARED -DTORRENT_SSL_PEERS -DTORRENT_USE_LIBCRYPTO -DTORRENT_USE_OPENSSL -I/home/yurii/Java/BiglyBTC/preview/native/app -I/home/yurii/Java/BiglyBTC/preview/native/core/include -I/home/yurii/Java/BiglyBTC/preview/native/ui -I/home/yurii/Java/BiglyBTC/preview/native/app/../plugins/BiglyBTC-plugin-SpeedScheduler -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_dht -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_ping -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_positions -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_contacts -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_nodes -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_values -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_packets -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_node -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_value -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_error -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_auth -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store_policy -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_router -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_value -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_mapping -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_runtime -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_control -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_provider -I/home/yurii/Java/BiglyBTC/preview/native/engine -I/home/yurii/Java/BiglyBTC/preview/native/adapters -I/home/yurii/Java/BiglyBTC/plugin-sdk/include -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_datagram -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_client -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_channel -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_session -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_datagram -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_tracker -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_streaming -isystem /opt/Qt/6.12.0/gcc_64/include/QtWidgets -isystem /opt/Qt/6.12.0/gcc_64/include -isystem /opt/Qt/6.12.0/gcc_64/include/QtCore -isystem /opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++ -isystem /opt/Qt/6.12.0/gcc_64/include/QtGui -isystem /opt/Qt/6.12.0/gcc_64/include/QtNetwork -isystem /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/install/include -isystem /home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include -isystem /opt/Qt/6.12.0/gcc_64/include/QtTest -O3 -DNDEBUG -std=c++23 -Wall -Wextra -Wpedantic -Werror -fPIC -fexceptions -MD -MT tests/CMakeFiles/biglybtc-i2p-host-transfer-probe.dir/i2p_host_transfer_probe.cpp.o -MF tests/CMakeFiles/biglybtc-i2p-host-transfer-probe.dir/i2p_host_transfer_probe.cpp.o.d -o tests/CMakeFiles/biglybtc-i2p-host-transfer-probe.dir/i2p_host_transfer_probe.cpp.o -c /home/yurii/Java/BiglyBTC/preview/native/tests/i2p_host_transfer_probe.cpp
+/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_host_transfer_probe.cpp: In lambda function:
+/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_host_transfer_probe.cpp:254:79: error: conversion from ‘const int64_t’ {aka ‘const long int’} to ‘const QJsonValue’ is ambiguous
+  254 |           {"seed_phase",static_cast<int>(sa.phase)},{"seed_verified_bytes",sa.verifiedBytes},{"seed_seeding",sa.seeding},
+      |                                                                            ~~~^~~~~~~~~~~~~
+  • there are 4 candidates
+In file included from /opt/Qt/6.12.0/gcc_64/include/QtCore/qjsonobject.h:8,
+                 from /opt/Qt/6.12.0/gcc_64/include/QtCore/QJsonObject:1,
+                 from /home/yurii/Java/BiglyBTC/preview/native/tests/i2p_host_transfer_probe.cpp:27:
+    • candidate 1: ‘QJsonValue::QJsonValue(qint64)’
+      /opt/Qt/6.12.0/gcc_64/include/QtCore/qjsonvalue.h:55:5:
+         55 |     QJsonValue(qint64 v);
+            |     ^~~~~~~~~~
+    • candidate 2: ‘QJsonValue::QJsonValue(int)’
+      /opt/Qt/6.12.0/gcc_64/include/QtCore/qjsonvalue.h:54:5:
+         54 |     QJsonValue(int n);
+            |     ^~~~~~~~~~
+    • candidate 3: ‘QJsonValue::QJsonValue(double)’
+      /opt/Qt/6.12.0/gcc_64/include/QtCore/qjsonvalue.h:53:5:
+         53 |     QJsonValue(double n);
+            |     ^~~~~~~~~~
+    • candidate 4: ‘QJsonValue::QJsonValue(bool)’
+      /opt/Qt/6.12.0/gcc_64/include/QtCore/qjsonvalue.h:52:5:
+         52 |     QJsonValue(bool b);
+            |     ^~~~~~~~~~
+In file included from /usr/include/c++/16/bits/stl_tempbuf.h:62,
+                 from /usr/include/c++/16/memory:68,
+                 from /home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/bencode.hpp:6,
+                 from /home/yurii/Java/BiglyBTC/preview/native/engine/network_policy.hpp:3,
+                 from /home/yurii/Java/BiglyBTC/preview/native/engine/owned_i2p_policy.hpp:3,
+                 from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_provider/profile_source.hpp:3,
+                 from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_provider/bridge.hpp:3,
+                 from /home/yurii/Java/BiglyBTC/preview/native/services/i2p_provider/owner.hpp:3,
+                 from /home/yurii/Java/BiglyBTC/preview/native/tests/i2p_host_transfer_probe.cpp:3:
+/usr/include/c++/16/bits/stl_pair.h:448:56: note: initializing argument 2 of ‘constexpr std::pair<_T1, _T2>::pair(std::type_identity_t<_T1>&, const _T2&) requires  _S_constructible<const _T1&, const _T2&>() [with _T1 = QString; _T2 = QJsonValue; std::type_identity_t<_T1> = QString]’
+  448 |       pair(const type_identity_t<_T1>& __x, const _T2& __y)
+      |                                             ~~~~~~~~~~~^~~
+[113/130] Building CXX object tests/CMakeFiles/biglybtc-statistics-navigation-page-tests.dir/statistics_navigation_page_tests.cpp.o
+[114/130] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/session_bridge.cpp.o
+ninja: build stopped: subcommand failed.

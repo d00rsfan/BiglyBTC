@@ -1,0 +1,9 @@
+{
+  "status": "PASS_BUNDLED_APPLICATION_USAGE_NO_PROFILE_OPENED",
+  "argv": [
+    "/home/yurii/Java/BiglyBTC/dist-i2p/BiglyBTC"
+  ],
+  "exit_code": 2,
+  "log_sha256": "3f0a33796a45b6bb85bbf688c16ffca7844d316a2cbe772a1176db19ad946702",
+  "scope": "Relocated application and linked bundle dependencies launch; deliberately no profile/GUI/router admission. Actual Host/UI tested separately with exact same application bytes."
+}

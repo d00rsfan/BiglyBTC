@@ -3,3 +3,5 @@
 /CMakeUserPresets.json
 **/__pycache__/
 *.pyc
+
+/dist-i2p/

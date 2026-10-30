@@ -1,0 +1,22 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+    Start  70: statistics-page-behavior
+1/4 Test  #70: statistics-page-behavior ..............   Passed   12.22 sec
+    Start  71: statistics-navigation-page
+2/4 Test  #71: statistics-navigation-page ............   Passed    7.25 sec
+    Start  72: statistics-navigation-window-worker
+3/4 Test  #72: statistics-navigation-window-worker ...   Passed   11.86 sec
+    Start 307: i2p-classic-host
+4/4 Test #307: i2p-classic-host ......................   Passed    0.77 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+classic-ui    =   0.77 sec*proc (1 test)
+config        =  12.22 sec*proc (1 test)
+i2p           =   0.77 sec*proc (1 test)
+navigation    =  19.11 sec*proc (2 tests)
+statistics    =  31.33 sec*proc (3 tests)
+ui            =  31.33 sec*proc (3 tests)
+unit          =  32.10 sec*proc (4 tests)
+
+Total Test time (real) =  32.12 sec

@@ -1,0 +1,21 @@
+SOURCE ONLY: no N edits, builds, imports, Java/router/network subjects.
+
+R4 reached real imported transfer completion but waits at Statistics. Existing
+progress omitted every distinguishing gate, so the actual cause is not asserted.
+The normal Desktop statistics request+response connections are present and their
+session/request correlation has no source contradiction.
+
+One fixture timing seam: after using a real modal intake, the transfer callback
+requests main-window activation then immediately sends Ctrl5 before returning to
+Qt. The staged test waits for actual main activeWindow/isActiveWindow and no
+active modal widget before sending its one real Ctrl5 key. It still requires the
+actual shortcut, current statistics page, matched request+response and Host I2P
+packet/labels before screenshot. No QAction-trigger fallback/retry, request
+fabrication, extra metadata query, predicate relaxation or deadline increase.
+
+Latest-only progress adds fixed key/shortcut/delivery flags, request/response
+counts and IDs, page existence/current and active-window/modal booleans. No
+payload/key/capability bytes or private profile are exposed. This separates
+focus/shortcut/request/response/page causes on the next actual run. Actual
+cause attribution remains pending those fields; the activation fence is a
+source-justified fixture correction, not credited runtime success.

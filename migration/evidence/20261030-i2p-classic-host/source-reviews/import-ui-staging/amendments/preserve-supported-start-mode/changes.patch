@@ -1,0 +1,56 @@
+--- a/preview/native/ui/torrent_intake_dialog.cpp
++++ b/preview/native/ui/torrent_intake_dialog.cpp
+@@ -269,9 +269,13 @@
+   const auto session=session_;const auto frame=preview_;QPointer<TorrentIntakeDialog> guard(this);
+   QPointer<QComboBox> mode=startMode_;if(!mode||!network_){return false;}
+   const auto current=[&]{return guard&&session_==session&&preview_==frame&&mode&&startMode_==mode&&network_;};
++  bool validMode=false;const auto previous=mode->currentData().toInt(&validMode);
++  const bool supported=validMode&&(previous==static_cast<int>(TorrentIntakeStartMode::Queued)
++      ||previous==static_cast<int>(TorrentIntakeStartMode::Stopped)||previous==static_cast<int>(TorrentIntakeStartMode::Paused));
++  const auto selected=supported?previous:static_cast<int>(TorrentIntakeStartMode::Stopped);
+   {
+-    // Changing worker-derived context resets the draft mode. Block Qt's
+-    // synchronous index/text callbacks until all combo mutations return.
++    // Preserve supported user intent across worker-derived context changes.
++    // Unsupported modes fall back to Stopped. Block synchronous Qt callbacks.
+     QSignalBlocker blocked(mode.data());
+     const auto alive=[&]{if(!mode){blocked.dismiss();}return current();};
+     mode->setItemText(0,i2pOnly?tr("Start now"):tr("Queued"));if(!alive()){return false;}
+@@ -284,7 +288,7 @@
+       mode->addItem(tr("Allocate, then stop"),static_cast<int>(TorrentIntakeStartMode::AllocateStopped));if(!alive()){return false;}
+       mode->addItem(tr("Allocate, then pause"),static_cast<int>(TorrentIntakeStartMode::AllocatePaused));if(!alive()){return false;}
+     }
+-    mode->setCurrentIndex(0);if(!alive()){return false;}
++    mode->setCurrentIndex(mode->findData(selected));if(!alive()){return false;}
+   }
+   i2pContext_=i2pOnly;
+   mode->setToolTip(i2pOnly?tr("Start now starts over I2P. Paused waits for Resume.")
+--- a/preview/native/tests/torrent_intake_dialog_tests.cpp
++++ b/preview/native/tests/torrent_intake_dialog_tests.cpp
+@@ -40,6 +40,26 @@
+ class TorrentIntakeDialogTests final:public QObject {
+   Q_OBJECT
+ private slots:
++
++  void i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes_data(){
++    QTest::addColumn<int>("previous");QTest::addColumn<int>("expected");
++    for(const auto mode:{ui::TorrentIntakeStartMode::Queued,ui::TorrentIntakeStartMode::Stopped,ui::TorrentIntakeStartMode::Paused,ui::TorrentIntakeStartMode::Forced,ui::TorrentIntakeStartMode::VerifySeeding,ui::TorrentIntakeStartMode::VerifySelected,ui::TorrentIntakeStartMode::AllocateStopped,ui::TorrentIntakeStartMode::AllocatePaused}){
++      const auto value=static_cast<int>(mode);const auto label=QByteArray::number(value);
++      QTest::newRow(label.constData())<<value<<(value<=static_cast<int>(ui::TorrentIntakeStartMode::Paused)?value:static_cast<int>(ui::TorrentIntakeStartMode::Stopped));
++    }
++  }
++  void i2pContextKeepsSupportedStartIntentAndStopsUnsupportedModes(){
++    QFETCH(int,previous);QFETCH(int,expected);ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
++    QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
++    auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));auto* mode=dialog.findChild<QComboBox*>(QStringLiteral("import-start-mode"));auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));QVERIFY(load&&mode&&add);
++    mode->setCurrentIndex(mode->findData(previous));QTRY_VERIFY(load->isEnabled());load->click();QCOMPARE(reads.size(),1);
++    auto frame=std::make_shared<ui::TorrentIntakePacket>(*packet(request(reads)));frame->i2pOnly=true;dialog.setPreview(frame);QTRY_VERIFY(add->isEnabled());
++    QCOMPARE(mode->count(),3);QCOMPARE(mode->currentData().toInt(),expected);dialog.accept();QCOMPARE(writes.size(),1);
++    const auto sent=submission(writes);QCOMPARE(sent.start,expected==static_cast<int>(ui::TorrentIntakeStartMode::Queued));QCOMPARE(sent.paused,expected==static_cast<int>(ui::TorrentIntakeStartMode::Paused));QVERIFY(!sent.forceStart&&!sent.verifyExisting);QCOMPARE(sent.allocation,core::TorrentAllocationMode::None);
++    dialog.rejectSubmission(sent);QTRY_VERIFY(load->isEnabled());load->click();QCOMPARE(reads.size(),2);dialog.setPreview(packet(request(reads),2));QTRY_VERIFY(add->isEnabled());
++    QCOMPARE(mode->count(),8);QCOMPARE(mode->currentData().toInt(),expected);QCOMPARE(mode->itemText(0),QStringLiteral("Queued"));dialog.accept();QCOMPARE(writes.size(),2);
++    const auto publicSent=submission(writes);QCOMPARE(publicSent.start,sent.start);QCOMPARE(publicSent.paused,sent.paused);QVERIFY(!publicSent.forceStart&&!publicSent.verifyExisting);QCOMPARE(publicSent.allocation,core::TorrentAllocationMode::None);
++  }
+ 
+   void i2pPreviewRestrictsModesAndPreservesPublicImportChoices(){
+     ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();

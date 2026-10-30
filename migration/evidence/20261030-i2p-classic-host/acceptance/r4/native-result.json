@@ -1,0 +1,41 @@
+{
+    "elapsed_ms": 150103,
+    "imported_infohash": "84821F338303FE225D8A8B53D8B69A44EEAE89EB",
+    "input_torrent_sha256": "360ee0c80f8cfb129694e570afb84596cfb16ecfa10c5af2e54854cd510e456a",
+    "last_i2p": {
+        "download_rate": 0,
+        "failure": "",
+        "hash": "84821F338303FE225D8A8B53D8B69A44EEAE89EB",
+        "payload_downloaded": 131072,
+        "payload_uploaded": 0,
+        "peers": 0,
+        "sequence": "150",
+        "session": "1",
+        "state": "Seeding — I2P",
+        "tracker_announces": "3",
+        "tracker_errors": "1",
+        "tracker_replies": "2",
+        "upload_rate": 0,
+        "verified_bytes": 131072
+    },
+    "reason": "Absolute Host/UI transfer/lifecycle budget exceeded",
+    "scope": "actual-Host-UI-I2P-transfer",
+    "status": "FAIL",
+    "transfer_i2p": {
+        "download_rate": 0,
+        "failure": "",
+        "hash": "84821F338303FE225D8A8B53D8B69A44EEAE89EB",
+        "payload_downloaded": 131072,
+        "payload_uploaded": 0,
+        "peers": 0,
+        "sequence": "24",
+        "session": "1",
+        "state": "Seeding — I2P",
+        "tracker_announces": "3",
+        "tracker_errors": "1",
+        "tracker_replies": "2",
+        "upload_rate": 0,
+        "verified_bytes": 131072
+    },
+    "verified_bytes": 131072
+}

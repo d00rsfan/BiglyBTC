@@ -1,0 +1,3 @@
+# Private I2P classic Host integration
+
+Native `2c6edc1b2390b59ba0f812d3c68e1cbc500e2311` integrates the existing optional owner with original saved settings, atomic torrent intake/recovery, actual classic controls/close and observed I2P Statistics. Full review and source baselines: [chapter evidence](../../evidence/20261030-i2p-classic-host/REVIEW.md). Fresh GCC/default/sanitiser and actual router/tracker import-to-transfer checks passed within the documented isolated scope. Whole component/queue/multihop/performance parity is not claimed; source coverage baseline/integration nulls and in-progress states are preserved.

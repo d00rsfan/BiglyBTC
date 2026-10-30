@@ -1,0 +1,35 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+    Start  81: saved-history-page
+1/9 Test  #81: saved-history-page ...............   Passed    2.11 sec
+    Start  83: saved-history-week-page
+2/9 Test  #83: saved-history-week-page ..........   Passed    2.94 sec
+    Start  86: saved-history-month-page
+3/9 Test  #86: saved-history-month-page .........   Passed    2.21 sec
+    Start  89: engine-activity-view
+4/9 Test  #89: engine-activity-view .............   Passed    1.67 sec
+    Start 155: startup-statistics-worker
+5/9 Test #155: startup-statistics-worker ........   Passed   19.21 sec
+    Start 159: manual-tag-window
+6/9 Test #159: manual-tag-window ................   Passed    3.36 sec
+    Start 168: country-statistics-window
+7/9 Test #168: country-statistics-window ........   Passed    5.16 sec
+    Start 181: azureus-statistics-channel
+8/9 Test #181: azureus-statistics-channel .......   Passed    4.07 sec
+    Start 187: live-speed-manager-channel
+9/9 Test #187: live-speed-manager-channel .......   Passed    1.12 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Label Time Summary:
+activity       =   1.67 sec*proc (1 test)
+country        =   5.16 sec*proc (1 test)
+history        =   7.25 sec*proc (3 tests)
+integration    =  19.21 sec*proc (1 test)
+loopback       =  23.29 sec*proc (2 tests)
+startup        =  19.21 sec*proc (1 test)
+statistics     =  41.84 sec*proc (9 tests)
+tags           =   3.36 sec*proc (1 test)
+ui             =  32.61 sec*proc (7 tests)
+unit           =  41.84 sec*proc (9 tests)
+
+Total Test time (real) =  41.85 sec

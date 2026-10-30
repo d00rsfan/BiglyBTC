@@ -1,0 +1,28 @@
+{
+  "status": "SOURCE_ONLY_TEST_CORRECTION",
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-ui-staging/amendments/preserve-supported-start-mode/manifest.json",
+    "sha256": "3ab3b926f00e19dafbe15678402fa486e30a47e7d3bc91a9ffbe468a8cb8d516"
+  },
+  "source_commit": "e982edcba96cb19e528dd8a3c5c3b8d3cb8fd616",
+  "source_paths": {
+    "preview/native/tests/torrent_intake_dialog_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-ui-staging/amendments/preserve-supported-start-mode/amendments/await-current-preview-model/before.cpp",
+      "before_sha256": "b2e11672ec5a9288d0825acd1317006cf578fa55afcb2b8f3b52a17fba2120b8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-ui-staging/amendments/preserve-supported-start-mode/amendments/await-current-preview-model/staging/preview/native/tests/torrent_intake_dialog_tests.cpp",
+      "after_sha256": "e2580f7377869187d8c99ed54f9e9c9cd33652d861461f4f292feee30d5a123f"
+    }
+  },
+  "actual_failure_log": {
+    "path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r7/ctest.log",
+    "sha256": "95d0c25d56a694387adce7ce3f74254e60e3f111db9005adde562f30a0b0c795"
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "8f537d5b9442b05c380a93c2ee71f730de1c07a13e199a21629b051544d5065d",
+    "before.cpp": "b2e11672ec5a9288d0825acd1317006cf578fa55afcb2b8f3b52a17fba2120b8",
+    "changes.patch": "9a4418034e72ef9dae373d078382e2b93c1aa42a80b48887632d9d986f05e2a4",
+    "staging/preview/native/tests/torrent_intake_dialog_tests.cpp": "e2580f7377869187d8c99ed54f9e9c9cd33652d861461f4f292feee30d5a123f"
+  },
+  "production_unchanged": true,
+  "build_or_test_execution": false
+}

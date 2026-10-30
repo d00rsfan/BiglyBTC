@@ -1,0 +1,12 @@
+Test project /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc
+    Start 242: owned-i2p-profile-source
+1/1 Test #242: owned-i2p-profile-source .........   Passed    0.29 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+i2p              =   0.29 sec*proc (1 test)
+owned-profile    =   0.29 sec*proc (1 test)
+unit             =   0.29 sec*proc (1 test)
+
+Total Test time (real) =   0.30 sec

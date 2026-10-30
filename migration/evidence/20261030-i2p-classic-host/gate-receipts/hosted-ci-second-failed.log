@@ -1,0 +1,120 @@
+preview	Run actual offline preview smoke and capture classic view	﻿2026-10-30T16:06:37.8487528Z ##[group]Run set -euo pipefail
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8487898Z ^[[36;1mset -euo pipefail^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8488204Z ^[[36;1mexport QT_PLUGIN_PATH="$BIGLYBTC_QT_PREFIX/plugins"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8488676Z ^[[36;1mexport QT_QPA_PLATFORM_PLUGIN_PATH="$BIGLYBTC_QT_PREFIX/plugins/platforms"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8489294Z ^[[36;1mpreview_root=$(python3 -c 'import uuid; print("/tmp/biglybtc-preview-" + uuid.uuid4().hex)')^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8489794Z ^[[36;1mtest ! -e "$preview_root"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8490142Z ^[[36;1mprintf '%s\n' "$preview_root" > "$EVIDENCE_DIR/sample-root.txt"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8490646Z ^[[36;1mpython3 preview/native/packaging/preview.py --prepare "$preview_root" \^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8491113Z ^[[36;1m  2>&1 | tee "$EVIDENCE_DIR/sample-preparation.log"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8491615Z ^[[36;1mmkdir -m 700 "$preview_root/xdg-config" "$preview_root/xdg-cache" "$preview_root/runtime"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8492117Z ^[[36;1mexport XDG_CONFIG_HOME="$preview_root/xdg-config"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8492524Z ^[[36;1mexport XDG_CACHE_HOME="$preview_root/xdg-cache"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8492887Z ^[[36;1mexport XDG_RUNTIME_DIR="$preview_root/runtime"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8493269Z ^[[36;1mexport BIGLYBTC_PREVIEW_PROFILE="$preview_root/profile"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8494054Z ^[[36;1mexport BIGLYBTC_PREVIEW_CAPTURE="$preview_root/classic-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8494522Z ^[[36;1m"$BUILD_DIR/biglybtc-preview-smoke" -o -,txt \^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8494888Z ^[[36;1m  2>&1 | tee "$EVIDENCE_DIR/preview-smoke.txt"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8495332Z ^[[36;1mcp -- "$preview_root/classic-preview.png" "$EVIDENCE_DIR/classic-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8495915Z ^[[36;1mcp -- "$preview_root/my-tracker-preview.png" "$EVIDENCE_DIR/my-tracker-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8496503Z ^[[36;1mcp -- "$preview_root/my-shares-preview.png" "$EVIDENCE_DIR/my-shares-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8497126Z ^[[36;1mcp -- "$preview_root/saved-selected-preview.png" "$EVIDENCE_DIR/saved-selected-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8498021Z ^[[36;1mcp -- "$preview_root/statistics-activity-preview.png" "$EVIDENCE_DIR/statistics-activity-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8498776Z ^[[36;1mcp -- "$preview_root/statistics-transfers-preview.png" "$EVIDENCE_DIR/statistics-transfers-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8499300Z ^[[36;1mfor section in {2..9}; do^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8499706Z ^[[36;1m  cp -- "$preview_root/statistics-section-$section-preview.png" "$EVIDENCE_DIR/"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8500114Z ^[[36;1mdone^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8500546Z ^[[36;1mcp -- "$preview_root/statistics-history-preview.png" "$EVIDENCE_DIR/statistics-history-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8501345Z ^[[36;1mcp -- "$preview_root/statistics-history-missing-preview.png" "$EVIDENCE_DIR/statistics-history-missing-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8502198Z ^[[36;1mcp -- "$preview_root/statistics-history-week-preview.png" "$EVIDENCE_DIR/statistics-history-week-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8503083Z ^[[36;1mcp -- "$preview_root/statistics-history-week-missing-preview.png" "$EVIDENCE_DIR/statistics-history-week-missing-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8504318Z ^[[36;1mcp -- "$preview_root/statistics-history-week-hourly-preview.png" "$EVIDENCE_DIR/statistics-history-week-hourly-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8505361Z ^[[36;1mcp -- "$preview_root/statistics-history-week-hourly-missing-preview.png" "$EVIDENCE_DIR/statistics-history-week-hourly-missing-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8506372Z ^[[36;1mcp -- "$preview_root/statistics-navigation-reopened-preview.png" "$EVIDENCE_DIR/statistics-navigation-reopened-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8507328Z ^[[36;1mcp -- "$preview_root/statistics-navigation-new-session-preview.png" "$EVIDENCE_DIR/statistics-navigation-new-session-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8508264Z ^[[36;1mcp -- "$preview_root/statistics-history-protocol-preview.png" "$EVIDENCE_DIR/statistics-history-protocol-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8509095Z ^[[36;1mcp -- "$preview_root/statistics-history-dht-preview.png" "$EVIDENCE_DIR/statistics-history-dht-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8510120Z ^[[36;1mcp -- "$preview_root/statistics-history-keyboard-preview.png" "$EVIDENCE_DIR/statistics-history-keyboard-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8510961Z ^[[36;1mcp -- "$preview_root/statistics-history-copy-preview.png" "$EVIDENCE_DIR/statistics-history-copy-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8511784Z ^[[36;1mcp -- "$preview_root/statistics-history-month-preview.png" "$EVIDENCE_DIR/statistics-history-month-preview.png"^[[0m
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8540533Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8540871Z env:
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8541069Z   QT_QPA_PLATFORM: offscreen
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8541307Z   TMPDIR: /tmp
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8541585Z   BUILD_DIR: /home/runner/work/_temp/biglybtc-preview-ci-build
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8542014Z   EVIDENCE_DIR: /home/runner/work/_temp/biglybtc-preview-ci-evidence
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8542478Z   BIGLYBTC_CXX: /usr/bin/g++-16
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8542920Z   BIGLYBTC_QT_PREFIX: /home/runner/work/_temp/biglybtc-preview-ci-dependencies/Qt/6.12.0/gcc_64
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8543528Z   BIGLYBTC_DEPENDENCY_EVIDENCE: /home/runner/work/_temp/biglybtc-preview-ci-dependencies
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.8544227Z ##[endgroup]
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.9232874Z /tmp/biglybtc-preview-40c8049b82dd42e09212b750bb687123/profile
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.9461020Z ********* Start testing of PreviewSmoke *********
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.9462351Z Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.9467951Z PASS   : PreviewSmoke::initTestCase()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.9469239Z PASS   : PreviewSmoke::regularTrackerTooltipKeepsActualRetainedCountsSeparateFromMainlineEstimate()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.9470954Z PASS   : PreviewSmoke::exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.9472313Z PASS   : PreviewSmoke::explicitQtConsoleControlsDisableNativeFiltering()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.9586198Z QWARN  : PreviewSmoke::generatedSampleLibraryAndFiles() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:37.9738131Z QWARN  : PreviewSmoke::generatedSampleLibraryAndFiles() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:38.0309203Z QWARN  : PreviewSmoke::generatedSampleLibraryAndFiles() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:38.6637170Z PASS   : PreviewSmoke::generatedSampleLibraryAndFiles()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:38.6669721Z QWARN  : PreviewSmoke::generatedColumnPreferencesSaveAndRestart() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:38.6776170Z QWARN  : PreviewSmoke::generatedColumnPreferencesSaveAndRestart() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:38.7811901Z QWARN  : PreviewSmoke::generatedColumnPreferencesSaveAndRestart() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:38.7912983Z QWARN  : PreviewSmoke::generatedColumnPreferencesSaveAndRestart() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:38.8410215Z PASS   : PreviewSmoke::generatedColumnPreferencesSaveAndRestart()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:38.8460217Z QWARN  : PreviewSmoke::explicitFirstSaveCreatesOnlyAfterMissingReadAndRestarts() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:38.9606370Z QWARN  : PreviewSmoke::explicitFirstSaveCreatesOnlyAfterMissingReadAndRestarts() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.0190258Z PASS   : PreviewSmoke::explicitFirstSaveCreatesOnlyAfterMissingReadAndRestarts()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.0223291Z QWARN  : PreviewSmoke::statisticsShortcutSavedTotalsAndCloseReopen() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.0324570Z QWARN  : PreviewSmoke::statisticsShortcutSavedTotalsAndCloseReopen() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.1625400Z QWARN  : PreviewSmoke::statisticsShortcutSavedTotalsAndCloseReopen() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.4688459Z FAIL!  : PreviewSmoke::statisticsShortcutSavedTotalsAndCloseReopen() Compared values are not the same
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.4689687Z    Actual   (page->tabs().count()): 11
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.4690371Z    Expected (10)                  : 10
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.4691152Z    Loc: [/home/runner/work/BiglyBTC/BiglyBTC/preview/native/packaging/preview_smoke.cpp(565)]
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.4769156Z QWARN  : PreviewSmoke::generatedSavedHistoryDayAndMissingDayRemainReadOnly() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.4889332Z QWARN  : PreviewSmoke::generatedSavedHistoryDayAndMissingDayRemainReadOnly() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.6155542Z QWARN  : PreviewSmoke::generatedSavedHistoryDayAndMissingDayRemainReadOnly() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.9416511Z PASS   : PreviewSmoke::generatedSavedHistoryDayAndMissingDayRemainReadOnly()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.9451491Z QWARN  : PreviewSmoke::generatedSevenDayOverviewAndMissingWeekRemainReadOnly() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:39.9555548Z QWARN  : PreviewSmoke::generatedSevenDayOverviewAndMissingWeekRemainReadOnly() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:40.0835310Z QWARN  : PreviewSmoke::generatedSevenDayOverviewAndMissingWeekRemainReadOnly() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:40.5445536Z PASS   : PreviewSmoke::generatedSevenDayOverviewAndMissingWeekRemainReadOnly()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:40.5480036Z QWARN  : PreviewSmoke::statisticsNavigationSurvivesCloseAndNewSessionClearsMemory() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:40.5602408Z QWARN  : PreviewSmoke::statisticsNavigationSurvivesCloseAndNewSessionClearsMemory() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:40.6868703Z QWARN  : PreviewSmoke::statisticsNavigationSurvivesCloseAndNewSessionClearsMemory() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:40.8200665Z QWARN  : PreviewSmoke::statisticsNavigationSurvivesCloseAndNewSessionClearsMemory() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:40.9249962Z QWARN  : PreviewSmoke::statisticsNavigationSurvivesCloseAndNewSessionClearsMemory() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:41.0489763Z QWARN  : PreviewSmoke::statisticsNavigationSurvivesCloseAndNewSessionClearsMemory() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:41.0628779Z QWARN  : PreviewSmoke::statisticsNavigationSurvivesCloseAndNewSessionClearsMemory() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:41.1960951Z QWARN  : PreviewSmoke::statisticsNavigationSurvivesCloseAndNewSessionClearsMemory() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:41.3187512Z PASS   : PreviewSmoke::statisticsNavigationSurvivesCloseAndNewSessionClearsMemory()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:41.3225155Z QWARN  : PreviewSmoke::historyTrafficUsesFreshSavedFactsWithoutExtraReads() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:41.3352226Z QWARN  : PreviewSmoke::historyTrafficUsesFreshSavedFactsWithoutExtraReads() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:41.4670541Z QWARN  : PreviewSmoke::historyTrafficUsesFreshSavedFactsWithoutExtraReads() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:41.7618278Z QWARN  : PreviewSmoke::historyTrafficUsesFreshSavedFactsWithoutExtraReads() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:41.8555795Z QWARN  : PreviewSmoke::historyTrafficUsesFreshSavedFactsWithoutExtraReads() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:42.0031361Z PASS   : PreviewSmoke::historyTrafficUsesFreshSavedFactsWithoutExtraReads()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:42.0067274Z QWARN  : PreviewSmoke::savedHistoryKeyboardInspectsRealBucketsWithoutExtraReads() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:42.0190801Z QWARN  : PreviewSmoke::savedHistoryKeyboardInspectsRealBucketsWithoutExtraReads() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:42.1455123Z QWARN  : PreviewSmoke::savedHistoryKeyboardInspectsRealBucketsWithoutExtraReads() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:42.3549362Z QWARN  : PreviewSmoke::savedHistoryKeyboardInspectsRealBucketsWithoutExtraReads() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:42.4610037Z QWARN  : PreviewSmoke::savedHistoryKeyboardInspectsRealBucketsWithoutExtraReads() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:42.5268545Z PASS   : PreviewSmoke::savedHistoryKeyboardInspectsRealBucketsWithoutExtraReads()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:42.5304879Z QWARN  : PreviewSmoke::savedHistoryCopyPublishesOnlyExplicitRealBucketValues() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:42.5507451Z QWARN  : PreviewSmoke::savedHistoryCopyPublishesOnlyExplicitRealBucketValues() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:42.6710608Z QWARN  : PreviewSmoke::savedHistoryCopyPublishesOnlyExplicitRealBucketValues() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:42.9218629Z QWARN  : PreviewSmoke::savedHistoryCopyPublishesOnlyExplicitRealBucketValues() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:43.0159530Z QWARN  : PreviewSmoke::savedHistoryCopyPublishesOnlyExplicitRealBucketValues() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:43.1034934Z PASS   : PreviewSmoke::savedHistoryCopyPublishesOnlyExplicitRealBucketValues()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:43.1075151Z QWARN  : PreviewSmoke::generatedThirtyDayHistoryKeepsExactDailyFactsAndFreshReopen() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:43.1310772Z QWARN  : PreviewSmoke::generatedThirtyDayHistoryKeepsExactDailyFactsAndFreshReopen() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:43.2488197Z QWARN  : PreviewSmoke::generatedThirtyDayHistoryKeepsExactDailyFactsAndFreshReopen() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:43.5167833Z QWARN  : PreviewSmoke::generatedThirtyDayHistoryKeepsExactDailyFactsAndFreshReopen() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:43.6277069Z QWARN  : PreviewSmoke::generatedThirtyDayHistoryKeepsExactDailyFactsAndFreshReopen() This plugin does not support propagateSizeHints()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:43.7048217Z PASS   : PreviewSmoke::generatedThirtyDayHistoryKeepsExactDailyFactsAndFreshReopen()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:43.7049144Z PASS   : PreviewSmoke::cleanupTestCase()
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:43.7050046Z Totals: 15 passed, 1 failed, 0 skipped, 0 blacklisted, 5759ms
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:43.7050442Z ********* Finished testing of PreviewSmoke *********
+preview	Run actual offline preview smoke and capture classic view	2026-10-30T16:06:43.7115312Z ##[error]Process completed with exit code 1.

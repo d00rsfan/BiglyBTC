@@ -1,0 +1,2 @@
+usage: preview.py [-h] [--prepare PREPARE] [--country-db COUNTRY_DB]
+preview.py: error: The preview requires a generated /tmp/biglybtc-* directory

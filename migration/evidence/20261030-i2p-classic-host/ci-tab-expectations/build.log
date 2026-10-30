@@ -1,0 +1,36 @@
+[1/36] Automatic MOC for target biglybtc-history-week-view-ui-tests
+[2/36] Automatic MOC for target biglybtc-history-month-view-ui-tests
+[3/36] Automatic MOC for target biglybtc-history-view-ui-tests
+[4/36] Automatic MOC for target biglybtc-engine-activity-view-tests
+[5/36] Automatic MOC for target biglybtc-manual-tag-window-tests
+[6/36] Automatic MOC for target biglybtc-country-statistics-window-tests
+[7/36] Automatic MOC for target biglybtc-startup-statistics-tests
+[8/36] Building CXX object tests/CMakeFiles/biglybtc-history-view-ui-tests.dir/biglybtc-history-view-ui-tests_autogen/mocs_compilation.cpp.o
+[9/36] Automatic MOC for target biglybtc-azureus-statistics-channel-tests
+[10/36] Building CXX object tests/CMakeFiles/biglybtc-history-week-view-ui-tests.dir/biglybtc-history-week-view-ui-tests_autogen/mocs_compilation.cpp.o
+[11/36] Automatic MOC for target biglybtc-live-speed-manager-channel-tests
+[12/36] Building CXX object tests/CMakeFiles/biglybtc-history-month-view-ui-tests.dir/biglybtc-history-month-view-ui-tests_autogen/mocs_compilation.cpp.o
+[13/36] Building CXX object tests/CMakeFiles/biglybtc-history-view-ui-tests.dir/history_view_ui_tests.cpp.o
+[14/36] Building CXX object tests/CMakeFiles/biglybtc-engine-activity-view-tests.dir/biglybtc-engine-activity-view-tests_autogen/mocs_compilation.cpp.o
+[15/36] Building CXX object tests/CMakeFiles/biglybtc-history-week-view-ui-tests.dir/history_week_view_ui_tests.cpp.o
+[16/36] Building CXX object tests/CMakeFiles/biglybtc-startup-statistics-tests.dir/biglybtc-startup-statistics-tests_autogen/mocs_compilation.cpp.o
+[17/36] Building CXX object tests/CMakeFiles/biglybtc-history-month-view-ui-tests.dir/history_month_view_ui_tests.cpp.o
+[18/36] Building CXX object tests/CMakeFiles/biglybtc-manual-tag-window-tests.dir/biglybtc-manual-tag-window-tests_autogen/mocs_compilation.cpp.o
+[19/36] Building CXX object tests/CMakeFiles/biglybtc-engine-activity-view-tests.dir/engine_activity_view_tests.cpp.o
+[20/36] Building CXX object tests/CMakeFiles/biglybtc-country-statistics-window-tests.dir/biglybtc-country-statistics-window-tests_autogen/mocs_compilation.cpp.o
+[21/36] Building CXX object tests/CMakeFiles/biglybtc-manual-tag-window-tests.dir/manual_tag_window_tests.cpp.o
+[22/36] Building CXX object tests/CMakeFiles/biglybtc-azureus-statistics-channel-tests.dir/biglybtc-azureus-statistics-channel-tests_autogen/mocs_compilation.cpp.o
+[23/36] Building CXX object tests/CMakeFiles/biglybtc-startup-statistics-tests.dir/startup_statistics_tests.cpp.o
+[24/36] Building CXX object tests/CMakeFiles/biglybtc-live-speed-manager-channel-tests.dir/biglybtc-live-speed-manager-channel-tests_autogen/mocs_compilation.cpp.o
+[25/36] Building CXX object tests/CMakeFiles/biglybtc-country-statistics-window-tests.dir/country_statistics_window_tests.cpp.o
+[26/36] Linking CXX executable tests/biglybtc-history-view-ui-tests
+[27/36] Linking CXX executable tests/biglybtc-history-week-view-ui-tests
+[28/36] Linking CXX executable tests/biglybtc-history-month-view-ui-tests
+[29/36] Linking CXX executable tests/biglybtc-engine-activity-view-tests
+[30/36] Linking CXX executable tests/biglybtc-startup-statistics-tests
+[31/36] Linking CXX executable tests/biglybtc-manual-tag-window-tests
+[32/36] Linking CXX executable tests/biglybtc-country-statistics-window-tests
+[33/36] Building CXX object tests/CMakeFiles/biglybtc-live-speed-manager-channel-tests.dir/live_speed_manager_channel_tests.cpp.o
+[34/36] Linking CXX executable tests/biglybtc-live-speed-manager-channel-tests
+[35/36] Building CXX object tests/CMakeFiles/biglybtc-azureus-statistics-channel-tests.dir/azureus_statistics_channel_tests.cpp.o
+[36/36] Linking CXX executable tests/biglybtc-azureus-statistics-channel-tests

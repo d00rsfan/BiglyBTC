@@ -1,0 +1,9 @@
+{
+  "status": "FAIL",
+  "scope": "real-isolated-router-Host-UI-I2P-transfer",
+  "cache_setup": "three actual accepted signature-verified Enc4 LS2 via public store",
+  "discovery_or_remote_tunnels_qualified": false,
+  "default_backend_activated": false,
+  "late_tracker_reply_qualified": false,
+  "failure": "AssertionError('Subject exit 1')"
+}

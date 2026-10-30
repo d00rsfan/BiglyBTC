@@ -1,0 +1,9 @@
+{
+  "source_commit": "5366da8dfff3c37b9545da766a18d55bfb9ff613",
+  "workflow_run": 41079106490,
+  "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41079106490",
+  "status": "failure",
+  "passed_suites": 202,
+  "total_suites": 210,
+  "failure": "Eight stale tab-count expectations after adding I2P; ninth matching startup test found locally. All9 corrected and rerun; subsequent source CI succeeds."
+}

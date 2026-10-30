@@ -1,0 +1,22 @@
+Test project /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc
+    Start  64: statistics-page-behavior
+1/4 Test  #64: statistics-page-behavior ..............   Passed   11.55 sec
+    Start  65: statistics-navigation-page
+2/4 Test  #65: statistics-navigation-page ............   Passed    5.45 sec
+    Start  66: statistics-navigation-window-worker
+3/4 Test  #66: statistics-navigation-window-worker ...   Passed    5.91 sec
+    Start 243: i2p-classic-host
+4/4 Test #243: i2p-classic-host ......................   Passed    0.49 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+classic-ui    =   0.49 sec*proc (1 test)
+config        =  11.55 sec*proc (1 test)
+i2p           =   0.49 sec*proc (1 test)
+navigation    =  11.36 sec*proc (2 tests)
+statistics    =  22.91 sec*proc (3 tests)
+ui            =  22.91 sec*proc (3 tests)
+unit          =  23.40 sec*proc (4 tests)
+
+Total Test time (real) =  23.41 sec

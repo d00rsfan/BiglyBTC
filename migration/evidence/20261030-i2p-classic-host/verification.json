@@ -1,0 +1,66 @@
+{
+  "status": "PASS_BOUNDED_PRIVATE_I2P_CLASSIC_HOST_CHAPTER",
+  "source_commit": "2c6edc1b2390b59ba0f812d3c68e1cbc500e2311",
+  "supplemental_ui_tests_source_commit": "e864927ab8548c3f0670d0229d79e6f403133704",
+  "runtime_and_probe_unchanged_since_qualification": true,
+  "source_tree": "5cf4117a0c7ceb5abab01ac2e16d07bda4f5d4c9",
+  "builds": {
+    "private": {
+      "batch": "r9",
+      "status": "PASS",
+      "receipt_sha256": "7ca7212d2fd57380eafefddb0edc05f64beb9eda2d34f9d1877a1d2b5b5e0a09"
+    },
+    "default": {
+      "batch": "r3",
+      "status": "PASS",
+      "receipt_sha256": "ad62e975ec7a0a19667877096848017639147159fbbf395c940e33151946d480"
+    },
+    "san": {
+      "batch": "r2",
+      "status": "PASS",
+      "receipt_sha256": "ceb852b2cc950ee2b691813f2c8f57663368b336cab3de085bd77225b769dcfe"
+    }
+  },
+  "actual_runs": {
+    "r5": "PASS_REAL_ISOLATED_ROUTER_HOST_UI_I2P_TRANSFER",
+    "r6": "PASS_REAL_ISOLATED_ROUTER_HOST_UI_I2P_TRANSFER"
+  },
+  "bundle": {
+    "status": "PASS_STAGED_PRIVATE_PREVIEW",
+    "path": "/home/yurii/Java/BiglyBTC/dist-i2p",
+    "manifest_sha256": "e6c5c58663f293ecc27192e64bb1326226edea6d0c90688c26d00280739c5955",
+    "mapped_files": 119,
+    "ldd_sha256": "2d85511923d2514046fb9fa77f148c992d56ec24801bea5ca0ce9bf119f9d89f",
+    "default_manifest_preserved": true,
+    "source_commit": "2c6edc1b2390b59ba0f812d3c68e1cbc500e2311"
+  },
+  "stop_after_chapter": true,
+  "whole_component_parity": false,
+  "private_keys_published": false,
+  "additional_ui_suites": {
+    "count": 9,
+    "source_commit": "e864927ab8548c3f0670d0229d79e6f403133704",
+    "result_sha256": "6ede76633f772e37a8073fc281edd34242c5bd31daf91f9e406b56944ff74131",
+    "status": "PASS"
+  },
+  "registry_validation": {
+    "BiglyBT": "PASS",
+    "BiglyBTC": "PASS",
+    "sources": 20,
+    "components": 108,
+    "dependencies": 22,
+    "prior_states_and_source_coverage_nulls_preserved": true
+  },
+  "hosted_ci": {
+    "status": "PASS",
+    "source_commit": "e9546f9893ac9c23086842a49ec4d624c8af5900",
+    "receipt": "gate-receipts/hosted-ci.json",
+    "all_runs_success": true
+  },
+  "supplemental_smoke_source_commit": "e9546f9893ac9c23086842a49ec4d624c8af5900",
+  "supplemental_smoke": {
+    "status": "PASS",
+    "cases": 16,
+    "result_sha256": "565451d81fe864f9fefe1594559833328cab8ca4af02f7737e7cf84acec31bb0"
+  }
+}

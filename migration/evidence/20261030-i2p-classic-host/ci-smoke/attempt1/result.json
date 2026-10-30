@@ -1,0 +1,35 @@
+{
+  "status": "FAIL",
+  "commands": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "biglybtc-preview-smoke"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/ci-smoke/build.log",
+      "log_sha256": "4a7903062613d3ee6ec69e108fac17b11ae710a515815c5e69fcd56eebeb6587"
+    },
+    {
+      "argv": [
+        "python3",
+        "/home/yurii/Java/BiglyBTC/preview/native/packaging/preview.py",
+        "--prepare",
+        "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/ci-smoke/subject"
+      ],
+      "exit_code": 2,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/ci-smoke/prepare.log",
+      "log_sha256": "e9c0455feaa4651fd80d56d2ef1bba1bb3ca25a6a9fec2b891f794e1abd02b56"
+    }
+  ],
+  "failure": "prepare",
+  "elapsed_seconds": 40.11
+}

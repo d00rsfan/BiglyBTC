@@ -1,0 +1,15 @@
+{
+  "status": "PASS_ORIGINAL_HEAD_INDEX_DEFAULT_DIST_AND_SUBJECT_CLEANUP",
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "default_dist_manifest_sha256": "aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b",
+  "actual_subject_private_cleanup": {
+    "r1": true,
+    "r2": true,
+    "r3": true,
+    "r4": true,
+    "r5": true,
+    "r6": true
+  },
+  "live_java_profile_accessed": false
+}

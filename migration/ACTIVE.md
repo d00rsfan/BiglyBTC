@@ -1,7 +1,7 @@
-# P07 — ordinary Host/UI private I2P integration
+# P07 — private I2P Host/UI chapter complete; stopped
 
-User authorised the proposed next chapter on 2026-10-30. Implement the qualified optional private I2P owner as an explicitly enabled ordinary application service, with saved network/identity compatibility, start/pause/resume/stop/close, classic My Torrents/details and separate observed I2P statistics. Finish this chapter, publish main and a usable preview, then stop.
+User-authorised chapter completed at `2c6edc1b2390b59ba0f812d3c68e1cbc500e2311`. [Review](evidence/20261030-i2p-classic-host/REVIEW.md), [verification](evidence/20261030-i2p-classic-host/verification.json). Ordinary dialog import, saved settings, classic Start/Pause/Resume/Stop/close, joined original storage and observed I2P Statistics qualify within the documented private isolated scope. Preview: `/home/yurii/Java/BiglyBTC/dist-i2p/BiglyBTC` with explicit isolated profile/router options.
 
-Preserve running Java BiglyBT, its live profile/payload and ordinary Git index. Development tests use generated profiles and loopback-only isolated router. No public discovery/multihop or chat/DATA/rooms in this chapter. One original I2P identity/provider admission per profile is the present qualified limit; cross-engine payload ownership must remain exclusive. Source/config changes must fail closed, without Public fallback or manufactured saved counters.
+No next chapter started. Larger component remains in progress. Preserve Java/live profile, default dist and ordinary original Git HEAD/index. Questions: none. Durable build diagnostics: `build/host-i2p-20261030`; compiler jobs3/nice5 and reused SDK/caches. Resume only on a new user request.
 
-Reuse the qualified SDK9d264/DSO53ce and existing native caches; no unchanged SDK rebuild. Keep aggregate compiler jobs at3/nice5, compiler logs on disk, print only summaries/errors. Prior section evidence remains immutable. Current work/evidence staging: build/host-i2p-20261030.
+Final hosted CI gates passed. Publication may be committed to main; then stop before the next chapter.

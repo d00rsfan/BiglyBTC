@@ -1,0 +1,29 @@
+--- a/preview/native/tests/torrent_intake_dialog_tests.cpp
++++ b/preview/native/tests/torrent_intake_dialog_tests.cpp
+@@ -53,10 +53,14 @@
+     QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
+     auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));auto* mode=dialog.findChild<QComboBox*>(QStringLiteral("import-start-mode"));auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));QVERIFY(load&&mode&&add);
+     mode->setCurrentIndex(mode->findData(previous));QTRY_VERIFY(load->isEnabled());load->click();QCOMPARE(reads.size(),1);
+-    auto frame=std::make_shared<ui::TorrentIntakePacket>(*packet(request(reads)));frame->i2pOnly=true;dialog.setPreview(frame);QTRY_VERIFY(add->isEnabled());
++    auto* table=dialog.findChild<QTableView*>(QStringLiteral("import-file-table"));QVERIFY(table);
++    auto frame=std::make_shared<ui::TorrentIntakePacket>(*packet(request(reads)));frame->i2pOnly=true;frame->files[0].path=QStringLiteral("private-current-preview.bin");dialog.setPreview(frame);
++    QTRY_COMPARE(table->model()->rowCount(),3);QTRY_COMPARE(table->model()->data(table->model()->index(0,1),Qt::DisplayRole).toString(),QStringLiteral("private-current-preview.bin"));QTRY_VERIFY(add->isEnabled());
+     QCOMPARE(mode->count(),3);QCOMPARE(mode->currentData().toInt(),expected);dialog.accept();QCOMPARE(writes.size(),1);
+     const auto sent=submission(writes);QCOMPARE(sent.start,expected==static_cast<int>(ui::TorrentIntakeStartMode::Queued));QCOMPARE(sent.paused,expected==static_cast<int>(ui::TorrentIntakeStartMode::Paused));QVERIFY(!sent.forceStart&&!sent.verifyExisting);QCOMPARE(sent.allocation,core::TorrentAllocationMode::None);
+-    dialog.rejectSubmission(sent);QTRY_VERIFY(load->isEnabled());load->click();QCOMPARE(reads.size(),2);dialog.setPreview(packet(request(reads),2));QTRY_VERIFY(add->isEnabled());
++    dialog.rejectSubmission(sent);QTRY_VERIFY(load->isEnabled());load->click();QCOMPARE(reads.size(),2);
++    auto publicFrame=std::make_shared<ui::TorrentIntakePacket>(*packet(request(reads),2));publicFrame->files[0].path=QStringLiteral("public-current-preview.bin");dialog.setPreview(publicFrame);
++    QTRY_COMPARE(table->model()->data(table->model()->index(0,1),Qt::DisplayRole).toString(),QStringLiteral("public-current-preview.bin"));QTRY_VERIFY(add->isEnabled());
+     QCOMPARE(mode->count(),8);QCOMPARE(mode->currentData().toInt(),expected);QCOMPARE(mode->itemText(0),QStringLiteral("Queued"));dialog.accept();QCOMPARE(writes.size(),2);
+     const auto publicSent=submission(writes);QCOMPARE(publicSent.start,sent.start);QCOMPARE(publicSent.paused,sent.paused);QVERIFY(!publicSent.forceStart&&!publicSent.verifyExisting);QCOMPARE(publicSent.allocation,core::TorrentAllocationMode::None);
+   }
+@@ -85,7 +89,8 @@
+       mode->addItem(QStringLiteral("Injected unsupported mode"),static_cast<int>(unsupported));mode->setCurrentIndex(mode->count()-1);dialog.accept();QCOMPARE(writes.size(),3);mode->removeItem(mode->count()-1);
+     }
+     QVERIFY(dialog.beginSession(78));QCOMPARE(mode->count(),8);QCOMPARE(mode->itemText(0),QStringLiteral("Queued"));QVERIFY(network->isHidden());QCOMPARE(dialog.windowTitle(),QStringLiteral("Open Torrent File"));
+-    inputs(dialog);QTRY_VERIFY(load->isEnabled());load->click();dialog.setPreview(packet(request(reads),2));QTRY_VERIFY(add->isEnabled());
++    inputs(dialog);QTRY_VERIFY(load->isEnabled());load->click();auto publicFrame=std::make_shared<ui::TorrentIntakePacket>(*packet(request(reads),2));publicFrame->files[0].path=QStringLiteral("public-restored-preview.bin");dialog.setPreview(publicFrame);
++    QTRY_COMPARE(table->model()->data(table->model()->index(0,1),Qt::DisplayRole).toString(),QStringLiteral("public-restored-preview.bin"));QTRY_VERIFY(add->isEnabled());
+     mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Forced)));dialog.accept();QCOMPARE(writes.size(),4);sent=submission(writes);QVERIFY(sent.start&&sent.forceStart&&!sent.paused);QCOMPARE(sent.allocation,core::TorrentAllocationMode::None);
+   }
+ 

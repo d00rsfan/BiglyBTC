@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "provider": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "provider_sha256": "53ce1703a5c43f88d871c6c786c8cc8fbdb7c8c2b058c6520cf733aadded0db9",
+  "private_qt": [
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6.12.0",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6DBus.so.6.12.0",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6.12.0",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6.12.0",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6.12.0",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6.12.0"
+  ],
+  "loader_log": "native-loader.70",
+  "loader_log_sha256": "76c4c8091ba1f2f3ad333bcbb4880b0b05c1ea3cf5609e345f19ea67e582577a"
+}

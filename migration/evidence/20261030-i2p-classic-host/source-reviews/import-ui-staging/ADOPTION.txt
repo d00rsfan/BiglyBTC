@@ -1,0 +1,7 @@
+SOURCE ONLY: four complete afterimages, exact current per-file beforemaps in source-map.json. No N edits/builds/compilers/GUI executions by author.
+
+Packet i2pOnly=false is trailing worker-derived presentation context only; it is absent from TorrentIntakeSubmission. The actual private CLI/profile/key context must remain independently authenticated by Host. Main must set packet.i2pOnly from its worker context and reject force/verify/selected-goal/allocation requests itself. Start now retains existing Queued enum data and sends start=true/forceStart=false; Host private importer must save queued=false. Stopped and Paused retain existing submission semantics.
+
+I2P preview sets window title and a read-only network label, offers only Start now/Stopped/Paused, explains excluded modes, and accept independently rejects unsupported injected enum choices. File choice/destination/priority, limits, sequential and tracker editors remain unchanged. New Public sessions restore exactly the original eight labels/data/default/tooltips. Existing all-Public path does not rebuild the combo or change its callbacks.
+
+New GUI method: i2pPreviewRestrictsModesAndPreservesPublicImportChoices in existing torrent_intake_dialog_tests.cpp. It covers three modes/default, start/no-force, all five excluded modes including injected-mode refusal, file/limits/sequential preservation, and Public restoration/Forced. All old GUI test bodies remain byte-exact. Root can run the existing torrent-intake-dialog suite after the combined adoption; no new target or CMake fragment required.

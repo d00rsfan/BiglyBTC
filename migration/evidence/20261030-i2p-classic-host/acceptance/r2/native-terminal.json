@@ -1,0 +1,6 @@
+{
+    "elapsed_ms": 20762,
+    "intended_success": false,
+    "phase": "before-finish-shutdown",
+    "reason": "Host I2P service reported failure: I2P admission has incomplete error observations; recheck remains required"
+}

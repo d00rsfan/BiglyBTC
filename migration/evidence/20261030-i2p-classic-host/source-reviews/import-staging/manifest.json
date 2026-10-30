@@ -1,0 +1,48 @@
+{
+  "status": "SOURCE_ONLY_NOT_BUILT_OR_TESTED",
+  "basis_commit": "e982edcba96cb19e528dd8a3c5c3b8d3cb8fd616",
+  "source_paths": {
+    "preview/native/adapters/torrent_intake.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-staging/before/torrent_intake.hpp",
+      "before_sha256": "191be4b96fc148c97d0c63e4256351c840878e63461703f2b5df131d29b4cdfe",
+      "after_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-staging/staging/preview/native/adapters/torrent_intake.hpp",
+      "after_sha256": "57d13d0a12862a95d4077bb93023ba9796ec8b83faa74765d219fa917e8558a1"
+    },
+    "preview/native/adapters/torrent_intake.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-staging/before/torrent_intake.cpp",
+      "before_sha256": "d3d833b0eb7ded6f9d0282ec6a92b1fcc4df51bcb7463038461c9a41f3fc0280",
+      "after_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-staging/staging/preview/native/adapters/torrent_intake.cpp",
+      "after_sha256": "d749e558071d3b66cf18c6ec5fead2116dedf8eeaf691b9b79de8ca301c0afe7"
+    },
+    "preview/native/tests/torrent_intake_file_options_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-staging/before/torrent_intake_file_options_tests.cpp",
+      "before_sha256": "36e9c76248ddf908b4bedf42ede42cceab15d05335151631bfd3a2662a2fb949",
+      "after_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-staging/staging/preview/native/tests/torrent_intake_file_options_tests.cpp",
+      "after_sha256": "6a53849028686cb4b315257993a274055dffc7305c48559ef095dd4bb6a94ea3"
+    },
+    "preview/native/tests/torrent_intake_i2p_tests.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-staging/staging/preview/native/tests/torrent_intake_i2p_tests.inc",
+      "after_sha256": "3100b64993adb7879369cf29cb445548075c1883ba7329e4a542172a0e68a4d6"
+    }
+  },
+  "artifacts_sha256": {
+    "changes.patch": "fe267ca866aee5728ea7edc324fd5ed1a5f028dde907e5344c44949f1b98a1e0",
+    "ADOPTION.txt": "a317afab3a20cbe09cd09430d82b58eae17bb7680b1d93660a3debc02862e917"
+  },
+  "original_contract": {
+    "biglybt_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "network_attribute": "attributes.networks list of original network names",
+    "peer_source": "Tracker",
+    "source": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java:2110\u20132164"
+  },
+  "validation": {
+    "current_beforeimages": "exact",
+    "previous_storage_test_source": "byte-exact after removing include+single new call",
+    "whitespace": "PASS",
+    "compile": false,
+    "test_execution": false,
+    "native_edits": false
+  }
+}

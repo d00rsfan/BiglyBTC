@@ -1,0 +1,933 @@
+preview	Run offline unit tests	﻿2026-10-30T15:29:39.0694766Z ##[group]Run set -euo pipefail
+preview	Run offline unit tests	2026-10-30T15:29:39.0694994Z ^[[36;1mset -euo pipefail^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0695165Z ^[[36;1mexport QT_PLUGIN_PATH="$BIGLYBTC_QT_PREFIX/plugins"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0695418Z ^[[36;1mexport QT_QPA_PLATFORM_PLUGIN_PATH="$BIGLYBTC_QT_PREFIX/plugins/platforms"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0695660Z ^[[36;1mmkdir -m 700 "$EVIDENCE_DIR/engine-captures"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0695893Z ^[[36;1mexport BIGLYBTC_ENGINE_CAPTURE_DIRECTORY="$EVIDENCE_DIR/engine-captures"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0696135Z ^[[36;1mmkdir -m 700 "$EVIDENCE_DIR/activity-captures"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0696404Z ^[[36;1mexport BIGLYBTC_ENGINE_ACTIVITY_CAPTURE_DIRECTORY="$EVIDENCE_DIR/activity-captures"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0696656Z ^[[36;1mmkdir -m 700 "$EVIDENCE_DIR/range-captures"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0696891Z ^[[36;1mexport BIGLYBTC_HISTORY_RANGE_CAPTURE_DIRECTORY="$EVIDENCE_DIR/range-captures"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0697153Z ^[[36;1mmkdir -m 700 "$EVIDENCE_DIR/native-session-captures"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0697452Z ^[[36;1mexport BIGLYBTC_NATIVE_SESSION_CAPTURE_DIRECTORY="$EVIDENCE_DIR/native-session-captures"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0697761Z ^[[36;1m# Explicit CI authorization for the fixed caller-dropping test helper.^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0697985Z ^[[36;1mexport BIGLYBTC_PUBLIC_ADMIN_MODE=sudo^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0698230Z ^[[36;1mexport BIGLYBTC_PUBLIC_ADMIN_HELPER="$BUILD_DIR/tests/biglybtc-public-netns-admin"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0698562Z ^[[36;1mexport BIGLYBTC_PUBLIC_ADMIN_SHA256=$(sha256sum "$BIGLYBTC_PUBLIC_ADMIN_HELPER" | cut -d ' ' -f1)^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0699009Z ^[[36;1mexport BIGLYBTC_PUBLIC_ADMIN_RECEIPT="$EVIDENCE_DIR/public-namespace-launch.json"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0699294Z ^[[36;1m/usr/bin/ctest --test-dir "$BUILD_DIR" -L unit --no-tests=error \^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0699559Z ^[[36;1m  --output-on-failure --output-junit "$EVIDENCE_DIR/unit-tests.xml" \^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0699786Z ^[[36;1m  2>&1 | tee "$EVIDENCE_DIR/unit-tests.log"^[[0m
+preview	Run offline unit tests	2026-10-30T15:29:39.0724143Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+preview	Run offline unit tests	2026-10-30T15:29:39.0724453Z env:
+preview	Run offline unit tests	2026-10-30T15:29:39.0724569Z   QT_QPA_PLATFORM: offscreen
+preview	Run offline unit tests	2026-10-30T15:29:39.0724706Z   TMPDIR: /tmp
+preview	Run offline unit tests	2026-10-30T15:29:39.0724863Z   BUILD_DIR: /home/runner/work/_temp/biglybtc-preview-ci-build
+preview	Run offline unit tests	2026-10-30T15:29:39.0725095Z   EVIDENCE_DIR: /home/runner/work/_temp/biglybtc-preview-ci-evidence
+preview	Run offline unit tests	2026-10-30T15:29:39.0725299Z   BIGLYBTC_CXX: /usr/bin/g++-16
+preview	Run offline unit tests	2026-10-30T15:29:39.0725531Z   BIGLYBTC_QT_PREFIX: /home/runner/work/_temp/biglybtc-preview-ci-dependencies/Qt/6.12.0/gcc_64
+preview	Run offline unit tests	2026-10-30T15:29:39.0725853Z   BIGLYBTC_DEPENDENCY_EVIDENCE: /home/runner/work/_temp/biglybtc-preview-ci-dependencies
+preview	Run offline unit tests	2026-10-30T15:29:39.0726081Z ##[endgroup]
+preview	Run offline unit tests	2026-10-30T15:29:39.0941232Z Test project /home/runner/work/_temp/biglybtc-preview-ci-build
+preview	Run offline unit tests	2026-10-30T15:29:39.0970731Z         Start   1: original-rating-data
+preview	Run offline unit tests	2026-10-30T15:29:39.1500822Z   1/210 Test   #1: original-rating-data ........................   Passed    0.05 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.1501580Z         Start   2: bounded-rating-data
+preview	Run offline unit tests	2026-10-30T15:29:39.1602602Z   2/210 Test   #2: bounded-rating-data .........................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.1603052Z         Start   3: original-rating-local-policy
+preview	Run offline unit tests	2026-10-30T15:29:39.2229606Z   3/210 Test   #3: original-rating-local-policy ................   Passed    0.06 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.2230051Z         Start   4: bounded-rating-local-policy
+preview	Run offline unit tests	2026-10-30T15:29:39.2320210Z   4/210 Test   #4: bounded-rating-local-policy .................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.2320769Z         Start   5: original-tor-safecookie
+preview	Run offline unit tests	2026-10-30T15:29:39.2689532Z   5/210 Test   #5: original-tor-safecookie .....................   Passed    0.04 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.2691600Z         Start   6: bounded-tor-safecookie
+preview	Run offline unit tests	2026-10-30T15:29:39.2726360Z   6/210 Test   #6: bounded-tor-safecookie ......................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.2731805Z         Start  11: bounded-plugin-attributes
+preview	Run offline unit tests	2026-10-30T15:29:39.2745912Z   7/210 Test  #11: bounded-plugin-attributes ...................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.2750574Z         Start  12: bounded-core-formats
+preview	Run offline unit tests	2026-10-30T15:29:39.2814552Z   8/210 Test  #12: bounded-core-formats ........................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.2814974Z         Start  13: saved-hosting-sharing-projection
+preview	Run offline unit tests	2026-10-30T15:29:39.2834651Z   9/210 Test  #13: saved-hosting-sharing-projection ............   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.2837972Z         Start  14: readonly-saved-service-views
+preview	Run offline unit tests	2026-10-30T15:29:39.3499868Z  10/210 Test  #14: readonly-saved-service-views ................   Passed    0.07 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.3500331Z         Start  15: saved-library-inventory
+preview	Run offline unit tests	2026-10-30T15:29:39.3522533Z  11/210 Test  #15: saved-library-inventory .....................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.3522902Z         Start  16: owned-engine-statistics-arithmetic
+preview	Run offline unit tests	2026-10-30T15:29:39.3603649Z  12/210 Test  #16: owned-engine-statistics-arithmetic ..........   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.3604100Z         Start  17: saved-statistics-projection
+preview	Run offline unit tests	2026-10-30T15:29:39.5124751Z  13/210 Test  #17: saved-statistics-projection .................   Passed    0.15 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.5125212Z         Start  18: saved-statistics-profile-reader
+preview	Run offline unit tests	2026-10-30T15:29:39.6731313Z  14/210 Test  #18: saved-statistics-profile-reader .............   Passed    0.16 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.6731790Z         Start  19: saved-history-projection
+preview	Run offline unit tests	2026-10-30T15:29:39.6832426Z  15/210 Test  #19: saved-history-projection ....................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.6833054Z         Start  20: saved-history-profile-reader
+preview	Run offline unit tests	2026-10-30T15:29:39.7084590Z  16/210 Test  #20: saved-history-profile-reader ................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.7084920Z         Start  21: saved-history-week-dates
+preview	Run offline unit tests	2026-10-30T15:29:39.7150109Z  17/210 Test  #21: saved-history-week-dates ....................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.7153203Z         Start  22: saved-history-week-reader
+preview	Run offline unit tests	2026-10-30T15:29:39.7955590Z  18/210 Test  #22: saved-history-week-reader ...................   Passed    0.08 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.7955997Z         Start  23: saved-history-month-dates
+preview	Run offline unit tests	2026-10-30T15:29:39.8121011Z  19/210 Test  #23: saved-history-month-dates ...................   Passed    0.02 sec
+preview	Run offline unit tests	2026-10-30T15:29:39.8121387Z         Start  24: saved-history-month-reader
+preview	Run offline unit tests	2026-10-30T15:29:40.4562867Z  20/210 Test  #24: saved-history-month-reader ..................   Passed    0.64 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.4563360Z         Start  25: classic-preferences-codec
+preview	Run offline unit tests	2026-10-30T15:29:40.6003375Z  21/210 Test  #25: classic-preferences-codec ...................   Passed    0.14 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.6003850Z         Start  26: classic-preferences-profile-save
+preview	Run offline unit tests	2026-10-30T15:29:40.6936762Z  22/210 Test  #26: classic-preferences-profile-save ............   Passed    0.09 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.6937116Z         Start  27: compatible-config-first-create
+preview	Run offline unit tests	2026-10-30T15:29:40.7396315Z  23/210 Test  #27: compatible-config-first-create ..............   Passed    0.05 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.7396723Z         Start  28: classic-preferences-profile-first-save
+preview	Run offline unit tests	2026-10-30T15:29:40.7686552Z  24/210 Test  #28: classic-preferences-profile-first-save ......   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.7689687Z         Start  29: classic-column-layout-projection
+preview	Run offline unit tests	2026-10-30T15:29:40.8195103Z  25/210 Test  #29: classic-column-layout-projection ............   Passed    0.05 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.8195600Z         Start  30: classic-column-layout-profile-reader
+preview	Run offline unit tests	2026-10-30T15:29:40.9569898Z  26/210 Test  #30: classic-column-layout-profile-reader ........   Passed    0.14 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.9570241Z         Start  31: pure-saved-dnd-aggregates
+preview	Run offline unit tests	2026-10-30T15:29:40.9594203Z  27/210 Test  #31: pure-saved-dnd-aggregates ...................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.9594753Z         Start  32: cached-state-metadata
+preview	Run offline unit tests	2026-10-30T15:29:40.9611946Z  28/210 Test  #32: cached-state-metadata .......................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.9612538Z         Start  33: original-torrent-geometry
+preview	Run offline unit tests	2026-10-30T15:29:40.9631076Z  29/210 Test  #33: original-torrent-geometry ...................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.9631413Z         Start  34: original-file-priorities
+preview	Run offline unit tests	2026-10-30T15:29:40.9648902Z  30/210 Test  #34: original-file-priorities ....................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.9649283Z         Start  35: structured-document-edits
+preview	Run offline unit tests	2026-10-30T15:29:40.9667583Z  31/210 Test  #35: structured-document-edits ...................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.9667975Z         Start  36: compressed-state-envelope
+preview	Run offline unit tests	2026-10-30T15:29:40.9684358Z  32/210 Test  #36: compressed-state-envelope ...................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.9684685Z         Start  37: bounded-executor
+preview	Run offline unit tests	2026-10-30T15:29:40.9709457Z  33/210 Test  #37: bounded-executor ............................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:40.9709843Z         Start  38: original-rpc-profile-snapshot
+preview	Run offline unit tests	2026-10-30T15:29:41.1523942Z  34/210 Test  #38: original-rpc-profile-snapshot ...............   Passed    0.18 sec
+preview	Run offline unit tests	2026-10-30T15:29:41.1524530Z         Start  39: original-mldht-routing-cache
+preview	Run offline unit tests	2026-10-30T15:29:41.2691594Z  35/210 Test  #39: original-mldht-routing-cache ................   Passed    0.12 sec
+preview	Run offline unit tests	2026-10-30T15:29:41.2692084Z         Start  40: original-plugin-settings
+preview	Run offline unit tests	2026-10-30T15:29:41.3992703Z  36/210 Test  #40: original-plugin-settings ....................   Passed    0.13 sec
+preview	Run offline unit tests	2026-10-30T15:29:41.3993078Z         Start  41: original-plugin-attributes
+preview	Run offline unit tests	2026-10-30T15:29:41.4277927Z  37/210 Test  #41: original-plugin-attributes ..................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:29:41.4280996Z         Start  42: owned-peer-readiness
+preview	Run offline unit tests	2026-10-30T15:29:41.5039251Z  38/210 Test  #42: owned-peer-readiness ........................   Passed    0.08 sec
+preview	Run offline unit tests	2026-10-30T15:29:41.5039698Z         Start  63: saved-services-bridge-lifecycle
+preview	Run offline unit tests	2026-10-30T15:29:43.2083315Z  39/210 Test  #63: saved-services-bridge-lifecycle .............   Passed    1.70 sec
+preview	Run offline unit tests	2026-10-30T15:29:43.2083814Z         Start  64: classic-saved-queue-position
+preview	Run offline unit tests	2026-10-30T15:29:43.4141978Z  40/210 Test  #64: classic-saved-queue-position ................   Passed    0.21 sec
+preview	Run offline unit tests	2026-10-30T15:29:43.4142420Z         Start  65: classic-saved-selected-statistics
+preview	Run offline unit tests	2026-10-30T15:29:43.5997701Z  41/210 Test  #65: classic-saved-selected-statistics ...........   Passed    0.19 sec
+preview	Run offline unit tests	2026-10-30T15:29:43.5998150Z         Start  66: classic-view-navigation
+preview	Run offline unit tests	2026-10-30T15:29:43.6944799Z  42/210 Test  #66: classic-view-navigation .....................   Passed    0.09 sec
+preview	Run offline unit tests	2026-10-30T15:29:43.6945338Z         Start  67: saved-services-view-navigation
+preview	Run offline unit tests	2026-10-30T15:29:44.3680994Z  43/210 Test  #67: saved-services-view-navigation ..............   Passed    0.67 sec
+preview	Run offline unit tests	2026-10-30T15:29:44.3681462Z         Start  68: classic-close-tab-lifecycle
+preview	Run offline unit tests	2026-10-30T15:29:44.7056716Z  44/210 Test  #68: classic-close-tab-lifecycle .................   Passed    0.34 sec
+preview	Run offline unit tests	2026-10-30T15:29:44.7057437Z         Start  69: classic-preferences-header-roundtrip
+preview	Run offline unit tests	2026-10-30T15:29:44.7535946Z  45/210 Test  #69: classic-preferences-header-roundtrip ........   Passed    0.05 sec
+preview	Run offline unit tests	2026-10-30T15:29:44.7536376Z         Start  70: statistics-page-behavior
+preview	Run offline unit tests	2026-10-30T15:29:47.3645322Z  46/210 Test  #70: statistics-page-behavior ....................   Passed    2.61 sec
+preview	Run offline unit tests	2026-10-30T15:29:47.3645779Z         Start  71: statistics-navigation-page
+preview	Run offline unit tests	2026-10-30T15:29:48.6469517Z  47/210 Test  #71: statistics-navigation-page ..................   Passed    1.28 sec
+preview	Run offline unit tests	2026-10-30T15:29:48.6470118Z         Start  72: statistics-navigation-window-worker
+preview	Run offline unit tests	2026-10-30T15:29:50.3702678Z  48/210 Test  #72: statistics-navigation-window-worker .........   Passed    1.72 sec
+preview	Run offline unit tests	2026-10-30T15:29:50.3703036Z         Start  73: saved-history-copy
+preview	Run offline unit tests	2026-10-30T15:29:50.3958934Z  49/210 Test  #73: saved-history-copy ..........................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:29:50.3959349Z         Start  74: saved-history-keyboard
+preview	Run offline unit tests	2026-10-30T15:29:50.4252272Z  50/210 Test  #74: saved-history-keyboard ......................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:29:50.4254769Z         Start  75: saved-history-traffic-data
+preview	Run offline unit tests	2026-10-30T15:29:50.4366223Z  51/210 Test  #75: saved-history-traffic-data ..................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:29:50.4366674Z         Start  76: saved-history-traffic-views
+preview	Run offline unit tests	2026-10-30T15:29:51.2841508Z  52/210 Test  #76: saved-history-traffic-views .................   Passed    0.85 sec
+preview	Run offline unit tests	2026-10-30T15:29:51.2841977Z         Start  77: saved-history-hourly-resolution
+preview	Run offline unit tests	2026-10-30T15:29:51.3697067Z  53/210 Test  #77: saved-history-hourly-resolution .............   Passed    0.09 sec
+preview	Run offline unit tests	2026-10-30T15:29:51.3697395Z         Start  78: saved-history-plot-data
+preview	Run offline unit tests	2026-10-30T15:29:51.3785111Z  54/210 Test  #78: saved-history-plot-data .....................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:29:51.3785436Z         Start  79: saved-history-plot-widget
+preview	Run offline unit tests	2026-10-30T15:29:51.3987811Z  55/210 Test  #79: saved-history-plot-widget ...................   Passed    0.02 sec
+preview	Run offline unit tests	2026-10-30T15:29:51.3988279Z         Start  80: saved-history-chart-view
+preview	Run offline unit tests	2026-10-30T15:29:51.6463993Z  56/210 Test  #80: saved-history-chart-view ....................   Passed    0.25 sec
+preview	Run offline unit tests	2026-10-30T15:29:51.6464726Z         Start  81: saved-history-page
+preview	Run offline unit tests	2026-10-30T15:29:52.0188684Z  57/210 Test  #81: saved-history-page ..........................***Failed    0.37 sec
+preview	Run offline unit tests	2026-10-30T15:29:52.0189089Z ********* Start testing of HistoryViewUiTests *********
+preview	Run offline unit tests	2026-10-30T15:29:52.0189450Z Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+preview	Run offline unit tests	2026-10-30T15:29:52.0196664Z PASS   : HistoryViewUiTests::initTestCase()
+preview	Run offline unit tests	2026-10-30T15:29:52.0196943Z PASS   : HistoryViewUiTests::initialUtcDateAndFixedUnknownReadOnlyModel()
+preview	Run offline unit tests	2026-10-30T15:29:52.0197341Z QWARN  : HistoryViewUiTests::pageDefaultPreservesActivityAndLazyHistoryActivation() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0197878Z FAIL!  : HistoryViewUiTests::pageDefaultPreservesActivityAndLazyHistoryActivation() Compared values are not the same
+preview	Run offline unit tests	2026-10-30T15:29:52.0198178Z    Actual   (page.tabs().count()): 11
+preview	Run offline unit tests	2026-10-30T15:29:52.0198325Z    Expected (10)                 : 10
+preview	Run offline unit tests	2026-10-30T15:29:52.0198589Z    Loc: [/home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/history_view_ui_tests.cpp(93)]
+preview	Run offline unit tests	2026-10-30T15:29:52.0198998Z QWARN  : HistoryViewUiTests::hiddenDateSelectionStillRequestsOnFirstActivation() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0199397Z PASS   : HistoryViewUiTests::hiddenDateSelectionStillRequestsOnFirstActivation()
+preview	Run offline unit tests	2026-10-30T15:29:52.0199781Z QWARN  : HistoryViewUiTests::hiddenDateChangeRequestsNewSelectionWhenReturning() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0200166Z PASS   : HistoryViewUiTests::hiddenDateChangeRequestsNewSelectionWhenReturning()
+preview	Run offline unit tests	2026-10-30T15:29:52.0200556Z QWARN  : HistoryViewUiTests::previousNextCalendarAndExplicitRefreshKeepUtcDates() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0200949Z PASS   : HistoryViewUiTests::previousNextCalendarAndExplicitRefreshKeepUtcDates()
+preview	Run offline unit tests	2026-10-30T15:29:52.0201300Z QWARN  : HistoryViewUiTests::dateRangeNavigationDoesNotWrap() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0201616Z PASS   : HistoryViewUiTests::dateRangeNavigationDoesNotWrap()
+preview	Run offline unit tests	2026-10-30T15:29:52.0201962Z QWARN  : HistoryViewUiTests::sameNonzeroSessionRequestAndDateMustMatchOnce() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0202338Z PASS   : HistoryViewUiTests::sameNonzeroSessionRequestAndDateMustMatchOnce()
+preview	Run offline unit tests	2026-10-30T15:29:52.0202694Z QWARN  : HistoryViewUiTests::oldDateCannotSettleAfterSelectionChange() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0203035Z PASS   : HistoryViewUiTests::oldDateCannotSettleAfterSelectionChange()
+preview	Run offline unit tests	2026-10-30T15:29:52.0203383Z QWARN  : HistoryViewUiTests::newRequestClearsFactsWithoutInferringZero() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0203889Z PASS   : HistoryViewUiTests::newRequestClearsFactsWithoutInferringZero()
+preview	Run offline unit tests	2026-10-30T15:29:52.0204423Z QWARN  : HistoryViewUiTests::missingAndExistingWithoutObservationsStayDistinct() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0204810Z PASS   : HistoryViewUiTests::missingAndExistingWithoutObservationsStayDistinct()
+preview	Run offline unit tests	2026-10-30T15:29:52.0205180Z QWARN  : HistoryViewUiTests::actualObservedZeroIsKnownAcrossAllSixDomains() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0205548Z PASS   : HistoryViewUiTests::actualObservedZeroIsKnownAcrossAllSixDomains()
+preview	Run offline unit tests	2026-10-30T15:29:52.0205914Z QWARN  : HistoryViewUiTests::sixCounterOrderAndSignedInt64BoundariesAreExact() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0206283Z PASS   : HistoryViewUiTests::sixCounterOrderAndSignedInt64BoundariesAreExact()
+preview	Run offline unit tests	2026-10-30T15:29:52.0206672Z QWARN  : HistoryViewUiTests::actualParserAggregatesHoursAndExcludesSessionBaseline() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0207083Z PASS   : HistoryViewUiTests::actualParserAggregatesHoursAndExcludesSessionBaseline()
+preview	Run offline unit tests	2026-10-30T15:29:52.0207482Z QWARN  : HistoryViewUiTests::outsideDayRecordsAreReportedWithoutSelectedTotals() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0207862Z PASS   : HistoryViewUiTests::outsideDayRecordsAreReportedWithoutSelectedTotals()
+preview	Run offline unit tests	2026-10-30T15:29:52.0208226Z QWARN  : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-0) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0208665Z PASS   : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-0)
+preview	Run offline unit tests	2026-10-30T15:29:52.0209008Z QWARN  : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-1) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0209354Z PASS   : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-1)
+preview	Run offline unit tests	2026-10-30T15:29:52.0209699Z QWARN  : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-2) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0210044Z PASS   : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-2)
+preview	Run offline unit tests	2026-10-30T15:29:52.0210387Z QWARN  : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-3) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0210725Z PASS   : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-3)
+preview	Run offline unit tests	2026-10-30T15:29:52.0211063Z QWARN  : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-4) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0211406Z PASS   : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-4)
+preview	Run offline unit tests	2026-10-30T15:29:52.0211743Z QWARN  : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-5) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0212087Z PASS   : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-5)
+preview	Run offline unit tests	2026-10-30T15:29:52.0212424Z QWARN  : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-6) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0212764Z PASS   : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-6)
+preview	Run offline unit tests	2026-10-30T15:29:52.0213106Z QWARN  : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-7) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0213447Z PASS   : HistoryViewUiTests::incompletePacketsFailWholeRead(incomplete-7)
+preview	Run offline unit tests	2026-10-30T15:29:52.0213794Z QWARN  : HistoryViewUiTests::failedReadClearsOldFactsAndBoundsPlainText() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0214154Z PASS   : HistoryViewUiTests::failedReadClearsOldFactsAndBoundsPlainText()
+preview	Run offline unit tests	2026-10-30T15:29:52.0214661Z QWARN  : HistoryViewUiTests::resetSessionClearsFactsAndDoesNotEmitReadReentrantly() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0215064Z PASS   : HistoryViewUiTests::resetSessionClearsFactsAndDoesNotEmitReadReentrantly()
+preview	Run offline unit tests	2026-10-30T15:29:52.0215552Z QWARN  : HistoryViewUiTests::hiddenCachesLatestWithoutModelOrLabelMutation() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0215922Z PASS   : HistoryViewUiTests::hiddenCachesLatestWithoutModelOrLabelMutation()
+preview	Run offline unit tests	2026-10-30T15:29:52.0216301Z QWARN  : HistoryViewUiTests::minimizedCachesWithoutMutatingThenRestoresLatest() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0216679Z PASS   : HistoryViewUiTests::minimizedCachesWithoutMutatingThenRestoresLatest()
+preview	Run offline unit tests	2026-10-30T15:29:52.0217105Z QWARN  : HistoryViewUiTests::pageSavedTotalsRefreshRetainsHistoryAndExplicitSessionResetClearsIt() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0217582Z PASS   : HistoryViewUiTests::pageSavedTotalsRefreshRetainsHistoryAndExplicitSessionResetClearsIt()
+preview	Run offline unit tests	2026-10-30T15:29:52.0217997Z QWARN  : HistoryViewUiTests::modelNotificationReentryWinsOverOlderResult() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0218358Z PASS   : HistoryViewUiTests::modelNotificationReentryWinsOverOlderResult()
+preview	Run offline unit tests	2026-10-30T15:29:52.0218696Z QWARN  : HistoryViewUiTests::modelNotificationMayDeleteView() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0219002Z PASS   : HistoryViewUiTests::modelNotificationMayDeleteView()
+preview	Run offline unit tests	2026-10-30T15:29:52.0219323Z QWARN  : HistoryViewUiTests::labelMutationReentryStopsOlderRender() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0219655Z PASS   : HistoryViewUiTests::labelMutationReentryStopsOlderRender()
+preview	Run offline unit tests	2026-10-30T15:29:52.0219964Z QWARN  : HistoryViewUiTests::labelMutationMayDeleteView() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0220343Z PASS   : HistoryViewUiTests::labelMutationMayDeleteView()
+preview	Run offline unit tests	2026-10-30T15:29:52.0220682Z QWARN  : HistoryViewUiTests::explicitRefreshMayDeleteViewWithoutTrailingAccess() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:52.0221070Z PASS   : HistoryViewUiTests::explicitRefreshMayDeleteViewWithoutTrailingAccess()
+preview	Run offline unit tests	2026-10-30T15:29:52.0221312Z PASS   : HistoryViewUiTests::cleanupTestCase()
+preview	Run offline unit tests	2026-10-30T15:29:52.0221509Z Totals: 33 passed, 1 failed, 0 skipped, 0 blacklisted, 361ms
+preview	Run offline unit tests	2026-10-30T15:29:52.0221711Z ********* Finished testing of HistoryViewUiTests *********
+preview	Run offline unit tests	2026-10-30T15:29:52.0221835Z 
+preview	Run offline unit tests	2026-10-30T15:29:52.0221905Z         Start  82: saved-history-window-worker
+preview	Run offline unit tests	2026-10-30T15:29:54.0180992Z  58/210 Test  #82: saved-history-window-worker .................   Passed    2.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:54.0181438Z         Start  83: saved-history-week-page
+preview	Run offline unit tests	2026-10-30T15:29:54.5083777Z  59/210 Test  #83: saved-history-week-page .....................***Failed    0.49 sec
+preview	Run offline unit tests	2026-10-30T15:29:54.5084344Z ********* Start testing of HistoryWeekViewUiTests *********
+preview	Run offline unit tests	2026-10-30T15:29:54.5084886Z Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+preview	Run offline unit tests	2026-10-30T15:29:54.5085454Z PASS   : HistoryWeekViewUiTests::initTestCase()
+preview	Run offline unit tests	2026-10-30T15:29:54.5085853Z PASS   : HistoryWeekViewUiTests::initialUtcDateAndSevenByEightReadOnlyModel()
+preview	Run offline unit tests	2026-10-30T15:29:54.5086492Z QWARN  : HistoryWeekViewUiTests::dailyRemainsDefaultAndWeeklyReadsAreLazyAndIndependent() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5087260Z FAIL!  : HistoryWeekViewUiTests::dailyRemainsDefaultAndWeeklyReadsAreLazyAndIndependent() Compared values are not the same
+preview	Run offline unit tests	2026-10-30T15:29:54.5087732Z    Actual   (page.tabs().count()): 11
+preview	Run offline unit tests	2026-10-30T15:29:54.5087949Z    Expected (10)                 : 10
+preview	Run offline unit tests	2026-10-30T15:29:54.5088328Z    Loc: [/home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/history_week_view_ui_tests.cpp(100)]
+preview	Run offline unit tests	2026-10-30T15:29:54.5088986Z QWARN  : HistoryWeekViewUiTests::dateSelectedBeforeFirstWeeklyActivationIsNotLost() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5089692Z PASS   : HistoryWeekViewUiTests::dateSelectedBeforeFirstWeeklyActivationIsNotLost()
+preview	Run offline unit tests	2026-10-30T15:29:54.5090189Z QWARN  : HistoryWeekViewUiTests::hiddenDateChangeRequestsOnlyWhenReturning() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5090720Z PASS   : HistoryWeekViewUiTests::hiddenDateChangeRequestsOnlyWhenReturning()
+preview	Run offline unit tests	2026-10-30T15:29:54.5091082Z QWARN  : HistoryWeekViewUiTests::previousAndNextMoveExactlySevenUtcDates() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5091501Z PASS   : HistoryWeekViewUiTests::previousAndNextMoveExactlySevenUtcDates()
+preview	Run offline unit tests	2026-10-30T15:29:54.5092057Z QWARN  : HistoryWeekViewUiTests::boundaryButtonsNeverClampOrPublishPartialPeriods() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5092653Z PASS   : HistoryWeekViewUiTests::boundaryButtonsNeverClampOrPublishPartialPeriods()
+preview	Run offline unit tests	2026-10-30T15:29:54.5093219Z QWARN  : HistoryWeekViewUiTests::exactChronologicalUtcDatesIncludeLeapDay() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5093764Z PASS   : HistoryWeekViewUiTests::exactChronologicalUtcDatesIncludeLeapDay()
+preview	Run offline unit tests	2026-10-30T15:29:54.5094545Z QWARN  : HistoryWeekViewUiTests::sevenMissingRowsAreSuccessfulUnknownNotBatchMissingOrZero() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5095238Z PASS   : HistoryWeekViewUiTests::sevenMissingRowsAreSuccessfulUnknownNotBatchMissingOrZero()
+preview	Run offline unit tests	2026-10-30T15:29:54.5095906Z QWARN  : HistoryWeekViewUiTests::missingEmptyHeaderZeroAndSignedRowsRemainDistinct() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5096525Z PASS   : HistoryWeekViewUiTests::missingEmptyHeaderZeroAndSignedRowsRemainDistinct()
+preview	Run offline unit tests	2026-10-30T15:29:54.5097314Z QWARN  : HistoryWeekViewUiTests::allSixDomainsHaveExactSignedInt64RolesAndTooltips() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5097929Z PASS   : HistoryWeekViewUiTests::allSixDomainsHaveExactSignedInt64RolesAndTooltips()
+preview	Run offline unit tests	2026-10-30T15:29:54.5098576Z QWARN  : HistoryWeekViewUiTests::sevenMaximumDailyValuesDoNotCreateOrOverflowAWeeklySum() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5099392Z PASS   : HistoryWeekViewUiTests::sevenMaximumDailyValuesDoNotCreateOrOverflowAWeeklySum()
+preview	Run offline unit tests	2026-10-30T15:29:54.5100044Z QWARN  : HistoryWeekViewUiTests::exactSessionRequestAndEndingDateSettleOnlyOnce() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5100681Z PASS   : HistoryWeekViewUiTests::exactSessionRequestAndEndingDateSettleOnlyOnce()
+preview	Run offline unit tests	2026-10-30T15:29:54.5101301Z QWARN  : HistoryWeekViewUiTests::dateChangeRejectsOldResultAndClearsVisibleFacts() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5101927Z PASS   : HistoryWeekViewUiTests::dateChangeRejectsOldResultAndClearsVisibleFacts()
+preview	Run offline unit tests	2026-10-30T15:29:54.5102550Z QWARN  : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-0) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5103163Z PASS   : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-0)
+preview	Run offline unit tests	2026-10-30T15:29:54.5103769Z QWARN  : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-1) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5104877Z PASS   : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-1)
+preview	Run offline unit tests	2026-10-30T15:29:54.5105488Z QWARN  : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-2) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5106096Z PASS   : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-2)
+preview	Run offline unit tests	2026-10-30T15:29:54.5106704Z QWARN  : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-3) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5107323Z PASS   : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-3)
+preview	Run offline unit tests	2026-10-30T15:29:54.5107977Z QWARN  : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-4) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5108595Z PASS   : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-4)
+preview	Run offline unit tests	2026-10-30T15:29:54.5109209Z QWARN  : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-5) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5110013Z PASS   : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-5)
+preview	Run offline unit tests	2026-10-30T15:29:54.5110621Z QWARN  : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-6) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5111229Z PASS   : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-6)
+preview	Run offline unit tests	2026-10-30T15:29:54.5111839Z QWARN  : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-7) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5112452Z PASS   : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-7)
+preview	Run offline unit tests	2026-10-30T15:29:54.5113069Z QWARN  : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-8) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5113682Z PASS   : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-8)
+preview	Run offline unit tests	2026-10-30T15:29:54.5114536Z QWARN  : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-9) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5115150Z PASS   : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-9)
+preview	Run offline unit tests	2026-10-30T15:29:54.5115759Z QWARN  : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-10) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5116398Z PASS   : HistoryWeekViewUiTests::malformedBatchMetadataFailsWholeResult(invalid-10)
+preview	Run offline unit tests	2026-10-30T15:29:54.5117119Z QWARN  : HistoryWeekViewUiTests::failedBatchClearsAllRowsAndBoundsPlainText() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5117722Z PASS   : HistoryWeekViewUiTests::failedBatchClearsAllRowsAndBoundsPlainText()
+preview	Run offline unit tests	2026-10-30T15:29:54.5118352Z QWARN  : HistoryWeekViewUiTests::resetSessionRejectsOldPacketsWithoutEmittingRead() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5118999Z PASS   : HistoryWeekViewUiTests::resetSessionRejectsOldPacketsWithoutEmittingRead()
+preview	Run offline unit tests	2026-10-30T15:29:54.5119670Z QWARN  : HistoryWeekViewUiTests::hiddenCachesWithoutLabelsOrModelMutationThenRendersLatest() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5120384Z PASS   : HistoryWeekViewUiTests::hiddenCachesWithoutLabelsOrModelMutationThenRendersLatest()
+preview	Run offline unit tests	2026-10-30T15:29:54.5121103Z QWARN  : HistoryWeekViewUiTests::minimizedCachesAndRestoreRendersFailedWithoutStaleValues() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5121854Z PASS   : HistoryWeekViewUiTests::minimizedCachesAndRestoreRendersFailedWithoutStaleValues()
+preview	Run offline unit tests	2026-10-30T15:29:54.5122564Z QWARN  : HistoryWeekViewUiTests::pageResetClearsBothViewsButSavedTotalsRefreshDoesNot() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5123247Z PASS   : HistoryWeekViewUiTests::pageResetClearsBothViewsButSavedTotalsRefreshDoesNot()
+preview	Run offline unit tests	2026-10-30T15:29:54.5123904Z QWARN  : HistoryWeekViewUiTests::modelNotificationReentryWinsOverOlderBatch() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5124633Z PASS   : HistoryWeekViewUiTests::modelNotificationReentryWinsOverOlderBatch()
+preview	Run offline unit tests	2026-10-30T15:29:54.5125208Z QWARN  : HistoryWeekViewUiTests::modelNotificationMayDeleteView() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5125741Z PASS   : HistoryWeekViewUiTests::modelNotificationMayDeleteView()
+preview	Run offline unit tests	2026-10-30T15:29:54.5126297Z QWARN  : HistoryWeekViewUiTests::labelMutationReentryStopsOldFrame() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5126938Z PASS   : HistoryWeekViewUiTests::labelMutationReentryStopsOldFrame()
+preview	Run offline unit tests	2026-10-30T15:29:54.5127453Z QWARN  : HistoryWeekViewUiTests::labelMutationMayDeleteView() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5127954Z PASS   : HistoryWeekViewUiTests::labelMutationMayDeleteView()
+preview	Run offline unit tests	2026-10-30T15:29:54.5128565Z QWARN  : HistoryWeekViewUiTests::pageDeletionDuringFirstChildResetCannotReachSecondChild() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5129391Z PASS   : HistoryWeekViewUiTests::pageDeletionDuringFirstChildResetCannotReachSecondChild()
+preview	Run offline unit tests	2026-10-30T15:29:54.5130057Z QWARN  : HistoryWeekViewUiTests::nestedNewerProfileResetWinsForBothChildren() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5130685Z PASS   : HistoryWeekViewUiTests::nestedNewerProfileResetWinsForBothChildren()
+preview	Run offline unit tests	2026-10-30T15:29:54.5131316Z QWARN  : HistoryWeekViewUiTests::refreshSignalMayDeleteViewWithoutTrailingAccess() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:54.5131982Z PASS   : HistoryWeekViewUiTests::refreshSignalMayDeleteViewWithoutTrailingAccess()
+preview	Run offline unit tests	2026-10-30T15:29:54.5132388Z PASS   : HistoryWeekViewUiTests::cleanupTestCase()
+preview	Run offline unit tests	2026-10-30T15:29:54.5132746Z Totals: 37 passed, 1 failed, 0 skipped, 0 blacklisted, 479ms
+preview	Run offline unit tests	2026-10-30T15:29:54.5133077Z ********* Finished testing of HistoryWeekViewUiTests *********
+preview	Run offline unit tests	2026-10-30T15:29:54.5133281Z 
+preview	Run offline unit tests	2026-10-30T15:29:54.5133405Z         Start  84: saved-history-week-window-worker
+preview	Run offline unit tests	2026-10-30T15:29:56.4535191Z  60/210 Test  #84: saved-history-week-window-worker ............   Passed    1.94 sec
+preview	Run offline unit tests	2026-10-30T15:29:56.4535654Z         Start  85: saved-history-month-plot-data
+preview	Run offline unit tests	2026-10-30T15:29:56.4708497Z  61/210 Test  #85: saved-history-month-plot-data ...............   Passed    0.02 sec
+preview	Run offline unit tests	2026-10-30T15:29:56.4711959Z         Start  86: saved-history-month-page
+preview	Run offline unit tests	2026-10-30T15:29:56.8647769Z  62/210 Test  #86: saved-history-month-page ....................***Failed    0.39 sec
+preview	Run offline unit tests	2026-10-30T15:29:56.8648716Z ********* Start testing of HistoryMonthViewUiTests *********
+preview	Run offline unit tests	2026-10-30T15:29:56.8649141Z Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+preview	Run offline unit tests	2026-10-30T15:29:56.8649511Z PASS   : HistoryMonthViewUiTests::initTestCase()
+preview	Run offline unit tests	2026-10-30T15:29:56.8649767Z PASS   : HistoryMonthViewUiTests::initialUtcBoundsAndThirtyByEightReadOnlyModel()
+preview	Run offline unit tests	2026-10-30T15:29:56.8650190Z QWARN  : HistoryMonthViewUiTests::dailyDefaultAndThreeIndependentLazyDatesArePreserved() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8650670Z FAIL!  : HistoryMonthViewUiTests::dailyDefaultAndThreeIndependentLazyDatesArePreserved() Compared values are not the same
+preview	Run offline unit tests	2026-10-30T15:29:56.8650974Z    Actual   (page.tabs().count()): 11
+preview	Run offline unit tests	2026-10-30T15:29:56.8651119Z    Expected (10)                 : 10
+preview	Run offline unit tests	2026-10-30T15:29:56.8651369Z    Loc: [/home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/history_month_view_ui_tests.cpp(84)]
+preview	Run offline unit tests	2026-10-30T15:29:56.8651854Z QWARN  : HistoryMonthViewUiTests::hiddenDateEditsReadOnlyTheLatestDateWhenTheMonthTabReturns() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8652328Z PASS   : HistoryMonthViewUiTests::hiddenDateEditsReadOnlyTheLatestDateWhenTheMonthTabReturns()
+preview	Run offline unit tests	2026-10-30T15:29:56.8652768Z QWARN  : HistoryMonthViewUiTests::previousNextAreFixedThirtyDatesAndNeverClampToShortRanges() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8653207Z PASS   : HistoryMonthViewUiTests::previousNextAreFixedThirtyDatesAndNeverClampToShortRanges()
+preview	Run offline unit tests	2026-10-30T15:29:56.8653655Z QWARN  : HistoryMonthViewUiTests::missingEmptyHeaderZeroAndAllSixSignedExtremesRemainDistinct() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8654103Z PASS   : HistoryMonthViewUiTests::missingEmptyHeaderZeroAndAllSixSignedExtremesRemainDistinct()
+preview	Run offline unit tests	2026-10-30T15:29:56.8654845Z QWARN  : HistoryMonthViewUiTests::thirtyMaximumValuesAreDisplayedIndividuallyWithoutAWholePeriodTotal() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8655338Z PASS   : HistoryMonthViewUiTests::thirtyMaximumValuesAreDisplayedIndividuallyWithoutAWholePeriodTotal()
+preview	Run offline unit tests	2026-10-30T15:29:56.8655800Z QWARN  : HistoryMonthViewUiTests::requestSessionDateAndOnceOnlyGuardsCannotSettleANewerRead() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8656235Z PASS   : HistoryMonthViewUiTests::requestSessionDateAndOnceOnlyGuardsCannotSettleANewerRead()
+preview	Run offline unit tests	2026-10-30T15:29:56.8656792Z QWARN  : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-0) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8657215Z PASS   : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-0)
+preview	Run offline unit tests	2026-10-30T15:29:56.8657640Z QWARN  : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-1) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8658061Z PASS   : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-1)
+preview	Run offline unit tests	2026-10-30T15:29:56.8658484Z QWARN  : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-2) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8658899Z PASS   : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-2)
+preview	Run offline unit tests	2026-10-30T15:29:56.8659319Z QWARN  : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-3) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8659738Z PASS   : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-3)
+preview	Run offline unit tests	2026-10-30T15:29:56.8660157Z QWARN  : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-4) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8660577Z PASS   : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-4)
+preview	Run offline unit tests	2026-10-30T15:29:56.8661001Z QWARN  : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-5) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8661521Z PASS   : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-5)
+preview	Run offline unit tests	2026-10-30T15:29:56.8661942Z QWARN  : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-6) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8662358Z PASS   : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-6)
+preview	Run offline unit tests	2026-10-30T15:29:56.8662796Z QWARN  : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-7) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8663218Z PASS   : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-7)
+preview	Run offline unit tests	2026-10-30T15:29:56.8663634Z QWARN  : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-8) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8664056Z PASS   : HistoryMonthViewUiTests::malformedReadyBatchIsAnExplicitWholeReadFailure(binding-8)
+preview	Run offline unit tests	2026-10-30T15:29:56.8664601Z QWARN  : HistoryMonthViewUiTests::failedReadBoundsPlainTextAndClearsPreviouslyObservedValues() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8665041Z PASS   : HistoryMonthViewUiTests::failedReadBoundsPlainTextAndClearsPreviouslyObservedValues()
+preview	Run offline unit tests	2026-10-30T15:29:56.8665485Z QWARN  : HistoryMonthViewUiTests::trafficChangesCoalesceRenderWithoutReadsOrTableNotifications() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8665944Z PASS   : HistoryMonthViewUiTests::trafficChangesCoalesceRenderWithoutReadsOrTableNotifications()
+preview	Run offline unit tests	2026-10-30T15:29:56.8666405Z QWARN  : HistoryMonthViewUiTests::hiddenAndMinimizedCacheWithoutVisibleMutationsThenRenderLatest() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8666869Z PASS   : HistoryMonthViewUiTests::hiddenAndMinimizedCacheWithoutVisibleMutationsThenRenderLatest()
+preview	Run offline unit tests	2026-10-30T15:29:56.8667344Z QWARN  : HistoryMonthViewUiTests::aggregateNavigationInvalidatesAllChoicesAndHiddenMonthChoicesRestore() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8667831Z PASS   : HistoryMonthViewUiTests::aggregateNavigationInvalidatesAllChoicesAndHiddenMonthChoicesRestore()
+preview	Run offline unit tests	2026-10-30T15:29:56.8668327Z QWARN  : HistoryMonthViewUiTests::pageSessionResetClearsAllThreeResultsWhileSavedTotalsRefreshKeepsThem() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8668922Z PASS   : HistoryMonthViewUiTests::pageSessionResetClearsAllThreeResultsWhileSavedTotalsRefreshKeepsThem()
+preview	Run offline unit tests	2026-10-30T15:29:56.8669391Z QWARN  : HistoryMonthViewUiTests::modelNotificationReentryKeepsNewerFailureAndCanDeleteOwner() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8669919Z QWARN  : HistoryMonthViewUiTests::modelNotificationReentryKeepsNewerFailureAndCanDeleteOwner() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8670355Z PASS   : HistoryMonthViewUiTests::modelNotificationReentryKeepsNewerFailureAndCanDeleteOwner()
+preview	Run offline unit tests	2026-10-30T15:29:56.8670800Z QWARN  : HistoryMonthViewUiTests::queuedTrafficTooltipMayDeleteViewAfterComboSetterHasReturned() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:56.8671259Z PASS   : HistoryMonthViewUiTests::queuedTrafficTooltipMayDeleteViewAfterComboSetterHasReturned()
+preview	Run offline unit tests	2026-10-30T15:29:56.8671543Z PASS   : HistoryMonthViewUiTests::cleanupTestCase()
+preview	Run offline unit tests	2026-10-30T15:29:56.8671748Z Totals: 24 passed, 1 failed, 0 skipped, 0 blacklisted, 383ms
+preview	Run offline unit tests	2026-10-30T15:29:56.8671953Z ********* Finished testing of HistoryMonthViewUiTests *********
+preview	Run offline unit tests	2026-10-30T15:29:56.8672078Z 
+preview	Run offline unit tests	2026-10-30T15:29:56.8672159Z         Start  87: saved-history-month-window-worker
+preview	Run offline unit tests	2026-10-30T15:29:58.7935892Z  63/210 Test  #87: saved-history-month-window-worker ...........   Passed    1.93 sec
+preview	Run offline unit tests	2026-10-30T15:29:58.7936352Z         Start  88: engine-activity-history
+preview	Run offline unit tests	2026-10-30T15:29:58.7979053Z  64/210 Test  #88: engine-activity-history .....................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:29:58.7979714Z         Start  89: engine-activity-view
+preview	Run offline unit tests	2026-10-30T15:29:59.1199422Z  65/210 Test  #89: engine-activity-view ........................***Failed    0.32 sec
+preview	Run offline unit tests	2026-10-30T15:29:59.1199939Z ********* Start testing of EngineActivityViewTests *********
+preview	Run offline unit tests	2026-10-30T15:29:59.1200487Z Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+preview	Run offline unit tests	2026-10-30T15:29:59.1200925Z PASS   : EngineActivityViewTests::initTestCase()
+preview	Run offline unit tests	2026-10-30T15:29:59.1201299Z QWARN  : EngineActivityViewTests::nestedActivityPreservesPayloadDefaultAndExistingIdentities() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1201808Z FAIL!  : EngineActivityViewTests::nestedActivityPreservesPayloadDefaultAndExistingIdentities() Compared values are not the same
+preview	Run offline unit tests	2026-10-30T15:29:59.1202131Z    Actual   (page.tabs().count()): 11
+preview	Run offline unit tests	2026-10-30T15:29:59.1202281Z    Expected (10)                 : 10
+preview	Run offline unit tests	2026-10-30T15:29:59.1202540Z    Loc: [/home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/engine_activity_view_tests.cpp(101)]
+preview	Run offline unit tests	2026-10-30T15:29:59.1202958Z QWARN  : EngineActivityViewTests::firstCounterObservationNeverInventsRateOrPoint() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1203358Z PASS   : EngineActivityViewTests::firstCounterObservationNeverInventsRateOrPoint()
+preview	Run offline unit tests	2026-10-30T15:29:59.1203787Z QWARN  : EngineActivityViewTests::sixExactLatestRatesUseOwnedComponentsAndPlainText() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1204384Z PASS   : EngineActivityViewTests::sixExactLatestRatesUseOwnedComponentsAndPlainText()
+preview	Run offline unit tests	2026-10-30T15:29:59.1204801Z QWARN  : EngineActivityViewTests::genuineZeroRatesAreKnownObservations() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1205157Z PASS   : EngineActivityViewTests::genuineZeroRatesAreKnownObservations()
+preview	Run offline unit tests	2026-10-30T15:29:59.1205589Z QWARN  : EngineActivityViewTests::latestUnknownRateKeepsPriorPlotButNeverStaleRateLabels(observed-unknown) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1206087Z PASS   : EngineActivityViewTests::latestUnknownRateKeepsPriorPlotButNeverStaleRateLabels(observed-unknown)
+preview	Run offline unit tests	2026-10-30T15:29:59.1206568Z QWARN  : EngineActivityViewTests::latestUnknownRateKeepsPriorPlotButNeverStaleRateLabels(ended-unknown) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1207043Z PASS   : EngineActivityViewTests::latestUnknownRateKeepsPriorPlotButNeverStaleRateLabels(ended-unknown)
+preview	Run offline unit tests	2026-10-30T15:29:59.1207662Z QWARN  : EngineActivityViewTests::terminalRetainsActualPointsWithoutDuplicateOrSyntheticZero() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1208113Z PASS   : EngineActivityViewTests::terminalRetainsActualPointsWithoutDuplicateOrSyntheticZero()
+preview	Run offline unit tests	2026-10-30T15:29:59.1208552Z QWARN  : EngineActivityViewTests::newPreparingClearsPointsAndEarlierRunCannotReturn() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1208960Z PASS   : EngineActivityViewTests::newPreparingClearsPointsAndEarlierRunCannotReturn()
+preview	Run offline unit tests	2026-10-30T15:29:59.1209365Z QWARN  : EngineActivityViewTests::higherProfileRebindsAndLowerProfileIsRejected() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1209760Z PASS   : EngineActivityViewTests::higherProfileRebindsAndLowerProfileIsRejected()
+preview	Run offline unit tests	2026-10-30T15:29:59.1210151Z QWARN  : EngineActivityViewTests::nullDuplicateAndOlderFrameCannotReplaceCurrent() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1210555Z PASS   : EngineActivityViewTests::nullDuplicateAndOlderFrameCannotReplaceCurrent()
+preview	Run offline unit tests	2026-10-30T15:29:59.1210989Z QWARN  : EngineActivityViewTests::factoryFramesOwnAllSixHundredPointsAfterHistoryDestruction() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1211467Z PASS   : EngineActivityViewTests::factoryFramesOwnAllSixHundredPointsAfterHistoryDestruction()
+preview	Run offline unit tests	2026-10-30T15:29:59.1211930Z QWARN  : EngineActivityViewTests::actualChartsDrawAllSeriesAndLeaveUnknownIntervalsDisconnected() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1212627Z QINFO  : EngineActivityViewTests::actualChartsDrawAllSeriesAndLeaveUnknownIntervalsDisconnected() direction=0 color=#1e7dcd connected=718 disconnected=0 image=1078x314 DPR=1
+preview	Run offline unit tests	2026-10-30T15:29:59.1213248Z QINFO  : EngineActivityViewTests::actualChartsDrawAllSeriesAndLeaveUnknownIntervalsDisconnected() direction=0 color=#26965a connected=598 disconnected=0 image=1078x314 DPR=1
+preview	Run offline unit tests	2026-10-30T15:29:59.1213866Z QINFO  : EngineActivityViewTests::actualChartsDrawAllSeriesAndLeaveUnknownIntervalsDisconnected() direction=0 color=#be5f14 connected=480 disconnected=0 image=1078x314 DPR=1
+preview	Run offline unit tests	2026-10-30T15:29:59.1214637Z QINFO  : EngineActivityViewTests::actualChartsDrawAllSeriesAndLeaveUnknownIntervalsDisconnected() direction=1 color=#1e7dcd connected=718 disconnected=0 image=1078x314 DPR=1
+preview	Run offline unit tests	2026-10-30T15:29:59.1215252Z QINFO  : EngineActivityViewTests::actualChartsDrawAllSeriesAndLeaveUnknownIntervalsDisconnected() direction=1 color=#26965a connected=598 disconnected=0 image=1078x314 DPR=1
+preview	Run offline unit tests	2026-10-30T15:29:59.1215864Z QINFO  : EngineActivityViewTests::actualChartsDrawAllSeriesAndLeaveUnknownIntervalsDisconnected() direction=1 color=#be5f14 connected=480 disconnected=0 image=1078x314 DPR=1
+preview	Run offline unit tests	2026-10-30T15:29:59.1216357Z PASS   : EngineActivityViewTests::actualChartsDrawAllSeriesAndLeaveUnknownIntervalsDisconnected()
+preview	Run offline unit tests	2026-10-30T15:29:59.1216802Z QWARN  : EngineActivityViewTests::largeObservationTimesSubtractBeforeFloatingConversion() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1217231Z PASS   : EngineActivityViewTests::largeObservationTimesSubtractBeforeFloatingConversion()
+preview	Run offline unit tests	2026-10-30T15:29:59.1217643Z QWARN  : EngineActivityViewTests::readableElapsedAxesKeepExactNanosecondTooltips() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1218039Z PASS   : EngineActivityViewTests::readableElapsedAxesKeepExactNanosecondTooltips()
+preview	Run offline unit tests	2026-10-30T15:29:59.1218453Z QWARN  : EngineActivityViewTests::hiddenUpdatesOnlyOwnedCacheWithoutLabelMutationOrPaint() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1218969Z QWARN  : EngineActivityViewTests::hiddenUpdatesOnlyOwnedCacheWithoutLabelMutationOrPaint() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1219399Z PASS   : EngineActivityViewTests::hiddenUpdatesOnlyOwnedCacheWithoutLabelMutationOrPaint()
+preview	Run offline unit tests	2026-10-30T15:29:59.1219791Z QWARN  : EngineActivityViewTests::minimizedUpdatesWaitForActualRestore() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1220329Z QWARN  : EngineActivityViewTests::minimizedUpdatesWaitForActualRestore() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1220680Z PASS   : EngineActivityViewTests::minimizedUpdatesWaitForActualRestore()
+preview	Run offline unit tests	2026-10-30T15:29:59.1221045Z QWARN  : EngineActivityViewTests::hiddenClearDropsDataThenShowsAnEmptyGraph() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1221504Z QWARN  : EngineActivityViewTests::hiddenClearDropsDataThenShowsAnEmptyGraph() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1221962Z QWARN  : EngineActivityViewTests::hiddenClearDropsDataThenShowsAnEmptyGraph() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1222337Z PASS   : EngineActivityViewTests::hiddenClearDropsDataThenShowsAnEmptyGraph()
+preview	Run offline unit tests	2026-10-30T15:29:59.1222755Z QWARN  : EngineActivityViewTests::reentrantNewOperationWinsEveryRemainingLabelAndChart() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1223190Z PASS   : EngineActivityViewTests::reentrantNewOperationWinsEveryRemainingLabelAndChart()
+preview	Run offline unit tests	2026-10-30T15:29:59.1223593Z QWARN  : EngineActivityViewTests::reentrantClearCannotBeOverwrittenByOldFrame() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1223978Z PASS   : EngineActivityViewTests::reentrantClearCannotBeOverwrittenByOldFrame()
+preview	Run offline unit tests	2026-10-30T15:29:59.1224526Z QWARN  : EngineActivityViewTests::directDeletionDuringViewRenderIsGuarded() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1224986Z PASS   : EngineActivityViewTests::directDeletionDuringViewRenderIsGuarded()
+preview	Run offline unit tests	2026-10-30T15:29:59.1225416Z QWARN  : EngineActivityViewTests::pageSavedRefreshKeepsFrameNewProfileClearsAndPayloadRemainsSeparate() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1225907Z PASS   : EngineActivityViewTests::pageSavedRefreshKeepsFrameNewProfileClearsAndPayloadRemainsSeparate()
+preview	Run offline unit tests	2026-10-30T15:29:59.1234791Z PASS   : EngineActivityViewTests::pageOnlyForwardsTheExactAdmittedImmutablePacket()
+preview	Run offline unit tests	2026-10-30T15:29:59.1235379Z QWARN  : EngineActivityViewTests::pageRenderReentryCannotForwardAFrameToAnotherProfile() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1235818Z PASS   : EngineActivityViewTests::pageRenderReentryCannotForwardAFrameToAnotherProfile()
+preview	Run offline unit tests	2026-10-30T15:29:59.1236266Z QWARN  : EngineActivityViewTests::pageDeletionDuringCounterAdmissionPreventsTrailingViewAccess() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:29:59.1236735Z PASS   : EngineActivityViewTests::pageDeletionDuringCounterAdmissionPreventsTrailingViewAccess()
+preview	Run offline unit tests	2026-10-30T15:29:59.1237020Z PASS   : EngineActivityViewTests::cleanupTestCase()
+preview	Run offline unit tests	2026-10-30T15:29:59.1237227Z Totals: 25 passed, 1 failed, 0 skipped, 0 blacklisted, 312ms
+preview	Run offline unit tests	2026-10-30T15:29:59.1237447Z ********* Finished testing of EngineActivityViewTests *********
+preview	Run offline unit tests	2026-10-30T15:29:59.1237580Z 
+preview	Run offline unit tests	2026-10-30T15:29:59.1237663Z         Start  90: owned-engine-activity-window-worker
+preview	Run offline unit tests	2026-10-30T15:30:11.1511647Z  66/210 Test  #90: owned-engine-activity-window-worker .........   Passed   12.03 sec
+preview	Run offline unit tests	2026-10-30T15:30:11.1512096Z         Start  91: owned-engine-statistics-window-worker
+preview	Run offline unit tests	2026-10-30T15:30:42.0520875Z  67/210 Test  #91: owned-engine-statistics-window-worker .......   Passed   30.90 sec
+preview	Run offline unit tests	2026-10-30T15:30:42.0521394Z         Start  92: statistics-window-worker
+preview	Run offline unit tests	2026-10-30T15:30:44.3051287Z  68/210 Test  #92: statistics-window-worker ....................   Passed    2.25 sec
+preview	Run offline unit tests	2026-10-30T15:30:44.3051857Z         Start  93: classic-preferences-window-worker-restart
+preview	Run offline unit tests	2026-10-30T15:30:46.7655322Z  69/210 Test  #93: classic-preferences-window-worker-restart ...   Passed    2.46 sec
+preview	Run offline unit tests	2026-10-30T15:30:46.7655827Z         Start  94: classic-saved-layout-import
+preview	Run offline unit tests	2026-10-30T15:30:47.1763527Z  70/210 Test  #94: classic-saved-layout-import .................   Passed    0.41 sec
+preview	Run offline unit tests	2026-10-30T15:30:47.1764044Z         Start  95: classic-saved-layout-worker
+preview	Run offline unit tests	2026-10-30T15:30:48.6596817Z  71/210 Test  #95: classic-saved-layout-worker .................   Passed    1.48 sec
+preview	Run offline unit tests	2026-10-30T15:30:48.6597290Z         Start  96: classic-table-columns
+preview	Run offline unit tests	2026-10-30T15:30:48.6850328Z  72/210 Test  #96: classic-table-columns .......................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:30:48.6854556Z         Start  97: saved-service-page-models
+preview	Run offline unit tests	2026-10-30T15:30:48.7095333Z  73/210 Test  #97: saved-service-page-models ...................   Passed    0.02 sec
+preview	Run offline unit tests	2026-10-30T15:30:48.7095750Z         Start  98: classic-library-layout
+preview	Run offline unit tests	2026-10-30T15:30:48.9087225Z  74/210 Test  #98: classic-library-layout ......................   Passed    0.20 sec
+preview	Run offline unit tests	2026-10-30T15:30:48.9087726Z         Start  99: desktop-model-and-lifecycle
+preview	Run offline unit tests	2026-10-30T15:30:49.0871254Z  75/210 Test  #99: desktop-model-and-lifecycle .................   Passed    0.18 sec
+preview	Run offline unit tests	2026-10-30T15:30:49.0871750Z         Start 100: desktop-files-model
+preview	Run offline unit tests	2026-10-30T15:30:49.1247241Z  76/210 Test #100: desktop-files-model .........................   Passed    0.04 sec
+preview	Run offline unit tests	2026-10-30T15:30:49.1247606Z         Start 114: executor-owner-finalizer
+preview	Run offline unit tests	2026-10-30T15:30:49.1274578Z  77/210 Test #114: executor-owner-finalizer ....................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:30:49.1275029Z         Start 115: executor-startup-rollback
+preview	Run offline unit tests	2026-10-30T15:30:49.1293655Z  78/210 Test #115: executor-startup-rollback ...................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:30:49.1294077Z         Start 116: saved-history-rolling-query
+preview	Run offline unit tests	2026-10-30T15:30:49.1325848Z  79/210 Test #116: saved-history-rolling-query .................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:30:49.1326400Z         Start 117: saved-history-rolling-reader
+preview	Run offline unit tests	2026-10-30T15:30:49.2060672Z  80/210 Test #117: saved-history-rolling-reader ................   Passed    0.07 sec
+preview	Run offline unit tests	2026-10-30T15:30:49.2061089Z         Start 118: history-range-view
+preview	Run offline unit tests	2026-10-30T15:30:49.4045754Z  81/210 Test #118: history-range-view ..........................   Passed    0.20 sec
+preview	Run offline unit tests	2026-10-30T15:30:49.4046254Z         Start 119: history-range-integration
+preview	Run offline unit tests	2026-10-30T15:30:50.7847708Z  82/210 Test #119: history-range-integration ...................   Passed    1.38 sec
+preview	Run offline unit tests	2026-10-30T15:30:50.7848084Z         Start 120: engine-rates-view
+preview	Run offline unit tests	2026-10-30T15:30:50.9840701Z  83/210 Test #120: engine-rates-view ...........................   Passed    0.20 sec
+preview	Run offline unit tests	2026-10-30T15:30:50.9841196Z         Start 121: saved-history-range-original-corpus
+preview	Run offline unit tests	2026-10-30T15:30:51.0575804Z  84/210 Test #121: saved-history-range-original-corpus .........   Passed    0.07 sec
+preview	Run offline unit tests	2026-10-30T15:30:51.0580270Z         Start 122: saved-history-range-dense-original-corpus
+preview	Run offline unit tests	2026-10-30T15:30:51.1156885Z  85/210 Test #122: saved-history-range-dense-original-corpus ...   Passed    0.06 sec
+preview	Run offline unit tests	2026-10-30T15:30:51.1157256Z         Start 123: persistent-runtime-default-unbound
+preview	Run offline unit tests	2026-10-30T15:30:51.1210828Z  86/210 Test #123: persistent-runtime-default-unbound ..........   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:30:51.1211314Z         Start 124: persistent-default-legacy-fallback
+preview	Run offline unit tests	2026-10-30T15:31:00.0194345Z  87/210 Test #124: persistent-default-legacy-fallback ..........   Passed    8.90 sec
+preview	Run offline unit tests	2026-10-30T15:31:00.0194826Z         Start 125: native-session-ui
+preview	Run offline unit tests	2026-10-30T15:31:00.2254107Z  88/210 Test #125: native-session-ui ...........................   Passed    0.21 sec
+preview	Run offline unit tests	2026-10-30T15:31:00.2254702Z         Start 126: native-session-statistics
+preview	Run offline unit tests	2026-10-30T15:31:02.1993329Z  89/210 Test #126: native-session-statistics ...................   Passed    1.97 sec
+preview	Run offline unit tests	2026-10-30T15:31:02.1994173Z         Start 127: overall-statistics
+preview	Run offline unit tests	2026-10-30T15:31:02.2033561Z  90/210 Test #127: overall-statistics ..........................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:02.2033950Z         Start 128: overall-statistics-view
+preview	Run offline unit tests	2026-10-30T15:31:02.2143381Z  91/210 Test #128: overall-statistics-view .....................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:31:02.2143895Z         Start 129: overall-statistics-service
+preview	Run offline unit tests	2026-10-30T15:31:02.2266207Z  92/210 Test #129: overall-statistics-service ..................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:31:02.2266825Z         Start 130: source-rate-average
+preview	Run offline unit tests	2026-10-30T15:31:02.2283717Z  93/210 Test #130: source-rate-average .........................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:02.2284103Z         Start 131: source-rate-projection
+preview	Run offline unit tests	2026-10-30T15:31:02.2301935Z  94/210 Test #131: source-rate-projection ......................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:02.2302273Z         Start 132: minute-history
+preview	Run offline unit tests	2026-10-30T15:31:02.2318576Z  95/210 Test #132: minute-history ..............................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:02.2318979Z         Start 133: minute-history-writer
+preview	Run offline unit tests	2026-10-30T15:31:02.2775365Z  96/210 Test #133: minute-history-writer .......................   Passed    0.05 sec
+preview	Run offline unit tests	2026-10-30T15:31:02.2779927Z         Start 134: overall-live-view
+preview	Run offline unit tests	2026-10-30T15:31:02.9829873Z  97/210 Test #134: overall-live-view ...........................   Passed    0.71 sec
+preview	Run offline unit tests	2026-10-30T15:31:02.9830361Z         Start 135: source-rate-original-java-replay
+preview	Run offline unit tests	2026-10-30T15:31:02.9853216Z  98/210 Test #135: source-rate-original-java-replay ............   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:02.9853585Z         Start 136: minute-history-original-java-replay
+preview	Run offline unit tests	2026-10-30T15:31:03.0018639Z  99/210 Test #136: minute-history-original-java-replay .........   Passed    0.02 sec
+preview	Run offline unit tests	2026-10-30T15:31:03.0019060Z         Start 137: runtime-metrics
+preview	Run offline unit tests	2026-10-30T15:31:03.0044861Z 100/210 Test #137: runtime-metrics .............................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:03.0045237Z         Start 138: runtime-metrics-view
+preview	Run offline unit tests	2026-10-30T15:31:03.6018946Z 101/210 Test #138: runtime-metrics-view ........................   Passed    0.60 sec
+preview	Run offline unit tests	2026-10-30T15:31:03.6019496Z         Start 139: effective-rate-limits
+preview	Run offline unit tests	2026-10-30T15:31:03.6055070Z 102/210 Test #139: effective-rate-limits .......................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:03.6055464Z         Start 140: effective-rate-limits-ui
+preview	Run offline unit tests	2026-10-30T15:31:03.6819719Z 103/210 Test #140: effective-rate-limits-ui ....................   Passed    0.08 sec
+preview	Run offline unit tests	2026-10-30T15:31:03.6820212Z         Start 141: saved-history-live-refresh
+preview	Run offline unit tests	2026-10-30T15:31:05.3833757Z 104/210 Test #141: saved-history-live-refresh ..................   Passed    1.70 sec
+preview	Run offline unit tests	2026-10-30T15:31:05.3834429Z         Start 142: saved-download-tags
+preview	Run offline unit tests	2026-10-30T15:31:05.3867782Z 105/210 Test #142: saved-download-tags .........................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:05.3868166Z         Start 143: manual-tag-statistics
+preview	Run offline unit tests	2026-10-30T15:31:05.3900472Z 106/210 Test #143: manual-tag-statistics .......................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:05.3900882Z         Start 144: manual-tag-view
+preview	Run offline unit tests	2026-10-30T15:31:05.4305405Z 107/210 Test #144: manual-tag-view .............................   Passed    0.04 sec
+preview	Run offline unit tests	2026-10-30T15:31:05.4305838Z         Start 145: manual-tag-window
+preview	Run offline unit tests	2026-10-30T15:31:06.4855947Z 108/210 Test #145: manual-tag-window ...........................***Failed    1.05 sec
+preview	Run offline unit tests	2026-10-30T15:31:06.4856452Z ********* Start testing of ManualTagWindowTests *********
+preview	Run offline unit tests	2026-10-30T15:31:06.4856888Z Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+preview	Run offline unit tests	2026-10-30T15:31:06.4857283Z PASS   : ManualTagWindowTests::initTestCase()
+preview	Run offline unit tests	2026-10-30T15:31:06.4857655Z QWARN  : ManualTagWindowTests::appendedRouteIsLazyAndCtrlOnePreservesLibraryTarget() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4858178Z QWARN  : ManualTagWindowTests::appendedRouteIsLazyAndCtrlOnePreservesLibraryTarget() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4858711Z QWARN  : ManualTagWindowTests::appendedRouteIsLazyAndCtrlOnePreservesLibraryTarget() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4859196Z FAIL!  : ManualTagWindowTests::appendedRouteIsLazyAndCtrlOnePreservesLibraryTarget() Compared values are not the same
+preview	Run offline unit tests	2026-10-30T15:31:06.4859512Z    Actual   (page.tabs().count()): 11
+preview	Run offline unit tests	2026-10-30T15:31:06.4859666Z    Expected (10)                 : 10
+preview	Run offline unit tests	2026-10-30T15:31:06.4860101Z    Loc: [/home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/manual_tag_window_tests.cpp(117)]
+preview	Run offline unit tests	2026-10-30T15:31:06.4860603Z QWARN  : ManualTagWindowTests::explicitBusyHiddenAndMinimizedReadIntentsCoalesceWithoutPolling() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4861184Z QWARN  : ManualTagWindowTests::explicitBusyHiddenAndMinimizedReadIntentsCoalesceWithoutPolling() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4861683Z PASS   : ManualTagWindowTests::explicitBusyHiddenAndMinimizedReadIntentsCoalesceWithoutPolling()
+preview	Run offline unit tests	2026-10-30T15:31:06.4862151Z QWARN  : ManualTagWindowTests::closeReopenRestoresTagsAndCacheButOldPageCannotRequest() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4862681Z QWARN  : ManualTagWindowTests::closeReopenRestoresTagsAndCacheButOldPageCannotRequest() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4863209Z QWARN  : ManualTagWindowTests::closeReopenRestoresTagsAndCacheButOldPageCannotRequest() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4863737Z QWARN  : ManualTagWindowTests::closeReopenRestoresTagsAndCacheButOldPageCannotRequest() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4864181Z PASS   : ManualTagWindowTests::closeReopenRestoresTagsAndCacheButOldPageCannotRequest()
+preview	Run offline unit tests	2026-10-30T15:31:06.4864997Z QWARN  : ManualTagWindowTests::everyReadStateKeepsEpochSequenceAndRevisionWatermarks() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4865636Z QWARN  : ManualTagWindowTests::everyReadStateKeepsEpochSequenceAndRevisionWatermarks() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4866070Z PASS   : ManualTagWindowTests::everyReadStateKeepsEpochSequenceAndRevisionWatermarks()
+preview	Run offline unit tests	2026-10-30T15:31:06.4866519Z QWARN  : ManualTagWindowTests::newProfileClearsCacheAndClosedNavigationBeforeAnyNewPacket() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4867073Z QWARN  : ManualTagWindowTests::newProfileClearsCacheAndClosedNavigationBeforeAnyNewPacket() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4867543Z PASS   : ManualTagWindowTests::newProfileClearsCacheAndClosedNavigationBeforeAnyNewPacket()
+preview	Run offline unit tests	2026-10-30T15:31:06.4868012Z QWARN  : ManualTagWindowTests::resultCallbackCanRebindProfileWithoutRestoringOldTagMetadata() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4868571Z QWARN  : ManualTagWindowTests::resultCallbackCanRebindProfileWithoutRestoringOldTagMetadata() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4869042Z PASS   : ManualTagWindowTests::resultCallbackCanRebindProfileWithoutRestoringOldTagMetadata()
+preview	Run offline unit tests	2026-10-30T15:31:06.4869511Z QWARN  : ManualTagWindowTests::queuedReadOrResultCallbackMayDeleteTheWindow(queued-read-signal) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4870063Z QWARN  : ManualTagWindowTests::queuedReadOrResultCallbackMayDeleteTheWindow(queued-read-signal) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4870527Z PASS   : ManualTagWindowTests::queuedReadOrResultCallbackMayDeleteTheWindow(queued-read-signal)
+preview	Run offline unit tests	2026-10-30T15:31:06.4871006Z QWARN  : ManualTagWindowTests::queuedReadOrResultCallbackMayDeleteTheWindow(accepted-tooltip-change) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4871588Z QWARN  : ManualTagWindowTests::queuedReadOrResultCallbackMayDeleteTheWindow(accepted-tooltip-change) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:06.4872098Z PASS   : ManualTagWindowTests::queuedReadOrResultCallbackMayDeleteTheWindow(accepted-tooltip-change)
+preview	Run offline unit tests	2026-10-30T15:31:06.4872391Z PASS   : ManualTagWindowTests::cleanupTestCase()
+preview	Run offline unit tests	2026-10-30T15:31:06.4872600Z Totals: 9 passed, 1 failed, 0 skipped, 0 blacklisted, 1043ms
+preview	Run offline unit tests	2026-10-30T15:31:06.4872820Z ********* Finished testing of ManualTagWindowTests *********
+preview	Run offline unit tests	2026-10-30T15:31:06.4872951Z 
+preview	Run offline unit tests	2026-10-30T15:31:06.4873027Z         Start 146: native-activity-rate-modes
+preview	Run offline unit tests	2026-10-30T15:31:06.5629321Z 109/210 Test #146: native-activity-rate-modes ..................   Passed    0.08 sec
+preview	Run offline unit tests	2026-10-30T15:31:06.5629765Z         Start 147: peer-payload-ledger
+preview	Run offline unit tests	2026-10-30T15:31:06.5849994Z 110/210 Test #147: peer-payload-ledger .........................   Passed    0.02 sec
+preview	Run offline unit tests	2026-10-30T15:31:06.5850419Z         Start 148: country-statistics
+preview	Run offline unit tests	2026-10-30T15:31:06.5875317Z 111/210 Test #148: country-statistics ..........................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:06.5876648Z         Start 149: country-provider
+preview	Run offline unit tests	2026-10-30T15:31:06.6159359Z 112/210 Test #149: country-provider ............................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:31:06.6159802Z         Start 150: country-provider-binding
+preview	Run offline unit tests	2026-10-30T15:31:06.6521460Z 113/210 Test #150: country-provider-binding ....................   Passed    0.04 sec
+preview	Run offline unit tests	2026-10-30T15:31:06.6521809Z         Start 151: country-statistics-view
+preview	Run offline unit tests	2026-10-30T15:31:06.6948075Z 114/210 Test #151: country-statistics-view .....................   Passed    0.04 sec
+preview	Run offline unit tests	2026-10-30T15:31:06.6948903Z         Start 152: country-statistics-window
+preview	Run offline unit tests	2026-10-30T15:31:07.8197728Z 115/210 Test #152: country-statistics-window ...................***Failed    1.12 sec
+preview	Run offline unit tests	2026-10-30T15:31:07.8198253Z ********* Start testing of CountryStatisticsWindowTests *********
+preview	Run offline unit tests	2026-10-30T15:31:07.8198850Z Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+preview	Run offline unit tests	2026-10-30T15:31:07.8199528Z PASS   : CountryStatisticsWindowTests::initTestCase()
+preview	Run offline unit tests	2026-10-30T15:31:07.8200355Z QWARN  : CountryStatisticsWindowTests::appendedRouteIsLazyAndCtrlOneRetainsLibraryTarget() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8200968Z QWARN  : CountryStatisticsWindowTests::appendedRouteIsLazyAndCtrlOneRetainsLibraryTarget() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8201505Z QWARN  : CountryStatisticsWindowTests::appendedRouteIsLazyAndCtrlOneRetainsLibraryTarget() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8202075Z FAIL!  : CountryStatisticsWindowTests::appendedRouteIsLazyAndCtrlOneRetainsLibraryTarget() Compared values are not the same
+preview	Run offline unit tests	2026-10-30T15:31:07.8202418Z    Actual   (page.tabs().count()): 11
+preview	Run offline unit tests	2026-10-30T15:31:07.8202579Z    Expected (10)                 : 10
+preview	Run offline unit tests	2026-10-30T15:31:07.8202851Z    Loc: [/home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/country_statistics_window_tests.cpp(102)]
+preview	Run offline unit tests	2026-10-30T15:31:07.8203363Z QWARN  : CountryStatisticsWindowTests::busyHiddenAndMinimizedRefreshIntentsCoalesceAndF5AvoidsSavedTotals() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8204007Z QWARN  : CountryStatisticsWindowTests::busyHiddenAndMinimizedRefreshIntentsCoalesceAndF5AvoidsSavedTotals() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8204893Z PASS   : CountryStatisticsWindowTests::busyHiddenAndMinimizedRefreshIntentsCoalesceAndF5AvoidsSavedTotals()
+preview	Run offline unit tests	2026-10-30T15:31:07.8205420Z QWARN  : CountryStatisticsWindowTests::closeReopenRestoresCountryCacheAndNewProfileClearsClosedMemory() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8206019Z QWARN  : CountryStatisticsWindowTests::closeReopenRestoresCountryCacheAndNewProfileClearsClosedMemory() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8206623Z QWARN  : CountryStatisticsWindowTests::closeReopenRestoresCountryCacheAndNewProfileClearsClosedMemory() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8207222Z QWARN  : CountryStatisticsWindowTests::closeReopenRestoresCountryCacheAndNewProfileClearsClosedMemory() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8207731Z PASS   : CountryStatisticsWindowTests::closeReopenRestoresCountryCacheAndNewProfileClearsClosedMemory()
+preview	Run offline unit tests	2026-10-30T15:31:07.8208221Z QWARN  : CountryStatisticsWindowTests::visibleProfileChangeStartsExactlyOneNewCountryIntent() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8208896Z QWARN  : CountryStatisticsWindowTests::visibleProfileChangeStartsExactlyOneNewCountryIntent() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8209364Z PASS   : CountryStatisticsWindowTests::visibleProfileChangeStartsExactlyOneNewCountryIntent()
+preview	Run offline unit tests	2026-10-30T15:31:07.8209830Z QWARN  : CountryStatisticsWindowTests::modelCallbackProfileRebindCannotRestoreOldMetadata() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8210371Z QWARN  : CountryStatisticsWindowTests::modelCallbackProfileRebindCannotRestoreOldMetadata() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8210832Z PASS   : CountryStatisticsWindowTests::modelCallbackProfileRebindCannotRestoreOldMetadata()
+preview	Run offline unit tests	2026-10-30T15:31:07.8211288Z QWARN  : CountryStatisticsWindowTests::newerPacketDuringModelResetWinsWithoutAnotherRead() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8211827Z QWARN  : CountryStatisticsWindowTests::newerPacketDuringModelResetWinsWithoutAnotherRead() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8212281Z PASS   : CountryStatisticsWindowTests::newerPacketDuringModelResetWinsWithoutAnotherRead()
+preview	Run offline unit tests	2026-10-30T15:31:07.8212727Z QWARN  : CountryStatisticsWindowTests::readOrResultCallbackMayDeleteWindow(queued-read) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8213237Z QWARN  : CountryStatisticsWindowTests::readOrResultCallbackMayDeleteWindow(queued-read) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8213749Z PASS   : CountryStatisticsWindowTests::readOrResultCallbackMayDeleteWindow(queued-read)
+preview	Run offline unit tests	2026-10-30T15:31:07.8214302Z QWARN  : CountryStatisticsWindowTests::readOrResultCallbackMayDeleteWindow(accepted-result-tooltip) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8214885Z QWARN  : CountryStatisticsWindowTests::readOrResultCallbackMayDeleteWindow(accepted-result-tooltip) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:07.8215364Z PASS   : CountryStatisticsWindowTests::readOrResultCallbackMayDeleteWindow(accepted-result-tooltip)
+preview	Run offline unit tests	2026-10-30T15:31:07.8215679Z PASS   : CountryStatisticsWindowTests::cleanupTestCase()
+preview	Run offline unit tests	2026-10-30T15:31:07.8215903Z Totals: 9 passed, 1 failed, 0 skipped, 0 blacklisted, 1113ms
+preview	Run offline unit tests	2026-10-30T15:31:07.8216147Z ********* Finished testing of CountryStatisticsWindowTests *********
+preview	Run offline unit tests	2026-10-30T15:31:07.8216290Z 
+preview	Run offline unit tests	2026-10-30T15:31:07.8216366Z         Start 153: tracker-statistics-view
+preview	Run offline unit tests	2026-10-30T15:31:07.8516242Z 116/210 Test #153: tracker-statistics-view .....................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:31:07.8517275Z         Start 154: tracker-statistics-sampler
+preview	Run offline unit tests	2026-10-30T15:31:07.9149336Z 117/210 Test #154: tracker-statistics-sampler ..................   Passed    0.06 sec
+preview	Run offline unit tests	2026-10-30T15:31:07.9149769Z         Start 155: azureus-statistics
+preview	Run offline unit tests	2026-10-30T15:31:08.9088766Z 118/210 Test #155: azureus-statistics ..........................   Passed    0.99 sec
+preview	Run offline unit tests	2026-10-30T15:31:08.9089239Z         Start 156: country-observed-bytes
+preview	Run offline unit tests	2026-10-30T15:31:08.9118685Z 119/210 Test #156: country-observed-bytes ......................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:08.9119011Z         Start 157: cache-statistics-view
+preview	Run offline unit tests	2026-10-30T15:31:08.9532588Z 120/210 Test #157: cache-statistics-view .......................   Passed    0.04 sec
+preview	Run offline unit tests	2026-10-30T15:31:08.9534939Z         Start 158: saved-speed-manager
+preview	Run offline unit tests	2026-10-30T15:31:08.9581135Z 121/210 Test #158: saved-speed-manager .........................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:08.9581634Z         Start 159: saved-speed-manager-ui
+preview	Run offline unit tests	2026-10-30T15:31:09.0385697Z 122/210 Test #159: saved-speed-manager-ui ......................   Passed    0.08 sec
+preview	Run offline unit tests	2026-10-30T15:31:09.0386133Z         Start 160: azureus-owned-service
+preview	Run offline unit tests	2026-10-30T15:31:14.5453335Z 123/210 Test #160: azureus-owned-service .......................   Passed    5.51 sec
+preview	Run offline unit tests	2026-10-30T15:31:14.5453947Z         Start 161: azureus-owned-bridge
+preview	Run offline unit tests	2026-10-30T15:31:17.0882991Z 124/210 Test #161: azureus-owned-bridge ........................   Passed    2.54 sec
+preview	Run offline unit tests	2026-10-30T15:31:17.0883687Z         Start 162: azureus-router-binding
+preview	Run offline unit tests	2026-10-30T15:31:17.8538825Z 125/210 Test #162: azureus-router-binding ......................   Passed    0.77 sec
+preview	Run offline unit tests	2026-10-30T15:31:17.8539307Z         Start 163: azureus-statistics-channel
+preview	Run offline unit tests	2026-10-30T15:31:18.8473169Z 126/210 Test #163: azureus-statistics-channel ..................***Failed    0.99 sec
+preview	Run offline unit tests	2026-10-30T15:31:18.8473559Z ********* Start testing of AzureusStatisticsChannelTests *********
+preview	Run offline unit tests	2026-10-30T15:31:18.8473977Z Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+preview	Run offline unit tests	2026-10-30T15:31:18.8474630Z PASS   : AzureusStatisticsChannelTests::initTestCase()
+preview	Run offline unit tests	2026-10-30T15:31:18.8475068Z QWARN  : AzureusStatisticsChannelTests::actualActorSnapshotRoutesToAllThreeViewsWithoutEngineMetrics() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8475656Z FAIL!  : AzureusStatisticsChannelTests::actualActorSnapshotRoutesToAllThreeViewsWithoutEngineMetrics() Compared values are not the same
+preview	Run offline unit tests	2026-10-30T15:31:18.8476029Z    Actual   (page.tabs().count()): 11
+preview	Run offline unit tests	2026-10-30T15:31:18.8476189Z    Expected (10)                 : 10
+preview	Run offline unit tests	2026-10-30T15:31:18.8476473Z    Loc: [/home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/azureus_statistics_channel_tests.cpp(157)]
+preview	Run offline unit tests	2026-10-30T15:31:18.8476976Z QWARN  : AzureusStatisticsChannelTests::closedWindowCachesActualPacketsAndFreshPageReplaysThem() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8477769Z QWARN  : AzureusStatisticsChannelTests::closedWindowCachesActualPacketsAndFreshPageReplaysThem() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8478275Z PASS   : AzureusStatisticsChannelTests::closedWindowCachesActualPacketsAndFreshPageReplaysThem()
+preview	Run offline unit tests	2026-10-30T15:31:18.8478709Z PASS   : AzureusStatisticsChannelTests::independentAdmissionRejectsStaleIdentityAndRegressingActualSources()
+preview	Run offline unit tests	2026-10-30T15:31:18.8479259Z QWARN  : AzureusStatisticsChannelTests::sameActualSourceMayBecomeLastObservedAndRecoverButNotDuplicate() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8479795Z PASS   : AzureusStatisticsChannelTests::sameActualSourceMayBecomeLastObservedAndRecoverButNotDuplicate()
+preview	Run offline unit tests	2026-10-30T15:31:18.8480334Z QWARN  : AzureusStatisticsChannelTests::disabledAndUnavailablePolicyRemainExplicitWithoutInventedRows() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8480958Z QWARN  : AzureusStatisticsChannelTests::disabledAndUnavailablePolicyRemainExplicitWithoutInventedRows() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8481484Z PASS   : AzureusStatisticsChannelTests::disabledAndUnavailablePolicyRemainExplicitWithoutInventedRows()
+preview	Run offline unit tests	2026-10-30T15:31:18.8482011Z QWARN  : AzureusStatisticsChannelTests::hiddenAndMinimizedViewsDeferRenderingWithoutDiscardingThePacket() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8482636Z QWARN  : AzureusStatisticsChannelTests::hiddenAndMinimizedViewsDeferRenderingWithoutDiscardingThePacket() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8483180Z PASS   : AzureusStatisticsChannelTests::hiddenAndMinimizedViewsDeferRenderingWithoutDiscardingThePacket()
+preview	Run offline unit tests	2026-10-30T15:31:18.8483702Z QWARN  : AzureusStatisticsChannelTests::nestedNewerPacketWinsAllRoutesWithoutCreatingAnotherRead() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8484523Z QWARN  : AzureusStatisticsChannelTests::nestedNewerPacketWinsAllRoutesWithoutCreatingAnotherRead() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8485038Z PASS   : AzureusStatisticsChannelTests::nestedNewerPacketWinsAllRoutesWithoutCreatingAnotherRead()
+preview	Run offline unit tests	2026-10-30T15:31:18.8485540Z QWARN  : AzureusStatisticsChannelTests::modelCallbackProfileRebindClearsCacheAndStopsOldDelivery() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8486126Z QWARN  : AzureusStatisticsChannelTests::modelCallbackProfileRebindClearsCacheAndStopsOldDelivery() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8486749Z PASS   : AzureusStatisticsChannelTests::modelCallbackProfileRebindClearsCacheAndStopsOldDelivery()
+preview	Run offline unit tests	2026-10-30T15:31:18.8487253Z QWARN  : AzureusStatisticsChannelTests::actualRouterCountsAdvanceWithoutAnEngineOrAnotherActorPull() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8487770Z PASS   : AzureusStatisticsChannelTests::actualRouterCountsAdvanceWithoutAnEngineOrAnotherActorPull()
+preview	Run offline unit tests	2026-10-30T15:31:18.8488230Z PASS   : AzureusStatisticsChannelTests::routerIdentityRevisionAvailabilityAndCurrentChangesAreAdmittedIndependently()
+preview	Run offline unit tests	2026-10-30T15:31:18.8488777Z QWARN  : AzureusStatisticsChannelTests::realBoundedRouterDropsProduceAnExplicitPartialIndicator() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8489276Z PASS   : AzureusStatisticsChannelTests::realBoundedRouterDropsProduceAnExplicitPartialIndicator()
+preview	Run offline unit tests	2026-10-30T15:31:18.8489804Z QWARN  : AzureusStatisticsChannelTests::routerModelCallbackCanDeleteTheWindowBeforeRemainingPublication() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8490431Z QWARN  : AzureusStatisticsChannelTests::routerModelCallbackCanDeleteTheWindowBeforeRemainingPublication() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8490964Z PASS   : AzureusStatisticsChannelTests::routerModelCallbackCanDeleteTheWindowBeforeRemainingPublication()
+preview	Run offline unit tests	2026-10-30T15:31:18.8491472Z QWARN  : AzureusStatisticsChannelTests::presentationCallbackMayDeleteThePageOrEntireWindow(page) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8492130Z QWARN  : AzureusStatisticsChannelTests::presentationCallbackMayDeleteThePageOrEntireWindow(page) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8492621Z PASS   : AzureusStatisticsChannelTests::presentationCallbackMayDeleteThePageOrEntireWindow(page)
+preview	Run offline unit tests	2026-10-30T15:31:18.8493117Z QWARN  : AzureusStatisticsChannelTests::presentationCallbackMayDeleteThePageOrEntireWindow(window) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8493711Z QWARN  : AzureusStatisticsChannelTests::presentationCallbackMayDeleteThePageOrEntireWindow(window) This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:18.8494199Z PASS   : AzureusStatisticsChannelTests::presentationCallbackMayDeleteThePageOrEntireWindow(window)
+preview	Run offline unit tests	2026-10-30T15:31:18.8494645Z PASS   : AzureusStatisticsChannelTests::cleanupTestCase()
+preview	Run offline unit tests	2026-10-30T15:31:18.8494872Z Totals: 15 passed, 1 failed, 0 skipped, 0 blacklisted, 980ms
+preview	Run offline unit tests	2026-10-30T15:31:18.8495116Z ********* Finished testing of AzureusStatisticsChannelTests *********
+preview	Run offline unit tests	2026-10-30T15:31:18.8495270Z 
+preview	Run offline unit tests	2026-10-30T15:31:18.8495337Z         Start 164: azureus-router-owner
+preview	Run offline unit tests	2026-10-30T15:31:18.8522963Z 127/210 Test #164: azureus-router-owner ........................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:18.8523339Z         Start 165: saved-speed-map
+preview	Run offline unit tests	2026-10-30T15:31:18.8760528Z 128/210 Test #165: saved-speed-map .............................   Passed    0.02 sec
+preview	Run offline unit tests	2026-10-30T15:31:18.8764967Z         Start 166: passive-speed-mapper
+preview	Run offline unit tests	2026-10-30T15:31:18.9906100Z 129/210 Test #166: passive-speed-mapper ........................   Passed    0.11 sec
+preview	Run offline unit tests	2026-10-30T15:31:18.9906852Z         Start 167: saved-speed-map-ui
+preview	Run offline unit tests	2026-10-30T15:31:19.0572462Z 130/210 Test #167: saved-speed-map-ui ..........................   Passed    0.07 sec
+preview	Run offline unit tests	2026-10-30T15:31:19.0572899Z         Start 168: live-speed-manager-ui
+preview	Run offline unit tests	2026-10-30T15:31:19.1218483Z 131/210 Test #168: live-speed-manager-ui .......................   Passed    0.06 sec
+preview	Run offline unit tests	2026-10-30T15:31:19.1223186Z         Start 169: live-speed-manager-channel
+preview	Run offline unit tests	2026-10-30T15:31:19.2346017Z 132/210 Test #169: live-speed-manager-channel ..................***Failed    0.11 sec
+preview	Run offline unit tests	2026-10-30T15:31:19.2346489Z ********* Start testing of LiveSpeedManagerChannelTests *********
+preview	Run offline unit tests	2026-10-30T15:31:19.2347068Z Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+preview	Run offline unit tests	2026-10-30T15:31:19.2347910Z PASS   : LiveSpeedManagerChannelTests::initTestCase()
+preview	Run offline unit tests	2026-10-30T15:31:19.2348563Z QWARN  : LiveSpeedManagerChannelTests::ownedMapperFactsSurviveClosedStatisticsAndProfileRebinding() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:19.2349485Z FAIL!  : LiveSpeedManagerChannelTests::ownedMapperFactsSurviveClosedStatisticsAndProfileRebinding() Compared values are not the same
+preview	Run offline unit tests	2026-10-30T15:31:19.2350040Z    Actual   (page.tabs().count()): 11
+preview	Run offline unit tests	2026-10-30T15:31:19.2350290Z    Expected (10)                 : 10
+preview	Run offline unit tests	2026-10-30T15:31:19.2350707Z    Loc: [/home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/live_speed_manager_channel_tests.cpp(70)]
+preview	Run offline unit tests	2026-10-30T15:31:19.2351483Z QWARN  : LiveSpeedManagerChannelTests::staleOwnerEpochSequenceAndSessionCannotOverwriteCurrentMap() This plugin does not support propagateSizeHints()
+preview	Run offline unit tests	2026-10-30T15:31:19.2352392Z PASS   : LiveSpeedManagerChannelTests::staleOwnerEpochSequenceAndSessionCannotOverwriteCurrentMap()
+preview	Run offline unit tests	2026-10-30T15:31:19.2352901Z PASS   : LiveSpeedManagerChannelTests::cleanupTestCase()
+preview	Run offline unit tests	2026-10-30T15:31:19.2353236Z Totals: 3 passed, 1 failed, 0 skipped, 0 blacklisted, 101ms
+preview	Run offline unit tests	2026-10-30T15:31:19.2353590Z ********* Finished testing of LiveSpeedManagerChannelTests *********
+preview	Run offline unit tests	2026-10-30T15:31:19.2353825Z 
+preview	Run offline unit tests	2026-10-30T15:31:19.2353918Z         Start 170: owned-dht-bytes
+preview	Run offline unit tests	2026-10-30T15:31:19.2912401Z 133/210 Test #170: owned-dht-bytes .............................   Passed    0.06 sec
+preview	Run offline unit tests	2026-10-30T15:31:19.2912911Z         Start 171: owned-vivaldi-peers
+preview	Run offline unit tests	2026-10-30T15:31:20.8551685Z 134/210 Test #171: owned-vivaldi-peers .........................   Passed    1.56 sec
+preview	Run offline unit tests	2026-10-30T15:31:20.8552158Z         Start 172: owned-ddb-control
+preview	Run offline unit tests	2026-10-30T15:31:20.8574741Z 135/210 Test #172: owned-ddb-control ...........................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:20.8575095Z         Start 173: owned-ddb-binding
+preview	Run offline unit tests	2026-10-30T15:31:21.6725044Z 136/210 Test #173: owned-ddb-binding ...........................   Passed    0.81 sec
+preview	Run offline unit tests	2026-10-30T15:31:21.6725538Z         Start 174: owned-lookup-tree-ui
+preview	Run offline unit tests	2026-10-30T15:31:22.0078923Z 137/210 Test #174: owned-lookup-tree-ui ........................   Passed    0.34 sec
+preview	Run offline unit tests	2026-10-30T15:31:22.0079388Z         Start 175: connections-history-view
+preview	Run offline unit tests	2026-10-30T15:31:22.0582877Z 138/210 Test #175: connections-history-view ....................   Passed    0.05 sec
+preview	Run offline unit tests	2026-10-30T15:31:22.0583305Z         Start 176: protocol-share-ui
+preview	Run offline unit tests	2026-10-30T15:31:22.1084036Z 139/210 Test #176: protocol-share-ui ...........................   Passed    0.05 sec
+preview	Run offline unit tests	2026-10-30T15:31:22.1084630Z         Start 177: tracker-history
+preview	Run offline unit tests	2026-10-30T15:31:22.1891851Z 140/210 Test #177: tracker-history .............................   Passed    0.08 sec
+preview	Run offline unit tests	2026-10-30T15:31:22.1892359Z         Start 178: library-commands
+preview	Run offline unit tests	2026-10-30T15:31:22.2191919Z 141/210 Test #178: library-commands ............................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:31:22.2192302Z         Start 179: library-action-ui
+preview	Run offline unit tests	2026-10-30T15:31:22.4674417Z 142/210 Test #179: library-action-ui ...........................   Passed    0.25 sec
+preview	Run offline unit tests	2026-10-30T15:31:22.4674891Z         Start 180: network-policy
+preview	Run offline unit tests	2026-10-30T15:31:22.4718442Z 143/210 Test #180: network-policy ..............................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:22.4718836Z         Start 181: managed-storage
+preview	Run offline unit tests	2026-10-30T15:31:23.6014835Z 144/210 Test #181: managed-storage .............................   Passed    1.13 sec
+preview	Run offline unit tests	2026-10-30T15:31:23.6019709Z         Start 182: torrent-intake
+preview	Run offline unit tests	2026-10-30T15:31:23.6581432Z 145/210 Test #182: torrent-intake ..............................   Passed    0.06 sec
+preview	Run offline unit tests	2026-10-30T15:31:23.6581883Z         Start 183: file-priority-ui
+preview	Run offline unit tests	2026-10-30T15:31:23.7839454Z 146/210 Test #183: file-priority-ui ............................   Passed    0.13 sec
+preview	Run offline unit tests	2026-10-30T15:31:23.7839925Z         Start 184: file-policy-commands
+preview	Run offline unit tests	2026-10-30T15:31:23.8081297Z 147/210 Test #184: file-policy-commands ........................   Passed    0.02 sec
+preview	Run offline unit tests	2026-10-30T15:31:23.8081963Z         Start 185: torrent-import-ui
+preview	Run offline unit tests	2026-10-30T15:31:23.8392150Z 148/210 Test #185: torrent-import-ui ...........................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:31:23.8392579Z         Start 186: magnet-intake
+preview	Run offline unit tests	2026-10-30T15:31:23.8750370Z 149/210 Test #186: magnet-intake ...............................   Passed    0.04 sec
+preview	Run offline unit tests	2026-10-30T15:31:23.8750688Z         Start 187: metadata-disk-router
+preview	Run offline unit tests	2026-10-30T15:31:25.3425648Z 150/210 Test #187: metadata-disk-router ........................   Passed    1.47 sec
+preview	Run offline unit tests	2026-10-30T15:31:25.3426111Z         Start 188: application-settings
+preview	Run offline unit tests	2026-10-30T15:31:25.3543614Z 151/210 Test #188: application-settings ........................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:31:25.3547131Z         Start 189: options-dialog
+preview	Run offline unit tests	2026-10-30T15:31:25.4439792Z 152/210 Test #189: options-dialog ..............................   Passed    0.09 sec
+preview	Run offline unit tests	2026-10-30T15:31:25.4440226Z         Start 190: options-host
+preview	Run offline unit tests	2026-10-30T15:31:26.0863002Z 153/210 Test #190: options-host ................................   Passed    0.64 sec
+preview	Run offline unit tests	2026-10-30T15:31:26.0863508Z         Start 191: queue-policy
+preview	Run offline unit tests	2026-10-30T15:31:26.0953904Z 154/210 Test #191: queue-policy ................................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:31:26.0954353Z         Start 192: scheduler-service
+preview	Run offline unit tests	2026-10-30T15:31:26.1244542Z 155/210 Test #192: scheduler-service ...........................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:31:26.1244949Z         Start 193: scheduler-dialog
+preview	Run offline unit tests	2026-10-30T15:31:26.1745078Z 156/210 Test #193: scheduler-dialog ............................   Passed    0.05 sec
+preview	Run offline unit tests	2026-10-30T15:31:26.1745726Z         Start 194: scheduler-host
+preview	Run offline unit tests	2026-10-30T15:31:27.1523258Z 157/210 Test #194: scheduler-host ..............................   Passed    0.98 sec
+preview	Run offline unit tests	2026-10-30T15:31:27.1523707Z         Start 195: torrent-creator
+preview	Run offline unit tests	2026-10-30T15:31:27.5321860Z 158/210 Test #195: torrent-creator .............................   Passed    0.38 sec
+preview	Run offline unit tests	2026-10-30T15:31:27.5325023Z         Start 196: file-operations
+preview	Run offline unit tests	2026-10-30T15:31:28.5256690Z 159/210 Test #196: file-operations .............................   Passed    0.99 sec
+preview	Run offline unit tests	2026-10-30T15:31:28.5257068Z         Start 197: file-operation-dialog
+preview	Run offline unit tests	2026-10-30T15:31:28.5601116Z 160/210 Test #197: file-operation-dialog .......................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:31:28.5604884Z         Start 198: torrent-creation-dialog
+preview	Run offline unit tests	2026-10-30T15:31:28.5913983Z 161/210 Test #198: torrent-creation-dialog .....................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:31:28.5918699Z         Start 199: original-physical-file-io
+preview	Run offline unit tests	2026-10-30T15:31:28.6582162Z 162/210 Test #199: original-physical-file-io ...................   Passed    0.07 sec
+preview	Run offline unit tests	2026-10-30T15:31:28.6584939Z         Start 200: original-disk-io
+preview	Run offline unit tests	2026-10-30T15:31:30.0020283Z 163/210 Test #200: original-disk-io ............................   Passed    1.34 sec
+preview	Run offline unit tests	2026-10-30T15:31:30.0025056Z         Start 205: file-compaction-ui
+preview	Run offline unit tests	2026-10-30T15:31:30.0812818Z 164/210 Test #205: file-compaction-ui ..........................   Passed    0.08 sec
+preview	Run offline unit tests	2026-10-30T15:31:30.0813318Z         Start 206: original-torrent-identity
+preview	Run offline unit tests	2026-10-30T15:31:30.0837157Z 165/210 Test #206: original-torrent-identity ...................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:30.0837571Z         Start 207: queue-slots
+preview	Run offline unit tests	2026-10-30T15:31:30.0854984Z 166/210 Test #207: queue-slots .................................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:30.0855343Z         Start 208: network-binding
+preview	Run offline unit tests	2026-10-30T15:31:30.0888122Z 167/210 Test #208: network-binding .............................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:30.0891666Z         Start 209: torrent-intake-file-options
+preview	Run offline unit tests	2026-10-30T15:31:31.0414422Z 168/210 Test #209: torrent-intake-file-options .................   Passed    0.95 sec
+preview	Run offline unit tests	2026-10-30T15:31:31.0415023Z         Start 210: torrent-intake-file-options-ui
+preview	Run offline unit tests	2026-10-30T15:31:31.3188697Z 169/210 Test #210: torrent-intake-file-options-ui ..............   Passed    0.28 sec
+preview	Run offline unit tests	2026-10-30T15:31:31.3193457Z         Start 211: queue-file-priority
+preview	Run offline unit tests	2026-10-30T15:31:31.3210910Z 170/210 Test #211: queue-file-priority .........................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:31.3211513Z         Start 212: queue-download-probes
+preview	Run offline unit tests	2026-10-30T15:31:31.3229737Z 171/210 Test #212: queue-download-probes .......................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:31.3232984Z         Start 213: file-operation-sequence
+preview	Run offline unit tests	2026-10-30T15:31:32.3103681Z 172/210 Test #213: file-operation-sequence .....................   Passed    0.99 sec
+preview	Run offline unit tests	2026-10-30T15:31:32.3104137Z         Start 214: local-rating-host-ui
+preview	Run offline unit tests	2026-10-30T15:31:32.3419244Z 173/210 Test #214: local-rating-host-ui ........................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:31:32.3419598Z         Start 215: local-rating-wiring
+preview	Run offline unit tests	2026-10-30T15:31:32.9073884Z 174/210 Test #215: local-rating-wiring .........................   Passed    0.57 sec
+preview	Run offline unit tests	2026-10-30T15:31:32.9074471Z         Start 216: managed-combined-counter-domain
+preview	Run offline unit tests	2026-10-30T15:31:32.9095784Z 175/210 Test #216: managed-combined-counter-domain .............   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:32.9096224Z         Start 217: queue-rate-providers
+preview	Run offline unit tests	2026-10-30T15:31:32.9112113Z 176/210 Test #217: queue-rate-providers ........................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:32.9115617Z         Start 218: network-proxy-capability-absent
+preview	Run offline unit tests	2026-10-30T15:31:32.9204952Z 177/210 Test #218: network-proxy-capability-absent .............   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:31:32.9205346Z         Start 219: queue-target-statistics
+preview	Run offline unit tests	2026-10-30T15:31:32.9221686Z 178/210 Test #219: queue-target-statistics .....................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:32.9222393Z         Start 220: owned-fixture-read-diagnostic
+preview	Run offline unit tests	2026-10-30T15:31:32.9261798Z 179/210 Test #220: owned-fixture-read-diagnostic ...............   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:32.9262206Z         Start 221: mainline-checkpoint
+preview	Run offline unit tests	2026-10-30T15:31:32.9423351Z 180/210 Test #221: mainline-checkpoint .........................   Passed    0.02 sec
+preview	Run offline unit tests	2026-10-30T15:31:32.9423748Z         Start 222: azureus-database-runtime
+preview	Run offline unit tests	2026-10-30T15:31:34.9803235Z 181/210 Test #222: azureus-database-runtime ....................   Passed    2.04 sec
+preview	Run offline unit tests	2026-10-30T15:31:34.9808153Z         Start 223: mainline-scrape-codec
+preview	Run offline unit tests	2026-10-30T15:31:34.9840375Z 182/210 Test #223: mainline-scrape-codec .......................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:34.9840737Z         Start 224: azureus-storage-stats
+preview	Run offline unit tests	2026-10-30T15:31:34.9857050Z 183/210 Test #224: azureus-storage-stats .......................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:34.9860243Z         Start 225: mainline-original-identity
+preview	Run offline unit tests	2026-10-30T15:31:35.0052450Z 184/210 Test #225: mainline-original-identity ..................   Passed    0.02 sec
+preview	Run offline unit tests	2026-10-30T15:31:35.0052879Z         Start 227: profile-lease-retention
+preview	Run offline unit tests	2026-10-30T15:31:35.0092754Z 185/210 Test #227: profile-lease-retention .....................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:35.0093171Z         Start 229: mainline-original-identity-create
+preview	Run offline unit tests	2026-10-30T15:31:35.0621910Z 186/210 Test #229: mainline-original-identity-create ...........   Passed    0.05 sec
+preview	Run offline unit tests	2026-10-30T15:31:35.0622374Z         Start 230: mainline-bind-plan
+preview	Run offline unit tests	2026-10-30T15:31:35.0646796Z 187/210 Test #230: mainline-bind-plan ..........................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:35.0647247Z         Start 231: pure-i2p-datagram-codec
+preview	Run offline unit tests	2026-10-30T15:31:35.0757736Z 188/210 Test #231: pure-i2p-datagram-codec .....................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:31:35.0758259Z         Start 232: pure-i2p-client-identity
+preview	Run offline unit tests	2026-10-30T15:31:35.0803891Z 189/210 Test #232: pure-i2p-client-identity ....................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:35.0804567Z         Start 233: pure-i2cp-initial-session-codec
+preview	Run offline unit tests	2026-10-30T15:31:35.0823270Z 190/210 Test #233: pure-i2cp-initial-session-codec .............   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:35.0823623Z         Start 234: i2cp-initial-channel
+preview	Run offline unit tests	2026-10-30T15:31:48.9044413Z 191/210 Test #234: i2cp-initial-channel ........................   Passed   13.82 sec
+preview	Run offline unit tests	2026-10-30T15:31:48.9044762Z         Start 235: pure-i2cp-signed-session-config
+preview	Run offline unit tests	2026-10-30T15:31:48.9288265Z 192/210 Test #235: pure-i2cp-signed-session-config .............   Passed    0.02 sec
+preview	Run offline unit tests	2026-10-30T15:31:48.9291200Z         Start 236: pure-i2cp-leaseset2
+preview	Run offline unit tests	2026-10-30T15:31:48.9626400Z 193/210 Test #236: pure-i2cp-leaseset2 .........................   Passed    0.03 sec
+preview	Run offline unit tests	2026-10-30T15:31:48.9627638Z         Start 237: pure-i2cp-datagram-messages
+preview	Run offline unit tests	2026-10-30T15:31:48.9680387Z 194/210 Test #237: pure-i2cp-datagram-messages .................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:31:48.9680737Z         Start 238: i2cp-lease-backed-datagram-channel
+preview	Run offline unit tests	2026-10-30T15:31:56.2234079Z 195/210 Test #238: i2cp-lease-backed-datagram-channel ..........   Passed    7.26 sec
+preview	Run offline unit tests	2026-10-30T15:31:56.2234571Z         Start 239: pure-i2cp-receive-control
+preview	Run offline unit tests	2026-10-30T15:31:56.2262678Z 196/210 Test #239: pure-i2cp-receive-control ...................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:31:56.2263071Z         Start 240: i2cp-bounded-datagram-receiver
+preview	Run offline unit tests	2026-10-30T15:32:07.1169939Z 197/210 Test #240: i2cp-bounded-datagram-receiver ..............   Passed   10.89 sec
+preview	Run offline unit tests	2026-10-30T15:32:07.1170329Z         Start 241: azureus-profile-io
+preview	Run offline unit tests	2026-10-30T15:32:12.0853745Z 198/210 Test #241: azureus-profile-io ..........................   Passed    4.97 sec
+preview	Run offline unit tests	2026-10-30T15:32:12.0854363Z         Start 242: pure-i2cp-tracker-objects
+preview	Run offline unit tests	2026-10-30T15:32:12.0882625Z 199/210 Test #242: pure-i2cp-tracker-objects ...................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:32:12.0884809Z         Start 243: i2cp-explicit-tracker-channel
+preview	Run offline unit tests	2026-10-30T15:32:17.2696448Z 200/210 Test #243: i2cp-explicit-tracker-channel ...............   Passed    5.18 sec
+preview	Run offline unit tests	2026-10-30T15:32:17.2697189Z         Start 244: native-torrent-state-writer-guards
+preview	Run offline unit tests	2026-10-30T15:32:17.3482106Z 201/210 Test #244: native-torrent-state-writer-guards ..........   Passed    0.08 sec
+preview	Run offline unit tests	2026-10-30T15:32:17.3484824Z         Start 245: azureus-routing
+preview	Run offline unit tests	2026-10-30T15:32:21.2177317Z 202/210 Test #245: azureus-routing .............................   Passed    3.87 sec
+preview	Run offline unit tests	2026-10-30T15:32:21.2177777Z         Start 246: pure-i2p-streaming
+preview	Run offline unit tests	2026-10-30T15:32:21.2363023Z 203/210 Test #246: pure-i2p-streaming ..........................   Passed    0.02 sec
+preview	Run offline unit tests	2026-10-30T15:32:21.2363321Z         Start 247: azureus-maintenance
+preview	Run offline unit tests	2026-10-30T15:33:41.9870034Z 204/210 Test #247: azureus-maintenance .........................   Passed   80.75 sec
+preview	Run offline unit tests	2026-10-30T15:33:41.9870506Z         Start 248: azureus-public-bound
+preview	Run offline unit tests	2026-10-30T15:34:13.2465287Z 205/210 Test #248: azureus-public-bound ........................   Passed   31.26 sec
+preview	Run offline unit tests	2026-10-30T15:34:13.2465761Z         Start 249: pure-i2p-streaming-manager
+preview	Run offline unit tests	2026-10-30T15:34:13.2608399Z 206/210 Test #249: pure-i2p-streaming-manager ..................   Passed    0.01 sec
+preview	Run offline unit tests	2026-10-30T15:34:13.2608709Z         Start 250: i2cp-bounded-stream-manager
+preview	Run offline unit tests	2026-10-30T15:34:19.6415166Z 207/210 Test #250: i2cp-bounded-stream-manager .................   Passed    6.38 sec
+preview	Run offline unit tests	2026-10-30T15:34:19.6415512Z         Start 251: pure-owned-sam-protocol
+preview	Run offline unit tests	2026-10-30T15:34:19.6452308Z 208/210 Test #251: pure-owned-sam-protocol .....................   Passed    0.00 sec
+preview	Run offline unit tests	2026-10-30T15:34:19.6455490Z         Start 252: owned-i2p-profile-source
+preview	Run offline unit tests	2026-10-30T15:34:19.9749220Z 209/210 Test #252: owned-i2p-profile-source ....................   Passed    0.33 sec
+preview	Run offline unit tests	2026-10-30T15:34:19.9749596Z         Start 253: i2p-classic-host
+preview	Run offline unit tests	2026-10-30T15:34:21.1792998Z 210/210 Test #253: i2p-classic-host ............................   Passed    1.20 sec
+preview	Run offline unit tests	2026-10-30T15:34:21.1799120Z 
+preview	Run offline unit tests	2026-10-30T15:34:21.1799248Z 96% tests passed, 8 tests failed out of 210
+preview	Run offline unit tests	2026-10-30T15:34:21.1800527Z 
+preview	Run offline unit tests	2026-10-30T15:34:21.1800660Z Label Time Summary:
+preview	Run offline unit tests	2026-10-30T15:34:21.1800880Z accounting           =   0.08 sec*proc (7 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1801154Z activity             =  12.43 sec*proc (4 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1801431Z async                =   1.34 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1801688Z charts               =   1.27 sec*proc (8 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1801962Z classic              =   6.58 sec*proc (16 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1802225Z classic-ui           =   1.20 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1802645Z clipboard            =   0.03 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1802812Z columns              =   4.43 sec*proc (5 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1802982Z compatibility        =   0.04 sec*proc (3 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1803153Z config               =   9.76 sec*proc (12 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1803327Z counters             =   0.00 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1803488Z country              =   1.26 sec*proc (7 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1803647Z crypto               =   0.08 sec*proc (5 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1803813Z database             =   2.04 sec*proc (2 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1803979Z discovery            =   0.09 sec*proc (5 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1804142Z dnd                  =   0.19 sec*proc (2 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1804449Z engine               =  31.28 sec*proc (2 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1804612Z faults               =   0.08 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1804776Z fileops              =   2.05 sec*proc (4 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1804949Z files                =   0.12 sec*proc (2 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1805113Z fixtures             =   3.92 sec*proc (34 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1805280Z history              =  11.19 sec*proc (28 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1805448Z i2p                  =  45.19 sec*proc (18 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1805610Z identity             =   0.00 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1805776Z intake               =   1.23 sec*proc (2 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1805946Z integration          =   2.03 sec*proc (3 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1806250Z io                   =   0.00 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1806416Z keyboard             =   0.03 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1806584Z locking              =   0.08 sec*proc (2 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1806753Z loopback             = 104.27 sec*proc (13 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1806927Z namespace            =  31.26 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1807100Z navigation           =   4.11 sec*proc (5 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1807272Z network              =   0.01 sec*proc (2 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1807442Z no-network           =   0.12 sec*proc (11 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1807611Z options              =   0.74 sec*proc (3 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1807775Z owned                =   0.05 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1807944Z owned-loopback       =  74.43 sec*proc (6 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1808116Z owned-profile        =   0.33 sec*proc (2 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1808290Z profile              = 120.85 sec*proc (5 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1808457Z queue                =   0.02 sec*proc (7 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1808625Z read-only            =   5.42 sec*proc (26 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1808793Z router               =   0.00 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1808957Z routing              = 115.88 sec*proc (3 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1809128Z runtime-binding      =   0.01 sec*proc (2 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1809301Z saved-services       =   2.40 sec*proc (3 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1809475Z scheduler            =   1.06 sec*proc (3 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1809643Z session              =   2.18 sec*proc (2 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1809813Z statistics           =  84.79 sec*proc (92 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1809985Z storage              =   3.53 sec*proc (9 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1810147Z tags                 =   1.10 sec*proc (4 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1810308Z torrent              =   0.38 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1810481Z torrent-workflows    =   3.15 sec*proc (10 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1810658Z ui                   =  78.97 sec*proc (66 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1810824Z unit                 = 282.04 sec*proc (210 tests)
+preview	Run offline unit tests	2026-10-30T15:34:21.1810995Z writeback            =   0.05 sec*proc (1 test)
+preview	Run offline unit tests	2026-10-30T15:34:21.1811105Z 
+preview	Run offline unit tests	2026-10-30T15:34:21.1811162Z Total Test time (real) = 282.09 sec
+preview	Run offline unit tests	2026-10-30T15:34:21.1811264Z 
+preview	Run offline unit tests	2026-10-30T15:34:21.1811318Z The following tests FAILED:
+preview	Run offline unit tests	2026-10-30T15:34:21.1815002Z 	 81 - saved-history-page (Failed)                       history statistics ui unit
+preview	Run offline unit tests	2026-10-30T15:34:21.1815411Z 	 83 - saved-history-week-page (Failed)                  history statistics ui unit
+preview	Run offline unit tests	2026-10-30T15:34:21.1815702Z 	 86 - saved-history-month-page (Failed)                 history statistics ui unit
+preview	Run offline unit tests	2026-10-30T15:34:21.1815987Z 	 89 - engine-activity-view (Failed)                     activity statistics ui unit
+preview	Run offline unit tests	2026-10-30T15:34:21.1816267Z 	145 - manual-tag-window (Failed)                        statistics tags ui unit
+preview	Run offline unit tests	2026-10-30T15:34:21.1816549Z 	152 - country-statistics-window (Failed)                country statistics unit
+preview	Run offline unit tests	2026-10-30T15:34:21.1816842Z 	163 - azureus-statistics-channel (Failed)               loopback statistics unit
+preview	Run offline unit tests	2026-10-30T15:34:21.1817132Z 	169 - live-speed-manager-channel (Failed)               statistics ui unit
+preview	Run offline unit tests	2026-10-30T15:34:21.1826781Z Errors while running CTest
+preview	Run offline unit tests	2026-10-30T15:34:21.1858960Z ##[error]Process completed with exit code 8.

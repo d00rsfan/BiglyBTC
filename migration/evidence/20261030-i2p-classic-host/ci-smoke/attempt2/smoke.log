@@ -1,0 +1,35 @@
+********* Start testing of PreviewSmoke *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : PreviewSmoke::initTestCase()
+PASS   : PreviewSmoke::regularTrackerTooltipKeepsActualRetainedCountsSeparateFromMainlineEstimate()
+PASS   : PreviewSmoke::exactWaylandNoFocusWarningKeepsOtherDiagnosticsAndForwardHandler()
+PASS   : PreviewSmoke::explicitQtConsoleControlsDisableNativeFiltering()
+FAIL!  : PreviewSmoke::generatedSampleLibraryAndFiles() 'root.dirName().startsWith(QStringLiteral("biglybtc-preview-"))' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/packaging/preview_smoke.cpp(147)]
+FAIL!  : PreviewSmoke::generatedColumnPreferencesSaveAndRestart() 'root.dirName().startsWith(QStringLiteral("biglybtc-preview-"))' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/packaging/preview_smoke.cpp(419)]
+FAIL!  : PreviewSmoke::explicitFirstSaveCreatesOnlyAfterMissingReadAndRestarts() 'root.dirName().startsWith(QStringLiteral("biglybtc-preview-"))' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/packaging/preview_smoke.cpp(460)]
+FAIL!  : PreviewSmoke::statisticsShortcutSavedTotalsAndCloseReopen() 'root.dirName().startsWith(QStringLiteral("biglybtc-preview-"))' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/packaging/preview_smoke.cpp(493)]
+FAIL!  : PreviewSmoke::generatedSavedHistoryDayAndMissingDayRemainReadOnly() 'root.dirName().startsWith(QStringLiteral("biglybtc-preview-"))' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/packaging/preview_smoke.cpp(603)]
+FAIL!  : PreviewSmoke::generatedSevenDayOverviewAndMissingWeekRemainReadOnly() 'root.dirName().startsWith(QStringLiteral("biglybtc-preview-"))' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/packaging/preview_smoke.cpp(656)]
+FAIL!  : PreviewSmoke::statisticsNavigationSurvivesCloseAndNewSessionClearsMemory() 'root.dirName().startsWith(QStringLiteral("biglybtc-preview-"))' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/packaging/preview_smoke.cpp(754)]
+QWARN  : PreviewSmoke::historyTrafficUsesFreshSavedFactsWithoutExtraReads() This plugin does not support propagateSizeHints()
+QWARN  : PreviewSmoke::historyTrafficUsesFreshSavedFactsWithoutExtraReads() This plugin does not support propagateSizeHints()
+QWARN  : PreviewSmoke::historyTrafficUsesFreshSavedFactsWithoutExtraReads() This plugin does not support propagateSizeHints()
+QWARN  : PreviewSmoke::historyTrafficUsesFreshSavedFactsWithoutExtraReads() This plugin does not support propagateSizeHints()
+QWARN  : PreviewSmoke::historyTrafficUsesFreshSavedFactsWithoutExtraReads() This plugin does not support propagateSizeHints()
+PASS   : PreviewSmoke::historyTrafficUsesFreshSavedFactsWithoutExtraReads()
+FAIL!  : PreviewSmoke::savedHistoryKeyboardInspectsRealBucketsWithoutExtraReads() 'root.dirName().startsWith(QStringLiteral("biglybtc-preview-"))' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/packaging/preview_smoke.cpp(892)]
+FAIL!  : PreviewSmoke::savedHistoryCopyPublishesOnlyExplicitRealBucketValues() 'root.dirName().startsWith(QStringLiteral("biglybtc-preview-"))' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/packaging/preview_smoke.cpp(1028)]
+FAIL!  : PreviewSmoke::generatedThirtyDayHistoryKeepsExactDailyFactsAndFreshReopen() 'root.dirName().startsWith(QStringLiteral("biglybtc-preview-"))' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/packaging/preview_smoke.cpp(1214)]
+PASS   : PreviewSmoke::cleanupTestCase()
+Totals: 6 passed, 10 failed, 0 skipped, 0 blacklisted, 1234ms
+********* Finished testing of PreviewSmoke *********

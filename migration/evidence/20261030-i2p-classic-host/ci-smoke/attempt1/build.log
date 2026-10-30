@@ -1,0 +1,4 @@
+[1/4] Automatic MOC for target biglybtc-preview-smoke
+[2/4] Building CXX object CMakeFiles/biglybtc-preview-smoke.dir/biglybtc-preview-smoke_autogen/mocs_compilation.cpp.o
+[3/4] Building CXX object CMakeFiles/biglybtc-preview-smoke.dir/packaging/preview_smoke.cpp.o
+[4/4] Linking CXX executable biglybtc-preview-smoke

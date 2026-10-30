@@ -1,0 +1,36 @@
+SOURCE ONLY: one test probe leaf. N and current acceptance recipe/pins unchanged.
+
+Basis facd900 current probe; staged UI dependency import-ui-staging manifest
+DCFDF54C6E9CC09E5FF6E2D26B87B468A720D3C15367E3E87435CDAD26A15198.
+Uses the worker-derived TorrentIntakePacket.i2pOnly field; no corresponding
+submission flag, checkbox or test authority is created.
+
+The leech fixture's generated active/<hash>.dat alone is removed before any
+leech profile lease exists; generated downloads.config becomes downloads[].
+All synthetic key/plugin configuration and existing outside-profile zero payload
+remain. input.torrent has only original standard info+announce (no attributes).
+The seed remains the qualified direct provider; leech never receives a direct
+owner/storage API or lease from the probe.
+
+No current drop handler exists, so actual classic-open QAction is used. Real
+source/destination widgets, Stopped combo, Load files and Add buttons drive the
+same desktop preview/submission/result signals to SessionBridge. Before Start:
+require initial empty Host model, unique actual preview, exact input infohash,
+worker I2P-only context, actual imported/nonstarted result, stopped I2P-only Host
+row and unchanged original zero-payload inode/bytes. Existing actual UI Start,
+transfer/counter/EOF/ACK/disk, Pause/Resume/Stop, joined close predicates and
+150s/160s budgets remain. Final original-compatible-I2P-UI-import=true is set only
+after these actual assertions and all existing terminal predicates succeed.
+
+Statistics request+response now mirror main_desktop. Screenshot waits only for
+the current Ctrl5 request result plus idle bridge; no extra metadata request.
+Missing saved statistics may be reported truthfully rather than fake refusal.
+
+Only extra generated output is /work/input.torrent, ordinary synthetic public
+metainfo without key/profile data. It is not added to the existing publication
+allowlist by this staging. Root can explicitly retain it publicly or delete it
+with other owned input fixtures; native-result records its SHA256+infohash.
+Existing /work/i2p-preview.png remains the only screenshot.
+
+No native edits, recipe pin changes, builds, compilers, Java/router/network
+subjects or real profile access. Root will adopt/qualify after current freeze.

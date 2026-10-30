@@ -1,0 +1,85 @@
+{
+  "status": "PASS",
+  "lane": "private",
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r8/configure.log",
+      "log_sha256": "7472864cd56379300d850dd061161143405f9fcc7ae6d1d2f431aff72fbbd6cb"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-i2p-host-transfer-probe",
+        "biglybtc-torrent-intake-file-options-tests",
+        "biglybtc-torrent-intake-dialog-tests"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r8/build.log",
+      "log_sha256": "b6a1e9a5c8139576ae034d7246207b823e071c0ca3c0ecb2052d7c9a717f4f9e"
+    },
+    {
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-R",
+        "^(i2p-classic-host|torrent-intake-file-options|torrent-intake-file-options-ui)$",
+        "--output-on-failure",
+        "--no-tests=error",
+        "-j",
+        "1"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r8/ctest.log",
+      "log_sha256": "bf15561a4684332a70c70717952cf56aa62b2b1ea70522c39694d5c269ca1594"
+    }
+  ],
+  "source_map_sha256": "66d5f55f6c082b3e39b2e0fc3be070cd1d1146ed1ac4623b6bb8e977b9b32365",
+  "images": {
+    "BiglyBTC": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/app/BiglyBTC",
+      "sha256": "e8a3f14a3ae197b7f31109bf87d5bc18b029da2bb17adf909e1f4cecbe59a235",
+      "bytes": 13192888
+    },
+    "biglybtc-i2p-classic-host-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-classic-host-tests",
+      "sha256": "fbcbcd4a29f5a3a748f2a347b2a67dfeb5cd53f3adb29ac9c9c3156b9854b020",
+      "bytes": 13188336
+    },
+    "biglybtc-i2p-host-transfer-probe": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-host-transfer-probe",
+      "sha256": "d2d464253b9b70aecc7fb15d68d46e49daac6ebc58f3143433a603bbc27af73f",
+      "bytes": 13183744
+    },
+    "biglybtc-torrent-intake-file-options-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-torrent-intake-file-options-tests",
+      "sha256": "5863b03ab7a7040cad0e3d9a149c3e4e7d716a6c901cffdabbb777031139ecc5",
+      "bytes": 3492672
+    },
+    "biglybtc-torrent-intake-dialog-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-torrent-intake-dialog-tests",
+      "sha256": "a126028e9171b45a5a7836d2c4b8d4de31d9d66eb570cf60c3028f4aa2a87da4",
+      "bytes": 3319472
+    }
+  },
+  "elapsed_seconds": 45.63
+}

@@ -1,0 +1,38 @@
+{
+  "preview/native/tests/history_view_ui_tests.cpp": {
+    "before_sha256": "3f5f27d7b05f423670d677c23d4f82b7b5542699baab21ee1273d64fef0db364",
+    "after_sha256": "cd551067b73928623252f4aa07fd529e4662dc97745d5e4651655f7b3e844d70"
+  },
+  "preview/native/tests/history_month_view_ui_tests.cpp": {
+    "before_sha256": "f28f036eeb14fbe26c8f61a9ee684810582a0fcd9b9b4028658ae6f505bc64e8",
+    "after_sha256": "594b863c97136ad57d4b65440e9112682c595477f7cc050c4e0af02650a5ed28"
+  },
+  "preview/native/tests/manual_tag_window_tests.cpp": {
+    "before_sha256": "0b4b06ec81fa49d43e82001b6a4e38d808c93d4a03216b8ada4f27a5b597b279",
+    "after_sha256": "4696abc4c052bd9fa9e10ef95614b363409928df6e01a1b460b62ff35051cf9a"
+  },
+  "preview/native/tests/live_speed_manager_channel_tests.cpp": {
+    "before_sha256": "26033e6ec9892f402c3876f316de2ada0f1eac7c94e6e30471a6d37279a4e037",
+    "after_sha256": "b84412d095523aa283c29a5af3f0790be112eb1ee8cc9b0b70e2b244fc6c5e83"
+  },
+  "preview/native/tests/engine_activity_view_tests.cpp": {
+    "before_sha256": "1f99cef537439d800b63d002f975c6bc25a17dbc696cfa0d68a4662b7082d2c2",
+    "after_sha256": "3adce0ea8227316bad9c6d16c82eab29b6afe6ac234ea9da4bd71be40946b0c4"
+  },
+  "preview/native/tests/history_week_view_ui_tests.cpp": {
+    "before_sha256": "a96fc67002e57376858c60b11e53743685c2cfb277e2428920f9acfb81080477",
+    "after_sha256": "c6b455ad40f243c19e41361f3dae8f4366825159f65dd0bad9454edbde3c3d22"
+  },
+  "preview/native/tests/startup_statistics_tests.cpp": {
+    "before_sha256": "249b47d99501e3296c3e0cb62b12875cd9911b9c2944fb456420fdca7e49d787",
+    "after_sha256": "377443096159835beaac60bc4b1e37d31c55779b92754ba5e94f095cd25a0b4e"
+  },
+  "preview/native/tests/country_statistics_window_tests.cpp": {
+    "before_sha256": "929fe4570b49ac024dfa6e5dd7aa328f987de529b6379b66b6463b43fe32c71b",
+    "after_sha256": "4b68eacfc0d80e8f8d097631e644b01d6886a17c8f90de79d24d259a19bd5f42"
+  },
+  "preview/native/tests/azureus_statistics_channel_tests.cpp": {
+    "before_sha256": "6d7cf0593986ce819c772ab6804a22b9998a26fcf2f19437ad765c8f18a4f35b",
+    "after_sha256": "ea7afe6dee034ce08aaab3bdb45d1a80f78a22d0f8c8883071df5056b8de54d7"
+  }
+}

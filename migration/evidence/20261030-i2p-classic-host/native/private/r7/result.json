@@ -1,0 +1,62 @@
+{
+  "status": "FAIL",
+  "lane": "private",
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r7/configure.log",
+      "log_sha256": "7472864cd56379300d850dd061161143405f9fcc7ae6d1d2f431aff72fbbd6cb"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-statistics-page-tests",
+        "biglybtc-statistics-navigation-page-tests",
+        "biglybtc-statistics-navigation-window-tests",
+        "biglybtc-i2p-host-transfer-probe",
+        "biglybtc-torrent-intake-file-options-tests",
+        "biglybtc-torrent-intake-dialog-tests"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r7/build.log",
+      "log_sha256": "4731867e8cd9e9d3b60fcc8ca8073e81cab5ef7de7e1ff640953d0e7ee57210a"
+    },
+    {
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-R",
+        "^(i2p-classic-host|statistics-page-behavior|statistics-navigation-page|statistics-navigation-window-worker|torrent-intake-file-options|torrent-intake-file-options-ui)$",
+        "--output-on-failure",
+        "--no-tests=error",
+        "-j",
+        "1"
+      ],
+      "exit_code": 8,
+      "log": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/private/r7/ctest.log",
+      "log_sha256": "95d0c25d56a694387adce7ce3f74254e60e3f111db9005adde562f30a0b0c795"
+    }
+  ],
+  "source_map_sha256": "7bc0f404d14a10e2c6d4d6de4ce300c5c0b61fb5337b09934522bf10635f5f2b",
+  "failure": "ctest failed",
+  "elapsed_seconds": 139.4
+}

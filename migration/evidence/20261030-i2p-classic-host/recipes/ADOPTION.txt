@@ -1,0 +1,63 @@
+SOURCE ONLY. No compiler, Java/router/native/namespace subject was run by the author.
+
+The new probe uses the genuine original profile fixture and unchanged Java router
+and tracker helper. Only the seed is a direct OwnedTorrent. The stopped leech is
+opened by SessionBridge::openNormal with explicit private I2pServiceOptions, then
+controlled by the LibraryWindow Start/Pause/Resume/Stop QActions and its real
+session-close handshake. Host snapshot completion, the immutable I2P packet,
+Ctrl5 statistics/labels, Ctrl1 library retention, real recheck after Resume,
+joined closure, lock release and original-inode payload bytes are required.
+Resume proves local recheck/lifecycle; it does not claim another remote transfer.
+The screenshot is the actual offscreen window after selecting its I2P statistics.
+Old direct-owner wrong-capability/held-source/source-replacement success fields
+are absent. They are not newly credited to the Host/UI test.
+
+run.py consumes the actual current source commit, GCC build receipt and probe.
+Build receipt format:
+ {status:'PASS',source_commit:FULL_CID,source_tree:GIT_PREVIEW_NATIVE_TREE,
+  cache:ABS_GCC_CACHE,commands:[{argv:[...],exit_code:0,
+    log:ABS_ACTUAL_LOG,log_sha256:SHA256}],
+  images:{'biglybtc-i2p-host-transfer-probe':{path:ABS,sha256:SHA,bytes:N},
+          'BiglyBTC':{path:ABS,sha256:SHA,bytes:N},...}}
+All command logs and images are rehashed. The exact clean Git native tree,
+private CMake SDK/approval/generated guard, installed SDK headers, DSO and private
+Qt libraries/offscreen plugin are checked. No old cohort status or old result is
+accepted as this build's PASS. The root owns actual build/test qualification.
+
+The five-namespace USER/NET/PID/IPC/UTS fence is unchanged from the successful
+72e preflight. Parent actual namespace descriptors stay open and are verified
+before and after; the child receives their pinned read-only regular snapshot.
+It must prove all five namespaces differ, net ownership, PID1 association,
+zero capabilities, NNP, only up loopback, no usable external routes and failed
+documentation-address connectivity before subjects and after their retirement.
+Exactly one unprivileged bwrap launch contains the router, tracker and native
+Host/UI probe. No pkexec or auth helper is used. Original signed local LS2 cache
+warming remains explicit; no discovery, remote tunnels, default activation,
+real-profile or public-network compatibility is claimed.
+
+The unchanged Java helpers compile once (--release17, one JVM processor/128MiB
+javac heap), then the original router and manager perform actual tracker replies
+with output flush/close/ACK checks unchanged. Private generated fixture paths,
+classes and synthetic keys are removed after subject joins and public evidence
+hashing; only the explicit public-artifacts.json whitelist is publishable.
+The native transfer/lifecycle budget is 150s, native outer wait 160s, total
+namespace wait 360s. Original positive byte, tracker ACK, identity, cache, joined
+client/transport and namespace predicates remain. No fallback or skipped gate.
+
+Root invocation (replace actual receipt/CID/image hash, no extra build):
+ python3 /home/yurii/Java/BiglyBT/build/host-i2p-20261030/acceptance/run.py \
+  --source-commit FULL_CID --build-receipt ABS_PASS_BUILD_RECEIPT \
+  --probe ABS_GCC_CACHE/tests/biglybtc-i2p-host-transfer-probe \
+  --probe-sha256 ACTUAL_IMAGE_SHA256 \
+  --provider-record /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source-build-record.json \
+  --provider-approval /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/root-private-owner-approval.json \
+  --provider-approval-sha256 6ff4c4d044777e2d777a7b61271c804736a102be2821e65840529cc0ecf529d5 \
+  --java /usr/lib/jvm/java-26-openjdk-amd64/bin/java \
+  --javac /usr/lib/jvm/java-26-openjdk-amd64/bin/javac \
+  --acknowledge-warmed-local-cache-only \
+  --output /home/yurii/Java/BiglyBT/build/host-i2p-20261030/acceptance/runs/r1
+
+The probe writes native-started.json, native-result.json, native-phase.json,
+native-progress.json, native-terminal.json and torrent.infohash; the only newly
+added public file is i2p-preview.png. The launcher retains unchanged fixed helper
+public receipts/logs plus those files and loader log, never keys/profile trees.

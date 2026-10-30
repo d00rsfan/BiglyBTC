@@ -1,0 +1,33 @@
+Test project /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc
+    Start 242: owned-i2p-profile-source
+1/1 Test #242: owned-i2p-profile-source .........***Failed    0.09 sec
+********* Start testing of OwnedI2pSourceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedI2pSourceTests::initTestCase()
+PASS   : OwnedI2pSourceTests::boundSourceAuthorityRefusesLegacySingleStreamPath()
+PASS   : OwnedI2pSourceTests::genuinePureSourceRetainsSameLeaseAndOriginalBytes()
+PASS   : OwnedI2pSourceTests::keyReplacementAndSourceMutationWithdrawWithoutRepair()
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(0)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(1)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(2)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(3)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(4)
+FAIL!  : OwnedI2pSourceTests::sourcePermitIsOneShotAndBlockedIoCannotExtendChannelDeadline() 'server.listen(QHostAddress::LocalHost,0)' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_i2p_source_tests.cpp(53)]
+PASS   : OwnedI2pSourceTests::cleanupTestCase()
+Totals: 10 passed, 1 failed, 0 skipped, 0 blacklisted, 71ms
+********* Finished testing of OwnedI2pSourceTests *********
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+i2p              =   0.09 sec*proc (1 test)
+owned-profile    =   0.09 sec*proc (1 test)
+unit             =   0.09 sec*proc (1 test)
+
+Total Test time (real) =   0.09 sec
+
+The following tests FAILED:
+	242 - owned-i2p-profile-source (Failed)                 i2p owned-profile unit
+Errors while running CTest

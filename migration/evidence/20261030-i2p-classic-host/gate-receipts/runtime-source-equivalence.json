@@ -1,0 +1,20 @@
+{
+  "status": "PASS_RUNTIME_AND_ACTUAL_PROBE_INPUTS_BYTE_IDENTICAL",
+  "qualified_runtime_and_actual_probe": "2c6edc1b2390b59ba0f812d3c68e1cbc500e2311",
+  "supplemental_ui_test_source": "e864927ab8548c3f0670d0229d79e6f403133704",
+  "supplemental_smoke_and_hosted_source": "e9546f9893ac9c23086842a49ec4d624c8af5900",
+  "all_native_diff_paths": [
+    "preview/native/packaging/preview_smoke.cpp",
+    "preview/native/tests/azureus_statistics_channel_tests.cpp",
+    "preview/native/tests/country_statistics_window_tests.cpp",
+    "preview/native/tests/engine_activity_view_tests.cpp",
+    "preview/native/tests/history_month_view_ui_tests.cpp",
+    "preview/native/tests/history_view_ui_tests.cpp",
+    "preview/native/tests/history_week_view_ui_tests.cpp",
+    "preview/native/tests/live_speed_manager_channel_tests.cpp",
+    "preview/native/tests/manual_tag_window_tests.cpp",
+    "preview/native/tests/startup_statistics_tests.cpp"
+  ],
+  "supplemental_ui_suites": 9,
+  "supplemental_smoke_cases": 16
+}

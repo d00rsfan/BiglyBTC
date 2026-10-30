@@ -1,0 +1,12 @@
+{
+  "status": "PASS_BYTE_IDENTICAL_PRODUCT_AND_HOSTED_DEFAULT_TEST_INPUTS",
+  "hosted_product_source": "5366da8dfff3c37b9545da766a18d55bfb9ff613",
+  "qualified_private_probe_source": "2c6edc1b2390b59ba0f812d3c68e1cbc500e2311",
+  "all_preview_native_diff_paths": [
+    "preview/native/tests/i2p_host_transfer_probe.cpp"
+  ],
+  "probe_is_excluded_from_default_all_target": true,
+  "cmake_sha256": "3293857f21dec8d069bb2ecb5ee49c71bf6620c17870b0ecedd3561cffeb1e3c",
+  "probe_qualification": "PASS fresh actual GCC r5 and leak-enabled ASan+UBSan native r6 isolated router/UI import-to-transfer/lifecycle.",
+  "reason_for_probe_only_ci_skip": "No application or default hosted test input changed. Existing hosted product run remains active; exact new excluded private probe is qualified locally with its actual measured provider/router."
+}

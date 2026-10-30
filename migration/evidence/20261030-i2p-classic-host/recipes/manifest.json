@@ -1,0 +1,27 @@
+{
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "scope": "actual ordinary classic dialog import then I2P Start/Pause/Resume/Stop/close; corrected existing statistics wiring",
+  "artifacts": {
+    "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/acceptance/run.py": {
+      "sha256": "6a2bd579bec3429151c7af2e4834c8212b7118c1476beb4cc1927e9a57dd0db0",
+      "bytes": 27230
+    },
+    "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/acceptance/source-pins.json": {
+      "sha256": "8ac44046dcf251d04d64c6dcd90132ceeb6c6fd7e8c3c49f4ac8781b071741f0",
+      "bytes": 4676
+    },
+    "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/acceptance/RouterTorrentTracker.java": {
+      "sha256": "dd31f4a975fff873b441176bc5dd225f1f86e5515e6928a403a09db1b7ce47e1",
+      "bytes": 17441
+    },
+    "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-probe-staging/manifest.json": {
+      "sha256": "b61b647ee2dc87f9cd7a883c00f09c54d957e2e4feec6afd18d6a148fef46c36",
+      "bytes": 1373
+    }
+  },
+  "prior_recipe_preserved": "before-import",
+  "statistics_probe_amendment": {
+    "path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/statistics-probe-staging/manifest.json",
+    "sha256": "223422dd0a450a9369b0dfd7750babc5777fc9e590387fe42a1d01443be9eee8"
+  }
+}

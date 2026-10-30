@@ -1,0 +1,49 @@
+{
+  "status": "SOURCE_ONLY_STAGED",
+  "scope": "Worker-derived I2P-only import dialog context and supported mode selection",
+  "source_commit": "e982edcba96cb19e528dd8a3c5c3b8d3cb8fd616",
+  "source_paths": {
+    "preview/native/ui/torrent_intake_presentation.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-ui-staging/before/preview/native/ui/torrent_intake_presentation.hpp",
+      "before_sha256": "2dd1be350647028bdb70c41f08892eafbabac411f577565b78529e758f9aa832",
+      "after_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-ui-staging/staging/preview/native/ui/torrent_intake_presentation.hpp",
+      "after_sha256": "4a4c1fa58139dc827e4477335d7d6a4c119fb93d03ee342164dedcb4db8c4d32"
+    },
+    "preview/native/ui/torrent_intake_dialog.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-ui-staging/before/preview/native/ui/torrent_intake_dialog.hpp",
+      "before_sha256": "cfa5d9b67cba3a795c2021cb5979d2b1c9c04b72ab8794736cbbedb1a518c2da",
+      "after_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-ui-staging/staging/preview/native/ui/torrent_intake_dialog.hpp",
+      "after_sha256": "94afc6d55ef25c12837c80030e8b0df76f1d42c16ee50412e49d8c5632ab887b"
+    },
+    "preview/native/ui/torrent_intake_dialog.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-ui-staging/before/preview/native/ui/torrent_intake_dialog.cpp",
+      "before_sha256": "a96fd68ef0092fd8ce357294c8f3a3ffed03720ccc50f8a8042f5186c4ca75b4",
+      "after_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-ui-staging/staging/preview/native/ui/torrent_intake_dialog.cpp",
+      "after_sha256": "98e31eba83d84e08da7f2b9bc10cc51d2ef28616387cb21a629585081305a49f"
+    },
+    "preview/native/tests/torrent_intake_dialog_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-ui-staging/before/preview/native/tests/torrent_intake_dialog_tests.cpp",
+      "before_sha256": "08c6bf7c2fecf21579d1fb95b15d1436119951593b5b5752a0cb032e8af93fab",
+      "after_path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/import-ui-staging/staging/preview/native/tests/torrent_intake_dialog_tests.cpp",
+      "after_sha256": "cc92d41814530549d9a0f4ec59355fb6d41845d60ca3c912fc840473b1bb8049"
+    }
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "aa0c44cf31679cff3cbdfe2af30ce1b388cb6c84935e1599f911043fa70ac445",
+    "before/preview/native/tests/torrent_intake_dialog_tests.cpp": "08c6bf7c2fecf21579d1fb95b15d1436119951593b5b5752a0cb032e8af93fab",
+    "before/preview/native/ui/torrent_intake_dialog.cpp": "a96fd68ef0092fd8ce357294c8f3a3ffed03720ccc50f8a8042f5186c4ca75b4",
+    "before/preview/native/ui/torrent_intake_dialog.hpp": "cfa5d9b67cba3a795c2021cb5979d2b1c9c04b72ab8794736cbbedb1a518c2da",
+    "before/preview/native/ui/torrent_intake_presentation.hpp": "2dd1be350647028bdb70c41f08892eafbabac411f577565b78529e758f9aa832",
+    "changes.patch": "40c7c2b419473535299f0cc13e03873a6e8a7421f1891c6adab2b75221801694",
+    "source-map.json": "b6ca642d6861d09c96425aa87ead0daf2fa4e88cdd5c867f3c5a50e9e3ada6bb",
+    "staging/preview/native/tests/torrent_intake_dialog_tests.cpp": "cc92d41814530549d9a0f4ec59355fb6d41845d60ca3c912fc840473b1bb8049",
+    "staging/preview/native/ui/torrent_intake_dialog.cpp": "98e31eba83d84e08da7f2b9bc10cc51d2ef28616387cb21a629585081305a49f",
+    "staging/preview/native/ui/torrent_intake_dialog.hpp": "94afc6d55ef25c12837c80030e8b0df76f1d42c16ee50412e49d8c5632ab887b",
+    "staging/preview/native/ui/torrent_intake_presentation.hpp": "4a4c1fa58139dc827e4477335d7d6a4c119fb93d03ee342164dedcb4db8c4d32"
+  },
+  "checks": {
+    "old_gui_test_bytes_retained": true,
+    "build_test_or_subject_execution": false,
+    "native_tree_mutated": false
+  }
+}
