@@ -1,0 +1,91 @@
+Per-torrent source authority for one shared private-I2P owner (proposal only)
+Basis: native 6b40b2bb175e5e665d4c1865a587fe7b34d4cfd3; exact file hashes in source-pins.json.
+No N edits, SDK changes, builds, tests, live profiles or Java execution.
+
+Current coupling (all paths below relative to preview/native)
+- services/i2p_provider/profile_source.cpp:27-53 capture() freezes complete config,
+  complete inventory and authoritative selected state. prepareStorage():123 binds
+  downloads.config's old inode; namedCurrent():65-73 refuses normal replacement.
+  validate():128-131 and validateRetiredSnapshot():133-141 compare those full stamps.
+- adapters/profile.hpp:28-60 gives every retained SAME-OFD lease one cooperative
+  gate/global revision. ConfigFile::save (profile.cpp:263) and state writers
+  (torrent_state.cpp:214,316,377) advance it even on attempted/failed writes.
+  ProfileSource::revisionCurrent():106 treats any revision change as stale;
+  services/i2cp_channel/owned_effects.inc:11 makes that terminal, before requesting
+  fresh I/O permission. Revision increase alone therefore cannot certify a save.
+- services/i2p_provider/bridge.cpp:256-259 watches root/active directories plus
+  bound files and closes immediately for every received event. Sibling .dat or
+  inventory publications can close a healthy admission before scoped validation.
+- engine/managed_storage.cpp:1032-1180 checkpoint() already reloads current
+  downloads.config, checks target mapping/captured counters, updates only that
+  row and preserves sibling encoded rows/current command fields. State save has
+  exact target-byte CAS; completion may publish multiple state/link transitions.
+  OwnedTorrent::checkpointRetired (owner.cpp:286-303) adds the stricter full-stamp
+  prerequisite. Existing real flush/remove/join/counters/recheck proof must stay.
+- prepareOwnedI2p (managed_storage.cpp:712-714) currently passes EMPTY retained
+  payload claims/full identities. Reuse existing claims(), identity(),
+  checkManagedClaims and prepareImpl overlap/alias checks for simultaneous owners;
+  relaxing source snapshots alone would leave simultaneous payload safety missing.
+
+Smallest safe split
+1. Keep existing retained lease/SAME-OFD and source-gate lock order unchanged.
+   Share exact profile/lock/plugin/key/config binding at session scope. A key,
+   configuration, named directory/lock or session-source failure revokes all.
+   Keep current strict single-torrent behavior as the default API mode.
+2. Each active torrent keeps a child generation and an exact selected-source
+   stamp: hash-resolved raw row (not a remembered list index), its matching
+   pause entry/absence, authoritative selected state/raw info and metadata/path
+   bindings. Validate inventory structure/unique hashes and bounded rows on
+   every capture. Child removal, pause/stop, policy/path/counter/metadata edits
+   retire that child; never silently recapture selected-row tampering. Shared
+   cache.dat is projected by selected hash: preparing B may remove B's cached
+   entry without changing A's effective state. Preserve raw unknown fields.
+3. Recognize sibling publications ONLY around actual trusted worker mutations,
+   not from a revision number or arbitrary newly read bytes. Under the same
+   held source gate: validate old shared/child snapshots; perform existing CAS
+   prepare/checkpoint/library operation; verify its actual expected published
+   bytes; rebind the shared inventory FD and keep every unaffected child stamp
+   equal. This can be a narrow private coordinator-owned update object, with
+   no public DTO grant or general writer framework. If interrupted/partial CAS
+   leaves an unexpected state, suspend effects and retain recovery proof rather
+   than bless the new snapshot. A selected child is retired/reopened with a new
+   generation when its own permitted intent changes. Shared config changes are
+   still a session restart boundary for this chapter.
+4. Watch notifications mark validation pending and request the existing bounded
+   worker; they grant no effects. Inotify loss/invalid source still fails closed.
+   While non-granted, a cooperative revision mismatch is pending revalidation,
+   not permanent SourceChanged. Only a freshly validated worker-held gate can
+   grant the current revision; all actual sends still check that grant, current
+   child/session generation and deadline. Preserve Ready->Executing->ACK->gate
+   release order, callback-after-release rule and close-before-external-join.
+   Do not merely remove revisionCurrent(), ignore inotify or accept new inodes.
+
+Concrete API seams for main's shared-owner implementation
+- Extend ProfileSource::prepareStorage / ManagedStorage::prepareOwnedI2p with
+  trailing bounded retained ManagedPayloadClaim and OriginalTorrentIdentity
+  spans; forward them to the existing prepareImpl checks before any writes.
+- Internal child-source validation takes the coordinator's recorded inventory
+  publication baseline; existing validate()/validateRetiredSnapshot() compare
+  selected scope plus shared exact sources. Keep retired validation read-only
+  and incapable of resurrecting revoked effects.
+- Add private begin/commit sibling-publication hooks only at the coordinator's
+  existing worker prepare/checkpoint/intent sites. No network-thread filesystem
+  access, new polling thread, user callback under the gate, or SDK ABI change.
+
+Finite required controls / risks
+- A continues real transfer while B prepares, checkpoints, pauses/stops and
+  restarts; raw A row/state/config/key stay equal and original cumulative B
+  counters persist. Independent child withdrawal must not call shared session
+  close/revoke; only final member/global-source failure retires the session.
+- Actual held permit blocks writer until ACK; close/deadlines progress while
+  worker waits. An unknown external inventory replacement (even changing only B)
+  must not gain a trusted publication receipt. Selected-row removal/duplicate/
+  pause, payload mapping/metadata tamper, cache override, key/config replacement,
+  overlap/full-hash alias and failed partial publication must refuse/withdraw.
+- Existing ManagedStorage checkpoint alone is not the full selected-source
+  guard: it checks mapping/counters, relying on the caller's stronger snapshot.
+  Preserve that guard and exact state CAS, actual piece/counter retirement proof.
+- Cooperative serialization cannot make pathname CAS atomic against a hostile
+  uncooperative process; retain held-FD/named/stat checks before/after effects and
+  existing documented race boundary. No Public+I2P coexistence or new admission,
+  queue-policy equivalence, limits equivalence or runtime qualification claimed.

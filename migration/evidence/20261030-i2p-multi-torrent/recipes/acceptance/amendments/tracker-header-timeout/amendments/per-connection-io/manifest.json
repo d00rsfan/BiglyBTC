@@ -1,0 +1,16 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NOT_ADOPTED",
+  "parent_manifest_sha256": "05f1f0b7c2352a45e288117dacd2f1f49025f3528ac2ab16b388d0fa4fbc5dca",
+  "reason": "An HTTP server must retire one owned cancelled/broken transport without killing its accept loop. Network IO failure is distinct from malformed protocol or service accept failure.",
+  "scope": "Only IOException inside an already accepted owned socket is per-connection. Server accept exceptions and all semantic/ASCII/query/identity assertions remain fatal. Accepted connections still<=256; actual write/flush/close completion alone credits replies; no synthetic request/transfer/progress.",
+  "files_sha256": {
+    "RouterMultiTorrentTracker.java": "26371a3d89d43b3361b5b50bee3ba428c09073338f578679ccd40b9173fec585",
+    "java.patch": "60b9da46d3acbc2b5096773e251ee81675a4b26afc4bb6725c7ce74bea1d2e8e",
+    "runner.patch": "bd8b8298dc49ea1f5181be479a993f49a74614064eb0f78faeaa3c051cf3b603",
+    "run.py": "38c5adfd52c6bfb49d0646137a712341f7a64a2dfa951274eb1aedde79936aa8",
+    "RouterMultiTorrentTracker-before.java": "9ee96d4612f70d65284537a6e4b1c42f8d4ec44a921e5db2abd952156235bf26",
+    "run-before.py": "c67473afec5fd4a3cdae197191915a1fd57df235adf20c25098e412245a5b3ae"
+  },
+  "native_or_sdk_changed": false,
+  "positive_assertions_changed": false
+}

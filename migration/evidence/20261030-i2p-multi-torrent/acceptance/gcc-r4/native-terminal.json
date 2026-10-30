@@ -1,0 +1,32 @@
+{
+    "elapsed_ms": 5567,
+    "intended_success": false,
+    "reason": "Seed shared identity/source lost",
+    "seed": [
+        {
+            "admission": "7760863195005843246",
+            "failure": "I2CP transport ended",
+            "generation": "7283461407054462830",
+            "global_download_limit": 0,
+            "global_upload_limit": 0,
+            "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+            "loopback_peer_classes": 0,
+            "phase": 3,
+            "public_identity": "876672fc9bb469b0f60a7361cb9e703a4f2a40c84be94f6de12fd1a6f8c7b89b",
+            "verified_bytes": 0
+        },
+        {
+            "admission": "6318269674223504063",
+            "failure": "I2CP transport ended",
+            "generation": "7283461407054462830",
+            "global_download_limit": 0,
+            "global_upload_limit": 0,
+            "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+            "loopback_peer_classes": 0,
+            "phase": 3,
+            "public_identity": "876672fc9bb469b0f60a7361cb9e703a4f2a40c84be94f6de12fd1a6f8c7b89b",
+            "verified_bytes": 0
+        }
+    ],
+    "stage": 1
+}

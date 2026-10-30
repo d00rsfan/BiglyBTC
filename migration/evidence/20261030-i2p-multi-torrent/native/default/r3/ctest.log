@@ -1,0 +1,35 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+    Start 212: managed-library-command-routing
+1/9 Test #212: managed-library-command-routing ...   Passed   36.56 sec
+    Start 218: queue-policy
+2/9 Test #218: queue-policy ......................   Passed    0.02 sec
+    Start 238: queue-slots
+3/9 Test #238: queue-slots .......................   Passed    0.01 sec
+    Start 241: torrent-intake-file-options
+4/9 Test #241: torrent-intake-file-options .......   Passed    0.55 sec
+    Start 242: torrent-intake-file-options-ui
+5/9 Test #242: torrent-intake-file-options-ui ....   Passed    1.27 sec
+    Start 302: pure-i2p-streaming-manager
+6/9 Test #302: pure-i2p-streaming-manager ........   Passed    0.05 sec
+    Start 303: i2cp-bounded-stream-manager
+7/9 Test #303: i2cp-bounded-stream-manager .......   Passed    6.62 sec
+    Start 305: pure-owned-sam-protocol
+8/9 Test #305: pure-owned-sam-protocol ...........   Passed    0.01 sec
+    Start 307: i2p-classic-host
+9/9 Test #307: i2p-classic-host ..................   Passed    1.43 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Label Time Summary:
+classic-ui           =   1.43 sec*proc (1 test)
+i2p                  =   8.11 sec*proc (4 tests)
+intake               =   1.82 sec*proc (2 tests)
+no-network           =   0.06 sec*proc (2 tests)
+owned-loopback       =   6.62 sec*proc (1 test)
+queue                =   0.03 sec*proc (2 tests)
+storage              =   0.55 sec*proc (1 test)
+torrent-workflows    =  36.56 sec*proc (1 test)
+ui                   =   1.27 sec*proc (1 test)
+unit                 =  46.52 sec*proc (9 tests)
+
+Total Test time (real) =  46.54 sec

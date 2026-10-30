@@ -1,0 +1,78 @@
+--- a/build/i2p-multi-20261030/acceptance/RouterMultiTorrentTracker.java
++++ b/build/i2p-multi-20261030/acceptance/RouterMultiTorrentTracker.java
+@@ -126,8 +126,28 @@
+ 
+   static byte[] readHeader(InputStream input)throws Exception{
+     ByteArrayOutputStream out=new ByteArrayOutputStream();int tail=0;
+-    while(out.size()<8192){int next=input.read();require(next>=0,"EOF in actual HTTP request");require(next==9||next==10||next==13||(next>=32&&next<127),"Non-ASCII actual HTTP header");out.write(next);tail=(tail<<8)|next;if(tail==0x0d0a0d0a)return out.toByteArray();}
++    while(out.size()<8192){int next=input.read();if(next<0)throw new EOFException(out.size()==0?"EOF before actual HTTP request":"EOF within actual HTTP request");require(next==9||next==10||next==13||(next>=32&&next<127),"Non-ASCII actual HTTP header");out.write(next);tail=(tail<<8)|next;if(tail==0x0d0a0d0a)return out.toByteArray();}
+     throw new IllegalStateException("Actual HTTP header exceeds8192bytes");
++  }
++  static String safeFailureMessage(Throwable error){
++    String message=error.getMessage();if(message==null)return "Unclassified tracker exception";
++    switch(message){
++      case "EOF before actual HTTP request":case "EOF within actual HTTP request":
++      case "Non-ASCII actual HTTP header":case "Actual HTTP header exceeds8192bytes":
++      case "Actual HTTP header shape":case "Expected actual GET tracker request":case "Unknown actual tracker path":
++      case "Bounded actual tracker fields":case "Duplicate actual tracker field":
++      case "Missing selected actual20byte torrent identity":case "Actual compact announce peer identity required":
++      case "Short query escape":case "Bad query escape":case "Non-ASCII query":
++      case "Unowned actual tracker peer":case "Actual tracker purpose/ports differ":
++      case "Actual accepted tracker connection bound":case "Actual per-hash/total tracker request bound":return message;
++      default:return "Unclassified tracker exception";
++    }
++  }
++  static void reportTrackerFailure(String stage,Throwable error){
++    String type=error.getClass().getName();if(type.length()>160)type="unknown";String message=safeFailureMessage(error);
++    System.err.println("OWNED_TRACKER_APPLICATION_FAILURE stage="+stage+" class="+type+" reason="+message);System.err.flush();
++    try{output("tracker-failure.json","{\"status\":\"FAIL_TRACKER_APPLICATION\",\"stage\":\""+stage+"\",\"exception_class\":\""+type+"\",\"message\":\""+message+"\"}");}
++    catch(Exception publication){System.err.println("OWNED_TRACKER_FAILURE_PUBLICATION_FAILED");System.err.flush();}
+   }
+   static byte[] unescape(String value)throws Exception{
+     ByteArrayOutputStream out=new ByteArrayOutputStream();for(int i=0;i<value.length();i++){
+@@ -182,16 +202,25 @@
+     I2PSession session=client.createSession(new ByteArrayInputStream(trackerKeys.toByteArray()),p);
+     I2PSocketManagerFull manager=new I2PSocketManagerFull(I2PAppContext.getGlobalContext(),session,p,"OwnedProviderTorrentTracker",d->d.equals(seed)||d.equals(leech));
+     AtomicReference<Throwable> failure=new AtomicReference<>();AtomicBoolean stopping=new AtomicBoolean();
+-    AtomicInteger requests=new AtomicInteger();AtomicReference<Map<String,Counts>> table=new AtomicReference<>();
++    AtomicInteger requests=new AtomicInteger(),acceptedConnections=new AtomicInteger(),zeroByteEof=new AtomicInteger(),partialHeaderEof=new AtomicInteger();AtomicReference<Map<String,Counts>> table=new AtomicReference<>();
+     try{
+       session.connect();require(!session.isClosed()&&session.getMyDestination().equals(tracker),"Actual tracker session not connected");I2PServerSocket server=manager.getServerSocket();server.setSoTimeout(1000);
+       Thread application=new Thread(()->{String stage="accept";try{
+         while(!stopping.get()){
+           stage="accept";I2PSocket accepted;try{accepted=server.accept();}catch(java.net.SocketTimeoutException timeout){continue;}
+           boolean isSeed=accepted.getPeerDestination().equals(seed);try(I2PSocket socket=accepted){
++            stage="connection-bound";require(acceptedConnections.incrementAndGet()<=256,"Actual accepted tracker connection bound");
+             stage="peer-identity";Destination remote=socket.getPeerDestination();require(isSeed||remote.equals(leech),"Unowned actual tracker peer");
+             stage="ports";require(socket.getLocalPort()==TRACKER_PORT&&socket.getPort()==(isSeed?seedFrom:leechFrom),"Actual tracker purpose/ports differ");socket.setReadTimeout(15000);
+-            stage="request-header-query";Request request=query(readHeader(socket.getInputStream()));Map<String,byte[]> fields=request.fields;stage="cache-infohash";
++            stage="request-header-query";byte[] header;
++            try{header=readHeader(socket.getInputStream());}catch(EOFException cancelled){
++              // An owned Pause/Stop/revoke can close an accepted connection.
++              // No complete request exists: no hash, announce, scrape or reply credit.
++              if("EOF before actual HTTP request".equals(cancelled.getMessage()))zeroByteEof.incrementAndGet();
++              else if("EOF within actual HTTP request".equals(cancelled.getMessage()))partialHeaderEof.incrementAndGet();else throw cancelled;
++              output("tracker-eof.json","{\"status\":\"ACTUAL_INCOMPLETE_TRACKER_CONNECTION\",\"accepted_connections\":"+acceptedConnections.get()+",\"zero_byte_eof\":"+zeroByteEof.get()+",\"partial_header_eof\":"+partialHeaderEof.get()+",\"hash_credit\":false,\"reply_credit\":false}");continue;
++            }
++            Request request=query(header);Map<String,byte[]> fields=request.fields;stage="cache-infohash";
+             RouterTracker.waitFor(()->Files.exists(RouterTracker.root.resolve("cache-precondition.json")),30000,"Actual native identities/accepted LS2 must precede tracker discovery");
+             Map<String,Counts> rows=table.get();if(rows==null){rows=torrentTable();table.set(rows);}
+             String hash=hex(fields.get("info_hash"));Counts count=rows.get(hash);require(count!=null,"Unadmitted multi-torrent infohash");
+@@ -205,7 +234,7 @@
+             output("tracker-progress.json","{\"status\":\"ACTUAL_MULTI_HASH_TRACKER_OBSERVATIONS\",\"hashes\":"+countsJson(rows,false)+"}");
+           }
+         }
+-      }catch(Throwable error){if(!stopping.get()&&failure.compareAndSet(null,error)){System.err.println("OWNED_TRACKER_APPLICATION_FAILURE stage="+stage+" class="+error.getClass().getName());}}},"owned-original-http-tracker");application.setDaemon(true);application.start();
++      }catch(Throwable error){if(!stopping.get()&&failure.compareAndSet(null,error)){reportTrackerFailure(stage,error);}}},"owned-original-http-tracker");application.setDaemon(true);application.start();
+       output("tracker-ready.json","{\"status\":\"ACTUAL_EXTERNAL_TORRENT_TRACKER_CONNECTED\",\"tracker_destination_sha256\":\""+hex(tracker.calculateHash().getData())+"\",\"seed_destination_sha256\":\""+hex(seed.calculateHash().getData())+"\",\"leech_destination_sha256\":\""+hex(leech.calculateHash().getData())+"\",\"tracker_port\":80,\"seed_from_port\":"+seedFrom+",\"leech_from_port\":"+leechFrom+"}");
+       BufferedReader commands=new BufferedReader(new InputStreamReader(System.in,StandardCharsets.US_ASCII));String command;
+       while((command=commands.readLine())!=null){
+@@ -213,7 +242,7 @@
+           if(failure.get()!=null)throw new IllegalStateException("Actual tracker application failed",failure.get());
+           Map<String,Counts> rows=table.get();require(rows!=null,"Actual multi-hash table was never observed");String actualCounts=countsJson(rows,true);
+           stopping.set(true);manager.destroySocketManager();application.join(5000);require(!application.isAlive()&&session.isClosed(),"Tracker application/session not retired");
+-          output("tracker-result.json","{\"status\":\"PASS\",\"hashes\":"+actualCounts+",\"requests\":"+requests.get()+",\"external_i2cp\":true,\"session_closed\":true,\"late_reply_qualified\":false}");return;
++          output("tracker-result.json","{\"status\":\"PASS\",\"hashes\":"+actualCounts+",\"requests\":"+requests.get()+",\"accepted_connections\":"+acceptedConnections.get()+",\"zero_byte_eof\":"+zeroByteEof.get()+",\"partial_header_eof\":"+partialHeaderEof.get()+",\"external_i2cp\":true,\"session_closed\":true,\"late_reply_qualified\":false}");return;
+         }
+       }
+       throw new EOFException("Owner closed tracker before completion");

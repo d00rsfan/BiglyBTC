@@ -1,0 +1,31 @@
+--- a/preview/native/services/i2p_provider/profile_owner.cpp
++++ b/preview/native/services/i2p_provider/profile_owner.cpp
+@@ -62,7 +62,7 @@
+     std::shared_ptr<engine::detail::ManagedQueueObservations> queue;
+     core::QueueObservedFacts queueFacts;core::QueueActivityMemory activity;
+     std::optional<std::int64_t> livePosition;std::optional<bool> observedComplete;
+-    std::int64_t nextDiagnostic=0;
++    std::int64_t nextDiagnostic=0,nextQueueDiagnostic=0;
+     bool forceStart=false,clearCompletedForce=false,justCompleted=false,completionPositionUnavailable=false;
+     std::atomic<bool> checkpointed{false};
+     std::optional<core::QueueObservedDurations> finalDurations;
+@@ -210,6 +210,9 @@
+         if(observed.durations){f.secondsDownloading=core::sourceQueueSum(saved.secondsDownloading,observed.durations->downloading);f.secondsSeeding=core::sourceQueueSum(saved.secondsSeeding,observed.durations->seeding);}
+         if(observed.swarm){const auto& swarm=*observed.swarm;f.swarm=core::QueueSwarm{swarm.seeds,swarm.peers,swarm.success,swarm.startupSuccess};}}
+       if(counters.state==engine::detail::ManagedPayloadCounters::Read::Accepted&&counters.badPrefix&&!saved.badPayloadCountersLost&&counters.received<=std::numeric_limits<std::int64_t>::max()-saved.downloaded&&counters.sent<=std::numeric_limits<std::int64_t>::max()-saved.uploaded&&counters.badPrefix->discarded<=std::numeric_limits<std::int64_t>::max()-saved.discarded&&counters.badPrefix->hashFailed<=std::numeric_limits<std::int64_t>::max()-saved.hashFailed){f.shareRatio=core::sourceQueueShareRatio(saved.downloaded+counters.received,saved.uploaded+counters.sent,saved.discarded+counters.badPrefix->discarded,saved.hashFailed+counters.badPrefix->hashFailed);}
++      if(qEnvironmentVariableIsSet("BIGLYBTC_I2P_DIAGNOSTICS")&&now>=m->nextQueueDiagnostic){
++        qInfo().noquote().nospace()<<"I2P_QUEUE_FACT admission="<<m->data().admission<<" sample="<<static_cast<int>(counters.state)<<" bad_prefix="<<counters.badPrefix.has_value()<<" bad_tail="<<counters.bad.has_value()<<" saved_bad_lost="<<saved.badPayloadCountersLost<<" share_known="<<f.shareRatio.has_value()<<" share="<<f.shareRatio.value_or(0)<<" checked="<<checked<<" complete="<<f.complete<<" state="<<static_cast<int>(f.state);
++      }
+       down+=s.download_payload_rate;up+=s.upload_payload_rate;any=true;onlySeeds&=f.complete;targets.emplace(f.token,m.get());facts.push_back(std::move(f));
+     }
+     context.seedingOnly=any&&onlySeeds;context.uploadBytesPerSecond=up;context.downloadBytesPerSecond=down;context.downloadLimitBytesPerSecond=rates.download;context.uploadLimitBytesPerSecond=context.seedingOnly&&rates.seedingOnly?rates.seedingUpload:rates.upload;
+@@ -220,6 +223,9 @@
+     const auto normalized=core::normalizeQueuePositions(positions);if(!normalized){failure="Original I2P queue positions are ambiguous";close();return;}
+     for(std::size_t i=0;i<order.size();++i){facts[order[i]].position=(*normalized)[i];}
+     auto plan=core::evaluateQueue(queuePolicy,facts,context);if(!plan){failure="Original I2P queue facts are inconsistent";close();return;}queueUnavailable=plan->unavailableInputs;
++    if(qEnvironmentVariableIsSet("BIGLYBTC_I2P_DIAGNOSTICS")){for(const auto& decision:plan->decisions){auto* m=targets.at(decision.token);if(now<m->nextQueueDiagnostic){continue;}m->nextQueueDiagnostic=now+1000;const auto actual=m->handle.status();
++      qInfo().noquote().nospace()<<"I2P_QUEUE_DECISION admission="<<m->data().admission<<" action="<<static_cast<int>(decision.action)<<" reason="<<static_cast<int>(decision.reason)<<" first_priority="<<decision.firstPriority<<" fp_known="<<decision.firstPriorityKnown<<" rank="<<decision.seedingRank<<" activity_known="<<decision.activityKnown<<" queued="<<m->queued<<" paused="<<bool(actual.flags&lt::torrent_flags::paused)<<" pause_settled="<<m->pauseSettled<<" pause_pending="<<m->pausePending<<" unavailable="<<plan->unavailableInputs;
++    }}
+     for(auto action:{core::QueueAction::Queue,core::QueueAction::Run}){for(const auto& decision:plan->decisions){auto* m=targets.at(decision.token);m->activity=decision.activity;if(decision.moveNewSeedToTop){m->completionPositionUnavailable=true;}m->justCompleted=false;if(decision.action!=action||!m->counters->checked.load()){continue;}
+       const auto actual=m->handle.status();const bool paused=bool(actual.flags&lt::torrent_flags::paused);
+       if(action==core::QueueAction::Queue){

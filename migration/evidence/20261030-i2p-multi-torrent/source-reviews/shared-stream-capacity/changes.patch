@@ -1,0 +1,377 @@
+--- a/preview/native/services/i2cp_channel/channel.cpp
++++ b/preview/native/services/i2cp_channel/channel.cpp
+@@ -511,7 +511,7 @@
+ std::optional<streaming::ManagedObservation> InitialChannel::managedStreamObservation(std::uint64_t operation)const noexcept{return sessionId()&&impl_->managedStreams?impl_->managedStreams->observation(operation):std::nullopt;}
+ streaming::ManagerObservation InitialChannel::streamManagerObservation()const noexcept{return impl_->managedStreams?impl_->managedStreams->observation():streaming::ManagerObservation{};}
+ bool InitialChannel::waitStream(std::uint64_t operation,streaming::WaitFor kind,std::size_t minimum,unsigned period){if(!impl_->onThread()||!impl_->managedCurrent()){return false;}try{const bool ok=impl_->managedStreams->wait(operation,kind,minimum,period,impl_->streamNow());impl_->armManagedStreams();impl_->notifyStream();return ok&&impl_->active();}catch(...){impl_->fail(Failure::Resources);return false;}}
+-bool InitialChannel::releaseStream(std::uint64_t operation){if(!impl_->onThread()||!impl_->managedStreams){return false;}const bool ok=impl_->managedStreams->release(operation);impl_->armManagedStreams();impl_->notifyStream();return ok;}
++bool InitialChannel::releaseStream(std::uint64_t operation){if(!impl_->onThread()||!impl_->managedStreams){return false;}const bool ok=impl_->managedStreams->release(operation);if(ok){impl_->armManagedStreams();impl_->notifyStream();}return ok;}
+ 
+ ConfigResult<std::uint64_t> InitialChannel::lookupDestination(const Hash& hash,unsigned timeout){return impl_->startOwnedLookup(hash,timeout);}
+ bool InitialChannel::cancelDestinationLookup(std::uint64_t id){if(!impl_->onThread()||!impl_->ownedLookup||impl_->ownedLookup->operation!=id){return false;}impl_->finishOwnedLookup(LookupPhase::Cancelled);return true;}
+--- a/preview/native/services/i2cp_channel/managed_streams.inc
++++ b/preview/native/services/i2cp_channel/managed_streams.inc
+@@ -57,7 +57,7 @@
+       if(managedLease&&!flushManagedLease()){if(active()){armManagedStreams(true);}return;}
+       if(socket.bytesToWrite()!=0){armManagedStreams(true);return;}
+       streamFlushing=true;const auto at=generation;
+-      for(std::size_t attempts=0;attempts<streaming::MaximumStreams;++attempts){
++      for(std::size_t attempts=0;attempts<managedStreams->maximumStreams();++attempts){
+       auto outbound=managedStreams->next(streamNow());
+       if(!outbound){streamFlushing=false;armManagedStreams();notifyStream();return;}
+       const auto* peer=managedStreams->peer(outbound->operation);if(!peer){streamFlushing=false;fail(Failure::Resources);return;}
+@@ -123,7 +123,7 @@
+     }catch(...){fail(Failure::Resources);return refuse(Code::CryptoFailure,"Managed stream resources unavailable");}
+   }
+   bool listenManagedStreams(const streaming::ListenOptions& provided){
+-    if(!onThread()||!managedCurrent()||provided.peers.empty()||provided.peers.size()>streaming::MaximumStreams){return false;}
++    if(!onThread()||!managedCurrent()||provided.peers.empty()||provided.peers.size()>managedStreams->maximumStreams()){return false;}
+     try{
+       streaming::ListenOptions input;input.ports=provided.ports;input.maximumWindow=provided.maximumWindow;
+       for(const auto& peer:provided.peers){auto decoded=decodeDestination(peer.wire);if(!decoded){return false;}input.peers.push_back(std::move(*decoded));}
+--- a/preview/native/services/i2p_provider/bridge.cpp
++++ b/preview/native/services/i2p_provider/bridge.cpp
+@@ -35,15 +35,15 @@
+   Bridge* q;std::shared_ptr<ProfileSource> source;QPointer<i2cp::InitialChannel> channel;
+   QTcpServer server;QTimer timer;std::unique_ptr<SourcePermit> permit;
+   int watch=-1;std::unique_ptr<QSocketNotifier> watcher;std::vector<int> criticalWatches;
+-  std::array<std::optional<Socket>,MaximumBridgeSockets> sockets;
+-  std::vector<Destination> peers;std::vector<Destination> resolved;
++  const BridgeCapacity capacity;std::vector<std::optional<Socket>> sockets;
++  std::vector<Destination> peers;std::vector<Destination> resolved;std::vector<std::uint64_t> retired;
+   std::optional<std::size_t> control;
+   Ports ports;Phase phase=Phase::Idle;std::string sessionId;Clock::time_point preparingEnd{};
+   std::array<Byte,32> capability{};std::uint64_t generation=0,admission=0,activeRevision=0,rejectedClients=0;
+   bool queued=false,notifyQueued=false,wanted=false,executing=false;
+   std::function<bool(void*)> install;const char* failure=nullptr;
+-  explicit Impl(Bridge* owner,std::shared_ptr<ProfileSource> s,i2cp::InitialChannel& c):q(owner),source(std::move(s)),channel(&c),server(owner),timer(owner){
+-    server.setProxy(QNetworkProxy::NoProxy);server.setMaxPendingConnections(static_cast<int>(MaximumBridgeSockets));timer.setSingleShot(true);
++  explicit Impl(Bridge* owner,std::shared_ptr<ProfileSource> s,i2cp::InitialChannel& c):q(owner),source(std::move(s)),channel(&c),server(owner),timer(owner),capacity(bridgeCapacity(source->groupMode())),sockets(capacity.sockets){
++    retired.reserve(capacity.streams);server.setProxy(QNetworkProxy::NoProxy);server.setMaxPendingConnections(static_cast<int>(capacity.sockets));timer.setSingleShot(true);
+     QObject::connect(&server,&QTcpServer::newConnection,q,[this]{schedule();});
+     QObject::connect(&timer,&QTimer::timeout,q,[this]{schedule();});
+     QObject::connect(&c,&i2cp::InitialChannel::streamChanged,q,[this]{schedule();});
+@@ -65,16 +65,46 @@
+     if(!ok){notifyQueued=false;close();}
+   }
+   void discard(std::size_t index){
+-    auto& item=sockets[index];if(!item){return;}if(!item->authenticated&&rejectedClients!=std::numeric_limits<std::uint64_t>::max()){++rejectedClients;}if(channel&&item->operation){channel->cancelStream(item->operation);auto terminal=channel->managedStreamObservation(item->operation);if(executing&&current()&&terminal&&terminal->stream.phase==streaming::Phase::Closed&&terminal->stream.queuedRx){static_cast<void>(channel->takeStreamBytes(item->operation,streaming::MaximumBuffered));}channel->releaseStream(item->operation);}
+-    if(channel&&item->lookup){channel->cancelDestinationLookup(item->lookup);}
++    auto& item=sockets[index];if(!item){return;}
++    if(!item->authenticated&&rejectedClients!=std::numeric_limits<std::uint64_t>::max()){++rejectedClients;}
++    const auto operation=item->operation;
++    if(channel&&operation){
++      channel->cancelStream(operation);if(phase==Phase::Withdrawn||!item||!channel){return;}
++      const auto terminal=channel->managedStreamObservation(operation);
++      if(executing&&current()&&terminal&&terminal->stream.phase==streaming::Phase::Closed&&terminal->stream.queuedRx){
++        static_cast<void>(channel->takeStreamBytes(operation,streaming::MaximumBuffered));if(phase==Phase::Withdrawn||!item||!channel){return;}
++      }
++      const bool released=channel->releaseStream(operation);if(phase==Phase::Withdrawn||!item||!channel){return;}
++      if(!released&&channel->managedStreamObservation(operation)&&std::find(retired.begin(),retired.end(),operation)==retired.end()){
++        if(retired.size()>=capacity.streams){close("I2P retired stream bound exhausted");return;}retired.push_back(operation);
++      }
++    }
++    if(channel&&item->lookup){channel->cancelDestinationLookup(item->lookup);if(phase==Phase::Withdrawn||!item){return;}}
+     if(control&&*control==index){close("I2P control connection ended");return;}
+     QObject::disconnect(item->tcp.get(),nullptr,q,nullptr);item->tcp->abort();item.reset();
++  }
++  void releaseRetired(){
++    // A vanished SAM consumer does not imply its Closed Streaming ACK/RX has
++    // settled. Only a fresh source-permit turn may drain its unread bytes.
++    // ACK output uses existing receive/bytesWritten/effect wakes; empty reads
++    // and failed releases must not schedule a cleanup spin.
++    for(auto at=retired.begin();at!=retired.end();){
++      if(!executing||!current()||!channel){return;}
++      const auto observed=channel->managedStreamObservation(*at);
++      if(!observed){at=retired.erase(at);continue;}
++      if(observed->stream.phase==streaming::Phase::Closed&&observed->stream.queuedRx){
++        static_cast<void>(channel->takeStreamBytes(*at,streaming::MaximumBuffered));
++        if(!current()||!channel){return;}
++      }
++      const bool released=channel->releaseStream(*at);if(!current()||!channel){return;}
++      if(released||!channel->managedStreamObservation(*at)){at=retired.erase(at);}else{++at;}
++    }
+   }
+   void close(const char* reason=nullptr){
+     if(reason&&!failure){failure=reason;}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;wanted=false;server.close();timer.stop();if(watcher){watcher->setEnabled(false);}source->revoke();
+     if(channel){channel->closeStreamListener();for(auto& item:sockets){if(item&&item->operation){channel->cancelStream(item->operation);}if(item&&item->lookup){channel->cancelDestinationLookup(item->lookup);}}}
+     for(auto& item:sockets){if(item){QObject::disconnect(item->tcp.get(),nullptr,q,nullptr);item->tcp->abort();item.reset();}}
+-    control.reset();peers.clear();resolved.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());notify();
++    control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());notify();
+   }
+   void schedule(bool work=true){
+     if(phase==Phase::Idle||phase==Phase::Withdrawn){return;}wanted|=work;if(queued){return;}queued=true;bool ok=false;
+@@ -94,7 +124,7 @@
+     return item.tcp->write(bytes.data(),static_cast<qint64>(bytes.size()))==static_cast<qint64>(bytes.size());
+   }
+   void acceptSockets(){
+-    for(std::size_t n=0;n<MaximumBridgeSockets&&server.hasPendingConnections();++n){
++    for(std::size_t n=0;n<sockets.size()&&server.hasPendingConnections();++n){
+       std::unique_ptr<QTcpSocket> tcp(server.nextPendingConnection());if(!tcp){break;}
+       auto free=std::find_if(sockets.begin(),sockets.end(),[](const auto& item){return !item;});
+       if(free==sockets.end()||!tcp->peerAddress().isLoopback()||tcp->localAddress()!=QHostAddress::LocalHost){tcp->abort();continue;}
+@@ -114,7 +144,7 @@
+   }
+   bool permitPeer(const Destination& destination){
+     if(std::none_of(peers.begin(),peers.end(),[&](const auto& p){return p.wire==destination.wire;})){
+-      if(peers.size()>=streaming::MaximumStreams){return false;}peers.push_back(destination);if(!updateListener()){return false;}
++      if(peers.size()>=capacity.peers){return false;}peers.push_back(destination);if(!updateListener()){return false;}
+     }return true;
+   }
+   bool known(const Destination& destination)const{return std::any_of(resolved.begin(),resolved.end(),[&](const auto& item){return item.wire==destination.wire;});}
+@@ -142,7 +172,7 @@
+       else if(f.at("PURPOSE")!="TRACKER"||*from!=0||!source->trackerAllowed(*hash,static_cast<std::uint16_t>(*to))){return false;}
+       auto found=std::find_if(resolved.begin(),resolved.end(),[&](const auto& d){return d.hash==*hash;});
+       if(found!=resolved.end()){if(item.peer&&!permitPeer(*found)){return false;}return send(item,"NAMING REPLY RESULT=OK NAME="+name+" VALUE="+destinationText(found->wire)+"\n");}
+-      if(resolved.size()>=8){return false;}
++      if(resolved.size()>=capacity.destinations){return false;}
+       auto lookup=channel->lookupDestination(*hash,30000);if(!lookup){return false;}
+       item.lookup=*lookup;item.requestedName=name;item.phase=SocketPhase::Lookup;item.end=Clock::now()+std::chrono::seconds(30);return true;
+     }
+@@ -171,7 +201,7 @@
+       if(value->phase==i2cp::InitialChannel::LookupPhase::Pending){return !item.eof;}
+       item.lookup=0;item.phase=SocketPhase::Control;
+       if(value->phase!=i2cp::InitialChannel::LookupPhase::Resolved||!value->destination){return send(item,"NAMING REPLY RESULT=KEY_NOT_FOUND NAME="+item.requestedName+"\n");}
+-      if(resolved.size()>=8||(item.peer&&!permitPeer(*value->destination))){return false;}resolved.push_back(*value->destination);
++      if(resolved.size()>=capacity.destinations||(item.peer&&!permitPeer(*value->destination))){return false;}resolved.push_back(*value->destination);
+       return send(item,"NAMING REPLY RESULT=OK NAME="+item.requestedName+" VALUE="+destinationText(value->destination->wire)+"\n");
+     }
+     if(item.phase==SocketPhase::Accept){
+@@ -236,7 +266,7 @@
+         struct Wipe {decltype(policy)& value;~Wipe(){OPENSSL_cleanse(value.capability.data(),value.capability.size());}} wipe{policy};
+         auto apply=std::move(install);if(!current()||!apply(&policy)||!current()){close("I2P provider installation refused");executing=false;return;}
+       }
+-      acceptSockets();
++      releaseRetired();if(phase==Phase::Withdrawn){executing=false;return;}acceptSockets();
+       for(std::size_t i=0;i<sockets.size()&&phase==Phase::Ready;++i){if(sockets[i]&&(!current()||!pumpSocket(i))){discard(i);}}
+       if(current()){channel->resumeAuthorizedEffects();}arm();
+     }catch(...){close("I2P bridge operation failed");}
+@@ -252,7 +282,10 @@
+   if(!s.source->prepared()||!ports.peer||!ports.localPeer||!admission||!s.leaseCurrent()){return false;}
+   if(RAND_bytes(s.capability.data(),static_cast<int>(s.capability.size()))!=1||RAND_bytes(reinterpret_cast<unsigned char*>(&s.generation),sizeof(s.generation))!=1||!s.generation){s.close();return false;}
+   s.ports=ports;s.admission=admission;
+-  if(!s.channel->enableStreamManager(streaming::ManagerOptions{})){s.close();return false;}
++  static_assert(bridgeCapacity(false).streams==streaming::MaximumStreams);
++  static_assert(bridgeCapacity(true).streams==streaming::MaximumConfiguredStreams);
++  streaming::ManagerOptions managerOptions;managerOptions.maximumStreams=static_cast<unsigned>(s.capacity.streams);
++  if(!s.channel->enableStreamManager(managerOptions)){s.close();return false;}
+   s.phase=Phase::Preparing;s.preparingEnd=end;
+     s.watch=::inotify_init1(IN_CLOEXEC|IN_NONBLOCK);if(s.watch<0){s.close();return false;}
+     const auto critical=s.source->criticalWatchDescriptors();
+--- a/preview/native/services/i2p_provider/sam_protocol.hpp
++++ b/preview/native/services/i2p_provider/sam_protocol.hpp
+@@ -8,6 +8,12 @@
+ 
+ namespace biglybtc::services::i2p::provider {
+ inline constexpr std::size_t MaximumCommandBytes=2048,MaximumBridgeSockets=6;
++struct BridgeCapacity {std::size_t streams,sockets,peers,destinations;};
++// Singleton defaults stay exact. Shared mode has at most32 admitted children,
++// four saved trackers per child and64 explicit peer Destinations.
++inline constexpr BridgeCapacity bridgeCapacity(bool shared)noexcept{
++  return shared?BridgeCapacity{64,64+2,64,32*4+64}:BridgeCapacity{4,MaximumBridgeSockets,4,8};
++}
+ enum class CommandKind {Hello,Create,Naming,Connect,Accept};
+ enum class Purpose {Peer,Tracker};
+ struct Command {
+--- a/preview/native/services/i2p_streaming/manager.cpp
++++ b/preview/native/services/i2p_streaming/manager.cpp
+@@ -12,9 +12,11 @@
+ bool endFits(std::uint64_t now,unsigned period){return now<=std::numeric_limits<std::uint64_t>::max()-period;}
+ }
+ Manager::Manager(Destination local,ManagerOptions options,Connection::Entropy entropy)
+-  :local_(std::move(local)),options_(options),entropy_(std::move(entropy)){}
++  :local_(std::move(local)),options_(options),entropy_(std::move(entropy)),
++   streams_(options.maximumStreams>=1&&options.maximumStreams<=MaximumConfiguredStreams?options.maximumStreams:0){}
+ bool Manager::valid()const noexcept{
+-  return !local_.wire.empty()&&options_.inactivityMilliseconds>=1&&options_.inactivityMilliseconds<=3600000
++  return !local_.wire.empty()&&options_.maximumStreams>=1&&options_.maximumStreams<=MaximumConfiguredStreams
++    &&streams_.size()==options_.maximumStreams&&options_.inactivityMilliseconds>=1&&options_.inactivityMilliseconds<=3600000
+     &&(options_.idleAction==IdleAction::Send||options_.idleAction==IdleAction::Disconnect);
+ }
+ Manager::Entry* Manager::find(std::uint64_t op)noexcept{for(auto& item:streams_){if(item&&item->connection.observation().operation==op){return &*item;}}return nullptr;}
+@@ -43,13 +45,22 @@
+ }
+ Result<void> Manager::listen(const ListenOptions& provided,std::uint64_t now){
+   tick(now);
+-  if(provided.peers.empty()||provided.peers.size()>MaximumStreams){return refused("Finite listener peer bound required");}
++  if(provided.peers.empty()||provided.peers.size()>streams_.size()){return refused("Finite listener peer bound required");}
+   ListenOptions input;input.ports=provided.ports;input.maximumWindow=provided.maximumWindow;
+   for(const auto& peer:provided.peers){auto decoded=decodeDestination(peer.wire);if(!decoded){return std::unexpected(decoded.error());}input.peers.push_back(std::move(*decoded));}
+-  if(!valid()||listener_||!pending_.empty()||!ports(input.ports)||!window(input.maximumWindow)||input.peers.empty()||input.peers.size()>MaximumStreams){return refused("Explicit finite listener unavailable");}
++  if(!valid()||(!listener_&&!pending_.empty())||!ports(input.ports)||!window(input.maximumWindow)||input.peers.empty()||input.peers.size()>streams_.size()){return refused("Explicit finite listener unavailable");}
+   for(std::size_t i=0;i<input.peers.size();++i){
+     if(input.peers[i].wire.empty()||input.peers[i].hash==local_.hash){return refused("Listener peer must be an explicit other Destination");}
+     for(std::size_t j=0;j<i;++j){if(input.peers[j].hash==input.peers[i].hash){return refused("Duplicate or ambiguous listener peer");}}
++  }
++  if(listener_){
++    // Only the explicit shared envelope may add verified full Destinations.
++    // Existing routes, pending signed SYNs and their original deadlines survive.
++    if(options_.maximumStreams<=MaximumStreams||input.ports.local!=listener_->ports.local||input.ports.remote!=listener_->ports.remote
++      ||input.maximumWindow!=listener_->maximumWindow||input.peers.size()<=listener_->peers.size()
++      ||std::ranges::any_of(listener_->peers,[&](const auto& old){return std::ranges::none_of(input.peers,[&](const auto& peer){return peer.wire==old.wire;});})){
++      return refused("Shared listener extension must preserve exact existing scope");
++    }
+   }
+   listener_.emplace(std::move(input));return {};
+ }
+@@ -115,8 +126,8 @@
+ }
+ std::optional<Outbound> Manager::next(std::uint64_t now){
+   tick(now);
+-  for(std::size_t step=0;step<MaximumStreams;++step){const auto index=(cursor_+step)%MaximumStreams;auto& item=streams_[index];if(!item){continue;}
+-    auto packet=item->connection.next(now);if(packet){cursor_=(index+1)%MaximumStreams;return Outbound{item->connection.observation().operation,std::move(*packet),item->ports};}
++  for(std::size_t step=0;step<streams_.size();++step){const auto index=(cursor_+step)%streams_.size();auto& item=streams_[index];if(!item){continue;}
++    auto packet=item->connection.next(now);if(packet){cursor_=(index+1)%streams_.size();return Outbound{item->connection.observation().operation,std::move(*packet),item->ports};}
+   }
+   return std::nullopt;
+ }
+--- a/preview/native/services/i2p_streaming/manager.hpp
++++ b/preview/native/services/i2p_streaming/manager.hpp
+@@ -4,9 +4,9 @@
+ #include <vector>
+ 
+ namespace biglybtc::services::i2p::streaming {
+-inline constexpr std::size_t MaximumStreams=4,MaximumPendingSyns=4,MaximumPendingSynBytes=262144;
++inline constexpr std::size_t MaximumStreams=4,MaximumConfiguredStreams=64,MaximumPendingSyns=4,MaximumPendingSynBytes=262144;
+ enum class IdleAction {Send,Disconnect};
+-struct ManagerOptions {unsigned inactivityMilliseconds=90000;IdleAction idleAction=IdleAction::Send;};
++struct ManagerOptions {unsigned inactivityMilliseconds=90000;IdleAction idleAction=IdleAction::Send;unsigned maximumStreams=MaximumStreams;};
+ struct Ports {std::uint16_t local=0,remote=0;};
+ struct ConnectOptions {Ports ports;unsigned handshakeMilliseconds=120000,maximumWindow=MaximumWindow;};
+ struct ListenOptions {Ports ports;std::vector<Destination> peers;unsigned maximumWindow=MaximumWindow;};
+@@ -25,6 +25,7 @@
+ public:
+   Manager(Destination local,ManagerOptions,Connection::Entropy={});
+   bool valid()const noexcept;
++  std::size_t maximumStreams()const noexcept{return streams_.size();}
+   bool receives()const noexcept;
+   bool active()const noexcept;
+   Result<void> connect(std::uint64_t operation,std::uint32_t id,Destination,const ConnectOptions&,std::uint64_t now,std::optional<std::uint64_t> absoluteHandshakeEnd={});
+@@ -63,7 +64,7 @@
+   void settleWait(Entry&,std::uint64_t now)noexcept;
+   bool available(std::uint64_t operation,std::uint32_t id)const noexcept;
+   Destination local_;ManagerOptions options_;Connection::Entropy entropy_;
+-  std::array<std::optional<Entry>,MaximumStreams> streams_{};
++  std::vector<std::optional<Entry>> streams_;
+   std::optional<ListenOptions> listener_;
+   std::deque<Pending> pending_;
+   std::size_t pendingBytes_=0,cursor_=0;
+--- a/preview/native/tests/i2cp_stream_manager_tests.cpp
++++ b/preview/native/tests/i2cp_stream_manager_tests.cpp
+@@ -1,7 +1,10 @@
+ // SPDX-License-Identifier: GPL-2.0-or-later
+ #include "channel.hpp"
+ #include <QFile>
++#include <QCoreApplication>
++#include <QEvent>
+ #include <QPointer>
++#include <QSignalSpy>
+ #include <QNetworkProxy>
+ #include <QTcpServer>
+ #include <QTcpSocket>
+@@ -73,9 +76,9 @@
+ }
+ class ManagerChannelTests final:public QObject {
+   Q_OBJECT
+-  void registered(Router& router,Channel& channel){
++  void registered(Router& router,Channel& channel,st::ManagerOptions policy={}){
+     QVERIFY(channel.begin(router.options()));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::GetDateType);auto date=cp::encodeMessage(cp::SetDate{Now,std::string("2.13.0")});QVERIFY(date&&router.send(*date));QTRY_VERIFY(channel.routerDate());
+-    auto signer=identity("dsa");QVERIFY(channel.createLeaseSession(std::move(signer),{{"i2cp.fastReceive","true"},{"i2cp.messageReliability","none"}},Now));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateSessionType);auto created=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});QVERIFY(created&&router.send(*created));QTRY_VERIFY(channel.sessionId());QVERIFY(router.lease());QTRY_VERIFY(router.next());QVERIFY(cp::decodeCreateLeaseSet2(router.take()));QTRY_VERIFY(channel.leaseSetSubmission());QVERIFY(channel.enableStreamManager({}));
++    auto signer=identity("dsa");QVERIFY(channel.createLeaseSession(std::move(signer),{{"i2cp.fastReceive","true"},{"i2cp.messageReliability","none"}},Now));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateSessionType);auto created=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});QVERIFY(created&&router.send(*created));QTRY_VERIFY(channel.sessionId());QVERIFY(router.lease());QTRY_VERIFY(router.next());QVERIFY(cp::decodeCreateLeaseSet2(router.take()));QTRY_VERIFY(channel.leaseSetSubmission());QVERIFY(channel.enableStreamManager(policy));
+   }
+ private slots:
+   void concurrentActualFramesAndExplicitIncomingPeerRemainIndependent(){
+@@ -125,6 +128,22 @@
+     QVERIFY(router.lease());QTRY_VERIFY(router.pump()&&channel.leaseSetSubmission()->revision>shortened);QCOMPARE(channel.managedStreamObservation(*operation)->stream.phase,st::Phase::LeaseExpired);QVERIFY(!channel.streamManagerObservation().listening);QVERIFY(!channel.writeStream(*operation,p::Bytes{'X'}));QVERIFY(channel.releaseStream(*operation));
+     auto fresh=channel.connectStream(router.remote.destination()->wire,{9001,80,3000});QVERIFY(fresh&&*fresh!=*operation);QTRY_VERIFY(router.pump()&&channel.managedStreamObservation(*fresh)&&channel.managedStreamObservation(*fresh)->stream.phase==st::Phase::Established);QVERIFY(router.failure.isEmpty());channel.close();
+   }
++  void explicitSharedCapacityEmitsMoreThanFourSignedFramesAndFailedReleaseDoesNotWake(){
++    Router router;QVERIFY(router.listen());Channel channel;st::ManagerOptions policy;policy.maximumStreams=64;registered(router,channel,policy);
++    std::array<std::uint64_t,6> operations{};for(std::size_t i=0;i<operations.size();++i){auto op=channel.connectStream(router.remote.destination()->wire,{static_cast<std::uint16_t>(9000+i),80,10000});QVERIFY(op);operations[i]=*op;}
++    std::array<bool,6> observed{};std::size_t count=0;
++    const auto collect=[&]{router.collect();while(router.next()){
++      auto sent=cp::decodeSendDatagram(router.take());if(!sent||sent->recipient.wire!=router.remote.destination()->wire){router.failure="Wrong shared actual recipient";return false;}
++      auto mux=st::decodeMux(sent->payload);if(!mux||mux->toPort!=80||mux->fromPort<9000||mux->fromPort>=9006||!st::decodeInitialSyn(mux->packet,*router.remote.destination())){router.failure="Wrong shared actual signed SYN/ports";return false;}
++      const auto index=static_cast<std::size_t>(mux->fromPort-9000);if(!observed[index]){observed[index]=true;++count;}
++    }return router.failure.isEmpty()&&count==operations.size();};
++    QTRY_VERIFY(collect());QCOMPARE(channel.streamManagerObservation().streams,std::size_t{6});
++    QCoreApplication::sendPostedEvents(&channel,QEvent::MetaCall);QSignalSpy wakes(&channel,&Channel::streamChanged);
++    QVERIFY(!channel.releaseStream(operations[2]));QCoreApplication::sendPostedEvents(&channel,QEvent::MetaCall);QCOMPARE(wakes.count(),0);
++    QVERIFY(channel.cancelStream(operations[2]));QVERIFY(channel.releaseStream(operations[2]));QVERIFY(!channel.managedStreamObservation(operations[2]));
++    for(std::size_t i=0;i<operations.size();++i){if(i!=2){QCOMPARE(channel.managedStreamObservation(operations[i])->stream.phase,st::Phase::Connecting);}}
++    auto replacement=channel.connectStream(router.remote.destination()->wire,{9010,80,10000});QVERIFY(replacement&&*replacement!=operations[2]);QCOMPARE(channel.streamManagerObservation().streams,std::size_t{6});QVERIFY(router.failure.isEmpty());channel.close();
++  }
+ };
+ QTEST_GUILESS_MAIN(ManagerChannelTests)
+ #include "i2cp_stream_manager_tests.moc"
+--- a/preview/native/tests/i2p_streaming_manager_tests.cpp
++++ b/preview/native/tests/i2p_streaming_manager_tests.cpp
+@@ -105,4 +105,46 @@
+   st::Manager listener(*local.destination(),{});require(!listener.listen({{0,80},{*peer.destination()},8},0)&&!listener.receives(),"Listener acquired zero-port wildcard authority");
+   st::Manager remoteZero(*local.destination(),{});require(!remoteZero.connect(1,100,*peer.destination(),{{0,0},100,8},0)&&!remoteZero.connect(1,100,*peer.destination(),{{9000,0},100,8},0)&&remoteZero.observation().streams==0,"Unspecified remote port acquired an outgoing slot");
+ }
+-int main(){try{auto local=identity("dsa"),peer=identity("ed25519");inboundCodecAndRole(local,peer);listenerBoundsAndExpiry(local,peer);multiplexFairnessAndMemory(local,peer);finiteWaitAndLongActivity(local,peer);originalOneShotIdleJitter(local,peer);postVerificationFence(local,peer);hardDeadlinesRemainArmedWithoutOutputCredit(local,peer);preparationCannotExtendAbsoluteHandshake(local,peer);outgoingUnspecifiedLocalPortRetainsExactRemoteAndReplyTuple(local,peer);std::cout<<"PASS bounded session Streaming manager source-authored controls\n";return 0;}catch(const std::exception& failure){std::cerr<<"FAIL "<<failure.what()<<'\n';return 1;}}
++void explicitCapacityIsBoundedAndReclaimsOnlyTheExactOperation(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  st::ManagerOptions policy;policy.maximumStreams=64;st::Manager manager(*local.destination(),policy);
++  require(manager.valid()&&manager.maximumStreams()==64,"Explicit shared capacity did not size actual storage");
++  for(unsigned i=0;i<64;++i){take(manager.connect(i+1,100+i,*peer.destination(),{{static_cast<std::uint16_t>(9000+i),80},100,8},0));}
++  require(manager.observation().streams==64&&!manager.connect(65,164,*peer.destination(),{{9100,80},100,8},0),"Configured shared stream bound was not exact");
++  for(unsigned i=0;i<64;++i){auto packet=manager.next(1);require(packet&&packet->operation==i+1&&packet->ports.local==9000+i,"Scheduler did not visit every configured stream fairly");manager.dispatched(*packet,1);}
++  auto reply=response(peer,163,263);reply.flags|=st::Syn|st::From;reply.from=*peer.destination();manager.receive(mux(reply,peer,80,9063),2);
++  require(manager.observation(64)->stream.phase==st::Phase::Established,"Signed reply beyond original four slots was not demultiplexed");
++  require(manager.cancel(17)&&manager.release(17)&&!manager.observation(17)&&manager.observation(64)->stream.phase==st::Phase::Established,"Exact release damaged an unrelated shared operation");
++  take(manager.connect(1000,1000,*peer.destination(),{{9999,80},100,8},3));require(manager.observation().streams==64,"Exact reclaimed slot was not reused");
++  const auto rejected=manager.observation().rejectedPackets;manager.receive(mux(response(peer,116,216),peer,80,9016),4);
++  require(manager.observation().rejectedPackets==rejected+1&&manager.observation(1000)->stream.phase==st::Phase::Connecting,"Old operation reply entered reused shared slot");
++  for(unsigned count:{0U,65U}){policy.maximumStreams=count;st::Manager invalid(*local.destination(),policy);require(!invalid.valid()&&invalid.maximumStreams()==0&&!invalid.connect(1,100,*peer.destination(),{{9000,80},100,8},0)&&!invalid.next(0),"Invalid capacity allocated or admitted a stream");}
++  policy.maximumStreams=1;st::Manager one(*local.destination(),policy);take(one.connect(1,100,*peer.destination(),{{9000,80},100,8},0));require(!one.connect(2,101,*peer.destination(),{{9001,80},100,8},0),"Small configured capacity was widened");
++}
++void sharedListenerExtensionPreservesSignedPendingSynAndOriginalScope(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  std::ifstream input(std::filesystem::path(BIGLYBTC_I2P_TEST_KEYS_DIR)/"ed25519.recipient",std::ios::binary);require(bool(input),"Missing additional public Destination fixture");
++  auto additional=take(p::decodeDestination(p::Bytes(std::istreambuf_iterator<char>(input),{})));require(additional.hash!=local.destination()->hash&&additional.hash!=peer.destination()->hash,"Additional listener fixture is not distinct");
++  std::ifstream otherInput(std::filesystem::path(BIGLYBTC_I2P_TEST_KEYS_DIR)/"dsa.recipient",std::ios::binary);require(bool(otherInput),"Missing second additional public Destination fixture");
++  auto third=take(p::decodeDestination(p::Bytes(std::istreambuf_iterator<char>(otherInput),{})));require(third.hash!=local.destination()->hash&&third.hash!=peer.destination()->hash&&third.hash!=additional.hash,"Second additional listener fixture is not distinct");
++  st::ManagerOptions policy;policy.maximumStreams=64;st::Manager manager(*local.destination(),policy);take(manager.listen({{6881,80},{*peer.destination()},8},0));
++  st::Connection remote(1,300,*peer.destination(),*local.destination());auto syn=remote.next(1);require(bool(syn),"Missing actual signed pending SYN");remote.dispatched(*syn,1);manager.receive(mux(*syn,peer,80,6881),1);
++  const auto before=manager.observation();require(before.pendingSyns==1,"Actual signed SYN was not pending before extension");
++  take(manager.listen({{6881,80},{*peer.destination(),additional},8},2));const auto after=manager.observation();
++  require(after.pendingSyns==before.pendingSyns&&after.pendingSynBytes==before.pendingSynBytes&&after.rejectedPackets==before.rejectedPackets&&manager.hardWakeup()==3001,"Listener extension changed original queued SYN identity/budget");
++  require(!manager.listen({{6882,80},{*peer.destination(),additional,third},8},2)&&!manager.listen({{6881,81},{*peer.destination(),additional,third},8},2)&&!manager.listen({{6881,80},{*peer.destination(),additional,third},7},2),"Shared extension changed actual ports/window");
++  require(!manager.listen({{6881,80},{additional},8},2)&&!manager.listen({{6881,80},{*peer.destination(),*peer.destination()},8},2),"Shared extension removed an old peer or accepted duplicate full identity");
++  take(manager.accept(2,100,3));auto reply=manager.next(4);require(reply&&reply->operation==2&&reply->ports.local==6881&&reply->ports.remote==80,"Preserved SYN was not accepted with exact tuple");manager.dispatched(*reply,4);remote.receive(checked(reply->packet,local),4);
++  require(remote.observation().phase==st::Phase::Established&&manager.observation(2)->inbound,"Preserved actual signed handshake lost its original peer");
++  st::Manager singleton(*local.destination(),{});take(singleton.listen({{6881,80},{*peer.destination()},8},0));require(!singleton.listen({{6881,80},{*peer.destination(),additional},8},1),"Default singleton listener scope was broadened");
++}
++void closedOperationMustWaitForRealUnreadBytesAndAckBeforeRelease(const p::ClientIdentity& local,const p::ClientIdentity& peer){
++  st::Manager manager(*local.destination(),{});establish(manager,local,peer);require(manager.finishWrite(1,4),"Local FIN refused");
++  auto fin=manager.next(4);require(fin&&(fin->packet.flags&st::Close),"Missing actual local FIN");manager.dispatched(*fin,4);
++  auto close=response(peer,100,200,1,{'R'});close.flags|=st::Close;close.ackThrough=fin->packet.sequence;manager.receive(mux(close,peer,80,9000),5);
++  require(manager.observation(1)->stream.phase==st::Phase::Closed&&manager.observation(1)->stream.queuedRx==1&&!manager.cancel(1)&&!manager.release(1),"Closed unread operation was discarded early");
++  require(take(manager.read(1,st::MaximumBuffered,5))==p::Bytes{'R'}&&!manager.release(1),"RX drain fabricated acknowledgement completion");
++  auto ack=manager.next(6);require(ack&&ack->operation==1&&ack->packet.ackThrough==1,"Closed FIN lacked its real pending ACK");
++  require(!manager.release(1),"Merely selecting ACK falsely released the operation");manager.dispatched(*ack,6);
++  require(manager.release(1)&&!manager.observation(1),"Actual Closed ACK dispatch failed to release exact operation");
++  take(manager.connect(2,101,*peer.destination(),{{9001,80},100,8},7));require(manager.observation().streams==1,"Released Closed slot was not reusable");
++}
++int main(){try{auto local=identity("dsa"),peer=identity("ed25519");inboundCodecAndRole(local,peer);listenerBoundsAndExpiry(local,peer);multiplexFairnessAndMemory(local,peer);finiteWaitAndLongActivity(local,peer);originalOneShotIdleJitter(local,peer);postVerificationFence(local,peer);hardDeadlinesRemainArmedWithoutOutputCredit(local,peer);preparationCannotExtendAbsoluteHandshake(local,peer);outgoingUnspecifiedLocalPortRetainsExactRemoteAndReplyTuple(local,peer);explicitCapacityIsBoundedAndReclaimsOnlyTheExactOperation(local,peer);sharedListenerExtensionPreservesSignedPendingSynAndOriginalScope(local,peer);closedOperationMustWaitForRealUnreadBytesAndAckBeforeRelease(local,peer);std::cout<<"PASS bounded session Streaming manager source-authored controls\n";return 0;}catch(const std::exception& failure){std::cerr<<"FAIL "<<failure.what()<<'\n';return 1;}}
+--- a/preview/native/tests/owned_sam_protocol_tests.cpp
++++ b/preview/native/tests/owned_sam_protocol_tests.cpp
+@@ -21,6 +21,12 @@
+   require(!sam::hex(std::string(64,'F'),32)&&!sam::hex(std::string(63,'a'),32),"Noncanonical capability accepted");
+   const Bytes a{0,1,2},b{0,1,3};require(sam::constantEqual(a,a)&&!sam::constantEqual(a,b)&&!sam::constantEqual(a,View(a).first(2)),"Capability equality failure");
+ }
++void sharedCapacityKeepsTheSingletonEnvelopeExact(){
++  const auto single=sam::bridgeCapacity(false),shared=sam::bridgeCapacity(true);
++  require(single.streams==4&&single.sockets==6&&single.peers==4&&single.destinations==8,"Singleton SAM capacity changed");
++  require(shared.streams==64&&shared.sockets==shared.streams+2&&shared.peers==64&&shared.destinations==32*4+shared.peers,"Shared SAM capacity lost its finite member/tracker/peer derivation");
++  require(sam::MaximumCommandBytes==2048,"Shared capacity broadened the command parser envelope");
++}
+ void publicNames(const char* path){
+   Hash hash{};for(std::size_t i=0;i<hash.size();++i){hash[i]=static_cast<Byte>(i*31+7);}const auto name=sam::hashName(hash);require(sam::hashName(name)==hash,"Hash name roundtrip");auto noncanonical=name;noncanonical[51]='b';require(!sam::hashName(noncanonical),"Nonzero base32 padding accepted");
+   std::ifstream input(path,std::ios::binary);require(bool(input),"Synthetic Destination fixture missing");Bytes bytes((std::istreambuf_iterator<char>(input)),{});
+@@ -28,4 +34,4 @@
+   require(!sam::destinationText(encoded+".i2p")&&!sam::destinationText(encoded+"\n")&&!sam::destinationText(std::string(1028,'a')),"Destination injection/bound accepted");
+ }
+ }
+-int main(int argc,char** argv){try{require(argc==2,"Explicit synthetic Destination path required");commands();publicNames(argv[1]);std::cout<<"PASS owned SAM parser/capability bounds\nPASS exact public Destination/name codec\n";return 0;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}
++int main(int argc,char** argv){try{require(argc==2,"Explicit synthetic Destination path required");commands();publicNames(argv[1]);sharedCapacityKeepsTheSingletonEnvelopeExact();std::cout<<"PASS owned SAM parser/capability bounds\nPASS exact public Destination/name codec\n";return 0;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}

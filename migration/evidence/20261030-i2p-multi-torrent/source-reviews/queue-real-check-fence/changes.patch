@@ -1,0 +1,32 @@
+--- a/preview/native/services/i2p_provider/owner.cpp
++++ b/preview/native/services/i2p_provider/owner.cpp
+@@ -167,6 +167,7 @@
+     if(inspected!=alerts.size()){markRetirementUnsafe("I2P alert batch exceeded4096; original recheck marker retained");}
+     for(std::size_t i=0;i<inspected;++i){
+       const auto* item=alerts[i];const lt::error_code* code=nullptr;bool selected=true;
++      if(const auto* checked=lt::alert_cast<lt::torrent_checked_alert>(item);checked&&checked->handle==handle){counters->checked.store(true,std::memory_order_release);}
+       if(lt::alert_cast<lt::alerts_dropped_alert>(item)){markRetirementUnsafe("I2P provider reported alerts_dropped; original recheck marker retained");}
+       else if(const auto* entry=lt::alert_cast<lt::session_error_alert>(item)){markRetirementUnsafe("I2P provider reported session_error; original recheck marker retained",entry->error.value());}
+       else if(const auto* entry=lt::alert_cast<lt::file_error_alert>(item)){markRetirementUnsafe("I2P provider reported file_error; original recheck marker retained",entry->error.value());}
+--- a/preview/native/services/i2p_provider/profile_owner.cpp
++++ b/preview/native/services/i2p_provider/profile_owner.cpp
+@@ -157,6 +157,7 @@
+       if(lt::alert_cast<lt::tracker_error_alert>(alert)){++m.alerts.trackerErrors;}
+       if(lt::alert_cast<lt::scrape_reply_alert>(alert)||lt::alert_cast<lt::scrape_failed_alert>(alert)){m.scrapePending=false;}
+       if(lt::alert_cast<lt::file_error_alert>(alert)||lt::alert_cast<lt::torrent_error_alert>(alert)||lt::alert_cast<lt::save_resume_data_failed_alert>(alert)){fail(m,{Code::Io,"Target I2P provider/storage observation failed; recheck retained"});continue;}
++      if(lt::alert_cast<lt::torrent_checked_alert>(alert)){m.counters->checked.store(true,std::memory_order_release);}
+       if(lt::alert_cast<lt::torrent_paused_alert>(alert)){m.pauseSettled=true;m.pausePending=false;}
+       if(!m.retired.requested||m.retired.failure){continue;}
+       if(std::chrono::steady_clock::now()>=m.deadline){fail(m,{Code::Io,"Target I2P retirement deadline expired; recheck retained"});continue;}
+--- a/preview/native/services/i2p_provider/retirement_counters.hpp
++++ b/preview/native/services/i2p_provider/retirement_counters.hpp
+@@ -38,7 +38,8 @@
+   void on_files_checked()noexcept override {
+     const auto raw=read();
+     if(!raw||raw->traffic.payload.received||raw->traffic.payload.sent){counters_->payload.fail();return;}
+-    counters_->checked.store(true,std::memory_order_release);
++    // The SDK also invokes this at extension attachment for known metadata.
++    // Only the owner's matched torrent_checked_alert may certify completion.
+     if(!protocol(*raw)){counters_->payload.combinedUnavailable();}
+     if(!bad(*raw)){counters_->payload.badUnavailable();}
+   }

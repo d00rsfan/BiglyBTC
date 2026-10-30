@@ -1,0 +1,15 @@
+{
+  "source_pins_parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/source-pins.json",
+    "sha256": "9a9d059842d3d579cd3d8459ae4539d6293e9bd0922ab62f7d8c2167e88cebea",
+    "bytes": 4612
+  },
+  "replace_only": {
+    "probe_source": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/seed-authority-diagnostics/staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "sha256": "33848182ff6e14b0e250e5b925ec78ecf009d13590c7f113b15bd92ba39598fd",
+      "bytes": 36474
+    }
+  },
+  "runner_java_and_positive_predicates": "unchanged; root binds actual corrected source/build before next execution"
+}

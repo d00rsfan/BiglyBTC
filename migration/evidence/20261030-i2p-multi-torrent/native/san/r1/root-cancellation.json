@@ -1,0 +1,6 @@
+{
+  "status": "CANCELLED_BUILD_NOT_QUALIFICATION",
+  "reason": "Actual GCC acceptance failed before transfer; stop obsolete sanitizer build while diagnosing, preserve cache and raw failed receipt.",
+  "subjects_stopped": "only descendants of exact current run-batch.py san process",
+  "native_or_router_acceptance_killed": false
+}

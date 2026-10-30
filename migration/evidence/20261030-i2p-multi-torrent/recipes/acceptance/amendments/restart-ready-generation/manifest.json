@@ -1,0 +1,7 @@
+{
+  "status": "HARNESS_READY_WAIT_NOT_RUNTIME_PASS",
+  "probe_before_sha256": "bac055021995d0aa9b29238ac2993acacc28844569fb1093f6e0602c6e778b02",
+  "probe_after_sha256": "fd700c91d40dd551d37cd2cf083ff5211374f7274529de47996d39fd0561a9f8",
+  "source_pins_sha256": "4f41913259505a539052d99d1f8a10ec7ff5ddc6527ff914e898997b1a39715b",
+  "delta": "Wait for nonzero actual generation before evaluating unchanged fresh-generation predicate. Connecting/gen0 is a pending state, not a failed generation certificate. All remaining payload/queue/retirement/source predicates unchanged."
+}

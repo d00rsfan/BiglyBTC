@@ -1,0 +1,500 @@
+        70:	
+        70:	file=libcrypto.so.3 [0];  needed by /probe [0]
+        70:	file=libcrypto.so.3 [0];  generating link map
+        70:	  dynamic: 0x000077e9c6613700  base: 0x000077e9c6000000   size: 0x0000000000619cb8
+        70:	    entry: 0x000077e9c6000000  phdr: 0x000077e9c6000040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libz.so.1 [0];  needed by /probe [0]
+        70:	file=libz.so.1 [0];  generating link map
+        70:	  dynamic: 0x000077e9c5ffedc0  base: 0x000077e9c5fe2000   size: 0x000000000001d098
+        70:	    entry: 0x000077e9c5fe2000  phdr: 0x000077e9c5fe2040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libQt6Widgets.so.6 [0];  needed by /probe [0]
+        70:	file=libQt6Widgets.so.6 [0];  generating link map
+        70:	  dynamic: 0x000077e9c5fb93d8  base: 0x000077e9c5800000   size: 0x00000000007ccc20
+        70:	    entry: 0x000077e9c598a3d0  phdr: 0x000077e9c5800040  phnum:                 11
+        70:	
+        70:	
+        70:	file=libQt6Gui.so.6 [0];  needed by /probe [0]
+        70:	file=libQt6Gui.so.6 [0];  generating link map
+        70:	  dynamic: 0x000077e9c56f8438  base: 0x000077e9c4c00000   size: 0x0000000000b1e128
+        70:	    entry: 0x000077e9c4d38170  phdr: 0x000077e9c4c00040  phnum:                 11
+        70:	
+        70:	
+        70:	file=libGLX.so.0 [0];  needed by /probe [0]
+        70:	file=libGLX.so.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c57eebc0  base: 0x000077e9c57cd000   size: 0x00000000000323c8
+        70:	    entry: 0x000077e9c57cd000  phdr: 0x000077e9c57cd040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libOpenGL.so.0 [0];  needed by /probe [0]
+        70:	file=libOpenGL.so.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c57cbd38  base: 0x000077e9c57a2000   size: 0x000000000002a020
+        70:	    entry: 0x000077e9c57a2000  phdr: 0x000077e9c57a2040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libQt6Network.so.6 [0];  needed by /probe [0]
+        70:	file=libQt6Network.so.6 [0];  generating link map
+        70:	  dynamic: 0x000077e9c4a06e78  base: 0x000077e9c4800000   size: 0x000000000020f578
+        70:	    entry: 0x000077e9c485eb70  phdr: 0x000077e9c4800040  phnum:                 11
+        70:	
+        70:	
+        70:	file=libQt6Core.so.6 [0];  needed by /probe [0]
+        70:	file=libQt6Core.so.6 [0];  generating link map
+        70:	  dynamic: 0x000077e9c474bb48  base: 0x000077e9c4000000   size: 0x000000000075a048
+        70:	    entry: 0x000077e9c4107ed0  phdr: 0x000077e9c4000040  phnum:                 14
+        70:	
+        70:	
+        70:	file=libtorrent-rasterbar.so.2.0 [0];  needed by /probe [0]
+        70:	file=libtorrent-rasterbar.so.2.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c3efe9f0  base: 0x000077e9c3800000   size: 0x0000000000707308
+        70:	    entry: 0x000077e9c3800000  phdr: 0x000077e9c3800040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libstdc++.so.6 [0];  needed by /probe [0]
+        70:	file=libstdc++.so.6 [0];  generating link map
+        70:	  dynamic: 0x000077e9c3697cb8  base: 0x000077e9c3400000   size: 0x000000000029f440
+        70:	    entry: 0x000077e9c3400000  phdr: 0x000077e9c3400040  phnum:                 13
+        70:	
+        70:	
+        70:	file=libm.so.6 [0];  needed by /probe [0]
+        70:	file=libm.so.6 [0];  generating link map
+        70:	  dynamic: 0x000077e9c4bfeb98  base: 0x000077e9c4ada000   size: 0x0000000000125018
+        70:	    entry: 0x000077e9c4ada000  phdr: 0x000077e9c4ada040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libgcc_s.so.1 [0];  needed by /probe [0]
+        70:	file=libgcc_s.so.1 [0];  generating link map
+        70:	  dynamic: 0x000077e9c57a0db0  base: 0x000077e9c5774000   size: 0x000000000002d3a8
+        70:	    entry: 0x000077e9c5774000  phdr: 0x000077e9c5774040  phnum:                 13
+        70:	
+        70:	
+        70:	file=libc.so.6 [0];  needed by /probe [0]
+        70:	file=libc.so.6 [0];  generating link map
+        70:	  dynamic: 0x000077e9c3211940  base: 0x000077e9c3000000   size: 0x0000000000220d90
+        70:	    entry: 0x000077e9c302a820  phdr: 0x000077e9c3000040  phnum:                 15
+        70:	
+        70:	
+        70:	file=libzstd.so.1 [0];  needed by /usr/lib/x86_64-linux-gnu/libcrypto.so.3 [0]
+        70:	file=libzstd.so.1 [0];  generating link map
+        70:	  dynamic: 0x000077e9c4ad8cb8  base: 0x000077e9c4a17000   size: 0x00000000000c2030
+        70:	    entry: 0x000077e9c4a17000  phdr: 0x000077e9c4a17040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libGL.so.1 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6 [0]
+        70:	file=libGL.so.1 [0];  generating link map
+        70:	  dynamic: 0x000077e9c47fdd18  base: 0x000077e9c477b000   size: 0x0000000000084890
+        70:	    entry: 0x000077e9c477b000  phdr: 0x000077e9c477b040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libxkbcommon.so.0 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6 [0]
+        70:	file=libxkbcommon.so.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c3ffedc0  base: 0x000077e9c3fa1000   size: 0x000000000005e258
+        70:	    entry: 0x000077e9c3fa1000  phdr: 0x000077e9c3fa1040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libEGL.so.1 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libEGL.so.1 [0];  generating link map
+        70:	  dynamic: 0x000077e9c5772bb8  base: 0x000077e9c5761000   size: 0x00000000000124a8
+        70:	    entry: 0x000077e9c5761000  phdr: 0x000077e9c5761040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libX11.so.6 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libX11.so.6 [0];  generating link map
+        70:	  dynamic: 0x000077e9c37fbc30  base: 0x000077e9c36be000   size: 0x0000000000141d30
+        70:	    entry: 0x000077e9c36be000  phdr: 0x000077e9c36be040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libglib-2.0.so.0 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libglib-2.0.so.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c33fd500  base: 0x000077e9c32a8000   size: 0x00000000001572a8
+        70:	    entry: 0x000077e9c32a8000  phdr: 0x000077e9c32a8040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libQt6DBus.so.6 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libQt6DBus.so.6 [0];  generating link map
+        70:	  dynamic: 0x000077e9c2ffba18  base: 0x000077e9c2f25000   size: 0x00000000000da2b8
+        70:	    entry: 0x000077e9c2f498b0  phdr: 0x000077e9c2f25040  phnum:                 11
+        70:	
+        70:	
+        70:	file=libfreetype.so.6 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libfreetype.so.6 [0];  generating link map
+        70:	  dynamic: 0x000077e9c2f23b90  base: 0x000077e9c2e50000   size: 0x00000000000d4010
+        70:	    entry: 0x000077e9c2e50000  phdr: 0x000077e9c2e50040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libfontconfig.so.1 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libfontconfig.so.1 [0];  generating link map
+        70:	  dynamic: 0x000077e9c3f9f9b8  base: 0x000077e9c3f4e000   size: 0x0000000000052258
+        70:	    entry: 0x000077e9c3f4e000  phdr: 0x000077e9c3f4e040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libgthread-2.0.so.0 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libgthread-2.0.so.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c5fdada8  base: 0x000077e9c5fd7000   size: 0x0000000000004010
+        70:	    entry: 0x000077e9c5fd7000  phdr: 0x000077e9c5fd7040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libGLdispatch.so.0 [0];  needed by /usr/lib/x86_64-linux-gnu/libGLX.so.0 [0]
+        70:	file=libGLdispatch.so.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c2e46d10  base: 0x000077e9c2d97000   size: 0x00000000000b82c0
+        70:	    entry: 0x000077e9c2d97000  phdr: 0x000077e9c2d97040  phnum:                 13
+        70:	
+        70:	
+        70:	file=libgssapi_krb5.so.2 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6 [0]
+        70:	file=libgssapi_krb5.so.2 [0];  generating link map
+        70:	  dynamic: 0x000077e9c32a5c50  base: 0x000077e9c3250000   size: 0x0000000000057428
+        70:	    entry: 0x000077e9c3250000  phdr: 0x000077e9c3250040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libbrotlidec.so.1 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6 [0]
+        70:	file=libbrotlidec.so.1 [0];  generating link map
+        70:	  dynamic: 0x000077e9c575fdb8  base: 0x000077e9c5752000   size: 0x000000000000e068
+        70:	    entry: 0x000077e9c5752000  phdr: 0x000077e9c5752040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libbrotlicommon.so.1 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6 [0]
+        70:	file=libbrotlicommon.so.1 [0];  generating link map
+        70:	  dynamic: 0x000077e9c5750df0  base: 0x000077e9c572f000   size: 0x0000000000022028
+        70:	    entry: 0x000077e9c572f000  phdr: 0x000077e9c572f040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libresolv.so.2 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6 [0]
+        70:	file=libresolv.so.2 [0];  generating link map
+        70:	  dynamic: 0x000077e9c4777b68  base: 0x000077e9c4768000   size: 0x0000000000012888
+        70:	    entry: 0x000077e9c4768000  phdr: 0x000077e9c4768040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libicui18n.so.73 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6 [0]
+        70:	file=libicui18n.so.73 [0];  generating link map
+        70:	  dynamic: 0x000077e9c2d4bbd0  base: 0x000077e9c2a00000   size: 0x000000000034e6f8
+        70:	    entry: 0x000077e9c2af9780  phdr: 0x000077e9c2a00040  phnum:                  9
+        70:	
+        70:	
+        70:	file=libicuuc.so.73 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6 [0]
+        70:	file=libicuuc.so.73 [0];  generating link map
+        70:	  dynamic: 0x000077e9c2814c18  base: 0x000077e9c2600000   size: 0x00000000002174b0
+        70:	    entry: 0x000077e9c266a440  phdr: 0x000077e9c2600040  phnum:                  9
+        70:	
+        70:	
+        70:	file=libicudata.so.73 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6 [0]
+        70:	file=libicudata.so.73 [0];  generating link map
+        70:	  dynamic: 0x000077e9c248df10  base: 0x000077e9c0600000   size: 0x0000000001e8e000
+        70:	    entry: 0x000077e9c0601000  phdr: 0x000077e9c0600040  phnum:                  6
+        70:	
+        70:	
+        70:	file=libssl.so.3 [0];  needed by /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0 [0]
+        70:	file=libssl.so.3 [0];  generating link map
+        70:	  dynamic: 0x000077e9c29fab30  base: 0x000077e9c28f2000   size: 0x000000000010d7e8
+        70:	    entry: 0x000077e9c28f2000  phdr: 0x000077e9c28f2040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libxcb.so.1 [0];  needed by /usr/lib/x86_64-linux-gnu/libX11.so.6 [0]
+        70:	file=libxcb.so.1 [0];  generating link map
+        70:	  dynamic: 0x000077e9c3f4cdb8  base: 0x000077e9c3f23000   size: 0x000000000002a288
+        70:	    entry: 0x000077e9c3f23000  phdr: 0x000077e9c3f23040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libatomic.so.1 [0];  needed by /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 [0]
+        70:	file=libatomic.so.1 [0];  generating link map
+        70:	  dynamic: 0x000077e9c572cdd8  base: 0x000077e9c5724000   size: 0x000000000000a088
+        70:	    entry: 0x000077e9c5724000  phdr: 0x000077e9c5724040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libpcre2-8.so.0 [0];  needed by /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 [0]
+        70:	file=libpcre2-8.so.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c28f0df8  base: 0x000077e9c2846000   size: 0x00000000000ab2b8
+        70:	    entry: 0x000077e9c2846000  phdr: 0x000077e9c2846040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libdbus-1.so.3 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6DBus.so.6 [0]
+        70:	file=libdbus-1.so.3 [0];  generating link map
+        70:	  dynamic: 0x000077e9c25fe9b8  base: 0x000077e9c25b0000   size: 0x000000000004f2f0
+        70:	    entry: 0x000077e9c25b0000  phdr: 0x000077e9c25b0040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libbz2.so.1.0 [0];  needed by /usr/lib/x86_64-linux-gnu/libfreetype.so.6 [0]
+        70:	file=libbz2.so.1.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c3f21d20  base: 0x000077e9c3f0e000   size: 0x0000000000014c28
+        70:	    entry: 0x000077e9c3f0e000  phdr: 0x000077e9c3f0e040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libpng16.so.16 [0];  needed by /usr/lib/x86_64-linux-gnu/libfreetype.so.6 [0]
+        70:	file=libpng16.so.16 [0];  generating link map
+        70:	  dynamic: 0x000077e9c2d95c58  base: 0x000077e9c2d5d000   size: 0x0000000000039010
+        70:	    entry: 0x000077e9c2d5d000  phdr: 0x000077e9c2d5d040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libexpat.so.1 [0];  needed by /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 [0]
+        70:	file=libexpat.so.1 [0];  generating link map
+        70:	  dynamic: 0x000077e9c324edd0  base: 0x000077e9c3223000   size: 0x000000000002c080
+        70:	    entry: 0x000077e9c3223000  phdr: 0x000077e9c3223040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libkrb5.so.3 [0];  needed by /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 [0]
+        70:	file=libkrb5.so.3 [0];  generating link map
+        70:	  dynamic: 0x000077e9c25adca0  base: 0x000077e9c24e4000   size: 0x00000000000cbaf8
+        70:	    entry: 0x000077e9c24e4000  phdr: 0x000077e9c24e4040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libk5crypto.so.3 [0];  needed by /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 [0]
+        70:	file=libk5crypto.so.3 [0];  generating link map
+        70:	  dynamic: 0x000077e9c2844da0  base: 0x000077e9c281a000   size: 0x000000000002b108
+        70:	    entry: 0x000077e9c281a000  phdr: 0x000077e9c281a040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libcom_err.so.2 [0];  needed by /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 [0]
+        70:	file=libcom_err.so.2 [0];  generating link map
+        70:	  dynamic: 0x000077e9c4a15cb8  base: 0x000077e9c4a11000   size: 0x0000000000005048
+        70:	    entry: 0x000077e9c4a11000  phdr: 0x000077e9c4a11040  phnum:                 13
+        70:	
+        70:	
+        70:	file=libkrb5support.so.0 [0];  needed by /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 [0]
+        70:	file=libkrb5support.so.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c4766d48  base: 0x000077e9c475b000   size: 0x000000000000c390
+        70:	    entry: 0x000077e9c475b000  phdr: 0x000077e9c475b040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libpthread.so.0 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libicui18n.so.73 [0]
+        70:	file=libpthread.so.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c5722da8  base: 0x000077e9c571f000   size: 0x0000000000004010
+        70:	    entry: 0x000077e9c571f000  phdr: 0x000077e9c571f040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libdl.so.2 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libicui18n.so.73 [0]
+        70:	file=libdl.so.2 [0];  generating link map
+        70:	  dynamic: 0x000077e9c3f0cda8  base: 0x000077e9c3f09000   size: 0x0000000000004010
+        70:	    entry: 0x000077e9c3f09000  phdr: 0x000077e9c3f09040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libXau.so.6 [0];  needed by /usr/lib/x86_64-linux-gnu/libxcb.so.1 [0]
+        70:	file=libXau.so.6 [0];  generating link map
+        70:	  dynamic: 0x000077e9c36bcdf8  base: 0x000077e9c36b8000   size: 0x00000000000050f0
+        70:	    entry: 0x000077e9c36b8000  phdr: 0x000077e9c36b8040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libXdmcp.so.6 [0];  needed by /usr/lib/x86_64-linux-gnu/libxcb.so.1 [0]
+        70:	file=libXdmcp.so.6 [0];  generating link map
+        70:	  dynamic: 0x000077e9c36b6df8  base: 0x000077e9c36b0000   size: 0x0000000000007068
+        70:	    entry: 0x000077e9c36b0000  phdr: 0x000077e9c36b0040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libsystemd.so.0 [0];  needed by /usr/lib/x86_64-linux-gnu/libdbus-1.so.3 [0]
+        70:	file=libsystemd.so.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c05fd610  base: 0x000077e9c04ec000   size: 0x0000000000113988
+        70:	    entry: 0x000077e9c04ec000  phdr: 0x000077e9c04ec040  phnum:                 13
+        70:	
+        70:	
+        70:	file=libkeyutils.so.1 [0];  needed by /usr/lib/x86_64-linux-gnu/libkrb5.so.3 [0]
+        70:	file=libkeyutils.so.1 [0];  generating link map
+        70:	  dynamic: 0x000077e9c36aed28  base: 0x000077e9c36a9000   size: 0x0000000000006010
+        70:	    entry: 0x000077e9c36a9000  phdr: 0x000077e9c36a9040  phnum:                 12
+        70:	
+        70:	
+        70:	calling init: /lib64/ld-linux-x86-64.so.2
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libc.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libkeyutils.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libm.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libsystemd.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libXdmcp.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libXau.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libdl.so.2
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libpthread.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libkrb5support.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libcom_err.so.2
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libk5crypto.so.3
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libresolv.so.2
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libkrb5.so.3
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libexpat.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libz.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libpng16.so.16
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libbz2.so.1.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libdbus-1.so.3
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libpcre2-8.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libatomic.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libxcb.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libzstd.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libcrypto.so.3
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libssl.so.3
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libicudata.so.73
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libicuuc.so.73
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libicui18n.so.73
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libbrotlicommon.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libbrotlidec.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libGLdispatch.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libgthread-2.0.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libfreetype.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libfontconfig.so.1
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libQt6DBus.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libX11.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libEGL.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libxkbcommon.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libGLX.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libGL.so.1
+        70:	
+        70:	
+        70:	calling init: /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libOpenGL.so.0
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+        70:	
+        70:	
+        70:	initialize program: /probe
+        70:	
+        70:	
+        70:	transferring control: /probe
+        70:	
+        70:	
+        70:	file=/opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so.avx2 [0];  dynamically loaded by /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6 [0]
+        70:	
+        70:	file=/opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so [0];  dynamically loaded by /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6 [0]
+        70:	file=/opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so [0];  generating link map
+        70:	  dynamic: 0x000077e9c24d9670  base: 0x000077e9c24bd000   size: 0x000000000001d110
+        70:	    entry: 0x000077e9c24c8a30  phdr: 0x000077e9c24bd040  phnum:                 11
+        70:	
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libcrypto.so.3 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libgthread-2.0.so.0 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libssl.so.3 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libkrb5.so.3 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libk5crypto.so.3 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libkrb5support.so.0 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libsystemd.so.0 [0]
+        70:	activating NODELETE for /opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so [0]
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so
+        70:	
+        70:	opening file=/opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so [0]; direct_opencount=1
+        70:	
+        70:	/usr/lib/x86_64-linux-gnu/libfreetype.so.6: error: symbol lookup error: undefined symbol: hb_version_atleast (fatal)
+        70:	
+        70:	file=libharfbuzz.so.0 [0];  dynamically loaded by /usr/lib/x86_64-linux-gnu/libfreetype.so.6 [0]
+        70:	file=libharfbuzz.so.0 [0];  generating link map
+        70:	  dynamic: 0x000077e9c048f9f0  base: 0x000077e9c0366000   size: 0x000000000012ab88
+        70:	    entry: 0x000077e9c0366000  phdr: 0x000077e9c0366040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libgraphite2.so.3 [0];  needed by /usr/lib/x86_64-linux-gnu/libharfbuzz.so.0 [0]
+        70:	file=libgraphite2.so.3 [0];  generating link map
+        70:	  dynamic: 0x000077e9c0364de0  base: 0x000077e9c0340000   size: 0x0000000000025090
+        70:	    entry: 0x000077e9c0340000  phdr: 0x000077e9c0340040  phnum:                 12
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libgraphite2.so.3
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libharfbuzz.so.0
+        70:	
+        70:	opening file=/usr/lib/x86_64-linux-gnu/libharfbuzz.so.0 [0]; direct_opencount=1
+        70:	
+        70:	opening file=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0 [0]; direct_opencount=1
+        70:	
+        70:	
+        70:	closing file=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0; direct_opencount=1
+        70:	
+        70:	closing file=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0; direct_opencount=1

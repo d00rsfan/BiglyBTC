@@ -1,0 +1,12 @@
+{
+  "commit": "dc3ca955f16880a3a7c15280e708a65579e40f76",
+  "tree": "9fe25a7e5e693db60b1c495acd5d6ed431eff51b",
+  "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+  "base": "6b40b2bb175e5e665d4c1865a587fe7b34d4cfd3",
+  "upstream": {
+    "BiglyBT": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "azneti2phelper": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+    "I2P": "9134f808337b401e8e53c73734c81fab04280c9d",
+    "libtorrent": "740a0b9aeabe00e762cc0efe4a0f27593db2550b"
+  }
+}

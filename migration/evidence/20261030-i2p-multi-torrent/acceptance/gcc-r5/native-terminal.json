@@ -1,0 +1,32 @@
+{
+    "elapsed_ms": 4041,
+    "intended_success": false,
+    "reason": "Seed shared identity/source lost",
+    "seed": [
+        {
+            "admission": "7677752637936725990",
+            "failure": "I2CP: RouterDisconnected",
+            "generation": "13060046669382211310",
+            "global_download_limit": 0,
+            "global_upload_limit": 0,
+            "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+            "loopback_peer_classes": 0,
+            "phase": 3,
+            "public_identity": "eca243ff804b7222a449cf48c89c064aad3c1935c86e9f6fa7b18be76b368920",
+            "verified_bytes": 0
+        },
+        {
+            "admission": "13676994085384272503",
+            "failure": "I2CP: RouterDisconnected",
+            "generation": "13060046669382211310",
+            "global_download_limit": 0,
+            "global_upload_limit": 0,
+            "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+            "loopback_peer_classes": 0,
+            "phase": 3,
+            "public_identity": "eca243ff804b7222a449cf48c89c064aad3c1935c86e9f6fa7b18be76b368920",
+            "verified_bytes": 0
+        }
+    ],
+    "stage": 1
+}

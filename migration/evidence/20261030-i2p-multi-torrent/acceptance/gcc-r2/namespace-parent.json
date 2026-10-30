@@ -1,0 +1,46 @@
+{
+  "uid": 1000,
+  "gid": 1000,
+  "namespaces": {
+    "user": {
+      "fd": 3,
+      "identity": {
+        "device": 5,
+        "inode": 4026531837
+      },
+      "link": "user:[4026531837]"
+    },
+    "net": {
+      "fd": 4,
+      "identity": {
+        "device": 5,
+        "inode": 4026531833
+      },
+      "link": "net:[4026531833]"
+    },
+    "pid": {
+      "fd": 5,
+      "identity": {
+        "device": 5,
+        "inode": 4026531836
+      },
+      "link": "pid:[4026531836]"
+    },
+    "ipc": {
+      "fd": 6,
+      "identity": {
+        "device": 5,
+        "inode": 4026531839
+      },
+      "link": "ipc:[4026531839]"
+    },
+    "uts": {
+      "fd": 7,
+      "identity": {
+        "device": 5,
+        "inode": 4026531838
+      },
+      "link": "uts:[4026531838]"
+    }
+  }
+}

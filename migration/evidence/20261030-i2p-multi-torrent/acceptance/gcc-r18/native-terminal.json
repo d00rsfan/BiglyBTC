@@ -1,0 +1,131 @@
+{
+    "elapsed_ms": 575343,
+    "i2p": {
+        "failure": "",
+        "global_download_limit": 0,
+        "global_upload_limit": 0,
+        "loopback_peer_classes": 0,
+        "sequence": "497",
+        "session": "2",
+        "torrents": [
+        ],
+        "tracker_announces": "0",
+        "tracker_errors": "0",
+        "tracker_replies": "0"
+    },
+    "intended_success": true,
+    "reason": "Actual two simultaneous tracker-discovered I2P torrents, independent controls and same-profile slot-limited restart",
+    "seed": [
+        {
+            "admission": "4051196031779318774",
+            "checked": true,
+            "download_rate": 0,
+            "failure": "",
+            "generation": "14038080067475101343",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "067322B7AF5F2D21277F670930CEF0926A86448B",
+            "loopback_peer_classes": 1,
+            "payload_downloaded": 0,
+            "payload_uploaded": 2179072,
+            "peers": 0,
+            "phase": 2,
+            "public_identity": "f49d71087805a0f4ceb1a096922c92a86525d0452a9043be7d6aa0482bb212c2",
+            "queued": false,
+            "seeding": true,
+            "tracker_announces": "2",
+            "tracker_errors": "0",
+            "tracker_replies": "2",
+            "upload_rate": 77,
+            "verified_bytes": 2097152
+        },
+        {
+            "admission": "1744629104406148477",
+            "checked": true,
+            "download_rate": 0,
+            "failure": "",
+            "generation": "14038080067475101343",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+            "loopback_peer_classes": 1,
+            "payload_downloaded": 0,
+            "payload_uploaded": 2207709,
+            "peers": 0,
+            "phase": 2,
+            "public_identity": "f49d71087805a0f4ceb1a096922c92a86525d0452a9043be7d6aa0482bb212c2",
+            "queued": false,
+            "seeding": true,
+            "tracker_announces": "2",
+            "tracker_errors": "0",
+            "tracker_replies": "2",
+            "upload_rate": 0,
+            "verified_bytes": 2097152
+        }
+    ],
+    "stage": 28,
+    "ui": {
+        "accepted_action_counts": [
+            [
+                1,
+                3,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "client_status": "3 torrents",
+        "last_Host_message": "",
+        "library": [
+            {
+                "completed": 2097152,
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "rendered_state": "Stopped",
+                "snapshot_state": "Stopped"
+            },
+            {
+                "completed": 2097152,
+                "hash": "067322B7AF5F2D21277F670930CEF0926A86448B",
+                "rendered_state": "Stopped",
+                "snapshot_state": "Stopped"
+            },
+            {
+                "completed": 0,
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "rendered_state": "Stopped",
+                "snapshot_state": "Stopped"
+            }
+        ],
+        "rendered_revision": "546",
+        "snapshot_revision": "546"
+    }
+}

@@ -1,0 +1,1 @@
+{"status":"FAIL_TRACKER_APPLICATION","stage":"request-header-query","exception_class":"java.net.SocketTimeoutException","message":"Unclassified tracker exception"}

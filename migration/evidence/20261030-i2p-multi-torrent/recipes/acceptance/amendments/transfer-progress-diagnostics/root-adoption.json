@@ -1,0 +1,6 @@
+{
+  "status": "ADOPTED_PASSIVE_DIAGNOSTICS_NOT_RUNTIME_PASS",
+  "manifest_sha256": "94ac74dc613972eccb679343b64f97336e474ef38b71458ba09326bfc11fab49",
+  "source_pins_sha256": "ef8f95d393879a000a3b89db889b9a24478543e3fdf60e998eae6c32727a8e05",
+  "probe_sha256": "c2ed7d729bdb95c0d8fb99951000bb2ec931fe49394f4ec1dcdbe0d460efb2d8"
+}

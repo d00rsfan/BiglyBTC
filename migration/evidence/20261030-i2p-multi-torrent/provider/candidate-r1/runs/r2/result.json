@@ -1,0 +1,26 @@
+{
+  "status": "ACTUAL_MULTI_I2P_PROVIDER_DIRECT_CONTROLS_PASS_NOT_APPROVED",
+  "native_runtime_approved": false,
+  "source_creation_sha256": "398fbfdc363172c9007f2f94c3626ffa065d3ee99cfc1d95e721bea8071b45a3",
+  "jobserver_makeflags": " -j3 --jobserver-auth=fifo:/tmp/GMfifo2584616 -- ATTEMPT=r2",
+  "original_head_index_before": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "previous_private_record_sha256": "5c3653a6c628fd0f6ac6df1e75bae50dfded310dc84c89c079ec8df1a1ec28c3",
+  "actual_ctest_suites": 9,
+  "private_owner_methods": 10,
+  "object_origins_sha256": "deffc0f2fb8599eaeabd5cb27245fa6982bd426b1469ae8af2983de27b70224f",
+  "reused_objects_from_qualified_sdk": 109,
+  "unchanged_library_objects": 166,
+  "fresh_library_objects": 1,
+  "two_object_repair_sha256": "7fabd5bc2928cc6caae2249f4a2816dc1beb33d6dca07bdbb189415955608714",
+  "commands_sha256": "63597e9f9dc29d8a5d394091ff02ea7b00ca6d8d86866ae6f221995ad0b91f0a",
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "hidden_test_objects_unchanged": true,
+  "original_head_index_unchanged": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  }
+}

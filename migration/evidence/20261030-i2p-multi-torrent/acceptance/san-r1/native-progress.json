@@ -1,0 +1,147 @@
+{
+    "Host_busy": true,
+    "elapsed_ms": 63811,
+    "i2p": {
+        "failure": "",
+        "global_download_limit": 16384,
+        "global_upload_limit": 20480,
+        "loopback_peer_classes": 1,
+        "sequence": "50",
+        "session": "1",
+        "torrents": [
+            {
+                "admission": "18001851487838251866",
+                "download_limit": 8192,
+                "download_rate": 0,
+                "generation": "16080451768449670011",
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "payload_downloaded": 0,
+                "payload_uploaded": 0,
+                "peers": 0,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Downloading — I2P",
+                "tracker_counters_available": false,
+                "upload_limit": 10240,
+                "upload_rate": 0,
+                "verified_bytes": 98304
+            }
+        ],
+        "tracker_announces": "1",
+        "tracker_errors": "0",
+        "tracker_replies": "0"
+    },
+    "seed": [
+        {
+            "admission": "7036385887146570343",
+            "checked": true,
+            "download_rate": 0,
+            "failure": "",
+            "generation": "5542212382105907564",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "067322B7AF5F2D21277F670930CEF0926A86448B",
+            "loopback_peer_classes": 1,
+            "payload_downloaded": 0,
+            "payload_uploaded": 262144,
+            "peers": 0,
+            "phase": 2,
+            "public_identity": "ce8652621cac92528849775a22e580c785620f2fed28c37c98990221ced79394",
+            "queued": false,
+            "seeding": true,
+            "tracker_announces": "2",
+            "tracker_errors": "1",
+            "tracker_replies": "1",
+            "upload_rate": 534,
+            "verified_bytes": 2097152
+        },
+        {
+            "admission": "12209043022157963302",
+            "checked": true,
+            "download_rate": 0,
+            "failure": "",
+            "generation": "5542212382105907564",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+            "loopback_peer_classes": 1,
+            "payload_downloaded": 0,
+            "payload_uploaded": 152363,
+            "peers": 0,
+            "phase": 2,
+            "public_identity": "ce8652621cac92528849775a22e580c785620f2fed28c37c98990221ced79394",
+            "queued": false,
+            "seeding": true,
+            "tracker_announces": "2",
+            "tracker_errors": "1",
+            "tracker_replies": "1",
+            "upload_rate": 180,
+            "verified_bytes": 2097152
+        }
+    ],
+    "stage": 13,
+    "ui": {
+        "accepted_action_counts": [
+            [
+                0,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "client_status": "3 torrents",
+        "last_Host_message": "",
+        "library": [
+            {
+                "completed": 98304,
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "rendered_state": "Downloading — I2P",
+                "snapshot_state": "Downloading — I2P"
+            },
+            {
+                "completed": 229376,
+                "hash": "067322B7AF5F2D21277F670930CEF0926A86448B",
+                "rendered_state": "Paused",
+                "snapshot_state": "Paused"
+            },
+            {
+                "completed": 0,
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "rendered_state": "Stopped",
+                "snapshot_state": "Stopped"
+            }
+        ],
+        "rendered_revision": "51",
+        "snapshot_revision": "51"
+    }
+}

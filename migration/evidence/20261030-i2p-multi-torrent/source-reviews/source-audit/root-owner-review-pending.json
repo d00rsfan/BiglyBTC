@@ -1,0 +1,48 @@
+{
+  "status": "SOURCE_REVIEW_PENDING_NARROW_FINAL_CORRECTIONS",
+  "scope": "Independent source-only shared owner/service lifetime and source authority review; no edits to reviewed files and no compiler or subject execution.",
+  "reviewed_sources": {
+    "profile_owner.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/root-source/profile_owner.hpp",
+      "sha256": "7b7ff6cd581d1bebf35c945027a8dc60f6d7e2fdcce87fad82df1541576774bb"
+    },
+    "profile_owner.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/root-source/profile_owner.cpp",
+      "sha256": "e0bbc30d567fd57f4d343c0e0b37e9621a9b33c220b58b6f4f4af4065ee84ed1"
+    },
+    "owned_i2p_service.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/root-source/owned_i2p_service.hpp",
+      "sha256": "3fdbedf56b5e24d477a1a19d70d30ead43bf5c76765e5e0a1271c9b01355c12f"
+    },
+    "owned_i2p_service.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/root-source/owned_i2p_service.cpp",
+      "sha256": "0524f35984be86a07eaf7b7f83897c4c5beb1a5b1fb04b4cc7a556b729199ff6"
+    }
+  },
+  "resolved_in_current_draft": [
+    "Separate SDK registration/installation ownership with unused-registration revocation and partial-handle removal",
+    "Genuine pauseSettled event before flush; no status-bit certification or resume overtaking unsettled pause",
+    "Weak expiry, executor barrier and subsequent essential alert drain before immutable Ready",
+    "Ready member skipped from later Qt mutable observations",
+    "Source-bound queue/rate bootstrap before Qt dispatch",
+    "Unknown on payload aggregate overflow; saturated display counters",
+    "No direct changed emission from source-held install/close"
+  ],
+  "remaining_findings": [
+    {
+      "id": "retirement-final-deadline",
+      "file": "profile_owner.cpp",
+      "detail": "Check the original member deadline before executor barrier and immediately before Ready; the current live-storage else timeout alone permits late expired-storage success."
+    },
+    {
+      "id": "active-add-source-permit",
+      "file": "profile_owner.cpp",
+      "detail": "Initial installation is under Bridge installProvider source permit; active add currently installs directly with prepared() only. Bind new registration/add/resume to an existing fresh worker permit. Capture queue inventory association under the accepted source gate. Bridge network writes remain separately source fenced."
+    }
+  ],
+  "source_seam_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/manifest.json",
+    "sha256": "f9c883e350d696d51fb66b58f5db742028e23e84ef6d4005af2e90f1a448e54c"
+  },
+  "limits": "Mutable staging review, not final frozen source signoff or runtime credit. Root owns the reviewed files, fixes, integration and qualification."
+}

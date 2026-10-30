@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "before": {
+    "Java": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/RouterMultiTorrentTracker.java",
+      "sha256": "15c34b870964dc20c2dde4138590c0f1f89c29bbb645e6c14132d7a1ee2fb4d2",
+      "bytes": 23499
+    },
+    "runner": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/run.py",
+      "sha256": "f106410b77dfd230528aafd753d82480c3c1e43bc29c0b07823b6695efa57d85",
+      "bytes": 30263
+    }
+  },
+  "artifacts": {
+    "RouterMultiTorrentTracker-before.java": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/tracker-eof-and-failfast/RouterMultiTorrentTracker-before.java",
+      "sha256": "15c34b870964dc20c2dde4138590c0f1f89c29bbb645e6c14132d7a1ee2fb4d2",
+      "bytes": 23499
+    },
+    "RouterMultiTorrentTracker.java": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/tracker-eof-and-failfast/RouterMultiTorrentTracker.java",
+      "sha256": "973179c8045fbad0ce4d609d50312256b86e182bbf01bc277b4b880fd4378025",
+      "bytes": 26209
+    },
+    "run-before.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/tracker-eof-and-failfast/run-before.py",
+      "sha256": "f106410b77dfd230528aafd753d82480c3c1e43bc29c0b07823b6695efa57d85",
+      "bytes": 30263
+    },
+    "run.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/tracker-eof-and-failfast/run.py",
+      "sha256": "ab37bfc91aa1fe46fc1fce71be9c606b98e6b4392a7d32c0207533d65de9c9fe",
+      "bytes": 31148
+    },
+    "java.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/tracker-eof-and-failfast/java.patch",
+      "sha256": "a1d7e3b3a9b1dd254fa9a5a2f7b7dd67f84bd06add77b502e785113d45d41207",
+      "bytes": 8410
+    },
+    "runner.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/tracker-eof-and-failfast/runner.patch",
+      "sha256": "f7e044d28a191ea95c4a5c4ce6cefeffa34da9838d6470fdcf21c05f00f47797",
+      "bytes": 3091
+    },
+    "source-pin-proposal.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/tracker-eof-and-failfast/source-pin-proposal.json",
+      "sha256": "b13ae9cf586bb0258c322cc7118a69924f36a0520db55b444caa19db72381d59",
+      "bytes": 855
+    },
+    "ADOPTION.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/tracker-eof-and-failfast/ADOPTION.txt",
+      "sha256": "7cb90aa62100e983f640e9097351eea5f43438a319fe2ee7e319637406b206e7",
+      "bytes": 1687
+    }
+  },
+  "delta": "EOF-only perconnection recovery without credit; accepted connection bound256; strict other parser errors remain fatal; bounded safe failure report and fail-fast polling.",
+  "native_changed": false,
+  "budgets_changed": false,
+  "no_execution": true
+}

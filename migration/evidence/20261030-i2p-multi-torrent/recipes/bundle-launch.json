@@ -1,0 +1,9 @@
+{
+  "status": "PASS_BUNDLED_APPLICATION_USAGE_NO_PROFILE_OPENED",
+  "argv": [
+    "/home/yurii/Java/BiglyBTC/dist-i2p/BiglyBTC"
+  ],
+  "exit_code": 2,
+  "log_sha256": "3f0a33796a45b6bb85bbf688c16ffca7844d316a2cbe772a1176db19ad946702",
+  "scope": "Current built application and bundled dependencies launch without opening any profile. Genuine Host/UI test uses the exact same source and private provider."
+}

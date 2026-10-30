@@ -1,0 +1,68 @@
+[
+  {
+    "label": "router",
+    "argv": [
+      "/usr/lib/jvm/java-26-openjdk-amd64/bin/java",
+      "-Xms32m",
+      "-Xmx256m",
+      "-XX:ActiveProcessorCount=1",
+      "-Djava.awt.headless=true",
+      "-Djava.net.preferIPv4Stack=true",
+      "-Duser.home=/work/home",
+      "-Djava.io.tmpdir=/tmp",
+      "-Di2p.dir.base=/work/router",
+      "-Di2p.dir.config=/work/router",
+      "-Dtime.disabled=true",
+      "-Djbigi.enable=false",
+      "-Djcpuid.enable=false",
+      "-cp",
+      "/classes:/reference.jar",
+      "RouterMultiTorrentTracker",
+      "router",
+      "/work",
+      "54863",
+      "0",
+      "0"
+    ],
+    "pid": 3,
+    "exit_code": 143
+  },
+  {
+    "label": "tracker",
+    "argv": [
+      "/usr/lib/jvm/java-26-openjdk-amd64/bin/java",
+      "-Xms32m",
+      "-Xmx256m",
+      "-XX:ActiveProcessorCount=1",
+      "-Djava.awt.headless=true",
+      "-Djava.net.preferIPv4Stack=true",
+      "-Duser.home=/work/home",
+      "-Djava.io.tmpdir=/tmp",
+      "-Di2p.dir.base=/work/peer-data",
+      "-Di2p.dir.config=/work/peer-data",
+      "-Dtime.disabled=true",
+      "-Djbigi.enable=false",
+      "-Djcpuid.enable=false",
+      "-cp",
+      "/classes:/reference.jar",
+      "RouterMultiTorrentTracker",
+      "tracker",
+      "/work",
+      "54863",
+      "0",
+      "0"
+    ],
+    "pid": 42,
+    "exit_code": 143
+  },
+  {
+    "label": "native",
+    "argv": [
+      "/probe",
+      "54863",
+      "/work"
+    ],
+    "pid": 70,
+    "exit_code": -15
+  }
+]

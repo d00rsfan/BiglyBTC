@@ -1,0 +1,8 @@
+{
+  "status": "HARNESS_TYPE_CORRECTION_NOT_RUNTIME_PASS",
+  "before_sha256": "c88d58ad49d36a339641fbf302d7fc30d3db1fc84c690cb19d320e4902e4412a",
+  "after_sha256": "15c34b870964dc20c2dde4138590c0f1f89c29bbb645e6c14132d7a1ee2fb4d2",
+  "source_pins_sha256": "05805ce3dc0f8ee3a649370845cc1c4f830431a40f9baa6d1b7d7c9ff60d1dbc",
+  "delta": "Exact client Set<Destination> matches actual API, retain equality assertion; log original exception before router shutdown; truthful final tracker-only client count1. No native/SDK/positive predicates changed.",
+  "api_proof": "javap original modified JAR ClientManagerFacade.listClients(): java.util.Set<net.i2p.data.Destination>; retained original ClientManager.java627."
+}

@@ -1,0 +1,136 @@
+--- a/src/torrent.cpp
++++ b/src/torrent.cpp
+@@ -3594,9 +3594,27 @@
+ 		}
+ 	}
+ 
++namespace {
++#if TORRENT_USE_I2P
++bool biglybtc_owned_tracker_result_current(aux::session_interface const& session,
++  info_hash_t const& full,info_hash_t const& wire,std::uint64_t admission,tracker_request const& request)
++{
++  auto owner=session.i2p_owned_bridge();if(!owner)return true;
++  return owner->matches(full,admission)&&request.biglybtc_owned_admission==admission
++    &&owner->matches(request.biglybtc_owned_hashes,admission)
++    &&request.i2pconn&&request.i2pconn->owned_bridge()==owner
++    &&bool(request.kind&tracker_request::i2p)&&is_i2p_url(request.url)&&request.url.compare(0,7,"http://")==0
++    &&((wire.has_v1()&&request.info_hash==wire.v1)||(wire.has_v2()&&request.info_hash==wire.get(protocol_version::V2)));
++}
++#endif
++}
++
+ 	void torrent::tracker_warning(tracker_request const& req, std::string const& msg)
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
++#if TORRENT_USE_I2P
++		if(!biglybtc_owned_tracker_result_current(m_ses,torrent_file().info_hashes(),m_wire_info_hash,m_biglybtc_i2p_admission,req))return;
++#endif
+ 
+ 		INVARIANT_CHECK;
+ 
+@@ -3625,6 +3643,9 @@
+ 		, int const complete, int const incomplete, int const downloaded, int /* downloaders */)
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
++#if TORRENT_USE_I2P
++		if(!biglybtc_owned_tracker_result_current(m_ses,torrent_file().info_hashes(),m_wire_info_hash,m_biglybtc_i2p_admission,req))return;
++#endif
+ 
+ 		INVARIANT_CHECK;
+ 		TORRENT_ASSERT(req.kind & tracker_request::scrape_request);
+@@ -3709,6 +3730,9 @@
+ 		, struct tracker_response const& resp)
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
++#if TORRENT_USE_I2P
++		if(!biglybtc_owned_tracker_result_current(m_ses,torrent_file().info_hashes(),m_wire_info_hash,m_biglybtc_i2p_admission,r))return;
++#endif
+ 
+ 		INVARIANT_CHECK;
+ 		TORRENT_ASSERT(!(r.kind & tracker_request::scrape_request));
+@@ -12475,6 +12499,9 @@
+ 		, seconds32 const retry_interval)
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
++#if TORRENT_USE_I2P
++		if(!biglybtc_owned_tracker_result_current(m_ses,torrent_file().info_hashes(),m_wire_info_hash,m_biglybtc_i2p_admission,r))return;
++#endif
+ 		biglybtc_queue_event((r.kind&tracker_request::scrape_request)
+ 			?BiglybtcQueueEventKindV1::ScrapeFailed:BiglybtcQueueEventKindV1::AnnounceFailed,&r);
+ 
+--- a/test/test_biglybtc_private_i2p_owner.cpp
++++ b/test/test_biglybtc_private_i2p_owner.cpp
+@@ -10,6 +10,10 @@
+ #include "libtorrent/entry.hpp"
+ #include "libtorrent/bencode.hpp"
+ #include "libtorrent/torrent_info.hpp"
++#include "libtorrent/torrent.hpp"
++#include "libtorrent/aux_/announce_entry.hpp"
++#include <future>
++#include <tuple>
+ #include "libtorrent/http_connection.hpp"
+ #include "libtorrent/aux_/resolver.hpp"
+ #include "libtorrent/i2p_stream.hpp"
+@@ -215,4 +219,62 @@
+   TEST_EQUAL(a.write_some(boost::asio::buffer(bytes),ec),2u);TEST_CHECK(!ec);char received[2]{};TEST_EQUAL(boost::asio::read(peer_a,boost::asio::buffer(received),ec),2u);TEST_CHECK(!ec);TEST_EQUAL(std::string(received,2),"ok");
+   io.restart();peer_b.non_blocking(true,ec);char absent[2]{};TEST_EQUAL(peer_b.read_some(boost::asio::buffer(absent),ec),0u);TEST_CHECK(ec==boost::asio::error::would_block||ec==boost::asio::error::try_again);TEST_CHECK(owner->current());
+ }
++
++namespace {
++struct MultiQueueResults final:BiglybtcQueueObserverV1 {
++  unsigned count=0;void observe(BiglybtcQueueEventV1 const&)noexcept override{++count;}
++};
++struct MultiTrackerResults final:BiglybtcTrackerResponseObserverV1 {
++  unsigned count=0;void observe(BiglybtcTrackerResponseEventV1 const&)noexcept override{++count;}
++};
++}
++TORRENT_TEST(private_i2p_multi_late_tracker_results_require_current_full_request)
++{
++  session ses{session_params{isolated()}};auto executor_work=make_work_guard(ses.native_handle()->get_context());auto ti=metadata('r');auto p=policy();
++  std::copy_n(reinterpret_cast<unsigned char const*>(ti->info_hashes().v1.data()),20,p.torrent_v1.begin());
++  TEST_EQUAL(biglybtc_configure_private_i2p_owner_v1(&ses,&p),0u);auto other=tuple(22,2);TEST_EQUAL(biglybtc_admit_private_i2p_torrent_v1(&ses,&other),0u);
++  add_torrent_params add;add.ti=ti;add.save_path=".";add.flags|=torrent_flags::paused;add.flags&=~torrent_flags::auto_managed;error_code ec;auto handle=ses.add_torrent(add,ec);TEST_CHECK(!ec);TEST_CHECK(handle.is_valid());
++  auto completion=std::make_shared<std::promise<void>>();auto done=completion->get_future();
++  boost::asio::post(ses.native_handle()->get_context(),[impl=ses.native_handle(),t=handle.native_handle(),p,other,completion]{try{
++    TEST_CHECK(t);if(!t){completion->set_value();return;}
++    i2p_connection sam(impl->get_context());sam.set_owned_bridge(impl->i2p_owned_bridge());
++    i2p_connection foreign(impl->get_context());foreign.set_owned_bridge(std::make_shared<aux::i2p_owner_context>(p));
++    auto queue=std::make_shared<MultiQueueResults>();auto results=std::make_shared<MultiTrackerResults>();
++    TEST_CHECK(t->biglybtc_attach_queue_observer(queue));TEST_CHECK(t->biglybtc_attach_tracker_response_observer(results,p.admission));
++    tracker_request request;request.url=t->torrent_file().trackers()[0].url;request.kind=tracker_request::i2p;
++    request.info_hash=t->torrent_file().info_hashes().v1;request.biglybtc_owned_hashes=t->torrent_file().info_hashes();request.biglybtc_owned_admission=p.admission;request.i2pconn=&sam;
++    auto* entry=t->find_tracker(request.url);TEST_CHECK(entry);if(!entry){completion->set_value();return;}entry->endpoints.clear();entry->endpoints.emplace_back(aux::listen_socket_handle{},false);
++    t->biglybtc_queue_dispatch(request);
++    auto snapshot=[&]{auto* current=t->find_tracker(request.url);auto const& value=current->endpoints[0].info_hashes[protocol_version::V1];
++      return std::make_tuple(bool(current->verified),int(current->fail_limit),value.scrape_complete,value.scrape_incomplete,value.scrape_downloaded,
++        value.next_announce,value.min_announce,int(value.fails),bool(value.updating),bool(value.start_sent),bool(value.complete_sent),value.message,value.last_error,queue->count,results->count);};
++    auto deliver=[&](tracker_request candidate){candidate.kind&=~tracker_request::scrape_request;
++      tracker_response response;response.complete=91;response.incomplete=92;response.downloaded=93;response.interval=seconds32(900);response.min_interval=seconds32(600);
++      t->tracker_response(candidate,address{},std::list<address>{},response);
++      t->tracker_warning(candidate,"late warning");
++      t->tracker_request_error(candidate,error_code(410,http_category()),operation_t::bittorrent,"late failure",seconds32(1200));
++      candidate.kind|=tracker_request::scrape_request;t->tracker_scrape_response(candidate,81,82,83,0);
++      t->tracker_request_error(candidate,error_code(410,http_category()),operation_t::bittorrent,"late scrape failure",seconds32(1200));};
++    // Genuine current handler entries update state and both retained observers.
++    tracker_response response;response.complete=7;response.incomplete=8;response.downloaded=9;t->tracker_response(request,address{},std::list<address>{},response);
++    TEST_EQUAL(entry->endpoints[0].info_hashes[protocol_version::V1].scrape_complete,7);TEST_EQUAL(queue->count,1u);TEST_EQUAL(results->count,1u);
++    auto scrape=request;scrape.kind|=tracker_request::scrape_request;t->tracker_scrape_response(scrape,11,12,13,0);TEST_EQUAL(entry->endpoints[0].info_hashes[protocol_version::V1].scrape_incomplete,12);TEST_EQUAL(queue->count,2u);TEST_EQUAL(results->count,2u);
++    t->tracker_request_error(request,error_code(410,http_category()),operation_t::bittorrent,"current failure",seconds32(30));TEST_EQUAL(int(entry->endpoints[0].info_hashes[protocol_version::V1].fails),1);TEST_EQUAL(queue->count,3u);TEST_EQUAL(results->count,3u);
++    t->tracker_warning(request,"current warning");TEST_EQUAL(entry->endpoints[0].info_hashes[protocol_version::V1].message,"current warning");
++    const auto current=snapshot();
++    auto bad=request;bad.biglybtc_owned_admission=0;deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.biglybtc_owned_admission=other.admission;bad.biglybtc_owned_hashes=hashes(other);deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.biglybtc_owned_hashes.v1[0]^=1;deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.info_hash[0]^=1;deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.kind&=~tracker_request::i2p;deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.i2pconn=nullptr;deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.i2pconn=&foreign;deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.url="http://example.invalid/announce";deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.url="udp://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.b32.i2p:80/announce";deliver(bad);TEST_CHECK(snapshot()==current);
++    auto subject=tuple(p.admission,1);subject.torrent_v1=p.torrent_v1;TEST_EQUAL(impl->biglybtc_revoke_private_i2p_torrent(subject),0u);
++    const auto retired=snapshot();deliver(request);TEST_CHECK(snapshot()==retired);TEST_CHECK(impl->i2p_owned_bridge()->current());TEST_CHECK(impl->i2p_owned_bridge()->matches(hashes(other),other.admission));
++    completion->set_value();
++  }catch(...){completion->set_exception(std::current_exception());}});
++  const auto ready=done.wait_for(std::chrono::seconds(5));TEST_CHECK(ready==std::future_status::ready);if(ready==std::future_status::ready)done.get();
++}
+ #endif

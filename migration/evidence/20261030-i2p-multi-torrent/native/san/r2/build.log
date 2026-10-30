@@ -1,0 +1,33 @@
+[1/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/application_settings.cpp.o
+[2/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/library_commands.cpp.o
+[3/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/original_file_io.cpp.o
+[4/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/original_torrent_identity.cpp.o
+[5/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/original_storage_defaults.cpp.o
+[6/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_value_versions.cpp.o
+[7/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_contacts.cpp.o
+[8/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_public_policy.cpp.o
+[9/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_operation_io.cpp.o
+[10/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/linear_to_compact.cpp.o
+[11/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/queue_positions.cpp.o
+[12/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_operations.cpp.o
+[13/91] Automatic MOC for target biglybtc_i2cp_initial_channel
+[14/91] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/torrent_intake.cpp.o
+[15/91] Linking CXX static library adapters/libbiglybtc_profile.a
+[16/91] Building CXX object engine/CMakeFiles/biglybtc_mainline_bind_plan.dir/mainline_bind_plan.cpp.o
+[17/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/engine_statistics_sampler.cpp.o
+[18/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/local_session.cpp.o
+[19/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[20/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/runtime_metrics_sampler.cpp.o
+[21/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/multifile_session.cpp.o
+[22/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/effective_rate_limits.cpp.o
+[23/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/peer_payload_observer.cpp.o
+[24/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/tracker_statistics_sampler.cpp.o
+[25/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/network_policy.cpp.o
+[26/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/mainline_dht.cpp.o
+[27/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/managed_storage.cpp.o
+[28/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/magnet_intake.cpp.o
+[29/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/metadata_disk_router.cpp.o
+[30/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/managed_payload_counters.cpp.o
+[31/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_session.cpp.o
+[32/91] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/live_settings.cpp.o
+ninja: build stopped: interrupted by user.

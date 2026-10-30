@@ -1,0 +1,118 @@
+{
+  "status": "PASS",
+  "lane": "default",
+  "cache": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/default/r2/configure.log",
+      "log_sha256": "6dc5a31b3b138c6037f4f5006a3eb717f96ddea8ec520e251ed5ceb2027a65fe"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-library-commands-bridge-tests",
+        "biglybtc-torrent-intake-file-options-tests",
+        "biglybtc-queue-policy-tests",
+        "biglybtc-queue-slots-tests",
+        "biglybtc-torrent-intake-dialog-tests",
+        "biglybtc-i2p-streaming-manager-tests",
+        "biglybtc-i2cp-stream-manager-tests",
+        "biglybtc-owned-sam-protocol-tests"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/default/r2/build.log",
+      "log_sha256": "5983d3f390361a2d134b1aafeda88786e355dd9f6bbc51d699d0a12bc5947242"
+    },
+    {
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-R",
+        "^(i2p-classic-host|queue-policy|queue-slots|managed-library-command-routing|torrent-intake-file-options|torrent-intake-file-options-ui|pure-i2p-streaming-manager|i2cp-bounded-stream-manager|pure-owned-sam-protocol)$",
+        "--output-on-failure",
+        "--no-tests=error",
+        "-j",
+        "1"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/default/r2/ctest.log",
+      "log_sha256": "5334f38e21ddd8dc737b691b70ccbe595709d64a58e6fec7caaf9f1c549986d7"
+    }
+  ],
+  "source_map_sha256": "97192938e37d365c1755e9e4f5d61c6f5f7cd8bf448c5930cb69b52cff68c8b1",
+  "images": {
+    "BiglyBTC": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/app/BiglyBTC",
+      "sha256": "862465f3853f1a27dddaee62dbecd5fb196ce8d431025199ca094fbf67e262e0",
+      "bytes": 12330968
+    },
+    "biglybtc-i2p-classic-host-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2p-classic-host-tests",
+      "sha256": "da2acd907bde45420e4e54af39196fab1f7a83c46362d882549081ce6ea77a55",
+      "bytes": 12335088
+    },
+    "biglybtc-library-commands-bridge-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-library-commands-bridge-tests",
+      "sha256": "7366d2d0855240779dd00ded7aeb7e79b68a0a95e64af6c8cb58ddc1bbc4c214",
+      "bytes": 12442864
+    },
+    "biglybtc-torrent-intake-file-options-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-torrent-intake-file-options-tests",
+      "sha256": "4db9afbdc5ba45be6f4b965d0b651c9324743cc206ca4ae301de725a12ff0c4d",
+      "bytes": 3496768
+    },
+    "biglybtc-queue-policy-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-queue-policy-tests",
+      "sha256": "01c971da1ae9f8ccf04751bf7083ca7ca98f540dc121d64cfd254f3d0576f36d",
+      "bytes": 414320
+    },
+    "biglybtc-queue-slots-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-queue-slots-tests",
+      "sha256": "9802ba3d192367c465e33ea5e1ffc226e981773ba3667952884eb32c3d4a414e",
+      "bytes": 228848
+    },
+    "biglybtc-torrent-intake-dialog-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-torrent-intake-dialog-tests",
+      "sha256": "4dc2fb878ec3dda8754cfe13d08051128d07422130cac17f0b6a91a686096bce",
+      "bytes": 3323808
+    },
+    "biglybtc-i2p-streaming-manager-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2p-streaming-manager-tests",
+      "sha256": "0da49685d16e91e8aadb5e0214ec742b45552cc552bebeee8f8f23851260730a",
+      "bytes": 353808
+    },
+    "biglybtc-i2cp-stream-manager-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2cp-stream-manager-tests",
+      "sha256": "4c9962d25044d66498ef0e2c0ce7aa9c4eea65745b5c2b47286068caf75afbdd",
+      "bytes": 850088
+    },
+    "biglybtc-owned-sam-protocol-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-owned-sam-protocol-tests",
+      "sha256": "0bea318258016b927bab4b24cca62fdf345aa7982ee77f317e6256b45481b783",
+      "bytes": 116208
+    }
+  },
+  "elapsed_seconds": 362.37
+}

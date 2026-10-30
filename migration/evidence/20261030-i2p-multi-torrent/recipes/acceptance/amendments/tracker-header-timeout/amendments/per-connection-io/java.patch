@@ -1,0 +1,33 @@
+--- a/java
++++ b/java
+@@ -202,7 +202,7 @@
+     I2PSession session=client.createSession(new ByteArrayInputStream(trackerKeys.toByteArray()),p);
+     I2PSocketManagerFull manager=new I2PSocketManagerFull(I2PAppContext.getGlobalContext(),session,p,"OwnedProviderTorrentTracker",d->d.equals(seed)||d.equals(leech));
+     AtomicReference<Throwable> failure=new AtomicReference<>();AtomicBoolean stopping=new AtomicBoolean();
+-    AtomicInteger requests=new AtomicInteger(),acceptedConnections=new AtomicInteger(),zeroByteEof=new AtomicInteger(),partialHeaderEof=new AtomicInteger(),headerTimeouts=new AtomicInteger();AtomicReference<Map<String,Counts>> table=new AtomicReference<>();
++    AtomicInteger requests=new AtomicInteger(),acceptedConnections=new AtomicInteger(),zeroByteEof=new AtomicInteger(),partialHeaderEof=new AtomicInteger(),headerTimeouts=new AtomicInteger(),transportFailures=new AtomicInteger();AtomicReference<Map<String,Counts>> table=new AtomicReference<>();
+     try{
+       session.connect();require(!session.isClosed()&&session.getMyDestination().equals(tracker),"Actual tracker session not connected");I2PServerSocket server=manager.getServerSocket();server.setSoTimeout(1000);
+       Thread application=new Thread(()->{String stage="accept";try{
+@@ -236,6 +236,12 @@
+             if(request.scrape){if(isSeed)count.seedScrapes.incrementAndGet();else count.leechScrapes.incrementAndGet();}
+             else{if(isSeed)count.seedReplies.incrementAndGet();else count.leechReplies.incrementAndGet();}
+             output("tracker-progress.json","{\"status\":\"ACTUAL_MULTI_HASH_TRACKER_OBSERVATIONS\",\"hashes\":"+countsJson(rows,false)+"}");
++          }catch(IOException disconnected){
++            // A transport failure belongs to this owned connection. Complete
++            // parsed requests retain only their actual observations; no reply
++            // is credited unless the real write/flush/close already completed.
++            transportFailures.incrementAndGet();
++            output("tracker-transport.json","{\"status\":\"ACTUAL_TRACKER_CONNECTION_IO_FAILURE\",\"stage\":\""+stage+"\",\"transport_failures\":"+transportFailures.get()+",\"new_reply_credit\":false}");
+           }
+         }
+       }catch(Throwable error){if(!stopping.get()&&failure.compareAndSet(null,error)){reportTrackerFailure(stage,error);}}},"owned-original-http-tracker");application.setDaemon(true);application.start();
+@@ -246,7 +252,7 @@
+           if(failure.get()!=null)throw new IllegalStateException("Actual tracker application failed",failure.get());
+           Map<String,Counts> rows=table.get();require(rows!=null,"Actual multi-hash table was never observed");String actualCounts=countsJson(rows,true);
+           stopping.set(true);manager.destroySocketManager();application.join(5000);require(!application.isAlive()&&session.isClosed(),"Tracker application/session not retired");
+-          output("tracker-result.json","{\"status\":\"PASS\",\"hashes\":"+actualCounts+",\"requests\":"+requests.get()+",\"accepted_connections\":"+acceptedConnections.get()+",\"zero_byte_eof\":"+zeroByteEof.get()+",\"partial_header_eof\":"+partialHeaderEof.get()+",\"header_timeouts\":"+headerTimeouts.get()+",\"external_i2cp\":true,\"session_closed\":true,\"late_reply_qualified\":false}");return;
++          output("tracker-result.json","{\"status\":\"PASS\",\"hashes\":"+actualCounts+",\"requests\":"+requests.get()+",\"accepted_connections\":"+acceptedConnections.get()+",\"zero_byte_eof\":"+zeroByteEof.get()+",\"partial_header_eof\":"+partialHeaderEof.get()+",\"header_timeouts\":"+headerTimeouts.get()+",\"transport_failures\":"+transportFailures.get()+",\"external_i2cp\":true,\"session_closed\":true,\"late_reply_qualified\":false}");return;
+         }
+       }
+       throw new EOFException("Owner closed tracker before completion");

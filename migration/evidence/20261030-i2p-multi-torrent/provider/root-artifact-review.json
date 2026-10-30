@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "status": "PASS_PRIVATE_ARTIFACT_CLOSURE",
+  "reviewer": "root",
+  "utc": "2026-10-30T17:38:57.581069+00:00",
+  "source_build_record_sha256": "449aa82f665786ce63f4e1778cee23bf07ca45439b762cf283b67efd0d48af0f",
+  "source_capsule_sha256": "63e9925c8f4f3e80168425d22b62ef87b23732eccff8fa1b7714f73f3f84e9c3",
+  "prebuild_source_review_sha256": "45e39229132d4ab235bc614808fed710acdf1a97a3d5a29769f11a23e618bb5d",
+  "source_files": 1087,
+  "installed_files": 293,
+  "headers": 284,
+  "required_same_image_exports": 34,
+  "runtime_manifest_sha256": "db3f519956a47492824b458d04d5f3013426f51c5139a996b602ac56075ac90a",
+  "fresh_suites": 9,
+  "private_methods": 10,
+  "notes": [
+    "109 byte/dependency/toolchain-proven parent library objects reused;58 affected units compiled in first candidate; result-entry amendment rebuilt torrent.cpp/private test only",
+    "R1 socket-EPERM failure preserved separately; test credit is qualified escalated R2 only",
+    "Shared SAM lookup framing may finish an already-issued command, but retired-target results/effects are suppressed",
+    "Private runtime/actual application still requires separate native and isolated lifecycle qualification"
+  ],
+  "default_public_runtime_approved": false,
+  "shipping_approved": false
+}

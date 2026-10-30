@@ -1,0 +1,20 @@
+{
+  "status": "CANCELLED_NOT_QUALIFICATION",
+  "reason": "Actual GCC r12 proves queued flag differs from actual provider pause after Resume; stop obsolete SAN batch before source correction. No PASS credit.",
+  "exact_root_pid": 2604750,
+  "owned_descendant_pids": [
+    2604750,
+    2604805,
+    2604806,
+    2605362,
+    2605363,
+    2605364,
+    2605503,
+    2605504,
+    2605505,
+    2605518,
+    2605519,
+    2605520
+  ],
+  "cache_preserved": true
+}

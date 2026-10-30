@@ -1,0 +1,212 @@
+{
+  "scope": "Read-only queue/rate reuse audit; no runtime qualification claim",
+  "native_commit": "6b40b2bb175e5e665d4c1865a587fe7b34d4cfd3",
+  "original_java_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native": {
+    "preview/native/core/include/biglybtc/queue_policy.hpp": {
+      "git_blob": "9f94a1a1bd1aedf718f5429f5d66e243e2171d89",
+      "sha256": "8d99e0044fe2db9243e9e3771fcfce22e41bd649a72d29415cbd453f1154015c",
+      "bytes": 8352,
+      "current_file_exact": true
+    },
+    "preview/native/core/src/queue_policy.cpp": {
+      "git_blob": "e853947792d0d15aff7e9853e81bf43610d67477",
+      "sha256": "5187184e943aedd2f1e9a6a5b405384bd939d55ae72d3ef5cfc6d1ad23dd39b4",
+      "bytes": 39636,
+      "current_file_exact": true
+    },
+    "preview/native/core/include/biglybtc/queue_slots.hpp": {
+      "git_blob": "4c2bda87894765e9fe8793d308850328b322de59",
+      "sha256": "2b008192bf7125305d700a0ab984d0ee73b8713f998749dc20b68f7ed5bb33e7",
+      "bytes": 3142,
+      "current_file_exact": true
+    },
+    "preview/native/core/src/queue_slots.cpp": {
+      "git_blob": "c298c047f92ea926b5b60342372bd9b62f659375",
+      "sha256": "045173c2d48a45aae0f6c9adc4ce8ece2c554081b85564dfa09274532e66e3eb",
+      "bytes": 5858,
+      "current_file_exact": true
+    },
+    "preview/native/core/include/biglybtc/queue_positions.hpp": {
+      "git_blob": "d7d502e5baa6719d5ad4e3eb4ac136ddba5110a3",
+      "sha256": "61214ca05096147593341f6367dbca4f8de3607c17a1920b7617b1ef521953cf",
+      "bytes": 1138,
+      "current_file_exact": true
+    },
+    "preview/native/core/src/queue_positions.cpp": {
+      "git_blob": "bdee967fbe664ef0b8f2c1ff3fcfc66f9bb6312f",
+      "sha256": "a7a8b4807eda89bed20312c28579a1fa4e3f7b22c0620da8f34e4c5652531907",
+      "bytes": 3205,
+      "current_file_exact": true
+    },
+    "preview/native/core/include/biglybtc/queue_file_priority.hpp": {
+      "git_blob": "baa1f67eae9ffa4aabc6352060faa15a0534ce24",
+      "sha256": "2a7dd9ff3f64725cbf2df0de3438e3f9e0045c539cce1c3ca2a522b1e7db7d80",
+      "bytes": 970,
+      "current_file_exact": true
+    },
+    "preview/native/core/include/biglybtc/queue_observations.hpp": {
+      "git_blob": "f602cebce225ee2b3ebb35242682453ecd30fa4e",
+      "sha256": "09ac13cc2bf0f08fec844b0b08f531c0d4d9456070169752daf3cefe1429d4e2",
+      "bytes": 10592,
+      "current_file_exact": true
+    },
+    "preview/native/core/include/biglybtc/queue_rate_providers.hpp": {
+      "git_blob": "fefbe2916922099b1400cc8c6dc7151823123dce",
+      "sha256": "0bcf155fa5ef8b6dffb56a00263a821b725a269b02e95e131a4d188e4121c50c",
+      "bytes": 3094,
+      "current_file_exact": true
+    },
+    "preview/native/core/include/biglybtc/queue_target_statistics.hpp": {
+      "git_blob": "0a8e37435a9688904a6b484b7aea60ac5263aca4",
+      "sha256": "eae40ec52dff6167e7c584b6f525d1f62d0dc9b4de05396da1d7b93e48229256",
+      "bytes": 3104,
+      "current_file_exact": true
+    },
+    "preview/native/core/include/biglybtc/queue_download_probe.hpp": {
+      "git_blob": "a1849f0a3b937fec68aa02972b31453ff1409108",
+      "sha256": "0611426d91897a32e3d58a048c6f99593742f560780e1ba22fa5bd08c7eef8fa",
+      "bytes": 2785,
+      "current_file_exact": true
+    },
+    "preview/native/core/include/biglybtc/library.hpp": {
+      "git_blob": "9eae63582317528f8b2b046c5275ccb7e442c2f3",
+      "sha256": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+      "bytes": 1823,
+      "current_file_exact": true
+    },
+    "preview/native/core/src/library.cpp": {
+      "git_blob": "3465fff582d5c17c4a3f37760710260c644c7a50",
+      "sha256": "3ba21404a77e0e3c9e23cbf267be130609598ed6646693df7c4f656306895348",
+      "bytes": 6670,
+      "current_file_exact": true
+    },
+    "preview/native/adapters/queue_positions.hpp": {
+      "git_blob": "9cec645a4fb6af60b182e76fbd44ab4053ca6643",
+      "sha256": "0703f30c9f2ba00aa0353a917bae7949d63641bc4f20df22f66d4e8bb0b91273",
+      "bytes": 1817,
+      "current_file_exact": true
+    },
+    "preview/native/adapters/queue_positions.cpp": {
+      "git_blob": "262e466a18f3ea357e55ca2176fdad8dec322951",
+      "sha256": "e30dabcf52afa0a668fabe0e087718c0202f6a131cc234b13bef74748323e9f4",
+      "bytes": 12299,
+      "current_file_exact": true
+    },
+    "preview/native/adapters/library_commands.cpp": {
+      "git_blob": "1d1b17d1d6c6661508d144d5a9336e44a0d6885a",
+      "sha256": "af07bc5d9fcdd6f2e1b978e79f8d79d373ca3c6b491556fb777ecac8be9d461e",
+      "bytes": 16239,
+      "current_file_exact": true
+    },
+    "preview/native/engine/persistent_session.cpp": {
+      "git_blob": "cc45f8b7dd343aebaeec5984c06cda700e7630d1",
+      "sha256": "66d5ec23bf2a719a43e6587cbfe8844366c6373150e918aeaf53674262279654",
+      "bytes": 142186,
+      "current_file_exact": true
+    },
+    "preview/native/engine/live_settings.cpp": {
+      "git_blob": "6d6528d0ad3d73c6745931b1b82da634de9a0ee0",
+      "sha256": "ad302d5dc44fa4fc19b5adc2af84a38c54956cac560bae9999c0450028030b56",
+      "bytes": 6037,
+      "current_file_exact": true
+    },
+    "preview/native/engine/live_settings.hpp": {
+      "git_blob": "820c6333a3bd0ef751aa4b52a11d732fe21f7f8b",
+      "sha256": "44d71ddb7fec126032c1d826337cd10f07759999572e8e9ffa35f4452d96774e",
+      "bytes": 2551,
+      "current_file_exact": true
+    },
+    "preview/native/engine/managed_storage.cpp": {
+      "git_blob": "1ad89e098a1530a125b5a1d0bc49fe9ce7664f67",
+      "sha256": "43933345c908c789989f4ff8fd00ece041c21927e6c1a93ebd1eeb03f2d33be8",
+      "bytes": 103403,
+      "current_file_exact": true
+    },
+    "preview/native/engine/managed_storage.hpp": {
+      "git_blob": "054a6107add35cea2ff5f02996392694045572cb",
+      "sha256": "6976dac193f1f14b6572a9b32adf79649f3c70a35cfec02eed14db090e767e0c",
+      "bytes": 6487,
+      "current_file_exact": true
+    },
+    "preview/native/engine/network_policy.cpp": {
+      "git_blob": "e7b739d0f54d2f3a4bec3ba5c83b4250d85a2858",
+      "sha256": "f193d1bd852c0fbee49d73f56722a0d7c4effc85d669513cab23825571cad378",
+      "bytes": 35006,
+      "current_file_exact": true
+    },
+    "preview/native/engine/owned_i2p_policy.cpp": {
+      "git_blob": "8766da2336d51bc041bc423e820ec8761fa006af",
+      "sha256": "dacab1f9cbb225861fe10a2eef1cfcc7cbf302edb0f1006da8eb25a23677d8d3",
+      "bytes": 3009,
+      "current_file_exact": true
+    },
+    "preview/native/services/i2p_provider/profile_source.cpp": {
+      "git_blob": "01dfa3d73fd26f4e4f9807b41c796d1d4d3f0eaf",
+      "sha256": "5aa579a993fdb0ff5b62b44d0f5f1cc658608a051ea1ba9e41407a33fcf71ee9",
+      "bytes": 17975,
+      "current_file_exact": true
+    },
+    "preview/native/services/i2p_provider/owner.cpp": {
+      "git_blob": "125bfdacdb693d11cbd3c8f1667b1742b10e5ed4",
+      "sha256": "b5c920620c12ef8287567964be02c9837971ce9e90e943d1ef08778d4f56c049",
+      "bytes": 25914,
+      "current_file_exact": true
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "git_blob": "c18550f6ceb1a61743d38e177c90b9f43269eea6",
+      "sha256": "cc515f168321a7b372557751f5e7c7e557bc2b89f3b2e4d411bdea14ac66ec8c",
+      "bytes": 199021,
+      "current_file_exact": true
+    }
+  },
+  "java": {
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin.java": {
+      "git_blob": "f1685632907cc7934a4cb2a6711c329980a82a38",
+      "sha256": "96f206eb132f85d9f9c1a1d35ab0eb85e33e76d75865e2c979c37139dfc66111",
+      "bytes": 105855,
+      "current_file_exact": true
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/RankCalculatorReal.java": {
+      "git_blob": "72e9d6af456da0d918456a39f1cd9d143e993466",
+      "sha256": "d2599c2d7249ab731029313962ddffb6ab3413f8148338d9468eb5b71e6150bb",
+      "bytes": 64724,
+      "current_file_exact": true
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/DefaultRankCalculator.java": {
+      "git_blob": "7b014105e8a42293ad3bc741ce3b640fc0931391",
+      "sha256": "7895c91c55eafc117e4412e8c64a4d336ecfc5fed521e3af78de4ef38d102980",
+      "bytes": 6561,
+      "current_file_exact": true
+    },
+    "core/src/com/biglybt/core/networkmanager/NetworkManager.java": {
+      "git_blob": "f686354a018ac66208f6e5e3f35360b36f0bcbfd",
+      "sha256": "06d13502359759816d010c77e4a26dc230b78d9e222d32591c0f9656e6d2d465",
+      "bytes": 24883,
+      "current_file_exact": true
+    },
+    "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": {
+      "git_blob": "f992aecdc28168d656c322512434ff1cbaf95c02",
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "bytes": 144403,
+      "current_file_exact": true
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java": {
+      "git_blob": "73350c54c291c03b2fafe54b5f7618d31fabab8e",
+      "sha256": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+      "bytes": 37856,
+      "current_file_exact": true
+    },
+    "core/src/com/biglybt/core/config/impl/TransferSpeedValidator.java": {
+      "git_blob": "3b424ed278ff4ab16919422af80d938774e49cbf",
+      "sha256": "6ad41b866ef53dfe16a82f4426a55bd286715562feef6409e943be94977e8d76",
+      "bytes": 7629,
+      "current_file_exact": true
+    }
+  },
+  "retained_original_queue_catalogue": {
+    "path": "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/source-pins.json",
+    "sha256": "924392bc26c1d6e45a1ebff9c51a86a6d0139740c24f5a1c2d2e062670dacf24"
+  },
+  "audit_sha256": "0b707936fefc96a18e2eda7a159d737827c06e5cb8b9b3fb34ff8de240b2ec26"
+}

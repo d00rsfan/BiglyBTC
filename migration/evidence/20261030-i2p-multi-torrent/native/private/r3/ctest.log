@@ -1,0 +1,63 @@
+Test project /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc
+    Start 185: queue-policy
+1/6 Test #185: queue-policy .....................   Passed    0.02 sec
+    Start 201: queue-slots
+2/6 Test #201: queue-slots ......................   Passed    0.00 sec
+    Start 203: torrent-intake-file-options
+3/6 Test #203: torrent-intake-file-options ......   Passed    0.65 sec
+    Start 204: torrent-intake-file-options-ui
+4/6 Test #204: torrent-intake-file-options-ui ...   Passed    1.56 sec
+    Start 242: owned-i2p-profile-source
+5/6 Test #242: owned-i2p-profile-source .........***Failed    0.62 sec
+********* Start testing of OwnedI2pSourceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedI2pSourceTests::initTestCase()
+PASS   : OwnedI2pSourceTests::boundSourceAuthorityRefusesLegacySingleStreamPath()
+PASS   : OwnedI2pSourceTests::genuinePureSourceRetainsSameLeaseAndOriginalBytes()
+PASS   : OwnedI2pSourceTests::keyReplacementAndSourceMutationWithdrawWithoutRepair()
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(0)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(1)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(2)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(3)
+PASS   : OwnedI2pSourceTests::unsupportedNetworksAndUnsafeOriginalKeysRefuse(4)
+PASS   : OwnedI2pSourceTests::sourcePermitIsOneShotAndBlockedIoCannotExtendChannelDeadline()
+PASS   : OwnedI2pSourceTests::sessionAnchorIsNotAStoppedTorrentGrantAndConsumesIdentityOnce()
+PASS   : OwnedI2pSourceTests::siblingPreparationAndUnverifiedCheckpointPreserveOtherSourceExactly()
+PASS   : OwnedI2pSourceTests::trustedSiblingPauseAndResumeDoNotChangeTheOtherMember()
+PASS   : OwnedI2pSourceTests::originalQueueMovePublicationChangesOnlyPositionsAndRejectsUnknownRowEdits()
+PASS   : OwnedI2pSourceTests::rejectedPublicationOnlySurvivesWhenEveryActualBeforeImageIsUnchanged()
+PASS   : OwnedI2pSourceTests::acceptedChildMetadataCannotBeRecapturedBeforeStoragePreparation()
+PASS   : OwnedI2pSourceTests::unregisteredInventoryReplacementCannotAcquirePublicationAuthority()
+PASS   : OwnedI2pSourceTests::wrongPublicationTargetWithdrawsGroupAndPreservesActualEdit()
+PASS   : OwnedI2pSourceTests::groupSelectedAndCommonTamperingRemainFatal(0)
+PASS   : OwnedI2pSourceTests::groupSelectedAndCommonTamperingRemainFatal(1)
+PASS   : OwnedI2pSourceTests::groupSelectedAndCommonTamperingRemainFatal(2)
+PASS   : OwnedI2pSourceTests::groupSelectedAndCommonTamperingRemainFatal(3)
+FAIL!  : OwnedI2pSourceTests::siblingPayloadOverlapIsRejectedByTheExistingStorageClaimChecks() '(*anchor)->effectAuthority()->revoked()' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/owned_i2p_source_tests.cpp(192)]
+PASS   : OwnedI2pSourceTests::retainedFullIdentityIsForwardedToOriginalStorageBeforeAdmission()
+PASS   : OwnedI2pSourceTests::dirtyReadyPermitReleasesGateAndRequiresFreshValidation()
+PASS   : OwnedI2pSourceTests::cleanupTestCase()
+Totals: 25 passed, 1 failed, 0 skipped, 0 blacklisted, 605ms
+********* Finished testing of OwnedI2pSourceTests *********
+
+    Start 243: i2p-classic-host
+6/6 Test #243: i2p-classic-host .................   Passed    1.64 sec
+
+83% tests passed, 1 tests failed out of 6
+
+Label Time Summary:
+classic-ui       =   1.64 sec*proc (1 test)
+i2p              =   2.26 sec*proc (2 tests)
+intake           =   2.21 sec*proc (2 tests)
+owned-profile    =   0.62 sec*proc (1 test)
+queue            =   0.03 sec*proc (2 tests)
+storage          =   0.65 sec*proc (1 test)
+ui               =   1.56 sec*proc (1 test)
+unit             =   4.50 sec*proc (6 tests)
+
+Total Test time (real) =   4.51 sec
+
+The following tests FAILED:
+	242 - owned-i2p-profile-source (Failed)                 i2p owned-profile unit
+Errors while running CTest

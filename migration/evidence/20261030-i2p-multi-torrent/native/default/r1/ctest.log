@@ -1,0 +1,28 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+    Start 212: managed-library-command-routing
+1/4 Test #212: managed-library-command-routing ...   Passed   34.88 sec
+    Start 241: torrent-intake-file-options
+2/4 Test #241: torrent-intake-file-options .......***Failed    0.05 sec
+I2P accepts ordinary queued intent
+
+    Start 242: torrent-intake-file-options-ui
+3/4 Test #242: torrent-intake-file-options-ui ....   Passed    1.21 sec
+    Start 307: i2p-classic-host
+4/4 Test #307: i2p-classic-host ..................   Passed    1.49 sec
+
+75% tests passed, 1 tests failed out of 4
+
+Label Time Summary:
+classic-ui           =   1.49 sec*proc (1 test)
+i2p                  =   1.49 sec*proc (1 test)
+intake               =   1.26 sec*proc (2 tests)
+storage              =   0.05 sec*proc (1 test)
+torrent-workflows    =  34.88 sec*proc (1 test)
+ui                   =   1.21 sec*proc (1 test)
+unit                 =  37.63 sec*proc (4 tests)
+
+Total Test time (real) =  37.65 sec
+
+The following tests FAILED:
+	241 - torrent-intake-file-options (Failed)              intake storage unit
+Errors while running CTest

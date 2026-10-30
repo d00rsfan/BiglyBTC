@@ -1,0 +1,13 @@
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Original mlDHT root reader disabled explicitly; original wire identity activation is unavailable
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable exact version "3.5.5") found components: Crypto
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.5", minimum required is "3.0") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.5") found components: Crypto
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Configuring done (2.2s)
+-- Generating done (1.2s)
+-- Build files have been written to: /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san

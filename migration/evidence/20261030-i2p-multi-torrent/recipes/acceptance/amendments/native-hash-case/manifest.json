@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/manifest.json",
+    "sha256": "1c3fc79e9f0a6f8e84eede48a786fb1af37e76975b88d445cc80d5da47031527",
+    "bytes": 4157
+  },
+  "runner_before": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/run.py",
+    "sha256": "b73f0c08db1e46781ca14eab23cecfb89bd91ec82ce461dcf759ece0eb6c8ee5",
+    "bytes": 30240
+  },
+  "artifacts": {
+    "run-before.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/native-hash-case/run-before.py",
+      "sha256": "b73f0c08db1e46781ca14eab23cecfb89bd91ec82ce461dcf759ece0eb6c8ee5",
+      "bytes": 30240
+    },
+    "run.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/native-hash-case/run.py",
+      "sha256": "c6140f4aae75da47d24426f9d89166d7782c096641ec3b8bf84583f8a77efd3b",
+      "bytes": 30256
+    },
+    "changes.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/native-hash-case/changes.patch",
+      "sha256": "1e10bd7b558f6f3a582bdb26336f88b660192c76933b8ec9f8983ef6759a2db4",
+      "bytes": 1714
+    },
+    "ADOPTION.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/native-hash-case/ADOPTION.txt",
+      "sha256": "9c9482c9c819e01e40407e7e679ee21654683b478be9439a3a7eac0cd9306687",
+      "bytes": 611
+    }
+  },
+  "delta": "Normalize only the native hexadecimal info_hash spelling in two exact comparisons; no hash-value/predicate weakening.",
+  "reviewed_helper_correction": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/router-client-identity-type/RouterMultiTorrentTracker-after.java",
+    "sha256": "15c34b870964dc20c2dde4138590c0f1f89c29bbb645e6c14132d7a1ee2fb4d2",
+    "bytes": 23499
+  },
+  "review": "Set<Destination> matches original ClientManager.listClients() return and actual modified JAR signature observed by root; all three\u2192two\u2192three\u2192one\u2192zero client counts consistent. No further deterministic helper type/count blocker found.",
+  "no_execution": true
+}

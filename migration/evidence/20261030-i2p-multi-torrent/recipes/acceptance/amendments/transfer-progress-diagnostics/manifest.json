@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/manifest.json",
+    "sha256": "ce6a5141e28fcff40f83aade2446637c77ce12568eeedcb4c19be0b0f158794e",
+    "bytes": 3673
+  },
+  "source_paths": {
+    "preview/native/tests/i2p_multi_host_transfer_probe.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/transfer-progress-diagnostics/before/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "before_sha256": "df7491d664c214fcd5db200a89d10a2778bbb8ace3a639542c1932fd1707b301",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/transfer-progress-diagnostics/staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "after_sha256": "c2ed7d729bdb95c0d8fb99951000bb2ec931fe49394f4ec1dcdbe0d460efb2d8"
+    }
+  },
+  "artifacts": {
+    "before/preview/native/tests/i2p_multi_host_transfer_probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/transfer-progress-diagnostics/before/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "sha256": "df7491d664c214fcd5db200a89d10a2778bbb8ace3a639542c1932fd1707b301",
+      "bytes": 37616
+    },
+    "staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/transfer-progress-diagnostics/staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "sha256": "c2ed7d729bdb95c0d8fb99951000bb2ec931fe49394f4ec1dcdbe0d460efb2d8",
+      "bytes": 39823
+    },
+    "changes.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/transfer-progress-diagnostics/changes.patch",
+      "sha256": "5192cd88a8fbaecb80a93d597ec9c586e3972902f1cd55708a2f9f84206301cc",
+      "bytes": 10084
+    },
+    "ADOPTION.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/transfer-progress-diagnostics/ADOPTION.txt",
+      "sha256": "2bd1dae4d0a5739492874ce2c58aeadcf1201cb70c89562ed99cca0f3314e387",
+      "bytes": 857
+    }
+  },
+  "passive_API_inputs": {
+    "packet": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/ui/i2p_presentation.hpp",
+      "sha256": "c0ccafed3498801f9fa84c68809ec4626330a0b605879368421a00220dff2f86",
+      "bytes": 1696
+    },
+    "service": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/app/owned_i2p_service.hpp",
+      "sha256": "3fdbedf56b5e24d477a1a19d70d30ead43bf5c76765e5e0a1271c9b01355c12f",
+      "bytes": 2944
+    }
+  },
+  "no_execution": true
+}

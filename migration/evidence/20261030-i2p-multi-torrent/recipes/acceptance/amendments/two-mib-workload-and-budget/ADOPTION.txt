@@ -1,0 +1,31 @@
+SOURCE ONLY. Workload/budget amendment requested for the same multi-torrent chapter.
+No N, run.py, launcher, source-pins, default build cache or live subject was changed.
+Root applies the three small patches only after its current immutable batch joins.
+
+Native one-leaf delta: PayloadBytes524288 ->2097152, so A/B each2MiB; the stopped
+sentinel shares this constant and becomes2MiB too. Both original files/inodes and
+all payload bytes remain required after joins. Native absolute240000 ->1000000ms.
+Every simultaneous-incomplete, sibling>=16KiB progress after target commands,
+exact perhashcounter/admission/generation, lifecycle, saved75/70/pause, queue and
+final byte/hash predicate remains unchanged. No fake events/traffic/ACK or speed
+assertions are added or waived.
+
+Runner changes exactly matching geometry: each2097152, total4194304; deterministic
+payload formula, piece16384 loop and independent canonical metainfo SHA1 algorithm
+unchanged, including literal metainfo length2097152. Full20-byte hashes/order remain
+exact. shared-controls wait120 ->300s; native join250 ->1050s; namespace600 ->1200s.
+Outer root launch-helper timeout600 ->1300s is a source-only proposal. It inherits
+all actual source/build/SDK/Java/privateQt/five-namespace gates. The runner/launcher
+afterimages are proposal copies, not standalone runnable acceptance directories.
+
+Budget arithmetic (bounds, not throughput evidence):2MiB/8KiBps=256s for A and
+2MiB/12KiBps=170.67s for B if continuously receiving at configured caps. Combined
+4MiB/global16KiBps has a256s capacity floor. Pause/re-admit/queue/restart plus actual
+lookup/retry legitimately extend elapsed time, so1000s finite native budget allows
+work and preserves the stronger independent-progress checks. No measured rate or
+completion-time guarantee follows from these calculations.
+
+Java stays byte-exact: total256/perhash128 requests, header8192, decimal left16,
+cache wait30s, actual output close/ACK and all client/LS2 identity checks unchanged.
+No recompilation/replay of Java or provider is requested by this source amendment.
+Parent actual failures including gcc-r11 remain immutable historical observations.

@@ -1,0 +1,14 @@
+Test project /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build
+Connected to MAKE jobserver
+    Start 10: test_biglybtc_mainline_identity
+1/4 Test #10: test_biglybtc_mainline_identity ...   Passed    0.01 sec
+    Start 11: test_biglybtc_private_i2p_owner
+2/4 Test #11: test_biglybtc_private_i2p_owner ...   Passed    0.18 sec
+    Start 12: test_biglybtc_swarm
+3/4 Test #12: test_biglybtc_swarm ...............   Passed    0.15 sec
+    Start 13: test_biglybtc_tracker_response
+4/4 Test #13: test_biglybtc_tracker_response ....   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   0.35 sec

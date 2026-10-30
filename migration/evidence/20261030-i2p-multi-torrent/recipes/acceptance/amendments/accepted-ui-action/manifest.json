@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "parents": {
+    "seed_diagnostics": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/seed-authority-diagnostics/manifest.json",
+      "sha256": "417491e69b1d78236403d23535cfdb1c034ec19e35de4500e9f1dc988cacd43a",
+      "bytes": 3215
+    },
+    "native_hash_case": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/native-hash-case/manifest.json",
+      "sha256": "27ba4d81180a1f4f6d8c66e532eefe2b8f3f7fa8c7c6a40d393b657d7a81566d",
+      "bytes": 2223
+    }
+  },
+  "source_paths": {
+    "preview/native/tests/i2p_multi_host_transfer_probe.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/before/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "before_sha256": "33848182ff6e14b0e250e5b925ec78ecf009d13590c7f113b15bd92ba39598fd",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "after_sha256": "df7491d664c214fcd5db200a89d10a2778bbb8ace3a639542c1932fd1707b301"
+    }
+  },
+  "artifacts": {
+    "before/preview/native/tests/i2p_multi_host_transfer_probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/before/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "sha256": "33848182ff6e14b0e250e5b925ec78ecf009d13590c7f113b15bd92ba39598fd",
+      "bytes": 36474
+    },
+    "staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "sha256": "df7491d664c214fcd5db200a89d10a2778bbb8ace3a639542c1932fd1707b301",
+      "bytes": 37616
+    },
+    "probe.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/probe.patch",
+      "sha256": "e573a4d0033856564038b8e43536963fafebb85d9c60bd678a1bd0f515184e7e",
+      "bytes": 12413
+    },
+    "runner.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/runner.patch",
+      "sha256": "1e10bd7b558f6f3a582bdb26336f88b660192c76933b8ec9f8983ef6759a2db4",
+      "bytes": 1714
+    },
+    "run-before.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/run-before.py",
+      "sha256": "b73f0c08db1e46781ca14eab23cecfb89bd91ec82ce461dcf759ece0eb6c8ee5",
+      "bytes": 30240
+    },
+    "run.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/run.py",
+      "sha256": "c6140f4aae75da47d24426f9d89166d7782c096641ec3b8bf84583f8a77efd3b",
+      "bytes": 30256
+    },
+    "source-pin-proposal.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/source-pin-proposal.json",
+      "sha256": "cd327e13b0146c3701b10d4559203508666d03667219d73be2554e29a553f1cb",
+      "bytes": 917
+    },
+    "ADOPTION.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/ADOPTION.txt",
+      "sha256": "0e64984b1aa830ca2786fff2f5ccb9028020f96ea4881cd3e2e7ff995baad7ab",
+      "bytes": 791
+    }
+  },
+  "delta": "Real QAction-to-accepted-Host-callback stage fence; exact expected torrent/action; inherited native text-case equality repair only.",
+  "no_execution": true
+}

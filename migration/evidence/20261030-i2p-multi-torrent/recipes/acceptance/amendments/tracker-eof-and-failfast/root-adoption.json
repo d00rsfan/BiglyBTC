@@ -1,0 +1,11 @@
+{
+  "status": "ADOPTED_SOURCE_FIXTURE_ONLY",
+  "capsule_sha256": "1219311cb117a41c0800e9bdbfbbcd222ffaa94cb1724c4d0c001bcbcafed0c2",
+  "root_review": "Typed premature header EOF is per-connection only with no infohash/announce/reply credit; accepted connection bound256. All complete-header/identity/query checks remain fatal; genuine tracker failure detected during waits and joins. Native images/CID/positive lifecycle+payload predicates unchanged.",
+  "native_build_reused": "private/r19; final source dc3ca95",
+  "files_sha256": {
+    "RouterMultiTorrentTracker.java": "973179c8045fbad0ce4d609d50312256b86e182bbf01bc277b4b880fd4378025",
+    "run.py": "ab37bfc91aa1fe46fc1fce71be9c606b98e6b4392a7d32c0207533d65de9c9fe",
+    "source-pins.json": "cc1f8e577729bad863ec8689747f01814a6bd7d4e536e8b7a7a1d2088d8d9e24"
+  }
+}

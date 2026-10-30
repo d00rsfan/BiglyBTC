@@ -1,0 +1,8 @@
+{
+  "status": "REVIEWED_AND_ADOPTED_FIXTURE_ONLY",
+  "reason": "GCC executable readelf DT_NEEDED has Core/Gui/Widgets/Network, no QtTest: inline QTest actions introduce no dynamic QtTest symbol. Actual loader proves all required private Qt GUI images and offscreen plugin. Instrumented run retains QtTest and fully passed. Require actual Core/Gui/Widgets+offscreen, and every loaded Qt image must still be private; provider exact artifact check unchanged. Real UI callbacks/payload/lifecycle/joins unchanged.",
+  "native_changed": false,
+  "before_sha256": "c67473afec5fd4a3cdae197191915a1fd57df235adf20c25098e412245a5b3ae",
+  "after_sha256": "9476b43ff2d6653ab7091062e06935d4e13e68818d838c3c61f487f3cf9c8bbd",
+  "preserved_stronger_sanitised_run": "san-r3 PASS_REAL_ISOLATED_ROUTER_MULTI_I2P_HOST_TRANSFER"
+}

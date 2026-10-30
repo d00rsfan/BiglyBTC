@@ -1,0 +1,12 @@
+--- a/RouterMultiTorrentTracker.java
++++ b/RouterMultiTorrentTracker.java
+@@ -216,7 +216,8 @@
+             try{header=readHeader(socket.getInputStream());}catch(EOFException cancelled){
+               // An owned Pause/Stop/revoke can close an accepted connection.
+               // No complete request exists: no hash, announce, scrape or reply credit.
+-              if("EOF before actual HTTP request".equals(cancelled.getMessage()))zeroByteEof.incrementAndGet();else partialHeaderEof.incrementAndGet();
++              if("EOF before actual HTTP request".equals(cancelled.getMessage()))zeroByteEof.incrementAndGet();
++              else if("EOF within actual HTTP request".equals(cancelled.getMessage()))partialHeaderEof.incrementAndGet();else throw cancelled;
+               output("tracker-eof.json","{\"status\":\"ACTUAL_INCOMPLETE_TRACKER_CONNECTION\",\"accepted_connections\":"+acceptedConnections.get()+",\"zero_byte_eof\":"+zeroByteEof.get()+",\"partial_header_eof\":"+partialHeaderEof.get()+",\"hash_credit\":false,\"reply_credit\":false}");continue;
+             }
+             Request request=query(header);Map<String,byte[]> fields=request.fields;stage="cache-infohash";

@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "status": "FROZEN_INCREMENTAL_TWO_LEAF_RECIPE",
+  "source_manifest_sha256": "63e9925c8f4f3e80168425d22b62ef87b23732eccff8fa1b7714f73f3f84e9c3",
+  "parent_recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/recipe/manifest.json",
+    "sha256": "a6ff3e6962c1697b00299cc8dbac206ed61f59b58c60c759dd8b438f8c3dea72"
+  },
+  "artifacts_sha256": {
+    "jobs.mk": "8c8ccf28247f6980fcd2ea46457b534e35244e8f79b757e00f100a8ef82480d5",
+    "inputs.json": "c6a65ab7ad23e578077ac18a8e6f275061c53129c1d6f5b418287160180b8469",
+    "provider.py": "41e5a87d385273f543ffa4a397ac9f6bbf2941dfbe52bb6ff60c40b724352629",
+    "test-objects.cmake": "16c82e94f769195dba188041bd575c2b72effb454348fd0a5caa031007e6cd89",
+    "NEXT.txt": "0c1a8b79e05c51e853a7720a093fd5ac26ac360ab129067ce33051191089870d"
+  }
+}

@@ -1,0 +1,5 @@
+[1/5] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[2/5] Linking CXX static library engine/libbiglybtc_local_engine.a
+[3/5] Linking CXX executable tests/biglybtc-library-commands-bridge-tests
+[4/5] Linking CXX executable tests/biglybtc-i2p-classic-host-tests
+[5/5] Linking CXX executable app/BiglyBTC

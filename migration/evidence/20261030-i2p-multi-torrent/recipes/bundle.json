@@ -1,0 +1,9 @@
+{
+  "status": "PASS_STAGED_PRIVATE_PREVIEW",
+  "path": "/home/yurii/Java/BiglyBTC/dist-i2p",
+  "manifest_sha256": "786cc05963255aacdcd9a07f93aff5192d1a81c9545808fe6b0ad0e056867b93",
+  "mapped_files": 119,
+  "ldd_sha256": "152bf2d9b69144e72e560508f6ce068e8d0f4155085c5aaeee7b316a39569f58",
+  "default_manifest_preserved": true,
+  "source_commit": "dc3ca955f16880a3a7c15280e708a65579e40f76"
+}

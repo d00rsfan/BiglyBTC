@@ -1,0 +1,69 @@
+SOURCE ONLY. Native basis 6b40b2bb175e5e665d4c1865a587fe7b34d4cfd3.
+Ten paths; no CMake, SDK, Host or service-owner changes. Not built or executed.
+
+Existing ProfileSource::open is the strict one-torrent path. createSession is
+explicit: one retained original SAME-OFD lease, private imported key consumed
+once, exact shared config/key/lock/directory and full trusted inventory baseline.
+The anchor has no payload grant; at most32 retained child sources are accepted.
+
+API: createSession(lease,directory); prepareChild(hash,claimed,identities), then
+child.prepareStorage(). The latter wraps its OWN anchor publication; do not nest
+another publish around it. Initial selected state/named identity is sealed at
+prepareChild, before queued preparation. Existing storage marker, raw-info/full
+identity, payload mapping, claim and alias validation are reused. Every retained
+sibling claim/full identity must be supplied; they are forwarded to the existing
+ManagedStorage checks, including revoked-but-not-yet-released children.
+
+publish(hash,trustedWorkerOperation) is trusted I/O owner code only: no external
+user callback, diagnostic observer, reentry, Qt waits or network-thread caller.
+The SAME-OFD source gate encloses before validation, the actual original CAS
+writer and post validation. All other rows/pauses/active-child state remain exact.
+Only this actual trusted operation can rebind inventory/target metadata. A stop,
+pause or missing target revokes its child; it never resurrects a revoked child.
+An Error preserves the group ONLY if independent pre-operation bytes and named
+identities for shared/child sources are unchanged. Partial publication, pending
+intake recovery, sibling edit, key/config change or uncertain output revokes the
+group. Cooperative revision advance by itself is never a publication receipt.
+
+publishPositions(trustedWorkerOperation) is a separate original queue seam.
+Only position presence/integer value within valid unique saved rows may change;
+row order/hash/unknown/counter/intent/root/pause fields and child states remain
+exact. It rebases inventory stamps only, preserving the original queue writer
+and caller's actual completion classifications. It grants no classifier facts.
+
+Root's OwnedProfile is a friend for validateRetiredSnapshot(). Actual selected
+save-resume flush/remove/storage weak-expiration proof precedes checkpoint under
+anchor.publish. Retired snapshot validation remains read-only and cannot restore
+source effects. releaseChild(hash) follows the real removal/checkpoint fence;
+it revokes/removes only that child. Shared session withdrawal revokes the anchor.
+
+Tracker permissions are a bounded atomic snapshot of non-revoked prepared
+children; no network-thread source lock or mutable child-container traversal.
+Verified publication updates cached current revision, never the one-shot grant.
+All real effects still need the SourcePermit worker's fresh validation with the
+source gate held through Execute/ACK. Dirty Ready is consumed without a grant,
+then its worker releases the gate before Idle permits a fresh request. Permanent
+revocation still fails. Both channel effect and managed-stream liveness checks
+use permanent revocation for terminal failure, leaving physical writes gated.
+
+Group inotify parses bounded complete events: overflow/unmount and critical
+key/config/lock changes withdraw immediately; other changes invalidate and
+schedule the existing validator. Root/active directory rename/create coverage
+continues after authorised inventory inode replacement. Strict default watcher
+behavior remains immediate withdrawal. No new timer, executor or SDK ABI.
+
+Existing owned-i2p-profile-source suite includes the appended controls, with all
+old method bodies exact: session-only/no stopped grant/key one-shot; two child
+preparations and unverified0-byte storage checkpoint preserve sibling source;
+trusted pause/resume; queue MoveTop and unknown-row edit refusal; unchanged vs
+partial failed mutation; pre-prepare metadata replacement; unregistered same-
+bytes inventory replacement; wrong target; selected/common tampering; existing
+payload overlap/full-identity checks; dirty-after-Ready revalidation. These are
+source/storage controls, not actual shared-session transfer qualification.
+
+Limits:32 members; existing65,536 claim/identity bounds; existing source/file
+parser bounds. Whole source validation still runs only on the I/O worker and
+may reread config/inventory for multiple children; no performance claim. Existing
+held-FD/named/stat/CAS checks retain the documented hostile external-swap race
+boundary. Public+I2P coexistence, default activation and SDK parity are outside
+this patch. Root owns shared-owner implementation and all actual qualification.

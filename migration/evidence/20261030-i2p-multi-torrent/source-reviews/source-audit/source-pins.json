@@ -1,0 +1,70 @@
+{
+  "status": "READ_ONLY_SOURCE_AUDIT_NO_BUILD_OR_TEST",
+  "native_commit": "6b40b2bb175e5e665d4c1865a587fe7b34d4cfd3",
+  "files": {
+    "preview/native/services/i2p_provider/profile_source.hpp": {
+      "sha256": "0a871a8330c340f8ba1efca71aef46e34708f3b55bc3ed823732f0f1392494bc",
+      "bytes": 2206
+    },
+    "preview/native/services/i2p_provider/profile_source.cpp": {
+      "sha256": "5aa579a993fdb0ff5b62b44d0f5f1cc658608a051ea1ba9e41407a33fcf71ee9",
+      "bytes": 17975
+    },
+    "preview/native/services/i2p_provider/source_permit.hpp": {
+      "sha256": "2232c9dba856d4d5ea30755f5909cb706de221a01f884e94229c7acc12bdee70",
+      "bytes": 3606
+    },
+    "preview/native/services/i2p_provider/bridge.cpp": {
+      "sha256": "04146b7645dedce9b0fd25d3bb0429d9066d82c55a53a91cf4b3f8908f2ae86b",
+      "bytes": 21573
+    },
+    "preview/native/services/i2p_provider/owner.cpp": {
+      "sha256": "b5c920620c12ef8287567964be02c9837971ce9e90e943d1ef08778d4f56c049",
+      "bytes": 25914
+    },
+    "preview/native/services/i2cp_channel/effect_authority.hpp": {
+      "sha256": "6738d96d6afeb91572e42e815a426e5da1828fef884414e97f038bdc0d67d78e",
+      "bytes": 1365
+    },
+    "preview/native/services/i2cp_channel/owned_effects.inc": {
+      "sha256": "3168ee8801e555e5bba8b0d2d594b74aba35e9074f8b0d0cbe9cd4474001f1e9",
+      "bytes": 2812
+    },
+    "preview/native/engine/owned_i2p_policy.hpp": {
+      "sha256": "28dd592c64d747838409c081855fca97235af6aa30725f0d842f900561cfeb5b",
+      "bytes": 975
+    },
+    "preview/native/engine/owned_i2p_policy.cpp": {
+      "sha256": "dacab1f9cbb225861fe10a2eef1cfcc7cbf302edb0f1006da8eb25a23677d8d3",
+      "bytes": 3009
+    },
+    "preview/native/engine/managed_storage.hpp": {
+      "sha256": "6976dac193f1f14b6572a9b32adf79649f3c70a35cfec02eed14db090e767e0c",
+      "bytes": 6487
+    },
+    "preview/native/engine/managed_storage.cpp": {
+      "sha256": "43933345c908c789989f4ff8fd00ece041c21927e6c1a93ebd1eeb03f2d33be8",
+      "bytes": 103403
+    },
+    "preview/native/adapters/profile.hpp": {
+      "sha256": "5e8d47cc73d10f62cc2746416c0565fca53359aec3e0a33480622f255f5fa41d",
+      "bytes": 7508
+    },
+    "preview/native/adapters/profile.cpp": {
+      "sha256": "93e151e3b31eca4503ec8d33989802bac23a24f5cf8656979addd951f0c4fa31",
+      "bytes": 15994
+    },
+    "preview/native/adapters/torrent_state.hpp": {
+      "sha256": "ed59d6d0cc31b679c21d41408aef9daf9e4814e4bed74ce552a91eaf8d42021f",
+      "bytes": 3482
+    },
+    "preview/native/adapters/torrent_state.cpp": {
+      "sha256": "5aa54a20a19b5a788e67f801a313ce6e194cf7b58acdfb23d48e8364ff5e6abf",
+      "bytes": 21274
+    },
+    "preview/native/adapters/library_commands.cpp": {
+      "sha256": "af07bc5d9fcdd6f2e1b978e79f8d79d373ca3c6b491556fb777ecac8be9d461e",
+      "bytes": 16239
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "status": "ROOT_REVIEWED_ADOPTED_NOT_RUNTIME_PASS",
+  "capsule_sha256": "abc1f27c12dc49640e45ee2480206caa9b6b7e7594e2c4072f8855dc59a7602a",
+  "paths": 9,
+  "review": "Exact beforeimages, configured default4/explicit64, full-destination same-scope listener extension, retained exact Closed operations, source-gated discarded RX and real-ACK release retry, no failed-release self-notification, pendingSYN/frame/ledger/auth bounds preserved. Source-only meaningful core/Qt regression additions; runtime pending.",
+  "owner_delta": "Align native member bound32 with existing source anchor cap; opt-in diagnostics add actual manager streams/socket occupancy and tracker category."
+}

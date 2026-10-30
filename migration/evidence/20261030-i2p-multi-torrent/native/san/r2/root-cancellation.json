@@ -1,0 +1,5 @@
+{
+  "status": "CANCELLED_BUILD_NOT_QUALIFICATION",
+  "reason": "Proven discarded stream-operation reference after failed release requires coherent Bridge/Manager correction; preserve compiled cache objects.",
+  "stopped_subjects": "only descendants of exact current run-batch.py san process"
+}

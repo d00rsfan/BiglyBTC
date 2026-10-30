@@ -1,0 +1,895 @@
+This plugin does not support propagateSizeHints()
+This plugin does not support propagateSizeHints()
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=0
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=false complete=false state=3
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=true paused=true pause_settled=true pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=0 reason=19 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=true paused=true pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=0 replies=0 tracker_errors=0 error=0 manager_streams=0 bridge_sockets=1
+I2P_TRACKER admission=7036385887146570343 updating=true started=false fails=0 error=0 category=system next=1793389576 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=true checked=false paused=true stop_ready=false announcing=false peers=0 done=2097152 payload=0 announces=0 replies=0 tracker_errors=0 error=0 manager_streams=0 bridge_sockets=1
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=0
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=0
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=true paused=true pause_settled=true pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=true paused=true pause_settled=true pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=1 error=7 category=i2p error next=1793389593 minimum=1793389576
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=1 error=7 category=i2p error next=1793389595 minimum=1793389578
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=194209271225440482 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=4 bridge_sockets=6
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=4 bridge_sockets=6
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=194209271225440482 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=194209271225440482 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=194209271225440482 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=194209271225440482 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=194209271225440482 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=194209271225440482 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=65527 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=194209271225440482 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=65527 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=194209271225440482 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=194209271225440482 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=1 bridge_sockets=3
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=1 bridge_sockets=3
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=1 bridge_sockets=3
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=1 bridge_sockets=3
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=65527 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=1 bridge_sockets=3
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=1 bridge_sockets=3
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=98304 payload=114632 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=10449146462572973094 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=0
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=10449146462572973094 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=true paused=true pause_settled=true pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=1 bridge_sockets=3
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=10449146462572973094 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=10449146462572973094 updating=false started=true fails=0 error=0 category=system next=1793389909 minimum=1793389610
+I2P_TRACKER admission=10449146462572973094 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=10449146462572973094 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=10449146462572973094 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=131072 payload=147396 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=10449146462572973094 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=10449146462572973094 updating=false started=true fails=0 error=0 category=system next=1793389909 minimum=1793389610
+I2P_TRACKER admission=10449146462572973094 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=10449146462572973094 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=10449146462572973094 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=10449146462572973094 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=10449146462572973094 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=163840 payload=163844 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=10449146462572973094 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=10449146462572973094 updating=false started=true fails=0 error=0 category=system next=1793389909 minimum=1793389610
+I2P_TRACKER admission=10449146462572973094 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=10449146462572973094 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=10449146462572973094 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=10449146462572973094 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=10449146462572973094 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=180224 payload=180228 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=10449146462572973094 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=10449146462572973094 updating=false started=true fails=0 error=0 category=system next=1793389909 minimum=1793389610
+I2P_TRACKER admission=10449146462572973094 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=10449146462572973094 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=10449146462572973094 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=180224 payload=180228 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=10449146462572973094 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=10449146462572973094 updating=false started=true fails=0 error=0 category=system next=1793389909 minimum=1793389610
+I2P_TRACKER admission=10449146462572973094 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=10449146462572973094 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=10449146462572973094 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=10449146462572973094 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=10449146462572973094 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=196608 payload=196612 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=10449146462572973094 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=10449146462572973094 updating=false started=true fails=0 error=0 category=system next=1793389909 minimum=1793389610
+I2P_TRACKER admission=10449146462572973094 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=2 bridge_sockets=4
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_FACT admission=10449146462572973094 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009998 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=10449146462572973094 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=212992 payload=212996 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=10449146462572973094 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=98304 payload=65464 announces=1 replies=1 tracker_errors=0 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=10449146462572973094 updating=false started=true fails=0 error=0 category=system next=1793389909 minimum=1793389610
+I2P_TRACKER admission=10449146462572973094 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=1 bridge_sockets=3
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=1 bridge_sockets=3
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=2883411240732861252 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=4
+I2P_QUEUE_DECISION admission=2883411240732861252 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=2883411240732861252 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=229376 payload=229380 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=3 bridge_sockets=5
+I2P_TRACKER admission=2883411240732861252 updating=false started=true fails=0 error=0 category=system next=1793389895 minimum=1793389596
+I2P_TRACKER admission=2883411240732861252 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=18001851487838251866 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=0 checked=true complete=false state=0
+I2P_QUEUE_DECISION admission=18001851487838251866 action=1 reason=0 first_priority=false fp_known=true rank=1000009999 activity_known=true queued=true paused=true pause_settled=true pause_pending=false unavailable=8
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=18001851487838251866 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=98304 payload=0 announces=1 replies=0 tracker_errors=0 error=0 manager_streams=5 bridge_sockets=7
+I2P_TRACKER admission=18001851487838251866 updating=true started=false fails=0 error=0 category=system next=1793389619 minimum=1793389619
+I2P_TRACKER admission=18001851487838251866 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+This plugin does not support propagateSizeHints()
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_QUEUE_FACT admission=7036385887146570343 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_FACT admission=12209043022157963302 sample=0 bad_prefix=true bad_tail=true saved_bad_lost=false share_known=true share=-1 checked=true complete=true state=5
+I2P_QUEUE_DECISION admission=7036385887146570343 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_QUEUE_DECISION admission=12209043022157963302 action=1 reason=0 first_priority=false fp_known=true rank=0 activity_known=true queued=false paused=false pause_settled=false pause_pending=false unavailable=8
+I2P_TARGET hash=067322B7AF5F2D21277F670930CEF0926A86448B admission=7036385887146570343 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=7036385887146570343 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=7036385887146570343 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=9741E969D70074DB7427DB6DBF7753F471A4A930 admission=12209043022157963302 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=2097152 payload=0 announces=2 replies=1 tracker_errors=1 error=0 manager_streams=0 bridge_sockets=2
+I2P_TRACKER admission=12209043022157963302 updating=false started=true fails=0 error=0 category=system next=1793389893 minimum=1793389594
+I2P_TRACKER admission=12209043022157963302 updating=false started=false fails=0 error=0 category=system next=-2147483648 minimum=-2147483648

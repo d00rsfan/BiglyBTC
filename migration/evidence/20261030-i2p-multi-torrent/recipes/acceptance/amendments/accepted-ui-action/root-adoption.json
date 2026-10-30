@@ -1,0 +1,7 @@
+{
+  "status": "ADOPTED_EXACT_ACTION_CONFIRMATION_NOT_RUNTIME_PASS",
+  "manifest_sha256": "ce6a5141e28fcff40f83aade2446637c77ce12568eeedcb4c19be0b0f158794e",
+  "source_pins_sha256": "36fa84ccf9d63de86b43ca194e648d73ddd72e27719456d1db5a590cf00b9e22",
+  "runner_sha256": "c6140f4aae75da47d24426f9d89166d7782c096641ec3b8bf84583f8a77efd3b",
+  "probe_sha256": "df7491d664c214fcd5db200a89d10a2778bbb8ace3a639542c1932fd1707b301"
+}

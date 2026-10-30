@@ -1,0 +1,6 @@
+{
+  "status": "ADOPTED_SOURCE_ONLY",
+  "independent_read_only_review": "error_codec: actual queued flag is not proof of pause; SDK ready pause occurs before checked callback; originating race unproven.",
+  "root_diff_review": "PASS: current physical paused state and matched alert required for Run/retirement; one pending actual pause; original authority/counters/predicates retained.",
+  "qualification": "private r17 and genuine GCC next; no runtime PASS yet"
+}

@@ -1,0 +1,7 @@
+{
+  "status": "ABORTED_AFTER_PROVEN_EXTERNAL_TRACKER_APPLICATION_FAILURE_NOT_QUALIFICATION",
+  "reason": "Actual tracker application thread declared fatal request-header-query error but Java command loop stayed alive. Native/SDK source unchanged; preserve failed run and investigate fixture message.",
+  "owned_probe_pid": 2609707,
+  "tracker_log_sha256": "532d7f8e59544b2036411324a9a9b62bee89a611bfa6ede1a78e712847bd0d86",
+  "native_progress_sha256": "2c6c636f2f25ee54095d399dde810a966f0b143dc23302d9b034428b032d15f1"
+}

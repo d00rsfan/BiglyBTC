@@ -1,0 +1,37 @@
+{
+  "status": "SOURCE_FROZEN_RUNTIME_PENDING",
+  "basis_commit": "75d9dc4e55e0886961305eb56f8edb7ff2775b41",
+  "source_paths": {
+    "preview/native/services/i2p_provider/profile_owner.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/queue-ready-fence/before/preview/native/services/i2p_provider/profile_owner.cpp",
+      "before_sha256": "d22ccf1cccf613180403953528f688e2fc0d1f6913c97074cbb7bf6627134735",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/queue-ready-fence/staging/preview/native/services/i2p_provider/profile_owner.cpp",
+      "after_sha256": "07d5c58a731b2c7e73dd20e76875f5cbba014bd0c1a5bcc535aa116b4d7a93ae"
+    }
+  },
+  "artifacts_sha256": {
+    "changes.patch": "2f33457dd920566b4a402f67a0a0db837e43326911364bfccdbe58e9eb7582c8",
+    "RATIONALE.txt": "7c3eb732daafd35eec871dec04660384ec89758e253332f3e51f2be93e8a5892"
+  },
+  "source_pins": {
+    "current_sdk_torrent": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/src/torrent.cpp",
+      "sha256": "d90230256df0f9c69e824c3aba4972071039353973ca68e1b29d5cccf3883c3d",
+      "relevant_lines": [
+        "8824 files_checked",
+        "8891 ready-state transition",
+        "8905 plugin callback",
+        "8941 start_announcing",
+        "10359 paused guard",
+        "11947 stop_when_ready",
+        "11997-12034 set_state ready pause"
+      ]
+    }
+  },
+  "checks": [
+    "Exact current committed one-file beforeimage",
+    "Read-only git apply --check",
+    "Whitespace check"
+  ],
+  "runtime": "No execution; existing actual multi-owner transfer probe is the regression. Actual r12 fast-check ordering is not claimed proven."
+}

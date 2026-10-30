@@ -1,0 +1,7 @@
+{
+  "status": "OPT_IN_PASSIVE_SDK_STATUS_DIAGNOSTICS_NOT_PASS",
+  "probe_sha256": "bac055021995d0aa9b29238ac2993acacc28844569fb1093f6e0602c6e778b02",
+  "owner_sha256": "fc4b1177ee4d10d9f95ff4dc58233e7eb95470bde844f972eae8aa8bd2aa35c5",
+  "source_pins_sha256": "f82d881ede61c572978f8a6c7d3b22ddfdc7efcae1bbfc6d725b8ab413cf1f13",
+  "delta": "Probe opts into max1Hz per-member public status/tracker timer/code diagnostics. No URLs, messages, keys, capabilities or private source bytes logged. No state/policy/action/acceptance predicate changes."
+}

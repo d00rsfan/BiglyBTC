@@ -1,0 +1,11 @@
+--- a/run.py
++++ b/run.py
+@@ -159,7 +159,7 @@
+         assert inputs['provider_artifact'] in exact,'Exact approved provider did not initialize'
+         qt_loaded=[name for name in exact if '/libQt6' in name]
+         assert qt_loaded and all(name.startswith(inputs['qt_root']+'/lib/') for name in qt_loaded),'Non-private Qt image'
+-        for library in ('libQt6Core.so.6','libQt6Gui.so.6','libQt6Widgets.so.6','libQt6Test.so.6'):
++        for library in ('libQt6Core.so.6','libQt6Gui.so.6','libQt6Widgets.so.6'):
+             assert str((pathlib.Path(inputs['qt_root'])/'lib'/library).resolve()) in exact,'Missing private Qt GUI/Test image'
+         platform=(pathlib.Path(inputs['qt_root'])/'plugins/platforms/libqoffscreen.so').resolve()
+         assert str(platform) in exact,'Actual offscreen platform plugin did not initialize'

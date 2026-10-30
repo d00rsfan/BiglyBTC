@@ -1,0 +1,11 @@
+--- a/build/i2p-multi-20261030/launch-acceptance.py
++++ b/build/i2p-multi-20261030/launch-acceptance.py
+@@ -13,7 +13,7 @@
+ import os
+ env=dict(os.environ)
+ if lane=='san':env.update(ASAN_OPTIONS='detect_leaks=1:halt_on_error=1',UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1')
+-with log.open('wb') as f:r=subprocess.run(args,env=env,stdout=f,stderr=subprocess.STDOUT,timeout=600)
++with log.open('wb') as f:r=subprocess.run(args,env=env,stdout=f,stderr=subprocess.STDOUT,timeout=1300)
+ print(json.dumps({'exit_code':r.returncode,'result':str(out/'result.json'),'log':str(log)}))
+ if (out/'result.json').exists():
+  x=json.loads((out/'result.json').read_text());print(json.dumps({k:x[k] for k in ('status','failure','failure_class','port') if k in x}))

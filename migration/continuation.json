@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-30T16:35:21.066496+00:00",
-  "objective": "Authorised private I2P Host/classic UI chapter complete; stop before next chapter.",
-  "native_head": "e9546f9893ac9c23086842a49ec4d624c8af5900",
-  "qualified_native_source": "2c6edc1b2390b59ba0f812d3c68e1cbc500e2311",
+  "updated_utc": "2026-10-30T20:24:58.061854+00:00",
+  "objective": "Authorised shared-session private I2P chapter complete; stop before Public+I2P coexistence.",
+  "native_head": "dc3ca955f16880a3a7c15280e708a65579e40f76",
+  "qualified_native_source": "dc3ca955f16880a3a7c15280e708a65579e40f76",
   "native_source_pushed": true,
-  "current_source_qualification": "Private/default/SAN/9 supplemental suites and actual GCC+SAN UI import-transfer-lifecycle PASS. All210 hosted unit suites+SDK refusal PASS at e864927; remaining stale packaging count fixed, local full16-case smokePASS. Final hosted rerun pending; app/probe inputs unchanged.",
+  "current_source_qualification": "PASS_BOUNDED_SHARED_SESSION_MULTI_I2P_CHAPTER",
   "accepted_dist_sha256": "aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b",
   "receipts": [
     {
@@ -57,29 +57,51 @@
       "name": "Private I2P classic Host chapter",
       "path": "migration/evidence/20261030-i2p-classic-host/verification.json",
       "sha256": "3136668b4db927925d51018376965beec2c66eadb7fe7e8085d5e18392988dc7"
+    },
+    {
+      "name": "Shared-session private I2P chapter",
+      "path": "migration/evidence/20261030-i2p-multi-torrent/verification.json",
+      "sha256": "c898edda12e631d0ab861b07ccde32c94eb0a95281aec9bc4f51720e83595773"
     }
   ],
   "active_local_sessions": [],
   "active_sessions": [],
   "remote_ci": {
-    "qualified_source": "e9546f9893ac9c23086842a49ec4d624c8af5900",
-    "41088043868": "success",
-    "41088043263": "success"
+    "source_commit": "dc3ca955f16880a3a7c15280e708a65579e40f76",
+    "runs": [
+      {
+        "conclusion": "success",
+        "databaseId": 41119369012,
+        "name": "Native plugin SDK contract",
+        "status": "completed",
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41119369012"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 41119369018,
+        "name": "Native desktop preview unit and smoke tests",
+        "status": "completed",
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41119369018"
+      }
+    ],
+    "updated_utc": "2026-10-30T20:24:56.228317+00:00",
+    "current_steps": [],
+    "status": "PASS"
   },
-  "next_action": "STOP. Authorised chapter and required checks completed; no next chapter started.",
+  "next_action": "STOP. Describe Public + I2P coexistence as proposed next chapter; do not begin it.",
   "pending_question": "None.",
-  "original_checkpoint_expected_parent": "e62c2acedff647d8eed6f38c22a38a18efafda67",
+  "original_checkpoint_expected_parent": "4b70153c53b6203b6ff4f9f14e44d03c8493f63b",
   "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
   "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
   "parallel_source": {
-    "error_driver": "Complete",
-    "error_codec": "Complete",
-    "error_oracle": "Complete"
+    "error_codec": "SDK and read-only diagnostics complete",
+    "error_driver": "source authority/shared transport/release complete",
+    "error_oracle": "actual acceptance source complete"
   },
   "details": "Bounded Host/UI/import qualification complete; whole epic and larger I2P/plugin components remain incomplete. Original Java/live profile/HEAD/index/default dist preserved. Qualified runtime/probe source and supplemental UI-test source are recorded separately; later publication commits change metadata only. Runtime and actual probe bytes remain identical after the qualified source. No DATA/chat/rooms work started.",
   "stop_after_current_milestone": false,
   "stop_after_current_section": true,
-  "current_section": "P07 ordinary Host/UI private I2P integration \u2014 complete",
-  "effective_acceptance": "build/host-i2p-20261030/acceptance",
-  "effective_native_recipe": "build/host-i2p-20261030/run-batch.py"
+  "current_section": "P07 shared-session multi-torrent private I2P \u2014 complete",
+  "effective_acceptance": "build/i2p-multi-20261030/acceptance",
+  "effective_native_recipe": "build/i2p-multi-20261030/run-batch.py"
 }

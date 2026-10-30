@@ -1,0 +1,465 @@
+This plugin does not support propagateSizeHints()
+This plugin does not support propagateSizeHints()
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=0 replies=0 tracker_errors=0 error=0
+I2P_TRACKER admission=16099469445532851672 updating=true started=false fails=0 error=0 next=1793385174 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=0 replies=0 tracker_errors=0 error=0
+I2P_TRACKER admission=17051931223445249659 updating=true started=false fails=0 error=0 next=1793385174 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=1 error=7 next=1793385190 minimum=1793385173
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=1 replies=0 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=1 error=7 next=1793385191 minimum=1793385174
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=0 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=0 payload=137 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=65527 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=12746730201403944860 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=65527 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=12746730201403944860 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=12746730201403944860 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=65527 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=65527 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=98304 payload=102654 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=5082470279019239229 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0
+I2P_TRACKER admission=5082470279019239229 updating=false started=true fails=0 error=0 next=1793385504 minimum=1793385205
+I2P_TRACKER admission=5082470279019239229 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=131072 payload=141350 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=5082470279019239229 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0
+I2P_TRACKER admission=5082470279019239229 updating=false started=true fails=0 error=0 next=1793385504 minimum=1793385205
+I2P_TRACKER admission=5082470279019239229 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=131072 payload=147428 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=5082470279019239229 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0
+I2P_TRACKER admission=5082470279019239229 updating=false started=true fails=0 error=0 next=1793385504 minimum=1793385205
+I2P_TRACKER admission=5082470279019239229 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=163840 payload=163844 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=5082470279019239229 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0
+I2P_TRACKER admission=5082470279019239229 updating=false started=true fails=0 error=0 next=1793385504 minimum=1793385205
+I2P_TRACKER admission=5082470279019239229 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=180224 payload=180228 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=5082470279019239229 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0
+I2P_TRACKER admission=5082470279019239229 updating=false started=true fails=0 error=0 next=1793385504 minimum=1793385205
+I2P_TRACKER admission=5082470279019239229 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=196608 payload=196612 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=5082470279019239229 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0
+I2P_TRACKER admission=5082470279019239229 updating=false started=true fails=0 error=0 next=1793385504 minimum=1793385205
+I2P_TRACKER admission=5082470279019239229 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=196608 payload=196612 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=5082470279019239229 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=49152 payload=0 announces=1 replies=1 tracker_errors=0 error=0
+I2P_TRACKER admission=5082470279019239229 updating=false started=true fails=0 error=0 next=1793385504 minimum=1793385205
+I2P_TRACKER admission=5082470279019239229 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=212992 payload=212996 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=5082470279019239229 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=98304 payload=65484 announces=1 replies=1 tracker_errors=0 error=0
+I2P_TRACKER admission=5082470279019239229 updating=false started=true fails=0 error=0 next=1793385504 minimum=1793385205
+I2P_TRACKER admission=5082470279019239229 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=1081836388639765234 queued=false checked=true paused=false stop_ready=false announcing=true peers=1 done=229376 payload=229380 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=1081836388639765234 updating=false started=true fails=0 error=0 next=1793385490 minimum=1793385191
+I2P_TRACKER admission=1081836388639765234 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+This plugin does not support propagateSizeHints()
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=5722013875660208010 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=98304 payload=0 announces=0 replies=0 tracker_errors=0 error=0
+I2P_TRACKER admission=5722013875660208010 updating=true started=false fails=0 error=0 next=1793385215 minimum=1793385215
+I2P_TRACKER admission=5722013875660208010 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=3725210875AF796848FFA71476354A63A4768B6D admission=16099469445532851672 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=16099469445532851672 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=16099469445532851672 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648
+I2P_TARGET hash=56A71467FDB3194A3E4C612A3FF1F3E65DC95891 admission=17051931223445249659 queued=false checked=true paused=false stop_ready=false announcing=true peers=0 done=524288 payload=0 announces=2 replies=1 tracker_errors=1 error=0
+I2P_TRACKER admission=17051931223445249659 updating=false started=true fails=0 error=0 next=1793385491 minimum=1793385192
+I2P_TRACKER admission=17051931223445249659 updating=false started=false fails=0 error=0 next=-2147483648 minimum=-2147483648

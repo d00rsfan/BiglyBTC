@@ -1,0 +1,23 @@
+SOURCE ONLY. Fixture only: no native/provider/CMake/budget/assertion weakening.
+readHeader rejects physical EOF with typed EOFException, distinguishing zero-byte
+from partial header. The one per-request catch surrounds ONLY readHeader, AFTER
+actual owned peer/port validation. It closes that incomplete connection and loops;
+no parsed hash, announce/scrape or response credit is produced. A separate bound
+of256 accepted connections includes EOF/malformed connections. Existing256 valid
+requests/perhash128, ASCII/header8192/query/identity validation remain fatal.
+No reply-write/flush/ACK/close IOException is swallowed. EOF diagnostic counters
+are explicit; gcc-r15's observed exception was generic and is NOT retroactively
+claimed proven EOF. Actual next counts will establish whether EOF occurred.
+
+All other application failures publish tracker-failure.json, fixed stage/class
+and whitelisted static message (never raw header/URL/payload/error message), flushed
+before return. Runner waits AND joins poll that report and fail immediately;
+positive files cannot mask it. Owned process cleanup/public allowlist remain,
+with tracker-failure/eof added. Java class layout5 remains; one actual javac as
+before. Parent helper/runner/sourcepins and actual subjects remain untouched.
+
+Offline source-path checks, NOT executed tests: empty stream ->typed zero-byteEOF;
+ASCII partial stream ->typed partialEOF; nonASCII ->fatal IllegalState; complete
+malformed query ->fatal IllegalState; complete valid header ->same strict query.
+No separate new parser harness or extra JVM was added. Python AST only by author.
+Root applies java.patch+runner.patch and prospective tracker pin after review.

@@ -1,0 +1,124 @@
+{
+  "status": "SOURCE_FROZEN_RUNTIME_PENDING",
+  "basis_commit": "c420cfb6757b13fed8c0d83e8a19db94c0e4b556",
+  "purpose": "Explicit bounded shared private I2P manager/Bridge capacity, exact Closed operation reclamation, and monotonic shared listener extension.",
+  "source_paths": {
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/before/preview/native/services/i2cp_channel/channel.cpp",
+      "before_sha256": "760989895b7b531f22d0629fd4dbd9f48d07f84da62ab0df12de17dbc88b707d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/staging/preview/native/services/i2cp_channel/channel.cpp",
+      "after_sha256": "0f670eb6177f923e21849d0e76ccdc67b85549f1507938260a17996d19c1449f"
+    },
+    "preview/native/services/i2cp_channel/managed_streams.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/before/preview/native/services/i2cp_channel/managed_streams.inc",
+      "before_sha256": "9dffce4a77a19fb2608114ad9a3a96ce65c81e3498e66ebbec3ebe22e2634f84",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/staging/preview/native/services/i2cp_channel/managed_streams.inc",
+      "after_sha256": "0f677314af6175b4541042d6a1b7d7f29bf14e480cf7450788d79540c2dbc46d"
+    },
+    "preview/native/services/i2p_provider/bridge.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/before/preview/native/services/i2p_provider/bridge.cpp",
+      "before_sha256": "98ae9016bdbee9e6d553ab91970ea3c9955cde84deba9e1e1f9f78bba28da2f5",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/staging/preview/native/services/i2p_provider/bridge.cpp",
+      "after_sha256": "bf2afe6e6c2a53476a516594b47b3126e94ca0fa456a4f33587369b776d5ddad"
+    },
+    "preview/native/services/i2p_provider/sam_protocol.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/before/preview/native/services/i2p_provider/sam_protocol.hpp",
+      "before_sha256": "d42567455f9b667e579ad559390e6101ffa0517f5d737999bd2a16435dbee863",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/staging/preview/native/services/i2p_provider/sam_protocol.hpp",
+      "after_sha256": "8c25ef00a28c920af86bd945008a4e0714d030fe4154a78fe217b588d47bb599"
+    },
+    "preview/native/services/i2p_streaming/manager.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/before/preview/native/services/i2p_streaming/manager.cpp",
+      "before_sha256": "4a4164a59f7572ee4c313c4def70768df1cdbdfdc048a9ee068d3f83a1a78c45",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/staging/preview/native/services/i2p_streaming/manager.cpp",
+      "after_sha256": "00bf3ace9a1536777722001d82a35290f1593044d18a6b33309746eef01f9ffa"
+    },
+    "preview/native/services/i2p_streaming/manager.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/before/preview/native/services/i2p_streaming/manager.hpp",
+      "before_sha256": "16e7ad8a2c5a65cb53b44ca6af7184becfe1cbc8cceb05970a5ddd2d79839432",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/staging/preview/native/services/i2p_streaming/manager.hpp",
+      "after_sha256": "737585f936d6b05d6e65e80ac3d48056e56e7924ff3765d80b3675b10b474980"
+    },
+    "preview/native/tests/i2cp_stream_manager_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/before/preview/native/tests/i2cp_stream_manager_tests.cpp",
+      "before_sha256": "4b48aa9db6b1ab66161e4b94f3fa2d9cb3916befb3c87aa51b4ec27e14c2978b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/staging/preview/native/tests/i2cp_stream_manager_tests.cpp",
+      "after_sha256": "8cc445e8d288cd3104cccc11105a70c0fbfe615488994cf70a346778ab7cbc5a"
+    },
+    "preview/native/tests/i2p_streaming_manager_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/before/preview/native/tests/i2p_streaming_manager_tests.cpp",
+      "before_sha256": "2b6c41a2d2e275860d502bb8fd52afd26c2e57659c78678eede5b266246778b4",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/staging/preview/native/tests/i2p_streaming_manager_tests.cpp",
+      "after_sha256": "4396383a1a9cfd5513171292ca5f47f5d700e7cfa7c796a2f6e61b256017c2e9"
+    },
+    "preview/native/tests/owned_sam_protocol_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/before/preview/native/tests/owned_sam_protocol_tests.cpp",
+      "before_sha256": "e626c6b3d9f6f80498ac458e525e11410580e14176b2f50e72ca554f0b4a8239",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/shared-stream-capacity/staging/preview/native/tests/owned_sam_protocol_tests.cpp",
+      "after_sha256": "4ab48ab3e171c35aa7641320ac46b871241bb369c00882265045622176fbbee6"
+    }
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "df17f8fa33e53b6710b3a65da59337ceab2791024b7700ab0da5bbf7dac82013",
+    "changes.patch": "e6ca185c26cfc1ba8409c357abb18c3200cf016db9e68fd6ab6636a9f8492fcc"
+  },
+  "preserved_boundaries": [
+    "Default Manager4 and singleton Bridge6 sockets/4 peers/8 destinations",
+    "Pending SYN4/262144B/3s",
+    "Per-stream payload/window/deadlines and one physical frame per flush",
+    "1024 lifetime operation/stream-ID ledger",
+    "Full Destination/protocol/ports/current source/permit/authentication gates",
+    "No SDK/provider/owner/probe/Host/UI/registry changes"
+  ],
+  "controls": {
+    "preview/native/tests/i2p_streaming_manager_tests.cpp": {
+      "retained_definitions": [
+        "require",
+        "establish",
+        "inboundCodecAndRole",
+        "listenerBoundsAndExpiry",
+        "multiplexFairnessAndMemory",
+        "finiteWaitAndLongActivity",
+        "originalOneShotIdleJitter",
+        "postVerificationFence",
+        "hardDeadlinesRemainArmedWithoutOutputCredit",
+        "preparationCannotExtendAbsoluteHandshake",
+        "outgoingUnspecifiedLocalPortRetainsExactRemoteAndReplyTuple"
+      ],
+      "intentional_helper_change": null
+    },
+    "preview/native/tests/i2cp_stream_manager_tests.cpp": {
+      "retained_definitions": [
+        "listen",
+        "collect",
+        "send",
+        "lease",
+        "leaseUntil",
+        "deliver",
+        "flush",
+        "pump",
+        "concurrentActualFramesAndExplicitIncomingPeerRemainIndependent",
+        "currentPendingSynNotificationMayDeleteTheController",
+        "finiteApplicationWaitDoesNotCloseOtherStreams",
+        "finiteHandshakesAndWaitRemainIndependentAcrossQueuedFrames",
+        "shortenedActualLeaseRetiresAuthorityAndRenewalCannotRestoreOldStreams"
+      ],
+      "intentional_helper_change": "registered trailing defaulted ManagerOptions only"
+    },
+    "preview/native/tests/owned_sam_protocol_tests.cpp": {
+      "retained_definitions": [
+        "require",
+        "commands",
+        "publicNames"
+      ],
+      "intentional_helper_change": null
+    }
+  },
+  "source_checks": [
+    "All9 beforeimages equal current committed native files",
+    "Read-only git apply --check PASS",
+    "Whitespace check PASS",
+    "Existing test definitions/predicates retained except registered helper trailing defaulted policy"
+  ],
+  "runtime": "No builds, tests, Java, router, subjects, network, SDK or native writes executed by author. All runtime qualification pending root."
+}

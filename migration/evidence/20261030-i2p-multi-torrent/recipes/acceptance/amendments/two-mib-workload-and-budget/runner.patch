@@ -1,0 +1,47 @@
+--- a/build/i2p-multi-20261030/acceptance/run.py
++++ b/build/i2p-multi-20261030/acceptance/run.py
+@@ -105,7 +105,7 @@
+         assert started['status']=='ACTUAL_TWO_SHARED_PROFILE_SERVICES_STARTED' and started['active_hashes']==2 and started['saved_hashes']==3
+         send(router,'warm-owned-cache');warm=wait_file('cache-precondition.json',40,[router,tracker,probe])
+         assert warm['status']=='ACTUAL_THREE_SIGNED_LS2_CACHE_PRECONDITION'
+-        controls=wait_file('shared-controls-ready.json',120,[router,tracker,probe])
++        controls=wait_file('shared-controls-ready.json',300,[router,tracker,probe])
+         assert controls['status']=='ACTUAL_SHARED_TARGET_CONTROLS_COMPLETED'
+         send(router,'check-native-shared')
+         shared=wait_file('shared-session-precondition.json',12,[router,tracker,probe])
+@@ -120,9 +120,9 @@
+         send(router,'rewarm-owned-cache');warm2=wait_file('cache-restart-precondition.json',40,[router,tracker,probe])
+         assert warm2['status']=='ACTUAL_RESTARTED_THREE_SIGNED_LS2_CACHE_PRECONDITION'
+         assert warm2['leech_lease_sha256']!=warm['leech_lease_sha256']
+-        # The probe owns one absolute240s end. This outer wait never extends it.
+-        join(probe,250);native=load(work/'native-result.json');assert native['status']=='PASS'
+-        assert native['verified_bytes']==1048576 and native['both_payload_inodes_preserved'] and native['joined_before_disk_read']
++        # The probe owns one absolute1000s end. This outer wait never extends it.
++        join(probe,1050);native=load(work/'native-result.json');assert native['status']=='PASS'
++        assert native['verified_bytes']==4194304 and native['both_payload_inodes_preserved'] and native['joined_before_disk_read']
+         for field in ('Host_shared_session_controls','one_download_limit_handoff','saved_75_70_pause_restored',
+                       'per_target_counters_preserved','Host_profile_lock_released','stopped_sentinel_untouched','loopback_global_peer_class'):
+             assert native[field],field
+@@ -132,10 +132,10 @@
+         expected_hashes=[hashes[i:i+20].hex() for i in range(0,60,20)];assert len(set(expected_hashes))==3
+         transfers=native['transfers'];assert len(transfers)==2 and [row['info_hash'].lower() for row in transfers]==expected_hashes[:2]
+         for index,row in enumerate(transfers):
+-            expected=bytes((n*31+17+index*23)%251 for n in range(524288))
+-            assert row['verified_bytes']==524288 and row['saved_downloaded']>=524288 and row['payload_sha256']==hashlib.sha256(expected).hexdigest()
++            expected=bytes((n*31+17+index*23)%251 for n in range(2097152))
++            assert row['verified_bytes']==2097152 and row['saved_downloaded']>=2097152 and row['payload_sha256']==hashlib.sha256(expected).hexdigest()
+             name=('sample-'+str(index)+'.bin').encode();pieces=b''.join(hashlib.sha1(expected[o:o+16384]).digest() for o in range(0,len(expected),16384))
+-            info=b'd6:lengthi524288e4:name'+str(len(name)).encode()+b':'+name+b'12:piece lengthi16384e6:pieces'+str(len(pieces)).encode()+b':'+pieces+b'e'
++            info=b'd6:lengthi2097152e4:name'+str(len(name)).encode()+b':'+name+b'12:piece lengthi16384e6:pieces'+str(len(pieces)).encode()+b':'+pieces+b'e'
+             assert row['info_hash'].lower()==hashlib.sha1(info).hexdigest()
+         assert (work/'i2p-multi-preview.png').read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
+         inputs=load(work/'inputs.json');loader=work/('native-loader.'+str(probe.pid))
+@@ -324,7 +324,7 @@
+         support['validate_parent'](parent);assert sha(out/'namespace-parent.json')==parent_sha
+         with (out/'namespace.log').open('wb') as log:
+             child=subprocess.Popen(command,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+-            try:code=child.wait(timeout=600)
++            try:code=child.wait(timeout=1200)
+             except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait();code=124
+         support['validate_parent'](parent);assert sha(out/'namespace-parent.json')==parent_sha
+         write(out/'namespace-exit.json',{'exit_code':code,'parent_descriptors_unchanged':True})

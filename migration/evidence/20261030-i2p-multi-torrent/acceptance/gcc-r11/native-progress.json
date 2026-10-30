@@ -1,0 +1,147 @@
+{
+    "Host_busy": false,
+    "elapsed_ms": 124582,
+    "i2p": {
+        "failure": "",
+        "global_download_limit": 16384,
+        "global_upload_limit": 20480,
+        "loopback_peer_classes": 1,
+        "sequence": "126",
+        "session": "1",
+        "torrents": [
+            {
+                "admission": "5979975405994981691",
+                "download_limit": 12288,
+                "download_rate": 0,
+                "generation": "1352720751162264566",
+                "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+                "payload_downloaded": 524288,
+                "payload_uploaded": 0,
+                "peers": 0,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Seeding — I2P",
+                "tracker_counters_available": false,
+                "upload_limit": 14336,
+                "upload_rate": 0,
+                "verified_bytes": 524288
+            }
+        ],
+        "tracker_announces": "3",
+        "tracker_errors": "1",
+        "tracker_replies": "1"
+    },
+    "seed": [
+        {
+            "admission": "7496042817287531130",
+            "checked": true,
+            "download_rate": 0,
+            "failure": "",
+            "generation": "3591836567626413253",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+            "loopback_peer_classes": 1,
+            "payload_downloaded": 0,
+            "payload_uploaded": 524288,
+            "peers": 0,
+            "phase": 2,
+            "public_identity": "eb05d902025249bb5efb9bc59dbe02bada915486e090adc043c53c6d9bd077f7",
+            "queued": false,
+            "seeding": true,
+            "tracker_announces": "2",
+            "tracker_errors": "1",
+            "tracker_replies": "1",
+            "upload_rate": 0,
+            "verified_bytes": 524288
+        },
+        {
+            "admission": "3452158389548710315",
+            "checked": true,
+            "download_rate": 0,
+            "failure": "",
+            "generation": "3591836567626413253",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+            "loopback_peer_classes": 1,
+            "payload_downloaded": 0,
+            "payload_uploaded": 163840,
+            "peers": 0,
+            "phase": 2,
+            "public_identity": "eb05d902025249bb5efb9bc59dbe02bada915486e090adc043c53c6d9bd077f7",
+            "queued": false,
+            "seeding": true,
+            "tracker_announces": "2",
+            "tracker_errors": "1",
+            "tracker_replies": "1",
+            "upload_rate": 32,
+            "verified_bytes": 524288
+        }
+    ],
+    "stage": 7,
+    "ui": {
+        "accepted_action_counts": [
+            [
+                0,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "client_status": "Seeding — I2P",
+        "last_Host_message": "",
+        "library": [
+            {
+                "completed": 98304,
+                "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+                "rendered_state": "Stopped",
+                "snapshot_state": "Stopped"
+            },
+            {
+                "completed": 524288,
+                "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+                "rendered_state": "Seeding — I2P",
+                "snapshot_state": "Seeding — I2P"
+            },
+            {
+                "completed": 0,
+                "hash": "B42958F2B2B36F5FD877E4651F8B6A0D301439A5",
+                "rendered_state": "Stopped",
+                "snapshot_state": "Stopped"
+            }
+        ],
+        "rendered_revision": "127",
+        "snapshot_revision": "127"
+    }
+}

@@ -1,0 +1,24 @@
+SOURCE ONLY: real SDK checked-completion fence for both private owners
+
+Pinned SDK torrent constructor420 sets m_connections_initialized=true for valid
+metadata. add_extension1576 then immediately calls plugin on_files_checked;
+that callback therefore does not prove a real payload check completed.
+RetirementCounterPlugin previously set checked=true from that early callback.
+
+Actual GCC r14 showed a checked/complete seed with Queue intent and a pending
+pause that never settled, while earlier records still showed checking progress.
+The early plugin certificate permits queue pause during checking; the SDK has a
+separate checking-files pause/last-job branch, so that is not the post-check pause
+fence required by this owner. No disk callback loss is asserted or invented.
+
+Remove only the checked.store from the plugin. Keep its counter/error checks
+unchanged. Each owner now sets the existing atomic true only when its bounded
+essential alert drain receives a genuine torrent_checked_alert matched to its
+actual current handle. Shared owner already dispatches by full handle; legacy
+owner adds the explicit handle comparison. All existing scheduler, presentation
+and retirement consumers thus retain one truthful checked-completion flag, with
+no extra Member state, fabricated alert, protocol or SDK change.
+
+Existing actual shared-owner transfer probe is the regression. No mirrored pure
+controller test or changed test/deadline/assertion is introduced. No builds,
+tests, Java, SDK, router, subjects, network or native source writes by author.

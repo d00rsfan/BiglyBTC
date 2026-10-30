@@ -1,0 +1,12 @@
+Test project /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/runs/r2/wire-controls
+Connected to MAKE jobserver
+    Start 1: id_enforcement_v4
+1/3 Test #1: id_enforcement_v4 ................   Passed    0.01 sec
+    Start 2: id_enforcement_v6
+2/3 Test #2: id_enforcement_v6 ................   Passed    0.01 sec
+    Start 3: parse_i2p_peers
+3/3 Test #3: parse_i2p_peers ..................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =   0.04 sec

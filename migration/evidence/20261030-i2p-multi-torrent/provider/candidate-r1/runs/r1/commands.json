@@ -1,0 +1,127 @@
+[
+  {
+    "name": "configure",
+    "args": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+      "-DCMAKE_POLICY_DEFAULT_CMP0167=NEW",
+      "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=FALSE",
+      "-DCMAKE_CXX_STANDARD=23",
+      "-DCMAKE_CXX_STANDARD_REQUIRED=ON",
+      "-DCMAKE_CXX_EXTENSIONS=OFF",
+      "-DCMAKE_INSTALL_PREFIX=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install",
+      "-DCMAKE_INSTALL_LIBDIR=lib",
+      "-DBUILD_SHARED_LIBS=ON",
+      "-Dbuild_tests=ON",
+      "-Dbuild_examples=OFF",
+      "-Dbuild_tools=OFF",
+      "-Dpython-bindings=OFF",
+      "-Dlogging=ON",
+      "-Di2p=ON",
+      "-Ddht=ON",
+      "-Dencryption=ON",
+      "-Ddeprecated-functions=ON",
+      "-DCMAKE_PROJECT_INCLUDE=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/recipe/test-objects.cmake"
+    ],
+    "exit": 0,
+    "seconds": 1.128,
+    "log": "runs/r1/configure.log",
+    "log_sha256": "463db05caeb398b156fc2be75fb9f1ace1581870ff700e038978df33d4d76cc0"
+  },
+  {
+    "name": "configure-reuse",
+    "args": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+      "-DCMAKE_POLICY_DEFAULT_CMP0167=NEW",
+      "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=FALSE",
+      "-DCMAKE_PROJECT_INCLUDE=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/recipe/test-objects.cmake"
+    ],
+    "exit": 0,
+    "seconds": 0.415,
+    "log": "runs/r1/configure-reuse.log",
+    "log_sha256": "e3947e5ce760df0b33efa96141fb5b6ecb68fa9d37e63debbb6a8179b56043d3"
+  },
+  {
+    "name": "build",
+    "args": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build",
+      "--target",
+      "torrent-rasterbar",
+      "test_biglybtc_mainline_identity",
+      "test_biglybtc_private_i2p_owner",
+      "test_biglybtc_swarm",
+      "test_biglybtc_tracker_response",
+      "test_dht",
+      "test_tracker",
+      "--",
+      "-k",
+      "0"
+    ],
+    "exit": 0,
+    "seconds": 734.21,
+    "log": "runs/r1/build.log",
+    "log_sha256": "0760a98a6cfbd93764779591f158debbd7b85933b1f11f13711bdbe43a3003fb"
+  },
+  {
+    "name": "install",
+    "args": [
+      "cmake",
+      "--install",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build"
+    ],
+    "exit": 0,
+    "seconds": 0.115,
+    "log": "runs/r1/install.log",
+    "log_sha256": "13e7b47e06ab52be904fa74bf545208138019605cdda1edebd17afac09dace53"
+  },
+  {
+    "name": "private-unit-list",
+    "args": [
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_biglybtc_private_i2p_owner",
+      "--list"
+    ],
+    "exit": 0,
+    "seconds": 0.008,
+    "log": "runs/r1/private-unit-list.log",
+    "log_sha256": "cafe23b1b778b0258940bee3cafb6225a845d58a9f99f89284e9a2c8fa1f18bc"
+  },
+  {
+    "name": "provider-tests",
+    "args": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build",
+      "-R",
+      "^(test_biglybtc_mainline_identity|test_biglybtc_private_i2p_owner|test_biglybtc_swarm|test_biglybtc_tracker_response)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/runs/r1/provider-tests.xml"
+    ],
+    "exit": 8,
+    "seconds": 0.267,
+    "log": "runs/r1/provider-tests.log",
+    "log_sha256": "bf99e3b2f3ba3b2494a7ffcd902fe8d1b36cb728c8c2ca8feb5a28b87bc486b4"
+  }
+]

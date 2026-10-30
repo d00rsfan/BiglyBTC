@@ -1,0 +1,50 @@
+{
+  "status": "FAIL",
+  "lane": "private",
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/cmake/LibtorrentRasterbar",
+        "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/root-private-owner-approval.json",
+        "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256=f3ca7de94ca6beb12e0375293c9c74c3f78a34f7e4952e1a122ff0ae9dff1f83"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/private/r2/configure.log",
+      "log_sha256": "2d3dc928bc42d49dfce9e7524779ca765bc7089fd3ef17c0e96e66b988c335ea"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-owned-i2p-source-tests",
+        "biglybtc-i2p-host-transfer-probe",
+        "biglybtc-i2p-multi-host-transfer-probe",
+        "biglybtc-torrent-intake-file-options-tests",
+        "biglybtc-queue-policy-tests",
+        "biglybtc-queue-slots-tests",
+        "biglybtc-torrent-intake-dialog-tests"
+      ],
+      "exit_code": 1,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/private/r2/build.log",
+      "log_sha256": "2328ed659d15b2415124013b20c76492243a64ecba49029be8d870bd49b1d154"
+    }
+  ],
+  "source_map_sha256": "e9ba2107a28b828cf6e66f7e18186ba62215ba46123236e49cd20272bbd7fe0f",
+  "failure": "build failed",
+  "elapsed_seconds": 220.87
+}

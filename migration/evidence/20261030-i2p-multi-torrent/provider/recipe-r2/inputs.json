@@ -1,0 +1,21 @@
+{
+  "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/recipe/provider_child.py": "0e9593dfca2bcde9fed90d45e5cb4ba575e5ba856790c466b0f7f4283a89e960",
+  "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source-build-record.json": "5c3653a6c628fd0f6ac6df1e75bae50dfded310dc84c89c079ec8df1a1ec28c3",
+  "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/build/build.ninja": "c1edca2701fb8b32491eefbadf9a95d93d32abb1ddbb4f19b9562a5e109c2b3d",
+  "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/build/.ninja_deps": "1e1c393180ad823097a4b8ec23344029fc0a0005039afcd18beaf41e200a690d",
+  "/usr/bin/x86_64-linux-gnu-g++-16": "ca3bb855e752ea0b36544ef684e542fcf04273d8c229b1a96a9c160587e41c62",
+  "/usr/bin/cmake": "6e1dccda39845415d68eabb934c598998949c99ec4668625d571aee1827b05c7",
+  "/usr/bin/ninja": "91e9548850cda2799facfdaa7abe33f9e978832f85e98212255708a7bbe437f2",
+  "/usr/bin/make": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49",
+  "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70",
+  "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+  "/usr/lib/x86_64-linux-gnu/libz.so.1": "47b61967895b30e8c0c6818dd633ffeb87711cf637c688f981896f0dd84ce23b",
+  "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/mainline-fixture/CMakeLists.txt": "5eed6fd3e968b412fb63e6460ef233b50238e3bf5b66dbcb670660b1d27f46a8",
+  "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/mainline-fixture/mainline_port_proof.cpp": "d460e64218a6d457005dd359a7cb39f118d10fee4b73613ebcd34b6bff8dc82c",
+  "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/socks4a-fixture/CMakeLists.txt": "9a5126e172708c76771656b9dac8a92273e221f5999164e5e8a224f948bef129",
+  "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/socks4a-fixture/socks4a_provider_tests.cpp": "fe57cbc46868fa5ce2cb80909bae0af2fe639bf822ae0cc35ed0170adda77c90",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/manifest.json": "63e9925c8f4f3e80168425d22b62ef87b23732eccff8fa1b7714f73f3f84e9c3",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/root-source-review.json": "45e39229132d4ab235bc614808fed710acdf1a97a3d5a29769f11a23e618bb5d",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/recipe/manifest.json": "a6ff3e6962c1697b00299cc8dbac206ed61f59b58c60c759dd8b438f8c3dea72",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/recipe/provider.py": "604a5090cecb97dbd85b893c937e0d39f354f3d490fa3bba68d2be9b4754f191"
+}

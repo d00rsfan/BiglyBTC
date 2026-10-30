@@ -1,8 +1,8 @@
 # Whole Solution C++ Migration Plan
 
-Latest user boundary (2026-10-30): the authorised ordinary Host/classic-UI private I2P chapter is complete. Stop here; the next chapter requires a new request. Preserve the running Java application/profile and main-only milestone commits. Read [the current state](migration/ACTIVE.md).
+Latest user boundary (2026-10-30): the authorised shared-session multi-torrent private I2P chapter is complete. Stop here; propose Public + I2P coexistence, do not start it. Preserve Java/live profile and main-only milestones. Read [current state](migration/ACTIVE.md).
 
-Qualified native source `2c6edc1b2390b59ba0f812d3c68e1cbc500e2311` adds atomic I2P torrent intake/recovery, saved pure settings, genuine classic controls/close and separate observed I2P Statistics. Fresh private/default GCC, native ASan+UBSan and two real isolated router/tracker UI-import/lifecycle checks passed. [Review](migration/evidence/20261030-i2p-classic-host/REVIEW.md). The larger I2P/plugin component remains in progress: public/multihop, multiple active torrents, full queue/rate policy and performance parity remain open. DATA/chat/rooms were not started.
+Qualified native source `dc3ca955f16880a3a7c15280e708a65579e40f76` adds one original identity/session with independent torrents, original queue/rate/restart and actual joined checkpoints; [review](migration/evidence/20261030-i2p-multi-torrent/REVIEW.md). Full I2P/plugin/queue/performance parity remains open; Public + I2P coexistence and DATA/chat/rooms were not started.
 
 Earlier progress and stop-boundary notes are preserved verbatim in [the historical status archive](migration/history/plan-status-prefix-through-20261028.md); the current stop boundary above is authoritative. The objective, phase definitions and acceptance requirements below are unchanged.
 

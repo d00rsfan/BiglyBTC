@@ -1,0 +1,18 @@
+--- a/build/i2p-multi-20261030/acceptance/run.py
++++ b/build/i2p-multi-20261030/acceptance/run.py
+@@ -130,13 +130,13 @@
+         assert native['seed_destination_sha256']==started['seed_destination_sha256'] and native['leech_destination_sha256']==started['leech_destination_sha256']
+         hashes=(work/'torrent.hashes').read_bytes();assert len(hashes)==60
+         expected_hashes=[hashes[i:i+20].hex() for i in range(0,60,20)];assert len(set(expected_hashes))==3
+-        transfers=native['transfers'];assert len(transfers)==2 and [row['info_hash'] for row in transfers]==expected_hashes[:2]
++        transfers=native['transfers'];assert len(transfers)==2 and [row['info_hash'].lower() for row in transfers]==expected_hashes[:2]
+         for index,row in enumerate(transfers):
+             expected=bytes((n*31+17+index*23)%251 for n in range(524288))
+             assert row['verified_bytes']==524288 and row['saved_downloaded']>=524288 and row['payload_sha256']==hashlib.sha256(expected).hexdigest()
+             name=('sample-'+str(index)+'.bin').encode();pieces=b''.join(hashlib.sha1(expected[o:o+16384]).digest() for o in range(0,len(expected),16384))
+             info=b'd6:lengthi524288e4:name'+str(len(name)).encode()+b':'+name+b'12:piece lengthi16384e6:pieces'+str(len(pieces)).encode()+b':'+pieces+b'e'
+-            assert row['info_hash']==hashlib.sha1(info).hexdigest()
++            assert row['info_hash'].lower()==hashlib.sha1(info).hexdigest()
+         assert (work/'i2p-multi-preview.png').read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
+         inputs=load(work/'inputs.json');loader=work/('native-loader.'+str(probe.pid))
+         loaded=re.findall(r'calling init:\s*(\S+)',loader.read_text())

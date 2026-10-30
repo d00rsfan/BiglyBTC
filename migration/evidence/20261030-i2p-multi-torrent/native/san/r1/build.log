@@ -1,0 +1,18 @@
+[1/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_io.cpp.o
+[2/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/profile.cpp.o
+[3/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/torrent_state.cpp.o
+[4/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/library_view.cpp.o
+[5/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/statistics_view.cpp.o
+[6/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/column_layout_view.cpp.o
+[7/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/overall_statistics_view.cpp.o
+[8/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_view.cpp.o
+[9/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_month_view.cpp.o
+[10/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_week_view.cpp.o
+[11/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/saved_download_tags_view.cpp.o
+[12/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/minute_history_writer.cpp.o
+[13/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/history_range_view.cpp.o
+[14/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/country_provider.cpp.o
+[15/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/country_provider_binding.cpp.o
+[16/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/saved_speed_manager_view.cpp.o
+[17/108] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/file_policy_commands.cpp.o
+ninja: build stopped: interrupted by user.

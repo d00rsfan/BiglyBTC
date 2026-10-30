@@ -1,0 +1,32 @@
+{
+    "elapsed_ms": 5351,
+    "intended_success": false,
+    "reason": "Seed shared identity/source lost",
+    "seed": [
+        {
+            "admission": "14942560467433694868",
+            "failure": "I2CP router disconnected: Router shutdown",
+            "generation": "11296225308258230363",
+            "global_download_limit": 0,
+            "global_upload_limit": 0,
+            "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+            "loopback_peer_classes": 0,
+            "phase": 3,
+            "public_identity": "08a5fde9b767e4e6a20dce3f6ecba79f09a85d99a353094916dd2858efccd7f2",
+            "verified_bytes": 0
+        },
+        {
+            "admission": "13298737743616016071",
+            "failure": "I2CP router disconnected: Router shutdown",
+            "generation": "11296225308258230363",
+            "global_download_limit": 0,
+            "global_upload_limit": 0,
+            "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+            "loopback_peer_classes": 0,
+            "phase": 3,
+            "public_identity": "08a5fde9b767e4e6a20dce3f6ecba79f09a85d99a353094916dd2858efccd7f2",
+            "verified_bytes": 0
+        }
+    ],
+    "stage": 1
+}

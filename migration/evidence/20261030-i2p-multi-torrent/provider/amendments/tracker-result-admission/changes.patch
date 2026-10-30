@@ -1,0 +1,831 @@
+--- a/include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp
++++ b/include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp
+@@ -9,7 +9,11 @@
+ namespace libtorrent { namespace aux {
+ enum class i2p_owner_purpose {Control,Peer,Tracker};
+ struct i2p_owner_context final {
+-  explicit i2p_owner_context(BiglybtcPrivateI2pOwnerPolicyV1 const& value):policy(value){}
++  explicit i2p_owner_context(BiglybtcPrivateI2pOwnerPolicyV1 const& value):policy(value){
++    auto& first=registrations[0];first.value.generation=value.generation;first.value.admission=value.admission;
++    first.value.torrent_v1=value.torrent_v1;first.value.torrent_v2=value.torrent_v2;first.value.hashes=value.hashes;
++    first.active=true;used=1;active_count=1;
++  }
+   ~i2p_owner_context(){wipe();}
+   i2p_owner_context(i2p_owner_context const&)=delete;
+   void wipe()noexcept{volatile unsigned char* p=policy.capability.data();for(std::size_t i=0;i<policy.capability.size();++i){p[i]=0;}}
+@@ -20,11 +24,74 @@
+       &&!p.reserved&&p.hashes&&!(p.hashes&~3U)
+       &&std::any_of(p.capability.begin(),p.capability.end(),[](unsigned char v){return v!=0;});
+   }
+-  bool matches(info_hash_t const& hashes)const noexcept{
++  struct registration {BiglybtcPrivateI2pTorrentV1 value;bool active=false;};
++  std::array<registration,BiglybtcPrivateI2pMaximumAdmissionsV1> registrations{};
++  unsigned used=0,active_count=0;
++  bool multi_enabled=false; // Only an explicit new admit API enables a cohort.
++  static bool valid(BiglybtcPrivateI2pTorrentV1 const& p)noexcept{
++    const auto nonzero=[](auto const& value){return std::any_of(value.begin(),value.end(),[](unsigned char v){return v!=0;});};
++    return p.version==1&&p.size==sizeof(p)&&p.generation&&p.admission&&p.hashes&&!(p.hashes&~3U)
++      &&bool(p.hashes&1U)==nonzero(p.torrent_v1)&&bool(p.hashes&2U)==nonzero(p.torrent_v2);
++  }
++  static bool equal(BiglybtcPrivateI2pTorrentV1 const& a,BiglybtcPrivateI2pTorrentV1 const& b)noexcept{
++    return a.generation==b.generation&&a.admission==b.admission&&a.hashes==b.hashes
++      &&(!(a.hashes&1U)||a.torrent_v1==b.torrent_v1)&&(!(a.hashes&2U)||a.torrent_v2==b.torrent_v2);
++  }
++  static bool matches(BiglybtcPrivateI2pTorrentV1 const& p,info_hash_t const& hashes)noexcept{
++    if(bool(p.hashes&1U)!=hashes.has_v1()||bool(p.hashes&2U)!=hashes.has_v2())return false;
++    if(hashes.has_v1()&&!std::equal(p.torrent_v1.begin(),p.torrent_v1.end(),reinterpret_cast<unsigned char const*>(hashes.v1.data())))return false;
++    return !hashes.has_v2()||std::equal(p.torrent_v2.begin(),p.torrent_v2.end(),reinterpret_cast<unsigned char const*>(hashes.v2.data()));
++  }
++  static bool aliases(BiglybtcPrivateI2pTorrentV1 const& a,BiglybtcPrivateI2pTorrentV1 const& b)noexcept{
++    const auto prefix=[](auto const& x,auto const& y){return std::equal(x.begin(),x.begin()+20,y.begin());};
++    return ((a.hashes&1U)&&(b.hashes&1U)&&a.torrent_v1==b.torrent_v1)
++      ||((a.hashes&2U)&&(b.hashes&2U)&&prefix(a.torrent_v2,b.torrent_v2))
++      ||((a.hashes&1U)&&(b.hashes&2U)&&prefix(a.torrent_v1,b.torrent_v2))
++      ||((a.hashes&2U)&&(b.hashes&1U)&&prefix(a.torrent_v2,b.torrent_v1));
++  }
++  static bool aliases(BiglybtcPrivateI2pTorrentV1 const& p,info_hash_t const& hashes)noexcept{
++    BiglybtcPrivateI2pTorrentV1 actual;actual.hashes=(hashes.has_v1()?1U:0U)|(hashes.has_v2()?2U:0U);
++    if(hashes.has_v1())std::copy_n(reinterpret_cast<unsigned char const*>(hashes.v1.data()),20,actual.torrent_v1.begin());
++    if(hashes.has_v2())std::copy_n(reinterpret_cast<unsigned char const*>(hashes.v2.data()),32,actual.torrent_v2.begin());
++    return aliases(p,actual);
++  }
++  bool admission_current(std::uint64_t id)const noexcept{
+     if(!current())return false;
+-    if(bool(policy.hashes&1U)!=hashes.has_v1()||bool(policy.hashes&2U)!=hashes.has_v2())return false;
+-    if(hashes.has_v1()&&!std::equal(policy.torrent_v1.begin(),policy.torrent_v1.end(),reinterpret_cast<unsigned char const*>(hashes.v1.data())))return false;
+-    return !hashes.has_v2()||std::equal(policy.torrent_v2.begin(),policy.torrent_v2.end(),reinterpret_cast<unsigned char const*>(hashes.v2.data()));
++    if(!id)return true; // Shared control/unknown inbound handshake only.
++    for(unsigned i=0;i<used;++i)if(registrations[i].value.admission==id)return registrations[i].active;
++    return false;
++  }
++  std::uint64_t admission_for(info_hash_t const& hashes)const noexcept{
++    if(!current())return 0;
++    for(unsigned i=0;i<used;++i)if(registrations[i].active&&matches(registrations[i].value,hashes))return registrations[i].value.admission;
++    return 0;
++  }
++  bool matches(info_hash_t const& hashes)const noexcept{return admission_for(hashes)!=0;}
++  bool matches(info_hash_t const& hashes,std::uint64_t id)const noexcept{return id&&admission_for(hashes)==id;}
++  std::uint32_t admit(BiglybtcPrivateI2pTorrentV1 const& p)noexcept{
++    using R=BiglybtcPrivateI2pTorrentResultV1;
++    if(!valid(p))return std::uint32_t(R::InvalidArgument);
++    if(!current()||p.generation!=policy.generation)return std::uint32_t(R::Stale);
++    for(unsigned i=0;i<used;++i){auto const& r=registrations[i];
++      if(r.value.admission==p.admission){
++        if(r.active&&equal(r.value,p)){multi_enabled=true;return std::uint32_t(R::Accepted);}
++        return std::uint32_t(r.active?R::Conflict:R::Stale);
++      }
++      if(r.active&&aliases(r.value,p))return std::uint32_t(R::Conflict);
++    }
++    if(active_count==BiglybtcPrivateI2pMaximumTorrentsV1||used==registrations.size())return std::uint32_t(R::Capacity);
++    registrations[used].value=p;registrations[used].active=true;++used;++active_count;multi_enabled=true;
++    return std::uint32_t(R::Accepted);
++  }
++  std::uint32_t revoke(BiglybtcPrivateI2pTorrentV1 const& p)noexcept{
++    using R=BiglybtcPrivateI2pTorrentResultV1;
++    if(!valid(p))return std::uint32_t(R::InvalidArgument);
++    if(!current()||p.generation!=policy.generation)return std::uint32_t(R::Stale);
++    for(unsigned i=0;i<used;++i){auto& r=registrations[i];if(r.value.admission!=p.admission)continue;
++      if(!r.active)return std::uint32_t(R::Stale);
++      if(!equal(r.value,p))return std::uint32_t(R::Conflict);
++      r.active=false;--active_count;return std::uint32_t(R::Accepted);
++    }return std::uint32_t(R::Stale);
+   }
+   static std::string hex(unsigned char const* data,std::size_t size){
+     static constexpr char alphabet[]="0123456789abcdef";std::string result(size*2,'0');
+--- a/include/libtorrent/aux_/session_impl.hpp
++++ b/include/libtorrent/aux_/session_impl.hpp
+@@ -751,6 +751,8 @@
+ 			std::uint32_t biglybtc_configure_private_i2p_owner(BiglybtcPrivateI2pOwnerPolicyV1 const&);
+ 			BiglybtcPrivateI2pOwnerStatusV1 biglybtc_private_i2p_owner_status() const;
+ 			std::uint32_t biglybtc_withdraw_private_i2p_owner(std::uint64_t);
++			std::uint32_t biglybtc_admit_private_i2p_torrent(BiglybtcPrivateI2pTorrentV1 const&);
++			std::uint32_t biglybtc_revoke_private_i2p_torrent(BiglybtcPrivateI2pTorrentV1 const&);
+ 			std::shared_ptr<i2p_owner_context> i2p_owned_bridge() const override { return m_i2p_conn.owned_bridge(); }
+ 			char const* i2p_session() const override { return m_i2p_conn.session_id(); }
+ 			std::string const& local_i2p_endpoint() const override { return m_i2p_conn.local_endpoint(); }
+--- a/include/libtorrent/biglybtc_private_i2p_owner.hpp
++++ b/include/libtorrent/biglybtc_private_i2p_owner.hpp
+@@ -46,4 +46,32 @@
+ // session. Actual session join remains the external owner's responsibility.
+ extern "C" TORRENT_EXPORT std::uint32_t biglybtc_withdraw_private_i2p_owner_v1(
+   session_handle const*,std::uint64_t generation) noexcept;
++// Separate opt-in extension. The V1 single-owner ABI above is unchanged.
++inline constexpr unsigned BiglybtcPrivateI2pTorrentsAbiV1=0x42495401;
++inline constexpr unsigned BiglybtcPrivateI2pMaximumTorrentsV1=64;
++inline constexpr unsigned BiglybtcPrivateI2pMaximumAdmissionsV1=128;
++struct BiglybtcPrivateI2pTorrentV1 {
++  std::uint32_t version=1,size=sizeof(BiglybtcPrivateI2pTorrentV1);
++  std::uint64_t generation=0,admission=0;
++  std::array<unsigned char,20> torrent_v1{};
++  std::array<unsigned char,32> torrent_v2{};
++  std::uint32_t hashes=0; // Exact full hash presence: v1=1, v2=2.
++};
++static_assert(sizeof(BiglybtcPrivateI2pTorrentV1)==80);
++static_assert(std::is_trivially_copyable<BiglybtcPrivateI2pTorrentV1>::value
++  &&std::is_standard_layout<BiglybtcPrivateI2pTorrentV1>::value);
++enum class BiglybtcPrivateI2pTorrentResultV1:std::uint32_t {
++  Accepted=0,InvalidArgument=1,Busy=2,InvalidHandle=3,Failed=4,Stale=5,
++  Capacity=6,Conflict=7
++};
++// Synchronous actual provider executor only, after the unchanged configure.
++// Configure seeds the first tuple. At most64 active and128 lifetime tuples;
++// retired admission IDs cannot be reused in this session. Exact ACTIVE admit
++// is idempotent; a repeated revoke is stale. Alias/full-hash conflicts refuse.
++// Neither operation configures routes, creates a torrent nor aborts siblings.
++extern "C" TORRENT_EXPORT unsigned biglybtc_private_i2p_torrents_abi_v1() noexcept;
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_admit_private_i2p_torrent_v1(
++  session_handle const*,BiglybtcPrivateI2pTorrentV1 const*) noexcept;
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_revoke_private_i2p_torrent_v1(
++  session_handle const*,BiglybtcPrivateI2pTorrentV1 const*) noexcept;
+ } // namespace libtorrent
+--- a/include/libtorrent/http_connection.hpp
++++ b/include/libtorrent/http_connection.hpp
+@@ -108,6 +108,9 @@
+ 	virtual ~http_connection();
+ 
+ 	void rate_limit(int limit);
++#if TORRENT_USE_I2P
++	void set_owned_i2p_admission(std::uint64_t value)noexcept{m_owned_i2p_admission=value;}
++#endif
+ 
+ 	int rate_limit() const
+ 	{ return m_rate_limit; }
+@@ -230,6 +233,9 @@
+ 	aux::resolver_flags m_resolve_flags;
+ 
+ 	std::uint16_t m_port;
++#if TORRENT_USE_I2P
++	std::uint64_t m_owned_i2p_admission=0;
++#endif
+ 
+ 	// bottled means that the handler is called once, when
+ 	// everything is received (and buffered in memory).
+--- a/include/libtorrent/i2p_stream.hpp
++++ b/include/libtorrent/i2p_stream.hpp
+@@ -145,23 +145,27 @@
+ 	void set_destination(string_view d) { m_dest = d.to_string(); }
+ 	std::string const& destination() const { return m_dest; }
+ 		void set_owned_bridge(std::shared_ptr<aux::i2p_owner_context> value,
+-			aux::i2p_owner_purpose purpose,std::uint16_t remote=0,std::uint16_t local=0)
+-		{ m_owner=std::move(value);m_owner_purpose=purpose;m_owner_remote=remote;m_owner_local=local; }
++			aux::i2p_owner_purpose purpose,std::uint16_t remote=0,std::uint16_t local=0,std::uint64_t admission=0)
++		{ m_owner=std::move(value);m_owner_purpose=purpose;m_owner_remote=remote;m_owner_local=local;m_owner_admission=admission; }
++		bool bind_owned_admission(std::uint64_t id)noexcept{
++			if(!m_owner||!id||(m_owner_admission&&m_owner_admission!=id)||!m_owner->admission_current(id))return false;
++			m_owner_admission=id;return true;
++		}
+ 		bool belongs_to_owner(std::shared_ptr<aux::i2p_owner_context> const& value)const noexcept{return m_owner&&m_owner==value&&m_owner->current();}
+ 		template<class Buffers,class Handler> void async_read_some(Buffers const& bytes,Handler handler)
+ 		{
+ 			if(!m_owner){m_sock.async_read_some(bytes,std::move(handler));return;}
+ 			if(!owner_alive()){boost::asio::post(m_sock.get_executor(),[h=std::move(handler)]()mutable{h(boost::asio::error::operation_aborted,0);});return;}
+-			auto owner=m_owner;m_sock.async_read_some(bytes,[owner,h=std::move(handler)](error_code ec,std::size_t n)mutable{
+-				if(owner&&!owner->current()){ec=boost::asio::error::operation_aborted;n=0;}h(ec,n);
++			auto owner=m_owner;auto admission=m_owner_admission;m_sock.async_read_some(bytes,[owner,admission,h=std::move(handler)](error_code ec,std::size_t n)mutable{
++				if(owner&&!owner->admission_current(admission)){ec=boost::asio::error::operation_aborted;n=0;}h(ec,n);
+ 			});
+ 		}
+ 		template<class Buffers,class Handler> void async_write_some(Buffers const& bytes,Handler handler)
+ 		{
+ 			if(!m_owner){m_sock.async_write_some(bytes,std::move(handler));return;}
+ 			if(!owner_alive()){boost::asio::post(m_sock.get_executor(),[h=std::move(handler)]()mutable{h(boost::asio::error::operation_aborted,0);});return;}
+-			auto owner=m_owner;m_sock.async_write_some(bytes,[owner,h=std::move(handler)](error_code ec,std::size_t n)mutable{
+-				if(owner&&!owner->current()){ec=boost::asio::error::operation_aborted;n=0;}h(ec,n);
++			auto owner=m_owner;auto admission=m_owner_admission;m_sock.async_write_some(bytes,[owner,admission,h=std::move(handler)](error_code ec,std::size_t n)mutable{
++				if(owner&&!owner->admission_current(admission)){ec=boost::asio::error::operation_aborted;n=0;}h(ec,n);
+ 			});
+ 		}
+ 		template<class Buffers>std::size_t read_some(Buffers const& bytes,error_code& ec)
+@@ -225,7 +229,7 @@
+ 	}
+ 
+ private:
+-		bool owner_alive()const noexcept{return !m_owner||m_owner->current();}
++		bool owner_alive()const noexcept{return !m_owner||m_owner->admission_current(m_owner_admission);}
+ 		static bool owner_name(std::string const& value)noexcept{
+ 			if(value=="ME")return true;
+ 			return value.size()==60&&value.compare(52,8,".b32.i2p")==0
+@@ -240,7 +244,7 @@
+ 			if(!owner_alive()||bytes.size()>2048){h(error_code(boost::asio::error::operation_aborted));return;}
+ 			auto command=std::make_shared<aux::i2p_owner_command>(std::move(bytes));
+ 			ADD_OUTSTANDING_ASYNC("i2p_stream::start_read_line");
+-			async_write(m_sock,boost::asio::buffer(command->bytes),wrap_allocator(
++			async_write(*this,boost::asio::buffer(command->bytes),wrap_allocator(
+ 				[this,command](error_code ec,std::size_t,Handler hn){
+ 					if(!owner_alive())ec=boost::asio::error::operation_aborted;
+ 					start_read_line(ec,std::move(hn));
+@@ -576,6 +580,7 @@
+ 		std::shared_ptr<aux::i2p_owner_context> m_owner;
+ 		aux::i2p_owner_purpose m_owner_purpose=aux::i2p_owner_purpose::Peer;
+ 		std::uint16_t m_owner_remote=0,m_owner_local=0;
++		std::uint64_t m_owner_admission=0;
+ };
+ 
+ class i2p_connection
+@@ -640,15 +645,15 @@
+ 	template <typename Handler>
+ 	void async_name_lookup(char const* name, Handler handler,
+ 		aux::i2p_owner_purpose purpose=aux::i2p_owner_purpose::Control,
+-		std::uint16_t remote=0,std::uint16_t local=0)
++		std::uint16_t remote=0,std::uint16_t local=0,std::uint64_t admission=0)
+ 	{
+ 		if(m_owner&&(!m_owner->current()||!name||std::strlen(name)>60||m_name_lookup.size()>=16)){
+ 			post(m_io_service,[h=std::move(handler)]()mutable{h(error_code(boost::asio::error::operation_aborted),nullptr);});return;
+ 		}
+ 		if (m_state == sam_idle && m_name_lookup.empty() && is_open())
+-			do_name_lookup(name,std::move(handler),purpose,remote,local);
++			do_name_lookup(name,std::move(handler),purpose,remote,local,admission);
+ 		else
+-			m_name_lookup.push_back(Lookup{std::string(name),std::move(handler),purpose,remote,local});
++			m_name_lookup.push_back(Lookup{std::string(name),std::move(handler),purpose,remote,local,admission});
+ 	}
+ 
+ private:
+@@ -674,14 +679,20 @@
+ 	using name_lookup_handler = std::function<void(error_code const&, char const*)>;
+ 
+ 	template <typename Handler>
+-	void do_name_lookup(std::string const& name, Handler handler,aux::i2p_owner_purpose purpose=aux::i2p_owner_purpose::Control,std::uint16_t remote=0,std::uint16_t local=0)
++	void do_name_lookup(std::string const& name, Handler handler,aux::i2p_owner_purpose purpose=aux::i2p_owner_purpose::Control,std::uint16_t remote=0,std::uint16_t local=0,std::uint64_t admission=0)
+ 	{
+ 		TORRENT_ASSERT(m_state == sam_idle);
+ 		m_state = sam_name_lookup;
++		if(m_owner&&!m_owner->admission_current(admission)){
++			post(m_io_service,[this,s=m_sam_socket,h=std::move(handler)]()mutable{on_name_lookup(error_code(boost::asio::error::operation_aborted),s,std::move(h));});return;
++		}
++		// Shared serial control consumes the real reply even if this target retires.
++		// Its target result is suppressed below; it never becomes peer authority.
+ 		m_sam_socket->set_owned_bridge(m_owner,purpose,remote,local);
+ 		m_sam_socket->set_name_lookup(name.c_str());
+ 		m_sam_socket->send_name_lookup(wrap_allocator(
+-			[this,s=m_sam_socket](error_code const& ec, Handler hn) {
++			[this,s=m_sam_socket,admission](error_code ec, Handler hn) {
++				if(m_owner&&!m_owner->admission_current(admission))ec=boost::asio::error::operation_aborted;
+ 				on_name_lookup(ec, s, std::move(hn));
+ 			}, std::move(handler)));
+ 	}
+@@ -694,9 +705,8 @@
+ 		std::string name = m_sam_socket->name_lookup();
+ 		if (!m_name_lookup.empty())
+ 		{
+-			auto& nl=m_name_lookup.front();
+-			do_name_lookup(nl.name,std::move(nl.handler),nl.purpose,nl.remote,nl.local);
+-			m_name_lookup.pop_front();
++			auto nl=std::move(m_name_lookup.front());m_name_lookup.pop_front();
++			do_name_lookup(nl.name,std::move(nl.handler),nl.purpose,nl.remote,nl.local,nl.admission);
+ 		}
+ 
+ 		if (ec)
+@@ -730,7 +740,7 @@
+ 	std::string m_i2p_local_endpoint;
+ 	std::string m_session_id;
+ 
+-	struct Lookup {std::string name;name_lookup_handler handler;aux::i2p_owner_purpose purpose;std::uint16_t remote=0,local=0;};
++	struct Lookup {std::string name;name_lookup_handler handler;aux::i2p_owner_purpose purpose;std::uint16_t remote=0,local=0;std::uint64_t admission=0;};
+ 	std::list<Lookup> m_name_lookup;
+ 
+ 	enum state_t
+--- a/include/libtorrent/session_handle.hpp
++++ b/include/libtorrent/session_handle.hpp
+@@ -109,6 +109,8 @@
+ 		std::uint32_t biglybtc_configure_private_i2p_owner(BiglybtcPrivateI2pOwnerPolicyV1 const&) const;
+ 		BiglybtcPrivateI2pOwnerStatusV1 biglybtc_private_i2p_owner_status() const;
+ 		std::uint32_t biglybtc_withdraw_private_i2p_owner(std::uint64_t) const;
++			std::uint32_t biglybtc_admit_private_i2p_torrent(BiglybtcPrivateI2pTorrentV1 const&) const;
++			std::uint32_t biglybtc_revoke_private_i2p_torrent(BiglybtcPrivateI2pTorrentV1 const&) const;
+ #endif
+ #ifndef TORRENT_DISABLE_DHT
+ 		// Optional provider implementation entry points; public class layout unchanged.
+--- a/include/libtorrent/torrent.hpp
++++ b/include/libtorrent/torrent.hpp
+@@ -460,6 +460,10 @@
+ 
+ 		void start_announcing();
+ 		void stop_announcing();
++#if TORRENT_USE_I2P
++		bool biglybtc_i2p_current()const;
++		std::uint64_t biglybtc_i2p_admission()const noexcept{return m_biglybtc_i2p_admission;}
++#endif
+ 
+ 		void send_upload_only();
+ 
+@@ -1387,6 +1391,9 @@
+ 		std::list<std::shared_ptr<torrent_plugin>> m_extensions;
+ #endif
+ 
++#if TORRENT_USE_I2P
++		std::uint64_t m_biglybtc_i2p_admission=0;
++#endif
+ 		// Optional fixed-state event source; all accesses on the real executor.
+ 		std::shared_ptr<BiglybtcMainlinePortObserverV1> m_biglybtc_mainline_observer;
+ 		std::uint64_t m_biglybtc_mainline_admission=0, m_biglybtc_mainline_sequence=0;
+--- a/include/libtorrent/tracker_manager.hpp
++++ b/include/libtorrent/tracker_manager.hpp
+@@ -54,6 +54,7 @@
+ #include "libtorrent/biglybtc_tracker_response.hpp"
+ #include "libtorrent/socket.hpp"
+ #include "libtorrent/fwd.hpp"
++#include "libtorrent/info_hash.hpp"
+ #include "libtorrent/address.hpp"
+ #include "libtorrent/peer_id.hpp"
+ #include "libtorrent/peer.hpp" // peer_entry
+@@ -160,6 +161,8 @@
+ #endif
+ #if TORRENT_USE_I2P
+ 		i2p_connection* i2pconn = nullptr;
++		info_hash_t biglybtc_owned_hashes;
++		std::uint64_t biglybtc_owned_admission=0;
+ #endif
+ 	};
+ 
+--- a/src/biglybtc_private_i2p_owner.inc
++++ b/src/biglybtc_private_i2p_owner.inc
+@@ -35,4 +35,27 @@
+   if(!owner||owner->policy.generation!=generation)return std::uint32_t(result::Stale);
+   owner->withdraw();abort();return std::uint32_t(result::Accepted);
+ }
++std::uint32_t session_impl::biglybtc_admit_private_i2p_torrent(BiglybtcPrivateI2pTorrentV1 const& p)
++{
++  TORRENT_ASSERT(is_single_thread());using R=BiglybtcPrivateI2pTorrentResultV1;
++  if(!i2p_owner_context::valid(p))return std::uint32_t(R::InvalidArgument);
++  auto owner=m_i2p_conn.owned_bridge();if(m_abort||!owner||!owner->current()||p.generation!=owner->policy.generation)return std::uint32_t(R::Stale);
++  // A new tuple may not relabel an existing torrent, even after revocation.
++  for(auto const& entry:m_torrents){
++    auto const& t=*entry;auto const& hashes=t.torrent_file().info_hashes();
++    if(i2p_owner_context::aliases(p,hashes)&&t.biglybtc_i2p_admission()!=p.admission)return std::uint32_t(R::Busy);
++  }
++  return owner->admit(p);
++}
++std::uint32_t session_impl::biglybtc_revoke_private_i2p_torrent(BiglybtcPrivateI2pTorrentV1 const& p)
++{
++  TORRENT_ASSERT(is_single_thread());using R=BiglybtcPrivateI2pTorrentResultV1;
++  auto owner=m_i2p_conn.owned_bridge();if(m_abort||!owner)return std::uint32_t(R::Stale);
++  const auto result=owner->revoke(p);if(result!=std::uint32_t(R::Accepted))return result;
++  // Stop this tuple's real peers and timers; never abort the shared session.
++  for(auto const& entry:m_torrents){auto& t=*entry;if(t.biglybtc_i2p_admission()!=p.admission)continue;
++    t.stop_announcing();t.disconnect_all(error_code(boost::asio::error::operation_aborted),operation_t::bittorrent);
++  }
++  return result;
++}
+ #endif
+--- a/src/biglybtc_private_i2p_owner_api.inc
++++ b/src/biglybtc_private_i2p_owner_api.inc
+@@ -5,6 +5,10 @@
+ {return sync_call_ret<BiglybtcPrivateI2pOwnerStatusV1>(&session_impl::biglybtc_private_i2p_owner_status);}
+ std::uint32_t session_handle::biglybtc_withdraw_private_i2p_owner(std::uint64_t generation)const
+ {return sync_call_ret<std::uint32_t>(&session_impl::biglybtc_withdraw_private_i2p_owner,generation);}
++std::uint32_t session_handle::biglybtc_admit_private_i2p_torrent(BiglybtcPrivateI2pTorrentV1 const& p)const
++{return sync_call_ret<std::uint32_t>(&session_impl::biglybtc_admit_private_i2p_torrent,std::cref(p));}
++std::uint32_t session_handle::biglybtc_revoke_private_i2p_torrent(BiglybtcPrivateI2pTorrentV1 const& p)const
++{return sync_call_ret<std::uint32_t>(&session_impl::biglybtc_revoke_private_i2p_torrent,std::cref(p));}
+ #endif
+ extern "C" TORRENT_EXPORT unsigned biglybtc_private_i2p_owner_abi_v1()noexcept
+ {
+@@ -48,3 +52,34 @@
+   return std::uint32_t(result::Failed);
+ #endif
+ }
++
++extern "C" TORRENT_EXPORT unsigned biglybtc_private_i2p_torrents_abi_v1()noexcept
++{
++#if TORRENT_USE_I2P
++  return BiglybtcPrivateI2pTorrentsAbiV1;
++#else
++  return 0;
++#endif
++}
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_admit_private_i2p_torrent_v1(session_handle const* handle,BiglybtcPrivateI2pTorrentV1 const* value)noexcept
++{
++  using R=BiglybtcPrivateI2pTorrentResultV1;
++  if(!handle||!value)return std::uint32_t(R::InvalidArgument);
++  if(!handle->is_valid())return std::uint32_t(R::InvalidHandle);
++#if TORRENT_USE_I2P
++  try{return handle->biglybtc_admit_private_i2p_torrent(*value);}catch(...){return std::uint32_t(R::Failed);}
++#else
++  return std::uint32_t(R::Failed);
++#endif
++}
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_revoke_private_i2p_torrent_v1(session_handle const* handle,BiglybtcPrivateI2pTorrentV1 const* value)noexcept
++{
++  using R=BiglybtcPrivateI2pTorrentResultV1;
++  if(!handle||!value)return std::uint32_t(R::InvalidArgument);
++  if(!handle->is_valid())return std::uint32_t(R::InvalidHandle);
++#if TORRENT_USE_I2P
++  try{return handle->biglybtc_revoke_private_i2p_torrent(*value);}catch(...){return std::uint32_t(R::Failed);}
++#else
++  return std::uint32_t(R::Failed);
++#endif
++}
+--- a/src/http_connection.cpp
++++ b/src/http_connection.cpp
+@@ -361,7 +361,7 @@
+ 			{
+ 				ADD_OUTSTANDING_ASYNC("http_connection::on_i2p_resolve");
+ 				i2p_conn->async_name_lookup(hostname.c_str(), std::bind(&http_connection::on_i2p_resolve
+-					, me, _1, _2),aux::i2p_owner_purpose::Tracker,static_cast<std::uint16_t>(port),0);
++					, me, _1, _2),aux::i2p_owner_purpose::Tracker,static_cast<std::uint16_t>(port),0,m_owned_i2p_admission);
+ 			}
+ 			else
+ 				connect_i2p_tracker(hostname.c_str());
+@@ -480,7 +480,7 @@
+ 	TORRENT_ASSERT(m_ssl == false);
+ #endif
+ 	boost::get<i2p_stream>(*m_sock).set_destination(destination);
+-	boost::get<i2p_stream>(*m_sock).set_owned_bridge(m_i2p_conn->owned_bridge(),aux::i2p_owner_purpose::Tracker,m_port,0);
++	boost::get<i2p_stream>(*m_sock).set_owned_bridge(m_i2p_conn->owned_bridge(),aux::i2p_owner_purpose::Tracker,m_port,0,m_owned_i2p_admission);
+ 	boost::get<i2p_stream>(*m_sock).set_command(i2p_stream::cmd_connect);
+ 	boost::get<i2p_stream>(*m_sock).set_session_id(m_i2p_conn->session_id());
+ 	ADD_OUTSTANDING_ASYNC("http_connection::on_connect");
+--- a/src/http_tracker_connection.cpp
++++ b/src/http_tracker_connection.cpp
+@@ -236,6 +236,9 @@
+ #endif
+ 			);
+ 
++#if TORRENT_USE_I2P
++		m_tracker_connection->set_owned_i2p_admission(tracker_req().biglybtc_owned_admission);
++#endif
+ 		int const timeout = tracker_req().event == event_t::stopped
+ 			? settings.get_int(settings_pack::stop_tracker_timeout)
+ 			: settings.get_int(settings_pack::tracker_completion_timeout);
+--- a/src/peer_connection.cpp
++++ b/src/peer_connection.cpp
+@@ -1339,6 +1339,14 @@
+ 			return;
+ 		}
+ 
++#if TORRENT_USE_I2P
++		if(auto owner=m_ses.i2p_owned_bridge()){
++			auto* stream=boost::get<i2p_stream>(&m_socket);
++			if(!stream||!stream->belongs_to_owner(owner)||!t->biglybtc_i2p_current()||!stream->bind_owned_admission(t->biglybtc_i2p_admission())){
++				disconnect(error_code(boost::asio::error::operation_aborted),operation_t::bittorrent);return;
++			}
++		}
++#endif
+ 		// if this peer supports v2, this better be a v2 torrent
+ 		TORRENT_ASSERT(t->info_hash().has_v2() || !(peer_info_struct() && peer_info_struct()->protocol_v2));
+ 
+--- a/src/session_impl.cpp
++++ b/src/session_impl.cpp
+@@ -1287,6 +1287,9 @@
+ #if TORRENT_USE_I2P
+ 		if(auto owned=m_i2p_conn.owned_bridge()){
+ 			if(!owned->current()||!is_i2p_url(req.url)||req.url.compare(0,7,"http://")!=0){owned->withdraw();abort();return;}
++			if(!owned->matches(req.biglybtc_owned_hashes,req.biglybtc_owned_admission)){
++				post(m_io_context,[request=std::move(req),callback=c]{if(auto target=callback.lock())target->tracker_request_error(request,error_code(boost::asio::error::operation_aborted),operation_t::bittorrent,"",seconds32(0));});return;
++			}
+ 		}
+ #endif
+ 		req.listen_port = 0;
+@@ -5063,7 +5066,7 @@
+ 		using ret_t = std::tuple<std::shared_ptr<torrent>, info_hash_t, bool>;
+ #if TORRENT_USE_I2P
+ 		if(auto owned=m_i2p_conn.owned_bridge()){
+-			bool safe=owned->current()&&num_torrents()==0&&params.ti&&owned->matches(params.ti->info_hashes())
++			bool safe=owned->current()&&(num_torrents()==0||owned->multi_enabled)&&params.ti&&owned->matches(params.ti->info_hashes())
+ 				&&params.url_seeds.empty()&&params.http_seeds.empty()&&params.peers.empty()&&params.dht_nodes.empty()
+ 				&&params.ti->web_seeds().empty();
+ 			for(auto const& url:params.trackers)safe=safe&&is_i2p_url(url)&&url.compare(0,7,"http://")==0;
+--- a/src/torrent.cpp
++++ b/src/torrent.cpp
+@@ -314,6 +314,10 @@
+ 			m_torrent_file = (p.ti ? p.ti : std::make_shared<torrent_info>(m_info_hash));
+ 
+ #if TORRENT_USE_I2P
++		if(auto owner=m_ses.i2p_owned_bridge()){
++			m_biglybtc_i2p_admission=owner->admission_for(m_torrent_file->info_hashes());
++			if(!m_biglybtc_i2p_admission)throw boost::system::system_error(error_code(boost::asio::error::operation_aborted));
++		}
+ 		if (m_torrent_file->is_i2p())
+ 			m_i2p = true;
+ #endif
+@@ -3035,6 +3039,9 @@
+ 
+ 	void torrent::announce_with_tracker(event_t e, bool const high_priority)
+ 	{
++#if TORRENT_USE_I2P
++		if(!biglybtc_i2p_current())return;
++#endif
+ 		TORRENT_ASSERT(is_single_thread());
+ 		TORRENT_ASSERT(e == event_t::stopped || state() != torrent_status::checking_files);
+ 		INVARIANT_CHECK;
+@@ -3086,6 +3093,9 @@
+ 			e = event_t::paused;
+ 
+ 		tracker_request req;
++#if TORRENT_USE_I2P
++		req.biglybtc_owned_hashes=torrent_file().info_hashes();req.biglybtc_owned_admission=m_biglybtc_i2p_admission;
++#endif
+ 		if (settings().get_bool(settings_pack::apply_ip_filter_to_trackers)
+ 			&& m_apply_ip_filter)
+ 		{
+@@ -3533,6 +3543,9 @@
+ 
+ 	void torrent::scrape_tracker(int idx, bool const user_triggered)
+ 	{
++#if TORRENT_USE_I2P
++		if(!biglybtc_i2p_current())return;
++#endif
+ 		TORRENT_ASSERT(is_single_thread());
+ #if TORRENT_ABI_VERSION == 1
+ 		m_last_scrape = aux::time_now32();
+@@ -3544,6 +3557,9 @@
+ 		if (idx < 0) idx = 0;
+ 
+ 		tracker_request req;
++#if TORRENT_USE_I2P
++		req.biglybtc_owned_hashes=torrent_file().info_hashes();req.biglybtc_owned_admission=m_biglybtc_i2p_admission;
++#endif
+ 		if (settings().get_bool(settings_pack::apply_ip_filter_to_trackers)
+ 			&& m_apply_ip_filter)
+ 			req.filter = m_ip_filter;
+@@ -3578,9 +3594,27 @@
+ 		}
+ 	}
+ 
++namespace {
++#if TORRENT_USE_I2P
++bool biglybtc_owned_tracker_result_current(aux::session_interface const& session,
++  info_hash_t const& full,info_hash_t const& wire,std::uint64_t admission,tracker_request const& request)
++{
++  auto owner=session.i2p_owned_bridge();if(!owner)return true;
++  return owner->matches(full,admission)&&request.biglybtc_owned_admission==admission
++    &&owner->matches(request.biglybtc_owned_hashes,admission)
++    &&request.i2pconn&&request.i2pconn->owned_bridge()==owner
++    &&bool(request.kind&tracker_request::i2p)&&is_i2p_url(request.url)&&request.url.compare(0,7,"http://")==0
++    &&((wire.has_v1()&&request.info_hash==wire.v1)||(wire.has_v2()&&request.info_hash==wire.get(protocol_version::V2)));
++}
++#endif
++}
++
+ 	void torrent::tracker_warning(tracker_request const& req, std::string const& msg)
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
++#if TORRENT_USE_I2P
++		if(!biglybtc_owned_tracker_result_current(m_ses,torrent_file().info_hashes(),m_wire_info_hash,m_biglybtc_i2p_admission,req))return;
++#endif
+ 
+ 		INVARIANT_CHECK;
+ 
+@@ -3609,6 +3643,9 @@
+ 		, int const complete, int const incomplete, int const downloaded, int /* downloaders */)
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
++#if TORRENT_USE_I2P
++		if(!biglybtc_owned_tracker_result_current(m_ses,torrent_file().info_hashes(),m_wire_info_hash,m_biglybtc_i2p_admission,req))return;
++#endif
+ 
+ 		INVARIANT_CHECK;
+ 		TORRENT_ASSERT(req.kind & tracker_request::scrape_request);
+@@ -3693,6 +3730,9 @@
+ 		, struct tracker_response const& resp)
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
++#if TORRENT_USE_I2P
++		if(!biglybtc_owned_tracker_result_current(m_ses,torrent_file().info_hashes(),m_wire_info_hash,m_biglybtc_i2p_admission,r))return;
++#endif
+ 
+ 		INVARIANT_CHECK;
+ 		TORRENT_ASSERT(!(r.kind & tracker_request::scrape_request));
+@@ -3789,7 +3829,7 @@
+ 
+ #if TORRENT_USE_I2P
+ 		if(auto owner=m_ses.i2p_owned_bridge()){
+-			if(!owner->matches(torrent_file().info_hashes())||!r.i2pconn||r.i2pconn->owned_bridge()!=owner){return;}
++			if(!owner->matches(torrent_file().info_hashes(),m_biglybtc_i2p_admission)||!r.i2pconn||r.i2pconn->owned_bridge()!=owner){return;}
+ 		}
+ #endif
+ 		// for each of the peers we got from the tracker
+@@ -3809,7 +3849,7 @@
+ 					ADD_OUTSTANDING_ASYNC("torrent::on_i2p_resolve");
+ 					r.i2pconn->async_name_lookup(i.hostname.c_str()
+ 						, [self = shared_from_this()] (error_code const& ec, char const* dest)
+-						{ self->torrent::on_i2p_resolve(ec, dest); },aux::i2p_owner_purpose::Peer,r.i2pconn->owned_bridge()?r.i2pconn->owned_bridge()->policy.peer_port:0,r.i2pconn->owned_bridge()?r.i2pconn->owned_bridge()->policy.local_peer_port:0);
++						{ self->torrent::on_i2p_resolve(ec, dest); },aux::i2p_owner_purpose::Peer,r.i2pconn->owned_bridge()?r.i2pconn->owned_bridge()->policy.peer_port:0,r.i2pconn->owned_bridge()?r.i2pconn->owned_bridge()->policy.local_peer_port:0,m_biglybtc_i2p_admission);
+ 				}
+ 				else
+ 				{
+@@ -3843,7 +3883,7 @@
+ 				ADD_OUTSTANDING_ASYNC("torrent::on_i2p_resolve");
+ 				r.i2pconn->async_name_lookup(destination.c_str()
+ 					, [self = shared_from_this()] (error_code const& ec, char const* dest)
+-					{ self->torrent::on_i2p_resolve(ec, dest); },aux::i2p_owner_purpose::Peer,r.i2pconn->owned_bridge()?r.i2pconn->owned_bridge()->policy.peer_port:0,r.i2pconn->owned_bridge()?r.i2pconn->owned_bridge()->policy.local_peer_port:0);
++					{ self->torrent::on_i2p_resolve(ec, dest); },aux::i2p_owner_purpose::Peer,r.i2pconn->owned_bridge()?r.i2pconn->owned_bridge()->policy.peer_port:0,r.i2pconn->owned_bridge()?r.i2pconn->owned_bridge()->policy.local_peer_port:0,m_biglybtc_i2p_admission);
+ 			}
+ 		}
+ #endif
+@@ -4080,6 +4120,9 @@
+ #endif
+ 
+ #if TORRENT_USE_I2P
++	bool torrent::biglybtc_i2p_current()const{
++		auto owner=m_ses.i2p_owned_bridge();return !owner||owner->matches(torrent_file().info_hashes(),m_biglybtc_i2p_admission);
++	}
+ 	void torrent::on_i2p_resolve(error_code const& ec, char const* dest) try
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
+@@ -4091,7 +4134,7 @@
+ 		if (ec && should_log())
+ 			debug_log("i2p_resolve error: %s", ec.message().c_str());
+ #endif
+-		if (ec || m_abort || m_ses.is_aborted()) return;
++		if (ec || m_abort || m_ses.is_aborted() || !biglybtc_i2p_current()) return;
+ 
+ 		need_peer_list();
+ 		torrent_state st = get_peer_list_state();
+@@ -7669,6 +7712,9 @@
+ 		TORRENT_ASSERT(peerinfo->connection == nullptr);
+ 
+ 		if (m_abort) return false;
++#if TORRENT_USE_I2P
++		if(!biglybtc_i2p_current())return false;
++#endif
+ 		if (!m_wire_info_hash.has(peerinfo->protocol())) return false;
+ 
+ 		peerinfo->last_connected = m_ses.session_time();
+@@ -7767,8 +7813,8 @@
+ 			str.set_command(i2p_stream::cmd_connect);
+ 			str.set_session_id(m_ses.i2p_session());
+ 			if(auto owned=m_ses.i2p_owned_bridge()) {
+-				if(!owned->matches(torrent_file().info_hashes())) throw boost::system::system_error(error_code(boost::asio::error::operation_aborted));
+-				str.set_owned_bridge(owned,aux::i2p_owner_purpose::Peer,owned->policy.peer_port,owned->policy.local_peer_port);
++				if(!owned->matches(torrent_file().info_hashes(),m_biglybtc_i2p_admission)) throw boost::system::system_error(error_code(boost::asio::error::operation_aborted));
++				str.set_owned_bridge(owned,aux::i2p_owner_purpose::Peer,owned->policy.peer_port,owned->policy.local_peer_port,m_biglybtc_i2p_admission);
+ 			}
+ 			return ret;
+ 		}
+@@ -8444,7 +8490,7 @@
+ 			// Dedicated private I2P uses its authenticated owner transport. Keep
+ 			// normal TCP/uTP disabled; connect_to_peer still rejects those types.
+ 			auto owner=m_ses.i2p_owned_bridge();
+-			if(!is_i2p()||!owner||!owner->matches(torrent_file().info_hashes()))return false;
++			if(!is_i2p()||!owner||!owner->matches(torrent_file().info_hashes(),m_biglybtc_i2p_admission))return false;
+ #else
+ 			return false;
+ #endif
+@@ -12453,6 +12499,9 @@
+ 		, seconds32 const retry_interval)
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
++#if TORRENT_USE_I2P
++		if(!biglybtc_owned_tracker_result_current(m_ses,torrent_file().info_hashes(),m_wire_info_hash,m_biglybtc_i2p_admission,r))return;
++#endif
+ 		biglybtc_queue_event((r.kind&tracker_request::scrape_request)
+ 			?BiglybtcQueueEventKindV1::ScrapeFailed:BiglybtcQueueEventKindV1::AnnounceFailed,&r);
+ 
+--- a/test/test_biglybtc_private_i2p_owner.cpp
++++ b/test/test_biglybtc_private_i2p_owner.cpp
+@@ -10,11 +10,16 @@
+ #include "libtorrent/entry.hpp"
+ #include "libtorrent/bencode.hpp"
+ #include "libtorrent/torrent_info.hpp"
++#include "libtorrent/torrent.hpp"
++#include "libtorrent/aux_/announce_entry.hpp"
++#include <future>
++#include <tuple>
+ #include "libtorrent/http_connection.hpp"
+ #include "libtorrent/aux_/resolver.hpp"
+ #include "libtorrent/i2p_stream.hpp"
+ #include <boost/asio/post.hpp>
+ #include <boost/asio/read_until.hpp>
++#include <boost/asio/read.hpp>
+ #include <boost/asio/streambuf.hpp>
+ #include <boost/asio/write.hpp>
+ #include <boost/asio/steady_timer.hpp>
+@@ -140,4 +145,136 @@
+   TEST_CHECK(io.stopped()); // All real session/backend work guards released.
+   io.stop(); // Bounded cleanup if a regression leaves an outstanding guard.
+ }
++namespace {
++BiglybtcPrivateI2pTorrentV1 tuple(std::uint64_t id,unsigned hash){
++  BiglybtcPrivateI2pTorrentV1 t;t.generation=7;t.admission=id;t.hashes=1;t.torrent_v1.fill(0x99);
++  for(unsigned n=0;n<4;++n){t.torrent_v1[n]=static_cast<unsigned char>(hash>>(n*8));}
++  return t;
++}
++info_hash_t hashes(BiglybtcPrivateI2pTorrentV1 const& value){
++  info_hash_t result;
++  if(value.hashes&1U)std::copy(value.torrent_v1.begin(),value.torrent_v1.end(),reinterpret_cast<unsigned char*>(result.v1.data()));
++  if(value.hashes&2U)std::copy(value.torrent_v2.begin(),value.torrent_v2.end(),reinterpret_cast<unsigned char*>(result.v2.data()));
++  return result;
++}
++std::shared_ptr<torrent_info> metadata(char suffix){
++  entry root;root["announce"]="http://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.b32.i2p/announce";
++  root["info"]["length"]=3;root["info"]["name"]=std::string("owned-")+suffix+".bin";root["info"]["piece length"]=16384;root["info"]["pieces"]=std::string(20,suffix);
++  std::vector<char> bytes;bencode(std::back_inserter(bytes),root);error_code ec;
++  auto result=std::make_shared<torrent_info>(span<char const>(bytes.data(),bytes.size()),ec,from_span);TEST_CHECK(!ec);return result;
++}
++}
++TORRENT_TEST(private_i2p_multi_full_tuples_aliases_and_retirement)
++{
++  TEST_EQUAL(biglybtc_private_i2p_torrents_abi_v1(),BiglybtcPrivateI2pTorrentsAbiV1);
++  auto p=policy();aux::i2p_owner_context owner(p);auto second=tuple(22,2);auto h=hashes(second);
++  TEST_CHECK(owner.matches(info_hash_t(sha1_hash(std::string(20,'\x11').data())),p.admission));
++  TEST_CHECK(!owner.multi_enabled);TEST_EQUAL(owner.admit(second),0u);TEST_CHECK(owner.multi_enabled);TEST_EQUAL(owner.admit(second),0u);TEST_EQUAL(owner.active_count,2u);TEST_EQUAL(owner.used,2u);
++  TEST_CHECK(owner.matches(h,22));auto stale=second;stale.generation=8;TEST_EQUAL(owner.revoke(stale),5u);stale=second;stale.admission=0;TEST_EQUAL(owner.admit(stale),1u);stale=second;stale.admission=99;TEST_EQUAL(owner.revoke(stale),5u);
++  auto alias=second;alias.admission=23;TEST_EQUAL(owner.admit(alias),7u);alias=second;alias.torrent_v1[4]^=1;TEST_EQUAL(owner.admit(alias),7u);TEST_CHECK(owner.matches(h,22));
++  auto hybrid=second;hybrid.admission=23;hybrid.hashes=3;hybrid.torrent_v2.fill(0x33);TEST_EQUAL(owner.admit(hybrid),7u);
++  auto v2=tuple(24,4);v2.hashes=2;v2.torrent_v1.fill(0);v2.torrent_v2.fill(0x44);TEST_EQUAL(owner.admit(v2),0u);
++  auto v2alias=v2;v2alias.admission=25;v2alias.torrent_v2[31]^=1;TEST_EQUAL(owner.admit(v2alias),7u); // Different full32 with the same wire prefix never grants a second identity.
++  v2alias=tuple(25,5);std::copy_n(v2.torrent_v2.begin(),20,v2alias.torrent_v1.begin());TEST_EQUAL(owner.admit(v2alias),7u);
++  auto wrong=second;wrong.torrent_v1[19]^=1;TEST_EQUAL(owner.revoke(wrong),7u);TEST_CHECK(owner.matches(h,22));
++  TEST_EQUAL(owner.revoke(second),0u);TEST_CHECK(owner.current());TEST_CHECK(!owner.matches(h,22));TEST_CHECK(owner.matches(hashes(v2),24));TEST_EQUAL(owner.revoke(second),5u);TEST_EQUAL(owner.admit(second),5u);
++  auto again=second;again.admission=33;TEST_EQUAL(owner.admit(again),0u);TEST_CHECK(owner.matches(h,33));TEST_CHECK(!owner.matches(h,22));
++  auto malformed=tuple(55,6);malformed.torrent_v2[0]=1;TEST_EQUAL(owner.admit(malformed),1u);malformed=tuple(55,6);malformed.torrent_v1.fill(0);TEST_EQUAL(owner.admit(malformed),1u);malformed=tuple(55,6);malformed.size=0;TEST_EQUAL(owner.admit(malformed),1u);
++  owner.withdraw();TEST_CHECK(!owner.matches(h,33));TEST_EQUAL(owner.admit(tuple(56,7)),5u);
++}
++TORRENT_TEST(private_i2p_multi_capacity_is_active64_and_lifetime128)
++{
++  aux::i2p_owner_context active(policy());
++  for(unsigned n=0;n<63;++n)TEST_EQUAL(active.admit(tuple(100+n,100+n)),0u);
++  TEST_EQUAL(active.active_count,64u);TEST_EQUAL(active.used,64u);TEST_EQUAL(active.admit(tuple(999,999)),6u);
++  auto freed=tuple(100,100);TEST_EQUAL(active.revoke(freed),0u);TEST_EQUAL(active.admit(tuple(999,999)),0u);TEST_EQUAL(active.active_count,64u);TEST_EQUAL(active.used,65u);
++  aux::i2p_owner_context lifetime(policy());
++  for(unsigned n=0;n<127;++n){auto value=tuple(100+n,100+n);TEST_EQUAL(lifetime.admit(value),0u);TEST_EQUAL(lifetime.revoke(value),0u);}
++  TEST_EQUAL(lifetime.used,128u);TEST_EQUAL(lifetime.active_count,1u);TEST_EQUAL(lifetime.admit(tuple(999,999)),6u);TEST_CHECK(lifetime.current());
++}
++TORRENT_TEST(private_i2p_multi_actual_session_admission_and_sibling_survival)
++{
++  session ses{session_params{isolated()}};auto executor_work=make_work_guard(ses.native_handle()->get_context());auto first=metadata('a'),second=metadata('b'),foreign=metadata('c');auto p=policy();
++  std::copy_n(reinterpret_cast<unsigned char const*>(first->info_hashes().v1.data()),20,p.torrent_v1.begin());
++  auto b=tuple(22,2);std::copy_n(reinterpret_cast<unsigned char const*>(second->info_hashes().v1.data()),20,b.torrent_v1.begin());
++  TEST_EQUAL(biglybtc_admit_private_i2p_torrent_v1(&ses,&b),5u);TEST_EQUAL(biglybtc_configure_private_i2p_owner_v1(&ses,&p),0u);TEST_EQUAL(biglybtc_admit_private_i2p_torrent_v1(&ses,&b),0u);
++  add_torrent_params add;add.save_path=".";add.flags|=torrent_flags::paused;add.flags&=~torrent_flags::auto_managed;error_code ec;add.ti=first;auto a=ses.add_torrent(add,ec);TEST_CHECK(!ec);TEST_CHECK(a.is_valid());
++  add.ti=second;auto sibling=ses.add_torrent(add,ec);TEST_CHECK(!ec);TEST_CHECK(sibling.is_valid());TEST_EQUAL(ses.get_torrents().size(),2u);
++  add.ti=foreign;auto denied=ses.add_torrent(add,ec);TEST_CHECK(ec);TEST_CHECK(!denied.is_valid());TEST_EQUAL(ses.get_torrents().size(),2u);
++  auto a_tuple=tuple(p.admission,1);a_tuple.torrent_v1=p.torrent_v1;TEST_EQUAL(biglybtc_revoke_private_i2p_torrent_v1(&ses,&a_tuple),0u);
++  BiglybtcPrivateI2pOwnerStatusV1 status;TEST_EQUAL(biglybtc_read_private_i2p_owner_v1(&ses,&status),0u);TEST_EQUAL(status.phase,1u);TEST_CHECK(sibling.is_valid());TEST_EQUAL(biglybtc_admit_private_i2p_torrent_v1(&ses,&b),0u);
++  a_tuple.admission=33;TEST_EQUAL(biglybtc_admit_private_i2p_torrent_v1(&ses,&a_tuple),2u); // Old actual handle cannot be relabelled.
++  ses.remove_torrent(a);TEST_EQUAL(ses.get_torrents().size(),1u);TEST_EQUAL(biglybtc_admit_private_i2p_torrent_v1(&ses,&a_tuple),0u);
++  add.ti=first;auto replacement=ses.add_torrent(add,ec);TEST_CHECK(!ec);TEST_CHECK(replacement.is_valid());TEST_EQUAL(ses.get_torrents().size(),2u);
++  TEST_EQUAL(biglybtc_revoke_private_i2p_torrent_v1(nullptr,&a_tuple),1u);auto old=b;old.generation=8;TEST_EQUAL(biglybtc_revoke_private_i2p_torrent_v1(&ses,&old),5u);TEST_EQUAL(biglybtc_read_private_i2p_owner_v1(&ses,&status),0u);TEST_EQUAL(status.phase,1u);
++}
++TORRENT_TEST(private_i2p_multi_actual_stream_io_denies_revoked_token_only)
++{
++  io_context io;tcp::acceptor listener(io,tcp::endpoint(address_v4::loopback(),0));auto owner=std::make_shared<aux::i2p_owner_context>(policy());auto second=tuple(22,2);TEST_EQUAL(owner->admit(second),0u);
++  i2p_stream a(io),b(io);a.set_owned_bridge(owner,aux::i2p_owner_purpose::Peer,6881,6881,11);b.set_owned_bridge(owner,aux::i2p_owner_purpose::Peer,6881,6881,22);
++  error_code ec;a.next_layer().connect(listener.local_endpoint(),ec);TEST_CHECK(!ec);tcp::socket peer_a(io);listener.accept(peer_a,ec);TEST_CHECK(!ec);
++  b.next_layer().connect(listener.local_endpoint(),ec);TEST_CHECK(!ec);tcp::socket peer_b(io);listener.accept(peer_b,ec);TEST_CHECK(!ec);
++  TEST_EQUAL(owner->revoke(second),0u);char bytes[]={'o','k'};TEST_EQUAL(b.write_some(boost::asio::buffer(bytes),ec),0u);TEST_EQUAL(ec,error_code(boost::asio::error::operation_aborted));
++  bool completed=false;b.async_write_some(boost::asio::buffer(bytes),[&](error_code error,std::size_t n){TEST_EQUAL(error,error_code(boost::asio::error::operation_aborted));TEST_EQUAL(n,0u);completed=true;});io.run();TEST_CHECK(completed);
++  TEST_EQUAL(a.write_some(boost::asio::buffer(bytes),ec),2u);TEST_CHECK(!ec);char received[2]{};TEST_EQUAL(boost::asio::read(peer_a,boost::asio::buffer(received),ec),2u);TEST_CHECK(!ec);TEST_EQUAL(std::string(received,2),"ok");
++  io.restart();peer_b.non_blocking(true,ec);char absent[2]{};TEST_EQUAL(peer_b.read_some(boost::asio::buffer(absent),ec),0u);TEST_CHECK(ec==boost::asio::error::would_block||ec==boost::asio::error::try_again);TEST_CHECK(owner->current());
++}
++
++namespace {
++struct MultiQueueResults final:BiglybtcQueueObserverV1 {
++  unsigned count=0;void observe(BiglybtcQueueEventV1 const&)noexcept override{++count;}
++};
++struct MultiTrackerResults final:BiglybtcTrackerResponseObserverV1 {
++  unsigned count=0;void observe(BiglybtcTrackerResponseEventV1 const&)noexcept override{++count;}
++};
++}
++TORRENT_TEST(private_i2p_multi_late_tracker_results_require_current_full_request)
++{
++  session ses{session_params{isolated()}};auto executor_work=make_work_guard(ses.native_handle()->get_context());auto ti=metadata('r');auto p=policy();
++  std::copy_n(reinterpret_cast<unsigned char const*>(ti->info_hashes().v1.data()),20,p.torrent_v1.begin());
++  TEST_EQUAL(biglybtc_configure_private_i2p_owner_v1(&ses,&p),0u);auto other=tuple(22,2);TEST_EQUAL(biglybtc_admit_private_i2p_torrent_v1(&ses,&other),0u);
++  add_torrent_params add;add.ti=ti;add.save_path=".";add.flags|=torrent_flags::paused;add.flags&=~torrent_flags::auto_managed;error_code ec;auto handle=ses.add_torrent(add,ec);TEST_CHECK(!ec);TEST_CHECK(handle.is_valid());
++  auto completion=std::make_shared<std::promise<void>>();auto done=completion->get_future();
++  boost::asio::post(ses.native_handle()->get_context(),[impl=ses.native_handle(),t=handle.native_handle(),p,other,completion]{try{
++    TEST_CHECK(t);if(!t){completion->set_value();return;}
++    i2p_connection sam(impl->get_context());sam.set_owned_bridge(impl->i2p_owned_bridge());
++    i2p_connection foreign(impl->get_context());foreign.set_owned_bridge(std::make_shared<aux::i2p_owner_context>(p));
++    auto queue=std::make_shared<MultiQueueResults>();auto results=std::make_shared<MultiTrackerResults>();
++    TEST_CHECK(t->biglybtc_attach_queue_observer(queue));TEST_CHECK(t->biglybtc_attach_tracker_response_observer(results,p.admission));
++    tracker_request request;request.url=t->torrent_file().trackers()[0].url;request.kind=tracker_request::i2p;
++    request.info_hash=t->torrent_file().info_hashes().v1;request.biglybtc_owned_hashes=t->torrent_file().info_hashes();request.biglybtc_owned_admission=p.admission;request.i2pconn=&sam;
++    auto* entry=t->find_tracker(request.url);TEST_CHECK(entry);if(!entry){completion->set_value();return;}entry->endpoints.clear();entry->endpoints.emplace_back(aux::listen_socket_handle{},false);
++    t->biglybtc_queue_dispatch(request);
++    auto snapshot=[&]{auto* current=t->find_tracker(request.url);auto const& value=current->endpoints[0].info_hashes[protocol_version::V1];
++      return std::make_tuple(bool(current->verified),int(current->fail_limit),value.scrape_complete,value.scrape_incomplete,value.scrape_downloaded,
++        value.next_announce,value.min_announce,int(value.fails),bool(value.updating),bool(value.start_sent),bool(value.complete_sent),value.message,value.last_error,queue->count,results->count);};
++    auto deliver=[&](tracker_request candidate){candidate.kind&=~tracker_request::scrape_request;
++      tracker_response response;response.complete=91;response.incomplete=92;response.downloaded=93;response.interval=seconds32(900);response.min_interval=seconds32(600);
++      t->tracker_response(candidate,address{},std::list<address>{},response);
++      t->tracker_warning(candidate,"late warning");
++      t->tracker_request_error(candidate,error_code(410,http_category()),operation_t::bittorrent,"late failure",seconds32(1200));
++      candidate.kind|=tracker_request::scrape_request;t->tracker_scrape_response(candidate,81,82,83,0);
++      t->tracker_request_error(candidate,error_code(410,http_category()),operation_t::bittorrent,"late scrape failure",seconds32(1200));};
++    // Genuine current handler entries update state and both retained observers.
++    tracker_response response;response.complete=7;response.incomplete=8;response.downloaded=9;t->tracker_response(request,address{},std::list<address>{},response);
++    TEST_EQUAL(entry->endpoints[0].info_hashes[protocol_version::V1].scrape_complete,7);TEST_EQUAL(queue->count,1u);TEST_EQUAL(results->count,1u);
++    auto scrape=request;scrape.kind|=tracker_request::scrape_request;t->tracker_scrape_response(scrape,11,12,13,0);TEST_EQUAL(entry->endpoints[0].info_hashes[protocol_version::V1].scrape_incomplete,12);TEST_EQUAL(queue->count,2u);TEST_EQUAL(results->count,2u);
++    t->tracker_request_error(request,error_code(410,http_category()),operation_t::bittorrent,"current failure",seconds32(30));TEST_EQUAL(int(entry->endpoints[0].info_hashes[protocol_version::V1].fails),1);TEST_EQUAL(queue->count,3u);TEST_EQUAL(results->count,3u);
++    t->tracker_warning(request,"current warning");TEST_EQUAL(entry->endpoints[0].info_hashes[protocol_version::V1].message,"current warning");
++    const auto current=snapshot();
++    auto bad=request;bad.biglybtc_owned_admission=0;deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.biglybtc_owned_admission=other.admission;bad.biglybtc_owned_hashes=hashes(other);deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.biglybtc_owned_hashes.v1[0]^=1;deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.info_hash[0]^=1;deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.kind&=~tracker_request::i2p;deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.i2pconn=nullptr;deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.i2pconn=&foreign;deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.url="http://example.invalid/announce";deliver(bad);TEST_CHECK(snapshot()==current);
++    bad=request;bad.url="udp://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.b32.i2p:80/announce";deliver(bad);TEST_CHECK(snapshot()==current);
++    auto subject=tuple(p.admission,1);subject.torrent_v1=p.torrent_v1;TEST_EQUAL(impl->biglybtc_revoke_private_i2p_torrent(subject),0u);
++    const auto retired=snapshot();deliver(request);TEST_CHECK(snapshot()==retired);TEST_CHECK(impl->i2p_owned_bridge()->current());TEST_CHECK(impl->i2p_owned_bridge()->matches(hashes(other),other.admission));
++    completion->set_value();
++  }catch(...){completion->set_exception(std::current_exception());}});
++  const auto ready=done.wait_for(std::chrono::seconds(5));TEST_CHECK(ready==std::future_status::ready);if(ready==std::future_status::ready)done.get();
++}
+ #endif

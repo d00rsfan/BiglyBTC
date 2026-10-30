@@ -1,0 +1,5 @@
+{
+  "status": "NOT_ADOPTED_SOURCE_PROPOSAL",
+  "reason": "Parent fixture was already reviewed and executing immutable subjects; no positive credit is granted for any EOF. Effective executed Java/runner hashes are frozen in each actual inputs and root-adoption records. Later proven header-timeout amendment is separate.",
+  "runtime_credit": false
+}

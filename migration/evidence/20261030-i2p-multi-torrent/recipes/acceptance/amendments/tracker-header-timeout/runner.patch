@@ -1,0 +1,11 @@
+--- a/runner
++++ b/runner
+@@ -385,7 +385,7 @@
+             'router-ready.json','router-result.json','seeder-announced.json','native.log','tracker.log','router.log',
+             'native-phase.json','native-progress.json','native-terminal.json','seed.dest','leech.dest','tracker.dest',
+             'tracker.url','torrent.hashes','i2p-multi-preview.png','private-cleanup.json',
+-            'tracker-progress.json','tracker-failure.json','tracker-eof.json','shared-controls-ready.json','shared-session-precondition.json','leech-restart-ready.json',
++            'tracker-progress.json','tracker-failure.json','tracker-eof.json','tracker-timeouts.json','shared-controls-ready.json','shared-session-precondition.json','leech-restart-ready.json',
+             'leech-retired.json','native-restarted.json','cache-restart-precondition.json')
+         public={str((out/name).resolve()):sha(out/name) for name in public_names if (out/name).is_file()}
+         if (out/'commands.json').is_file():

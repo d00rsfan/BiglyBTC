@@ -1,0 +1,712 @@
+--- a/preview/native/engine/managed_storage.cpp
++++ b/preview/native/engine/managed_storage.cpp
+@@ -709,9 +709,9 @@
+ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose) {
+   return prepareImpl(lease,hash,policy,claimed,retainedIdentities,std::move(swarmBridge),purpose,nullptr);
+ }
+-std::expected<ManagedStorage,Error> ManagedStorage::prepareOwnedI2p(const storage::ProfileLease& lease,const core::TorrentHash& hash,const OwnedI2pPolicy& owned){
++std::expected<ManagedStorage,Error> ManagedStorage::prepareOwnedI2p(const storage::ProfileLease& lease,const core::TorrentHash& hash,const OwnedI2pPolicy& owned,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> identities){
+   if(!owned.matches(lease,hash)){return std::unexpected(Error{ErrorCode::Conflict,"Owned I2P storage needs SAME lease/hash"});}
+-  return prepareImpl(lease,hash,NetworkPolicy{}, {}, {}, {},ManagedStoragePurpose::Download,&owned);
++  return prepareImpl(lease,hash,NetworkPolicy{},claimed,identities,{},ManagedStoragePurpose::Download,&owned);
+ }
+ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned) {
+   try {
+--- a/preview/native/engine/managed_storage.hpp
++++ b/preview/native/engine/managed_storage.hpp
+@@ -69,7 +69,9 @@
+       ManagedStoragePurpose purpose=ManagedStoragePurpose::Download);
+   // Separate minted I2P-only policy; ordinary prepare/global policy unchanged.
+   static std::expected<ManagedStorage,storage::Error> prepareOwnedI2p(
+-      const storage::ProfileLease&,const core::TorrentHash&,const OwnedI2pPolicy&);
++      const storage::ProfileLease&,const core::TorrentHash&,const OwnedI2pPolicy&,
++      std::span<const ManagedPayloadClaim> claimed={},
++      std::span<const storage::OriginalTorrentIdentity> retainedIdentities={});
+   ManagedStorage(ManagedStorage&&) noexcept;
+   ManagedStorage& operator=(ManagedStorage&&) noexcept;
+   ManagedStorage(const ManagedStorage&) = delete;
+--- a/preview/native/services/i2cp_channel/effect_authority.hpp
++++ b/preview/native/services/i2cp_channel/effect_authority.hpp
+@@ -10,6 +10,7 @@
+ // current() performs atomics only, never filesystem work or a Qt callback.
+ class EffectAuthority final {
+ public:
++  bool revoked()const noexcept{return revoked_.load();}
+   bool current()const noexcept{try{return !revoked_.load()&&current_(revision_.load());}catch(...){return false;}}
+   bool granted()const noexcept{return granted_.load()&&current();}
+ private:
+--- a/preview/native/services/i2cp_channel/managed_streams.inc
++++ b/preview/native/services/i2cp_channel/managed_streams.inc
+@@ -6,7 +6,7 @@
+   std::optional<DeferredLease> managedLease;
+   bool managedCurrent(){
+     if(!managedStreams){return false;}
+-    if(sourceAuthority&&!sourceAuthority->current()){fail(Failure::SourceChanged);return false;}
++    if(sourceAuthority&&sourceAuthority->revoked()){fail(Failure::SourceChanged);return false;}
+     if(generation!=managedGeneration||state!=State::SessionCreated||!leaseCurrent()){
+       managedStreams->terminate(streaming::Phase::LeaseExpired);managedLease.reset();streamTimer.stop();notifyStream();return false;
+     }
+--- a/preview/native/services/i2cp_channel/owned_effects.inc
++++ b/preview/native/services/i2cp_channel/owned_effects.inc
+@@ -8,7 +8,7 @@
+   void clearSourceEffects(){sourceLease.reset();sourceEffectPending=false;sourceEffectQueued=false;effectTimer.stop();}
+   bool effectReady(){
+     if(!sourceAuthority){return true;}
+-    if(!sourceAuthority->current()){fail(Failure::SourceChanged);return false;}
++    if(sourceAuthority->revoked()){fail(Failure::SourceChanged);return false;}
+     if(sourceAuthority->granted()){return true;}
+     if(!sourceEffectPending){sourceEffectPending=true;sourceEffectEnd=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);effectTimer.start(options.deadlineMilliseconds);}
+     if(Clock::now()>=sourceEffectEnd){fail(Failure::Deadline);return false;}
+--- a/preview/native/services/i2p_provider/bridge.cpp
++++ b/preview/native/services/i2p_provider/bridge.cpp
+@@ -20,6 +20,7 @@
+ #include <array>
+ #include <chrono>
+ #include <limits>
++#include <cstring>
+ 
+ namespace biglybtc::services::i2p::provider {
+ struct Bridge::Impl {
+@@ -33,7 +34,7 @@
+   };
+   Bridge* q;std::shared_ptr<ProfileSource> source;QPointer<i2cp::InitialChannel> channel;
+   QTcpServer server;QTimer timer;std::unique_ptr<SourcePermit> permit;
+-  int watch=-1;std::unique_ptr<QSocketNotifier> watcher;
++  int watch=-1;std::unique_ptr<QSocketNotifier> watcher;std::vector<int> criticalWatches;
+   std::array<std::optional<Socket>,MaximumBridgeSockets> sockets;
+   std::vector<Destination> peers;std::vector<Destination> resolved;
+   std::optional<std::size_t> control;
+@@ -254,9 +255,29 @@
+   if(!s.channel->enableStreamManager(streaming::ManagerOptions{})){s.close();return false;}
+   s.phase=Phase::Preparing;s.preparingEnd=end;
+     s.watch=::inotify_init1(IN_CLOEXEC|IN_NONBLOCK);if(s.watch<0){s.close();return false;}
+-    for(int fd:s.source->watchDescriptors()){if(fd<0||::inotify_add_watch(s.watch,("/proc/self/fd/"+std::to_string(fd)).c_str(),IN_ATTRIB|IN_CLOSE_WRITE|IN_MOVE_SELF|IN_DELETE_SELF|IN_UNMOUNT)<0){s.close();return false;}}
++    const auto critical=s.source->criticalWatchDescriptors();
++    for(int fd:s.source->watchDescriptors()){
++      const auto mask=IN_ATTRIB|IN_CLOSE_WRITE|IN_MOVE_SELF|IN_DELETE_SELF|IN_UNMOUNT
++          |(s.source->groupMode()?(IN_CREATE|IN_DELETE|IN_MOVED_FROM|IN_MOVED_TO):0);
++      const int wd=fd<0?-1: ::inotify_add_watch(s.watch,("/proc/self/fd/"+std::to_string(fd)).c_str(),mask);
++      if(wd<0){s.close();return false;}if(std::find(critical.begin(),critical.end(),fd)!=critical.end()){s.criticalWatches.push_back(wd);}
++    }
+     s.watcher=std::make_unique<QSocketNotifier>(s.watch,QSocketNotifier::Read,this);
+-    QObject::connect(s.watcher.get(),&QSocketNotifier::activated,this,[this]{std::array<char,4096> bytes{};const auto n=::read(impl_->watch,bytes.data(),bytes.size());if(n>0||(n<0&&errno!=EAGAIN&&errno!=EINTR)){impl_->close();}});
++    QObject::connect(s.watcher.get(),&QSocketNotifier::activated,this,[this]{
++      std::array<char,4096> bytes{};const auto n=::read(impl_->watch,bytes.data(),bytes.size());
++      if(n<0){if(errno!=EAGAIN&&errno!=EINTR){impl_->close();}return;}if(n==0){impl_->close();return;}
++      if(!impl_->source->groupMode()){impl_->close();return;}
++      for(std::size_t offset=0;offset<static_cast<std::size_t>(n);){
++        if(static_cast<std::size_t>(n)-offset<sizeof(inotify_event)){impl_->close();return;}
++        inotify_event event{};std::memcpy(&event,bytes.data()+offset,sizeof(event));
++        if(event.len>static_cast<std::size_t>(n)-offset-sizeof(event)){impl_->close();return;}
++        if((event.mask&(IN_Q_OVERFLOW|IN_UNMOUNT))||std::find(impl_->criticalWatches.begin(),impl_->criticalWatches.end(),event.wd)!=impl_->criticalWatches.end()){
++          impl_->close();return;
++        }
++        offset+=sizeof(event)+event.len;
++      }
++      impl_->source->invalidate();impl_->schedule();
++    });
+     s.permit=std::make_unique<SourcePermit>(s.source,this);
+     if(Impl::Clock::now()>=end){s.close();return false;}s.arm();s.schedule();return true;
+   }catch(...){s.close();return false;}
+--- a/preview/native/services/i2p_provider/profile_source.cpp
++++ b/preview/native/services/i2p_provider/profile_source.cpp
+@@ -24,11 +24,11 @@
+ bool sameDirectory(const struct stat& a,const struct stat& b){return S_ISDIR(a.st_mode)&&S_ISDIR(b.st_mode)&&a.st_uid==::geteuid()&&b.st_uid==a.st_uid&&a.st_gid==b.st_gid&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode;}
+ bool sameFile(const struct stat& a,const struct stat& b){return S_ISREG(a.st_mode)&&S_ISREG(b.st_mode)&&a.st_uid==::geteuid()&&a.st_uid==b.st_uid&&a.st_nlink==1&&b.st_nlink==1&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;}
+ bool absent(int directory,const std::string& name){struct stat st{};if(::fstatat(directory,name.c_str(),&st,AT_SYMLINK_NOFOLLOW)==0){return false;}return errno==ENOENT;}
++constexpr core::Limits SourceLimits{.inputBytes=8*1024*1024,.stringBytes=8*1024*1024,.nodes=100000,.depth=64};
+ struct Stamp {std::string config,inventory,state;bool operator==(const Stamp&)const=default;};
+-Stamp capture(const storage::ProfileLease& lease,const core::TorrentHash& hash,const std::string& directory){
+-  constexpr core::Limits limits{.inputBytes=8*1024*1024,.stringBytes=8*1024*1024,.nodes=100000,.depth=64};
++Stamp capture(const storage::ProfileLease& lease,const core::TorrentHash* hash,const std::string& directory,bool running=true){
+   require(absent(lease.directoryHandle(),"biglybt.config.saving")&&absent(lease.directoryHandle(),"downloads.config.saving"),ErrorCode::Conflict,"Resolve owned I2P source recovery first");
+-  auto config=take(storage::ConfigFile::load(lease,"biglybt.config",limits));auto inventory=take(storage::ConfigFile::load(lease,"downloads.config",limits));
++  auto config=take(storage::ConfigFile::load(lease,"biglybt.config",SourceLimits));auto inventory=take(storage::ConfigFile::load(lease,"downloads.config",SourceLimits));
+   require(config.recoverySource()==storage::RecoverySource::Primary&&inventory.recoverySource()==storage::RecoverySource::Primary&&unique(config.document().root())&&unique(inventory.document().root()),ErrorCode::Conflict,"Owned I2P requires unique primary sources");
+   auto binding=storage::originalPluginBinding("azneti2phelper",directory);require(bool(binding),ErrorCode::InvalidFormat,"Invalid original I2P plugin directory");
+   storage::OriginalPluginSettings settings(config.document(),std::move(*binding));
+@@ -38,10 +38,15 @@
+   const auto* rows=inventory.document().find("downloads");if(rows){require(rows->type==core::Node::Type::List,ErrorCode::InvalidFormat,"Invalid I2P inventory rows");for(const auto& row:rows->children){require(unique(row),ErrorCode::InvalidFormat,"Duplicate I2P inventory row");}}
+   else{for(std::size_t i=0;i<inventory.document().root().children.size();i+=2){const auto& row=inventory.document().root().children[i+1];if(row.type==core::Node::Type::Dictionary){require(unique(row),ErrorCode::InvalidFormat,"Duplicate legacy I2P inventory row");}}}
+   bool found=false;std::set<std::string> seen;
+-  for(const auto& row:library->downloads){require(row.hash&&seen.insert(row.hash->hex()).second,ErrorCode::Conflict,"Ambiguous owned I2P inventory identity");if(*row.hash==hash){require(row.persistent&&row.startup!=core::StartupState::Stopped,ErrorCode::Unsupported,"Owned I2P download has no current start intent");found=true;}}
+-  require(found&&std::none_of(library->paused.begin(),library->paused.end(),[&](const auto& p){return p.hash==hash;}),ErrorCode::Conflict,"Owned I2P download is absent or paused");
+-  Descriptor active(::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));require(active.get()>=0&&absent(active.get(),hash.hex()+".dat.saving"),ErrorCode::Conflict,"Resolve owned I2P metadata saving recovery first");
+-  auto store=take(storage::TorrentStateStore::open(lease));auto state=take(store.loadAttributes(lease,hash));
++  for(const auto& row:library->downloads){require(row.hash&&seen.insert(row.hash->hex()).second,ErrorCode::Conflict,"Ambiguous owned I2P inventory identity");if(hash&&*row.hash==*hash){require(row.persistent&&(!running||row.startup!=core::StartupState::Stopped),ErrorCode::Unsupported,"Owned I2P download has no current start intent");found=true;}}
++  if(!hash){
++    for(const auto* pending:{"BiglyBTC.torrent-import","BiglyBTC.torrent-import.saving","BiglyBTC.torrent-import.inventory","BiglyBTC.torrent-import.backup"}){
++      require(absent(lease.directoryHandle(),pending),ErrorCode::Conflict,"Resolve I2P inventory import recovery first");}
++    return {config.document().serialize(),inventory.document().serialize(),{}};
++  }
++  require(found&&(!running||std::none_of(library->paused.begin(),library->paused.end(),[&](const auto& p){return p.hash==*hash;})),ErrorCode::Conflict,"Owned I2P download is absent or paused");
++  Descriptor active(::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));require(active.get()>=0&&absent(active.get(),hash->hex()+".dat.saving"),ErrorCode::Conflict,"Resolve owned I2P metadata saving recovery first");
++  auto store=take(storage::TorrentStateStore::open(lease));auto state=take(store.loadAttributes(lease,*hash));
+   require(!state.recoveredBackup()&&unique(state.document().root()),ErrorCode::Conflict,"Resolve owned I2P metadata recovery first");
+   const auto* attrs=state.document().find("attributes");require(attrs&&unique(*attrs),ErrorCode::InvalidFormat,"Unique owned I2P attributes required");
+   const auto* networks=attrs->find("networks");require(networks&&networks->type==core::Node::Type::List&&networks->children.size()==1&&networks->children[0].type==core::Node::Type::Bytes&&networks->children[0].bytes=="I2P",ErrorCode::Unsupported,"Dedicated owned admission requires only saved I2P network");
+@@ -52,6 +57,48 @@
+   require(tracker,ErrorCode::Unsupported,"Original I2P Tracker source disabled");
+   return {config.document().serialize(),inventory.document().serialize(),state.document().serialize()};
+ }
++std::string raw(const core::Document& d,const core::Node& n){return d.originalBytes().substr(n.begin,n.end-n.begin);}
++std::string inventoryScope(const std::string& bytes,const core::TorrentHash& hash,bool selected){
++  auto d=take(core::Document::parse(bytes,SourceLimits).transform_error([](const auto&){return Error{ErrorCode::InvalidFormat,"Cannot project I2P inventory"};}));
++  auto library=take(core::readLibrary(d).transform_error([](const auto&){return Error{ErrorCode::InvalidFormat,"Cannot project I2P rows"};}));
++  const core::SavedDownload* target=nullptr;for(const auto& row:library.downloads){if(row.hash&&*row.hash==hash){target=&row;}}
++  std::string out="d",pauses="l";
++  for(std::size_t i=0;i<d.root().children.size();i+=2){
++    const auto& key=d.root().children[i];const auto& value=d.root().children[i+1];
++    if(key.bytes=="downloads"){
++      std::string rows="l";for(std::size_t j=0;j<value.children.size();++j){if((target&&j==target->sourceIndex)==selected){rows+=raw(d,value.children[j]);}}
++      out+=raw(d,key)+rows+'e';
++    }else if(key.bytes=="pause_data"){
++      require(value.type==core::Node::Type::List,ErrorCode::InvalidFormat,"Invalid I2P pause list");
++      for(const auto& pause:value.children){const auto* encoded=pause.find("hash");
++        require(encoded&&encoded->type==core::Node::Type::Bytes,ErrorCode::InvalidFormat,"Invalid I2P pause hash");
++        auto parsed=core::TorrentHash::parse(encoded->bytes);require(bool(parsed),ErrorCode::InvalidFormat,"Invalid I2P pause identity");
++        if((*parsed==hash)==selected){pauses+=raw(d,pause);}}
++    }else if(library.legacyMap&&target&&target->legacyKey&&key.bytes==*target->legacyKey){
++      if(selected){out+=raw(d,key)+raw(d,value);}
++    }else if(!selected){out+=raw(d,key)+raw(d,value);}
++  }return out+"10:pause_data"+pauses+"ee";
++}
++std::string positionInvariant(const std::string& bytes,bool published=false){
++  auto d=take(core::Document::parse(bytes,SourceLimits).transform_error([](const auto&){return Error{ErrorCode::InvalidFormat,"Cannot project I2P positions"};}));
++  auto library=take(core::readLibrary(d).transform_error([](const auto&){return Error{ErrorCode::InvalidFormat,"Cannot project I2P position rows"};}));
++  const auto rowWithoutPosition=[&](const core::Node& row){
++    require(unique(row),ErrorCode::InvalidFormat,"Unique I2P position row required");std::string out="d";
++    for(std::size_t j=0;j<row.children.size();j+=2){const auto& key=row.children[j];const auto& value=row.children[j+1];
++      if(key.bytes=="position"){require(value.type==core::Node::Type::Integer&&(!published||value.integer>0),ErrorCode::InvalidFormat,"Invalid published I2P queue position");}
++      else{out+=raw(d,key)+raw(d,value);}}
++    return out+'e';
++  };
++  std::string out="d";for(std::size_t i=0;i<d.root().children.size();i+=2){const auto& key=d.root().children[i];const auto& value=d.root().children[i+1];out+=raw(d,key);
++    if(key.bytes=="downloads"){
++      require(value.type==core::Node::Type::List,ErrorCode::InvalidFormat,"I2P position list required");out+='l';for(const auto& row:value.children){out+=rowWithoutPosition(row);}out+='e';
++    }else if(library.legacyMap&&std::any_of(library.downloads.begin(),library.downloads.end(),[&](const auto& row){return row.sourceIndex==i/2;})){out+=rowWithoutPosition(value);}
++    else{out+=raw(d,value);}
++  }return out+'e';
++}
++Stamp memberCapture(const storage::ProfileLease& lease,const core::TorrentHash& hash,const std::string& directory,bool running=true){
++  auto value=capture(lease,&hash,directory,running);value.inventory=inventoryScope(value.inventory,hash,true);return value;
++}
+ }
+ struct ProfileSource::Impl {
+   std::shared_ptr<const storage::ProfileLease> lease;
+@@ -59,13 +106,37 @@
+   Descriptor plugins{-1},plugin{-1},key{-1},active{-1};
+   struct Bound {int directory=-1;std::string name;Descriptor fd{-1};struct stat stat{};};
+   std::vector<Bound> bound;struct stat profileStat{},pluginsStat{},pluginStat{},keyStat{},activeStat{};
+-  std::optional<ClientIdentity> identity;Destination publicIdentity;std::optional<Stamp> stamp;
+-  std::vector<std::pair<Hash,std::uint16_t>> trackers;std::shared_ptr<i2cp::EffectAuthority> authority;std::atomic<bool> revoked{false};
++  std::optional<ClientIdentity> identity;Destination publicIdentity;std::optional<Stamp> stamp,accepted;
++  std::vector<std::pair<Hash,std::uint16_t>> trackers;std::shared_ptr<i2cp::EffectAuthority> authority;std::atomic<bool> revoked{false},dirty{false};
++  bool session=false,publishing=false;
++  std::shared_ptr<ProfileSource> anchor;
++  std::vector<std::weak_ptr<ProfileSource>> children;
++  std::vector<engine::detail::ManagedPayloadClaim> claimed;
++  std::vector<storage::OriginalTorrentIdentity> retainedIdentities;
++  std::vector<engine::detail::ManagedPayloadClaim> admissionClaims;
++  std::optional<storage::OriginalTorrentIdentity> admissionIdentity;
++  const Stamp* snapshot()const noexcept{return stamp?&*stamp:accepted?&*accepted:nullptr;}
++  struct TrackerGrant {Hash hash;std::uint16_t port;std::weak_ptr<ProfileSource> child;};
++  std::atomic<std::shared_ptr<const std::vector<TrackerGrant>>> trackerGrants;
++  void bind(int directory,std::string name){
++    Bound file;file.directory=directory;file.name=std::move(name);file.fd=Descriptor(::openat(directory,file.name.c_str(),O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_NOFOLLOW));
++    struct stat named{};require(file.fd.get()>=0&&::fstat(file.fd.get(),&file.stat)==0&&sameFile(file.stat,file.stat)
++        &&::fstatat(directory,file.name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&sameFile(file.stat,named),ErrorCode::UnsafePath,"Private current regular I2P source required");
++    auto old=std::find_if(bound.begin(),bound.end(),[&](const auto& v){return v.directory==directory&&v.name==file.name;});
++    if(old==bound.end()){bound.push_back(std::move(file));}else{*old=std::move(file);}
++  }
++  void refreshTrackers(){
++    auto grants=std::make_shared<std::vector<TrackerGrant>>();
++    for(const auto& weak:children){if(auto child=weak.lock();child&&child->impl_->stamp&&!child->impl_->revoked){
++      for(const auto& [hash,port]:child->impl_->trackers){grants->push_back({hash,port,child});}}}
++    trackerGrants.store(std::move(grants));
++  }
+   Impl(std::shared_ptr<const storage::ProfileLease> l,core::TorrentHash h,std::string d,engine::OwnedI2pPolicy p):lease(std::move(l)),hash(std::move(h)),directory(std::move(d)),policy(std::move(p)){}
+   bool namedCurrent()const{
+     struct stat profile{},a{},b{},c{},d{},e{},f{};
+     const bool files=std::all_of(bound.begin(),bound.end(),[](const auto& file){struct stat held{},named{};return ::fstat(file.fd.get(),&held)==0&&sameFile(file.stat,held)&&::fstatat(file.directory,file.name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&sameFile(held,named);});
+     struct stat activeHeld{},activeNamed{};const bool activeCurrent=active.get()<0||(::fstat(active.get(),&activeHeld)==0&&sameDirectory(activeStat,activeHeld)&&::fstatat(lease->directoryHandle(),"active",&activeNamed,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(activeHeld,activeNamed));
++    if(anchor){return files&&activeCurrent&&lease->valid();}
+     return files&&activeCurrent&&lease->valid()&&::fstat(lease->directoryHandle(),&profile)==0&&sameDirectory(profileStat,profile)
+       &&::fstat(plugins.get(),&a)==0&&sameDirectory(pluginsStat,a)&&::fstatat(lease->directoryHandle(),"plugins",&b,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(a,b)
+       &&::fstat(plugin.get(),&c)==0&&sameDirectory(pluginStat,c)&&::fstatat(plugins.get(),directory.c_str(),&d,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(c,d)
+@@ -74,7 +145,9 @@
+ };
+ ProfileSource::ProfileSource(std::unique_ptr<Impl> impl):impl_(std::move(impl)){}
+ ProfileSource::~ProfileSource()=default;
+-std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::open(const storage::ProfileLease& caller,const core::TorrentHash& hash,std::string directory){
++std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::open(const storage::ProfileLease& caller,const core::TorrentHash& hash,std::string directory){return openImpl(caller,hash,std::move(directory),false);}
++std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::createSession(const storage::ProfileLease& caller,std::string directory){return openImpl(caller,core::TorrentHash{},std::move(directory),true);}
++std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::openImpl(const storage::ProfileLease& caller,const core::TorrentHash& hash,std::string directory,bool session){
+   try{
+     auto retained=take(caller.retain());const auto& held=*retained;auto access=take(held.sourceAccess());
+     auto binding=storage::originalPluginBinding("azneti2phelper",directory);require(bool(binding),ErrorCode::UnsafePath,"Invalid I2P plugin basename");
+@@ -91,54 +164,186 @@
+     while(done<size){const auto n=::pread(impl->key.get(),bytes.data()+done,size-done,static_cast<off_t>(done));if(n<0&&errno==EINTR){continue;}require(n>0,ErrorCode::Io,"Cannot read original I2P identity");done+=static_cast<std::size_t>(n);}
+     auto identity=decodeClientIdentity(View(bytes).first(size));require(bool(identity),ErrorCode::Unsupported,"Unsupported or invalid original I2P identity");
+     impl->publicIdentity=*identity->destination();impl->identity.emplace(std::move(*identity));
+-    static_cast<void>(capture(held,hash,impl->directory));require(impl->namedCurrent(),ErrorCode::Conflict,"I2P identity source changed during loading");
+-    return std::shared_ptr<ProfileSource>(new ProfileSource(std::move(impl)));
++    impl->session=session;
++    auto initial=capture(held,session?nullptr:&hash,impl->directory);
++    if(session){
++      impl->bind(held.directoryHandle(),".azlock");impl->bind(held.directoryHandle(),"biglybt.config");impl->bind(held.directoryHandle(),"downloads.config");
++      impl->active=Descriptor(::openat(held.directoryHandle(),"active",O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_DIRECTORY));
++      require(impl->active.get()>=0&&::fstat(impl->active.get(),&impl->activeStat)==0,ErrorCode::UnsafePath,"Held I2P metadata directory required");impl->stamp=std::move(initial);
++    }
++    require(impl->namedCurrent(),ErrorCode::Conflict,"I2P identity source changed during loading");
++    auto result=std::shared_ptr<ProfileSource>(new ProfileSource(std::move(impl)));
++    if(session){const std::weak_ptr<ProfileSource> weak=result;result->impl_->authority=std::shared_ptr<i2cp::EffectAuthority>(new i2cp::EffectAuthority([weak](std::uint64_t revision){auto held=weak.lock();return held&&held->revisionCurrent(revision);},held.sourceRevision()));}
++    return result;
+   }catch(const Rejected& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot retain owned I2P profile source"});}
+ }
+ const std::shared_ptr<const storage::ProfileLease>& ProfileSource::lease()const noexcept{return impl_->lease;}
+-std::vector<int> ProfileSource::watchDescriptors()const{std::vector<int> result{impl_->lease->directoryHandle(),impl_->plugins.get(),impl_->plugin.get(),impl_->key.get(),impl_->active.get()};for(const auto& file:impl_->bound){result.push_back(file.fd.get());}return result;}
++std::vector<int> ProfileSource::watchDescriptors()const{std::vector<int> result;for(int fd:{impl_->lease->directoryHandle(),impl_->plugins.get(),impl_->plugin.get(),impl_->key.get(),impl_->active.get()}){if(fd>=0){result.push_back(fd);}}for(const auto& file:impl_->bound){result.push_back(file.fd.get());}return result;}
++std::vector<int> ProfileSource::criticalWatchDescriptors()const{std::vector<int> result;if(impl_->key.get()>=0){result.push_back(impl_->key.get());}for(const auto& file:impl_->bound){if(file.name==".azlock"||file.name=="biglybt.config"){result.push_back(file.fd.get());}}return result;}
++bool ProfileSource::groupMode()const noexcept{return impl_->session||bool(impl_->anchor);}
++void ProfileSource::invalidate()noexcept{impl_->dirty=true;if(impl_->anchor){impl_->anchor->impl_->dirty=true;}}
+ const Destination& ProfileSource::destination()const noexcept{return impl_->publicIdentity;}
+ const engine::OwnedI2pPolicy& ProfileSource::policy()const noexcept{return impl_->policy;}
+ const core::TorrentHash& ProfileSource::hash()const noexcept{return impl_->hash;}
+ bool ProfileSource::prepared()const noexcept{return impl_->stamp.has_value()&&!impl_->revoked;}
+ void ProfileSource::revoke()noexcept{impl_->revoked=true;if(impl_->authority){impl_->authority->revoke();}}
+ std::shared_ptr<i2cp::EffectAuthority> ProfileSource::effectAuthority()const noexcept{return impl_->authority;}
+-bool ProfileSource::revisionCurrent(std::uint64_t revision)const noexcept{return !impl_->revoked&&impl_->lease->sourceRevision()==revision;}
+-bool ProfileSource::trackerAllowed(const Hash& hash,std::uint16_t port)const noexcept{return std::find(impl_->trackers.begin(),impl_->trackers.end(),std::pair{hash,port})!=impl_->trackers.end();}
++bool ProfileSource::revisionCurrent(std::uint64_t revision)const noexcept{return !impl_->revoked&&!impl_->dirty&&(!impl_->anchor||(!impl_->anchor->impl_->revoked&&!impl_->anchor->impl_->dirty))&&impl_->lease->sourceRevision()==revision;}
++bool ProfileSource::trackerAllowed(const Hash& hash,std::uint16_t port)const noexcept{
++  if(impl_->revoked){return false;}if(impl_->session){auto grants=impl_->trackerGrants.load();if(!grants){return false;}
++    return std::any_of(grants->begin(),grants->end(),[&](const auto& grant){auto child=grant.child.lock();return child&&!child->impl_->revoked&&grant.hash==hash&&grant.port==port;});}
++  return std::find(impl_->trackers.begin(),impl_->trackers.end(),std::pair{hash,port})!=impl_->trackers.end();
++}
+ std::expected<ClientIdentity,storage::Error> ProfileSource::takeIdentity(){
+   auto valid=validate();if(!valid){return std::unexpected(valid.error());}
+   if(!impl_->identity){return std::unexpected(Error{ErrorCode::Conflict,"Original I2P identity already consumed"});}
+   ClientIdentity result=std::move(*impl_->identity);impl_->identity.reset();return result;
+ }
+ std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prepareStorage(){
+-  try{auto access=take(impl_->lease->sourceAccess());require(!impl_->stamp&&!impl_->revoked&&impl_->namedCurrent(),ErrorCode::Conflict,"Owned I2P preparation is one-shot/current");
+-    static_cast<void>(capture(*impl_->lease,impl_->hash,impl_->directory));
+-    auto storage=take(engine::detail::ManagedStorage::prepareOwnedI2p(*impl_->lease,impl_->hash,impl_->policy));
++  if(impl_->session){return std::unexpected(Error{ErrorCode::Unsupported,"Session anchor has no payload admission"});}
++  if(!impl_->anchor){return prepareStorageDirect();}
++  std::optional<engine::detail::ManagedStorage> result;
++  auto saved=impl_->anchor->publish(impl_->hash,[&]()->std::expected<void,Error>{auto value=prepareStorageDirect();if(!value){return std::unexpected(value.error());}result.emplace(std::move(*value));return {};});
++  if(!saved){revoke();return std::unexpected(saved.error());}
++  if(impl_->revoked){return std::unexpected(Error{ErrorCode::Cancelled,"I2P child retired during preparation"});}
++  return std::move(*result);
++}
++std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prepareStorageDirect(){
++  try{auto access=take(impl_->lease->sourceAccess());require(!impl_->session&&!impl_->stamp&&!impl_->revoked&&impl_->namedCurrent(),ErrorCode::Conflict,"Owned I2P preparation is one-shot/current");
++    if(impl_->anchor){require(impl_->accepted&&memberCapture(*impl_->lease,impl_->hash,impl_->directory)==*impl_->accepted,ErrorCode::Conflict,"I2P child source changed after acceptance");}
++    else{static_cast<void>(capture(*impl_->lease,&impl_->hash,impl_->directory));}
++    auto storage=take(engine::detail::ManagedStorage::prepareOwnedI2p(*impl_->lease,impl_->hash,impl_->policy,impl_->claimed,impl_->retainedIdentities));
+     std::vector<std::string> urls=storage.parameters().trackers;for(const auto& entry:storage.parameters().ti->trackers()){if(std::find(urls.begin(),urls.end(),entry.url)==urls.end()){urls.push_back(entry.url);}}
+     require(!urls.empty()&&urls.size()<=4,ErrorCode::Unsupported,"One to four exact I2P HTTP trackers required");
+     for(const auto& url:urls){std::string_view authority(url);authority.remove_prefix(7);authority=authority.substr(0,authority.find_first_of("/?#"));auto colon=authority.find(':');auto hash=hashName(authority.substr(0,colon));auto port=colon==std::string_view::npos?std::optional<std::uint64_t>(80):decimal(authority.substr(colon+1),65535);require(hash&&port&&*port,ErrorCode::Unsupported,"Exact numeric I2P tracker port/hash required");impl_->trackers.emplace_back(*hash,static_cast<std::uint16_t>(*port));}
+-    impl_->active=Descriptor(::openat(impl_->lease->directoryHandle(),"active",O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_DIRECTORY));
+-    require(impl_->active.get()>=0&&::fstat(impl_->active.get(),&impl_->activeStat)==0,ErrorCode::UnsafePath,"Held original active metadata directory required");
+-    const auto bind=[&](int directory,std::string name){Impl::Bound file;file.directory=directory;file.name=std::move(name);file.fd=Descriptor(::openat(directory,file.name.c_str(),O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_NOFOLLOW));require(file.fd.get()>=0&&::fstat(file.fd.get(),&file.stat)==0&&sameFile(file.stat,file.stat),ErrorCode::UnsafePath,"Private regular owned I2P source file required");impl_->bound.push_back(std::move(file));};
+-    bind(impl_->lease->directoryHandle(),".azlock");bind(impl_->lease->directoryHandle(),"biglybt.config");bind(impl_->lease->directoryHandle(),"downloads.config");bind(impl_->active.get(),impl_->hash.hex()+".dat");
+-    impl_->stamp=capture(*impl_->lease,impl_->hash,impl_->directory);require(impl_->namedCurrent(),ErrorCode::Conflict,"Owned I2P source changed during storage preparation");
++    if(impl_->active.get()<0){
++      impl_->active=Descriptor(::openat(impl_->lease->directoryHandle(),"active",O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_DIRECTORY));
++      require(impl_->active.get()>=0&&::fstat(impl_->active.get(),&impl_->activeStat)==0,ErrorCode::UnsafePath,"Held original active metadata directory required");
++    }
++    if(!impl_->anchor){impl_->bind(impl_->lease->directoryHandle(),".azlock");impl_->bind(impl_->lease->directoryHandle(),"biglybt.config");impl_->bind(impl_->lease->directoryHandle(),"downloads.config");}
++    impl_->bind(impl_->active.get(),impl_->hash.hex()+".dat");
++    impl_->stamp=impl_->anchor?memberCapture(*impl_->lease,impl_->hash,impl_->directory):capture(*impl_->lease,&impl_->hash,impl_->directory);
++    require(impl_->namedCurrent(),ErrorCode::Conflict,"Owned I2P source changed during storage preparation");
++    if(impl_->anchor){impl_->admissionClaims.assign(storage.claims().begin(),storage.claims().end());impl_->admissionIdentity=storage.identity();}
+     const std::weak_ptr<ProfileSource> source=shared_from_this();impl_->authority=std::shared_ptr<i2cp::EffectAuthority>(new i2cp::EffectAuthority([source](std::uint64_t revision){auto held=source.lock();return held&&held->revisionCurrent(revision);},impl_->lease->sourceRevision()));return storage;
+-  }catch(const Rejected& error){impl_->revoked=true;return std::unexpected(error.error);}catch(...){impl_->revoked=true;return std::unexpected(Error{ErrorCode::Io,"Owned I2P storage preparation failed"});}
++  }catch(const Rejected& error){revoke();return std::unexpected(error.error);}catch(...){revoke();return std::unexpected(Error{ErrorCode::Io,"Owned I2P storage preparation failed"});}
+ }
+ std::expected<void,storage::Error> ProfileSource::validate()const{
+-  try{auto alias=take(impl_->lease->retain());auto access=take(alias->sourceAccess());require(!impl_->revoked&&impl_->namedCurrent(),ErrorCode::Conflict,"Original I2P identity source is no longer current");
+-    const auto now=capture(*impl_->lease,impl_->hash,impl_->directory);require(!impl_->stamp||now==*impl_->stamp,ErrorCode::Conflict,"Owned I2P profile source changed");require(impl_->namedCurrent(),ErrorCode::Conflict,"Original I2P source changed while reading");return {};
+-  }catch(const Rejected& error){impl_->revoked=true;return std::unexpected(error.error);}catch(...){impl_->revoked=true;return std::unexpected(Error{ErrorCode::Io,"Owned I2P source validation failed"});}
++  try{auto alias=take(impl_->lease->retain());auto access=take(alias->sourceAccess());
++    require(!impl_->revoked,ErrorCode::Conflict,"Owned I2P source is revoked");
++    if(impl_->anchor){
++      auto valid=impl_->anchor->validate();if(!valid){return std::unexpected(valid.error());}
++      require(impl_->namedCurrent(),ErrorCode::Conflict,"I2P child metadata path changed");
++      const auto now=memberCapture(*impl_->lease,impl_->hash,impl_->directory);require(!impl_->snapshot()||now==*impl_->snapshot(),ErrorCode::Conflict,"I2P selected source changed");
++    }else{
++      require(impl_->namedCurrent(),ErrorCode::Conflict,"Original I2P identity source is no longer current");
++      const auto now=capture(*impl_->lease,impl_->session?nullptr:&impl_->hash,impl_->directory);
++      require(!impl_->stamp||now==*impl_->stamp,ErrorCode::Conflict,"Owned I2P profile source changed");
++      if(impl_->session){for(const auto& weak:impl_->children){if(auto child=weak.lock();child&&!child->impl_->revoked&&child->impl_->snapshot()){
++        require(child->impl_->namedCurrent()&&memberCapture(*impl_->lease,child->impl_->hash,impl_->directory)==*child->impl_->snapshot(),ErrorCode::Conflict,"Active I2P child source changed");}}}
++    }
++    require(impl_->namedCurrent(),ErrorCode::Conflict,"Original I2P source changed while reading");impl_->dirty=false;return {};
++  }catch(const Rejected& error){const_cast<ProfileSource*>(this)->revoke();return std::unexpected(error.error);}catch(...){const_cast<ProfileSource*>(this)->revoke();return std::unexpected(Error{ErrorCode::Io,"Owned I2P source validation failed"});}
+ }
+ std::expected<void,storage::Error> ProfileSource::validateRetiredSnapshot()const{
+   try{auto alias=take(impl_->lease->retain());auto access=take(alias->sourceAccess());
+     require(impl_->stamp&&impl_->namedCurrent(),ErrorCode::Conflict,"Retired I2P source no longer names its exact prepared snapshot");
+-    const auto now=capture(*impl_->lease,impl_->hash,impl_->directory);
++    if(impl_->anchor){auto valid=impl_->anchor->validate();if(!valid){return std::unexpected(valid.error());}}
++    const auto now=impl_->anchor?memberCapture(*impl_->lease,impl_->hash,impl_->directory,false):capture(*impl_->lease,&impl_->hash,impl_->directory);
+     require(now==*impl_->stamp&&impl_->namedCurrent(),ErrorCode::Conflict,"Retired I2P source changed before checkpoint");
+-    // Intentionally do not inspect/clear revoked: this proves original bytes
+-    // for the joined owner's CAS only, and cannot authorize a network effect.
+-    return {};
++    return {}; // Read-only; intentionally never restores revoked effects.
+   }catch(const Rejected& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot validate retired I2P source snapshot"});}
+ }
+-
+-}
++std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::prepareChild(const core::TorrentHash& hash,
++    std::span<const engine::detail::ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> identities){
++  try{auto access=take(impl_->lease->sourceAccess());require(impl_->session&&!impl_->publishing,ErrorCode::Conflict,"I2P child requires its session anchor");
++    auto current=validate();if(!current){return std::unexpected(current.error());}
++    require(claimed.size()<=engine::detail::MaximumManagedPayloadClaims&&identities.size()<=engine::detail::MaximumManagedPayloadClaims,ErrorCode::Unsupported,"I2P retained admission bound");
++    std::erase_if(impl_->children,[](const auto& weak){return weak.expired();});
++    require(impl_->children.size()<32,ErrorCode::Unsupported,"I2P session member bound");
++    for(const auto& weak:impl_->children){if(auto child=weak.lock()){
++      require(child->hash()!=hash,ErrorCode::Conflict,"I2P child already retained");
++      for(const auto& required:child->impl_->admissionClaims){require(std::any_of(claimed.begin(),claimed.end(),[&](const auto& value){return value.absolutePath==required.absolutePath&&value.device==required.device&&value.inode==required.inode;}),ErrorCode::Conflict,"Retained I2P sibling payload claim omitted");}
++      if(child->impl_->admissionIdentity){const auto& required=*child->impl_->admissionIdentity;
++        require(std::any_of(identities.begin(),identities.end(),[&](const auto& value){return value.originalKey==required.originalKey&&value.selected==required.selected&&value.full==required.full;}),ErrorCode::Conflict,"Retained I2P sibling full identity omitted");}
++    }}
++    auto accepted=memberCapture(*impl_->lease,hash,impl_->directory);
++    auto data=std::make_unique<Impl>(impl_->lease,hash,impl_->directory,engine::OwnedI2pPolicy(impl_->lease,hash));
++    data->anchor=shared_from_this();data->publicIdentity=impl_->publicIdentity;data->accepted=std::move(accepted);
++    data->active=Descriptor(::openat(impl_->lease->directoryHandle(),"active",O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_DIRECTORY));
++    require(data->active.get()>=0&&::fstat(data->active.get(),&data->activeStat)==0,ErrorCode::UnsafePath,"Held I2P child metadata directory required");
++    data->bind(data->active.get(),hash.hex()+".dat");require(data->namedCurrent(),ErrorCode::Conflict,"I2P child changed while accepting");
++    data->claimed.assign(claimed.begin(),claimed.end());data->retainedIdentities.assign(identities.begin(),identities.end());
++    auto child=std::shared_ptr<ProfileSource>(new ProfileSource(std::move(data)));impl_->children.push_back(child);return child;
++  }catch(const Rejected& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare owned I2P child"});}
++}
++std::expected<void,storage::Error> ProfileSource::publish(const core::TorrentHash& target,
++    const std::function<std::expected<void,storage::Error>()>& operation){return publishImpl(target,operation);}
++std::expected<void,storage::Error> ProfileSource::publishPositions(
++    const std::function<std::expected<void,storage::Error>()>& operation){return publishImpl({},operation);}
++std::expected<void,storage::Error> ProfileSource::publishImpl(const std::optional<core::TorrentHash>& target,
++    const std::function<std::expected<void,storage::Error>()>& operation){
++  try{auto access=take(impl_->lease->sourceAccess());require(impl_->session&&!impl_->publishing&&bool(operation),ErrorCode::Conflict,"I2P publication requires one nonreentrant anchor operation");
++    auto valid=validate();if(!valid){return std::unexpected(valid.error());}
++    const auto others=target?inventoryScope(impl_->stamp->inventory,*target,false):positionInvariant(impl_->stamp->inventory);
++    struct BeforeName {int directory;std::string name;struct stat value;};
++    struct BeforeMember {std::shared_ptr<ProfileSource> source;Stamp stamp;std::vector<BeforeName> names;};
++    std::vector<BeforeMember> members;
++    for(const auto& weak:impl_->children){if(auto child=weak.lock()){
++      BeforeMember before{child,memberCapture(*impl_->lease,child->hash(),impl_->directory,false),{}};
++      for(const auto& bound:child->impl_->bound){before.names.push_back({bound.directory,bound.name,bound.stat});}members.push_back(std::move(before));}}
++    impl_->publishing=true;struct Reset {bool& value;~Reset(){value=false;}} reset{impl_->publishing};
++    auto result=operation();if(!result){
++      // A rejected command may advance the cooperative epoch before any write.
++      // Independent before-images prevent a changed target from blessing itself
++      // by updating its own stored snapshot in the callback.
++      bool unchanged=impl_->namedCurrent()&&capture(*impl_->lease,nullptr,impl_->directory)==*impl_->stamp;
++      for(const auto& before:members){
++        unchanged=unchanged&&before.source->impl_->namedCurrent()
++            &&memberCapture(*impl_->lease,before.source->hash(),impl_->directory,false)==before.stamp;
++        for(const auto& file:before.names){struct stat named{};unchanged=unchanged&&::fstatat(file.directory,file.name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&sameFile(file.value,named);}
++      }
++      if(!unchanged){revoke();}else{impl_->dirty=false;if(impl_->authority){impl_->authority->revision_=impl_->lease->sourceRevision();}}
++      return std::unexpected(result.error());
++    }
++    require(!impl_->revoked,ErrorCode::Cancelled,"I2P group retired during publication");
++    auto after=capture(*impl_->lease,nullptr,impl_->directory);
++    require(after.config==impl_->stamp->config&&(target?inventoryScope(after.inventory,*target,false):positionInvariant(after.inventory,true))==others,ErrorCode::Conflict,"I2P publication changed unrelated source rows");
++    // Immutable common named files remain exact. Only downloads.config may have
++    // been durably replaced by this actual trusted operation.
++    auto inventory=std::find_if(impl_->bound.begin(),impl_->bound.end(),[](const auto& file){return file.name=="downloads.config";});
++    require(inventory!=impl_->bound.end(),ErrorCode::Conflict,"I2P inventory binding unavailable");
++    impl_->bound.erase(inventory);
++    require(impl_->namedCurrent(),ErrorCode::Conflict,"I2P shared identity/config changed during publication");
++    impl_->bind(impl_->lease->directoryHandle(),"downloads.config");
++    for(const auto& weak:impl_->children){if(auto child=weak.lock();child&&child->impl_->snapshot()){
++      auto& member=*child->impl_;
++      if(!target){
++        auto now=memberCapture(*impl_->lease,member.hash,impl_->directory,false);const auto& before=*member.snapshot();
++        require(member.namedCurrent()&&now.config==before.config&&now.state==before.state
++            &&positionInvariant(now.inventory,true)==positionInvariant(before.inventory),ErrorCode::Conflict,"I2P position publication changed child state");
++        if(member.stamp){member.stamp->inventory=std::move(now.inventory);}else{member.accepted->inventory=std::move(now.inventory);}
++      }else if(member.hash==*target){
++        auto rows=take(core::Document::parse(after.inventory,SourceLimits).transform_error([](const auto&){return Error{ErrorCode::InvalidFormat,"Invalid published I2P inventory"};}));
++        auto saved=take(core::readLibrary(rows).transform_error([](const auto&){return Error{ErrorCode::InvalidFormat,"Invalid published I2P rows"};}));
++        const bool started=std::any_of(saved.downloads.begin(),saved.downloads.end(),[&](const auto& row){return row.hash&&*row.hash==*target&&row.persistent&&row.startup!=core::StartupState::Stopped;})
++            &&std::none_of(saved.paused.begin(),saved.paused.end(),[&](const auto& pause){return pause.hash==*target;});
++        if(!started){child->revoke();}else if(member.stamp){
++          member.stamp=memberCapture(*impl_->lease,*target,impl_->directory);
++          member.bind(member.active.get(),target->hex()+".dat");require(member.namedCurrent(),ErrorCode::Conflict,"Published I2P child path changed");
++        }else{require(member.namedCurrent()&&memberCapture(*impl_->lease,*target,impl_->directory)==*member.accepted,ErrorCode::Conflict,"Unprepared I2P child changed during publication");}
++      }else if(!member.revoked){require(member.namedCurrent()&&memberCapture(*impl_->lease,member.hash,impl_->directory)==*member.snapshot(),ErrorCode::Conflict,"I2P publication changed sibling metadata");}
++    }}
++    impl_->stamp=std::move(after);impl_->refreshTrackers();impl_->dirty=false;
++    // Verified publication updates currentness, never a one-shot effect grant.
++    if(impl_->authority){impl_->authority->revision_=impl_->lease->sourceRevision();}
++    require(!impl_->revoked&&impl_->namedCurrent(),ErrorCode::Conflict,"I2P source changed or retired after publication");return {};
++  }catch(const Rejected& error){revoke();return std::unexpected(error.error);}catch(...){revoke();return std::unexpected(Error{ErrorCode::Io,"I2P publication failed; group source revoked"});}
++}
++std::expected<void,storage::Error> ProfileSource::releaseChild(const core::TorrentHash& hash){
++  try{auto access=take(impl_->lease->sourceAccess());require(impl_->session&&!impl_->publishing,ErrorCode::Conflict,"I2P release requires session anchor");
++    bool found=false;std::erase_if(impl_->children,[&](const auto& weak){auto child=weak.lock();if(!child){return true;}if(child->hash()==hash){child->revoke();found=true;return true;}return false;});
++    require(found,ErrorCode::Conflict,"I2P child is not retained");impl_->refreshTrackers();return {};
++  }catch(const Rejected& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot release owned I2P child"});}
++}
++}
+--- a/preview/native/services/i2p_provider/profile_source.hpp
++++ b/preview/native/services/i2p_provider/profile_source.hpp
+@@ -6,15 +6,38 @@
+ #include "effect_authority.hpp"
+ #include <atomic>
+ #include <memory>
++#include <functional>
+ 
+ namespace biglybtc::services::i2p::provider {
+ class OwnedTorrent;
++class OwnedProfile;
+ // Filesystem methods belong to an external lifetime/I/O worker, never the
+ // socket thread. Public observations contain no key bytes or ephemeral auth.
+ class ProfileSource final:public std::enable_shared_from_this<ProfileSource> {
+ public:
+   static std::expected<std::shared_ptr<ProfileSource>,storage::Error> open(
+       const storage::ProfileLease&,const core::TorrentHash&,std::string pluginDirectory="azneti2phelper");
++  // Explicit shared identity/session anchor. No torrent or payload permission.
++  static std::expected<std::shared_ptr<ProfileSource>,storage::Error> createSession(
++      const storage::ProfileLease&,std::string pluginDirectory="azneti2phelper");
++  // Worker-only child admission; prepareStorage() performs its own publication.
++  std::expected<std::shared_ptr<ProfileSource>,storage::Error> prepareChild(
++      const core::TorrentHash&,std::span<const engine::detail::ManagedPayloadClaim> claimed={},
++      std::span<const storage::OriginalTorrentIdentity> retainedIdentities={});
++  // Trusted owner I/O only, never a user/reentrant callback or observed writer.
++  // Holds SAME-OFD source gate across validation, actual CAS and post-validation.
++  std::expected<void,storage::Error> publish(const core::TorrentHash&,
++      const std::function<std::expected<void,storage::Error>()>& trustedWorkerOperation);
++  // Original queue adapters only: positions may change, every other source
++  // row/pause/state field remains exact. No completion classification is minted.
++  std::expected<void,storage::Error> publishPositions(
++      const std::function<std::expected<void,storage::Error>()>& trustedWorkerOperation);
++  // Caller has removed the actual handle, expired its storage weak reference
++  // and completed (or explicitly failed) checkpoint. Revokes only this child.
++  std::expected<void,storage::Error> releaseChild(const core::TorrentHash&);
++  bool groupMode()const noexcept;
++  // Inotify is a dirty hint only; no fresh authority is granted here.
++  void invalidate()noexcept;
+   ~ProfileSource();
+   ProfileSource(const ProfileSource&)=delete;
+   const std::shared_ptr<const storage::ProfileLease>& lease()const noexcept;
+@@ -34,12 +57,19 @@
+   std::shared_ptr<i2cp::EffectAuthority> effectAuthority()const noexcept;
+ private:
+   friend class OwnedTorrent;
++  friend class OwnedProfile;
+   // Read-only final CAS preflight after the friend's actual flush/remove/join.
+   // Accepts intentionally revoked effects ONLY when every held named source
+   // and exact prepared snapshot still matches; never restores effect authority.
+   std::expected<void,storage::Error> validateRetiredSnapshot()const;
+   friend class Bridge;
+   std::vector<int> watchDescriptors()const;
++  std::vector<int> criticalWatchDescriptors()const;
++  static std::expected<std::shared_ptr<ProfileSource>,storage::Error> openImpl(
++      const storage::ProfileLease&,const core::TorrentHash&,std::string,bool session);
++  std::expected<engine::detail::ManagedStorage,storage::Error> prepareStorageDirect();
++  std::expected<void,storage::Error> publishImpl(const std::optional<core::TorrentHash>&,
++      const std::function<std::expected<void,storage::Error>()>&);
+   struct Impl;
+   explicit ProfileSource(std::unique_ptr<Impl>);
+   std::unique_ptr<Impl> impl_;
+--- a/preview/native/services/i2p_provider/source_permit.hpp
++++ b/preview/native/services/i2p_provider/source_permit.hpp
+@@ -21,7 +21,13 @@
+   ~SourcePermit(){stop();join();}
+   SourcePermit(const SourcePermit&)=delete;
+   bool request(){std::lock_guard lock(mutex_);if(phase_!=Phase::Idle){return false;}phase_=Phase::Requested;changed_.notify_all();return true;}
+-  std::optional<std::uint64_t> take(){std::lock_guard lock(mutex_);if(phase_!=Phase::Ready||stopped_){return {};}if(!source_->effectAuthority()||!source_->effectAuthority()->enter(revision_)){stopped_=true;phase_=Phase::Failed;changed_.notify_all();return {};}phase_=Phase::Executing;return revision_;}
++  std::optional<std::uint64_t> take(){std::lock_guard lock(mutex_);if(phase_!=Phase::Ready||stopped_){return {};}if(!source_->effectAuthority()){stopped_=true;phase_=Phase::Failed;changed_.notify_all();return {};}
++    if(!source_->effectAuthority()->enter(revision_)){
++      // A dirty watch/cooperative epoch can race Ready. Release this actual
++      // gate and revalidate; permanent revocation still settles Failed.
++      if(source_->effectAuthority()->revoked()){stopped_=true;phase_=Phase::Failed;}else{phase_=Phase::Consumed;}
++      changed_.notify_all();return {};
++    }phase_=Phase::Executing;return revision_;}
+   void acknowledge(){if(source_->effectAuthority()){source_->effectAuthority()->leave();}std::lock_guard lock(mutex_);if(phase_==Phase::Executing){phase_=Phase::Consumed;}changed_.notify_all();}
+   Phase phase()const{std::lock_guard lock(mutex_);return phase_;}
+   void stop()noexcept{std::lock_guard lock(mutex_);stopped_=true;receiver_=nullptr;changed_.notify_all();worker_.request_stop();}
+--- a/preview/native/tests/owned_i2p_source_tests.cpp
++++ b/preview/native/tests/owned_i2p_source_tests.cpp
+@@ -2,7 +2,11 @@
+ #include "owned_i2p_profile_fixture.hpp"
+ #include "source_permit.hpp"
+ #include "channel.hpp"
++#include "library_commands.hpp"
++#include "sam_protocol.hpp"
++#include <QScopeGuard>
+ #include <libtorrent/torrent_flags.hpp>
++#include <libtorrent/torrent_info.hpp>
+ #include <QSignalSpy>
+ #include <QTcpServer>
+ #include <QtTest>
+@@ -11,6 +15,29 @@
+ namespace sam=biglybtc::services::i2p::provider;
+ namespace i2cp=biglybtc::services::i2p::i2cp;
+ using namespace owned_i2p_test;
++namespace {
++void replaceNamedFileWithSameBytes(const fs::path& path){const auto bytes=read(path);fs::rename(path,path.string()+".retained-original");write(path,bytes);}
++core::TorrentHash addSibling(Fixture& f,bool overlap=false){
++  const auto name=overlap?"owned.bin":"second.bin";
++  const auto info=dict({{"length","i"+std::to_string(f.payload.size())+"e"},{"name",b(name)},
++      {"piece length",overlap?"i32768e":"i16384e"},{"pieces",b(sha1(f.payload))}});
++  const auto hash=*core::TorrentHash::parse(sha1(info));const auto tracker="http://"+std::string(51,'a')+"q.b32.i2p:80/announce";
++  write(f.path/"active"/(hash.hex()+".dat"),dict({{"announce",b(tracker)},{"attributes",dict({{"networks","l3:I2Pe"},{"peersources","l7:Trackere"}})},{"info",info}}));
++  write(f.path/"second.torrent",dict({{"announce",b(tracker)},{"info",info}}));
++  auto inventory=storage::ConfigFile::load(*f.lease,"downloads.config");if(!inventory){throw std::runtime_error(inventory.error().message);}
++  const auto& d=inventory->document();const auto* downloads=d.find("downloads");
++  const auto& first=downloads->children.at(0);auto firstRow=core::Document::parse(d.originalBytes().substr(first.begin,first.end-first.begin));
++  if(!firstRow||!firstRow->replaceValue("position","i1e")){throw std::runtime_error("Cannot initialize source fixture positions");}
++  auto rows="l"+firstRow->serialize();
++  rows+=dict({{"persistent","i1e"},{"position","i2e"},{"save_dir",b(f.payloadDirectory.path().toStdString())},{"save_file",b(name)},
++      {"state","i75e"},{"torrent",b((f.path/"second.torrent").string())},{"torrent_hash",b(sha1(info))}})+'e';
++  if(!inventory->document().replaceValue("downloads",rows)){throw std::runtime_error("Cannot append owned sibling");}
++  auto saved=inventory->save(*f.lease);if(!saved){throw std::runtime_error(saved.error().message);}return hash;
++}
++std::expected<void,storage::Error> saveIntent(Fixture& f,const core::TorrentHash& hash,core::DownloadAction action){
++  auto value=storage::applyLibraryCommand(*f.lease,hash,action);if(!value){return std::unexpected(value.error());}return {};
++}
++}
+ class OwnedI2pSourceTests:public QObject {
+   Q_OBJECT
+ private slots:
+@@ -59,6 +86,132 @@
+     QTRY_COMPARE_WITH_TIMEOUT(permit.phase(),sam::SourcePermit::Phase::Ready,2000);QVERIFY(permit.take());QVERIFY((*source)->effectAuthority()->granted());QVERIFY(!channel.resumeAuthorizedEffects());QVERIFY(!permit.take());permit.acknowledge();QVERIFY(!(*source)->effectAuthority()->granted());
+     QTRY_COMPARE_WITH_TIMEOUT(permit.phase(),sam::SourcePermit::Phase::Idle,2000);permit.stop();permit.join();
+   }
++  void sessionAnchorIsNotAStoppedTorrentGrantAndConsumesIdentityOnce(){
++    Fixture f;QVERIFY(saveIntent(f,f.hash,core::DownloadAction::Stop));
++    auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY2(anchor,anchor?"":anchor.error().message.c_str());
++    QVERIFY((*anchor)->prepared());QVERIFY((*anchor)->groupMode());QVERIFY((*anchor)->validate());QVERIFY((*anchor)->lease()->sharesOwnership(*f.lease));
++    QVERIFY(!(*anchor)->prepareChild(f.hash));QVERIFY((*anchor)->validate());QVERIFY(!(*anchor)->prepareStorage());
++    auto identity=(*anchor)->takeIdentity();QVERIFY(identity);QCOMPARE(identity->destination()->wire,(*anchor)->destination().wire);QVERIFY(!(*anchor)->takeIdentity());
++  }
++  void siblingPreparationAndUnverifiedCheckpointPreserveOtherSourceExactly(){
++    Fixture f;const auto sibling=addSibling(f);const auto config=read(f.path/"biglybt.config"),key=read(f.key);
++    auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);auto a=(*anchor)->prepareChild(f.hash);QVERIFY(a);
++    auto storageA=(*a)->prepareStorage();QVERIFY2(storageA,storageA?"":storageA.error().message.c_str());const auto stateA=read(f.state());
++    QVERIFY(!(*anchor)->prepareChild(sibling));
++    const std::array ids{storageA->identity()};auto b=(*anchor)->prepareChild(sibling,storageA->claims(),ids);QVERIFY(b);
++    auto storageB=(*b)->prepareStorage();QVERIFY2(storageB,storageB?"":storageB.error().message.c_str());QVERIFY((*anchor)->validate());QVERIFY((*a)->validate());
++    QCOMPARE(read(f.state()),stateA);QCOMPARE(read(f.path/"biglybt.config"),config);QCOMPARE(read(f.key),key);
++    // The fixture's canonical b32 names are decoded through the real SAM helper.
++    const auto trackerA=sam::hashName(std::string(52,'a')+".b32.i2p"),trackerB=sam::hashName(std::string(51,'a')+"q.b32.i2p");
++    QVERIFY(trackerA&&trackerB);QVERIFY((*anchor)->trackerAllowed(*trackerA,80));QVERIFY((*anchor)->trackerAllowed(*trackerB,80));
++    (*b)->revoke();QVERIFY(!(*anchor)->trackerAllowed(*trackerB,80));QVERIFY((*anchor)->trackerAllowed(*trackerA,80));
++    const std::vector<std::uint8_t> unverified(static_cast<std::size_t>(storageB->parameters().ti->num_pieces()),0);
++    auto saved=(*anchor)->publish(sibling,[&]{return storageB->checkpoint(*f.lease,unverified,false,0,0);});
++    QVERIFY2(saved,saved?"":saved.error().message.c_str());QVERIFY((*a)->validate());QVERIFY((*anchor)->validate());QCOMPARE(read(f.state()),stateA);
++    const auto inventory=storage::ConfigFile::load(*f.lease,"downloads.config");QVERIFY(inventory);const auto library=core::readLibrary(inventory->document());QVERIFY(library);
++    const auto row=std::find_if(library->downloads.begin(),library->downloads.end(),[&](const auto& value){return value.hash&&*value.hash==sibling;});
++    QVERIFY(row!=library->downloads.end());QCOMPARE(row->downloaded.value_or(0),std::int64_t{0});QCOMPARE(row->completedBytes.value_or(-1),std::int64_t{0});
++    storageB=std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"release actual storage before child release"});
++    QVERIFY((*anchor)->releaseChild(sibling));QVERIFY((*anchor)->validate());QVERIFY((*a)->validate());
++  }
++  void trustedSiblingPauseAndResumeDoNotChangeTheOtherMember(){
++    Fixture f;const auto sibling=addSibling(f);auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);
++    auto a=(*anchor)->prepareChild(f.hash);QVERIFY(a);auto storageA=(*a)->prepareStorage();QVERIFY(storageA);const auto stateA=read(f.state());
++    const std::array ids{storageA->identity()};auto b=(*anchor)->prepareChild(sibling,storageA->claims(),ids);QVERIFY(b);auto storageB=(*b)->prepareStorage();QVERIFY(storageB);
++    (*b)->revoke();storageB=std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"storage-only fixture has no engine to retire"});
++    QVERIFY((*anchor)->publish(sibling,[&]{return saveIntent(f,sibling,core::DownloadAction::Pause);}));
++    QVERIFY(!(*b)->validate());QVERIFY((*anchor)->validate());QVERIFY((*a)->validate());QCOMPARE(read(f.state()),stateA);
++    QVERIFY((*anchor)->releaseChild(sibling));QVERIFY((*anchor)->publish(sibling,[&]{return saveIntent(f,sibling,core::DownloadAction::Resume);}));
++    auto restarted=(*anchor)->prepareChild(sibling,storageA->claims(),ids);QVERIFY(restarted);auto storageAgain=(*restarted)->prepareStorage();QVERIFY2(storageAgain,storageAgain?"":storageAgain.error().message.c_str());
++    QVERIFY((*anchor)->validate());QVERIFY((*a)->validate());QVERIFY(!(*b)->effectAuthority()->current());QCOMPARE(read(f.state()),stateA);
++  }
++  void originalQueueMovePublicationChangesOnlyPositionsAndRejectsUnknownRowEdits(){
++    for(bool invalid:{false,true}){
++      Fixture f;const auto sibling=addSibling(f);auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);
++      auto a=(*anchor)->prepareChild(f.hash);QVERIFY(a);auto storageA=(*a)->prepareStorage();QVERIFY(storageA);const std::array ids{storageA->identity()};
++      auto b=(*anchor)->prepareChild(sibling,storageA->claims(),ids);QVERIFY(b);auto storageB=(*b)->prepareStorage();QVERIFY(storageB);
++      const auto stateA=read(f.state()),stateB=read(f.path/"active"/(sibling.hex()+".dat"));
++      const std::array pools{storage::LibraryCompletionPool{f.hash,false},storage::LibraryCompletionPool{sibling,false}};
++      const auto result=(*anchor)->publishPositions([&]()->std::expected<void,storage::Error>{
++        if(!invalid){auto moved=storage::applyLibraryCommand(*f.lease,sibling,core::DownloadAction::MoveTop,pools);if(!moved){return std::unexpected(moved.error());}return {};}
++        auto file=storage::ConfigFile::load(*f.lease,"downloads.config");if(!file){return std::unexpected(file.error());}
++        const auto& d=file->document();const auto* rows=d.find("downloads");std::string changed="l";
++        for(std::size_t i=0;i<rows->children.size();++i){const auto& row=rows->children[i];auto encoded=d.originalBytes().substr(row.begin,row.end-row.begin);
++          if(i==0){auto edited=core::Document::parse(encoded);if(!edited||!edited->replaceValue("future",b("unrelated change"))){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Owned position refusal fixture"});}encoded=edited->serialize();}changed+=encoded;}
++        if(!file->document().replaceValue("downloads",changed+'e')){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Owned position list"});}return file->save(*f.lease);
++      });
++      if(invalid){QVERIFY(!result);QVERIFY((*anchor)->effectAuthority()->revoked());}else{
++        QVERIFY2(result,result?"":result.error().message.c_str());QVERIFY((*anchor)->validate());QVERIFY((*a)->validate());QVERIFY((*b)->validate());
++        auto file=storage::ConfigFile::load(*f.lease,"downloads.config");QVERIFY(file);auto library=core::readLibrary(file->document());QVERIFY(library);
++        QCOMPARE(library->downloads[0].position.value_or(0),std::int64_t{2});QCOMPARE(library->downloads[1].position.value_or(0),std::int64_t{1});
++      }
++      QCOMPARE(read(f.state()),stateA);QCOMPARE(read(f.path/"active"/(sibling.hex()+".dat")),stateB);
++    }
++  }
++  void rejectedPublicationOnlySurvivesWhenEveryActualBeforeImageIsUnchanged(){
++    for(bool partial:{false,true}){
++      Fixture f;auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);auto child=(*anchor)->prepareChild(f.hash);QVERIFY(child);auto prepared=(*child)->prepareStorage();QVERIFY(prepared);
++      const auto error=storage::Error{storage::ErrorCode::Conflict,"Owned rejected operation"};
++      const auto result=(*anchor)->publish(f.hash,[&]()->std::expected<void,storage::Error>{
++        // A rejected attempted writer still advances the real cooperative epoch.
++        auto access=f.lease->sourceAccess(true);if(!access){return std::unexpected(access.error());}
++        if(partial){replaceNamedFileWithSameBytes(f.state());}return std::unexpected(error);
++      });
++      QVERIFY(!result);if(partial){QVERIFY((*anchor)->effectAuthority()->revoked());}else{
++        QVERIFY(!(*anchor)->effectAuthority()->revoked());QVERIFY((*anchor)->validate());QVERIFY((*child)->validate());QVERIFY((*anchor)->effectAuthority()->current());QVERIFY(!(*anchor)->effectAuthority()->granted());
++      }
++    }
++  }
++  void acceptedChildMetadataCannotBeRecapturedBeforeStoragePreparation(){
++    Fixture f;auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);auto child=(*anchor)->prepareChild(f.hash);QVERIFY(child);
++    replaceNamedFileWithSameBytes(f.state());QVERIFY(!(*child)->prepareStorage());QVERIFY((*anchor)->effectAuthority()->revoked());
++  }
++  void unregisteredInventoryReplacementCannotAcquirePublicationAuthority(){
++    Fixture f;auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);auto child=(*anchor)->prepareChild(f.hash);QVERIFY(child);auto prepared=(*child)->prepareStorage();QVERIFY(prepared);
++    const auto before=read(f.path/"downloads.config");auto replacement=storage::ConfigFile::load(*f.lease,"downloads.config");QVERIFY(replacement);QVERIFY(replacement->save(*f.lease));
++    QCOMPARE(read(f.path/"downloads.config"),before);QVERIFY(!(*anchor)->validate());QVERIFY((*anchor)->effectAuthority()->revoked());
++  }
++  void wrongPublicationTargetWithdrawsGroupAndPreservesActualEdit(){
++    Fixture f;const auto sibling=addSibling(f);auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);auto child=(*anchor)->prepareChild(f.hash);QVERIFY(child);auto prepared=(*child)->prepareStorage();QVERIFY(prepared);
++    const auto result=(*anchor)->publish(sibling,[&]{return saveIntent(f,f.hash,core::DownloadAction::Stop);});QVERIFY(!result);QVERIFY((*anchor)->effectAuthority()->revoked());
++    auto inventory=storage::ConfigFile::load(*f.lease,"downloads.config");QVERIFY(inventory);auto library=core::readLibrary(inventory->document());QVERIFY(library);QCOMPARE(library->downloads[0].startup,core::StartupState::Stopped);
++  }
++  void groupSelectedAndCommonTamperingRemainFatal_data(){QTest::addColumn<int>("kind");for(int i=0;i<4;++i){QTest::newRow(std::to_string(i).c_str())<<i;}}
++  void groupSelectedAndCommonTamperingRemainFatal(){
++    QFETCH(int,kind);Fixture f;auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);auto child=(*anchor)->prepareChild(f.hash);QVERIFY(child);auto prepared=(*child)->prepareStorage();QVERIFY(prepared);
++    if(kind==0){replaceNamedFileWithSameBytes(f.state());}
++    if(kind==1){const auto bytes=read(f.key);fs::rename(f.key,f.key.string()+".old");write(f.key,bytes);QVERIFY(::chmod(f.key.c_str(),0600)==0);}
++    if(kind==2){replaceNamedFileWithSameBytes(f.path/"biglybt.config");}
++    if(kind==3){QVERIFY(saveIntent(f,f.hash,core::DownloadAction::Pause));}
++    QVERIFY(!(*anchor)->validate());QVERIFY((*anchor)->effectAuthority()->revoked());QVERIFY(!(*child)->revisionCurrent(f.lease->sourceRevision()));
++  }
++  void siblingPayloadOverlapIsRejectedByTheExistingStorageClaimChecks(){
++    Fixture f;const auto sibling=addSibling(f,true);auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);auto a=(*anchor)->prepareChild(f.hash);QVERIFY(a);auto storageA=(*a)->prepareStorage();QVERIFY(storageA);
++    const auto claims=storageA->claims();QVERIFY(!claims.empty());const auto inode=claims.front().inode;const std::array ids{storageA->identity()};
++    auto b=(*anchor)->prepareChild(sibling,claims,ids);QVERIFY(b);auto refused=(*b)->prepareStorage();QVERIFY(!refused);QCOMPARE(refused.error().code,storage::ErrorCode::Conflict);
++    QCOMPARE(storageA->claims().front().inode,inode);QVERIFY((*anchor)->effectAuthority()->revoked());
++  }
++  void retainedFullIdentityIsForwardedToOriginalStorageBeforeAdmission(){
++    Fixture f,other;const auto sibling=addSibling(f),otherHash=addSibling(other);QCOMPARE(sibling,otherHash);
++    auto held=sam::ProfileSource::open(*other.lease,otherHash);QVERIFY(held);auto retained=(*held)->prepareStorage();QVERIFY(retained);
++    auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);auto a=(*anchor)->prepareChild(f.hash);QVERIFY(a);auto storageA=(*a)->prepareStorage();QVERIFY(storageA);
++    const std::array ids{storageA->identity(),retained->identity()};auto b=(*anchor)->prepareChild(sibling,storageA->claims(),ids);QVERIFY(b);
++    auto refused=(*b)->prepareStorage();QVERIFY(!refused);QCOMPARE(refused.error().code,storage::ErrorCode::Conflict);
++  }
++  void dirtyReadyPermitReleasesGateAndRequiresFreshValidation(){
++    Fixture f;auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);QObject receiver;sam::SourcePermit permit(*anchor,&receiver);
++    const auto cleanup=qScopeGuard([&]{if(permit.phase()==sam::SourcePermit::Phase::Executing){permit.acknowledge();}permit.stop();permit.join();});
++    QVERIFY(permit.request());QTRY_COMPARE_WITH_TIMEOUT(permit.phase(),sam::SourcePermit::Phase::Ready,2000);
++    (*anchor)->invalidate();QVERIFY(!(*anchor)->effectAuthority()->current());QVERIFY(!permit.take());QVERIFY(!(*anchor)->effectAuthority()->revoked());
++    QTRY_COMPARE_WITH_TIMEOUT(permit.phase(),sam::SourcePermit::Phase::Idle,2000);QVERIFY(permit.request());QTRY_COMPARE_WITH_TIMEOUT(permit.phase(),sam::SourcePermit::Phase::Ready,2000);
++    QVERIFY(permit.take());QVERIFY((*anchor)->effectAuthority()->granted());permit.acknowledge();QTRY_COMPARE_WITH_TIMEOUT(permit.phase(),sam::SourcePermit::Phase::Idle,2000);
++    QVERIFY((*anchor)->publish(f.hash,[&]{return saveIntent(f,f.hash,core::DownloadAction::Start);}));
++    QVERIFY((*anchor)->effectAuthority()->current());QVERIFY(!(*anchor)->effectAuthority()->granted());QVERIFY(!(*anchor)->effectAuthority()->revoked());
++    i2cp::InitialChannel channel;QVERIFY(channel.bindEffectAuthority((*anchor)->effectAuthority()));
++    QTcpServer server;QVERIFY(server.listen(QHostAddress::LocalHost,0));
++    i2cp::InitialChannel::Options options{QHostAddress::LocalHost,server.serverPort(),"owned-group",false,100,false};
++    QVERIFY(channel.begin(options));QVERIFY(channel.sourceEffectsPending());QCOMPARE(channel.failure(),i2cp::InitialChannel::Failure::None);QVERIFY(!server.hasPendingConnections());channel.close();
++  }
+ };
+ QTEST_GUILESS_MAIN(OwnedI2pSourceTests)
+ #include "owned_i2p_source_tests.moc"

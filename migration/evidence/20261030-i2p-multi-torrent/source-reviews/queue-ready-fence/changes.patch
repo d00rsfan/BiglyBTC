@@ -1,0 +1,68 @@
+--- a/preview/native/services/i2p_provider/profile_owner.cpp
++++ b/preview/native/services/i2p_provider/profile_owner.cpp
+@@ -69,7 +69,7 @@
+     OwnedTorrent::RetirementObservation retired;std::chrono::steady_clock::time_point deadline{};
+     engine::detail::ManagedPayloadCounters::Sample finalCounters;
+     std::vector<std::uint8_t> pieces;std::int64_t nextScrape=0;bool scrapePending=false,weakExpiryObserved=false;
+-    bool complete=false,unchecked=false,pauseSettled=false,pauseSeen=false,saveRequested=false,removed=false,removing=false,queued=true,installed=false,registered=false;
++    bool complete=false,unchecked=false,pauseSettled=false,pausePending=false,pauseSeen=false,saveRequested=false,removed=false,removing=false,queued=true,installed=false,registered=false;
+     OwnedTorrent::AlertDiagnostics alerts;std::string failure;
+     auto& data(){return *prepared->impl_;}const auto& data()const{return *prepared->impl_;}
+   };
+@@ -125,9 +125,11 @@
+       if(lt::biglybtc_attach_queue_observer_v1(&h,&sink)==0){queue->installed();}
+       return std::make_shared<detail::RetirementCounterPlugin>(h,ledger,held);
+     });
+-    params.flags|=lt::torrent_flags::paused|lt::torrent_flags::stop_when_ready|lt::torrent_flags::duplicate_is_error;params.flags&=~lt::torrent_flags::auto_managed;
++    // Let the SDK check immediately and perform its own ready-state pause.
++    // A post-add resume could overwrite an already completed ready pause.
++    params.flags|=lt::torrent_flags::stop_when_ready|lt::torrent_flags::duplicate_is_error;params.flags&=~(lt::torrent_flags::paused|lt::torrent_flags::auto_managed);
+     lt::error_code ec;m.handle=session->add_torrent(params,ec);if(ec||!m.handle.is_valid()){return false;}
+-    m.installed=true;m.pauseSettled=false;m.handle.resume();return true; // stop_when_ready holds after genuine checking.
++    m.installed=true;m.pauseSettled=false;m.pausePending=false;return true; // No resume until a genuine checked/paused queue fence.
+   }
+   bool installSession(void* opaque){
+     if(phase!=Phase::Starting){return false;}
+@@ -155,7 +157,7 @@
+       if(lt::alert_cast<lt::tracker_error_alert>(alert)){++m.alerts.trackerErrors;}
+       if(lt::alert_cast<lt::scrape_reply_alert>(alert)||lt::alert_cast<lt::scrape_failed_alert>(alert)){m.scrapePending=false;}
+       if(lt::alert_cast<lt::file_error_alert>(alert)||lt::alert_cast<lt::torrent_error_alert>(alert)||lt::alert_cast<lt::save_resume_data_failed_alert>(alert)){fail(m,{Code::Io,"Target I2P provider/storage observation failed; recheck retained"});continue;}
+-      if(lt::alert_cast<lt::torrent_paused_alert>(alert)){m.pauseSettled=true;}
++      if(lt::alert_cast<lt::torrent_paused_alert>(alert)){m.pauseSettled=true;m.pausePending=false;}
+       if(!m.retired.requested||m.retired.failure){continue;}
+       if(std::chrono::steady_clock::now()>=m.deadline){fail(m,{Code::Io,"Target I2P retirement deadline expired; recheck retained"});continue;}
+       if(lt::alert_cast<lt::torrent_paused_alert>(alert)){
+@@ -219,9 +221,19 @@
+     for(std::size_t i=0;i<order.size();++i){facts[order[i]].position=(*normalized)[i];}
+     auto plan=core::evaluateQueue(queuePolicy,facts,context);if(!plan){failure="Original I2P queue facts are inconsistent";close();return;}queueUnavailable=plan->unavailableInputs;
+     for(auto action:{core::QueueAction::Queue,core::QueueAction::Run}){for(const auto& decision:plan->decisions){auto* m=targets.at(decision.token);m->activity=decision.activity;if(decision.moveNewSeedToTop){m->completionPositionUnavailable=true;}m->justCompleted=false;if(decision.action!=action||!m->counters->checked.load()){continue;}
+-      m->handle.unset_flags(lt::torrent_flags::auto_managed|lt::torrent_flags::stop_when_ready);
+-      if(action==core::QueueAction::Queue){if(!m->queued){m->pauseSettled=false;m->handle.pause();m->queued=true;}}
+-      else if(m->queued&&m->pauseSettled){m->pauseSettled=false;m->handle.resume();m->queued=false;}
++      const auto actual=m->handle.status();const bool paused=bool(actual.flags&lt::torrent_flags::paused);
++      if(action==core::QueueAction::Queue){
++        m->queued=true;
++        if(!paused&&!m->pausePending){m->pauseSettled=false;m->pausePending=true;m->handle.pause();}
++      }else if(m->queued){
++        // A queued intent is not proof of an actual settled pause. Request it
++        // once if necessary; a historical alert cannot authorize this resume.
++        if(!paused&&!m->pausePending){m->pauseSettled=false;m->pausePending=true;m->handle.pause();}
++        else if(paused&&m->pauseSettled&&!m->pausePending){
++          m->handle.unset_flags(lt::torrent_flags::auto_managed|lt::torrent_flags::stop_when_ready);
++          m->pauseSettled=false;m->handle.resume();m->queued=false;
++        }
++      }
+     }}
+   }
+   void requestStartup(){if((phase==Phase::Starting||phase==Phase::Active)&&permit&&permit->phase()==SourcePermit::Phase::Idle){permit->request();}}
+@@ -292,8 +304,8 @@
+   // Preserve a genuine settled pause across policy holds. A paused status bit
+   // alone may precede async_stop_torrent and cannot authorize the snapshot.
+   const auto actual=m->handle.status();m->handle.unset_flags(lt::torrent_flags::auto_managed|lt::torrent_flags::stop_when_ready);
+-  if(m->pauseSettled){m->pauseSeen=true;m->saveRequested=true;m->handle.save_resume_data(lt::torrent_handle::flush_disk_cache);}
+-  else if(!(actual.flags&lt::torrent_flags::paused)){m->handle.pause();} // Otherwise await its genuine outstanding pause callback.
++  if(m->pauseSettled&&!m->pausePending&&(actual.flags&lt::torrent_flags::paused)){m->pauseSeen=true;m->saveRequested=true;m->handle.save_resume_data(lt::torrent_handle::flush_disk_cache);}
++  else if(!(actual.flags&lt::torrent_flags::paused)&&!m->pausePending){m->pauseSettled=false;m->pausePending=true;m->handle.pause();} // Otherwise await its genuine outstanding pause callback.
+   return true;
+ }
+ OwnedTorrent::RetirementObservation OwnedProfile::retirement(const core::TorrentHash& h){impl_->alerts();auto* m=impl_->find(h);return m?m->retired:OwnedTorrent::RetirementObservation{.failure=Error{Code::Missing,"I2P member is absent"}};}

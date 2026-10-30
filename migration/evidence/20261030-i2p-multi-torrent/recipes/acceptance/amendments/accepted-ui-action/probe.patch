@@ -1,0 +1,102 @@
+--- a/preview/native/tests/i2p_multi_host_transfer_probe.cpp
++++ b/preview/native/tests/i2p_multi_host_transfer_probe.cpp
+@@ -192,7 +192,7 @@
+   ui::Presentation snapshot;ui::I2pPresentation packet;quint64 session=0,initialSession=0;
+   bool done=false,inTurn=false,joined=false,released=false,closeRequested=false,shutdownDone=false;int code=1;
+   QJsonArray latestSeed;QString callbackFailure;Stage stage=Stage::Initial;QJsonObject result{{"status","FAIL"},{"scope","actual-shared-profile-multi-I2P-Host-transfer"}};
+-  std::array<std::array<unsigned,10>,3> actions{};std::array<quint64,2> initialAdmissions{},initialGenerations{};
++  std::optional<std::pair<std::size_t,Action>> expectedAction;std::array<std::array<unsigned,10>,3> actions{};std::array<quint64,2> initialAdmissions{},initialGenerations{};
+   quint64 stableAdmission=0,stableGeneration=0,restartGeneration=0,slotQueuedAdmission=0,slotRunningAdmission=0;int running=0,waiting=1;
+   qint64 siblingBaseline=0,firstSessionBytes=0;QElapsedTimer slotAge;bool slotObserved=false;QJsonObject beforeRestart;std::array<qint64,3> savedReceived{};
+   const auto diagnostic=[&](const QString& name,const QJsonObject& value)noexcept{try{output(work+'/'+name,value);}catch(...){std::cerr<<"Cannot write bounded progress marker\n";}};
+@@ -225,14 +225,27 @@
+     QObject::connect(&window,&ui::LibraryWindow::downloadActionRequested,&window,[&](ui::DownloadTargets targets,Action action){
+       if(targets.size()!=1||!window.model().accepts(targets.front())){callbackFailure="Stale UI action target";return;}
+       std::size_t index=3;for(std::size_t i=0;i<3;++i){if(targets.front().hash==b.torrents[i].text()){index=i;}}
+-      const auto ordinal=static_cast<std::size_t>(action);if(index==3||ordinal>=10||!bridge->downloadAction(std::move(targets),action)){callbackFailure="Host refused actual per-hash UI action";return;}++actions[index][ordinal];
++      const auto ordinal=static_cast<std::size_t>(action);
++      if(!expectedAction||index!=expectedAction->first||action!=expectedAction->second){callbackFailure="UI dispatched a different torrent/action than the real QAction requested";return;}
++      if(index==3||ordinal>=10||!bridge->downloadAction(std::move(targets),action)){callbackFailure="Host refused actual per-hash UI action";return;}++actions[index][ordinal];
+     });
+     QObject::connect(&window,&ui::LibraryWindow::sessionCloseRequested,&window,[&]{closeRequested=true;if(!bridge->closeSession()){callbackFailure="Host refused joined close";}});
+     QObject::connect(bridge.get(),&app::SessionBridge::sessionClosed,&window,[&](quint64 closed,bool didJoin,bool didRelease){if(closed!=session){callbackFailure="Close acknowledged another Host session";return;}joined=didJoin;released=didRelease;window.completeSessionClose();});
+     QObject::connect(bridge.get(),&app::SessionBridge::sessionCloseFailed,&window,[&]{callbackFailure="Host close/checkpoint failed";});
+     const auto row=[&](std::size_t index)->const ui::LibraryItem*{if(!snapshot){return nullptr;}const auto found=std::find_if(snapshot->items.begin(),snapshot->items.end(),[&](const auto& value){return value.hash==b.torrents[index].text();});return found==snapshot->items.end()?nullptr:&*found;};
+     const auto live=[&](std::size_t index)->const ui::I2pTorrentPacket*{if(!packet){return nullptr;}const auto found=std::find_if(packet->torrents.begin(),packet->torrents.end(),[&](const auto& value){return value.hash==b.torrents[index].text();});return found==packet->torrents.end()?nullptr:&*found;};
+-    const auto trigger=[&](std::size_t index,const char* id,Stage next){if(bridge->busy()||!selectTorrent(window,b.torrents[index].text())){return false;}auto* action=window.findChild<QAction*>(QString::fromLatin1(id));require(action!=nullptr,"Required real UI QAction absent");if(!action->isEnabled()){return false;}stage=next;action->trigger();return true;};
++    const auto trigger=[&](std::size_t index,const char* id,Action requested,Stage next){
++      if(bridge->busy()||!selectTorrent(window,b.torrents[index].text())){return false;}
++      auto* action=window.findChild<QAction*>(QString::fromLatin1(id));require(action!=nullptr,"Required real UI QAction absent");if(!action->isEnabled()){return false;}
++      const auto ordinal=static_cast<std::size_t>(requested);const auto beforeCount=actions[index][ordinal];
++      expectedAction=std::pair{index,requested};struct Reset{decltype(expectedAction)& value;~Reset(){value.reset();}} reset{expectedAction};
++      action->trigger();
++      require(callbackFailure.isEmpty(),callbackFailure.toUtf8().constData());
++      const auto afterCount=actions[index][ordinal];require(afterCount==beforeCount||afterCount==beforeCount+1,"Real QAction emitted more than one accepted callback");
++      // dispatchDownload may deliberately suppress a stale rendered revision.
++      // Retry the same real action on a later Qt turn; never bypass its guard.
++      if(afterCount==beforeCount){return false;}stage=next;return true;
++    };
+     const auto assertSibling=[&](std::size_t index){const auto* value=live(index);require(value&&value->admission==stableAdmission&&value->generation==stableGeneration&&packet->session==initialSession,"Sibling admission/shared session changed during target command");};
+     const auto savedRow=[&](const biglybtc::core::LibrarySnapshot& saved,std::size_t i)->const biglybtc::core::SavedDownload&{const auto found=std::find_if(saved.downloads.begin(),saved.downloads.end(),[&](const auto& x){return x.hash&&*x.hash==b.torrents[i].hash;});require(found!=saved.downloads.end(),"Saved full hash missing");return *found;};
+     QElapsedTimer progressAge;progressAge.start();window.show();require(bridge->openNormal(b.profile.toStdString()),"Host refused original multi-torrent profile");
+@@ -265,19 +278,19 @@
+             result.insert("concurrent_initial",packetJson(packet));result.insert("actual_seed_global_upload_limit",SeedGlobalUpload);result.insert("actual_seed_global_download_limit",48*1024);result.insert("loopback_global_peer_class",true);
+             stableAdmission=y->admission;stableGeneration=y->generation;siblingBaseline=y->payloadDownloaded;stage=Stage::PauseA;
+           }break;
+-        case Stage::PauseA:static_cast<void>(trigger(0,"classic-pause",Stage::PausedA));break;
++        case Stage::PauseA:static_cast<void>(trigger(0,"classic-pause",Action::Pause,Stage::PausedA));break;
+         case Stage::PausedA:
+           if(!bridge->busy()&&row(0)&&row(0)->state.startsWith("Paused")&&!x){assertSibling(1);if(y->payloadDownloaded>=siblingBaseline+16384){result.insert("pause_A_preserved_B",packetJson(packet));stage=Stage::ResumeA;}}break;
+-        case Stage::ResumeA:static_cast<void>(trigger(0,"classic-resume",Stage::ResumedA));break;
++        case Stage::ResumeA:static_cast<void>(trigger(0,"classic-resume",Action::Resume,Stage::ResumedA));break;
+         case Stage::ResumedA:
+           if(!bridge->busy()&&x&&y&&!x->queued&&x->payloadDownloaded>=16384){assertSibling(1);require(x->admission!=initialAdmissions[0]&&x->generation==stableGeneration,"Resumed target reused admission or replaced shared generation");siblingBaseline=y->payloadDownloaded;stage=Stage::StopA;}break;
+-        case Stage::StopA:static_cast<void>(trigger(0,"classic-stop",Stage::StoppedA));break;
++        case Stage::StopA:static_cast<void>(trigger(0,"classic-stop",Action::Stop,Stage::StoppedA));break;
+         case Stage::StoppedA:
+           if(!bridge->busy()&&!x&&row(0)&&row(0)->state=="Stopped"){assertSibling(1);if(y->payloadDownloaded>=siblingBaseline+16384){result.insert("stop_A_preserved_B",packetJson(packet));stage=Stage::QueueA;}}break;
+-        case Stage::QueueA:static_cast<void>(trigger(0,"classic-queue",Stage::QueuedA));break;
++        case Stage::QueueA:static_cast<void>(trigger(0,"classic-queue",Action::Queue,Stage::QueuedA));break;
+         case Stage::QueuedA:
+           if(!bridge->busy()&&x&&y&&x->generation==stableGeneration){assertSibling(1);require(x->verifiedBytes<PayloadBytes&&y->verifiedBytes<PayloadBytes,"No incomplete work remains for restart slot check");stage=Stage::PauseB;}break;
+-        case Stage::PauseB:static_cast<void>(trigger(1,"classic-pause",Stage::PausedB));break;
++        case Stage::PauseB:static_cast<void>(trigger(1,"classic-pause",Action::Pause,Stage::PausedB));break;
+         case Stage::PausedB:
+           if(!bridge->busy()&&x&&!y&&row(1)&&row(1)->state.startsWith("Paused")){
+             require(x->generation==initialGenerations[0],"Sibling pause replaced shared session");beforeRestart=packetJson(packet);
+@@ -303,7 +316,7 @@
+           }break;
+         case Stage::Reopened:
+           if(QFile::exists(work+"/cache-restart-precondition.json")){stage=Stage::ResumeB;}break;
+-        case Stage::ResumeB:static_cast<void>(trigger(1,"classic-resume",Stage::SlotLimited));break;
++        case Stage::ResumeB:static_cast<void>(trigger(1,"classic-resume",Action::Resume,Stage::SlotLimited));break;
+         case Stage::SlotLimited:
+           if(!bridge->busy()&&x&&y&&x->generation==restartGeneration&&y->generation==restartGeneration&&x->queued!=y->queued){
+             require(x->verifiedBytes<PayloadBytes&&y->verifiedBytes<PayloadBytes,"Capacity proof requires two incomplete eligible torrents");running=x->queued?1:0;waiting=1-running;const auto* r=live(static_cast<std::size_t>(running));const auto* w=live(static_cast<std::size_t>(waiting));
+@@ -312,7 +325,7 @@
+             if(w->admission!=slotQueuedAdmission||r->admission!=slotRunningAdmission||w->payloadDownloaded!=siblingBaseline){slotObserved=false;break;}
+             if(slotAge.elapsed()<1000){break;}stableAdmission=w->admission;stableGeneration=w->generation;siblingBaseline=w->payloadDownloaded;result.insert("one_download_slot",packetJson(packet));stage=Stage::StopRunning;
+           }break;
+-        case Stage::StopRunning:static_cast<void>(trigger(static_cast<std::size_t>(running),"classic-stop",Stage::Handoff));break;
++        case Stage::StopRunning:static_cast<void>(trigger(static_cast<std::size_t>(running),"classic-stop",Action::Stop,Stage::Handoff));break;
+         case Stage::Handoff:{
+           const auto* active=live(static_cast<std::size_t>(waiting));const auto* stoppedRow=row(static_cast<std::size_t>(running));
+           if(!bridge->busy()&&!live(static_cast<std::size_t>(running))&&active&&!active->queued&&stoppedRow&&stoppedRow->state=="Stopped"){
+@@ -320,14 +333,14 @@
+             if(active->payloadDownloaded>=siblingBaseline+16384){result.insert("slot_handoff",packetJson(packet));stage=Stage::RestartStopped;}
+           }break;
+         }
+-        case Stage::RestartStopped:static_cast<void>(trigger(static_cast<std::size_t>(running),"classic-start",Stage::FinishTransfers));break;
++        case Stage::RestartStopped:static_cast<void>(trigger(static_cast<std::size_t>(running),"classic-start",Action::Start,Stage::FinishTransfers));break;
+         case Stage::FinishTransfers:
+           if(!bridge->busy()&&x&&y&&x->state=="Seeding — I2P"&&y->state=="Seeding — I2P"&&x->verifiedBytes==PayloadBytes&&y->verifiedBytes==PayloadBytes&&row(0)&&row(1)&&row(0)->completed==PayloadBytes&&row(1)->completed==PayloadBytes){
+             require(x->generation==restartGeneration&&y->generation==restartGeneration,"Finishing sibling replaced shared generation");result.insert("completed",packetJson(packet));require(window.grab().save(work+"/i2p-multi-preview.png"),"Cannot retain actual multi-torrent window");stage=Stage::StopFinalA;
+           }break;
+-        case Stage::StopFinalA:static_cast<void>(trigger(0,"classic-stop",Stage::FinalStoppedA));break;
++        case Stage::StopFinalA:static_cast<void>(trigger(0,"classic-stop",Action::Stop,Stage::FinalStoppedA));break;
+         case Stage::FinalStoppedA:if(!bridge->busy()&&!x&&row(0)&&row(0)->state=="Stopped"){stage=Stage::StopFinalB;}break;
+-        case Stage::StopFinalB:static_cast<void>(trigger(1,"classic-stop",Stage::FinalStoppedB));break;
++        case Stage::StopFinalB:static_cast<void>(trigger(1,"classic-stop",Action::Stop,Stage::FinalStoppedB));break;
+         case Stage::FinalStoppedB:if(!bridge->busy()&&!y&&row(1)&&row(1)->state=="Stopped"){stage=Stage::FinalClose;}break;
+         case Stage::FinalClose:stage=Stage::FinalClosed;joined=released=false;closeRequested=false;window.close();break;
+         case Stage::FinalClosed:

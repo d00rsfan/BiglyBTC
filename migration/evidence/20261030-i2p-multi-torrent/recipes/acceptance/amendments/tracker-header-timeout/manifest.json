@@ -1,0 +1,18 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NOT_ADOPTED",
+  "basis": "san-r1 actual SocketTimeoutException in request-header-query, false-fatal for global serial tracker",
+  "rule": "Only SocketTimeoutException raised while reading an incomplete header retires that one connection.15s unchanged, acceptedconnections<=256 includestimeouts, zero infohash/announce/reply credit. All complete-header/parser/identity checks remain fatal. Native, SDK and positive runner assertions unchanged.",
+  "files": {
+    "RouterMultiTorrentTracker.java": "9ee96d4612f70d65284537a6e4b1c42f8d4ec44a921e5db2abd952156235bf26",
+    "java.patch": "7491368e856074d1a0a4d5d462aeb80f406c848c70169fba237fe43a3c059f73",
+    "runner.patch": "05f28e02f8060cc9994c2d5e215fa4250cf1151cf7201f6a3021fd4dfdb2c431",
+    "run.py": "c67473afec5fd4a3cdae197191915a1fd57df235adf20c25098e412245a5b3ae",
+    "RouterMultiTorrentTracker-before.java": "973179c8045fbad0ce4d609d50312256b86e182bbf01bc277b4b880fd4378025",
+    "run-before.py": "ab37bfc91aa1fe46fc1fce71be9c606b98e6b4392a7d32c0207533d65de9c9fe"
+  },
+  "before": {
+    "Java": "973179c8045fbad0ce4d609d50312256b86e182bbf01bc277b4b880fd4378025",
+    "runner": "ab37bfc91aa1fe46fc1fce71be9c606b98e6b4392a7d32c0207533d65de9c9fe"
+  },
+  "native_changed": false
+}

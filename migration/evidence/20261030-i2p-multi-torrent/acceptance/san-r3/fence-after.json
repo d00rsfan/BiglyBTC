@@ -1,0 +1,95 @@
+{
+  "status": "PASS_FIVE_NAMESPACE_LOOPBACK_PREFLIGHT",
+  "namespaces": {
+    "user": {
+      "parent": {
+        "device": 5,
+        "inode": 4026531837
+      },
+      "actual": {
+        "device": 5,
+        "inode": 4026533099
+      },
+      "link": "user:[4026533099]"
+    },
+    "net": {
+      "parent": {
+        "device": 5,
+        "inode": 4026531833
+      },
+      "actual": {
+        "device": 5,
+        "inode": 4026532994
+      },
+      "link": "net:[4026532994]"
+    },
+    "pid": {
+      "parent": {
+        "device": 5,
+        "inode": 4026531836
+      },
+      "actual": {
+        "device": 5,
+        "inode": 4026532993
+      },
+      "link": "pid:[4026532993]"
+    },
+    "ipc": {
+      "parent": {
+        "device": 5,
+        "inode": 4026531839
+      },
+      "actual": {
+        "device": 5,
+        "inode": 4026532992
+      },
+      "link": "ipc:[4026532992]"
+    },
+    "uts": {
+      "parent": {
+        "device": 5,
+        "inode": 4026531838
+      },
+      "actual": {
+        "device": 5,
+        "inode": 4026532991
+      },
+      "link": "uts:[4026532991]"
+    }
+  },
+  "capabilities": {
+    "CapInh": 0,
+    "CapPrm": 0,
+    "CapEff": 0,
+    "CapBnd": 0,
+    "CapAmb": 0
+  },
+  "no_new_privileges": true,
+  "interfaces": [
+    "lo"
+  ],
+  "loopback_up": true,
+  "ipv4": "127.0.0.1",
+  "ipv6": [
+    "::1/128"
+  ],
+  "routes": {
+    "4": [],
+    "6": [
+      "00000000000000000000000000000000 00 00000000000000000000000000000000 00 00000000000000000000000000000000 ffffffff 00000001 00000000 00200200       lo",
+      "00000000000000000000000000000001 80 00000000000000000000000000000000 00 00000000000000000000000000000000 00000000 00000002 00000000 80200001       lo",
+      "00000000000000000000000000000000 00 00000000000000000000000000000000 00 00000000000000000000000000000000 ffffffff 00000001 00000000 00200200       lo"
+    ]
+  },
+  "unreachable_controls_errno": {
+    "2/1": 101,
+    "2/2": 101,
+    "10/1": 101,
+    "10/2": 101
+  },
+  "pid": 2,
+  "proc_pid1_namespace": "pid:[4026532993]",
+  "label": "bwrap//&unpriv_bwrap (enforce)",
+  "parent_sha256": "d6727faa1924c13780c60fc2efe81563f0e2e795d6ebd830f098802e7a4be789",
+  "scope": "actual provider acceptance environment fence"
+}

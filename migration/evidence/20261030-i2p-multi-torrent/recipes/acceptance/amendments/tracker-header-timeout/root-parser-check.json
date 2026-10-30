@@ -1,0 +1,26 @@
+{
+  "status": "PASS_OFFLINE_HEADER_PARSER_CHECK",
+  "commands": [
+    [
+      "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac",
+      "--release",
+      "17",
+      "-cp",
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-d",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/header-timeout-parser-check",
+      "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/router-ls2-static-type/staging/RouterTracker.java",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/tracker-header-timeout/RouterMultiTorrentTracker.java",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/header-timeout-parser-check/TrackerHeaderCheck.java"
+    ],
+    [
+      "/usr/lib/jvm/java-26-openjdk-amd64/bin/java",
+      "-cp",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/header-timeout-parser-check:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "TrackerHeaderCheck"
+    ]
+  ],
+  "log_sha256": "ad1645017ce3b8eee697b5f5bd4e903bcd99ff9e3c7b910f66e127f9f4c93ddc",
+  "source_sha256": "5081b23c382938f8f46d1e545412e4349db917d0f53088deeac6b0b875619d6c",
+  "network_or_native_execution": false
+}

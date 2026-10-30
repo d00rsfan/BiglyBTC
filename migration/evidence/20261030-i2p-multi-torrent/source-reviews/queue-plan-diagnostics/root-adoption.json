@@ -1,0 +1,5 @@
+{
+  "status": "ADOPTED_DIAGNOSTIC_ONLY",
+  "review": "Bounded opt-in exact planner/availability/pause telemetry; no change to queue algorithm/effect predicates; unknown values labelled known=false.",
+  "runtime": "pending"
+}

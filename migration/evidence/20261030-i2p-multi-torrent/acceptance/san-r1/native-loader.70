@@ -1,0 +1,568 @@
+        70:	
+        70:	file=libasan.so.8 [0];  needed by /probe [0]
+        70:	file=libasan.so.8 [0];  generating link map
+        70:	  dynamic: 0x00007b87b57d3d60  base: 0x00007b87b5600000   size: 0x000000000070e1a8
+        70:	    entry: 0x00007b87b5600000  phdr: 0x00007b87b5600040  phnum:                 13
+        70:	
+        70:	
+        70:	file=libQt6Test.so.6 [0];  needed by /probe [0]
+        70:	file=libQt6Test.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b5e82fb0  base: 0x00007b87b5e0f000   size: 0x0000000000075d50
+        70:	    entry: 0x00007b87b5e23ef0  phdr: 0x00007b87b5e0f040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libcrypto.so.3 [0];  needed by /probe [0]
+        70:	file=libcrypto.so.3 [0];  generating link map
+        70:	  dynamic: 0x00007b87b5413700  base: 0x00007b87b4e00000   size: 0x0000000000619cb8
+        70:	    entry: 0x00007b87b4e00000  phdr: 0x00007b87b4e00040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libz.so.1 [0];  needed by /probe [0]
+        70:	file=libz.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b5e0ddc0  base: 0x00007b87b5df1000   size: 0x000000000001d098
+        70:	    entry: 0x00007b87b5df1000  phdr: 0x00007b87b5df1040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libQt6Widgets.so.6 [0];  needed by /probe [0]
+        70:	file=libQt6Widgets.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b4db93d8  base: 0x00007b87b4600000   size: 0x00000000007ccc20
+        70:	    entry: 0x00007b87b478a3d0  phdr: 0x00007b87b4600040  phnum:                 11
+        70:	
+        70:	
+        70:	file=libQt6Gui.so.6 [0];  needed by /probe [0]
+        70:	file=libQt6Gui.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b44f8438  base: 0x00007b87b3a00000   size: 0x0000000000b1e128
+        70:	    entry: 0x00007b87b3b38170  phdr: 0x00007b87b3a00040  phnum:                 11
+        70:	
+        70:	
+        70:	file=libGLX.so.0 [0];  needed by /probe [0]
+        70:	file=libGLX.so.0 [0];  generating link map
+        70:	  dynamic: 0x00007b87b5dddbc0  base: 0x00007b87b5dbc000   size: 0x00000000000323c8
+        70:	    entry: 0x00007b87b5dbc000  phdr: 0x00007b87b5dbc040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libOpenGL.so.0 [0];  needed by /probe [0]
+        70:	file=libOpenGL.so.0 [0];  generating link map
+        70:	  dynamic: 0x00007b87b5dbad38  base: 0x00007b87b5d91000   size: 0x000000000002a020
+        70:	    entry: 0x00007b87b5d91000  phdr: 0x00007b87b5d91040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libQt6Network.so.6 [0];  needed by /probe [0]
+        70:	file=libQt6Network.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b3806e78  base: 0x00007b87b3600000   size: 0x000000000020f578
+        70:	    entry: 0x00007b87b365eb70  phdr: 0x00007b87b3600040  phnum:                 11
+        70:	
+        70:	
+        70:	file=libQt6Core.so.6 [0];  needed by /probe [0]
+        70:	file=libQt6Core.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b354bb48  base: 0x00007b87b2e00000   size: 0x000000000075a048
+        70:	    entry: 0x00007b87b2f07ed0  phdr: 0x00007b87b2e00040  phnum:                 14
+        70:	
+        70:	
+        70:	file=libtorrent-rasterbar.so.2.0 [0];  needed by /probe [0]
+        70:	file=libtorrent-rasterbar.so.2.0 [0];  generating link map
+        70:	  dynamic: 0x00007b87b2cfe9f0  base: 0x00007b87b2600000   size: 0x0000000000707308
+        70:	    entry: 0x00007b87b2600000  phdr: 0x00007b87b2600040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libssl.so.3 [0];  needed by /probe [0]
+        70:	file=libssl.so.3 [0];  generating link map
+        70:	  dynamic: 0x00007b87b55fab30  base: 0x00007b87b54f2000   size: 0x000000000010d7e8
+        70:	    entry: 0x00007b87b54f2000  phdr: 0x00007b87b54f2040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libstdc++.so.6 [0];  needed by /probe [0]
+        70:	file=libstdc++.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b2497cb8  base: 0x00007b87b2200000   size: 0x000000000029f440
+        70:	    entry: 0x00007b87b2200000  phdr: 0x00007b87b2200040  phnum:                 13
+        70:	
+        70:	
+        70:	file=libm.so.6 [0];  needed by /probe [0]
+        70:	file=libm.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b39feb98  base: 0x00007b87b38da000   size: 0x0000000000125018
+        70:	    entry: 0x00007b87b38da000  phdr: 0x00007b87b38da040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libubsan.so.1 [0];  needed by /probe [0]
+        70:	file=libubsan.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b1a77d00  base: 0x00007b87b1a00000   size: 0x000000000061c5c8
+        70:	    entry: 0x00007b87b1a00000  phdr: 0x00007b87b1a00040  phnum:                 13
+        70:	
+        70:	
+        70:	file=libgcc_s.so.1 [0];  needed by /probe [0]
+        70:	file=libgcc_s.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b5d8ddb0  base: 0x00007b87b5d61000   size: 0x000000000002d3a8
+        70:	    entry: 0x00007b87b5d61000  phdr: 0x00007b87b5d61040  phnum:                 13
+        70:	
+        70:	
+        70:	file=libc.so.6 [0];  needed by /probe [0]
+        70:	file=libc.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b1811940  base: 0x00007b87b1600000   size: 0x0000000000220d90
+        70:	    entry: 0x00007b87b162a820  phdr: 0x00007b87b1600040  phnum:                 15
+        70:	
+        70:	
+        70:	file=libzstd.so.1 [0];  needed by /usr/lib/x86_64-linux-gnu/libcrypto.so.3 [0]
+        70:	file=libzstd.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b54f0cb8  base: 0x00007b87b542f000   size: 0x00000000000c2030
+        70:	    entry: 0x00007b87b542f000  phdr: 0x00007b87b542f040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libGL.so.1 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6 [0]
+        70:	file=libGL.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b45fdd18  base: 0x00007b87b457b000   size: 0x0000000000084890
+        70:	    entry: 0x00007b87b457b000  phdr: 0x00007b87b457b040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libxkbcommon.so.0 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6 [0]
+        70:	file=libxkbcommon.so.0 [0];  generating link map
+        70:	  dynamic: 0x00007b87b38d8dc0  base: 0x00007b87b387b000   size: 0x000000000005e258
+        70:	    entry: 0x00007b87b387b000  phdr: 0x00007b87b387b040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libEGL.so.1 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libEGL.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b5d5dbb8  base: 0x00007b87b5d4c000   size: 0x00000000000124a8
+        70:	    entry: 0x00007b87b5d4c000  phdr: 0x00007b87b5d4c040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libX11.so.6 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libX11.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b25fbc30  base: 0x00007b87b24be000   size: 0x0000000000141d30
+        70:	    entry: 0x00007b87b24be000  phdr: 0x00007b87b24be040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libglib-2.0.so.0 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libglib-2.0.so.0 [0];  generating link map
+        70:	  dynamic: 0x00007b87b21fd500  base: 0x00007b87b20a8000   size: 0x00000000001572a8
+        70:	    entry: 0x00007b87b20a8000  phdr: 0x00007b87b20a8040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libQt6DBus.so.6 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libQt6DBus.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b2dfba18  base: 0x00007b87b2d25000   size: 0x00000000000da2b8
+        70:	    entry: 0x00007b87b2d498b0  phdr: 0x00007b87b2d25040  phnum:                 11
+        70:	
+        70:	
+        70:	file=libfreetype.so.6 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libfreetype.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b19feb90  base: 0x00007b87b192b000   size: 0x00000000000d4010
+        70:	    entry: 0x00007b87b192b000  phdr: 0x00007b87b192b040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libfontconfig.so.1 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libfontconfig.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b45799b8  base: 0x00007b87b4528000   size: 0x0000000000052258
+        70:	    entry: 0x00007b87b4528000  phdr: 0x00007b87b4528040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libgthread-2.0.so.0 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6 [0]
+        70:	file=libgthread-2.0.so.0 [0];  generating link map
+        70:	  dynamic: 0x00007b87b5d48da8  base: 0x00007b87b5d45000   size: 0x0000000000004010
+        70:	    entry: 0x00007b87b5d45000  phdr: 0x00007b87b5d45040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libGLdispatch.so.0 [0];  needed by /usr/lib/x86_64-linux-gnu/libGLX.so.0 [0]
+        70:	file=libGLdispatch.so.0 [0];  generating link map
+        70:	  dynamic: 0x00007b87b1921d10  base: 0x00007b87b1872000   size: 0x00000000000b82c0
+        70:	    entry: 0x00007b87b1872000  phdr: 0x00007b87b1872040  phnum:                 13
+        70:	
+        70:	
+        70:	file=libgssapi_krb5.so.2 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6 [0]
+        70:	file=libgssapi_krb5.so.2 [0];  generating link map
+        70:	  dynamic: 0x00007b87b3878c50  base: 0x00007b87b3823000   size: 0x0000000000057428
+        70:	    entry: 0x00007b87b3823000  phdr: 0x00007b87b3823040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libbrotlidec.so.1 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6 [0]
+        70:	file=libbrotlidec.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b5d41db8  base: 0x00007b87b5d34000   size: 0x000000000000e068
+        70:	    entry: 0x00007b87b5d34000  phdr: 0x00007b87b5d34040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libbrotlicommon.so.1 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6 [0]
+        70:	file=libbrotlicommon.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b5d32df0  base: 0x00007b87b5d11000   size: 0x0000000000022028
+        70:	    entry: 0x00007b87b5d11000  phdr: 0x00007b87b5d11040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libresolv.so.2 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6 [0]
+        70:	file=libresolv.so.2 [0];  generating link map
+        70:	  dynamic: 0x00007b87b542bb68  base: 0x00007b87b541c000   size: 0x0000000000012888
+        70:	    entry: 0x00007b87b541c000  phdr: 0x00007b87b541c040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libicui18n.so.73 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6 [0]
+        70:	file=libicui18n.so.73 [0];  generating link map
+        70:	  dynamic: 0x00007b87b154bbd0  base: 0x00007b87b1200000   size: 0x000000000034e6f8
+        70:	    entry: 0x00007b87b12f9780  phdr: 0x00007b87b1200040  phnum:                  9
+        70:	
+        70:	
+        70:	file=libicuuc.so.73 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6 [0]
+        70:	file=libicuuc.so.73 [0];  generating link map
+        70:	  dynamic: 0x00007b87b1014c18  base: 0x00007b87b0e00000   size: 0x00000000002174b0
+        70:	    entry: 0x00007b87b0e6a440  phdr: 0x00007b87b0e00040  phnum:                  9
+        70:	
+        70:	
+        70:	file=libicudata.so.73 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6 [0]
+        70:	file=libicudata.so.73 [0];  generating link map
+        70:	  dynamic: 0x00007b87b0c8df10  base: 0x00007b87aee00000   size: 0x0000000001e8e000
+        70:	    entry: 0x00007b87aee01000  phdr: 0x00007b87aee00040  phnum:                  6
+        70:	
+        70:	
+        70:	file=libxcb.so.1 [0];  needed by /usr/lib/x86_64-linux-gnu/libX11.so.6 [0]
+        70:	file=libxcb.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b4dfedb8  base: 0x00007b87b4dd5000   size: 0x000000000002a288
+        70:	    entry: 0x00007b87b4dd5000  phdr: 0x00007b87b4dd5040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libatomic.so.1 [0];  needed by /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 [0]
+        70:	file=libatomic.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b3820dd8  base: 0x00007b87b3818000   size: 0x000000000000a088
+        70:	    entry: 0x00007b87b3818000  phdr: 0x00007b87b3818040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libpcre2-8.so.0 [0];  needed by /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 [0]
+        70:	file=libpcre2-8.so.0 [0];  generating link map
+        70:	  dynamic: 0x00007b87b15fedf8  base: 0x00007b87b1554000   size: 0x00000000000ab2b8
+        70:	    entry: 0x00007b87b1554000  phdr: 0x00007b87b1554040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libdbus-1.so.3 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libQt6DBus.so.6 [0]
+        70:	file=libdbus-1.so.3 [0];  generating link map
+        70:	  dynamic: 0x00007b87b35fe9b8  base: 0x00007b87b35b0000   size: 0x000000000004f2f0
+        70:	    entry: 0x00007b87b35b0000  phdr: 0x00007b87b35b0040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libbz2.so.1.0 [0];  needed by /usr/lib/x86_64-linux-gnu/libfreetype.so.6 [0]
+        70:	file=libbz2.so.1.0 [0];  generating link map
+        70:	  dynamic: 0x00007b87b35aed20  base: 0x00007b87b359b000   size: 0x0000000000014c28
+        70:	    entry: 0x00007b87b359b000  phdr: 0x00007b87b359b040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libpng16.so.16 [0];  needed by /usr/lib/x86_64-linux-gnu/libfreetype.so.6 [0]
+        70:	file=libpng16.so.16 [0];  generating link map
+        70:	  dynamic: 0x00007b87b3599c58  base: 0x00007b87b3561000   size: 0x0000000000039010
+        70:	    entry: 0x00007b87b3561000  phdr: 0x00007b87b3561040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libexpat.so.1 [0];  needed by /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 [0]
+        70:	file=libexpat.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b20a6dd0  base: 0x00007b87b207b000   size: 0x000000000002c080
+        70:	    entry: 0x00007b87b207b000  phdr: 0x00007b87b207b040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libkrb5.so.3 [0];  needed by /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 [0]
+        70:	file=libkrb5.so.3 [0];  generating link map
+        70:	  dynamic: 0x00007b87b11fdca0  base: 0x00007b87b1134000   size: 0x00000000000cbaf8
+        70:	    entry: 0x00007b87b1134000  phdr: 0x00007b87b1134040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libk5crypto.so.3 [0];  needed by /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 [0]
+        70:	file=libk5crypto.so.3 [0];  generating link map
+        70:	  dynamic: 0x00007b87b2079da0  base: 0x00007b87b204f000   size: 0x000000000002b108
+        70:	    entry: 0x00007b87b204f000  phdr: 0x00007b87b204f040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libcom_err.so.2 [0];  needed by /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 [0]
+        70:	file=libcom_err.so.2 [0];  generating link map
+        70:	  dynamic: 0x00007b87b4dd1cb8  base: 0x00007b87b4dcd000   size: 0x0000000000005048
+        70:	    entry: 0x00007b87b4dcd000  phdr: 0x00007b87b4dcd040  phnum:                 13
+        70:	
+        70:	
+        70:	file=libkrb5support.so.0 [0];  needed by /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 [0]
+        70:	file=libkrb5support.so.0 [0];  generating link map
+        70:	  dynamic: 0x00007b87b2d23d48  base: 0x00007b87b2d18000   size: 0x000000000000c390
+        70:	    entry: 0x00007b87b2d18000  phdr: 0x00007b87b2d18040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libpthread.so.0 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libicui18n.so.73 [0]
+        70:	file=libpthread.so.0 [0];  generating link map
+        70:	  dynamic: 0x00007b87b4526da8  base: 0x00007b87b4523000   size: 0x0000000000004010
+        70:	    entry: 0x00007b87b4523000  phdr: 0x00007b87b4523040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libdl.so.2 [0];  needed by /opt/Qt/6.12.0/gcc_64/lib/libicui18n.so.73 [0]
+        70:	file=libdl.so.2 [0];  generating link map
+        70:	  dynamic: 0x00007b87b3816da8  base: 0x00007b87b3813000   size: 0x0000000000004010
+        70:	    entry: 0x00007b87b3813000  phdr: 0x00007b87b3813040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libXau.so.6 [0];  needed by /usr/lib/x86_64-linux-gnu/libxcb.so.1 [0]
+        70:	file=libXau.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b355fdf8  base: 0x00007b87b355b000   size: 0x00000000000050f0
+        70:	    entry: 0x00007b87b355b000  phdr: 0x00007b87b355b040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libXdmcp.so.6 [0];  needed by /usr/lib/x86_64-linux-gnu/libxcb.so.1 [0]
+        70:	file=libXdmcp.so.6 [0];  generating link map
+        70:	  dynamic: 0x00007b87b2d16df8  base: 0x00007b87b2d10000   size: 0x0000000000007068
+        70:	    entry: 0x00007b87b2d10000  phdr: 0x00007b87b2d10040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libsystemd.so.0 [0];  needed by /usr/lib/x86_64-linux-gnu/libdbus-1.so.3 [0]
+        70:	file=libsystemd.so.0 [0];  generating link map
+        70:	  dynamic: 0x00007b87b1131610  base: 0x00007b87b1020000   size: 0x0000000000113988
+        70:	    entry: 0x00007b87b1020000  phdr: 0x00007b87b1020040  phnum:                 13
+        70:	
+        70:	
+        70:	file=libkeyutils.so.1 [0];  needed by /usr/lib/x86_64-linux-gnu/libkrb5.so.3 [0]
+        70:	file=libkeyutils.so.1 [0];  generating link map
+        70:	  dynamic: 0x00007b87b2d0ed28  base: 0x00007b87b2d09000   size: 0x0000000000006010
+        70:	    entry: 0x00007b87b2d09000  phdr: 0x00007b87b2d09040  phnum:                 12
+        70:	
+        70:	
+        70:	calling preinit: /probe
+        70:	
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: __isoc99_printf (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: __isoc99_sprintf (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: __isoc99_snprintf (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: __isoc99_fprintf (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: __isoc99_vprintf (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: __isoc99_vsprintf (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: __isoc99_vsnprintf (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: __isoc99_vfprintf (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: pthread_mutexattr_getrobust_np (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdrmem_create (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdrstdio_create (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_short (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_u_short (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_int (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_u_int (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_long (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_u_long (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_hyper (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_u_hyper (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_longlong_t (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_u_longlong_t (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_int8_t (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_uint8_t (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_int16_t (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_uint16_t (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_int32_t (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_uint32_t (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_int64_t (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_uint64_t (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_quad_t (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_u_quad_t (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_bool (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_enum (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_char (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_u_char (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_float (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_double (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_bytes (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_string (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdrrec_create (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: xdr_destroy (fatal)
+        70:	/usr/lib/x86_64-linux-gnu/libasan.so.8: error: symbol lookup error: undefined symbol: swift_demangle (fatal)
+        70:	
+        70:	calling init: /lib64/ld-linux-x86-64.so.2
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libc.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libkeyutils.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libm.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libsystemd.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libXdmcp.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libXau.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libdl.so.2
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libpthread.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libkrb5support.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libcom_err.so.2
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libk5crypto.so.3
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libresolv.so.2
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libkrb5.so.3
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libexpat.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libz.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libpng16.so.16
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libbz2.so.1.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libdbus-1.so.3
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libpcre2-8.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libatomic.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libxcb.so.1
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libicudata.so.73
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libicuuc.so.73
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libicui18n.so.73
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libbrotlicommon.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libbrotlidec.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libGLdispatch.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libgthread-2.0.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libfreetype.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libfontconfig.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libzstd.so.1
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libQt6DBus.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libX11.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libEGL.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libxkbcommon.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libGLX.so.0
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libGL.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libubsan.so.1
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libcrypto.so.3
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libssl.so.3
+        70:	
+        70:	
+        70:	calling init: /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libOpenGL.so.0
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+        70:	
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libasan.so.8
+        70:	
+        70:	
+        70:	initialize program: /probe
+        70:	
+        70:	
+        70:	transferring control: /probe
+        70:	
+        70:	
+        70:	file=/opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so.avx2 [0];  dynamically loaded by /usr/lib/x86_64-linux-gnu/libasan.so.8 [0]
+        70:	
+        70:	file=/opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so [0];  dynamically loaded by /usr/lib/x86_64-linux-gnu/libasan.so.8 [0]
+        70:	file=/opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so [0];  generating link map
+        70:	  dynamic: 0x00007787acc5a670  base: 0x00007787acc3e000   size: 0x000000000001d110
+        70:	    entry: 0x00007787acc49a30  phdr: 0x00007787acc3e040  phnum:                 11
+        70:	
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libcrypto.so.3 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libssl.so.3 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libgthread-2.0.so.0 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libkrb5.so.3 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libk5crypto.so.3 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libkrb5support.so.0 [0]
+        70:	activating NODELETE for /usr/lib/x86_64-linux-gnu/libsystemd.so.0 [0]
+        70:	activating NODELETE for /opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so [0]
+        70:	
+        70:	calling init: /opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so
+        70:	
+        70:	opening file=/opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so [0]; direct_opencount=1
+        70:	
+        70:	/usr/lib/x86_64-linux-gnu/libfreetype.so.6: error: symbol lookup error: undefined symbol: hb_version_atleast (fatal)
+        70:	
+        70:	file=libharfbuzz.so.0 [0];  dynamically loaded by /usr/lib/x86_64-linux-gnu/libasan.so.8 [0]
+        70:	file=libharfbuzz.so.0 [0];  generating link map
+        70:	  dynamic: 0x00007787abbfe9f0  base: 0x00007787abad5000   size: 0x000000000012ab88
+        70:	    entry: 0x00007787abad5000  phdr: 0x00007787abad5040  phnum:                 12
+        70:	
+        70:	
+        70:	file=libgraphite2.so.3 [0];  needed by /usr/lib/x86_64-linux-gnu/libharfbuzz.so.0 [0]
+        70:	file=libgraphite2.so.3 [0];  generating link map
+        70:	  dynamic: 0x00007787acc20de0  base: 0x00007787acbfc000   size: 0x0000000000025090
+        70:	    entry: 0x00007787acbfc000  phdr: 0x00007787acbfc040  phnum:                 12
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libgraphite2.so.3
+        70:	
+        70:	
+        70:	calling init: /usr/lib/x86_64-linux-gnu/libharfbuzz.so.0
+        70:	
+        70:	opening file=/usr/lib/x86_64-linux-gnu/libharfbuzz.so.0 [0]; direct_opencount=1
+        70:	
+        70:	opening file=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0 [0]; direct_opencount=1
+        70:	

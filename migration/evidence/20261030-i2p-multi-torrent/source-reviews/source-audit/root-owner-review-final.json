@@ -1,0 +1,42 @@
+{
+  "status": "SOURCE_PASS",
+  "scope": "Independent shared owner/service source review and final three-item delta review only.",
+  "reviewed_sources": {
+    "profile_owner.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/root-source/profile_owner.hpp",
+      "sha256": "7b7ff6cd581d1bebf35c945027a8dc60f6d7e2fdcce87fad82df1541576774bb",
+      "bytes": 3157
+    },
+    "profile_owner.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/root-source/profile_owner.cpp",
+      "sha256": "bef28292f11d1ecf4390cf8caefad6b5a416d9da4f0d7a4bb295d60c05e7a600",
+      "bytes": 38410
+    },
+    "owned_i2p_service.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/root-source/owned_i2p_service.hpp",
+      "sha256": "3fdbedf56b5e24d477a1a19d70d30ead43bf5c76765e5e0a1271c9b01355c12f",
+      "bytes": 2944
+    },
+    "owned_i2p_service.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/root-source/owned_i2p_service.cpp",
+      "sha256": "0524f35984be86a07eaf7b7f83897c4c5beb1a5b1fb04b4cc7a556b729199ff6",
+      "bytes": 17271
+    }
+  },
+  "prior_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-audit/root-owner-review-pending.json",
+    "sha256": "59f8fb9a5f454d849c3bab2db4b29124da5a78f1aaf79cdccefa59dc3d0a9803"
+  },
+  "source_authority_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/manifest.json",
+    "sha256": "f9c883e350d696d51fb66b58f5db742028e23e84ef6d4005af2e90f1a448e54c"
+  },
+  "resolved": [
+    "The original member retirement deadline is checked before the weak-expiry executor barrier, after the barrier, and immediately before Ready. Late retirement retains the recheck failure rather than authorizing a checkpoint.",
+    "Active add only queues memberInstallRequested. The existing SourcePermit worker validates the anchor and active children, the Qt startup consumes its actual one-shot permit, and registration/add/resume run before acknowledgement. Idle wake includes pending members. Retired or failed pending members are skipped; uncertain installation closes the shared session.",
+    "prepareTorrent holds same-OFD SourceAccess across child preparation and queue inventory association; no Qt wait occurs inside that scope.",
+    "OwnedProfile has no changed signal, direct emission, or notification callback. The service observes by its existing explicit polling interface; no new user callback is invoked under a source permit."
+  ],
+  "findings": [],
+  "limits": "SOURCE ONLY. No compiler, tests, SDK, router, subjects, network or N edits were executed by this review. Actual builds and lifecycle/queue/transfer qualification remain root-owned and pending."
+}

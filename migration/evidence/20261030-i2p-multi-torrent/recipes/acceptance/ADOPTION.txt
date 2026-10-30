@@ -1,0 +1,81 @@
+SOURCE ONLY; no native/Java compile, namespace, router or acceptance run by author.
+
+Add one native leaf, tests/i2p_multi_host_transfer_probe.cpp, target
+biglybtc-i2p-multi-host-transfer-probe. Root owns CMake composition: use the same
+link/include closure as the qualified i2p-host-transfer-probe plus the existing
+OwnedI2pService target. This source uses root's staged shared-profile API and
+I2pPacket global/per-target observations. Neither old probe nor Java helper changes.
+
+The seed calls genuine OwnedI2pService start/add/observations/close on its external
+caller QThread. The leecher is a real SessionBridge+LibraryWindow with original
+three-row saved inventory and one original identity key. A/B have distinct512KiB
+payloads; C remains stopped on both profiles. All six original payload inodes are
+preserved. Initial two genuinely transferring, unqueued rows must be incomplete.
+Actual per-target limits are seed24/32KiB upload, leecher8/12KiB download; seed's
+seeding-only global40KiB and leecher global16KiB are actual SDK readbacks, with
+loopback included in global peer class. Rates are not certified by a short sample.
+
+Real GUI Pause/Resume/Stop/Queue for A require B progress plus the identical B
+admission, generation and Host session. After B Pause, actual Host.closeSession
+joins/checkpoints before config changes or saved reads. It uses the Host API for
+this intermediate profile close, leaving the window reusable; the final close
+uses the ordinary window session-close handshake. Exact saved A75/B70+pause/C70
+and positive per-target original counters are required. Restart uses the same key,
+max-download1, genuine router absence/new signed LS2 barriers. Resuming B must
+show two eligible incomplete rows with exactly one queued and stable queued
+counter/admissions for >=1s. Stopping the running row must hand its slot to its
+unchanged sibling and produce actual payload progress. Both ultimately transfer
+exact bytes, then real final Stops/Host close/seed join precede disk/inode reads.
+Saved per-target downloaded totals must survive restarts and cover full payloads.
+
+Original rank=None is an explicit original setting; no synthetic swarm facts or
+force-start bypass. Other unimplemented queue facts retain actual unavailable bits.
+The new real Java tracker handles exact selected info_hash for /announce and
+/scrape, uses actual peer identity and source/destination ports, tracks left/event
+per announced role, and reports observed complete/incomplete/completed counts.
+C remains in the exact full-hash allowlist but must have zero announce/reply counts.
+Only A/B require actual two-sided replies. Each reply is credited after original
+Streaming flush+close acknowledgement; no fake socket/status/data callback.
+Bounds:3hashes in this probe (helper accepts2..4), total256/perhash128 requests,
+8192-byte HTTP header,16-byte decimal left; native absolute240s, outer native250s,
+namespace600s. No deadline or predicate from an old acceptance is credited here.
+
+Barrier files/commands (one router, one Java tracker, one native probe):
+ native-started -> warm-owned-cache -> cache-precondition
+ shared-controls-ready -> check-native-shared -> shared-session-precondition
+ leech-restart-ready -> leech-closed -> leech-retired
+ native-restarted -> rewarm-owned-cache -> cache-restart-precondition
+ native PASS+join -> native-closed -> native-retired; tracker stop; router stop.
+The shared check requires the exact same two native public identities plus tracker.
+The restart requires actual leech absence followed by actual local registration,
+new accepted/signature-verified Enc4 LS2, while seed remains. Public store warming
+is explicit: this proves local zero-hop exchange, not discovery or remote tunnels.
+
+Launcher reuses unchanged reviewed bwrap five-namespace/readonly-parent snapshot
+fence. No pkexec, auth or fallback. Before and after: USER/NET/PID/IPC/UTS distinct
+from held actual parent descriptors, loopback-only, no external usable routes,
+all capability sets0/NNP1. One actual javac compiles unchanged RouterTracker utility
+and this helper against exact modified b086 JAR.5 class files expected. Exact
+sourceCID/tree/build logs/images/current approved DSO/SDK headers/private config,
+Qt GUI/Test/offscreen loader maps are required. CLI source/approval/record refers
+to the future actually measured additive multi-hash provider, not oldV1 approval.
+No SDK or Java core build is performed by this recipe. Owned fixture keys/profiles,
+payload/home/classes are deleted only after actual child joins and evidence hashes;
+public allowlist excludes all private keys and router/profile trees.
+
+Root-only future command after actual SDK+native qualification:
+ python3 build/i2p-multi-20261030/acceptance/run.py \
+  --source-commit ACTUAL_FULL_CID --build-receipt ACTUAL_BUILD_JSON \
+  --probe ABS_GCC/biglybtc-i2p-multi-host-transfer-probe --probe-sha256 ACTUAL_SHA \
+  --provider-source ACTUAL_PROVIDER_MANIFEST --provider-source-sha256 ACTUAL_SHA \
+  --provider-record ACTUAL_SOURCE_BUILD_RECORD \
+  --provider-approval ACTUAL_ROOT_APPROVAL --provider-approval-sha256 ACTUAL_SHA \
+  --java /usr/lib/jvm/java-26-openjdk-amd64/bin/java \
+  --javac /usr/lib/jvm/java-26-openjdk-amd64/bin/javac \
+  --output ABS_R/build/i2p-multi-20261030/acceptance/runs/r1 \
+  --acknowledge-warmed-local-cache-only
+
+Required simple build receipt schema is the existing Host receipt: status PASS,
+source_commit, source_tree (git preview/native tree), cache absolute, commands
+[{argv,exit_code,log,log_sha256}], images mapping with exact probe and BiglyBTC
+{path,sha256,bytes}. No old runtime PASS is pooled or implied.

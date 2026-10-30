@@ -1,0 +1,67 @@
+{
+    "Host_busy": false,
+    "elapsed_ms": 5264,
+    "i2p": {
+        "failure": "",
+        "global_download_limit": 0,
+        "global_upload_limit": 0,
+        "loopback_peer_classes": 4,
+        "sequence": "3",
+        "session": "1",
+        "torrents": [
+            {
+                "admission": "6143822492822344523",
+                "download_limit": 0,
+                "generation": "0",
+                "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+                "payload_downloaded": -1,
+                "payload_uploaded": -1,
+                "queue_unavailable": 0,
+                "queued": true,
+                "state": "Connecting — I2P",
+                "upload_limit": 0,
+                "verified_bytes": 0
+            },
+            {
+                "admission": "13178449562512914575",
+                "download_limit": 0,
+                "generation": "0",
+                "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+                "payload_downloaded": -1,
+                "payload_uploaded": -1,
+                "queue_unavailable": 0,
+                "queued": true,
+                "state": "Connecting — I2P",
+                "upload_limit": 0,
+                "verified_bytes": 0
+            }
+        ]
+    },
+    "seed": [
+        {
+            "admission": "14942560467433694868",
+            "failure": "",
+            "generation": "11296225308258230363",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+            "loopback_peer_classes": 1,
+            "phase": 2,
+            "public_identity": "08a5fde9b767e4e6a20dce3f6ecba79f09a85d99a353094916dd2858efccd7f2",
+            "verified_bytes": 524288
+        },
+        {
+            "admission": "13298737743616016071",
+            "failure": "",
+            "generation": "11296225308258230363",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+            "loopback_peer_classes": 1,
+            "phase": 2,
+            "public_identity": "08a5fde9b767e4e6a20dce3f6ecba79f09a85d99a353094916dd2858efccd7f2",
+            "verified_bytes": 524288
+        }
+    ],
+    "stage": 0
+}

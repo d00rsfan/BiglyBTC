@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/manifest.json",
+    "sha256": "1c3fc79e9f0a6f8e84eede48a786fb1af37e76975b88d445cc80d5da47031527",
+    "bytes": 4157
+  },
+  "source_paths": {
+    "preview/native/tests/i2p_multi_host_transfer_probe.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/seed-authority-diagnostics/before/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "before_sha256": "ab664239951b0b36cba854faa3aa87e313a980cb6915f564a51bbbe44e1bac5c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/seed-authority-diagnostics/staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "after_sha256": "33848182ff6e14b0e250e5b925ec78ecf009d13590c7f113b15bd92ba39598fd"
+    }
+  },
+  "artifacts": {
+    "before/preview/native/tests/i2p_multi_host_transfer_probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/seed-authority-diagnostics/before/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "sha256": "ab664239951b0b36cba854faa3aa87e313a980cb6915f564a51bbbe44e1bac5c",
+      "bytes": 35833
+    },
+    "staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/seed-authority-diagnostics/staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "sha256": "33848182ff6e14b0e250e5b925ec78ecf009d13590c7f113b15bd92ba39598fd",
+      "bytes": 36474
+    },
+    "changes.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/seed-authority-diagnostics/changes.patch",
+      "sha256": "577792874de4ef7e9720f0275154a0f0eddcfb49a6876d725b860bee01ed88e2",
+      "bytes": 7148
+    },
+    "source-pin-proposal.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/seed-authority-diagnostics/source-pin-proposal.json",
+      "sha256": "225c7a6d02ae0461302704cef9513da015ee3b015499f6c5e7c50b2f9c02984a",
+      "bytes": 682
+    }
+  },
+  "actual_failure": {
+    "native-terminal.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/runs/gcc-r1/native-terminal.json",
+      "sha256": "b1512d0a4bb43c7a4f680d3966757bb6d7193eaf278920f633824f616c005ea5",
+      "bytes": 108
+    },
+    "native-result.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/runs/gcc-r1/native-result.json",
+      "sha256": "5bfbfc2cc3007b75eb7d09e864643b3f79c2334f72ceb0a7bcff04a4a988bd32",
+      "bytes": 1505
+    },
+    "native-progress.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/runs/gcc-r1/native-progress.json",
+      "sha256": "6728f9ee4289f432ddff3ae571c2b10dae7fbbce0642ebd7be020f32b8f56ed2",
+      "bytes": 1860
+    }
+  },
+  "delta": "Only bounded passive seed observations captured before authority invariant and retained in progress/terminal/result before shutdown. All assertions/actions/authority/deadlines unchanged.",
+  "no_execution": true
+}

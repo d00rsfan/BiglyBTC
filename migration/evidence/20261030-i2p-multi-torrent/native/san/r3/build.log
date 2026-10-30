@@ -1,0 +1,28 @@
+[1/73] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[2/73] Building CXX object services/CMakeFiles/biglybtc_i2p_streaming.dir/i2p_streaming/manager.cpp.o
+[3/73] Linking CXX static library services/libbiglybtc_i2p_streaming.a
+[4/73] Automatic MOC for target biglybtc_i2cp_initial_channel
+[5/73] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/original_control.cpp.o
+[6/73] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/original_disk_io.cpp.o
+[7/73] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/torrent_creator.cpp.o
+[8/73] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/network_proxy_capability.cpp.o
+[9/73] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/disk_latency.cpp.o
+[10/73] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/network_binding.cpp.o
+[11/73] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/library_http_protocol.cpp.o
+[12/73] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/queued_mainline_scrape.cpp.o
+[13/73] Linking CXX static library engine/libbiglybtc_mainline_bind_plan.a
+[14/73] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/library_http_tracker.cpp.o
+[15/73] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/owned_i2p_policy.cpp.o
+[16/73] Building CXX object services/CMakeFiles/biglybtc_owned_sam_protocol.dir/i2p_provider/sam_protocol.cpp.o
+[17/73] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/biglybtc_i2cp_initial_channel_autogen/mocs_compilation.cpp.o
+[18/73] Linking CXX static library services/libbiglybtc_owned_sam_protocol.a
+[19/73] Linking CXX static library engine/libbiglybtc_local_engine.a
+[20/73] Automatic MOC for target biglybtc_ui
+[21/73] Building CXX object services/CMakeFiles/biglybtc_owned_i2p_source.dir/i2p_provider/profile_source.cpp.o
+[22/73] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/i2cp_channel/channel.cpp.o
+[23/73] Linking CXX static library services/libbiglybtc_i2cp_initial_channel.a
+[24/73] Linking CXX static library services/libbiglybtc_owned_i2p_source.a
+[25/73] Automatic MOC for target biglybtc_i2p_provider_owner
+[26/73] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/biglybtc_ui_autogen/mocs_compilation.cpp.o
+[27/73] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/biglybtc_i2p_provider_owner_autogen/mocs_compilation.cpp.o
+ninja: build stopped: interrupted by user.

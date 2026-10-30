@@ -1,0 +1,43 @@
+{
+    "elapsed_ms": 6861,
+    "last_i2p": {
+        "failure": "",
+        "global_download_limit": 16384,
+        "global_upload_limit": 20480,
+        "loopback_peer_classes": 1,
+        "sequence": "3",
+        "session": "1",
+        "torrents": [
+            {
+                "admission": "15335020455736709262",
+                "download_limit": 12288,
+                "generation": "10254156573232408583",
+                "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+                "payload_downloaded": 0,
+                "payload_uploaded": 0,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Downloading — I2P",
+                "upload_limit": 14336,
+                "verified_bytes": 0
+            },
+            {
+                "admission": "9742640231205910205",
+                "download_limit": 8192,
+                "generation": "10254156573232408583",
+                "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+                "payload_downloaded": 0,
+                "payload_uploaded": 0,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Downloading — I2P",
+                "upload_limit": 10240,
+                "verified_bytes": 0
+            }
+        ]
+    },
+    "reason": "Seed shared identity/source lost",
+    "scope": "actual-shared-profile-multi-I2P-Host-transfer",
+    "shutdown_error": "I2P member cannot certify retirement",
+    "status": "FAIL"
+}

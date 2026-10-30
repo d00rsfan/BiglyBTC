@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "baseline_native_commit": "6b40b2bb175e5e665d4c1865a587fe7b34d4cfd3",
+  "source_paths": {
+    "preview/native/tests/i2p_multi_host_transfer_probe.cpp": {
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "after_sha256": "ab664239951b0b36cba854faa3aa87e313a980cb6915f564a51bbbe44e1bac5c"
+    }
+  },
+  "artifacts": {
+    "staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "sha256": "ab664239951b0b36cba854faa3aa87e313a980cb6915f564a51bbbe44e1bac5c",
+      "bytes": 35833
+    },
+    "RouterMultiTorrentTracker.java": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/RouterMultiTorrentTracker.java",
+      "sha256": "c88d58ad49d36a339641fbf302d7fc30d3db1fc84c690cb19d320e4902e4412a",
+      "bytes": 23419
+    },
+    "run.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/run.py",
+      "sha256": "b73f0c08db1e46781ca14eab23cecfb89bd91ec82ce461dcf759ece0eb6c8ee5",
+      "bytes": 30240
+    },
+    "source-pins.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/source-pins.json",
+      "sha256": "9a9d059842d3d579cd3d8459ae4539d6293e9bd0922ab62f7d8c2167e88cebea",
+      "bytes": 4612
+    },
+    "ADOPTION.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/ADOPTION.txt",
+      "sha256": "2eabd4ec8ad0f07e954bbd001a5636c306667e800b9447b491a05316c496bc7b",
+      "bytes": 5628
+    },
+    "changes.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/changes.patch",
+      "sha256": "05a5a6d7d6eccebedc4db9d569769e65e24835fa3c0acb3089338dd0f77f7c13",
+      "bytes": 36259
+    }
+  },
+  "unchanged_parent": {
+    "launcher": {
+      "path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/acceptance/run.py",
+      "sha256": "6a2bd579bec3429151c7af2e4834c8212b7118c1476beb4cc1927e9a57dd0db0",
+      "bytes": 27230
+    },
+    "tracker": {
+      "path": "/home/yurii/Java/BiglyBT/build/host-i2p-20261030/acceptance/RouterTorrentTracker.java",
+      "sha256": "dd31f4a975fff873b441176bc5dd225f1f86e5515e6928a403a09db1b7ce47e1",
+      "bytes": 17441
+    },
+    "probe": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/i2p_host_transfer_probe.cpp",
+      "sha256": "6e116db12378db7062e2a6a6fc040d5348833c207f82342833aeb98a7cefcc69",
+      "bytes": 34514
+    }
+  },
+  "source_contract_inputs": {
+    "owned_i2p_service.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/root-source/owned_i2p_service.hpp",
+      "sha256": "c2f70ceaee02a0f4b274ae35ed3311c01dea02d77e1e4163ad40d58224458281",
+      "bytes": 2898
+    },
+    "i2p_presentation.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/root-source/i2p_presentation.hpp",
+      "sha256": "658a3ea76327bbfb4e1da520583242679aafa83f21708c619f0bc087677248b0",
+      "bytes": 1652
+    }
+  },
+  "required_target": "biglybtc-i2p-multi-host-transfer-probe",
+  "required_build_receipt": "PASS source_commit/source_tree/cache/commands/images with same-source BiglyBTC and new probe",
+  "required_provider": "actual additive multi-hash approval+source-build-record+source-capsule CLI; not guessed hashes",
+  "native_deadline_milliseconds": 240000,
+  "namespace_deadline_seconds": 600,
+  "tests_executed": false,
+  "checks": [
+    "Python AST",
+    "C++/Java lexical delimiters only",
+    "all inherited preflight/source artifact SHA256 pins rehashed"
+  ],
+  "scope": "three saved swarms, two real simultaneous tracker-discovered transfers, independent GUI controls, one-download slot handoff after same-identity Host restart; stopped third sentinel",
+  "no_claims": [
+    "No default/public backend activation",
+    "No discovery or remote tunnel proof",
+    "No old runtime PASS pooled",
+    "No SDK/core/provider rebuild by this recipe"
+  ]
+}

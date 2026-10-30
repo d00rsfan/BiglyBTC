@@ -1,0 +1,20 @@
+{
+  "before": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/source-pins.json",
+    "sha256": "fc0690fcac98d3bcd0391a8bb00817b4efd6f357847cd78751f349359289fda0",
+    "bytes": 4564
+  },
+  "replace_only": {
+    "tracker_source": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/tracker-eof-and-failfast/RouterMultiTorrentTracker.java",
+      "sha256": "973179c8045fbad0ce4d609d50312256b86e182bbf01bc277b4b880fd4378025",
+      "bytes": 26209
+    }
+  },
+  "runner_after": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/tracker-eof-and-failfast/run.py",
+    "sha256": "ab37bfc91aa1fe46fc1fce71be9c606b98e6b4392a7d32c0207533d65de9c9fe",
+    "bytes": 31148
+  },
+  "native": "unchanged; root adopts fixture only after active immutable execution joins"
+}

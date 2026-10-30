@@ -1,0 +1,17 @@
+{
+  "status": "SOURCE_FROZEN_DIAGNOSTIC_ONLY_RUNTIME_PENDING",
+  "basis_commit": "5969abba1a219b921017856fb15dd5df90449e87",
+  "source_paths": {
+    "preview/native/services/i2p_provider/profile_owner.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/queue-plan-diagnostics/before/preview/native/services/i2p_provider/profile_owner.cpp",
+      "before_sha256": "07d5c58a731b2c7e73dd20e76875f5cbba014bd0c1a5bcc535aa116b4d7a93ae",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/queue-plan-diagnostics/staging/preview/native/services/i2p_provider/profile_owner.cpp",
+      "after_sha256": "1e14ae448be686f62bc6f599c386937ccce2ea80fe3b90cebd03b6e63a417bfe"
+    }
+  },
+  "artifacts_sha256": {
+    "changes.patch": "d4b0de4847489e2b87ba627566f2c7e0b1d0b8c6c612255b765b3c2adc278e87",
+    "NOTE.txt": "c7cd396cd38d8df3ac98fdafdf8cad195b972730196d0971a804c606f9bcaa12"
+  },
+  "limits": "No production fix claimed; source-only opt-in diagnostics, no N mutation/build/subject execution."
+}

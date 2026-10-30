@@ -1,0 +1,67 @@
+{
+    "Host_busy": false,
+    "elapsed_ms": 4586,
+    "i2p": {
+        "failure": "",
+        "global_download_limit": 0,
+        "global_upload_limit": 0,
+        "loopback_peer_classes": 4,
+        "sequence": "3",
+        "session": "1",
+        "torrents": [
+            {
+                "admission": "5781873915410560243",
+                "download_limit": 0,
+                "generation": "0",
+                "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+                "payload_downloaded": -1,
+                "payload_uploaded": -1,
+                "queue_unavailable": 0,
+                "queued": true,
+                "state": "Connecting — I2P",
+                "upload_limit": 0,
+                "verified_bytes": 0
+            },
+            {
+                "admission": "2710852220219953261",
+                "download_limit": 0,
+                "generation": "0",
+                "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+                "payload_downloaded": -1,
+                "payload_uploaded": -1,
+                "queue_unavailable": 0,
+                "queued": true,
+                "state": "Connecting — I2P",
+                "upload_limit": 0,
+                "verified_bytes": 0
+            }
+        ]
+    },
+    "seed": [
+        {
+            "admission": "7760863195005843246",
+            "failure": "",
+            "generation": "0",
+            "global_download_limit": 0,
+            "global_upload_limit": 0,
+            "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+            "loopback_peer_classes": 4,
+            "phase": 1,
+            "public_identity": "876672fc9bb469b0f60a7361cb9e703a4f2a40c84be94f6de12fd1a6f8c7b89b",
+            "verified_bytes": 0
+        },
+        {
+            "admission": "6318269674223504063",
+            "failure": "",
+            "generation": "0",
+            "global_download_limit": 0,
+            "global_upload_limit": 0,
+            "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+            "loopback_peer_classes": 4,
+            "phase": 1,
+            "public_identity": "876672fc9bb469b0f60a7361cb9e703a4f2a40c84be94f6de12fd1a6f8c7b89b",
+            "verified_bytes": 0
+        }
+    ],
+    "stage": 0
+}

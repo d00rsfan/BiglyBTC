@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "phase": "SOURCE_REVIEW_BEFORE_CANDIDATE",
+  "reviewer": "root",
+  "utc": "2026-10-30T17:14:54.153986+00:00",
+  "manifest_sha256": "aaa656498cda7048f8f7c4340fefa0a87d77dbe44ca4b3e977034ec635aeb425",
+  "frozen_paths_verified": 16,
+  "old_public_header_prefix_byte_exact": true,
+  "reviewed_semantics": [
+    "unchanged configure-before-first-torrent and private transport controls",
+    "bounded64 active/128 lifetime tuples; exact full hash and nonreusable admission",
+    "per-target torrent, tracker, lookup, peer and socket token fences; shared control remains independent",
+    "old V1 path retains one registration until explicit new admit; no Public/mixed fallback"
+  ],
+  "runtime_or_artifact_approval": false,
+  "pending": [
+    "new measured artifact and installed SDK closure",
+    "nine fresh controls including actual multiple handles and stale/capacity/alias/revoke guards",
+    "independent final artifact review and same-image34 export validation",
+    "actual isolated native multiple-torrent lifecycle/queue/rate/restart qualification"
+  ]
+}

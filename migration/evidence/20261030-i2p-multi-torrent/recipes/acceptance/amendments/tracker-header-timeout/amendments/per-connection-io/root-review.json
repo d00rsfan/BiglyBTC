@@ -1,0 +1,5 @@
+{
+  "status": "NOT_ADOPTED",
+  "reason": "The proposed broad IOException catch also covers filesystem publications inside the per-connection body. Keep those failures fatal. Only the proven header-read SocketTimeoutException amendment will be adopted; no broad transport exception waiver.",
+  "runtime_credit": false
+}

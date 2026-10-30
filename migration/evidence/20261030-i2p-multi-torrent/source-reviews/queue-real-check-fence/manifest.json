@@ -1,0 +1,46 @@
+{
+  "status": "SOURCE_FROZEN_RUNTIME_PENDING",
+  "basis_commit": "eb5684f278e05ff3310f1e6da354fb6592672dd8",
+  "source_paths": {
+    "preview/native/services/i2p_provider/owner.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/queue-real-check-fence/before/preview/native/services/i2p_provider/owner.cpp",
+      "before_sha256": "b5c920620c12ef8287567964be02c9837971ce9e90e943d1ef08778d4f56c049",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/queue-real-check-fence/staging/preview/native/services/i2p_provider/owner.cpp",
+      "after_sha256": "9e76c6044f79add09736ce0bed6b44d8799679deff5b5826dd905fb8a65ba7cb"
+    },
+    "preview/native/services/i2p_provider/profile_owner.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/queue-real-check-fence/before/preview/native/services/i2p_provider/profile_owner.cpp",
+      "before_sha256": "1e14ae448be686f62bc6f599c386937ccce2ea80fe3b90cebd03b6e63a417bfe",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/queue-real-check-fence/staging/preview/native/services/i2p_provider/profile_owner.cpp",
+      "after_sha256": "09c315a062c385af915d27961e678d16abe05516f522a5a1f464bd7957f2950c"
+    },
+    "preview/native/services/i2p_provider/retirement_counters.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/queue-real-check-fence/before/preview/native/services/i2p_provider/retirement_counters.hpp",
+      "before_sha256": "508360dbe9254d8ce7640cb719461cd8f4f7b3a6b84396a4bbc892bfb403d9bf",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/queue-real-check-fence/staging/preview/native/services/i2p_provider/retirement_counters.hpp",
+      "after_sha256": "dcb1ee39f4345e39dc077b583c119d98c9a13745f62e3705a9cc4bfe3c862888"
+    }
+  },
+  "artifacts_sha256": {
+    "changes.patch": "1139916d499e298672c95a73e3f41b0ee437c1812708c5ac4f80e9f6b58601e5",
+    "RATIONALE.txt": "11479a0804916ae826a61197f62cb5ee03480241773502b8fbb375ec75836e83"
+  },
+  "source_pins": {
+    "sdk_torrent": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/src/torrent.cpp",
+      "sha256": "d90230256df0f9c69e824c3aba4972071039353973ca68e1b29d5cccf3883c3d",
+      "relevant_lines": [
+        "420 known-metadata connections_initialized",
+        "1576 attachment on_files_checked",
+        "8896 real torrent_checked_alert",
+        "8905 subsequent plugin callback",
+        "9921 checking pause branch"
+      ]
+    }
+  },
+  "checks": [
+    "Exact3 current committed beforeimages",
+    "Read-only git apply --check"
+  ],
+  "runtime": "No execution. Both legacy and shared owner regression qualification remains root-owned/pending."
+}

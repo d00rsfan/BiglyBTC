@@ -1,0 +1,38 @@
+[1/44] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[2/44] Linking CXX static library engine/libbiglybtc_local_engine.a
+[3/44] Automatic MOC for target biglybtc_i2p_provider_owner
+[4/43] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/statistics_page.cpp.o
+[5/43] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/torrent_intake_dialog.cpp.o
+[6/43] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner_runtime_guard.cpp.o
+[7/43] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/profile_owner.cpp.o
+[8/43] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/i2p_statistics_view.cpp.o
+[9/43] Linking CXX static library ui/libbiglybtc_ui.a
+[10/43] Automatic MOC for target biglybtc-torrent-intake-dialog-tests
+[11/42] Automatic MOC for target biglybtc-owned-i2p-source-tests
+[12/42] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/bridge.cpp.o
+[13/42] Linking CXX static library services/libbiglybtc_i2p_provider_owner.a
+[14/42] Automatic MOC for target biglybtc_desktop_host
+[15/42] Building CXX object tests/CMakeFiles/biglybtc-queue-slots-tests.dir/queue_slots_tests.cpp.o
+[16/42] Building CXX object tests/CMakeFiles/biglybtc-queue-policy-tests.dir/queue_policy_tests.cpp.o
+[17/42] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/biglybtc_desktop_host_autogen/mocs_compilation.cpp.o
+[18/42] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/live_speed_mapper_binding.cpp.o
+[19/42] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/owned_dht_accounting.cpp.o
+[20/42] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/i2p_saved_settings.cpp.o
+[21/42] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/owned_i2p_service.cpp.o
+[22/42] Building CXX object tests/CMakeFiles/biglybtc-i2p-host-transfer-probe.dir/i2p_host_transfer_probe.cpp.o
+[23/42] Building CXX object tests/CMakeFiles/biglybtc-torrent-intake-file-options-tests.dir/torrent_intake_file_options_tests.cpp.o
+[24/42] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/session_bridge.cpp.o
+[25/42] Linking CXX static library app/libbiglybtc_desktop_host.a
+[26/42] Automatic MOC for target biglybtc-i2p-classic-host-tests
+[27/42] Building CXX object tests/CMakeFiles/biglybtc-i2p-multi-host-transfer-probe.dir/i2p_multi_host_transfer_probe.cpp.o
+[28/42] Building CXX object tests/CMakeFiles/biglybtc-owned-i2p-source-tests.dir/biglybtc-owned-i2p-source-tests_autogen/mocs_compilation.cpp.o
+[29/42] Building CXX object tests/CMakeFiles/biglybtc-owned-i2p-source-tests.dir/owned_i2p_source_tests.cpp.o
+FAILED: [code=1] tests/CMakeFiles/biglybtc-owned-i2p-source-tests.dir/owned_i2p_source_tests.cpp.o 
+/usr/bin/g++-16 -DBIGLYBTC_I2P_TEST_KEYS_DIR=\"/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram\" -DBOOST_ASIO_ENABLE_CANCELIO -DBOOST_ASIO_NO_DEPRECATED -DOPENSSL_NO_DTLS1 -DOPENSSL_NO_SSL2 -DOPENSSL_NO_SSL3 -DOPENSSL_NO_TLS1 -DOPENSSL_NO_TLS1_1 -DQT_CORE_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -DQT_TESTCASE_BUILDDIR=\"/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests\" -DQT_TESTCASE_SOURCEDIR=\"/home/yurii/Java/BiglyBTC/preview/native/tests\" -DQT_TESTLIB_LIB -DTORRENT_EXPORT_EXTRA -DTORRENT_LINKING_SHARED -DTORRENT_SSL_PEERS -DTORRENT_USE_LIBCRYPTO -DTORRENT_USE_OPENSSL -I/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-owned-i2p-source-tests_autogen/include -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_provider -I/home/yurii/Java/BiglyBTC/preview/native/engine -I/home/yurii/Java/BiglyBTC/preview/native/adapters -I/home/yurii/Java/BiglyBTC/preview/native/core/include -I/home/yurii/Java/BiglyBTC/plugin-sdk/include -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_datagram -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_client -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_channel -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_session -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_leaseset -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_datagram -I/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_tracker -I/home/yurii/Java/BiglyBTC/preview/native/services/i2p_streaming -isystem /opt/Qt/6.12.0/gcc_64/include/QtCore -isystem /opt/Qt/6.12.0/gcc_64/include -isystem /opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++ -isystem /opt/Qt/6.12.0/gcc_64/include/QtNetwork -isystem /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/include -isystem /home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include -isystem /opt/Qt/6.12.0/gcc_64/include/QtTest -O3 -DNDEBUG -std=c++23 -Wall -Wextra -Wpedantic -Werror -fPIC -fexceptions -MD -MT tests/CMakeFiles/biglybtc-owned-i2p-source-tests.dir/owned_i2p_source_tests.cpp.o -MF tests/CMakeFiles/biglybtc-owned-i2p-source-tests.dir/owned_i2p_source_tests.cpp.o.d -o tests/CMakeFiles/biglybtc-owned-i2p-source-tests.dir/owned_i2p_source_tests.cpp.o -c /home/yurii/Java/BiglyBTC/preview/native/tests/owned_i2p_source_tests.cpp
+/home/yurii/Java/BiglyBTC/preview/native/tests/owned_i2p_source_tests.cpp: In lambda function:
+/home/yurii/Java/BiglyBTC/preview/native/tests/owned_i2p_source_tests.cpp:140:107: error: no match for call to ‘(std::expected<std::shared_ptr<biglybtc::services::i2p::provider::ProfileSource>, biglybtc::storage::Error>) (const char [17])’
+  140 |           if(i==0){auto edited=core::Document::parse(encoded);if(!edited||!edited->replaceValue("future",b("unrelated change"))){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Owned position refusal fixture"});}encoded=edited->serialize();}changed+=encoded;}
+      |                                                                                                          ~^~~~~~~~~~~~~~~~~~~~
+[30/42] Building CXX object app/CMakeFiles/BiglyBTC.dir/main_desktop.cpp.o
+[31/42] Building CXX object tests/CMakeFiles/biglybtc-torrent-intake-dialog-tests.dir/torrent_intake_dialog_tests.cpp.o
+ninja: build stopped: subcommand failed.

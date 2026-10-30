@@ -1,0 +1,10 @@
+{
+  "status": "ADOPTED_HEADER_TIMEOUT_ONLY",
+  "manifest_sha256": "05f1f0b7c2352a45e288117dacd2f1f49025f3528ac2ab16b388d0fa4fbc5dca",
+  "review": "Only SocketTimeoutException while reading incomplete header retires a bounded accepted connection, without hash/reply credit. Existing15s unchanged; all ASCII/query/identity checks remain fatal. Broader perconnectionIO proposal explicitly NOT adopted. Both actual oldruns joined/cleaned. Native images andpositiveassertions unchanged.",
+  "files_sha256": {
+    "RouterMultiTorrentTracker.java": "9ee96d4612f70d65284537a6e4b1c42f8d4ec44a921e5db2abd952156235bf26",
+    "run.py": "c67473afec5fd4a3cdae197191915a1fd57df235adf20c25098e412245a5b3ae",
+    "source-pins.json": "c59b6bde80c923436f93dc2b344d3d8d23d6cbd1294a72a60fb19f67c330b9ff"
+  }
+}

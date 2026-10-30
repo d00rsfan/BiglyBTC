@@ -1,0 +1,59 @@
+{
+  "status": "FAIL",
+  "lane": "default",
+  "cache": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/default/r1/configure.log",
+      "log_sha256": "fb501269748a72745d987b685cf00d3da7939231935cbab659a234d4211bf9ba"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-library-commands-bridge-tests",
+        "biglybtc-torrent-intake-file-options-tests",
+        "biglybtc-torrent-intake-dialog-tests"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/default/r1/build.log",
+      "log_sha256": "5fb46f46ec0a06157c7e5ad438f6679997d6386fe64417755ccabdc9a4f3237a"
+    },
+    {
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-R",
+        "^(i2p-classic-host|managed-library-command-routing|torrent-intake-file-options|torrent-intake-file-options-ui)$",
+        "--output-on-failure",
+        "--no-tests=error",
+        "-j",
+        "1"
+      ],
+      "exit_code": 8,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/default/r1/ctest.log",
+      "log_sha256": "5b3cab02ed2761a13a1eefae2c1216f8c6d7539328a045269fbb25a88e39483b"
+    }
+  ],
+  "source_map_sha256": "2f06a2ab8ea7b88b03e06a90281d044bfa26ef4443f7461312c1b8bfaa0fc740",
+  "failure": "ctest failed",
+  "elapsed_seconds": 342.08
+}

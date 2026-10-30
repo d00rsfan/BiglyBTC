@@ -1,0 +1,25 @@
+SOURCE ONLY: shared private I2P queue ready/pause fence
+
+Actual GCC r12 showed queued=true while the real SDK status remained paused=false
+and payload continued. That invariant defect is proven. The exact fast-check vs
+post-add resume ordering in that actual mapped-disk run is NOT proven.
+
+Install now adds with paused/auto_managed cleared and stop_when_ready set; it
+never sends an unconditional post-add resume. The current SDK files_checked
+first changes ready state, which synchronously applies stop_when_ready pause,
+then calls plugin on_files_checked and later start_announcing. The latter refuses
+paused torrents. Metadata is already authenticated/available on this owner path.
+
+For checked queue decisions, queued is intent rather than a pause certificate.
+If actual paused=false, request exactly one pause and keep pausePending until a
+matching torrent_paused_alert. Run requires both that genuine settled event and
+current actual paused=true with no outstanding request. Clear stop_when_ready
+only at that actual Run boundary. Retirement uses the same actual paused plus
+settled fence, never a historical pause flag alone. Payload/full-hash/source/
+provider admission and checkpoint counters are unchanged.
+
+No new helper abstraction or controller-only mirror test. The existing actual
+multi-owner transfer probe already exposes this failing Stage5 path and remains
+the runtime regression; its predicates/deadlines/source are unchanged here.
+Author ran no build, tests, SDK, Java, router, subjects or network and edited no N
+files. Root must review/adopt and rerun the affected existing qualification.

@@ -1,0 +1,11 @@
+TESTS:
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_owner_arguments_and_public_status_are_bounded
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_owner_refuses_direct_network_settings_and_foreign_torrent
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_owner_full_hash_and_withdrawal_context
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_owner_fresh_http_tracker_uses_actual_normalized_port
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_owner_withdraw_then_destroy_drains_external_executor
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_multi_full_tuples_aliases_and_retirement
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_multi_capacity_is_active64_and_lifetime128
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_multi_actual_session_admission_and_sibling_survival
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_multi_actual_stream_io_denies_revoked_token_only
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp.private_i2p_multi_late_tracker_results_require_current_full_request

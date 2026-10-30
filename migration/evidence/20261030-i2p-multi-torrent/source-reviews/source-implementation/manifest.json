@@ -1,0 +1,95 @@
+{
+  "status": "SOURCE_ONLY_NOT_BUILT_OR_TESTED",
+  "basis_commit": "6b40b2bb175e5e665d4c1865a587fe7b34d4cfd3",
+  "source_paths": {
+    "preview/native/engine/managed_storage.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/before/preview/native/engine/managed_storage.cpp",
+      "before_sha256": "43933345c908c789989f4ff8fd00ece041c21927e6c1a93ebd1eeb03f2d33be8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/staging/preview/native/engine/managed_storage.cpp",
+      "after_sha256": "5b02c9c070341407c535656824e899c58a12cfe7776f8d5f5d5be53905f4a257"
+    },
+    "preview/native/engine/managed_storage.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/before/preview/native/engine/managed_storage.hpp",
+      "before_sha256": "6976dac193f1f14b6572a9b32adf79649f3c70a35cfec02eed14db090e767e0c",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/staging/preview/native/engine/managed_storage.hpp",
+      "after_sha256": "420454abf80b95ed45132d73f865a98308ef5f5a41b71b0b480b6a41c44fd2d4"
+    },
+    "preview/native/services/i2cp_channel/effect_authority.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/before/preview/native/services/i2cp_channel/effect_authority.hpp",
+      "before_sha256": "6738d96d6afeb91572e42e815a426e5da1828fef884414e97f038bdc0d67d78e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/staging/preview/native/services/i2cp_channel/effect_authority.hpp",
+      "after_sha256": "fe69196aba3d9a1970fdfa9c1bf67ad8be49b4605e9df5e688beeabf3a3fc8c4"
+    },
+    "preview/native/services/i2cp_channel/managed_streams.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/before/preview/native/services/i2cp_channel/managed_streams.inc",
+      "before_sha256": "77903a286ccffbc0d1d31a1baf165a4df9383e7b950f706f4a69272a3111c8de",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/staging/preview/native/services/i2cp_channel/managed_streams.inc",
+      "after_sha256": "9dffce4a77a19fb2608114ad9a3a96ce65c81e3498e66ebbec3ebe22e2634f84"
+    },
+    "preview/native/services/i2cp_channel/owned_effects.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/before/preview/native/services/i2cp_channel/owned_effects.inc",
+      "before_sha256": "3168ee8801e555e5bba8b0d2d594b74aba35e9074f8b0d0cbe9cd4474001f1e9",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/staging/preview/native/services/i2cp_channel/owned_effects.inc",
+      "after_sha256": "4215f44ccd2fa5bc4a2502b9168ee9460a6514e94dfd549d50e4c69b59a1ade0"
+    },
+    "preview/native/services/i2p_provider/bridge.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/before/preview/native/services/i2p_provider/bridge.cpp",
+      "before_sha256": "04146b7645dedce9b0fd25d3bb0429d9066d82c55a53a91cf4b3f8908f2ae86b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/staging/preview/native/services/i2p_provider/bridge.cpp",
+      "after_sha256": "41e283eeb5418c1310804a0d961cd9b80a249dc622ed37cdd3760b90d1af1c1e"
+    },
+    "preview/native/services/i2p_provider/profile_source.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/before/preview/native/services/i2p_provider/profile_source.cpp",
+      "before_sha256": "5aa579a993fdb0ff5b62b44d0f5f1cc658608a051ea1ba9e41407a33fcf71ee9",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/staging/preview/native/services/i2p_provider/profile_source.cpp",
+      "after_sha256": "18ea6f848b68c38b6cf12f7ffc148151ab34feca013888a6f7a4ba80e8f08a76"
+    },
+    "preview/native/services/i2p_provider/profile_source.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/before/preview/native/services/i2p_provider/profile_source.hpp",
+      "before_sha256": "0a871a8330c340f8ba1efca71aef46e34708f3b55bc3ed823732f0f1392494bc",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/staging/preview/native/services/i2p_provider/profile_source.hpp",
+      "after_sha256": "a2ab7cf980d3df512d078c255cc843a9368232f297a7de81cbf3bda196062fc0"
+    },
+    "preview/native/services/i2p_provider/source_permit.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/before/preview/native/services/i2p_provider/source_permit.hpp",
+      "before_sha256": "2232c9dba856d4d5ea30755f5909cb706de221a01f884e94229c7acc12bdee70",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/staging/preview/native/services/i2p_provider/source_permit.hpp",
+      "after_sha256": "19e9dc283047c63c808156eab1665397d838669250fc89fd2b16fe49f00f0c34"
+    },
+    "preview/native/tests/owned_i2p_source_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/before/preview/native/tests/owned_i2p_source_tests.cpp",
+      "before_sha256": "829ac7e393e292ec8b82300eac5a1e72f0de42da955fd080796e9d1c3e2dc258",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/source-implementation/staging/preview/native/tests/owned_i2p_source_tests.cpp",
+      "after_sha256": "b98b21739b33da5898d36927ca9d1d593f8279b8bb8aef80fcb6f006acddfa54"
+    }
+  },
+  "artifacts_sha256": {
+    "changes.patch": "86f7609296f8716aa3da92e464c073e74edaeb589c004adefd060eacf68c5058",
+    "ADOPTION.txt": "84e7dbf039fd0d9f4c401597bce3d413a4ca4e6230afd4b533f842145f11473b"
+  },
+  "validation": {
+    "exact_current_and_git_beforeimages": true,
+    "all_previous_source_test_method_bodies_retained": true,
+    "whitespace": true,
+    "compiler_executed": false,
+    "tests_executed": false,
+    "native_mutation": false
+  },
+  "api": [
+    "createSession",
+    "prepareChild",
+    "prepareStorage (automatic scoped publication)",
+    "publish",
+    "publishPositions",
+    "releaseChild"
+  ],
+  "bounds": {
+    "retained_children": 32,
+    "claims_and_identities": "existing MaximumManagedPayloadClaims=65536"
+  },
+  "review_fixes": [
+    "dirty Ready consumed without grant then worker release/revalidate",
+    "unchanged rejected writer preserves group; partial/uncertain output revokes",
+    "positions-only original queue publication"
+  ]
+}

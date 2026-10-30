@@ -1,0 +1,288 @@
+{
+    "actual_seed_global_download_limit": 49152,
+    "actual_seed_global_upload_limit": 40960,
+    "before_restart": {
+        "failure": "",
+        "global_download_limit": 16384,
+        "global_upload_limit": 20480,
+        "loopback_peer_classes": 1,
+        "sequence": "49",
+        "session": "1",
+        "torrents": [
+            {
+                "admission": "5722013875660208010",
+                "download_limit": 8192,
+                "download_rate": 0,
+                "generation": "18303667881911227955",
+                "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+                "payload_downloaded": 0,
+                "payload_uploaded": 0,
+                "peers": 0,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Downloading — I2P",
+                "tracker_counters_available": false,
+                "upload_limit": 10240,
+                "upload_rate": 0,
+                "verified_bytes": 98304
+            }
+        ],
+        "tracker_announces": "1",
+        "tracker_errors": "1",
+        "tracker_replies": "0"
+    },
+    "concurrent_initial": {
+        "failure": "",
+        "global_download_limit": 16384,
+        "global_upload_limit": 20480,
+        "loopback_peer_classes": 1,
+        "sequence": "30",
+        "session": "1",
+        "torrents": [
+            {
+                "admission": "1081836388639765234",
+                "download_limit": 12288,
+                "download_rate": 13078,
+                "generation": "18303667881911227955",
+                "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+                "payload_downloaded": 65527,
+                "payload_uploaded": 0,
+                "peers": 1,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Downloading — I2P",
+                "tracker_counters_available": false,
+                "upload_limit": 14336,
+                "upload_rate": 0,
+                "verified_bytes": 49152
+            },
+            {
+                "admission": "12746730201403944860",
+                "download_limit": 8192,
+                "download_rate": 13078,
+                "generation": "18303667881911227955",
+                "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+                "payload_downloaded": 65527,
+                "payload_uploaded": 0,
+                "peers": 1,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Downloading — I2P",
+                "tracker_counters_available": false,
+                "upload_limit": 10240,
+                "upload_rate": 0,
+                "verified_bytes": 49152
+            }
+        ],
+        "tracker_announces": "4",
+        "tracker_errors": "2",
+        "tracker_replies": "2"
+    },
+    "elapsed_ms": 51648,
+    "last_i2p": {
+        "failure": "",
+        "global_download_limit": 0,
+        "global_upload_limit": 0,
+        "loopback_peer_classes": 4,
+        "sequence": "1",
+        "session": "2",
+        "torrents": [
+            {
+                "admission": "8963077203988171576",
+                "download_limit": 0,
+                "download_rate": 0,
+                "generation": "0",
+                "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+                "payload_downloaded": -1,
+                "payload_uploaded": -1,
+                "peers": 0,
+                "queue_unavailable": 0,
+                "queued": true,
+                "state": "Connecting — I2P",
+                "tracker_counters_available": false,
+                "upload_limit": 0,
+                "upload_rate": 0,
+                "verified_bytes": 0
+            }
+        ],
+        "tracker_announces": "0",
+        "tracker_errors": "0",
+        "tracker_replies": "0"
+    },
+    "last_seed": [
+        {
+            "admission": "16099469445532851672",
+            "checked": true,
+            "download_rate": 0,
+            "failure": "",
+            "generation": "10842039292626140017",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+            "loopback_peer_classes": 1,
+            "payload_downloaded": 0,
+            "payload_uploaded": 262144,
+            "peers": 0,
+            "phase": 2,
+            "public_identity": "b6ec2ec68a0711f135bf75dc16424cc5aa56fe330e46ebc6496556622206a067",
+            "queued": false,
+            "seeding": true,
+            "tracker_announces": "2",
+            "tracker_errors": "1",
+            "tracker_replies": "1",
+            "upload_rate": 3324,
+            "verified_bytes": 524288
+        },
+        {
+            "admission": "17051931223445249659",
+            "checked": true,
+            "download_rate": 0,
+            "failure": "",
+            "generation": "10842039292626140017",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+            "loopback_peer_classes": 1,
+            "payload_downloaded": 0,
+            "payload_uploaded": 170026,
+            "peers": 0,
+            "phase": 2,
+            "public_identity": "b6ec2ec68a0711f135bf75dc16424cc5aa56fe330e46ebc6496556622206a067",
+            "queued": false,
+            "seeding": true,
+            "tracker_announces": "2",
+            "tracker_errors": "1",
+            "tracker_replies": "1",
+            "upload_rate": 1766,
+            "verified_bytes": 524288
+        }
+    ],
+    "last_ui": {
+        "accepted_action_counts": [
+            [
+                0,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "client_status": "Saved column-layout request was not accepted",
+        "last_Host_message": "",
+        "library": [
+            {
+                "completed": 0,
+                "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+                "rendered_state": "Connecting — I2P",
+                "snapshot_state": "Connecting — I2P"
+            },
+            {
+                "completed": 229376,
+                "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+                "rendered_state": "Paused",
+                "snapshot_state": "Paused"
+            },
+            {
+                "completed": 0,
+                "hash": "B42958F2B2B36F5FD877E4651F8B6A0D301439A5",
+                "rendered_state": "Stopped",
+                "snapshot_state": "Stopped"
+            }
+        ],
+        "rendered_revision": "52",
+        "snapshot_revision": "52"
+    },
+    "loopback_global_peer_class": true,
+    "pause_A_preserved_B": {
+        "failure": "",
+        "global_download_limit": 16384,
+        "global_upload_limit": 20480,
+        "loopback_peer_classes": 1,
+        "sequence": "34",
+        "session": "1",
+        "torrents": [
+            {
+                "admission": "1081836388639765234",
+                "download_limit": 12288,
+                "download_rate": 11062,
+                "generation": "18303667881911227955",
+                "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+                "payload_downloaded": 102654,
+                "payload_uploaded": 0,
+                "peers": 1,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Downloading — I2P",
+                "tracker_counters_available": false,
+                "upload_limit": 14336,
+                "upload_rate": 0,
+                "verified_bytes": 98304
+            }
+        ],
+        "tracker_announces": "2",
+        "tracker_errors": "1",
+        "tracker_replies": "1"
+    },
+    "reason": "Restart did not establish a fresh actual generation",
+    "scope": "actual-shared-profile-multi-I2P-Host-transfer",
+    "status": "FAIL",
+    "stop_A_preserved_B": {
+        "failure": "",
+        "global_download_limit": 16384,
+        "global_upload_limit": 20480,
+        "loopback_peer_classes": 1,
+        "sequence": "47",
+        "session": "1",
+        "torrents": [
+            {
+                "admission": "1081836388639765234",
+                "download_limit": 12288,
+                "download_rate": 10036,
+                "generation": "18303667881911227955",
+                "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+                "payload_downloaded": 229380,
+                "payload_uploaded": 0,
+                "peers": 1,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Downloading — I2P",
+                "tracker_counters_available": false,
+                "upload_limit": 14336,
+                "upload_rate": 0,
+                "verified_bytes": 229376
+            }
+        ],
+        "tracker_announces": "2",
+        "tracker_errors": "1",
+        "tracker_replies": "1"
+    }
+}

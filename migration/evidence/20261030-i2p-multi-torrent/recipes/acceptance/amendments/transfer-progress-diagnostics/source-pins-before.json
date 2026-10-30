@@ -1,0 +1,73 @@
+{
+  "router_parent_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/router-ls2-static-type/staging/RouterTracker.java",
+    "sha256": "b44836e86c4a36a45a849b432cc4276b846770fd2de6c1068d08f0c73951d570",
+    "recompiled_reference_only": "Exact existing utilities/zeroHop/typedLocal/accepted LS2 checks, source remains untouched"
+  },
+  "modified_jar": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+    "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5"
+  },
+  "fence_tool": {
+    "path": "/usr/bin/bwrap",
+    "sha256": "0abea81db798ebf6b4742ac0664802d97521547a353c2a0dbdc21d76cbbfd2c0"
+  },
+  "namespace_preflight": {
+    "manifest": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/manifest.json",
+      "sha256": "72e88a4e1cb3fe052bc6c7e64a99b2b495d1c2881fbd39c94952fba3a9789b72",
+      "bytes": 4161
+    },
+    "source": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/preflight.py",
+      "sha256": "18cf05fa18f3a624a7de2d3ae779879da21a3353b3ee1b71b0295afee979bbe4",
+      "bytes": 10004
+    },
+    "root_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/root-review.json",
+      "sha256": "8b7405231615e4dd1afb3a3d1e669704929e7cb5caa8b2aebc015b6e4496e471",
+      "bytes": 467
+    },
+    "result": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/result.json",
+      "sha256": "2edca867b5acf4b434ff37a81bdfd7254872dd1189552262719da58423bd7f01",
+      "bytes": 551
+    },
+    "inputs": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/inputs.json",
+      "sha256": "8612a6638f9777c4cb4331b20a8ac9c95668f375fa431acdef45d0920db8e241",
+      "bytes": 2299
+    },
+    "parent": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/parent.json",
+      "sha256": "afdb0929418977f69d0e9e18f3e1b78dfccf4305d2d8ef53b903ac30070c3be3",
+      "bytes": 787
+    },
+    "preflight": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/preflight.json",
+      "sha256": "593f26352fa47ed617c03d1c7ec905dcdb53e2ecf4b042ac76058763840f21c6",
+      "bytes": 2212
+    },
+    "stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/acceptance/amendments/five-namespace-preflight/amendments/mapped-parent-descriptors/amendments/readonly-parent-snapshot/runs/r1/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  },
+  "tracker_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/RouterMultiTorrentTracker.java",
+    "sha256": "15c34b870964dc20c2dde4138590c0f1f89c29bbb645e6c14132d7a1ee2fb4d2",
+    "bytes": 23419
+  },
+  "probe_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+    "sha256": "df7491d664c214fcd5db200a89d10a2778bbb8ace3a639542c1932fd1707b301"
+  },
+  "status": "SOURCE_ONLY_SHARED_MULTI_I2P_ACCEPTANCE_NOT_EXECUTED",
+  "provider_source_requirement": "Explicit --provider-source/--provider-source-sha256 must match the actual approved additive multi-hash SDK record; no parent V1 approval can substitute."
+}

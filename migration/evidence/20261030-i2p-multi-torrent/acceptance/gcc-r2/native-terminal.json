@@ -1,0 +1,32 @@
+{
+    "elapsed_ms": 4452,
+    "intended_success": false,
+    "reason": "Seed shared identity/source lost",
+    "seed": [
+        {
+            "admission": "18072285628289994009",
+            "failure": "",
+            "generation": "15823665163283793541",
+            "global_download_limit": 0,
+            "global_upload_limit": 0,
+            "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+            "loopback_peer_classes": 0,
+            "phase": 3,
+            "public_identity": "6a8c9bd5d830a1bb9494b88ba802b486f5c988d8be15d637907c337733f89b6b",
+            "verified_bytes": 0
+        },
+        {
+            "admission": "7943987638494969597",
+            "failure": "",
+            "generation": "15823665163283793541",
+            "global_download_limit": 0,
+            "global_upload_limit": 0,
+            "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+            "loopback_peer_classes": 0,
+            "phase": 3,
+            "public_identity": "6a8c9bd5d830a1bb9494b88ba802b486f5c988d8be15d637907c337733f89b6b",
+            "verified_bytes": 0
+        }
+    ],
+    "stage": 1
+}

@@ -1,0 +1,69 @@
+{
+    "elapsed_ms": 5366,
+    "last_i2p": {
+        "failure": "",
+        "global_download_limit": 16384,
+        "global_upload_limit": 20480,
+        "loopback_peer_classes": 1,
+        "sequence": "4",
+        "session": "1",
+        "torrents": [
+            {
+                "admission": "6143822492822344523",
+                "download_limit": 12288,
+                "generation": "15320666568288456037",
+                "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+                "payload_downloaded": 0,
+                "payload_uploaded": 0,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Downloading — I2P",
+                "upload_limit": 14336,
+                "verified_bytes": 0
+            },
+            {
+                "admission": "13178449562512914575",
+                "download_limit": 8192,
+                "generation": "15320666568288456037",
+                "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+                "payload_downloaded": 0,
+                "payload_uploaded": 0,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Downloading — I2P",
+                "upload_limit": 10240,
+                "verified_bytes": 0
+            }
+        ]
+    },
+    "last_seed": [
+        {
+            "admission": "14942560467433694868",
+            "failure": "I2CP router disconnected: Router shutdown",
+            "generation": "11296225308258230363",
+            "global_download_limit": 0,
+            "global_upload_limit": 0,
+            "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+            "loopback_peer_classes": 0,
+            "phase": 3,
+            "public_identity": "08a5fde9b767e4e6a20dce3f6ecba79f09a85d99a353094916dd2858efccd7f2",
+            "verified_bytes": 0
+        },
+        {
+            "admission": "13298737743616016071",
+            "failure": "I2CP router disconnected: Router shutdown",
+            "generation": "11296225308258230363",
+            "global_download_limit": 0,
+            "global_upload_limit": 0,
+            "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+            "loopback_peer_classes": 0,
+            "phase": 3,
+            "public_identity": "08a5fde9b767e4e6a20dce3f6ecba79f09a85d99a353094916dd2858efccd7f2",
+            "verified_bytes": 0
+        }
+    ],
+    "reason": "Seed shared identity/source lost",
+    "scope": "actual-shared-profile-multi-I2P-Host-transfer",
+    "shutdown_error": "I2P member cannot certify retirement",
+    "status": "FAIL"
+}

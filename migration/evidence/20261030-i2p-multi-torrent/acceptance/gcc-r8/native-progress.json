@@ -1,0 +1,67 @@
+{
+    "Host_busy": false,
+    "elapsed_ms": 124848,
+    "i2p": {
+        "failure": "",
+        "global_download_limit": 16384,
+        "global_upload_limit": 20480,
+        "loopback_peer_classes": 1,
+        "sequence": "125",
+        "session": "1",
+        "torrents": [
+            {
+                "admission": "11807673929576530247",
+                "download_limit": 12288,
+                "generation": "14645250007951681234",
+                "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+                "payload_downloaded": 524288,
+                "payload_uploaded": 0,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Seeding — I2P",
+                "upload_limit": 14336,
+                "verified_bytes": 524288
+            },
+            {
+                "admission": "15744756061845892995",
+                "download_limit": 8192,
+                "generation": "14645250007951681234",
+                "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+                "payload_downloaded": 0,
+                "payload_uploaded": 0,
+                "queue_unavailable": 8,
+                "queued": false,
+                "state": "Downloading — I2P",
+                "upload_limit": 10240,
+                "verified_bytes": 49152
+            }
+        ]
+    },
+    "seed": [
+        {
+            "admission": "8655967139697314055",
+            "failure": "",
+            "generation": "5322476545031108676",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "3725210875AF796848FFA71476354A63A4768B6D",
+            "loopback_peer_classes": 1,
+            "phase": 2,
+            "public_identity": "71a42c0bc37367ba5afb40b72964e769fc663b48f3eb522dc478c83777bbadea",
+            "verified_bytes": 524288
+        },
+        {
+            "admission": "8727545662243547369",
+            "failure": "",
+            "generation": "5322476545031108676",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "56A71467FDB3194A3E4C612A3FF1F3E65DC95891",
+            "loopback_peer_classes": 1,
+            "phase": 2,
+            "public_identity": "71a42c0bc37367ba5afb40b72964e769fc663b48f3eb522dc478c83777bbadea",
+            "verified_bytes": 524288
+        }
+    ],
+    "stage": 5
+}

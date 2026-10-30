@@ -1,0 +1,8 @@
+{
+  "status": "ADOPTED_SOURCE_ONLY_AFTER_DEFAULT_R2_JOIN",
+  "native_probe_sha256": "ee60b82711115b11bea8f04e8171af430500cb863fc5f49c88dadb971868f7c4",
+  "source_pins_sha256": "fc0690fcac98d3bcd0391a8bb00817b4efd6f357847cd78751f349359289fda0",
+  "predicates_unchanged": true,
+  "default_r2": "PASS",
+  "next_qualification": "private r16, real GCC acceptance; SAN and default final"
+}

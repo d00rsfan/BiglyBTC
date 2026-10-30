@@ -1,0 +1,254 @@
+[
+  {
+    "name": "configure",
+    "args": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+      "-DCMAKE_POLICY_DEFAULT_CMP0167=NEW",
+      "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=FALSE",
+      "-DCMAKE_CXX_STANDARD=23",
+      "-DCMAKE_CXX_STANDARD_REQUIRED=ON",
+      "-DCMAKE_CXX_EXTENSIONS=OFF",
+      "-DCMAKE_INSTALL_PREFIX=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install",
+      "-DCMAKE_INSTALL_LIBDIR=lib",
+      "-DBUILD_SHARED_LIBS=ON",
+      "-Dbuild_tests=ON",
+      "-Dbuild_examples=OFF",
+      "-Dbuild_tools=OFF",
+      "-Dpython-bindings=OFF",
+      "-Dlogging=ON",
+      "-Di2p=ON",
+      "-Ddht=ON",
+      "-Dencryption=ON",
+      "-Ddeprecated-functions=ON",
+      "-DCMAKE_PROJECT_INCLUDE=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/recipe-r2/test-objects.cmake"
+    ],
+    "exit": 0,
+    "seconds": 0.365,
+    "log": "runs/r2/configure.log",
+    "log_sha256": "e3947e5ce760df0b33efa96141fb5b6ecb68fa9d37e63debbb6a8179b56043d3"
+  },
+  {
+    "name": "build",
+    "args": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build",
+      "--target",
+      "torrent-rasterbar",
+      "test_biglybtc_mainline_identity",
+      "test_biglybtc_private_i2p_owner",
+      "test_biglybtc_swarm",
+      "test_biglybtc_tracker_response",
+      "test_dht",
+      "test_tracker",
+      "--",
+      "-k",
+      "0"
+    ],
+    "exit": 0,
+    "seconds": 82.269,
+    "log": "runs/r2/build.log",
+    "log_sha256": "8e92846d4b9db3b488af4321f4deedc26bc1095f5412aa49803e201d1352e641"
+  },
+  {
+    "name": "install",
+    "args": [
+      "cmake",
+      "--install",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build"
+    ],
+    "exit": 0,
+    "seconds": 0.065,
+    "log": "runs/r2/install.log",
+    "log_sha256": "e4bf8f6e9b4af0af6762611e055e221d599deb78f26fedbac3ffbda6b00a8ec7"
+  },
+  {
+    "name": "private-unit-list",
+    "args": [
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_biglybtc_private_i2p_owner",
+      "--list"
+    ],
+    "exit": 0,
+    "seconds": 0.008,
+    "log": "runs/r2/private-unit-list.log",
+    "log_sha256": "d8fc54eb7397eb9b70e8d977ff3f460d9e42dfc56166717b83e6c1c5a71c5ed8"
+  },
+  {
+    "name": "provider-tests",
+    "args": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build",
+      "-R",
+      "^(test_biglybtc_mainline_identity|test_biglybtc_private_i2p_owner|test_biglybtc_swarm|test_biglybtc_tracker_response)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/runs/r2/provider-tests.xml"
+    ],
+    "exit": 0,
+    "seconds": 0.366,
+    "log": "runs/r2/provider-tests.log",
+    "log_sha256": "4a82fc0444b03ae4aca82bad11a9139dbb8621dfe6f39209b3d611425d3661a1"
+  },
+  {
+    "name": "test_dht-list",
+    "args": [
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_dht",
+      "--list"
+    ],
+    "exit": 0,
+    "seconds": 0.009,
+    "log": "runs/r2/test_dht-list.log",
+    "log_sha256": "307925390fbfdd0ae8169507d04a6acae994b2634ee9b0c80241aa88141a9626"
+  },
+  {
+    "name": "test_tracker-list",
+    "args": [
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_tracker",
+      "--list"
+    ],
+    "exit": 0,
+    "seconds": 0.009,
+    "log": "runs/r2/test_tracker-list.log",
+    "log_sha256": "8fdbb968cfab2c97acb410c06dff9e8f74ff64ea5e47d10506406d738d359c00"
+  },
+  {
+    "name": "wire-controls",
+    "args": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/runs/r2/wire-controls",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/runs/r2/wire-controls.xml"
+    ],
+    "exit": 0,
+    "seconds": 0.065,
+    "log": "runs/r2/wire-controls.log",
+    "log_sha256": "072ac182a1affbbe82c0756e8b33722164d2d615db627a639b470f20699d9b51"
+  },
+  {
+    "name": "mainline-configure",
+    "args": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/mainline-fixture",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/mainline-build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+      "-DCMAKE_POLICY_DEFAULT_CMP0167=NEW",
+      "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=FALSE",
+      "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/cmake/LibtorrentRasterbar",
+      "-DMAINLINE_PROVIDER_INSTALL=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install",
+      "-DMAINLINE_PROVIDER_SOURCE=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source"
+    ],
+    "exit": 0,
+    "seconds": 0.919,
+    "log": "runs/r2/mainline-configure.log",
+    "log_sha256": "055631d0ecc58a5f4ee1dcf24248c4288bd71982bb5be8e05b63b6a52d1d1989"
+  },
+  {
+    "name": "mainline-build",
+    "args": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/mainline-build",
+      "--",
+      "-k",
+      "0"
+    ],
+    "exit": 0,
+    "seconds": 20.59,
+    "log": "runs/r2/mainline-build.log",
+    "log_sha256": "ad4abd2ee30b7d2200a47c0e73445c3454c8f37160dd392e5b241c309c615946"
+  },
+  {
+    "name": "mainline-tests",
+    "args": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/mainline-build",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/runs/r2/mainline-tests.xml"
+    ],
+    "exit": 0,
+    "seconds": 0.316,
+    "log": "runs/r2/mainline-tests.log",
+    "log_sha256": "7918330278c3c4b24ee92a32d68437609b34f55fb8066e8addc20a314af91066"
+  },
+  {
+    "name": "socks4a-configure",
+    "args": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/socks4a-fixture",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/socks4a-build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+      "-DCMAKE_POLICY_DEFAULT_CMP0167=NEW",
+      "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=FALSE",
+      "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/cmake/LibtorrentRasterbar"
+    ],
+    "exit": 0,
+    "seconds": 1.019,
+    "log": "runs/r2/socks4a-configure.log",
+    "log_sha256": "27847730f64c7b9cc903b35a56fbc87ba5d94845ea4bf503986add38ccc11a1e"
+  },
+  {
+    "name": "socks4a-build",
+    "args": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/socks4a-build",
+      "--",
+      "-k",
+      "0"
+    ],
+    "exit": 0,
+    "seconds": 18.931,
+    "log": "runs/r2/socks4a-build.log",
+    "log_sha256": "c11e551977f99cea823963fd5a9388e3eb6cfcbaceb4e2b4418cb740f3fa9b42"
+  },
+  {
+    "name": "socks4a-tests",
+    "args": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/socks4a-build",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/runs/r2/socks4a-tests.xml"
+    ],
+    "exit": 0,
+    "seconds": 15.47,
+    "log": "runs/r2/socks4a-tests.log",
+    "log_sha256": "1948b7f90dae8d4ae690817d1f11c20ab6034b72090ac3cbcac4ef389b3ddad2"
+  }
+]

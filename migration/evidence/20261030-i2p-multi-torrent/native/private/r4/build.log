@@ -1,0 +1,11 @@
+[1/12] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[2/12] Linking CXX static library engine/libbiglybtc_local_engine.a
+[3/12] Building CXX object services/CMakeFiles/biglybtc_i2p_provider_owner.dir/i2p_provider/owner_runtime_guard.cpp.o
+[4/12] Linking CXX static library services/libbiglybtc_i2p_provider_owner.a
+[5/12] Linking CXX executable app/BiglyBTC
+[6/12] Linking CXX executable tests/biglybtc-i2p-classic-host-tests
+[7/12] Automatic MOC for target biglybtc-owned-i2p-source-tests
+[8/11] Linking CXX executable tests/biglybtc-i2p-host-transfer-probe
+[9/11] Linking CXX executable tests/biglybtc-i2p-multi-host-transfer-probe
+[10/11] Building CXX object tests/CMakeFiles/biglybtc-owned-i2p-source-tests.dir/owned_i2p_source_tests.cpp.o
+[11/11] Linking CXX executable tests/biglybtc-owned-i2p-source-tests

@@ -1,0 +1,18 @@
+[
+  "/usr/bin/nice",
+  "-n",
+  "5",
+  "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac",
+  "-J-Xmx128m",
+  "-J-XX:ActiveProcessorCount=1",
+  "-J-Duser.home=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/runs/gcc-r1/home",
+  "-J-Djava.io.tmpdir=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/runs/gcc-r1/tmp",
+  "--release",
+  "17",
+  "-cp",
+  "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+  "-d",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/runs/gcc-r1/classes",
+  "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/router-ls2-static-type/staging/RouterTracker.java",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/RouterMultiTorrentTracker.java"
+]

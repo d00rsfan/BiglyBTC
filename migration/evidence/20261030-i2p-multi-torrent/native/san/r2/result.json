@@ -1,0 +1,49 @@
+{
+  "status": "FAIL",
+  "lane": "san",
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/cmake/LibtorrentRasterbar",
+        "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/root-private-owner-approval.json",
+        "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256=f3ca7de94ca6beb12e0375293c9c74c3f78a34f7e4952e1a122ff0ae9dff1f83"
+      ],
+      "exit_code": 0,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/san/r2/configure.log",
+      "log_sha256": "84c1d0b70265756b6d54b0d9138b728e7073d5ae8812a3c2c88c537e3ca9e344"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "--parallel",
+        "3",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-owned-i2p-source-tests",
+        "biglybtc-i2p-host-transfer-probe",
+        "biglybtc-i2p-multi-host-transfer-probe",
+        "biglybtc-torrent-intake-file-options-tests",
+        "biglybtc-queue-policy-tests",
+        "biglybtc-queue-slots-tests"
+      ],
+      "exit_code": -15,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/san/r2/build.log",
+      "log_sha256": "83dfb4c86c0344b50744d31adcb1cb139c4c4075d58c1d72b9a93ed540553993"
+    }
+  ],
+  "source_map_sha256": "96280d67a6eebcf7fa4db643b9c48891a082606cf3529f39b264ef0687b3c18a",
+  "failure": "build failed",
+  "elapsed_seconds": 439.26
+}

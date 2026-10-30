@@ -1,0 +1,61 @@
+{
+  "status": "PASS_BOUNDED_SHARED_SESSION_MULTI_I2P_CHAPTER",
+  "source_commit": "dc3ca955f16880a3a7c15280e708a65579e40f76",
+  "source_tree": "9fe25a7e5e693db60b1c495acd5d6ed431eff51b",
+  "builds": {
+    "private": {
+      "batch": "r19",
+      "status": "PASS",
+      "receipt_sha256": "e0fa67cbda139887d3fb1505e46d311740c31bb4e3d74346ec5efb8163d0eba3"
+    },
+    "default": {
+      "batch": "r4",
+      "status": "PASS",
+      "receipt_sha256": "2fbf9c52ee20ab49835966276d4c344dc567f97238e379f7ef68c60d31782c45"
+    },
+    "san": {
+      "batch": "r4",
+      "status": "PASS",
+      "receipt_sha256": "9d9bc9dcd09959999d0ff5bf571ac65aeb5ff63550b550bb6830700015e94f5b"
+    }
+  },
+  "actual_runs": {
+    "gcc-r19": "PASS_REAL_ISOLATED_ROUTER_MULTI_I2P_HOST_TRANSFER",
+    "san-r3": "PASS_REAL_ISOLATED_ROUTER_MULTI_I2P_HOST_TRANSFER"
+  },
+  "hosted_ci": {
+    "source_commit": "dc3ca955f16880a3a7c15280e708a65579e40f76",
+    "runs": [
+      {
+        "conclusion": "success",
+        "databaseId": 41119369012,
+        "name": "Native plugin SDK contract",
+        "status": "completed",
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41119369012"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 41119369018,
+        "name": "Native desktop preview unit and smoke tests",
+        "status": "completed",
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41119369018"
+      }
+    ],
+    "updated_utc": "2026-10-30T20:24:56.228317+00:00",
+    "current_steps": [],
+    "status": "PASS"
+  },
+  "bundle": {
+    "status": "PASS_STAGED_PRIVATE_PREVIEW",
+    "path": "/home/yurii/Java/BiglyBTC/dist-i2p",
+    "manifest_sha256": "786cc05963255aacdcd9a07f93aff5192d1a81c9545808fe6b0ad0e056867b93",
+    "mapped_files": 119,
+    "ldd_sha256": "152bf2d9b69144e72e560508f6ce068e8d0f4155085c5aaeee7b316a39569f58",
+    "default_manifest_preserved": true,
+    "source_commit": "dc3ca955f16880a3a7c15280e708a65579e40f76"
+  },
+  "stop_after_chapter": true,
+  "next_chapter_started": false,
+  "whole_component_parity": false,
+  "private_keys_published": false
+}

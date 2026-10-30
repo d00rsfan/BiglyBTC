@@ -1,0 +1,185 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2 -- ATTEMPT=r1
+[1/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/alert_manager.cpp.o
+[2/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/alert.cpp.o
+[3/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/bt_peer_connection.cpp.o
+[4/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/choker.cpp.o
+[5/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/enum_net.cpp.o
+[6/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/file_progress.cpp.o
+[7/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/create_torrent.cpp.o
+[8/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/hash_picker.cpp.o
+[9/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/http_seed_connection.cpp.o
+[10/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/i2p_stream.cpp.o
+[11/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/http_tracker_connection.cpp.o
+[12/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/instantiate_connection.cpp.o
+[13/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ip_voter.cpp.o
+[14/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/magnet_uri.cpp.o
+[15/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/listen_socket_handle.cpp.o
+[16/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/http_connection.cpp.o
+[17/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/peer_class.cpp.o
+[18/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/mmap_storage.cpp.o
+[19/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/peer_connection_handle.cpp.o
+[20/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/peer_list.cpp.o
+[21/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/request_blocks.cpp.o
+[22/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/piece_picker.cpp.o
+[23/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/session_call.cpp.o
+[24/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/session.cpp.o
+[25/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/peer_connection.cpp.o
+[26/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/session_params.cpp.o
+[27/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/session_handle.cpp.o
+[28/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/settings_pack.cpp.o
+[29/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/socket_type.cpp.o
+[30/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/storage_utils.cpp.o
+[31/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/session_impl.cpp.o
+[32/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/torrent_handle.cpp.o
+[33/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/torrent_peer.cpp.o
+[34/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/tracker_manager.cpp.o
+[35/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/udp_socket.cpp.o
+[36/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/udp_tracker_connection.cpp.o
+[37/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/utp_socket_manager.cpp.o
+[38/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/torrent.cpp.o
+In file included from /usr/include/c++/16/algorithm:62,
+                 from /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/src/torrent.cpp:58:
+In function ‘constexpr typename __gnu_cxx::__enable_if<(std::__is_byte<_Tp>::__value && (std::__are_same< <template-parameter-1-1>, <template-parameter-1-2> >::__value || std::__memcpyable_integer<_Up>::__width)), void>::__type std::__fill_a1(_Up*, _Up*, const _Tp&) [with _Up = char; _Tp = char]’,
+    inlined from ‘constexpr void std::__fill_a(_FIte, _FIte, const _Tp&) [with _FIte = char*; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:978:21,
+    inlined from ‘constexpr _OutputIterator std::__fill_n_a(_OutputIterator, _Size, const _Tp&, random_access_iterator_tag) [with _OutputIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1156:20,
+    inlined from ‘constexpr _OI std::fill_n(_OI, _Size, const _Tp&) [with _OI = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1186:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:946:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:938:9,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:997:20,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n_a(_ForwardIterator, _Size, allocator<_Tp>&) [with _ForwardIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_uninitialized.h:1052:44,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_default_append(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/vector.tcc:862:35,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::resize(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/stl_vector.h:1136:21,
+    inlined from ‘void libtorrent::aux::container_wrapper<T, IndexType, Base>::resize(underlying_index) [with U = int; Cond = void; T = char; IndexType = int; Base = std::vector<char>]’ at /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/aux_/container_wrapper.hpp:96:22,
+    inlined from ‘void libtorrent::i2p_stream::start_read_line(const libtorrent::error_code&, Handler) [with Handler = libtorrent::wrap_allocator_t<libtorrent::i2p_connection::do_name_lookup<std::function<void(const boost::system::error_code&, const char*)> >(const std::string&, std::function<void(const boost::system::error_code&, const char*)>, libtorrent::aux::i2p_owner_purpose, uint16_t, uint16_t, uint64_t)::<lambda(libtorrent::error_code, std::function<void(const boost::system::error_code&, const char*)>)>, std::function<void(const boost::system::error_code&, const char*)> >]’ at /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/i2p_stream.hpp:307:18:
+/usr/include/c++/16/bits/stl_algobase.h:950:25: warning: ‘void* __builtin_memset(void*, int, long unsigned int)’ offset 1 is out of the bounds [0, 1] [-Warray-bounds=]
+  950 |         __builtin_memset(__first, static_cast<unsigned char>(__val), __len);
+      |         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In function ‘constexpr typename __gnu_cxx::__enable_if<(std::__is_byte<_Tp>::__value && (std::__are_same< <template-parameter-1-1>, <template-parameter-1-2> >::__value || std::__memcpyable_integer<_Up>::__width)), void>::__type std::__fill_a1(_Up*, _Up*, const _Tp&) [with _Up = char; _Tp = char]’,
+    inlined from ‘constexpr void std::__fill_a(_FIte, _FIte, const _Tp&) [with _FIte = char*; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:978:21,
+    inlined from ‘constexpr _OutputIterator std::__fill_n_a(_OutputIterator, _Size, const _Tp&, random_access_iterator_tag) [with _OutputIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1156:20,
+    inlined from ‘constexpr _OI std::fill_n(_OI, _Size, const _Tp&) [with _OI = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1186:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:946:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:938:9,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:997:20,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n_a(_ForwardIterator, _Size, allocator<_Tp>&) [with _ForwardIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_uninitialized.h:1052:44,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_default_append(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/vector.tcc:862:35,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::resize(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/stl_vector.h:1136:21,
+    inlined from ‘void libtorrent::aux::container_wrapper<T, IndexType, Base>::resize(underlying_index) [with U = int; Cond = void; T = char; IndexType = int; Base = std::vector<char>]’ at /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/aux_/container_wrapper.hpp:96:22,
+    inlined from ‘void libtorrent::i2p_stream::start_read_line(const libtorrent::error_code&, Handler) [with Handler = libtorrent::wrap_allocator_t<libtorrent::i2p_connection::do_name_lookup<libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)> >(const std::string&, libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)>, libtorrent::aux::i2p_owner_purpose, uint16_t, uint16_t, uint64_t)::<lambda(libtorrent::error_code, libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)>)>, libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)> >]’ at /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/i2p_stream.hpp:307:18:
+/usr/include/c++/16/bits/stl_algobase.h:950:25: warning: ‘void* __builtin_memset(void*, int, long unsigned int)’ offset 1 is out of the bounds [0, 1] [-Warray-bounds=]
+  950 |         __builtin_memset(__first, static_cast<unsigned char>(__val), __len);
+      |         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In function ‘constexpr typename __gnu_cxx::__enable_if<(std::__is_byte<_Tp>::__value && (std::__are_same< <template-parameter-1-1>, <template-parameter-1-2> >::__value || std::__memcpyable_integer<_Up>::__width)), void>::__type std::__fill_a1(_Up*, _Up*, const _Tp&) [with _Up = char; _Tp = char]’,
+    inlined from ‘constexpr void std::__fill_a(_FIte, _FIte, const _Tp&) [with _FIte = char*; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:978:21,
+    inlined from ‘constexpr _OutputIterator std::__fill_n_a(_OutputIterator, _Size, const _Tp&, random_access_iterator_tag) [with _OutputIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1156:20,
+    inlined from ‘constexpr _OI std::fill_n(_OI, _Size, const _Tp&) [with _OI = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1186:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:946:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:938:9,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:997:20,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n_a(_ForwardIterator, _Size, allocator<_Tp>&) [with _ForwardIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_uninitialized.h:1052:44,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_default_append(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/vector.tcc:862:35,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::resize(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/stl_vector.h:1136:21,
+    inlined from ‘void libtorrent::aux::container_wrapper<T, IndexType, Base>::resize(underlying_index) [with U = int; Cond = void; T = char; IndexType = int; Base = std::vector<char>]’ at /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/aux_/container_wrapper.hpp:96:22,
+    inlined from ‘void libtorrent::i2p_stream::start_read_line(const libtorrent::error_code&, Handler) [with Handler = libtorrent::wrap_allocator_t<libtorrent::i2p_connection::do_name_lookup<libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)> >(const std::string&, libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)>, libtorrent::aux::i2p_owner_purpose, uint16_t, uint16_t, uint64_t)::<lambda(libtorrent::error_code, libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)>)>, libtorrent::torrent::tracker_response(const libtorrent::tracker_request&, const boost::asio::ip::address&, const std::__cxx11::list<boost::asio::ip::address>&, const libtorrent::tracker_response&)::<lambda(const libtorrent::error_code&, const char*)> >]’ at /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/i2p_stream.hpp:307:18:
+/usr/include/c++/16/bits/stl_algobase.h:950:25: warning: ‘void* __builtin_memset(void*, int, long unsigned int)’ offset 1 is out of the bounds [0, 1] [-Warray-bounds=]
+  950 |         __builtin_memset(__first, static_cast<unsigned char>(__val), __len);
+      |         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[39/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/upnp.cpp.o
+[40/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/web_connection_base.cpp.o
+[41/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/utp_stream.cpp.o
+[42/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/web_peer_connection.cpp.o
+[43/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/smart_ban.cpp.o
+[44/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/write_resume_data.cpp.o
+[45/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ut_pex.cpp.o
+[46/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/ut_metadata.cpp.o
+[47/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/dos_blocker.cpp.o
+[48/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/dht_tracker.cpp.o
+[49/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/find_data.cpp.o
+[50/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/get_item.cpp.o
+[51/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/get_peers.cpp.o
+[52/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/put_data.cpp.o
+[53/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/refresh.cpp.o
+[54/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/node.cpp.o
+[55/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/sample_infohashes.cpp.o
+[56/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/rpc_manager.cpp.o
+[57/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/routing_table.cpp.o
+[58/85] Building CXX object test/CMakeFiles/test_common.dir/broadcast_socket.cpp.o
+[59/85] Building CXX object test/CMakeFiles/test_common.dir/dht_server.cpp.o
+[60/85] Building CXX object CMakeFiles/torrent-rasterbar.dir/src/kademlia/traversal_algorithm.cpp.o
+[61/85] Linking CXX shared library libtorrent-rasterbar.so.2.0.12
+[62/85] Creating library symlink libtorrent-rasterbar.so.2.0 libtorrent-rasterbar.so
+[63/85] Building CXX object test/CMakeFiles/test_common.dir/main.cpp.o
+[64/85] Building CXX object test/CMakeFiles/test_common.dir/make_torrent.cpp.o
+[65/85] Building CXX object test/CMakeFiles/test_common.dir/settings.cpp.o
+[66/85] Building CXX object test/CMakeFiles/test_common.dir/peer_server.cpp.o
+[67/85] Building CXX object test/CMakeFiles/test_common.dir/test.cpp.o
+[68/85] Building CXX object test/CMakeFiles/test_common.dir/swarm_suite.cpp.o
+[69/85] Building CXX object test/CMakeFiles/test_common.dir/test_utils.cpp.o
+[70/85] Building CXX object test/CMakeFiles/test_common.dir/setup_transfer.cpp.o
+[71/85] Building CXX object test/CMakeFiles/test_common.dir/udp_tracker.cpp.o
+[72/85] Building CXX object test/CMakeFiles/test_common.dir/web_seed_suite.cpp.o
+[73/85] Linking CXX static library test/libtest_common.a
+[74/85] Building CXX object test/CMakeFiles/test_biglybtc_swarm.dir/test_biglybtc_swarm.cpp.o
+[75/85] Building CXX object test/CMakeFiles/test_biglybtc_mainline_identity.dir/test_biglybtc_mainline_identity.cpp.o
+[76/85] Building CXX object test/CMakeFiles/test_biglybtc_tracker_response.dir/test_biglybtc_tracker_response.cpp.o
+[77/85] Building CXX object test/CMakeFiles/test_biglybtc_private_i2p_owner.dir/test_biglybtc_private_i2p_owner.cpp.o
+In file included from /usr/include/c++/16/string:55,
+                 from /home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include/boost/utility/string_view_fwd.hpp:21,
+                 from /home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include/boost/utility/string_view.hpp:24,
+                 from /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/string_view.hpp:75,
+                 from /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/address.hpp:40,
+                 from /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test.hpp:37,
+                 from /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_biglybtc_private_i2p_owner.cpp:2:
+In function ‘constexpr typename __gnu_cxx::__enable_if<(std::__is_byte<_Tp>::__value && (std::__are_same< <template-parameter-1-1>, <template-parameter-1-2> >::__value || std::__memcpyable_integer<_Up>::__width)), void>::__type std::__fill_a1(_Up*, _Up*, const _Tp&) [with _Up = char; _Tp = char]’,
+    inlined from ‘constexpr void std::__fill_a(_FIte, _FIte, const _Tp&) [with _FIte = char*; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:978:21,
+    inlined from ‘constexpr _OutputIterator std::__fill_n_a(_OutputIterator, _Size, const _Tp&, random_access_iterator_tag) [with _OutputIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1156:20,
+    inlined from ‘constexpr _OI std::fill_n(_OI, _Size, const _Tp&) [with _OI = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1186:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:946:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:938:9,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:997:20,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n_a(_ForwardIterator, _Size, allocator<_Tp>&) [with _ForwardIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_uninitialized.h:1052:44,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_default_append(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/vector.tcc:862:35,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::resize(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/stl_vector.h:1136:21,
+    inlined from ‘void libtorrent::aux::container_wrapper<T, IndexType, Base>::resize(underlying_index) [with U = int; Cond = void; T = char; IndexType = int; Base = std::vector<char>]’ at /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/aux_/container_wrapper.hpp:96:22,
+    inlined from ‘void libtorrent::i2p_stream::start_read_line(const libtorrent::error_code&, Handler) [with Handler = libtorrent::wrap_allocator_t<libtorrent::i2p_connection::do_name_lookup<std::function<void(const boost::system::error_code&, const char*)> >(const std::string&, std::function<void(const boost::system::error_code&, const char*)>, libtorrent::aux::i2p_owner_purpose, uint16_t, uint16_t, uint64_t)::<lambda(libtorrent::error_code, std::function<void(const boost::system::error_code&, const char*)>)>, std::function<void(const boost::system::error_code&, const char*)> >]’ at /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/i2p_stream.hpp:307:18:
+/usr/include/c++/16/bits/stl_algobase.h:950:25: warning: ‘void* __builtin_memset(void*, int, long unsigned int)’ offset 1 is out of the bounds [0, 1] [-Warray-bounds=]
+  950 |         __builtin_memset(__first, static_cast<unsigned char>(__val), __len);
+      |         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In function ‘constexpr typename __gnu_cxx::__enable_if<(std::__is_byte<_Tp>::__value && (std::__are_same< <template-parameter-1-1>, <template-parameter-1-2> >::__value || std::__memcpyable_integer<_Up>::__width)), void>::__type std::__fill_a1(_Up*, _Up*, const _Tp&) [with _Up = char; _Tp = char]’,
+    inlined from ‘constexpr void std::__fill_a(_FIte, _FIte, const _Tp&) [with _FIte = char*; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:978:21,
+    inlined from ‘constexpr _OutputIterator std::__fill_n_a(_OutputIterator, _Size, const _Tp&, random_access_iterator_tag) [with _OutputIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1156:20,
+    inlined from ‘constexpr _OI std::fill_n(_OI, _Size, const _Tp&) [with _OI = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1186:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:946:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:938:9,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:997:20,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n_a(_ForwardIterator, _Size, allocator<_Tp>&) [with _ForwardIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_uninitialized.h:1052:44,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_default_append(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/vector.tcc:862:35,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::resize(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/stl_vector.h:1136:21,
+    inlined from ‘void libtorrent::aux::container_wrapper<T, IndexType, Base>::resize(underlying_index) [with U = int; Cond = void; T = char; IndexType = int; Base = std::vector<char>]’ at /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/aux_/container_wrapper.hpp:96:22,
+    inlined from ‘void libtorrent::i2p_stream::start_read_line(const libtorrent::error_code&, Handler) [with Handler = libtorrent::wrap_allocator_t<libtorrent::i2p_connection::do_name_lookup<libtorrent::wrap_allocator_t<libtorrent::i2p_connection::on_sam_connect<{anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)> >(const libtorrent::error_code&, std::shared_ptr<libtorrent::i2p_stream>, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)>)::<lambda(const libtorrent::error_code&, const char*, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)>)>, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)> > >(const std::string&, libtorrent::wrap_allocator_t<libtorrent::i2p_connection::on_sam_connect<{anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)> >(const libtorrent::error_code&, std::shared_ptr<libtorrent::i2p_stream>, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)>)::<lambda(const libtorrent::error_code&, const char*, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)>)>, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)> >, libtorrent::aux::i2p_owner_purpose, uint16_t, uint16_t, uint64_t)::<lambda(libtorrent::error_code, libtorrent::wrap_allocator_t<libtorrent::i2p_connection::on_sam_connect<{anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)> >(const libtorrent::error_code&, std::shared_ptr<libtorrent::i2p_stream>, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)>)::<lambda(const libtorrent::error_code&, const char*, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)>)>, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)> >)>, libtorrent::wrap_allocator_t<libtorrent::i2p_connection::on_sam_connect<{anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)> >(const libtorrent::error_code&, std::shared_ptr<libtorrent::i2p_stream>, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)>)::<lambda(const libtorrent::error_code&, const char*, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)>)>, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)> > >]’ at /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/i2p_stream.hpp:307:18:
+/usr/include/c++/16/bits/stl_algobase.h:950:25: warning: ‘void* __builtin_memset(void*, int, long unsigned int)’ offset 1 is out of the bounds [0, 1] [-Warray-bounds=]
+  950 |         __builtin_memset(__first, static_cast<unsigned char>(__val), __len);
+      |         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In function ‘constexpr typename __gnu_cxx::__enable_if<(std::__is_byte<_Tp>::__value && (std::__are_same< <template-parameter-1-1>, <template-parameter-1-2> >::__value || std::__memcpyable_integer<_Up>::__width)), void>::__type std::__fill_a1(_Up*, _Up*, const _Tp&) [with _Up = char; _Tp = char]’,
+    inlined from ‘constexpr void std::__fill_a(_FIte, _FIte, const _Tp&) [with _FIte = char*; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:978:21,
+    inlined from ‘constexpr _OutputIterator std::__fill_n_a(_OutputIterator, _Size, const _Tp&, random_access_iterator_tag) [with _OutputIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1156:20,
+    inlined from ‘constexpr _OI std::fill_n(_OI, _Size, const _Tp&) [with _OI = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_algobase.h:1186:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:946:29,
+    inlined from ‘static constexpr _ForwardIterator std::__uninitialized_default_n_1<true>::__uninit_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:938:9,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n(_ForwardIterator, _Size) [with _ForwardIterator = char*; _Size = long unsigned int]’ at /usr/include/c++/16/bits/stl_uninitialized.h:997:20,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_default_n_a(_ForwardIterator, _Size, allocator<_Tp>&) [with _ForwardIterator = char*; _Size = long unsigned int; _Tp = char]’ at /usr/include/c++/16/bits/stl_uninitialized.h:1052:44,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_default_append(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/vector.tcc:862:35,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::resize(size_type) [with _Tp = char; _Alloc = std::allocator<char>]’ at /usr/include/c++/16/bits/stl_vector.h:1136:21,
+    inlined from ‘void libtorrent::aux::container_wrapper<T, IndexType, Base>::resize(underlying_index) [with U = int; Cond = void; T = char; IndexType = int; Base = std::vector<char>]’ at /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/aux_/container_wrapper.hpp:96:22,
+    inlined from ‘void libtorrent::i2p_stream::start_read_line(const libtorrent::error_code&, Handler) [with Handler = libtorrent::wrap_allocator_t<libtorrent::i2p_connection::open<{anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)> >(const std::string&, int, const libtorrent::i2p_session_options&, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)>)::<lambda(const libtorrent::error_code&, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)>)>, {anonymous}::fresh_http_tracker_naming_port(uint16_t)::<lambda(const libtorrent::error_code&)> >]’ at /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/include/libtorrent/i2p_stream.hpp:307:18:
+/usr/include/c++/16/bits/stl_algobase.h:950:25: warning: ‘void* __builtin_memset(void*, int, long unsigned int)’ offset 1 is out of the bounds [0, 1] [-Warray-bounds=]
+  950 |         __builtin_memset(__first, static_cast<unsigned char>(__val), __len);
+      |         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[78/85] Linking CXX executable test/test_biglybtc_mainline_identity
+[79/85] Linking CXX executable test/test_biglybtc_private_i2p_owner
+[80/85] Linking CXX executable test/test_biglybtc_swarm
+[81/85] Linking CXX executable test/test_biglybtc_tracker_response
+[82/85] Building CXX object test/CMakeFiles/test_tracker.dir/test_tracker.cpp.o
+[83/85] Linking CXX executable test/test_tracker
+[84/85] Building CXX object test/CMakeFiles/test_dht.dir/test_dht.cpp.o
+[85/85] Linking CXX executable test/test_dht

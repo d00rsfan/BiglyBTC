@@ -1,0 +1,47 @@
+--- a/build/i2p-multi-20261030/acceptance/run.py
++++ b/build/i2p-multi-20261030/acceptance/run.py
+@@ -66,18 +66,33 @@
+         process=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,
+                                  start_new_session=True,close_fds=True,env=environment)
+         subjects.append(process);commands.append({'label':label,'argv':args,'pid':process.pid});return process
++    def check_tracker_failure():
++        failure=work/'tracker-failure.json'
++        if failure.exists():
++            assert failure.stat().st_size<=4096,'Tracker failure report exceeds bound'
++            actual=load(failure)
++            assert actual['status']=='FAIL_TRACKER_APPLICATION'
++            raise AssertionError('Actual tracker application failed: '+actual['stage']+' / '+actual['exception_class']+' / '+actual['message'])
+     def wait_file(leaf,seconds,processes):
+         deadline=time.monotonic()+seconds
++        check_tracker_failure()
+         while not (work/leaf).exists():
++            check_tracker_failure()
+             assert all(p.poll() is None for p in processes),f'Subject exited before {leaf}'
+             assert time.monotonic()<deadline,f'Deadline waiting for {leaf}'
+             time.sleep(.025)
+-        return load(work/leaf)
++        check_tracker_failure();return load(work/leaf)
+     def send(process,line):
+         assert process.poll() is None
+         process.stdin.write((line+'\n').encode('ascii'));process.stdin.flush()
+     def join(process,seconds):
+-        process.wait(timeout=seconds);assert process.returncode==0,f'Subject exit {process.returncode}'
++        deadline=time.monotonic()+seconds
++        while process.poll() is None:
++            check_tracker_failure();remaining=deadline-time.monotonic()
++            assert remaining>0,'Subject join deadline exceeded'
++            try:process.wait(timeout=min(.05,remaining))
++            except subprocess.TimeoutExpired:pass
++        check_tracker_failure();assert process.returncode==0,f'Subject exit {process.returncode}'
+     try:
+         with socket.socket() as reserve:reserve.bind(('127.0.0.1',0));port=reserve.getsockname()[1]
+         assert port>=1024
+@@ -370,7 +385,7 @@
+             'router-ready.json','router-result.json','seeder-announced.json','native.log','tracker.log','router.log',
+             'native-phase.json','native-progress.json','native-terminal.json','seed.dest','leech.dest','tracker.dest',
+             'tracker.url','torrent.hashes','i2p-multi-preview.png','private-cleanup.json',
+-            'tracker-progress.json','shared-controls-ready.json','shared-session-precondition.json','leech-restart-ready.json',
++            'tracker-progress.json','tracker-failure.json','tracker-eof.json','shared-controls-ready.json','shared-session-precondition.json','leech-restart-ready.json',
+             'leech-retired.json','native-restarted.json','cache-restart-precondition.json')
+         public={str((out/name).resolve()):sha(out/name) for name in public_names if (out/name).is_file()}
+         if (out/'commands.json').is_file():

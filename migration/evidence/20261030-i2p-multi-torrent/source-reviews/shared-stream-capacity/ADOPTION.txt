@@ -1,0 +1,39 @@
+Shared private I2P stream capacity and exact Closed-operation cleanup (SOURCE ONLY)
+
+ManagerOptions.maximumStreams is a trailing opt-in value: default4, valid1..64.
+Manager storage, fair selection, receive lookup and listener bounds use the actual
+configured slots. Invalid0/>64 allocate no slots and cannot acquire authority.
+Shared ProfileSource group mode selects64 manager streams,66 SAM sockets,64
+explicit peer Destinations and192 resolved Destinations (32 members x4 trackers
+plus64 peers). Singleton mode remains4/6/4/8. Pending SYN count4/262144B/3s,
+per-stream payload/window/deadlines, one physical frame per channel flush,
+1024 lifetime operation/stream-ID ledger and all profile/network gates remain.
+Only explicit capacity>4 may monotonically extend an existing listener's full
+Destination allowlist, preserving exact ports/window/all old peers and queued
+signed SYN IDs/deadlines/bytes. Default repeated-listen refusal remains exact;
+Bridge can request this extension only under its existing fresh source permit.
+
+Bridge now retains an exact discarded operation if release refuses while a
+Closed stream still has unread RX or a real FIN ACK awaiting dispatch. Existing
+streamChanged/source-permit/bytesWritten turns drain discarded RX only under a
+fresh current permit and retry exact release. There is no empty-read polling or
+extra timer; a failed channel release no longer notifies/rearms itself. Retired
+IDs are bounded by configured manager slots; exhaustion closes the bridge and
+retains normal join authority. Whole close clears the pending list.
+
+Focused additions use existing targets: pure-i2p-streaming-manager covers64
+slots/fair traversal/signed reply beyond4/exact release-reuse/invalid bounds,
+signed pending-SYN preservation across same-scope listener extension,
+and a real signed Closed FIN with unread RX plus pending ACK that remains
+unreleasable until dispatch. Existing default fifth-stream refusal remains.
+i2cp-bounded-stream-manager covers six actual signed SYN frames through the
+one-frame channel and no invented streamChanged wake from failed release.
+pure-owned-sam-protocol pins unchanged singleton/command envelope and finite
+shared member/tracker/peer capacity. Existing test bodies/predicates retained;
+registered() helper only gains trailing defaulted ManagerOptions.
+
+No compiler, tests, Java, router, subjects, network, SDK or N edits by author.
+Root must review/adopt while its current source is stable, then build affected
+existing targets and rerun the actual shared-owner transfer. This source closes
+a proven lost-operation-reference leak and a real capacity mismatch; it does
+not establish that either caused every observed resumed-peer stall.

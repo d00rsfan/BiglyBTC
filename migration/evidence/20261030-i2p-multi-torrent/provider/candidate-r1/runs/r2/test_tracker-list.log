@@ -1,0 +1,23 @@
+TESTS:
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.parse_hostname_peers
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.parse_peers4
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.parse_i2p_peers
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.parse_interval
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.parse_warning
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.parse_failure_reason
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.parse_scrape_response
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.parse_scrape_response_with_zero
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.parse_external_ip
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.parse_external_ip6
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.extract_peer
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.extract_peer_hostname
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.extract_peer_not_a_dictionary
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.extract_peer_missing_ip
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.extract_peer_missing_port
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.udp_tracker_v4
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.udp_tracker_v6
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.http_peers
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.current_tracker
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.tracker_proxy
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.stop_tracker_timeout
+ - /home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/test/test_tracker.cpp.stop_tracker_timeout_zero_timeout

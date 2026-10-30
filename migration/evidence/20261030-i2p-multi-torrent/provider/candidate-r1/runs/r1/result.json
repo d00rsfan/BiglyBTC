@@ -1,0 +1,12 @@
+{
+  "status": "FAIL",
+  "native_runtime_approved": false,
+  "source_creation_sha256": "9590cdeb001b2184891f7095b2ca2dc465fbc2a3ee84c688b9e1cccfc6d00ab7",
+  "jobserver_makeflags": " -j3 --jobserver-auth=fifo:/tmp/GMfifo2 -- ATTEMPT=r1",
+  "original_head_index_before": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "previous_private_record_sha256": "5c3653a6c628fd0f6ac6df1e75bae50dfded310dc84c89c079ec8df1a1ec28c3",
+  "failure": "RuntimeError('Actual command failed provider-tests')"
+}

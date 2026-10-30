@@ -1,0 +1,20 @@
+{
+  "source_pins_parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/source-pins.json",
+    "sha256": "05805ce3dc0f8ee3a649370845cc1c4f830431a40f9baa6d1b7d7c9ff60d1dbc",
+    "bytes": 4630
+  },
+  "replace_only": {
+    "probe_source": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/staging/preview/native/tests/i2p_multi_host_transfer_probe.cpp",
+      "sha256": "df7491d664c214fcd5db200a89d10a2778bbb8ace3a639542c1932fd1707b301",
+      "bytes": 37616
+    }
+  },
+  "runner_after": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/acceptance/amendments/accepted-ui-action/run.py",
+    "sha256": "c6140f4aae75da47d24426f9d89166d7782c096641ec3b8bf84583f8a77efd3b",
+    "bytes": 30256
+  },
+  "tracker_source": "Root corrected Set<Destination> helper remains independently pinned; no Java change in this child."
+}

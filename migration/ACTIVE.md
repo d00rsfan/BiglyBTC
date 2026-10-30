@@ -1,7 +1,5 @@
-# P07 — private I2P Host/UI chapter complete; stopped
+# Shared-session private I2P chapter complete; stopped
 
-User-authorised chapter completed at `2c6edc1b2390b59ba0f812d3c68e1cbc500e2311`. [Review](evidence/20261030-i2p-classic-host/REVIEW.md), [verification](evidence/20261030-i2p-classic-host/verification.json). Ordinary dialog import, saved settings, classic Start/Pause/Resume/Stop/close, joined original storage and observed I2P Statistics qualify within the documented private isolated scope. Preview: `/home/yurii/Java/BiglyBTC/dist-i2p/BiglyBTC` with explicit isolated profile/router options.
+Authorised chapter complete at `dc3ca955f16880a3a7c15280e708a65579e40f76`. [Review](evidence/20261030-i2p-multi-torrent/REVIEW.md), [verification](evidence/20261030-i2p-multi-torrent/verification.json). Shared original identity/session, independent controls/checkpoints, saved queue/rates/restart and real two-swarm slot handoff qualify within the documented scope. Preview `/home/yurii/Java/BiglyBTC/dist-i2p/BiglyBTC` requires explicit isolated profile/router options.
 
-No next chapter started. Larger component remains in progress. Preserve Java/live profile, default dist and ordinary original Git HEAD/index. Questions: none. Durable build diagnostics: `build/host-i2p-20261030`; compiler jobs3/nice5 and reused SDK/caches. Resume only on a new user request.
-
-Final hosted CI gates passed. Publication may be committed to main; then stop before the next chapter.
+Proposed next: Public + I2P coexistence in one application; NOT started. Whole epic/larger component parity is incomplete. Preserve Java/live profile, original HEAD/index/default dist. Questions: none. Follow [resource policy](RESOURCE_POLICY.md): reuse current caches, clean obsolete generated files, no build archives. Durable diagnostics `build/i2p-multi-20261030`; cached builds, aggregate3 compiler jobs/nice5, logs on disk.

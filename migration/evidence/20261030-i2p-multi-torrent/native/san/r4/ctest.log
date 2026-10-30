@@ -1,0 +1,32 @@
+Test project /home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san
+    Start 185: queue-policy
+1/8 Test #185: queue-policy .....................   Passed    0.12 sec
+    Start 201: queue-slots
+2/8 Test #201: queue-slots ......................   Passed    0.03 sec
+    Start 203: torrent-intake-file-options
+3/8 Test #203: torrent-intake-file-options ......   Passed    3.64 sec
+    Start 239: pure-i2p-streaming-manager
+4/8 Test #239: pure-i2p-streaming-manager .......   Passed    0.12 sec
+    Start 240: i2cp-bounded-stream-manager
+5/8 Test #240: i2cp-bounded-stream-manager ......   Passed    7.58 sec
+    Start 241: pure-owned-sam-protocol
+6/8 Test #241: pure-owned-sam-protocol ..........   Passed    0.03 sec
+    Start 242: owned-i2p-profile-source
+7/8 Test #242: owned-i2p-profile-source .........   Passed    0.87 sec
+    Start 243: i2p-classic-host
+8/8 Test #243: i2p-classic-host .................   Passed    1.97 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Label Time Summary:
+classic-ui        =   1.97 sec*proc (1 test)
+i2p               =  10.58 sec*proc (5 tests)
+intake            =   3.64 sec*proc (1 test)
+no-network        =   0.15 sec*proc (2 tests)
+owned-loopback    =   7.58 sec*proc (1 test)
+owned-profile     =   0.87 sec*proc (1 test)
+queue             =   0.14 sec*proc (2 tests)
+storage           =   3.64 sec*proc (1 test)
+unit              =  14.36 sec*proc (8 tests)
+
+Total Test time (real) =  14.38 sec

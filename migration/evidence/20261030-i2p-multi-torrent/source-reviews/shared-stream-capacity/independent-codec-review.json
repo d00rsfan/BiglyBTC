@@ -1,0 +1,8 @@
+{
+  "status": "PASS_SOURCE_ONLY_NOT_RUNTIME_QUALIFICATION",
+  "reviewer": "/root/error_codec",
+  "capsule_sha256": "abc1f27c12dc49640e45ee2480206caa9b6b7e7594e2c4072f8855dc59a7602a",
+  "verified_paths": 9,
+  "findings": "No concrete blocker. Exact operations retained through source-gated Closed RX and actual ACK dispatch; failed release has no wake loop; queued notifications cannot invalidate iterator before checked withdrawal. Default4/explicit64 and monotonic same-port/window full-peer scope preserve signed pending SYN deadlines.",
+  "runtime_credit": false
+}

@@ -1,0 +1,156 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY",
+  "basis_record": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/source-build-record.json",
+    "sha256": "5c3653a6c628fd0f6ac6df1e75bae50dfded310dc84c89c079ec8df1a1ec28c3"
+  },
+  "source_paths": {
+    "include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp",
+      "before_sha256": "dd5f3ff2ceb30c8031fa036ffa83cdf3aa8c169bb177b35f2d35bff4ae9316cf",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp",
+      "after_sha256": "f4ca76e3c3c2ea6610631ab8a239a5a523bffe859705c7762592ddb48703a4f0"
+    },
+    "include/libtorrent/aux_/session_impl.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/include/libtorrent/aux_/session_impl.hpp",
+      "before_sha256": "0b1459a6b5c7409b7647855378f7335f3aa7cc275a80249156d867489927e79a",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/include/libtorrent/aux_/session_impl.hpp",
+      "after_sha256": "34ea8b7a7c8884b0127ed062abbecab7b47affd2f866d34184309263fee651af"
+    },
+    "include/libtorrent/biglybtc_private_i2p_owner.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/include/libtorrent/biglybtc_private_i2p_owner.hpp",
+      "before_sha256": "ab6a2a737bf343fb2672b4f478a2f3d09db44fc88fab8c27d3ae21ebea0d7830",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/include/libtorrent/biglybtc_private_i2p_owner.hpp",
+      "after_sha256": "b3793fd094c1f46b2cd421949f424bb0697e1605bc92137069722c1321893749"
+    },
+    "include/libtorrent/http_connection.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/include/libtorrent/http_connection.hpp",
+      "before_sha256": "c4d1b121f96987c4855cf695703e5e29246b049233889485ee0c8e74dd9d6b61",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/include/libtorrent/http_connection.hpp",
+      "after_sha256": "e61fb42792324fb96b3e6d1946f03f474877448cd05439a893c933cd0844246b"
+    },
+    "include/libtorrent/i2p_stream.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/include/libtorrent/i2p_stream.hpp",
+      "before_sha256": "d03a383c14f1e3a5d87ee5f3acc1c6c4f8e2c67d29cb1e131c323e8f0c5ba72e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/include/libtorrent/i2p_stream.hpp",
+      "after_sha256": "b009d0188777944dd773defe3ea135b8a8bcd51870c76d3c484ba0ecfb7f6a2f"
+    },
+    "include/libtorrent/session_handle.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/include/libtorrent/session_handle.hpp",
+      "before_sha256": "af33e725f5d0118ed25b0f0f3b35b3c79b485a9d35bdd10e451a15679844d407",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/include/libtorrent/session_handle.hpp",
+      "after_sha256": "36f4ab5775bd2f3b8f23d0e700a26eccad3664cb38429006478535e765dd5cef"
+    },
+    "include/libtorrent/torrent.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/include/libtorrent/torrent.hpp",
+      "before_sha256": "6b2b84912a086d220280c636563c583eae5207be7f41a513611c395415c75f40",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/include/libtorrent/torrent.hpp",
+      "after_sha256": "3370be9a7fa285f812f3221367635285cb802ffe27d9df8a4cb3902f529d454f"
+    },
+    "include/libtorrent/tracker_manager.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/include/libtorrent/tracker_manager.hpp",
+      "before_sha256": "04306de288d5f11145ea3375e63a5ec954db378bee7bdf81b551f34847b4f0f0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/include/libtorrent/tracker_manager.hpp",
+      "after_sha256": "ec1284fc04f4ad1866f18d83d987b8b2274d58a9633a8fb2eb8bf6294f90bbad"
+    },
+    "src/biglybtc_private_i2p_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/src/biglybtc_private_i2p_owner.inc",
+      "before_sha256": "1000e44295b8d7063090b038af4d0ffbbc36f6279df42fede3c48a4a374b2b96",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/src/biglybtc_private_i2p_owner.inc",
+      "after_sha256": "30f7601647c5e7f610946a6c09d9979595e56bad7c5af3cd3ac3ce4fe4be8df1"
+    },
+    "src/biglybtc_private_i2p_owner_api.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/src/biglybtc_private_i2p_owner_api.inc",
+      "before_sha256": "6516a33c5aedcb32d8af1e14487a2f36bd5daaa4e73643f4709dd92d4d90660d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/src/biglybtc_private_i2p_owner_api.inc",
+      "after_sha256": "40229a142839128df32a9fecacfdc144d7a5f42e4028264889524cd6adef15f5"
+    },
+    "src/http_connection.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/src/http_connection.cpp",
+      "before_sha256": "5ad19748f7e19f94257fdf8a7340885cf485625eabae39aa591ead7a78907c93",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/src/http_connection.cpp",
+      "after_sha256": "7cb4bf5a0c4a830f4249ebf908601323b1bd767b9b42ef429198eb950e7cb10e"
+    },
+    "src/http_tracker_connection.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/src/http_tracker_connection.cpp",
+      "before_sha256": "fe47413e5eba505211e30608430960e8da345a67204a35550fa5a100aeb41050",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/src/http_tracker_connection.cpp",
+      "after_sha256": "fc17bb644b7f070602bf91e2fbcf3c9d97e9a8b64f5b15a1b70628ffa5db199f"
+    },
+    "src/peer_connection.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/src/peer_connection.cpp",
+      "before_sha256": "45047f59d4931e40cdc8d8e4603de7f41f8f85ad894536368a1f7f9822de237b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/src/peer_connection.cpp",
+      "after_sha256": "625421130d71f0c5847fce6603974248884fc746232c810e1b6c03d27e06b887"
+    },
+    "src/session_impl.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/src/session_impl.cpp",
+      "before_sha256": "af0aef0944bfbc0ef4c991260fda72c45a9cfc90dc65d22f52c4f49c83f3bfa0",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/src/session_impl.cpp",
+      "after_sha256": "b8f74ea227dbe2f58850c04061e92430983d9c6c3f47a4a6df6fbc0c8ba4e012"
+    },
+    "src/torrent.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/src/torrent.cpp",
+      "before_sha256": "9b300d52eeaaad24ca3908d7db97386cecb5ffbb202f04f8c4e35964e91d57c8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/src/torrent.cpp",
+      "after_sha256": "d90230256df0f9c69e824c3aba4972071039353973ca68e1b29d5cccf3883c3d"
+    },
+    "test/test_biglybtc_private_i2p_owner.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/before/test/test_biglybtc_private_i2p_owner.cpp",
+      "before_sha256": "fff7c1c8440d59737100671315a3fb8dac15bb7452aa3793f7c95e098968f3a9",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/test/test_biglybtc_private_i2p_owner.cpp",
+      "after_sha256": "22f5004e2a8314b50d0bd78df7fe8b1724cac5e05493b54088757d7670ac953d"
+    }
+  },
+  "new_required_exports": [
+    "biglybtc_private_i2p_torrents_abi_v1",
+    "biglybtc_admit_private_i2p_torrent_v1",
+    "biglybtc_revoke_private_i2p_torrent_v1"
+  ],
+  "expected_existing_exports": 31,
+  "expected_total_optional_exports": 34,
+  "old_private_owner_test_bodies_exact": true,
+  "old_public_header_prefix_exact": true,
+  "author_builds_or_subjects": [],
+  "artifacts_sha256": {
+    "parent-delta.patch": "f143a99dc6517d801a9981dfa31fbacc38f1ba7c83272f72aeaee01304f8127c",
+    "ADOPTION.txt": "1ece69eb710b9c0f92f19d470f0ce3dd4355cfe7d73618fcf79715625f9ecd63",
+    "changes.patch": "c6a55ad02f9f4053a6fc1522fa8dc30bcd8771ca5015e123df7d3eabc259f104",
+    "staging/src/session_impl.cpp": "b8f74ea227dbe2f58850c04061e92430983d9c6c3f47a4a6df6fbc0c8ba4e012",
+    "staging/src/biglybtc_private_i2p_owner.inc": "30f7601647c5e7f610946a6c09d9979595e56bad7c5af3cd3ac3ce4fe4be8df1",
+    "staging/src/http_connection.cpp": "7cb4bf5a0c4a830f4249ebf908601323b1bd767b9b42ef429198eb950e7cb10e",
+    "staging/src/torrent.cpp": "d90230256df0f9c69e824c3aba4972071039353973ca68e1b29d5cccf3883c3d",
+    "staging/src/peer_connection.cpp": "625421130d71f0c5847fce6603974248884fc746232c810e1b6c03d27e06b887",
+    "staging/src/http_tracker_connection.cpp": "fc17bb644b7f070602bf91e2fbcf3c9d97e9a8b64f5b15a1b70628ffa5db199f",
+    "staging/src/biglybtc_private_i2p_owner_api.inc": "40229a142839128df32a9fecacfdc144d7a5f42e4028264889524cd6adef15f5",
+    "staging/test/test_biglybtc_private_i2p_owner.cpp": "22f5004e2a8314b50d0bd78df7fe8b1724cac5e05493b54088757d7670ac953d",
+    "staging/include/libtorrent/torrent.hpp": "3370be9a7fa285f812f3221367635285cb802ffe27d9df8a4cb3902f529d454f",
+    "staging/include/libtorrent/tracker_manager.hpp": "ec1284fc04f4ad1866f18d83d987b8b2274d58a9633a8fb2eb8bf6294f90bbad",
+    "staging/include/libtorrent/http_connection.hpp": "e61fb42792324fb96b3e6d1946f03f474877448cd05439a893c933cd0844246b",
+    "staging/include/libtorrent/biglybtc_private_i2p_owner.hpp": "b3793fd094c1f46b2cd421949f424bb0697e1605bc92137069722c1321893749",
+    "staging/include/libtorrent/i2p_stream.hpp": "b009d0188777944dd773defe3ea135b8a8bcd51870c76d3c484ba0ecfb7f6a2f",
+    "staging/include/libtorrent/session_handle.hpp": "36f4ab5775bd2f3b8f23d0e700a26eccad3664cb38429006478535e765dd5cef",
+    "staging/include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp": "f4ca76e3c3c2ea6610631ab8a239a5a523bffe859705c7762592ddb48703a4f0",
+    "staging/include/libtorrent/aux_/session_impl.hpp": "34ea8b7a7c8884b0127ed062abbecab7b47affd2f866d34184309263fee651af"
+  },
+  "parent_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/manifest.json",
+    "sha256": "aaa656498cda7048f8f7c4340fefa0a87d77dbe44ca4b3e977034ec635aeb425"
+  },
+  "delta_source_paths": {
+    "src/torrent.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/staging/src/torrent.cpp",
+      "before_sha256": "50bb449aaa37a765338aa63b2f88206ba04a714ad766f220c06f286c74f4c365",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/src/torrent.cpp",
+      "after_sha256": "d90230256df0f9c69e824c3aba4972071039353973ca68e1b29d5cccf3883c3d"
+    },
+    "test/test_biglybtc_private_i2p_owner.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/staging/test/test_biglybtc_private_i2p_owner.cpp",
+      "before_sha256": "5f6e15dd6dbeabe82e3200f73e3410550b63fa12d3860b5e215ce31d12006943",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/amendments/tracker-result-admission/staging/test/test_biglybtc_private_i2p_owner.cpp",
+      "after_sha256": "22f5004e2a8314b50d0bd78df7fe8b1724cac5e05493b54088757d7670ac953d"
+    }
+  },
+  "private_owner_methods": 10
+}

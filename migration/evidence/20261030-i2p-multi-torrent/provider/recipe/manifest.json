@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "status": "FROZEN_ROOT_AUTHORIZED_CANDIDATE_RECIPE",
+  "source_manifest_sha256": "aaa656498cda7048f8f7c4340fefa0a87d77dbe44ca4b3e977034ec635aeb425",
+  "artifacts_sha256": {
+    "jobs.mk": "8c8ccf28247f6980fcd2ea46457b534e35244e8f79b757e00f100a8ef82480d5",
+    "inputs.json": "a789f8585125821e8b1344cc57c8497aaade516b5b4dca3dc4bd4a348b3f99e4",
+    "provider.py": "604a5090cecb97dbd85b893c937e0d39f354f3d490fa3bba68d2be9b4754f191",
+    "test-objects.cmake": "16c82e94f769195dba188041bd575c2b72effb454348fd0a5caa031007e6cd89",
+    "NEXT.txt": "2e68a25fc54bbb7e921bfc1fd6bfed9a7d604423e91dadaa0edd3908766c60c3"
+  }
+}
