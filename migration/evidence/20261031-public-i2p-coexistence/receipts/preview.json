@@ -1,0 +1,11 @@
+{
+  "status": "PASS_STAGED_OPTIONAL_COEXISTENCE_PREVIEW",
+  "source_commit": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+  "manifest_sha256": "66a2d897fe98ddc9e93e20bf68b9d498891658257973c4843572b4e24cd3b97d",
+  "mapped_files": 119,
+  "default_dist_unchanged": true,
+  "build_receipt_sha256": "8371ed6497c4893c1651a85a19b6e3aca6ca151e98bd1ed7c59c0407f0881bd5",
+  "role_approval_sha256": "3407d518e13a86f2a64b3d748cbe0870ef7df57712fade48cb72c87d2962ad75",
+  "relocation_exit": 0,
+  "ldd_sha256": "38abb4b0075c89b02f2903b2fbe8ffe8581d990349f8e7c7899c6b59af944559"
+}

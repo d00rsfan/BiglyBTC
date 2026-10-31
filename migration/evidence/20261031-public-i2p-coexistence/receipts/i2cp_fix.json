@@ -1,0 +1,23 @@
+{
+  "status": "PASS_FOCUSED_GCC_PERIODIC_SETDATE_REGRESSIONS",
+  "source_commit": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+  "source_tree": "97921ce7171fb6702a3ce0e644cde1dfdfdd233c",
+  "patch_manifest_sha256": "dff2fe2b8dfd39a40cf98b37c52ebc824f0489e001a74a71ba2079d5695db58b",
+  "source_diagnosis_sha256": "1bee5b0804dab20ebe234ebf1f469bf735d8d3eb2569afd2b95d33be8d60d40f",
+  "build_receipt_sha256": "8371ed6497c4893c1651a85a19b6e3aca6ca151e98bd1ed7c59c0407f0881bd5",
+  "qt_totals_sha256": "1269f15b6dcc558bf1a6ceccef92d12792810abc547da6437873c86c6b97e2f7",
+  "protocol_suites": [
+    "i2cp-initial-channel",
+    "i2cp-lease-backed-datagram-channel",
+    "i2cp-bounded-datagram-receiver",
+    "i2cp-explicit-tracker-channel",
+    "i2cp-bounded-stream-manager"
+  ],
+  "all_27_suite_batch_passed": true,
+  "no_skips": true,
+  "diagnosis": "Native rejected valid supplementary SetDate outside WaitingDate. Original source and actual modified-JAR bytecode send one every600000ms. Actual failed packet was not retained; attribution of gcc-r2 to this sender is a causal inference.",
+  "policy": "Consume a fully decoded nonzero supplementary date only on an already-dated active channel, preserving initial clock/version, session/nonce/identity/lease/source authority and absolute budgets.",
+  "native_deadline_seconds": 1000,
+  "sdk_changed": false,
+  "java_bug_claimed": false
+}

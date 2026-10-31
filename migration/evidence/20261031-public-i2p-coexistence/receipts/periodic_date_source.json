@@ -1,0 +1,28 @@
+{
+  "status": "SOURCE_DIAGNOSIS_NO_SUBJECT_EXECUTION",
+  "native_commit": "78a9c915018132b713ff711900f188558e4e9888",
+  "source_refs": {
+    "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/original-source/router/java/src/net/i2p/router/client/ClientManager.java": "35985a294e5f02e103ad976843580a3f4fa402c61345a925d69968ade29b8828",
+    "/home/yurii/Java/BiglyBT/build/i2cp-initial-channel-20261029/original-source/core/java/src/net/i2p/client/impl/SetDateMessageHandler.java": "3f7b28bc1dd0aa1775636251258095149fe86c081252979138e8e49120d4de5f",
+    "/home/yurii/Java/BiglyBTC/preview/native/services/i2cp_channel/channel.cpp": "0f670eb6177f923e21849d0e76ccdc67b85549f1507938260a17996d19c1449f",
+    "/home/yurii/Java/BiglyBT/build/coexist-20261031/acceptance/runs/gcc-r2/native-terminal.json": "57ce624277544c354e0d29eab4f02ec55c4def33f11443532d028113d988d6f4",
+    "/home/yurii/Java/BiglyBT/build/coexist-20261031/acceptance/runs/gcc-r2/native-result.json": "7c5f5db46d3bfacc2b4ad98b33f62af3a7fd6e1c7dbcd194883f5c6d33472956",
+    "/home/yurii/Java/BiglyBT/build/coexist-20261031/acceptance/runs/gcc-r2/inputs.json": "aa0e73cee6656ab85a0611cb6ab1348b573bb1a4372a06a638a4e2f86b8effa5",
+    "/home/yurii/Java/BiglyBT/build/coexist-20261031/periodic-date-audit/actual-client-timestamper.javap.txt": "1603fb39e05c5fefdfbb8042e58a50b782a2b75bfbfc029d9f3e883e80b48fef",
+    "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5"
+  },
+  "original_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "original_client_manager_blob": "1e74b8361f2f8ba7b27b9332e892297832dd7409",
+  "actual_jar_class": {
+    "entry": "net/i2p/router/client/ClientManager$ClientTimestamper.class",
+    "sha256": "cc5be755772fffc494f9080df649ae61374ddcfaee0bd9d3ce1cd5eb93adef77",
+    "bytes": 2812,
+    "method_offsets": "SetDate construction/send127..147; next600000ms schedule175..178",
+    "actual_version_literal": "0.9.70",
+    "full_modified_source_equivalence_claimed": false
+  },
+  "limitations": [
+    "No actual rejected I2CP frame capture exists; source/actual class plus matching time establish a source defect and strong causal inference.",
+    "javap inspected class metadata only; no compiled application, fixture, SDK, network or live profile was executed."
+  ]
+}

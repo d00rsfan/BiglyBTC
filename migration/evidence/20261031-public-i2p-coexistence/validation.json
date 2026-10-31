@@ -1,0 +1,26 @@
+{
+  "status": "PASS_REGISTRY_VALIDATION_BOTH_WORKSPACES",
+  "source_commit": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+  "registry_sha256": "b0baec5b3658dcce6be0a994bab567b8a86f18029814154095c23efd605220ae",
+  "commands": [
+    {
+      "cwd": "/home/yurii/Java/BiglyBT",
+      "argv": [
+        "python3",
+        "migration/tools/validate.py"
+      ],
+      "exit_code": 0,
+      "output": "PASS registry:20 sources,108 components,0 reviews"
+    },
+    {
+      "cwd": "/home/yurii/Java/BiglyBTC",
+      "argv": [
+        "python3",
+        "migration/tools/validate.py"
+      ],
+      "exit_code": 0,
+      "output": "PASS registry:20 sources,108 components,0 reviews"
+    }
+  ],
+  "larger_component_states_and_source_coverage_preserved": true
+}

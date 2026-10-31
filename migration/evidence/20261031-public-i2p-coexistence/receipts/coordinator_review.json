@@ -1,0 +1,33 @@
+{
+  "status": "SOURCE_PASS_RUNTIME_PENDING",
+  "scope": "Bounded independent coordinator/Host and external-queue API review; no builds, subjects or native writes.",
+  "source_sha256": {
+    "host-integration/preview/native/app/coexist_coordinator.hpp": "76d0fdfc3d02cf74e18976d04d32ec8e6a2e6889cad81acc49f667cda38fc6fe",
+    "host-integration/preview/native/app/session_bridge.cpp": "986c3a39978a6d88aa5de2fd3c566786d46ba8ada7701e286fb0c15b9e8372e9",
+    "host-integration/preview/native/app/main_desktop.cpp": "0cd7657b921d4b16d876a98cfed36b1ccaf57cfb19c719cdb75e2e037ddd3033",
+    "host-integration/preview/native/ui/library_model.hpp": "3e317030f55d36803e3f49a4fdbfb70d231ba6bc20f935e4f8efbda3533169cd",
+    "authority-queue-integration/staging/preview/native/app/owned_i2p_service.cpp": "d47f93abcad72561871ca169b3b533f06076b91cfaedcaf48491afaef9a0d04a",
+    "authority-queue-integration/staging/preview/native/services/i2p_provider/profile_owner.cpp": "16f1a43a6b7353f7e148dcaee3d816ad975eaeeb06457c28c72467702eca05ec",
+    "authority-queue-integration/staging/preview/native/engine/persistent_session.cpp": "367e94874aec86a3f26b8266f03f743899d1e1a1019759c5398e637e37b63327",
+    "authority-queue-integration/staging/preview/native/engine/coexist_queue.hpp": "ee7a680d8fb1903e4dcbd1fc995f531d66149b4ec8f8bf83859b2b55e031ad10",
+    "authority-queue-integration/staging/preview/native/engine/managed_download.hpp": "58f800b9af68a17fc300af3533a41893f32dc5fda9152699c522f0509ae6c15c"
+  },
+  "resolved_findings": [
+    "Preserve with actual Downloading/Seeding demand participates in role bandwidth allocation; queued/checking Preserve remains excluded.",
+    "Speed/ETA with private rows clears all download probes and marks the original global probe unavailable; Public-only probes and Position mode are retained.",
+    "External private Run validates current source under the retained lease on the Host worker, then checks the released-gate revision on Qt before resume; no source gate spans provider waits.",
+    "Experimental-local coexistence is explicitly rejected; normal profile coexistence reads and configures the shared saved queue."
+  ],
+  "other_checked_boundaries": [
+    "One original queue evaluation over both admission-bound snapshots; Queue acknowledgements from both owners precede replacement Run.",
+    "Finite role rate allocations sum to the shared limit; reductions precede increases and private cache identity includes owner/generation.",
+    "Saved payload prefixes and real current deltas use checked cumulative projection; unknown remains unavailable.",
+    "Default/private-only paths retain their existing routing and guard configuration.",
+    "Policy reconfiguration invalidates both rate caches; explicit private-owner creation/close/withdrawal invalidates its grants and position cache, independently of pointer reuse/generation coincidence."
+  ],
+  "remaining_blockers": [],
+  "limits": [
+    "This review does not establish runtime behavior, throughput or atomic exclusion of hostile external file replacement.",
+    "Source hashes bind the reviewed staged bytes; adoption and actual qualification are separate."
+  ]
+}

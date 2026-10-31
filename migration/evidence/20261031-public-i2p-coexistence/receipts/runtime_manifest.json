@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "purpose": "same-image-separate-public-private-sessions",
+  "source_build_record": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source-build-record.json",
+  "source_build_record_sha256": "449aa82f665786ce63f4e1778cee23bf07ca45439b762cf283b67efd0d48af0f",
+  "source_capsule_sha256": "63e9925c8f4f3e80168425d22b62ef87b23732eccff8fa1b7714f73f3f84e9c3",
+  "artifact": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "artifact_sha256": "7ffbd4c63d7770168bcbdf8e8c19644e18d1509d57ac148331a3c4bd094310c4",
+  "artifact_bytes": 9659328,
+  "sdk_tree_sha256": "869833b2302494bb95d910f74261e60e2e96446bcc85c3f1e2412b8448a07e3b",
+  "private_runtime_manifest": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/runtime-manifest.json",
+  "private_approval_sha256": "f3ca7de94ca6beb12e0375293c9c74c3f78a34f7e4952e1a122ff0ae9dff1f83",
+  "role_controls": {
+    "result": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r6/result.json",
+    "xml": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r6/fixture/tests.xml",
+    "commands": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r6/commands.json",
+    "inputs_before": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r6/inputs-before.json",
+    "inputs_after": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r6/inputs-after.json",
+    "files_sha256": {
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r6/result.json": "69fde47825b5614654bb10689b5fc9e2b7b352dad965a27b95416f2fefcf77e9",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r6/commands.json": "4797e08ac6af5b05b6565f75aedaa7cb465d647e2be032d8421d1a5d5058b0d2",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r6/roles.log": "0f608d36bfdd726c0a5d4e041e57f29e397a1d5ce6d50915d5dc4cb2eb6e8257",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r6/inputs-before.json": "51eea743bee9528cddb4b48184f45ee4d670022fdcf635c440dabcd121dfc6f1",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r6/inputs-after.json": "51eea743bee9528cddb4b48184f45ee4d670022fdcf635c440dabcd121dfc6f1",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r6/fixture/tests.xml": "9e8d488c477181f001e760a185aeb024119b09f20320887c8a9cae02e91d2f34",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/build/sdk-role-controls": "785d9eceffad2c0e6298e61ab170569c184c6b26a5d5dcf5f22361a2382dd62d",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/role_controls.cpp": "693159f1d034c74eca6ebeba30ef6add639939130984adb66c410da2a864f52c",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/exports.hpp": "3bcdaf1c612cfef5bf271d63f8321e586370663600408d3a0680f991a7df2ca7",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/CMakeLists.txt": "6e7d0715becabbe0570f40488dce85a3e0aa8f4968f3f12458717d8411934d78",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/run-r6.py": "fc2e3b88f325d3e88b410adae1684f00fb51d69211ab0888beb0d60ff7c922e8"
+    }
+  },
+  "failed_attempts": {
+    "r1": {
+      "result_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r1/result.json",
+      "result_sha256": "730595639bd6456826773d9cfadc2d9a80baaa08f7e1740b3717c6135fa8ca7b"
+    },
+    "r2": {
+      "result_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r2/result.json",
+      "result_sha256": "f2e60d7d6f02ef6bed389cb981739d2864dc07f60f62b8c0bd2353ca4011df34"
+    },
+    "r3": {
+      "result_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r3/result.json",
+      "result_sha256": "d1fa17dab7b322f7aadbe8e4bb13c5ddcca6f97e585846404bc64814c0345b94"
+    },
+    "r4": {
+      "result_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r4/result.json",
+      "result_sha256": "8bc11dcabcd364017fafaefeace353c21f501d711f5b3dff6200a00bc67d33c6"
+    },
+    "r5": {
+      "result_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/runs/r5/result.json",
+      "result_sha256": "e3fe1f3a70321f614ddedd02f4e645c529fc44e9607a61dbf3547fdec0e4d39e"
+    }
+  },
+  "native_coexistence_qualification_pending": true,
+  "default_runtime_changed": false
+}

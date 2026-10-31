@@ -1,0 +1,20 @@
+{
+  "status": "PASS_SDK_PUBLIC_PRIVATE_ROLES_NOT_APPROVED",
+  "record_sha256": "449aa82f665786ce63f4e1778cee23bf07ca45439b762cf283b67efd0d48af0f",
+  "artifact_sha256": "7ffbd4c63d7770168bcbdf8e8c19644e18d1509d57ac148331a3c4bd094310c4",
+  "native_runtime_approved": false,
+  "source_and_sdk_unchanged": true,
+  "actual_cases": [
+    "same-image-34-exports-and-markers",
+    "distinct-roles-public-and-private-admission-denials",
+    "loopback-tracker-peer-transfer-survives-private-withdraw",
+    "private-mixed-settings-failure-is-session-local",
+    "public-join-preserves-private-registration-and-independent-join",
+    "joined-public-disk-bytes-exact"
+  ],
+  "image": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/build/sdk-role-controls",
+  "image_sha256": "785d9eceffad2c0e6298e61ab170569c184c6b26a5d5dcf5f22361a2382dd62d",
+  "xml_sha256": "9e8d488c477181f001e760a185aeb024119b09f20320887c8a9cae02e91d2f34",
+  "commands_sha256": "4797e08ac6af5b05b6565f75aedaa7cb465d647e2be032d8421d1a5d5058b0d2",
+  "runner_sha256": "fc2e3b88f325d3e88b410adae1684f00fb51d69211ab0888beb0d60ff7c922e8"
+}

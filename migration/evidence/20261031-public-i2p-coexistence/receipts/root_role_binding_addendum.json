@@ -1,0 +1,7 @@
+{
+  "scope": "Bind actual combined acceptance to the separately root-approved Public/private cohort before any subjects",
+  "runner_before_sha256": "9f45f131298113b939277e3d8f1673c3a7019ecf1c4574494dcf1be1903ccff8",
+  "runner_after_sha256": "007a6606e469717cca9254556ec30409c8846da5669c37808f9c2cc5db02e814",
+  "behaviour": "Only strengthens preflight: exact new closed manifest, root approval, actual CMake flag and generated Public runtime header; old private proof remains independent",
+  "native_source_changed": false
+}

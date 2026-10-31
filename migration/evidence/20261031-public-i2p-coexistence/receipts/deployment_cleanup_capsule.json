@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_RUNTIME_PENDING",
+  "source_paths": {
+    "preview/native/tests/runtime_deployment_tests.py": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/deployment-cleanup/before/preview/native/tests/runtime_deployment_tests.py",
+      "before_sha256": "767b6f81c12e0bdff771e3cab0fda3264f6d65d6e3ca94b36508ecbb7d3e954b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/deployment-cleanup/staging/preview/native/tests/runtime_deployment_tests.py",
+      "after_sha256": "ec6c8e89e8731f5c68ffe38b43447a0c06bc99f089d3df029bb0bf1bf29361fe"
+    }
+  },
+  "artifacts_sha256": {
+    "changes.patch": "c027620de97831c828a53abc21fdb0045a077907ee3d64c3b19964350a86f168",
+    "before/preview/native/tests/runtime_deployment_tests.py": "767b6f81c12e0bdff771e3cab0fda3264f6d65d6e3ca94b36508ecbb7d3e954b",
+    "staging/preview/native/tests/runtime_deployment_tests.py": "ec6c8e89e8731f5c68ffe38b43447a0c06bc99f089d3df029bb0bf1bf29361fe"
+  },
+  "change": "Every per-case copied image directory uses TemporaryDirectory cleanup; small receipt/stdout/stderr files remain under CTest working directory instead of /tmp. All case predicates and provider input checks retained.",
+  "executed_builds_or_subjects": false,
+  "static_checks": [
+    "Python AST valid",
+    "Exactly one case-loop name store (loop binding); TemporaryDirectory binds area_name only",
+    "Read-only current git apply --check"
+  ]
+}

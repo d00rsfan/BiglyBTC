@@ -1,0 +1,36 @@
+{
+  "status": "SOURCE_READY_NOT_EXECUTED",
+  "native_basis_commit": "78a9c915018132b713ff711900f188558e4e9888",
+  "source_paths": {
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/periodic-date-followup/before/preview/native/services/i2cp_channel/channel.cpp",
+      "before_sha256": "0f670eb6177f923e21849d0e76ccdc67b85549f1507938260a17996d19c1449f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/periodic-date-followup/staging/preview/native/services/i2cp_channel/channel.cpp",
+      "after_sha256": "fba3c2263ea1938fceb82dcb44cca32a177cf54ad9edc15d1d54b133a5b2856a"
+    },
+    "preview/native/tests/i2cp_datagram_channel_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/periodic-date-followup/before/preview/native/tests/i2cp_datagram_channel_tests.cpp",
+      "before_sha256": "4a952687ace251b91a3b1902aa5bb4354744323ad894fcd93353d575bae93401",
+      "after_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/periodic-date-followup/staging/preview/native/tests/i2cp_datagram_channel_tests.cpp",
+      "after_sha256": "989e69243dc22726e7c7bfa5e0a4451b5845f9af6411d1b96778f281e73911b3"
+    },
+    "preview/native/tests/i2cp_initial_channel_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/periodic-date-followup/before/preview/native/tests/i2cp_initial_channel_tests.cpp",
+      "before_sha256": "bb6b6b095331271d8ace102fe3d36906e9e7ac3e060ddd64bcfe1c2aaf2848e6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/periodic-date-followup/staging/preview/native/tests/i2cp_initial_channel_tests.cpp",
+      "after_sha256": "8d26587033f139270fa95f3e957e1cea7f82e7b9e1687b81e5d3ed3a2d9703cf"
+    }
+  },
+  "artifacts_sha256": {
+    "/home/yurii/Java/BiglyBT/build/coexist-20261031/periodic-date-followup/changes.patch": "7e6030fbe8693db1f38abf4a87b605ea8f56cfb4f8591f0e00fcc0f8770d4b01",
+    "/home/yurii/Java/BiglyBT/build/coexist-20261031/periodic-date-followup/ADOPTION.txt": "da88d50b4efc6c029bc3d02e5d18427d4558df07d483ac12e6ccbf50c7e156dc",
+    "/home/yurii/Java/BiglyBT/build/coexist-20261031/periodic-date-followup/static-checks.json": "6a460264f2e07ef62aceb61e9e96e529dec99cb6d7b8720e5f991f04d9d4ae56"
+  },
+  "source_diagnosis": {
+    "path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/periodic-date-audit/pins.json",
+    "sha256": "1bee5b0804dab20ebe234ebf1f469bf735d8d3eb2569afd2b95d33be8d60d40f"
+  },
+  "cmake_changes": false,
+  "sdk_changes": false,
+  "native_1000_second_budget_changed": false
+}

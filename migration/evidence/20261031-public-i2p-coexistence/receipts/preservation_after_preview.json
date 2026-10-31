@@ -1,0 +1,12 @@
+{
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "native_source_commit": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+  "native_source_tree": "97921ce7171fb6702a3ce0e644cde1dfdfdd233c",
+  "default_manifest_sha256": "aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b",
+  "optional_manifest_sha256": "66a2d897fe98ddc9e93e20bf68b9d498891658257973c4843572b4e24cd3b97d",
+  "old_optional_manifest_sha256": "786cc05963255aacdcd9a07f93aff5192d1a81c9545808fe6b0ad0e056867b93",
+  "tmp_biglybtc_entry_count": 0,
+  "disk_free_bytes": 14684389376,
+  "status": "PASS_ORIGINAL_STATE_AND_PREVIEW_BOUNDARIES"
+}

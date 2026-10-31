@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "source_commit": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+  "runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 41202534397,
+      "headSha": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41202534397",
+      "workflowName": "Native desktop preview unit and smoke tests"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 41202534431,
+      "headSha": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41202534431",
+      "workflowName": "Native plugin SDK contract"
+    }
+  ],
+  "validation": "Both actual hosted workflows completed successfully at the reviewed source commit; hosted stock/default lane is separate from optional local role-qualified SDK."
+}

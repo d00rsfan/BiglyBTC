@@ -1,0 +1,68 @@
+{
+  "status": "FAIL",
+  "lane": "san",
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/cmake/LibtorrentRasterbar",
+        "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/root-private-owner-approval.json",
+        "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256=f3ca7de94ca6beb12e0375293c9c74c3f78a34f7e4952e1a122ff0ae9dff1f83",
+        "-DBIGLYBTC_PERSISTENT_NEGATIVE_LT_LIBRARY=/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so.2.0.12",
+        "-DBIGLYBTC_PERSISTENT_COEXISTENCE_RUNTIME=ON",
+        "-DBIGLYBTC_PERSISTENT_RUNTIME_MANIFEST=/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/runtime-manifest.json",
+        "-DBIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL=/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/root-coexistence-approval.json",
+        "-DBIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL_SHA256=3407d518e13a86f2a64b3d748cbe0870ef7df57712fade48cb72c87d2962ad75"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "/home/yurii/Java/BiglyBT/build/coexist-20261031/san/r1/configure.log",
+      "log_sha256": "8060827cfc54274ab7411e848ffc620a7513bf0b0d509cbdadc5b81e83978113"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "--parallel",
+        "2",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-managed-queue-tests",
+        "biglybtc-managed-download-tests",
+        "biglybtc-managed-tracker-tests",
+        "biglybtc-library-commands-bridge-tests",
+        "biglybtc-torrent-intake-file-options-tests",
+        "biglybtc-queue-policy-tests",
+        "biglybtc-queue-slots-tests",
+        "biglybtc-runtime-binding-driver",
+        "biglybtc-runtime-negative-driver",
+        "biglybtc-runtime-interposer",
+        "biglybtc-runtime-interposition-driver",
+        "biglybtc-provider-coexistence-runtime-deployment-driver",
+        "biglybtc-coexistence-interposition-driver",
+        "biglybtc-owned-i2p-source-tests",
+        "biglybtc-coexist-host-transfer-probe",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit_code": -15,
+      "timed_out": true,
+      "log": "/home/yurii/Java/BiglyBT/build/coexist-20261031/san/r1/build.log",
+      "log_sha256": "071ca48cbc63a1cf064e0ec81c828c6cc0aab0b8f06194f212700b5deca56733"
+    }
+  ],
+  "source_map_sha256": "ff47c9956020bb1503b04ba6f12b10f4b07d07ba9c835eb0ffdfa039e67cc94d",
+  "failure": "build failed",
+  "elapsed_seconds": 1003.99
+}

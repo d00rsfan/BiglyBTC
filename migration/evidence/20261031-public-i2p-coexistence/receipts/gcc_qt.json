@@ -1,0 +1,9 @@
+{
+  "ctest_result_sha256": "3a5ef3cbcf491977f5e2d1d90fcd15bfe7624599e0da7655bd9970f0fb9a1d08",
+  "full_log_sha256": "531e5af98f0372b390d2e509789681edb42115b4553410aabd1d6613ba95a7ac",
+  "qt_total_rows": 12,
+  "qt_failed": 0,
+  "qt_skipped": 0,
+  "qt_blacklisted": 0,
+  "whole_suite_count": 27
+}

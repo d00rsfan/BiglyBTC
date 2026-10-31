@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "reviewer": "root",
+  "reviewed_epoch": 1793446204.474896,
+  "scope": "same-image separate Public/private SDK roles only",
+  "source_capsule_sha256": "9d30e96d5aec065f45eab381e702051318fbbc36871ad2ee31e2d9ce726e7ed5",
+  "runtime_manifest_sha256": "62f7545f96af46806e7a7708213319ffd1e91c7a5228f0c35065eaa249a91343",
+  "actual_control_result_sha256": "69fde47825b5614654bb10689b5fc9e2b7b352dad965a27b95416f2fefcf77e9",
+  "source_guard_review": [
+    "All34 same-image symbols retained behind exact new manifest+artifact binding; FD/inode/mapping/hash pin remains before marker invocation.",
+    "New option default OFF; closed private/source/SDK approvals remain independent mandatory inputs.",
+    "Actual tracker-discovered Public payload continued after private withdrawal; Public join preserved a separately admitted private owner.",
+    "Fixture self-advertisement/same-IP failures are retained and are not attributed to SDK.",
+    "Rejected proposal refused before root approval."
+  ],
+  "unchanged_sdk": true,
+  "native_application_coexistence_qualified": false
+}

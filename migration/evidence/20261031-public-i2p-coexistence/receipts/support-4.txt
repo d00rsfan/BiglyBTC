@@ -1,0 +1,99 @@
+Compiled from "ClientManager.java"
+class net.i2p.router.client.ClientManager$ClientTimestamper extends net.i2p.util.SimpleTimer2$TimedEvent {
+  public static final long LOOP_TIME;
+
+  final net.i2p.router.client.ClientManager this$0;
+
+  public net.i2p.router.client.ClientManager$ClientTimestamper(net.i2p.router.client.ClientManager);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: putfield      #15                 // Field this$0:Lnet/i2p/router/client/ClientManager;
+         5: aload_0
+         6: aload_1
+         7: getfield      #17                 // Field net/i2p/router/client/ClientManager._ctx:Lnet/i2p/router/RouterContext;
+        10: invokevirtual #23                 // Method net/i2p/router/RouterContext.simpleTimer2:()Lnet/i2p/util/SimpleTimer2;
+        13: invokespecial #29                 // Method net/i2p/util/SimpleTimer2$TimedEvent."<init>":(Lnet/i2p/util/SimpleTimer2;)V
+        16: return
+
+  public void timeReached();
+    Code:
+         0: aload_0
+         1: getfield      #15                 // Field this$0:Lnet/i2p/router/client/ClientManager;
+         4: getfield      #38                 // Field net/i2p/router/client/ClientManager._isStarted:Z
+         7: ifne          11
+        10: return
+        11: aload_0
+        12: getfield      #15                 // Field this$0:Lnet/i2p/router/client/ClientManager;
+        15: invokestatic  #42                 // Method net/i2p/router/client/ClientManager.access$2:(Lnet/i2p/router/client/ClientManager;)Ljava/util/Map;
+        18: invokeinterface #46,  1           // InterfaceMethod java/util/Map.isEmpty:()Z
+        23: ifeq          34
+        26: aload_0
+        27: ldc2_w        #8                  // long 600000l
+        30: invokevirtual #52                 // Method schedule:(J)V
+        33: return
+        34: new           #56                 // class java/util/HashSet
+        37: dup
+        38: aload_0
+        39: getfield      #15                 // Field this$0:Lnet/i2p/router/client/ClientManager;
+        42: invokestatic  #42                 // Method net/i2p/router/client/ClientManager.access$2:(Lnet/i2p/router/client/ClientManager;)Ljava/util/Map;
+        45: invokeinterface #58,  1           // InterfaceMethod java/util/Map.values:()Ljava/util/Collection;
+        50: invokespecial #62                 // Method java/util/HashSet."<init>":(Ljava/util/Collection;)V
+        53: astore_1
+        54: aload_1
+        55: invokeinterface #65,  1           // InterfaceMethod java/util/Set.iterator:()Ljava/util/Iterator;
+        60: astore_3
+        61: goto          155
+        64: aload_3
+        65: invokeinterface #71,  1           // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        70: checkcast     #77                 // class net/i2p/router/client/ClientConnectionRunner
+        73: astore_2
+        74: aload_2
+        75: instanceof    #79                 // class net/i2p/router/client/QueuedClientConnectionRunner
+        78: ifeq          84
+        81: goto          155
+        84: aload_2
+        85: invokevirtual #81                 // Method net/i2p/router/client/ClientConnectionRunner.isDead:()Z
+        88: ifeq          94
+        91: goto          155
+        94: aload_2
+        95: invokevirtual #84                 // Method net/i2p/router/client/ClientConnectionRunner.getPrimaryConfig:()Lnet/i2p/data/i2cp/SessionConfig;
+        98: astore        4
+       100: aload         4
+       102: ifnonnull     108
+       105: goto          155
+       108: aload_2
+       109: aload         4
+       111: invokevirtual #88                 // Method net/i2p/data/i2cp/SessionConfig.getDestination:()Lnet/i2p/data/Destination;
+       114: invokevirtual #94                 // Method net/i2p/data/Destination.calculateHash:()Lnet/i2p/data/Hash;
+       117: invokevirtual #100                // Method net/i2p/router/client/ClientConnectionRunner.getLeaseSet:(Lnet/i2p/data/Hash;)Lnet/i2p/data/LeaseSet;
+       120: ifnonnull     126
+       123: goto          155
+       126: aload_2
+       127: new           #104                // class net/i2p/data/i2cp/SetDateMessage
+       130: dup
+       131: aload_2
+       132: invokevirtual #106                // Method net/i2p/router/client/ClientConnectionRunner.getClientVersion:()Ljava/lang/String;
+       135: ifnull        143
+       138: ldc           #112                // String 0.9.70
+       140: goto          144
+       143: aconst_null
+       144: invokespecial #114                // Method net/i2p/data/i2cp/SetDateMessage."<init>":(Ljava/lang/String;)V
+       147: invokevirtual #117                // Method net/i2p/router/client/ClientConnectionRunner.doSend:(Lnet/i2p/data/i2cp/I2CPMessage;)V
+       150: goto          155
+       153: astore        5
+       155: aload_3
+       156: invokeinterface #121,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+       161: ifne          64
+       164: aload_0
+       165: getfield      #15                 // Field this$0:Lnet/i2p/router/client/ClientManager;
+       168: getfield      #38                 // Field net/i2p/router/client/ClientManager._isStarted:Z
+       171: ifeq          181
+       174: aload_0
+       175: ldc2_w        #8                  // long 600000l
+       178: invokevirtual #52                 // Method schedule:(J)V
+       181: return
+      Exception table:
+         from    to  target type
+           126   150   153   Class net/i2p/data/i2cp/I2CPMessageException
+}

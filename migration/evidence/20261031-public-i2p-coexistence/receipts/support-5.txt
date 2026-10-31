@@ -1,0 +1,37 @@
+Periodic router date message, not source lifetime expiry
+
+Actual GCC r2 terminal:597965ms, Stage31, seed withdrawn phase3 with precisely
+I2CP:UnexpectedMessage; leech still active, no source error. Root cleanup joined.
+No Deadline/SourceChanged/InvalidLeaseSet was reported by the seed.
+
+Exact source: original ClientManager.java:856-892 ClientTimestamper runs every
+600000ms, sends SetDate to each live external session with a real LeaseSet,
+and starts its first interval when the router listener starts (:172), before
+the native seed. Actual b086 JAR class confirms this same send/schedule path
+(offsets127..147/175..178). Its version literal0.9.70 differs from official
+source constants; no full modified-class/source byte equivalence claimed.
+Native channel.cpp:149 rejects any decoded SetDate outside WaitingDate with
+exactly UnexpectedMessage. Type37 lease renewal has different failure enums.
+This is a proven protocol handling defect matching this run's timing; because
+the rejected frame was not retained, exact packet attribution is inferred.
+
+Smallest proposed correction (SOURCE ONLY, awaiting root choice)
+Accept fully decoded nonzero supplementary SetDate only on an already-dated
+active channel (DateReceived/Creating/SessionCreated/Reconfiguring). Consume it
+as a router notification; retain the initial immutable monotone clock/version
+anchor and ALL existing absolute startup/request/LS2/datagram/stream/source
+budgets, sessionID/revision and identity. Do not re-emit dateReceived or create
+a session, permit, lease or listening authority. Zero/malformed dates remain
+fatal; undated/unexpected phases remain refused. No new timer, privilege,
+namespace setting, TTL or Native1000s budget change. This deliberately does not
+implement runtime router clock correction/capability renegotiation.
+
+Focused controls: owned router sends a supplementary date after an actual
+session (same sessionID/revision/lease; no duplicate callback or new frames),
+plus sends during a held pending request to prove its original absolute timeout
+is unchanged. Malformed/zero periodic dates still refuse. Root's full1000s
+coexistence acceptance then exercises the actual10-minute router event.
+
+A monotone-only runtime clock refresh could also be designed, but it requires
+rearming every actual lease-derived deadline without extending any authority.
+That is larger than necessary to fix this proven unsolicited-message refusal.

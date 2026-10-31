@@ -4831,7 +4831,8 @@
       "task_records": [
         "migration/tasks/P04-15-classic-statistics.md",
         "migration/tasks/P07-i2p-classic-host.md",
-        "migration/tasks/P07-i2p-multi-torrent.md"
+        "migration/tasks/P07-i2p-multi-torrent.md",
+        "migration/tasks/P07-public-i2p-coexistence.md"
       ],
       "target_paths": [
         "../BiglyBTC/preview/native/ui/statistics_page.cpp",
@@ -4980,6 +4981,16 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "dc3ca955f16880a3a7c15280e708a65579e40f76",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "78a9c915018132b713ff711900f188558e4e9888",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -4995,7 +5006,8 @@
         "migration/evidence/20261018-statistics/reviews/storage.json",
         "migration/evidence/20261018-statistics/reviews/window.json",
         "migration/updates/services.i2cp_initial_session/20261030-classic-host.md",
-        "migration/updates/services.i2cp_initial_session/20261030-shared-multi-torrent.md"
+        "migration/updates/services.i2cp_initial_session/20261030-shared-multi-torrent.md",
+        "migration/updates/services.i2cp_initial_session/20261031-public-i2p-coexistence.md"
       ],
       "evidence": [
         "migration/evidence/20261018-statistics-next/source-pins.json",
@@ -5007,7 +5019,8 @@
         "migration/evidence/20261018-statistics/dist-promotion.json",
         "migration/evidence/20261018-statistics/installed-rpath-equivalence.json",
         "migration/evidence/20261030-i2p-classic-host/verification.json",
-        "migration/evidence/20261030-i2p-multi-torrent/verification.json"
+        "migration/evidence/20261030-i2p-multi-torrent/verification.json",
+        "migration/evidence/20261031-public-i2p-coexistence/verification.json"
       ],
       "decision_ref": null
     },
@@ -6472,7 +6485,8 @@
       "task_records": [
         "migration/tasks/P08-01-queue-seeding-scheduling.md",
         "migration/tasks/P08-01-compatibility-providers.md",
-        "migration/tasks/P07-i2p-multi-torrent.md"
+        "migration/tasks/P07-i2p-multi-torrent.md",
+        "migration/tasks/P07-public-i2p-coexistence.md"
       ],
       "target_paths": [
         "native/core/src/queue_policy.cpp",
@@ -6641,6 +6655,16 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "dc3ca955f16880a3a7c15280e708a65579e40f76",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "78a9c915018132b713ff711900f188558e4e9888",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -6654,7 +6678,8 @@
         "migration/updates/compatibility.providers/20261027-gcc-milestone.md",
         "migration/updates/compatibility.providers/20261028-chapter.md",
         "migration/evidence/20261029-direct-i2p-identity/REVIEW.md",
-        "migration/updates/services.i2cp_initial_session/20261030-shared-multi-torrent.md"
+        "migration/updates/services.i2cp_initial_session/20261030-shared-multi-torrent.md",
+        "migration/updates/services.i2cp_initial_session/20261031-public-i2p-coexistence.md"
       ],
       "evidence": [
         "migration/tasks/P08-01-queue-seeding-scheduling.md",
@@ -6669,7 +6694,8 @@
         "migration/evidence/20261027-compatibility-gcc-milestone/verification.json",
         "migration/evidence/20261028-compatibility-chapter/verification.json",
         "migration/evidence/20261029-direct-i2p-identity/verification.json",
-        "migration/evidence/20261030-i2p-multi-torrent/verification.json"
+        "migration/evidence/20261030-i2p-multi-torrent/verification.json",
+        "migration/evidence/20261031-public-i2p-coexistence/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -7398,7 +7424,8 @@
         "migration/evidence/20261026-compatibility-batch3/verification.json",
         "migration/evidence/20261030-private-i2p-provider-transfer/verification.json",
         "migration/evidence/20261030-i2p-classic-host/verification.json",
-        "migration/evidence/20261030-i2p-multi-torrent/verification.json"
+        "migration/evidence/20261030-i2p-multi-torrent/verification.json",
+        "migration/evidence/20261031-public-i2p-coexistence/verification.json"
       ],
       "feature_ids": [
         "F01.original_file_geometry",
@@ -7545,6 +7572,16 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "dc3ca955f16880a3a7c15280e708a65579e40f76",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "78a9c915018132b713ff711900f188558e4e9888",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -7552,7 +7589,8 @@
         "migration/updates/compatibility.providers/20261026-batch3.md",
         "migration/updates/services.i2cp_initial_session/20261030-private-owner-transfer.md",
         "migration/updates/services.i2cp_initial_session/20261030-classic-host.md",
-        "migration/updates/services.i2cp_initial_session/20261030-shared-multi-torrent.md"
+        "migration/updates/services.i2cp_initial_session/20261030-shared-multi-torrent.md",
+        "migration/updates/services.i2cp_initial_session/20261031-public-i2p-coexistence.md"
       ],
       "source_coverage": [
         {
@@ -7591,7 +7629,8 @@
         "migration/tasks/P03-10-v2-hybrid-compatibility.md",
         "migration/tasks/P07-owned-i2p-streaming.md",
         "migration/tasks/P07-i2p-classic-host.md",
-        "migration/tasks/P07-i2p-multi-torrent.md"
+        "migration/tasks/P07-i2p-multi-torrent.md",
+        "migration/tasks/P07-public-i2p-coexistence.md"
       ]
     },
     {
@@ -9081,7 +9120,8 @@
         "migration/tasks/P07-02b-i2cp-initial-session.md",
         "migration/tasks/P07-owned-i2p-streaming.md",
         "migration/tasks/P07-i2p-classic-host.md",
-        "migration/tasks/P07-i2p-multi-torrent.md"
+        "migration/tasks/P07-i2p-multi-torrent.md",
+        "migration/tasks/P07-public-i2p-coexistence.md"
       ],
       "target_paths": [
         "preview/native/services/i2cp/protocol.hpp",
@@ -9534,6 +9574,16 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "dc3ca955f16880a3a7c15280e708a65579e40f76",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "78a9c915018132b713ff711900f188558e4e9888",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -9551,7 +9601,8 @@
         "migration/evidence/20261029-streaming-manager-known/REVIEW.md",
         "migration/updates/services.i2cp_initial_session/20261030-private-owner-transfer.md",
         "migration/updates/services.i2cp_initial_session/20261030-classic-host.md",
-        "migration/updates/services.i2cp_initial_session/20261030-shared-multi-torrent.md"
+        "migration/updates/services.i2cp_initial_session/20261030-shared-multi-torrent.md",
+        "migration/updates/services.i2cp_initial_session/20261031-public-i2p-coexistence.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
@@ -9568,7 +9619,8 @@
         "migration/evidence/20261029-streaming-manager-known/verification.json",
         "migration/evidence/20261030-private-i2p-provider-transfer/verification.json",
         "migration/evidence/20261030-i2p-classic-host/verification.json",
-        "migration/evidence/20261030-i2p-multi-torrent/verification.json"
+        "migration/evidence/20261030-i2p-multi-torrent/verification.json",
+        "migration/evidence/20261031-public-i2p-coexistence/verification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     }

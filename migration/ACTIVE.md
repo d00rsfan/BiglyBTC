@@ -1,5 +1,9 @@
-# Shared-session private I2P chapter complete; stopped
+# Public and I2P coexistence complete; stopped
 
-Authorised chapter complete at `dc3ca955f16880a3a7c15280e708a65579e40f76`. [Review](evidence/20261030-i2p-multi-torrent/REVIEW.md), [verification](evidence/20261030-i2p-multi-torrent/verification.json). Shared original identity/session, independent controls/checkpoints, saved queue/rates/restart and real two-swarm slot handoff qualify within the documented scope. Preview `/home/yurii/Java/BiglyBTC/dist-i2p/BiglyBTC` requires explicit isolated profile/router options.
+Qualified native `0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df` (tree `97921ce7171fb6702a3ce0e644cde1dfdfdd233c`) supports separate pure Public and pure-I2P torrents in one Host/profile/library, one original-source queue decision, independent UI controls/joined checkpoints and cumulative original per-torrent payload history. Whole client and larger components remain in progress. Mixed-network single torrents remain unsupported; selected networks are never silently removed or fallback permissions.
 
-Proposed next: Public + I2P coexistence in one application; NOT started. Whole epic/larger component parity is incomplete. Preserve Java/live profile, original HEAD/index/default dist. Questions: none. Follow [resource policy](RESOURCE_POLICY.md): reuse current caches, clean obsolete generated files, no build archives. Durable diagnostics `build/i2p-multi-20261030`; cached builds, aggregate3 compiler jobs/nice5, logs on disk.
+[Review](evidence/20261031-public-i2p-coexistence/REVIEW.md).
+
+Next proposed only: Propose original mixed Public+I2P selection for one torrent, with explicit privacy/admission controls; do not start it.
+
+Preserve Java/live profile and manifests; [resource policy](RESOURCE_POLICY.md). Work: build/coexist-20261031.

@@ -1,8 +1,8 @@
 # Whole Solution C++ Migration Plan
 
-Latest user boundary (2026-10-30): the authorised shared-session multi-torrent private I2P chapter is complete. Stop here; propose Public + I2P coexistence, do not start it. Preserve Java/live profile and main-only milestones. Read [current state](migration/ACTIVE.md).
+Latest user boundary (2026-10-31): Public + I2P coexistence chapter complete; STOP. Propose the next chapter without starting it. Preserve Java/live profile and main-only milestones.
 
-Qualified native source `dc3ca955f16880a3a7c15280e708a65579e40f76` adds one original identity/session with independent torrents, original queue/rate/restart and actual joined checkpoints; [review](migration/evidence/20261030-i2p-multi-torrent/REVIEW.md). Full I2P/plugin/queue/performance parity remains open; Public + I2P coexistence and DATA/chat/rooms were not started.
+Qualified native source `0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df`: separate pure Public/I2P rows in one Host/profile, shared queue, independent controls/checkpoints and cumulative payload library totals. [Review](migration/evidence/20261031-public-i2p-coexistence/REVIEW.md). Whole-client parity remains in progress; mixed-network single torrents unsupported.
 
 Earlier progress and stop-boundary notes are preserved verbatim in [the historical status archive](migration/history/plan-status-prefix-through-20261028.md); the current stop boundary above is authoritative. The objective, phase definitions and acceptance requirements below are unchanged.
 
@@ -1739,3 +1739,10 @@ Qualified source `9f46cf05d133624e48c6d60d45d2c503a6141ff9` adds explicit privat
 The optional provider remains separate from default355/f746. Default Host/UI, public discovery/multihop, late tracker-response, whole plugin/client and performance parity remain open. The existing119-leaf dist remains manifest `aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b`; source qualification is not a dist promotion. Original Java HEAD/index and live profile/payload are preserved.
 
 This requested section is complete. Stop here; no next chapter, DATA or chat/rooms was started. Both registry components remain in progress with original coverage nulls/baselines unchanged.
+
+
+## 2026-10-31 — Public and I2P coexistence (bounded chapter complete)
+
+Qualified native source `0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df`: separate pure Public/I2P rows in one Host/profile, shared queue, independent controls/checkpoints and cumulative payload library totals. [Review](migration/evidence/20261031-public-i2p-coexistence/REVIEW.md). Whole-client parity remains in progress; mixed-network single torrents unsupported.
+
+STOP. Proposed next: Propose original mixed Public+I2P selection for one torrent, with explicit privacy/admission controls; do not start it.

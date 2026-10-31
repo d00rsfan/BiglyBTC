@@ -1,0 +1,14 @@
+{
+  "schema": "BIGLYBTC_PUBLIC_PRIVATE_COEXISTENCE_APPROVAL_V1",
+  "status": "ROOT_APPROVED_PUBLIC_PRIVATE_COEXISTENCE",
+  "scope": "same-image-separate-public-private-sessions",
+  "runtime_manifest_sha256": "62f7545f96af46806e7a7708213319ffd1e91c7a5228f0c35065eaa249a91343",
+  "source_build_record_sha256": "449aa82f665786ce63f4e1778cee23bf07ca45439b762cf283b67efd0d48af0f",
+  "artifact_sha256": "7ffbd4c63d7770168bcbdf8e8c19644e18d1509d57ac148331a3c4bd094310c4",
+  "private_approval_sha256": "f3ca7de94ca6beb12e0375293c9c74c3f78a34f7e4952e1a122ff0ae9dff1f83",
+  "review_sha256": "f3fd138ba481f93ea5db48eed077a577f7984bb4d47fa905f5e825c0e632a9e9",
+  "notes": [
+    "Six actual SDK role controls PASS; no provider/SDK change",
+    "Native coexistence and application qualification remain required; root review/approval is separate"
+  ]
+}

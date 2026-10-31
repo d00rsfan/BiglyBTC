@@ -1,0 +1,63 @@
+{
+  "status": "FAIL",
+  "lane": "default",
+  "cache": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-DBIGLYBTC_PERSISTENT_COEXISTENCE_RUNTIME=OFF"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "/home/yurii/Java/BiglyBT/build/coexist-20261031/default/r1/configure.log",
+      "log_sha256": "9fedd60eea589760444360d2bf5a7139f0477bf6a78ba32be291cd5459801156"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "1",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-managed-queue-tests",
+        "biglybtc-managed-download-tests",
+        "biglybtc-managed-tracker-tests",
+        "biglybtc-library-commands-bridge-tests",
+        "biglybtc-torrent-intake-file-options-tests",
+        "biglybtc-queue-policy-tests",
+        "biglybtc-queue-slots-tests",
+        "biglybtc-i2cp-initial-channel-tests",
+        "biglybtc-i2cp-datagram-channel-tests",
+        "biglybtc-i2cp-receive-channel-tests",
+        "biglybtc-i2cp-tracker-channel-tests",
+        "biglybtc-i2cp-stream-manager-tests",
+        "biglybtc-runtime-binding-driver",
+        "biglybtc-runtime-negative-driver",
+        "biglybtc-runtime-interposer",
+        "biglybtc-runtime-interposition-driver",
+        "biglybtc-torrent-intake-dialog-tests",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit_code": -15,
+      "timed_out": true,
+      "log": "/home/yurii/Java/BiglyBT/build/coexist-20261031/default/r1/build.log",
+      "log_sha256": "ce5485feb9a2a7b41f89a159734dd40653c94ebe184fb993bf407721d51dd02b"
+    }
+  ],
+  "source_map_sha256": "57b078690a2e3d8c6210be16b767de3ffdbab360de4d7f764eb62459a8b7e35d",
+  "failure": "build failed",
+  "elapsed_seconds": 1041.34
+}

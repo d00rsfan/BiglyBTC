@@ -1,0 +1,13 @@
+{
+  "policy": "owned /tmp/biglybtc* older than4h; preserve any same-user process cwd/exe/fd/map/cmdline reference; no symlink traversal",
+  "removed_count": 2601,
+  "removed_allocated_bytes": 935153664,
+  "removed_names_sha256": "644691a202daf24602cbbf26387e5042c7c9ec7a390f538e319f197c3473ebda",
+  "active_references_preserved": 0,
+  "remaining_name_count": 11,
+  "legacy_current_test_fixture_dirs_removed": 11,
+  "legacy_current_test_fixture_bytes_removed": 91947008,
+  "current_test_fixture_dirs_preserved_as_active": 0,
+  "current_tmp_biglybtc_count": 0,
+  "deployment_cleanup_now_automatic": true
+}
