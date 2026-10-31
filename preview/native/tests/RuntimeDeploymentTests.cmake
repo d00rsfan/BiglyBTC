@@ -2,6 +2,10 @@
 # and fixtures remain byte-exact; unbound legacy-fallback tests remain required.
 if(NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
   file(SHA256 "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" _biglybtc_deployment_manifest)
+  if(BIGLYBTC_PERSISTENT_MIXED_I2P_RUNTIME)
+    include("${CMAKE_CURRENT_LIST_DIR}/ProviderMixedRuntimeTests.cmake")
+    return()
+  endif()
   if(_biglybtc_deployment_manifest STREQUAL "010c6094b62e5e2e597ce6267b0125f6560d1a043a792218389ef4b962e871ae"
       OR _biglybtc_deployment_manifest STREQUAL "aa5f1767640fc1ca5f978360ddb8eebd26fc29b2f0c34b44fdf7416299a1bb3c")
     set(_biglybtc_deployment_mode source)

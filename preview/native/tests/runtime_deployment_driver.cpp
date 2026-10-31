@@ -137,7 +137,13 @@ int main(int argc, char** argv) {
       if (fault == "replace") { fs::copy_file(cleanup.saved, image); }
     }
     armed = true;
-#if defined(BIGLYBTC_COEXISTENCE_DEPLOYMENT) && BIGLYBTC_COEXISTENCE_DEPLOYMENT
+#if defined(BIGLYBTC_MIXED_DEPLOYMENT) && BIGLYBTC_MIXED_DEPLOYMENT
+#if !defined(BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND) || !BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND
+#error Mixed fixtures require the separately approved compiled39 role binding.
+#endif
+    const auto retainedPin = biglybtc::engine::detail::mixedI2pTransportRuntimePin();
+    const bool admitted = static_cast<bool>(retainedPin);
+#elif defined(BIGLYBTC_COEXISTENCE_DEPLOYMENT) && BIGLYBTC_COEXISTENCE_DEPLOYMENT
 #if !defined(BIGLYBTC_PERSISTENT_COEXISTENCE_BOUND) || !BIGLYBTC_PERSISTENT_COEXISTENCE_BOUND
 #error Coexistence fixtures require the separately approved compiled role binding.
 #endif
@@ -170,7 +176,9 @@ int main(int argc, char** argv) {
     std::cout << "case=" << fault << " admitted=" << admitted << " copied_opens=" << opens
         << " original_opens=" << originalOpens << " injected=" << injected << " real_bytes=" << readBytes
         << " mapped_copy=" << actual << '\n';
-#if defined(BIGLYBTC_COEXISTENCE_DEPLOYMENT) && BIGLYBTC_COEXISTENCE_DEPLOYMENT
+#if defined(BIGLYBTC_MIXED_DEPLOYMENT) && BIGLYBTC_MIXED_DEPLOYMENT
+    std::cout << "proof=mixed39 retained_pin=" << static_cast<bool>(retainedPin) << '\n';
+#elif defined(BIGLYBTC_COEXISTENCE_DEPLOYMENT) && BIGLYBTC_COEXISTENCE_DEPLOYMENT
     std::cout << "proof=coexistence34 retained_pin=" << static_cast<bool>(retainedPin) << '\n';
 #elif defined(BIGLYBTC_MAINLINE_ROUTING_DEPLOYMENT) && BIGLYBTC_MAINLINE_ROUTING_DEPLOYMENT
     std::cout << "proof=mainline_routing27 retained_pin=" << static_cast<bool>(retainedPin) << '\n';

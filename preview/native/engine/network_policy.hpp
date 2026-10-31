@@ -94,6 +94,10 @@ struct TorrentNetworkSelection {
 // Known malformed/routing-incompatible settings fail instead of enabling fallback.
 std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
     const core::Document* configuration, NetworkPolicyOptions options = {});
+// Explicit mixed-mode reader; default I2P selection is configuration, never
+// per-torrent/private-route authority. Saved rows still require exact networks.
+std::expected<NetworkPolicy, NetworkPolicyError> readMixedNetworkPolicy(
+    const core::Document* configuration, NetworkPolicyOptions options = {});
 
 // Validate requested selectors without OS access (Options/live-rate planning).
 std::expected<void, NetworkPolicyError> validateNetworkPolicy(const NetworkPolicy&);

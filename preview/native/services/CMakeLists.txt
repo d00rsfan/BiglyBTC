@@ -207,9 +207,14 @@ if(BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER)
     message(FATAL_ERROR "Explicit approved private SDK/image required; stock/published provider remains unsupported")
   endif()
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  set(_owned_i2p_source_capsule "63e9925c8f4f3e80168425d22b62ef87b23732eccff8fa1b7714f73f3f84e9c3")
+  if(BIGLYBTC_PERSISTENT_MIXED_I2P_RUNTIME)
+    # CLOSED: root replaces only after reviewed final source/artifact controls.
+    set(_owned_i2p_source_capsule "5557a8f7e9b1edc4ae1a7d9bb1b4392fddb6d9f5ba305454fdf462b38e45409d")
+  endif()
   execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/i2p_provider/verify-owner-approval.py"
     "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL}" "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256}"
-    "${_owned_i2p_dso}" "${_owned_i2p_sdk}" "63e9925c8f4f3e80168425d22b62ef87b23732eccff8fa1b7714f73f3f84e9c3"
+    "${_owned_i2p_dso}" "${_owned_i2p_sdk}" "${_owned_i2p_source_capsule}"
     "${CMAKE_CURRENT_BINARY_DIR}/private_i2p_runtime_config.hpp" RESULT_VARIABLE _owned_i2p_verify)
   if(NOT _owned_i2p_verify EQUAL 0)
     message(FATAL_ERROR "Private owner approval/SDK/artifact closure failed")

@@ -274,10 +274,12 @@ void TorrentIntakeDialog::setPreview(TorrentIntakePresentation packet) {
 }
 std::optional<TorrentIntakeNetwork> TorrentIntakeDialog::requestedNetwork()const {
   if(preview_&&preview_->i2pOnly){return TorrentIntakeNetwork::I2p;}
-  if(!preview_||!preview_->i2pAvailable){return TorrentIntakeNetwork::Public;}
+  if(!preview_||(!preview_->i2pAvailable&&!preview_->mixedAvailable)){return TorrentIntakeNetwork::Public;}
   if(!networkChoice_){return std::nullopt;}
   bool valid=false;const auto value=networkChoice_->currentData().toInt(&valid);
-  if(!valid||(value!=static_cast<int>(TorrentIntakeNetwork::Public)&&value!=static_cast<int>(TorrentIntakeNetwork::I2p))){return std::nullopt;}
+  if(!valid||(value!=static_cast<int>(TorrentIntakeNetwork::Public)
+      &&!(value==static_cast<int>(TorrentIntakeNetwork::I2p)&&preview_->i2pAvailable)
+      &&!(value==static_cast<int>(TorrentIntakeNetwork::Mixed)&&preview_->mixedAvailable))){return std::nullopt;}
   return static_cast<TorrentIntakeNetwork>(value);
 }
 bool TorrentIntakeDialog::setNetworkContext() {
@@ -285,11 +287,22 @@ bool TorrentIntakeDialog::setNetworkContext() {
   QPointer<QComboBox> choice=networkChoice_;
   const auto current=[&]{return guard&&session_==session&&preview_==frame&&choice&&networkChoice_==choice&&networkRow_&&network_;};
   if(!current()){return false;}
-  const bool only=frame&&frame->i2pOnly,available=frame&&frame->i2pAvailable&&!only;
-  if(!available){
+  const bool only=frame&&frame->i2pOnly,available=frame&&(frame->i2pAvailable||frame->mixedAvailable)&&!only;
+  {
     QSignalBlocker blocked(choice.data());
-    choice->setCurrentIndex(choice->findData(static_cast<int>(only?TorrentIntakeNetwork::I2p:TorrentIntakeNetwork::Public)));
-    if(!choice){blocked.dismiss();}if(!current()){return false;}
+    const auto alive=[&]{if(!choice){blocked.dismiss();}return current();};
+    bool removedSelection=false;
+    const bool includeI2p=!available||frame->i2pAvailable,includeMixed=available&&frame->mixedAvailable;
+    for(const auto candidate:{TorrentIntakeNetwork::I2p,TorrentIntakeNetwork::Mixed}){
+      const auto index=choice->findData(static_cast<int>(candidate));
+      const bool include=candidate==TorrentIntakeNetwork::I2p?includeI2p:includeMixed;
+      if(include&&index<0){choice->addItem(candidate==TorrentIntakeNetwork::I2p?tr("I2P"):tr("Public + I2P"),static_cast<int>(candidate));if(!alive()){return false;}}
+      else if(!include&&index>=0){removedSelection|=index==choice->currentIndex();choice->removeItem(index);if(!alive()){return false;}}
+    }
+    if(!available||removedSelection){
+      choice->setCurrentIndex(choice->findData(static_cast<int>(only?TorrentIntakeNetwork::I2p:TorrentIntakeNetwork::Public)));
+      if(!alive()){return false;}
+    }
   }
   networkRow_->setVisible(available);if(!current()){return false;}
   network_->setText(only?tr("Network: I2P only"):QString{});if(!current()){return false;}
@@ -298,7 +311,7 @@ bool TorrentIntakeDialog::setNetworkContext() {
   return setI2pContext(selected&&*selected==TorrentIntakeNetwork::I2p);
 }
 bool TorrentIntakeDialog::setI2pContext(bool i2pOnly) {
-  const bool coexistPublic=preview_&&preview_->i2pAvailable&&!preview_->i2pOnly&&!i2pOnly;
+  const bool coexistPublic=preview_&&(preview_->i2pAvailable||preview_->mixedAvailable)&&!preview_->i2pOnly&&!i2pOnly;
   if(i2pContext_==i2pOnly&&coexistPublicContext_==coexistPublic){return true;}
   const auto session=session_;const auto frame=preview_;QPointer<TorrentIntakeDialog> guard(this);
   QPointer<QComboBox> mode=startMode_;if(!mode||!network_){return false;}
@@ -388,7 +401,7 @@ void TorrentIntakeDialog::render() {
   table_->setEnabled(!busy_&&!pending());if(!current()||!table_){return;}
   priority_->setEnabled(!busy_&&!pending()&&bool(frame));if(!current()||!priority_){return;}
   startMode_->setEnabled(!busy_&&!pending()&&(!frame||model_->selectedBytes()!=0));if(!current()||!startMode_){return;}
-  networkChoice_->setEnabled(!busy_&&!pending()&&frame&&frame->i2pAvailable&&!frame->i2pOnly);if(!current()){return;}
+  networkChoice_->setEnabled(!busy_&&!pending()&&frame&&(frame->i2pAvailable||frame->mixedAvailable)&&!frame->i2pOnly);if(!current()){return;}
   sequential_->setEnabled(!busy_&&!pending());if(!current()||!sequential_){return;}
   downloadLimit_->setEnabled(!busy_&&!pending());if(!current()||!downloadLimit_){return;}
   uploadLimit_->setEnabled(!busy_&&!pending());if(!current()||!uploadLimit_){return;}
@@ -404,7 +417,7 @@ void TorrentIntakeDialog::render() {
   add_->setEnabled(session_&&!busy_&&!pending()&&valid&&selectedNetwork&&validTrackers&&validName&&path(destination_->text()));if(!current()||!add_){return;}
   QString status=failure_;
   if(status.isEmpty()){
-    status=!selectedNetwork?tr("Choose Public or I2P for this torrent.")
+    status=!selectedNetwork?tr("Choose an available network for this torrent.")
         :!validName?tr("Enter one safe file or folder name, up to 255 UTF8 bytes.")
         :!validTrackers?tr("Enter valid HTTP, HTTPS or UDP tracker URLs (up to 16 tiers and 64 URLs).")
         :loading_?tr("Loading torrent files…"):committing_?tr("Adding torrent…")
@@ -416,7 +429,8 @@ void TorrentIntakeDialog::render() {
   if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::AllocateStopped)||startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::AllocatePaused)){status+=tr("\nWrites and synchronizes new zero-filled files without downloading. Requires all real files selected and absent or unchanged full-size linear data. Allocated bytes are not verified pieces.");}
   if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::VerifySelected)){status+=tr("\nChecks every piece needed by selected files, including skipped-file boundary bytes. Other gaps stay unverified. No data is created, repaired or downloaded.");}
   if(frame&&selectedNetwork&&*selectedNetwork==TorrentIntakeNetwork::I2p){status+=tr("\nI2P supports Queued, Stopped and Paused. Force start, verify-existing and allocation modes are not available.");}
-  else if(frame&&frame->i2pAvailable&&selectedNetwork&&*selectedNetwork==TorrentIntakeNetwork::Public){status+=tr("\nPublic imports support Queued, Stopped, Paused and Forced in this session. Verify-existing and allocation modes are not available.");}
+  else if(frame&&(frame->i2pAvailable||frame->mixedAvailable)&&selectedNetwork&&*selectedNetwork==TorrentIntakeNetwork::Public){status+=tr("\nPublic imports support Queued, Stopped, Paused and Forced in this session. Verify-existing and allocation modes are not available.");}
+  else if(frame&&selectedNetwork&&*selectedNetwork==TorrentIntakeNetwork::Mixed){status+=tr("\nPublic + I2P uses both networks for this torrent. Queued, Stopped, Paused and Forced are supported. Verify-existing and allocation modes are not available.");}
   if(frame&&!frame->trackers){status+=tr("\nOriginal tracker fields are kept unchanged; this editor cannot represent their format or size.");}
   status_->setText(status.left(4096));
 }
@@ -428,7 +442,7 @@ void TorrentIntakeDialog::accept() {
   if(!validMode||mode<static_cast<int>(TorrentIntakeStartMode::Queued)||mode>static_cast<int>(TorrentIntakeStartMode::AllocatePaused)){return;}
   if(*selectedNetwork==TorrentIntakeNetwork::I2p&&mode!=static_cast<int>(TorrentIntakeStartMode::Queued)
       &&mode!=static_cast<int>(TorrentIntakeStartMode::Stopped)&&mode!=static_cast<int>(TorrentIntakeStartMode::Paused)){return;}
-  if(preview_->i2pAvailable&&*selectedNetwork==TorrentIntakeNetwork::Public&&mode>static_cast<int>(TorrentIntakeStartMode::Forced)){return;}
+  if((preview_->i2pAvailable||preview_->mixedAvailable)&&*selectedNetwork!=TorrentIntakeNetwork::I2p&&mode>static_cast<int>(TorrentIntakeStartMode::Forced)){return;}
   const bool selected=model_->selectedBytes()!=0;
   const auto allocation=mode==static_cast<int>(TorrentIntakeStartMode::AllocateStopped)?core::TorrentAllocationMode::Stopped
       :mode==static_cast<int>(TorrentIntakeStartMode::AllocatePaused)?core::TorrentAllocationMode::Paused:core::TorrentAllocationMode::None;

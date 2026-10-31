@@ -6,6 +6,7 @@
 #include <memory>
 #include <functional>
 
+namespace biglybtc::app {class OwnedMixedI2pService;}
 namespace biglybtc::services::i2p::provider {
 class OwnedTorrent;
 // Explicit optional private SAM-shaped endpoint, never a system SAM service.
@@ -28,10 +29,12 @@ signals:
 private:
   friend class OwnedTorrent;
   friend class OwnedProfile;
+  friend class biglybtc::app::OwnedMixedI2pService;
   struct Impl;std::unique_ptr<Impl> impl_;
   // Private ephemeral capability is transferred only into the exact measured
   // provider hook. Not exposed by a public config/read/observation interface.
   bool installProvider(std::function<bool(void*)>);
+  bool installMixedProvider(std::function<bool(void*)>);
   bool event(QEvent*)override;
 };
 }

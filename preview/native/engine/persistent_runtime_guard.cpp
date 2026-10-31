@@ -222,6 +222,18 @@ bool relocatableCoexistenceProviderArtifact() {
   return false;
 #endif
 }
+bool relocatableMixedProviderArtifact() {
+#if defined(BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND) && BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND
+  // Generated only after the separate CLOSED39 role/source verifier succeeds.
+  // The loaded image still passes every export/mapping/FD/digest check below.
+  return std::string_view(runtime_binding::mixed_approval_sha256).size()==64
+      && std::string_view(runtime_binding::source_capsule_sha256).size()==64
+      && std::string_view(runtime_binding::manifest).size()==64
+      && runtime_binding::bytes>0 && runtime_binding::bytes<=64ULL*1024*1024;
+#else
+  return false;
+#endif
+}
 bool hashed(int descriptor) {
   Digest context;
   if (!context.value || EVP_DigestInit_ex(context.value, EVP_sha256(), nullptr) != 1) { return false; }
@@ -260,7 +272,7 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
   const auto actual = canonicalPath(object->l_name);
   if (!actual || (std::string_view(actual->data()) != runtime_binding::artifact
                   && !relocatableSourceArtifact() && !relocatableSelectedProviderArtifact() && !relocatableNextProviderArtifact()
-                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact() && !relocatableMainlineProviderArtifact() && !relocatableOriginalIdentityProviderArtifact() && !relocatableMainlineRoutingProviderArtifact() && !relocatableCoexistenceProviderArtifact())) { return false; }
+                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact() && !relocatableMainlineProviderArtifact() && !relocatableOriginalIdentityProviderArtifact() && !relocatableMainlineRoutingProviderArtifact() && !relocatableCoexistenceProviderArtifact() && !relocatableMixedProviderArtifact())) { return false; }
   // These are ORIGINAL dynamic exports, not &method / __wrap_* references.
   // GNU --wrap test seams therefore do not misidentify the test executable as LT.
   constexpr const char* symbols[] = {
@@ -283,11 +295,14 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       "biglybtc_mainline_routing_abi_v1", "biglybtc_query_mainline_routing_v1",
       "biglybtc_private_i2p_owner_abi_v1", "biglybtc_configure_private_i2p_owner_v1",
       "biglybtc_read_private_i2p_owner_v1", "biglybtc_withdraw_private_i2p_owner_v1",
-      "biglybtc_private_i2p_torrents_abi_v1", "biglybtc_admit_private_i2p_torrent_v1", "biglybtc_revoke_private_i2p_torrent_v1"};
+      "biglybtc_private_i2p_torrents_abi_v1", "biglybtc_admit_private_i2p_torrent_v1", "biglybtc_revoke_private_i2p_torrent_v1",
+      "biglybtc_mixed_i2p_transport_abi_v1", "biglybtc_configure_mixed_i2p_transport_v1",
+      "biglybtc_admit_mixed_i2p_route_v1", "biglybtc_revoke_mixed_i2p_route_v1", "biglybtc_withdraw_mixed_i2p_transport_v1"};
   const bool coexistence = relocatableCoexistenceProviderArtifact();
-  const std::size_t required = coexistence ? 34 : socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
-  std::array<std::uintptr_t, 34> addresses{};
-  std::array<Mapping, 34> beforeMappings{};
+  const bool mixed = relocatableMixedProviderArtifact();
+  const std::size_t required = mixed ? 39 : coexistence ? 34 : socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
+  std::array<std::uintptr_t, 39> addresses{};
+  std::array<Mapping, 39> beforeMappings{};
   std::size_t at = 0;
   for (; at < required; ++at) {
     const auto* name = symbols[at];
@@ -325,12 +340,13 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
     if (!afterMapping || beforeMappings[i] != *afterMapping) { return false; }
   }
   if (!canonicalMatches(object->l_name, *actual)) { return false; }
-  if (coexistence) {
+  if (coexistence || mixed) {
     using Marker = unsigned (*)();
     // Call only after the exact image/mapping/FD/hash checks above. Keep the
     // default engine independent of optional private SDK header declarations.
     if (reinterpret_cast<Marker>(addresses[27])() != 0x42494f01U
-        || reinterpret_cast<Marker>(addresses[31])() != 0x42495401U) { return false; }
+        || reinterpret_cast<Marker>(addresses[31])() != 0x42495401U
+        || (mixed && reinterpret_cast<Marker>(addresses[34])() != 0x42494d01U)) { return false; }
   }
   if (retainedPin) {
     // Transfer, rather than reopen, the object which passed every mapping,
@@ -420,6 +436,19 @@ std::shared_ptr<void> managedTrackerResponseRuntimePin() noexcept {
 #if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
   try {std::shared_ptr<void> pin;if(!checkLoadedProvider(true,&pin,true,true,true,true,true,true)){return {};}return pin;}
   catch (...) {return {};}
+#else
+  return {};
+#endif
+}
+}
+
+namespace biglybtc::engine::detail {
+std::shared_ptr<void> mixedI2pTransportRuntimePin() noexcept {
+#if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
+  try {std::shared_ptr<void> pin;
+    if(!relocatableMixedProviderArtifact()||!checkLoadedProvider(true,&pin,true,true,true,true,true,true,true)){return {};}
+    return pin;
+  }catch(...){return {};}
 #else
   return {};
 #endif

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_source.hpp"
+#include "mixed_i2p_source.hpp"
 #include "sam_protocol.hpp"
 #include "file_io.hpp"
 #include "plugin_settings.hpp"
@@ -26,14 +27,14 @@ bool sameFile(const struct stat& a,const struct stat& b){return S_ISREG(a.st_mod
 bool absent(int directory,const std::string& name){struct stat st{};if(::fstatat(directory,name.c_str(),&st,AT_SYMLINK_NOFOLLOW)==0){return false;}return errno==ENOENT;}
 constexpr core::Limits SourceLimits{.inputBytes=8*1024*1024,.stringBytes=8*1024*1024,.nodes=100000,.depth=64};
 struct Stamp {std::string config,inventory,state;bool operator==(const Stamp&)const=default;};
-Stamp capture(const storage::ProfileLease& lease,const core::TorrentHash* hash,const std::string& directory,bool running=true){
+Stamp capture(const storage::ProfileLease& lease,const core::TorrentHash* hash,const std::string& directory,bool running=true,bool mixed=false){
   require(absent(lease.directoryHandle(),"biglybt.config.saving")&&absent(lease.directoryHandle(),"downloads.config.saving"),ErrorCode::Conflict,"Resolve owned I2P source recovery first");
   auto config=take(storage::ConfigFile::load(lease,"biglybt.config",SourceLimits));auto inventory=take(storage::ConfigFile::load(lease,"downloads.config",SourceLimits));
   require(config.recoverySource()==storage::RecoverySource::Primary&&inventory.recoverySource()==storage::RecoverySource::Primary&&unique(config.document().root())&&unique(inventory.document().root()),ErrorCode::Conflict,"Owned I2P requires unique primary sources");
   auto binding=storage::originalPluginBinding("azneti2phelper",directory);require(bool(binding),ErrorCode::InvalidFormat,"Invalid original I2P plugin directory");
   storage::OriginalPluginSettings settings(config.document(),std::move(*binding));
-  const bool enabled=settings.loadedAtStartup()&&settings.boolean("enable",true)&&settings.boolean("azi2phelper.pure.enabled",true);
-  require(enabled&&settings.wrongTypes().empty(),ErrorCode::Unsupported,"Original pure I2P identity is disabled or malformed");
+  const bool enabled=settings.loadedAtStartup()&&settings.boolean("enable",true)&&settings.boolean(mixed?"azi2phelper.mix.enabled":"azi2phelper.pure.enabled",true);
+  require(enabled&&settings.wrongTypes().empty(),ErrorCode::Unsupported,mixed?"Original mixed I2P identity is disabled or malformed":"Original pure I2P identity is disabled or malformed");
   auto library=core::readLibrary(inventory.document());require(bool(library)&&library->issues.empty(),ErrorCode::InvalidFormat,"Invalid owned I2P inventory");
   const auto* rows=inventory.document().find("downloads");if(rows){require(rows->type==core::Node::Type::List,ErrorCode::InvalidFormat,"Invalid I2P inventory rows");for(const auto& row:rows->children){require(unique(row),ErrorCode::InvalidFormat,"Duplicate I2P inventory row");}}
   else{for(std::size_t i=0;i<inventory.document().root().children.size();i+=2){const auto& row=inventory.document().root().children[i+1];if(row.type==core::Node::Type::Dictionary){require(unique(row),ErrorCode::InvalidFormat,"Duplicate legacy I2P inventory row");}}}
@@ -49,7 +50,12 @@ Stamp capture(const storage::ProfileLease& lease,const core::TorrentHash* hash,c
   auto store=take(storage::TorrentStateStore::open(lease));auto state=take(store.loadAttributes(lease,*hash));
   require(!state.recoveredBackup()&&unique(state.document().root()),ErrorCode::Conflict,"Resolve owned I2P metadata recovery first");
   const auto* attrs=state.document().find("attributes");require(attrs&&unique(*attrs),ErrorCode::InvalidFormat,"Unique owned I2P attributes required");
-  const auto* networks=attrs->find("networks");require(networks&&networks->type==core::Node::Type::List&&networks->children.size()==1&&networks->children[0].type==core::Node::Type::Bytes&&networks->children[0].bytes=="I2P",ErrorCode::Unsupported,"Dedicated owned admission requires only saved I2P network");
+  const auto* networks=attrs->find("networks");
+  const bool pure=networks&&networks->type==core::Node::Type::List&&networks->children.size()==1&&networks->children[0].type==core::Node::Type::Bytes&&networks->children[0].bytes=="I2P";
+  const bool both=networks&&networks->type==core::Node::Type::List&&networks->children.size()==2
+      &&networks->children[0].type==core::Node::Type::Bytes&&networks->children[1].type==core::Node::Type::Bytes
+      &&((networks->children[0].bytes=="Public"&&networks->children[1].bytes=="I2P")||(networks->children[0].bytes=="I2P"&&networks->children[1].bytes=="Public"));
+  require(mixed?both:pure,ErrorCode::Unsupported,mixed?"Mixed admission requires exact saved Public and I2P networks":"Dedicated owned admission requires only saved I2P network");
   if(const auto* flags=attrs->find("flags")){require(flags->type==core::Node::Type::Integer&&(static_cast<std::uint64_t>(flags->integer)&0x200U)==0,ErrorCode::Unsupported,"Full owned I2P metadata required");}
   const auto* sources=attrs->find("peersources");require(sources&&sources->type==core::Node::Type::List,ErrorCode::Unsupported,"Explicit original Tracker source required");
   bool tracker=false;for(const auto& item:sources->children){require(item.type==core::Node::Type::Bytes,ErrorCode::InvalidFormat,"Malformed I2P peer source");tracker|=item.bytes=="Tracker";}
@@ -96,8 +102,8 @@ std::string positionInvariant(const std::string& bytes,bool published=false){
     else{out+=raw(d,value);}
   }return out+'e';
 }
-Stamp memberCapture(const storage::ProfileLease& lease,const core::TorrentHash& hash,const std::string& directory,bool running=true){
-  auto value=capture(lease,&hash,directory,running);value.inventory=inventoryScope(value.inventory,hash,true);return value;
+Stamp memberCapture(const storage::ProfileLease& lease,const core::TorrentHash& hash,const std::string& directory,bool running=true,bool mixed=false){
+  auto value=capture(lease,&hash,directory,running,mixed);value.inventory=inventoryScope(value.inventory,hash,true);return value;
 }
 }
 struct ProfileSource::Impl {
@@ -108,7 +114,11 @@ struct ProfileSource::Impl {
   std::vector<Bound> bound;struct stat profileStat{},pluginsStat{},pluginStat{},keyStat{},activeStat{};
   std::optional<ClientIdentity> identity;Destination publicIdentity;std::optional<Stamp> stamp,accepted;
   std::vector<std::pair<Hash,std::uint16_t>> trackers;std::shared_ptr<i2cp::EffectAuthority> authority;std::atomic<bool> revoked{false},dirty{false};
-  bool session=false,publishing=false;
+  bool session=false,publishing=false,mixed=false;
+  std::optional<core::TorrentHash> publicationTarget;
+  std::shared_ptr<const engine::MixedManagedSource> managed;
+  bool managedCurrent()const noexcept{return !mixed||session||(managed&&managed->current());}
+  const char* keyName()const noexcept{return mixed?"dest_key.dat":"dest_key1.dat";}
   std::shared_ptr<ProfileSource> anchor;
   std::vector<std::weak_ptr<ProfileSource>> children;
   std::vector<engine::detail::ManagedPayloadClaim> claimed;
@@ -140,32 +150,33 @@ struct ProfileSource::Impl {
     return files&&activeCurrent&&lease->valid()&&::fstat(lease->directoryHandle(),&profile)==0&&sameDirectory(profileStat,profile)
       &&::fstat(plugins.get(),&a)==0&&sameDirectory(pluginsStat,a)&&::fstatat(lease->directoryHandle(),"plugins",&b,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(a,b)
       &&::fstat(plugin.get(),&c)==0&&sameDirectory(pluginStat,c)&&::fstatat(plugins.get(),directory.c_str(),&d,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(c,d)
-      &&::fstat(key.get(),&e)==0&&sameFile(keyStat,e)&&::fstatat(plugin.get(),"dest_key1.dat",&f,AT_SYMLINK_NOFOLLOW)==0&&sameFile(e,f);
+      &&::fstat(key.get(),&e)==0&&sameFile(keyStat,e)&&::fstatat(plugin.get(),keyName(),&f,AT_SYMLINK_NOFOLLOW)==0&&sameFile(e,f);
   }
 };
 ProfileSource::ProfileSource(std::unique_ptr<Impl> impl):impl_(std::move(impl)){}
 ProfileSource::~ProfileSource()=default;
 std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::open(const storage::ProfileLease& caller,const core::TorrentHash& hash,std::string directory){return openImpl(caller,hash,std::move(directory),false);}
 std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::createSession(const storage::ProfileLease& caller,std::string directory){return openImpl(caller,core::TorrentHash{},std::move(directory),true);}
-std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::openImpl(const storage::ProfileLease& caller,const core::TorrentHash& hash,std::string directory,bool session){
+std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::createMixedSession(const storage::ProfileLease& caller,std::string directory){return openImpl(caller,core::TorrentHash{},std::move(directory),true,true);}
+std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::openImpl(const storage::ProfileLease& caller,const core::TorrentHash& hash,std::string directory,bool session,bool mixed){
   try{
     auto retained=take(caller.retain());const auto& held=*retained;auto access=take(held.sourceAccess());
     auto binding=storage::originalPluginBinding("azneti2phelper",directory);require(bool(binding),ErrorCode::UnsafePath,"Invalid I2P plugin basename");
-    auto impl=std::make_unique<Impl>(retained,hash,std::move(directory),engine::OwnedI2pPolicy(retained,hash));
+    auto impl=std::make_unique<Impl>(retained,hash,std::move(directory),engine::OwnedI2pPolicy(mixed?std::shared_ptr<const storage::ProfileLease>{}:retained,hash));impl->mixed=mixed;
     require(::fstat(held.directoryHandle(),&impl->profileStat)==0&&S_ISDIR(impl->profileStat.st_mode)&&impl->profileStat.st_uid==::geteuid(),ErrorCode::UnsafePath,"Owned profile directory required");
     impl->plugins=Descriptor(::openat(held.directoryHandle(),"plugins",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
     require(impl->plugins.get()>=0&&::fstat(impl->plugins.get(),&impl->pluginsStat)==0,ErrorCode::UnsafePath,"Existing held plugin directories required");
     impl->plugin=Descriptor(::openat(impl->plugins.get(),impl->directory.c_str(),O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
     require(impl->plugin.get()>=0&&::fstat(impl->plugin.get(),&impl->pluginStat)==0,ErrorCode::UnsafePath,"Existing original I2P plugin directory required");
-    impl->key=Descriptor(::openat(impl->plugin.get(),"dest_key1.dat",O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));
-    require(impl->key.get()>=0&&::fstat(impl->key.get(),&impl->keyStat)==0&&S_ISREG(impl->keyStat.st_mode)&&impl->keyStat.st_uid==::geteuid()&&impl->keyStat.st_nlink==1&&(impl->keyStat.st_mode&0077)==0&&impl->keyStat.st_size>0&&impl->keyStat.st_size<=static_cast<off_t>(MaximumClientIdentityInputBytes),ErrorCode::UnsafePath,"Private original pure identity key required");
+    impl->key=Descriptor(::openat(impl->plugin.get(),impl->keyName(),O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));
+    require(impl->key.get()>=0&&::fstat(impl->key.get(),&impl->keyStat)==0&&S_ISREG(impl->keyStat.st_mode)&&impl->keyStat.st_uid==::geteuid()&&impl->keyStat.st_nlink==1&&(impl->keyStat.st_mode&0077)==0&&impl->keyStat.st_size>0&&impl->keyStat.st_size<=static_cast<off_t>(MaximumClientIdentityInputBytes),ErrorCode::UnsafePath,mixed?"Private original mixed identity key required":"Private original pure identity key required");
     std::array<Byte,MaximumClientIdentityInputBytes> bytes{};struct Wipe{decltype(bytes)& value;~Wipe(){OPENSSL_cleanse(value.data(),value.size());}} wipe{bytes};
     const auto size=static_cast<std::size_t>(impl->keyStat.st_size);std::size_t done=0;
     while(done<size){const auto n=::pread(impl->key.get(),bytes.data()+done,size-done,static_cast<off_t>(done));if(n<0&&errno==EINTR){continue;}require(n>0,ErrorCode::Io,"Cannot read original I2P identity");done+=static_cast<std::size_t>(n);}
     auto identity=decodeClientIdentity(View(bytes).first(size));require(bool(identity),ErrorCode::Unsupported,"Unsupported or invalid original I2P identity");
     impl->publicIdentity=*identity->destination();impl->identity.emplace(std::move(*identity));
     impl->session=session;
-    auto initial=capture(held,session?nullptr:&hash,impl->directory);
+    auto initial=capture(held,session?nullptr:&hash,impl->directory,true,impl->mixed);
     if(session){
       impl->bind(held.directoryHandle(),".azlock");impl->bind(held.directoryHandle(),"biglybt.config");impl->bind(held.directoryHandle(),"downloads.config");
       impl->active=Descriptor(::openat(held.directoryHandle(),"active",O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_DIRECTORY));
@@ -181,18 +192,19 @@ const std::shared_ptr<const storage::ProfileLease>& ProfileSource::lease()const 
 std::vector<int> ProfileSource::watchDescriptors()const{std::vector<int> result;for(int fd:{impl_->lease->directoryHandle(),impl_->plugins.get(),impl_->plugin.get(),impl_->key.get(),impl_->active.get()}){if(fd>=0){result.push_back(fd);}}for(const auto& file:impl_->bound){result.push_back(file.fd.get());}return result;}
 std::vector<int> ProfileSource::criticalWatchDescriptors()const{std::vector<int> result;if(impl_->key.get()>=0){result.push_back(impl_->key.get());}for(const auto& file:impl_->bound){if(file.name==".azlock"||file.name=="biglybt.config"){result.push_back(file.fd.get());}}return result;}
 bool ProfileSource::groupMode()const noexcept{return impl_->session||bool(impl_->anchor);}
+bool ProfileSource::mixedMode()const noexcept{return impl_->mixed;}
 void ProfileSource::invalidate()noexcept{impl_->dirty=true;if(impl_->anchor){impl_->anchor->impl_->dirty=true;}}
 const Destination& ProfileSource::destination()const noexcept{return impl_->publicIdentity;}
 const engine::OwnedI2pPolicy& ProfileSource::policy()const noexcept{return impl_->policy;}
 const core::TorrentHash& ProfileSource::hash()const noexcept{return impl_->hash;}
-bool ProfileSource::prepared()const noexcept{return impl_->stamp.has_value()&&!impl_->revoked;}
+bool ProfileSource::prepared()const noexcept{return impl_->stamp.has_value()&&!impl_->revoked&&impl_->managedCurrent();}
 void ProfileSource::revoke()noexcept{impl_->revoked=true;if(impl_->authority){impl_->authority->revoke();}}
 std::shared_ptr<i2cp::EffectAuthority> ProfileSource::effectAuthority()const noexcept{return impl_->authority;}
-bool ProfileSource::revisionCurrent(std::uint64_t revision)const noexcept{return !impl_->revoked&&!impl_->dirty&&(!impl_->anchor||(!impl_->anchor->impl_->revoked&&!impl_->anchor->impl_->dirty))&&impl_->lease->sourceRevision()==revision;}
+bool ProfileSource::revisionCurrent(std::uint64_t revision)const noexcept{return !impl_->revoked&&!impl_->dirty&&impl_->managedCurrent()&&(!impl_->anchor||(!impl_->anchor->impl_->revoked&&!impl_->anchor->impl_->dirty))&&impl_->lease->sourceRevision()==revision;}
 bool ProfileSource::trackerAllowed(const Hash& hash,std::uint16_t port)const noexcept{
   if(impl_->revoked){return false;}if(impl_->session){auto grants=impl_->trackerGrants.load();if(!grants){return false;}
-    return std::any_of(grants->begin(),grants->end(),[&](const auto& grant){auto child=grant.child.lock();return child&&!child->impl_->revoked&&grant.hash==hash&&grant.port==port;});}
-  return std::find(impl_->trackers.begin(),impl_->trackers.end(),std::pair{hash,port})!=impl_->trackers.end();
+    return std::any_of(grants->begin(),grants->end(),[&](const auto& grant){auto child=grant.child.lock();return child&&!child->impl_->revoked&&child->impl_->managedCurrent()&&grant.hash==hash&&grant.port==port;});}
+  return impl_->managedCurrent()&&std::find(impl_->trackers.begin(),impl_->trackers.end(),std::pair{hash,port})!=impl_->trackers.end();
 }
 std::expected<ClientIdentity,storage::Error> ProfileSource::takeIdentity(){
   auto valid=validate();if(!valid){return std::unexpected(valid.error());}
@@ -200,6 +212,7 @@ std::expected<ClientIdentity,storage::Error> ProfileSource::takeIdentity(){
   ClientIdentity result=std::move(*impl_->identity);impl_->identity.reset();return result;
 }
 std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prepareStorage(){
+  if(impl_->mixed){return std::unexpected(Error{ErrorCode::Unsupported,"Mixed source borrows the sole engine storage admission"});}
   if(impl_->session){return std::unexpected(Error{ErrorCode::Unsupported,"Session anchor has no payload admission"});}
   if(!impl_->anchor){return prepareStorageDirect();}
   std::optional<engine::detail::ManagedStorage> result;
@@ -210,8 +223,8 @@ std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prep
 }
 std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prepareStorageDirect(){
   try{auto access=take(impl_->lease->sourceAccess());require(!impl_->session&&!impl_->stamp&&!impl_->revoked&&impl_->namedCurrent(),ErrorCode::Conflict,"Owned I2P preparation is one-shot/current");
-    if(impl_->anchor){require(impl_->accepted&&memberCapture(*impl_->lease,impl_->hash,impl_->directory)==*impl_->accepted,ErrorCode::Conflict,"I2P child source changed after acceptance");}
-    else{static_cast<void>(capture(*impl_->lease,&impl_->hash,impl_->directory));}
+    if(impl_->anchor){require(impl_->accepted&&memberCapture(*impl_->lease,impl_->hash,impl_->directory,true,impl_->mixed)==*impl_->accepted,ErrorCode::Conflict,"I2P child source changed after acceptance");}
+    else{static_cast<void>(capture(*impl_->lease,&impl_->hash,impl_->directory,true,impl_->mixed));}
     auto storage=take(engine::detail::ManagedStorage::prepareOwnedI2p(*impl_->lease,impl_->hash,impl_->policy,impl_->claimed,impl_->retainedIdentities));
     std::vector<std::string> urls=storage.parameters().trackers;for(const auto& entry:storage.parameters().ti->trackers()){if(std::find(urls.begin(),urls.end(),entry.url)==urls.end()){urls.push_back(entry.url);}}
     require(!urls.empty()&&urls.size()<=4,ErrorCode::Unsupported,"One to four exact I2P HTTP trackers required");
@@ -222,7 +235,7 @@ std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prep
     }
     if(!impl_->anchor){impl_->bind(impl_->lease->directoryHandle(),".azlock");impl_->bind(impl_->lease->directoryHandle(),"biglybt.config");impl_->bind(impl_->lease->directoryHandle(),"downloads.config");}
     impl_->bind(impl_->active.get(),impl_->hash.hex()+".dat");
-    impl_->stamp=impl_->anchor?memberCapture(*impl_->lease,impl_->hash,impl_->directory):capture(*impl_->lease,&impl_->hash,impl_->directory);
+    impl_->stamp=impl_->anchor?memberCapture(*impl_->lease,impl_->hash,impl_->directory,true,impl_->mixed):capture(*impl_->lease,&impl_->hash,impl_->directory,true,impl_->mixed);
     require(impl_->namedCurrent(),ErrorCode::Conflict,"Owned I2P source changed during storage preparation");
     if(impl_->anchor){impl_->admissionClaims.assign(storage.claims().begin(),storage.claims().end());impl_->admissionIdentity=storage.identity();}
     const std::weak_ptr<ProfileSource> source=shared_from_this();impl_->authority=std::shared_ptr<i2cp::EffectAuthority>(new i2cp::EffectAuthority([source](std::uint64_t revision){auto held=source.lock();return held&&held->revisionCurrent(revision);},impl_->lease->sourceRevision()));return storage;
@@ -231,32 +244,49 @@ std::expected<engine::detail::ManagedStorage,storage::Error> ProfileSource::prep
 std::expected<void,storage::Error> ProfileSource::validate()const{
   try{auto alias=take(impl_->lease->retain());auto access=take(alias->sourceAccess());
     require(!impl_->revoked,ErrorCode::Conflict,"Owned I2P source is revoked");
+    require(!impl_->mixed||impl_->session||!impl_->stamp||impl_->managedCurrent(),ErrorCode::Conflict,"Mixed engine admission is no longer current");
     if(impl_->anchor){
       auto valid=impl_->anchor->validate();if(!valid){return std::unexpected(valid.error());}
       require(impl_->namedCurrent(),ErrorCode::Conflict,"I2P child metadata path changed");
-      const auto now=memberCapture(*impl_->lease,impl_->hash,impl_->directory);require(!impl_->snapshot()||now==*impl_->snapshot(),ErrorCode::Conflict,"I2P selected source changed");
+      const auto now=memberCapture(*impl_->lease,impl_->hash,impl_->directory,true,impl_->mixed);require(!impl_->snapshot()||now==*impl_->snapshot(),ErrorCode::Conflict,"I2P selected source changed");
     }else{
       require(impl_->namedCurrent(),ErrorCode::Conflict,"Original I2P identity source is no longer current");
-      const auto now=capture(*impl_->lease,impl_->session?nullptr:&impl_->hash,impl_->directory);
+      const auto now=capture(*impl_->lease,impl_->session?nullptr:&impl_->hash,impl_->directory,true,impl_->mixed);
       require(!impl_->stamp||now==*impl_->stamp,ErrorCode::Conflict,"Owned I2P profile source changed");
       if(impl_->session){for(const auto& weak:impl_->children){if(auto child=weak.lock();child&&!child->impl_->revoked&&child->impl_->snapshot()){
-        require(child->impl_->namedCurrent()&&memberCapture(*impl_->lease,child->impl_->hash,impl_->directory)==*child->impl_->snapshot(),ErrorCode::Conflict,"Active I2P child source changed");}}}
+        require(child->impl_->namedCurrent()&&memberCapture(*impl_->lease,child->impl_->hash,impl_->directory,true,child->impl_->mixed)==*child->impl_->snapshot(),ErrorCode::Conflict,"Active I2P child source changed");}}}
     }
     require(impl_->namedCurrent(),ErrorCode::Conflict,"Original I2P source changed while reading");impl_->dirty=false;return {};
   }catch(const Rejected& error){const_cast<ProfileSource*>(this)->revoke();return std::unexpected(error.error);}catch(...){const_cast<ProfileSource*>(this)->revoke();return std::unexpected(Error{ErrorCode::Io,"Owned I2P source validation failed"});}
+}
+std::expected<void,storage::Error> ProfileSource::validateTransportSnapshot()const{
+  try{auto alias=take(impl_->lease->retain());auto access=take(alias->sourceAccess());
+    // Transport close revokes effects before reporting why it closed. Inspect
+    // the held source independently; this never blesses a revoked generation.
+    const auto& root=impl_->anchor?*impl_->anchor->impl_:*impl_;
+    require(root.namedCurrent()&&root.snapshot(),ErrorCode::Conflict,"I2P transport source no longer names its accepted snapshot");
+    const auto common=capture(*root.lease,root.session?nullptr:&root.hash,root.directory,false,root.mixed);
+    require(common==*root.snapshot(),ErrorCode::Conflict,"I2P transport profile source changed");
+    if(root.session){for(const auto& weak:root.children){if(auto child=weak.lock();child&&child->impl_->snapshot()){
+      require(child->impl_->namedCurrent()&&memberCapture(*root.lease,child->hash(),root.directory,false,child->impl_->mixed)==*child->impl_->snapshot(),ErrorCode::Conflict,"I2P transport member source changed");
+    }}}
+    if(impl_->anchor){require(impl_->namedCurrent()&&impl_->snapshot()
+        &&memberCapture(*impl_->lease,impl_->hash,impl_->directory,false,impl_->mixed)==*impl_->snapshot(),ErrorCode::Conflict,"I2P transport selected source changed");}
+    require(root.namedCurrent(),ErrorCode::Conflict,"I2P transport source changed while reading");return {};
+  }catch(const Rejected& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot inspect withdrawn I2P transport source"});}
 }
 std::expected<void,storage::Error> ProfileSource::validateRetiredSnapshot()const{
   try{auto alias=take(impl_->lease->retain());auto access=take(alias->sourceAccess());
     require(impl_->stamp&&impl_->namedCurrent(),ErrorCode::Conflict,"Retired I2P source no longer names its exact prepared snapshot");
     if(impl_->anchor){auto valid=impl_->anchor->validate();if(!valid){return std::unexpected(valid.error());}}
-    const auto now=impl_->anchor?memberCapture(*impl_->lease,impl_->hash,impl_->directory,false):capture(*impl_->lease,&impl_->hash,impl_->directory);
+    const auto now=impl_->anchor?memberCapture(*impl_->lease,impl_->hash,impl_->directory,false,impl_->mixed):capture(*impl_->lease,&impl_->hash,impl_->directory,true,impl_->mixed);
     require(now==*impl_->stamp&&impl_->namedCurrent(),ErrorCode::Conflict,"Retired I2P source changed before checkpoint");
     return {}; // Read-only; intentionally never restores revoked effects.
   }catch(const Rejected& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot validate retired I2P source snapshot"});}
 }
 std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::prepareChild(const core::TorrentHash& hash,
     std::span<const engine::detail::ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> identities){
-  try{auto access=take(impl_->lease->sourceAccess());require(impl_->session&&!impl_->publishing,ErrorCode::Conflict,"I2P child requires its session anchor");
+  try{auto access=take(impl_->lease->sourceAccess());require(impl_->session&&!impl_->mixed&&!impl_->publishing,ErrorCode::Conflict,"Pure I2P child requires its pure session anchor");
     auto current=validate();if(!current){return std::unexpected(current.error());}
     require(claimed.size()<=engine::detail::MaximumManagedPayloadClaims&&identities.size()<=engine::detail::MaximumManagedPayloadClaims,ErrorCode::Unsupported,"I2P retained admission bound");
     std::erase_if(impl_->children,[](const auto& weak){return weak.expired();});
@@ -267,7 +297,7 @@ std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::prep
       if(child->impl_->admissionIdentity){const auto& required=*child->impl_->admissionIdentity;
         require(std::any_of(identities.begin(),identities.end(),[&](const auto& value){return value.originalKey==required.originalKey&&value.selected==required.selected&&value.full==required.full;}),ErrorCode::Conflict,"Retained I2P sibling full identity omitted");}
     }}
-    auto accepted=memberCapture(*impl_->lease,hash,impl_->directory);
+    auto accepted=memberCapture(*impl_->lease,hash,impl_->directory,true,impl_->mixed);
     auto data=std::make_unique<Impl>(impl_->lease,hash,impl_->directory,engine::OwnedI2pPolicy(impl_->lease,hash));
     data->anchor=shared_from_this();data->publicIdentity=impl_->publicIdentity;data->accepted=std::move(accepted);
     data->active=Descriptor(::openat(impl_->lease->directoryHandle(),"active",O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_DIRECTORY));
@@ -276,6 +306,66 @@ std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::prep
     data->claimed.assign(claimed.begin(),claimed.end());data->retainedIdentities.assign(identities.begin(),identities.end());
     auto child=std::shared_ptr<ProfileSource>(new ProfileSource(std::move(data)));impl_->children.push_back(child);return child;
   }catch(const Rejected& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot prepare owned I2P child"});}
+}
+std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::prepareMixedChild(const core::TorrentHash& hash){
+  try{auto access=take(impl_->lease->sourceAccess());
+    require(impl_->session&&impl_->mixed&&!impl_->publishing,ErrorCode::Conflict,"Mixed child requires its mixed session anchor");
+    auto current=validate();if(!current){return std::unexpected(current.error());}
+    std::erase_if(impl_->children,[](const auto& weak){return weak.expired();});
+    require(impl_->children.size()<32,ErrorCode::Unsupported,"I2P session member bound");
+    for(const auto& weak:impl_->children){if(auto child=weak.lock()){require(child->hash()!=hash,ErrorCode::Conflict,"Mixed child already retained");}}
+    auto accepted=memberCapture(*impl_->lease,hash,impl_->directory,true,true);
+    // Deliberately no OwnedI2pPolicy mint and no payload/path preparation.
+    auto data=std::make_unique<Impl>(impl_->lease,hash,impl_->directory,engine::OwnedI2pPolicy({},hash));
+    data->mixed=true;data->anchor=shared_from_this();data->publicIdentity=impl_->publicIdentity;data->accepted=std::move(accepted);
+    data->active=Descriptor(::openat(impl_->lease->directoryHandle(),"active",O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_DIRECTORY));
+    require(data->active.get()>=0&&::fstat(data->active.get(),&data->activeStat)==0,ErrorCode::UnsafePath,"Held mixed metadata directory required");
+    data->bind(data->active.get(),hash.hex()+".dat");require(data->namedCurrent(),ErrorCode::Conflict,"Mixed child changed while accepting");
+    auto child=std::shared_ptr<ProfileSource>(new ProfileSource(std::move(data)));impl_->children.push_back(child);return child;
+  }catch(const Rejected& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot accept mixed I2P metadata source"});}
+}
+std::expected<void,storage::Error> ProfileSource::bindMixedManaged(std::shared_ptr<const engine::MixedManagedSource> managed){
+  try{auto access=take(impl_->lease->sourceAccess());
+    require(impl_->mixed&&!impl_->session&&impl_->anchor&&!impl_->revoked&&!impl_->stamp&&!impl_->managed&&impl_->accepted,
+        ErrorCode::Conflict,"Mixed engine binding is one-shot");
+    auto& root=*impl_->anchor->impl_;
+    require(root.mixed&&root.publishing&&root.publicationTarget&&*root.publicationTarget==impl_->hash&&!root.revoked,
+        ErrorCode::Conflict,"Mixed binding requires its actual target storage publication");
+    require(managed&&managed->current()&&managed->admission()&&managed->lease().sharesOwnership(*impl_->lease)
+        &&managed->identity().originalKey==impl_->hash,ErrorCode::Conflict,"Actual same-profile mixed engine admission required");
+    auto selected=storage::validateOriginalTorrentKey(managed->identity(),impl_->hash);require(bool(selected),ErrorCode::Conflict,"Mixed engine full identity does not match saved selection");
+    auto now=memberCapture(*impl_->lease,impl_->hash,impl_->directory,true,true);
+    require(now.config==impl_->accepted->config&&now.state==managed->stateSnapshot(),ErrorCode::Conflict,"Mixed metadata differs from actual prepared engine source");
+    require(managed->claims().size()<=engine::detail::MaximumManagedPayloadClaims,ErrorCode::Unsupported,"Mixed admission payload claim bound");
+    std::vector<engine::detail::ManagedPayloadClaim> claims(managed->claims().begin(),managed->claims().end());
+    std::vector<std::pair<Hash,std::uint16_t>> trackers;
+    for(const auto& url:managed->trackers()){
+      const auto scheme=url.find("://");if(scheme==std::string::npos){continue;}
+      std::string_view authority(url);authority.remove_prefix(scheme+3);authority=authority.substr(0,authority.find_first_of("/?#"));
+      const auto colon=authority.find(':');const auto host=authority.substr(0,colon);
+      if(!host.ends_with(".b32.i2p")){continue;} // Public endpoints never enter the I2P grant set.
+      require(url.starts_with("http://")&&url.size()<=2048&&url.find_first_of("\r\n\t ")==std::string::npos&&url.find('\0')==std::string::npos,
+          ErrorCode::Unsupported,"Mixed I2P tracker requires bounded original HTTP routing");
+      const auto hash=hashName(host);const auto port=colon==std::string_view::npos?std::optional<std::uint64_t>(80):decimal(authority.substr(colon+1),65535);
+      require(hash&&port&&*port,ErrorCode::Unsupported,"Mixed I2P tracker requires exact b32 hash/numeric port");
+      const auto grant=std::pair{*hash,static_cast<std::uint16_t>(*port)};
+      if(std::find(trackers.begin(),trackers.end(),grant)==trackers.end()){trackers.push_back(grant);}
+      require(trackers.size()<=4,ErrorCode::Unsupported,"Mixed I2P tracker grant bound");
+    }
+    const std::weak_ptr<ProfileSource> source=shared_from_this();
+    auto authority=std::shared_ptr<i2cp::EffectAuthority>(new i2cp::EffectAuthority([source](std::uint64_t revision){auto held=source.lock();return held&&held->revisionCurrent(revision);},impl_->lease->sourceRevision()));
+    // Re-open only the target's actual postprepare source. The surrounding
+    // publication independently checks config/key, inventory and all siblings.
+    impl_->bind(impl_->active.get(),impl_->hash.hex()+".dat");
+    require(impl_->namedCurrent()&&memberCapture(*impl_->lease,impl_->hash,impl_->directory,true,true)==now
+        &&managed->current()&&!impl_->revoked&&!root.revoked,ErrorCode::Conflict,"Mixed admission changed before binding");
+    impl_->admissionIdentity=managed->identity();impl_->admissionClaims=std::move(claims);impl_->trackers=std::move(trackers);
+    impl_->managed=std::move(managed);impl_->stamp=std::move(now);impl_->authority=std::move(authority);return {};
+  }catch(const Rejected& error){revoke();return std::unexpected(error.error);}catch(...){revoke();return std::unexpected(Error{ErrorCode::Io,"Cannot bind actual mixed managed source"});}
+}
+std::expected<void,storage::Error> ProfileSource::releaseMixedChild(const core::TorrentHash& hash){
+  if(!impl_->mixed||!impl_->session){return std::unexpected(Error{ErrorCode::Unsupported,"Mixed release requires its mixed session anchor"});}
+  return releaseChild(hash);
 }
 std::expected<void,storage::Error> ProfileSource::publish(const core::TorrentHash& target,
     const std::function<std::expected<void,storage::Error>()>& operation){return publishImpl(target,operation);}
@@ -290,24 +380,25 @@ std::expected<void,storage::Error> ProfileSource::publishImpl(const std::optiona
     struct BeforeMember {std::shared_ptr<ProfileSource> source;Stamp stamp;std::vector<BeforeName> names;};
     std::vector<BeforeMember> members;
     for(const auto& weak:impl_->children){if(auto child=weak.lock()){
-      BeforeMember before{child,memberCapture(*impl_->lease,child->hash(),impl_->directory,false),{}};
+      BeforeMember before{child,memberCapture(*impl_->lease,child->hash(),impl_->directory,false,child->impl_->mixed),{}};
       for(const auto& bound:child->impl_->bound){before.names.push_back({bound.directory,bound.name,bound.stat});}members.push_back(std::move(before));}}
-    impl_->publishing=true;struct Reset {bool& value;~Reset(){value=false;}} reset{impl_->publishing};
+    impl_->publishing=true;impl_->publicationTarget=target;
+    struct Reset {Impl& value;~Reset(){value.publishing=false;value.publicationTarget.reset();}} reset{*impl_};
     auto result=operation();if(!result){
       // A rejected command may advance the cooperative epoch before any write.
       // Independent before-images prevent a changed target from blessing itself
       // by updating its own stored snapshot in the callback.
-      bool unchanged=impl_->namedCurrent()&&capture(*impl_->lease,nullptr,impl_->directory)==*impl_->stamp;
+      bool unchanged=impl_->namedCurrent()&&capture(*impl_->lease,nullptr,impl_->directory,true,impl_->mixed)==*impl_->stamp;
       for(const auto& before:members){
         unchanged=unchanged&&before.source->impl_->namedCurrent()
-            &&memberCapture(*impl_->lease,before.source->hash(),impl_->directory,false)==before.stamp;
+            &&memberCapture(*impl_->lease,before.source->hash(),impl_->directory,false,before.source->impl_->mixed)==before.stamp;
         for(const auto& file:before.names){struct stat named{};unchanged=unchanged&&::fstatat(file.directory,file.name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&sameFile(file.value,named);}
       }
       if(!unchanged){revoke();}else{impl_->dirty=false;if(impl_->authority){impl_->authority->revision_=impl_->lease->sourceRevision();}}
       return std::unexpected(result.error());
     }
     require(!impl_->revoked,ErrorCode::Cancelled,"I2P group retired during publication");
-    auto after=capture(*impl_->lease,nullptr,impl_->directory);
+    auto after=capture(*impl_->lease,nullptr,impl_->directory,true,impl_->mixed);
     require(after.config==impl_->stamp->config&&(target?inventoryScope(after.inventory,*target,false):positionInvariant(after.inventory,true))==others,ErrorCode::Conflict,"I2P publication changed unrelated source rows");
     // Immutable common named files remain exact. Only downloads.config may have
     // been durably replaced by this actual trusted operation.
@@ -319,7 +410,7 @@ std::expected<void,storage::Error> ProfileSource::publishImpl(const std::optiona
     for(const auto& weak:impl_->children){if(auto child=weak.lock();child&&child->impl_->snapshot()){
       auto& member=*child->impl_;
       if(!target){
-        auto now=memberCapture(*impl_->lease,member.hash,impl_->directory,false);const auto& before=*member.snapshot();
+        auto now=memberCapture(*impl_->lease,member.hash,impl_->directory,false,member.mixed);const auto& before=*member.snapshot();
         require(member.namedCurrent()&&now.config==before.config&&now.state==before.state
             &&positionInvariant(now.inventory,true)==positionInvariant(before.inventory),ErrorCode::Conflict,"I2P position publication changed child state");
         if(member.stamp){member.stamp->inventory=std::move(now.inventory);}else{member.accepted->inventory=std::move(now.inventory);}
@@ -329,10 +420,10 @@ std::expected<void,storage::Error> ProfileSource::publishImpl(const std::optiona
         const bool started=std::any_of(saved.downloads.begin(),saved.downloads.end(),[&](const auto& row){return row.hash&&*row.hash==*target&&row.persistent&&row.startup!=core::StartupState::Stopped;})
             &&std::none_of(saved.paused.begin(),saved.paused.end(),[&](const auto& pause){return pause.hash==*target;});
         if(!started){child->revoke();}else if(member.stamp){
-          member.stamp=memberCapture(*impl_->lease,*target,impl_->directory);
+          member.stamp=memberCapture(*impl_->lease,*target,impl_->directory,true,member.mixed);
           member.bind(member.active.get(),target->hex()+".dat");require(member.namedCurrent(),ErrorCode::Conflict,"Published I2P child path changed");
-        }else{require(member.namedCurrent()&&memberCapture(*impl_->lease,*target,impl_->directory)==*member.accepted,ErrorCode::Conflict,"Unprepared I2P child changed during publication");}
-      }else if(!member.revoked){require(member.namedCurrent()&&memberCapture(*impl_->lease,member.hash,impl_->directory)==*member.snapshot(),ErrorCode::Conflict,"I2P publication changed sibling metadata");}
+        }else{require(member.namedCurrent()&&memberCapture(*impl_->lease,*target,impl_->directory,true,member.mixed)==*member.accepted,ErrorCode::Conflict,"Unprepared I2P child changed during publication");}
+      }else if(!member.revoked){require(member.namedCurrent()&&memberCapture(*impl_->lease,member.hash,impl_->directory,true,member.mixed)==*member.snapshot(),ErrorCode::Conflict,"I2P publication changed sibling metadata");}
     }}
     impl_->stamp=std::move(after);impl_->refreshTrackers();impl_->dirty=false;
     // Verified publication updates currentness, never a one-shot effect grant.

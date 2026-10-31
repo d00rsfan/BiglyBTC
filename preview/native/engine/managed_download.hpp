@@ -77,5 +77,6 @@ struct ManagedDownloadOptions {
   // A caller-supplied real monotone deadline; absent uses five minutes.
   std::optional<std::chrono::steady_clock::time_point> verificationDeadline{};
   core::TorrentAllocationMode allocationMode=core::TorrentAllocationMode::None;
+  bool mixedNetworks=false; // Explicit prepared Public+I2P choice; not a route grant.
 };
 } // namespace biglybtc::engine

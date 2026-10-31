@@ -3,6 +3,8 @@
 #include "owner.hpp"
 #include "coexist_queue.hpp"
 #include "biglybtc/queue_policy.hpp"
+#include <array>
+#include <cstdint>
 #include <functional>
 #include <span>
 #include <vector>
@@ -77,7 +79,11 @@ public:
   OwnedTorrent::RetirementObservation retirement(const core::TorrentHash&);
   std::expected<void,storage::Error> release(const core::TorrentHash&);
   std::vector<Observation> observations();
+  // Explicit passive query on the owner thread only; no polling/IO/effect permit.
+  std::vector<std::array<std::uint8_t,20>> peerIds(const core::TorrentHash&)const;
   Phase phase()const noexcept;
+  bool sourceCurrent()const noexcept;
+  void revokeSource()noexcept; // Atomic source revocation; no Qt or SDK wait.
   void close();
   void join(); // External lifetime only, after close.
 private:

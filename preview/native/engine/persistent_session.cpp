@@ -14,6 +14,8 @@
 #include "effective_rate_limits.hpp"
 #include "peer_payload_observer.hpp"
 #include "managed_storage.hpp"
+#include "mixed_i2p_source.hpp"
+#include "mixed_i2p_transport.hpp"
 #include "library_commands.hpp"
 #include "queue_positions.hpp"
 #include "magnet_intake.hpp"
@@ -102,6 +104,8 @@ struct PersistentSession::Impl {
   struct Managed {
     std::unique_ptr<OperationToken> token;
     detail::ManagedStorage storage;
+    std::shared_ptr<detail::MixedManagedLifetime> mixedLifetime;
+    std::shared_ptr<const MixedManagedSource> mixedSource;
     std::shared_ptr<detail::ManagedPayloadCounters> payloadCounters = std::make_shared<detail::ManagedPayloadCounters>();
     lt::torrent_handle handle;
     ManagedDownloadStatus status;
@@ -172,6 +176,7 @@ struct PersistentSession::Impl {
     Managed(std::uint64_t id, detail::ManagedStorage files, const core::TorrentHash& hash)
         : token(std::make_unique<OperationToken>(OperationToken{id})), storage(std::move(files)),
           status{.hash = hash, .admission = id} {idleUpload=core::QueueIdleUploadAge(storage.queueMetadata().secondsSinceUpload);}
+    ~Managed(){if(mixedLifetime){mixedLifetime->attached=false;mixedLifetime->retained=false;}}
   };
   std::map<std::string, std::unique_ptr<Managed>> managed;
   std::map<lt::torrent_handle, Managed*> managedByHandle;
@@ -230,6 +235,10 @@ struct PersistentSession::Impl {
   const std::int64_t origin = static_cast<std::int64_t>(Clock::now().time_since_epoch().count());
   std::shared_ptr<core::PeerPayloadLedger> peerPayloadLedger{};
   std::unique_ptr<lt::session> session{};
+  bool mixedNetworks=false;
+  std::shared_ptr<const detail::MixedManagedOrigin> mixedOrigin;
+  PersistentSession::MixedSourceBinding mixedBinder;
+  std::shared_ptr<MixedI2pTransport> mixedTransport;
   AccountingState phase = AccountingState::Starting;
   core::SessionRateLimits rateLimits{};
   bool call = false;
@@ -553,6 +562,8 @@ struct PersistentSession::Impl {
     retireMainlinePorts();
     closeMainline();
     mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
+    for(auto& [key,member]:managed){(void)key;if(member->mixedLifetime){member->mixedLifetime->attached=false;member->mixedLifetime->retained=false;}}
+    if(mixedTransport){mixedTransport->retire();mixedTransport.reset();}
     session.reset();
     releaseRegularTrackerLease();
     for (auto& [key, entry] : managed) {
@@ -898,6 +909,7 @@ struct PersistentSession::Impl {
     else { value.status.phase = sample.is_finished ? ManagedPhase::Seeding : ManagedPhase::Downloading; }
   }
   void requestStop(Managed& value) {
+    if(value.mixedLifetime){value.mixedLifetime->attached=false;value.mixedLifetime->retained=false;}
     externalSnapshotValid=false;
     retireMainlinePort(value.mainlinePort);
     if(value.allocationIntent&&value.status.retained){value.stop=true;value.status.phase=ManagedPhase::Stopping;return;}
@@ -1491,6 +1503,8 @@ PersistentSession::~PersistentSession() {
   impl_->sink = {}; impl_->operationSink = {};
   impl_->retireMainlinePorts();
   impl_->closeMainline();
+  for(auto& [key,member]:impl_->managed){(void)key;if(member->mixedLifetime){member->mixedLifetime->attached=false;member->mixedLifetime->retained=false;}}
+  if(impl_->mixedTransport){impl_->mixedTransport->retire();impl_->mixedTransport.reset();}
   impl_->session.reset();
   impl_->releaseRegularTrackerLease();
 }
@@ -1861,19 +1875,33 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
       const auto flags=core::originalDownloadFlags(state.document().find("attributes"));
       detail::require(flags&&(*flags&0x8),"Verified seeding requires the original completion-move flag before preparation",storage::ErrorCode::Conflict);
     }
+    detail::require(!options.mixedNetworks||impl_->mixedNetworks,"Mixed storage requires its qualified runtime mode",storage::ErrorCode::Unsupported);
+    detail::require(!options.mixedNetworks||(!intent&&!allocating&&!options.ownedLoopbackPeerPort),"Mixed storage requires ordinary original intent",storage::ErrorCode::Unsupported);
+    std::optional<MixedPublicPolicy> mixedPolicy;
+    if(options.mixedNetworks){mixedPolicy.emplace(MixedPublicPolicy(detail::take(lease.retain()),options.hash));}
+    std::unique_ptr<Impl::Managed> mixedPrepared;
     std::optional<detail::ManagedStorage> preparedStorage;
     detail::done(impl_->publishTarget(options.hash,[&]()->std::expected<void,storage::Error>{
-      auto prepared=detail::ManagedStorage::prepare(lease,options.hash,*impl_->network,claimed,retainedIdentities,payloadBridge,
-          allocating?detail::ManagedStoragePurpose::AllocateOnly:intent?(intent->goal==core::ExistingVerificationGoal::SelectedFiles?detail::ManagedStoragePurpose::VerifySelectedReadOnly:detail::ManagedStoragePurpose::VerifyExistingReadOnly):detail::ManagedStoragePurpose::Download);
-      if(!prepared){return std::unexpected(prepared.error());}preparedStorage.emplace(std::move(*prepared));return {};
+      auto prepared=mixedPolicy?detail::ManagedStorage::prepareMixedPublic(lease,options.hash,*impl_->network,*mixedPolicy,claimed,retainedIdentities,payloadBridge,detail::ManagedStoragePurpose::Download)
+          :detail::ManagedStorage::prepare(lease,options.hash,*impl_->network,claimed,retainedIdentities,payloadBridge,
+            allocating?detail::ManagedStoragePurpose::AllocateOnly:intent?(intent->goal==core::ExistingVerificationGoal::SelectedFiles?detail::ManagedStoragePurpose::VerifySelectedReadOnly:detail::ManagedStoragePurpose::VerifyExistingReadOnly):detail::ManagedStoragePurpose::Download);
+      if(!prepared){return std::unexpected(prepared.error());}
+      if(mixedPolicy){
+        mixedPrepared=std::make_unique<Impl::Managed>(++impl_->operation,std::move(*prepared),options.hash);
+        auto& member=*mixedPrepared;member.mixedLifetime=std::make_shared<detail::MixedManagedLifetime>();
+        const auto parameters=member.storage.parameters();const auto claims=member.storage.claims();
+        member.mixedSource=std::shared_ptr<const MixedManagedSource>(new MixedManagedSource(detail::take(lease.retain()),member.storage.identity(),member.status.admission,
+            member.storage.preparedStateSnapshot(),parameters.trackers,{claims.begin(),claims.end()},member.mixedLifetime,impl_->mixedOrigin));
+        if(impl_->mixedBinder){auto bound=impl_->mixedBinder(member.mixedSource);if(!bound){return std::unexpected(bound.error());}}
+      }else{preparedStorage.emplace(std::move(*prepared));}
+      return {};
     }));
-    detail::require(preparedStorage.has_value(),"Source publication did not execute storage preparation",storage::ErrorCode::Conflict);
-    auto storage=std::move(*preparedStorage);
+    detail::require(preparedStorage.has_value()||bool(mixedPrepared),"Source publication did not execute storage preparation",storage::ErrorCode::Conflict);
     // A certified same-hash restart replaces its own old claim only after the
     // new read-only collision gate and complete preparation succeeded.
     if(previous!=impl_->managed.end()){if(previous->second->trackerResponse){static_cast<void>(previous->second->trackerResponse->drain());}impl_->managedByHandle.erase(previous->second->handle);impl_->managed.erase(previous);}
     if(!allocating){impl_->ensureSession();}
-    auto value = std::make_unique<Impl::Managed>(++impl_->operation, std::move(storage), options.hash);
+    auto value = mixedPrepared?std::move(mixedPrepared):std::make_unique<Impl::Managed>(++impl_->operation,std::move(*preparedStorage),options.hash);
     if(allocating){
       value->allocationIntent=allocation;value->status.allocationMode=options.allocationMode;value->status.phase=ManagedPhase::Allocating;value->status.retained=true;
       const auto progress=value->storage.allocationProgress();value->status.allocationBytes=progress.completedBytes;value->status.allocationTotalBytes=progress.totalBytes;
@@ -1961,6 +1989,13 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     if (error || !slot->second->handle.is_valid()) {
       impl_->managed.erase(slot);
       throw detail::Failure{{storage::ErrorCode::Io, "Cannot add original torrent to the managed session"}};
+    }
+    if(slot->second->mixedLifetime){
+      // torrent_info caches its I2P classification even with override_trackers.
+      // This genuine two-network admission must retain its Public transport
+      // before a separately sourced I2P route exists.
+      slot->second->handle.unset_flags(lt::torrent_flags::i2p_torrent);
+      slot->second->mixedLifetime->attached.store(true,std::memory_order_release);
     }
     try { impl_->managedByHandle.emplace(slot->second->handle,slot->second.get()); }
     catch (...) { impl_->joinPoisoned(); throw; }
@@ -2410,6 +2445,8 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   impl_->sink = {}; impl_->operationSink = {};
   impl_->closeMainline();
   impl_->mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
+  for(auto& [key,member]:impl_->managed){(void)key;if(member->mixedLifetime){member->mixedLifetime->attached=false;member->mixedLifetime->retained=false;}}
+  if(impl_->mixedTransport){impl_->mixedTransport->retire();impl_->mixedTransport.reset();}
   impl_->session.reset(); // Join may outlive the certification effort deadline.
   impl_->releaseRegularTrackerLease();
   impl_->registered = false; impl_->outstanding = false;
@@ -2489,3 +2526,39 @@ void PersistentOperation::retire() {
 }
 } // namespace detail
 } // namespace biglybtc::engine
+
+namespace biglybtc::engine {
+bool PersistentSession::mixedNetworksAvailable()noexcept{return bool(detail::mixedI2pTransportRuntimePin());}
+std::expected<void,storage::Error> PersistentSession::configureMixedNetworks(){
+  if(!impl_->onWorker()||impl_->call||impl_->session||impl_->closed||impl_->poisoned||!mixedNetworksAvailable()){
+    return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed Public+I2P runtime mode is unavailable"});
+  }
+  try{impl_->mixedOrigin=std::make_shared<detail::MixedManagedOrigin>();}
+  catch(const std::bad_alloc&){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot retain mixed engine owner origin"});}
+  impl_->mixedNetworks=true;return {};
+}
+std::expected<void,storage::Error> PersistentSession::configureMixedSourceBinding(MixedSourceBinding binding){
+  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||!impl_->managed.empty()){
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Configure mixed source binding before managed admissions"});
+  }
+  impl_->mixedBinder=std::move(binding);return {};
+}
+std::expected<std::shared_ptr<const MixedManagedSource>,storage::Error> PersistentSession::mixedSource(const core::TorrentHash& hash)const{
+  const auto found=impl_->managed.find(hash.hex());
+  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||found==impl_->managed.end()||!found->second->mixedSource||!found->second->mixedSource->backendCurrent()){
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"No actual retained mixed admission"});
+  }
+  return found->second->mixedSource;
+}
+std::expected<std::shared_ptr<MixedI2pTransport>,storage::Error> PersistentSession::mixedTransport(){
+  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||!impl_->mixedNetworks||!impl_->session){
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Mixed transport needs an actual retained Public session"});
+  }
+  if(!impl_->mixedTransport){
+    auto pin=detail::mixedI2pTransportRuntimePin();if(!pin){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed I2P SDK cohort is unavailable"});}
+    auto state=std::make_shared<MixedI2pTransport::State>();state->owner=impl_->session.get();state->pin=std::move(pin);state->origin=impl_->mixedOrigin;
+    impl_->mixedTransport=std::shared_ptr<MixedI2pTransport>(new MixedI2pTransport(std::move(state)));
+  }
+  return impl_->mixedTransport;
+}
+}

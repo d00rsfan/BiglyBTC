@@ -152,7 +152,7 @@ endif()
 # The already approved optional provider is a distinct explicit application mode.
 # Stock/default builds retain a refusal stub and their unchanged Public owner.
 if(TARGET biglybtc_desktop_host)
-  target_sources(biglybtc_desktop_host PRIVATE owned_i2p_service.hpp owned_i2p_service.cpp i2p_saved_settings.hpp i2p_saved_settings.cpp)
+  target_sources(biglybtc_desktop_host PRIVATE owned_i2p_service.hpp owned_i2p_service.cpp owned_mixed_i2p_service.hpp owned_mixed_i2p_service.cpp i2p_saved_settings.hpp i2p_saved_settings.cpp)
   if(TARGET biglybtc_i2p_provider_owner)
     target_compile_definitions(biglybtc_desktop_host PUBLIC BIGLYBTC_HOST_I2P_OWNER=1)
     target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_i2p_provider_owner)

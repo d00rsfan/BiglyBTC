@@ -54,6 +54,8 @@ public:
   struct TorrentObservation {core::TorrentHash hash;Observation value;};
   Observation observation()const;
   std::vector<TorrentObservation> observations()const;
+  // Optional passive peer view, at most4 real handshake IDs; caller worker only.
+  std::vector<std::array<std::uint8_t,20>> peerIds(const core::TorrentHash&)const;
   std::expected<void,storage::Error> add(const core::TorrentHash&,const engine::RetainedPayloads& external={});
   std::expected<void,storage::Error> stop(const core::TorrentHash&);
   std::expected<void,storage::Error> command(const core::TorrentHash&,core::DownloadAction,const engine::RetainedPayloads& external={});
@@ -74,6 +76,8 @@ public:
   // Five-second actual retirement, external join, then exact saved checkpoint.
   // Failure retains recheck state; callers must not change saved intent.
   // Provider/source joins and checkpoint IO may block on this Host worker.
+  bool sourceCurrent()const noexcept; // No Qt/SDK/I/O.
+  void revoke()noexcept; // Atomic source-only withdrawal; no Qt/SDK dispatch.
   std::expected<void,storage::Error> close();
 private:
   struct Impl;explicit OwnedI2pService(std::unique_ptr<Impl>);

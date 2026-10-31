@@ -531,6 +531,26 @@ int main(int argc, char** argv) {
       CHECK(root);
       rejected(*root, Code::InvalidConfiguration);
     });
+    run("mixed defaults need an explicit reader and never grant torrent routing", [] {
+      auto document=config({{"Network Selection Default.Public",integer(1)},
+          {"Network Selection Default.I2P",integer(1)}});
+      const auto before=document.serialize();
+      rejected(document,Code::Unsupported);
+      auto mixed=engine::readMixedNetworkPolicy(&document,{.mode=engine::NetworkMode::Normal});
+      CHECK(mixed&&document.serialize()==before);
+      auto params=lt::add_torrent_params{};params.ti=metadata();
+      const auto denied=engine::applyTorrentNetworkPolicy(*mixed,
+          {.publicNetwork=true,.tor=false,.i2p=true},params);
+      CHECK(!denied&&denied.error().code==Code::Unsupported);
+      auto tor=config({{"Network Selection Default.Tor",integer(1)}});
+      CHECK(!engine::readMixedNetworkPolicy(&tor,{.mode=engine::NetworkMode::Normal}));
+      auto only=config({{"Network Selection Default.Public",integer(0)},
+          {"Network Selection Default.I2P",integer(1)}});
+      CHECK(!engine::readMixedNetworkPolicy(&only,{.mode=engine::NetworkMode::Normal}));
+      auto malformed=config({{"Network Selection Default.I2P",bytes("true")}});
+      const auto bad=engine::readMixedNetworkPolicy(&malformed,{.mode=engine::NetworkMode::Normal});
+      CHECK(!bad&&bad.error().code==Code::InvalidConfiguration);
+    });
     run("required encryption never silently falls back", [] {
       auto document = config({{"network.transport.encrypted.require", integer(1)}});
       const auto settings = engine::makeNetworkSettings(normal(&document));

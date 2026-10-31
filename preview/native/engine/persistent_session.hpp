@@ -85,6 +85,8 @@ struct MainlineDiscoveryStatus {
   std::vector<MainlineScrapeCandidateStatus> admittedScrapeCandidates{};
 };
 namespace detail { class PersistentCall; class PersistentOperation; }
+class MixedManagedSource;
+class MixedI2pTransport;
 class PersistentSession;
 // Only the source-bound successful retirement protocol may mint a settled
 // checkpoint. It is NOT epoch-final while a later admission is possible.
@@ -181,6 +183,14 @@ public:
       std::span<const std::pair<QueueBinding,std::uint32_t>>);
   std::expected<void,storage::Error> applyExternalRateLimits(const core::SessionRateLimits&);
   RetainedPayloads retainedPayloads() const;
+  static bool mixedNetworksAvailable()noexcept;
+  std::expected<void,storage::Error> configureMixedNetworks();
+  // Trusted worker-only filesystem binder, run under target publication after
+  // sole storage preparation and before its actual handle is added.
+  using MixedSourceBinding=std::function<std::expected<void,storage::Error>(std::shared_ptr<const MixedManagedSource>)>;
+  std::expected<void,storage::Error> configureMixedSourceBinding(MixedSourceBinding);
+  std::expected<std::shared_ptr<const MixedManagedSource>,storage::Error> mixedSource(const core::TorrentHash&)const;
+  std::expected<std::shared_ptr<MixedI2pTransport>,storage::Error> mixedTransport();
   // Host-worker IO only. The callbacks wrap synchronous source mutations, never
   // session startup, handle methods, blocking SDK barriers or caller observers.
   std::expected<void,storage::Error> configureSourcePublication(TargetPublication,PositionsPublication);

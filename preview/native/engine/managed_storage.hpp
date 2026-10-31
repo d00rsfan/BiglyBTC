@@ -20,6 +20,7 @@
 namespace biglybtc::engine {
 struct NetworkPolicy;
 class OwnedI2pPolicy;
+class MixedPublicPolicy;
 namespace detail {
 
 class OriginalDiskFiles;
@@ -66,6 +67,12 @@ public:
       const storage::ProfileLease&,const core::TorrentHash&,const OwnedI2pPolicy&,
       std::span<const ManagedPayloadClaim> claimed={},
       std::span<const storage::OriginalTorrentIdentity> retainedIdentities={});
+  static std::expected<ManagedStorage,storage::Error> prepareMixedPublic(
+      const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,
+      const MixedPublicPolicy&,std::span<const ManagedPayloadClaim>,
+      std::span<const storage::OriginalTorrentIdentity>,
+      std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose);
+  std::string preparedStateSnapshot()const;
   ManagedStorage(ManagedStorage&&) noexcept;
   ManagedStorage& operator=(ManagedStorage&&) noexcept;
   ManagedStorage(const ManagedStorage&) = delete;
@@ -112,7 +119,7 @@ private:
   static std::expected<ManagedStorage,storage::Error> prepareImpl(
       const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,
       std::span<const ManagedPayloadClaim>,std::span<const storage::OriginalTorrentIdentity>,
-      std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose,const OwnedI2pPolicy*);
+      std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose,const OwnedI2pPolicy*,const MixedPublicPolicy* = nullptr);
   std::expected<void,storage::Error> beginAllocation(const storage::ProfileLease&);
   struct Impl;
   explicit ManagedStorage(std::unique_ptr<Impl>);

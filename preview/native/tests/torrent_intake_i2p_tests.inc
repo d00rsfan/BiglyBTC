@@ -120,3 +120,83 @@ void i2pNetworkContexts(){
   }
 }
 }
+
+namespace {
+std::expected<core::TorrentHash,storage::Error> importMixedFiles(Area& area,
+    const storage::TorrentIntakeMetadata& source,void(*observer)(storage::TorrentIntakeStage)=nullptr,
+    bool force=false,bool paused=false,bool queued=false,bool verify=false,
+    core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None){
+  return storage::importTorrentWithFileOptions(*area.lease,source,area.destination,!queued,mixed,
+      observer,force,{}, {8192,4096},false,queued,paused,{}, {},verify,{},
+      core::ExistingVerificationGoal::FullTorrent,allocation,storage::TorrentIntakeNetwork::Mixed);
+}
+void checkMixedState(Area& area,const core::TorrentHash& hash,std::string_view expected="l6:Public3:I2Pe"){
+  const auto state=parse(read(area.profile/"active"/(hash.hex()+".dat")));
+  const auto attrs=parse(rawValue(state,"attributes"));
+  check(rawValue(attrs,"networks")==expected,"Exact original mixed network order/encoding survives");
+  const auto* peers=attrs.find("peersources");check(peers&&peers->type==core::Node::Type::List
+      &&std::ranges::any_of(peers->children,[](const auto& value){return value.type==core::Node::Type::Bytes&&value.bytes=="Tracker";}),"Mixed import retains real Tracker permission");
+  check(rawValue(state,"info")==rawValue(parse(read(area.input)),"info"),"Mixed import preserves raw info");
+  check(!fs::exists(area.destination),"Mixed context grants no payload allocation");
+}
+void mixedNetworkContexts(){
+  const std::string publicTracker="http://127.0.0.1:9/announce",i2pTracker="http://"+std::string(52,'a')+".b32.i2p/announce";
+  const auto original=withTrackers(publicTracker,{{publicTracker},{i2pTracker}});
+  for(int intent=0;intent<4;++intent){
+    Area area;write(area.input,original);const auto source=take(storage::inspectTorrentIntake(area.input));
+    const auto hash=take(importMixedFiles(area,source,nullptr,intent==3,intent==2,intent==1));
+    verify(area,hash,"LCLC",mixed);checkMixedState(area,hash);
+    const auto saved=core::readLibrary(parse(read(area.profile/"downloads.config")));check(saved&&saved->downloads.size()==1,"One original mixed row");
+    check(saved->downloads[0].startup==(intent==3?core::StartupState::Waiting:intent==1?core::StartupState::Queued:core::StartupState::Stopped)
+        &&saved->downloads[0].forceStart==(intent==3)&&saved->paused.size()==static_cast<std::size_t>(intent==2),"Mixed ordinary start/queue/pause/force intent is distinct");
+    const auto inventory=parse(read(area.profile/"downloads.config"));const auto& row=inventory.find("downloads")->children.at(0);
+    check(row.find("maxdl")->integer==8192&&row.find("maxul")->integer==4096,"Mixed limits remain original payload rates");
+    check(read(area.input)==original&&read(area.profile/"torrents"/(hash.hex()+".torrent"))==original,"Mixed source/archive remain byte exact");
+  }
+  for(auto boundary:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,
+      storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
+    Area area;write(area.input,original);const auto source=take(storage::inspectTorrentIntake(area.input));interrupted=boundary;
+    check(!importMixedFiles(area,source,interrupt,false,true),"Interrupt accepted mixed commit at the actual boundary");
+    const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));check(journal.find("network")&&journal.find("network")->bytes=="Public+I2P","Accepted mixed context is explicit and durable");
+    area.reopen();const auto hash=take(storage::recoverTorrentIntake(*area.lease));check(hash&&*hash==source.hash(),"Mixed recovery retains selected identity");
+    verify(area,*hash,"LCLC",mixed);checkMixedState(area,*hash);const auto saved=core::readLibrary(parse(read(area.profile/"downloads.config")));
+    check(saved&&saved->paused.size()==1&&saved->paused[0].hash==*hash&&!saved->downloads[0].forceStart,"Mixed recovery preserves pause intent in the same transaction");
+  }
+  for(const auto* selection:{"l6:Public3:I2Pe","l3:I2P6:Publice"}){
+    Area area;auto input=parse(original);auto attrs=parse(rawValue(input,"attributes"));
+    check(attrs.replaceValue("networks",selection).has_value()&&input.replaceValue("attributes",attrs.serialize()).has_value(),"Own exact inherited mixed selection");
+    const auto bytes=input.serialize();write(area.input,bytes);const auto source=take(storage::inspectTorrentIntake(area.input));const auto hash=take(importMixedFiles(area,source));
+    verify(area,hash,"LCLC",mixed);checkMixedState(area,hash,selection);check(read(area.input)==bytes,"Inherited source order is not rewritten");
+  }
+  for(const auto* selection:{"l6:Publice","l3:I2Pe","l3:Tore","l6:Public6:Publice","l6:Public3:I2P3:Tore","le","3:I2P"}){
+    Area area;auto input=parse(original);auto attrs=parse(rawValue(input,"attributes"));
+    check(attrs.replaceValue("networks",selection).has_value()&&input.replaceValue("attributes",attrs.serialize()).has_value(),"Own incompatible mixed input");
+    const auto bytes=input.serialize();write(area.input,bytes);const auto source=take(storage::inspectTorrentIntake(area.input));
+    check(!importMixedFiles(area,source),"Mixed import cannot broaden or normalize an existing network selection");area.untouched();check(read(area.input)==bytes,"Rejected network input remains exact");
+  }
+  for(bool denied:{false,true}){
+    Area area;auto input=parse(original);auto attrs=parse(rawValue(input,"attributes"));
+    check(attrs.replaceValue(denied?"peersourcesdenied":"peersources",denied?"l7:Trackere":"l3:DHTe").has_value()
+        &&input.replaceValue("attributes",attrs.serialize()).has_value(),"Own disabled mixed Tracker source");write(area.input,input.serialize());
+    const auto source=take(storage::inspectTorrentIntake(area.input));check(!importMixedFiles(area,source),"Mixed choice cannot override disabled/denied Tracker");area.untouched();
+  }
+  for(const auto* value:{"6:Public","5:Mixed","10:Public+I2p","i2e"}){
+    Area area;const auto source=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;
+    check(!importMixedFiles(area,source,interrupt),"Own accepted mixed journal");auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));
+    check(journal.replaceValue("network",value).has_value(),"Own malformed accepted context");const auto bytes=journal.serialize();write(area.profile/"BiglyBTC.torrent-import",bytes);
+    const auto before=read(area.profile/"downloads.config");area.reopen();const auto result=storage::recoverTorrentIntake(*area.lease);
+    check(!result&&result.error().code==storage::ErrorCode::InvalidFormat,"Unknown mixed journal values never fall back");
+    check(read(area.profile/"downloads.config")==before&&read(area.profile/"BiglyBTC.torrent-import")==bytes&&!fs::exists(area.profile/"active"),"Malformed recovery preserves proof without effects");
+  }
+  for(bool allocation:{false,true}){
+    Area area;const auto source=take(storage::inspectTorrentIntake(area.input));
+    check(!importMixedFiles(area,source,nullptr,false,false,false,!allocation,allocation?core::TorrentAllocationMode::Stopped:core::TorrentAllocationMode::None),"Mixed verification/allocation are refused before effects");area.untouched();
+  }
+  {
+    Area area;write(area.input,original);const auto hash=take(storage::importTorrent(*area.lease,area.input,area.destination,true));
+    const auto before=read(area.profile/"downloads.config"),state=read(area.profile/"active"/(hash.hex()+".dat"));const auto source=take(storage::inspectTorrentIntake(area.input));
+    check(!importMixedFiles(area,source)&&read(area.profile/"downloads.config")==before&&read(area.profile/"active"/(hash.hex()+".dat"))==state
+        &&!storage::hasPendingTorrentIntake(*area.lease),"Mixed re-import cannot convert an existing saved Public row");
+  }
+}
+}

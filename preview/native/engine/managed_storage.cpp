@@ -1,5 +1,6 @@
 #include "biglybtc/original_file_links.hpp"
 #include "managed_storage.hpp"
+#include "mixed_i2p_source.hpp"
 #include "owned_i2p_policy.hpp"
 #include "allocation_intent.hpp"
 #include "verified_existing_scope.hpp"
@@ -713,7 +714,12 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareOwnedI2p(const storag
   if(!owned.matches(lease,hash)){return std::unexpected(Error{ErrorCode::Conflict,"Owned I2P storage needs SAME lease/hash"});}
   return prepareImpl(lease,hash,NetworkPolicy{},claimed,identities,{},ManagedStoragePurpose::Download,&owned);
 }
-std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned) {
+std::expected<ManagedStorage,Error> ManagedStorage::prepareMixedPublic(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,const MixedPublicPolicy& mixed,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> identities,std::shared_ptr<const ManagedPayloadCounterBridge> bridge,ManagedStoragePurpose purpose){
+  if(!mixed.matches(lease,hash)){return std::unexpected(Error{ErrorCode::Conflict,"Mixed Public storage needs SAME lease/hash"});}
+  return prepareImpl(lease,hash,policy,claimed,identities,std::move(bridge),purpose,nullptr,&mixed);
+}
+std::string ManagedStorage::preparedStateSnapshot()const{return impl_->state.document().serialize();}
+std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned,const MixedPublicPolicy* mixed) {
   try {
     require(purpose==ManagedStoragePurpose::Download||purpose==ManagedStoragePurpose::VerifyExistingReadOnly||purpose==ManagedStoragePurpose::VerifySelectedReadOnly||purpose==ManagedStoragePurpose::AllocateOnly,"Unknown managed preparation purpose",ErrorCode::InvalidFormat);
     const bool allocationOnly=purpose==ManagedStoragePurpose::AllocateOnly;
@@ -884,10 +890,18 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     }
     params.flags&=~lt::torrent_flags::auto_managed; params.flags|=lt::torrent_flags::paused;
     const auto selectedNetworks=networks(source,attributes.root());
+    if(mixed){
+      const auto* selected=attributes.root().find("networks");
+      require(selected&&selected->type==Node::Type::List&&selected->children.size()==2
+          &&selected->children[0].type==Node::Type::Bytes&&selected->children[1].type==Node::Type::Bytes
+          &&selected->children[0].bytes!=selected->children[1].bytes
+          &&selectedNetworks.publicNetwork&&selectedNetworks.i2p&&!selectedNetworks.tor,
+          "Mixed storage needs exactly saved Public and I2P networks",ErrorCode::Unsupported);
+    }
     auto mainline=originalMainlinePolicy(policy,attributes.root(),info->priv());
-    mainline.discover=mainline.discover && selectedNetworks.publicNetwork && selectedNetworks.dhtBackup && !selectedNetworks.tor && !selectedNetworks.i2p;
+    mainline.discover=mainline.discover && selectedNetworks.publicNetwork && selectedNetworks.dhtBackup && !selectedNetworks.tor && (!selectedNetworks.i2p||mixed);
     mainline.announce=mainline.announce && mainline.discover;
-    auto filtered=owned?owned->apply(selectedNetworks,params):applyTorrentNetworkPolicy(policy,selectedNetworks,params);
+    auto filtered=owned?owned->apply(selectedNetworks,params):mixed?mixed->apply(policy,selectedNetworks,params):applyTorrentNetworkPolicy(policy,selectedNetworks,params);
     require(filtered.has_value(),"Managed torrent network selection is unsupported by the owner policy");
     auto claimPlan=payloadClaimPlan(slots,save,attributes.root(),pending);
     checkManagedClaims(claimPlan.values,claimed);
@@ -919,7 +933,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       }
     }
     // Cache values are copied before their backing state is relinquished.
-    auto rechecked=owned?owned->apply(networks(state.document(),actual.root()),params):applyTorrentNetworkPolicy(policy,networks(state.document(),actual.root()),params);
+    auto rechecked=owned?owned->apply(networks(state.document(),actual.root()),params):mixed?mixed->apply(policy,networks(state.document(),actual.root()),params):applyTorrentNetworkPolicy(policy,networks(state.document(),actual.root()),params);
     require(rechecked.has_value(),"Authoritative torrent network policy changed",ErrorCode::Conflict);
     // Before any payload write, Java must recheck after an interrupted owner.
     auto resume=dictionary(state.document().find("resume"));auto resumeData=dictionary(resume.find("data"));
@@ -1008,7 +1022,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     for(std::size_t i=0;i<claimPlan.values.size();++i){const auto& id=slots[claimPlan.indices[i]].identity;claimPlan.values[i].device=static_cast<std::uint64_t>(id.st_dev);claimPlan.values[i].inode=static_cast<std::uint64_t>(id.st_ino);}
     auto checkedMainline=originalMainlinePolicy(policy,actual.root(),info->priv());
     const auto actualNetworks=networks(state.document(),actual.root());
-    checkedMainline.discover=checkedMainline.discover && actualNetworks.publicNetwork && actualNetworks.dhtBackup && !actualNetworks.tor && !actualNetworks.i2p;
+    checkedMainline.discover=checkedMainline.discover && actualNetworks.publicNetwork && actualNetworks.dhtBackup && !actualNetworks.tor && (!actualNetworks.i2p||mixed);
     checkedMainline.announce=checkedMainline.announce && checkedMainline.discover;
     require(mainline==checkedMainline,"Original Mainline source selection changed during preparation",ErrorCode::Conflict);
     auto result=std::make_unique<Impl>(hash,std::move(identity),saved,std::move(store),std::move(state),std::move(layout),std::move(params),save,

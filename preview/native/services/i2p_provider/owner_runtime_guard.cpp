@@ -191,7 +191,12 @@ bool check(std::shared_ptr<void>* retainedPin) {
       "biglybtc_mainline_routing_abi_v1", "biglybtc_query_mainline_routing_v1",
       "biglybtc_private_i2p_owner_abi_v1", "biglybtc_configure_private_i2p_owner_v1",
       "biglybtc_read_private_i2p_owner_v1", "biglybtc_withdraw_private_i2p_owner_v1",
-      "biglybtc_private_i2p_torrents_abi_v1", "biglybtc_admit_private_i2p_torrent_v1", "biglybtc_revoke_private_i2p_torrent_v1"};
+      "biglybtc_private_i2p_torrents_abi_v1", "biglybtc_admit_private_i2p_torrent_v1", "biglybtc_revoke_private_i2p_torrent_v1"
+#if defined(BIGLYBTC_PRIVATE_MIXED_ROLE_BOUND) && BIGLYBTC_PRIVATE_MIXED_ROLE_BOUND
+      ,"biglybtc_mixed_i2p_transport_abi_v1", "biglybtc_configure_mixed_i2p_transport_v1",
+      "biglybtc_admit_mixed_i2p_route_v1", "biglybtc_revoke_mixed_i2p_route_v1", "biglybtc_withdraw_mixed_i2p_transport_v1"
+#endif
+  };
   constexpr std::size_t required=std::size(symbols);
   std::array<std::uintptr_t,required> addresses{};
   std::array<Mapping,required> beforeMappings{};
@@ -232,6 +237,12 @@ bool check(std::shared_ptr<void>* retainedPin) {
     if (!afterMapping || beforeMappings[i] != *afterMapping) { return false; }
   }
   if (!canonicalMatches(object->l_name, *actual)) { return false; }
+#if defined(BIGLYBTC_PRIVATE_MIXED_ROLE_BOUND) && BIGLYBTC_PRIVATE_MIXED_ROLE_BOUND
+  using Marker=unsigned(*)();
+  if(reinterpret_cast<Marker>(addresses[27])()!=0x42494f01U
+      ||reinterpret_cast<Marker>(addresses[31])()!=0x42495401U
+      ||reinterpret_cast<Marker>(addresses[34])()!=0x42494d01U){return false;}
+#endif
   if (retainedPin) {
     // Transfer, rather than reopen, the object which passed every mapping,
     // descriptor, source-bound digest and before/after identity check above.

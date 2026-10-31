@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Configure-only private artifact closure. Never builds or runs the provider."""
+import argparse
+import importlib.util
 import hashlib
 import json
 from pathlib import Path
@@ -21,7 +23,17 @@ def main():
     assert approval_path.is_absolute() and artifact.is_absolute() and sdk.is_absolute()
     assert digest(approval_path) == approval_sha
     approval = json.loads(approval_path.read_text())
-    assert approval['schema'] == 'BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_V1'
+    mixed = approval.get('schema') == 'BIGLYBTC_MIXED_I2P_ROLE_APPROVAL_V1'
+    if mixed:
+        verifier = Path(__file__).resolve().parents[2] / 'engine/runtime-binding/verify_runtime_manifest_mixed.py'
+        sys.dont_write_bytecode = True
+        spec = importlib.util.spec_from_file_location('mixed_private_role_reader', verifier)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        module.inspect(argparse.Namespace(manifest=Path(approval['runtime_manifest']), approval=approval_path,
+            approval_sha256=approval_sha, library=artifact, include_root=sdk))
+    else:
+        assert approval['schema'] == 'BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_V1'
     for field in ('source_capsule_sha256', 'artifact_sha256', 'sdk_tree_sha256',
                   'runtime_manifest_sha256', 'source_build_record_sha256', 'review_sha256'):
         assert re.fullmatch('[0-9a-f]{64}', approval[field])
@@ -38,7 +50,8 @@ def main():
     assert 'libtorrent/biglybtc_private_i2p_owner.hpp' in actual
     # No runtime discovery/allowlist extension: these exact constants are
     # compiled only for the explicitly requested new private target.
-    text = '#pragma once\nnamespace biglybtc::services::i2p::provider::private_i2p_runtime_binding {\n'
+    text = '#pragma once\n#define BIGLYBTC_PRIVATE_MIXED_ROLE_BOUND ' + ('1' if mixed else '0') + '\n'
+    text += 'namespace biglybtc::services::i2p::provider::private_i2p_runtime_binding {\n'
     text += f'inline constexpr char sha256[]="{approval["artifact_sha256"]}";\n'
     text += f'inline constexpr unsigned long long bytes={approval["artifact_bytes"]}ULL;\n'
     for name in ('source_capsule_sha256', 'sdk_tree_sha256', 'runtime_manifest_sha256', 'source_build_record_sha256', 'review_sha256'):

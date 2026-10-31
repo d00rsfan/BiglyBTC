@@ -41,6 +41,58 @@ class TorrentIntakeDialogTests final:public QObject {
   Q_OBJECT
 private slots:
 
+  void mixedNetworkChoicePreservesDraftAndRequiresExplicitCapability(){
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
+    QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
+    auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));auto* network=dialog.findChild<QComboBox*>(QStringLiteral("import-network"));
+    auto* mode=dialog.findChild<QComboBox*>(QStringLiteral("import-start-mode"));auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));
+    auto* table=dialog.findChild<QTableView*>(QStringLiteral("import-file-table"));QVERIFY(load&&network&&mode&&add&&table);
+    QTRY_VERIFY(load->isEnabled());load->click();auto frame=std::make_shared<ui::TorrentIntakePacket>(*packet(request(reads)));frame->i2pAvailable=true;frame->mixedAvailable=true;dialog.setPreview(frame);
+    QTRY_COMPARE(table->model()->rowCount(),3);QTRY_VERIFY(add->isEnabled());QCOMPARE(network->count(),3);
+    QCOMPARE(network->itemText(network->findData(static_cast<int>(ui::TorrentIntakeNetwork::Mixed))),QStringLiteral("Public + I2P"));
+    QVERIFY(table->model()->setData(table->model()->index(1,0),Qt::Unchecked,Qt::CheckStateRole));
+    dialog.findChild<QSpinBox*>(QStringLiteral("import-download-limit"))->setValue(12);
+    mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Paused)));
+    network->setCurrentIndex(network->findData(static_cast<int>(ui::TorrentIntakeNetwork::Mixed)));QTRY_COMPARE(mode->count(),4);
+    QCOMPARE(mode->currentData().toInt(),static_cast<int>(ui::TorrentIntakeStartMode::Paused));
+    connect(&dialog,&ui::TorrentIntakeDialog::submitted,&dialog,[&]{dialog.accept();});
+    dialog.accept();QCOMPARE(writes.size(),1);auto sent=submission(writes);QCOMPARE(sent.network,ui::TorrentIntakeNetwork::Mixed);
+    QVERIFY(!sent.start&&sent.paused&&!sent.forceStart&&!sent.verifyExisting&&sent.files[1].skipped);QCOMPARE(sent.limits.downloadBytesPerSecond,std::int64_t{12288});
+    dialog.rejectSubmission(sent);QTRY_VERIFY(add->isEnabled());
+    for(const auto unsupported:{ui::TorrentIntakeStartMode::VerifySeeding,ui::TorrentIntakeStartMode::VerifySelected,ui::TorrentIntakeStartMode::AllocateStopped,ui::TorrentIntakeStartMode::AllocatePaused}){
+      QVERIFY(mode->findData(static_cast<int>(unsupported))<0);mode->addItem(QStringLiteral("Injected unsupported mixed mode"),static_cast<int>(unsupported));mode->setCurrentIndex(mode->count()-1);
+      dialog.accept();QCOMPARE(writes.size(),1);mode->removeItem(mode->count()-1);
+    }
+    mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Forced)));dialog.accept();QCOMPARE(writes.size(),2);
+    sent=submission(writes);QCOMPARE(sent.network,ui::TorrentIntakeNetwork::Mixed);QVERIFY(sent.start&&sent.forceStart&&!sent.paused&&sent.files[1].skipped);
+    dialog.rejectSubmission(sent);QTRY_VERIFY(add->isEnabled());QVERIFY(dialog.beginSession(78));QVERIFY(!network->isVisible());
+    QVERIFY(network->findData(static_cast<int>(ui::TorrentIntakeNetwork::Mixed))<0);QCOMPARE(mode->count(),8);dialog.accept();QCOMPARE(writes.size(),2);
+  }
+
+  void mixedAvailabilityDoesNotBroadenFixedOrPureNetworkContexts_data(){
+    QTest::addColumn<bool>("only");QTest::addColumn<bool>("i2p");QTest::addColumn<bool>("mixed");QTest::addColumn<int>("expected");
+    QTest::newRow("ordinary-public")<<false<<false<<false<<static_cast<int>(ui::TorrentIntakeNetwork::Public);
+    QTest::newRow("coexist-without-mixed")<<false<<true<<false<<-1;
+    QTest::newRow("mixed-capability-without-pure")<<false<<false<<true<<static_cast<int>(ui::TorrentIntakeNetwork::Mixed);
+    QTest::newRow("legacy-private-wins")<<true<<true<<true<<static_cast<int>(ui::TorrentIntakeNetwork::I2p);
+  }
+  void mixedAvailabilityDoesNotBroadenFixedOrPureNetworkContexts(){
+    QFETCH(bool,only);QFETCH(bool,i2p);QFETCH(bool,mixed);QFETCH(int,expected);
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
+    QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
+    auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));auto* network=dialog.findChild<QComboBox*>(QStringLiteral("import-network"));auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));
+    auto* table=dialog.findChild<QTableView*>(QStringLiteral("import-file-table"));QVERIFY(load&&network&&add&&table);QTRY_VERIFY(load->isEnabled());load->click();
+    auto frame=std::make_shared<ui::TorrentIntakePacket>(*packet(request(reads)));frame->i2pOnly=only;frame->i2pAvailable=i2p;frame->mixedAvailable=mixed;dialog.setPreview(frame);
+    QTRY_COMPARE(table->model()->rowCount(),3);QTRY_VERIFY(add->isEnabled());
+    QCOMPARE(network->findData(static_cast<int>(ui::TorrentIntakeNetwork::Mixed))>=0,mixed&&!only);
+    if(!only&&mixed&&!i2p){QVERIFY(network->findData(static_cast<int>(ui::TorrentIntakeNetwork::I2p))<0);}
+    if(network->findData(static_cast<int>(ui::TorrentIntakeNetwork::Mixed))<0){network->addItem(QStringLiteral("Injected unavailable mixed choice"),static_cast<int>(ui::TorrentIntakeNetwork::Mixed));}
+    network->setCurrentIndex(network->findData(static_cast<int>(ui::TorrentIntakeNetwork::Mixed)));
+    // No queued render may turn this injected item into network permission.
+    dialog.accept();QCOMPARE(writes.size(),expected<0?0:1);
+    if(expected>=0){QCOMPARE(static_cast<int>(submission(writes).network),expected);}
+  }
+
   void coexistNetworkChoiceKeepsDraftAndRequestsOnlySelectedNetwork(){
     ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
     QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);

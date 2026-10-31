@@ -3,6 +3,12 @@
 #include "sam_protocol.hpp"
 #include "source_permit.hpp"
 #include <libtorrent/biglybtc_private_i2p_owner.hpp>
+#if __has_include(<libtorrent/biglybtc_mixed_i2p_transport.hpp>)
+#include <libtorrent/biglybtc_mixed_i2p_transport.hpp>
+#define BIGLYBTC_BRIDGE_HAS_MIXED_HEADER 1
+#else
+#define BIGLYBTC_BRIDGE_HAS_MIXED_HEADER 0
+#endif
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QNetworkProxy>
@@ -39,7 +45,7 @@ struct Bridge::Impl {
   std::vector<Destination> peers;std::vector<Destination> resolved;std::vector<std::uint64_t> retired;
   std::optional<std::size_t> control;
   Ports ports;Phase phase=Phase::Idle;std::string sessionId;Clock::time_point preparingEnd{};
-  std::array<Byte,32> capability{};std::uint64_t generation=0,admission=0,activeRevision=0,rejectedClients=0;
+  std::array<Byte,32> capability{};std::array<Byte,12> peerIdMask{};std::uint64_t generation=0,admission=0,activeRevision=0,rejectedClients=0;
   bool queued=false,notifyQueued=false,wanted=false,executing=false;
   std::function<bool(void*)> install;const char* failure=nullptr;
   explicit Impl(Bridge* owner,std::shared_ptr<ProfileSource> s,i2cp::InitialChannel& c):q(owner),source(std::move(s)),channel(&c),server(owner),timer(owner),capacity(bridgeCapacity(source->groupMode())),sockets(capacity.sockets){
@@ -52,7 +58,7 @@ struct Bridge::Impl {
     QObject::connect(&c,&i2cp::InitialChannel::leaseSetSubmitted,q,[this]{schedule();});
     QObject::connect(&c,&QObject::destroyed,q,[this]{channel=nullptr;close();});
   }
-  ~Impl(){close();if(watch>=0){::close(watch);}if(permit){permit->join();}OPENSSL_cleanse(capability.data(),capability.size());}
+  ~Impl(){close();if(watch>=0){::close(watch);}if(permit){permit->join();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());}
   bool onThread()const{return QThread::currentThread()==q->thread();}
   bool leaseCurrent()const{
     if(!channel||channel->thread()!=q->thread()){return false;}
@@ -104,7 +110,7 @@ struct Bridge::Impl {
     if(reason&&!failure){failure=reason;}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;wanted=false;server.close();timer.stop();if(watcher){watcher->setEnabled(false);}source->revoke();
     if(channel){channel->closeStreamListener();for(auto& item:sockets){if(item&&item->operation){channel->cancelStream(item->operation);}if(item&&item->lookup){channel->cancelDestinationLookup(item->lookup);}}}
     for(auto& item:sockets){if(item){QObject::disconnect(item->tcp.get(),nullptr,q,nullptr);item->tcp->abort();item.reset();}}
-    control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());notify();
+    control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());notify();
   }
   void schedule(bool work=true){
     if(phase==Phase::Idle||phase==Phase::Withdrawn){return;}wanted|=work;if(queued){return;}queued=true;bool ok=false;
@@ -261,7 +267,16 @@ struct Bridge::Impl {
       if(phase==Phase::Preparing){
         if(!server.listen(QHostAddress::LocalHost,0)||!current()){close();executing=false;return;}phase=Phase::Ready;notify();
       }
-      if(install){
+      if(install&&source->mixedMode()){
+#if BIGLYBTC_BRIDGE_HAS_MIXED_HEADER
+        libtorrent::BiglybtcMixedI2pTransportPolicyV1 policy;policy.generation=generation;policy.capability=capability;policy.public_destination_hash=source->destination().hash;
+        policy.bridge_port=server.serverPort();policy.peer_port=ports.peer;policy.local_peer_port=ports.localPeer;policy.peer_id_mask=peerIdMask;
+        struct Wipe {decltype(policy)& value;~Wipe(){OPENSSL_cleanse(value.capability.data(),value.capability.size());OPENSSL_cleanse(value.peer_id_mask.data(),value.peer_id_mask.size());}} wipe{policy};
+        auto apply=std::move(install);if(!current()||!apply(&policy)||!current()){close("Mixed I2P provider installation refused");executing=false;return;}
+#else
+        close("Mixed I2P SDK is unavailable");executing=false;return;
+#endif
+      }else if(install){
         libtorrent::BiglybtcPrivateI2pOwnerPolicyV1 policy;policy.generation=generation;policy.admission=admission;policy.capability=capability;policy.public_destination_hash=source->destination().hash;policy.bridge_port=server.serverPort();policy.peer_port=ports.peer;policy.local_peer_port=ports.localPeer;
         struct Wipe {decltype(policy)& value;~Wipe(){OPENSSL_cleanse(value.capability.data(),value.capability.size());}} wipe{policy};
         auto apply=std::move(install);if(!current()||!apply(&policy)||!current()){close("I2P provider installation refused");executing=false;return;}
@@ -281,6 +296,7 @@ bool Bridge::begin(Ports ports,std::uint64_t admission){
   try{
   if(!s.source->prepared()||!ports.peer||!ports.localPeer||!admission||!s.leaseCurrent()){return false;}
   if(RAND_bytes(s.capability.data(),static_cast<int>(s.capability.size()))!=1||RAND_bytes(reinterpret_cast<unsigned char*>(&s.generation),sizeof(s.generation))!=1||!s.generation){s.close();return false;}
+  if(s.source->mixedMode()&&RAND_bytes(s.peerIdMask.data(),static_cast<int>(s.peerIdMask.size()))!=1){s.close();return false;}
   s.ports=ports;s.admission=admission;
   static_assert(bridgeCapacity(false).streams==streaming::MaximumStreams);
   static_assert(bridgeCapacity(true).streams==streaming::MaximumConfiguredStreams);
@@ -322,6 +338,14 @@ Bridge::Observation Bridge::observation()const noexcept{
   const auto& s=*impl_;Observation value{s.phase,s.generation,s.admission,s.source->destination().hash,s.server.serverPort(),0,0,s.peers.size(),s.rejectedClients};
   for(const auto& item:s.sockets){if(item){++value.sockets;value.streams+=item->operation!=0;}}return value;
 }
-bool Bridge::installProvider(std::function<bool(void*)> install){if(!impl_->onThread()||impl_->phase!=Phase::Ready||impl_->install||!install){return false;}impl_->install=std::move(install);impl_->schedule();return true;}
+bool Bridge::installProvider(std::function<bool(void*)> install){if(!impl_->onThread()||impl_->source->mixedMode()||impl_->phase!=Phase::Ready||impl_->install||!install){return false;}impl_->install=std::move(install);impl_->schedule();return true;}
+bool Bridge::installMixedProvider(std::function<bool(void*)> install){
+#if BIGLYBTC_BRIDGE_HAS_MIXED_HEADER
+  if(!impl_->onThread()||!impl_->source->mixedMode()||impl_->phase!=Phase::Ready||impl_->install||!install){return false;}
+  impl_->install=std::move(install);impl_->schedule();return true;
+#else
+  (void)install;return false;
+#endif
+}
 bool Bridge::event(QEvent* event){if(event->type()==SourcePermit::wakeEvent()){const auto phase=impl_->permit?impl_->permit->phase():SourcePermit::Phase::Stopped;if(phase==SourcePermit::Phase::Ready||phase==SourcePermit::Phase::Failed||phase==SourcePermit::Phase::Stopped||impl_->wanted){impl_->schedule(false);}return true;}return QObject::event(event);}
 }

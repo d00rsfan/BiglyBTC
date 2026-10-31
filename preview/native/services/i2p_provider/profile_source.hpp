@@ -8,6 +8,7 @@
 #include <memory>
 #include <functional>
 
+namespace biglybtc::engine {class MixedManagedSource;}
 namespace biglybtc::services::i2p::provider {
 class OwnedTorrent;
 class OwnedProfile;
@@ -20,6 +21,23 @@ public:
   // Explicit shared identity/session anchor. No torrent or payload permission.
   static std::expected<std::shared_ptr<ProfileSource>,storage::Error> createSession(
       const storage::ProfileLease&,std::string pluginDirectory="azneti2phelper");
+  // Explicit original mixed index0/key0; pure factories retain index1/key1.
+  static std::expected<std::shared_ptr<ProfileSource>,storage::Error> createMixedSession(
+      const storage::ProfileLease&,std::string pluginDirectory="azneti2phelper");
+  // Read-only acceptance: no ManagedStorage preparation or effect authority.
+  std::expected<std::shared_ptr<ProfileSource>,storage::Error> prepareMixedChild(
+      const core::TorrentHash&);
+  // One-shot, inside this anchor's target publication, after the sole engine
+  // storage preparation. Only the actual engine can construct the binding.
+  std::expected<void,storage::Error> bindMixedManaged(
+      std::shared_ptr<const engine::MixedManagedSource>);
+  // Source/transport retirement only; never removes/checkpoints engine storage.
+  std::expected<void,storage::Error> releaseMixedChild(const core::TorrentHash&);
+  bool mixedMode()const noexcept;
+  // Worker-only read after intentional transport withdrawal. Checks exact held
+  // profile/key/metadata snapshots even when effects are revoked. Does not
+  // clear dirty/revoked flags, refresh an epoch or restore any permission.
+  std::expected<void,storage::Error> validateTransportSnapshot()const;
   // Worker-only child admission; prepareStorage() performs its own publication.
   std::expected<std::shared_ptr<ProfileSource>,storage::Error> prepareChild(
       const core::TorrentHash&,std::span<const engine::detail::ManagedPayloadClaim> claimed={},
@@ -66,7 +84,7 @@ private:
   std::vector<int> watchDescriptors()const;
   std::vector<int> criticalWatchDescriptors()const;
   static std::expected<std::shared_ptr<ProfileSource>,storage::Error> openImpl(
-      const storage::ProfileLease&,const core::TorrentHash&,std::string,bool session);
+      const storage::ProfileLease&,const core::TorrentHash&,std::string,bool session,bool mixed=false);
   std::expected<engine::detail::ManagedStorage,storage::Error> prepareStorageDirect();
   std::expected<void,storage::Error> publishImpl(const std::optional<core::TorrentHash>&,
       const std::function<std::expected<void,storage::Error>()>&);

@@ -3,8 +3,13 @@
 #include "source_permit.hpp"
 #include "channel.hpp"
 #include "library_commands.hpp"
+#include "torrent_state.hpp"
 #include "sam_protocol.hpp"
 #include "network_policy.hpp"
+#include "persistent_session.hpp"
+#include "mixed_i2p_source.hpp"
+#include "mixed_i2p_transport.hpp"
+#include <array>
 #include <QScopeGuard>
 #include <libtorrent/torrent_flags.hpp>
 #include <libtorrent/torrent_info.hpp>
@@ -35,6 +40,18 @@ core::TorrentHash addSibling(Fixture& f,bool overlap=false){
   if(!inventory->document().replaceValue("downloads",rows)){throw std::runtime_error("Cannot append owned sibling");}
   auto saved=inventory->save(*f.lease);if(!saved){throw std::runtime_error(saved.error().message);}return hash;
 }
+fs::path mixedKey(Fixture& f){
+  const auto path=f.key.parent_path()/"dest_key.dat";write(path,read(f.key));
+  if(::chmod(path.c_str(),0600)!=0){throw std::runtime_error("Mixed original fixture key mode");}return path;
+}
+void setNetworks(Fixture& f,const core::TorrentHash& hash,const std::string& encoded){
+  const auto path=f.path/"active"/(hash.hex()+".dat");auto state=core::Document::parse(read(path));
+  if(!state){throw std::runtime_error("Mixed fixture metadata");}const auto* old=state->find("attributes");
+  if(!old){throw std::runtime_error("Mixed fixture attributes");}
+  auto attrs=core::Document::parse(state->originalBytes().substr(old->begin,old->end-old->begin));
+  if(!attrs||!attrs->replaceValue("networks",encoded)||!state->replaceValue("attributes",attrs->serialize())){throw std::runtime_error("Mixed fixture network selection");}
+  write(path,state->serialize());
+}
 std::expected<void,storage::Error> saveIntent(Fixture& f,const core::TorrentHash& hash,core::DownloadAction action){
   auto value=storage::applyLibraryCommand(*f.lease,hash,action);if(!value){return std::unexpected(value.error());}return {};
 }
@@ -42,6 +59,131 @@ std::expected<void,storage::Error> saveIntent(Fixture& f,const core::TorrentHash
 class OwnedI2pSourceTests:public QObject {
   Q_OBJECT
 private slots:
+
+  void realMixedStorageSealsBindPendingAndRejectCrossedActualPublicOwners(){
+    namespace engine=biglybtc::engine;
+    if(!engine::PersistentSession::mixedNetworksAvailable()){QSKIP("Explicitly qualified mixed SDK is unavailable; metadata-only controls still run");}
+    std::array<Fixture,2> fixtures;QCOMPARE(fixtures[0].hash,fixtures[1].hash);
+    std::array<std::shared_ptr<sam::ProfileSource>,2> anchors,children;
+    std::array<std::shared_ptr<const engine::MixedManagedSource>,2> seals;
+    std::array<std::unique_ptr<engine::PersistentSession>,2> owners;
+    std::array<bool,2> boundPending{false,false};
+    const auto cleanup=qScopeGuard([&]{for(auto& owner:owners){if(owner){static_cast<void>(owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{2}));}}});
+    for(std::size_t i=0;i<fixtures.size();++i){
+      auto& fixture=fixtures[i];const auto key=mixedKey(fixture);QVERIFY(fs::exists(key));
+      setNetworks(fixture,fixture.hash,i?"l3:I2P6:Publice":"l6:Public3:I2Pe");
+      auto anchor=sam::ProfileSource::createMixedSession(*fixture.lease);QVERIFY(anchor);anchors[i]=std::move(*anchor);
+      auto child=anchors[i]->prepareMixedChild(fixture.hash);QVERIFY(child);children[i]=std::move(*child);
+      auto made=engine::PersistentSession::create({3301+i*100,3302+i*100,3303+i*100});
+      QVERIFY2(made,made?"":"Qualified mixed runtime must create the actual Public owner");owners[i]=std::move(*made);
+      QVERIFY(owners[i]->configureNetwork(engine::NetworkPolicy{})); // Isolated 127.0.0.1:0, no tracker/DHT/bootstrap.
+      QVERIFY(owners[i]->configureExternalQueue(true));QVERIFY(owners[i]->configureMixedNetworks());
+      QVERIFY(owners[i]->configureSourcePublication(
+          [&,i](const core::TorrentHash& hash,const auto& operation){return anchors[i]->publish(hash,operation);},
+          [&,i](const auto& operation){return anchors[i]->publishPositions(operation);}));
+      QVERIFY(owners[i]->configureMixedSourceBinding([&,i](const auto& source)->std::expected<void,storage::Error>{
+        // This callback has real prepared storage but no attached handle yet.
+        // No SDK/Qt calls may be made from inside its source publication.
+        seals[i]=source;boundPending[i]=source->current();return children[i]->bindMixedManaged(source);
+      }));
+      QVERIFY(owners[i]->startIdle(*fixture.lease));
+      QVERIFY2(owners[i]->startManaged(*fixture.lease,{.hash=fixture.hash,.queued=true,.mixedNetworks=true}),"Real mixed managed storage preparation failed");
+      QVERIFY(boundPending[i]);QVERIFY(seals[i]);QVERIFY(seals[i]->current());QVERIFY(children[i]->prepared());QVERIFY(children[i]->effectAuthority());
+      QVERIFY(!children[i]->effectAuthority()->granted());QVERIFY(anchors[i]->validate());QVERIFY(children[i]->validate());
+      auto attached=owners[i]->mixedSource(fixture.hash);QVERIFY(attached);QCOMPARE(attached->get(),seals[i].get());
+      QCOMPARE(seals[i]->identity().originalKey,fixture.hash);QVERIFY(seals[i]->identity().full.v1);QVERIFY(seals[i]->admission());
+      auto loaded=storage::TorrentStateStore::open(*fixture.lease);QVERIFY(loaded);auto actual=loaded->load(*fixture.lease,fixture.hash);QVERIFY(actual);
+      QCOMPARE(std::string(seals[i]->stateSnapshot()),actual->document().serialize());
+      QCOMPARE(owners[i]->retainedPayloads().identities.size(),std::size_t{1});QVERIFY(!children[i]->prepareStorage());
+    }
+    QVERIFY(seals[0]->lease().sharesOwnership(*fixtures[0].lease));QVERIFY(!seals[0]->lease().sharesOwnership(*fixtures[1].lease));
+    auto transport=owners[0]->mixedTransport();QVERIFY(transport);
+    const auto crossAdmit=(*transport)->admit(*seals[1],1,1),crossRevoke=(*transport)->revoke(*seals[1],1,1);
+    QVERIFY(!crossAdmit);QVERIFY(!crossRevoke);
+    for(const auto* result:{&crossAdmit,&crossRevoke}){
+      QCOMPARE(result->error().code,storage::ErrorCode::Unsupported);
+      QCOMPARE(result->error().message,std::string("Mixed source belongs to another actual engine owner"));
+    }
+    // Correct owner reaches the real unconfigured SDK route check (no I2CP,
+    // SAM or policy configuration is fabricated just to make it successful).
+    const auto sameOwner=(*transport)->admit(*seals[0],1,2);QVERIFY(!sameOwner);
+    QCOMPARE(sameOwner.error().code,storage::ErrorCode::Conflict);
+    QCOMPARE(sameOwner.error().message,std::string("Mixed I2P provider rejected a current route operation"));
+    QVERIFY(owners[0]->stopManaged(fixtures[0].hash));QVERIFY(!seals[0]->current());QVERIFY(!children[0]->prepared());
+    QVERIFY(!children[0]->effectAuthority()->current());QVERIFY(!owners[0]->mixedSource(fixtures[0].hash));
+    const auto expired=(*transport)->admit(*seals[0],1,3);QVERIFY(!expired);
+    QCOMPARE(expired.error().code,storage::ErrorCode::Unsupported);
+    QCOMPARE(expired.error().message,std::string("Mixed I2P admission is not attached to its actual engine handle"));
+    QVERIFY(seals[1]->current());QVERIFY(children[1]->prepared());QVERIFY(anchors[1]->validate());
+    const auto closed=owners[0]->close(std::chrono::steady_clock::now()+std::chrono::seconds{2});QVERIFY(closed.sessionJoined);
+    QVERIFY(!seals[0]->current());QVERIFY(seals[1]->current());
+  }
+
+  void mixedSourceAcceptsBothOriginalOrdersWithoutPreparingSecondStorage(){
+    for(bool reversed:{false,true}){
+      Fixture f;const auto key=mixedKey(f);setNetworks(f,f.hash,reversed?"l3:I2P6:Publice":"l6:Public3:I2Pe");
+      const auto state=read(f.state()),config=read(f.path/"biglybt.config"),inventory=read(f.path/"downloads.config"),keyBytes=read(key);
+      auto anchor=sam::ProfileSource::createMixedSession(*f.lease);QVERIFY2(anchor,anchor?"":anchor.error().message.c_str());
+      QVERIFY((*anchor)->mixedMode());QVERIFY((*anchor)->groupMode());QVERIFY((*anchor)->prepared());QVERIFY((*anchor)->validate());
+      QVERIFY(!(*anchor)->prepareChild(f.hash));QVERIFY(!(*anchor)->policy().matches(*f.lease,f.hash));
+      auto child=(*anchor)->prepareMixedChild(f.hash);QVERIFY(child);QVERIFY((*child)->mixedMode());QVERIFY(!(*child)->prepared());
+      QVERIFY(!(*child)->effectAuthority());QVERIFY(!(*child)->revisionCurrent(f.lease->sourceRevision()));
+      QVERIFY(!(*child)->prepareStorage());QVERIFY((*child)->validate());QVERIFY((*anchor)->validate());
+      const auto tracker=sam::hashName(std::string(52,'a')+".b32.i2p");QVERIFY(tracker);QVERIFY(!(*anchor)->trackerAllowed(*tracker,80));
+      auto identity=(*anchor)->takeIdentity();QVERIFY(identity);QVERIFY(!(*anchor)->takeIdentity());
+      QVERIFY((*anchor)->releaseMixedChild(f.hash));QVERIFY((*anchor)->validate());QVERIFY(!(*child)->validate());
+      QCOMPARE(read(f.state()),state);QCOMPARE(read(f.path/"biglybt.config"),config);QCOMPARE(read(f.path/"downloads.config"),inventory);QCOMPARE(read(key),keyBytes);
+    }
+  }
+  void mixedIdentityUsesOnlyItsOriginalKeyAndEnableSetting(){
+    Fixture f;const auto key=mixedKey(f);fs::remove(f.key);
+    auto mixed=sam::ProfileSource::createMixedSession(*f.lease);QVERIFY(mixed);QVERIFY((*mixed)->validate());
+    QVERIFY(!sam::ProfileSource::createSession(*f.lease));
+    const auto bytes=read(key);replaceNamedFileWithSameBytes(key);QVERIFY(::chmod(key.c_str(),0600)==0);
+    QVERIFY(!(*mixed)->validateTransportSnapshot());QVERIFY(!(*mixed)->validate());QCOMPARE(read(key),bytes);
+    Fixture disabledPure;const auto independentKey=mixedKey(disabledPure);
+    write(disabledPure.path/"biglybt.config",dict({{"PluginInfo.azneti2phelper.enabled","i1e"},{"Plugin.azneti2phelper.enable","i1e"},
+        {"Plugin.azneti2phelper.azi2phelper.pure.enabled","i0e"},{"Plugin.azneti2phelper.azi2phelper.mix.enabled","i1e"}}));
+    QVERIFY(sam::ProfileSource::createMixedSession(*disabledPure.lease));QVERIFY(!sam::ProfileSource::createSession(*disabledPure.lease));QVERIFY(fs::exists(independentKey));
+    for(bool malformed:{false,true}){
+      Fixture other;const auto otherKey=mixedKey(other);const auto unchanged=read(other.key),unchangedMixed=read(otherKey);
+      write(other.path/"biglybt.config",dict({{"PluginInfo.azneti2phelper.enabled","i1e"},{"Plugin.azneti2phelper.enable","i1e"},
+          {"Plugin.azneti2phelper.azi2phelper.pure.enabled","i1e"},{"Plugin.azneti2phelper.azi2phelper.mix.enabled",malformed?owned_i2p_test::b("1"):"i0e"}}));
+      QVERIFY(!sam::ProfileSource::createMixedSession(*other.lease));QVERIFY(sam::ProfileSource::createSession(*other.lease));
+      QCOMPARE(read(other.key),unchanged);QCOMPARE(read(otherKey),unchangedMixed);
+    }
+  }
+  void mixedSourceRejectsOtherNetworkListsAndAnUnmintedBinding(){
+    for(const std::string networks:{"le","l6:Publice","l3:I2Pe","l6:Public3:I2P3:I2Pe","l6:Public3:I2P3:Tore","l6:Public7:unknowne"}){
+      Fixture f;const auto key=mixedKey(f);setNetworks(f,f.hash,networks);const auto bytes=read(f.state()),keyBytes=read(key);
+      auto anchor=sam::ProfileSource::createMixedSession(*f.lease);QVERIFY(anchor);QVERIFY(!(*anchor)->prepareMixedChild(f.hash));QVERIFY((*anchor)->validate());
+      QCOMPARE(read(f.state()),bytes);QCOMPARE(read(key),keyBytes);
+    }
+    Fixture f;const auto key=mixedKey(f);setNetworks(f,f.hash,"l6:Public3:I2Pe");auto anchor=sam::ProfileSource::createMixedSession(*f.lease);QVERIFY(anchor);
+    auto child=(*anchor)->prepareMixedChild(f.hash);QVERIFY(child);const auto bytes=read(f.state()),inventory=read(f.path/"downloads.config");
+    QVERIFY(!(*child)->bindMixedManaged({}));QVERIFY(!(*child)->prepared());QVERIFY(!(*child)->effectAuthority());
+    QVERIFY((*anchor)->validate());QCOMPARE(read(f.state()),bytes);QCOMPARE(read(f.path/"downloads.config"),inventory);QVERIFY(fs::exists(key));
+  }
+  void transportSnapshotReadNeverRestoresRevokedEffectsAndDetectsActualTampering(){
+    for(bool mixed:{false,true}){
+      Fixture f;const auto key=mixed?mixedKey(f):f.key;if(mixed){setNetworks(f,f.hash,"l3:I2P6:Publice");}
+      auto anchor=mixed?sam::ProfileSource::createMixedSession(*f.lease):sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);
+      auto child=mixed?(*anchor)->prepareMixedChild(f.hash):(*anchor)->prepareChild(f.hash);QVERIFY(child);
+      (*anchor)->revoke();QVERIFY((*anchor)->effectAuthority()->revoked());QVERIFY((*anchor)->validateTransportSnapshot());QVERIFY((*child)->validateTransportSnapshot());
+      QVERIFY((*anchor)->effectAuthority()->revoked());QVERIFY(!(*anchor)->effectAuthority()->current());QVERIFY(!(*anchor)->prepared());
+      replaceNamedFileWithSameBytes(key);QVERIFY(::chmod(key.c_str(),0600)==0);QVERIFY(!(*anchor)->validateTransportSnapshot());QVERIFY(!(*child)->validateTransportSnapshot());
+    }
+  }
+  void pureThenMixedPositionPublicationPreservesBothOriginalIdentityAnchors(){
+    Fixture f;const auto key=mixedKey(f);const auto sibling=addSibling(f);setNetworks(f,sibling,"l3:I2P6:Publice");
+    auto pure=sam::ProfileSource::createSession(*f.lease);QVERIFY(pure);auto child=(*pure)->prepareChild(f.hash);QVERIFY(child);auto prepared=(*child)->prepareStorage();QVERIFY(prepared);
+    auto mixed=sam::ProfileSource::createMixedSession(*f.lease);QVERIFY(mixed);auto accepted=(*mixed)->prepareMixedChild(sibling);QVERIFY(accepted);
+    const auto state=read(f.state()),mixedState=read(f.path/"active"/(sibling.hex()+".dat")),pureKey=read(f.key),mixedBytes=read(key);
+    const std::array pools{storage::LibraryCompletionPool{f.hash,false},storage::LibraryCompletionPool{sibling,false}};
+    auto moved=(*pure)->publishPositions([&]{return (*mixed)->publishPositions([&]()->std::expected<void,storage::Error>{auto value=storage::applyLibraryCommand(*f.lease,sibling,core::DownloadAction::MoveTop,pools);if(!value){return std::unexpected(value.error());}return {};});});
+    QVERIFY2(moved,moved?"":moved.error().message.c_str());QVERIFY((*pure)->validate());QVERIFY((*mixed)->validate());QVERIFY((*child)->validate());QVERIFY((*accepted)->validate());
+    QCOMPARE(read(f.state()),state);QCOMPARE(read(f.path/"active"/(sibling.hex()+".dat")),mixedState);QCOMPARE(read(f.key),pureKey);QCOMPARE(read(key),mixedBytes);
+  }
 
   void trustedPublicStorageAndPositionWritesPreserveTheCurrentI2pMember(){
     Fixture f;const auto publicHash=addSibling(f);const auto publicState=f.path/"active"/(publicHash.hex()+".dat");

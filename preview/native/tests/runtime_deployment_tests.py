@@ -1,5 +1,6 @@
 """Owned copied-provider identity fixtures; no configure, build or profile IO."""
 import argparse
+import importlib.util
 import hashlib
 import json
 import os
@@ -31,8 +32,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--driver", type=Path, required=True)
     parser.add_argument("--provider", type=Path, required=True)
-    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "webseed", "queue", "traffic", "socks", "mainline", "original-identity", "mainline-routing", "coexistence", "strict"), required=True)
+    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "webseed", "queue", "traffic", "socks", "mainline", "original-identity", "mainline-routing", "coexistence", "mixed", "strict"), required=True)
     parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--approval", type=Path)
+    parser.add_argument("--approval-sha256")
+    parser.add_argument("--include-root", type=Path)
     parser.add_argument("--alternate", type=Path)
     parser.add_argument("--interposition-driver", type=Path)
     parser.add_argument("--preload")
@@ -118,6 +122,16 @@ def main():
         if (Path(declared["artifact"]).resolve(strict=True) != provider
                 or declared["artifact_sha256"] != original_sha or declared["artifact_bytes"] != provider.stat().st_size):
             raise ValueError("Original identity/tracker relocation differs from the reviewed manifest")
+    elif args.mode == "mixed":
+        if not all((args.manifest, args.approval, args.approval_sha256, args.include_root,
+                    args.alternate, args.interposition_driver, args.preload)):
+            raise ValueError("Mixed relocation requires its closed39 role proof and all rejection controls")
+        verifier = Path(__file__).resolve().parents[1] / "engine/runtime-binding/verify_runtime_manifest_mixed.py"
+        spec = importlib.util.spec_from_file_location("mixed_deployment_closed_reader", verifier)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        module.inspect(argparse.Namespace(manifest=args.manifest, approval=args.approval,
+            approval_sha256=args.approval_sha256, library=provider, include_root=args.include_root))
     elif args.mode == "coexistence":
         if (not args.manifest or digest(args.manifest) != "62f7545f96af46806e7a7708213319ffd1e91c7a5228f0c35065eaa249a91343"
                 or original_sha != "7ffbd4c63d7770168bcbdf8e8c19644e18d1509d57ac148331a3c4bd094310c4" or provider.stat().st_size != 9659328
@@ -172,6 +186,10 @@ def main():
                 raise ValueError("Copied runtime fixture failed: " + name + ": " + result.stderr.decode(errors="replace"))
             if b"original_opens=0" not in result.stdout or b"mapped_copy=" not in result.stdout:
                 raise ValueError("Missing actual copied-origin/original-path controls: " + name)
+            if args.mode == "mixed":
+                proof = b"proof=mixed39 retained_pin=" + (b"1" if expected == "bound" else b"0")
+                if proof not in result.stdout:
+                    raise ValueError("Missing retained complete39-export proof: " + name)
             if args.mode == "coexistence":
                 proof = b"proof=coexistence34 retained_pin=" + (b"1" if expected == "bound" else b"0")
                 if proof not in result.stdout:

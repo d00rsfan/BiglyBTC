@@ -483,6 +483,7 @@ void decoderContextOptions(){
 int main(){
   try{
     i2pNetworkContexts();
+    mixedNetworkContexts();
     decoderContextOptions();
     selectedExistingJournalCases();
     filenameConversionOptions();

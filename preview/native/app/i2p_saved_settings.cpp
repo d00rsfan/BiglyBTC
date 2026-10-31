@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <array>
 namespace biglybtc::app {
-std::expected<I2pServiceOptions,storage::Error> readSavedI2pOptions(const core::Document& config,I2pServiceOptions options){
+static std::expected<I2pServiceOptions,storage::Error> readSavedI2pOptionsImpl(const core::Document& config,I2pServiceOptions options,bool mixed){
   auto binding=storage::originalPluginBinding("azneti2phelper","azneti2phelper");
   if(!binding){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,binding.error().message});}
   storage::OriginalPluginSettings saved(config,std::move(*binding));
@@ -17,8 +17,9 @@ std::expected<I2pServiceOptions,storage::Error> readSavedI2pOptions(const core::
     {"azi2phelper.i2p.inbound.var","inbound.lengthVariance",0,-3,3},
     {"azi2phelper.i2p.outbound.var","outbound.lengthVariance",0,-3,3}}};
   for(const auto& field:fields){
-    const auto value=saved.integer(field.name,field.fallback);
-    if(value<field.minimum||value>field.maximum){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,std::string("Unsupported saved I2P setting: ")+field.name});}
+    std::string key=field.name;if(mixed){key.replace(key.find(".i2p."),5,".mix.");}
+    const auto value=saved.integer(key,mixed&&field.fallback==3?1:field.fallback);
+    if(value<field.minimum||value>field.maximum){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,std::string("Unsupported saved I2P setting: ")+key});}
     if(std::ranges::none_of(options.sessionOptions,[&](const auto& entry){return entry.first==field.property;})){
       options.sessionOptions.emplace_back(field.property,std::to_string(value));
     }
@@ -31,5 +32,11 @@ std::expected<I2pServiceOptions,storage::Error> readSavedI2pOptions(const core::
   }
   if(!saved.wrongTypes().empty()){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Malformed original I2P setting: "+saved.wrongTypes().front()});}
   return options;
+}
+std::expected<I2pServiceOptions,storage::Error> readSavedI2pOptions(const core::Document& config,I2pServiceOptions options){
+  return readSavedI2pOptionsImpl(config,std::move(options),false);
+}
+std::expected<I2pServiceOptions,storage::Error> readSavedMixedI2pOptions(const core::Document& config,I2pServiceOptions options){
+  return readSavedI2pOptionsImpl(config,std::move(options),true);
 }
 }

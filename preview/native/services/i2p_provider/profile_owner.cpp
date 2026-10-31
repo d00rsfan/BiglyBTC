@@ -8,6 +8,7 @@
 #include "biglybtc/queue_observations.hpp"
 #include "biglybtc/queue_positions.hpp"
 #include <libtorrent/session.hpp>
+#include <libtorrent/peer_info.hpp>
 #include <libtorrent/settings_pack.hpp>
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/torrent_flags.hpp>
@@ -467,7 +468,23 @@ std::vector<OwnedProfile::Observation> OwnedProfile::observations(){
     out.push_back(std::move(row));
   }return out;
 }
+std::vector<std::array<std::uint8_t,20>> OwnedProfile::peerIds(const core::TorrentHash& h)const{
+  try{
+    const auto& s=*impl_;if(!s.onThread()||s.phase!=Phase::Active){return {};}const auto* m=s.find(h);
+    if(!m||!m->installed||m->retired.requested
+        ||!m->failure.empty()||!s.failure.empty()||!m->handle.is_valid()){return {};}
+    std::vector<lt::peer_info> peers;m->handle.get_peer_info(peers);
+    std::vector<std::array<std::uint8_t,20>> out;
+    for(const auto& peer:peers){
+      if(!(peer.flags&lt::peer_info::i2p_socket)||peer.pid.is_all_zeros()){continue;}
+      std::array<std::uint8_t,20> id{};std::copy_n(peer.pid.begin(),id.size(),id.begin());
+      if(std::ranges::find(out,id)==out.end()){out.push_back(id);if(out.size()==4){break;}}
+    }return out;
+  }catch(...){return {};}
+}
 OwnedProfile::Phase OwnedProfile::phase()const noexcept{return impl_->phase;}
+bool OwnedProfile::sourceCurrent()const noexcept{return impl_->source->prepared();}
+void OwnedProfile::revokeSource()noexcept{impl_->source->revoke();}
 void OwnedProfile::close(){if(impl_->onThread()){impl_->close();}}
 void OwnedProfile::join(){auto& s=*impl_;s.joining.reset();if(s.bridge){s.bridge->joinSource();}if(s.permit){s.permit->join();}}
 bool OwnedProfile::event(QEvent* e){if(e->type()==SourcePermit::wakeEvent()){auto& s=*impl_;if(s.permit){const auto p=s.permit->phase();if(p==SourcePermit::Phase::Ready||p==SourcePermit::Phase::Failed||p==SourcePermit::Phase::Stopped){s.startup();}else if(p==SourcePermit::Phase::Idle&&(s.startRequested||s.memberInstallRequested||(s.bridgeRequested&&s.channel->ownedTransportIdle())||s.channel->sourceEffectsPending())){s.requestStartup();}}return true;}return QObject::event(e);}

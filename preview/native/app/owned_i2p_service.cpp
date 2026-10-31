@@ -125,6 +125,13 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
 std::vector<OwnedI2pService::TorrentObservation> OwnedI2pService::observations()const{
   auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.closed&&s.owner&&QThread::currentThread()==s.caller){s.settleCompletions();if(!s.onOwner([&]{s.capture();})){for(auto& e:s.last){e.value.current=false;e.value.failure="I2P event loop unavailable";}}}return s.last;
 }
+std::vector<std::array<std::uint8_t,20>> OwnedI2pService::peerIds(const core::TorrentHash& h)const{
+  auto& s=*impl_;std::lock_guard lock(s.mutex);
+  if(s.closed||!s.owner||QThread::currentThread()!=s.caller){return {};}
+  try{std::vector<std::array<std::uint8_t,20>> out;
+    if(!s.onOwner([&]{out=s.owner->peerIds(h);})){return {};}return out;
+  }catch(...){return {};}
+}
 OwnedI2pService::Observation OwnedI2pService::observation()const{
   const auto rows=observations();Observation out;out.joined=impl_->joined;if(rows.empty()){out.phase=impl_->closed?Phase::Withdrawn:impl_->lastPhase;return out;}out=rows.front().value;
   if(rows.size()>1){bool capped=false;out.verifiedBytes=0;out.payloadDownloaded=0;out.payloadUploaded=0;out.downloadRate=0;out.uploadRate=0;out.peers=0;out.seeds=0;out.checked=true;out.seeding=true;out.cumulativeReceived=0;out.cumulativeSent=0;out.trackerAnnounces=out.trackerReplies=out.trackerErrors=0;
@@ -201,6 +208,8 @@ engine::RetainedPayloads OwnedI2pService::retainedPayloads()const{
   auto& s=*impl_;std::lock_guard lock(s.mutex);engine::RetainedPayloads out;
   if(!s.closed&&QThread::currentThread()==s.caller){(void)s.onOwner([&]{out=s.owner->retained();});}return out;
 }
+bool OwnedI2pService::sourceCurrent()const noexcept{auto& s=*impl_;std::lock_guard lock(s.mutex);return !s.closed&&s.owner&&QThread::currentThread()==s.caller&&s.owner->sourceCurrent();}
+void OwnedI2pService::revoke()noexcept{auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.closed&&s.owner&&QThread::currentThread()==s.caller){s.owner->revokeSource();}}
 std::expected<void,storage::Error> OwnedI2pService::close(){auto& s=*impl_;std::lock_guard lock(s.mutex);return s.shutdown(true);}
 OwnedI2pService::~OwnedI2pService(){try{auto& s=*impl_;std::lock_guard lock(s.mutex);(void)s.shutdown(false);}catch(...){}}
 }
@@ -213,6 +222,7 @@ bool OwnedI2pService::available()noexcept{return false;}
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::start(const storage::ProfileLease&,const core::TorrentHash&,I2pServiceOptions,const engine::RetainedPayloads&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 OwnedI2pService::Observation OwnedI2pService::observation()const{Observation v;v.phase=Phase::Withdrawn;v.failure="Optional native I2P owner is unavailable";return v;}
 std::vector<OwnedI2pService::TorrentObservation> OwnedI2pService::observations()const{return {};}
+std::vector<std::array<std::uint8_t,20>> OwnedI2pService::peerIds(const core::TorrentHash&)const{return {};}
 std::expected<void,storage::Error> OwnedI2pService::add(const core::TorrentHash&,const engine::RetainedPayloads&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::stop(const core::TorrentHash&){return {};}
 std::expected<void,storage::Error> OwnedI2pService::command(const core::TorrentHash&,core::DownloadAction,const engine::RetainedPayloads&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
@@ -225,6 +235,8 @@ std::expected<bool,storage::Error> OwnedI2pService::applyExternalQueue(std::uint
 std::expected<void,storage::Error> OwnedI2pService::applyExternalQueuePositions(std::span<const std::pair<engine::QueueBinding,std::uint32_t>>){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::applyExternalRateLimits(const core::SessionRateLimits&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 engine::RetainedPayloads OwnedI2pService::retainedPayloads()const{return {};}
+bool OwnedI2pService::sourceCurrent()const noexcept{return false;}
+void OwnedI2pService::revoke()noexcept{}
 std::expected<void,storage::Error> OwnedI2pService::close(){return {};}
 }
 #endif

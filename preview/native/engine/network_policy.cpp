@@ -282,8 +282,8 @@ UrlKind urlKind(std::string_view url, std::string_view field, bool ipv6 = true) 
 }
 } // namespace
 
-std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
-    const core::Document* configuration, NetworkPolicyOptions options) {
+static std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicyImpl(
+    const core::Document* configuration, NetworkPolicyOptions options, bool mixedDefaults) {
   try {
     require(options.mode == NetworkMode::IsolatedLoopback || options.mode == NetworkMode::Normal,
         Code::InvalidConfiguration, "mode");
@@ -292,8 +292,10 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
     const Config c(configuration);
     p.mode = NetworkMode::Normal;
     p.socks4Capability = std::move(options.socks4Capability);
+    const bool defaultI2p=c.boolean("Network Selection Default.I2P", false);
     require(c.boolean("Network Selection Default.Public", true)
-        && !c.boolean("Network Selection Default.Tor", false) && !c.boolean("Network Selection Default.I2P", false),
+        && !c.boolean("Network Selection Default.Tor", false)
+        && (mixedDefaults || !defaultI2p),
         Code::Unsupported, "Network Selection Default");
     p.ipv6 = c.boolean("IPV6 Enable Support", false);
     const bool tcp = c.boolean("peercontrol.tcp.public.enable", true);
@@ -453,6 +455,16 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
     return p;
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::bad_alloc&) { return std::unexpected(NetworkPolicyError{Code::Memory, "network policy"}); }
+}
+
+std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
+    const core::Document* configuration, NetworkPolicyOptions options) {
+  return readNetworkPolicyImpl(configuration, std::move(options), false);
+}
+
+std::expected<NetworkPolicy, NetworkPolicyError> readMixedNetworkPolicy(
+    const core::Document* configuration, NetworkPolicyOptions options) {
+  return readNetworkPolicyImpl(configuration, std::move(options), true);
 }
 
 std::expected<void, NetworkPolicyError> validateNetworkPolicy(const NetworkPolicy& policy) {

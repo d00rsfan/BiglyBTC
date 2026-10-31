@@ -6,6 +6,8 @@ namespace biglybtc::engine::detail {
 // Private build/runtime admission, never a caller-supplied trust token. This is
 // source/artifact binding only; causal qualification remains a separate gate.
 bool persistentRuntimeQualified() noexcept;
+// Requires the independently approved complete mixed-transport SDK cohort.
+std::shared_ptr<void> mixedI2pTransportRuntimePin() noexcept;
 // Optional PORT ABI requires the complete new exact mapped-image proof. Old
 // providers return absent; the caller retains this same pin through callbacks.
 std::shared_ptr<void> mainlinePortRuntimePin() noexcept;

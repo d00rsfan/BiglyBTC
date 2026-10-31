@@ -31,10 +31,11 @@ struct TorrentIntakePacket {
   bool decoderShowAll=false; // Worker-derived sealed context, never a UI setting.
   bool i2pOnly=false; // Worker-derived presentation context, never network authority.
   bool i2pAvailable=false; // Explicit coexistence context; legacy i2pOnly takes precedence.
+  bool mixedAvailable=false; // Explicit single-owner Public + I2P capability; never inferred from i2pAvailable.
 };
 using TorrentIntakePresentation=std::shared_ptr<const TorrentIntakePacket>;
 enum class TorrentIntakeStartMode { Queued, Stopped, Paused, Forced, VerifySeeding, VerifySelected, AllocateStopped, AllocatePaused };
-enum class TorrentIntakeNetwork { Public, I2p };
+enum class TorrentIntakeNetwork { Public, I2p, Mixed };
 struct TorrentIntakeSubmission {
   quint64 session=0,request=0,revision=0;
   QString destination;

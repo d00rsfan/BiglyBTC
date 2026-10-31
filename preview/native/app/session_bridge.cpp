@@ -13,6 +13,8 @@
 #include "network_policy.hpp"
 #include "session_bridge.hpp"
 #include "i2p_saved_settings.hpp"
+#include "owned_mixed_i2p_service.hpp"
+#include "mixed_i2p_source.hpp"
 #include "coexist_coordinator.hpp"
 #include "application_settings.hpp"
 #include "scheduler_service.hpp"
@@ -204,18 +206,24 @@ void take(std::expected<void, storage::Error> value) {
 }
 }
 struct SessionBridge::Host {
-  ~Host(){i2p.reset();} // Immediate no-throw fallback joins before the held lease.
+  ~Host(){mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
   struct Known { QString name; std::optional<qint64> bytes{}; };
   std::filesystem::path profile;
   unsigned short peerPort;
   bool normalNetwork = false;
   std::optional<I2pServiceOptions> i2pOptions;
   std::unique_ptr<OwnedI2pService> i2p;
+  std::unique_ptr<OwnedMixedI2pService> mixed;
+  struct MixedStatus {bool active=false;std::uint64_t generation=0,routeNonce=0;std::string failure;};
+  std::map<std::string,MixedStatus> mixedStatus;
+  std::set<std::string> mixedBindingTargets;
+  bool mixedJoined=true;
+  bool mixedCapable()const noexcept{return coexistence()&&engine::PersistentSession::mixedNetworksAvailable();}
   std::map<std::string,ui::I2pPacket> i2pPackets;
   std::map<std::string,OwnedI2pService::Observation> i2pFacts;
   ui::I2pPacket i2pPacket;
   quint64 i2pSequence=0;
-  enum class Route { Public, I2p, Unsupported };
+  enum class Route { Public, I2p, Mixed, Unsupported };
   bool coexistence()const noexcept{return i2pOptions&&i2pOptions->publicCoexistence;}
   bool privateOnly()const noexcept{return i2pOptions&&!i2pOptions->publicCoexistence;}
   Route route(const core::TorrentHash& hash)const {
@@ -223,13 +231,78 @@ struct SessionBridge::Host {
     auto state=store->loadAttributes(lease,hash);if(!state){return Route::Unsupported;}
     const auto* a=state->document().find("attributes");const auto* n=a?a->find("networks"):nullptr;
     if(!n){return Route::Public;}
-    if(n->type!=core::Node::Type::List||n->children.size()!=1||n->children[0].type!=core::Node::Type::Bytes){return Route::Unsupported;}
+    if(n->type!=core::Node::Type::List){return Route::Unsupported;}
+    if(n->children.size()==2&&n->children[0].type==core::Node::Type::Bytes&&n->children[1].type==core::Node::Type::Bytes
+        &&((n->children[0].bytes=="Public"&&n->children[1].bytes=="I2P")||(n->children[0].bytes=="I2P"&&n->children[1].bytes=="Public"))){return Route::Mixed;}
+    if(n->children.size()!=1||n->children[0].type!=core::Node::Type::Bytes){return Route::Unsupported;}
     if(n->children[0].bytes=="I2P"){return Route::I2p;}
     return n->children[0].bytes=="Public"?Route::Public:Route::Unsupported;
   }
   bool pureI2p(const core::TorrentHash& hash)const{return route(hash)==Route::I2p;}
-  std::expected<void,storage::Error> publishTarget(const core::TorrentHash& hash,const std::function<std::expected<void,storage::Error>()>& f){return i2p?i2p->publish(hash,f):f();}
-  std::expected<void,storage::Error> publishPositions(const std::function<std::expected<void,storage::Error>()>& f){return i2p?i2p->publishPositions(f):f();}
+  std::expected<void,storage::Error> publishTarget(const core::TorrentHash& hash,const std::function<std::expected<void,storage::Error>()>& f){
+    const auto inner=[&]{return mixed?mixed->publish(hash,f):f();};
+    auto result=i2p?i2p->publish(hash,inner):inner();
+    if(!result&&((i2p&&!i2p->sourceCurrent())||(mixed&&!mixed->sourceCurrent()))){if(i2p){i2p->revoke();}if(mixed){mixed->revoke();}}return result;
+  }
+  std::expected<void,storage::Error> publishPositions(const std::function<std::expected<void,storage::Error>()>& f){
+    const auto inner=[&]{return mixed?mixed->publishPositions(f):f();};
+    auto result=i2p?i2p->publishPositions(inner):inner();
+    if(!result&&((i2p&&!i2p->sourceCurrent())||(mixed&&!mixed->sourceCurrent()))){if(i2p){i2p->revoke();}if(mixed){mixed->revoke();}}return result;
+  }
+  void rememberMixedFailure(const core::TorrentHash& hash,const storage::Error& error){
+    auto& value=mixedStatus[hash.hex()];value.active=false;value.failure=error.message;
+  }
+  std::expected<void,storage::Error> prepareMixed(const core::TorrentHash& hash){
+    if(!mixedCapable()||!engine){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"The mixed I2P provider is unavailable"});}
+    if(!mixed){
+      auto transport=engine->mixedTransport();if(!transport){return std::unexpected(transport.error());}
+      // The facade reads mixed defaults and captures its key/config under one
+      // same-profile gate; explicitly supplied development options still win.
+      auto created=OwnedMixedI2pService::create(lease,*i2pOptions,*transport);if(!created){return std::unexpected(created.error());}
+      mixed=std::move(*created);mixedJoined=false;
+    }
+    auto result=mixed->prepare(hash);if(result){mixedStatus[hash.hex()]={};}return result;
+  }
+  std::expected<void,storage::Error> removeMixed(const core::TorrentHash& hash){
+    mixedBindingTargets.erase(hash.hex());auto result=mixed?mixed->remove(hash):std::expected<void,storage::Error>{};
+    mixedStatus.erase(hash.hex());return result;
+  }
+  void attachMixed(const core::TorrentHash& hash){
+    if(!mixed){return;}auto source=engine->mixedSource(hash);
+    if(!source){rememberMixedFailure(hash,source.error());return;}
+    const auto result=mixed->attach(*source);if(!result){rememberMixedFailure(hash,result.error());}
+  }
+  void retryMixed(const core::TorrentHash& hash){
+    const auto removed=removeMixed(hash);if(!removed){rememberMixedFailure(hash,removed.error());return;}
+    auto prepared=prepareMixed(hash);if(!prepared){rememberMixedFailure(hash,prepared.error());return;}
+    auto source=engine->mixedSource(hash);if(!source){rememberMixedFailure(hash,source.error());return;}
+    const auto bound=publishTarget(hash,[&]{return mixed->bind(*source);});
+    if(!bound){rememberMixedFailure(hash,bound.error());return;}attachMixed(hash);
+  }
+  void pollMixed(){
+    if(!mixed){return;}auto observations=mixed->observations();
+    bool unavailable=false;std::vector<core::TorrentHash> changed;
+    for(const auto& row:observations){auto& value=mixedStatus[row.hash.hex()];
+      value={row.active,row.generation,row.routeNonce,row.failure};
+      unavailable|=row.unavailable;if(row.sourceChanged){changed.push_back(row.hash);}
+    }
+    if(unavailable||!changed.empty()){
+      static_cast<void>(mixed->close());
+      const auto final=mixed->observations();mixedJoined=std::ranges::all_of(final,[](const auto& row){return row.joined;});
+      mixed.reset();mixedBindingTargets.clear();
+      for(auto& [hash,value]:mixedStatus){(void)hash;value.active=false;if(value.failure.empty()){value.failure="I2P unavailable. Use Start to retry; Public remains selected.";}}
+      for(const auto& hash:changed){
+        const auto stopped=engine->stopManaged(hash);
+        admissionFailures.insert_or_assign(hash.hex(),storage::Error{storage::ErrorCode::Conflict,"Mixed torrent source changed. The admission was withdrawn; inspect the original profile before retrying."});
+        if(!stopped){admissionFailures.insert_or_assign(hash.hex(),stopped.error());}
+      }
+    }
+  }
+  std::expected<void,storage::Error> stopMixed(){
+    if(!mixed){mixedStatus.clear();return {};}auto result=mixed->close();
+    const auto final=mixed->observations();mixedJoined=std::ranges::all_of(final,[](const auto& row){return row.joined;});mixed.reset();
+    mixedStatus.clear();mixedBindingTargets.clear();return result;
+  }
   std::expected<storage::LibraryCommandResult,storage::Error> libraryCommand(const core::TorrentHash& hash,core::DownloadAction action,std::span<const storage::LibraryCompletionPool> pools={}){
     std::optional<storage::LibraryCommandResult> result;
     const auto write=[&]()->std::expected<void,storage::Error>{auto v=storage::applyLibraryCommand(lease,hash,action,pools);if(!v){return std::unexpected(v.error());}result=std::move(*v);return {};};
@@ -238,8 +311,16 @@ struct SessionBridge::Host {
     if(!done){return std::unexpected(done.error());}return std::move(*result);
   }
   std::expected<void,storage::Error> startPublic(engine::ManagedDownloadOptions options){
-    if(!engine||privateOnly()||route(options.hash)!=Route::Public){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Saved torrent networks require a provider that is not available; the selection was preserved"});}
-    return engine->startManaged(lease,std::move(options),i2p?i2p->retainedPayloads():engine::RetainedPayloads{});
+    const auto selected=route(options.hash);const bool both=selected==Route::Mixed&&mixedCapable();
+    if(!engine||privateOnly()||(selected!=Route::Public&&!both)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Saved torrent networks require a provider that is not available; the selection was preserved"});}
+    const auto hash=options.hash;
+    if(both){options.mixedNetworks=true;const auto prepared=prepareMixed(hash);
+      if(prepared){mixedBindingTargets.insert(hash.hex());}else{rememberMixedFailure(hash,prepared.error());}
+    }
+    const auto started=engine->startManaged(lease,std::move(options),i2p?i2p->retainedPayloads():engine::RetainedPayloads{});
+    mixedBindingTargets.erase(hash.hex());
+    if(both){if(started){attachMixed(hash);pollMixed();}else{static_cast<void>(removeMixed(hash));}}
+    return started;
   }
   std::expected<void,storage::Error> startSaved(const core::TorrentHash& hash,bool force=false,bool queued=false){
     return route(hash)==Route::I2p?startI2p(hash):startPublic({hash,peerPort,force,queued});
@@ -247,6 +328,8 @@ struct SessionBridge::Host {
   CoexistCoordinator coexistQueue;
   void scheduleCoexistence(){if(coexistence()&&engine){take(coexistQueue.tick(*engine,i2p.get(),lease,networkPolicy));}}
   void requireI2pIdle() {
+    if(!mixedStatus.empty()){throw Failure{{storage::ErrorCode::Conflict,"Stop the mixed torrents before changing profile settings or files"}};}
+    if(mixed){take(stopMixed());}
     if(i2p&&!i2pPackets.empty()){throw Failure{{storage::ErrorCode::Conflict,"Stop the I2P torrents before changing profile settings or files"}};}
     if(i2p){take(stopI2p());}
   }
@@ -759,6 +842,7 @@ struct SessionBridge::Host {
           : size && saved.completedBytes && *saved.completedBytes >= *size ? SessionBridge::tr("Complete")
           : saved.startup == core::StartupState::Queued ? SessionBridge::tr("Queued") : SessionBridge::tr("Waiting");
       const bool unique = !hash.empty() && counts[hash] == 1;
+      const auto selectedRoute=unique?route(*saved.hash):Route::Unsupported;
       if (unique) { currentHashes.insert(hash); }
       const auto key = unique ? hash : hash + ":" + std::to_string(saved.sourceIndex);
       quint16 actions = 0;
@@ -797,8 +881,8 @@ struct SessionBridge::Host {
         }
       }
       if (admissionFailures.contains(hash) || (active != live.end() && active->second.failure)) { state = SessionBridge::tr("Error"); }
-      if (engine && engine->managedAvailable() && unique && saved.persistent && !retiring && route(*saved.hash)==Route::Public) {
-        if (!retained || paused) { actions |= actionBit(core::DownloadAction::Start); }
+      if (engine && engine->managedAvailable() && unique && saved.persistent && !retiring && (selectedRoute==Route::Public||(selectedRoute==Route::Mixed&&mixedCapable()))) {
+        if (!retained || paused || (selectedRoute==Route::Mixed&&(!mixedStatus.contains(hash)||!mixedStatus.at(hash).active))) { actions |= actionBit(core::DownloadAction::Start); }
         if (!stopped || retained || paused) { actions |= actionBit(core::DownloadAction::Stop); }
         if (!paused && !stopped) { actions |= actionBit(core::DownloadAction::Pause); }
         if (paused) { actions |= actionBit(core::DownloadAction::Resume); }
@@ -814,7 +898,7 @@ struct SessionBridge::Host {
         if(retained&&active->second.phase==engine::ManagedPhase::Allocating){state=tr("Allocating %1 / %2 bytes").arg(active->second.allocationBytes).arg(active->second.allocationTotalBytes);}
         else if(!retained&&!admissionFailures.contains(hash)&&(active==live.end()||!active->second.failure)){state=tr("Allocation pending — use Start to retry");}
       }
-      const bool i2pRow=i2pOptions&&unique&&pureI2p(*saved.hash);
+      const bool i2pRow=i2pOptions&&unique&&selectedRoute==Route::I2p;
       if(i2pRow&&saved.persistent&&!fileRecoveryRequired){
         actions=0;const bool activeI2p=i2p&&i2pPackets.contains(hash);
         if(!activeI2p||paused){actions|=actionBit(core::DownloadAction::Start);}
@@ -836,7 +920,7 @@ struct SessionBridge::Host {
       result->items.push_back({.key = text(key), .hash = text(hash), .name = name, .state = state,
           .bytes = size, .completed = completed,
           .received = received, .sent = sent,
-          .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained && !magnetRetained && !i2pOptions && route(*saved.hash)==Route::Public,
+          .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained && !magnetRetained && !i2pOptions && selectedRoute==Route::Public,
           .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions});
       if(retained){result->items.back().providerAdmission=active->second.admission;result->items.back().providerGeneration=columnLayoutSession;}
       if(i2pRow&&i2pFacts.contains(hash)){result->items.back().providerAdmission=i2pFacts.at(hash).admission;result->items.back().providerGeneration=i2pFacts.at(hash).generation;}
@@ -844,7 +928,13 @@ struct SessionBridge::Host {
         if(i2pPackets.contains(hash)&&!i2pPackets.at(hash).failure.isEmpty()){result->items.back().networkStatus+='\n'+i2pPackets.at(hash).failure;}
         if(i2pFacts.contains(hash)&&i2pFacts.at(hash).completionPositionUnavailable){result->items.back().networkStatus+='\n'+SessionBridge::tr("Automatic seed positioning is not available in this preview.");}
       }
-      if(unique&&route(*saved.hash)==Route::Unsupported){result->items.back().networkStatus=SessionBridge::tr("This saved network selection is not supported yet. It has been preserved.");}
+      if(unique&&selectedRoute==Route::Unsupported){result->items.back().networkStatus=SessionBridge::tr("This saved network selection is not supported yet. It has been preserved.");}
+      else if(unique&&selectedRoute==Route::Mixed){
+        result->items.back().networkStatus=SessionBridge::tr("Network: Public + I2P");
+        if(mixedStatus.contains(hash)){const auto& value=mixedStatus.at(hash);
+          result->items.back().networkStatus+='\n'+(value.active?SessionBridge::tr("I2P active"):value.failure.empty()?SessionBridge::tr("Connecting — I2P"):SessionBridge::tr("I2P unavailable: %1. Use Start to retry.").arg(text(value.failure)));
+        }else if(!mixedCapable()){result->items.back().networkStatus+='\n'+SessionBridge::tr("The mixed I2P provider is unavailable; the saved selection was preserved.");}
+      }
       else if(coexistence()&&!i2pRow){result->items.back().networkStatus=SessionBridge::tr("Network: Public");}
       if(admissionFailures.contains(hash)){result->items.back().networkStatus+='\n'+text(admissionFailures.at(hash).message);}
       if(unique&&!magnetRetained&&!paused&&!stopped&&!admissionFailures.contains(hash)){
@@ -966,7 +1056,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
     }
     auto poll = worker_.submit([this](std::stop_token stop) -> core::WorkResult {
       if (!stop.stop_requested() && host_) {
-        if(host_->i2pOptions){host_->pollI2p();}
+        if(host_->i2pOptions){host_->pollI2p();host_->pollMixed();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
           static_cast<void>(host_->engine->poll());host_->scheduleCoexistence();publishMainlineFailure();tickScheduler();tickAccounting();
@@ -1321,6 +1411,10 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
           continue;
         }
       }
+      const bool mixedRow=host_->route(hash)==Host::Route::Mixed;
+      if(mixedRow&&(action==core::DownloadAction::Stop||action==core::DownloadAction::Pause)){
+        const auto removed=host_->removeMixed(hash);if(!removed){failures.push_back(text(removed.error().message));continue;}
+      }
       auto changed = host_->libraryCommand(hash, action, host_->movePools);
       if (!changed) { failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(changed.error().message)); continue; }
       host_->admissionFailures.erase(hash.hex());
@@ -1352,7 +1446,11 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
       if (!controlled) {
         host_->admissionFailures.insert_or_assign(hash.hex(), controlled.error());
         failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(controlled.error().message));
-      }else{static_cast<void>(host_->engine->rearmMainlineScrape(hash));}
+      }else{
+        if(mixedRow&&active&&(action==core::DownloadAction::Start||action==core::DownloadAction::Resume||action==core::DownloadAction::Queue||action==core::DownloadAction::ForceStart)
+            &&(!host_->mixedStatus.contains(hash.hex())||!host_->mixedStatus.at(hash.hex()).active)){host_->retryMixed(hash);}
+        static_cast<void>(host_->engine->rearmMainlineScrape(hash));
+      }
     }
     host_->coexistQueue.invalidatePositions();host_->scheduleCoexistence();publishI2p();
     ready(host_->query({}), failures.empty() ? tr("Download command applied") : failures.join(QLatin1Char('\n')));
@@ -1375,7 +1473,7 @@ bool SessionBridge::torrentImport(QString metadata, QString destination, bool st
         std::filesystem::path(metadata.toUtf8().toStdString()),
         std::filesystem::path(destination.toUtf8().toStdString()), !start, nullptr, false,
         host_->privateOnly()?storage::TorrentIntakeNetwork::I2p:storage::TorrentIntakeNetwork::Public);if(!imported){return std::unexpected(imported.error());}if(*imported!=hash){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Imported torrent identity changed"});}return {};};
-    take(host_->i2p?host_->i2p->publish(hash,import):import());
+    take(host_->publishTarget(hash,import));
     const auto details = engine::queryTorrent(host_->lease, hash);
     if (details) { host_->known.insert_or_assign(hash.hex(), Host::Known{text(details->name), details->bytes}); }
     QString message = tr("Torrent added");
@@ -1396,7 +1494,7 @@ bool SessionBridge::previewTorrentIntake(ui::TorrentIntakeRequest request) {
     try {
       if(!host_||request.session!=host_->columnLayoutSession){throw Failure{{storage::ErrorCode::Conflict,"The profile changed; load the torrent again"}};}
       if(host_->intakeRequest&&request.request<=host_->intakeRequest->request){throw Failure{{storage::ErrorCode::Conflict,"This file preview request is stale"}};}
-      packet->i2pOnly=host_->privateOnly();packet->i2pAvailable=host_->coexistence();
+      packet->i2pOnly=host_->privateOnly();packet->i2pAvailable=host_->coexistence();packet->mixedAvailable=host_->mixedCapable();
       host_->intakeRequest=request;host_->intakeMetadata.reset();
       const auto filenameContext=take(storage::readOriginalFilenameContext(host_->lease));
       auto value=take(storage::inspectTorrentIntake(std::filesystem::path(request.metadata.toUtf8().toStdString()),stop,filenameContext.conversions,filenameContext.decoderShowAll));
@@ -1457,8 +1555,10 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       const bool paused=selected&&submission.paused;
       if(paused&&(submission.start||submission.forceStart)){throw Failure{{storage::ErrorCode::InvalidFormat,"Paused import conflicts with start/force intent"}};}
       const bool start=submission.start&&selected&&!paused;
-      if(submission.network!=ui::TorrentIntakeNetwork::Public&&submission.network!=ui::TorrentIntakeNetwork::I2p){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid requested torrent network"}};}
+      if(submission.network!=ui::TorrentIntakeNetwork::Public&&submission.network!=ui::TorrentIntakeNetwork::I2p&&submission.network!=ui::TorrentIntakeNetwork::Mixed){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid requested torrent network"}};}
       if(submission.network==ui::TorrentIntakeNetwork::I2p&&!host_->i2pOptions){throw Failure{{storage::ErrorCode::Unsupported,"The I2P provider is unavailable"}};}
+      const bool mixedNetwork=submission.network==ui::TorrentIntakeNetwork::Mixed;
+      if(mixedNetwork&&!host_->mixedCapable()){throw Failure{{storage::ErrorCode::Unsupported,"The mixed I2P provider is unavailable"}};}
       const bool privateI2p=host_->privateOnly()||submission.network==ui::TorrentIntakeNetwork::I2p;
       if(privateI2p&&(submission.forceStart||submission.verifyExisting||allocating||submission.goal!=core::ExistingVerificationGoal::FullTorrent)){throw Failure{{storage::ErrorCode::Unsupported,"The private I2P importer supports Queued, Stopped and Paused only"}};}
       const bool force=start&&submission.forceStart;const bool queued=start&&!force;
@@ -1466,8 +1566,8 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       checkpoint(stop); // No payload/network work happens before the explicit commit.
       const auto hash=host_->intakeMetadata->hash();
       const auto import=[&]()->std::expected<void,storage::Error>{auto imported=storage::importTorrentWithFileOptions(host_->lease,*host_->intakeMetadata,
-          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal,submission.allocation,privateI2p?storage::TorrentIntakeNetwork::I2p:storage::TorrentIntakeNetwork::Public);if(!imported){return std::unexpected(imported.error());}if(*imported!=hash){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Imported torrent identity changed"});}return {};};
-      take(host_->i2p?host_->i2p->publish(hash,import):import());
+          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal,submission.allocation,privateI2p?storage::TorrentIntakeNetwork::I2p:mixedNetwork?storage::TorrentIntakeNetwork::Mixed:storage::TorrentIntakeNetwork::Public);if(!imported){return std::unexpected(imported.error());}if(*imported!=hash){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Imported torrent identity changed"});}return {};};
+      take(host_->publishTarget(hash,import));
       result->imported=true;result->hash=text(hash.hex());host_->intakeMetadata.reset();
       const auto details=engine::queryTorrent(host_->lease,hash);
       if(details){host_->known.insert_or_assign(hash.hex(),Host::Known{text(details->displayName&&!details->displayName->empty()?*details->displayName:details->name),details->bytes});}
@@ -2413,7 +2513,7 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     }
     auto config = storage::ConfigFile::load(host_->lease, "biglybt.config");
     if (!config && config.error().code != storage::ErrorCode::Missing) { throw Failure{config.error()}; }
-    auto policy = engine::readNetworkPolicy(config ? &config->document() : nullptr,
+    auto policy = (host_->mixedCapable()?engine::readMixedNetworkPolicy:engine::readNetworkPolicy)(config ? &config->document() : nullptr,
         {.mode = engine::NetworkMode::Normal, .socks4Capability = host_->networkPolicy.socks4Capability});
     if (!policy) { throw Failure{{storage::ErrorCode::Unsupported, "Unsupported network setting: " + policy.error().field}}; }
     auto queues = core::readQueuePolicy(config ? &config->document() : nullptr);
@@ -2431,6 +2531,12 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     // below; it never creates a second lease or changes the payload route.
     const auto original=(*owner)->configureOriginalMainlineIdentity(host_->lease);
     if(!original&&(*owner)->mainlineDiscovery().state!=engine::MainlineDiscoveryStatus::State::Unavailable){throw Failure{original.error()};}
+  }
+  if(host_->mixedCapable()){
+    take((*owner)->configureMixedNetworks());
+    take((*owner)->configureMixedSourceBinding([this](const auto& source)->std::expected<void,storage::Error>{
+      return host_->mixed&&host_->mixedBindingTargets.contains(source->identity().originalKey.hex())?host_->mixed->bind(source):std::expected<void,storage::Error>{};
+    }));
   }
   if(host_->coexistence()){
     take((*owner)->configureExternalQueue(true));
@@ -2810,6 +2916,8 @@ bool SessionBridge::closeSession() {
     ui::NativeSessionPresentation finalObservation;
     QString checkpointFailure;
     if(host_){
+      const auto mixedStopped=host_->stopMixed();joined=joined&&host_->mixedJoined;
+      if(!mixedStopped){checkpointFailure=text(mixedStopped.error().message);}
       const auto stopped=host_->stopI2p();joined=joined&&host_->i2pJoined;
       if(!stopped){checkpointFailure=text(stopped.error().message);}publishI2p();
     }
@@ -2959,7 +3067,7 @@ bool SessionBridge::loadOptions(ui::OptionsRequest request) {
       } else {
         bool restart = !host_->engine;
         if (read->source) {
-          const auto policy = engine::readNetworkPolicy(read->source.get(),
+          const auto policy = (host_->mixedCapable()?engine::readMixedNetworkPolicy:engine::readNetworkPolicy)(read->source.get(),
               {.mode = engine::NetworkMode::Normal, .socks4Capability = host_->networkPolicy.socks4Capability});
           if (policy) {
             auto live = engine::prepareLiveSettings(host_->networkPolicy, *policy);
@@ -2999,7 +3107,7 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
       auto prepared = storage::prepareApplicationSettings(*host_->optionsBaseline, submission.changes);
       if (!prepared) { packet->failure = text(prepared.error().message); }
       else {
-        auto policy = engine::readNetworkPolicy(&prepared->document(),
+        auto policy = (host_->mixedCapable()?engine::readMixedNetworkPolicy:engine::readNetworkPolicy)(&prepared->document(),
             {.mode = engine::NetworkMode::Normal, .socks4Capability = host_->networkPolicy.socks4Capability});
         if (!policy) { packet->failure = tr("Unsupported or invalid setting: %1").arg(text(policy.error().field)); }
         else {
@@ -3226,7 +3334,7 @@ void SessionBridge::tickScheduler() noexcept {
       if(plan.uploadKiB){edits.push_back({seedingOnly?core::SettingId::SeedingUploadLimit:core::SettingId::UploadLimit,std::int64_t{*plan.uploadKiB}});}
       if(plan.downloadKiB){edits.push_back({core::SettingId::DownloadLimit,std::int64_t{*plan.downloadKiB}});}
       auto prepared=take(storage::prepareApplicationSettings(source,edits));
-      auto requested=engine::readNetworkPolicy(&prepared.document(),
+      auto requested=(host_->mixedCapable()?engine::readMixedNetworkPolicy:engine::readNetworkPolicy)(&prepared.document(),
           {.mode=engine::NetworkMode::Normal,.socks4Capability=host_->networkPolicy.socks4Capability});
       if(!requested){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid saved routing while applying scheduled rates"}};}
       auto safe=take(engine::prepareLiveSettings(host_->networkPolicy,*requested));

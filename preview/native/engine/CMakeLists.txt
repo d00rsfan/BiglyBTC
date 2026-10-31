@@ -93,4 +93,4 @@ target_sources(biglybtc_local_engine PRIVATE library_http_tracker.cpp library_ht
 target_link_libraries(biglybtc_local_engine PRIVATE Qt6::Network)
 
 # Separate explicit I2P-only preparation path; existing Public policy unchanged.
-target_sources(biglybtc_local_engine PRIVATE owned_i2p_policy.cpp)
+target_sources(biglybtc_local_engine PRIVATE owned_i2p_policy.cpp mixed_i2p_source.cpp mixed_i2p_transport.cpp)

@@ -18,7 +18,7 @@
 namespace biglybtc::storage {
 
 // Explicit import context only; grants no engine, router or identity authority.
-enum class TorrentIntakeNetwork { Public, I2p };
+enum class TorrentIntakeNetwork { Public, I2p, Mixed };
 
 enum class TorrentIntakeStage { JournalSynced, StatePublished, ArchivePublished, InventoryPublished };
 
@@ -87,6 +87,10 @@ std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLeas
 // Tracker permission in the SAME transaction, persists context through recovery,
 // and refuses incompatible inherited networks/explicitly denied Tracker. It
 // never converts a saved Public row/alias or starts an owner; Public is default.
+// Mixed context explicitly saves [Public,I2P], preserving an existing exact
+// two-token selection verbatim (either order). It permits ordinary forced
+// intent, rejects aliases/verification/allocation, and requires Tracker as for
+// I2p. Accepted journals retain the literal Public+I2P; no runtime is granted.
 // Optional saveName changes only the saved destination leaf. Missing retains
 // old defaults; restoring layout.name clears manual rename intent. Changed
 // names require an absent target and disjoint original library mappings, with
