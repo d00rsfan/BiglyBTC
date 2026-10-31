@@ -1070,7 +1070,16 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         if(host_->i2pOptions){host_->pollI2p();host_->pollMixed();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
-          static_cast<void>(host_->engine->poll());host_->scheduleCoexistence();publishMainlineFailure();tickScheduler();tickAccounting();
+          const auto polled=host_->engine->poll();publishMainlineFailure();
+          if(!polled&&!host_->engine->managedAvailable()){
+            auto detail=QStringLiteral("Engine owner unavailable (poll %1)").arg(static_cast<int>(polled.error()));
+            if(const auto listener=host_->engine->lastListenerFailure()){
+              detail+=QStringLiteral("; listener socket=%1 operation=%2 error=%3 mixedAccept=%4")
+                  .arg(listener->socketType).arg(listener->operation).arg(listener->errorCode).arg(listener->handledAsMixedAccept?1:0);
+            }
+            reportIdlePollFailure(session,std::move(detail));reported->store(true);
+          }
+          host_->scheduleCoexistence();tickScheduler();tickAccounting();
           auto current = host_->engine->managedDownloads();
           bool changed = host_->coexistence() || current.size() != host_->lastManagedPhases.size();
           for (const auto& item : current) {
@@ -1115,12 +1124,12 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
       return {};
       }catch(const Failure& failure){
         const bool cancelled=stop.stop_requested()||failure.error.code==storage::ErrorCode::Cancelled;
-        if(!cancelled){reportIdlePollFailure(session,QStringLiteral("storage %1: %2")
+        if(!cancelled&&!reported->load()){reportIdlePollFailure(session,QStringLiteral("storage %1: %2")
             .arg(static_cast<int>(failure.error.code)).arg(text(failure.error.message).left(384)));reported->store(true);}
         return std::unexpected(cancelled?core::WorkError::Cancelled:core::WorkError::Failed);
       }catch(...){
         // Arbitrary exception text is not a safe source for profile/key bytes.
-        if(!stop.stop_requested()){reportIdlePollFailure(session,QStringLiteral("Unexpected session worker failure"));reported->store(true);}
+        if(!stop.stop_requested()&&!reported->load()){reportIdlePollFailure(session,QStringLiteral("Unexpected session worker failure"));reported->store(true);}
         return std::unexpected(stop.stop_requested()?core::WorkError::Cancelled:core::WorkError::Failed);
       }
     });

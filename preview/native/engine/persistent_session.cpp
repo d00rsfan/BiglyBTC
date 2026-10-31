@@ -55,6 +55,8 @@
 #endif
 
 #include <libtorrent/alert_types.hpp>
+#include <libtorrent/socket_type.hpp>
+#include <libtorrent/operations.hpp>
 #include <libtorrent/session.hpp>
 #include <libtorrent/session_stats.hpp>
 #include <libtorrent/version.hpp>
@@ -239,6 +241,7 @@ struct PersistentSession::Impl {
   std::shared_ptr<const detail::MixedManagedOrigin> mixedOrigin;
   PersistentSession::MixedSourceBinding mixedBinder;
   std::shared_ptr<MixedI2pTransport> mixedTransport;
+  std::optional<ListenerFailureObservation> listenerFailure;
   AccountingState phase = AccountingState::Starting;
   core::SessionRateLimits rateLimits{};
   bool call = false;
@@ -459,7 +462,20 @@ struct PersistentSession::Impl {
       if (auto* failed = lt::alert_cast<lt::save_resume_data_failed_alert>(alert); failed && matches(failed->handle)) {
         storageError = true; transferError = true;
       }
-      if (lt::alert_cast<lt::listen_failed_alert>(alert)) { transferError = true; }
+      if (const auto* failed=lt::alert_cast<lt::listen_failed_alert>(alert)) {
+        // The qualified mixed SAM ACCEPT is optional to the sole Public owner.
+        // This does not forgive TCP/UDP bind/listen/accept loss, unconfigured
+        // I2P alerts, or any dropped essential alert. No route is regranted.
+        const bool mixedAccept=mixedNetworks&&mixedTransport
+            &&mixedTransport->state_->pin&&mixedTransport->state_->configured.load()
+            &&failed->socket_type==lt::socket_type_t::i2p
+            &&failed->op==lt::operation_t::sock_accept;
+        const auto previous=listenerFailure?listenerFailure->sequence:std::uint64_t{0};
+        listenerFailure=ListenerFailureObservation{previous==UINT64_MAX?previous:previous+1,
+            static_cast<int>(failed->socket_type),static_cast<int>(failed->op),
+            failed->error.value(),mixedAccept};
+        if(!mixedAccept){transferError=true;}
+      }
       if (lt::alert_cast<lt::session_error_alert>(alert)) {
         transferError = true; removalLost = true;
         counterError(AccountingError::Engine);
@@ -2391,6 +2407,9 @@ std::optional<core::PeerPayloadSnapshot> PersistentSession::peerPayloads() const
 std::shared_ptr<const core::RuntimeMetrics> PersistentSession::diagnostics() const noexcept {
   if (!impl_->onWorker()) { return {}; }
   return impl_->runtimeMetrics.latest();
+}
+std::optional<ListenerFailureObservation> PersistentSession::lastListenerFailure() const noexcept {
+  return impl_->onWorker()?impl_->listenerFailure:std::nullopt;
 }
 std::optional<RetirementReceipt> PersistentSession::lastRetirement() const {
   if (!impl_->onWorker()) { return {}; }

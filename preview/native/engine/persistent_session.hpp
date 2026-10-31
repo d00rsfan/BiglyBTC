@@ -46,6 +46,14 @@ struct ApplicationPeerObservation {
 
 using ApplicationObservationSink = std::function<void(ApplicationPeerObservation)>;
 
+// Passive last actual listener error. Numeric fields retain provider enum/error
+// values; no endpoint, remote text or authority is exposed by this witness.
+struct ListenerFailureObservation {
+  std::uint64_t sequence=0;
+  int socketType=-1,operation=-1,errorCode=0;
+  bool handledAsMixedAccept=false;
+};
+
 struct NetworkPolicy;
 struct PendingMagnet;
 // Last authenticated regular library response. This owns values only and
@@ -242,6 +250,8 @@ public:
   std::optional<ApplicationPeerObservation> latest() const;
   // Worker-only optional last accepted stats snapshot. No request or engine creation.
   std::shared_ptr<const core::RuntimeMetrics> diagnostics() const noexcept;
+  // Worker-only owned scalar copy; never drains alerts or changes listener policy.
+  std::optional<ListenerFailureObservation> lastListenerFailure() const noexcept;
   // Passive, lossy per-peer observations only. No IO/request, complete tail,
   // country mapping, aggregate byte total or accounting certification.
   std::optional<core::PeerPayloadSnapshot> peerPayloads() const noexcept;

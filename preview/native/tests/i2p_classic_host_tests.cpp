@@ -5,6 +5,16 @@
 #include "i2p_saved_settings.hpp"
 #include "coexist_coordinator.hpp"
 #include "mixed_i2p_source.hpp"
+#include "mixed_i2p_transport.hpp"
+#include <QTcpSocket>
+#include <QPointer>
+#include <libtorrent/alert_types.hpp>
+#if __has_include(<libtorrent/biglybtc_mixed_i2p_transport.hpp>)
+#include <libtorrent/biglybtc_mixed_i2p_transport.hpp>
+#define BIGLYBTC_TEST_MIXED_ACCEPT_SDK 1
+#else
+#define BIGLYBTC_TEST_MIXED_ACCEPT_SDK 0
+#endif
 #include <QScopeGuard>
 #include "library_window.hpp"
 #include "statistics_page.hpp"
@@ -21,6 +31,85 @@ using namespace biglybtc;
 class I2pClassicHostTests final:public QObject {
   Q_OBJECT
 private slots:
+  void pendingMixedSamAcceptFailurePreservesActualPublicAdmission(){
+#if !BIGLYBTC_TEST_MIXED_ACCEPT_SDK
+    QSKIP("Mixed SDK header unavailable");
+#else
+    namespace test=owned_i2p_test;namespace sam=services::i2p::provider;namespace lt=libtorrent;
+    if(!engine::PersistentSession::mixedNetworksAvailable()){QSKIP("Qualified mixed SDK unavailable");}
+    test::Fixture f;const auto key=f.key.parent_path()/"dest_key.dat";test::write(key,test::read(f.key));QVERIFY(::chmod(key.c_str(),0600)==0);
+    auto state=core::Document::parse(test::read(f.state()));QVERIFY(state);QVERIFY(state->replaceValue("attributes",test::dict({{"networks","l6:Public3:I2Pe"},{"peersources","l7:Trackere"}})));test::write(f.state(),state->serialize());
+    auto anchor=sam::ProfileSource::createMixedSession(*f.lease);QVERIFY(anchor);auto child=(*anchor)->prepareMixedChild(f.hash);QVERIFY(child);
+    auto made=engine::PersistentSession::create({9411,9412,9413});QVERIFY(made);auto owner=std::move(*made);
+    const auto cleanup=qScopeGuard([&]{static_cast<void>(owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{2}));});
+    core::QueuePolicy queue;queue.maximumDownloads=1;queue.maximumActive=1;queue.minimumDownloads=0;
+    QVERIFY(owner->configureNetwork(engine::NetworkPolicy{}));QVERIFY(owner->configureQueuePolicy(queue));QVERIFY(owner->configureExternalQueue(true));QVERIFY(owner->configureMixedNetworks());
+    QVERIFY(owner->configureSourcePublication([&](const core::TorrentHash& hash,const auto& operation){return (*anchor)->publish(hash,operation);},[&](const auto& operation){return (*anchor)->publishPositions(operation);}));
+    QVERIFY(owner->configureMixedSourceBinding([&](const auto& source){return (*child)->bindMixedManaged(source);}));
+    QVERIFY(owner->startIdle(*f.lease));QVERIFY(owner->startManaged(*f.lease,{.hash=f.hash,.queued=true,.mixedNetworks=true}));
+    const auto checked=[&]{static_cast<void>(owner->poll());const auto rows=owner->managedDownloads();return rows.size()==1&&rows.front().checked;};QTRY_VERIFY_WITH_TIMEOUT(checked(),5000);
+    auto managed=owner->mixedSource(f.hash);QVERIFY(managed);auto transport=owner->mixedTransport();QVERIFY(transport);
+    const auto initial=owner->externalQueueSnapshot();QVERIFY(initial);QCOMPARE(initial->rows.size(),std::size_t{1});const auto binding=initial->rows.front().binding;
+    QTcpServer server;QVERIFY(server.listen(QHostAddress::LocalHost,0));QPointer<QTcpSocket> control,accept;
+    unsigned connections=0,hellos=0,created=0,named=0,accepts=0;QString protocolFailure;
+    lt::BiglybtcMixedI2pTransportPolicyV1 policy;policy.generation=71;policy.bridge_port=server.serverPort();policy.peer_port=6881;policy.local_peer_port=6881;
+    // Generated fixture capability/mask, never a user profile secret or I2CP proof.
+    policy.capability.fill(0xd3);for(std::size_t i=0;i<policy.peer_id_mask.size();++i){policy.peer_id_mask[i]=static_cast<unsigned char>(i+1);}
+    const auto& destination=(*anchor)->destination().hash;std::copy(destination.begin(),destination.end(),policy.public_destination_hash.begin());
+    const auto capability=QByteArray(reinterpret_cast<const char*>(policy.capability.data()),static_cast<qsizetype>(policy.capability.size())).toHex();
+    const auto publicHash=QByteArray(reinterpret_cast<const char*>(policy.public_destination_hash.data()),static_cast<qsizetype>(policy.public_destination_hash.size())).toHex();
+    const auto consume=[&](QTcpSocket* socket){
+      if(socket->bytesAvailable()>2048){protocolFailure="Generated SAM input bound";socket->abort();return;}
+      while(socket->canReadLine()){
+        const auto line=socket->readLine(2049);QByteArray reply;
+        if(line=="HELLO VERSION MIN=3.1 MAX=3.1 BIGLYBTC_OWNER="+capability+" GENERATION=71\n"){
+          ++hellos;reply="HELLO REPLY RESULT=OK VERSION=3.1\n";
+        }else if(line.startsWith("SESSION CREATE STYLE=STREAM ID=")&&line.endsWith(" DESTINATION=BIGLYBTC_OWNED PUBLIC_HASH="+publicHash+"\n")&&!control){
+          control=socket;++created;reply="SESSION STATUS RESULT=OK DESTINATION=AAAA\n";
+        }else if(socket==control&&line=="NAMING LOOKUP NAME=ME PURPOSE=CONTROL TO_PORT=0 FROM_PORT=0\n"){
+          ++named;reply="NAMING REPLY RESULT=OK NAME=ME VALUE=AAAA\n";
+        }else if(socket!=control&&line.startsWith("STREAM ACCEPT ID=")&&line.endsWith(" PURPOSE=PEER TO_PORT=6881 FROM_PORT=6881\n")&&(!accept||accept->state()==QAbstractSocket::UnconnectedState)){
+          accept=socket;++accepts;reply="STREAM STATUS RESULT=OK\n";
+        }else{protocolFailure="Unexpected generated SAM command";socket->abort();return;}
+        if(socket->write(reply)!=reply.size()){protocolFailure="Generated SAM reply write";socket->abort();return;}
+      }
+    };
+    QObject::connect(&server,&QTcpServer::newConnection,&server,[&]{while(server.hasPendingConnections()){
+      auto* socket=server.nextPendingConnection();++connections;
+      if(connections>3||socket->peerAddress()!=QHostAddress::LocalHost||socket->localAddress()!=QHostAddress::LocalHost){protocolFailure="Generated SAM connection bound";socket->abort();continue;}
+      socket->setReadBufferSize(2048);QObject::connect(socket,&QTcpSocket::readyRead,&server,[&,socket]{consume(socket);});consume(socket);
+    }});
+    QVERIFY((*transport)->configure(policy));QVERIFY((*transport)->admit(**managed,policy.generation,901));
+    QTRY_VERIFY_WITH_TIMEOUT(accept&&accept->bytesToWrite()==0,5000);QVERIFY2(protocolFailure.isEmpty(),qPrintable(protocolFailure));QVERIFY(control&&control->state()==QAbstractSocket::ConnectedState);
+    QCOMPARE(connections,2u);QCOMPARE(hellos,2u);QCOMPARE(created,1u);QCOMPARE(named,1u);QCOMPARE(accepts,1u);
+    // Real SDK pending ACCEPT receives EOF while its current context/control,
+    // real Native torrent and route remain installed. No120s wait or router.
+    const auto firstAccept=accept;accept->disconnectFromHost();bool pollFailed=false;
+    const auto observed=[&]{if(!owner->poll()){pollFailed=true;}return owner->lastListenerFailure().has_value();};QTRY_VERIFY_WITH_TIMEOUT(observed(),3000);
+    const auto witness=owner->lastListenerFailure();QVERIFY(witness);QVERIFY(witness->sequence>0);QCOMPARE(witness->socketType,static_cast<int>(lt::socket_type_t::i2p));QCOMPARE(witness->operation,static_cast<int>(lt::operation_t::sock_accept));QVERIFY(witness->errorCode!=0);QVERIFY(witness->handledAsMixedAccept);QVERIFY(!pollFailed);
+    // Actual delayed SDK rearm must reach a new pending ACCEPT under the same
+    // configured context before the retained Public admission is rechecked.
+    QTRY_VERIFY_WITH_TIMEOUT(accepts==2&&accept&&accept->state()==QAbstractSocket::ConnectedState&&accept->bytesToWrite()==0,5000);
+    QCOMPARE(connections,3u);QCOMPARE(hellos,3u);QCOMPARE(created,1u);QCOMPARE(named,1u);QCOMPARE(accepts,2u);QVERIFY(accept.data()!=firstAccept.data());
+    QVERIFY(control&&control->state()==QAbstractSocket::ConnectedState);QVERIFY2(protocolFailure.isEmpty(),qPrintable(protocolFailure));
+    auto after=owner->externalQueueSnapshot();QVERIFY(after);QCOMPARE(after->rows.size(),std::size_t{1});QCOMPARE(after->rows.front().binding.hash,binding.hash);QCOMPARE(after->rows.front().binding.admission,binding.admission);
+    const auto retained=owner->managedDownloads();QCOMPARE(retained.size(),std::size_t{1});QVERIFY(retained.front().retained);QVERIFY(!retained.front().failure);QVERIFY((*managed)->current());QVERIFY((*child)->prepared());QVERIFY((*anchor)->validate());
+    QVERIFY((*transport)->revoke(**managed,policy.generation,901));QVERIFY((*transport)->withdraw(policy.generation));
+#endif
+  }
+  void publicTcpListenFailureStillPoisonsActualOwner(){
+    namespace lt=libtorrent;namespace test=owned_i2p_test;
+    test::Fixture f;QTcpServer occupied;QVERIFY(occupied.listen(QHostAddress::LocalHost,0));
+    auto made=engine::PersistentSession::create({9421,9422,9423});QVERIFY(made);auto owner=std::move(*made);
+    const auto cleanup=qScopeGuard([&]{static_cast<void>(owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{2}));});
+    engine::NetworkPolicy network;network.mode=engine::NetworkMode::Normal;network.listenPort=occupied.serverPort();network.enforceBind=true;network.outgoingTcp=false;
+    // Existing settings translation pins max_retry_port_bind=0 and disables
+    // listen_system_port_fallback; the real occupied TCP bind must fail.
+    QVERIFY(owner->configureNetwork(network));QVERIFY(owner->startIdle(*f.lease));
+    const auto observed=[&]{static_cast<void>(owner->poll());return owner->lastListenerFailure().has_value();};QTRY_VERIFY_WITH_TIMEOUT(observed(),3000);
+    const auto witness=owner->lastListenerFailure();QVERIFY(witness);QVERIFY(witness->sequence>0);QCOMPARE(witness->socketType,static_cast<int>(lt::socket_type_t::tcp));QCOMPARE(witness->operation,static_cast<int>(lt::operation_t::sock_bind));QVERIFY(witness->errorCode!=0);QVERIFY(!witness->handledAsMixedAccept);
+    QVERIFY(!owner->managedAvailable());const auto polled=owner->poll();QVERIFY(!polled);QCOMPARE(polled.error(),engine::AccountingError::OwnerResetRequired);
+  }
   void coordinatorNormalizationUsesBothAnchorsAndRefusedPublicationLeavesThemCurrent(){
     namespace test=owned_i2p_test;namespace sam=services::i2p::provider;
     if(!engine::PersistentSession::mixedNetworksAvailable()){QSKIP("Qualified mixed SDK unavailable; existing source controls still run");}

@@ -24,13 +24,15 @@ libtorrent::BiglybtcMixedI2pRouteV1 routeFor(const MixedManagedSource& source,st
 }
 #endif
 }
-void MixedI2pTransport::retire()noexcept{try{std::lock_guard lock(state_->mutex);state_->owner=nullptr;}catch(...){std::terminate();}}
+void MixedI2pTransport::retire()noexcept{try{std::lock_guard lock(state_->mutex);state_->configured.store(false);state_->owner=nullptr;}catch(...){std::terminate();}}
 std::expected<void,storage::Error> MixedI2pTransport::configure(const libtorrent::BiglybtcMixedI2pTransportPolicyV1& policy){
 #if BIGLYBTC_HAS_MIXED_TRANSPORT_HEADER
   std::lock_guard lock(state_->mutex);if(!state_->owner||!state_->pin){return denied("Mixed I2P engine owner has retired");}
   const auto operation=reinterpret_cast<decltype(&libtorrent::biglybtc_configure_mixed_i2p_transport_v1)>(::dlsym(state_->pin.get(),"biglybtc_configure_mixed_i2p_transport_v1"));
   if(!operation){return denied("Mixed I2P provider export is unavailable");}
-  return checked(operation(state_->owner,&policy));
+  auto result=checked(operation(state_->owner,&policy));
+  if(result){state_->configured.store(true);}
+  return result;
 #else
   (void)policy;return denied("Mixed I2P SDK is unavailable");
 #endif

@@ -4,9 +4,9 @@ import argparse, hashlib, importlib.util, json, re, sys
 from pathlib import Path
 import xml.etree.ElementTree as ET
 # CLOSED until root reviews the actual artifact/controls and inserts exact pins.
-MANIFEST_SHA='61c9486d8258cb0e46b607c69a05d846bf17cc58781f662aafc29704f81d14e4'
-APPROVAL_SHA='728c7140dc963a6b105feccf62e2d3d519bf4a429c9da56ad9228214dbe4640c'
-SOURCE_CAPSULE='5557a8f7e9b1edc4ae1a7d9bb1b4392fddb6d9f5ba305454fdf462b38e45409d'  # Source only; approval remains CLOSED.
+MANIFEST_SHA='03694052165fab605b7f9a8c30ec9ddbb806b0d94a7eef642453f1341d838fe9'
+APPROVAL_SHA='c47c93f8f2e90ef573d4e79ac7c8fb14589d0a3c3ce2e99db5be3f2577f41993'
+SOURCE_CAPSULE='05a9fad2ad069fb0a4017e6253c91da1b56f7bec67b6fe514194007a126b0ee0'  # Source only; approval remains CLOSED.
 BASIS_RECORD='449aa82f665786ce63f4e1778cee23bf07ca45439b762cf283b67efd0d48af0f'
 COMMON_SHA='db8dc81c8d2baf5cf3859d5706bacbea68253866bdbfc03b19d24cdcf2a7cb6c'
 ROLES=['Public','DedicatedPrivateI2pV1','PrivateI2pMulti','PublicPrivateCoexistence','MixedI2pTransportV1']
@@ -61,7 +61,7 @@ def inspect(args):
  assert r['required_exports'][-5:]==NEW_EXPORTS
  for name,expected in r['evidence_sha256'].items():assert digest(c.regular(c.leaf(record_path.parent,name)))==expected,name
  controls=r['actual_controls'];assert controls['status']=='PASS_MIXED_SDK_DIRECT_CONTROLS_NOT_APPROVED'
- assert controls['actual_ctest_suites']==9 and controls['private_owner_methods']==15 and controls['fresh_separate_role_cases']==6
+ assert controls['actual_ctest_suites']==9 and controls['private_owner_methods']==17 and controls['fresh_separate_role_cases']==6
  assert controls['required_exports']==39 and controls['actual_roles']==CASES and controls['source_and_sdk_unchanged_during_subjects'] and controls['images_unchanged']
  proof=m['actual_proof'];run=c.canonical_directory(proof['directory'])
  assert digest(c.regular(run/'result.json'))==proof['result_sha256'] and json.loads((run/'result.json').read_bytes())==controls

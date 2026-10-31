@@ -3,6 +3,7 @@
 #include "mixed_i2p_source.hpp"
 #include <libtorrent/fwd.hpp>
 #include <mutex>
+#include <atomic>
 namespace libtorrent {struct BiglybtcMixedI2pTransportPolicyV1;}
 namespace biglybtc::engine {
 // A borrowed, pinned transport endpoint on the sole Public SDK session. It
@@ -20,6 +21,9 @@ private:
     const libtorrent::session_handle* owner=nullptr;
     std::shared_ptr<void> pin;
     std::shared_ptr<const detail::MixedManagedOrigin> origin;
+    // Sticky provenance of Accepted configure on this retained qualified owner.
+    // Queued old ACCEPT failures can drain after transport withdrawal.
+    std::atomic_bool configured=false;
   };
   explicit MixedI2pTransport(std::shared_ptr<State> state):state_(std::move(state)){}
   std::shared_ptr<State> state_;
