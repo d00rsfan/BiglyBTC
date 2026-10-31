@@ -210,7 +210,7 @@ if(BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER)
   set(_owned_i2p_source_capsule "63e9925c8f4f3e80168425d22b62ef87b23732eccff8fa1b7714f73f3f84e9c3")
   if(BIGLYBTC_PERSISTENT_MIXED_I2P_RUNTIME)
     # CLOSED: root replaces only after reviewed final source/artifact controls.
-    set(_owned_i2p_source_capsule "5557a8f7e9b1edc4ae1a7d9bb1b4392fddb6d9f5ba305454fdf462b38e45409d")
+    set(_owned_i2p_source_capsule "05a9fad2ad069fb0a4017e6253c91da1b56f7bec67b6fe514194007a126b0ee0")
   endif()
   execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/i2p_provider/verify-owner-approval.py"
     "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL}" "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256}"
