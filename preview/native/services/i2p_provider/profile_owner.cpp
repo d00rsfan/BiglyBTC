@@ -81,6 +81,8 @@ struct OwnedProfile::Impl {
   QTimer timer;Options options;core::QueuePolicy queuePolicy;Rates rates;Phase phase=Phase::Prepared;
   std::uint64_t admission=0,generation=0;bool startRequested=false,bridgeRequested=false,installQueued=false,memberInstallRequested=false;std::int64_t started=nowMillis();
   std::uint32_t queueUnavailable=0;std::string failure;
+  bool externalQueue=false,externalSnapshotValid=false;std::uint64_t externalQueueSequence=0;
+  std::optional<core::SessionRateLimits> externalRates;
   bool onThread()const{return QThread::currentThread()==q->thread();}
   Member* find(const core::TorrentHash& h)const{const auto i=members.find(h.hex());return i==members.end()?nullptr:i->second.get();}
   void requestInstall(){
@@ -144,6 +146,10 @@ struct OwnedProfile::Impl {
     // authenticated private bridge itself is a loopback transport.
     lt::ip_filter filter;filter.add_rule(lt::address_v4::any(),lt::address_v4::broadcast(),1u<<static_cast<unsigned>(lt::session::global_peer_class_id));
     filter.add_rule(lt::address_v6::any(),lt::make_address_v6("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"),1u<<static_cast<unsigned>(lt::session::global_peer_class_id));session->set_peer_class_filter(filter);
+    if(externalQueue&&externalRates){lt::settings_pack limits;
+      limits.set_int(lt::settings_pack::download_rate_limit,static_cast<int>(externalRates->download.bytesPerSecond));
+      limits.set_int(lt::settings_pack::upload_rate_limit,static_cast<int>(externalRates->upload.bytesPerSecond));session->apply_settings(limits);
+    }
     bool firstRecord=true;for(auto& [key,m]:members){(void)key;if(m->retired.requested){continue;}if(!install(*m,firstRecord)){return false;}firstRecord=false;}phase=Phase::Active;timer.start(250);return true;
   }
   void alerts(){
@@ -193,17 +199,19 @@ struct OwnedProfile::Impl {
       }else if(std::chrono::steady_clock::now()>=m->deadline){fail(*m,{Code::Io,"Target I2P storage retirement timed out; recheck retained"});}
     }
   }
-  void schedule(){
-    if(phase!=Phase::Active||!session){return;}alerts();if(!session){return;}const auto now=nowMillis();std::vector<core::QueueTorrentFacts> facts;std::map<std::uint64_t,Member*> targets;
+  engine::ExternalQueueSnapshot collectQueue(bool maintenance,bool positionProof=false){
+    const auto now=nowMillis();std::vector<core::QueueTorrentFacts> facts;std::map<std::uint64_t,Member*> targets;
     core::QueueContext context;context.nowMillis=now;context.ownerStartedMillis=started;std::int64_t down=0,up=0;bool any=false,onlySeeds=true;
     for(auto& [key,m]:members){(void)key;if(!m->installed||m->retired.requested||!m->failure.empty()||!m->handle.is_valid()){continue;}
       lt::torrent_status s;const auto counters=sample(*m,s);if(counters.state!=engine::detail::ManagedPayloadCounters::Read::Accepted){s=m->handle.status();}
       const bool checked=m->counters->checked.load()&&!s.errc;
-      if(checked&&m->queued&&!m->scrapePending&&now>=m->nextScrape){m->handle.scrape_tracker();m->scrapePending=true;m->nextScrape=now+10000;}
+      if(maintenance&&checked&&m->queued&&!m->scrapePending&&now>=m->nextScrape){m->handle.scrape_tracker();m->scrapePending=true;m->nextScrape=now+10000;}
       core::QueueTorrentFacts f;const auto& saved=m->data().storage.queueMetadata();
       f.token=m->data().admission;f.position=static_cast<std::uint32_t>(std::clamp<std::int64_t>(saved.position,1,std::numeric_limits<std::int32_t>::max()));
-      f.complete=s.is_finished;f.state=!checked?core::QueueTorrentState::Checking:m->queued?core::QueueTorrentState::Queued:f.complete?core::QueueTorrentState::Seeding:core::QueueTorrentState::Downloading;
-      if(checked){if(m->observedComplete&&!*m->observedComplete&&f.complete){m->justCompleted=true;if(m->forceStart&&!queuePolicy.retainForceStartOnComplete){m->clearCompletedForce=true;}}m->observedComplete=f.complete;}
+      f.complete=s.is_finished;
+      const bool held=externalQueue?bool(s.flags&lt::torrent_flags::paused):m->queued;
+      f.state=!checked?core::QueueTorrentState::Checking:held?core::QueueTorrentState::Queued:f.complete?core::QueueTorrentState::Seeding:core::QueueTorrentState::Downloading;
+      if(checked){if(m->observedComplete&&!*m->observedComplete&&f.complete){m->justCompleted=true;if(!externalQueue&&m->forceStart&&!queuePolicy.retainForceStartOnComplete){m->clearCompletedForce=true;}}m->observedComplete=f.complete;}
       f.forceStart=m->forceStart;f.newlyCompleted=m->justCompleted;f.minimumShareRatio=saved.minimumShareRatio;f.maximumShareRatio=saved.maximumShareRatio;f.activity=m->activity;
       f.connectedLeechers=std::max(0,s.num_peers-s.num_seeds);f.downloadBytesPerSecond=s.download_payload_rate;f.uploadBytesPerSecond=s.upload_payload_rate;
       f.sizeBytes=s.total_wanted;f.remainingBytes=std::max<std::int64_t>(0,s.total_wanted-s.total_wanted_done);f.idleUploadSourceKnown=false;
@@ -217,6 +225,24 @@ struct OwnedProfile::Impl {
       down+=s.download_payload_rate;up+=s.upload_payload_rate;any=true;onlySeeds&=f.complete;targets.emplace(f.token,m.get());facts.push_back(std::move(f));
     }
     context.seedingOnly=any&&onlySeeds;context.uploadBytesPerSecond=up;context.downloadBytesPerSecond=down;context.downloadLimitBytesPerSecond=rates.download;context.uploadLimitBytesPerSecond=context.seedingOnly&&rates.seedingOnly?rates.seedingUpload:rates.upload;
+    if(externalQueue&&externalRates){context.downloadLimitBytesPerSecond=externalRates->download.bytesPerSecond;context.uploadLimitBytesPerSecond=externalRates->upload.bytesPerSecond;}
+    engine::ExternalQueueSnapshot snapshot;snapshot.context=context;snapshot.rows.reserve(facts.size());
+    for(auto& fact:facts){auto& m=*targets.at(fact.token);
+      if(m.livePosition){fact.position=static_cast<std::uint32_t>(std::clamp<std::int64_t>(*m.livePosition,1,std::numeric_limits<std::int32_t>::max()));}
+      engine::ExternalQueueRow row;row.binding={m.data().hash,m.data().admission};row.facts=std::move(fact);row.checked=row.facts.state!=core::QueueTorrentState::Checking;
+      if(positionProof){const auto policy=m.data().storage.capturedFilePolicy();
+        row.position={m.data().hash,m.data().storage.identity(),m.data().storage.capturedDownload(),
+            std::vector<compat::FilePolicy>(policy.begin(),policy.end()),m.observedComplete.value_or(false),m.data().storage.capturedQueueMappingScope()};
+        if(m.justCompleted){row.transition=storage::LibraryGroupTransition{m.data().hash,true};}
+      }snapshot.rows.push_back(std::move(row));
+    }return snapshot;
+  }
+  void schedule(){
+    if(phase!=Phase::Active||!session){return;}alerts();if(!session){return;}
+    auto snapshot=collectQueue(true);if(externalQueue){return;}
+    auto context=snapshot.context;const auto now=context.nowMillis;
+    std::vector<core::QueueTorrentFacts> facts;std::map<std::uint64_t,Member*> targets;
+    for(auto& row:snapshot.rows){targets.emplace(row.binding.admission,find(row.binding.hash));facts.push_back(std::move(row.facts));}
     lt::settings_pack limits;limits.set_int(lt::settings_pack::download_rate_limit,rates.download);limits.set_int(lt::settings_pack::upload_rate_limit,static_cast<int>(context.uploadLimitBytesPerSecond));session->apply_settings(limits);
     std::vector<std::size_t> order;for(std::size_t i=0;i<facts.size();++i){order.push_back(i);}
     std::ranges::sort(order,[&](auto a,auto b){return targets.at(facts[a].token)->data().inventoryIndex<targets.at(facts[b].token)->data().inventoryIndex;});
@@ -269,10 +295,10 @@ OwnedProfile::OwnedProfile(std::unique_ptr<Impl> p):impl_(std::move(p)){
   QObject::connect(s.channel.get(),&i2cp::InitialChannel::closed,this,[this]{if(impl_->phase==Phase::Starting||impl_->phase==Phase::Active){impl_->close("I2CP transport ended");}});
 }
 OwnedProfile::~OwnedProfile(){impl_->close();join();}
-std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash){
+std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const Retained& external){
   try{auto pin=privateOwnerRuntimePin();if(!pin||lt::biglybtc_private_i2p_torrents_abi_v1()!=lt::BiglybtcPrivateI2pTorrentsAbiV1){return std::unexpected(Error{Code::Unsupported,"Approved multi-torrent private I2P provider required"});}
     auto source=ProfileSource::createSession(lease);if(!source){return std::unexpected(source.error());}auto s=std::make_unique<Impl>();s->source=*source;s->pin=std::move(pin);
-    auto owner=std::unique_ptr<OwnedProfile>(new OwnedProfile(std::move(s)));auto first=owner->prepareTorrent(hash,{});if(!first){return std::unexpected(first.error());}
+    auto owner=std::unique_ptr<OwnedProfile>(new OwnedProfile(std::move(s)));auto first=owner->prepareTorrent(hash,external);if(!first){return std::unexpected(first.error());}
     auto identity=(*source)->takeIdentity();if(!identity){return std::unexpected(identity.error());}owner->impl_->identity.emplace(std::move(*identity));owner->impl_->admission=(*first)->impl_->admission;
     auto settings=(*first)->impl_->source->policy().settings();settings.set_int(lt::settings_pack::alert_mask,static_cast<int>(lt::alert_category::error|lt::alert_category::status|lt::alert_category::storage|lt::alert_category::tracker));settings.set_int(lt::settings_pack::alert_queue_size,4096);
     lt::session_params params(std::move(settings));params.disk_io_constructor=engine::detail::metadataDiskConstructor(owner->impl_->disks);owner->impl_->session=std::make_unique<lt::session>(std::move(params));
@@ -294,13 +320,87 @@ bool OwnedProfile::begin(const Options& options,core::QueuePolicy policy,Rates r
 OwnedProfile::Retained OwnedProfile::retained()const{
   Retained v;for(const auto& [key,m]:impl_->members){(void)key;const auto claims=m->data().storage.claims();v.claims.insert(v.claims.end(),claims.begin(),claims.end());v.identities.push_back(m->data().storage.identity());}return v;
 }
+bool OwnedProfile::configureExternalQueue(bool enabled){
+  auto& s=*impl_;if(!s.onThread()||(s.phase!=Phase::Prepared&&s.externalQueue!=enabled)){return false;}s.externalQueue=enabled;return true;
+}
+std::expected<engine::ExternalQueueSnapshot,Error> OwnedProfile::externalQueueSnapshot(){
+  auto& s=*impl_;if(!s.onThread()||!s.externalQueue||s.phase==Phase::Withdrawn||s.externalQueueSequence==std::numeric_limits<std::uint64_t>::max()){
+    return std::unexpected(Error{Code::Conflict,"External I2P queue snapshot unavailable"});
+  }
+  s.alerts();if(s.phase==Phase::Withdrawn){return std::unexpected(Error{Code::Conflict,"I2P source withdrew"});}
+  auto snapshot=s.collectQueue(false,true);snapshot.sequence=++s.externalQueueSequence;s.externalSnapshotValid=true;return snapshot;
+}
+bool OwnedProfile::externalQueueCurrent(std::uint64_t sequence,std::span<const engine::ExternalQueueDecision> rows)const{
+  const auto& s=*impl_;if(!s.onThread()||!s.externalQueue||!s.externalSnapshotValid||!sequence||sequence!=s.externalQueueSequence||s.phase==Phase::Withdrawn){return false;}
+  for(std::size_t n=0;n<rows.size();++n){const auto& row=rows[n];const auto* m=s.find(row.binding.hash);
+    if(!m||!row.binding.admission||m->data().admission!=row.binding.admission||row.decision.token!=row.binding.admission
+        ||!m->installed||m->retired.requested||!m->failure.empty()||!m->handle.is_valid()){return false;}
+    for(std::size_t i=0;i<n;++i){if(rows[i].binding==row.binding){return false;}}
+  }return true;
+}
+std::expected<bool,Error> OwnedProfile::applyExternalQueue(std::uint64_t sequence,
+    std::span<const engine::ExternalQueueDecision> rows,std::uint32_t unavailable,core::QueueAction action,std::optional<std::uint64_t> validatedSource){
+  auto& s=*impl_;if(!s.onThread()||!s.externalQueue||!s.externalSnapshotValid||!sequence||sequence!=s.externalQueueSequence||s.phase==Phase::Withdrawn
+      ||(action!=core::QueueAction::Queue&&action!=core::QueueAction::Run&&action!=core::QueueAction::Preserve)){
+    return std::unexpected(Error{Code::Conflict,"External I2P queue plan is stale"});
+  }
+  std::vector<Impl::Member*> targets;targets.reserve(rows.size());
+  for(const auto& row:rows){auto* m=s.find(row.binding.hash);
+    if(!m||!row.binding.admission||m->data().admission!=row.binding.admission||row.decision.token!=row.binding.admission
+        ||!m->installed||m->retired.requested||!m->failure.empty()||!m->handle.is_valid()
+        ||std::ranges::find(targets,m)!=targets.end()){
+      return std::unexpected(Error{Code::Conflict,"External I2P queue binding changed"});
+    }targets.push_back(m);
+  }
+  if(action==core::QueueAction::Run&&(!validatedSource||!s.source->revisionCurrent(*validatedSource))){return std::unexpected(Error{Code::Conflict,"I2P source changed before external Run"});}
+  bool settled=true;s.queueUnavailable=unavailable;
+  for(std::size_t i=0;i<rows.size();++i){const auto& d=rows[i].decision;auto& m=*targets[i];if(action!=core::QueueAction::Queue&&d.action!=action){continue;}
+    m.activity=d.activity;m.justCompleted=false;
+    if(d.action!=action){continue;}
+    if(action==core::QueueAction::Preserve){continue;}
+    if(!m.counters->checked.load()){settled=false;continue;}
+    const auto actual=m.handle.status();if(actual.errc){settled=false;continue;}
+    const bool paused=bool(actual.flags&lt::torrent_flags::paused);
+    if(action==core::QueueAction::Queue){m.queued=true;
+      if(!paused&&!m.pausePending){m.pauseSettled=false;m.pausePending=true;m.handle.pause();}
+      settled&=paused&&m.pauseSettled&&!m.pausePending;
+    }else if(m.queued){
+      if(!paused&&!m.pausePending){m.pauseSettled=false;m.pausePending=true;m.handle.pause();}
+      else if(paused&&m.pauseSettled&&!m.pausePending){
+        if(!validatedSource||!s.source->revisionCurrent(*validatedSource)){return std::unexpected(Error{Code::Conflict,"I2P source changed during external Run preparation"});}
+        m.handle.unset_flags(lt::torrent_flags::auto_managed|lt::torrent_flags::stop_when_ready);m.pauseSettled=false;m.handle.resume();m.queued=false;
+      }else{settled=false;}
+    }
+  }return settled;
+}
+std::expected<void,Error> OwnedProfile::applyExternalQueuePositions(
+    std::span<const std::pair<engine::QueueBinding,std::uint32_t>> rows){
+  auto& s=*impl_;if(!s.onThread()||!s.externalQueue||s.phase==Phase::Withdrawn){return std::unexpected(Error{Code::Conflict,"External I2P positions unavailable"});}
+  for(const auto& [binding,position]:rows){auto* m=s.find(binding.hash);if(!m||m->data().admission!=binding.admission||m->retired.requested||!position||position>std::numeric_limits<std::int32_t>::max()){
+    return std::unexpected(Error{Code::Conflict,"External I2P position binding changed"});
+  }}
+  for(const auto& [binding,position]:rows){auto* m=s.find(binding.hash);m->livePosition=position;m->completionPositionUnavailable=false;}return {};
+}
+std::expected<void,Error> OwnedProfile::applyExternalRateLimits(const core::SessionRateLimits& limits){
+  auto& s=*impl_;if(!s.onThread()||!s.externalQueue||s.phase==Phase::Withdrawn||!engine::validExternalRateLimits(limits)){
+    return std::unexpected(Error{Code::InvalidFormat,"Invalid coordinated I2P rate caps"});
+  }
+  s.externalRates=limits;
+  if(s.session){lt::settings_pack pack;pack.set_int(lt::settings_pack::download_rate_limit,static_cast<int>(limits.download.bytesPerSecond));
+    pack.set_int(lt::settings_pack::upload_rate_limit,static_cast<int>(limits.upload.bytesPerSecond));s.session->apply_settings(pack);
+    const auto actual=s.session->get_settings();
+    if(core::effectiveSessionRateLimit(actual.get_int(lt::settings_pack::download_rate_limit))!=limits.download
+        ||core::effectiveSessionRateLimit(actual.get_int(lt::settings_pack::upload_rate_limit))!=limits.upload){return std::unexpected(Error{Code::Io,"Coordinated I2P rate caps unavailable"});}
+  }return {};
+}
 std::expected<void,Error> OwnedProfile::add(std::unique_ptr<Prepared> p){
   auto& s=*impl_;if(!s.onThread()||s.phase==Phase::Withdrawn||!p||s.members.size()>=32||s.members.contains(p->impl_->hash.hex())){return std::unexpected(Error{Code::Conflict,"I2P member is duplicate, stale or exceeds the32-torrent bound"});}
+  s.externalSnapshotValid=false;
   const auto key=p->impl_->hash.hex();auto m=std::make_unique<Impl::Member>();m->prepared=std::move(p);m->livePosition=m->data().storage.capturedDownload().position;m->forceStart=m->data().storage.capturedDownload().forceStart;auto [i,ok]=s.members.emplace(key,std::move(m));(void)ok;
   if(s.phase==Phase::Active){s.memberInstallRequested=true;s.requestStartup();}else if(s.phase==Phase::Starting){s.requestInstall();}return {};
 }
 bool OwnedProfile::retire(const core::TorrentHash& hash,std::chrono::steady_clock::time_point end){
-  auto& s=*impl_;auto* m=s.find(hash);if(!s.onThread()||!m||m->retired.requested||end<=std::chrono::steady_clock::now()){return false;}s.alerts();m->retired.requested=true;m->deadline=end;
+  auto& s=*impl_;auto* m=s.find(hash);if(!s.onThread()||!m||m->retired.requested||end<=std::chrono::steady_clock::now()){return false;}s.alerts();s.externalSnapshotValid=false;m->retired.requested=true;m->deadline=end;
   if(!m->installed){
     if(m->handle.is_valid()){
       if(!s.session){return false;}m->unchecked=true;m->removing=true;m->retired.failure.reset();m->failure.clear();s.session->remove_torrent(m->handle);return true;
@@ -329,6 +429,11 @@ std::expected<void,Error> OwnedProfile::checkpoint(const core::TorrentHash& h){
 std::expected<void,Error> OwnedProfile::release(const core::TorrentHash& h){auto& s=*impl_;auto* m=s.find(h);if(!s.onThread()||!m||!m->checkpointed.load()){return std::unexpected(Error{Code::Conflict,"I2P member storage still retained"});}s.members.erase(h.hex());s.schedule();return {};}
 std::expected<void,Error> OwnedProfile::publish(const core::TorrentHash& h,const std::function<std::expected<void,Error>()>& f){return impl_->source->publish(h,f);}
 std::expected<void,Error> OwnedProfile::publishPositions(const std::function<std::expected<void,Error>()>& f){return impl_->source->publishPositions(f);}
+std::expected<std::uint64_t,Error> OwnedProfile::validateExternalQueueSource(){
+  auto access=impl_->source->lease()->sourceAccess();if(!access){return std::unexpected(access.error());}
+  auto current=impl_->source->validate();if(!current){return std::unexpected(current.error());}
+  return access->revision(); // SAME OFD/source epoch; no returned effect permit.
+}
 std::expected<std::unique_ptr<OwnedProfile::QueueState>,Error> OwnedProfile::readQueueState(){
   auto& s=*impl_;auto access=s.source->lease()->sourceAccess();if(!access){return std::unexpected(access.error());}auto valid=s.source->validate();if(!valid){return std::unexpected(valid.error());}
   auto file=storage::ConfigFile::load(*s.source->lease(),"downloads.config");if(!file){return std::unexpected(file.error());}auto library=core::readLibrary(file->document());if(!library){return std::unexpected(Error{Code::InvalidFormat,"Invalid saved I2P queue"});}
@@ -355,6 +460,9 @@ std::vector<OwnedProfile::Observation> OwnedProfile::observations(){
       }
       selectedComplete=actual.is_finished;v.seeding=actual.is_seeding;v.verifiedBytes=actual.total_done;v.checked=m->counters->checked.load()&&!actual.errc;v.downloadRate=actual.download_payload_rate;v.uploadRate=actual.upload_payload_rate;v.peers=actual.num_peers;v.seeds=actual.num_seeds;v.diagnostics.statusAvailable=true;v.diagnostics.paused=bool(actual.flags&lt::torrent_flags::paused);v.diagnostics.alerts=m->alerts;dl=m->handle.download_limit();ul=m->handle.upload_limit();}
     if(m->retired.requested){v.phase=Phase::Retiring;}Observation row{.hash=m->data().hash,.torrent=std::move(v),.queued=m->queued,.selectedComplete=selectedComplete,.downloadLimit=dl,.uploadLimit=ul};row.queueUnavailable=s.queueUnavailable;row.completionPositionUnavailable=m->completionPositionUnavailable;
+    const auto& original=m->data().storage.capturedDownload();
+    row.cumulativeReceived=engine::cumulativePayload(original.downloaded,row.torrent.payloadDownloaded);
+    row.cumulativeSent=engine::cumulativePayload(original.uploaded,row.torrent.payloadUploaded);
     if(s.session){const auto settings=s.session->get_settings();row.globalDownloadLimit=settings.get_int(lt::settings_pack::download_rate_limit);row.globalUploadLimit=settings.get_int(lt::settings_pack::upload_rate_limit);row.loopbackPeerClasses=s.session->get_peer_class_filter().access(lt::address_v4::loopback());}
     out.push_back(std::move(row));
   }return out;

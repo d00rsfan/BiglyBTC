@@ -4,6 +4,7 @@
 #include "file_policy_commands.hpp"
 #include "owned_engine_fixture.hpp"
 #include "verified_seeding_fixture.hpp"
+#include "versioned_verified_seeding_fixture.hpp"
 #include "managed_queue_observations.hpp"
 #include "managed_tracker_responses.hpp"
 #include "queued_mainline_scrape.hpp"
@@ -17,6 +18,7 @@
 #include <thread>
 
 #include <QtTest>
+#include <QScopeGuard>
 
 #include <algorithm>
 #include <atomic>
@@ -214,6 +216,68 @@ struct ActiveUdpCleanup {engine::PersistentSession& owner;ActiveUdpPair& tracker
 class ManagedQueueTests final:public QObject {
   Q_OBJECT
 private slots:
+
+  void externalQueueUsesActualPauseAndAdmissionWithoutRunningItsLocalPlanner(){
+    test::OwnedEngineFixture fixture(false);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+    auto lease=held(fixture);auto service=owner();auto p=policy(1,1);p.rankMode=core::QueueRankMode::None;
+    p.minimumSeedSeconds=0;p.minimumSeedActiveSeconds=0;p.ignoreZeroPeers=false;p.firstPriorityIgnoreZeroPeers=false;
+    QVERIFY(service->configureQueuePolicy(p));QVERIFY(service->configureExternalQueue(true));
+    int targetWrites=0;
+    QVERIFY(service->configureSourcePublication([&](const core::TorrentHash& hash,const engine::SourceMutation& f){
+      if(hash!=*fixture.hash){return std::expected<void,storage::Error>{std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Wrong owned publication target"})};}
+      ++targetWrites;return f();
+    },[](const engine::SourceMutation& f){return f();}));
+    const auto empty=service->externalQueueSnapshot();QVERIFY(empty&&empty->rows.empty()&&empty->sequence);
+    const auto noRows=service->applyExternalQueue(empty->sequence,{},0,core::QueueAction::Queue);QVERIFY(noRows&&*noRows);
+    QVERIFY(service->startManaged(lease,{.hash=*fixture.hash,.ownedLoopbackPeerPort=fixture.port(),.queued=true}));QCOMPARE(targetWrites,1);
+    const auto cleanup=qScopeGuard([&]{(void)service->close(std::chrono::steady_clock::now()+5s);});
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!service->poll()){return false;}auto v=status(*service,*fixture.hash);return v&&!v->failure&&v->checked&&v->phase==Phase::Queued;})(),10000);
+    const auto heldStatus=status(*service,*fixture.hash);QVERIFY(heldStatus);QCOMPARE(heldStatus->received,std::int64_t{0});
+    QVERIFY(heldStatus->cumulativeReceived);QCOMPARE(*heldStatus->cumulativeReceived,std::int64_t{0});
+    auto snapshot=service->externalQueueSnapshot();QVERIFY(snapshot&&snapshot->rows.size()==1&&snapshot->rows.front().checked);
+    auto binding=snapshot->rows.front().binding;core::QueueDecision d;d.token=binding.admission;d.action=core::QueueAction::Run;
+    std::vector<engine::ExternalQueueDecision> decisions{{binding,d}};
+    ++decisions[0].binding.admission;QVERIFY(!service->applyExternalQueue(snapshot->sequence,decisions,0,core::QueueAction::Run));
+    decisions[0].binding=binding;
+    auto next=service->externalQueueSnapshot();QVERIFY(next);QVERIFY(!service->applyExternalQueue(snapshot->sequence,decisions,0,core::QueueAction::Run));snapshot=std::move(next);
+    core::SessionRateLimits caps;caps.download=core::effectiveSessionRateLimit(65536);caps.upload=core::effectiveSessionRateLimit(32768);
+    QVERIFY(service->applyExternalRateLimits(caps));QVERIFY(service->configureQueuePolicy(p));
+    const auto actual=service->liveSettings();QVERIFY(actual);QCOMPARE(actual->rateLimits.download,caps.download);QCOMPARE(actual->rateLimits.upload,caps.upload);
+    snapshot=service->externalQueueSnapshot();QVERIFY(snapshot);
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!service->poll()){return false;}auto result=service->applyExternalQueue(snapshot->sequence,decisions,0,core::QueueAction::Run);return result&&*result;})(),5000);
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!service->poll()){return false;}const auto v=status(*service,*fixture.hash);return v&&!v->failure&&v->received>0;})(),15000);
+    const auto transfer=status(*service,*fixture.hash);QVERIFY(transfer&&transfer->cumulativeReceived);QCOMPARE(*transfer->cumulativeReceived,transfer->received);
+    snapshot=service->externalQueueSnapshot();QVERIFY(snapshot);decisions[0].decision.action=core::QueueAction::Queue;
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!service->poll()){return false;}auto result=service->applyExternalQueue(snapshot->sequence,decisions,0,core::QueueAction::Queue);return result&&*result;})(),5000);
+    QVERIFY(service->stopManaged(*fixture.hash));QVERIFY(!service->applyExternalQueue(snapshot->sequence,decisions,0,core::QueueAction::Run));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!service->poll()){return false;}const auto v=status(*service,*fixture.hash);return v&&!v->failure&&!v->retained;})(),10000);
+    QVERIFY(targetWrites>=2);QVERIFY(fixture.intact(false));
+    QVERIFY(!engine::cumulativePayload(-1,0));QVERIFY(!engine::cumulativePayload(0,-1));
+    QVERIFY(!engine::cumulativePayload(std::numeric_limits<std::int64_t>::max(),1));QCOMPARE(*engine::cumulativePayload({},7),std::int64_t{7});
+  }
+  void externalClaimsAndHybridAliasRefuseBeforeOriginalStorageWrites_data(){
+    QTest::addColumn<bool>("alias");QTest::newRow("actual-retained-payload")<<false;QTest::newRow("actual-hybrid-alternate-key")<<true;
+  }
+  void externalClaimsAndHybridAliasRefuseBeforeOriginalStorageWrites(){
+    QFETCH(bool,alias);QTemporaryDir directory;QVERIFY(directory.isValid());
+    const auto fixture=test::prepareVersionedVerifiedSeedCase(directory.path()+"/owned",QStringLiteral("hybrid-v1"));
+    auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());QVERIFY(lease);
+    QVERIFY(storage::importTorrent(*lease,fixture.metadata.toStdString(),fixture.payload.toStdString(),true));
+    engine::RetainedPayloads external;
+    if(alias){
+      const auto source=parsed(test::read(fixture.metadata));libtorrent::error_code ec;const libtorrent::torrent_info meta(fixture.metadata.toStdString(),ec);QVERIFY(!ec);
+      auto identity=storage::originalTorrentIdentityFromLibtorrent(source,meta);QVERIFY(identity&&identity->full.v1&&identity->full.v2);
+      const auto& hash=*identity->full.v2;const auto alternate=core::TorrentHash::parse(std::string_view(reinterpret_cast<const char*>(hash.data()),20));QVERIFY(alternate);
+      identity->selected=storage::OriginalSelectedHash::V2;identity->originalKey=*alternate;external.identities.push_back(*identity);
+    }else{
+      const auto& file=fixture.files.front();external.claims.push_back({(fixture.payload+'/'+file.relative).toStdString(),static_cast<std::uint64_t>(file.before.st_dev),static_cast<std::uint64_t>(file.before.st_ino)});
+    }
+    const auto statePath=fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat";
+    const auto before=test::read(fixture.profile+"/downloads.config"),stateBefore=test::read(statePath);
+    auto service=owner();const auto admitted=service->startManaged(*lease,{.hash=fixture.hash},external);
+    QVERIFY(!admitted);QCOMPARE(admitted.error().code,storage::ErrorCode::Conflict);QVERIFY(service->managedDownloads().empty());
+    QCOMPARE(test::read(fixture.profile+"/downloads.config"),before);QCOMPARE(test::read(statePath),stateBefore);QVERIFY(test::versionedRealSnapshotsIntact(fixture));
+  }
 
   void ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks_data(){QTest::addColumn<bool>("multi");QTest::newRow("single")<<false;QTest::newRow("multi")<<true;}
   void ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(){

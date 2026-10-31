@@ -71,6 +71,8 @@ struct LibraryItem {
   std::optional<MainlineEstimateValues> mainlineEstimate{};
   std::optional<TrackerScrapeValues> trackerScrape{};
   QString networkStatus{};
+  // Passive current provider binding, never UI command authority.
+  quint64 providerAdmission=0,providerGeneration=0;
 };
 struct LibraryPresentation {
   quint64 revision = 0;

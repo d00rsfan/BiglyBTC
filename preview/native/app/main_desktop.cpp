@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   const bool normal = argc >= 2 && std::string_view(argv[1]) == "--profile";
   const bool local = argc >= 2 && std::string_view(argv[1]) == "--experimental-local";
   if ((!normal && !local) || (normal && argc < 3) || (local && argc < 4)) {
-    std::cerr << "Usage: BiglyBTC --profile ABSOLUTE_PROFILE [--country-db ABSOLUTE_DIRECTORY] [--private-i2p I2CP_PORT]\n"
+    std::cerr << "Usage: BiglyBTC --profile ABSOLUTE_PROFILE [--country-db ABSOLUTE_DIRECTORY] [--i2p-router I2CP_PORT | --private-i2p I2CP_PORT]\n"
                  "       BiglyBTC --experimental-local GENERATED_PROFILE OWNED_PEER_PORT [--country-db ABSOLUTE_DIRECTORY] [--private-i2p I2CP_PORT]\n";
     return 2;
   }
@@ -50,18 +50,19 @@ int main(int argc, char** argv) {
     if(option+1>=argc){std::cerr<<"Missing option value\n";return 2;}
     if(std::string_view(argv[option])=="--country-db"&&countryDatabase.empty()){
       countryDatabase=argv[option+1];if(!countryDatabase.is_absolute()){std::cerr<<"Country database needs an absolute directory\n";return 2;}
-    }else if(std::string_view(argv[option])=="--private-i2p"&&!i2pOptions){
+    }else if((std::string_view(argv[option])=="--private-i2p"||std::string_view(argv[option])=="--i2p-router")&&!i2pOptions){
 #if BIGLYBTC_HOST_I2P_OWNER
       unsigned int routerPort=0;const std::string_view value(argv[option+1]);
       const auto parsed=std::from_chars(value.data(),value.data()+value.size(),routerPort);
       if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||!routerPort||routerPort>65535){std::cerr<<"Use a numeric owned loopback I2CP port\n";return 2;}
-      i2pOptions.emplace();i2pOptions->routerPort=static_cast<unsigned short>(routerPort);
+      i2pOptions.emplace();i2pOptions->routerPort=static_cast<unsigned short>(routerPort);i2pOptions->publicCoexistence=std::string_view(argv[option])=="--i2p-router";
 #else
       std::cerr<<"This build has no privately approved I2P provider\n";return 2;
 #endif
     }else{std::cerr<<"Unknown or repeated option\n";return 2;}
   }
 
+  if(local&&i2pOptions&&i2pOptions->publicCoexistence){std::cerr<<"Use --profile for shared Public and I2P startup\n";return 2;}
   try {
     if (!std::setlocale(LC_CTYPE, "")) { throw std::runtime_error("Unable to initialize the filesystem character locale"); }
     biglybtc::app::detail::installWaylandConsoleFilter();

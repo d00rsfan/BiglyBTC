@@ -2,6 +2,12 @@
 # manifest and its source/build/install tree are available. No version fallback.
 set(BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST "" CACHE FILEPATH
   "Reviewed source-bound persistent-engine qualification manifest (default OFF)")
+option(BIGLYBTC_PERSISTENT_COEXISTENCE_RUNTIME "Separately root-approved same-image Public/private session cohort" OFF)
+set(BIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL "" CACHE FILEPATH "Exact closed Public/private role approval")
+set(BIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL_SHA256 "" CACHE STRING "Actual root approval digest")
+if(BIGLYBTC_PERSISTENT_COEXISTENCE_RUNTIME AND BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  message(FATAL_ERROR "Coexistence requires its explicit source/SDK/role manifest")
+endif()
 set(_biglybtc_binding_dir "${CMAKE_CURRENT_BINARY_DIR}/runtime-binding")
 file(MAKE_DIRECTORY "${_biglybtc_binding_dir}")
 set(_biglybtc_binding_header "${_biglybtc_binding_dir}/persistent_runtime_config.hpp")
@@ -56,12 +62,23 @@ else()
     message(FATAL_ERROR "Missing LT installed header root")
   endif()
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_mainline_routing.py")
+  set(_biglybtc_role_arguments "")
+  if(BIGLYBTC_PERSISTENT_COEXISTENCE_RUNTIME)
+    if(NOT BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER OR NOT IS_ABSOLUTE "${BIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL}" OR NOT IS_ABSOLUTE "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL}")
+      message(FATAL_ERROR "Coexistence requires separate explicit Public and private approvals")
+    endif()
+    set(_biglybtc_runtime_verifier "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_coexistence.py")
+    list(APPEND _biglybtc_role_arguments --approval "${BIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL}"
+      --approval-sha256 "${BIGLYBTC_PERSISTENT_COEXISTENCE_APPROVAL_SHA256}"
+      --private-approval "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL}")
+  endif()
   execute_process(COMMAND "${Python3_EXECUTABLE}"
-    "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_mainline_routing.py"
+    "${_biglybtc_runtime_verifier}"
     --manifest "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}"
     --library "${_biglybtc_locations}" --include "${_biglybtc_lt_include}"
     --header "${_biglybtc_binding_header}"
-    --receipt "${_biglybtc_binding_dir}/configure-receipt.json"
+    --receipt "${_biglybtc_binding_dir}/configure-receipt.json" ${_biglybtc_role_arguments}
     RESULT_VARIABLE _biglybtc_binding_result)
   if(NOT _biglybtc_binding_result EQUAL 0)
     message(FATAL_ERROR "Persistent runtime/source manifest admission failed")

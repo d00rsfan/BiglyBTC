@@ -30,9 +30,11 @@ struct TorrentIntakePacket {
   bool multifile=true;
   bool decoderShowAll=false; // Worker-derived sealed context, never a UI setting.
   bool i2pOnly=false; // Worker-derived presentation context, never network authority.
+  bool i2pAvailable=false; // Explicit coexistence context; legacy i2pOnly takes precedence.
 };
 using TorrentIntakePresentation=std::shared_ptr<const TorrentIntakePacket>;
 enum class TorrentIntakeStartMode { Queued, Stopped, Paused, Forced, VerifySeeding, VerifySelected, AllocateStopped, AllocatePaused };
+enum class TorrentIntakeNetwork { Public, I2p };
 struct TorrentIntakeSubmission {
   quint64 session=0,request=0,revision=0;
   QString destination;
@@ -49,6 +51,7 @@ struct TorrentIntakeSubmission {
   core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent;
   bool decoderShowAll=false;
   core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None;
+  TorrentIntakeNetwork network=TorrentIntakeNetwork::Public; // Requested network; Host validates the current capability.
 };
 struct TorrentIntakeResultPacket {
   quint64 session=0,request=0,revision=0;

@@ -4,6 +4,7 @@
 #include "channel.hpp"
 #include "library_commands.hpp"
 #include "sam_protocol.hpp"
+#include "network_policy.hpp"
 #include <QScopeGuard>
 #include <libtorrent/torrent_flags.hpp>
 #include <libtorrent/torrent_info.hpp>
@@ -41,6 +42,29 @@ std::expected<void,storage::Error> saveIntent(Fixture& f,const core::TorrentHash
 class OwnedI2pSourceTests:public QObject {
   Q_OBJECT
 private slots:
+
+  void trustedPublicStorageAndPositionWritesPreserveTheCurrentI2pMember(){
+    Fixture f;const auto publicHash=addSibling(f);const auto publicState=f.path/"active"/(publicHash.hex()+".dat");
+    auto state=core::Document::parse(read(publicState));QVERIFY(state);const auto* old=state->find("attributes");QVERIFY(old);
+    auto attributes=core::Document::parse(state->originalBytes().substr(old->begin,old->end-old->begin));QVERIFY(attributes);QVERIFY(attributes->replaceValue("networks","l6:Publice"));
+    QVERIFY(state->replaceValue("attributes",attributes->serialize()));write(publicState,state->serialize());
+    auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);auto child=(*anchor)->prepareChild(f.hash);QVERIFY(child);auto privateStorage=(*child)->prepareStorage();QVERIFY(privateStorage);
+    const auto protectedState=read(f.state()),config=read(f.path/"biglybt.config"),key=read(f.key);std::optional<biglybtc::engine::detail::ManagedStorage> publicStorage;
+    const std::array ids{privateStorage->identity()};
+    QVERIFY((*anchor)->publish(publicHash,[&]()->std::expected<void,storage::Error>{
+      auto prepared=biglybtc::engine::detail::ManagedStorage::prepare(*f.lease,publicHash,biglybtc::engine::NetworkPolicy{},privateStorage->claims(),ids);
+      if(!prepared){return std::unexpected(prepared.error());}publicStorage.emplace(std::move(*prepared));return {};
+    }));QVERIFY(publicStorage);QVERIFY((*anchor)->validate());QVERIFY((*child)->validate());
+    const std::vector<std::uint8_t> noVerifiedPieces(static_cast<std::size_t>(publicStorage->parameters().ti->num_pieces()),0);
+    QVERIFY((*anchor)->publish(publicHash,[&]{return publicStorage->checkpoint(*f.lease,noVerifiedPieces,false,0,0);}));
+    const std::array pools{storage::LibraryCompletionPool{f.hash,false},storage::LibraryCompletionPool{publicHash,false}};
+    QVERIFY((*anchor)->publishPositions([&]()->std::expected<void,storage::Error>{auto moved=storage::applyLibraryCommand(*f.lease,publicHash,core::DownloadAction::MoveTop,pools);return moved?std::expected<void,storage::Error>{}:std::unexpected(moved.error());}));
+    QVERIFY((*anchor)->validate());QVERIFY((*child)->validate());QCOMPARE(read(f.state()),protectedState);QCOMPARE(read(f.path/"biglybt.config"),config);QCOMPARE(read(f.key),key);
+    // An unrelated config write inside this narrow position transaction remains
+    // fatal; there is no generic recapture of cooperative external mutations.
+    QVERIFY(!(*anchor)->publishPositions([&]()->std::expected<void,storage::Error>{auto file=storage::ConfigFile::load(*f.lease,"biglybt.config");if(!file){return std::unexpected(file.error());}if(!file->document().replaceValue("future",owned_i2p_test::b("foreign change"))){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Owned config refusal"});}return file->save(*f.lease);}));
+    QVERIFY((*anchor)->effectAuthority()->revoked());QVERIFY(!(*child)->validate());QCOMPARE(read(f.state()),protectedState);
+  }
   void boundSourceAuthorityRefusesLegacySingleStreamPath(){
     Fixture f;auto source=sam::ProfileSource::open(*f.lease,f.hash);QVERIFY(source);auto storage=(*source)->prepareStorage();QVERIFY(storage);
     i2cp::InitialChannel channel;QVERIFY(channel.bindEffectAuthority((*source)->effectAuthority()));

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "owner.hpp"
+#include "coexist_queue.hpp"
 #include "biglybtc/queue_policy.hpp"
 #include <functional>
 #include <span>
@@ -17,6 +18,7 @@ public:
   struct Observation {
     core::TorrentHash hash;
     OwnedTorrent::Observation torrent;
+    std::optional<std::int64_t> cumulativeReceived{},cumulativeSent{};
     bool queued=false,selectedComplete=false;
     bool completionPositionUnavailable=false;
     int downloadLimit=0,uploadLimit=0;
@@ -24,10 +26,7 @@ public:
     std::uint32_t loopbackPeerClasses=0;
     std::uint32_t queueUnavailable=0;
   };
-  struct Retained {
-    std::vector<engine::detail::ManagedPayloadClaim> claims;
-    std::vector<storage::OriginalTorrentIdentity> identities;
-  };
+  using Retained=engine::RetainedPayloads;
   class Prepared final {
   public:
     ~Prepared();
@@ -45,7 +44,7 @@ public:
     std::unique_ptr<Impl> impl_;
   };
   static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> prepare(
-      const storage::ProfileLease&,const core::TorrentHash&);
+      const storage::ProfileLease&,const core::TorrentHash&,const Retained& external={});
   ~OwnedProfile()override;
   // External Host worker only: filesystem/key/source preparation/publication.
   std::expected<std::unique_ptr<Prepared>,storage::Error> prepareTorrent(
@@ -56,9 +55,20 @@ public:
   std::expected<void,storage::Error> publishPositions(
       const std::function<std::expected<void,storage::Error>()>&);
   std::expected<std::unique_ptr<QueueState>,storage::Error> readQueueState();
+  // Host-worker read/validation only; gate released before the Qt/SDK turn.
+  std::expected<std::uint64_t,storage::Error> validateExternalQueueSource();
   // Same QObject thread only; no filesystem calls or caller callbacks.
   bool begin(const Options&,core::QueuePolicy,Rates);
   Retained retained()const;
+  bool configureExternalQueue(bool);
+  std::expected<engine::ExternalQueueSnapshot,storage::Error> externalQueueSnapshot();
+  bool externalQueueCurrent(std::uint64_t,std::span<const engine::ExternalQueueDecision>)const;
+  std::expected<bool,storage::Error> applyExternalQueue(std::uint64_t,
+      std::span<const engine::ExternalQueueDecision>,std::uint32_t,core::QueueAction,
+      std::optional<std::uint64_t> validatedSource={});
+  std::expected<void,storage::Error> applyExternalQueuePositions(
+      std::span<const std::pair<engine::QueueBinding,std::uint32_t>>);
+  std::expected<void,storage::Error> applyExternalRateLimits(const core::SessionRateLimits&);
   bool applyQueueState(std::unique_ptr<QueueState>);
   std::vector<core::TorrentHash> completedForceStarts()const;
   void acknowledgeCompletion(const core::TorrentHash&);

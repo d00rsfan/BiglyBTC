@@ -34,6 +34,9 @@ struct ManagedDownloadStatus {
   std::optional<std::array<std::int32_t,4>> queueFilePriority{};
   // Optional exact last-accepted admission prefix; not a final/retired receipt.
   std::optional<std::int64_t> combinedReceived{}, combinedSent{};
+  // Original saved payload prefix + actual accepted admission payload delta.
+  // Missing means unavailable, never a persisted guess or retired receipt.
+  std::optional<std::int64_t> cumulativeReceived{},cumulativeSent{};
   std::optional<core::QueueTargetStatistics> queueTargetStatistics{};
   // Current mapped-admission request latency; absent for stock mmap/lost facts.
   std::optional<std::int64_t> diskReadLatencyMillis{},diskWriteLatencyMillis{};

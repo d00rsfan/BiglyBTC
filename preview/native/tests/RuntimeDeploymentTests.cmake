@@ -24,6 +24,10 @@ if(NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
     # provider-next-runtime-deployment block, including all rejection controls.
     # Configure-time manifest/source/image verification has already succeeded.
     return()
+  elseif(_biglybtc_deployment_manifest STREQUAL "62f7545f96af46806e7a7708213319ffd1e91c7a5228f0c35065eaa249a91343")
+    # Optional role approval has separate all34 relocation and rejection controls.
+    include("${CMAKE_CURRENT_LIST_DIR}/ProviderCoexistenceRuntimeTests.cmake")
+    return()
   else()
     message(FATAL_ERROR "Runtime deployment fixtures require an explicitly reviewed provider cohort")
   endif()

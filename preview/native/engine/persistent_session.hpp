@@ -3,6 +3,7 @@
 
 #include "local_session.hpp"
 #include "managed_download.hpp"
+#include "coexist_queue.hpp"
 #include "original_torrent_identity.hpp"
 #include "live_settings.hpp"
 #include "mainline_scrape_estimate.hpp"
@@ -169,9 +170,23 @@ public:
   // it uses this owner's sole pump and never enables a second LT scheduler.
   std::expected<void, storage::Error> configureQueuePolicy(const core::QueuePolicy&, int configuredSmoothingSeconds=30);
   std::optional<core::QueuePolicy> queuePolicy() const;
+  // Explicit Host union controller; configure before the first managed admission.
+  // Snapshot does not evaluate a plan or perform filesystem writes. Queue must
+  // settle on BOTH providers before the Host submits either provider's Run.
+  std::expected<void,storage::Error> configureExternalQueue(bool);
+  std::expected<ExternalQueueSnapshot,storage::Error> externalQueueSnapshot();
+  std::expected<bool,storage::Error> applyExternalQueue(std::uint64_t sequence,
+      std::span<const ExternalQueueDecision>,std::uint32_t unavailableInputs,core::QueueAction phase);
+  std::expected<void,storage::Error> applyExternalQueuePositions(
+      std::span<const std::pair<QueueBinding,std::uint32_t>>);
+  std::expected<void,storage::Error> applyExternalRateLimits(const core::SessionRateLimits&);
+  RetainedPayloads retainedPayloads() const;
+  // Host-worker IO only. The callbacks wrap synchronous source mutations, never
+  // session startup, handle methods, blocking SDK barriers or caller observers.
+  std::expected<void,storage::Error> configureSourcePublication(TargetPublication,PositionsPublication);
   // Worker-affine, nonblocking admission/control. The sole poll pump advances
   // checking, transfer, flush/removal and compatible checkpoints for every hash.
-  std::expected<void, storage::Error> startManaged(const storage::ProfileLease&, const ManagedDownloadOptions&);
+  std::expected<void, storage::Error> startManaged(const storage::ProfileLease&, const ManagedDownloadOptions&, const RetainedPayloads& external = {});
   std::expected<void, storage::Error> pauseManaged(const core::TorrentHash&, bool paused);
   std::expected<void, storage::Error> queueManaged(const core::TorrentHash&, bool forceStart, bool queued);
   std::expected<void, storage::Error> stopManaged(const core::TorrentHash&);

@@ -27,6 +27,8 @@ signals:
 private:
   void requestPreview();
   bool resetTrackerDraft();
+  std::optional<TorrentIntakeNetwork> requestedNetwork()const;
+  bool setNetworkContext();
   bool setI2pContext(bool);
   bool setSaveNameText(const QString&);
   bool setTrackerDraftText(const QString&);
@@ -41,9 +43,10 @@ private:
   QPointer<QCheckBox> sequential_,editTrackers_;
   QPointer<QPlainTextEdit> trackers_;
   QPointer<QLabel> status_,network_;
-  bool i2pContext_=false;
+  QPointer<QWidget> networkRow_;
+  bool i2pContext_=false,coexistPublicContext_=false;
   QPointer<QPushButton> load_,add_;
-  QPointer<QComboBox> priority_,startMode_;
+  QPointer<QComboBox> priority_,startMode_,networkChoice_;
   QPointer<QSpinBox> downloadLimit_,uploadLimit_;
   QPointer<QTableView> table_;
   QPointer<IntakeFileModel> model_;

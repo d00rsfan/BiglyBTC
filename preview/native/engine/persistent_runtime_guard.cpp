@@ -210,6 +210,18 @@ bool relocatableMainlineRoutingProviderArtifact() {
       && std::string_view(runtime_binding::sha256) == "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443"
       && runtime_binding::bytes == 9198832ULL;
 }
+bool relocatableCoexistenceProviderArtifact() {
+#if defined(BIGLYBTC_PERSISTENT_COEXISTENCE_BOUND) && BIGLYBTC_PERSISTENT_COEXISTENCE_BOUND
+  // Separate root-approved Public/private role cohort. Never grants mixed
+  // torrents inside a private session; configure verifies all source/SDK and
+  // actual role controls before these constants exist.
+  return std::string_view(runtime_binding::manifest) == "62f7545f96af46806e7a7708213319ffd1e91c7a5228f0c35065eaa249a91343"
+      && std::string_view(runtime_binding::sha256) == "7ffbd4c63d7770168bcbdf8e8c19644e18d1509d57ac148331a3c4bd094310c4"
+      && runtime_binding::bytes == 9659328ULL;
+#else
+  return false;
+#endif
+}
 bool hashed(int descriptor) {
   Digest context;
   if (!context.value || EVP_DigestInit_ex(context.value, EVP_sha256(), nullptr) != 1) { return false; }
@@ -248,7 +260,7 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
   const auto actual = canonicalPath(object->l_name);
   if (!actual || (std::string_view(actual->data()) != runtime_binding::artifact
                   && !relocatableSourceArtifact() && !relocatableSelectedProviderArtifact() && !relocatableNextProviderArtifact()
-                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact() && !relocatableMainlineProviderArtifact() && !relocatableOriginalIdentityProviderArtifact() && !relocatableMainlineRoutingProviderArtifact())) { return false; }
+                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact() && !relocatableMainlineProviderArtifact() && !relocatableOriginalIdentityProviderArtifact() && !relocatableMainlineRoutingProviderArtifact() && !relocatableCoexistenceProviderArtifact())) { return false; }
   // These are ORIGINAL dynamic exports, not &method / __wrap_* references.
   // GNU --wrap test seams therefore do not misidentify the test executable as LT.
   constexpr const char* symbols[] = {
@@ -268,10 +280,14 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       "biglybtc_refresh_mainline_port_v1",
       "biglybtc_mainline_identity_abi_v1", "biglybtc_configure_mainline_identity_v1", "biglybtc_read_mainline_identity_v1",
       "biglybtc_tracker_response_abi_v1", "biglybtc_attach_tracker_response_observer_v1",
-      "biglybtc_mainline_routing_abi_v1", "biglybtc_query_mainline_routing_v1"};
-  const std::size_t required = socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
-  std::array<std::uintptr_t, 27> addresses{};
-  std::array<Mapping, 27> beforeMappings{};
+      "biglybtc_mainline_routing_abi_v1", "biglybtc_query_mainline_routing_v1",
+      "biglybtc_private_i2p_owner_abi_v1", "biglybtc_configure_private_i2p_owner_v1",
+      "biglybtc_read_private_i2p_owner_v1", "biglybtc_withdraw_private_i2p_owner_v1",
+      "biglybtc_private_i2p_torrents_abi_v1", "biglybtc_admit_private_i2p_torrent_v1", "biglybtc_revoke_private_i2p_torrent_v1"};
+  const bool coexistence = relocatableCoexistenceProviderArtifact();
+  const std::size_t required = coexistence ? 34 : socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
+  std::array<std::uintptr_t, 34> addresses{};
+  std::array<Mapping, 34> beforeMappings{};
   std::size_t at = 0;
   for (; at < required; ++at) {
     const auto* name = symbols[at];
@@ -309,6 +325,13 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
     if (!afterMapping || beforeMappings[i] != *afterMapping) { return false; }
   }
   if (!canonicalMatches(object->l_name, *actual)) { return false; }
+  if (coexistence) {
+    using Marker = unsigned (*)();
+    // Call only after the exact image/mapping/FD/hash checks above. Keep the
+    // default engine independent of optional private SDK header declarations.
+    if (reinterpret_cast<Marker>(addresses[27])() != 0x42494f01U
+        || reinterpret_cast<Marker>(addresses[31])() != 0x42495401U) { return false; }
+  }
   if (retainedPin) {
     // Transfer, rather than reopen, the object which passed every mapping,
     // descriptor, source-bound digest and before/after identity check above.
