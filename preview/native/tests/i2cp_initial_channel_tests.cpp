@@ -91,6 +91,45 @@ private slots:
     zero=fixture("set-date-zero.frame");disconnect=fixture("disconnect-control.frame");status=fixture("status-created.frame");
     QCOMPARE(greeting,QByteArray(1,'*'));QCOMPARE(getDate.size(),qsizetype(12));QCOMPARE(date.size(),qsizetype(20));
   }
+  void supplementaryDateCannotAcknowledgeOrExtendAHeldSessionRequest(){
+    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");
+    QSignalSpy dates(&channel,&Channel::dateReceived),created(&channel,&Channel::sessionCreated);
+    auto options=router.options();options.deadlineMilliseconds=800;
+    QVERIFY(channel.begin(options));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_COMPARE(dates.count(),1);
+    const auto initial=channel.routerDate();QVERIFY(initial);
+    QVERIFY(channel.createSession(identity,{},1761739200123ULL));QTRY_VERIFY(sentFrame(router.received,hello().size()));
+    const auto sent=router.received;QVERIFY(!channel.sessionId());QCOMPARE(channel.state(),Channel::State::Creating);
+    auto* socket=channel.findChild<QTcpSocket*>();QVERIFY(socket);QSignalSpy reads(socket,&QTcpSocket::readyRead);
+    QTimer periodic;QObject::connect(&periodic,&QTimer::timeout,&router.server,[&]{
+      if(channel.state()==Channel::State::Creating){(void)router.send(date);}else{periodic.stop();}
+    });periodic.start(25);
+    QTRY_VERIFY_WITH_TIMEOUT(reads.count()>0,500);QCOMPARE(channel.state(),Channel::State::Creating);
+    QVERIFY(channel.routerDate()==initial);QVERIFY(channel.deadlineActive());QVERIFY(!channel.sessionId());QCOMPARE(created.count(),0);QCOMPARE(dates.count(),1);
+    QTRY_COMPARE_WITH_TIMEOUT(channel.state(),Channel::State::Failed,2000);periodic.stop();
+    QCOMPARE(channel.failure(),Channel::Failure::Deadline);QCOMPARE(dates.count(),1);QCOMPARE(created.count(),0);
+    QCOMPARE(router.received,sent);QVERIFY(!channel.sessionId());QVERIFY(!channel.routerDate());QVERIFY(!channel.leaseSetSubmission());
+    // A late complete date already queued on the peer cannot revive terminal
+    // state or manufacture a registration after the genuine request timeout.
+    (void)router.send(date);QCoreApplication::processEvents();QCOMPARE(channel.state(),Channel::State::Failed);QCOMPARE(created.count(),0);
+  }
+  void malformedSupplementaryDatesRemainFatalInEarlyAndEstablishedPhases_data(){
+    QTest::addColumn<int>("phase");QTest::addColumn<bool>("malformed");
+    for(int phase=0;phase<4;++phase){for(bool malformed:{false,true}){
+      QTest::newRow((std::to_string(phase)+(malformed?"-truncated":"-zero")).c_str())<<phase<<malformed;
+    }}
+  }
+  void malformedSupplementaryDatesRemainFatalInEarlyAndEstablishedPhases(){
+    QFETCH(int,phase);QFETCH(bool,malformed);OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");
+    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());
+    if(phase>0){QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate());}
+    if(phase>1){QVERIFY(channel.createSession(identity,{},1761739200123ULL));QTRY_VERIFY(sentFrame(router.received,hello().size()));}
+    if(phase>2){QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId());}
+    QByteArray bad=zero;
+    if(malformed){bad=QByteArray::fromHex("000000072100000000000000");} // Valid frame, truncated8-byte date.
+    QVERIFY(router.send(bad));QTRY_COMPARE(channel.state(),Channel::State::Failed);
+    QCOMPARE(channel.failure(),malformed?Channel::Failure::Framing:Channel::Failure::InvalidDate);
+    QVERIFY(!channel.routerDate());QVERIFY(!channel.sessionId());QVERIFY(!channel.leaseSetSubmission());QVERIFY(!channel.socketActive());QVERIFY(!channel.sourceEffectsPending());
+  }
   void actualJavaDateOverOwnedTcp_data(){
     QTest::addColumn<bool>("ipv6");QTest::newRow("ipv4")<<false;QTest::newRow("ipv6")<<true;
   }

@@ -34,6 +34,26 @@ class DatagramChannelTests final:public QObject {
     auto identity=signer(family);QVERIFY(channel.begin(router.options(budget)));QTRY_VERIFY(router.next());QCOMPARE(router.bytes[0],'*');QCOMPARE(router.take().type,cp::GetDateType);auto date=cp::encodeMessage(cp::SetDate{Now,std::string("2.13.0")});QVERIFY(date&&router.send(*date));QTRY_VERIFY(channel.routerDate());QVERIFY(channel.createLeaseSession(std::move(identity),options,Now));QVERIFY(!identity.valid());QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateSessionType);auto status=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});QVERIFY(status&&router.send(*status));QTRY_VERIFY(channel.sessionId());QVERIFY(router.lease(expiry));QTRY_VERIFY(router.next());auto created=cp::decodeCreateLeaseSet2(router.take());QVERIFY2(created.has_value(),created?"":created.error().message.c_str());QVERIFY(cp::verifyLeaseSet2(created->leaseSet));QTRY_VERIFY(channel.leaseSetSubmission());
   }
 private slots:
+  void periodicRouterDatesPreserveTheOriginalSessionLeaseAndActualDatagram(){
+    Router router;QVERIFY(router.listen());Channel channel;
+    QSignalSpy dates(&channel,&Channel::dateReceived),created(&channel,&Channel::sessionCreated),leases(&channel,&Channel::leaseSetSubmitted);
+    registered(router,channel,"ed25519");QTRY_COMPARE(dates.count(),1);QTRY_COMPARE(created.count(),1);QTRY_COMPARE(leases.count(),1);
+    const auto initialDate=channel.routerDate();const auto initialSession=channel.sessionId();const auto initialOptions=channel.sessionOptions();const auto initialLease=channel.leaseSetSubmission();
+    QVERIFY(initialDate&&initialSession&&initialLease);QVERIFY(!channel.sourceEffectsPending());
+    auto recipient=signer("dsa");const auto sent=channel.submitDatagram2(recipient.destination()->wire,{},{});QVERIFY(sent);QTRY_VERIFY(router.next());QVERIFY(cp::decodeSendDatagram(router.take()));
+    // Both a far-future and older valid router notification must leave the
+    // original clock/capability/lease fence untouched, without a new identity.
+    const auto forward=cp::encodeMessage(cp::SetDate{Now+7200000,std::string("0.9.70")});
+    const auto backward=cp::encodeMessage(cp::SetDate{Now-600000,std::nullopt});QVERIFY(forward&&backward);
+    QVERIFY(router.send(*forward));QVERIFY(router.send(*backward));QVERIFY(router.status(*sent,123,6));
+    QTRY_VERIFY(!channel.datagramPending());QCOMPARE(channel.state(),Channel::State::SessionCreated);QCOMPARE(channel.failure(),Channel::Failure::None);
+    const auto outcome=channel.datagramObservation();QVERIFY(outcome&&outcome->routerStatus);QCOMPARE(outcome->nonce,*sent);QCOMPARE(outcome->routerStatus->code,cp::Byte(6));
+    QVERIFY(channel.routerDate()==initialDate);QVERIFY(channel.sessionId()==initialSession);QVERIFY(channel.sessionOptions()==initialOptions);
+    const auto lease=channel.leaseSetSubmission();QVERIFY(lease);QCOMPARE(lease->revision,initialLease->revision);QCOMPARE(lease->publishedMilliseconds,initialLease->publishedMilliseconds);QCOMPARE(lease->expiresMilliseconds,initialLease->expiresMilliseconds);QCOMPARE(lease->leases,initialLease->leases);QCOMPARE(lease->unpublished,initialLease->unpublished);
+    QCOMPARE(dates.count(),1);QCOMPARE(created.count(),1);QCOMPARE(leases.count(),1);QVERIFY(!channel.deadlineActive());QVERIFY(!channel.sourceEffectsPending());QVERIFY(!router.next());
+    QVERIFY(router.send(*forward));channel.close();QCoreApplication::processEvents();
+    QCOMPARE(channel.state(),Channel::State::Closed);QVERIFY(!channel.routerDate());QVERIFY(!channel.sessionId());QVERIFY(!channel.leaseSetSubmission());QVERIFY(!channel.submitDatagram2(recipient.destination()->wire,{},{}));QCOMPARE(dates.count(),1);QCOMPARE(created.count(),1);QCOMPARE(leases.count(),1);
+  }
   void actualSignedAndClaimedDatagramsExposeHonestRouterStatuses_data(){
     QTest::addColumn<QByteArray>("family");QTest::addColumn<bool>("ipv6");QTest::addColumn<bool>("claimed");
     QTest::newRow("DSA0-v4-signed")<<QByteArray("dsa")<<false<<false;QTest::newRow("Ed7-v6-signed")<<QByteArray("ed25519")<<true<<false;

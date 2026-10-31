@@ -146,8 +146,17 @@ struct InitialChannel::Impl {
     }
     if(auto* status=std::get_if<SessionStatus>(&*decoded)){acknowledge(*status);return;}
     auto* reply=std::get_if<SetDate>(&*decoded);
-    if(!reply||state!=State::WaitingDate){fail(Failure::UnexpectedMessage);return;}
+    if(!reply){fail(Failure::UnexpectedMessage);return;}
     if(reply->milliseconds==0){fail(Failure::InvalidDate);return;}
+    if(state!=State::WaitingDate){
+      // The original router broadcasts SetDate every ten minutes. Consume its
+      // validated notification on an already-dated connection, keeping the
+      // initial monotone clock/version anchor and every request/lease budget.
+      // This is neither another dateReceived callback nor source authority.
+      if(date&&(state==State::DateReceived||state==State::Creating
+          ||state==State::SessionCreated||state==State::Reconfiguring)){return;}
+      fail(Failure::UnexpectedMessage);return;
+    }
     if(expired()){return;} // Decode/allocation may have crossed the absolute budget.
     date=std::move(*reply);dateObserved=Clock::now();state=State::DateReceived;timer.stop();notify();
   }

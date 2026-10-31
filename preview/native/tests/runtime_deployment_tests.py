@@ -129,7 +129,7 @@ def main():
             raise ValueError("Coexistence relocation differs from the reviewed manifest")
     elif original_sha not in INSTRUMENTED:
         raise ValueError("Strict relocation test requires an exact retained instrumented image")
-    root = Path(tempfile.mkdtemp(prefix="biglybtc-runtime-deploy-results-", dir="/tmp"))
+    root = Path(tempfile.mkdtemp(prefix="runtime-deployment-results-", dir=Path.cwd()))
     rows = []
     cases = [("copied", "copy", "bound"), ("moved-before-load", "moved", "bound"),
              ("open-denied", "open", "unbound"), ("mapped-inode-mismatch", "inode", "unbound"),
@@ -140,74 +140,77 @@ def main():
     if args.mode == "strict":
         cases = [("strict-copy", "strict", "unbound"), ("strict-moved-before-load", "strict", "unbound")]
     for name, fault, expected in cases:
-        area = Path(tempfile.mkdtemp(prefix="biglybtc-runtime-deploy-", dir="/tmp"))
-        initial = area / ("before-move" if "moved-before-load" in name else "lib")
-        initial.mkdir(mode=0o700)
-        selected = args.alternate.resolve(strict=True) if fault == "alternate" else provider
-        selected_sha, selected_stamp = digest(selected), stamp(selected)
-        if fault == "alternate" and selected_sha != "bbe6713f187140db190cc86e1140de36d006954d9b1ee1c581eeeb5cd98af427":
-            raise ValueError("Unexpected independently retained distro fixture")
-        image = initial / "libtorrent-rasterbar.so.2.0.12"
-        shutil.copy2(selected, image)
-        (initial / "libtorrent-rasterbar.so.2.0").symlink_to(image.name)
-        (initial / "libtorrent-rasterbar.so").symlink_to(image.name)
-        if initial.name != "lib":
-            initial.rename(area / "lib")
-        image = area / "lib/libtorrent-rasterbar.so.2.0.12"
-        if image.stat().st_ino == selected.stat().st_ino and image.stat().st_dev == selected.stat().st_dev:
-            raise ValueError("Fixture did not create an independent inode")
-        environment = os.environ.copy()
-        environment.pop("LD_PRELOAD", None)
-        environment.pop("LD_AUDIT", None)
-        environment["LD_LIBRARY_PATH"] = str(area / "lib") + ":" + environment.get("LD_LIBRARY_PATH", "")
-        if fault == "preload":
-            environment["LD_PRELOAD"] = args.preload
-        argv = [str(args.driver.resolve(strict=True)), str(area), fault, expected]
-        result = subprocess.run(argv, env=environment, capture_output=True, timeout=15)
-        (root / (name + ".stdout")).write_bytes(result.stdout)
-        (root / (name + ".stderr")).write_bytes(result.stderr)
-        if result.returncode or digest(image) != selected_sha or stamp(selected) != selected_stamp or digest(selected) != selected_sha:
-            raise ValueError("Copied runtime fixture failed: " + name + ": " + result.stderr.decode(errors="replace"))
-        if b"original_opens=0" not in result.stdout or b"mapped_copy=" not in result.stdout:
-            raise ValueError("Missing actual copied-origin/original-path controls: " + name)
-        if args.mode == "coexistence":
-            proof = b"proof=coexistence34 retained_pin=" + (b"1" if expected == "bound" else b"0")
-            if proof not in result.stdout:
-                raise ValueError("Missing retained complete34-export proof: " + name)
-        if args.mode == "mainline-routing":
-            proof = b"proof=mainline_routing27 retained_pin=" + (b"1" if expected == "bound" else b"0")
-            if proof not in result.stdout:
-                raise ValueError("Missing retained complete27-export proof: " + name)
-        if args.mode == "original-identity":
-            proof = b"proof=original_identity_tracker25 retained_pin=" + (b"1" if expected == "bound" else b"0")
-            if proof not in result.stdout:
-                raise ValueError("Missing retained complete25-export proof: " + name)
-        if args.mode == "mainline":
-            proof = b"proof=mainline20 retained_pin=" + (b"1" if expected == "bound" else b"0")
-            if proof not in result.stdout:
-                raise ValueError("Missing actual retained full20-export PORT proof: " + name)
-        rows.append({"case": name, "fault": fault, "expected": expected, "argv": argv,
-                     "owned_root": str(area), "selected_provider_sha256": selected_sha,
-                     "copied_provider_sha256": digest(image), "source_stamp_unchanged": True,
-                     "exit_code": result.returncode, "stdout_sha256": digest(root / (name + ".stdout")),
-                     "stderr_sha256": digest(root / (name + ".stderr"))})
-        (root / "cases.json").write_text(json.dumps(rows, indent=2) + "\n")
-        if fault == "preload":
-            # Existing fixture explicitly unsets LD_PRELOAD after it is mapped,
-            # proves original/default exports differ, then requires rejection.
-            argv = [str(args.interposition_driver.resolve(strict=True))]
-            mapped = subprocess.run(argv, env=environment, capture_output=True, timeout=15)
-            (root / "mapped-interposition.stdout").write_bytes(mapped.stdout)
-            (root / "mapped-interposition.stderr").write_bytes(mapped.stderr)
-            if mapped.returncode:
-                raise ValueError("Copied-provider actual mapped-interposition rejection failed")
-            rows.append({"case": "mapped-interposition-after-env-removed", "argv": argv,
-                         "owned_root": str(area), "exit_code": mapped.returncode})
+        # Temporary image trees are removed on success, assertion, timeout or exception.
+        with tempfile.TemporaryDirectory(prefix="biglybtc-runtime-deploy-", dir="/tmp") as area_name:
+            area = Path(area_name)
+            initial = area / ("before-move" if "moved-before-load" in name else "lib")
+            initial.mkdir(mode=0o700)
+            selected = args.alternate.resolve(strict=True) if fault == "alternate" else provider
+            selected_sha, selected_stamp = digest(selected), stamp(selected)
+            if fault == "alternate" and selected_sha != "bbe6713f187140db190cc86e1140de36d006954d9b1ee1c581eeeb5cd98af427":
+                raise ValueError("Unexpected independently retained distro fixture")
+            image = initial / "libtorrent-rasterbar.so.2.0.12"
+            shutil.copy2(selected, image)
+            (initial / "libtorrent-rasterbar.so.2.0").symlink_to(image.name)
+            (initial / "libtorrent-rasterbar.so").symlink_to(image.name)
+            if initial.name != "lib":
+                initial.rename(area / "lib")
+            image = area / "lib/libtorrent-rasterbar.so.2.0.12"
+            if image.stat().st_ino == selected.stat().st_ino and image.stat().st_dev == selected.stat().st_dev:
+                raise ValueError("Fixture did not create an independent inode")
+            environment = os.environ.copy()
+            environment.pop("LD_PRELOAD", None)
+            environment.pop("LD_AUDIT", None)
+            environment["LD_LIBRARY_PATH"] = str(area / "lib") + ":" + environment.get("LD_LIBRARY_PATH", "")
+            if fault == "preload":
+                environment["LD_PRELOAD"] = args.preload
+            argv = [str(args.driver.resolve(strict=True)), str(area), fault, expected]
+            result = subprocess.run(argv, env=environment, capture_output=True, timeout=15)
+            (root / (name + ".stdout")).write_bytes(result.stdout)
+            (root / (name + ".stderr")).write_bytes(result.stderr)
+            if result.returncode or digest(image) != selected_sha or stamp(selected) != selected_stamp or digest(selected) != selected_sha:
+                raise ValueError("Copied runtime fixture failed: " + name + ": " + result.stderr.decode(errors="replace"))
+            if b"original_opens=0" not in result.stdout or b"mapped_copy=" not in result.stdout:
+                raise ValueError("Missing actual copied-origin/original-path controls: " + name)
+            if args.mode == "coexistence":
+                proof = b"proof=coexistence34 retained_pin=" + (b"1" if expected == "bound" else b"0")
+                if proof not in result.stdout:
+                    raise ValueError("Missing retained complete34-export proof: " + name)
+            if args.mode == "mainline-routing":
+                proof = b"proof=mainline_routing27 retained_pin=" + (b"1" if expected == "bound" else b"0")
+                if proof not in result.stdout:
+                    raise ValueError("Missing retained complete27-export proof: " + name)
+            if args.mode == "original-identity":
+                proof = b"proof=original_identity_tracker25 retained_pin=" + (b"1" if expected == "bound" else b"0")
+                if proof not in result.stdout:
+                    raise ValueError("Missing retained complete25-export proof: " + name)
+            if args.mode == "mainline":
+                proof = b"proof=mainline20 retained_pin=" + (b"1" if expected == "bound" else b"0")
+                if proof not in result.stdout:
+                    raise ValueError("Missing actual retained full20-export PORT proof: " + name)
+            rows.append({"case": name, "fault": fault, "expected": expected, "argv": argv,
+                         "owned_root": str(area), "selected_provider_sha256": selected_sha,
+                         "copied_provider_sha256": digest(image), "source_stamp_unchanged": True,
+                         "exit_code": result.returncode, "stdout_sha256": digest(root / (name + ".stdout")),
+                         "stderr_sha256": digest(root / (name + ".stderr"))})
+            (root / "cases.json").write_text(json.dumps(rows, indent=2) + "\n")
+            if fault == "preload":
+                # Existing fixture explicitly unsets LD_PRELOAD after it is mapped,
+                # proves original/default exports differ, then requires rejection.
+                argv = [str(args.interposition_driver.resolve(strict=True))]
+                mapped = subprocess.run(argv, env=environment, capture_output=True, timeout=15)
+                (root / "mapped-interposition.stdout").write_bytes(mapped.stdout)
+                (root / "mapped-interposition.stderr").write_bytes(mapped.stderr)
+                if mapped.returncode:
+                    raise ValueError("Copied-provider actual mapped-interposition rejection failed")
+                rows.append({"case": "mapped-interposition-after-env-removed", "argv": argv,
+                             "owned_root": str(area), "exit_code": mapped.returncode})
     if stamp(provider) != before or digest(provider) != original_sha:
         raise ValueError("Retained provider was changed")
     receipt = {"scope": "Actual copied-provider identity plus explicit synthetic IO rejection seams",
                "provider": str(provider), "provider_sha256": original_sha, "mode": args.mode,
                "cases": rows, "provider_unchanged": True, "owner_or_profile_created": False,
+               "owned_fixture_directories_removed": True,
                "causal_or_writer_credit": False}
     (root / "result.json").write_text(json.dumps(receipt, indent=2) + "\n")
     print(json.dumps({"receipt": str(root / "result.json"), "cases": len(rows), "mode": args.mode}))
