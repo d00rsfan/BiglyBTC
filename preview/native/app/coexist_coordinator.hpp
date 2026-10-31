@@ -65,7 +65,8 @@ public:
   void invalidatePositions(){lastPositions_.clear();refreshPositions_=true;}
   const std::optional<Error>& positionFailure()const noexcept{return positionFailure_;}
   std::expected<void,Error> tick(engine::PersistentSession& pub,OwnedI2pService* priv,
-      const storage::ProfileLease& lease,const engine::NetworkPolicy& network){
+      const storage::ProfileLease& lease,const engine::NetworkPolicy& network,
+      const engine::PositionsPublication& publishPositions={}){
     auto a=pub.externalQueueSnapshot();if(!a){return std::unexpected(a.error());}
     engine::ExternalQueueSnapshot b;if(priv){auto v=priv->externalQueueSnapshot();if(!v){return std::unexpected(v.error());}b=std::move(*v);}
     if(refreshPositions_){
@@ -114,7 +115,9 @@ public:
     if(checked&&!positions.empty()&&positionStamp!=lastPositions_){
       std::optional<storage::LibraryPositionNormalization> normalized;
       const auto write=[&]()->std::expected<void,Error>{auto v=storage::normalizeLibraryPositions(lease,positions,transitions,policy_.newSeedsMoveTop);if(!v){return std::unexpected(v.error());}normalized=std::move(*v);return {};};
-      auto saved=priv?priv->publishPositions(write):write();
+      // Host composes all retained source anchors; legacy callers keep their
+      // existing private-only/direct publication when no callback is supplied.
+      auto saved=publishPositions?publishPositions(write):priv?priv->publishPositions(write):write();
       if(saved){
         std::vector<std::pair<Binding,std::uint32_t>> p,q;
         for(const auto& row:normalized->positions){for(std::size_t i=0;i<bindings.size();++i){if(bindings[i].second.hash==row.hash){facts[i].position=row.position;(bindings[i].first?q:p).push_back({bindings[i].second,row.position});}}}

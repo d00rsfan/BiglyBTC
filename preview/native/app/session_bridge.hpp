@@ -142,6 +142,7 @@ private:
   void initializePersistentOwner(std::stop_token);
   void publishMainlineFailure() noexcept;
   void publishI2p();
+  void reportIdlePollFailure(quint64 session,QString detail);
   void observeNative(const engine::ApplicationPeerObservation&) noexcept;
   void refreshDhtAccounting(bool ending = false) noexcept;
   void tickAccounting(bool force = false, bool ending = false) noexcept;
@@ -163,6 +164,9 @@ private:
   QTimer* completionMonitor_ = nullptr;
   QTimer* idleMonitor_ = nullptr;
   std::optional<core::Ticket> idlePoll_;
+  std::shared_ptr<std::atomic_bool> idlePollFailurePosted_;
+  quint64 idlePollSession_=0,idleFailureSession_=0; // GUI-only diagnostic identities.
+  QString idleFailureMessage_;
   bool closingSession_ = false;
   bool profileClosed_ = false; // GUI-only: closed admission differs from never-opened failure routing.
   std::mutex progressMutex_;

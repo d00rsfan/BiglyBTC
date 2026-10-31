@@ -3,6 +3,9 @@
 #include "session_bridge.hpp"
 #include "persistent_session.hpp"
 #include "i2p_saved_settings.hpp"
+#include "coexist_coordinator.hpp"
+#include "mixed_i2p_source.hpp"
+#include <QScopeGuard>
 #include "library_window.hpp"
 #include "statistics_page.hpp"
 #include "i2p_statistics_view.hpp"
@@ -18,6 +21,38 @@ using namespace biglybtc;
 class I2pClassicHostTests final:public QObject {
   Q_OBJECT
 private slots:
+  void coordinatorNormalizationUsesBothAnchorsAndRefusedPublicationLeavesThemCurrent(){
+    namespace test=owned_i2p_test;namespace sam=services::i2p::provider;
+    if(!engine::PersistentSession::mixedNetworksAvailable()){QSKIP("Qualified mixed SDK unavailable; existing source controls still run");}
+    test::Fixture f;const auto mixedKey=f.key.parent_path()/"dest_key.dat";test::write(mixedKey,test::read(f.key));QVERIFY(::chmod(mixedKey.c_str(),0600)==0);
+    auto state=core::Document::parse(test::read(f.state()));QVERIFY(state);QVERIFY(state->replaceValue("attributes",test::dict({{"networks","l6:Public3:I2Pe"},{"peersources","l7:Trackere"}})));test::write(f.state(),state->serialize());
+    auto inventory=core::Document::parse(test::read(f.path/"downloads.config"));QVERIFY(inventory);
+    const auto* rows=inventory->find("downloads");QVERIFY(rows&&rows->children.size()==1);
+    auto row=core::Document::parse(inventory->originalBytes().substr(rows->children[0].begin,rows->children[0].end-rows->children[0].begin));QVERIFY(row);QVERIFY(row->replaceValue("position","i5e"));QVERIFY(inventory->replaceValue("downloads","l"+row->serialize()+"e"));test::write(f.path/"downloads.config",inventory->serialize());
+    auto pure=sam::ProfileSource::createSession(*f.lease),mixed=sam::ProfileSource::createMixedSession(*f.lease);QVERIFY(pure&&mixed);
+    auto child=(*mixed)->prepareMixedChild(f.hash);QVERIFY(child);
+    auto made=engine::PersistentSession::create({9401,9402,9403});QVERIFY(made);auto owner=std::move(*made);
+    const auto close=qScopeGuard([&]{static_cast<void>(owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{2}));});
+    core::QueuePolicy policy;policy.maximumDownloads=1;policy.maximumActive=1;policy.minimumDownloads=0;
+    engine::NetworkPolicy network;QVERIFY(owner->configureNetwork(network));QVERIFY(owner->configureQueuePolicy(policy));QVERIFY(owner->configureExternalQueue(true));QVERIFY(owner->configureMixedNetworks());
+    const auto positions=[&](const engine::SourceMutation& operation){return (*pure)->publishPositions([&]{return (*mixed)->publishPositions(operation);});};
+    QVERIFY(owner->configureSourcePublication([&](const core::TorrentHash& hash,const auto& operation){return (*pure)->publish(hash,[&]{return (*mixed)->publish(hash,operation);});},positions));
+    QVERIFY(owner->configureMixedSourceBinding([&](const auto& source){return (*child)->bindMixedManaged(source);}));
+    QVERIFY(owner->startIdle(*f.lease));QVERIFY(owner->startManaged(*f.lease,{.hash=f.hash,.queued=true,.mixedNetworks=true}));
+    const auto checked=[&]{static_cast<void>(owner->poll());const auto current=owner->managedDownloads();return current.size()==1&&current.front().checked;};QTRY_VERIFY_WITH_TIMEOUT(checked(),5000);
+    const auto unchangedState=test::read(f.state()),config=test::read(f.path/"biglybt.config"),pureKey=test::read(f.key),mixedBytes=test::read(mixedKey),oldInventory=test::read(f.path/"downloads.config");
+    app::CoexistCoordinator coordinator;coordinator.configure(policy);bool deny=false;int publications=0,operations=0;
+    const engine::PositionsPublication publication=[&](const engine::SourceMutation& operation){++publications;return positions([&]()->std::expected<void,storage::Error>{
+      if(deny){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Controlled coordinator publication refusal"});}++operations;return operation();
+    });};
+    QVERIFY(coordinator.tick(*owner,nullptr,*f.lease,network,publication));QCOMPARE(publications,1);QCOMPARE(operations,1);QVERIFY(!coordinator.positionFailure());
+    auto normalized=core::Document::parse(test::read(f.path/"downloads.config"));QVERIFY(normalized);auto library=core::readLibrary(*normalized);QVERIFY(library);QCOMPARE(library->downloads[0].position,std::optional<std::int64_t>{1});
+    QVERIFY(test::read(f.path/"downloads.config")!=oldInventory);QVERIFY((*pure)->validate());QVERIFY((*mixed)->validate());QVERIFY((*child)->prepared());
+    const auto currentInventory=test::read(f.path/"downloads.config");deny=true;coordinator.invalidatePositions();
+    QVERIFY(coordinator.tick(*owner,nullptr,*f.lease,network,publication));QCOMPARE(publications,2);QCOMPARE(operations,1);QVERIFY(coordinator.positionFailure());QCOMPARE(coordinator.positionFailure()->message,std::string("Controlled coordinator publication refusal"));
+    QCOMPARE(test::read(f.path/"downloads.config"),currentInventory);QVERIFY((*pure)->validate());QVERIFY((*mixed)->validate());QVERIFY((*child)->prepared());QVERIFY(!(*pure)->effectAuthority()->revoked());QVERIFY(!(*mixed)->effectAuthority()->revoked());
+    QCOMPARE(test::read(f.state()),unchangedState);QCOMPARE(test::read(f.path/"biglybt.config"),config);QCOMPARE(test::read(f.key),pureKey);QCOMPARE(test::read(mixedKey),mixedBytes);
+  }
   void privateImporterRefusesUnsupportedModesBeforeEffectsAndSavesI2pContext_data(){
     QTest::addColumn<bool>("paused");QTest::newRow("stopped")<<false;QTest::newRow("paused")<<true;
   }

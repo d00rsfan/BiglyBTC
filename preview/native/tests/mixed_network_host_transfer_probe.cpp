@@ -387,7 +387,7 @@ int main(int argc,char** argv){
     QObject::connect(bridge.get(),&app::SessionBridge::snapshotReady,&window,[&](ui::Presentation p){snapshot=p;window.setPresentation(std::move(p));});
     QObject::connect(bridge.get(),&app::SessionBridge::progressReady,&window,&ui::LibraryWindow::setTelemetry);QObject::connect(bridge.get(),&app::SessionBridge::detailsReady,&window,&ui::LibraryWindow::setDetails);
     QObject::connect(bridge.get(),&app::SessionBridge::busyChanged,&window,&ui::LibraryWindow::setBusy);QObject::connect(bridge.get(),&app::SessionBridge::messageReady,&window,&ui::LibraryWindow::setMessage);
-    QObject::connect(bridge.get(),&app::SessionBridge::messageReady,&window,[&](const QString& value){latestHostMessage=value.left(512);});
+    QObject::connect(bridge.get(),&app::SessionBridge::messageReady,&window,[&](const QString& value){latestHostMessage=value.left(512);if(value.startsWith(QStringLiteral("Background update failed:"))&&callbackFailure.isEmpty()){callbackFailure=latestHostMessage;}});
     QObject::connect(bridge.get(),&app::SessionBridge::i2pReady,&window,[&](ui::I2pPresentation p){if(p&&p->session==session&&(!packet||p->sequence>packet->sequence)){packet=p;}window.setI2p(std::move(p));});
     QObject::connect(bridge.get(),&app::SessionBridge::columnLayoutSessionReady,&window,[&](quint64 value){session=value;window.beginColumnLayoutSession(value);});
     QObject::connect(&window,&ui::LibraryWindow::refreshRequested,&window,[&]{if(bridge){static_cast<void>(bridge->refresh());}});QObject::connect(&window,&ui::LibraryWindow::detailsRequested,&window,[&](ui::Target value){if(bridge){static_cast<void>(bridge->details(value));}});

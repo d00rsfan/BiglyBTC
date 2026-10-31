@@ -326,7 +326,8 @@ struct SessionBridge::Host {
     return route(hash)==Route::I2p?startI2p(hash):startPublic({hash,peerPort,force,queued});
   }
   CoexistCoordinator coexistQueue;
-  void scheduleCoexistence(){if(coexistence()&&engine){take(coexistQueue.tick(*engine,i2p.get(),lease,networkPolicy));}}
+  void scheduleCoexistence(){if(coexistence()&&engine){take(coexistQueue.tick(*engine,i2p.get(),lease,networkPolicy,
+      [this](const auto& operation){return publishPositions(operation);}));}}
   void requireI2pIdle() {
     if(!mixedStatus.empty()){throw Failure{{storage::ErrorCode::Conflict,"Stop the mixed torrents before changing profile settings or files"}};}
     if(mixed){take(stopMixed());}
@@ -1051,10 +1052,20 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
     if (busy_ || closingSession_) { return; }
     if (idlePoll_) {
       if (idlePoll_->result().wait_for(std::chrono::seconds{0}) != std::future_status::ready) { return; }
-      static_cast<void>(idlePoll_->result().get());
+      const auto completed=idlePoll_->result().get();
       idlePoll_.reset();
+      if(!completed&&completed.error()!=core::WorkError::Cancelled
+          &&(!idlePollFailurePosted_||!idlePollFailurePosted_->load())){
+        reportIdlePollFailure(idlePollSession_,QStringLiteral("Session worker failed"));
+      }else if(completed&&idlePollSession_==publishedColumnLayoutSession_){
+        idleFailureSession_=0;idleFailureMessage_.clear();
+      }
+      idlePollFailurePosted_.reset();
     }
-    auto poll = worker_.submit([this](std::stop_token stop) -> core::WorkResult {
+    const auto reported=std::make_shared<std::atomic_bool>(false);
+    auto poll = worker_.submit([this,reported](std::stop_token stop) -> core::WorkResult {
+      const auto session=host_?host_->columnLayoutSession:quint64{0};
+      try{
       if (!stop.stop_requested() && host_) {
         if(host_->i2pOptions){host_->pollI2p();host_->pollMixed();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
@@ -1102,8 +1113,19 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         }
       }
       return {};
+      }catch(const Failure& failure){
+        const bool cancelled=stop.stop_requested()||failure.error.code==storage::ErrorCode::Cancelled;
+        if(!cancelled){reportIdlePollFailure(session,QStringLiteral("storage %1: %2")
+            .arg(static_cast<int>(failure.error.code)).arg(text(failure.error.message).left(384)));reported->store(true);}
+        return std::unexpected(cancelled?core::WorkError::Cancelled:core::WorkError::Failed);
+      }catch(...){
+        // Arbitrary exception text is not a safe source for profile/key bytes.
+        if(!stop.stop_requested()){reportIdlePollFailure(session,QStringLiteral("Unexpected session worker failure"));reported->store(true);}
+        return std::unexpected(stop.stop_requested()?core::WorkError::Cancelled:core::WorkError::Failed);
+      }
     });
-    if (poll) { idlePoll_.emplace(std::move(*poll)); }
+    if (poll) { idlePollSession_=publishedColumnLayoutSession_;idlePollFailurePosted_=reported;idlePoll_.emplace(std::move(*poll)); }
+    else{reportIdlePollFailure(publishedColumnLayoutSession_,QStringLiteral("Session worker queue is unavailable"));}
   });
   idleMonitor_->start();
 }
@@ -1148,6 +1170,16 @@ void SessionBridge::ready(ui::Presentation snapshot, QString message) {
     if (!guard) { return; }
     if (!message.isEmpty()) { emit messageReady(message); }
   }, Qt::QueuedConnection);
+}
+void SessionBridge::reportIdlePollFailure(quint64 session,QString detail){
+  detail=detail.left(512);
+  QMetaObject::invokeMethod(this,[this,session,detail=std::move(detail)]{
+    if(profileClosed_||!session||session!=publishedColumnLayoutSession_){return;}
+    if(idleFailureSession_==session&&idleFailureMessage_==detail){return;}
+    idleFailureSession_=session;idleFailureMessage_=detail;
+    // Observation only: no busy-state change, modal UI or source/route effect.
+    emit messageReady(QStringLiteral("Background update failed: ")+detail);
+  },Qt::QueuedConnection);
 }
 void SessionBridge::failed(QString message) {
   QMetaObject::invokeMethod(this, [this, message = std::move(message)] {
