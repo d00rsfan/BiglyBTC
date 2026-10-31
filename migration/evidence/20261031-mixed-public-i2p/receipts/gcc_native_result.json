@@ -1,0 +1,947 @@
+{
+    "Host_profile_lock_released": true,
+    "I2P_progress_without_Public_source": {
+        "accepted_actions": [
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "last_Host_message": "",
+        "rendered_revision": "22",
+        "revision": "22",
+        "rows": [
+            {
+                "admission": "1",
+                "completed": 49152,
+                "generation": "1",
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "network_status": "Network: Public",
+                "received": 66527,
+                "sent": 10,
+                "state": "Downloading"
+            },
+            {
+                "admission": "2",
+                "completed": 131072,
+                "generation": "1",
+                "hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+                "network_status": "Network: Public + I2P\nI2P active",
+                "received": 133072,
+                "sent": 20,
+                "state": "Downloading"
+            },
+            {
+                "admission": "0",
+                "completed": 0,
+                "generation": "0",
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "network_status": "Network: I2P only",
+                "received": 3000,
+                "sent": 30,
+                "state": "Stopped"
+            }
+        ],
+        "session": "1"
+    },
+    "Mixed_Public_tracker": {
+        "accepted": 14,
+        "actual_peer_advertisements": 10,
+        "failure": "",
+        "incomplete_eof": 0,
+        "leech_announces": 10,
+        "leech_left": 0,
+        "registered_seed_port": 46217,
+        "replies": 14,
+        "seed_announces": 4,
+        "source_left": 1048576
+    },
+    "Public_progress_after_mixed_router_EOF": {
+        "accepted_actions": [
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "last_Host_message": "",
+        "rendered_revision": "90",
+        "revision": "90",
+        "rows": [
+            {
+                "admission": "1",
+                "completed": 311296,
+                "generation": "1",
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "network_status": "Network: Public",
+                "received": 325757,
+                "sent": 10,
+                "state": "Downloading"
+            },
+            {
+                "admission": "2",
+                "completed": 655360,
+                "generation": "1",
+                "hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+                "network_status": "Network: Public + I2P\nI2P unavailable: Mixed I2CP transport failed. Use Start to retry.",
+                "received": 657378,
+                "sent": 20,
+                "state": "Downloading"
+            },
+            {
+                "admission": "0",
+                "completed": 0,
+                "generation": "0",
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "network_status": "Network: I2P only",
+                "received": 3000,
+                "sent": 30,
+                "state": "Stopped"
+            }
+        ],
+        "session": "1"
+    },
+    "Public_tracker": {
+        "accepted": 14,
+        "actual_peer_advertisements": 11,
+        "failure": "",
+        "incomplete_eof": 0,
+        "leech_announces": 11,
+        "leech_left": 0,
+        "registered_seed_port": 46217,
+        "replies": 14,
+        "seed_announces": 3,
+        "source_left": 0
+    },
+    "actual_BT_wire_identity_prefix_and_private_tail": true,
+    "all_payload_inodes_preserved": true,
+    "completed": {
+        "accepted_actions": [
+            [
+                1,
+                2,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                1,
+                1,
+                2,
+                2,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "last_Host_message": "Download command applied",
+        "rendered_revision": "794",
+        "revision": "794",
+        "rows": [
+            {
+                "admission": "3",
+                "completed": 2097152,
+                "generation": "2",
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "network_status": "Network: Public",
+                "received": 2154796,
+                "sent": 10,
+                "state": "Seeding"
+            },
+            {
+                "admission": "2",
+                "completed": 2097152,
+                "generation": "2",
+                "hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+                "network_status": "Network: Public + I2P\nI2P active",
+                "received": 2129280,
+                "sent": 20,
+                "state": "Seeding"
+            },
+            {
+                "admission": "0",
+                "completed": 0,
+                "generation": "0",
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "network_status": "Network: I2P only",
+                "received": 3000,
+                "sent": 30,
+                "state": "Stopped"
+            }
+        ],
+        "session": "2"
+    },
+    "cross_owner_slot_handoff": {
+        "accepted_actions": [
+            [
+                0,
+                2,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                1,
+                1,
+                2,
+                2,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "last_Host_message": "Download command applied",
+        "rendered_revision": "239",
+        "revision": "239",
+        "rows": [
+            {
+                "admission": "0",
+                "completed": 475136,
+                "generation": "0",
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "network_status": "Network: Public",
+                "received": 532780,
+                "sent": 10,
+                "state": "Stopped"
+            },
+            {
+                "admission": "2",
+                "completed": 933888,
+                "generation": "2",
+                "hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+                "network_status": "Network: Public + I2P\nI2P active",
+                "received": 958037,
+                "sent": 20,
+                "state": "Downloading"
+            },
+            {
+                "admission": "0",
+                "completed": 0,
+                "generation": "0",
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "network_status": "Network: I2P only",
+                "received": 3000,
+                "sent": 30,
+                "state": "Stopped"
+            }
+        ],
+        "session": "2"
+    },
+    "cumulative_library_traffic_preserved": true,
+    "direct_peer_injection": false,
+    "elapsed_ms": 798308,
+    "independent_controls": true,
+    "joined_before_disk_read": true,
+    "last_i2p": {
+        "failure": "",
+        "global_download_limit": 0,
+        "global_upload_limit": 0,
+        "loopback_peer_classes": 0,
+        "sequence": "591",
+        "session": "2",
+        "torrents": [
+        ],
+        "tracker_announces": "0",
+        "tracker_errors": "0",
+        "tracker_replies": "0"
+    },
+    "last_seed": [
+        {
+            "admission": "14101520707554060780",
+            "checked": true,
+            "download_rate": 0,
+            "failure": "",
+            "generation": "10875223537597552876",
+            "global_download_limit": 49152,
+            "global_upload_limit": 40960,
+            "hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+            "loopback_peer_classes": 1,
+            "payload_downloaded": 0,
+            "payload_uploaded": 1146880,
+            "peers": 0,
+            "phase": 2,
+            "public_identity": "12667dc726c2767a3a9209f95c8c4bf2131e3c5f076e37fd65d4faca45800967",
+            "queued": false,
+            "seeding": false,
+            "tracker_announces": "4",
+            "tracker_errors": "1",
+            "tracker_replies": "3",
+            "upload_rate": 345,
+            "verified_bytes": 1048576
+        }
+    ],
+    "last_ui": {
+        "accepted_actions": [
+            [
+                1,
+                3,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                1,
+                2,
+                2,
+                2,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "last_Host_message": "Download command applied",
+        "rendered_revision": "800",
+        "revision": "800",
+        "rows": [
+            {
+                "admission": "0",
+                "completed": 2097152,
+                "generation": "0",
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "network_status": "Network: Public",
+                "received": 2154796,
+                "sent": 10,
+                "state": "Stopped"
+            },
+            {
+                "admission": "0",
+                "completed": 2097152,
+                "generation": "0",
+                "hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+                "network_status": "Network: Public + I2P",
+                "received": 2129280,
+                "sent": 20,
+                "state": "Stopped"
+            },
+            {
+                "admission": "0",
+                "completed": 0,
+                "generation": "0",
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "network_status": "Network: I2P only",
+                "received": 3000,
+                "sent": 30,
+                "state": "Stopped"
+            }
+        ],
+        "session": "2"
+    },
+    "leech_destination_sha256": "858a1aa04a598e0d564c2e47cf23f2dae87181e5ffcc3b90417cdf8fd9050c9c",
+    "mixed_single_torrent_both_source_ranges_verified": true,
+    "one_mixed_library_row": true,
+    "one_shared_download_slot": {
+        "accepted_actions": [
+            [
+                0,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                1,
+                1,
+                2,
+                2,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "last_Host_message": "Download command applied",
+        "rendered_revision": "226",
+        "revision": "226",
+        "rows": [
+            {
+                "admission": "1",
+                "completed": 475136,
+                "generation": "2",
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "network_status": "Network: Public",
+                "received": 532780,
+                "sent": 10,
+                "state": "Downloading"
+            },
+            {
+                "admission": "2",
+                "completed": 884736,
+                "generation": "2",
+                "hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+                "network_status": "Network: Public + I2P\nI2P active",
+                "received": 903079,
+                "sent": 20,
+                "state": "Queued — download limit"
+            },
+            {
+                "admission": "0",
+                "completed": 0,
+                "generation": "0",
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "network_status": "Network: I2P only",
+                "received": 3000,
+                "sent": 30,
+                "state": "Stopped"
+            }
+        ],
+        "session": "2"
+    },
+    "original_networks_preserved": true,
+    "pause_I2P_preserved_Public": {
+        "accepted_actions": [
+            [
+                0,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                1,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "last_Host_message": "Download command applied",
+        "rendered_revision": "191",
+        "revision": "191",
+        "rows": [
+            {
+                "admission": "3",
+                "completed": 393216,
+                "generation": "1",
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "network_status": "Network: Public",
+                "received": 437475,
+                "sent": 10,
+                "state": "Downloading"
+            },
+            {
+                "admission": "2",
+                "completed": 835584,
+                "generation": "1",
+                "hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+                "network_status": "Network: Public + I2P",
+                "received": 837606,
+                "sent": 20,
+                "state": "Paused"
+            },
+            {
+                "admission": "0",
+                "completed": 0,
+                "generation": "0",
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "network_status": "Network: I2P only",
+                "received": 3000,
+                "sent": 30,
+                "state": "Stopped"
+            }
+        ],
+        "session": "1"
+    },
+    "pause_Public_preserved_I2P": {
+        "accepted_actions": [
+            [
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "last_Host_message": "Download command applied",
+        "rendered_revision": "161",
+        "revision": "161",
+        "rows": [
+            {
+                "admission": "1",
+                "completed": 327680,
+                "generation": "1",
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "network_status": "Network: Public",
+                "received": 342141,
+                "sent": 10,
+                "state": "Paused"
+            },
+            {
+                "admission": "2",
+                "completed": 704512,
+                "generation": "1",
+                "hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+                "network_status": "Network: Public + I2P\nI2P active",
+                "received": 722905,
+                "sent": 20,
+                "state": "Downloading"
+            },
+            {
+                "admission": "0",
+                "completed": 0,
+                "generation": "0",
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "network_status": "Network: I2P only",
+                "received": 3000,
+                "sent": 30,
+                "state": "Stopped"
+            }
+        ],
+        "session": "1"
+    },
+    "public_partial_source_unchanged": true,
+    "reason": "Actual one-owner mixed transfer, complementary verified sources, router loss continuation, shared queue and same-profile restart",
+    "saved_75_70_pause_restored": true,
+    "scope": "actual-single-owner-mixed-Public-I2P-Host",
+    "seed_destination_sha256": "12667dc726c2767a3a9209f95c8c4bf2131e3c5f076e37fd65d4faca45800967",
+    "shared_download_slot_handoff": true,
+    "simultaneous_networks": {
+        "accepted_actions": [
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "last_Host_message": "",
+        "rendered_revision": "21",
+        "revision": "21",
+        "rows": [
+            {
+                "admission": "1",
+                "completed": 49152,
+                "generation": "1",
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "network_status": "Network: Public",
+                "received": 66527,
+                "sent": 10,
+                "state": "Downloading"
+            },
+            {
+                "admission": "2",
+                "completed": 98304,
+                "generation": "1",
+                "hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+                "network_status": "Network: Public + I2P\nI2P active",
+                "received": 105224,
+                "sent": 20,
+                "state": "Downloading"
+            },
+            {
+                "admission": "0",
+                "completed": 0,
+                "generation": "0",
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "network_status": "Network: I2P only",
+                "received": 3000,
+                "sent": 30,
+                "state": "Stopped"
+            }
+        ],
+        "session": "1"
+    },
+    "source_checked_partition": {
+        "I2P_first_piece": 64,
+        "I2P_piece_count": 64,
+        "I2P_verified_bytes": 1048576,
+        "Public_first_piece": 0,
+        "Public_piece_count": 64,
+        "piece_bytes": 16384
+    },
+    "status": "PASS",
+    "stop_I2P_preserved_Public": {
+        "accepted_actions": [
+            [
+                0,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "last_Host_message": "Download command applied",
+        "rendered_revision": "206",
+        "revision": "206",
+        "rows": [
+            {
+                "admission": "3",
+                "completed": 442368,
+                "generation": "1",
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "network_status": "Network: Public",
+                "received": 486628,
+                "sent": 10,
+                "state": "Downloading"
+            },
+            {
+                "admission": "0",
+                "completed": 884736,
+                "generation": "0",
+                "hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+                "network_status": "Network: Public + I2P",
+                "received": 903079,
+                "sent": 20,
+                "state": "Stopped"
+            },
+            {
+                "admission": "0",
+                "completed": 0,
+                "generation": "0",
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "network_status": "Network: I2P only",
+                "received": 3000,
+                "sent": 30,
+                "state": "Stopped"
+            }
+        ],
+        "session": "1"
+    },
+    "stop_Public_preserved_I2P": {
+        "accepted_actions": [
+            [
+                0,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        "last_Host_message": "Download command applied",
+        "rendered_revision": "176",
+        "revision": "176",
+        "rows": [
+            {
+                "admission": "0",
+                "completed": 360448,
+                "generation": "0",
+                "hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+                "network_status": "Network: Public",
+                "received": 391215,
+                "sent": 10,
+                "state": "Stopped"
+            },
+            {
+                "admission": "2",
+                "completed": 819200,
+                "generation": "1",
+                "hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+                "network_status": "Network: Public + I2P\nI2P active",
+                "received": 821222,
+                "sent": 20,
+                "state": "Downloading"
+            },
+            {
+                "admission": "0",
+                "completed": 0,
+                "generation": "0",
+                "hash": "C83792E8B8C30DEA976F942D6D659CFF6DF4BC66",
+                "network_status": "Network: I2P only",
+                "received": 3000,
+                "sent": 30,
+                "state": "Stopped"
+            }
+        ],
+        "session": "1"
+    },
+    "stopped_private_sentinel_untouched": true,
+    "transfers": [
+        {
+            "info_hash": "9741E969D70074DB7427DB6DBF7753F471A4A930",
+            "initial_downloaded": 1000,
+            "network": "Public",
+            "payload_sha256": "91d6f139837323de3829070b54945b770230a2fbfd270b370184b57305bfaf65",
+            "saved_downloaded": 2154796,
+            "verified_bytes": 2097152
+        },
+        {
+            "info_hash": "CEB2DF9F8A73A3112EB62EE84B85246779A21094",
+            "initial_downloaded": 2000,
+            "network": "Public+I2P",
+            "payload_sha256": "1bd89710ad4edd8ef8f73cd4f579e89d42372e1d5f35804426494b79849d83cb",
+            "saved_downloaded": 2129280,
+            "verified_bytes": 2097152
+        }
+    ],
+    "verified_bytes": 4194304
+}

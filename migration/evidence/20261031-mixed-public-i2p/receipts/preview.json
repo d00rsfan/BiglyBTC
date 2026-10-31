@@ -1,0 +1,45 @@
+{
+  "status": "PASS_STAGED_OPTIONAL_MIXED_PREVIEW",
+  "source_commit": "90f1d3defd31acacb784cb8cda40d8d06ba6d76d",
+  "source_tree": "2210063859f4940974addd3543b6473c74dfae69",
+  "manifest_sha256": "a574c680f2d16c6b4f147720ce8a8eef49ec594e00676a5aeab24e6c4aaaacec",
+  "mapped_files": 119,
+  "default_dist_unchanged": true,
+  "shipping_approved": false,
+  "build_receipt_sha256": "c06f81b82c2a3cf553e656b11f51436578c63ffb77a80956aca76d4e3f2577a0",
+  "acceptance": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/result.json",
+      "sha256": "ca757817e7c94044968a045821e13e69d1fb881818640a515422dde0da6d6826",
+      "inputs_sha256": "6525dde74bafaad81deed0387c532dc6d9ee19ca5aca3b4675efe71a6f3972b3",
+      "public_artifacts_sha256": "cfaab6593fddfef47afee58cc6f81b7ce970e15919e044fd9740789678005244",
+      "build_receipt_sha256": "c06f81b82c2a3cf553e656b11f51436578c63ffb77a80956aca76d4e3f2577a0"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/result.json",
+      "sha256": "14adb8de57cf8af196ab2a39e0bd896681b9a3dd03a1a14889a102641e6ac5e5",
+      "inputs_sha256": "84b27aefdccd3834e2995bd8bc91e4864c537f65c2cbc23a22bf11763abac972",
+      "public_artifacts_sha256": "5c19b15d328c3bc9b7a697d6db9eb03b226868f45db8d8c3e8948336c7fb6ffe",
+      "build_receipt_sha256": "faa4d7b5e91f0109ea90ba15f1903200ea6dd32f3c1c40393299d977217d1e79"
+    }
+  ],
+  "role_approval_sha256": "c47c93f8f2e90ef573d4e79ac7c8fb14589d0a3c3ce2e99db5be3f2577f41993",
+  "provider_sha256": "dd71c87d9030a1db9f39741850bb56d989f87d409044fa693733b5352f01ed34",
+  "relocation_exit": 0,
+  "retained_same_image_exports": 39,
+  "ldd_sha256": "d5c067d0fb1fb62b24e169108cd799d6366aa1fb27b34fa29b31bec20dfdee99",
+  "files_changed": [
+    "README.txt",
+    "dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so",
+    "dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so.2.0",
+    "dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so.2.0.12",
+    "usr/lib/biglybtc/bin/BiglyBTC",
+    "usr/lib/biglybtc/lib/libtorrent-rasterbar.so",
+    "usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0",
+    "usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12",
+    "usr/share/doc/biglybtc-experimental/private-i2p/SCOPE.md",
+    "usr/share/doc/biglybtc-experimental/private-i2p/root-private-owner-approval.json",
+    "usr/share/doc/biglybtc-experimental/private-i2p/source-build-record.json"
+  ],
+  "backup_or_archive_created": false
+}

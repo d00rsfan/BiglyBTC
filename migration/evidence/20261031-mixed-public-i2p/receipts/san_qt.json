@@ -1,0 +1,9 @@
+{
+  "actual_log": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/Testing/Temporary/LastTest.log",
+  "actual_log_sha256": "582223786358ad7240382adc40c2b58c2c04c5ae362721ac8c0bee268aa9a23f",
+  "Qt_suites": 7,
+  "passed": 219,
+  "failed": 0,
+  "skipped": 0,
+  "blacklisted": 0
+}

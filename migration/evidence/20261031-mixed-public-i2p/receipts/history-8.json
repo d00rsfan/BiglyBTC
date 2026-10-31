@@ -1,0 +1,79 @@
+{
+  "status": "FAIL",
+  "lane": "private",
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-DBIGLYBTC_PERSISTENT_COEXISTENCE_RUNTIME=OFF",
+        "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/cmake/LibtorrentRasterbar",
+        "-DBIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER=ON",
+        "-DBIGLYBTC_PERSISTENT_MIXED_I2P_RUNTIME=ON",
+        "-DBIGLYBTC_PERSISTENT_RUNTIME_MANIFEST=/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/runtime-manifest.json",
+        "-DBIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL=/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/root-mixed-role-approval.json",
+        "-DBIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256=c47c93f8f2e90ef573d4e79ac7c8fb14589d0a3c3ce2e99db5be3f2577f41993",
+        "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL=/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/root-mixed-role-approval.json",
+        "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256=c47c93f8f2e90ef573d4e79ac7c8fb14589d0a3c3ce2e99db5be3f2577f41993",
+        "-DBIGLYBTC_PERSISTENT_NEGATIVE_LT_LIBRARY=/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so.2.0.12"
+      ],
+      "exit_code": 1,
+      "timed_out": false,
+      "elapsed_seconds": 2.17,
+      "log": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r4/configure.log",
+      "log_sha256": "4ece52f8dd425bdb5030432e08740b0645d34f9d549baa9857c25237d50f1198"
+    }
+  ],
+  "images": {},
+  "source_commit": null,
+  "source_tree": null,
+  "source_map_sha256": "ba31c544f07fe368e67f8b1f4f8bf809d2567b46d079205f217cdbd469f3cfa5",
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/run-batch.py": "0feaf8cd8da605940208ed6b07e20eb0965441f19e38764da8f7c113814cacaa",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/final-sdk-inputs.json": "7ecfd7e078b656630a44557247db0b0b209233ef818a93b5cd894564c59b2121",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/root-mixed-role-approval.json": "c47c93f8f2e90ef573d4e79ac7c8fb14589d0a3c3ce2e99db5be3f2577f41993",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/runtime-manifest.json": "03694052165fab605b7f9a8c30ec9ddbb806b0d94a7eef642453f1341d838fe9",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/source-build-record-accept-rearm.json": "f1c09a9a9b097c226bf9261f8c17c6523a48f0f53aea0f14e3ae39034cf94e16",
+    "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12": "dd71c87d9030a1db9f39741850bb56d989f87d409044fa693733b5352f01ed34"
+  },
+  "expected_tests": [
+    "i2p-classic-host",
+    "network-policy",
+    "managed-download",
+    "managed-queue",
+    "managed-tracker",
+    "managed-library-command-routing",
+    "torrent-intake-file-options",
+    "torrent-intake-file-options-ui",
+    "queue-policy",
+    "queue-slots",
+    "owned-i2p-profile-source",
+    "persistent-runtime-source-bound",
+    "persistent-runtime-manifest-negatives",
+    "persistent-runtime-reject-open",
+    "persistent-runtime-reject-inode",
+    "persistent-runtime-reject-content",
+    "persistent-runtime-reject-fifo",
+    "persistent-runtime-reject-preload",
+    "persistent-runtime-reject-mapped-interposition",
+    "persistent-runtime-reject-same-version-distro",
+    "provider-mixed-runtime-inputs",
+    "provider-mixed-runtime-deployment",
+    "provider-mixed-reject-foreign-owner",
+    "provider-mixed-reject-foreign-torrents",
+    "provider-mixed-reject-foreign-mixed"
+  ],
+  "makeflags": " -j3 --jobserver-auth=fifo:/tmp/GMfifo2765589 -- ATTEMPT=r4",
+  "original_head_index": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "failure": "RuntimeError('configure failed')",
+  "elapsed_seconds": 2.31,
+  "source_after_sha256": "ba31c544f07fe368e67f8b1f4f8bf809d2567b46d079205f217cdbd469f3cfa5",
+  "tests_xml_sha256": null
+}

@@ -1,0 +1,251 @@
+{
+  "status": "PASS_BOUNDED_SINGLE_TORRENT_PUBLIC_I2P_MIXED_CHAPTER",
+  "source_commit": "90f1d3defd31acacb784cb8cda40d8d06ba6d76d",
+  "source_tree": "2210063859f4940974addd3543b6473c74dfae69",
+  "receipts": {
+    "source_map": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r5/source-before.json",
+      "sha256": "55ee607816d7a9eece26b3066ca11befe929731c648f1f381073cbe782ee8e25"
+    },
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r5/result-stamped.json",
+      "sha256": "c06f81b82c2a3cf553e656b11f51436578c63ffb77a80956aca76d4e3f2577a0"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/san/r5/result-stamped.json",
+      "sha256": "faa4d7b5e91f0109ea90ba15f1903200ea6dd32f3c1c40393299d977217d1e79"
+    },
+    "default": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/default/r5/result-stamped.json",
+      "sha256": "19cb727567d147e391f18338a371d26f840b9c0ee7f23e215a23c4beae1dd8e3"
+    },
+    "gcc_actual": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/result.json",
+      "sha256": "ca757817e7c94044968a045821e13e69d1fb881818640a515422dde0da6d6826"
+    },
+    "san_actual": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/result.json",
+      "sha256": "14adb8de57cf8af196ab2a39e0bd896681b9a3dd03a1a14889a102641e6ac5e5"
+    },
+    "provider_record": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/source-build-record-accept-rearm.json",
+      "sha256": "f1c09a9a9b097c226bf9261f8c17c6523a48f0f53aea0f14e3ae39034cf94e16"
+    },
+    "provider_source": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/amendments/mixed-accept-rearm/amendments/steady-accept-backoff/manifest.json",
+      "sha256": "05a9fad2ad069fb0a4017e6253c91da1b56f7bec67b6fe514194007a126b0ee0"
+    },
+    "provider_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/root-artifact-review.json",
+      "sha256": "bf16e1b8b78277a6d05fb6570bbef4fa63401000f37babf55bcdbfeedfea64ce"
+    },
+    "provider_public_evidence": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider-public-evidence-rearm-r2/manifest.json",
+      "sha256": "3cf1c941d3d4632588544ea8cca2d65a16a14ae857cae579fe10d0439dd5e398"
+    },
+    "role_approval": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/root-mixed-role-approval.json",
+      "sha256": "c47c93f8f2e90ef573d4e79ac7c8fb14589d0a3c3ce2e99db5be3f2577f41993"
+    },
+    "runtime_manifest": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/runtime-manifest.json",
+      "sha256": "03694052165fab605b7f9a8c30ec9ddbb806b0d94a7eef642453f1341d838fe9"
+    },
+    "ci": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/ci-result.json",
+      "sha256": "9393524511b8348f306dbd6c85652ce07c6c1fe660e61f29894ea8bda61d60d4"
+    },
+    "preview": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/preview-stage/r1/result.json",
+      "sha256": "3d4f2e1ea99fadc584c73e05978a3ef7d0bea2efeb82064dcb008de6a68076c9"
+    },
+    "preservation": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/preservation-after-preview.json",
+      "sha256": "9b0616d62c92bdb877405d4d17d4260d2e139ce1ed50f1bbd700c52fb02cb0a0"
+    },
+    "cleanup": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/tmp-cleanup.json",
+      "sha256": "c789ee004087e89bb535e4e5e02044e1d5bbe0b0ad03944a45b5795218d43ff1"
+    },
+    "gcc_qt": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r5/qt-totals.json",
+      "sha256": "068eeadc15044165f800d3c773afb38c3eba68b9060eda24d53eb6e95255902e"
+    },
+    "san_qt": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/san/r5/qt-totals.json",
+      "sha256": "aef9a02c3ddcd197c1d7e76973d0d8b7de368b4c8c7dcf9f8a1e65fbc4c9adb3"
+    },
+    "default_qt": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/default/r5/qt-totals.json",
+      "sha256": "a26265673164a7aa8d952683f6de171c0044365ece3ab562d1e099a6d38978b8"
+    },
+    "symbol_binding_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/engine-provider-symbol-binding/review-driver.json",
+      "sha256": "4691bd72de40f8677f72779574ab7f46e2f1585889b4649c09162ad87def6a3c"
+    },
+    "source_repair": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/native-repairs-r2.json",
+      "sha256": "2cc67949ba72fdd0415083c7b03f3a1ca670a98d1c96e05ad1d1212d76efde8f"
+    },
+    "service_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-service-review/review.json",
+      "sha256": "12b07260381beeb9dd1df3f3c353c125e8e5a95fd11b82921a4d911fc986039f"
+    },
+    "runtime_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-accept-repin-final/repinning.json",
+      "sha256": "aa369b8c8059d5866b4e075af1f4c2c9c9c0f54b60cbd3f09863862a5e347766"
+    },
+    "sdk_measured_controls": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/amendments/mixed-accept-rearm/amendments/steady-accept-backoff/qualification/runs/r1/result.json",
+      "sha256": "97ea16cc6576fd1ecd71268b31efd61a2e44a44c606436765953f98f73ea21c2"
+    },
+    "gcc_inputs": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/inputs.json",
+      "sha256": "6525dde74bafaad81deed0387c532dc6d9ee19ca5aca3b4675efe71a6f3972b3"
+    },
+    "gcc_inputs_after": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/inputs-after.json",
+      "sha256": "09225d6b77499d8d39f9985ec497abda991d7d3290e63a13860be9a325f18182"
+    },
+    "gcc_commands": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/commands.json",
+      "sha256": "fcdc572947056e881b9a39e015d135ce5862429a39c8fef6e58c069310c439c1"
+    },
+    "gcc_native_result": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/native-result.json",
+      "sha256": "5e20fdb94048e0b9bfe5fe09c8137e3162780ce39fa7c97a1164c5067ed7c99a"
+    },
+    "gcc_native_loaded": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/native-loaded.json",
+      "sha256": "6414591a36acfcda522b2f621db803c1c109f182f268e66d923c83e846684db5"
+    },
+    "gcc_private_cleanup": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/private-cleanup.json",
+      "sha256": "bcd5a73f1c7dbeb378897eec66c7933aef80b1339d33f8598130f103c08e0424"
+    },
+    "gcc_namespace_exit": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/namespace-exit.json",
+      "sha256": "5d6e86aed99fded6092d15cecc8c2cba4e61cc700dd231bdf6a948b3ea8a860e"
+    },
+    "gcc_fence_before": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/fence-before.json",
+      "sha256": "57d7e79222df08ce29839a0f881dde6109756e6b22d2cc63c85535c2d9ec6796"
+    },
+    "gcc_fence_after": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/fence-after.json",
+      "sha256": "57d7e79222df08ce29839a0f881dde6109756e6b22d2cc63c85535c2d9ec6796"
+    },
+    "gcc_public_artifacts": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/public-artifacts.json",
+      "sha256": "cfaab6593fddfef47afee58cc6f81b7ce970e15919e044fd9740789678005244"
+    },
+    "gcc_tracker_result": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/tracker-result.json",
+      "sha256": "effb4d348cd1b173d9b5ab61349b1ca63cb80017f9470a0dff0907bc37e7383f"
+    },
+    "gcc_router_result": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/router-result.json",
+      "sha256": "51540df79cbf32c59c4b801fdc93bd6ddaf1850f3f1836b4964fcfdee3357d69"
+    },
+    "san_inputs": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/inputs.json",
+      "sha256": "84b27aefdccd3834e2995bd8bc91e4864c537f65c2cbc23a22bf11763abac972"
+    },
+    "san_inputs_after": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/inputs-after.json",
+      "sha256": "d30b3350443a3d14fa4cd8cbdf77c1afe7a62c5cedfb6179173d5b4993d3c701"
+    },
+    "san_commands": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/commands.json",
+      "sha256": "303ca4bcdbd8c6e63aad72723203007f3d74c26bcce19ba4d76cbc3d92fedf40"
+    },
+    "san_native_result": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/native-result.json",
+      "sha256": "efbdfc1937200e05bb96c03c1194ae024b4db5319a9b218c1ba7735b0137fdd6"
+    },
+    "san_native_loaded": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/native-loaded.json",
+      "sha256": "59a7ae4d1b3d0371bb5456bb3b4be060cf0b5490e9fcdd0347bd26829833c28b"
+    },
+    "san_private_cleanup": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/private-cleanup.json",
+      "sha256": "bcd5a73f1c7dbeb378897eec66c7933aef80b1339d33f8598130f103c08e0424"
+    },
+    "san_namespace_exit": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/namespace-exit.json",
+      "sha256": "5d6e86aed99fded6092d15cecc8c2cba4e61cc700dd231bdf6a948b3ea8a860e"
+    },
+    "san_fence_before": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/fence-before.json",
+      "sha256": "3cd355b6825649956c5073bb759cc562b2fa7abd482fe0f15598e287a78503fd"
+    },
+    "san_fence_after": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/fence-after.json",
+      "sha256": "3cd355b6825649956c5073bb759cc562b2fa7abd482fe0f15598e287a78503fd"
+    },
+    "san_public_artifacts": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/public-artifacts.json",
+      "sha256": "5c19b15d328c3bc9b7a697d6db9eb03b226868f45db8d8c3e8948336c7fb6ffe"
+    },
+    "san_tracker_result": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/tracker-result.json",
+      "sha256": "effb4d348cd1b173d9b5ab61349b1ca63cb80017f9470a0dff0907bc37e7383f"
+    },
+    "san_router_result": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/router-result.json",
+      "sha256": "51540df79cbf32c59c4b801fdc93bd6ddaf1850f3f1836b4964fcfdee3357d69"
+    }
+  },
+  "actual_runs": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/result.json",
+      "sha256": "ca757817e7c94044968a045821e13e69d1fb881818640a515422dde0da6d6826",
+      "inputs_sha256": "6525dde74bafaad81deed0387c532dc6d9ee19ca5aca3b4675efe71a6f3972b3",
+      "public_artifacts_sha256": "cfaab6593fddfef47afee58cc6f81b7ce970e15919e044fd9740789678005244",
+      "build_receipt_sha256": "c06f81b82c2a3cf553e656b11f51436578c63ffb77a80956aca76d4e3f2577a0"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/result.json",
+      "sha256": "14adb8de57cf8af196ab2a39e0bd896681b9a3dd03a1a14889a102641e6ac5e5",
+      "inputs_sha256": "84b27aefdccd3834e2995bd8bc91e4864c537f65c2cbc23a22bf11763abac972",
+      "public_artifacts_sha256": "5c19b15d328c3bc9b7a697d6db9eb03b226868f45db8d8c3e8948336c7fb6ffe",
+      "build_receipt_sha256": "faa4d7b5e91f0109ea90ba15f1903200ea6dd32f3c1c40393299d977217d1e79"
+    }
+  },
+  "original_preservation": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "bundle_manifests": {
+    "default": {
+      "path": "/home/yurii/Java/BiglyBTC/dist/BUILD_MANIFEST.json",
+      "sha256": "aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b"
+    },
+    "private": {
+      "path": "/home/yurii/Java/BiglyBTC/dist-i2p/BUILD_MANIFEST.json",
+      "sha256": "a574c680f2d16c6b4f147720ce8a8eef49ec594e00676a5aeab24e6c4aaaacec"
+    }
+  },
+  "registry_counts": {
+    "upstreams": 20,
+    "components": 108,
+    "dependencies": 22
+  },
+  "whole_client_state": "in_progress",
+  "shipping_approved": false,
+  "stop_after_chapter": true,
+  "next_chapter_started": false,
+  "private_keys_published": false,
+  "ci_test_only_delta": {
+    "qualified_source_commit": "90f1d3defd31acacb784cb8cda40d8d06ba6d76d",
+    "qualified_source_tree": "2210063859f4940974addd3543b6473c74dfae69",
+    "ci_source_commit": "89a42691ac2f7193b6fd95cbf23a8dbd172e7477",
+    "ci_source_tree": "7e4d7488693dab345d39eeab679b7e8465efd203",
+    "test_path": "preview/native/tests/i2p_classic_host_tests.cpp",
+    "before_sha256": "83e1b11599cbba8dcd0d31a00f4f4b98f544042301e10dc414073d19fc42d2a3",
+    "after_sha256": "f9bdf2c4ce1db44c0f9ce40794d4722bb0eadeb87cb0eff66fa58594052ef092",
+    "capsule_sha256": "627f250c247e9fe3a9595bd3268847e2d532b0dd8e8d04946c88c6fc0d64b719",
+    "all_other_repository_files_identical": true,
+    "local_test_guard_rebuilt": false
+  }
+}

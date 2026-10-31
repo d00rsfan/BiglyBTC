@@ -1,7 +1,9 @@
-# Mixed Public and I2P torrent — in progress
+# Mixed Public and I2P torrent complete; stopped
 
-User authorised the next chapter on2026-10-31. [Task](tasks/P07-mixed-network-torrent.md). Preserve exact selected networks with one torrent/piece/storage/checkpoint owner and one queue slot; genuine peers in both networks must contribute. Prior separate-torrent coexistence stays qualified.
+Native `90f1d3defd31acacb784cb8cda40d8d06ba6d76d` (preview tree `2210063859f4940974addd3543b6473c74dfae69`) qualifies the bounded mixed Public+I2P single-torrent chapter. A mixed row has one Public torrent handle, payload/piece/storage/checkpoint owner and queue slot. Key0 mixed transport borrows that owner; pure-I2P key1 remains separate. Explicit original network order/unknown metadata, source fences, independent lifecycle, shared queue/rates and cumulative payload counters remain preserved. Whole client/P07 and larger components remain in progress.
 
-Original mixed index0/key0 semantics and source authority audited; one-owner engine/Host/import integration is in place. New independently qualified39-export SDK passed9 suites/private15 methods/6 role controls; default Host8 suites passed. Native GCC production build and24/25 selected suites passed; optional-symbol loading fix independently reviewed/adopted. First SAN build reached1000s without compiler errors; cached grouped GCC/SAN/default closure is now running, followed by genuine isolated mixed transfer. No mixed enablement beneath private-only approval. Reuse caches, retain5GiB reserve and≤3 compiler jobs, native1000s. [Resource policy](RESOURCE_POLICY.md). Work:build/mixed-network-20261031.
+[Review](evidence/20261031-mixed-public-i2p/REVIEW.md).
 
-Stop after this chapter, describe the proposed next chapter without beginning it. No user questions at present.
+Next proposed only: Propose I2P peer discovery and magnets beyond tracker-only peers and explicitly warmed known local LS2 caches; do not begin it.
+
+Preserve Java/live profile and manifests; [resource policy](RESOURCE_POLICY.md). Work:build/mixed-network-20261031.

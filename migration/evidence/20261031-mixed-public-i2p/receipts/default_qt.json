@@ -1,0 +1,9 @@
+{
+  "actual_log": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/Testing/Temporary/LastTest.log",
+  "actual_log_sha256": "30b67f0a0e712a8f26502e1031717e877a51c8894fd09fecce10ced95640be17",
+  "Qt_suites": 7,
+  "passed": 216,
+  "failed": 0,
+  "skipped": 3,
+  "blacklisted": 0
+}

@@ -1,0 +1,307 @@
+{
+  "status": "PASS",
+  "lane": "san",
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "-DBIGLYBTC_PERSISTENT_COEXISTENCE_RUNTIME=OFF",
+        "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/cmake/LibtorrentRasterbar",
+        "-DBIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER=ON",
+        "-DBIGLYBTC_PERSISTENT_MIXED_I2P_RUNTIME=ON",
+        "-DBIGLYBTC_PERSISTENT_RUNTIME_MANIFEST=/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/runtime-manifest.json",
+        "-DBIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL=/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/root-mixed-role-approval.json",
+        "-DBIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256=c47c93f8f2e90ef573d4e79ac7c8fb14589d0a3c3ce2e99db5be3f2577f41993",
+        "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL=/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/root-mixed-role-approval.json",
+        "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256=c47c93f8f2e90ef573d4e79ac7c8fb14589d0a3c3ce2e99db5be3f2577f41993",
+        "-DBIGLYBTC_PERSISTENT_NEGATIVE_LT_LIBRARY=/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so.2.0.12"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "elapsed_seconds": 5.14,
+      "log": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/san/r5/configure.log",
+      "log_sha256": "2577bcebb3fbd52ef541e7f9ec14bff89db296d09bdab742fd9d3c95657a08d3"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-network-policy-tests",
+        "biglybtc-managed-download-tests",
+        "biglybtc-managed-queue-tests",
+        "biglybtc-managed-tracker-tests",
+        "biglybtc-library-commands-bridge-tests",
+        "biglybtc-torrent-intake-file-options-tests",
+        "biglybtc-torrent-intake-dialog-tests",
+        "biglybtc-queue-policy-tests",
+        "biglybtc-queue-slots-tests",
+        "biglybtc-owned-i2p-source-tests",
+        "biglybtc-runtime-binding-driver",
+        "biglybtc-runtime-negative-driver",
+        "biglybtc-runtime-interposer",
+        "biglybtc-runtime-interposition-driver",
+        "biglybtc-mixed-network-host-transfer-probe",
+        "biglybtc-provider-mixed-runtime-deployment-driver",
+        "biglybtc-mixed-interposition-driver",
+        "biglybtc-mixed-owner-foreign-marker",
+        "biglybtc-mixed-torrents-foreign-marker",
+        "biglybtc-mixed-mixed-foreign-marker",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "elapsed_seconds": 688.48,
+      "log": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/san/r5/build.log",
+      "log_sha256": "f613118dd4adff20da4915038cc832ee4697a0e7e85398f7811145e93a8e26d2"
+    },
+    {
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "-R",
+        "^(i2p\\-classic\\-host|network\\-policy|managed\\-download|managed\\-queue|managed\\-tracker|managed\\-library\\-command\\-routing|torrent\\-intake\\-file\\-options|torrent\\-intake\\-file\\-options\\-ui|queue\\-policy|queue\\-slots|owned\\-i2p\\-profile\\-source|persistent\\-runtime\\-source\\-bound|persistent\\-runtime\\-manifest\\-negatives|persistent\\-runtime\\-reject\\-open|persistent\\-runtime\\-reject\\-inode|persistent\\-runtime\\-reject\\-content|persistent\\-runtime\\-reject\\-fifo|persistent\\-runtime\\-reject\\-preload|persistent\\-runtime\\-reject\\-mapped\\-interposition|persistent\\-runtime\\-reject\\-same\\-version\\-distro|provider\\-mixed\\-runtime\\-inputs|provider\\-mixed\\-runtime\\-deployment|provider\\-mixed\\-reject\\-foreign\\-owner|provider\\-mixed\\-reject\\-foreign\\-torrents|provider\\-mixed\\-reject\\-foreign\\-mixed)$",
+        "--output-on-failure",
+        "--no-tests=error",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/san/r5/tests.xml",
+        "-j",
+        "1"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "elapsed_seconds": 255.01,
+      "log": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/san/r5/ctest.log",
+      "log_sha256": "99b6d36de06447bd99c3578111e0aa0f7e90e22b4e0e0ad288fced3ce13e79e8"
+    }
+  ],
+  "images": {
+    "BiglyBTC": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/app/BiglyBTC",
+      "sha256": "54ee1cde3918a9fc5349e84200f86dd0fbbb265f1f798a6cad683b543b124017",
+      "bytes": 366974912
+    },
+    "biglybtc-i2p-classic-host-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-classic-host-tests",
+      "sha256": "468df4555aae7c928b5d1f2f363b253cc2a3748b144d9f0c86d24db158fae4a1",
+      "bytes": 367490904
+    },
+    "biglybtc-network-policy-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-network-policy-tests",
+      "sha256": "83cb262e479c706751e5886ba744cb8c38173256f3d05d1f376b717b174b9f86",
+      "bytes": 11226952
+    },
+    "biglybtc-managed-download-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-managed-download-tests",
+      "sha256": "7c2de6ec6288d1180d9f17e84a1683cec5b07460709cea3b3c9cb94d7c8dabf9",
+      "bytes": 140214312
+    },
+    "biglybtc-managed-queue-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-managed-queue-tests",
+      "sha256": "7b5fb0dc6d80cfe09bc0de7efe5afa0d4a74aeb764cfedb9a2381e1652abcf63",
+      "bytes": 144827720
+    },
+    "biglybtc-managed-tracker-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-managed-tracker-tests",
+      "sha256": "1fc546ebacd169077013606d5b7183c66874c7e119efaf522afc3f72a7036783",
+      "bytes": 129358712
+    },
+    "biglybtc-library-commands-bridge-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-library-commands-bridge-tests",
+      "sha256": "eb30ec2a222d2cb9469a309299b8317424131cc3ba6f61642a0db4cc716c171f",
+      "bytes": 366255264
+    },
+    "biglybtc-torrent-intake-file-options-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-torrent-intake-file-options-tests",
+      "sha256": "8b00e9518e03f89d3fa69b26f1978dcdc7565cf531a6ed815aa697baef2440ad",
+      "bytes": 50202288
+    },
+    "biglybtc-torrent-intake-dialog-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-torrent-intake-dialog-tests",
+      "sha256": "8a6624200d109a06682394282b056a0a0a23f66c3dfd61088da787ba96c0d4e9",
+      "bytes": 102348736
+    },
+    "biglybtc-queue-policy-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-queue-policy-tests",
+      "sha256": "5b7e19e7141ea659324f2bf92a546979daf61a6fb3b53a9b76989279f2a3d456",
+      "bytes": 6762216
+    },
+    "biglybtc-queue-slots-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-queue-slots-tests",
+      "sha256": "f1c1096a596370f87b914d876443670a3755a888369009e9083ce452be7a85ca",
+      "bytes": 4804720
+    },
+    "biglybtc-owned-i2p-source-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-owned-i2p-source-tests",
+      "sha256": "32a38d565a94b4e1d5db93826c5e0e707e65424c6da7d776c4e7a3fcd2770fa5",
+      "bytes": 152041152
+    },
+    "biglybtc-runtime-binding-driver": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-runtime-binding-driver",
+      "sha256": "e981751d549e4313ac66255f6e88fc8cf6ccbdee96e00f50d2e05de3bd10f755",
+      "bytes": 126715488
+    },
+    "biglybtc-runtime-negative-driver": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-runtime-negative-driver",
+      "sha256": "756b7f560b098702aa06022e34a43bddbff0d418ca5522e7457b3818318fd861",
+      "bytes": 126742112
+    },
+    "biglybtc-runtime-interposer": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/libbiglybtc-runtime-interposer.so",
+      "sha256": "1732b4c9ef0a513bf106cd9106a833f4a47dc4427f1fab0ce201ae0aaa828d27",
+      "bytes": 17392
+    },
+    "biglybtc-runtime-interposition-driver": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-runtime-interposition-driver",
+      "sha256": "41fa3279087094fc2a8611c85495ab438a714bbdf54339da1c4d123e884515ab",
+      "bytes": 126671944
+    },
+    "biglybtc-mixed-network-host-transfer-probe": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-mixed-network-host-transfer-probe",
+      "sha256": "a0ee701ccae5c5468ae0cbd2069279d4102efeb313d442f22baf7f8fcb58a669",
+      "bytes": 366694760
+    },
+    "biglybtc-provider-mixed-runtime-deployment-driver": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-provider-mixed-runtime-deployment-driver",
+      "sha256": "e512821bdd393d64ff0683d0cd32bed72b3332812a51592ad84bfbc529587a95",
+      "bytes": 903232
+    },
+    "biglybtc-mixed-interposition-driver": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-mixed-interposition-driver",
+      "sha256": "ea896a317e60ee69e2c0f63bba78eb51d3f2ebf0aecf16106879e8d6418d0788",
+      "bytes": 474936
+    },
+    "biglybtc-mixed-owner-foreign-marker": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/libbiglybtc-mixed-owner-foreign-marker.so",
+      "sha256": "aac25c4c45ae44a8a213f22e7c6c9f42db22741d13c8cfd03c2a663b2f7d592c",
+      "bytes": 17056
+    },
+    "biglybtc-mixed-torrents-foreign-marker": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/libbiglybtc-mixed-torrents-foreign-marker.so",
+      "sha256": "62a7eeb2ce42257b7a9881ec1117061b2dd90b37ef3fe29c4b628e66fe610d38",
+      "bytes": 17064
+    },
+    "biglybtc-mixed-mixed-foreign-marker": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/libbiglybtc-mixed-mixed-foreign-marker.so",
+      "sha256": "cbccb6e3c615d044717b6f7317d3dfc8d52f73e48b15063dedeec4ac92806daa",
+      "bytes": 17064
+    }
+  },
+  "source_commit": "90f1d3defd31acacb784cb8cda40d8d06ba6d76d",
+  "source_tree": "2210063859f4940974addd3543b6473c74dfae69",
+  "source_map_sha256": "55ee607816d7a9eece26b3066ca11befe929731c648f1f381073cbe782ee8e25",
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/run-batch.py": "0feaf8cd8da605940208ed6b07e20eb0965441f19e38764da8f7c113814cacaa",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/final-sdk-inputs.json": "7ecfd7e078b656630a44557247db0b0b209233ef818a93b5cd894564c59b2121",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/root-mixed-role-approval.json": "c47c93f8f2e90ef573d4e79ac7c8fb14589d0a3c3ce2e99db5be3f2577f41993",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/runtime-manifest.json": "03694052165fab605b7f9a8c30ec9ddbb806b0d94a7eef642453f1341d838fe9",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/source-build-record-accept-rearm.json": "f1c09a9a9b097c226bf9261f8c17c6523a48f0f53aea0f14e3ae39034cf94e16",
+    "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12": "dd71c87d9030a1db9f39741850bb56d989f87d409044fa693733b5352f01ed34"
+  },
+  "expected_tests": [
+    "i2p-classic-host",
+    "network-policy",
+    "managed-download",
+    "managed-queue",
+    "managed-tracker",
+    "managed-library-command-routing",
+    "torrent-intake-file-options",
+    "torrent-intake-file-options-ui",
+    "queue-policy",
+    "queue-slots",
+    "owned-i2p-profile-source",
+    "persistent-runtime-source-bound",
+    "persistent-runtime-manifest-negatives",
+    "persistent-runtime-reject-open",
+    "persistent-runtime-reject-inode",
+    "persistent-runtime-reject-content",
+    "persistent-runtime-reject-fifo",
+    "persistent-runtime-reject-preload",
+    "persistent-runtime-reject-mapped-interposition",
+    "persistent-runtime-reject-same-version-distro",
+    "provider-mixed-runtime-inputs",
+    "provider-mixed-runtime-deployment",
+    "provider-mixed-reject-foreign-owner",
+    "provider-mixed-reject-foreign-torrents",
+    "provider-mixed-reject-foreign-mixed"
+  ],
+  "makeflags": " -j3 --jobserver-auth=fifo:/tmp/GMfifo2766014 -- ATTEMPT=r5",
+  "original_head_index": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "dependencies_sha256": {
+    "/usr/lib/x86_64-linux-gnu/libasan.so.8": "b49a5ec136d444f8b40cf24964c20ef01434fc4e6dcf68dc272f5028d65b5496",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6": "ae894c4a328a883311faf7449dcdd1ec70e6be25784e5676cb9977fe437d01c4",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6": "392cf5a2fed77ca7b861484ae0f25a2f7f54789024e79518c6c28e1ddf5b4b1a",
+    "/usr/lib/x86_64-linux-gnu/libGLX.so.0": "0754505cc97c5c2251aebc10b5ab6ccbb9ad02d765bee07115bc9c09daf13002",
+    "/usr/lib/x86_64-linux-gnu/libOpenGL.so.0": "61455557f21aba21fafba9b0dae45cbb65a806df5984599cb90950b727aa42aa",
+    "/usr/lib/x86_64-linux-gnu/libz.so.1": "47b61967895b30e8c0c6818dd633ffeb87711cf637c688f981896f0dd84ce23b",
+    "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+    "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0": "dd71c87d9030a1db9f39741850bb56d989f87d409044fa693733b5352f01ed34",
+    "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70",
+    "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3",
+    "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+    "/usr/lib/x86_64-linux-gnu/libubsan.so.1": "1bdb7eae5853277e4d5dfa17431a63944feb16289fa707d8e4d1d8d3825de68e",
+    "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+    "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+    "/usr/lib/x86_64-linux-gnu/libGL.so.1": "ef85065ae96bff373db8ed59e1f4a77191cae4411f3dd7128d14a4c34af18a18",
+    "/usr/lib/x86_64-linux-gnu/libxkbcommon.so.0": "8b7d244ea1df8b1c073069344f8c705bab90d6b6bcafb96f1c2eccc2312f4946",
+    "/usr/lib/x86_64-linux-gnu/libEGL.so.1": "6fa3af4903be9ce007f56f0a0cd2fff01d6500b5eecb59df13c93f17c2059341",
+    "/usr/lib/x86_64-linux-gnu/libX11.so.6": "c7acb54e5a5d252af46e77f7eac662740b64ca5173ba870c01af3932acc0a710",
+    "/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0": "29a6e3b17710f39de325675d29a05054b93bbe6ae5ae2d55929646e8e6e7f9c5",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6DBus.so.6": "678d0bf82548e35680a93615d476d79405f1d4beec4ce405236e04bc64ea14eb",
+    "/usr/lib/x86_64-linux-gnu/libfreetype.so.6": "de0b38b01924302a7fa7bfbaee47afcb9468ad2f8a22b4a8cca56ad54f64569c",
+    "/usr/lib/x86_64-linux-gnu/libfontconfig.so.1": "cabcdfea3d61540e8aa7f93a29642da1d1e35c8f5fd13549f4b8ee2ee0ab28f0",
+    "/usr/lib/x86_64-linux-gnu/libgthread-2.0.so.0": "a37b0395dc7250886892e4c43762f9d7abdf6f58efb661696f962cc670949128",
+    "/usr/lib/x86_64-linux-gnu/libGLdispatch.so.0": "8c3dbc80a9e435d15bb6394f609f90b823175a92e9ca41133294b5b8fcac50b2",
+    "/usr/lib/x86_64-linux-gnu/libzstd.so.1": "060eeb79531d435306665fd78329d8a9dd579f95876c5960bb67937825362a80",
+    "/usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2": "18e2ba0b2f421b780e7265337e52996f382857df63d0f9e63f391a75a14cdbe7",
+    "/usr/lib/x86_64-linux-gnu/libbrotlidec.so.1": "eb8768f85e9c367cd74772919b5668bbe0045cb71b65d75aafc32828e7acb1b7",
+    "/usr/lib/x86_64-linux-gnu/libbrotlicommon.so.1": "fb353cab2ea4ecd90814b46f872c21e1034c92bd86c3c677415748b4d16b5ad1",
+    "/usr/lib/x86_64-linux-gnu/libresolv.so.2": "6b99ecf94bcb81732ed1e81615084a5cfe7383eb89ce83106fa51077409ce609",
+    "/opt/Qt/6.12.0/gcc_64/lib/libicui18n.so.73": "a18e48266e59efff3ec872d9dc5cc99b776e180b8ede57269d354e6bc6595778",
+    "/opt/Qt/6.12.0/gcc_64/lib/libicuuc.so.73": "b76380b2c15c8ff8b3c94576ac98b40d34fc0a091db4a89324d72e271c7699f0",
+    "/opt/Qt/6.12.0/gcc_64/lib/libicudata.so.73": "4f182a855296cf96d39f75c9028b12765a78fe6afff3d3781d633110525b7a8b",
+    "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+    "/usr/lib/x86_64-linux-gnu/libxcb.so.1": "6af94be329e17e57f1cc0f5e4afb5bdfe669a5168accdc31b03274110b937b41",
+    "/usr/lib/x86_64-linux-gnu/libatomic.so.1": "eac440708f874c4d446671efb5353cebeaa829bd1f18cd8d5065cd6efefa387b",
+    "/usr/lib/x86_64-linux-gnu/libpcre2-8.so.0": "4a6b6b2078685b074869d75cb068664d7da6b3036df7bca0442b1bbbd4ac7e65",
+    "/usr/lib/x86_64-linux-gnu/libdbus-1.so.3": "bb0b37afa67c7b6d664ca189f63fb92e75a690a340c4c13a149cc4dfbd8249ff",
+    "/usr/lib/x86_64-linux-gnu/libbz2.so.1.0": "7138aeb748f73c150b1d34d67de69139a441910cd7b269076ba3c8b986dea9a7",
+    "/usr/lib/x86_64-linux-gnu/libpng16.so.16": "d32086178ed0b315428af82f73966ccf4871855b9ab64ee71868e96cfdbdfb4a",
+    "/usr/lib/x86_64-linux-gnu/libexpat.so.1": "093e973baf0b0c786d32fd89d1f6904b794af28e489d20198b9fe0729fd39765",
+    "/usr/lib/x86_64-linux-gnu/libkrb5.so.3": "aca607790a4349c5053390fa22b24e717b2c5ea101d7b468ece6507140c6ff7b",
+    "/usr/lib/x86_64-linux-gnu/libk5crypto.so.3": "ee77156da39841edfaa7c5fcdca4cf98ae34d60323095617b484188a4d9965e3",
+    "/usr/lib/x86_64-linux-gnu/libcom_err.so.2": "6fb3115b11fe7e14c26f3e086c4dc1fb41061130869a66c976e0ea69fdb912d6",
+    "/usr/lib/x86_64-linux-gnu/libkrb5support.so.0": "8cc61cecc016710e7134c1621b5a6537c55eea91d2a074f6f05fa6f6e36ec8d6",
+    "/usr/lib/x86_64-linux-gnu/libpthread.so.0": "1327fc40710691dbd94e88b6cf4efce27fefe8fbb93f7d1164a75b4dccaea696",
+    "/usr/lib/x86_64-linux-gnu/libdl.so.2": "59d725ca30596a9863f4fa2552a7125f834842abc86b40890231c129358965d2",
+    "/usr/lib/x86_64-linux-gnu/libXau.so.6": "2b742de65acd00f154ed156720af66c0c0af9a58360ba041f25a41e2f775fab5",
+    "/usr/lib/x86_64-linux-gnu/libXdmcp.so.6": "24beecbb0faf600d1a646b5edfc8c144da6f2965cb427598f4e17edc1285a733",
+    "/usr/lib/x86_64-linux-gnu/libsystemd.so.0": "9405c27411b652140806ab7576f7d76610f67bde662ba730efc7aa7171785011",
+    "/usr/lib/x86_64-linux-gnu/libkeyutils.so.1": "c0c8f8d5adec4abe76fa462d8ad7c010f50c61e2b67b9feaa6f44e462c12cf41",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975"
+  },
+  "elapsed_seconds": 1019.18,
+  "source_after_sha256": "55ee607816d7a9eece26b3066ca11befe929731c648f1f381073cbe782ee8e25",
+  "tests_xml_sha256": "f594629ac4e1eb3000529697f69c4174d8e7d0959b6c46565b7fed9b2525a806",
+  "unstamped_receipt": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/san/r5/result.json",
+  "unstamped_receipt_sha256": "4a0b6cfa44ac2104dbf31b291b36201b6696e8bca97f8e21fc140ad856bbb991"
+}

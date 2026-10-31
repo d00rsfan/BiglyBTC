@@ -1,0 +1,8 @@
+{
+  "path": "/home/yurii/Java/BiglyBTC/preview/native/services/CMakeLists.txt",
+  "before_sha256": "d054e2e40df0840b07aafb7ea9adffd0127f31f08cc32d5b0486d8c35b4a20d1",
+  "after_sha256": "b8df296c85dd95ead638dc3fe4a682f48a7753242dd350a21617025659438134",
+  "reason": "Private owner CMake mixed SDK source pin must match approved final capsule",
+  "failed_configure": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r4/result.json",
+  "compilation_started": false
+}

@@ -1,0 +1,25 @@
+{
+  "status": "SOURCE_ONLY_FROZEN",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/native-mixed-accept-regression/amendments/public-listener-counter-control/manifest.json",
+    "sha256": "e2c21df581510def49ce99618f7f1296d0316b47b7ef5c80453c6f9870ab8381"
+  },
+  "source_paths": {
+    "preview/native/tests/i2p_classic_host_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/native-mixed-accept-regression/amendments/public-listener-counter-control/amendments/destination-hash-byte-type/before/preview/native/tests/i2p_classic_host_tests.cpp",
+      "before_sha256": "38b6fac83f01e8882a0c7a4815a82a29f75b9bc492e0db1fcdb1a6711746b4c6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/native-mixed-accept-regression/amendments/public-listener-counter-control/amendments/destination-hash-byte-type/staging/preview/native/tests/i2p_classic_host_tests.cpp",
+      "after_sha256": "d283e6c27495859ff59c036d99134109e7ca7628e1dc57fbfe0f178a96b9f72f"
+    }
+  },
+  "artifacts_sha256": {
+    "changes.patch": "e19aab551d202e59b5c5d632d0bc467902bd479a1d9bf913b6f217225af2dc8a",
+    "ADOPTION.txt": "1c89b6f911c77e5bb1af31a4c2530b594f970296ef54ee790cd84136365bcc53"
+  },
+  "checks": {
+    "current_native_beforeimage": true,
+    "one_line_inverse_exact": true,
+    "read_only_apply_check": true,
+    "build_or_runtime_executed": false
+  }
+}

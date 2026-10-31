@@ -1,0 +1,6 @@
+{
+  "status": "FUTURE_SOURCE_INSPECTION_ONLY_NOT_A_NEW_CHAPTER_STARTED",
+  "observation": "The new delayed ACCEPT recovery is mixed-only. The unchanged dedicated I2P branch returns on ACCEPT error while retaining m_i2p_listen_socket; qualify its behavior after Bridge idle expiry in a separate follow-up before claiming incoming-listener resilience for dedicated mode. No new Java bug reproduction is claimed.",
+  "source": "SDK session_impl.cpp on_i2p_accept and Native services/i2p_provider/bridge.cpp Accept120s",
+  "current_scope": "Mixed single-torrent Public+I2P; whole client remains in progress"
+}

@@ -1,0 +1,38 @@
+{
+  "status": "SOURCE_STAGED_NOT_ADOPTED",
+  "inputs": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/final-sdk-inputs.json",
+  "inputs_sha256": "7ecfd7e078b656630a44557247db0b0b209233ef818a93b5cd894564c59b2121",
+  "measured_inputs_sha256": {
+    "source_capsule": "05a9fad2ad069fb0a4017e6253c91da1b56f7bec67b6fe514194007a126b0ee0",
+    "source_build_record": "f1c09a9a9b097c226bf9261f8c17c6523a48f0f53aea0f14e3ae39034cf94e16",
+    "root_artifact_review": "bf16e1b8b78277a6d05fb6570bbef4fa63401000f37babf55bcdbfeedfea64ce",
+    "runtime_manifest": "03694052165fab605b7f9a8c30ec9ddbb806b0d94a7eef642453f1341d838fe9",
+    "approval": "c47c93f8f2e90ef573d4e79ac7c8fb14589d0a3c3ce2e99db5be3f2577f41993",
+    "public_evidence": "3cf1c941d3d4632588544ea8cca2d65a16a14ae857cae579fe10d0439dd5e398",
+    "sdk_measured_controls": "97ea16cc6576fd1ecd71268b31efd61a2e44a44c606436765953f98f73ea21c2"
+  },
+  "source_paths": {
+    "preview/native/engine/runtime-binding/verify_runtime_manifest_mixed.py": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/verify_runtime_manifest_mixed.py",
+      "before_sha256": "a7686747b668a2379beae0f6055d9f7b5c514a81343c01a1de2cff42b145d10a",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-accept-repin-final/preview/native/engine/runtime-binding/verify_runtime_manifest_mixed.py",
+      "after_sha256": "10b48307589202fb44bccda1145974e1395cebfc932df92789b6f62850e087cb"
+    },
+    "stage-preview.py": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/preview-stage/stage-preview.py",
+      "before_sha256": "d68d83fcfd8bcc83544245b42bb8ce912f23fb9db3e4628bddd17db098bff246",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-accept-repin-final/stage-preview.py",
+      "after_sha256": "ca817d16910d030ef2d1496f7318045b1aee808882881c90a2c2b3aa1e3fc64b"
+    },
+    "finalise-stage.py": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/closeout-recipe/finalise-stage.py",
+      "before_sha256": "43b35425976d6f39baff7854608dc317a6498249101d6bf2657cc0a1268fa179",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-accept-repin-final/finalise-stage.py",
+      "after_sha256": "0ca024958117a286a54eda97055e398893dede801e7f0d23dd7e6deca7d62e58"
+    }
+  },
+  "native_leaves": 1,
+  "subjects_executed": false,
+  "approval_created": false,
+  "default_provider_changed": false
+}

@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-31T13:12:41.927317+00:00",
-  "objective": "Authorised Public+I2P coexistence chapter complete; stop before next chapter.",
-  "native_head": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
-  "qualified_native_source": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+  "updated_utc": "2026-10-31T18:49:59.475409+00:00",
+  "objective": "Authorised mixed one-torrent Public+I2P chapter complete; stop.",
+  "native_head": "90f1d3defd31acacb784cb8cda40d8d06ba6d76d",
+  "qualified_native_source": "90f1d3defd31acacb784cb8cda40d8d06ba6d76d",
   "native_source_pushed": true,
-  "current_source_qualification": "PASS_BOUNDED_PUBLIC_I2P_COEXISTENCE_CHAPTER",
+  "current_source_qualification": "PASS_BOUNDED_SINGLE_TORRENT_PUBLIC_I2P_MIXED_CHAPTER",
   "accepted_dist_sha256": "aad928753cb8f2dac8f99245298d987cfe2c4bee9e7bdebf5b8d7645ed6d559b",
   "receipts": [
     {
@@ -67,36 +67,40 @@
       "name": "Public and I2P coexistence",
       "path": "migration/evidence/20261031-public-i2p-coexistence/verification.json",
       "sha256": "5dbb126756102b594caecfb73105877450114394b125d153730c7d1af6ff8a36"
+    },
+    {
+      "name": "Mixed Public and I2P one-owner chapter",
+      "path": "migration/evidence/20261031-mixed-public-i2p/verification.json",
+      "sha256": "6a74e3e989235915d51bbe9d2af41eb1e5187e4bbb29383d8488fbd96aab0d0a"
     }
   ],
   "active_local_sessions": [],
   "active_sessions": [],
   "remote_ci": {
     "status": "PASS",
-    "source_commit": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+    "source_commit": "89a42691ac2f7193b6fd95cbf23a8dbd172e7477",
     "runs": [
       {
         "conclusion": "success",
-        "databaseId": 41202534397,
-        "headSha": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+        "databaseId": 41229018940,
+        "headSha": "89a42691ac2f7193b6fd95cbf23a8dbd172e7477",
         "status": "completed",
-        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41202534397",
-        "workflowName": "Native desktop preview unit and smoke tests"
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41229018940",
+        "workflowName": "Native plugin SDK contract"
       },
       {
         "conclusion": "success",
-        "databaseId": 41202534431,
-        "headSha": "0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df",
+        "databaseId": 41229018858,
+        "headSha": "89a42691ac2f7193b6fd95cbf23a8dbd172e7477",
         "status": "completed",
-        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41202534431",
-        "workflowName": "Native plugin SDK contract"
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/41229018858",
+        "workflowName": "Native desktop preview unit and smoke tests"
       }
-    ],
-    "validation": "Both actual hosted workflows completed successfully at the reviewed source commit; hosted stock/default lane is separate from optional local role-qualified SDK."
+    ]
   },
-  "next_action": "STOP. Propose original mixed Public+I2P selection for one torrent, with explicit privacy/admission controls; do not start it.",
+  "next_action": "STOP. Propose I2P peer discovery and magnets beyond tracker-only peers and explicitly warmed known local LS2 caches; do not begin it.",
   "pending_question": "None.",
-  "original_checkpoint_expected_parent": "47d87b923589957722e26f0ecf8194aa5fe1af76",
+  "original_checkpoint_expected_parent": "ea0f5cd6b9f533325363f85697bdbe937e7a4e73",
   "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
   "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
   "parallel_source": {
@@ -105,9 +109,13 @@
     "error_oracle": "real transfer fixture/UI and closeout staging complete"
   },
   "details": "Bounded Host/UI/import qualification complete; whole epic and larger I2P/plugin components remain incomplete. Original Java/live profile/HEAD/index/default dist preserved. Qualified runtime/probe source and supplemental UI-test source are recorded separately; later publication commits change metadata only. Runtime and actual probe bytes remain identical after the qualified source. No DATA/chat/rooms work started.",
-  "stop_after_current_milestone": false,
+  "stop_after_current_milestone": true,
   "stop_after_current_section": true,
-  "current_section": "Public + I2P coexistence \u2014 complete",
-  "effective_acceptance": "migration/evidence/20261031-public-i2p-coexistence/verification.json",
-  "effective_native_recipe": "Reuse build/i2p-multi-20261030/run-batch.py caches; adapt coherent chapter recipe only after audits."
+  "current_section": "Mixed Public+I2P single torrent \u2014 complete",
+  "effective_acceptance": "migration/evidence/20261031-mixed-public-i2p/verification.json",
+  "effective_native_recipe": "build/mixed-network-20261031/run-batch.py; exact committed current-source receipts indexed in verification",
+  "current_task": "P07 mixed Public+I2P: preserve Public on optional SAM ACCEPT failure and rearm mixed listener under same qualified owner; then final qualification and chapter STOP",
+  "durable_progress": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/integration-progress.json",
+  "whole_client_state": "in_progress",
+  "notes": "Bounded mixed one-owner chapter complete; whole client/P07 remain incomplete. Original Java/live profile/default dist and registry baselines preserved. Explicit optional preview remains shippingfalse/warmed-cache scope; no discovery/DATA/chat chapter started."
 }

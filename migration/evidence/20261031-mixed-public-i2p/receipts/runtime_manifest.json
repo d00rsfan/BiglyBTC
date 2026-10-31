@@ -1,0 +1,76 @@
+{
+  "schema": 2,
+  "purpose": "one-public-handle-source-bound-key0-i2p-route",
+  "roles": [
+    "Public",
+    "DedicatedPrivateI2pV1",
+    "PrivateI2pMulti",
+    "PublicPrivateCoexistence",
+    "MixedI2pTransportV1"
+  ],
+  "source_capsule_sha256": "05a9fad2ad069fb0a4017e6253c91da1b56f7bec67b6fe514194007a126b0ee0",
+  "source_build_record": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/source-build-record-accept-rearm.json",
+  "source_build_record_sha256": "f1c09a9a9b097c226bf9261f8c17c6523a48f0f53aea0f14e3ae39034cf94e16",
+  "artifact": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "artifact_sha256": "dd71c87d9030a1db9f39741850bb56d989f87d409044fa693733b5352f01ed34",
+  "artifact_bytes": 10022696,
+  "sdk_tree_sha256": "e3b5ac51817b9369e1bcf339f41765926f87f684deca0c5cbcdecef59c8597be",
+  "required_exports": [
+    "_ZN10libtorrent7versionEv",
+    "_ZN10libtorrent21session_stats_metricsEv",
+    "_ZN10libtorrent14session_handle18post_session_statsEv",
+    "_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE",
+    "_ZNK10libtorrent19session_stats_alert8countersEv",
+    "_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE",
+    "biglybtc_swarm_mask_abi_v1",
+    "biglybtc_payload_counter_abi_v1",
+    "biglybtc_read_payload_counters_v1",
+    "biglybtc_socks4a_abi_v1",
+    "biglybtc_traffic_counter_abi_v2",
+    "biglybtc_read_traffic_counters_v2",
+    "biglybtc_socks4a_webseed_abi_v1",
+    "biglybtc_queue_observer_abi_v1",
+    "biglybtc_attach_queue_observer_v1",
+    "biglybtc_traffic_counter_abi_v3",
+    "biglybtc_read_traffic_counters_v3",
+    "biglybtc_mainline_port_abi_v1",
+    "biglybtc_attach_mainline_port_observer_v1",
+    "biglybtc_refresh_mainline_port_v1",
+    "biglybtc_mainline_identity_abi_v1",
+    "biglybtc_configure_mainline_identity_v1",
+    "biglybtc_read_mainline_identity_v1",
+    "biglybtc_tracker_response_abi_v1",
+    "biglybtc_attach_tracker_response_observer_v1",
+    "biglybtc_mainline_routing_abi_v1",
+    "biglybtc_query_mainline_routing_v1",
+    "biglybtc_private_i2p_owner_abi_v1",
+    "biglybtc_configure_private_i2p_owner_v1",
+    "biglybtc_read_private_i2p_owner_v1",
+    "biglybtc_withdraw_private_i2p_owner_v1",
+    "biglybtc_private_i2p_torrents_abi_v1",
+    "biglybtc_admit_private_i2p_torrent_v1",
+    "biglybtc_revoke_private_i2p_torrent_v1",
+    "biglybtc_mixed_i2p_transport_abi_v1",
+    "biglybtc_configure_mixed_i2p_transport_v1",
+    "biglybtc_admit_mixed_i2p_route_v1",
+    "biglybtc_revoke_mixed_i2p_route_v1",
+    "biglybtc_withdraw_mixed_i2p_transport_v1"
+  ],
+  "actual_proof": {
+    "directory": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/amendments/mixed-accept-rearm/amendments/steady-accept-backoff/qualification/runs/r1",
+    "result_sha256": "97ea16cc6576fd1ecd71268b31efd61a2e44a44c606436765953f98f73ea21c2",
+    "commands_sha256": "146946cfb189e0040c4cac325561c190b2adc606d083875b9856e1bb9a87fa8c"
+  },
+  "rejected_prior_approvals": {
+    "private": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/root-private-owner-approval.json",
+      "sha256": "f3ca7de94ca6beb12e0375293c9c74c3f78a34f7e4952e1a122ff0ae9dff1f83"
+    },
+    "coexistence": {
+      "path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/root-coexistence-approval.json",
+      "sha256": "3407d518e13a86f2a64b3d748cbe0870ef7df57712fade48cb72c87d2962ad75"
+    }
+  },
+  "native_runtime_approved": false,
+  "shipping_approved": false
+}

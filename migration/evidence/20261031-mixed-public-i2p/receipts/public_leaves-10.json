@@ -1,0 +1,62 @@
+{
+  "status": "SOURCE_ONLY_FROZEN",
+  "basis_commit": "72a985c9079fada469fbc17f59564a5cfe703076",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/coordinator-publication/manifest.json",
+    "sha256": "d47ec5277007c65b86b988dd529c7d8492893bb50ec07e540957686efa201142"
+  },
+  "source_paths": {
+    "preview/native/app/session_bridge.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/idle-poll-reporting/before/preview/native/app/session_bridge.hpp",
+      "before_sha256": "18ef0191c833fba12ed54afdd8216dd407e55bf52324cdb4f58cf97e75c4fbb3",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/idle-poll-reporting/staging/preview/native/app/session_bridge.hpp",
+      "after_sha256": "89f71aaa3b0691541fe6a675e1783383c9afcecd8f993e72aacde75602c34880"
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/idle-poll-reporting/before/preview/native/app/session_bridge.cpp",
+      "before_sha256": "388747dec6e43ba0f2ff460c0582ec5791d0d138600d86e3a387802cc217899e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/idle-poll-reporting/staging/preview/native/app/session_bridge.cpp",
+      "after_sha256": "aaafde9b9bafa25af1155bb884e7a01d477bbb19d775b5158a742ad2f909e538"
+    }
+  },
+  "effective_source_paths": {
+    "preview/native/app/coexist_coordinator.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/coordinator-publication/before/preview/native/app/coexist_coordinator.hpp",
+      "before_sha256": "76d0fdfc3d02cf74e18976d04d32ec8e6a2e6889cad81acc49f667cda38fc6fe",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/coordinator-publication/staging/preview/native/app/coexist_coordinator.hpp",
+      "after_sha256": "316f4c123ffb93310acd5577e5c47f8fb5518f2cf4e345976f4df4c3e2b04afa"
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/coordinator-publication/before/preview/native/app/session_bridge.cpp",
+      "before_sha256": "bc80ddd7d09136d6a1cc2ebd0faa7655e5b140fefce671f771ee138ab76112f1",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/idle-poll-reporting/staging/preview/native/app/session_bridge.cpp",
+      "after_sha256": "aaafde9b9bafa25af1155bb884e7a01d477bbb19d775b5158a742ad2f909e538"
+    },
+    "preview/native/app/session_bridge.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/idle-poll-reporting/before/preview/native/app/session_bridge.hpp",
+      "before_sha256": "18ef0191c833fba12ed54afdd8216dd407e55bf52324cdb4f58cf97e75c4fbb3",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/idle-poll-reporting/staging/preview/native/app/session_bridge.hpp",
+      "after_sha256": "89f71aaa3b0691541fe6a675e1783383c9afcecd8f993e72aacde75602c34880"
+    },
+    "preview/native/tests/i2p_classic_host_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/coordinator-publication/before/preview/native/tests/i2p_classic_host_tests.cpp",
+      "before_sha256": "672036948b27c5090820dcbed9c4fda49125484af28025e76c638abd0975828f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/coordinator-publication/staging/preview/native/tests/i2p_classic_host_tests.cpp",
+      "after_sha256": "8452b7d60c5949aad06f039cb30167306090474410d7539fff4da98bebc49317"
+    }
+  },
+  "artifacts_sha256": {
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/idle-poll-reporting/changes.patch": "ede2088ce579f7cde7965de5007330a146e32513b91c7d6c2fb68f0c351cca48",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/idle-poll-reporting/ADOPTION.txt": "15473bc7f0b49062bbc1abf2da13381b72ce663e08c0692e47fee7af1b92d6fa"
+  },
+  "checks": {
+    "current_and_parent_beforeimages": true,
+    "compile_or_runtime_executed": false
+  },
+  "message_prefix": "Background update failed:",
+  "limits": {
+    "detail_characters": 512,
+    "storage_message_characters": 384,
+    "retained_distinct_failure_messages": 1
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "status": "SOURCE_ONLY_PARTIAL_SOURCE_TRACKER_EVENT_CORRECTION",
+  "parent_enum_amendment": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/amendments/exhaustive-stages/manifest.json",
+    "sha256": "488fd62a3bb888049a4766b7de03b170de5503cb63770262366f9865237b7ebe"
+  },
+  "source_paths": {
+    "preview/native/tests/mixed_network_host_transfer_probe.cpp": {
+      "before_sha256": "71a58d6ac633028ab745b908892b5bc1dd34035dece0f67cc821c5bffd593cf3",
+      "after_sha256": "a8dbd6514e66083611df966c3d11db768c3dec2253451647390850e48bc92144",
+      "artifact": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/amendments/partial-source-paused/staging/preview/native/tests/mixed_network_host_transfer_probe.cpp",
+      "bytes": 64359
+    }
+  },
+  "actual_sdk_source_pins": {
+    "src/torrent.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/src/torrent.cpp",
+      "sha256": "f2c4efb35408b3d06dce1b207d6f8a3af4e66d038484d6b79640f08d36a158d8"
+    },
+    "src/http_tracker_connection.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/src/http_tracker_connection.cpp",
+      "sha256": "fc17bb644b7f070602bf91e2fbcf3c9d97e9a8b64f5b15a1b70628ffa5db199f"
+    }
+  },
+  "source_build_record": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/source-build-record.json",
+    "sha256": "2a3d548066207e438df69e15b0ca07088e8cc342d2284e7e7fc46db07401acf2"
+  },
+  "artifacts_sha256": {
+    "before.cpp": "71a58d6ac633028ab745b908892b5bc1dd34035dece0f67cc821c5bffd593cf3",
+    "changes.patch": "e041e5c0c5933e18f37d3724c7c499769bf1a9d7ff56308263da82911cd73027",
+    "ADOPTION.txt": "37a4bbf7ff1cc3ea413d35ef7bd734c98d7a1394bfc96098c75ea46e17c1b43f"
+  },
+  "static_checks": {
+    "current_beforeimage": true,
+    "readonly_git_apply_check": true,
+    "exact_one_condition_addition": true,
+    "source_leaves_match_measured_record": true
+  },
+  "native_mutated": false,
+  "builds_or_subjects_executed": false
+}

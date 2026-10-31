@@ -1,0 +1,25 @@
+{
+  "schema": "BIGLYBTC_OPTIONAL_MIXED_EXPORT_BINDING_V1",
+  "status": "SOURCE_ONLY",
+  "source_paths": {
+    "preview/native/engine/mixed_i2p_transport.cpp": {
+      "before_path": "before/preview/native/engine/mixed_i2p_transport.cpp",
+      "before_sha256": "60e4fed4f4254fb45403d07d39bbf001c3b05952a4be4d9cac05926a97f091dc",
+      "after_path": "staging/preview/native/engine/mixed_i2p_transport.cpp",
+      "after_sha256": "598819b0528888004bd585982c50a42c250bc86a4d88363baa871dedbb0764a6"
+    }
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "779ff02bb83a4ca1e901d81bc4fa687424c4ac30a3f07f9a47d3b1b0acaa6adf",
+    "before/preview/native/engine/mixed_i2p_transport.cpp": "60e4fed4f4254fb45403d07d39bbf001c3b05952a4be4d9cac05926a97f091dc",
+    "changes.patch": "55ad4fb23cff62deb5ee3c4573641d98240dd572b6ddfcf9e01375f8e1a3c106",
+    "staging/preview/native/engine/mixed_i2p_transport.cpp": "598819b0528888004bd585982c50a42c250bc86a4d88363baa871dedbb0764a6"
+  },
+  "source_checks": {
+    "retained_handle_lookup_count": 4,
+    "no_direct_abi_calls": true,
+    "no_reopen_or_default_lookup": true,
+    "readonly_patch_check": true
+  },
+  "executed": false
+}

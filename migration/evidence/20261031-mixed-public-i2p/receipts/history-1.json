@@ -1,0 +1,250 @@
+{
+  "status": "FAIL",
+  "lane": "private",
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-DBIGLYBTC_PERSISTENT_COEXISTENCE_RUNTIME=OFF",
+        "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/cmake/LibtorrentRasterbar",
+        "-DBIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER=ON",
+        "-DBIGLYBTC_PERSISTENT_MIXED_I2P_RUNTIME=ON",
+        "-DBIGLYBTC_PERSISTENT_RUNTIME_MANIFEST=/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/runtime-manifest.json",
+        "-DBIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL=/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/root-mixed-role-approval.json",
+        "-DBIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256=728c7140dc963a6b105feccf62e2d3d519bf4a429c9da56ad9228214dbe4640c",
+        "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL=/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/root-mixed-role-approval.json",
+        "-DBIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256=728c7140dc963a6b105feccf62e2d3d519bf4a429c9da56ad9228214dbe4640c",
+        "-DBIGLYBTC_PERSISTENT_NEGATIVE_LT_LIBRARY=/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so.2.0.12"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "elapsed_seconds": 4.73,
+      "log": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r2/configure.log",
+      "log_sha256": "07607927dbea29e29702d2cc756b66ffc63a8fa91f083214a6f15730ac6b210e"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "--target",
+        "BiglyBTC",
+        "biglybtc-i2p-classic-host-tests",
+        "biglybtc-network-policy-tests",
+        "biglybtc-managed-download-tests",
+        "biglybtc-managed-queue-tests",
+        "biglybtc-managed-tracker-tests",
+        "biglybtc-library-commands-bridge-tests",
+        "biglybtc-torrent-intake-file-options-tests",
+        "biglybtc-torrent-intake-dialog-tests",
+        "biglybtc-queue-policy-tests",
+        "biglybtc-queue-slots-tests",
+        "biglybtc-owned-i2p-source-tests",
+        "biglybtc-runtime-binding-driver",
+        "biglybtc-runtime-negative-driver",
+        "biglybtc-runtime-interposer",
+        "biglybtc-runtime-interposition-driver",
+        "biglybtc-mixed-network-host-transfer-probe",
+        "biglybtc-provider-mixed-runtime-deployment-driver",
+        "biglybtc-mixed-interposition-driver",
+        "biglybtc-mixed-owner-foreign-marker",
+        "biglybtc-mixed-torrents-foreign-marker",
+        "biglybtc-mixed-mixed-foreign-marker",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "elapsed_seconds": 51.47,
+      "log": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r2/build.log",
+      "log_sha256": "b6974cd893f284e29b5509358627d5591ffc63ce68e9499817028de22ccbf46a"
+    },
+    {
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-R",
+        "^(i2p\\-classic\\-host|network\\-policy|managed\\-download|managed\\-queue|managed\\-tracker|managed\\-library\\-command\\-routing|torrent\\-intake\\-file\\-options|torrent\\-intake\\-file\\-options\\-ui|queue\\-policy|queue\\-slots|owned\\-i2p\\-profile\\-source|persistent\\-runtime\\-source\\-bound|persistent\\-runtime\\-manifest\\-negatives|persistent\\-runtime\\-reject\\-open|persistent\\-runtime\\-reject\\-inode|persistent\\-runtime\\-reject\\-content|persistent\\-runtime\\-reject\\-fifo|persistent\\-runtime\\-reject\\-preload|persistent\\-runtime\\-reject\\-mapped\\-interposition|persistent\\-runtime\\-reject\\-same\\-version\\-distro|provider\\-mixed\\-runtime\\-inputs|provider\\-mixed\\-runtime\\-deployment|provider\\-mixed\\-reject\\-foreign\\-owner|provider\\-mixed\\-reject\\-foreign\\-torrents|provider\\-mixed\\-reject\\-foreign\\-mixed)$",
+        "--output-on-failure",
+        "--no-tests=error",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r2/tests.xml",
+        "-j",
+        "1"
+      ],
+      "exit_code": 8,
+      "timed_out": false,
+      "elapsed_seconds": 232.24,
+      "log": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r2/ctest.log",
+      "log_sha256": "010420ce1e29e7fa74cd2dd46e85db44ec747391f6bfc17555f097828f65fafe"
+    }
+  ],
+  "images": {
+    "BiglyBTC": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/app/BiglyBTC",
+      "sha256": "2eb8a6d93449a3e62627eec02de0ded444891062d77fa252555b73ce934d189b",
+      "bytes": 13872264
+    },
+    "biglybtc-i2p-classic-host-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-classic-host-tests",
+      "sha256": "fd425a7da5796e3381ef3d30e9e0ae4ba1a44b0898dc0a1432ecf300c690dd01",
+      "bytes": 13934768
+    },
+    "biglybtc-network-policy-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-network-policy-tests",
+      "sha256": "2816f493833bd5d5228cfeecd2a6715e4461b3b43c0ab3b23ea4f08f3ebe4e62",
+      "bytes": 577184
+    },
+    "biglybtc-managed-download-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-managed-download-tests",
+      "sha256": "444833afa18d8eb24aabbe8ccef236bb247500c6d4696622be3f9e0c5d5745e8",
+      "bytes": 6589592
+    },
+    "biglybtc-managed-queue-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-managed-queue-tests",
+      "sha256": "3cf743035d6e325f5b5b315fcc651c4dee4f286287be2fcae718daa774aa0874",
+      "bytes": 6635384
+    },
+    "biglybtc-managed-tracker-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-managed-tracker-tests",
+      "sha256": "bf4c896167d3d04f3db3026898286637fdceb245e1a762ec34bafcf3d9ca7dea",
+      "bytes": 5954064
+    },
+    "biglybtc-library-commands-bridge-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-library-commands-bridge-tests",
+      "sha256": "b3b09fb36add31c60af42c77c5fbaec9bca327ee0a7e99e7bd38e502ad4e148d",
+      "bytes": 13980056
+    },
+    "biglybtc-torrent-intake-file-options-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-torrent-intake-file-options-tests",
+      "sha256": "16c2b1987be20590d30396c309d39742b583945503bd3fdde668174ba4439644",
+      "bytes": 3531032
+    },
+    "biglybtc-torrent-intake-dialog-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-torrent-intake-dialog-tests",
+      "sha256": "e5232998f9e11973888592262e6d0ae8ef93c3f6cbf0a13d403b63cf5484f501",
+      "bytes": 3405256
+    },
+    "biglybtc-queue-policy-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-queue-policy-tests",
+      "sha256": "01c971da1ae9f8ccf04751bf7083ca7ca98f540dc121d64cfd254f3d0576f36d",
+      "bytes": 414320
+    },
+    "biglybtc-queue-slots-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-queue-slots-tests",
+      "sha256": "9802ba3d192367c465e33ea5e1ffc226e981773ba3667952884eb32c3d4a414e",
+      "bytes": 228848
+    },
+    "biglybtc-owned-i2p-source-tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-owned-i2p-source-tests",
+      "sha256": "9f123dd3fcda98eb976b285ec63c52a68cf4ac5c70b744e808ca9ef1b9228f9e",
+      "bytes": 7038280
+    },
+    "biglybtc-runtime-binding-driver": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-runtime-binding-driver",
+      "sha256": "3e9ce23db005448e9b148ba1777c9ec5bdb8188851b4743b29a62472f5ad5a0e",
+      "bytes": 5869408
+    },
+    "biglybtc-runtime-negative-driver": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-runtime-negative-driver",
+      "sha256": "08cdccb511d3c2330ec0db16485dd82dfc990069512dbd6c2970207337bfb6a7",
+      "bytes": 5870480
+    },
+    "biglybtc-runtime-interposer": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/libbiglybtc-runtime-interposer.so",
+      "sha256": "1f4dda335c3b5d4917fe8d0f6dc5b8f6e9e28d9361c58601ea3c51f682f72153",
+      "bytes": 15264
+    },
+    "biglybtc-runtime-interposition-driver": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-runtime-interposition-driver",
+      "sha256": "260ffebd9cc14d12b9291d1352ab67cf77e8e9f1da34ecc16addd4a097ac374d",
+      "bytes": 5869448
+    },
+    "biglybtc-mixed-network-host-transfer-probe": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-mixed-network-host-transfer-probe",
+      "sha256": "32f61a1bb4932992567dba822b071974e001bfd392aeb490e53133ceee4282c5",
+      "bytes": 13979600
+    },
+    "biglybtc-provider-mixed-runtime-deployment-driver": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-provider-mixed-runtime-deployment-driver",
+      "sha256": "81bbd195b003971183149cce5893b18115bbf0e0aedacb9ec51ec07c8c84e905",
+      "bytes": 61048
+    },
+    "biglybtc-mixed-interposition-driver": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-mixed-interposition-driver",
+      "sha256": "fde710a3b81b8ef684bf4ea2a1680b08e812fd4c9fde3c64e0792166dd515fff",
+      "bytes": 44744
+    },
+    "biglybtc-mixed-owner-foreign-marker": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/libbiglybtc-mixed-owner-foreign-marker.so",
+      "sha256": "e78237c9e062c45ff2302a5a0774dd6d57e912e4eada50557fe6dfdbeefc16f2",
+      "bytes": 15208
+    },
+    "biglybtc-mixed-torrents-foreign-marker": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/libbiglybtc-mixed-torrents-foreign-marker.so",
+      "sha256": "45be8e9ae6569b6ed52e6320ce86a1cbf21f66a50ff2a1dd660ddfd648a659a7",
+      "bytes": 15216
+    },
+    "biglybtc-mixed-mixed-foreign-marker": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/libbiglybtc-mixed-mixed-foreign-marker.so",
+      "sha256": "a7b6f6f538b0a2316c9524d396c4f634a94b3878785a8796fc15f1117f2780b8",
+      "bytes": 15216
+    }
+  },
+  "source_commit": null,
+  "source_tree": null,
+  "source_map_sha256": "a798a276cf64b7d3be7730ed9b413ed2eb9fd765fef36e6b13aacb8247689ae8",
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/run-batch.py": "860ba3ca5425dbd88124e4fba04b336570fbd69375dbfb4b24ed3cc63519ee45",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/root-mixed-role-approval.json": "728c7140dc963a6b105feccf62e2d3d519bf4a429c9da56ad9228214dbe4640c",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/runtime-manifest.json": "61c9486d8258cb0e46b607c69a05d846bf17cc58781f662aafc29704f81d14e4",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/source-build-record.json": "2a3d548066207e438df69e15b0ca07088e8cc342d2284e7e7fc46db07401acf2",
+    "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12": "3103653f5a816b3a878cd1efdf562ee44d85755ac01b0a2511d0f063d8f28f1d"
+  },
+  "expected_tests": [
+    "i2p-classic-host",
+    "network-policy",
+    "managed-download",
+    "managed-queue",
+    "managed-tracker",
+    "managed-library-command-routing",
+    "torrent-intake-file-options",
+    "torrent-intake-file-options-ui",
+    "queue-policy",
+    "queue-slots",
+    "owned-i2p-profile-source",
+    "persistent-runtime-source-bound",
+    "persistent-runtime-manifest-negatives",
+    "persistent-runtime-reject-open",
+    "persistent-runtime-reject-inode",
+    "persistent-runtime-reject-content",
+    "persistent-runtime-reject-fifo",
+    "persistent-runtime-reject-preload",
+    "persistent-runtime-reject-mapped-interposition",
+    "persistent-runtime-reject-same-version-distro",
+    "provider-mixed-runtime-inputs",
+    "provider-mixed-runtime-deployment",
+    "provider-mixed-reject-foreign-owner",
+    "provider-mixed-reject-foreign-torrents",
+    "provider-mixed-reject-foreign-mixed"
+  ],
+  "makeflags": " -j3 --jobserver-auth=fifo:/tmp/GMfifo2743554 -- ATTEMPT=r2",
+  "original_head_index": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "failure": "RuntimeError('ctest failed')",
+  "elapsed_seconds": 290.36,
+  "source_after_sha256": "a798a276cf64b7d3be7730ed9b413ed2eb9fd765fef36e6b13aacb8247689ae8",
+  "tests_xml_sha256": "b2bf11d0d4b041d88161d4c64a8ded5e85084562f3b321c1914c39d11cebd13d"
+}

@@ -1,0 +1,27 @@
+{
+  "status": "SOURCE_ONLY_TEST_CAPABILITY_GUARD_NOT_ADOPTED",
+  "basis_commit": "90f1d3defd31acacb784cb8cda40d8d06ba6d76d",
+  "source_paths": {
+    "preview/native/tests/i2p_classic_host_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/ci-runtime-guard/before/preview/native/tests/i2p_classic_host_tests.cpp",
+      "before_sha256": "83e1b11599cbba8dcd0d31a00f4f4b98f544042301e10dc414073d19fc42d2a3",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/ci-runtime-guard/staging/preview/native/tests/i2p_classic_host_tests.cpp",
+      "after_sha256": "f9bdf2c4ce1db44c0f9ce40794d4722bb0eadeb87cb0eff66fa58594052ef092"
+    }
+  },
+  "ci_failure_log": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/ci-failed-90f1.log",
+    "sha256": "8e7e006d13ea81200edeb6d3e8849c4cfdf145c4ebb644472375e3f340d5feb5"
+  },
+  "failure": "stock unqualified CI provider correctly refuses PersistentSession::create with DependencyUnqualified",
+  "scope": "Only this exact unsupported dependency error skips; other creation failures and every qualified-owner assertion remain unchanged. Qualified public Default and mixed providers still run this real TCP bind failure regression.",
+  "production_changes": false,
+  "qualified_local_replay_claimed": false,
+  "author_builds_tests_or_subjects": 0,
+  "artifacts_sha256": {
+    "before/preview/native/tests/i2p_classic_host_tests.cpp": "83e1b11599cbba8dcd0d31a00f4f4b98f544042301e10dc414073d19fc42d2a3",
+    "changes.patch": "507f7c8b8aa9dc54bfe7092ea7611e493bd40afe3dbc23cd81debd39a61ed999",
+    "failure-excerpt.txt": "45893cac9b3a2d5f19eb7e69eda37d3212fbf39b8ad8cf6324ac59279b43962e",
+    "staging/preview/native/tests/i2p_classic_host_tests.cpp": "f9bdf2c4ce1db44c0f9ce40794d4722bb0eadeb87cb0eff66fa58594052ef092"
+  }
+}

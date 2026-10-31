@@ -1,0 +1,5 @@
+# Mixed Public and I2P one-owner integration
+
+Upstream repositories: https://github.com/BiglySoftware/BiglyBT.git and https://github.com/BiglySoftware/BiglyBT-plugin-azneti2phelper.git. Selected old A and candidate B remain the same pinned committed baselines: BiglyBT cb8c6cb9bb97916cbc7e80338a017200ffc3e71f and helper33d97eca67a9f332e3d4da7e7492ec54f4bec078. No upstream-update or integrated-through advancement is claimed. Native integration commits: 860a65d930f8a74f27639a37666282c61e27e4e3, 72a985c9079fada469fbc17f59564a5cfe703076, e760652ca63019b441bf4d58d72031a7712d3e8b, dcd6f8a2a91ee49aef06afa47a452d054be6132e, 90f1d3defd31acacb784cb8cda40d8d06ba6d76d.
+
+Implemented bounded source/privacy/routing/storage/UI behavior and explicit remaining discovery/performance gaps are in the [review](../../evidence/20261031-mixed-public-i2p/REVIEW.md). Exact local/hosted commands and independent root/source reviews are linked by the verification/index. Existing component states and source/null/baseline fields are unchanged.

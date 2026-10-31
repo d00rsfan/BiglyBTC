@@ -1,0 +1,12 @@
+[
+  {
+    "stage": "build",
+    "exit_code": 0,
+    "seconds": 38.53
+  },
+  {
+    "stage": "regression",
+    "exit_code": 0,
+    "seconds": 1.37
+  }
+]

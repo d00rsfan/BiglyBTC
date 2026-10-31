@@ -1,0 +1,65 @@
+{
+  "status": "SOURCE_ONLY_FROZEN",
+  "basis_commit": "e760652ca63019b441bf4d58d72031a7712d3e8b",
+  "source_paths": {
+    "preview/native/engine/persistent_session.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/before/preview/native/engine/persistent_session.hpp",
+      "before_sha256": "695835b8f00eceaf124c56de7098c5bf0bf5c4b88768e153aee0aa7ba89a756f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/staging/preview/native/engine/persistent_session.hpp",
+      "after_sha256": "d0d7dee67898a132f6a2dbda5504643d930d77db8fbe17a46fceca6e01749765"
+    },
+    "preview/native/engine/persistent_session.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/before/preview/native/engine/persistent_session.cpp",
+      "before_sha256": "4d52a9339735d8ffe80675d6ff99b9c5db601c9b71174a02b49723a76ac106b7",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/staging/preview/native/engine/persistent_session.cpp",
+      "after_sha256": "3769ae4591373bab8a54bee67e0b7dcc55b9ad66bfe55437452b4efeb37efc52"
+    },
+    "preview/native/engine/mixed_i2p_transport.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/before/preview/native/engine/mixed_i2p_transport.hpp",
+      "before_sha256": "24b6ccc118fd23435916f8e59ad424545dfc412c0a82af758d81747463c03de6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/staging/preview/native/engine/mixed_i2p_transport.hpp",
+      "after_sha256": "952666249416eb8ca7121f30e330aa6133b2dba80518a12b324320f432872ef2"
+    },
+    "preview/native/engine/mixed_i2p_transport.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/before/preview/native/engine/mixed_i2p_transport.cpp",
+      "before_sha256": "598819b0528888004bd585982c50a42c250bc86a4d88363baa871dedbb0764a6",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/staging/preview/native/engine/mixed_i2p_transport.cpp",
+      "after_sha256": "4edb94188eb6c7ea6965a08885ef344fa1c230fd147247f0d160fef250f18906"
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/before/preview/native/app/session_bridge.cpp",
+      "before_sha256": "aaafde9b9bafa25af1155bb884e7a01d477bbb19d775b5158a742ad2f909e538",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/staging/preview/native/app/session_bridge.cpp",
+      "after_sha256": "e4feffdc3ebfec665476d74e98cdf9460bf379b03a14c473b28dc3928eddd371"
+    }
+  },
+  "artifacts_sha256": {
+    "changes.patch": "8df0a9eb1f03fd694c68009b06d1eb3711a32ff6157a3da6957c969f6c79eaf1",
+    "ADOPTION.txt": "2811c689e6dbcaa2eea4609e6c2d3835886d6cb78acb886b2c308354c97e8205"
+  },
+  "source_inputs": {
+    "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/src/session_impl.cpp": {
+      "sha256": "f3482ee7b5ddbf7e1be6a332020b12d25622d0cb7fad3814d2e84081b5c82f8c",
+      "sections": [
+        "on_i2p_accept2522-2538: typed failure posts then returns",
+        "success2545: opens next incoming connection"
+      ]
+    },
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/runtime-manifest.json": {
+      "sha256": "61c9486d8258cb0e46b607c69a05d846bf17cc58781f662aafc29704f81d14e4"
+    },
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/root-mixed-role-approval.json": {
+      "sha256": "728c7140dc963a6b105feccf62e2d3d519bf4a429c9da56ad9228214dbe4640c"
+    }
+  },
+  "companion_regression": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/native-mixed-accept-regression/manifest.json",
+    "sha256": "6f1216a5ed05e9b4621875485366a70318000e1c4f4d08b916588c0a6ee14a6b"
+  },
+  "checks": {
+    "current_beforeimages": true,
+    "read_only_apply_check": true,
+    "essential_non_listener_guards_unchanged": true,
+    "build_or_runtime_executed": false
+  }
+}

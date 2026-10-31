@@ -1,0 +1,11 @@
+--- a/preview/native/tests/i2p_classic_host_tests.cpp
++++ b/preview/native/tests/i2p_classic_host_tests.cpp
+@@ -100,7 +100,7 @@
+   void publicTcpListenFailureStillPoisonsActualOwner(){
+     namespace lt=libtorrent;namespace test=owned_i2p_test;
+     test::Fixture f;QTcpServer occupied;QVERIFY(occupied.listen(QHostAddress::LocalHost,0));
+-    auto made=engine::PersistentSession::create({9421,9422,9423});QVERIFY(made);auto owner=std::move(*made);
++    auto made=engine::PersistentSession::create({9421,9422,9423});if(!made&&made.error()==engine::AccountingError::DependencyUnqualified){QSKIP("Qualified persistent SDK unavailable");}QVERIFY(made);auto owner=std::move(*made);
+     const auto cleanup=qScopeGuard([&]{static_cast<void>(owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{2}));});
+     engine::NetworkPolicy network;network.mode=engine::NetworkMode::Normal;network.listenPort=occupied.serverPort();network.enforceBind=true;network.outgoingTcp=false;
+     // Existing settings translation pins max_retry_port_bind=0 and disables

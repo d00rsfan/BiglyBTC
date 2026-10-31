@@ -1,0 +1,28 @@
+{
+  "status": "SOURCE_PASS",
+  "reviewed_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/engine-provider-symbol-binding/manifest.json",
+    "sha256": "76ae9763303d3abe0664ddfeaa16907271e7cfac05c056b6db4dd3fafa74dbc1"
+  },
+  "confirmed_blockers": [],
+  "findings": [
+    "All four operations resolve through state_->pin.get(), the exact loader handle retained by mixedI2pTransportRuntimePin after the existing39-export/map/FD/hash validation. State mutex and retained shared pin cover lookup and synchronous call. No new dlopen/default lookup or provider fallback.",
+    "decltype(&ABIfunction) supplies the exact installed noexcept signature in an unevaluated context; actual dispatch is through the resolved function pointer and missing exports fail Unsupported. There is no remaining direct optional ABI call in this TU.",
+    "Owner-retirement, per-session opaque origin, backend-current admission and generation/route arguments are unchanged. Header-absent stubs and existing result mapping remain unchanged."
+  ],
+  "static_checks": {
+    "all_manifest_artifacts_and_maps_exact": true,
+    "retained_handle_lookups": 4,
+    "direct_optional_abi_calls": 0,
+    "read_only_patch_check": true
+  },
+  "inputs": {
+    "/home/yurii/Java/BiglyBTC/preview/native/engine/mixed_i2p_transport.hpp": "24b6ccc118fd23435916f8e59ad424545dfc412c0a82af758d81747463c03de6",
+    "/home/yurii/Java/BiglyBTC/preview/native/engine/persistent_runtime_guard.cpp": "c8f5c390d6999474288b38392e2d316c074c3c111afdea7ea0dacf1623d8d2cb",
+    "/home/yurii/Java/BiglyBTC/preview/native/engine/persistent_session.cpp": "4d52a9339735d8ffe80675d6ff99b9c5db601c9b71174a02b49723a76ac106b7"
+  },
+  "native_executed": false,
+  "limits": [
+    "Source-only review; loader/default-distro and affected Native cohorts remain root-owned actual validation. No edits to Native, SDK, caches or running subjects."
+  ]
+}

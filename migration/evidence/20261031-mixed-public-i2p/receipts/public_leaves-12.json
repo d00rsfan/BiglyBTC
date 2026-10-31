@@ -1,0 +1,28 @@
+{
+  "status": "SOURCE_PASS",
+  "effective_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/native-mixed-accept-regression/amendments/public-listener-counter-control/manifest.json",
+    "sha256": "e2c21df581510def49ce99618f7f1296d0316b47b7ef5c80453c6f9870ab8381"
+  },
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/native-mixed-accept-regression/manifest.json",
+    "sha256": "6f1216a5ed05e9b4621875485366a70318000e1c4f4d08b916588c0a6ee14a6b"
+  },
+  "production": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/manifest.json",
+    "sha256": "0e11c1e1147dcae7a72e6bb597f5a86572c5d65891b1a1f1289b54cadd291e60"
+  },
+  "verified_hashes": 13,
+  "source_review": [
+    "Generated bounded SAM exchanges configure the actual qualified transport, admit an actual engine-minted mixed seal, then close only the held ACCEPT while control stays live. Witness and same admission/source/snapshot are checked after genuine provider alert. No injected alert or fabricated handler result.",
+    "Actual occupied exact loopback TCP bind verifies public sock_bind is not classified mixed and owner becomes unavailable/OwnerResetRequired. Existing translator disables port fallback.",
+    "Parent mixed-positive body retained exactly; all prior classic-host slot/helper bodies retained exactly. No protocol/deadline/assertion weakening."
+  ],
+  "source_pins": {
+    "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/src/session_impl.cpp": "f3482ee7b5ddbf7e1be6a332020b12d25622d0cb7fad3814d2e84081b5c82f8c",
+    "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source/src/biglybtc_mixed_i2p.inc": "3d412dbd7ef39144c66f7b4327c53250000dc169971c3a263f5191bc787918d8"
+  },
+  "limitation": "Tests prove Public survival and Public fatal counter-control, not incoming I2P recovery. Actual failed ACCEPT pointer remains occupied until qualified withdraw/session close; native unavailable+explicit Start fresh-generation policy must remain honest.",
+  "runtime_claim": false,
+  "build_or_subject_executed": false
+}

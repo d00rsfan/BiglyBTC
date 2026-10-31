@@ -1,0 +1,13 @@
+Public source evidence only; no binary, key, runtime or shipping grant.
+
+The retained upstream libtorrent2.0.12 snapshot is recorded at740a0b9aeabe00e762cc0efe4a0f27593db2550b. The full1067-byte inventory is exact release evidence; fresh Git-object verification is not claimed. The complete upstream-to-mixed39.patch contains34 modified upstream leaves and23 additions, reconstructing1090 actual leaves, including the final18-path mixed family and explicit steady delayed ACCEPT rearm. Old5557/2a3d/c1f921 evidence remains separately pinned history.
+
+On an independently obtained exact matching release source root, with build/install outside it:
+  python3 verify-source.py <source> --state upstream
+  git -C <source> apply --check <absolute>/upstream-to-mixed39.patch
+  git -C <source> apply <absolute>/upstream-to-mixed39.patch
+  python3 verify-source.py <source> --state final
+
+Use the recorded compiler and ABI/cache settings, exact dependencies and explicit install prefix. Pass CMAKE_PROJECT_INCLUDE=<absolute>/test-objects.cmake for the unchanged test-only hidden-object linkage. The same39 exports are required;9 SDK CTest suites include17 private methods, plus6 separately measured role cases. Exact command/test/image origins and prior failures belong to the supplied measured record and root review; this bundle does not replay or replace them. Source reproduction alone grants no runtime approval.
+
+Upstream per-file notices remain intact; exact COPYING/LICENSE are in notices/. Added synthetic test capabilities are fixture bytes, not saved profile secrets. No SDK tree, archive, binary, generated build/install output or private profile is bundled.

@@ -1,0 +1,518 @@
+{
+  "source_map": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r5/source-before.json",
+    "sha256": "55ee607816d7a9eece26b3066ca11befe929731c648f1f381073cbe782ee8e25",
+    "bytes": 152099,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/source_map.json"
+  },
+  "gcc": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r5/result-stamped.json",
+    "sha256": "c06f81b82c2a3cf553e656b11f51436578c63ffb77a80956aca76d4e3f2577a0",
+    "bytes": 20806,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc.json"
+  },
+  "san": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/san/r5/result-stamped.json",
+    "sha256": "faa4d7b5e91f0109ea90ba15f1903200ea6dd32f3c1c40393299d977217d1e79",
+    "bytes": 21039,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san.json"
+  },
+  "default": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/default/r5/result-stamped.json",
+    "sha256": "19cb727567d147e391f18338a371d26f840b9c0ee7f23e215a23c4beae1dd8e3",
+    "bytes": 15907,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/default.json"
+  },
+  "gcc_actual": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/result.json",
+    "sha256": "ca757817e7c94044968a045821e13e69d1fb881818640a515422dde0da6d6826",
+    "bytes": 22407,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_actual.json"
+  },
+  "san_actual": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/result.json",
+    "sha256": "14adb8de57cf8af196ab2a39e0bd896681b9a3dd03a1a14889a102641e6ac5e5",
+    "bytes": 22408,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_actual.json"
+  },
+  "provider_record": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/source-build-record-accept-rearm.json",
+    "sha256": "f1c09a9a9b097c226bf9261f8c17c6523a48f0f53aea0f14e3ae39034cf94e16",
+    "bytes": 192821,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/provider_record.json"
+  },
+  "provider_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/amendments/mixed-accept-rearm/amendments/steady-accept-backoff/manifest.json",
+    "sha256": "05a9fad2ad069fb0a4017e6253c91da1b56f7bec67b6fe514194007a126b0ee0",
+    "bytes": 14655,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/provider_source.json"
+  },
+  "provider_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/root-artifact-review.json",
+    "sha256": "bf16e1b8b78277a6d05fb6570bbef4fa63401000f37babf55bcdbfeedfea64ce",
+    "bytes": 1766,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/provider_review.json"
+  },
+  "provider_public_evidence": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider-public-evidence-rearm-r2/manifest.json",
+    "sha256": "3cf1c941d3d4632588544ea8cca2d65a16a14ae857cae579fe10d0439dd5e398",
+    "bytes": 1613,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/provider_public_evidence.json"
+  },
+  "role_approval": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/root-mixed-role-approval.json",
+    "sha256": "c47c93f8f2e90ef573d4e79ac7c8fb14589d0a3c3ce2e99db5be3f2577f41993",
+    "bytes": 31051,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/role_approval.json"
+  },
+  "runtime_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm-r2/runtime-manifest.json",
+    "sha256": "03694052165fab605b7f9a8c30ec9ddbb806b0d94a7eef642453f1341d838fe9",
+    "bytes": 3629,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/runtime_manifest.json"
+  },
+  "ci": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/ci-result.json",
+    "sha256": "9393524511b8348f306dbd6c85652ce07c6c1fe660e61f29894ea8bda61d60d4",
+    "bytes": 711,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/ci.json"
+  },
+  "preview": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/preview-stage/r1/result.json",
+    "sha256": "3d4f2e1ea99fadc584c73e05978a3ef7d0bea2efeb82064dcb008de6a68076c9",
+    "bytes": 2549,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/preview.json"
+  },
+  "preservation": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/preservation-after-preview.json",
+    "sha256": "9b0616d62c92bdb877405d4d17d4260d2e139ce1ed50f1bbd700c52fb02cb0a0",
+    "bytes": 721,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/preservation.json"
+  },
+  "cleanup": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/tmp-cleanup.json",
+    "sha256": "c789ee004087e89bb535e4e5e02044e1d5bbe0b0ad03944a45b5795218d43ff1",
+    "bytes": 895,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/cleanup.json"
+  },
+  "gcc_qt": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r5/qt-totals.json",
+    "sha256": "068eeadc15044165f800d3c773afb38c3eba68b9060eda24d53eb6e95255902e",
+    "bytes": 330,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_qt.json"
+  },
+  "san_qt": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/san/r5/qt-totals.json",
+    "sha256": "aef9a02c3ddcd197c1d7e76973d0d8b7de368b4c8c7dcf9f8a1e65fbc4c9adb3",
+    "bytes": 330,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_qt.json"
+  },
+  "default_qt": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/default/r5/qt-totals.json",
+    "sha256": "a26265673164a7aa8d952683f6de171c0044365ece3ab562d1e099a6d38978b8",
+    "bytes": 308,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/default_qt.json"
+  },
+  "symbol_binding_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/engine-provider-symbol-binding/review-driver.json",
+    "sha256": "4691bd72de40f8677f72779574ab7f46e2f1585889b4649c09162ad87def6a3c",
+    "bytes": 1909,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/symbol_binding_review.json"
+  },
+  "source_repair": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/native-repairs-r2.json",
+    "sha256": "2cc67949ba72fdd0415083c7b03f3a1ca670a98d1c96e05ad1d1212d76efde8f",
+    "bytes": 1322,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/source_repair.json"
+  },
+  "service_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-service-review/review.json",
+    "sha256": "12b07260381beeb9dd1df3f3c353c125e8e5a95fd11b82921a4d911fc986039f",
+    "bytes": 1009,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/service_review.json"
+  },
+  "runtime_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-accept-repin-final/repinning.json",
+    "sha256": "aa369b8c8059d5866b4e075af1f4c2c9c9c0f54b60cbd3f09863862a5e347766",
+    "bytes": 2485,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/runtime_review.json"
+  },
+  "sdk_measured_controls": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/amendments/mixed-accept-rearm/amendments/steady-accept-backoff/qualification/runs/r1/result.json",
+    "sha256": "97ea16cc6576fd1ecd71268b31efd61a2e44a44c606436765953f98f73ea21c2",
+    "bytes": 1137,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/sdk_measured_controls.json"
+  },
+  "gcc_inputs": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/inputs.json",
+    "sha256": "6525dde74bafaad81deed0387c532dc6d9ee19ca5aca3b4675efe71a6f3972b3",
+    "bytes": 44203,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_inputs.json"
+  },
+  "gcc_inputs_after": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/inputs-after.json",
+    "sha256": "09225d6b77499d8d39f9985ec497abda991d7d3290e63a13860be9a325f18182",
+    "bytes": 178,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_inputs_after.json"
+  },
+  "gcc_commands": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/commands.json",
+    "sha256": "fcdc572947056e881b9a39e015d135ce5862429a39c8fef6e58c069310c439c1",
+    "bytes": 1456,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_commands.json"
+  },
+  "gcc_native_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/native-result.json",
+    "sha256": "5e20fdb94048e0b9bfe5fe09c8137e3162780ce39fa7c97a1164c5067ed7c99a",
+    "bytes": 25746,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_native_result.json"
+  },
+  "gcc_native_loaded": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/native-loaded.json",
+    "sha256": "6414591a36acfcda522b2f621db803c1c109f182f268e66d923c83e846684db5",
+    "bytes": 668,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_native_loaded.json"
+  },
+  "gcc_private_cleanup": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/private-cleanup.json",
+    "sha256": "bcd5a73f1c7dbeb378897eec66c7933aef80b1339d33f8598130f103c08e0424",
+    "bytes": 85,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_private_cleanup.json"
+  },
+  "gcc_namespace_exit": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/namespace-exit.json",
+    "sha256": "5d6e86aed99fded6092d15cecc8c2cba4e61cc700dd231bdf6a948b3ea8a860e",
+    "bytes": 61,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_namespace_exit.json"
+  },
+  "gcc_fence_before": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/fence-before.json",
+    "sha256": "57d7e79222df08ce29839a0f881dde6109756e6b22d2cc63c85535c2d9ec6796",
+    "bytes": 2230,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_fence_before.json"
+  },
+  "gcc_fence_after": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/fence-after.json",
+    "sha256": "57d7e79222df08ce29839a0f881dde6109756e6b22d2cc63c85535c2d9ec6796",
+    "bytes": 2230,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_fence_after.json"
+  },
+  "gcc_public_artifacts": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/public-artifacts.json",
+    "sha256": "cfaab6593fddfef47afee58cc6f81b7ce970e15919e044fd9740789678005244",
+    "bytes": 7930,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_public_artifacts.json"
+  },
+  "gcc_tracker_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/tracker-result.json",
+    "sha256": "effb4d348cd1b173d9b5ab61349b1ca63cb80017f9470a0dff0907bc37e7383f",
+    "bytes": 405,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_tracker_result.json"
+  },
+  "gcc_router_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/router-result.json",
+    "sha256": "51540df79cbf32c59c4b801fdc93bd6ddaf1850f3f1836b4964fcfdee3357d69",
+    "bytes": 129,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/gcc_router_result.json"
+  },
+  "san_inputs": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/inputs.json",
+    "sha256": "84b27aefdccd3834e2995bd8bc91e4864c537f65c2cbc23a22bf11763abac972",
+    "bytes": 44227,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_inputs.json"
+  },
+  "san_inputs_after": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/inputs-after.json",
+    "sha256": "d30b3350443a3d14fa4cd8cbdf77c1afe7a62c5cedfb6179173d5b4993d3c701",
+    "bytes": 178,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_inputs_after.json"
+  },
+  "san_commands": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/commands.json",
+    "sha256": "303ca4bcdbd8c6e63aad72723203007f3d74c26bcce19ba4d76cbc3d92fedf40",
+    "bytes": 1456,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_commands.json"
+  },
+  "san_native_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/native-result.json",
+    "sha256": "efbdfc1937200e05bb96c03c1194ae024b4db5319a9b218c1ba7735b0137fdd6",
+    "bytes": 25747,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_native_result.json"
+  },
+  "san_native_loaded": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/native-loaded.json",
+    "sha256": "59a7ae4d1b3d0371bb5456bb3b4be060cf0b5490e9fcdd0347bd26829833c28b",
+    "bytes": 722,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_native_loaded.json"
+  },
+  "san_private_cleanup": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/private-cleanup.json",
+    "sha256": "bcd5a73f1c7dbeb378897eec66c7933aef80b1339d33f8598130f103c08e0424",
+    "bytes": 85,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_private_cleanup.json"
+  },
+  "san_namespace_exit": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/namespace-exit.json",
+    "sha256": "5d6e86aed99fded6092d15cecc8c2cba4e61cc700dd231bdf6a948b3ea8a860e",
+    "bytes": 61,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_namespace_exit.json"
+  },
+  "san_fence_before": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/fence-before.json",
+    "sha256": "3cd355b6825649956c5073bb759cc562b2fa7abd482fe0f15598e287a78503fd",
+    "bytes": 2230,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_fence_before.json"
+  },
+  "san_fence_after": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/fence-after.json",
+    "sha256": "3cd355b6825649956c5073bb759cc562b2fa7abd482fe0f15598e287a78503fd",
+    "bytes": 2230,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_fence_after.json"
+  },
+  "san_public_artifacts": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/public-artifacts.json",
+    "sha256": "5c19b15d328c3bc9b7a697d6db9eb03b226868f45db8d8c3e8948336c7fb6ffe",
+    "bytes": 7930,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_public_artifacts.json"
+  },
+  "san_tracker_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/tracker-result.json",
+    "sha256": "effb4d348cd1b173d9b5ab61349b1ca63cb80017f9470a0dff0907bc37e7383f",
+    "bytes": 405,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_tracker_result.json"
+  },
+  "san_router_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/router-result.json",
+    "sha256": "51540df79cbf32c59c4b801fdc93bd6ddaf1850f3f1836b4964fcfdee3357d69",
+    "bytes": 129,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/san_router_result.json"
+  },
+  "history-0": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r1/result.json",
+    "sha256": "62eaf3d80bb5fff85be2f1445d1dc42cfb437a30b2c9a84e8b4eb31ae5493e6a",
+    "bytes": 5796,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/history-0.json"
+  },
+  "history-1": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r2/result.json",
+    "sha256": "4e3196cfdeb7ad699d6813ec0d808dc741fec9f326b42afb831dff6c9d660cbf",
+    "bytes": 14305,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/history-1.json"
+  },
+  "history-2": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/san/r1/result.json",
+    "sha256": "d6eabf55a4b14319ca711c0cd3f815afbcb4ca0bb91376f82a21450343106ed8",
+    "bytes": 6758,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/history-2.json"
+  },
+  "history-3": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r1/result.json",
+    "sha256": "d10d1f95f0b0b59c0ece4b11c1d6a2d263cb3f1cbf9ee779637a80c52f5f3785",
+    "bytes": 355,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/history-3.json"
+  },
+  "history-4": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r1/result.json",
+    "sha256": "d10d1f95f0b0b59c0ece4b11c1d6a2d263cb3f1cbf9ee779637a80c52f5f3785",
+    "bytes": 355,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/history-4.json"
+  },
+  "history-5": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/diagnostic/runs/gcc-r1/result.json",
+    "sha256": "bf9b00316afe8cba43ff4756d3a3323b3065a63f1c35b95bbdc1f0f707364c19",
+    "bytes": 389,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/history-5.json"
+  },
+  "history-6": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/diagnostic/amendments/reviewed-source-delta/runs/gcc-r1/result.json",
+    "sha256": "bf9b00316afe8cba43ff4756d3a3323b3065a63f1c35b95bbdc1f0f707364c19",
+    "bytes": 389,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/history-6.json"
+  },
+  "history-7": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/quick-regression/result.json",
+    "sha256": "83f181f5d9aed46b3a8b4597965d0cc76a2b8e7d9bd63122729bc8d0c57b613f",
+    "bytes": 76,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/history-7.json"
+  },
+  "history-8": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/batch/private/r4/result.json",
+    "sha256": "931433721b26361a877203039ca0cbd2f1f08571a152e918a0fa1d9bf54ce9a3",
+    "bytes": 4507,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/history-8.json"
+  },
+  "public_leaves-0": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/source-pins.json",
+    "sha256": "6f247904e505e4327ebb87e6821a801bdf1e61a223a692c2323869d9a109df7a",
+    "bytes": 5427,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-0.json"
+  },
+  "public_leaves-1": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/run.py",
+    "sha256": "1ee1ff1b5eb749987592a770d6c90e0de78f05bc7b7fe7aee7edc193d3ddeb68",
+    "bytes": 37087,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-1.py"
+  },
+  "public_leaves-2": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/RouterMixedTracker.java",
+    "sha256": "a29f971b9f891ed03b03372cfa1bcc406cf38d1f2e037945a08f809eaea9caac",
+    "bytes": 27685,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-2.java"
+  },
+  "public_leaves-3": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/run-batch.py",
+    "sha256": "0feaf8cd8da605940208ed6b07e20eb0965441f19e38764da8f7c113814cacaa",
+    "bytes": 12264,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-3.py"
+  },
+  "public_leaves-4": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-accept-repin-final/stage-preview.py",
+    "sha256": "ca817d16910d030ef2d1496f7318045b1aee808882881c90a2c2b3aa1e3fc64b",
+    "bytes": 16677,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-4.py"
+  },
+  "public_leaves-5": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/finalise-closeout.py",
+    "sha256": "ecf5989af14db95781763c2cd3a48f34cc537815a3938ff8d06b7815c2af4f4b",
+    "bytes": 23886,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-5.py"
+  },
+  "public_leaves-6": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/launch-actual.py",
+    "sha256": "ba2c3b2b46b8d460c810f790080d09bb07a148642215767dbae50f07151b6f43",
+    "bytes": 2530,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-6.py"
+  },
+  "public_leaves-7": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/amendments/partial-source-paused/manifest.json",
+    "sha256": "b4e29a477367588c0cc7da76c73071d5af6b867295dbe31e057476924a066cf7",
+    "bytes": 2076,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-7.json"
+  },
+  "public_leaves-8": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/engine-provider-symbol-binding/manifest.json",
+    "sha256": "76ae9763303d3abe0664ddfeaa16907271e7cfac05c056b6db4dd3fafa74dbc1",
+    "bytes": 1162,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-8.json"
+  },
+  "public_leaves-9": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/coordinator-publication/manifest.json",
+    "sha256": "d47ec5277007c65b86b988dd529c7d8492893bb50ec07e540957686efa201142",
+    "bytes": 2469,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-9.json"
+  },
+  "public_leaves-10": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/idle-poll-reporting/manifest.json",
+    "sha256": "55181cc0f0aee5581fe9593f9b8913b36d381a56812ec7baa344e286a0a5fe9f",
+    "bytes": 4188,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-10.json"
+  },
+  "public_leaves-11": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/manifest.json",
+    "sha256": "0e11c1e1147dcae7a72e6bb597f5a86572c5d65891b1a1f1289b54cadd291e60",
+    "bytes": 4211,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-11.json"
+  },
+  "public_leaves-12": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/native-mixed-accept-regression-review/review.json",
+    "sha256": "012df0446bab544426bf2e919ee3fafb48e0a82a71cf21c4e011cdccafbd9bd6",
+    "bytes": 2145,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-12.json"
+  },
+  "public_leaves-13": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/native-mixed-accept-regression/amendments/public-listener-counter-control/amendments/destination-hash-byte-type/manifest.json",
+    "sha256": "785859f5b96439cc5dbe8855bd3cac8e333efc6332ea6205cdb5d5d092614e3d",
+    "bytes": 1426,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-13.json"
+  },
+  "public_leaves-14": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-accept-repin-recipe/manifest.json",
+    "sha256": "a82fdc27199203afcab9baf4c849a5da78ae7d6cdc15527d40d703b8db727691",
+    "bytes": 1955,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-14.json"
+  },
+  "public_leaves-15": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/service-source-pin-repair.json",
+    "sha256": "61f8376641fa39a50e665d538f9b5f7059ad149c9403715ae03247c0517f5e07",
+    "bytes": 484,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-15.json"
+  },
+  "public_leaves-16": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/record-placement-correction.json",
+    "sha256": "eda1a2683012adf69bc069a1300c555a606f4d6e743b3261ea5304d42b977089",
+    "bytes": 733,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-16.json"
+  },
+  "public_leaves-17": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/follow-up-source-observations.json",
+    "sha256": "ccdf104f97f64de633d8c3c7c671a72fa05cdd9b61359156b881501169450780",
+    "bytes": 606,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-17.json"
+  },
+  "public_leaves-18": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-accept-failure/quick-regression-r2/result.json",
+    "sha256": "c15ce51f992612256d32d6cd94188eeda8b06498b258f9ba6c2f8b88098e43c1",
+    "bytes": 151,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/public_leaves-18.json"
+  },
+  "provider-0": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider-public-evidence-rearm-r2/REPRODUCE.txt",
+    "sha256": "fa280749bfbd8efec1b65cb05e2951bc4b5d2b893fcb3a01e6a9b0ed4b661eb5",
+    "bytes": 1663,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/provider-public-evidence/REPRODUCE.txt"
+  },
+  "provider-1": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider-public-evidence-rearm-r2/notices/COPYING",
+    "sha256": "f4b492afbde73d2f4e051050a619622876a13b77e7b8b6ea3ec2868a6929b31b",
+    "bytes": 1524,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/provider-public-evidence/notices/COPYING"
+  },
+  "provider-2": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider-public-evidence-rearm-r2/notices/LICENSE",
+    "sha256": "34c359bb2297512ec3de21952ac668f1d981514fd63361ffdcca85294127ef6b",
+    "bytes": 9082,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/provider-public-evidence/notices/LICENSE"
+  },
+  "provider-3": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider-public-evidence-rearm-r2/source-provenance.json",
+    "sha256": "3266386b1a406d4a49f5ba9e26f195546c74a2b5cc790425024a4d4772556e29",
+    "bytes": 300315,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/provider-public-evidence/source-provenance.json"
+  },
+  "provider-4": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider-public-evidence-rearm-r2/test-objects.cmake",
+    "sha256": "17d3d0a962316d5f90779ea65adbb5da27acb77091a2a08f7dd1751e225df0d3",
+    "bytes": 1333,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/provider-public-evidence/test-objects.cmake"
+  },
+  "provider-5": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider-public-evidence-rearm-r2/upstream-to-mixed39.patch",
+    "sha256": "e19b5a1f1039d2a7004a5594aaeaed6c6a9f9f9eabf4580aa8d05dcad894e1a8",
+    "bytes": 302998,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/provider-public-evidence/upstream-to-mixed39.patch"
+  },
+  "provider-6": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider-public-evidence-rearm-r2/verify-source.py",
+    "sha256": "d90fbde5d209f5244853db5a778ac7acf12008ef2e9973ee326f8d6844290a75",
+    "bytes": 955,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/provider-public-evidence/verify-source.py"
+  },
+  "ci-test-guard": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/ci-runtime-guard/manifest.json",
+    "sha256": "627f250c247e9fe3a9595bd3268847e2d532b0dd8e8d04946c88c6fc0d64b719",
+    "bytes": 1832,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/ci-test-guard.json"
+  },
+  "ci-test-guard-patch": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/ci-runtime-guard/changes.patch",
+    "sha256": "507f7c8b8aa9dc54bfe7092ea7611e493bd40afe3dbc23cd81debd39a61ed999",
+    "bytes": 1059,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/ci-test-guard-patch.patch"
+  },
+  "ci-test-guard-failure": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/ci-runtime-guard/failure-excerpt.txt",
+    "sha256": "45893cac9b3a2d5f19eb7e69eda37d3212fbf39b8ad8cf6324ac59279b43962e",
+    "bytes": 1058,
+    "copy": "migration/evidence/20261031-mixed-public-i2p/receipts/ci-test-guard-failure.txt"
+  }
+}

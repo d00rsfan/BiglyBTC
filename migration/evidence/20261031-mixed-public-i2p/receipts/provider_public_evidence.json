@@ -1,0 +1,27 @@
+{
+  "schema": "BIGLYBTC_PUBLIC_SOURCE_EVIDENCE_V1",
+  "status": "SOURCE_ONLY_NO_RUNTIME_AUTHORITY",
+  "upstream_recorded_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "upstream_snapshot_files": 1067,
+  "actual_source_files": 1090,
+  "unified_delta_paths": 57,
+  "final_mixed_delta_paths": 18,
+  "source_capsule_sha256": "05a9fad2ad069fb0a4017e6253c91da1b56f7bec67b6fe514194007a126b0ee0",
+  "source_build_record_sha256": "f1c09a9a9b097c226bf9261f8c17c6523a48f0f53aea0f14e3ae39034cf94e16",
+  "root_artifact_review_sha256": "bf16e1b8b78277a6d05fb6570bbef4fa63401000f37babf55bcdbfeedfea64ce",
+  "source_provenance_sha256": "3266386b1a406d4a49f5ba9e26f195546c74a2b5cc790425024a4d4772556e29",
+  "artifacts_sha256": {
+    "REPRODUCE.txt": "fa280749bfbd8efec1b65cb05e2951bc4b5d2b893fcb3a01e6a9b0ed4b661eb5",
+    "notices/COPYING": "f4b492afbde73d2f4e051050a619622876a13b77e7b8b6ea3ec2868a6929b31b",
+    "notices/LICENSE": "34c359bb2297512ec3de21952ac668f1d981514fd63361ffdcca85294127ef6b",
+    "source-provenance.json": "3266386b1a406d4a49f5ba9e26f195546c74a2b5cc790425024a4d4772556e29",
+    "test-objects.cmake": "17d3d0a962316d5f90779ea65adbb5da27acb77091a2a08f7dd1751e225df0d3",
+    "upstream-to-mixed39.patch": "e19b5a1f1039d2a7004a5594aaeaed6c6a9f9f9eabf4580aa8d05dcad894e1a8",
+    "verify-source.py": "d90fbde5d209f5244853db5a778ac7acf12008ef2e9973ee326f8d6844290a75"
+  },
+  "contains_binaries": false,
+  "contains_profile_keys": false,
+  "sdk_or_native_mutated": false,
+  "private_owner_methods": 17,
+  "previous_public_bundle_sha256": "c1f921dad7269703805f87400d5d5496fd4aa52a87c13b4ed21856c5b33de193"
+}

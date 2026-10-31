@@ -1,0 +1,31 @@
+{
+  "status": "SOURCE_ONLY_ROOT_RECIPES_NOT_EXECUTED",
+  "purpose": "Exact downstream closed repinning after fresh mixed ACCEPT rearm qualification and root artifact review",
+  "artifacts_sha256": {
+    "ADOPTION.txt": "8e80d773d1b93af128dcd7432ec466fa2abbdc3e29fc18896b2384517df77456",
+    "prepare-review.py": "6afb7f00612179973a813ad77f901fb593025bdf6255ef2137767159dfb2c4ac",
+    "source-checks.json": "d90539e7c71b8ea1bba02359de3f693f7f1acc49ac8d4756dadd02db0dc8363d",
+    "stage-downstream.py": "860a1f39cccf5bad4944a1bac43efce57a6176fd2adb016b6e11e3f7e72b30ae"
+  },
+  "immutable_templates_sha256": {
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/review-artifact.py": "8a98ab727dbfd6bb67cf8b3ec58ba8107124858bc78987e65388ea7e84985e8a",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/runtime-manifest.json": "61c9486d8258cb0e46b607c69a05d846bf17cc58781f662aafc29704f81d14e4",
+    "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/verify_runtime_manifest_mixed.py": "a7686747b668a2379beae0f6055d9f7b5c514a81343c01a1de2cff42b145d10a",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/preview-stage/stage-preview.py": "d68d83fcfd8bcc83544245b42bb8ce912f23fb9db3e4628bddd17db098bff246",
+    "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/closeout-recipe/finalise-stage.py": "43b35425976d6f39baff7854608dc317a6498249101d6bf2657cc0a1268fa179"
+  },
+  "forthcoming_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/amendments/mixed-accept-rearm/manifest.json",
+    "sha256": "3fd38e32283e0bd30447c250d9b19ba46f54ecd969550f1727df6793a775e97c"
+  },
+  "requires_actual_controls": {
+    "sdk_suites": 9,
+    "private_owner_methods": 17,
+    "separate_role_cases": 6,
+    "exports": 39
+  },
+  "native_adoption_pending": true,
+  "new_artifact_root_review_pending": true,
+  "author_subjects": 0,
+  "author_sdk_or_native_mutations": false
+}

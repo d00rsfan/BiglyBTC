@@ -1,0 +1,8 @@
+{
+  "status": "METADATA_ONLY_NO_REBUILD",
+  "reason": "Existing verifier resolves evidence paths relative to record directory; evidence keys are provider-relative",
+  "original_measured_record": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/amendments/mixed-accept-rearm/amendments/steady-accept-backoff/qualification/source-build-record-accept-rearm.json",
+  "canonical_record": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/source-build-record-accept-rearm.json",
+  "identical_sha256": "f1c09a9a9b097c226bf9261f8c17c6523a48f0f53aea0f14e3ae39034cf94e16",
+  "failed_runtime_preparation": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/sdk-role-integration/accept-rearm/preparation.json"
+}

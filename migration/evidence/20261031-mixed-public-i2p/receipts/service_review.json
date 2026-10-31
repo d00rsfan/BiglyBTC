@@ -1,0 +1,16 @@
+{
+  "status": "SOURCE_PASS",
+  "source_capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/mixed-service/manifest.json",
+    "sha256": "19d5da00ba0ed61a9acbd074fadf3aae982cefaf28790434fed243fc5a8953cb"
+  },
+  "current_host": {
+    "path": "/home/yurii/Java/BiglyBTC/preview/native/app/session_bridge.cpp",
+    "sha256": "9c5feb3e5589409728e62cbda6a0a67190d7864c023cc86275fe1424caa8feab"
+  },
+  "decision": "No confirmed material lifecycle, source-authority, or privacy blocker found in the frozen six-file service delta and current Host integration. Actual mixed SDK/runtime and genuine transfer qualification remain pending.",
+  "reviewer_scope": "Owned key0 bootstrap and same-OFD publication boundaries; route nonce/current actual handle; private-only withdrawal; worker/Qt/source joins; unavailable-versus-source-changed Host handling; mask/capability lifetime.",
+  "source_map_artifact_hashes_checked": true,
+  "native_mutated": false,
+  "builds_or_subjects_executed": false
+}

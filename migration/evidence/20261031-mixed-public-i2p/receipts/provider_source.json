@@ -1,0 +1,242 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_FROZEN",
+  "basis_record": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source-build-record.json",
+    "sha256": "449aa82f665786ce63f4e1778cee23bf07ca45439b762cf283b67efd0d48af0f"
+  },
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/amendments/mixed-accept-rearm/manifest.json",
+    "sha256": "3fd38e32283e0bd30447c250d9b19ba46f54ecd969550f1727df6793a775e97c"
+  },
+  "previous_measured_record": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/provider/source-build-record.json",
+    "sha256": "2a3d548066207e438df69e15b0ca07088e8cc342d2284e7e7fc46db07401acf2"
+  },
+  "source_paths": {
+    "include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp": {
+      "before_path": "before/include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp",
+      "before_sha256": "f4ca76e3c3c2ea6610631ab8a239a5a523bffe859705c7762592ddb48703a4f0",
+      "after_path": "staging/include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp",
+      "after_sha256": "c28d064786ffa5c359ad59142585842063fc59032fb27e5919d5e6984c4d0997"
+    },
+    "include/libtorrent/aux_/session_impl.hpp": {
+      "before_path": "before/include/libtorrent/aux_/session_impl.hpp",
+      "before_sha256": "34ea8b7a7c8884b0127ed062abbecab7b47affd2f866d34184309263fee651af",
+      "after_path": "staging/include/libtorrent/aux_/session_impl.hpp",
+      "after_sha256": "5d1f87726dc16fb3b194c32c6918cc66eba539785947c4f528a0af4904cfe755"
+    },
+    "include/libtorrent/biglybtc_mixed_i2p_transport.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "staging/include/libtorrent/biglybtc_mixed_i2p_transport.hpp",
+      "after_sha256": "623a84bea8258e4046ed60478e220f12f1d19f37cd00b3f7635a6cde2187d0e5"
+    },
+    "include/libtorrent/i2p_stream.hpp": {
+      "before_path": "before/include/libtorrent/i2p_stream.hpp",
+      "before_sha256": "b009d0188777944dd773defe3ea135b8a8bcd51870c76d3c484ba0ecfb7f6a2f",
+      "after_path": "staging/include/libtorrent/i2p_stream.hpp",
+      "after_sha256": "a7d64dec4d179c408685506732eb2de21a9c1f84491bea0336f23cd3ce163ed1"
+    },
+    "include/libtorrent/session_handle.hpp": {
+      "before_path": "before/include/libtorrent/session_handle.hpp",
+      "before_sha256": "36f4ab5775bd2f3b8f23d0e700a26eccad3664cb38429006478535e765dd5cef",
+      "after_path": "staging/include/libtorrent/session_handle.hpp",
+      "after_sha256": "d5783daf88da4f1544e6773dce9eb69fff400473fbac43c33adae68d407adf99"
+    },
+    "include/libtorrent/torrent.hpp": {
+      "before_path": "before/include/libtorrent/torrent.hpp",
+      "before_sha256": "3370be9a7fa285f812f3221367635285cb802ffe27d9df8a4cb3902f529d454f",
+      "after_path": "staging/include/libtorrent/torrent.hpp",
+      "after_sha256": "0febed7435ce91ec16185a6b4d8a97dc32f7c402a45097ba70389fa73c6f91ae"
+    },
+    "include/libtorrent/tracker_manager.hpp": {
+      "before_path": "before/include/libtorrent/tracker_manager.hpp",
+      "before_sha256": "ec1284fc04f4ad1866f18d83d987b8b2274d58a9633a8fb2eb8bf6294f90bbad",
+      "after_path": "staging/include/libtorrent/tracker_manager.hpp",
+      "after_sha256": "9e3786dba02f3e7a3bc7698e2e6798d030f3602ec5c32e16a6c52d9ea1f64227"
+    },
+    "src/biglybtc_mixed_i2p.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "staging/src/biglybtc_mixed_i2p.inc",
+      "after_sha256": "c93ecc326f7039f47d4e643da00a7ebc34a0aa45423cce196e0ab63d064bea04"
+    },
+    "src/biglybtc_mixed_i2p_api.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "staging/src/biglybtc_mixed_i2p_api.inc",
+      "after_sha256": "02941bd93dd03454bb0df6eee0459f57cfc4838532a8532ad39d62d7f871305d"
+    },
+    "src/biglybtc_private_i2p_owner.inc": {
+      "before_path": "before/src/biglybtc_private_i2p_owner.inc",
+      "before_sha256": "30f7601647c5e7f610946a6c09d9979595e56bad7c5af3cd3ac3ce4fe4be8df1",
+      "after_path": "staging/src/biglybtc_private_i2p_owner.inc",
+      "after_sha256": "d25fcc7e5a5b30cb2470c0ec925b6a97fbdb01f8bcaceac72d7f752751159da7"
+    },
+    "src/bt_peer_connection.cpp": {
+      "before_path": "before/src/bt_peer_connection.cpp",
+      "before_sha256": "e3cce5e9275932fde01e42e35c6e3123dc01f3b55d412779ac6ae1370b4fd3d8",
+      "after_path": "staging/src/bt_peer_connection.cpp",
+      "after_sha256": "7e4007593a7841d18a22fd9d0588a1ac03762274baede025af05dea0e6738a5f"
+    },
+    "src/http_connection.cpp": {
+      "before_path": "before/src/http_connection.cpp",
+      "before_sha256": "7cb4bf5a0c4a830f4249ebf908601323b1bd767b9b42ef429198eb950e7cb10e",
+      "after_path": "staging/src/http_connection.cpp",
+      "after_sha256": "49d46ee451a69596ece4e688b82d77eb573cc579e115c381b091c27674e045aa"
+    },
+    "src/peer_connection.cpp": {
+      "before_path": "before/src/peer_connection.cpp",
+      "before_sha256": "625421130d71f0c5847fce6603974248884fc746232c810e1b6c03d27e06b887",
+      "after_path": "staging/src/peer_connection.cpp",
+      "after_sha256": "4fe3a5d6caa27b44fedb934ab627d9efcd8d045700af02e760c05f06079a9fd4"
+    },
+    "src/session_handle.cpp": {
+      "before_path": "before/src/session_handle.cpp",
+      "before_sha256": "415e6868caf0aa882d7c4fae32e3b5acd7fd17764af54a43718d0cc74eaef61e",
+      "after_path": "staging/src/session_handle.cpp",
+      "after_sha256": "fb872261918f85525393257adf9f29dd04a86ec10b631369293c890160db9886"
+    },
+    "src/session_impl.cpp": {
+      "before_path": "before/src/session_impl.cpp",
+      "before_sha256": "b8f74ea227dbe2f58850c04061e92430983d9c6c3f47a4a6df6fbc0c8ba4e012",
+      "after_path": "staging/src/session_impl.cpp",
+      "after_sha256": "ebe829f17fb71d12cd8e02e9c636319f0a94b3ad4a151b5795e088816a5ac26c"
+    },
+    "src/torrent.cpp": {
+      "before_path": "before/src/torrent.cpp",
+      "before_sha256": "d90230256df0f9c69e824c3aba4972071039353973ca68e1b29d5cccf3883c3d",
+      "after_path": "staging/src/torrent.cpp",
+      "after_sha256": "f2c4efb35408b3d06dce1b207d6f8a3af4e66d038484d6b79640f08d36a158d8"
+    },
+    "src/tracker_manager.cpp": {
+      "before_path": "before/src/tracker_manager.cpp",
+      "before_sha256": "8c8ebd4a76603cc6a9eca4d17177078092a4cf7d7532e5e53fa2bb36f9ad235c",
+      "after_path": "staging/src/tracker_manager.cpp",
+      "after_sha256": "d0ed7f75e616a7df6579f4d9bea2cac4725fdf7a0a0907be21171d961f884504"
+    },
+    "test/test_biglybtc_private_i2p_owner.cpp": {
+      "before_path": "before/test/test_biglybtc_private_i2p_owner.cpp",
+      "before_sha256": "22f5004e2a8314b50d0bd78df7fe8b1724cac5e05493b54088757d7670ac953d",
+      "after_path": "staging/test/test_biglybtc_private_i2p_owner.cpp",
+      "after_sha256": "f1389f4ad342a74a67695eeeb454f0fad938a74581a6f03fc3bf8f90bc57fc3b"
+    }
+  },
+  "delta_source_paths": {
+    "include/libtorrent/aux_/session_impl.hpp": {
+      "before_sha256": "d05c0eea5104c02a2cd1dc2a4d49b3c645f656f113043b459b3a80fc0e1e1231",
+      "after_sha256": "5d1f87726dc16fb3b194c32c6918cc66eba539785947c4f528a0af4904cfe755"
+    },
+    "src/session_impl.cpp": {
+      "before_sha256": "c139c0488234c48203343717f842002a2cbe2f56c065ab7fc1708ffce49a1682",
+      "after_sha256": "ebe829f17fb71d12cd8e02e9c636319f0a94b3ad4a151b5795e088816a5ac26c"
+    },
+    "test/test_biglybtc_private_i2p_owner.cpp": {
+      "before_sha256": "61b5429b398a64e3b87ba843d642ea07c2cc2324fc84bd83c94d619f1d34aadf",
+      "after_sha256": "f1389f4ad342a74a67695eeeb454f0fad938a74581a6f03fc3bf8f90bc57fc3b"
+    }
+  },
+  "actual_current_delta_paths": {
+    "include/libtorrent/aux_/session_impl.hpp": {
+      "before_sha256": "b96aee4000c54bf0f8de09bc47859d780e13f80fe007fd350fada08844bd2931",
+      "after_sha256": "5d1f87726dc16fb3b194c32c6918cc66eba539785947c4f528a0af4904cfe755"
+    },
+    "src/biglybtc_mixed_i2p.inc": {
+      "before_sha256": "3d412dbd7ef39144c66f7b4327c53250000dc169971c3a263f5191bc787918d8",
+      "after_sha256": "c93ecc326f7039f47d4e643da00a7ebc34a0aa45423cce196e0ab63d064bea04"
+    },
+    "src/session_impl.cpp": {
+      "before_sha256": "f3482ee7b5ddbf7e1be6a332020b12d25622d0cb7fad3814d2e84081b5c82f8c",
+      "after_sha256": "ebe829f17fb71d12cd8e02e9c636319f0a94b3ad4a151b5795e088816a5ac26c"
+    },
+    "test/test_biglybtc_private_i2p_owner.cpp": {
+      "before_sha256": "df544bcb99360c5518bc27678f8e3304b52055cbb38fabf944f7d2b4d6f0310a",
+      "after_sha256": "f1389f4ad342a74a67695eeeb454f0fad938a74581a6f03fc3bf8f90bc57fc3b"
+    }
+  },
+  "required_exports": [
+    "_ZN10libtorrent7versionEv",
+    "_ZN10libtorrent21session_stats_metricsEv",
+    "_ZN10libtorrent14session_handle18post_session_statsEv",
+    "_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE",
+    "_ZNK10libtorrent19session_stats_alert8countersEv",
+    "_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE",
+    "biglybtc_swarm_mask_abi_v1",
+    "biglybtc_payload_counter_abi_v1",
+    "biglybtc_read_payload_counters_v1",
+    "biglybtc_socks4a_abi_v1",
+    "biglybtc_traffic_counter_abi_v2",
+    "biglybtc_read_traffic_counters_v2",
+    "biglybtc_socks4a_webseed_abi_v1",
+    "biglybtc_queue_observer_abi_v1",
+    "biglybtc_attach_queue_observer_v1",
+    "biglybtc_traffic_counter_abi_v3",
+    "biglybtc_read_traffic_counters_v3",
+    "biglybtc_mainline_port_abi_v1",
+    "biglybtc_attach_mainline_port_observer_v1",
+    "biglybtc_refresh_mainline_port_v1",
+    "biglybtc_mainline_identity_abi_v1",
+    "biglybtc_configure_mainline_identity_v1",
+    "biglybtc_read_mainline_identity_v1",
+    "biglybtc_tracker_response_abi_v1",
+    "biglybtc_attach_tracker_response_observer_v1",
+    "biglybtc_mainline_routing_abi_v1",
+    "biglybtc_query_mainline_routing_v1",
+    "biglybtc_private_i2p_owner_abi_v1",
+    "biglybtc_configure_private_i2p_owner_v1",
+    "biglybtc_read_private_i2p_owner_v1",
+    "biglybtc_withdraw_private_i2p_owner_v1",
+    "biglybtc_private_i2p_torrents_abi_v1",
+    "biglybtc_admit_private_i2p_torrent_v1",
+    "biglybtc_revoke_private_i2p_torrent_v1",
+    "biglybtc_mixed_i2p_transport_abi_v1",
+    "biglybtc_configure_mixed_i2p_transport_v1",
+    "biglybtc_admit_mixed_i2p_route_v1",
+    "biglybtc_revoke_mixed_i2p_route_v1",
+    "biglybtc_withdraw_mixed_i2p_transport_v1"
+  ],
+  "expected_total_optional_exports": 39,
+  "old_private_owner_methods_exact": 15,
+  "new_private_owner_methods": 17,
+  "author_builds_or_subjects": false,
+  "artifacts_sha256": {
+    "ADOPTION.txt": "dfec23e5e55cd4e0cc87bc1abbcab14eca8a43d55c1ab2f645833e26fba67d9a",
+    "actual-parent-delta.patch": "a68a0eb4bd49a07fe7a2fcaf39e36364222ea6792fa788900d2807af143ea5ff",
+    "before/include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp": "f4ca76e3c3c2ea6610631ab8a239a5a523bffe859705c7762592ddb48703a4f0",
+    "before/include/libtorrent/aux_/session_impl.hpp": "34ea8b7a7c8884b0127ed062abbecab7b47affd2f866d34184309263fee651af",
+    "before/include/libtorrent/i2p_stream.hpp": "b009d0188777944dd773defe3ea135b8a8bcd51870c76d3c484ba0ecfb7f6a2f",
+    "before/include/libtorrent/session_handle.hpp": "36f4ab5775bd2f3b8f23d0e700a26eccad3664cb38429006478535e765dd5cef",
+    "before/include/libtorrent/torrent.hpp": "3370be9a7fa285f812f3221367635285cb802ffe27d9df8a4cb3902f529d454f",
+    "before/include/libtorrent/tracker_manager.hpp": "ec1284fc04f4ad1866f18d83d987b8b2274d58a9633a8fb2eb8bf6294f90bbad",
+    "before/src/biglybtc_private_i2p_owner.inc": "30f7601647c5e7f610946a6c09d9979595e56bad7c5af3cd3ac3ce4fe4be8df1",
+    "before/src/bt_peer_connection.cpp": "e3cce5e9275932fde01e42e35c6e3123dc01f3b55d412779ac6ae1370b4fd3d8",
+    "before/src/http_connection.cpp": "7cb4bf5a0c4a830f4249ebf908601323b1bd767b9b42ef429198eb950e7cb10e",
+    "before/src/peer_connection.cpp": "625421130d71f0c5847fce6603974248884fc746232c810e1b6c03d27e06b887",
+    "before/src/session_handle.cpp": "415e6868caf0aa882d7c4fae32e3b5acd7fd17764af54a43718d0cc74eaef61e",
+    "before/src/session_impl.cpp": "b8f74ea227dbe2f58850c04061e92430983d9c6c3f47a4a6df6fbc0c8ba4e012",
+    "before/src/torrent.cpp": "d90230256df0f9c69e824c3aba4972071039353973ca68e1b29d5cccf3883c3d",
+    "before/src/tracker_manager.cpp": "8c8ebd4a76603cc6a9eca4d17177078092a4cf7d7532e5e53fa2bb36f9ad235c",
+    "before/test/test_biglybtc_private_i2p_owner.cpp": "22f5004e2a8314b50d0bd78df7fe8b1724cac5e05493b54088757d7670ac953d",
+    "changes.patch": "7ef4cbe16d24480a332a57ccf060148614a90f11e9fe242ff2b0f0d1ddf96276",
+    "parent-delta.patch": "31caadb6b401fb7b1ff3e4a40c832650d83b16cf5968238de290d9186fffa03a",
+    "staging/include/libtorrent/aux_/biglybtc_private_i2p_owner.hpp": "c28d064786ffa5c359ad59142585842063fc59032fb27e5919d5e6984c4d0997",
+    "staging/include/libtorrent/aux_/session_impl.hpp": "5d1f87726dc16fb3b194c32c6918cc66eba539785947c4f528a0af4904cfe755",
+    "staging/include/libtorrent/biglybtc_mixed_i2p_transport.hpp": "623a84bea8258e4046ed60478e220f12f1d19f37cd00b3f7635a6cde2187d0e5",
+    "staging/include/libtorrent/i2p_stream.hpp": "a7d64dec4d179c408685506732eb2de21a9c1f84491bea0336f23cd3ce163ed1",
+    "staging/include/libtorrent/session_handle.hpp": "d5783daf88da4f1544e6773dce9eb69fff400473fbac43c33adae68d407adf99",
+    "staging/include/libtorrent/torrent.hpp": "0febed7435ce91ec16185a6b4d8a97dc32f7c402a45097ba70389fa73c6f91ae",
+    "staging/include/libtorrent/tracker_manager.hpp": "9e3786dba02f3e7a3bc7698e2e6798d030f3602ec5c32e16a6c52d9ea1f64227",
+    "staging/src/biglybtc_mixed_i2p.inc": "c93ecc326f7039f47d4e643da00a7ebc34a0aa45423cce196e0ab63d064bea04",
+    "staging/src/biglybtc_mixed_i2p_api.inc": "02941bd93dd03454bb0df6eee0459f57cfc4838532a8532ad39d62d7f871305d",
+    "staging/src/biglybtc_private_i2p_owner.inc": "d25fcc7e5a5b30cb2470c0ec925b6a97fbdb01f8bcaceac72d7f752751159da7",
+    "staging/src/bt_peer_connection.cpp": "7e4007593a7841d18a22fd9d0588a1ac03762274baede025af05dea0e6738a5f",
+    "staging/src/http_connection.cpp": "49d46ee451a69596ece4e688b82d77eb573cc579e115c381b091c27674e045aa",
+    "staging/src/peer_connection.cpp": "4fe3a5d6caa27b44fedb934ab627d9efcd8d045700af02e760c05f06079a9fd4",
+    "staging/src/session_handle.cpp": "fb872261918f85525393257adf9f29dd04a86ec10b631369293c890160db9886",
+    "staging/src/session_impl.cpp": "ebe829f17fb71d12cd8e02e9c636319f0a94b3ad4a151b5795e088816a5ac26c",
+    "staging/src/torrent.cpp": "f2c4efb35408b3d06dce1b207d6f8a3af4e66d038484d6b79640f08d36a158d8",
+    "staging/src/tracker_manager.cpp": "d0ed7f75e616a7df6579f4d9bea2cac4725fdf7a0a0907be21171d961f884504",
+    "staging/test/test_biglybtc_private_i2p_owner.cpp": "f1389f4ad342a74a67695eeeb454f0fad938a74581a6f03fc3bf8f90bc57fc3b"
+  }
+}

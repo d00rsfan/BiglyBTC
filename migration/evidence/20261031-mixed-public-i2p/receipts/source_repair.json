@@ -1,0 +1,22 @@
+{
+  "status": "REVIEWED_SOURCE_REPAIRS_ADOPTED_AFTER_SAN_JOIN",
+  "changes": [
+    {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/engine/mixed_i2p_transport.cpp",
+      "before_sha256": "60e4fed4f4254fb45403d07d39bbf001c3b05952a4be4d9cac05926a97f091dc",
+      "after_sha256": "598819b0528888004bd585982c50a42c250bc86a4d88363baa871dedbb0764a6",
+      "manifest": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/engine-provider-symbol-binding/manifest.json",
+      "manifest_sha256": "76ae9763303d3abe0664ddfeaa16907271e7cfac05c056b6db4dd3fafa74dbc1"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/mixed_network_host_transfer_probe.cpp",
+      "before_sha256": "71a58d6ac633028ab745b908892b5bc1dd34035dece0f67cc821c5bffd593cf3",
+      "after_sha256": "a8dbd6514e66083611df966c3d11db768c3dec2253451647390850e48bc92144",
+      "manifest": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/amendments/partial-source-paused/manifest.json",
+      "manifest_sha256": "b4e29a477367588c0cc7da76c73071d5af6b867295dbe31e057476924a066cf7"
+    }
+  ],
+  "source_pins_before_sha256": "d40acede834b4aeb0c14201189eafef3b70877c9e6c1d94f0118292b47c0371b",
+  "source_pins_after_sha256": "8a4e8889a80f6c5daeec90cdb877d8e3f9fa2213aef9be4c67839b6d9fb080cc",
+  "SDK_unchanged": true
+}

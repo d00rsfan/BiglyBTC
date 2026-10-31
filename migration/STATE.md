@@ -1,3 +1,3 @@
 # Current native migration state
 
-Public/pure-I2P coexistence qualified at `0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df`. [Review](evidence/20261031-public-i2p-coexistence/REVIEW.md). Whole client in progress; STOP. Mixed-network single torrents unsupported.
+Bounded mixed one-torrent chapter qualified at `90f1d3defd31acacb784cb8cda40d8d06ba6d76d`. [Review](evidence/20261031-mixed-public-i2p/REVIEW.md). Whole client/P07 in progress; STOP. I2P discovery beyond tracker/warmed local-cache scope remains open.

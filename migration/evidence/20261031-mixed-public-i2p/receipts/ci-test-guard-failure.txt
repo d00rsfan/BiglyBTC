@@ -1,0 +1,6 @@
+preview	Run offline unit tests	2026-10-31T18:10:57.6031794Z SKIP   : I2pClassicHostTests::pendingMixedSamAcceptFailurePreservesActualPublicAdmission() Mixed SDK header unavailable
+preview	Run offline unit tests	2026-10-31T18:10:57.6032485Z    Loc: [/home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/i2p_classic_host_tests.cpp(36)]
+preview	Run offline unit tests	2026-10-31T18:10:57.6033147Z FAIL!  : I2pClassicHostTests::publicTcpListenFailureStillPoisonsActualOwner() 'made' returned FALSE. ()
+preview	Run offline unit tests	2026-10-31T18:10:57.6033664Z    Loc: [/home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/i2p_classic_host_tests.cpp(103)]
+preview	Run offline unit tests	2026-10-31T18:10:57.6034226Z SKIP   : I2pClassicHostTests::coordinatorNormalizationUsesBothAnchorsAndRefusedPublicationLeavesThemCurrent() Qualified mixed SDK unavailable; existing source controls still run
+preview	Run offline unit tests	2026-10-31T18:10:57.6034780Z    Loc: [/home/runner/work/BiglyBTC/BiglyBTC/preview/native/tests/i2p_classic_host_tests.cpp(115)]

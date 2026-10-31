@@ -1,8 +1,8 @@
 # Whole Solution C++ Migration Plan
 
-Latest user boundary (2026-10-31): Public + I2P coexistence chapter complete; STOP. Propose the next chapter without starting it. Preserve Java/live profile and main-only milestones.
+Latest user boundary (2026-10-31): mixed Public+I2P single-torrent chapter complete; STOP. Propose I2P discovery next without starting it. Preserve running Java/live profile and main-only milestones.
 
-Qualified native source `0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df`: separate pure Public/I2P rows in one Host/profile, shared queue, independent controls/checkpoints and cumulative payload library totals. [Review](migration/evidence/20261031-public-i2p-coexistence/REVIEW.md). Whole-client parity remains in progress; mixed-network single torrents unsupported.
+Qualified native source `90f1d3defd31acacb784cb8cda40d8d06ba6d76d`: one mixed torrent/storage/queue owner with genuine Public+I2P contribution, source-bound key0 route, independent controls and original counters/restart. [Review](migration/evidence/20261031-mixed-public-i2p/REVIEW.md). Whole client/P07 remain in progress; discovery beyond tracker/warmed local-cache scope is open.
 
 Earlier progress and stop-boundary notes are preserved verbatim in [the historical status archive](migration/history/plan-status-prefix-through-20261028.md); the current stop boundary above is authoritative. The objective, phase definitions and acceptance requirements below are unchanged.
 
@@ -1746,3 +1746,9 @@ This requested section is complete. Stop here; no next chapter, DATA or chat/roo
 Qualified native source `0b7a0801bd63d6a6f925a4c5fd9e7d5ef0fc50df`: separate pure Public/I2P rows in one Host/profile, shared queue, independent controls/checkpoints and cumulative payload library totals. [Review](migration/evidence/20261031-public-i2p-coexistence/REVIEW.md). Whole-client parity remains in progress; mixed-network single torrents unsupported.
 
 STOP. Proposed next: Propose original mixed Public+I2P selection for one torrent, with explicit privacy/admission controls; do not start it.
+
+## 2026-10-31 — Mixed Public and I2P torrent (bounded chapter complete)
+
+Qualified native source `90f1d3defd31acacb784cb8cda40d8d06ba6d76d`: one mixed torrent/storage/queue owner with genuine Public+I2P contribution, source-bound key0 route, independent controls and original counters/restart. [Review](migration/evidence/20261031-mixed-public-i2p/REVIEW.md). Whole client/P07 remain in progress; discovery beyond tracker/warmed local-cache scope is open.
+
+STOP. Proposed next: Propose I2P peer discovery and magnets beyond tracker-only peers and explicitly warmed known local LS2 caches; do not begin it.

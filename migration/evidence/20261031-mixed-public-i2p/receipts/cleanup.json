@@ -1,0 +1,21 @@
+{
+  "policy": "Current joined fixtures auto-cleaned; no archived or rollback builds created",
+  "removed_count": 0,
+  "current_tmp_biglybtc_count": 0,
+  "deployment_cleanup_now_automatic": true,
+  "deployment_cleanup_source": {
+    "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/runtime_deployment_tests.py",
+    "sha256": "95f9eadd96601bfb08c334a2ca2afdf9625da62e3c35906835942a6d84e8d818"
+  },
+  "actual_gcc_san_cleanup": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/gcc-r2/private-cleanup.json",
+      "sha256": "bcd5a73f1c7dbeb378897eec66c7933aef80b1339d33f8598130f103c08e0424"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-network-20261031/acceptance/runs/san-r2/private-cleanup.json",
+      "sha256": "bcd5a73f1c7dbeb378897eec66c7933aef80b1339d33f8598130f103c08e0424"
+    }
+  ],
+  "disk_free_bytes": 14242263040
+}
