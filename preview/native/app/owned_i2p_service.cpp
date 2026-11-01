@@ -306,7 +306,6 @@ engine::RetainedPayloads OwnedI2pService::retainedPayloads()const{return {};}
 bool OwnedI2pService::sourceCurrent()const noexcept{return false;}
 void OwnedI2pService::revoke()noexcept{}
 std::expected<void,storage::Error> OwnedI2pService::close(){return {};}
-}
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startPending(const storage::ProfileLease&,const engine::PendingMagnet&,I2pServiceOptions){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::addMagnet(const engine::PendingMagnet&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::cancelMagnet(const core::TorrentHash&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}
@@ -314,4 +313,5 @@ std::vector<engine::PendingMagnetStatus> OwnedI2pService::pendingMagnets()const{
 std::expected<std::string,storage::Error> OwnedI2pService::takeCompletedMetadata(const core::TorrentHash&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::releaseMagnet(const core::TorrentHash&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::publishPendingMagnet(const core::TorrentHash&,const std::function<std::expected<void,storage::Error>()>&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}
+}
 #endif

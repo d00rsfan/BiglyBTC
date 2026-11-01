@@ -369,10 +369,10 @@ bool OwnedMixedI2pService::sourceCurrent()const noexcept{return false;}
 void OwnedMixedI2pService::revoke()noexcept{}
 std::vector<OwnedMixedI2pService::Observation> OwnedMixedI2pService::observations()const{return {};}
 std::expected<void,storage::Error> OwnedMixedI2pService::close(){return {};}
-}
 std::expected<void,storage::Error> OwnedMixedI2pService::prepareMagnet(const engine::PendingMagnet&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed metadata unavailable"});}
 std::expected<void,storage::Error> OwnedMixedI2pService::bindMetadata(std::shared_ptr<const engine::PendingMetadataSource>){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed metadata unavailable"});}
 std::expected<void,storage::Error> OwnedMixedI2pService::attachMetadata(std::shared_ptr<const engine::PendingMetadataSource>){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed metadata unavailable"});}
 std::expected<void,storage::Error> OwnedMixedI2pService::removeMetadata(const core::TorrentHash&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed metadata unavailable"});}
 std::expected<void,storage::Error> OwnedMixedI2pService::publishPendingMagnet(const core::TorrentHash&,const std::function<std::expected<void,storage::Error>()>&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed metadata unavailable"});}
+}
 #endif
