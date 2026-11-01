@@ -3,6 +3,7 @@
 #include "../adapters/library_commands.hpp"
 
 #include <libtorrent/hasher.hpp>
+#include <libtorrent/torrent_flags.hpp>
 
 #include <array>
 #include <cerrno>
@@ -329,6 +330,131 @@ int main() {
       const auto unsupported = engine::attachPendingMagnetDestination(*area.lease, legacy->front(), area.destination, normal());
       CHECK(!unsupported && unsupported.error().code == Code::Unsupported);
       CHECK(read(area.profile / "biglybt.config") == before); area.noNormalDownload();
+    });
+    run("explicit I2P pending context survives recovery and journaled completion", [] {
+      Area area;const auto network=normal();
+      auto intent=engine::parseMagnetIntent(uri()+"&net=I2P",area.destination,true,network,engine::MagnetNetwork::I2p);CHECK(intent);
+      CHECK(intent->network==engine::MagnetNetwork::I2p&&intent->networks==std::vector<std::string>{"I2P"});
+      CHECK(!engine::parseMagnetIntent(intent->uri,area.destination,true,network)); // Ordinary Public entry stays strict.
+      auto pending=engine::queuePendingMagnet(*area.lease,*intent,network,engine::MagnetNetwork::I2p);CHECK(pending);
+      area.noNormalDownload();
+      const auto saved=read(area.profile/"biglybt.config");auto recovered=engine::readPendingMagnets(*area.lease,network,engine::MagnetNetwork::I2p);CHECK(recovered&&recovered->size()==1);
+      auto publicOnly=engine::readPendingMagnets(*area.lease,network);CHECK(publicOnly&&publicOnly->empty());CHECK(read(area.profile/"biglybt.config")==saved);
+      CHECK(recovered->front().requested==pending->requested&&recovered->front().sourceEntry==pending->sourceEntry);
+      auto tampered=*pending;tampered.uri=uri()+"&dn=forged&net=I2P";CHECK(!engine::validatePendingMagnet(*area.lease,tampered,network));
+      CHECK(engine::validatePendingMagnet(*area.lease,*pending,network));
+      auto parameters=engine::metadataOnlyParameters(*pending,network,area.root/"virtual-metadata");CHECK(parameters&&!parameters->ti&&parameters->peers.empty()&&parameters->url_seeds.empty());
+      CHECK(parameters->flags&lt::torrent_flags::upload_mode);CHECK(parameters->flags&lt::torrent_flags::disable_dht);
+      CHECK(!engine::parseMagnetIntent(uri()+"&net=I2P&x.pe=127.0.0.1:6881",area.destination,true,network,engine::MagnetNetwork::I2p));
+      CHECK(!engine::parseMagnetIntent(uri()+"&net=Tor",area.destination,true,network,engine::MagnetNetwork::I2p));
+      const auto completed=engine::completePendingMagnet(*area.lease,*pending,area.actual,network);CHECK(completed&&*completed==pending->hash);
+      const auto state=document(area.profile/"active"/(pending->hash.hex()+".dat"));const auto* attrs=state.find("attributes");CHECK(attrs);
+      const auto* networks=attrs->find("networks");CHECK(networks&&networks->type==core::Node::Type::List&&networks->children.size()==1&&networks->children.front().bytes=="I2P");
+      const auto inventory=document(area.profile/"downloads.config");const auto library=core::readLibrary(inventory);CHECK(library&&library->downloads.size()==1&&library->downloads.front().startup==core::StartupState::Stopped);
+      CHECK(!fs::exists(area.destination));
+    });
+    run("mixed pending original choice order is retained and cannot widen pure context", [] {
+      Area area;const auto network=normal();const auto value=uri()+"&net=I2P&net=Public";
+      const auto defaultPublic=engine::parseMagnetIntent(uri(),area.destination,false,network,engine::MagnetNetwork::PublicAndI2p);CHECK(defaultPublic&&defaultPublic->network==engine::MagnetNetwork::Public);
+      const auto explicitPure=engine::parseMagnetIntent(uri()+"&net=I2P",area.destination,false,network,engine::MagnetNetwork::PublicAndI2p);CHECK(explicitPure&&explicitPure->network==engine::MagnetNetwork::I2p);
+      auto intent=engine::parseMagnetIntent(value,area.destination,false,network,engine::MagnetNetwork::PublicAndI2p);CHECK(intent);
+      CHECK((intent->networks==std::vector<std::string>{"I2P","Public"}));
+      CHECK(!engine::parseMagnetIntent(value,area.destination,false,network,engine::MagnetNetwork::I2p));
+      auto pending=engine::queuePendingMagnet(*area.lease,*intent,network,engine::MagnetNetwork::PublicAndI2p);CHECK(pending);
+      const auto recovered=engine::readPendingMagnets(*area.lease,network,engine::MagnetNetwork::PublicAndI2p);CHECK(recovered&&recovered->size()==1&&recovered->front().networks==intent->networks);
+      CHECK(engine::completePendingMagnet(*area.lease,*pending,area.actual,network));
+      const auto state=document(area.profile/"active"/(pending->hash.hex()+".dat"));const auto* networks=state.find("attributes")->find("networks");
+      CHECK(networks&&networks->children.size()==2&&networks->children[0].bytes=="Public"&&networks->children[1].bytes=="I2P"); // Original storage policy canonical pair, raw args retain input order.
+    });
+    run("trackerless private completion retains original decentralized marker and explicit sources", [] {
+      for(const auto context:{engine::MagnetNetwork::I2p,engine::MagnetNetwork::PublicAndI2p}){
+        for(bool inherited:{false,true}){
+          Area area;const auto network=normal();const auto args=context==engine::MagnetNetwork::I2p?"&net=I2P":"&net=Public&net=I2P";
+          auto intent=engine::parseMagnetIntent(uri()+args,area.destination,true,network,context);CHECK(intent);
+          auto saved=engine::queuePendingMagnet(*area.lease,*intent,network,context);CHECK(saved);
+          auto actual=document(area.actual);const auto info=raw(actual,actual.find("info"));
+          if(inherited){CHECK(actual.replaceValue("attributes","d11:peersourcesl3:DHTe6:future4:keepe"));}
+          CHECK(actual.replaceValue("future",b("untouched")));write(area.actual,actual.serialize());
+          CHECK(engine::completePendingMagnet(*area.lease,*saved,area.actual,network));
+          const auto state=document(area.profile/"active"/(saved->hash.hex()+".dat"));const auto archive=document(area.profile/"torrents"/(saved->hash.hex()+".torrent"));
+          CHECK(raw(state,state.find("info"))==info&&raw(archive,archive.find("info"))==info);
+          CHECK(state.find("announce")&&state.find("announce")->bytes=="dht://"+saved->hash.hex()+".dht/announce");
+          CHECK(state.find("announce-list")->children.size()==1&&state.find("announce-list")->children.front().children.size()==1);
+          CHECK(state.find("future")->bytes=="untouched");const auto* attrs=state.find("attributes");CHECK(attrs);
+          const auto* sources=attrs->find("peersources");CHECK(sources&&sources->children.size()==1&&sources->children.front().bytes==(inherited?"DHT":"Tracker"));
+          if(inherited){CHECK(attrs->find("future")->bytes=="keep");}CHECK(!fs::exists(area.destination));
+        }
+      }
+    });
+    run("I2P pending forced intent commits exact original force in ordinary import", [] {
+      Area area;const auto network=normal();auto intent=engine::parseMagnetIntent(uri()+"&net=I2P",area.destination,false,network,engine::MagnetNetwork::I2p);CHECK(intent);intent->forceStart=true;
+      auto saved=engine::queuePendingMagnet(*area.lease,*intent,network,engine::MagnetNetwork::I2p);CHECK(saved&&saved->forceStart&&!saved->stopped);
+      auto original=core::Document::parse(saved->sourceEntry);CHECK(original&&original->find("ss")->integer==1);
+      CHECK(engine::completePendingMagnet(*area.lease,*saved,area.actual,network));const auto inventory=document(area.profile/"downloads.config");const auto library=core::readLibrary(inventory);
+      CHECK(library&&library->downloads.size()==1&&library->downloads.front().forceStart&&library->downloads.front().startup==core::StartupState::Waiting);
+      const auto state=document(area.profile/"active"/(saved->hash.hex()+".dat"));CHECK(state.find("attributes")->find("networks")->children.front().bytes=="I2P");CHECK(!fs::exists(area.destination));
+    });
+    run("implicit pure args recover as original I2P without Native network context", [] {
+      Area area;const auto network=normal();const auto submitted=uri()+"&dn=Original+name&future=%2Bopaque";
+      const std::string opaque="d6:opaque3:"+std::string("\0\xffX",3)+'e';write(area.profile/"biglybt.config",opaque);
+      auto input=engine::parseMagnetIntent(submitted,area.destination,false,network,engine::MagnetNetwork::I2p);CHECK(input);input->forceStart=true;
+      auto queued=engine::queuePendingMagnet(*area.lease,*input,network,engine::MagnetNetwork::I2p);CHECK(queued);
+      CHECK(queued->uri==submitted+"&net=I2P"&&queued->forceStart&&queued->network==engine::MagnetNetwork::I2p);
+      CHECK(engine::validatePendingMagnet(*area.lease,*queued,network));
+      auto config=document(area.profile/"biglybt.config");const auto* map=config.find("MagnetPlugin.active.magnets");CHECK(map&&map->children.size()==2);
+      const auto& row=map->children[1];const auto* other=row.find("other_metadata");CHECK(other);
+      CHECK(row.find("args")->bytes==std::string_view(queued->uri).substr(8));CHECK(other->find("BiglyBTC.pending.submitted_uri")->bytes==submitted);
+      auto before=core::Document::parse(opaque);CHECK(before);CHECK(raw(config,config.find("opaque"))==raw(*before,before->find("opaque")));
+      // Use only actual original-shaped args, with Public as the ordinary
+      // default/capability ceiling. No Native context/metadata contributes.
+      const auto recovered=engine::parseMagnetIntent("magnet:?"+std::string(row.find("args")->bytes),area.destination,false,network,engine::MagnetNetwork::PublicAndI2p);
+      CHECK(recovered&&recovered->network==engine::MagnetNetwork::I2p&&recovered->networks==std::vector<std::string>{"I2P"});
+      CHECK(!engine::parseMagnetIntent(recovered->uri,area.destination,false,network));
+      const auto key=std::string(map->children[0].bytes);auto originalRow=core::Document::parse(raw(config,&row));CHECK(originalRow);CHECK(originalRow->replaceValue("other_metadata","de"));
+      CHECK(config.replaceValue("MagnetPlugin.active.magnets","d"+b(key)+originalRow->serialize()+'e'));write(area.profile/"biglybt.config",config.serialize());
+      const auto original=engine::readPendingMagnets(*area.lease,network,engine::MagnetNetwork::PublicAndI2p);CHECK(original&&original->size()==1&&original->front().network==engine::MagnetNetwork::I2p);
+      const auto publicRows=engine::readPendingMagnets(*area.lease,network);CHECK(publicRows&&publicRows->empty());area.noNormalDownload();
+    });
+    run("explicit original network args and mixed no-net default remain byte exact", [] {
+      for(int kind=0;kind<3;++kind){
+        Area area;const auto network=normal();const auto submitted=uri()+(kind==0?"&net=I2P":kind==1?"&net=I2P&net=Public":"");
+        const auto context=kind==0?engine::MagnetNetwork::I2p:engine::MagnetNetwork::PublicAndI2p;
+        auto input=engine::parseMagnetIntent(submitted,area.destination,true,network,context);CHECK(input);
+        auto queued=engine::queuePendingMagnet(*area.lease,*input,network,context);CHECK(queued&&queued->uri==submitted);
+        const auto config=document(area.profile/"biglybt.config");const auto* map=config.find("MagnetPlugin.active.magnets");CHECK(map);const auto& row=map->children[1];
+        CHECK(row.find("args")->bytes==std::string_view(submitted).substr(8));CHECK(!row.find("other_metadata")->find("BiglyBTC.pending.submitted_uri"));
+        CHECK(queued->network==(kind==0?engine::MagnetNetwork::I2p:kind==1?engine::MagnetNetwork::PublicAndI2p:engine::MagnetNetwork::Public));
+      }
+    });
+    run("legacy implicit pure attachment preserves unknowns and refuses reserved conflicts", [] {
+      for(bool conflict:{false,true}){
+        Area area;const auto network=normal();const auto submitted=uri()+"&dn=Keep+raw";
+        auto input=engine::parseMagnetIntent(submitted,area.destination,true,network,engine::MagnetNetwork::I2p);CHECK(input);
+        CHECK(engine::queuePendingMagnet(*area.lease,*input,network,engine::MagnetNetwork::I2p));
+        auto config=document(area.profile/"biglybt.config");const auto* map=config.find("MagnetPlugin.active.magnets");CHECK(map);
+        const auto key=std::string(map->children[0].bytes);auto row=core::Document::parse(raw(config,&map->children[1]));CHECK(row);
+        CHECK(row->replaceValue("args",b(std::string_view(submitted).substr(8))));CHECK(row->replaceValue("future","l3:rawi-7ee"));
+        std::string other="d"+b("BiglyBTC.pending.networks")+"l3:I2Pe"+b("opaque")+b(std::string("\0\xffM",3));
+        if(conflict){other+=b("BiglyBTC.pending.submitted_uri")+b("foreign reserved bytes");}other+='e';CHECK(row->replaceValue("other_metadata",other));
+        CHECK(config.replaceValue("MagnetPlugin.active.magnets","d"+b(key)+row->serialize()+'e'));const auto before=config.serialize();write(area.profile/"biglybt.config",before);
+        const auto legacy=engine::readPendingMagnets(*area.lease,network,engine::MagnetNetwork::PublicAndI2p);
+        if(conflict){CHECK(!legacy&&legacy.error().code==Code::Conflict);CHECK(read(area.profile/"biglybt.config")==before);continue;}
+        CHECK(legacy&&legacy->size()==1&&!legacy->front().destination);
+        // Edits own separate Node.origin buffers; raw offsets on the mutated
+        // row are not relative to row.originalBytes(). Pin the actual persisted
+        // pre-attachment bytes before comparing unknown values below.
+        const auto beforeRow=core::Document::parse(legacy->front().sourceEntry);CHECK(beforeRow);
+        CHECK(raw(*beforeRow,beforeRow->find("future"))=="l3:rawi-7ee");
+        CHECK(raw(*beforeRow,beforeRow->find("other_metadata")->find("opaque"))==b(std::string("\0\xffM",3)));
+        auto attached=engine::attachPendingMagnetDestination(*area.lease,legacy->front(),area.destination,network,engine::MagnetNetwork::I2p);CHECK(attached&&attached->uri==submitted+"&net=I2P");
+        const auto after=core::Document::parse(attached->sourceEntry);CHECK(after);
+        CHECK(raw(*after,after->find("future"))==raw(*beforeRow,beforeRow->find("future")));
+        CHECK(raw(*after,after->find("other_metadata")->find("opaque"))==raw(*beforeRow,beforeRow->find("other_metadata")->find("opaque")));
+        CHECK(after->find("other_metadata")->find("BiglyBTC.pending.submitted_uri")->bytes==submitted);
+        const auto primary=read(area.profile/"biglybt.config"),backup=read(area.profile/"biglybt.config.bak");
+        CHECK(engine::attachPendingMagnetDestination(*area.lease,*attached,area.destination,network,engine::MagnetNetwork::I2p));
+        CHECK(read(area.profile/"biglybt.config")==primary&&read(area.profile/"biglybt.config.bak")==backup);area.noNormalDownload();
+      }
     });
     std::cout << families << " magnet-intake families, " << assertions << " assertions passed\n";
     return 0;

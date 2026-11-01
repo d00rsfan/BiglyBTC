@@ -117,6 +117,27 @@ Result<void> verifyData(SigningType type,View publicKey,View signature,View data
   }
   return verify(type,publicKey,signature,data);
 }
+Result<Bytes> encode1(View sender,View privateKey,View payload){
+  auto from=decodeDestination(sender);if(!from){return std::unexpected(from.error());}
+  const auto overhead=sender.size()+signatureSize(from->signingType);
+  if(overhead>MaximumWireBytes||payload.size()>MaximumWireBytes-overhead){return error(ErrorCode::TooLarge,"Legacy datagram exceeds maker bound");}
+  auto pub=signingPublicKey(from->signingType,privateKey);if(!pub){return std::unexpected(pub.error());}
+  if(*pub!=from->signingPublicKey){return error(ErrorCode::KeyMismatch,"Legacy datagram signing key mismatch");}
+  Hash digest{};View preimage=payload;
+  if(from->signingType==SigningType::DsaSha1){auto d=hash(payload);if(!d){return std::unexpected(d.error());}digest=*d;preimage=digest;}
+  auto sig=sign(from->signingType,*pub,privateKey,preimage);if(!sig){return std::unexpected(sig.error());}
+  Bytes wire(sender.begin(),sender.end());wire.insert(wire.end(),sig->begin(),sig->end());wire.insert(wire.end(),payload.begin(),payload.end());return wire;
+}
+Result<Datagram1> decode1(View wire){
+  if(wire.size()>MaximumWireBytes){return error(ErrorCode::TooLarge,"Legacy datagram exceeds bounded input");}
+  auto from=destination(wire,false);if(!from){return std::unexpected(from.error());}
+  const auto offset=from->wire.size(),size=signatureSize(from->signingType);
+  if(wire.size()<offset+size){return error(ErrorCode::InvalidFormat,"Legacy datagram signature truncated");}
+  const auto payload=wire.subspan(offset+size);Hash digest{};View preimage=payload;
+  if(from->signingType==SigningType::DsaSha1){auto d=hash(payload);if(!d){return std::unexpected(d.error());}digest=*d;preimage=digest;}
+  auto checked=verify(from->signingType,from->signingPublicKey,wire.subspan(offset,size),preimage);if(!checked){return std::unexpected(checked.error());}
+  return Datagram1{std::move(*from),Bytes(payload.begin(),payload.end())};
+}
 Result<Bytes> encode2(View sender,View privateKey,const Hash& recipient,View payload){
   auto from=decodeDestination(sender);if(!from){return std::unexpected(from.error());}const auto overhead=sender.size()+2+signatureSize(from->signingType);
   if(payload.size()>MaximumWireBytes-overhead){return error(ErrorCode::TooLarge,"I2P Datagram2 exceeds maker bound");}

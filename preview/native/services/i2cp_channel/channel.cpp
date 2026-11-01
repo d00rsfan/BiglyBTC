@@ -29,6 +29,7 @@ struct InitialChannel::Impl {
   QTimer streamTimer;
   QTimer lookupTimer;
   QTimer effectTimer;
+  QTimer dhtTimer;
   FrameDecoder decoder;
   Options options;
   QByteArray hello;
@@ -55,7 +56,7 @@ struct InitialChannel::Impl {
   Clock::time_point dateObserved{};
   bool notificationQueued=false,drainQueued=false,reading=false,lostPending=false;
 
-  explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner),statusTimer(owner),receiveTimer(owner),trackerTimer(owner),streamTimer(owner),lookupTimer(owner),effectTimer(owner){
+  explicit Impl(InitialChannel* owner):q(owner),socket(owner),timer(owner),statusTimer(owner),receiveTimer(owner),trackerTimer(owner),streamTimer(owner),lookupTimer(owner),effectTimer(owner),dhtTimer(owner){
     socket.setProxy(QNetworkProxy::NoProxy); // Local I2CP control, never app proxy.
     socket.setReadBufferSize(static_cast<qint64>(MaximumFrameBytes));
     timer.setSingleShot(true);
@@ -65,6 +66,7 @@ struct InitialChannel::Impl {
     streamTimer.setSingleShot(true);
     lookupTimer.setSingleShot(true);
     effectTimer.setSingleShot(true);
+    dhtTimer.setSingleShot(true);dhtTimer.setTimerType(Qt::PreciseTimer);
   }
   ~Impl(){stopIo();}
   bool active()const{return state==State::Connecting||state==State::WaitingDate||state==State::DateReceived||state==State::Creating||state==State::SessionCreated||state==State::Reconfiguring;}
@@ -76,7 +78,7 @@ struct InitialChannel::Impl {
     for(std::size_t i=0;i<3;++i){const auto dot=value.find('.');const auto part=value.substr(0,dot);if(part.empty()){return false;}const auto parsed=std::from_chars(part.data(),part.data()+part.size(),version[i]);if(parsed.ec!=std::errc{}||parsed.ptr!=part.data()+part.size()){return false;}if(i<2){if(dot==std::string_view::npos){return false;}value.remove_prefix(dot+1);}}
     return version[0]>0||version[1]>9||(version[1]==9&&version[2]>=38);
   }
-  void clearSession(){clearSourceEffects();clearLookup();clearStream();clearTracker();clearReceive();session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;statusPending=false;datagram.reset();datagramMessageId.reset();statusReplies=true;pendingStatusReplies=true;statusTimer.stop();}
+  void clearSession(){clearDht();clearSourceEffects();clearLookup();clearStream();clearTracker();clearReceive();session.reset();acceptedOptions.clear();pendingOptions.clear();acceptedDestination.clear();pendingDestination.clear();revision=0;leaseSigner.reset();leaseKey.reset();leaseSubmission.reset();lastRawLeasePublished=0;waitingFirstLease=false;statusPending=false;datagram.reset();datagramMessageId.reset();statusReplies=true;pendingStatusReplies=true;statusTimer.stop();}
   void stopIo(){
     timer.stop();QObject::disconnect(&timer,nullptr,q,nullptr);
     statusTimer.stop();QObject::disconnect(&statusTimer,nullptr,q,nullptr);
@@ -85,6 +87,7 @@ struct InitialChannel::Impl {
     streamTimer.stop();QObject::disconnect(&streamTimer,nullptr,q,nullptr);
     lookupTimer.stop();QObject::disconnect(&lookupTimer,nullptr,q,nullptr);
     effectTimer.stop();QObject::disconnect(&effectTimer,nullptr,q,nullptr);
+    dhtTimer.stop();QObject::disconnect(&dhtTimer,nullptr,q,nullptr);
     QObject::disconnect(&socket,nullptr,q,nullptr);socket.abort();
   }
   void notify(){
@@ -179,6 +182,7 @@ struct InitialChannel::Impl {
     }else{fail(Failure::UnexpectedMessage);return;}
     const bool initial=state==State::Creating;
     state=State::SessionCreated;timer.stop();
+    if(dhtQueryPort){flushDhtWrite();}
     if(initial&&leaseSigner){waitingFirstLease=true;expires=Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds);timer.start(options.deadlineMilliseconds);}
     notify();
   }
@@ -361,6 +365,7 @@ struct InitialChannel::Impl {
 #include "managed_streams.inc"
 #include "tracker.inc"
 #include "owned_lookup.inc"
+#include "dht.inc"
 #include "receive.inc"
   void drain(){
     if(reading||!active()||state==State::Connecting||expired()){return;}
@@ -446,9 +451,10 @@ struct InitialChannel::Impl {
     QObject::connect(&receiveTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{receiveDeadline();}catch(...){fail(Failure::Resources);}}});
     QObject::connect(&trackerTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{trackerDeadline();}catch(...){fail(Failure::Resources);}}});
     QObject::connect(&effectTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{if(sourceEffectPending){if(Clock::now()>=sourceEffectEnd){fail(Failure::Deadline);}else{effectTimer.start(static_cast<int>(std::max<std::int64_t>(1,std::chrono::duration_cast<std::chrono::milliseconds>(sourceEffectEnd-Clock::now()).count())));}}}catch(...){fail(Failure::Resources);}}});
+    QObject::connect(&dhtTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{dhtDeadline();}catch(...){fail(Failure::Resources);}}});
     QObject::connect(&lookupTimer,&QTimer::timeout,q,[this,at]{if(current(at)){try{lookupDeadline();}catch(...){fail(Failure::Resources);}}});
     QObject::connect(&streamTimer,&QTimer::timeout,q,[this,at]{if(current(at)){flushStream();}});
-    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){if(sourceAuthority&&!managedStreams&&leaseSubmission&&socket.bytesToWrite()==0){static_cast<void>(effectReady());}if(sourceAuthority&&(sourceLease||state==State::Connecting)&&effectReady()){resumeSourceEffects();}if(current(at)&&managedLease){(void)flushManagedLease();}if(current(at)){flushReceiveControls();flushTrackerWrite();flushOwnedLookup();flushStream();}}});
+    QObject::connect(&socket,&QTcpSocket::bytesWritten,q,[this,at](qint64){if(current(at)){if(sourceAuthority&&!managedStreams&&leaseSubmission&&socket.bytesToWrite()==0){static_cast<void>(effectReady());}if(sourceAuthority&&(sourceLease||state==State::Connecting)&&effectReady()){resumeSourceEffects();}if(current(at)&&managedLease){(void)flushManagedLease();}if(current(at)){flushReceiveControls();flushTrackerWrite();flushOwnedLookup();flushDhtWrite();flushStream();}}});
     state=State::Connecting;expires=Clock::now()+std::chrono::milliseconds(next.deadlineMilliseconds);
     timer.start(next.deadlineMilliseconds);notify();
     if(!current(at)||state!=State::Connecting){return false;}
@@ -489,6 +495,17 @@ ConfigResult<std::uint32_t> InitialChannel::submitClaimedDatagram3(View recipien
 bool InitialChannel::cancelDatagram(std::uint32_t nonce){if(!impl_->onThread()||!impl_->statusPending||!impl_->datagram||impl_->datagram->nonce!=nonce){return false;}impl_->localDatagram(DatagramPhase::LocalCancelled);return true;}
 bool InitialChannel::datagramPending()const noexcept{return impl_->statusPending;}
 std::optional<InitialChannel::DatagramObservation> InitialChannel::datagramObservation()const noexcept{return sessionId()?impl_->datagram:std::nullopt;}
+bool InitialChannel::enableDhtDatagrams(std::uint16_t port){try{return impl_->enableDht(port);}catch(...){impl_->fail(Failure::Resources);return false;}}
+void InitialChannel::disableDhtDatagrams(){try{impl_->disableDht();}catch(...){impl_->fail(Failure::Resources);}}
+std::uint64_t InitialChannel::dhtScopeGeneration()const noexcept{try{return impl_->onThread()&&impl_->dhtReceives()?impl_->dhtEpoch:0;}catch(...){return 0;}}
+ConfigResult<std::uint64_t> InitialChannel::submitDhtDatagram(View to,View data,bool repliable,std::uint16_t port,unsigned timeout){return impl_->sendDht(to,data,repliable,port,timeout);}
+bool InitialChannel::cancelDhtDatagram(std::uint64_t ticket){try{return impl_->cancelDht(ticket);}catch(...){impl_->fail(Failure::Resources);return false;}}
+std::optional<InitialChannel::DhtDispatch> InitialChannel::takeDhtDispatch(){if(!impl_->onThread()||impl_->dhtDispatches.empty()){return {};}auto result=impl_->dhtDispatches.front();impl_->dhtDispatches.pop_front();return result;}
+std::optional<InitialChannel::DhtDatagram> InitialChannel::takeDhtDatagram(){
+  if(!impl_->onThread()||impl_->dhtReceived.empty()){return {};}
+  if(!impl_->dhtReceives()){impl_->dhtReceived.clear();impl_->dhtBytes=0;return {};}
+  auto out=std::move(impl_->dhtReceived.front());impl_->dhtReceived.pop_front();impl_->dhtBytes-=out.payload.size()+(out.sender?out.sender->wire.size()+out.sender->signingPublicKey.size()+32:0);return out;
+}
 bool InitialChannel::enableDatagramReceiver(){return impl_->enableReceive();}
 void InitialChannel::disableDatagramReceiver(){impl_->disableReceive();}
 std::optional<InitialChannel::ReceivedDatagram> InitialChannel::takeReceivedDatagram(){return impl_->takeReceive();}
@@ -525,6 +542,13 @@ bool InitialChannel::releaseStream(std::uint64_t operation){if(!impl_->onThread(
 ConfigResult<std::uint64_t> InitialChannel::lookupDestination(const Hash& hash,unsigned timeout){return impl_->startOwnedLookup(hash,timeout);}
 bool InitialChannel::cancelDestinationLookup(std::uint64_t id){if(!impl_->onThread()||!impl_->ownedLookup||impl_->ownedLookup->operation!=id){return false;}impl_->finishOwnedLookup(LookupPhase::Cancelled);return true;}
 std::optional<InitialChannel::LookupObservation> InitialChannel::destinationLookupObservation()const{return impl_->ownedLookupResult;}
+std::optional<InitialChannel::LookupObservation> InitialChannel::destinationLookupObservation(std::uint64_t operation)const{
+  if(!impl_->onThread()||!operation){return {};}
+  if(impl_->ownedLookupResult&&impl_->ownedLookupResult->operation==operation){return impl_->ownedLookupResult;}
+  const auto& history=impl_->ownedLookupHistory;
+  const auto found=std::find_if(history.begin(),history.end(),[operation](const auto& value){return value.operation==operation;});
+  return found==history.end()?std::nullopt:std::optional(*found);
+}
 std::optional<Destination> InitialChannel::ownedLeaseDestination()const{if(!impl_->onThread()||!impl_->session||!impl_->leaseSigner||!impl_->leaseCurrent()||impl_->state!=State::SessionCreated){return {};}return *impl_->leaseSigner->destination();}
 std::optional<Destination> InitialChannel::managedStreamPeer(std::uint64_t id)const{if(!impl_->onThread()||!impl_->session||!impl_->leaseCurrent()||!impl_->managedStreams){return {};}const auto* peer=impl_->managedStreams->peer(id);return peer?std::optional(*peer):std::nullopt;}
 

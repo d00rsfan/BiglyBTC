@@ -1,0 +1,26 @@
+{
+  "status": "REVIEWED_SOURCE_ONLY_NOT_RUNTIME_APPROVAL",
+  "review_author": "/root/error_codec",
+  "root_authorisation": "Root accepted final parsed-marker child f9afc and explicitly authorised FAILED_NOT_APPROVED current-cache transition; independent artifact approval remains root-owned.",
+  "parent_qualified_record_sha256": "866b43970dfc5883a2a7f7f0f861a6d9a4704b3579c8a6eb354fb0902843896d",
+  "capsule_sha256": "f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6",
+  "actual_current_delta": {
+    "src/session_impl.cpp": {
+      "before_path": "current-before/src/session_impl.cpp",
+      "before_sha256": "2419d09ce8032bd188345e0f45ad287c25708ab2c9bdc0b810f48cecbe6afc29",
+      "after_path": "staging/src/session_impl.cpp",
+      "after_sha256": "05801e9fd68de1e1671f90bec29990b2fa7f301a93e8e6fa56f511572dbc564b"
+    },
+    "test/test_biglybtc_private_i2p_owner.cpp": {
+      "before_path": "current-before/test/test_biglybtc_private_i2p_owner.cpp",
+      "before_sha256": "6e4ae9d0e7dc221d02b359be11b1d33aebb9ee78dc9e75014854b04c505ddcba",
+      "after_path": "staging/test/test_biglybtc_private_i2p_owner.cpp",
+      "after_sha256": "64670d1f5ec520ca913ad232ccfda458a12804ed7a5772f9dfb36a01b4b2e57f"
+    }
+  },
+  "production_byte_exact_qualified_capacity": true,
+  "old_private_methods_exact": 22,
+  "expected_private_methods": 23,
+  "required_exports": 42,
+  "failed_attempt_input_sha256": "cf3aaf3537004f981da3aeedbc3e5c7cfc993792afc515178356a4495a03cc41"
+}

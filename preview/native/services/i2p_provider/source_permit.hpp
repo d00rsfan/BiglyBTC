@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "profile_source.hpp"
+#include "pending_magnet_source.hpp"
 #include <QCoreApplication>
 #include <QEvent>
 #include <QObject>
@@ -18,6 +19,7 @@ public:
   enum class Phase {Idle,Requested,Reading,Ready,Executing,Consumed,Failed,Stopped};
   static QEvent::Type wakeEvent(){static const auto type=[] {const auto value=QEvent::registerEventType();if(value<QEvent::User){throw std::runtime_error("No owned I2P source event type");}return static_cast<QEvent::Type>(value);}();return type;}
   explicit SourcePermit(std::shared_ptr<ProfileSource> source,QObject* receiver):source_(std::move(source)),receiver_(receiver),worker_([this](std::stop_token stop){run(stop);}){}
+  explicit SourcePermit(std::shared_ptr<PendingMagnetSource> source,QObject* receiver):SourcePermit(source->source_,receiver){}
   ~SourcePermit(){stop();join();}
   SourcePermit(const SourcePermit&)=delete;
   bool request(){std::lock_guard lock(mutex_);if(phase_!=Phase::Idle){return false;}phase_=Phase::Requested;changed_.notify_all();return true;}

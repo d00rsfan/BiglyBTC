@@ -97,6 +97,18 @@ public:
   void disableDatagramReceiver();
   [[nodiscard]] std::optional<ReceivedDatagram> takeReceivedDatagram();
   [[nodiscard]] ReceiverObservation receiverObservation()const noexcept;
+  // One explicit legacy DHT port pair; no general raw18 admission. Query port
+  // Q and reply Q+1 are disjoint from the existing tracker local port9000.
+  struct DhtDatagram {std::uint32_t messageId=0;std::uint16_t fromPort=0,toPort=0;std::optional<Destination> sender;Bytes payload;};
+  struct DhtDispatch {std::uint64_t ticket=0;bool written=false;}; // socket enqueue only
+  bool enableDhtDatagrams(std::uint16_t queryPort);
+  void disableDhtDatagrams();
+  std::uint64_t dhtScopeGeneration()const noexcept; // Passive active epoch;0 means disabled.
+  [[nodiscard]] ConfigResult<std::uint64_t> submitDhtDatagram(View recipient,View payload,
+      bool repliable,std::uint16_t toPort,unsigned timeoutMilliseconds=30000);
+  bool cancelDhtDatagram(std::uint64_t ticket);
+  [[nodiscard]] std::optional<DhtDatagram> takeDhtDatagram();
+  [[nodiscard]] std::optional<DhtDispatch> takeDhtDispatch();
   // Explicit hash-addressed UDP tracker only, no DNS/backend selection.
   // One operation; a raw reply never authenticates its purported sender.
   [[nodiscard]] ConfigResult<std::uint64_t> scrapeTracker(const TrackerRequest&);
@@ -109,6 +121,9 @@ public:
   [[nodiscard]] ConfigResult<std::uint64_t> lookupDestination(const Hash&,unsigned deadlineMilliseconds=30000);
   bool cancelDestinationLookup(std::uint64_t);
   [[nodiscard]] std::optional<LookupObservation> destinationLookupObservation()const;
+  // Owning current/terminal result only; the last eight terminal operations
+  // survive a subsequent lookup. Session reset clears them; never authority.
+  [[nodiscard]] std::optional<LookupObservation> destinationLookupObservation(std::uint64_t operation)const;
   // Public identity only, observed from the consumed owned signer/current LS2.
   [[nodiscard]] std::optional<Destination> ownedLeaseDestination()const;
   [[nodiscard]] std::optional<Destination> managedStreamPeer(std::uint64_t)const;
@@ -150,6 +165,7 @@ signals:
   void leaseSetSubmitted();
   void datagramChanged(); // Coalesced latest observation, not a result queue.
   void receiverChanged(); // Queued current bounded queue/drop observation.
+  void dhtChanged(); // Coalesced owning DHT queues only; separate tracker authority.
   void trackerChanged(); // Queued latest same-generation operation observation.
   void sourceEffectRequested(); // Queued coalesced need for a fresh worker permit.
   void destinationLookupChanged();

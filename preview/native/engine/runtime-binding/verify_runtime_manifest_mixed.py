@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Closed optional mixed39 role/source/SDK proof; never runs a target."""
+"""Closed optional discovery42 role/source/SDK proof; never runs a target."""
 import argparse, hashlib, importlib.util, json, re, sys
 from pathlib import Path
 import xml.etree.ElementTree as ET
 # CLOSED until root reviews the actual artifact/controls and inserts exact pins.
-MANIFEST_SHA='03694052165fab605b7f9a8c30ec9ddbb806b0d94a7eef642453f1341d838fe9'
-APPROVAL_SHA='c47c93f8f2e90ef573d4e79ac7c8fb14589d0a3c3ce2e99db5be3f2577f41993'
-SOURCE_CAPSULE='05a9fad2ad069fb0a4017e6253c91da1b56f7bec67b6fe514194007a126b0ee0'  # Source only; approval remains CLOSED.
+MANIFEST_SHA='0a89e6259888ef9d05db489d51875075c4d31148eb5eacaee7f453840f34fd88'
+APPROVAL_SHA='9631d9e89cccb9360d8661ade6a30bc6882cb7a1afd773ad703112d2694ddc9f'
+SOURCE_CAPSULE='f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6'  # Source only; approval remains CLOSED.
 BASIS_RECORD='449aa82f665786ce63f4e1778cee23bf07ca45439b762cf283b67efd0d48af0f'
 COMMON_SHA='db8dc81c8d2baf5cf3859d5706bacbea68253866bdbfc03b19d24cdcf2a7cb6c'
 ROLES=['Public','DedicatedPrivateI2pV1','PrivateI2pMulti','PublicPrivateCoexistence','MixedI2pTransportV1']
@@ -57,12 +57,12 @@ def inspect(args):
  artifact=c.regular(Path(r['artifact']));assert artifact==install/'lib/libtorrent-rasterbar.so.2.0.12'
  assert args.library.resolve(strict=True)==artifact and args.include_root.resolve(strict=True)==install/'include'
  assert artifact.stat().st_size==r['artifact_bytes'] and digest(artifact)==r['artifact_sha256']
- assert len(r['required_exports'])==39 and len(set(r['required_exports']))==39 and r['required_exports']==m['required_exports']
- assert r['required_exports'][-5:]==NEW_EXPORTS
+ assert len(r['required_exports'])==42 and len(set(r['required_exports']))==42 and r['required_exports']==m['required_exports']
+ assert set(NEW_EXPORTS+['biglybtc_i2p_discovery_abi_v1','biglybtc_authorize_i2p_metadata_v1','biglybtc_discovered_i2p_peer_v1'])<=set(r['required_exports'])
  for name,expected in r['evidence_sha256'].items():assert digest(c.regular(c.leaf(record_path.parent,name)))==expected,name
  controls=r['actual_controls'];assert controls['status']=='PASS_MIXED_SDK_DIRECT_CONTROLS_NOT_APPROVED'
- assert controls['actual_ctest_suites']==9 and controls['private_owner_methods']==17 and controls['fresh_separate_role_cases']==6
- assert controls['required_exports']==39 and controls['actual_roles']==CASES and controls['source_and_sdk_unchanged_during_subjects'] and controls['images_unchanged']
+ assert controls['actual_ctest_suites']==9 and controls['private_owner_methods']==23 and controls['fresh_separate_role_cases']==6
+ assert controls['required_exports']==42 and controls['actual_roles']==CASES and controls['source_and_sdk_unchanged_during_subjects'] and controls['images_unchanged']
  proof=m['actual_proof'];run=c.canonical_directory(proof['directory'])
  assert digest(c.regular(run/'result.json'))==proof['result_sha256'] and json.loads((run/'result.json').read_bytes())==controls
  commands=c.regular(run/'commands.json');assert digest(commands)==controls['commands_sha256']==proof['commands_sha256']
@@ -83,5 +83,5 @@ def main():
  p=argparse.ArgumentParser()
  for name in ('manifest','approval','library','header','receipt'):p.add_argument('--'+name,required=True,type=Path)
  p.add_argument('--include',dest='include_root',required=True,type=Path);p.add_argument('--approval-sha256',required=True);a=p.parse_args();m,r,approved=inspect(a)
- a.header.write_text(generated(m,r,approved,a.approval_sha256));a.receipt.write_text(json.dumps({'manifest_sha256':MANIFEST_SHA,'approval_sha256':APPROVAL_SHA,'source_build_record_sha256':m['source_build_record_sha256'],'source_capsule_sha256':SOURCE_CAPSULE,'artifact_sha256':r['artifact_sha256'],'sdk_tree_sha256':r['sdk_tree_sha256'],'same_image_exports':39,'explicit_roles':ROLES,'native_mixed_qualification_pending':True},indent=2)+'\n')
+ a.header.write_text(generated(m,r,approved,a.approval_sha256));a.receipt.write_text(json.dumps({'manifest_sha256':MANIFEST_SHA,'approval_sha256':APPROVAL_SHA,'source_build_record_sha256':m['source_build_record_sha256'],'source_capsule_sha256':SOURCE_CAPSULE,'artifact_sha256':r['artifact_sha256'],'sdk_tree_sha256':r['sdk_tree_sha256'],'same_image_exports':42,'explicit_roles':ROLES,'native_mixed_qualification_pending':True},indent=2)+'\n')
 if __name__=='__main__':main()

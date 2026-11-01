@@ -1,0 +1,44 @@
+{
+  "status": "ROOT_REVIEWED_EXPLICIT_I2P_DISCOVERY42_NATIVE_QUALIFICATION_ONLY",
+  "record_sha256": "e213ba3227a464fcb8eab1c7db3e3adef720f482fd352bb87ec12c3f27ec1e92",
+  "source_capsule_sha256": "f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6",
+  "source_review_sha256": "fc8f81f47b73afa57d373c5add343158b67a165fe5a5a5bf984d7669fbf50e02",
+  "runtime_manifest_sha256": "0a89e6259888ef9d05db489d51875075c4d31148eb5eacaee7f453840f34fd88",
+  "artifact_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "artifact_bytes": 10137344,
+  "verified_source_files": 1090,
+  "verified_installed_files": 294,
+  "verified_sdk_headers": 285,
+  "same_image_exports": 42,
+  "actual_suites": {
+    "provider-tests.xml": [
+      "test_biglybtc_mainline_identity",
+      "test_biglybtc_private_i2p_owner",
+      "test_biglybtc_swarm",
+      "test_biglybtc_tracker_response"
+    ],
+    "wire-controls.xml": [
+      "id_enforcement_v4",
+      "id_enforcement_v6",
+      "parse_i2p_peers"
+    ],
+    "mainline-tests.xml": [
+      "mainline-port-bridge"
+    ],
+    "socks4a-tests.xml": [
+      "socks4a-provider"
+    ],
+    "roles-fixture/tests.xml": [
+      "same-image-34-exports-and-markers",
+      "distinct-roles-public-and-private-admission-denials",
+      "loopback-tracker-peer-transfer-survives-private-withdraw",
+      "private-mixed-settings-failure-is-session-local",
+      "public-join-preserves-private-registration-and-independent-join",
+      "joined-public-disk-bytes-exact"
+    ]
+  },
+  "private_owner_methods": 23,
+  "actual_successful_commands": 17,
+  "native_positive_qualification_pending": true,
+  "shipping_approved": false
+}

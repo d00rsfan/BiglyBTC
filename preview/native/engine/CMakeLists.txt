@@ -94,3 +94,17 @@ target_link_libraries(biglybtc_local_engine PRIVATE Qt6::Network)
 
 # Separate explicit I2P-only preparation path; existing Public policy unchanged.
 target_sources(biglybtc_local_engine PRIVATE owned_i2p_policy.cpp mixed_i2p_source.cpp mixed_i2p_transport.cpp)
+
+# Optional discovery types are available only in the separately reviewed SDK.
+# Probe the selected headers; old/default SDKs keep the code compiled out.
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_LIBRARIES LibtorrentRasterbar::torrent-rasterbar)
+unset(BIGLYBTC_HAS_I2P_DISCOVERY_SDK CACHE)
+check_cxx_source_compiles("#include <libtorrent/biglybtc_private_i2p_owner.hpp>
+static_assert(libtorrent::BiglybtcI2pDiscoveryAbiV1 == 0x42494401);
+static_assert(sizeof(libtorrent::BiglybtcI2pDiscoveredPeerV1) == 128);
+int main() { return 0; }" BIGLYBTC_HAS_I2P_DISCOVERY_SDK)
+unset(CMAKE_REQUIRED_LIBRARIES)
+if(BIGLYBTC_HAS_I2P_DISCOVERY_SDK)
+  target_compile_definitions(biglybtc_local_engine PUBLIC BIGLYBTC_I2P_DISCOVERY_ABI_V1=1)
+endif()

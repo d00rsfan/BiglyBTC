@@ -14,7 +14,17 @@
 #include <utility>
 #include <vector>
 
+namespace biglybtc::engine {struct PendingMagnet;struct PendingMagnetStatus;}
 namespace biglybtc::app {
+struct I2pDiscoverySeed {
+  std::array<std::uint8_t,20> nodeId{};
+  std::array<std::uint8_t,32> destinationHash{};
+  std::uint16_t queryPort=0;std::vector<std::uint8_t> destination;
+};
+struct I2pDiscoveryOptions {
+  std::array<std::uint8_t,20> nodeId{};std::uint16_t queryPort=0;
+  std::vector<I2pDiscoverySeed> seeds;
+};
 struct I2pServiceOptions {
   std::uint16_t routerPort=7654;
   std::vector<std::pair<std::string,std::string>> sessionOptions;
@@ -22,6 +32,7 @@ struct I2pServiceOptions {
   // Coexistence is an explicit Host mode, not new network/source authority.
   // It requires the union controller before the first possible admission.
   bool publicCoexistence=false,externalQueue=false;
+  std::optional<I2pDiscoveryOptions> discovery; // Explicit routing hints; no peer/source authority.
 };
 // All calls and destruction belong to the external Host worker that called
 // start(). Blocking Qt/provider observations and joins must never run on GUI.
@@ -48,6 +59,15 @@ public:
   static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> start(
       const storage::ProfileLease&,const core::TorrentHash&,I2pServiceOptions={},
       const engine::RetainedPayloads& external={});
+  static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startPending(
+      const storage::ProfileLease&,const engine::PendingMagnet&,I2pServiceOptions={});
+  std::expected<void,storage::Error> addMagnet(const engine::PendingMagnet&);
+  std::expected<void,storage::Error> cancelMagnet(const core::TorrentHash&);
+  std::vector<engine::PendingMagnetStatus> pendingMagnets()const;
+  std::expected<std::string,storage::Error> takeCompletedMetadata(const core::TorrentHash&);
+  std::expected<void,storage::Error> releaseMagnet(const core::TorrentHash&);
+  std::expected<void,storage::Error> publishPendingMagnet(const core::TorrentHash&,
+      const std::function<std::expected<void,storage::Error>()>&);
   ~OwnedI2pService();
   OwnedI2pService(const OwnedI2pService&)=delete;
   OwnedI2pService& operator=(const OwnedI2pService&)=delete;

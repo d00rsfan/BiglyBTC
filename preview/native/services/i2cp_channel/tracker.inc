@@ -21,7 +21,7 @@
   void finishTracker(TrackerPhase phase,std::optional<TrackerCounts> counts=std::nullopt,Byte lookupResult=0){
     if(!tracker||!trackerResult){return;}if(counts&&!trackerCurrent()){return;}tracker.reset();trackerTimer.stop();trackerResult->phase=phase;trackerResult->counts=counts;trackerResult->lookupResult=lookupResult;
     // This is only local cancellation/release. No fabricated remote ACK/status.
-    if(!receiverEnabled&&fetch){cancelFetch(ReceiveDrop::Cancelled);}notifyTracker();
+    if(!receiverEnabled&&!dhtReceives()&&fetch){cancelFetch(ReceiveDrop::Cancelled);}notifyTracker();
   }
   bool trackerCurrent(){
     if(!tracker){return false;}

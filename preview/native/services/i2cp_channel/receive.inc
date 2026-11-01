@@ -14,7 +14,7 @@
   ReceiverObservation receiveSnapshot()const noexcept{return {receiverEnabled,fastReceive,fetch.has_value(),controlLost,received.size(),receiveBytes,controlCount,receiveDrops,lastReceiveDrop};}
   void clearReceive(){receiveNotificationQueued=false;received.clear();receiveBytes=0;fetch.reset();receiveTimer.stop();receiverEnabled=false;fastReceive=false;pendingFastReceive=false;controlCount=0;recentCount=0;recentPosition=0;controlFlushing=false;controlLost=false;receiveDrops=0;lastReceiveDrop.reset();}
   bool receiverCurrent()const{return (state==State::SessionCreated||state==State::Reconfiguring)&&leaseCurrent();}
-  bool remembered(std::uint32_t id)const{return std::any_of(received.begin(),received.end(),[id](const auto& d){return d.messageId==id;})||std::find(recentReceived.begin(),recentReceived.begin()+static_cast<std::ptrdiff_t>(recentCount),id)!=recentReceived.begin()+static_cast<std::ptrdiff_t>(recentCount);}
+  bool remembered(std::uint32_t id)const{return std::any_of(received.begin(),received.end(),[id](const auto& d){return d.messageId==id;})||std::any_of(dhtReceived.begin(),dhtReceived.end(),[id](const auto& d){return d.messageId==id;})||std::find(recentReceived.begin(),recentReceived.begin()+static_cast<std::ptrdiff_t>(recentCount),id)!=recentReceived.begin()+static_cast<std::ptrdiff_t>(recentCount);}
   void remember(std::uint32_t id){if(remembered(id)){return;}recentReceived[recentPosition]=id;recentPosition=(recentPosition+1)%ReceiveRecentLimit;recentCount=std::min(recentCount+1,ReceiveRecentLimit);}
   void notifyReceive(){
     if(receiveNotificationQueued){return;}receiveNotificationQueued=true;bool queued=false;
@@ -34,7 +34,7 @@
     if(!fetch){return;}const auto id=fetch->messageId;removeBegin(id);fetch.reset();receiveTimer.stop();remember(id);if(release){(void)enqueueControl(false,id);}dropReceive(reason);
   }
   void receiveDeadline(){
-    if(!fetch){return;}if(!receiverEnabled&&!(trackerReceives()||streamReceives())){cancelFetch(ReceiveDrop::Cancelled);return;}if(!receiverCurrent()){cancelFetch(ReceiveDrop::LeaseExpired);return;}
+    if(!fetch){return;}if(!receiverEnabled&&!(trackerReceives()||streamReceives()||dhtReceives())){cancelFetch(ReceiveDrop::Cancelled);return;}if(!receiverCurrent()){cancelFetch(ReceiveDrop::LeaseExpired);return;}
     if(Clock::now()>=fetch->end){cancelFetch(ReceiveDrop::PendingTimeout);return;}const auto left=std::chrono::duration_cast<std::chrono::milliseconds>(fetch->end-Clock::now()).count();receiveTimer.start(static_cast<int>(std::max<std::int64_t>(1,left)));
   }
   void flushReceiveControls(){
@@ -45,7 +45,7 @@
         if(next.generation!=generation||!session||next.value.sessionId!=*session){popControl();continue;}
         if(next.value.begin){
           if(!fetch||fetch->messageId!=next.value.messageId||fetch->generation!=generation){popControl();continue;}
-          if((!receiverEnabled&&!(trackerReceives()||streamReceives()))||!receiverCurrent()||Clock::now()>=fetch->end){cancelFetch((!receiverEnabled&&!(trackerReceives()||streamReceives()))?ReceiveDrop::Cancelled:!receiverCurrent()?ReceiveDrop::LeaseExpired:ReceiveDrop::PendingTimeout);continue;}
+          if((!receiverEnabled&&!(trackerReceives()||streamReceives()||dhtReceives()))||!receiverCurrent()||Clock::now()>=fetch->end){cancelFetch((!receiverEnabled&&!(trackerReceives()||streamReceives()||dhtReceives()))?ReceiveDrop::Cancelled:!receiverCurrent()?ReceiveDrop::LeaseExpired:ReceiveDrop::PendingTimeout);continue;}
         }
         auto encoded=encodeReceiveControl(next.value);if(!encoded){fail(Failure::Resources);break;}const auto at=generation;
         if(!effectReady()){break;}
@@ -61,9 +61,9 @@
     if(fastReceive){remember(status.messageId);dropReceive(ReceiveDrop::UnexpectedPayload);return;} // No legacy ACKs in immutable fast mode.
     if(fetch&&fetch->messageId==status.messageId){dropReceive(ReceiveDrop::Duplicate);return;} // Don't release a live fetch.
     if(remembered(status.messageId)){(void)enqueueControl(false,status.messageId);dropReceive(ReceiveDrop::Duplicate);return;}
-    if((!receiverEnabled&&!(trackerReceives()||streamReceives()))||!receiverCurrent()||fetch||(received.size()==ReceiveQueueLimit&&!(trackerReceives()||streamReceives()))||status.size>MaximumI2cpPayloadBytes){
+    if((!receiverEnabled&&!(trackerReceives()||streamReceives()||dhtReceives()))||!receiverCurrent()||fetch||(received.size()==ReceiveQueueLimit&&!(trackerReceives()||streamReceives()||dhtReceives()))||status.size>MaximumI2cpPayloadBytes){
       remember(status.messageId);(void)enqueueControl(false,status.messageId);
-      dropReceive((!receiverEnabled&&!(trackerReceives()||streamReceives()))?ReceiveDrop::Disabled:!receiverCurrent()?ReceiveDrop::LeaseExpired:status.size>MaximumI2cpPayloadBytes?ReceiveDrop::Malformed:ReceiveDrop::QueueFull);return;
+      dropReceive((!receiverEnabled&&!(trackerReceives()||streamReceives()||dhtReceives()))?ReceiveDrop::Disabled:!receiverCurrent()?ReceiveDrop::LeaseExpired:status.size>MaximumI2cpPayloadBytes?ReceiveDrop::Malformed:ReceiveDrop::QueueFull);return;
     }
     fetch=Fetch{*session,status.messageId,status.size,generation,Clock::now()+std::chrono::milliseconds(options.deadlineMilliseconds),false};receiveDeadline();
     if(fetch&&!enqueueControl(true,status.messageId)){if(fetch){cancelFetch(ReceiveDrop::ControlBackpressure,false);}}
@@ -91,6 +91,7 @@
     }else{if(remembered(id)){dropReceive(ReceiveDrop::Duplicate);return;}remember(id);}
     if(advertised&&*advertised!=decoded->payload.size()){dropReceive(ReceiveDrop::Malformed);return;}
     if(decoded->payload.size()>9&&decoded->payload[9]==streaming::Protocol&&streamReceives()){observeStreamPayload(decoded->payload,fetchEnd);return;}
+    if(observeDhtPayload(decoded->payload,fetchEnd,id)){return;}
     // RAW18 has no general receiver permission. Only this current dispatched
     // tracker operation may consume it, and it never enters the datagram queue.
     if(decoded->payload.size()>9&&decoded->payload[9]==RawTrackerProtocol&&trackerReceives()){observeTrackerPayload(decoded->payload,fetchEnd);return;}
@@ -107,5 +108,5 @@
     received.push_back(std::move(data));receiveBytes+=weight;notifyReceive();
   }
   bool enableReceive(){if(!onThread()||!leaseSigner||!leaseSigner->valid()||!active()||state==State::Connecting||state==State::WaitingDate||state==State::DateReceived){return false;}receiverEnabled=true;notifyReceive();return receiverEnabled&&active();}
-  void disableReceive(){if(!onThread()){return;}receiverEnabled=false;received.clear();receiveBytes=0;if(fetch&&!(trackerReceives()||streamReceives())){cancelFetch(ReceiveDrop::Cancelled);}notifyReceive();}
+  void disableReceive(){if(!onThread()){return;}receiverEnabled=false;received.clear();receiveBytes=0;if(fetch&&!(trackerReceives()||streamReceives()||dhtReceives())){cancelFetch(ReceiveDrop::Cancelled);}notifyReceive();}
   std::optional<ReceivedDatagram> takeReceive(){if(!onThread()||received.empty()){return std::nullopt;}if(!receiverCurrent()){received.clear();receiveBytes=0;dropReceive(ReceiveDrop::LeaseExpired);return std::nullopt;}auto out=std::move(received.front());received.pop_front();receiveBytes-=receiveWeight(out);remember(out.messageId);notifyReceive();return out;}

@@ -2,6 +2,7 @@
 #pragma once
 #include "profile_source.hpp"
 #include "channel.hpp"
+#include "../i2p_dht/actor.hpp"
 #include <QObject>
 #include <memory>
 #include <functional>
@@ -9,6 +10,7 @@
 namespace biglybtc::app {class OwnedMixedI2pService;}
 namespace biglybtc::services::i2p::provider {
 class OwnedTorrent;
+class PendingMagnetSource;
 // Explicit optional private SAM-shaped endpoint, never a system SAM service.
 // All calls/destruction are on the same QObject thread as InitialChannel.
 class Bridge final:public QObject {
@@ -33,6 +35,12 @@ private:
   struct Impl;std::unique_ptr<Impl> impl_;
   // Private ephemeral capability is transferred only into the exact measured
   // provider hook. Not exposed by a public config/read/observation interface.
+  bool beginDiscovery(const dht::Actor::Options&);
+  bool discover(std::shared_ptr<ProfileSource>,const core::TorrentHash&,const dht::Id&,
+      std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)>);
+  bool discover(std::shared_ptr<PendingMagnetSource>,const core::TorrentHash&,const dht::Id&,
+      std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)>);
+  void cancelDiscovery(std::uint64_t admission);
   bool installProvider(std::function<bool(void*)>);
   bool installMixedProvider(std::function<bool(void*)>);
   bool event(QEvent*)override;

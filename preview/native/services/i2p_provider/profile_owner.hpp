@@ -2,6 +2,8 @@
 #pragma once
 #include "owner.hpp"
 #include "coexist_queue.hpp"
+#include "pending_magnet_source.hpp"
+#include "../i2p_dht/actor.hpp"
 #include "biglybtc/queue_policy.hpp"
 #include <array>
 #include <cstdint>
@@ -47,6 +49,29 @@ public:
   };
   static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> prepare(
       const storage::ProfileLease&,const core::TorrentHash&,const Retained& external={});
+  // Pending-first pure bootstrap uses the SAME key1 session and disk sandbox.
+  static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> preparePending(
+      const storage::ProfileLease&,const engine::PendingMagnet&);
+  struct MagnetObservation {
+    core::TorrentHash hash;std::uint64_t admission=0,generation=0;
+    bool retained=false,metadataReady=false,cancelled=false;
+    std::optional<storage::Error> failure;
+  };
+  class PreparedMagnet final {
+  public:~PreparedMagnet();
+  private:friend class OwnedProfile;struct Impl;explicit PreparedMagnet(std::unique_ptr<Impl>);std::unique_ptr<Impl> impl_;
+  };
+  std::expected<std::unique_ptr<PreparedMagnet>,storage::Error> prepareMagnet(const engine::PendingMagnet&); // Worker IO.
+  bool configureDiscovery(const dht::Actor::Options&); // Same Qt thread, before begin.
+  std::expected<void,storage::Error> startMagnet(std::unique_ptr<PreparedMagnet>); // Qt, no IO.
+  bool cancelMagnet(const core::TorrentHash&,std::chrono::steady_clock::time_point); // Qt.
+  std::vector<MagnetObservation> magnetObservations(); // Qt.
+  // Actual complete metainfo only after matching removal, weak expiry and an
+  // executor/alert fence. The worker imports via publishPendingMagnet afterward.
+  std::expected<std::string,storage::Error> takeCompletedMetadata(const core::TorrentHash&); // Qt.
+  std::expected<void,storage::Error> releaseMagnet(const core::TorrentHash&); // Worker IO, after retirement.
+  std::expected<void,storage::Error> publishPendingMagnet(const core::TorrentHash&,
+      const std::function<std::expected<void,storage::Error>()>&);
   ~OwnedProfile()override;
   // External Host worker only: filesystem/key/source preparation/publication.
   std::expected<std::unique_ptr<Prepared>,storage::Error> prepareTorrent(

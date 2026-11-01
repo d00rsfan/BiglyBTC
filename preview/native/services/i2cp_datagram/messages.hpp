@@ -17,6 +17,13 @@ struct ReceiveControl {std::uint16_t sessionId=0;std::uint32_t messageId=0;bool 
 [[nodiscard]] bool originalFastReceiveEnabled(const SessionOptions&) noexcept;
 [[nodiscard]] ConfigResult<Bytes> encodeMuxDatagram(const MuxDatagram&,GzipMode);
 [[nodiscard]] ConfigResult<MuxDatagram> decodeMuxDatagram(View);
+// Separate explicitly scoped legacy DHT mux; general19/20 remains unchanged.
+inline constexpr std::size_t MaximumDhtMuxBytes=12*1024;
+[[nodiscard]] ConfigResult<Bytes> encodeDhtMuxDatagram(const MuxDatagram&,GzipMode);
+[[nodiscard]] ConfigResult<MuxDatagram> decodeDhtMuxDatagram(View);
+// Exact helper adhoc flags: tags8/threshold4(rounds down3)=0x24, raw adds0x100.
+[[nodiscard]] ConfigResult<Bytes> encodeDhtSendDatagram(const SendDatagram&);
+[[nodiscard]] ConfigResult<SendDatagram> decodeDhtSendDatagram(const Frame&);
 // Separate bounded RAW18 tracker-reply codec, not general receiver permission.
 [[nodiscard]] ConfigResult<MuxDatagram> decodeRawTrackerReply(View);
 [[nodiscard]] ConfigResult<Bytes> encodeSendDatagram(const SendDatagram&);

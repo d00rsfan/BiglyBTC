@@ -16,7 +16,7 @@ struct Error {ErrorCode code;std::string message;};
 template<class T>using Result=std::expected<T,Error>;
 enum class SigningType:std::uint16_t {DsaSha1=0,Ed25519=7};
 inline constexpr std::size_t MaximumWireBytes=61*1024;
-inline constexpr std::uint8_t Datagram2Protocol=19,Datagram3Protocol=20;
+inline constexpr std::uint8_t Datagram1Protocol=17,Datagram2Protocol=19,Datagram3Protocol=20;
 struct Destination {
   Bytes wire;
   SigningType signingType;
@@ -35,6 +35,12 @@ Result<Bytes> signingPublicKey(SigningType,View privateKey);
 inline constexpr std::size_t MaximumSignedDataBytes=128*1024;
 Result<Bytes> signData(SigningType,View privateKey,View data);
 Result<void> verifyData(SigningType,View publicKey,View signature,View data);
+// Legacy repliable17: Destination || signature || payload. Type0 signs the
+// SHA256(payload) with DSA-SHA1; Ed7 signs payload directly. No recipient/freshness
+// binding is present. Verified signing-key possession is not endpoint authority.
+struct Datagram1 {Destination sender;Bytes payload;};
+Result<Bytes> encode1(View senderDestination,View privateKey,View payload);
+Result<Datagram1> decode1(View wire);
 struct Datagram2 {Destination sender;Bytes payload;};
 // Online/default no-options form. Receiver hash participates in the signature
 // but is NOT transmitted. Signature proves signing-key possession/recipient

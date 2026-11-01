@@ -56,6 +56,7 @@ struct ListenerFailureObservation {
 
 struct NetworkPolicy;
 struct PendingMagnet;
+class PendingMetadataSource;
 // Last authenticated regular library response. This owns values only and
 // supplies no new admission, scheduler/peer permission or synthetic queue epoch.
 struct LibraryTrackerResponse {
@@ -239,6 +240,17 @@ public:
   // after its exact handle has retired. The held profile path is authenticated.
   std::expected<void, storage::Error> startMagnet(storage::ProfileLease&, const PendingMagnet&,
       const std::filesystem::path& profile);
+  using PendingMetadataBinding=std::function<std::expected<void,storage::Error>(std::shared_ptr<const PendingMetadataSource>)>;
+  // Worker reserve only; binder MUST enter fresh narrow pending publication.
+  // Session creation completes before binder; no SDK add or second writer.
+  std::expected<std::shared_ptr<const PendingMetadataSource>,storage::Error> prepareMagnetMetadata(
+      storage::ProfileLease&,const PendingMagnet&,const std::filesystem::path&,PendingMetadataBinding);
+  // After the actual source graph registered+authorized the reserved tuple.
+  std::expected<void,storage::Error> activatePreparedMagnet(const core::TorrentHash&);
+  // Retire a mixed metadata source failure without cancelling its original row.
+  std::expected<void,storage::Error> withdrawPreparedMagnet(const core::TorrentHash&,storage::Error reason);
+  std::expected<std::string,storage::Error> takeCompletedMagnetMetadata(const core::TorrentHash&);
+  std::expected<void,storage::Error> releasePreparedMagnet(const core::TorrentHash&);
   std::expected<void, storage::Error> cancelMagnet(const core::TorrentHash&);
   std::vector<PendingMagnetStatus> pendingMagnets() const;
   std::expected<void, storage::Error> reorderManaged(std::span<const core::TorrentHash>);

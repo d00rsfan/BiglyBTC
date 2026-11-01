@@ -1,0 +1,18 @@
+{
+  "classification": "FAILED_NOT_APPROVED",
+  "reason": "Incorrect fixture assumption that torrent_info retains dht:// led to empty-front access; production relaxation removed entirely. Corrected r2 fresh controls are the only final result.",
+  "original_failed_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/qualification/runs/r1/result.json",
+    "sha256": "6083297e18fd1a2c32d7ad7d3c30663ac9382a307504e01f279795a327ea7fb1"
+  },
+  "original_failed_commands": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/qualification/runs/r1/commands.json",
+    "sha256": "9fbd78ef3d168fc3bae40983b027f3d17ba5a34b57b26430973730f567b83e91"
+  },
+  "current_cache_transition": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/failed-r1-cache-association.json",
+    "sha256": "cf3aaf3537004f981da3aeedbc3e5c7cfc993792afc515178356a4495a03cc41"
+  },
+  "production_matches_capacity_record_sha256": "866b43970dfc5883a2a7f7f0f861a6d9a4704b3579c8a6eb354fb0902843896d",
+  "earlier_results_replayed_or_pooled": false
+}

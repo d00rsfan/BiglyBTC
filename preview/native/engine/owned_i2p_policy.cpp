@@ -7,6 +7,7 @@
 #include <algorithm>
 namespace biglybtc::engine {
 namespace {
+bool decentralized(std::string_view url){return url.size()>=6&&(url[0]=='d'||url[0]=='D')&&(url[1]=='h'||url[1]=='H')&&(url[2]=='t'||url[2]=='T')&&url.substr(3,3)=="://";}
 bool tracker(std::string_view url){
   if(!url.starts_with("http://")||url.size()>2048||url.find_first_of("\r\n\t ")!=std::string_view::npos||url.find('\0')!=std::string_view::npos){return false;}
   auto host=url.substr(7);host=host.substr(0,host.find_first_of("/:?#"));
@@ -26,10 +27,22 @@ libtorrent::settings_pack OwnedI2pPolicy::settings()const{
 std::expected<void,NetworkPolicyError> OwnedI2pPolicy::apply(const TorrentNetworkSelection& selection,libtorrent::add_torrent_params& params)const{
   const auto bad=[]()->std::expected<void,NetworkPolicyError>{return std::unexpected(NetworkPolicyError{NetworkPolicyErrorCode::Unsupported,"explicit owned I2P-only torrent"});};
   if(!lease_||!lease_->valid()||selection.publicNetwork||selection.tor||!selection.i2p||!params.ti||!params.peers.empty()||!params.dht_nodes.empty()||!params.url_seeds.empty()||!params.http_seeds.empty()||!params.ti->web_seeds().empty()){return bad();}
-  if(params.trackers.size()>4||params.ti->trackers().size()>4){return bad();}
-  for(const auto& entry:params.trackers){if(!tracker(entry)){return bad();}}
-  for(const auto& entry:params.ti->trackers()){if(!tracker(entry.url)){return bad();}}
-  auto next=params;next.flags|=libtorrent::torrent_flags::disable_dht|libtorrent::torrent_flags::disable_lsd|libtorrent::torrent_flags::disable_pex|libtorrent::torrent_flags::override_web_seeds;
+  if(trackers_){
+  if(std::ranges::count_if(params.trackers,[](const auto& url){return !decentralized(url);})>4||std::ranges::count_if(params.ti->trackers(),[](const auto& entry){return !decentralized(entry.url);})>4){return bad();}
+  for(const auto& entry:params.trackers){if(!decentralized(entry)&&!tracker(entry)){return bad();}}
+  for(const auto& entry:params.ti->trackers()){if(!decentralized(entry.url)&&!tracker(entry.url)){return bad();}}
+  } // Disabled Tracker fields stay inert and are removed from the runtime copy.
+  auto next=params;
+  const bool projection=!trackers_||std::ranges::any_of(next.ti->trackers(),[](const auto& entry){return decentralized(entry.url);});
+  std::erase_if(next.trackers,[&](const auto& url){return !trackers_||decentralized(url);});
+  if(projection){
+    // Announce URLs are outside hashed info. Preserve original source bytes and
+    // clone only when an inert DHT placeholder/disabled Tracker needs removal.
+    auto runtime=std::make_shared<libtorrent::torrent_info>(*next.ti);runtime->clear_trackers();
+    if(trackers_){for(const auto& entry:next.ti->trackers()){if(!decentralized(entry.url)){runtime->add_tracker(entry.url,entry.tier);}}}
+    next.ti=std::move(runtime);
+  }
+  next.flags|=libtorrent::torrent_flags::disable_dht|libtorrent::torrent_flags::disable_lsd|libtorrent::torrent_flags::disable_pex|libtorrent::torrent_flags::override_web_seeds;
   next.flags&=~libtorrent::torrent_flags::auto_managed;next.flags|=libtorrent::torrent_flags::paused;
   params=std::move(next);return {};
 }

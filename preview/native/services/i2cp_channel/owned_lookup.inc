@@ -3,10 +3,20 @@
   struct OwnedLookup {std::uint64_t operation=0,generation=0;std::uint32_t request=0;Clock::time_point end{};Bytes write;bool sent=false;};
   std::optional<OwnedLookup> ownedLookup;
   std::optional<LookupObservation> ownedLookupResult;
+  std::deque<LookupObservation> ownedLookupHistory; // Eight owning terminal facts, never grants.
   std::uint32_t nextOwnedLookup=0;
   bool lookupQueued=false;
-  void clearLookup(){lookupTimer.stop();ownedLookup.reset();ownedLookupResult.reset();lookupQueued=false;}
+  void clearLookup(){lookupTimer.stop();ownedLookup.reset();ownedLookupResult.reset();ownedLookupHistory.clear();lookupQueued=false;}
   void notifyOwnedLookup(){
+    // Retain before coalescing the queued notification: another consumer can
+    // start a lookup before this operation's queued observer gets its turn.
+    try{
+      if(ownedLookupResult&&ownedLookupResult->phase!=LookupPhase::Pending
+          &&(ownedLookupHistory.empty()||ownedLookupHistory.back().operation!=ownedLookupResult->operation)){
+        ownedLookupHistory.push_back(*ownedLookupResult);
+        if(ownedLookupHistory.size()>8){ownedLookupHistory.pop_front();}
+      }
+    }catch(...){fail(Failure::Resources);return;}
     if(lookupQueued){return;}lookupQueued=true;bool queued=false;
     try{const QPointer<InitialChannel> owner(q);const auto at=generation;queued=QMetaObject::invokeMethod(q,[owner,at]{if(!owner){return;}auto* self=owner->impl_.get();if(self->generation!=at){return;}self->lookupQueued=false;if(self->ownedLookupResult){emit owner->destinationLookupChanged();}},Qt::QueuedConnection);}catch(...){queued=false;}
     if(!queued){lookupQueued=false;fail(Failure::Resources);}

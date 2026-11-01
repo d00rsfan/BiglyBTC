@@ -31,6 +31,8 @@ using storage::detail::Descriptor;
 constexpr std::string_view Active = "MagnetPlugin.active.magnets";
 constexpr std::string_view Recovery = "Plugin.Magnet URI Handler.MagnetPlugin.recover.magnets";
 constexpr std::string_view Destination = "BiglyBTC.pending.destination";
+constexpr std::string_view Networks = "BiglyBTC.pending.networks";
+constexpr std::string_view SubmittedUri = "BiglyBTC.pending.submitted_uri";
 constexpr std::string_view Version = "BiglyBTC.pending.version";
 constexpr std::size_t MaximumUri = 64 * 1024;
 constexpr std::size_t MaximumPending = 128;
@@ -157,6 +159,33 @@ void policy(NetworkPolicyError error) {
       : error.code == NetworkPolicyErrorCode::Unsupported ? Code::Unsupported : Code::InvalidFormat,
       "Magnet network policy rejected field: " + error.field);
 }
+bool i2pTracker(std::string_view url) {
+  if (!url.starts_with("http://") || url.size()>2048 || url.find_first_of("\r\n\t ")!=std::string_view::npos || url.find('\0')!=std::string_view::npos) { return false; }
+  auto authority=url.substr(7); authority=authority.substr(0,authority.find_first_of("/?#"));
+  const auto colon=authority.find(':'); const auto host=authority.substr(0,colon);
+  if(host.size()!=60 || !host.ends_with(".b32.i2p") || !std::all_of(host.begin(),host.begin()+52,[](char c){return (c>='a'&&c<='z')||(c>='2'&&c<='7');})) { return false; }
+  if(colon!=std::string_view::npos) { (void)port(authority.substr(colon+1)); }
+  return true;
+}
+// Match the pinned Java recovery parser: raw lhs is case-insensitive net,
+// raw value is internalised without percent decoding or numbered-key aliases.
+bool originalI2pNetwork(std::string_view uri){
+  auto query=uri.substr(8);
+  while(!query.empty()){
+    const auto end=query.find('&');const auto field=query.substr(0,end);const auto equal=field.find('=');
+    if(equal!=std::string_view::npos&&lower(field.substr(0,equal))=="net"&&lower(field.substr(equal+1))=="i2p"){return true;}
+    if(end==std::string_view::npos){break;}query.remove_prefix(end+1);
+  }return false;
+}
+std::vector<std::string> choices(MagnetNetwork network) {
+  return network==MagnetNetwork::I2p?std::vector<std::string>{"I2P"}:network==MagnetNetwork::PublicAndI2p?std::vector<std::string>{"Public","I2P"}:std::vector<std::string>{"Public"};
+}
+MagnetNetwork selection(const std::vector<std::string>& values) {
+  bool pub=false,i2p=false;
+  require(!values.empty()&&values.size()<=2,Code::Unsupported,"Unsupported magnet network set");
+  for(const auto& value:values) { require(value=="Public"||value=="I2P",Code::Unsupported,"Unsupported magnet network"); if(value=="Public"){require(!pub,Code::InvalidFormat,"Duplicate magnet network");pub=true;}else{require(!i2p,Code::InvalidFormat,"Duplicate magnet network");i2p=true;} }
+  return pub?(i2p?MagnetNetwork::PublicAndI2p:MagnetNetwork::Public):MagnetNetwork::I2p;
+}
 libtorrent::add_torrent_params parameters(const PendingMagnet& intent, const NetworkPolicy& network) {
   require(intent.trackers.size() <= 128 && intent.webSeeds.size() <= 128 && intent.peers.size() <= 256
       && intent.dhtNodes.size() <= 128, Code::InvalidFormat, "Over-limit typed magnet sources");
@@ -166,17 +195,28 @@ libtorrent::add_torrent_params parameters(const PendingMagnet& intent, const Net
   params.url_seeds.assign(intent.webSeeds.begin(), intent.webSeeds.end());
   params.peers.assign(intent.peers.begin(), intent.peers.end());
   params.dht_nodes.assign(intent.dhtNodes.begin(), intent.dhtNodes.end());
-  const auto accepted = applyTorrentNetworkPolicy(network, {}, params);
-  if (!accepted) { policy(accepted.error()); }
+  if(intent.network==MagnetNetwork::Public) {
+    const auto accepted=applyTorrentNetworkPolicy(network,{},params); if(!accepted){policy(accepted.error());}
+  } else {
+    require(intent.webSeeds.empty()&&intent.peers.empty()&&intent.dhtNodes.empty(),Code::Unsupported,"I2P magnet has unsupported external source hints");
+    std::vector<std::string> privateTrackers;
+    std::erase_if(params.trackers,[&](const auto& url){if(i2pTracker(url)){privateTrackers.push_back(url);return true;}return false;});
+    if(intent.network==MagnetNetwork::I2p) { require(params.trackers.empty(),Code::Unsupported,"Pure I2P magnet contains a Public tracker"); }
+    else { const auto accepted=applyTorrentNetworkPolicy(network,{},params);if(!accepted){policy(accepted.error());} }
+    require(privateTrackers.size()<=4,Code::Unsupported,"I2P magnet tracker bound");
+    params.trackers.insert(params.trackers.end(),privateTrackers.begin(),privateTrackers.end());
+    params.flags|=libtorrent::torrent_flags::disable_dht|libtorrent::torrent_flags::disable_lsd|libtorrent::torrent_flags::disable_pex;
+  }
   return params;
 }
-PendingMagnet parse(std::string_view uri, std::optional<fs::path> destination, bool stopped, const NetworkPolicy& network) {
+PendingMagnet parse(std::string_view uri, std::optional<fs::path> destination, bool stopped, const NetworkPolicy& network, MagnetNetwork context=MagnetNetwork::Public) {
   require(uri.size() <= MaximumUri && uri.starts_with("magnet:?") && uri.find('#') == std::string_view::npos,
       Code::InvalidFormat, "Invalid or over-limit magnet URI");
   if (destination) { pathShape(*destination); }
   std::optional<std::string> v1, v2;
   PendingMagnet result;
   result.uri = uri; result.destination = std::move(destination); result.stopped = stopped;
+  std::vector<std::string> selectedNetworks;
   auto query = uri.substr(8);
   std::size_t fields = 0;
   while (!query.empty()) {
@@ -209,7 +249,7 @@ PendingMagnet parse(std::string_view uri, std::optional<fs::path> destination, b
     } else if (key == "dn") {
       require(value.size() <= 512, Code::InvalidFormat, "Magnet display name exceeds limit"); result.displayName = value;
     } else if (key == "net") {
-      require(value == "Public", Code::Unsupported, "Tor/I2P magnet networks require their own route adapter");
+      if(std::find(selectedNetworks.begin(),selectedNetworks.end(),value)==selectedNetworks.end()){selectedNetworks.push_back(value);}
     } else if (key == "x.pe" || key == "xsource") {
       require(result.peers.size() < 128, Code::InvalidFormat, "Too many magnet peer hints"); result.peers.push_back(numericPeer(value));
     } else if (key == "dht") {
@@ -232,6 +272,9 @@ PendingMagnet parse(std::string_view uri, std::optional<fs::path> destination, b
   const auto& original = v1 ? *v1 : *v2;
   auto shortHash = core::TorrentHash::parse(std::string_view(original).substr(0, 20));
   require(shortHash.has_value(), Code::InvalidFormat, "Invalid original magnet recovery identity"); result.hash = *shortHash;
+  result.networks=selectedNetworks.empty()?choices(context==MagnetNetwork::I2p?MagnetNetwork::I2p:MagnetNetwork::Public):std::move(selectedNetworks);
+  result.network=selection(result.networks);
+  require(context==MagnetNetwork::PublicAndI2p||result.network==context,Code::Unsupported,"Magnet network exceeds explicit import context");
   const auto admitted = parameters(result, network);
   result.trackers.assign(admitted.trackers.begin(), admitted.trackers.end());
   result.webSeeds.assign(admitted.url_seeds.begin(), admitted.url_seeds.end());
@@ -324,8 +367,25 @@ PendingMagnet row(const Configuration& c, const Node& node, std::string_view key
   }
   const auto state = number(node.find("ss"), 2);
   require(state >= 1 && state <= 3, Code::InvalidFormat, "Invalid original magnet start state");
-  auto result = parse(args.starts_with("magnet:?") ? args : "magnet:?" + args, std::move(destination), state == 3, network);
+  MagnetNetwork context=MagnetNetwork::Public;
+  if(other&&other->find(Networks)) {
+    const auto* saved=other->find(Networks);require(saved->type==Node::Type::List,Code::InvalidFormat,"Malformed pending network context");
+    std::vector<std::string> values;for(const auto& value:saved->children){values.push_back(text(&value));}context=selection(values);
+  } else {
+    // Original Java rows encode explicit network choices in their args.
+    const auto query=args.starts_with("magnet:?")?std::string_view(args).substr(8):std::string_view(args);
+    std::vector<std::string> values;auto remaining=query;
+    while(!remaining.empty()){const auto end=remaining.find('&');const auto field=remaining.substr(0,end);const auto equal=field.find('=');if(equal!=std::string_view::npos&&[&]{auto key=lower(decode(field.substr(0,equal)));const auto dot=key.rfind('.');if(dot!=std::string::npos&&dot+1<key.size()&&std::all_of(key.begin()+static_cast<std::ptrdiff_t>(dot+1),key.end(),[](char c){return c>='0'&&c<='9';})){key.resize(dot);}return key=="net";}()){auto value=decode(field.substr(equal+1));if(std::find(values.begin(),values.end(),value)==values.end()){values.push_back(std::move(value));}}if(end==std::string_view::npos){break;}remaining.remove_prefix(end+1);}
+    if(!values.empty()){context=selection(values);}
+  }
+  auto result = parse(args.starts_with("magnet:?") ? args : "magnet:?" + args, std::move(destination), state == 3, network,context);
   require(result.hash == *parsedHash, Code::Conflict, "Pending full URI and original short hash disagree");
+  if(other&&other->find(SubmittedUri)){
+    const auto submitted=text(other->find(SubmittedUri));
+    require(number(other->find(Version),-1)==1&&result.network==MagnetNetwork::I2p
+        &&submitted.starts_with("magnet:?")&&submitted.size()<=MaximumUri&&!originalI2pNetwork(submitted)
+        &&result.uri==submitted+"&net=I2P",Code::Conflict,"Conflicting reserved submitted magnet URI metadata");
+  }
   result.forceStart = state == 1;
   result.timeoutMillis = number(node.find("timeout"), -1);
   require(result.timeoutMillis >= 1 && result.timeoutMillis <= 3600000, Code::Unsupported, "Pending timeout outside bounded owner range");
@@ -365,7 +425,7 @@ PendingMagnet current(const Configuration& c, const PendingMagnet& expected, con
       Code::Conflict, "Pending magnet changed or was cancelled");
   return row(c, *value, key, network);
 }
-std::string entry(const PendingMagnet& intent) {
+std::string entry(const PendingMagnet& intent,std::optional<std::string_view> submitted={}) {
   require(intent.destination.has_value(), Code::Missing, "New pending magnet needs an explicit destination");
   std::string sources = "l";
   for (const auto& peer : intent.peers) {
@@ -382,7 +442,10 @@ std::string entry(const PendingMagnet& intent) {
   std::string result = "d" + b("hash") + b(std::string_view(reinterpret_cast<const char*>(bytes.data()), bytes.size()))
       + b("args") + b(std::string_view(intent.uri).substr(8)) + b("sources") + sources
       + b("timeout") + integer(intent.timeoutMillis) + b("ss") + integer(intent.forceStart ? 1 : intent.stopped ? 3 : 2)
-      + b("other_metadata") + "d" + b(Version) + "i1e" + b(Destination) + b(intent.destination->native()) + 'e';
+      + b("other_metadata") + "d" + b(Version) + "i1e" + b(Destination) + b(intent.destination->native());
+  if(intent.network!=MagnetNetwork::Public){std::string networks="l";for(const auto& value:intent.networks){networks+=b(value);}result+=b(Networks)+networks+'e';}
+  if(submitted){result+=b(SubmittedUri)+b(*submitted);}
+  result+='e';
   if (intent.addedMillis) { result += b("added") + integer(*intent.addedMillis); }
   return result + 'e';
 }
@@ -416,15 +479,25 @@ void matching(const PendingMagnet& pending, const libtorrent::torrent_info& info
 } // namespace
 
 std::expected<PendingMagnet, Error> parseMagnetIntent(std::string_view uri, const fs::path& destination,
-    bool stopped, const NetworkPolicy& network) {
-  try { return parse(uri, destination, stopped, network); }
+    bool stopped, const NetworkPolicy& network,MagnetNetwork context) {
+  try { return parse(uri, destination, stopped, network,context); }
   catch (const Failure& error) { return std::unexpected(error.error); }
   catch (const std::exception&) { return std::unexpected(Error{Code::Io, "Cannot prepare bounded magnet intent"}); }
 }
 std::expected<PendingMagnet, Error> queuePendingMagnet(storage::ProfileLease& lease,
-    const PendingMagnet& supplied, const NetworkPolicy& network) {
+    const PendingMagnet& supplied, const NetworkPolicy& network,MagnetNetwork context) {
   try {
-    auto intent = parse(supplied.uri, supplied.destination, supplied.stopped, network);
+    require(context==MagnetNetwork::PublicAndI2p||supplied.network==context,Code::Conflict,"Pending magnet network context changed");
+    auto intent = parse(supplied.uri, supplied.destination, supplied.stopped, network,context);
+    require(intent.network==supplied.network&&intent.networks==supplied.networks,Code::Conflict,"Pending supplied network differs from parsed context");
+    std::optional<std::string> submitted;
+    if(intent.network==MagnetNetwork::I2p&&!originalI2pNetwork(intent.uri)){
+      submitted=intent.uri;
+      // The original Java reader must see the same strict network policy.
+      // Preserve the submitted bytes separately; validate the complete effective
+      // query again so the suffix cannot exceed URI/field bounds.
+      intent=parse(*submitted+"&net=I2P",intent.destination,intent.stopped,network,context);
+    }
     require(supplied.timeoutMillis >= 1 && supplied.timeoutMillis <= 3600000,
         Code::Unsupported, "Unsupported pending timeout request");
     intent.forceStart = supplied.forceStart;
@@ -435,7 +508,7 @@ std::expected<PendingMagnet, Error> queuePendingMagnet(storage::ProfileLease& le
     const auto* map = active(c);
     const auto key = base32(intent.hash);
     require(!map || (!map->find(key) && map->children.size() / 2 < MaximumPending), Code::Conflict, "Magnet is already pending or pending limit reached");
-    put(c.doc, Active, mapChange(c, key, entry(intent)));
+    put(c.doc, Active, mapChange(c, key, entry(intent,submitted?std::optional<std::string_view>{*submitted}:std::nullopt)));
     save(c, lease);
     auto saved = load(lease); const auto* savedMap = active(saved);
     const auto* stored = savedMap ? savedMap->find(key) : nullptr;
@@ -445,21 +518,29 @@ std::expected<PendingMagnet, Error> queuePendingMagnet(storage::ProfileLease& le
   catch (const std::exception&) { return std::unexpected(Error{Code::Io, "Pending magnet save may be indeterminate; reload before retry"}); }
 }
 std::expected<PendingMagnet, Error> attachPendingMagnetDestination(storage::ProfileLease& lease,
-    const PendingMagnet& expected, const fs::path& destination, const NetworkPolicy& network) {
+    const PendingMagnet& expected, const fs::path& destination, const NetworkPolicy& network,MagnetNetwork context) {
   try {
+    require(context==MagnetNetwork::PublicAndI2p||expected.network==context,Code::Conflict,"Pending destination network context changed");
     pathShape(destination);
     auto c = load(lease);
     require(recoveryEnabled(c), Code::Unsupported, "Original magnet recovery is disabled");
     auto intent = current(c, expected, network);
+    const bool normalize=intent.network==MagnetNetwork::I2p&&!originalI2pNetwork(intent.uri);
     if (intent.destination) {
       require(*intent.destination == destination, Code::Conflict, "Pending magnet already has a different destination");
-      return intent; // No backup or config write for explicit same-destination retry.
+      if(!normalize){return intent;} // Already original-compatible same-destination retry is read-only.
     }
     auto ownedRow = document(intent.sourceEntry);
     const auto* other = ownedRow.find("other_metadata");
     auto ownedOther = document(other ? raw(ownedRow, *other) : "de");
     require(!ownedOther.find(Version) || number(ownedOther.find(Version), -1) == 1,
         Code::Unsupported, "Unsupported native pending version");
+    if(normalize){
+      require(!ownedOther.find(SubmittedUri),Code::Conflict,"Reserved submitted magnet URI metadata is already present");
+      const auto effective=parse(intent.uri+"&net=I2P",destination,intent.stopped,network,MagnetNetwork::I2p);
+      put(ownedRow,"args",b(std::string_view(effective.uri).substr(8)));
+      put(ownedOther,SubmittedUri,b(intent.uri));
+    }
     put(ownedOther, Version, "i1e");
     put(ownedOther, Destination, b(destination.native()));
     put(ownedRow, "other_metadata", ownedOther.serialize());
@@ -476,16 +557,21 @@ std::expected<PendingMagnet, Error> attachPendingMagnetDestination(storage::Prof
   catch (const std::exception&) { return std::unexpected(Error{Code::Io, "Pending destination save may be indeterminate; reload before retry"}); }
 }
 std::expected<std::vector<PendingMagnet>, Error> readPendingMagnets(const storage::ProfileLease& lease,
-    const NetworkPolicy& network) {
+    const NetworkPolicy& network,MagnetNetwork context) {
   try {
     auto c = load(lease);
     std::vector<PendingMagnet> result;
     if (!recoveryEnabled(c)) { return result; }
     const auto* map = active(c); if (!map) { return result; }
-    for (std::size_t n = 0; n < map->children.size(); n += 2) { result.push_back(row(c, map->children[n + 1], map->children[n].bytes, network)); }
+    for (std::size_t n = 0; n < map->children.size(); n += 2) { auto value=row(c, map->children[n + 1], map->children[n].bytes, network);if(context==MagnetNetwork::PublicAndI2p||value.network==context){result.push_back(std::move(value));} }
     return result;
   } catch (const Failure& error) { return std::unexpected(error.error); }
   catch (const std::exception&) { return std::unexpected(Error{Code::Io, "Cannot load bounded original pending magnets"}); }
+}
+std::expected<PendingMagnet,Error> validatePendingMagnet(const storage::ProfileLease& lease,const PendingMagnet& expected,const NetworkPolicy& network){
+  try{auto config=load(lease);auto value=current(config,expected,network);
+    require(value.uri==expected.uri&&value.displayName==expected.displayName&&value.addedMillis==expected.addedMillis&&value.requested==expected.requested&&value.network==expected.network&&value.networks==expected.networks&&value.destination==expected.destination&&value.stopped==expected.stopped&&value.forceStart==expected.forceStart&&value.timeoutMillis==expected.timeoutMillis&&value.trackers==expected.trackers&&value.webSeeds==expected.webSeeds&&value.peers==expected.peers&&value.dhtNodes==expected.dhtNodes,Code::Conflict,"Pending typed values differ from actual original row");return value;
+  }catch(const Failure& e){return std::unexpected(e.error);}catch(...){return std::unexpected(Error{Code::Io,"Cannot validate pending magnet source"});}
 }
 std::expected<void, Error> cancelPendingMagnet(storage::ProfileLease& lease, const PendingMagnet& expected) {
   try {
@@ -501,7 +587,7 @@ std::expected<libtorrent::add_torrent_params, Error> metadataOnlyParameters(cons
     const NetworkPolicy& network, const fs::path& ownedMetadataDirectory) {
   try {
     pathShape(ownedMetadataDirectory);
-    auto intent = parse(supplied.uri, supplied.destination, supplied.stopped, network);
+    auto intent = parse(supplied.uri, supplied.destination, supplied.stopped, network,supplied.network);
     require(intent.hash == supplied.hash && intent.requested == supplied.requested, Code::Conflict, "Magnet URI/hash identity was changed");
     // Preserve separately supplied actual Java numeric recovery hints, then
     // reapply the policy. No hostname lookup or new source is manufactured.
@@ -533,8 +619,13 @@ std::expected<core::TorrentHash, Error> completePendingMagnet(storage::ProfileLe
     require(layout.has_value() && !doc.find("info")->find("hash-override"), Code::InvalidFormat, "Unqualified actual magnet file layout");
     auto params = parameters(intent, network); params.ti = info;
     params.flags &= ~(libtorrent::torrent_flags::override_trackers | libtorrent::torrent_flags::override_web_seeds);
-    const auto accepted = applyTorrentNetworkPolicy(network, {}, params);
-    if (!accepted) { policy(accepted.error()); }
+    if(intent.network==MagnetNetwork::Public){const auto accepted=applyTorrentNetworkPolicy(network,{},params);if(!accepted){policy(accepted.error());}}
+    // Original metadata downloader uses TorrentUtils.getDecentralisedURL(hash)
+    // when no tracker was supplied. This preserves DHT eligibility without
+    // rewriting an explicit saved peer-source selection or enabling HTTP.
+    if(intent.network!=MagnetNetwork::Public&&params.trackers.empty()){
+      params.trackers.push_back("dht://"+intent.hash.hex()+".dht/announce");
+    }
     std::string trackers = "l";
     for (const auto& tracker : params.trackers) { trackers += 'l' + b(tracker) + 'e'; }
     put(doc, "announce-list", trackers + 'e');
@@ -569,13 +660,21 @@ std::expected<core::TorrentHash, Error> completePendingMagnet(storage::ProfileLe
         auto archive = directory(fs::path(profile) / "torrents");
         auto existing = metadata(readOwned(archive.get(), intent.hash.hex() + ".torrent", MaximumMetadata)); matching(intent, *existing);
         auto activeDir = directory(fs::path(profile) / "active");
-        auto state = metadata(readOwned(activeDir.get(), intent.hash.hex() + ".dat", 64 * 1024 * 1024)); matching(intent, *state);
+        const auto stateBytes=readOwned(activeDir.get(),intent.hash.hex()+".dat",64*1024*1024);
+        auto state=metadata(stateBytes);matching(intent,*state);
+        if(intent.network!=MagnetNetwork::Public){
+          auto savedState=document(stateBytes,64*1024*1024);const auto* attrs=savedState.find("attributes");const auto* selected=attrs?attrs->find("networks"):nullptr;
+          require(selected&&selected->type==Node::Type::List,Code::Conflict,"Existing imported network selection is absent");
+          std::vector<std::string> values;for(const auto& value:selected->children){values.push_back(text(&value));}
+          require(selection(values)==intent.network,Code::Conflict,"Existing imported row has a different network selection");
+        }
         already = true;
       }
     }
     if (!already) {
       const auto imported = take(storage::importTorrent(lease, fs::path(profile) / sourceName,
-          *intent.destination, intent.stopped, nullptr, intent.forceStart));
+          *intent.destination, intent.stopped, nullptr, intent.forceStart,
+          intent.network==MagnetNetwork::I2p?storage::TorrentIntakeNetwork::I2p:intent.network==MagnetNetwork::PublicAndI2p?storage::TorrentIntakeNetwork::Mixed:storage::TorrentIntakeNetwork::Public));
       require(imported == intent.hash, Code::Conflict, "Imported identity differs from pending request");
     }
     take(cancelPendingMagnet(lease, intent));

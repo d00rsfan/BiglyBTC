@@ -1,0 +1,283 @@
+[
+  {
+    "name": "configure",
+    "args": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+      "-DCMAKE_POLICY_DEFAULT_CMP0167=NEW",
+      "-DCMAKE_PROJECT_INCLUDE=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/test-objects.cmake"
+    ],
+    "exit": 0,
+    "seconds": 0.315,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/configure.log",
+    "log_sha256": "e3947e5ce760df0b33efa96141fb5b6ecb68fa9d37e63debbb6a8179b56043d3"
+  },
+  {
+    "name": "build",
+    "args": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build",
+      "--target",
+      "torrent-rasterbar",
+      "test_biglybtc_mainline_identity",
+      "test_biglybtc_private_i2p_owner",
+      "test_biglybtc_swarm",
+      "test_biglybtc_tracker_response",
+      "test_dht",
+      "test_tracker",
+      "--",
+      "-k",
+      "0"
+    ],
+    "exit": 0,
+    "seconds": 96.169,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/build.log",
+    "log_sha256": "8ab50ed5a7bd28260e769123064308f66a958933632b160b471318fb7c3dd1c2"
+  },
+  {
+    "name": "install",
+    "args": [
+      "cmake",
+      "--install",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build"
+    ],
+    "exit": 0,
+    "seconds": 0.032,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/install.log",
+    "log_sha256": "e98a573155cad2b655767c2dea41d5ae4147a87d7a701e9c2e0cb0aebc624420"
+  },
+  {
+    "name": "private-unit-list",
+    "args": [
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_biglybtc_private_i2p_owner",
+      "--list"
+    ],
+    "exit": 0,
+    "seconds": 0.008,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/private-unit-list.log",
+    "log_sha256": "8cebd2ae1f583a454c820af36cd88c623e1a7bf22686e5531449daecd102b19e"
+  },
+  {
+    "name": "provider-tests",
+    "args": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build",
+      "-R",
+      "^(test_biglybtc_mainline_identity|test_biglybtc_private_i2p_owner|test_biglybtc_swarm|test_biglybtc_tracker_response)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/provider-tests.xml"
+    ],
+    "exit": 0,
+    "seconds": 7.845,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/provider-tests.log",
+    "log_sha256": "ca89983d80f12143debe3dd50796d36a07a751c9866f07f2939b2120ef8dd516"
+  },
+  {
+    "name": "test_dht-list",
+    "args": [
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_dht",
+      "--list"
+    ],
+    "exit": 0,
+    "seconds": 0.008,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/test_dht-list.log",
+    "log_sha256": "307925390fbfdd0ae8169507d04a6acae994b2634ee9b0c80241aa88141a9626"
+  },
+  {
+    "name": "test_tracker-list",
+    "args": [
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_tracker",
+      "--list"
+    ],
+    "exit": 0,
+    "seconds": 0.008,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/test_tracker-list.log",
+    "log_sha256": "8fdbb968cfab2c97acb410c06dff9e8f74ff64ea5e47d10506406d738d359c00"
+  },
+  {
+    "name": "wire-controls",
+    "args": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/wire-controls",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/wire-controls.xml"
+    ],
+    "exit": 0,
+    "seconds": 0.064,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/wire-controls.log",
+    "log_sha256": "189d01e502c09bf03f1728695f1edceb5715bb7212ccb6afdbe86554d8133500"
+  },
+  {
+    "name": "mainline-configure",
+    "args": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/mainline-fixture",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/mainline-build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+      "-DCMAKE_POLICY_DEFAULT_CMP0167=NEW",
+      "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/cmake/LibtorrentRasterbar",
+      "-DMAINLINE_PROVIDER_INSTALL=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install",
+      "-DMAINLINE_PROVIDER_SOURCE=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/source"
+    ],
+    "exit": 0,
+    "seconds": 0.065,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/mainline-configure.log",
+    "log_sha256": "9b67aa8f1fa3d78a95008f327ff535c063b560ef64c8032242ac39245188be2e"
+  },
+  {
+    "name": "mainline-build",
+    "args": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/mainline-build",
+      "--",
+      "-k",
+      "0"
+    ],
+    "exit": 0,
+    "seconds": 0.265,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/mainline-build.log",
+    "log_sha256": "55052ec0fe0e084f3180a7f16b353bf31d9dea8fa49acd0b0ab177b1e4ef3654"
+  },
+  {
+    "name": "mainline-tests",
+    "args": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/mainline-build",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/mainline-tests.xml"
+    ],
+    "exit": 0,
+    "seconds": 0.217,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/mainline-tests.log",
+    "log_sha256": "acdae03cadd18c912b9ba5c04d47d87302e4aadc6b587a4d2861b99b41a9bb84"
+  },
+  {
+    "name": "socks4a-configure",
+    "args": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/socks4a-fixture",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/socks4a-build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+      "-DCMAKE_POLICY_DEFAULT_CMP0167=NEW",
+      "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/cmake/LibtorrentRasterbar"
+    ],
+    "exit": 0,
+    "seconds": 0.166,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/socks4a-configure.log",
+    "log_sha256": "cd8780e9510a13c64afeb3290aa7bc192235d67e18a19a34f6c04de47bb4dfe8"
+  },
+  {
+    "name": "socks4a-build",
+    "args": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/socks4a-build",
+      "--",
+      "-k",
+      "0"
+    ],
+    "exit": 0,
+    "seconds": 0.416,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/socks4a-build.log",
+    "log_sha256": "b5c9ae95578ec3fcc222fb25474a4f60928391a4faccd31e5899951296d614f0"
+  },
+  {
+    "name": "socks4a-tests",
+    "args": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/socks4a-build",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/socks4a-tests.xml"
+    ],
+    "exit": 0,
+    "seconds": 15.366,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/socks4a-tests.log",
+    "log_sha256": "eb9763e87b1b61fe5bc63395dd4aa2e3ebc2f10a7847489cb979cb79f34ba985"
+  },
+  {
+    "name": "roles-configure",
+    "args": [
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+      "-DCMAKE_POLICY_DEFAULT_CMP0167=NEW",
+      "-DLibtorrentRasterbar_DIR=/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/cmake/LibtorrentRasterbar"
+    ],
+    "exit": 0,
+    "seconds": 0.066,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/roles-configure.log",
+    "log_sha256": "9d52c934ffdbaf696338f4d7fd2275bacb56b974ff0776966bee71b0cc7dafa0"
+  },
+  {
+    "name": "roles-build",
+    "args": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/build"
+    ],
+    "exit": 0,
+    "seconds": 0.215,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/roles-build.log",
+    "log_sha256": "b45c25347b1e61410222a9f4b5ff81d9c4ed00154866c7c3c081fab05361a268"
+  },
+  {
+    "name": "roles",
+    "args": [
+      "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/build/sdk-role-controls",
+      "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/roles-fixture"
+    ],
+    "exit": 0,
+    "seconds": 5.385,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/roles.log",
+    "log_sha256": "0f608d36bfdd726c0a5d4e041e57f29e397a1d5ce6d50915d5dc4cb2eb6e8257"
+  }
+]

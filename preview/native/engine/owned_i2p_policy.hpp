@@ -17,5 +17,6 @@ private:
   OwnedI2pPolicy(std::shared_ptr<const storage::ProfileLease> lease,core::TorrentHash hash):lease_(std::move(lease)),hash_(std::move(hash)){}
   std::shared_ptr<const storage::ProfileLease> lease_;
   core::TorrentHash hash_;
+  bool trackers_=true; // Minted from the exact selected original peer-source state.
 };
 }

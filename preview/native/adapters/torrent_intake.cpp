@@ -453,16 +453,21 @@ void applyIntakeNetwork(core::Document& attributes,TorrentIntakeNetwork network,
         :selected->children.size()==1&&i2pNetwork),
         ErrorCode::Unsupported,"I2P or mixed intake refuses incompatible inherited networks");
   }
+  const auto dht=[](std::string_view value){return value.size()==3
+      &&(value[0]=='D'||value[0]=='d')&&(value[1]=='H'||value[1]=='h')&&(value[2]=='T'||value[2]=='t');};
+  bool trackerDenied=false,dhtDenied=false;
   if(const auto* denied=attributes.find("peersourcesdenied")){
     require(denied->type==Node::Type::List,ErrorCode::InvalidFormat,"Malformed inherited denied peer sources");
     for(const auto& value:denied->children){require(value.type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Malformed inherited denied peer source");
-      require(value.bytes!="Tracker",ErrorCode::Unsupported,"I2P intake cannot override denied Tracker permission");}
+      trackerDenied|=value.bytes=="Tracker";dhtDenied|=dht(value.bytes);}
   }
+  bool tracker=true,discovery=false;
   if(const auto* sources=attributes.find("peersources")){
     require(sources->type==Node::Type::List,ErrorCode::InvalidFormat,"Malformed inherited peer sources");
-    bool tracker=false;for(const auto& value:sources->children){require(value.type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Malformed inherited peer source");tracker|=value.bytes=="Tracker";}
-    require(tracker,ErrorCode::Unsupported,"I2P intake requires inherited Tracker permission");
+    tracker=false;for(const auto& value:sources->children){require(value.type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Malformed inherited peer source");tracker|=value.bytes=="Tracker";discovery|=dht(value.bytes);}
   }else{put(attributes,"peersources","l7:Trackere");}
+  require((tracker&&!trackerDenied)||(discovery&&!dhtDenied),ErrorCode::Unsupported,
+      "I2P intake cannot override disabled or denied Tracker/DHT peer sources");
   // An explicit existing mixed list retains its original order/raw encoding.
   if(!mixed||!inherited){put(attributes,"networks",mixed?"l6:Public3:I2Pe":"l3:I2Pe");}
 }
@@ -481,9 +486,9 @@ struct Plan {
 Plan plan(std::string metadata, std::string destination, std::string profile,
     std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={},TorrentIntakeNetwork network=TorrentIntakeNetwork::Public) {
   require(network==TorrentIntakeNetwork::Public||network==TorrentIntakeNetwork::I2p||network==TorrentIntakeNetwork::Mixed,ErrorCode::InvalidFormat,"Invalid intake network context");
-  require(network!=TorrentIntakeNetwork::I2p||(!forceStart&&!alias
+  require(network!=TorrentIntakeNetwork::I2p||(!alias
       &&(!options||(!options->verifyExisting&&options->allocation==core::TorrentAllocationMode::None))),
-      ErrorCode::Unsupported,"I2P intake requires ordinary unforced intent without verification or allocation");
+      ErrorCode::Unsupported,"I2P intake requires ordinary intent without verification or allocation");
   require(network!=TorrentIntakeNetwork::Mixed||(!alias
       &&(!options||(!options->verifyExisting&&options->allocation==core::TorrentAllocationMode::None))),
       ErrorCode::Unsupported,"Mixed intake requires ordinary intent without aliases, verification or allocation");
@@ -1019,8 +1024,8 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false,const std::string* expectedConversions=nullptr,std::optional<core::TorrentIntakeFileDestinations> fileDestinations={},core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent,const bool* expectedDecoderShowAll=nullptr,core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None) {
   try {
     require(network==TorrentIntakeNetwork::Public||network==TorrentIntakeNetwork::I2p||network==TorrentIntakeNetwork::Mixed,ErrorCode::InvalidFormat,"Invalid intake network context");
-    require(network!=TorrentIntakeNetwork::I2p||(!forceStart&&!verifyExisting&&allocation==core::TorrentAllocationMode::None),
-        ErrorCode::Unsupported,"I2P intake requires ordinary unforced intent without verification or allocation");
+    require(network!=TorrentIntakeNetwork::I2p||(!verifyExisting&&allocation==core::TorrentAllocationMode::None),
+        ErrorCode::Unsupported,"I2P intake requires ordinary intent without verification or allocation");
     require(network!=TorrentIntakeNetwork::Mixed||(!verifyExisting&&allocation==core::TorrentAllocationMode::None),
         ErrorCode::Unsupported,"Mixed intake requires ordinary intent without verification or allocation");
     require(core::validTorrentAllocationMode(allocation)&& (allocation==core::TorrentAllocationMode::None||(stopped&&!forceStart&&!queued&&!paused&&!verifyExisting&&policies.has_value())),ErrorCode::InvalidFormat,"Allocation requires explicit selected stopped/unforced intent");

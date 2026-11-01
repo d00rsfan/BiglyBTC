@@ -34,7 +34,7 @@
         if(queued.generation!=generation||Clock::now()>=queued.end){fail(Failure::Deadline);return false;}
         answerLeaseWithin(std::move(queued.frame),queued.end);
       }
-      if(active()){flushReceiveControls();flushTrackerWrite();flushOwnedLookup();flushStream();}
+      if(active()){flushReceiveControls();flushTrackerWrite();flushOwnedLookup();flushDhtWrite();flushStream();}
       if(sourceLease){sourceEffectPending=true;sourceEffectEnd=sourceLease->end;effectTimer.start(static_cast<int>(std::max<std::int64_t>(1,std::chrono::duration_cast<std::chrono::milliseconds>(sourceEffectEnd-Clock::now()).count())));}
       return active()&&sourceAuthority->current();
     }catch(...){fail(Failure::Resources);return false;}

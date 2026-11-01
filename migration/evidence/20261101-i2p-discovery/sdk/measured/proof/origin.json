@@ -1,0 +1,22 @@
+{
+  "basis_record_sha256": "449aa82f665786ce63f4e1778cee23bf07ca45439b762cf283b67efd0d48af0f",
+  "previous_mixed_record_sha256": "866b43970dfc5883a2a7f7f0f861a6d9a4704b3579c8a6eb354fb0902843896d",
+  "previous_artifact_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "failed_cache_transition_sha256": "cf3aaf3537004f981da3aeedbc3e5c7cfc993792afc515178356a4495a03cc41",
+  "root_source_review_sha256": "fc8f81f47b73afa57d373c5add343158b67a165fe5a5a5bf984d7669fbf50e02",
+  "source_capsule_sha256": "f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6",
+  "recipe_sha256": "8af69b0999328a044495fd6eaa2b6f7b9d6f9b3d46b6bee62c5b84a4af3d9c29",
+  "helper_sha256": "0e9593dfca2bcde9fed90d45e5cb4ba575e5ba856790c466b0f7f4283a89e960",
+  "makeflags": " -j3 --jobserver-auth=fifo:/tmp/GMfifo2855050 -- ATTEMPT=r2",
+  "original_head_index": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "cache_before_sha256": "91325556234dbf55babac395a48859c5b0b3da1d1134379c20ffa3a4cc640c58",
+  "old_external_reuse_override_sha256": "86b842069f3166cbe2763da28de09164a36c7da95455920e22d3964430d79e93",
+  "roles_source_sha256": {
+    "role_controls.cpp": "693159f1d034c74eca6ebeba30ef6add639939130984adb66c410da2a864f52c",
+    "exports.hpp": "3bcdaf1c612cfef5bf271d63f8321e586370663600408d3a0680f991a7df2ca7",
+    "CMakeLists.txt": "6e7d0715becabbe0570f40488dce85a3e0aa8f4968f3f12458717d8411934d78"
+  }
+}

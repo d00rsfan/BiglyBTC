@@ -210,7 +210,7 @@ if(BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER)
   set(_owned_i2p_source_capsule "63e9925c8f4f3e80168425d22b62ef87b23732eccff8fa1b7714f73f3f84e9c3")
   if(BIGLYBTC_PERSISTENT_MIXED_I2P_RUNTIME)
     # CLOSED: root replaces only after reviewed final source/artifact controls.
-    set(_owned_i2p_source_capsule "05a9fad2ad069fb0a4017e6253c91da1b56f7bec67b6fe514194007a126b0ee0")
+    set(_owned_i2p_source_capsule "f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6")
   endif()
   execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/i2p_provider/verify-owner-approval.py"
     "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL}" "${BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256}"
@@ -228,3 +228,19 @@ if(BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER)
   target_compile_features(biglybtc_i2p_provider_owner PUBLIC cxx_std_23)
   target_compile_options(biglybtc_i2p_provider_owner PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
+
+# Append once; no default discovery activation or new dependency.
+target_sources(biglybtc_i2cp_initial_channel PRIVATE i2cp_channel/dht.inc)
+add_library(biglybtc_i2p_dht STATIC i2p_dht/dht.cpp i2p_dht/actor.cpp i2p_dht/actor.hpp)
+set_target_properties(biglybtc_i2p_dht PROPERTIES AUTOMOC ON)
+target_include_directories(biglybtc_i2p_dht PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2p_dht")
+target_link_libraries(biglybtc_i2p_dht PUBLIC biglybtc_i2cp_initial_channel BiglyBTC::Core PRIVATE OpenSSL::Crypto)
+target_compile_features(biglybtc_i2p_dht PUBLIC cxx_std_23)
+target_compile_options(biglybtc_i2p_dht PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+# Append after the existing owner and explicit discovery targets.
+if(TARGET biglybtc_i2p_provider_owner AND TARGET biglybtc_i2p_dht)
+  target_link_libraries(biglybtc_i2p_provider_owner PUBLIC biglybtc_i2p_dht)
+endif()
+# Root supplies BIGLYBTC_I2P_DISCOVERY_ABI_V1 only from the exact approved
+# 42-export SDK feature probe. No old/default header or runtime gains effects.

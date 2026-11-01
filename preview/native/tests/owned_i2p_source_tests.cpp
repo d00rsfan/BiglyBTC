@@ -9,6 +9,8 @@
 #include "persistent_session.hpp"
 #include "mixed_i2p_source.hpp"
 #include "mixed_i2p_transport.hpp"
+#include "pending_magnet_source.hpp"
+#include "magnet_intake.hpp"
 #include <array>
 #include <QScopeGuard>
 #include <libtorrent/torrent_flags.hpp>
@@ -59,6 +61,111 @@ std::expected<void,storage::Error> saveIntent(Fixture& f,const core::TorrentHash
 class OwnedI2pSourceTests:public QObject {
   Q_OBJECT
 private slots:
+
+  void savedDhtOnlySourcesRespectOriginalBackupAndPrivateRules_data(){
+    QTest::addColumn<int>("kind");for(int kind=0;kind<7;++kind){QTest::newRow(std::to_string(kind).c_str())<<kind;}
+  }
+  void savedDhtOnlySourcesRespectOriginalBackupAndPrivateRules(){
+    QFETCH(int,kind);Fixture f;
+    const auto tracker=std::string("http://")+std::string(52,'a')+".b32.i2p:80/announce";
+    const auto announce=kind==1?"dht://"+f.hash.hex()+".dht/announce":kind==6?std::string("http://example.invalid/announce"):tracker;
+    const auto info=kind==4?dict({{"length","i"+std::to_string(f.payload.size())+"e"},{"name",b("owned.bin")},{"piece length","i16384e"},{"pieces",b(sha1(f.payload))},{"private","i1e"}}):f.info;
+    const auto sources=kind==1?"le":"l3:DHte"; // case-insensitive original DHT source.
+    const auto bytes=dict({{"announce",b(announce)},{"attributes",dict({{"networks","l3:I2Pe"},{"peersources",sources}})},
+        {"azureus_properties",dict({{"dht_backup_enable",kind==2?"i0e":"i1e"}})},{"info",info}});
+    write(f.state(),bytes);write(f.path/"fixture.torrent",dict({{"announce",b(announce)},{"info",info}}));
+    if(kind==3||kind==5){auto config=storage::ConfigFile::load(*f.lease,"biglybt.config");QVERIFY(config);QVERIFY(config->document().replaceValue("Plugin.azneti2phelper.azi2phelper.dht.enable",kind==3?"i0e":"3:bad"));QVERIFY(config->save(*f.lease));}
+    const auto configBefore=read(f.path/"biglybt.config"),inventoryBefore=read(f.path/"downloads.config"),stateBefore=read(f.state());
+    auto source=sam::ProfileSource::open(*f.lease,f.hash);
+    if(kind>=2&&kind!=6){QVERIFY(!source);QCOMPARE(read(f.state()),stateBefore);QCOMPARE(read(f.path/"biglybt.config"),configBefore);QCOMPARE(read(f.path/"downloads.config"),inventoryBefore);return;}
+    QVERIFY(source);auto storage=(*source)->prepareStorage();QVERIFY2(storage,storage?"":storage.error().message.c_str());
+    QVERIFY((*source)->discoveryAllowed());QVERIFY(storage->parameters().trackers.empty());QVERIFY(storage->parameters().ti->trackers().empty());
+    const auto savedMetadata=core::Document::parse(read(f.state()));QVERIFY(savedMetadata);const auto* savedAnnounce=savedMetadata->find("announce");QVERIFY(savedAnnounce);QCOMPARE(std::string(savedAnnounce->bytes),announce);
+    const auto actualHashes=storage->parameters().ti->info_hashes();QVERIFY(actualHashes.has_v1());QCOMPARE(sha1(f.info),std::string(actualHashes.v1.data(),20));
+    const auto trackerHash=sam::hashName(std::string(52,'a')+".b32.i2p");QVERIFY(trackerHash);QVERIFY(!(*source)->trackerAllowed(*trackerHash,80));
+    QVERIFY(storage->parameters().flags&lt::torrent_flags::disable_dht); // Public BEP5 remains disabled.
+  }
+  void enabledOrdinaryTrackerKeepsItsActualRuntimeMetadata(){
+    Fixture f;const auto before=core::Document::parse(read(f.state()));QVERIFY(before);const auto url=std::string(before->find("announce")->bytes);
+    auto source=sam::ProfileSource::open(*f.lease,f.hash);QVERIFY(source);auto storage=(*source)->prepareStorage();QVERIFY(storage);
+    const auto params=storage->parameters();QVERIFY(!(params.flags&lt::torrent_flags::override_trackers));
+    QVERIFY(!params.ti->trackers().empty());QCOMPARE(params.ti->trackers().front().url,url);
+    const auto hash=sam::hashName(std::string(52,'a')+".b32.i2p");QVERIFY(hash);QVERIFY((*source)->trackerAllowed(*hash,80));
+  }
+  void pendingSourcesHaveNoStorageGrantAndSelectedPublicationKeepsSiblingsExact(){
+    Fixture f;auto policy=biglybtc::engine::readNetworkPolicy(nullptr,{biglybtc::engine::NetworkMode::Normal});QVERIFY(policy);
+    const auto other=core::TorrentHash::parse(std::string(20,'q'));QVERIFY(other);
+    const auto uri="magnet:?xt=urn:btih:"+other->hex()+"&net=I2P";
+    auto intent=biglybtc::engine::parseMagnetIntent(uri,fs::path(f.payloadDirectory.path().toStdString())/"metadata-target",true,*policy,biglybtc::engine::MagnetNetwork::I2p);QVERIFY(intent);
+    auto pending=biglybtc::engine::queuePendingMagnet(*f.lease,*intent,*policy,biglybtc::engine::MagnetNetwork::I2p);QVERIFY(pending);
+    const auto state=read(f.state()),inventory=read(f.path/"downloads.config");
+    auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);
+    auto forged=*pending;forged.uri+="&dn=not-saved";QVERIFY(!(*anchor)->preparePendingMagnet(forged));
+    auto child=(*anchor)->preparePendingMagnet(*pending);QVERIFY(child);
+    QVERIFY(!(*child)->prepared());QVERIFY(!(*child)->discoveryAllowed());QVERIFY(!(*child)->effectAuthority());QVERIFY((*child)->validate());
+    auto rejected=(*anchor)->publishPendingMagnet(pending->hash,[]{return std::expected<void,storage::Error>{std::unexpected(storage::Error{storage::ErrorCode::Conflict,"No write"})};});
+    QVERIFY(!rejected);QVERIFY((*anchor)->prepared());QVERIFY((*anchor)->validate());
+    QVERIFY((*anchor)->publishPendingMagnet(pending->hash,[&]{return biglybtc::engine::cancelPendingMagnet(*f.lease,*pending);}));
+    QVERIFY((*anchor)->prepared());QVERIFY((*anchor)->validate());QCOMPARE(read(f.state()),state);QCOMPARE(read(f.path/"downloads.config"),inventory);
+    QVERIFY((*child)->release()); // Never bound, so no actual SDK lifetime exists.
+  }
+  void pendingPublicationRejectsUnrelatedConfigEdits(){
+    Fixture f;auto anchor=sam::ProfileSource::createSession(*f.lease);QVERIFY(anchor);
+    const auto result=(*anchor)->publishPendingMagnet(f.hash,[&]()->std::expected<void,storage::Error>{
+      auto config=storage::ConfigFile::load(*f.lease,"biglybt.config");if(!config){return std::unexpected(config.error());}
+      if(!config->document().replaceValue("future","3:bad")){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Fixture edit"});}return config->save(*f.lease);
+    });QVERIFY(!result);QVERIFY(!(*anchor)->prepared());QVERIFY(!(*anchor)->effectAuthority()->current());
+  }
+
+  void actualPendingMetadataSealsRejectCrossOwnerAndCannotActivateWithoutAuthorization(){
+#if defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
+    namespace engine=biglybtc::engine;
+    if(!engine::PersistentSession::mixedNetworksAvailable()){QSKIP("Explicitly qualified discovery runtime unavailable");}
+    std::array<Fixture,2> fixtures;std::array<std::unique_ptr<engine::PersistentSession>,2> owners;
+    std::array<std::shared_ptr<sam::ProfileSource>,2> anchors;
+    std::array<std::shared_ptr<sam::PendingMagnetSource>,2> children;
+    std::array<std::shared_ptr<const engine::PendingMetadataSource>,2> seals;
+    const auto cleanup=qScopeGuard([&]{for(auto& owner:owners){if(owner){(void)owner->close(std::chrono::steady_clock::now()+std::chrono::seconds(2));}}});
+    for(std::size_t n=0;n<fixtures.size();++n){auto& f=fixtures[n];(void)mixedKey(f);write(f.path/"downloads.config",dict({{"downloads","le"}}));
+      auto network=engine::readNetworkPolicy(nullptr,{engine::NetworkMode::Normal});QVERIFY(network);
+      auto intent=engine::parseMagnetIntent("magnet:?xt=urn:btih:"+f.hash.hex()+"&net=Public&net=I2P",fs::path(f.payloadDirectory.path().toStdString())/"pending",true,*network,engine::MagnetNetwork::PublicAndI2p);QVERIFY(intent);
+      auto queued=engine::queuePendingMagnet(*f.lease,*intent,*network,engine::MagnetNetwork::PublicAndI2p);QVERIFY(queued);
+      auto anchor=sam::ProfileSource::createMixedSession(*f.lease);QVERIFY(anchor);anchors[n]=*anchor;
+      auto child=anchors[n]->preparePendingMagnet(*queued);QVERIFY(child);children[n]=*child;
+      auto owner=engine::PersistentSession::create({7301+n*100,7302+n*100,7303+n*100});QVERIFY(owner);owners[n]=std::move(*owner);
+      QVERIFY(owners[n]->configureNetwork(engine::NetworkPolicy{}));QVERIFY(owners[n]->configureMixedNetworks());
+      QVERIFY(owners[n]->configureSourcePublication([&,n](const core::TorrentHash& hash,const auto& f){return anchors[n]->publishPendingMagnet(hash,f);},[&,n](const auto& f){return anchors[n]->publishPositions(f);}));
+      QVERIFY(owners[n]->startIdle(*f.lease));const auto config=read(f.path/"biglybt.config"),inventory=read(f.path/"downloads.config");
+      if(n==0){
+        std::shared_ptr<const engine::PendingMetadataSource> rejectedSeal;
+        const auto rejected=owners[n]->prepareMagnetMetadata(*f.lease,*queued,f.path,[&](auto source)->std::expected<void,storage::Error>{rejectedSeal=source;throw std::runtime_error("Rejected fixture binder");});
+        QVERIFY(!rejected);QVERIFY(rejectedSeal&&!rejectedSeal->current());QVERIFY(anchors[n]->validate());
+        QCOMPARE(read(f.path/"biglybt.config"),config);QCOMPARE(read(f.path/"downloads.config"),inventory);
+      }
+      auto sealed=owners[n]->prepareMagnetMetadata(*f.lease,*queued,f.path,[&,n](auto source){seals[n]=source;return anchors[n]->publishPendingMagnet(source->hash(),[&]{return children[n]->bindMetadata(source);});});QVERIFY2(sealed,sealed?"":sealed.error().message.c_str());
+      QVERIFY(seals[n]&&seals[n]->current());QCOMPARE(seals[n]->hash(),f.hash);QVERIFY(seals[n]->requested()==queued->requested);QVERIFY(seals[n]->admission());
+      QVERIFY(children[n]->prepared());QVERIFY(children[n]->discoveryAllowed());QVERIFY(!children[n]->effectAuthority()->granted());QVERIFY(anchors[n]->validate());
+      QVERIFY(!owners[n]->activatePreparedMagnet(f.hash));QCOMPARE(read(f.path/"biglybt.config"),config);QCOMPARE(read(f.path/"downloads.config"),inventory);
+      QVERIFY(owners[n]->retainedPayloads().claims.empty());QVERIFY(owners[n]->retainedPayloads().identities.empty());
+    }
+    auto transport=owners[0]->mixedTransport();QVERIFY(transport);
+    const auto crossed=(*transport)->admitMetadata(*seals[1],1,1);QVERIFY(!crossed);QCOMPARE(crossed.error().message,std::string("Pending source belongs to another actual engine owner"));
+    const auto correct=(*transport)->admitMetadata(*seals[0],1,1);QVERIFY(!correct);QVERIFY(correct.error().message!=crossed.error().message);
+    QVERIFY(owners[0]->cancelMagnet(fixtures[0].hash));QVERIFY(!seals[0]->current());QVERIFY(!children[0]->discoveryAllowed());QVERIFY(anchors[0]->validate());QVERIFY(seals[1]->current());
+    QVERIFY(owners[0]->releasePreparedMagnet(fixtures[0].hash));QVERIFY(children[0]->release());QVERIFY(anchors[0]->validate());
+    const auto savedIntent=read(fixtures[1].path/"biglybt.config");
+    const auto snapshot=read(fixtures[1].path/"downloads.config");
+    QVERIFY(owners[1]->withdrawPreparedMagnet(fixtures[1].hash,{storage::ErrorCode::Conflict,"Generated source withdrawal"}));
+    QVERIFY(!seals[1]->current());QVERIFY(!seals[1]->effectsCurrent());QVERIFY(!children[1]->discoveryAllowed());QVERIFY(anchors[1]->validate());
+    const auto status=owners[1]->pendingMagnets();QCOMPARE(status.size(),std::size_t{1});
+    QCOMPARE(status.front().phase,engine::MagnetPhase::Failed);QVERIFY(!status.front().retained&&status.front().failure);
+    QCOMPARE(status.front().failure->message,std::string("Generated source withdrawal"));
+    QCOMPARE(read(fixtures[1].path/"biglybt.config"),savedIntent);QCOMPARE(read(fixtures[1].path/"downloads.config"),snapshot);
+    QVERIFY(owners[1]->releasePreparedMagnet(fixtures[1].hash));QVERIFY(children[1]->release());QVERIFY(anchors[1]->validate());
+#else
+    QSKIP("No qualified discovery header/ABI; default source-only controls remain active");
+#endif
+  }
 
   void realMixedStorageSealsBindPendingAndRejectCrossedActualPublicOwners(){
     namespace engine=biglybtc::engine;

@@ -2,6 +2,7 @@
 #include "bridge.hpp"
 #include "sam_protocol.hpp"
 #include "source_permit.hpp"
+#include "pending_magnet_source.hpp"
 #include <libtorrent/biglybtc_private_i2p_owner.hpp>
 #if __has_include(<libtorrent/biglybtc_mixed_i2p_transport.hpp>)
 #include <libtorrent/biglybtc_mixed_i2p_transport.hpp>
@@ -48,6 +49,69 @@ struct Bridge::Impl {
   std::array<Byte,32> capability{};std::array<Byte,12> peerIdMask{};std::uint64_t generation=0,admission=0,activeRevision=0,rejectedClients=0;
   bool queued=false,notifyQueued=false,wanted=false,executing=false;
   std::function<bool(void*)> install;const char* failure=nullptr;
+  struct Discovery {
+    std::shared_ptr<ProfileSource> source;core::TorrentHash selected;dht::Id wire;
+    std::uint64_t admission=0;bool seeding=false;Clock::time_point next{},end{};
+    std::function<bool(const Hash&,std::uint64_t)> deliver;std::vector<Hash> delivered;
+  };
+  std::unique_ptr<dht::Actor> discovery;std::vector<Discovery> discoveries;
+  std::optional<std::uint64_t> discoveryAdmission;std::uint64_t discoveryOperation=0;
+  bool beginDiscovery(const dht::Actor::Options& options){
+    if(discovery||!channel||phase==Phase::Idle||phase==Phase::Withdrawn){return false;}
+    auto actor=std::make_unique<dht::Actor>(*channel,q);
+    if(!actor->begin(options)){return false;}
+    QObject::connect(actor.get(),&dht::Actor::changed,q,[this]{schedule();});discovery=std::move(actor);return true;
+  }
+  bool discover(std::shared_ptr<ProfileSource> child,const core::TorrentHash& selected,
+      const dht::Id& wire,std::uint64_t route,bool seeding,std::function<bool(const Hash&,std::uint64_t)> deliver){
+    if(!onThread()||!discovery||!current()||!route||!deliver||!child||!child->prepared()
+        ||!child->discoveryAllowed()||child->hash()!=selected||!child->lease()
+        ||!source->lease()||!child->lease()->sharesOwnership(*source->lease())
+        ||child->destination().wire!=source->destination().wire||child->mixedMode()!=source->mixedMode()){return false;}
+    auto found=std::find_if(discoveries.begin(),discoveries.end(),[&](const auto& value){return value.admission==route;});
+    if(found!=discoveries.end()){return found->source==child&&found->selected==selected&&found->wire==wire;}
+    if(discoveries.size()>=32){return false;}
+    discoveries.push_back({std::move(child),selected,wire,route,seeding,Clock::now(),{},std::move(deliver),{}});schedule();return true;
+  }
+  void cancelDiscovery(std::uint64_t route){
+    if(discoveryAdmission&&*discoveryAdmission==route){if(discovery&&discoveryOperation){discovery->cancel(discoveryOperation);}discoveryAdmission.reset();discoveryOperation=0;}
+    std::erase_if(discoveries,[&](const auto& value){return value.admission==route;});
+  }
+  void pumpDiscovery(){
+    if(!discovery||!executing||!current()){return;}const auto now=Clock::now();
+    for(auto at=discoveries.begin();at!=discoveries.end();){
+      if(!at->source->prepared()||!at->source->discoveryAllowed()){
+        const auto id=at->admission;++at;cancelDiscovery(id);at=discoveries.begin();
+      }else{++at;}
+    }
+    if(discoveryAdmission){
+      auto job=std::find_if(discoveries.begin(),discoveries.end(),[&](const auto& v){return v.admission==*discoveryAdmission;});
+      if(job==discoveries.end()){discovery->cancel(discoveryOperation);discoveryAdmission.reset();discoveryOperation=0;}
+      else{
+        const auto value=discovery->observation();
+        if(value.operation!=discoveryOperation||value.target!=job->wire){cancelDiscovery(job->admission);return;}
+        for(const auto& peer:value.peers){
+          if(!current()||!job->source->prepared()||!job->source->discoveryAllowed()){return;}
+          if(peer.hash==source->destination().hash||std::find(job->delivered.begin(),job->delivered.end(),peer.hash)!=job->delivered.end()){continue;}
+          if(job->deliver(peer.hash,value.operation)){job->delivered.push_back(peer.hash);}
+          if(phase==Phase::Withdrawn){return;}
+        }
+        const bool terminal=value.phase!=dht::Phase::Running;
+        const bool delivered=std::all_of(value.peers.begin(),value.peers.end(),[&](const auto& peer){return peer.hash==source->destination().hash||std::find(job->delivered.begin(),job->delivered.end(),peer.hash)!=job->delivered.end();});
+        if(now>=job->end||(terminal&&delivered)){
+          if(!terminal){discovery->cancel(discoveryOperation);}job->next=now+std::chrono::minutes(5);job->delivered.clear();discoveryAdmission.reset();discoveryOperation=0;
+        }
+      }
+    }
+    if(!discoveryAdmission){
+      auto job=std::min_element(discoveries.begin(),discoveries.end(),[](const auto& a,const auto& b){return a.next<b.next;});
+      if(job!=discoveries.end()&&now>=job->next){
+        auto operation=discovery->announceSelf(job->wire,job->seeding,120000);
+        if(operation){discoveryAdmission=job->admission;discoveryOperation=*operation;job->end=now+std::chrono::seconds(150);job->delivered.clear();}
+        else{job->next=now+std::chrono::seconds(30);}
+      }
+    }
+  }
   explicit Impl(Bridge* owner,std::shared_ptr<ProfileSource> s,i2cp::InitialChannel& c):q(owner),source(std::move(s)),channel(&c),server(owner),timer(owner),capacity(bridgeCapacity(source->groupMode())),sockets(capacity.sockets){
     retired.reserve(capacity.streams);server.setProxy(QNetworkProxy::NoProxy);server.setMaxPendingConnections(static_cast<int>(capacity.sockets));timer.setSingleShot(true);
     QObject::connect(&server,&QTcpServer::newConnection,q,[this]{schedule();});
@@ -110,7 +174,7 @@ struct Bridge::Impl {
     if(reason&&!failure){failure=reason;}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;wanted=false;server.close();timer.stop();if(watcher){watcher->setEnabled(false);}source->revoke();
     if(channel){channel->closeStreamListener();for(auto& item:sockets){if(item&&item->operation){channel->cancelStream(item->operation);}if(item&&item->lookup){channel->cancelDestinationLookup(item->lookup);}}}
     for(auto& item:sockets){if(item){QObject::disconnect(item->tcp.get(),nullptr,q,nullptr);item->tcp->abort();item.reset();}}
-    control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());notify();
+    if(discovery){discovery->close();}discoveries.clear();discoveryAdmission.reset();discoveryOperation=0;control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());notify();
   }
   void schedule(bool work=true){
     if(phase==Phase::Idle||phase==Phase::Withdrawn){return;}wanted|=work;if(queued){return;}queued=true;bool ok=false;
@@ -120,7 +184,19 @@ struct Bridge::Impl {
   void arm(){
     if(phase==Phase::Idle||phase==Phase::Withdrawn){timer.stop();return;}
     auto end=phase==Phase::Preparing?preparingEnd:Clock::time_point::max();
-    for(const auto& item:sockets){if(item&&item->phase!=SocketPhase::Control&&item->phase!=SocketPhase::Data){end=std::min(end,item->end);}}
+    for(const auto& item:sockets){if(item&&item->phase!=SocketPhase::Control&&item->phase!=SocketPhase::Data){
+      if(item->phase==SocketPhase::Lookup){
+        const auto now=Clock::now();if(now<item->end){end=std::min(end,item->end);}
+        if(!item->lookup||now>=item->end){end=std::min(end,now+std::chrono::milliseconds(250));}
+      }else{end=std::min(end,item->end);}
+    }}
+    if(discoveryAdmission){end=std::min(end,Clock::now()+std::chrono::seconds(1));}
+    else{for(const auto& job:discoveries){
+      // A due job still needs the asynchronous source permit. Its completion
+      // schedules us; avoid a one-millisecond timer loop while I/O is pending.
+      const auto now=Clock::now();
+      end=std::min(end,job.next<=now?now+std::chrono::milliseconds(250):job.next);
+    }}
     if(end==Clock::time_point::max()){timer.stop();return;}
     timer.start(static_cast<int>(std::max<std::int64_t>(1,std::chrono::duration_cast<std::chrono::milliseconds>(end-Clock::now()).count())));
   }
@@ -179,8 +255,9 @@ struct Bridge::Impl {
       auto found=std::find_if(resolved.begin(),resolved.end(),[&](const auto& d){return d.hash==*hash;});
       if(found!=resolved.end()){if(item.peer&&!permitPeer(*found)){return false;}return send(item,"NAMING REPLY RESULT=OK NAME="+name+" VALUE="+destinationText(found->wire)+"\n");}
       if(resolved.size()>=capacity.destinations){return false;}
-      auto lookup=channel->lookupDestination(*hash,30000);if(!lookup){return false;}
-      item.lookup=*lookup;item.requestedName=name;item.phase=SocketPhase::Lookup;item.end=Clock::now()+std::chrono::seconds(30);return true;
+      // DHT contact resolution shares the actual Host38 slot. Waiting for it
+      // neither rejects the SDK control socket nor extends this NAMING budget.
+      item.lookup=0;item.requestedName=name;item.phase=SocketPhase::Lookup;item.end=Clock::now()+std::chrono::seconds(30);return true;
     }
     if(!control||sessionId.empty()||f.at("ID")!=sessionId||item.phase!=SocketPhase::Command){return false;}
     auto to=decimal(f.at("TO_PORT"),65535),from=decimal(f.at("FROM_PORT"),65535);if(!to||!from){return false;}
@@ -201,9 +278,22 @@ struct Bridge::Impl {
   }
   bool pumpSocket(std::size_t index){
     auto& item=*sockets[index];
-    if(item.phase!=SocketPhase::Data&&item.phase!=SocketPhase::Control&&Clock::now()>=item.end){return false;}
+    if(item.phase!=SocketPhase::Data&&item.phase!=SocketPhase::Control&&item.phase!=SocketPhase::Lookup&&Clock::now()>=item.end){return false;}
     if(item.phase==SocketPhase::Lookup){
-      auto value=channel->destinationLookupObservation();if(!value||value->operation!=item.lookup){return false;}
+      if(Clock::now()>=item.end){
+        if(item.lookup){channel->cancelDestinationLookup(item.lookup);}item.lookup=0;item.phase=SocketPhase::Control;
+        return send(item,"NAMING REPLY RESULT=KEY_NOT_FOUND NAME="+item.requestedName+"\n");
+      }
+      if(!item.lookup){
+        const auto active=channel->destinationLookupObservation();
+        if(active&&active->phase==i2cp::InitialChannel::LookupPhase::Pending){return !item.eof;}
+        const auto hash=hashName(item.requestedName);if(!hash){return false;}
+        const auto remaining=std::chrono::duration_cast<std::chrono::milliseconds>(item.end-Clock::now()).count();
+        if(remaining<=0){return false;}
+        auto lookup=channel->lookupDestination(*hash,static_cast<unsigned>(std::min<std::int64_t>(30000,remaining)));
+        if(!lookup){return !item.eof;}item.lookup=*lookup;return true;
+      }
+      auto value=channel->destinationLookupObservation(item.lookup);if(!value||value->operation!=item.lookup){return false;}
       if(value->phase==i2cp::InitialChannel::LookupPhase::Pending){return !item.eof;}
       item.lookup=0;item.phase=SocketPhase::Control;
       if(value->phase!=i2cp::InitialChannel::LookupPhase::Resolved||!value->destination){return send(item,"NAMING REPLY RESULT=KEY_NOT_FOUND NAME="+item.requestedName+"\n");}
@@ -256,7 +346,14 @@ struct Bridge::Impl {
       if(phase==Phase::Preparing&&now>=preparingEnd){close("I2P bridge preparation deadline expired");return;}
       for(std::size_t i=0;i<sockets.size()&&phase!=Phase::Withdrawn;++i){
         if(sockets[i]&&sockets[i]->phase!=SocketPhase::Control&&sockets[i]->phase!=SocketPhase::Data
-          &&(now>=sockets[i]->end||sockets[i]->eof)){discard(i);}
+          &&(now>=sockets[i]->end||sockets[i]->eof)){
+          if(sockets[i]->phase==SocketPhase::Lookup&&!sockets[i]->eof){
+            // The operation ends locally at its original deadline. A fresh
+            // source permit sends the negative result; a missing remote peer
+            // does not tear down the shared authenticated SDK control channel.
+            if(sockets[i]->lookup){channel->cancelDestinationLookup(sockets[i]->lookup);sockets[i]->lookup=0;}
+          }else{discard(i);}
+        }
       }
       if(phase==Phase::Withdrawn){return;}if(!leaseCurrent()){close("I2P lease identity unavailable");return;}
       if(!permit){arm();return;}
@@ -281,7 +378,7 @@ struct Bridge::Impl {
         struct Wipe {decltype(policy)& value;~Wipe(){OPENSSL_cleanse(value.capability.data(),value.capability.size());}} wipe{policy};
         auto apply=std::move(install);if(!current()||!apply(&policy)||!current()){close("I2P provider installation refused");executing=false;return;}
       }
-      releaseRetired();if(phase==Phase::Withdrawn){executing=false;return;}acceptSockets();
+      pumpDiscovery();if(phase==Phase::Withdrawn){executing=false;return;}releaseRetired();if(phase==Phase::Withdrawn){executing=false;return;}acceptSockets();
       for(std::size_t i=0;i<sockets.size()&&phase==Phase::Ready;++i){if(sockets[i]&&(!current()||!pumpSocket(i))){discard(i);}}
       if(current()){channel->resumeAuthorizedEffects();}arm();
     }catch(...){close("I2P bridge operation failed");}
@@ -348,4 +445,13 @@ bool Bridge::installMixedProvider(std::function<bool(void*)> install){
 #endif
 }
 bool Bridge::event(QEvent* event){if(event->type()==SourcePermit::wakeEvent()){const auto phase=impl_->permit?impl_->permit->phase():SourcePermit::Phase::Stopped;if(phase==SourcePermit::Phase::Ready||phase==SourcePermit::Phase::Failed||phase==SourcePermit::Phase::Stopped||impl_->wanted){impl_->schedule(false);}return true;}return QObject::event(event);}
+}
+
+namespace biglybtc::services::i2p::provider {
+bool Bridge::beginDiscovery(const dht::Actor::Options& options){return impl_->onThread()&&impl_->beginDiscovery(options);}
+bool Bridge::discover(std::shared_ptr<ProfileSource> source,const core::TorrentHash& hash,const dht::Id& wire,
+    std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)> deliver){return impl_->discover(std::move(source),hash,wire,admission,seeding,std::move(deliver));}
+bool Bridge::discover(std::shared_ptr<PendingMagnetSource> source,const core::TorrentHash& hash,const dht::Id& wire,
+    std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)> deliver){return source&&impl_->discover(source->source_,hash,wire,admission,seeding,std::move(deliver));}
+void Bridge::cancelDiscovery(std::uint64_t admission){if(impl_->onThread()){impl_->cancelDiscovery(admission);}}
 }

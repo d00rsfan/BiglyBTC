@@ -8,9 +8,10 @@
 #include <memory>
 #include <functional>
 
-namespace biglybtc::engine {class MixedManagedSource;}
+namespace biglybtc::engine {class MixedManagedSource;class PendingMetadataSource;struct PendingMagnet;}
 namespace biglybtc::services::i2p::provider {
 class OwnedTorrent;
+class PendingMagnetSource;
 class OwnedProfile;
 // Filesystem methods belong to an external lifetime/I/O worker, never the
 // socket thread. Public observations contain no key bytes or ephemeral auth.
@@ -33,6 +34,13 @@ public:
       std::shared_ptr<const engine::MixedManagedSource>);
   // Source/transport retirement only; never removes/checkpoints engine storage.
   std::expected<void,storage::Error> releaseMixedChild(const core::TorrentHash&);
+  std::expected<std::shared_ptr<PendingMagnetSource>,storage::Error> preparePendingMagnet(const engine::PendingMagnet&);
+  // Only the selected original pending row and target import may change. All
+  // other config, identity, inventory rows and child sources remain exact.
+  std::expected<void,storage::Error> publishPendingMagnet(const core::TorrentHash&,
+      const std::function<std::expected<void,storage::Error>()>&);
+  std::expected<void,storage::Error> releasePendingChild(const core::TorrentHash&);
+  bool discoveryAllowed()const noexcept;
   bool mixedMode()const noexcept;
   // Worker-only read after intentional transport withdrawal. Checks exact held
   // profile/key/metadata snapshots even when effects are revoked. Does not
@@ -74,6 +82,7 @@ public:
   void revoke()noexcept;
   std::shared_ptr<i2cp::EffectAuthority> effectAuthority()const noexcept;
 private:
+  friend class PendingMagnetSource;
   friend class OwnedTorrent;
   friend class OwnedProfile;
   // Read-only final CAS preflight after the friend's actual flush/remove/join.
@@ -87,7 +96,8 @@ private:
       const storage::ProfileLease&,const core::TorrentHash&,std::string,bool session,bool mixed=false);
   std::expected<engine::detail::ManagedStorage,storage::Error> prepareStorageDirect();
   std::expected<void,storage::Error> publishImpl(const std::optional<core::TorrentHash>&,
-      const std::function<std::expected<void,storage::Error>()>&);
+      const std::function<std::expected<void,storage::Error>()>&,bool pendingPublication=false);
+  std::expected<void,storage::Error> bindPendingMetadata(std::shared_ptr<const engine::PendingMetadataSource>);
   struct Impl;
   explicit ProfileSource(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;

@@ -70,11 +70,15 @@ void i2pNetworkContexts(){
     const auto bytes=input.serialize();write(area.input,bytes);const auto source=take(storage::inspectTorrentIntake(area.input));
     check(!importI2pFiles(area,source),"I2P context cannot silently reinterpret inherited networks");area.untouched();check(read(area.input)==bytes,"Incompatible source remains unchanged");
   }
-  for(bool denied:{false,true}){
+  for(int source=0;source<3;++source){
     Area area;auto input=parse(original);auto attrs=parse(rawValue(input,"attributes"));
-    check(attrs.replaceValue(denied?"peersourcesdenied":"peersources",denied?"l7:Trackere":"l3:DHTe").has_value(),"Own disabled inherited Tracker source");
-    check(input.replaceValue("attributes",attrs.serialize()).has_value(),"Own inherited peer-source metadata");write(area.input,input.serialize());
-    const auto source=take(storage::inspectTorrentIntake(area.input));check(!importI2pFiles(area,source),"Explicit disabled or denied Tracker cannot be re-enabled by import context");area.untouched();
+    if(source!=1){check(attrs.replaceValue("peersources","l3:DHTe").has_value(),"Own explicit DHT-only source");}
+    if(source){check(attrs.replaceValue("peersourcesdenied",source==1?"l7:Trackere":"l3:DHTe").has_value(),"Own denied actual source");}
+    check(input.replaceValue("attributes",attrs.serialize()).has_value(),"Own inherited peer-source metadata");const auto bytes=input.serialize();write(area.input,bytes);
+    const auto metadata=take(storage::inspectTorrentIntake(area.input));const auto result=importI2pFiles(area,metadata);
+    if(source){check(!result,"Denied default Tracker or explicit DHT cannot be re-enabled by intake");area.untouched();}
+    else{check(result.has_value(),"Explicit inherited DHT-only selection remains supported");const auto state=parse(read(area.profile/"active"/(result->hex()+".dat")));check(rawValue(parse(rawValue(state,"attributes")),"peersources")=="l3:DHTe","Explicit DHT-only selection preserved");}
+    check(read(area.input)==bytes,"Peer-source selection never rewrites input");
   }
   {
     Area area;write(area.input,original);const auto hash=take(storage::importTorrent(*area.lease,area.input,area.destination,true));
@@ -113,11 +117,20 @@ void i2pNetworkContexts(){
         kind==2?core::TorrentAllocationMode::Stopped:core::TorrentAllocationMode::None,Network::I2p);
     check(!result,"I2P context cannot imply unsupported queue, verified-seeding or allocation ownership");area.untouched();
   }
-  for(int kind=0;kind<2;++kind){
-    Area area;const auto result=storage::importTorrent(*area.lease,area.input,area.destination,true,nullptr,kind==0,
-        kind==1?static_cast<Network>(99):Network::I2p);
-    check(!result,"I2P context refuses force or invalid enum before effects");area.untouched();
+  {
+    Area area;const auto result=storage::importTorrent(*area.lease,area.input,area.destination,true,nullptr,false,static_cast<Network>(99));
+    check(!result,"Invalid I2P context enum refuses before effects");area.untouched();
   }
+  for(auto boundary:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,
+      storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
+    Area area;write(area.input,original);interrupted=boundary;
+    check(!storage::importTorrent(*area.lease,area.input,area.destination,false,interrupt,true,Network::I2p),"Interrupt forced I2P import at real durable boundary");
+    const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));check(journal.find("forceStart")->integer==1&&journal.find("network")->bytes=="I2P","Original forced intent and I2P context share the same journal");
+    area.reopen();const auto hash=take(storage::recoverTorrentIntake(*area.lease));check(hash.has_value(),"Recover actual forced I2P intake");checkI2pState(area,*hash);
+    const auto saved=core::readLibrary(parse(read(area.profile/"downloads.config")));
+    check(saved&&saved->downloads.size()==1&&saved->downloads[0].forceStart&&saved->downloads[0].startup==core::StartupState::Waiting&&saved->paused.empty(),"Forced Waiting0 survives each exact I2P recovery boundary without payload ownership");
+  }
+
 }
 }
 
@@ -174,11 +187,15 @@ void mixedNetworkContexts(){
     const auto bytes=input.serialize();write(area.input,bytes);const auto source=take(storage::inspectTorrentIntake(area.input));
     check(!importMixedFiles(area,source),"Mixed import cannot broaden or normalize an existing network selection");area.untouched();check(read(area.input)==bytes,"Rejected network input remains exact");
   }
-  for(bool denied:{false,true}){
+  for(int source=0;source<3;++source){
     Area area;auto input=parse(original);auto attrs=parse(rawValue(input,"attributes"));
-    check(attrs.replaceValue(denied?"peersourcesdenied":"peersources",denied?"l7:Trackere":"l3:DHTe").has_value()
-        &&input.replaceValue("attributes",attrs.serialize()).has_value(),"Own disabled mixed Tracker source");write(area.input,input.serialize());
-    const auto source=take(storage::inspectTorrentIntake(area.input));check(!importMixedFiles(area,source),"Mixed choice cannot override disabled/denied Tracker");area.untouched();
+    if(source!=1){check(attrs.replaceValue("peersources","l3:DHTe").has_value(),"Own mixed DHT-only source");}
+    if(source){check(attrs.replaceValue("peersourcesdenied",source==1?"l7:Trackere":"l3:DHTe").has_value(),"Own denied mixed source");}
+    check(input.replaceValue("attributes",attrs.serialize()).has_value(),"Own mixed peer sources");const auto bytes=input.serialize();write(area.input,bytes);
+    const auto metadata=take(storage::inspectTorrentIntake(area.input));const auto result=importMixedFiles(area,metadata);
+    if(source){check(!result,"Mixed choice cannot override denied actual source");area.untouched();}
+    else{check(result.has_value(),"Mixed import preserves explicit DHT-only source");const auto state=parse(read(area.profile/"active"/(result->hex()+".dat")));check(rawValue(parse(rawValue(state,"attributes")),"peersources")=="l3:DHTe","Mixed DHT-only selection remains exact");}
+    check(read(area.input)==bytes,"Mixed source bytes remain exact");
   }
   for(const auto* value:{"6:Public","5:Mixed","10:Public+I2p","i2e"}){
     Area area;const auto source=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;

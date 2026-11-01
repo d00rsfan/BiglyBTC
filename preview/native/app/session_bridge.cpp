@@ -8,6 +8,8 @@
 #include "torrent_creator.hpp"
 #include <thread>
 #include "magnet_intake.hpp"
+#include "pending_metadata_source.hpp"
+#include <unistd.h>
 #include "file_policy_commands.hpp"
 #include "library_commands.hpp"
 #include "network_policy.hpp"
@@ -282,7 +284,26 @@ struct SessionBridge::Host {
   void pollMixed(){
     if(!mixed){return;}auto observations=mixed->observations();
     bool unavailable=false;std::vector<core::TorrentHash> changed;
-    for(const auto& row:observations){auto& value=mixedStatus[row.hash.hex()];
+    for(const auto& row:observations){
+      if(row.metadataOnly){
+        if(row.sourceChanged){
+          // Filesystem/key loss revokes the actual metadata handle as well as
+          // I2P effects. Keep its original recovery intent for an explicit retry.
+          if(engine){
+            auto withdrawn=engine->withdrawPreparedMagnet(row.hash,storage::Error{storage::ErrorCode::Conflict,"Mixed metadata source changed; recovery intent retained"});
+            if(!withdrawn){admissionFailures.insert_or_assign(row.hash.hex(),withdrawn.error());}
+          }
+          unavailable=true;
+          admissionFailures.insert_or_assign(row.hash.hex(),storage::Error{storage::ErrorCode::Conflict,"Mixed metadata source changed; inspect the original profile before retrying"});
+          continue;
+        }
+        if(row.active&&engine&&mixedMetadata.contains(row.hash.hex())&&!activatedMetadata.contains(row.hash.hex())){
+          auto activated=engine->activatePreparedMagnet(row.hash);if(activated){activatedMetadata.insert(row.hash.hex());}else{admissionFailures.insert_or_assign(row.hash.hex(),activated.error());}
+        }
+        if(row.unavailable){admissionFailures.insert_or_assign(row.hash.hex(),storage::Error{storage::ErrorCode::Conflict,row.failure.empty()?"I2P metadata route unavailable":row.failure});}
+        continue;
+      }
+      auto& value=mixedStatus[row.hash.hex()];
       value={row.active,row.generation,row.routeNonce,row.failure};
       unavailable|=row.unavailable;if(row.sourceChanged){changed.push_back(row.hash);}
     }
@@ -702,8 +723,136 @@ struct SessionBridge::Host {
     }
     return true;
   }
+
+  std::map<std::string,std::shared_ptr<const engine::PendingMetadataSource>> mixedMetadata;
+  std::set<std::string> activatedMetadata;
+  struct PrivateImport {
+    engine::PendingMagnet intent;
+    std::string bytes;
+    bool committed=false,routeReleased=false,reservationReleased=false;
+    std::chrono::steady_clock::time_point next{};
+  };
+  // Completion deletes the pending row. Retain the subsequent release work
+  // independently, so a transient owner failure cannot orphan that admission.
+  std::map<std::string,PrivateImport> privateImports;
+  engine::MagnetNetwork magnetContext()const noexcept{
+    return !i2pOptions?engine::MagnetNetwork::Public:privateOnly()?engine::MagnetNetwork::I2p:engine::MagnetNetwork::PublicAndI2p;
+  }
+  std::expected<void,storage::Error> publishPending(const core::TorrentHash& hash,const std::function<std::expected<void,storage::Error>()>& operation){
+    const auto inner=[&]{return mixed?mixed->publishPendingMagnet(hash,operation):operation();};
+    auto result=i2p?i2p->publishPendingMagnet(hash,inner):inner();
+    if(!result&&((i2p&&!i2p->sourceCurrent())||(mixed&&!mixed->sourceCurrent()))){if(i2p){i2p->revoke();}if(mixed){mixed->revoke();}}
+    return result;
+  }
+  std::vector<engine::PendingMagnetStatus> pendingMagnets()const{
+    auto result=engine?engine->pendingMagnets():std::vector<engine::PendingMagnetStatus>{};
+    if(i2p){auto pure=i2p->pendingMagnets();result.insert(result.end(),std::make_move_iterator(pure.begin()),std::make_move_iterator(pure.end()));}
+    return result;
+  }
+  std::expected<void,storage::Error> startPending(const engine::PendingMagnet& intent){
+    const auto previous=pendingMagnets();const auto old=std::ranges::find(previous,intent.hash,&engine::PendingMagnetStatus::hash);
+    if(old!=previous.end()&&old->retained){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata admission is still resolving or retiring"});}
+    if(old!=previous.end()&&intent.network!=engine::MagnetNetwork::Public){
+      // An explicit retry retires only the old, already removed reservation;
+      // its exact original recovery row remains available for a fresh attempt.
+      if(intent.network==engine::MagnetNetwork::I2p&&i2p){auto released=i2p->releaseMagnet(intent.hash);if(!released){return released;}}
+      else if(mixedMetadata.contains(intent.hash.hex())){
+        auto released=mixed?mixed->removeMetadata(intent.hash):std::expected<void,storage::Error>{};
+        if(released&&engine){released=engine->releasePreparedMagnet(intent.hash);}if(!released){return released;}
+        mixedMetadata.erase(intent.hash.hex());activatedMetadata.erase(intent.hash.hex());
+      }
+    }
+    if(intent.network==engine::MagnetNetwork::Public){
+      if(!engine||privateOnly()){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Public magnet owner unavailable"});}
+      return engine->startMagnet(lease,intent,profile);
+    }
+    if(!i2pOptions){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P magnet provider unavailable"});}
+    if(intent.network==engine::MagnetNetwork::I2p){
+      if(i2p){return i2p->addMagnet(intent);}
+      auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}
+      auto options=readSavedI2pOptions(config->document(),*i2pOptions);if(!options){return std::unexpected(options.error());}
+      options->externalQueue=coexistence();
+      auto created=OwnedI2pService::startPending(lease,intent,std::move(*options));if(!created){return std::unexpected(created.error());}
+      i2p=std::move(*created);i2pJoined=false;coexistQueue.privateOwnerChanged();return {};
+    }
+    if(!mixedCapable()||!engine){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed magnet provider unavailable"});}
+    if(!mixed){auto transport=engine->mixedTransport();if(!transport){return std::unexpected(transport.error());}
+      auto created=OwnedMixedI2pService::create(lease,*i2pOptions,*transport);if(!created){return std::unexpected(created.error());}
+      mixed=std::move(*created);mixedJoined=false;}
+    auto prepared=mixed->prepareMagnet(intent);if(!prepared){return prepared;}
+    auto sealed=engine->prepareMagnetMetadata(lease,intent,profile,[this,&intent](auto seal){return publishPending(intent.hash,[&]{return mixed->bindMetadata(std::move(seal));});});
+    if(!sealed){(void)mixed->removeMetadata(intent.hash);return std::unexpected(sealed.error());}
+    mixedMetadata.insert_or_assign(intent.hash.hex(),*sealed);
+    auto attached=mixed->attachMetadata(*sealed);if(!attached){(void)engine->withdrawPreparedMagnet(intent.hash,attached.error());return attached;}return {};
+  }
+  std::expected<void,storage::Error> cancelPending(const engine::PendingMagnet& intent){
+    const auto live=pendingMagnets();const auto found=std::ranges::find(live,intent.hash,&engine::PendingMagnetStatus::hash);
+    if(found!=live.end()&&found->retained){
+      return intent.network==engine::MagnetNetwork::I2p&&i2p?i2p->cancelMagnet(intent.hash):engine?engine->cancelMagnet(intent.hash):std::expected<void,storage::Error>{std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata owner unavailable"})};
+    }
+    auto cancelled=publishPending(intent.hash,[&]{return engine::cancelPendingMagnet(lease,intent);});
+    if(cancelled){
+      if(found!=live.end()&&intent.network==engine::MagnetNetwork::I2p&&i2p){cancelled=i2p->releaseMagnet(intent.hash);}
+      else if(mixedMetadata.contains(intent.hash.hex())){cancelled=mixed?mixed->removeMetadata(intent.hash):std::expected<void,storage::Error>{};
+        if(cancelled&&engine){cancelled=engine->releasePreparedMagnet(intent.hash);}if(cancelled){mixedMetadata.erase(intent.hash.hex());activatedMetadata.erase(intent.hash.hex());}}
+    }return cancelled;
+  }
+  void pollPrivateMagnets(){
+    // This Host worker imports only after actual metadata handle removal and
+    // weak expiry. The Qt owner retains bytes until explicit successful release.
+    const auto live=pendingMagnets();
+    for(const auto& value:live){
+      if(privateImports.contains(value.hash.hex())){continue;}
+      auto found=pendingIntents.find(value.hash.hex());if(found==pendingIntents.end()){continue;}const auto intent=found->second;
+      if(intent.network==engine::MagnetNetwork::Public||value.retained){continue;}
+      if(value.phase==engine::MagnetPhase::Cancelled){
+        const auto done=cancelPending(intent);if(!done){admissionFailures.insert_or_assign(value.hash.hex(),done.error());}continue;
+      }
+      if(value.phase!=engine::MagnetPhase::Retiring||value.failure){continue;}
+      auto bytes=intent.network==engine::MagnetNetwork::I2p&&i2p?i2p->takeCompletedMetadata(value.hash):engine?engine->takeCompletedMagnetMetadata(value.hash):std::expected<std::string,storage::Error>{std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata owner unavailable"})};
+      if(!bytes){admissionFailures.insert_or_assign(value.hash.hex(),bytes.error());continue;}
+      // Allocate retry state before the durable import can delete its row.
+      auto [at,inserted]=privateImports.emplace(value.hash.hex(),PrivateImport{intent,std::move(*bytes)});
+      if(!inserted){continue;}
+      const auto& metadata=at->second.bytes;
+      const auto filename="BiglyBTC.metadata."+value.hash.hex()+".config";
+      const auto completed=publishPending(value.hash,[&]()->std::expected<void,storage::Error>{
+        auto existing=storage::ConfigFile::load(lease,filename);
+        if(existing){if(existing->recoverySource()!=storage::RecoverySource::Primary||existing->document().serialize()!=metadata){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Received metadata staging conflicts with an earlier result"});}}
+        else{if(existing.error().code!=storage::ErrorCode::Missing){return std::unexpected(existing.error());}auto made=storage::ConfigFile::createMissing(lease,filename,metadata);if(!made){return std::unexpected(made.error());}}
+        auto imported=engine::completePendingMagnet(lease,intent,profile/filename,networkPolicy);return imported?std::expected<void,storage::Error>{}:std::expected<void,storage::Error>{std::unexpected(imported.error())};
+      });
+      if(!completed){admissionFailures.insert_or_assign(value.hash.hex(),completed.error());privateImports.erase(at);continue;}
+      at->second.committed=true;
+    }
+    for(auto at=privateImports.begin();at!=privateImports.end();){
+      auto& work=at->second;const auto key=at->first;const auto hash=work.intent.hash;
+      if(!work.committed){at=privateImports.erase(at);continue;}
+      const auto now=std::chrono::steady_clock::now();if(now<work.next){++at;continue;}
+      work.next=now+std::chrono::seconds(1);
+      if(!work.routeReleased){
+        auto released=work.intent.network==engine::MagnetNetwork::I2p&&i2p?i2p->releaseMagnet(hash):mixed?mixed->removeMetadata(hash):std::expected<void,storage::Error>{};
+        if(!released){admissionFailures.insert_or_assign(key,released.error());++at;continue;}
+        work.routeReleased=true;
+      }
+      if(!work.reservationReleased){
+        auto released=mixedMetadata.contains(key)&&engine?engine->releasePreparedMagnet(hash):std::expected<void,storage::Error>{};
+        if(!released){admissionFailures.insert_or_assign(key,released.error());++at;continue;}
+        work.reservationReleased=true;
+      }
+      mixedMetadata.erase(key);activatedMetadata.erase(key);
+      const auto filename="BiglyBTC.metadata."+key+".config";
+      // Remove only our exact consumed sidecar, releasing the gate before SDK
+      // payload admission. Ordinary saved-library Start handles later retries.
+      {auto held=lease.sourceAccess();if(held){auto staged=storage::ConfigFile::load(lease,filename);if(staged&&staged->document().serialize()==work.bytes&&::unlinkat(lease.directoryHandle(),filename.c_str(),0)==0){(void)::fsync(lease.directoryHandle());}}}
+      admissionFailures.erase(key);
+      if(!work.intent.stopped){auto started=startSaved(hash,work.intent.forceStart);if(!started){admissionFailures.insert_or_assign(key,started.error());}else{admissionFailures.erase(key);}}
+      pendingIntents.erase(key);at=privateImports.erase(at);
+    }
+  }
+
   void readMagnets() {
-    auto read = engine::readPendingMagnets(lease, networkPolicy);
+    auto read = engine::readPendingMagnets(lease, networkPolicy,magnetContext());
     pendingSourceCurrent = read.has_value();
     if (!read) {
       pendingReadFailure = read.error(); // Keep previous rows, visibly nonactionable.
@@ -727,7 +876,7 @@ struct SessionBridge::Host {
     return {};
   }
   quint16 magnetActions(const engine::PendingMagnet* intent, const engine::PendingMagnetStatus* live) const {
-    if (!engine || !engine->managedAvailable() || !pendingSourceCurrent || !intent) { return 0; }
+    if (!pendingSourceCurrent || !intent || (intent->network==engine::MagnetNetwork::Public?(!engine||!engine->managedAvailable()):(!i2pOptions||!OwnedI2pService::available()))) { return 0; }
     if (live && (live->phase == engine::MagnetPhase::Retiring
         || (live->retained && live->phase != engine::MagnetPhase::Resolving))) { return 0; }
     quint16 actions = actionBit(core::DownloadAction::Stop);
@@ -738,7 +887,7 @@ struct SessionBridge::Host {
   }
   void bootstrapMagnets(std::stop_token stop) {
     readMagnets();
-    if (!pendingSourceCurrent || !engine) { return; }
+    if (!pendingSourceCurrent || (!engine&&!i2pOptions)) { return; }
     const auto library = take(storage::readLibraryView(lease));
     // Copy before completion removes a persisted row. No new handle is admitted
     // for a crash-recovered magnet already present in the ordinary inventory.
@@ -757,12 +906,14 @@ struct SessionBridge::Host {
       if (duplicate) {
         admitted = std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Duplicate ordinary magnet identity"});
       } else if (existing) {
-        auto completed = engine::completePendingMagnet(lease, intent, existing->saved.torrentFile, networkPolicy);
+        std::expected<core::TorrentHash,storage::Error> completed=std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Pending import publication failed"});
+        auto published=publishPending(intent.hash,[&]()->std::expected<void,storage::Error>{completed=engine::completePendingMagnet(lease,intent,existing->saved.torrentFile,networkPolicy);return completed?std::expected<void,storage::Error>{}:std::expected<void,storage::Error>{std::unexpected(completed.error())};});
+        if(!published){admitted=std::unexpected(published.error());}
         if (!completed) { admitted = std::unexpected(completed.error()); }
       } else if (!intent.destination) {
         admitted = std::unexpected(storage::Error{storage::ErrorCode::Missing, "Recovered magnet needs an explicit destination"});
       } else {
-        admitted = engine->startMagnet(lease, intent, profile);
+        admitted = startPending(intent);
       }
       if (!admitted) { admissionFailures.insert_or_assign(hash, admitted.error()); }
       else { admissionFailures.erase(hash); }
@@ -786,8 +937,8 @@ struct SessionBridge::Host {
     std::map<std::string, engine::ManagedDownloadStatus> live;
     if (engine) { for (auto& item : engine->managedDownloads()) { live.emplace(item.hash.hex(), std::move(item)); } }
     std::map<std::string, engine::PendingMagnetStatus> magnets;
-    if (engine) {
-      for (auto& item : engine->pendingMagnets()) {
+    {
+      for (auto& item : pendingMagnets()) {
         // Imported metadata may already be an ordinary row even if its optional
         // autostart failed. Report that admission once; retry remains ordinary.
         if (item.phase == engine::MagnetPhase::Imported && item.failure
@@ -1067,7 +1218,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
       const auto session=host_?host_->columnLayoutSession:quint64{0};
       try{
       if (!stop.stop_requested() && host_) {
-        if(host_->i2pOptions){host_->pollI2p();host_->pollMixed();}
+        if(host_->i2pOptions){host_->pollI2p();host_->pollMixed();host_->pollPrivateMagnets();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
           const auto polled=host_->engine->poll();publishMainlineFailure();
@@ -1090,7 +1241,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             prior->second = stamp;
           }
           std::map<std::string, Host::MagnetStamp> magnets;
-          for (const auto& item : host_->engine->pendingMagnets()) {
+          for (const auto& item : host_->pendingMagnets()) {
             magnets.emplace(item.hash.hex(), Host::MagnetStamp{item.admission, item.phase, item.retained,
                 item.name, item.failure ? std::optional{item.failure->code} : std::nullopt,
                 item.failure ? item.failure->message : std::string{}});
@@ -1316,7 +1467,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
         if(host_->i2pOptions){host_->i2pPacket.hash=text(saved.hash->hex());host_->i2pPacket.state=tr("Error — I2P");host_->i2pPacket.failure=text(started.error().message);}
       }
     }
-    if(host_->engine){host_->bootstrapMagnets(stop);} // Private I2P has no Public magnet fallback.
+    host_->bootstrapMagnets(stop);
     host_->scheduleCoexistence();tickScheduler();
     ready(host_->query(stop), host_->admissionFailures.empty() ? QString{} : tr("Some torrents require attention; saved data was preserved"));
     publishI2p();
@@ -1325,10 +1476,10 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
 bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAction action) {
   if (profileClosed_ || targets.empty()) { return false; }
   return dispatch([this, targets = std::move(targets), action](std::stop_token stop) {
-    if(host_&&host_->privateOnly()&&host_->lastSnapshot){
+    if(host_&&host_->privateOnly()&&host_->lastSnapshot&&std::ranges::none_of(targets,[&](const auto& target){return host_->pendingTargets.contains(target.hash.toStdString());})){
       host_->i2pCommands(targets,action,stop);publishI2p();ready(host_->query(stop));return;
     }
-    if (!host_ || !host_->engine || !host_->lastSnapshot) {
+    if (!host_ || (!host_->engine&&!host_->privateOnly()) || !host_->lastSnapshot) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
     if (host_->fileRecoveryRequired || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
@@ -1346,10 +1497,10 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
     std::vector<engine::PendingMagnetStatus> metadata;
     if (hasPending) {
       // Whole-selection CAS admission before either pending or ordinary effects.
-      for (auto& item : take(engine::readPendingMagnets(host_->lease, host_->networkPolicy))) {
+      for (auto& item : take(engine::readPendingMagnets(host_->lease, host_->networkPolicy,host_->magnetContext()))) {
         freshPending.emplace(item.hash.hex(), std::move(item));
       }
-      metadata = host_->engine->pendingMagnets();
+      metadata = host_->pendingMagnets();
     }
     for (const auto& target : targets) {
       checkpoint(stop); host_->accepts(target);
@@ -1377,7 +1528,7 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
     // Withdraw EVERY accepted selected ticket before the first target's IO.
     // A failure for A must not leave selected B authorized to auto-publish.
     std::set<std::string> cancelledVerification,cancelledAllocation;
-    const auto admissions=host_->engine->managedDownloads();
+    const auto admissions=host_->engine?host_->engine->managedDownloads():std::vector<engine::ManagedDownloadStatus>{};
     for(const auto& hash:hashes){if(std::ranges::any_of(admissions,[&](const auto& item){return item.hash==hash&&item.verificationHeld;})){
       cancelledVerification.insert(hash.hex());
     }}
@@ -1392,14 +1543,13 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
       if (const auto pending = pendingSelection.find(hash.hex()); pending != pendingSelection.end()) {
         std::expected<void, storage::Error> controlled;
         if (action == core::DownloadAction::Start) {
-          controlled = host_->engine->startMagnet(host_->lease, pending->second, host_->profile);
+          controlled = host_->startPending(pending->second);
         } else {
-          const auto current = host_->engine->pendingMagnets();
+          const auto current = host_->pendingMagnets();
           const auto live = std::ranges::find_if(current, [&](const auto& item) { return item.hash == hash; });
           // The engine owns retirement whenever an exact handle is retained.
           // Adapter-only cancellation is safe solely without a metadata handle.
-          controlled = live != current.end() && live->retained ? host_->engine->cancelMagnet(hash)
-              : engine::cancelPendingMagnet(host_->lease, pending->second);
+          (void)live;controlled = host_->cancelPending(pending->second);
         }
         if (!controlled) {
           host_->admissionFailures.insert_or_assign(hash.hex(), controlled.error());
@@ -1635,36 +1785,46 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
 bool SessionBridge::magnetImport(QString uri, QString destination) {
   if (profileClosed_ || uri.isEmpty() || destination.isEmpty()) { return false; }
   return dispatch([this, uri = std::move(uri), destination = std::move(destination)](std::stop_token stop) {
-    if(host_){host_->requireI2pIdle();}
-    if (!host_ || !host_->engine || !host_->engine->managedAvailable()) {
+    if (!host_ || ((!host_->engine||!host_->engine->managedAvailable())&&!host_->privateOnly())) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
     checkpoint(stop);
     if (host_->fileRecoveryRequired || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
     const auto intent = take(engine::parseMagnetIntent(uri.toUtf8().toStdString(),
-        std::filesystem::path(destination.toUtf8().toStdString()), false, host_->networkPolicy));
+        std::filesystem::path(destination.toUtf8().toStdString()), false, host_->networkPolicy,host_->magnetContext()));
     const auto library = take(storage::readLibraryView(host_->lease));
     for (const auto& item : library.items) {
       if (item.saved.hash && *item.saved.hash == intent.hash) {
         throw Failure{{storage::ErrorCode::Conflict, "This magnet is already in the library"}};
       }
     }
-    const auto existing = take(engine::readPendingMagnets(host_->lease, host_->networkPolicy));
+    const auto existing = take(engine::readPendingMagnets(host_->lease, host_->networkPolicy,host_->magnetContext()));
     const auto prior = std::ranges::find_if(existing, [&](const auto& value) { return value.hash == intent.hash; });
-    for (const auto& active : host_->engine->pendingMagnets()) {
+    for (const auto& active : host_->pendingMagnets()) {
       if (active.hash == intent.hash && active.retained) {
         throw Failure{{storage::ErrorCode::Conflict, "This magnet is already resolving or retiring"}};
       }
     }
-    if (prior != existing.end() && (prior->uri != intent.uri || prior->requested != intent.requested)) {
+    bool sameUri=prior==existing.end()||prior->uri==intent.uri;
+    if(!sameUri&&prior->network==engine::MagnetNetwork::I2p&&intent.network==engine::MagnetNetwork::I2p){
+      // The reader validated this exact submitted/effective-URI witness. Java
+      // sees explicit net=I2P; a repeat paste may still use the submitted URI.
+      const auto row=core::Document::parse(prior->sourceEntry);
+      const auto* other=row?row->find("other_metadata"):nullptr;
+      const auto* submitted=other?other->find("BiglyBTC.pending.submitted_uri"):nullptr;
+      sameUri=submitted&&submitted->type==core::Node::Type::Bytes&&submitted->bytes==intent.uri;
+    }
+    if (prior != existing.end() && (!sameUri || prior->requested != intent.requested)) {
       throw Failure{{storage::ErrorCode::Conflict, "A different magnet request already owns this identity"}};
     }
     checkpoint(stop); // From persistence onward, failures retain the original recovery row.
-    const auto persisted = prior == existing.end()
-        ? take(engine::queuePendingMagnet(host_->lease, intent, host_->networkPolicy))
-        : take(engine::attachPendingMagnetDestination(host_->lease, *prior, *intent.destination, host_->networkPolicy));
-    const auto admitted = host_->engine->startMagnet(host_->lease, persisted, host_->profile);
+    engine::PendingMagnet persisted;
+    take(host_->publishPending(intent.hash,[&]()->std::expected<void,storage::Error>{
+      auto saved=prior==existing.end()?engine::queuePendingMagnet(host_->lease,intent,host_->networkPolicy,host_->magnetContext()):engine::attachPendingMagnetDestination(host_->lease,*prior,*intent.destination,host_->networkPolicy,host_->magnetContext());
+      if(!saved){return std::unexpected(saved.error());}persisted=std::move(*saved);return {};
+    }));
+    const auto admitted = host_->startPending(persisted);
     if (!admitted) { host_->admissionFailures.insert_or_assign(persisted.hash.hex(), admitted.error()); }
     else { host_->admissionFailures.erase(persisted.hash.hex()); }
     ready(host_->query({}), admitted ? tr("Resolving magnet metadata") : text(admitted.error().message));
@@ -3369,7 +3529,7 @@ void SessionBridge::tickScheduler() noexcept {
       if(host_->networkPolicy.seedingOnlyUpload){
         const auto live=host_->engine->managedDownloads();bool any=false,onlySeeds=true;
         for(const auto& row:live){if(row.retained&&row.phase!=engine::ManagedPhase::Stopping){any=true;onlySeeds=onlySeeds&&row.selectedComplete;}}
-        seedingOnly=any&&onlySeeds&&host_->engine->pendingMagnets().empty();
+        seedingOnly=any&&onlySeeds&&host_->pendingMagnets().empty();
       }
       std::vector<core::SettingChange> edits;
       if(plan.uploadKiB){edits.push_back({seedingOnly?core::SettingId::SeedingUploadLimit:core::SettingId::UploadLimit,std::int64_t{*plan.uploadKiB}});}

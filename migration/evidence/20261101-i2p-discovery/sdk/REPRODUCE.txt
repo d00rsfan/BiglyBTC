@@ -1,0 +1,32 @@
+Public source evidence and measured text proof only. No binary/key/runtime grant.
+
+Pinned upstream libtorrent2.0.12 commit740a0b9aeabe00e762cc0efe4a0f27593db2550b
+is identified by the exact retained1067-file release snapshot. Fresh Git-object
+verification is not claimed. upstream-to-discovery42.patch contains34 modified
+upstream paths+23 additions, reproducing all1090 measured leaves. It includes
+every earlier private/multi/mixed/delayed-ACCEPT extension, the complete final20
+source family and the parsed-DHT regression. This is not only the latest delta.
+
+Against independently obtained matching release bytes, build/install elsewhere:
+  python3 verify-source.py <source> --state upstream
+  git -C <source> apply --check <absolute>/upstream-to-discovery42.patch
+  git -C <source> apply <absolute>/upstream-to-discovery42.patch
+  python3 verify-source.py <source> --state final
+Use the recorded compiler/cache/dependencies and test-objects.cmake. Exact actual
+commands remain in measured/proof/commands.json. New qualification requires the
+same42 exports, nine suites, all23 private methods and six separate role cases.
+Recorded successful subjects are evidence, not a promise reproduced ELF hashes
+will match across a different build environment.
+
+All upstream notices remain; COPYING/LICENSE are preserved. No generated build/install files are part of the cumulative source delta.
+Added fixed synthetic test capabilities are fixture bytes, never profile keys.
+Original failed r1 assumption/run is retained by measured/failed-assumption.json;
+final production equals the capacity cohort, only the new test differs.
+
+The measured record/runtime/approval copies are BYTE-EXACT archival references;
+the active closed verifier still uses original local paths. external-inputs.json
+lists actual raw closure: SDK/source trees, test images, object hashes, synthetic
+payloads and full logs are not copied. Copying this text bundle alone does not
+satisfy those current local checks. relocate-evidence.py emits only a review-gated
+source/path proposal; any moved record/manifest/approval needs root verification,
+new exact pins and fresh Native configuration. It does not run tests or approve.

@@ -1,0 +1,26 @@
+{
+  "status": "PASS_MIXED_SDK_DIRECT_CONTROLS_NOT_APPROVED",
+  "source_capsule_sha256": "f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6",
+  "native_runtime_approved": false,
+  "shipping_approved": false,
+  "artifact_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "actual_ctest_suites": 9,
+  "private_owner_methods": 23,
+  "fresh_separate_role_cases": 6,
+  "actual_roles": [
+    "same-image-34-exports-and-markers",
+    "distinct-roles-public-and-private-admission-denials",
+    "loopback-tracker-peer-transfer-survives-private-withdraw",
+    "private-mixed-settings-failure-is-session-local",
+    "public-join-preserves-private-registration-and-independent-join",
+    "joined-public-disk-bytes-exact"
+  ],
+  "required_exports": 42,
+  "source_and_sdk_unchanged_during_subjects": true,
+  "images_unchanged": true,
+  "original_head_index_unchanged": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "commands_sha256": "5c593ac2c3458405464a229bdb2d0ad0dfc9c1d588932e9ed5e5fe623068d849"
+}

@@ -1,0 +1,12 @@
+{
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_biglybtc_mainline_identity": "10b08fe01c601935001bf8f8c73da27b0f9a9dcab092af36046665a849fc2bbe",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_biglybtc_private_i2p_owner": "b677d8ebb02333d60aa7ec4ed2cafcb4674abf294fd10e308dda71a4ba9a27f3",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_biglybtc_swarm": "853d6cf5351efe5a00a8c47558e7bf71ca7d6e0e8a3fce9739a8fe1d9be7df3c",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_biglybtc_tracker_response": "46528107bdb0fee282caa418ef6bfda48ded22e9c1629173d1da8642d2140aaf",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_dht": "6093b89bddb499d4d6c6bf7adb15232f994e964fd9eaa645aefe40ca1319dfa7",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/build/test/test_tracker": "d7f5faff97e577619643dccd7d80299e0868356550a65c0dee6fac037e8afd70",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/mainline-build/owned-mainline-port-proof": "80598f80b4796016e9391a2cd36177b6fe1c5b9a37014d78a3000deba39776a3",
+  "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/socks4a-build/biglybtc-socks4a-provider-tests": "0c446d8d0beeaed0f10bb3cd0d8e2df96ba0c6a534c0302d35e48d923ef993e0",
+  "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/controls/build/sdk-role-controls": "785d9eceffad2c0e6298e61ab170569c184c6b26a5d5dcf5f22361a2382dd62d"
+}

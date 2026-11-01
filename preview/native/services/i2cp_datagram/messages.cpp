@@ -46,6 +46,12 @@ ConfigResult<MuxDatagram> inflateMux(View bytes,std::size_t maximum,Byte first,B
 }
 } // namespace
 ConfigResult<MuxDatagram> decodeMuxDatagram(View bytes){return inflateMux(bytes,MaximumMuxDatagramBytes,Datagram2Protocol,Datagram3Protocol);}
+ConfigResult<Bytes> encodeDhtMuxDatagram(const MuxDatagram& data,GzipMode mode){
+  if((data.protocol!=17&&data.protocol!=18)||data.datagram.size()>MaximumDhtMuxBytes){return error(Code::Unsupported,"Scoped legacy DHT17/18 input required");}
+  auto copy=data;copy.protocol=Datagram2Protocol;auto encoded=encodeMuxDatagram(copy,mode);
+  if(encoded){(*encoded)[9]=data.protocol;}return encoded;
+}
+ConfigResult<MuxDatagram> decodeDhtMuxDatagram(View bytes){return inflateMux(bytes,MaximumDhtMuxBytes,17,18);}
 ConfigResult<MuxDatagram> decodeRawTrackerReply(View bytes){return inflateMux(bytes,1024,18,18);}
 ConfigResult<Bytes> encodeSendDatagram(const SendDatagram& data){
   auto valid=payloadValid(data.sessionId,data.payload);if(!valid){return std::unexpected(valid.error());}auto dest=decodeDestination(data.recipient.wire);if(!dest){return std::unexpected(dest.error());}
@@ -60,6 +66,19 @@ ConfigResult<SendDatagram> decodeSendDatagram(const Frame& input){
   if(!r.number(4,length)||length>MaximumI2cpPayloadBytes||!r.take(static_cast<std::size_t>(length),payload)||!r.number(4,nonce)){return error(Code::InvalidFormat,"Invalid Send Payload/nonce");}std::optional<std::uint64_t> expires;bool skipLeaseSet=false;
   if(input.type==SendMessageExpiresType){std::uint64_t flags=0,date=0;if(!r.number(2,flags)||(flags!=0&&flags!=0x0100)||!r.number(6,date)||!date){return error(Code::Unsupported,"Only default/skipLeaseSet flags and positive Expires date supported");}expires=date;skipLeaseSet=flags==0x0100;}
   if(r.at!=r.bytes.size()){return error(Code::InvalidFormat,"Trailing Send bytes");}SendDatagram out{static_cast<std::uint16_t>(id),std::move(*dest),Bytes(payload.begin(),payload.end()),static_cast<std::uint32_t>(nonce),expires,skipLeaseSet};auto valid=payloadValid(out.sessionId,out.payload);if(!valid){return std::unexpected(valid.error());}return out;
+}
+ConfigResult<Bytes> encodeDhtSendDatagram(const SendDatagram& data){
+  auto mux=decodeDhtMuxDatagram(data.payload);
+  if(!mux||!data.expirationMilliseconds||data.nonce||data.skipLeaseSet!=(mux->protocol==18)){return error(Code::InvalidFormat,"Scoped DHT Expires/nonce0/protocol flags required");}
+  auto result=encodeSendDatagram(data);if(result){(*result)[result->size()-7]|=0x24;}return result;
+}
+ConfigResult<SendDatagram> decodeDhtSendDatagram(const Frame& input){
+  if(input.type!=SendMessageExpiresType||input.payload.size()<8){return error(Code::InvalidFormat,"DHT Send36 required");}
+  const auto flags=(unsigned(input.payload[input.payload.size()-8])<<8)|input.payload[input.payload.size()-7];
+  if(flags!=0x24&&flags!=0x124){return error(Code::Unsupported,"Only original DHT adhoc flags accepted");}
+  auto copy=input;copy.payload[copy.payload.size()-7]&=Byte(~0x24U);auto result=decodeSendDatagram(copy);
+  if(!result){return result;}auto mux=decodeDhtMuxDatagram(result->payload);
+  if(!mux||result->nonce||result->skipLeaseSet!=(mux->protocol==18)){return error(Code::InvalidFormat,"DHT protocol/flags differ");}return result;
 }
 ConfigResult<StatusMeaning> messageStatusMeaning(Byte code){switch(code){case 0:return StatusMeaning::IncomingAvailable;case 1:return StatusMeaning::RouterAccepted;case 2:return StatusMeaning::UnusedLegacySuccess;case 3:case 5:return StatusMeaning::ProbableFailure;case 4:return StatusMeaning::ProbableSuccess;case 6:return StatusMeaning::LocalSuccess;default:if(code<=23){return StatusMeaning::Failure;}return error(Code::Unsupported,"Unknown original MessageStatus code");}}
 ConfigResult<Bytes> encodeMessageStatus(const MessageStatus& data){auto meaning=messageStatusMeaning(data.code);if(!meaning){return std::unexpected(meaning.error());}if(data.sessionId==65535){return error(Code::InvalidFormat,"Unknown status session");}Bytes out;put(out,data.sessionId,2);put(out,data.messageId,4);out.push_back(data.code);put(out,data.size,4);put(out,data.nonce,4);return frame(MessageStatusType,out);}

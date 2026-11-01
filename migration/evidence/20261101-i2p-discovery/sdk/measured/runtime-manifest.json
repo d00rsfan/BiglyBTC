@@ -1,0 +1,79 @@
+{
+  "schema": 2,
+  "purpose": "one-public-handle-source-bound-key0-i2p-route",
+  "roles": [
+    "Public",
+    "DedicatedPrivateI2pV1",
+    "PrivateI2pMulti",
+    "PublicPrivateCoexistence",
+    "MixedI2pTransportV1"
+  ],
+  "source_capsule_sha256": "f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6",
+  "source_build_record": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/source-build-record-discovery-final.json",
+  "source_build_record_sha256": "e213ba3227a464fcb8eab1c7db3e3adef720f482fd352bb87ec12c3f27ec1e92",
+  "artifact": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "artifact_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "artifact_bytes": 10137344,
+  "sdk_tree_sha256": "0f5d2473aeda08a5d70ac24133b4dd9194097fa1df2ebdd8b0c8d4dd11ebb860",
+  "required_exports": [
+    "_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE",
+    "_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE",
+    "_ZN10libtorrent14session_handle18post_session_statsEv",
+    "_ZN10libtorrent21session_stats_metricsEv",
+    "_ZN10libtorrent7versionEv",
+    "_ZNK10libtorrent19session_stats_alert8countersEv",
+    "biglybtc_admit_mixed_i2p_route_v1",
+    "biglybtc_admit_private_i2p_torrent_v1",
+    "biglybtc_attach_mainline_port_observer_v1",
+    "biglybtc_attach_queue_observer_v1",
+    "biglybtc_attach_tracker_response_observer_v1",
+    "biglybtc_authorize_i2p_metadata_v1",
+    "biglybtc_configure_mainline_identity_v1",
+    "biglybtc_configure_mixed_i2p_transport_v1",
+    "biglybtc_configure_private_i2p_owner_v1",
+    "biglybtc_discovered_i2p_peer_v1",
+    "biglybtc_i2p_discovery_abi_v1",
+    "biglybtc_mainline_identity_abi_v1",
+    "biglybtc_mainline_port_abi_v1",
+    "biglybtc_mainline_routing_abi_v1",
+    "biglybtc_mixed_i2p_transport_abi_v1",
+    "biglybtc_payload_counter_abi_v1",
+    "biglybtc_private_i2p_owner_abi_v1",
+    "biglybtc_private_i2p_torrents_abi_v1",
+    "biglybtc_query_mainline_routing_v1",
+    "biglybtc_queue_observer_abi_v1",
+    "biglybtc_read_mainline_identity_v1",
+    "biglybtc_read_payload_counters_v1",
+    "biglybtc_read_private_i2p_owner_v1",
+    "biglybtc_read_traffic_counters_v2",
+    "biglybtc_read_traffic_counters_v3",
+    "biglybtc_refresh_mainline_port_v1",
+    "biglybtc_revoke_mixed_i2p_route_v1",
+    "biglybtc_revoke_private_i2p_torrent_v1",
+    "biglybtc_socks4a_abi_v1",
+    "biglybtc_socks4a_webseed_abi_v1",
+    "biglybtc_swarm_mask_abi_v1",
+    "biglybtc_tracker_response_abi_v1",
+    "biglybtc_traffic_counter_abi_v2",
+    "biglybtc_traffic_counter_abi_v3",
+    "biglybtc_withdraw_mixed_i2p_transport_v1",
+    "biglybtc_withdraw_private_i2p_owner_v1"
+  ],
+  "actual_proof": {
+    "directory": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2",
+    "result_sha256": "bf825517300df125e1907dc9f715d33f7fd811d734006d57a41f7a32fc015aed",
+    "commands_sha256": "5c593ac2c3458405464a229bdb2d0ad0dfc9c1d588932e9ed5e5fe623068d849"
+  },
+  "rejected_prior_approvals": {
+    "private": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/root-private-owner-approval.json",
+      "sha256": "f3ca7de94ca6beb12e0375293c9c74c3f78a34f7e4952e1a122ff0ae9dff1f83"
+    },
+    "coexistence": {
+      "path": "/home/yurii/Java/BiglyBT/build/coexist-20261031/sdk-role-integration/root-coexistence-approval.json",
+      "sha256": "3407d518e13a86f2a64b3d748cbe0870ef7df57712fade48cb72c87d2962ad75"
+    }
+  },
+  "native_runtime_approved": false,
+  "shipping_approved": false
+}

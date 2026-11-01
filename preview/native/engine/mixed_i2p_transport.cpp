@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "mixed_i2p_transport.hpp"
+#include <algorithm>
 #if __has_include(<libtorrent/biglybtc_mixed_i2p_transport.hpp>)
 #include <libtorrent/biglybtc_mixed_i2p_transport.hpp>
 #include <dlfcn.h>
+#include <libtorrent/biglybtc_private_i2p_owner.hpp>
 #define BIGLYBTC_HAS_MIXED_TRANSPORT_HEADER 1
 #else
 #define BIGLYBTC_HAS_MIXED_TRANSPORT_HEADER 0
@@ -59,6 +61,65 @@ std::expected<void,storage::Error> MixedI2pTransport::revoke(const MixedManagedS
   return checked(operation(state_->owner,&route));
 #else
   (void)source;(void)generation;(void)admission;return denied("Mixed I2P SDK is unavailable");
+#endif
+}
+std::expected<void,storage::Error> MixedI2pTransport::admitMetadata(const PendingMetadataSource& source,std::uint64_t generation,std::uint64_t admission){
+#if BIGLYBTC_HAS_MIXED_TRANSPORT_HEADER && defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
+  std::lock_guard lock(state_->mutex);
+  if(!state_->origin||source.origin_!=state_->origin){return denied("Pending source belongs to another actual engine owner");}
+  if(!state_->owner||!state_->pin||!state_->configured.load()||!source.effectsCurrent()||!generation||!admission||source.intent().network!=MagnetNetwork::PublicAndI2p||source.lifetime_->attached.load()||source.lifetime_->authorized.load()){return denied("Pending metadata route is not a fresh prepared engine admission");}
+  libtorrent::BiglybtcMixedI2pRouteV1 route;route.generation=generation;route.admission=admission;
+  if(source.requested().has_v1()){route.hashes|=1;std::copy(source.requested().v1.begin(),source.requested().v1.end(),route.torrent_v1.begin());}
+  if(source.requested().has_v2()){route.hashes|=2;std::copy(source.requested().v2.begin(),source.requested().v2.end(),route.torrent_v2.begin());}
+  const auto admit=reinterpret_cast<decltype(&libtorrent::biglybtc_admit_mixed_i2p_route_v1)>(::dlsym(state_->pin.get(),"biglybtc_admit_mixed_i2p_route_v1"));
+  const auto revoke=reinterpret_cast<decltype(&libtorrent::biglybtc_revoke_mixed_i2p_route_v1)>(::dlsym(state_->pin.get(),"biglybtc_revoke_mixed_i2p_route_v1"));
+  const auto authorize=reinterpret_cast<decltype(&libtorrent::biglybtc_authorize_i2p_metadata_v1)>(::dlsym(state_->pin.get(),"biglybtc_authorize_i2p_metadata_v1"));
+  if(!admit||!revoke||!authorize){return denied("Qualified metadata provider exports unavailable");}
+  auto accepted=checked(admit(state_->owner,&route));if(!accepted){return accepted;}
+  libtorrent::BiglybtcPrivateI2pTorrentV1 tuple;tuple.generation=generation;tuple.admission=admission;tuple.hashes=route.hashes;tuple.torrent_v1=route.torrent_v1;tuple.torrent_v2=route.torrent_v2;
+  if(authorize(state_->owner,&tuple)!=0||!source.effectsCurrent()){(void)revoke(state_->owner,&route);return denied("Provider refused the exact pending metadata authorization");}
+  source.lifetime_->generation.store(generation);source.lifetime_->route.store(admission);source.lifetime_->authorized.store(true,std::memory_order_release);return {};
+#else
+  (void)source;(void)generation;(void)admission;return denied("Qualified metadata SDK is unavailable");
+#endif
+}
+std::expected<void,storage::Error> MixedI2pTransport::revokeMetadata(const PendingMetadataSource& source,std::uint64_t generation,std::uint64_t admission){
+#if BIGLYBTC_HAS_MIXED_TRANSPORT_HEADER && defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
+  std::lock_guard lock(state_->mutex);if(!state_->origin||source.origin_!=state_->origin){return denied("Pending source belongs to another actual engine owner");}
+  if(!state_->owner||!state_->pin||source.lifetime_->generation.load()!=generation||source.lifetime_->route.load()!=admission){return denied("Pending metadata route tuple changed");}
+  libtorrent::BiglybtcMixedI2pRouteV1 route;route.generation=generation;route.admission=admission;
+  if(source.requested().has_v1()){route.hashes|=1;std::copy(source.requested().v1.begin(),source.requested().v1.end(),route.torrent_v1.begin());}
+  if(source.requested().has_v2()){route.hashes|=2;std::copy(source.requested().v2.begin(),source.requested().v2.end(),route.torrent_v2.begin());}
+  const auto operation=reinterpret_cast<decltype(&libtorrent::biglybtc_revoke_mixed_i2p_route_v1)>(::dlsym(state_->pin.get(),"biglybtc_revoke_mixed_i2p_route_v1"));
+  if(!operation){return denied("Qualified metadata provider export unavailable");}
+  auto result=checked(operation(state_->owner,&route));if(result){source.lifetime_->authorized.store(false);}return result;
+#else
+  (void)source;(void)generation;(void)admission;return denied("Qualified metadata SDK is unavailable");
+#endif
+}
+std::expected<void,storage::Error> MixedI2pTransport::discoveredPeer(const MixedManagedSource& source,std::uint64_t generation,std::uint64_t route,const std::array<std::uint8_t,32>& peer,std::uint64_t operation){
+#if BIGLYBTC_HAS_MIXED_TRANSPORT_HEADER && defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
+  std::lock_guard lock(state_->mutex);if(!state_->origin||source.origin_!=state_->origin){return denied("Mixed source belongs to another actual engine owner");}
+  if(!state_->owner||!state_->pin||!state_->configured.load()||!source.backendCurrent()||!generation||!route||!operation){return denied("Mixed discovered-peer source is no longer current");}
+  const auto value=routeFor(source,generation,route);libtorrent::BiglybtcI2pDiscoveredPeerV1 request;
+  request.torrent.generation=generation;request.torrent.admission=route;request.torrent.hashes=value.hashes;request.torrent.torrent_v1=value.torrent_v1;request.torrent.torrent_v2=value.torrent_v2;request.peer_hash=peer;request.operation=operation;
+  const auto deliver=reinterpret_cast<decltype(&libtorrent::biglybtc_discovered_i2p_peer_v1)>(::dlsym(state_->pin.get(),"biglybtc_discovered_i2p_peer_v1"));
+  if(!deliver){return denied("Qualified discovered-peer provider unavailable");}return checked(deliver(state_->owner,&request));
+#else
+  (void)source;(void)generation;(void)route;(void)peer;(void)operation;return denied("Qualified discovery SDK unavailable");
+#endif
+}
+std::expected<void,storage::Error> MixedI2pTransport::discoveredPeer(const PendingMetadataSource& source,std::uint64_t generation,std::uint64_t route,const std::array<std::uint8_t,32>& peer,std::uint64_t operation){
+#if BIGLYBTC_HAS_MIXED_TRANSPORT_HEADER && defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
+  std::lock_guard lock(state_->mutex);if(!state_->origin||source.origin_!=state_->origin){return denied("Pending source belongs to another actual engine owner");}
+  if(!state_->owner||!state_->pin||!state_->configured.load()||!source.effectsCurrent()||!source.lifetime_->attached.load()||!source.lifetime_->authorized.load()||source.lifetime_->generation.load()!=generation||source.lifetime_->route.load()!=route||!operation){return denied("Pending discovered-peer source is no longer current");}
+  libtorrent::BiglybtcI2pDiscoveredPeerV1 request;request.torrent.generation=generation;request.torrent.admission=route;request.peer_hash=peer;request.operation=operation;
+  if(source.requested().has_v1()){request.torrent.hashes|=1;std::copy(source.requested().v1.begin(),source.requested().v1.end(),request.torrent.torrent_v1.begin());}
+  if(source.requested().has_v2()){request.torrent.hashes|=2;std::copy(source.requested().v2.begin(),source.requested().v2.end(),request.torrent.torrent_v2.begin());}
+  const auto deliver=reinterpret_cast<decltype(&libtorrent::biglybtc_discovered_i2p_peer_v1)>(::dlsym(state_->pin.get(),"biglybtc_discovered_i2p_peer_v1"));
+  if(!deliver){return denied("Qualified discovered-peer provider unavailable");}return checked(deliver(state_->owner,&request));
+#else
+  (void)source;(void)generation;(void)route;(void)peer;(void)operation;return denied("Qualified discovery SDK unavailable");
 #endif
 }
 std::expected<void,storage::Error> MixedI2pTransport::withdraw(std::uint64_t generation){

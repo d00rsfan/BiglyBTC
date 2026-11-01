@@ -31,7 +31,7 @@ def main():
    command=[sys.executable,'-B',str(verifier),'--manifest',str(manifest),'--library',str(a.provider),'--include',str(include),'--approval',str(approval),'--approval-sha256',pin,'--header',str(root/'generated.hpp'),'--receipt',str(root/'generated.json')]
    actual=subprocess.run(command,capture_output=True,timeout=60)
    if case=='exact-approved':
-    assert actual.returncode==0,actual.stderr.decode(errors='replace');r=json.loads((root/'generated.json').read_bytes());assert r['same_image_exports']==39 and r['native_mixed_qualification_pending'] is True
+    assert actual.returncode==0,actual.stderr.decode(errors='replace');r=json.loads((root/'generated.json').read_bytes());assert r['same_image_exports']==42 and r['native_mixed_qualification_pending'] is True
     assert '#define BIGLYBTC_PERSISTENT_MIXED_I2P_BOUND 1' in (root/'generated.hpp').read_text()
    else:assert actual.returncode!=0 and not(root/'generated.hpp').exists() and not(root/'generated.json').exists(),case
    print('PASS mixed-input '+case)

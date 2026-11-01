@@ -21,6 +21,7 @@
 #include "magnet_intake.hpp"
 #include "torrent_intake.hpp"
 #include "metadata_disk_router.hpp"
+#include "pending_metadata_source.hpp"
 #include "mmap_disk_latency.hpp"
 #include "original_disk_io.hpp"
 #include <libtorrent/session_params.hpp>
@@ -35,6 +36,7 @@
 #include "mainline_identity.hpp"
 #endif
 #include <libtorrent/peer_info.hpp>
+#include <libtorrent/hasher.hpp>
 #include <openssl/rand.h>
 #include "network_binding.hpp"
 #include "network_peer_classes.hpp"
@@ -221,6 +223,10 @@ struct PersistentSession::Impl {
     std::shared_ptr<MainlinePortQueue> mainlinePort;
     bool removing = false, removed = false, cancel = false, shutdown = false;
     std::string metadata;
+    std::shared_ptr<detail::PendingMetadataLifetime> pendingLifetime;
+    std::shared_ptr<const PendingMetadataSource> pendingSource;
+    lt::add_torrent_params pendingParameters;
+    bool metadataTaken=false,expiryCrossed=false;
     Magnet(std::uint64_t id, PendingMagnet value)
         : token(std::make_unique<OperationToken>(OperationToken{id})), intent(std::move(value)),
           status{.hash = intent.hash, .admission = id, .name = intent.displayName} {}
@@ -600,7 +606,8 @@ struct PersistentSession::Impl {
           "Engine owner joined after failure; original pieces require recheck"};
     }
     for (auto& [key, entry] : magnets) {
-      static_cast<void>(key); entry->status.retained = false; entry->status.phase = MagnetPhase::Failed;
+      static_cast<void>(key);if(entry->pendingLifetime){entry->pendingLifetime->retained.store(false);}
+      entry->status.retained = false; entry->status.phase = MagnetPhase::Failed;
       entry->status.failure = storage::Error{storage::ErrorCode::Io, "Engine joined after failure; magnet recovery intent retained"};
     }
     outstanding = false;
@@ -1332,6 +1339,7 @@ struct PersistentSession::Impl {
     return false;
   }
   void requestMagnetRetirement(Magnet& value) {
+    if(value.pendingLifetime){value.pendingLifetime->retiring.store(true,std::memory_order_release);value.pendingLifetime->authorized.store(false);}
     retireMainlinePort(value.mainlinePort);
     if (value.removing || !value.handle.is_valid()) { return; }
     value.status.phase = MagnetPhase::Retiring;
@@ -1345,6 +1353,18 @@ struct PersistentSession::Impl {
     for (auto& [key, entry] : magnets) {
       static_cast<void>(key); auto& value = *entry;
       if (!value.status.retained) { continue; }
+      if(value.pendingSource&&!value.pendingLifetime->attached.load()){
+        // A failed route may never reach add_torrent. Its reservation still
+        // consumes the original finite metadata budget, without a handle.
+        if(Clock::now()>=value.expires){
+          value.pendingLifetime->retiring.store(true,std::memory_order_release);
+          value.pendingLifetime->authorized.store(false);
+          value.pendingLifetime->retained.store(false,std::memory_order_release);
+          value.status.retained=false;value.status.phase=MagnetPhase::Failed;
+          value.status.failure=storage::Error{storage::ErrorCode::Io,"Magnet metadata deadline expired before activation; recovery intent retained"};
+        }
+        continue;
+      }
       if (!value.removing && !value.cancel && !value.shutdown && !value.status.failure) {
         try {
           const auto metadata = value.handle.torrent_file();
@@ -1371,6 +1391,15 @@ struct PersistentSession::Impl {
         }
       }
       if (value.removing && value.removed && !value.handle.is_valid()) {
+        if(value.pendingSource){
+          // Metadata completion cannot reuse the no-ti registration as payload.
+          // Cross the executor then consume a subsequent whole alert batch.
+          if(!value.expiryCrossed){(void)session->get_settings();value.expiryCrossed=true;continue;}
+          value.pendingLifetime->retained.store(false,std::memory_order_release);
+          value.status.retained=false;value.removing=false;
+          value.status.phase=value.status.failure?MagnetPhase::Failed:value.cancel?MagnetPhase::Cancelled:!value.metadata.empty()?MagnetPhase::Retiring:MagnetPhase::Resolving;
+          continue; // Host worker owns selected-row publication and fresh import.
+        }
         value.status.retained = false;
         value.removing = false;
         if (value.status.failure) { value.status.phase = MagnetPhase::Failed; continue; }
@@ -1519,6 +1548,7 @@ PersistentSession::~PersistentSession() {
   impl_->sink = {}; impl_->operationSink = {};
   impl_->retireMainlinePorts();
   impl_->closeMainline();
+  for(auto& [key,magnet]:impl_->magnets){(void)key;if(magnet->pendingLifetime){magnet->pendingLifetime->attached=false;magnet->pendingLifetime->retained=false;}}
   for(auto& [key,member]:impl_->managed){(void)key;if(member->mixedLifetime){member->mixedLifetime->attached=false;member->mixedLifetime->retained=false;}}
   if(impl_->mixedTransport){impl_->mixedTransport->retire();impl_->mixedTransport.reset();}
   impl_->session.reset();
@@ -1833,6 +1863,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"External queue admits ordinary downloads only"});
   }
   const auto key = options.hash.hex();
+  if(const auto pending=impl_->magnets.find(key);pending!=impl_->magnets.end()&&pending->second->pendingSource&&pending->second->status.retained){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Retire actual metadata before payload admission"});}
   const auto previous=impl_->managed.find(key);
   if(previous!=impl_->managed.end()) {
     const auto& row=*previous->second;
@@ -1840,6 +1871,15 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
         ||!row.flushed||!row.removed||row.status.failure) {
       return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Torrent is already admitted or retirement is uncertified"});
     }
+  }
+  if(std::ranges::any_of(impl_->magnets,[](const auto& item){return item.second->pendingSource&&item.second->status.retained;})){
+    auto store=storage::TorrentStateStore::open(lease);if(!store){return std::unexpected(store.error());}auto state=store->load(lease,options.hash);if(!state){return std::unexpected(state.error());}
+    const auto subject=storage::originalTorrentInfoSubject(state->document());if(!subject){return std::unexpected(subject.error());}
+    const auto* info=state->document().find("info");const auto* version=info->find("meta version");const bool v2=version&&version->type==core::Node::Type::Integer&&version->integer==2;const bool v1=!v2||info->find("pieces");
+    const auto sha1=lt::hasher(subject->data(),static_cast<int>(subject->size())).final();const auto sha256=lt::hasher256(subject->data(),static_cast<int>(subject->size())).final();
+    for(const auto& [name,entry]:impl_->magnets){(void)name;if(!entry->pendingSource||!entry->status.retained){continue;}const auto& wanted=entry->intent.requested;
+      if((wanted.has_v1()&&v1&&wanted.v1==sha1)||(wanted.has_v2()&&v2&&wanted.v2==sha256)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Retire actual metadata alias before payload preparation"});}}
+
   }
   // Required raw counter support is admitted before any ManagedStorage
   // beginUpdate/create/truncate. Stock/old approved providers stay unsupported.
@@ -2163,7 +2203,7 @@ std::optional<unsigned short> PersistentSession::tcpListenPort() const noexcept 
 }
 std::expected<void, storage::Error> PersistentSession::startMagnet(storage::ProfileLease& lease,
     const PendingMagnet& intent, const std::filesystem::path& profile) {
-  if (!managedAvailable() || impl_->call || impl_->closingAdmission) {
+  if (!managedAvailable() || impl_->call || impl_->closingAdmission || intent.network!=MagnetNetwork::Public) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Magnet admission is unavailable"});
   }
   const auto key = intent.hash.hex();
@@ -2226,6 +2266,92 @@ std::expected<void, storage::Error> PersistentSession::startMagnet(storage::Prof
   } catch (const detail::Failure& failure) { impl_->call = false; return std::unexpected(failure.error); }
   catch (...) { impl_->call = false; return std::unexpected(storage::Error{storage::ErrorCode::Io, "Magnet admission failed; recovery intent retained"}); }
 }
+std::expected<std::shared_ptr<const PendingMetadataSource>,storage::Error> PersistentSession::prepareMagnetMetadata(
+    storage::ProfileLease& lease,const PendingMagnet& intent,const std::filesystem::path& profile,PendingMetadataBinding binder){
+#if defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
+  if(!managedAvailable()||impl_->call||impl_->closingAdmission||!impl_->mixedNetworks||!impl_->mixedOrigin||intent.network!=MagnetNetwork::PublicAndI2p||!binder){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Explicit mixed metadata owner unavailable"});}
+  const auto entered=Clock::now();const auto key=intent.hash.hex();
+  if(const auto old=impl_->magnets.find(key);old!=impl_->magnets.end()&&(old->second->status.retained||old->second->pendingSource)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Pending metadata entry is retained"});}
+  if(const auto old=impl_->managed.find(key);old!=impl_->managed.end()&&old->second->status.retained){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Payload identity is already retained"});}
+  for(const auto& [name,member]:impl_->managed){(void)name;if(!member->status.retained&&!member->removing&&!member->handle.is_valid()){continue;}const auto full=member->storage.parameters().ti->info_hashes();
+    if((intent.requested.has_v1()&&full.has_v1()&&intent.requested.v1==full.v1)||(intent.requested.has_v2()&&full.has_v2()&&intent.requested.v2==full.v2)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Pending metadata aliases an actual retained payload admission"});}}
+  for(const auto& [name,entry]:impl_->magnets){(void)name;if(!entry->status.retained){continue;}const auto& full=entry->intent.requested;
+    if((intent.requested.has_v1()&&full.has_v1()&&intent.requested.v1==full.v1)||(intent.requested.has_v2()&&full.has_v2()&&intent.requested.v2==full.v2)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Pending metadata alias is already retained"});}}
+  impl_->call=true;
+  try{
+    impl_->bind(lease);detail::require(intent.destination&&!intent.sourceEntry.empty()&&intent.timeoutMillis>0&&intent.timeoutMillis<=3600000,"Persisted bounded metadata intent required",storage::ErrorCode::Conflict);
+    detail::require(profile.is_absolute()&&profile.lexically_normal()==profile,"Metadata profile path must be normalized",storage::ErrorCode::UnsafePath);
+    const auto directory=detail::directory(profile);struct stat held{},named{};
+    detail::require(::fstat(lease.directoryHandle(),&held)==0&&::fstat(directory.get(),&named)==0&&held.st_dev==named.st_dev&&held.st_ino==named.st_ino,"Metadata path differs from retained profile",storage::ErrorCode::Conflict);
+    if(!impl_->network){impl_->network=NetworkPolicy{};}
+    (void)detail::take(validatePendingMagnet(lease,intent,*impl_->network));
+    detail::require(impl_->operation!=std::numeric_limits<std::uint64_t>::max(),"Metadata admission exhausted");const auto admission=++impl_->operation;
+    const auto virtualPath=profile/(".BiglyBTC.metadata."+key+"."+std::to_string(admission));detail::done(impl_->diskPolicy->registerMetadataPath(virtualPath));
+    auto value=std::make_unique<Impl::Magnet>(admission,intent);value->expires=entered+std::chrono::milliseconds(intent.timeoutMillis);
+    value->pendingParameters=detail::take(metadataOnlyParameters(intent,*impl_->network,virtualPath));
+    value->pendingParameters.flags|=lt::torrent_flags::paused|lt::torrent_flags::duplicate_is_error;
+    value->pendingParameters.userdata=value->token.get();
+    value->pendingLifetime=std::make_shared<detail::PendingMetadataLifetime>();
+    value->pendingSource=std::shared_ptr<const PendingMetadataSource>(new PendingMetadataSource(detail::take(lease.retain()),intent,admission,value->pendingLifetime,impl_->mixedOrigin));
+    auto result=value->pendingSource;
+    impl_->ensureSession(); // No SDK wait is allowed inside source publication.
+    const auto old=impl_->magnets.find(key);if(old!=impl_->magnets.end()){impl_->magnets.erase(old);}
+    auto [slot,ok]=impl_->magnets.emplace(key,std::move(value));detail::require(ok,"Metadata reservation collision",storage::ErrorCode::Conflict);slot->second->status.retained=true;
+    // Caller owns the narrow pending-row publication (possibly composed key1
+    // then key0 anchors). No generic full-download target publisher is used.
+    auto bound=binder(slot->second->pendingSource);
+    if(!bound){slot->second->pendingLifetime->retained.store(false);impl_->magnets.erase(slot);throw detail::Failure{bound.error()};}
+
+    impl_->magnetLease=&lease;impl_->managedLease=&lease;impl_->magnetProfile=profile;impl_->call=false;return result;
+  }catch(const detail::Failure& e){if(const auto it=impl_->magnets.find(key);it!=impl_->magnets.end()&&it->second->pendingLifetime){it->second->pendingLifetime->retained.store(false);impl_->magnets.erase(it);}impl_->call=false;return std::unexpected(e.error);}
+  catch(...){if(const auto it=impl_->magnets.find(key);it!=impl_->magnets.end()&&it->second->pendingLifetime){it->second->pendingLifetime->retained.store(false);impl_->magnets.erase(it);}impl_->call=false;return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot reserve mixed metadata entry"});}
+#else
+  (void)lease;(void)intent;(void)profile;(void)binder;return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Qualified discovery SDK unavailable"});
+#endif
+}
+std::expected<void,storage::Error> PersistentSession::activatePreparedMagnet(const core::TorrentHash& hash){
+  if(!managedAvailable()||impl_->call||impl_->closingAdmission){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata activation unavailable"});}
+  const auto at=impl_->magnets.find(hash.hex());if(at==impl_->magnets.end()||!at->second->pendingSource){return std::unexpected(storage::Error{storage::ErrorCode::Missing,"No reserved metadata entry"});}
+  auto& value=*at->second;
+  if(!value.pendingSource->effectsCurrent()||!value.pendingLifetime->authorized.load(std::memory_order_acquire)||value.pendingLifetime->attached.load()||value.cancel||Clock::now()>=value.expires){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata authorization is stale or expired"});}
+  impl_->call=true;
+  try{lt::error_code error;value.handle=impl_->session->add_torrent(value.pendingParameters,error);
+    if(error||!value.handle.is_valid()){value.pendingLifetime->retained.store(false);value.status.retained=false;if(value.handle.is_valid()){impl_->joinPoisoned();}throw detail::Failure{{storage::ErrorCode::Io,"Provider rejected the actual metadata-only handle"}};}
+    value.pendingLifetime->attached.store(true,std::memory_order_release);value.handle.resume();impl_->session->resume();impl_->phase=AccountingState::Active;impl_->call=false;return {};
+  }catch(const detail::Failure& e){impl_->call=false;return std::unexpected(e.error);}catch(...){value.pendingLifetime->retained.store(false);impl_->joinPoisoned();impl_->call=false;return std::unexpected(storage::Error{storage::ErrorCode::Io,"Metadata ownership became uncertain"});}
+}
+std::expected<void,storage::Error> PersistentSession::withdrawPreparedMagnet(
+    const core::TorrentHash& hash,storage::Error reason){
+  if(!impl_->onWorker()||impl_->call){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata withdrawal requires its actual owner"});}
+  const auto at=impl_->magnets.find(hash.hex());
+  if(at==impl_->magnets.end()||!at->second->pendingSource||at->second->cancel){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"A noncancelled mixed metadata admission is required"});}
+  auto& value=*at->second;impl_->call=true;
+  try{
+    // Source failure is not a user cancellation. Preserve the exact saved row
+    // while ending all new effects immediately, before actual remove/weak expiry.
+    if(!value.status.failure){value.status.failure=std::move(reason);}
+    value.pendingLifetime->retiring.store(true,std::memory_order_release);
+    value.pendingLifetime->authorized.store(false);
+    if(!value.pendingLifetime->attached.load()||!value.status.retained){
+      value.pendingLifetime->retained.store(false,std::memory_order_release);value.status.retained=false;value.status.phase=MagnetPhase::Failed;
+    }else{
+      detail::require(value.handle.is_valid()||value.removing,"Attached metadata lifetime lost before its removal fence",storage::ErrorCode::Conflict);
+      impl_->requestMagnetRetirement(value); // Already-removing keeps its original fence/deadline.
+    }
+    impl_->call=false;return {};
+  }catch(...){impl_->joinPoisoned();impl_->call=false;return std::unexpected(storage::Error{storage::ErrorCode::Io,"Metadata source withdrawal ownership became uncertain; recovery intent retained"});}
+}
+std::expected<std::string,storage::Error> PersistentSession::takeCompletedMagnetMetadata(const core::TorrentHash& hash){
+  if(!impl_->onWorker()||impl_->call){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata result owner unavailable"});}
+  const auto at=impl_->magnets.find(hash.hex());if(at==impl_->magnets.end()){return std::unexpected(storage::Error{storage::ErrorCode::Missing,"No metadata entry"});}auto& value=*at->second;
+  if(!value.pendingSource||value.status.retained||!value.removed||value.handle.is_valid()||!value.expiryCrossed||value.status.failure||value.cancel||value.metadata.empty()){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Actual metadata removal/result fence incomplete"});}
+  return value.metadata; // Retained until explicit pending lifecycle release; failed import may retry.
+}
+std::expected<void,storage::Error> PersistentSession::releasePreparedMagnet(const core::TorrentHash& hash){
+  if(!impl_->onWorker()||impl_->call){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata result owner unavailable"});}
+  const auto at=impl_->magnets.find(hash.hex());if(at==impl_->magnets.end()||!at->second->pendingSource||at->second->status.retained||at->second->handle.is_valid()||at->second->pendingLifetime->retained.load()){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Actual metadata lifetime remains retained"});}
+  impl_->magnets.erase(at);return {};
+}
 std::expected<void, storage::Error> PersistentSession::cancelMagnet(const core::TorrentHash& hash) {
   if (!managedAvailable() || impl_->call) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Magnet cancellation is unavailable"});
@@ -2233,6 +2359,7 @@ std::expected<void, storage::Error> PersistentSession::cancelMagnet(const core::
   const auto found = impl_->magnets.find(hash.hex());
   if (found == impl_->magnets.end()) { return std::unexpected(storage::Error{storage::ErrorCode::Missing, "Magnet is not admitted"}); }
   auto& value = *found->second;
+  if(value.pendingSource){value.cancel=true;if(value.handle.is_valid()){impl_->requestMagnetRetirement(value);}else{value.pendingLifetime->retained.store(false);value.status.retained=false;value.status.phase=MagnetPhase::Cancelled;}return {};}
   if (value.status.phase == MagnetPhase::Imported || value.status.phase == MagnetPhase::Cancelled) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Magnet has already left the pending lifecycle"});
   }
@@ -2464,6 +2591,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   impl_->sink = {}; impl_->operationSink = {};
   impl_->closeMainline();
   impl_->mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
+  for(auto& [key,magnet]:impl_->magnets){(void)key;if(magnet->pendingLifetime){magnet->pendingLifetime->attached=false;magnet->pendingLifetime->retained=false;}}
   for(auto& [key,member]:impl_->managed){(void)key;if(member->mixedLifetime){member->mixedLifetime->attached=false;member->mixedLifetime->retained=false;}}
   if(impl_->mixedTransport){impl_->mixedTransport->retire();impl_->mixedTransport.reset();}
   impl_->session.reset(); // Join may outlive the certification effort deadline.
