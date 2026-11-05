@@ -1,0 +1,83 @@
+{
+  "status": "PASS_ACTUAL_WINDOW_WORKER_STORE_CLOSE_REOPEN",
+  "production_basis_commit": "1dfd8f9f55865bf4127a56fa47caa9fd2e9e099f",
+  "source_map_sha256": "17fe79ade655c3591bf5450b9765cd2575aec4b10f7ca89ddcdfac5f4f6286d2",
+  "manifest_sha256": "560ac4e6c14333a5527ce6955c97deb2a87f178e0c335bb28444057627253f24",
+  "review_sha256": "e5947cc0906e3ad7a74c11105e3cd3c4d37676f8fcdbe493fb927d0f489fcbfe",
+  "commands": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "--target",
+        "biglybtc-manual-tag-bridge-tests"
+      ],
+      "exit_code": 0,
+      "log_sha256": "81413ac34a6523f7f08c6898ea9eecf6619af526e2726a2ebfa1221965ac78d8",
+      "seconds": 35.385
+    },
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-manual-tag-bridge-tests",
+        "actualWindowWorkerTagWorkflowPreservesRawStateAcrossReopen"
+      ],
+      "exit_code": 0,
+      "log_sha256": "9b7c1d6c7f298541603a271662832b13fa91a5c64ba8ed13a60b4508728f5c89",
+      "seconds": 0.816
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "--target",
+        "biglybtc-manual-tag-bridge-tests"
+      ],
+      "exit_code": 0,
+      "log_sha256": "4940337e172d86f802c49a52aaaf9425817dd9aef67a2eafa7f67884f2aef40c",
+      "seconds": 95.022
+    },
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-manual-tag-bridge-tests",
+        "actualWindowWorkerTagWorkflowPreservesRawStateAcrossReopen"
+      ],
+      "exit_code": 0,
+      "log_sha256": "471136939739f262a50d3e8c50e23b34e0190a1cb7cc3fb34af40607d594e6d1",
+      "seconds": 1.421
+    }
+  ],
+  "images": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-manual-tag-bridge-tests",
+      "sha256": "a31972d0d877caf6ac56a2df0a9cea03f542e3df849301d3a5b9fd3e004a8666",
+      "bytes": 15116944
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-manual-tag-bridge-tests",
+      "sha256": "14805b4b8907bf0c95eaec39738d0f07671942ce329191600ad60ea4a0a5960d",
+      "bytes": 398838592
+    }
+  },
+  "original_before": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "original_after": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "source_commit": "5857eee57f8fecff2919be3f9e89d22f3385df6e",
+  "source_tree": "a2e7337137dc46c75027aff38a2b904133ba7d50",
+  "raw_receipt_sha256": "f3e5885c170714e12ea7b969f8cfdd5512178152bcf434a69f5271b72796b714",
+  "upstream_core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "whole_P08_complete": false,
+  "default_dist_promoted": false
+}
