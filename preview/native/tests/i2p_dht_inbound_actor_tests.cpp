@@ -2,6 +2,13 @@
 #include "actor.hpp"
 #include "owned_i2p_profile_fixture.hpp"
 #include "source_permit.hpp"
+#if defined(BIGLYBTC_TEST_LIVE_I2P_BRIDGE)
+#include "bridge.hpp"
+#include <sys/inotify.h>
+#include <cstring>
+#include <future>
+#include <condition_variable>
+#endif
 #include <QElapsedTimer>
 #include <QFile>
 #include <QPointer>
@@ -55,6 +62,98 @@ public:
 class InboundActorTests final:public QObject {
   Q_OBJECT
 private slots:
+  void ownPendingPublicationKeepsLiveBridgeAndReplacementWatched_data(){
+    QTest::addColumn<bool>("group");QTest::addColumn<int>("mutation");
+    QTest::newRow("group-then-in-place")<<true<<0;
+    QTest::newRow("group-then-atomic")<<true<<1;
+    QTest::newRow("group-then-key")<<true<<2;
+    QTest::newRow("group-then-lock")<<true<<3;
+    QTest::newRow("strict-single-config")<<false<<0;
+  }
+  void ownPendingPublicationKeepsLiveBridgeAndReplacementWatched(){
+#if !defined(BIGLYBTC_TEST_LIVE_I2P_BRIDGE)
+    QSKIP("The optional private owner/real Bridge target is disabled; source-only tests remain active");
+#else
+    QFETCH(bool,group);QFETCH(int,mutation);namespace engine=biglybtc::engine;namespace storage=biglybtc::storage;
+    owned_i2p_test::Fixture fixture;auto policy=engine::readNetworkPolicy(nullptr,{engine::NetworkMode::Normal});QVERIFY(policy);
+    const auto pendingHash=biglybtc::core::TorrentHash::parse(std::string(20,'q'));QVERIFY(pendingHash);
+    auto intent=engine::parseMagnetIntent("magnet:?xt=urn:btih:"+pendingHash->hex()+"&net=I2P",std::filesystem::path(fixture.payloadDirectory.path().toStdString())/"metadata-target",true,*policy,engine::MagnetNetwork::I2p);QVERIFY(intent);
+    auto pending=engine::queuePendingMagnet(*fixture.lease,*intent,*policy,engine::MagnetNetwork::I2p);QVERIFY(pending);
+    auto source=group?provider::ProfileSource::createSession(*fixture.lease):provider::ProfileSource::open(*fixture.lease,fixture.hash);QVERIFY(source);
+    std::shared_ptr<provider::ProfileSource> sibling;std::shared_ptr<provider::PendingMagnetSource> pendingSource;
+    std::optional<engine::detail::ManagedStorage> preparedStorage;
+    if(group){auto accepted=(*source)->prepareChild(fixture.hash);QVERIFY(accepted);sibling=*accepted;auto storage=sibling->prepareStorage();QVERIFY(storage);preparedStorage.emplace(std::move(*storage));auto acceptedPending=(*source)->preparePendingMagnet(*pending);QVERIFY(acceptedPending);pendingSource=*acceptedPending;}
+    else{auto storage=(*source)->prepareStorage();QVERIFY(storage);preparedStorage.emplace(std::move(*storage));}
+    const auto state=owned_i2p_test::read(fixture.state()),inventory=owned_i2p_test::read(fixture.path/"downloads.config"),key=owned_i2p_test::read(fixture.key);
+    Router router;QVERIFY(router.listen());Channel channel;QVERIFY(channel.bindEffectAuthority((*source)->effectAuthority()));
+    {SourceDriver driver(*source,channel);QVERIFY(channel.begin(router.options()));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::GetDateType);
+      auto date=cp::encodeMessage(cp::SetDate{Now,std::string("2.13.0")});QVERIFY(date&&router.send(*date));QTRY_VERIFY(channel.routerDate());auto identity=(*source)->takeIdentity();QVERIFY(identity);
+      QTRY_COMPARE(driver.permit.phase(),provider::SourcePermit::Phase::Idle);driver.hold=true;QVERIFY(driver.permit.request());QTRY_COMPARE(driver.permit.phase(),provider::SourcePermit::Phase::Ready);
+      {QVERIFY(driver.permit.take());const auto ack=qScopeGuard([&]{driver.permit.acknowledge();});auto created=channel.createLeaseSession(std::move(*identity),{{"i2cp.fastReceive","true"}},Now);QVERIFY2(created,created?"":created.error().message.c_str());}
+      driver.release();QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateSessionType);auto ack=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});QVERIFY(ack&&router.send(*ack));QTRY_VERIFY(channel.sessionId());
+      QVERIFY(router.lease());QTRY_VERIFY(router.next());QVERIFY(cp::decodeCreateLeaseSet2(router.take()));QTRY_VERIFY(channel.leaseSetSubmission());
+    } // The setup worker is joined before Bridge installs its own real permit.
+    provider::Bridge bridge(*source,channel);std::future<std::expected<void,storage::Error>> work;
+    const auto configPath=fixture.path/"biglybt.config";
+    std::mutex savedMutex;std::condition_variable savedChanged;std::atomic_bool saved=false;bool allowPostcheck=false;
+    // On any assertion return, release the worker's test barrier and stop the
+    // Bridge Ready permit BEFORE a launch::async future can block destruction.
+    const auto stopIo=[&]{{std::lock_guard lock(savedMutex);allowPostcheck=true;}savedChanged.notify_all();bridge.close();bridge.joinSource();if(work.valid()){work.wait();}};
+    const auto close=qScopeGuard(stopIo);
+    QVERIFY(bridge.begin({6881,6881},91));QTRY_COMPARE(bridge.observation().phase,provider::Bridge::Phase::Ready);
+    const auto generation=bridge.observation().generation;QVERIFY(generation!=0);
+    if(group){
+      struct stat before{},after{};QVERIFY(::stat(configPath.c_str(),&before)==0);
+      const int witness=::inotify_init1(IN_CLOEXEC|IN_NONBLOCK);QVERIFY(witness>=0);const auto closeWitness=qScopeGuard([&]{::close(witness);});
+      QVERIFY(::inotify_add_watch(witness,configPath.c_str(),IN_MOVE_SELF|IN_DELETE_SELF|IN_ATTRIB)>=0);
+      bool realRename=false;auto inside=provider::Bridge::Phase::Idle;
+      // Await any capturing worker BEFORE this block's marker/descriptor die.
+      // A consumed future is invalid, so normal completion keeps Bridge live.
+      const auto groupWork=qScopeGuard([&]{if(work.valid()){stopIo();}});
+      work=std::async(std::launch::async,[&]()->std::expected<void,storage::Error>{return (*source)->publishPendingMagnet(pending->hash,[&]()->std::expected<void,storage::Error>{
+        auto cancelled=engine::cancelPendingMagnet(*fixture.lease,*pending);if(!cancelled){return cancelled;}
+        std::array<char,4096> bytes{};const auto n=::read(witness,bytes.data(),bytes.size());
+        if(n<static_cast<ssize_t>(sizeof(inotify_event))){return std::unexpected(storage::Error{storage::ErrorCode::Io,"No actual config rename watch event"});}
+        for(std::size_t at=0;at<static_cast<std::size_t>(n);){
+          if(static_cast<std::size_t>(n)-at<sizeof(inotify_event)){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Incomplete fixture watch event"});}
+          inotify_event event{};std::memcpy(&event,bytes.data()+at,sizeof(event));
+          if(event.len>static_cast<std::size_t>(n)-at-sizeof(event)){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Unbounded fixture watch event"});}
+          realRename=realRename||bool(event.mask&IN_MOVE_SELF);at+=sizeof(event)+event.len;
+        }
+        saved.store(true,std::memory_order_release);savedChanged.notify_all();
+        // Test-only bounded handoff models concurrent Host I/O and Qt watcher;
+        // no Qt/SDK callback is invoked by this source-gate-owning worker.
+        std::unique_lock lock(savedMutex);if(!savedChanged.wait_for(lock,std::chrono::seconds(5),[&]{return allowPostcheck;})){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Fixture watch handoff expired"});}return {};
+      });});
+      QTRY_VERIFY(saved.load(std::memory_order_acquire)||work.wait_for(std::chrono::seconds(0))==std::future_status::ready);
+      QCoreApplication::processEvents(QEventLoop::AllEvents);
+      QCoreApplication::sendPostedEvents(nullptr,QEvent::MetaCall);
+      QCoreApplication::processEvents(QEventLoop::AllEvents);inside=bridge.observation().phase;
+      {std::lock_guard lock(savedMutex);allowPostcheck=true;}savedChanged.notify_all();
+      QTRY_VERIFY(work.wait_for(std::chrono::seconds(0))==std::future_status::ready);const auto published=work.get();
+      QVERIFY2(published,published?"":published.error().message.c_str());QVERIFY(saved.load(std::memory_order_acquire));QVERIFY(realRename);QCOMPARE(inside,provider::Bridge::Phase::Ready);
+      QVERIFY(::stat(configPath.c_str(),&after)==0);QVERIFY(before.st_ino!=after.st_ino);QCOMPARE(before.st_dev,after.st_dev);
+      QTRY_VERIFY((*source)->effectAuthority()->current());QCOMPARE(bridge.observation().phase,provider::Bridge::Phase::Ready);QCOMPARE(bridge.observation().generation,generation);
+      work=std::async(std::launch::async,[&]()->std::expected<void,storage::Error>{auto current=(*source)->validate();if(!current){return current;}current=sibling->validate();if(!current){return current;}return pendingSource->release();});
+      QTRY_VERIFY(work.wait_for(std::chrono::seconds(0))==std::future_status::ready);const auto validated=work.get();QVERIFY2(validated,validated?"":validated.error().message.c_str());QVERIFY(sibling->prepared());
+      QCOMPARE(owned_i2p_test::read(fixture.state()),state);QCOMPARE(owned_i2p_test::read(fixture.path/"downloads.config"),inventory);QCOMPARE(owned_i2p_test::read(fixture.key),key);
+      auto config=biglybtc::core::Document::parse(owned_i2p_test::read(configPath));QVERIFY(config);const auto* future=config->find("future");QVERIFY(future&&future->type==biglybtc::core::Node::Type::Bytes);QCOMPARE(std::string(future->bytes),std::string("x\0y",3));
+    }
+    work=std::async(std::launch::async,[&]()->std::expected<void,storage::Error>{
+      if(mutation<=1){
+        auto changed=storage::ConfigFile::load(*fixture.lease,"biglybt.config");if(!changed){return std::unexpected(changed.error());}if(!changed->document().replaceValue("future",owned_i2p_test::b("external-change"))){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Fixture external config edit"});}
+        if(mutation==0){struct stat before{},after{};if(::stat(configPath.c_str(),&before)!=0){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Fixture config stat"});}owned_i2p_test::write(configPath,changed->document().serialize());if(::stat(configPath.c_str(),&after)!=0||before.st_ino!=after.st_ino){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Fixture inplace inode changed"});}}
+        else{return changed->save(*fixture.lease);}
+      }else if(mutation==2){auto changed=key;changed.back()^=1;owned_i2p_test::write(fixture.key,changed);}
+      else{const auto lock=fixture.path/".azlock";owned_i2p_test::write(lock,owned_i2p_test::read(lock)+"changed");}return {};
+    });
+    QTRY_VERIFY(work.wait_for(std::chrono::seconds(0))==std::future_status::ready);const auto mutated=work.get();QVERIFY2(mutated,mutated?"":mutated.error().message.c_str());
+    QTRY_COMPARE(bridge.observation().phase,provider::Bridge::Phase::Withdrawn);QVERIFY(!(*source)->prepared());QVERIFY(!(*source)->effectAuthority()->current());
+    // Critical watch and fresh worker validation may race; both must revoke,
+    // and the fixed public reason is observational rather than a timing proof.
+    QVERIFY(bridge.failureReason()&&bridge.failureReason()[0]!='\0');
+#endif
+  }
   void actualSourcePermitPreservesQueuedQueryAcrossClientStartAndWithdraws_data(){
     QTest::addColumn<bool>("cancelQueued");QTest::addColumn<quint16>("announceSourcePort");QTest::addColumn<bool>("pressure");
     QTest::newRow("actual-reply")<<false<<quint16(10020)<<false;

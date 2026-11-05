@@ -198,6 +198,9 @@ int main(int argc,char** argv){
   try{startCase();QObject::connect(&poll,&QTimer::timeout,&application,[&]{if(done||inTurn){return;}inTurn=true;struct Reset{bool& flag;~Reset(){flag=false;}}reset{inTurn};try{
       require(elapsed.elapsed()<1000000,"Absolute Native discovery acceptance deadline");require(callbackFailure.isEmpty(),callbackFailure.toUtf8().constData());proxy->tick();require(proxy->failure().isEmpty(),proxy->failure().toUtf8().constData());const auto& f=*fixture;const ui::LibraryItem* row=nullptr;if(latest){for(const auto& value:latest->items){if(value.hash.compare(f.hash,Qt::CaseInsensitive)==0){require(row==nullptr,"Duplicate Host handle/library row");row=&value;}}}
       if(progressAge.elapsed()>=1000){progressAge.restart();json(work+"/native-progress.json",{{"case",f.name},{"phase",static_cast<int>(phase)},{"elapsed_ms",elapsed.elapsed()},{"busy",bridge->busy()},{"held_host38",proxy->held()},{"forwarded_host38",proxy->released()},{"i2cp_proxy",proxy->diagnostic()},{"row_state",row?row->state:QString{}},{"network_status",row?row->networkStatus:QString{}},{"completed",row&&row->completed?*row->completed:qint64{-1}},{"received",row&&row->received?*row->received:qint64{-1}}});}
+      if(row&&row->state==QStringLiteral("Error")){
+        throw std::runtime_error((QStringLiteral("Actual selected torrent Error: ")+row->networkStatus).left(512).toUtf8().toStdString());
+      }
       if(phase==Phase::Opening&&!bridge->busy()&&latest){if(f.magnet&&!magnetSubmitted){require(latest->items.empty()&&!QFileInfo::exists(f.file),"Magnet admitted payload before metadata");require(bridge->magnetImport(f.uri(),f.parent),"Real Host trackerless magnet intake refused");magnetSubmitted=true;}phase=Phase::Transferring;}
       if(phase==Phase::Transferring){
         if(proxy->held()&&f.magnet){

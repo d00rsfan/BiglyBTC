@@ -250,7 +250,11 @@ std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::open
 }
 const std::shared_ptr<const storage::ProfileLease>& ProfileSource::lease()const noexcept{return impl_->lease;}
 std::vector<int> ProfileSource::watchDescriptors()const{std::vector<int> result;for(int fd:{impl_->lease->directoryHandle(),impl_->plugins.get(),impl_->plugin.get(),impl_->key.get(),impl_->active.get()}){if(fd>=0){result.push_back(fd);}}for(const auto& file:impl_->bound){result.push_back(file.fd.get());}return result;}
-std::vector<int> ProfileSource::criticalWatchDescriptors()const{std::vector<int> result;if(impl_->key.get()>=0){result.push_back(impl_->key.get());}for(const auto& file:impl_->bound){if(file.name==".azlock"||file.name=="biglybt.config"){result.push_back(file.fd.get());}}return result;}
+// Group configuration is mutable only through independently checked publication.
+// Its inode and the retained profile directory still invalidate the source; a
+// fresh worker validation fences effects, including after atomic replacement.
+// Identity and lock events remain immediately fatal.
+std::vector<int> ProfileSource::criticalWatchDescriptors()const{std::vector<int> result;if(impl_->key.get()>=0){result.push_back(impl_->key.get());}for(const auto& file:impl_->bound){if(file.name==".azlock"){result.push_back(file.fd.get());}}return result;}
 bool ProfileSource::groupMode()const noexcept{return impl_->session||bool(impl_->anchor);}
 bool ProfileSource::mixedMode()const noexcept{return impl_->mixed;}
 void ProfileSource::invalidate()noexcept{impl_->dirty=true;if(impl_->anchor){impl_->anchor->impl_->dirty=true;}}
