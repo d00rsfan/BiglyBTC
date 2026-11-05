@@ -506,7 +506,9 @@ InitialChannel::DhtScopeObservation InitialChannel::dhtScopeObservation(std::uin
 bool InitialChannel::requestDhtEffects(std::uint64_t expectedScope){
   try{if(!dhtScopeObservation(expectedScope).sourceBound){return false;}return impl_->effectReady()&&dhtScopeObservation(expectedScope).granted;}catch(...){impl_->fail(Failure::Resources);return false;}
 }
-std::uint64_t InitialChannel::dhtScopeGeneration()const noexcept{try{return impl_->onThread()&&impl_->dhtReceives()?impl_->dhtEpoch:0;}catch(...){return 0;}}
+// Passive ownership epoch survives a dirty/cooperative source revision gap.
+// Actual receive/dispatch/held grants still require dhtReceives()/effectReady().
+std::uint64_t InitialChannel::dhtScopeGeneration()const noexcept{try{return impl_->onThread()&&impl_->dhtQueryPort&&impl_->receiverCurrent()&&(!impl_->sourceAuthority||!impl_->sourceAuthority->revoked())?impl_->dhtEpoch:0;}catch(...){return 0;}}
 ConfigResult<std::uint64_t> InitialChannel::submitDhtDatagram(View to,View data,bool repliable,std::uint16_t port,unsigned timeout){return impl_->sendDht(to,data,repliable,port,timeout);}
 ConfigResult<std::uint64_t> InitialChannel::submitDhtReply(std::uint64_t expectedScope,View recipient,View payload,std::uint16_t toPort,std::chrono::steady_clock::time_point absoluteEnd){
   if(!dhtScopeObservation(expectedScope).granted||absoluteEnd<=Impl::Clock::now()){

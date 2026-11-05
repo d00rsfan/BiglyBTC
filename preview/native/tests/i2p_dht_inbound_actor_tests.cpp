@@ -155,15 +155,16 @@ private slots:
 #endif
   }
   void actualSourcePermitPreservesQueuedQueryAcrossClientStartAndWithdraws_data(){
-    QTest::addColumn<bool>("cancelQueued");QTest::addColumn<quint16>("announceSourcePort");QTest::addColumn<bool>("pressure");
-    QTest::newRow("actual-reply")<<false<<quint16(10020)<<false;
-    QTest::newRow("cancel-queued-server-reply")<<true<<quint16(10020)<<false;
-    QTest::newRow("raw-zero-source-port")<<false<<quint16(0)<<false;
-    QTest::newRow("raw-max-source-port")<<false<<quint16(65535)<<false;
-    QTest::newRow("eight-replies-defer-client")<<false<<quint16(10020)<<true;
+    QTest::addColumn<bool>("cancelQueued");QTest::addColumn<quint16>("announceSourcePort");QTest::addColumn<bool>("pressure");QTest::addColumn<bool>("sourceGap");
+    QTest::newRow("actual-reply")<<false<<quint16(10020)<<false<<false;
+    QTest::newRow("cancel-queued-server-reply")<<true<<quint16(10020)<<false<<false;
+    QTest::newRow("raw-zero-source-port")<<false<<quint16(0)<<false<<false;
+    QTest::newRow("raw-max-source-port")<<false<<quint16(65535)<<false<<false;
+    QTest::newRow("eight-replies-defer-client")<<false<<quint16(10020)<<true<<false;
+    QTest::newRow("source-revision-gap")<<false<<quint16(10020)<<false<<true;
   }
   void actualSourcePermitPreservesQueuedQueryAcrossClientStartAndWithdraws(){
-    QFETCH(bool,cancelQueued);QFETCH(quint16,announceSourcePort);QFETCH(bool,pressure);owned_i2p_test::Fixture fixture;auto source=provider::ProfileSource::open(*fixture.lease,fixture.hash);QVERIFY(source);auto storage=(*source)->prepareStorage();QVERIFY(storage);
+    QFETCH(bool,cancelQueued);QFETCH(quint16,announceSourcePort);QFETCH(bool,pressure);QFETCH(bool,sourceGap);owned_i2p_test::Fixture fixture;auto source=provider::ProfileSource::open(*fixture.lease,fixture.hash);QVERIFY(source);auto storage=(*source)->prepareStorage();QVERIFY(storage);
     const auto config=owned_i2p_test::read(fixture.path/"biglybt.config"),key=owned_i2p_test::read(fixture.key),state=owned_i2p_test::read(fixture.state());
     Router router;QVERIFY(router.listen());Channel channel;QVERIFY(channel.bindEffectAuthority((*source)->effectAuthority()));SourceDriver driver(*source,channel);
     QVERIFY(channel.begin(router.options()));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::GetDateType);
@@ -178,6 +179,22 @@ private slots:
     QVERIFY(router.lease());QTRY_VERIFY(router.next());QVERIFY(cp::decodeCreateLeaseSet2(router.take()));QTRY_VERIFY(channel.leaseSetSubmission());
     auto remote=signer("dsa");d::Contact seed;seed.hash=remote.destination()->hash;seed.port=10002;seed.destination=*remote.destination();auto rid=d::makeNodeId(seed.hash,seed.port,i2p::Bytes(14,0x32));QVERIFY(rid);seed.id=*rid;
     auto lid=d::makeNodeId((*source)->destination().hash,10000,i2p::Bytes(14,0x31));QVERIFY(lid);d::Actor actor(channel);driver.actor=&actor;QVERIFY(actor.begin({*lid,10000,{seed},3,true}));QTRY_VERIFY(actor.inboundEnabled());const auto scope=channel.dhtScopeGeneration();
+    if(sourceGap){
+      QTRY_COMPARE(driver.permit.phase(),provider::SourcePermit::Phase::Idle);driver.hold=true;
+      const auto before=fixture.lease->sourceRevision();
+      {auto edit=fixture.lease->sourceAccess(true);QVERIFY(edit);} // Real cooperative epoch, no file mutation.
+      QVERIFY(fixture.lease->sourceRevision()>before);(*source)->invalidate(); // Actual watch primitive.
+      QVERIFY(!(*source)->effectAuthority()->current());QVERIFY(!(*source)->effectAuthority()->granted());
+      // Pump the actual Actor during the gap. Its ownership must survive, but
+      // no receive/write slot or held server grant is available before validation.
+      QVERIFY(!actor.resumeAuthorizedInbound());QCOMPARE(channel.dhtScopeGeneration(),scope);QVERIFY(actor.inboundEnabled());
+      QVERIFY(!channel.dhtScopeObservation(scope).granted);QCOMPARE(channel.dhtScopeObservation(scope).writeSlots,std::size_t(0));QVERIFY(!router.next());
+      QVERIFY(driver.permit.request());QTRY_COMPARE(driver.permit.phase(),provider::SourcePermit::Phase::Ready);
+      QVERIFY(!(*source)->effectAuthority()->current());QVERIFY(!(*source)->effectAuthority()->granted());
+      driver.release();QTRY_VERIFY((*source)->effectAuthority()->current());QVERIFY(actor.inboundEnabled());QCOMPARE(channel.dhtScopeGeneration(),scope);
+      // The unchanged family below performs real ping/token/announce/readback,
+      // client lookup and permanent revoke/Closed assertions after recovery.
+    }
     if(pressure){
       QTRY_COMPARE(driver.permit.phase(),provider::SourcePermit::Phase::Idle);driver.hold=true;QVERIFY(driver.permit.request());
       QTRY_COMPARE(driver.permit.phase(),provider::SourcePermit::Phase::Ready);QVERIFY(driver.permit.take());QVERIFY(channel.dhtScopeObservation(scope).granted);
