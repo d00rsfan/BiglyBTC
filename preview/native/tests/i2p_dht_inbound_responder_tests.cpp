@@ -100,4 +100,30 @@ void originalShapes(){
     d::Id target=key;target[2]=item.second?1:2;auto t=numeric.token(a,target);auto announce=query(d::Method::AnnouncePeer,a,target);announce.token=t;auto bytes=argument(wire(announce),"seed",std::string(item.first));s::Incoming in{bytes,nullptr,0,static_cast<std::uint16_t>(numeric.local.port+1)};(void)take(numeric.responder->receive(in,1000,{},[]{return true;},numeric.route));auto result=*take(numeric.send(query(d::Method::GetPeers,b,target),&b));const auto values=take(d::decode(result.payload));require(values.peers.size()==1&&values.peers.front().seed==item.second,"Original numeric intValue seed semantics changed");
   }
 }
-int main(){try{normalWire();filtering();refusalsAndPolicy();routingAndLifetime();originalShapes();std::cout<<"PASS detached inbound responder controls\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}
+void causalObservationCounts(){
+  Harness h;auto a=contact(1),b=contact(2);d::Id key{};key.fill(0x56);
+  auto counts=take(h.responder->counts());require(counts.requests==0&&counts.replyPrepared==0&&counts.tokenRejected==0,"Responder observation did not start empty");
+  auto token=h.token(a,key);counts=take(h.responder->counts());require(counts.requests==1&&counts.replyPrepared==1&&counts.tokenRejected==0&&counts.tokenBindings==1,"Actual get_peers token outcome was not counted");
+  (void)h.announce(a,key,token,true);auto read=*take(h.send(query(d::Method::GetPeers,b,key),&b));auto peers=take(d::decode(read.payload));require(peers.peers.size()==1&&peers.peers.front().hash==a.hash&&peers.peers.front().seed,"Observation baseline did not preserve actual seed readback");
+  const auto before=take(h.responder->counts());const auto calls=h.calls;auto bad=query(d::Method::AnnouncePeer,b,key);bad.token=token;bad.token[0]^=1;
+  require(!take(h.send(bad,nullptr)),"Bad raw token unexpectedly prepared a reply");counts=take(h.responder->counts());
+  require(counts.requests==before.requests+1&&counts.replyPrepared==before.replyPrepared&&counts.tokenRejected==before.tokenRejected+1,"Exact token-binding miss was not isolated in observations");
+  require(h.calls==calls&&counts.tokenBindings==before.tokenBindings&&counts.peers.keys==before.peers.keys&&counts.peers.values==before.peers.values,"Bad-token observation changed routing/binding/store state");
+  // The old owning snapshot must remain independent of subsequent outcomes.
+  require(before.requests==3&&before.replyPrepared==3&&before.tokenRejected==0,"Owning observation changed after receive");
+  const auto rejected=counts;
+  const auto unchanged=[&]{auto now=take(h.responder->counts());return now.requests==rejected.requests&&now.replyPrepared==rejected.replyPrepared&&now.tokenRejected==rejected.tokenRejected&&now.tokenBindings==rejected.tokenBindings&&now.peers.keys==rejected.peers.keys&&now.peers.values==rejected.peers.values;};
+  h.enabled=false;auto noSource=h.send(bad,nullptr);require(!noSource&&noSource.error()==s::ResponderError::NoAuthority&&unchanged(),"NoAuthority changed responder observations");h.enabled=true;
+  require(!take(h.send(bad,nullptr,1000,false,{true,false}))&&unchanged(),"Sleeping decline was miscounted as a rejected token");
+  auto bytes=wire(bad);s::Incoming wrongPort{bytes,nullptr,0,h.local.port};require(!take(h.responder->receive(wrongPort,1000,{},[]{return true;},h.route))&&unchanged(),"Wrong destination port was miscounted as a rejected token");
+  i::Bytes malformed{0xff};s::Incoming invalid{malformed,nullptr,0,static_cast<std::uint16_t>(h.local.port+1)};auto invalidResult=h.responder->receive(invalid,1000,{},[]{return true;},h.route);require(!invalidResult&&invalidResult.error()==s::ResponderError::Invalid&&unchanged(),"Malformed bytes changed guarded outcome counters");
+  auto valid=*take(h.send(query(d::Method::GetPeers,b,key),&b));peers=take(d::decode(valid.payload));require(peers.peers.size()==1&&peers.peers.front().hash==a.hash&&peers.peers.front().seed,"Rejected-token observation changed valid store contents");
+}
+void observationGuardBoundaries(){
+  auto a=contact(1);d::Id key{};key.fill(0x57);
+  Harness lost;lost.route=[&](const d::Contact&,d::Method,const d::Id&,bool)->std::optional<s::RoutingSnapshot>{lost.enabled=false;return s::RoutingSnapshot{};};
+  auto denied=lost.send(query(d::Method::GetPeers,a,key),&a);require(!denied&&denied.error()==s::ResponderError::NoAuthority,"Fixture did not lose actual callback authority");auto counts=take(lost.responder->counts());require(counts.requests==0&&counts.replyPrepared==0&&counts.tokenRejected==0&&counts.tokenBindings==0&&counts.peers.values==0,"Route callback source loss committed observation state");
+  Harness nested;bool blocked=false;nested.route=[&](const d::Contact&,d::Method,const d::Id&,bool)->std::optional<s::RoutingSnapshot>{auto denied=nested.send(query(d::Method::Ping,a,key),&a);blocked=!denied&&denied.error()==s::ResponderError::Reentry;auto during=take(nested.responder->counts());require(during.requests==0&&during.replyPrepared==0&&during.tokenRejected==0,"Reentry changed observation counters");return s::RoutingSnapshot{};};require(take(nested.send(query(d::Method::Ping,a,key),&a)).has_value()&&blocked,"Reentry fixture did not finish its legitimate outer reply");counts=take(nested.responder->counts());require(counts.requests==1&&counts.replyPrepared==1&&counts.tokenRejected==0,"Nested refusal was counted as an outer terminal outcome");
+  Harness foreign;bool refused=false;std::thread thread([&]{auto result=foreign.send(query(d::Method::Ping,a,key),&a);refused=!result&&result.error()==s::ResponderError::Thread;});thread.join();counts=take(foreign.responder->counts());require(refused&&counts.requests==0&&counts.replyPrepared==0&&counts.tokenRejected==0,"Foreign-thread call committed observation state");
+}
+int main(){try{normalWire();filtering();refusalsAndPolicy();routingAndLifetime();originalShapes();causalObservationCounts();observationGuardBoundaries();std::cout<<"PASS detached inbound responder controls\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}

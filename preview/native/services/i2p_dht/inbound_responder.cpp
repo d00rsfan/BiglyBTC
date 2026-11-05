@@ -3,9 +3,16 @@
 #include "inbound_responder.hpp"
 #include <algorithm>
 #include <new>
+#include <limits>
 #include <openssl/crypto.h>
 namespace biglybtc::services::i2p::dht::inbound {
 namespace {
+constexpr std::uint64_t increment(std::uint64_t value)noexcept{
+  return value==std::numeric_limits<std::uint64_t>::max()?value:value+1;
+}
+static_assert(increment(0)==1);
+static_assert(increment(std::numeric_limits<std::uint64_t>::max()-1)==std::numeric_limits<std::uint64_t>::max());
+static_assert(increment(std::numeric_limits<std::uint64_t>::max())==std::numeric_limits<std::uint64_t>::max());
 ResponderError stateError(StateError value){
   switch(value){
   case StateError::Invalid:return ResponderError::Invalid;case StateError::Thread:return ResponderError::Thread;
@@ -56,7 +63,12 @@ ReplyResult<std::optional<Response>> Responder::receive(const Incoming& incoming
       auto actual=signedContact(*incoming.signedSender,request->id,incoming.fromPort);if(!actual){return std::unexpected(actual.error());}originator=std::move(*actual);
     }else{
       if(incoming.toPort!=static_cast<unsigned>(local_.port)+1||request->method!=Method::AnnouncePeer){return std::optional<Response>{};}
-      if(!live()){return std::unexpected(unavailable());}auto saved=tokens_->resolve(request->token);if(!saved){return std::unexpected(stateError(saved.error()));}if(!*saved){return std::optional<Response>{};}originator=std::move(**saved);
+      if(!live()){return std::unexpected(unavailable());}auto saved=tokens_->resolve(request->token);if(!saved){return std::unexpected(stateError(saved.error()));}if(!*saved){
+        // The immediately preceding live guard encloses this non-callback
+        // binding lookup. No routing/store/response is attempted on a miss.
+        requests_=increment(requests_);tokenRejected_=increment(tokenRejected_);
+        return std::optional<Response>{};
+      }originator=std::move(**saved);
       // Raw a.id and observed fromPort are not identity evidence. Only the
       // original token-map saved full contact supplies the originator/reply Q.
     }
@@ -89,12 +101,16 @@ ReplyResult<std::optional<Response>> Responder::receive(const Incoming& incoming
     auto payload=encodeReply(response,request->version==0?PeerReplyMode::Ordinary:PeerReplyMode::Azureus);if(!payload){return std::unexpected(ResponderError::Invalid);}
     if(!live()){return std::unexpected(unavailable());}
     const auto replyPort=static_cast<std::uint16_t>(originator.port+1);
-    return std::optional<Response>{Response{std::move(originator),local_.port,replyPort,std::move(*payload)}};
+    auto result=std::optional<Response>{Response{std::move(originator),local_.port,replyPort,std::move(*payload)}};
+    // Full owning response construction and the final live guard succeeded.
+    // No counters are committed on a later-returning NoAuthority path.
+    requests_=increment(requests_);replyPrepared_=increment(replyPrepared_);
+    return result;
   }catch(const std::bad_alloc&){return std::unexpected(ResponderError::Resource);}catch(...){return std::unexpected(ResponderError::Callback);}
 }
 ReplyResult<StateCounts> Responder::counts()const noexcept{
   if(std::this_thread::get_id()!=thread_){return std::unexpected(ResponderError::Thread);}if(closed_){return std::unexpected(ResponderError::Closed);}
-  auto tokens=tokens_->size();if(!tokens){return std::unexpected(stateError(tokens.error()));}auto peers=peers_->counts();if(!peers){return std::unexpected(stateError(peers.error()));}return StateCounts{*tokens,*peers};
+  auto tokens=tokens_->size();if(!tokens){return std::unexpected(stateError(tokens.error()));}auto peers=peers_->counts();if(!peers){return std::unexpected(stateError(peers.error()));}return StateCounts{*tokens,*peers,requests_,replyPrepared_,tokenRejected_};
 }
 void Responder::close()noexcept{closed_=true;if(tokens_){tokens_->close();}if(peers_){peers_->close();}}
 } // namespace biglybtc::services::i2p::dht::inbound

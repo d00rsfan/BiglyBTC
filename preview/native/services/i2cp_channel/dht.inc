@@ -50,7 +50,9 @@
     const auto reject=[](Code c,const char* why)->ConfigResult<std::uint64_t>{return std::unexpected(::biglybtc::services::i2p::Error{c,why});};
     const auto end=std::min(Clock::now()+std::chrono::milliseconds(std::min(timeout,30000U)),absoluteEnd.value_or(Clock::time_point::max()));
     if(!onThread()||!dhtReceives()||!port||!timeout||timeout>30000||payload.size()>10*1024){return reject(Code::InvalidFormat,"Explicit current bounded DHT scope required");}
-    if(dhtWrites.size()+dhtDispatches.size()==DhtQueueLimit||nextDhtTicket>8192){return reject(Code::TooLarge,"DHT queue/lifetime capacity exhausted");}
+    // Tickets are Native-only monotonic IDs, never the 32-bit I2CP nonce.
+    // Reserve UINT64_MAX so postincrement cannot wrap/reuse a retired ID.
+    if(dhtWrites.size()+dhtDispatches.size()==DhtQueueLimit||nextDhtTicket==std::numeric_limits<std::uint64_t>::max()){return reject(Code::TooLarge,"DHT queue or ticket identifier capacity exhausted");}
     try{
       const auto at=generation;auto destination=decodeDestination(recipient);if(!destination){return std::unexpected(destination.error());}
       auto data=repliable?encode1(leaseSigner->destination()->wire,leaseSigner->signingPrivateKey(),payload):ConfigResult<Bytes>{Bytes(payload.begin(),payload.end())};

@@ -58,6 +58,7 @@ std::expected<std::optional<dht::Actor::Options>,storage::Error> readI2pDiscover
   dht::Actor::Options result;
   if(options.discovery){
     result.queryPort=options.discovery->queryPort;result.localId=options.discovery->nodeId;
+    result.inbound=options.discovery->inbound;result.inboundSleeping=options.discovery->inboundSleeping;result.inboundSuspended=options.discovery->inboundSuspended;
     for(const auto& seed:options.discovery->seeds){
       dht::Contact value;value.id=seed.nodeId;value.hash=seed.destinationHash;value.port=seed.queryPort;
       if(!seed.destination.empty()){
@@ -67,7 +68,7 @@ std::expected<std::optional<dht::Actor::Options>,storage::Error> readI2pDiscover
       }
       if(!dht::validContact(value)){return bad("Invalid explicit I2P DHT contact");}result.seeds.push_back(std::move(value));
     }
-    if(!result.queryPort||result.queryPort>=65534||result.seeds.empty()||result.seeds.size()>20){return bad("Invalid explicit I2P DHT routing options");}
+    if(!result.queryPort||result.queryPort>=65535||result.seeds.empty()||result.seeds.size()>20){return bad("Invalid explicit I2P DHT routing options");}
     return std::optional{std::move(result)};
   }
   storage::detail::Descriptor plugins(::openat(lease.directoryHandle(),"plugins",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
@@ -82,7 +83,7 @@ std::expected<std::optional<dht::Actor::Options>,storage::Error> readI2pDiscover
     if(values->contains("port")){
       const auto& value=values->at("port");unsigned port=0;const auto parsed=std::from_chars(value.data(),value.data()+value.size(),port);
       auto id=nodeId(values->at("nid"));
-      if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||port<1||port>=65534||!id){return bad("Malformed original I2P DHT identity");}
+      if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||port<1||port>=65535||!id){return bad("Malformed original I2P DHT identity");}
       result.queryPort=static_cast<std::uint16_t>(port);result.localId=*id;
     }
   }

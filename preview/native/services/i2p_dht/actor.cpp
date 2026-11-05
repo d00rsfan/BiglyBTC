@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "actor.hpp"
+#include "transaction_history.hpp"
 #include "inbound_responder.hpp"
 #include "../azureus_router/router.hpp"
 #include <QDateTime>
@@ -17,14 +18,14 @@ struct Actor::Impl {
   using Clock=std::chrono::steady_clock;
   Actor* q;QPointer<i2cp::InitialChannel> channel;QTimer timer;Options options;
   Lookup lookup;std::uint64_t nextOperation=1,scope=0,resolver=0;std::optional<std::size_t> resolving;
-  std::vector<std::array<Byte,8>> transactions;Bytes localDestination;Hash localHash{};
+  detail::TransactionHistory transactions;Bytes localDestination;Hash localHash{};
   bool enabled=false,pumping=false,wakeQueued=false,notificationQueued=false,inboundRequested=false;
   std::unique_ptr<inbound::Responder> responder;
   std::unique_ptr<azureus_router::RouterOwner> router;
   std::vector<Contact> routingContacts;
   std::vector<std::uint64_t> replyTickets;
   explicit Impl(Actor* owner,i2cp::InitialChannel& c):q(owner),channel(&c),timer(owner){
-    timer.setSingleShot(true);timer.setTimerType(Qt::PreciseTimer);transactions.reserve(1024);
+    timer.setSingleShot(true);timer.setTimerType(Qt::PreciseTimer);
     QObject::connect(&timer,&QTimer::timeout,q,[this]{safePump();});
     QObject::connect(&c,&i2cp::InitialChannel::dhtChanged,q,[this]{schedule();});
     QObject::connect(&c,&i2cp::InitialChannel::destinationLookupChanged,q,[this]{schedule();});
@@ -60,10 +61,11 @@ struct Actor::Impl {
   }
   void safeClose()noexcept{try{close();}catch(...){timer.stop();stopInbound();enabled=false;scope=0;lookup.close();}}
   void safePump()noexcept{try{pump();}catch(...){safeClose();}}
-  Result<Bytes> transaction(){
-    if(transactions.size()==1024){return std::unexpected(Error{ErrorCode::TooLarge,"DHT lifetime transaction capacity exhausted"});}
+  Result<Bytes> transaction(std::int64_t stamp){
+    if(!transactions.advance(stamp)){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid DHT transaction clock"});}
+    if(!transactions.available()){return std::unexpected(Error{ErrorCode::TooLarge,"DHT recent transaction window is full"});}
     std::array<Byte,8> tx{};for(unsigned tries=0;tries<8;++tries){if(RAND_bytes(tx.data(),int(tx.size()))!=1){break;}
-      if(std::find(transactions.begin(),transactions.end(),tx)==transactions.end()){transactions.push_back(tx);return Bytes(tx.begin(),tx.end());}}
+      if(transactions.remember(tx,stamp)){return Bytes(tx.begin(),tx.end());}}
     return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT transaction entropy unavailable"});
   }
   void stopInbound()noexcept{
@@ -151,11 +153,12 @@ struct Actor::Impl {
     if(!channel->enableDhtDatagrams(value.queryPort)){return false;}scope=channel->dhtScopeGeneration();enabled=true;if(value.inbound&&!enableInbound()){close();return false;}notify();return true;
   }
   Result<std::uint64_t> start(const Id& target,bool seed,bool announce,unsigned timeout){
-    if(!onThread()||!current()||lookup.running()||nextOperation>1024){return std::unexpected(Error{ErrorCode::InvalidFormat,"Current idle explicitly bound DHT actor required"});}
+    if(!onThread()||!current()||lookup.running()){return std::unexpected(Error{ErrorCode::InvalidFormat,"Current idle explicitly bound DHT actor required"});}
+    if(!nextOperation){return std::unexpected(Error{ErrorCode::TooLarge,"DHT operation identifier space exhausted"});}
     cancelPending();
     const auto operation=nextOperation;
     if(!lookup.start(operation,{target,seed,announce,timeout,options.parallelism},options.seeds,now())){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid finite DHT lookup options"});}
-    ++nextOperation;pump();return operation;
+    nextOperation=detail::nextOperationId(operation);pump();return operation;
   }
   void pump(bool heldInbound=false){
     if(pumping||!onThread()||!enabled){return;}
@@ -192,6 +195,7 @@ struct Actor::Impl {
         resolver=0;resolving.reset();progressed=true;
       }
     }
+    std::optional<std::int64_t> transactionWake;
     // At most three new RPCs per turn. No reentrant callback/foreign code is
     // invoked; channel signals are queued current-state notifications.
     for(unsigned steps=0;steps<3&&lookup.running()&&channel->state()==i2cp::InitialChannel::State::SessionCreated;++steps){
@@ -210,7 +214,9 @@ struct Actor::Impl {
       // transaction or extending the lookup end. Lifetime exhaustion differs.
       const auto capacity=channel->dhtScopeObservation(scope);
       if(!capacity.writeSlots){if(capacity.lifetimeExhausted){lookup.failed(*index);progressed=true;continue;}break;}
-      const auto intended=now();auto tx=transaction();if(!tx){close();return;}
+      const auto intended=now();if(!transactions.advance(intended)){close();return;}
+      if(!transactions.available()){transactionWake=transactions.wakeup(lookup.end());break;}
+      auto tx=transaction(intended);if(!tx){close();return;}
       Message message;message.transaction=*tx;message.id=options.localId;message.target=lookup.options().target;
       message.method=node.phase==NodePhase::Replied?Method::AnnouncePeer:Method::GetPeers;message.noSeed=lookup.options().seed;message.seed=lookup.options().seed;message.token=node.token;
       auto packet=encode(message);if(!packet){lookup.failed(*index);continue;}
@@ -223,7 +229,7 @@ struct Actor::Impl {
     }
     lookup.tick(now());
     if(!lookup.running()){timer.stop();cancelPending();if(!inboundRequested||!heldInbound||progressed||clientWasRunning){notify();}return;}
-    auto end=lookup.end();for(const auto& n:lookup.nodes()){if(n.phase==NodePhase::Resolving||n.phase==NodePhase::Queued||n.phase==NodePhase::Sent){end=std::min(end,n.end);}}
+    auto end=lookup.end();if(transactionWake){end=std::min(end,*transactionWake);}for(const auto& n:lookup.nodes()){if(n.phase==NodePhase::Resolving||n.phase==NodePhase::Queued||n.phase==NodePhase::Sent){end=std::min(end,n.end);}}
     timer.start(int(std::max<std::int64_t>(1,end-now())));if(!inboundRequested||!heldInbound||progressed){notify();}
   }
 };
@@ -239,4 +245,13 @@ bool Actor::resumeAuthorizedInbound(){try{return impl_->resumeInbound();}catch(.
 bool Actor::cancel(std::uint64_t op){try{if(!impl_->onThread()||!impl_->lookup.running()||impl_->lookup.snapshot().operation!=op){return false;}impl_->lookup.cancel();impl_->cancelPending();impl_->timer.stop();impl_->notify();return true;}catch(...){impl_->safeClose();return false;}}
 void Actor::close(){if(impl_->onThread()){impl_->safeClose();}}
 Snapshot Actor::observation()const{if(!impl_->onThread()){return {};}return impl_->lookup.snapshot();}
+Actor::InboundObservation Actor::inboundObservation()const noexcept{
+  try{
+    if(!impl_->onThread()){return {};}const auto& s=*impl_;InboundObservation value;
+    value.requested=s.inboundRequested;value.retained=s.current();value.ready=bool(s.responder)&&value.retained;value.scope=s.scope;
+    if(s.channel){const auto state=s.channel->dhtScopeObservation(s.scope);value.sourceCurrent=state.sourceBound;value.grantActive=state.granted;}
+    if(s.responder){const auto counts=s.responder->counts();if(counts){value.requests=counts->requests;value.replyPrepared=counts->replyPrepared;value.tokenRejected=counts->tokenRejected;value.tokenBindings=counts->tokenBindings;value.peerKeys=counts->peers.keys;value.peerValues=counts->peers.values;}else{value.ready=false;}}
+    return value;
+  }catch(...){return {};}
+}
 } // namespace biglybtc::services::i2p::dht

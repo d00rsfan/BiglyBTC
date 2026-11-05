@@ -3,6 +3,7 @@
 // Detached SOURCE-CANDIDATE; no channel consumer or source/provider grant.
 #pragma once
 #include "inbound_state.hpp"
+#include <cstdint>
 #include <functional>
 namespace biglybtc::services::i2p::dht::inbound {
 enum class ResponderError {Invalid,NoAuthority,Routing,Capacity,Crypto,Clock,Thread,Reentry,Closed,Resource,Callback};
@@ -11,7 +12,15 @@ struct Incoming {View payload;const Destination* signedSender=nullptr;std::uint1
 struct RequestPolicy {bool sleeping=false,suspended=false;};
 struct RoutingSnapshot {std::vector<Contact> closest;bool allowStore=false;}; // Already distance-sorted/truncated liveOnlyK10; not source authority.
 struct Response {Contact recipient;std::uint16_t fromPort=0,toPort=0;Bytes payload;}; // RAW18 to exact saved Q+1; ACK is not storage certification.
-struct StateCounts {std::size_t tokenBindings=0;Counts peers;};
+// Guarded terminal outcomes per Responder instance, not all received packets.
+// requests counts only a fully prepared reply or an exact raw token-binding
+// miss. replyPrepared is local construction, never socket enqueue/delivery.
+// tokenRejected counts only that binding miss, not malformed/NoAuthority/etc.
+// Owning passive copies confer no identity/source/store/provider permission.
+struct StateCounts {
+  std::size_t tokenBindings=0;Counts peers;
+  std::uint64_t requests=0,replyPrepared=0,tokenRejected=0;
+};
 // Caller reserves one bounded response slot and retains the object through the
 // call. Current must reflect the actual held source permit/session/lease, and
 // cannot itself grant authority. Route records actual contactAlive then supplies
@@ -29,6 +38,7 @@ public:
 private:
   Responder(Contact,std::unique_ptr<TokenBindings>,std::unique_ptr<PeerStore>);
   Contact local_;std::unique_ptr<TokenBindings> tokens_;std::unique_ptr<PeerStore> peers_;
+  std::uint64_t requests_=0,replyPrepared_=0,tokenRejected_=0;
   const std::thread::id thread_=std::this_thread::get_id();bool closed_=false,busy_=false;
 };
 } // namespace biglybtc::services::i2p::dht::inbound

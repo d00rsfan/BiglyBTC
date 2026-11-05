@@ -3,6 +3,7 @@
 #include "session_bridge.hpp"
 #include "persistent_session.hpp"
 #include "i2p_saved_settings.hpp"
+#include "i2p_discovery_options.hpp"
 #include "coexist_coordinator.hpp"
 #include "mixed_i2p_source.hpp"
 #include "mixed_i2p_transport.hpp"
@@ -31,6 +32,35 @@ using namespace biglybtc;
 class I2pClassicHostTests final:public QObject {
   Q_OBJECT
 private slots:
+  void originalDiscoveryPortBoundary_data(){
+    QTest::addColumn<bool>("mixed");QTest::addColumn<bool>("saved");QTest::addColumn<quint16>("port");
+    for(bool mixed:{false,true}){for(bool saved:{false,true}){for(quint16 port:{quint16(0),quint16(1),quint16(65533),quint16(65534),quint16(65535)}){
+      const auto label=QByteArray::number(port)+(mixed?"-mixed":"-pure")+(saved?"-saved":"-explicit");QTest::newRow(label.constData())<<mixed<<saved<<port;
+    }}}
+  }
+  void originalDiscoveryPortBoundary(){
+    QFETCH(bool,mixed);QFETCH(bool,saved);QFETCH(quint16,port);namespace dht=services::i2p::dht;owned_i2p_test::Fixture f;
+    const auto config=owned_i2p_test::read(f.path/"biglybt.config");services::i2p::Hash hash{};hash.fill(0x35);
+    const auto id=dht::makeNodeId(hash,65534,services::i2p::Bytes(14,0x21));QVERIFY(id);app::I2pServiceOptions options;
+    app::I2pDiscoveryOptions hints;hints.queryPort=port;hints.nodeId=*id;app::I2pDiscoverySeed seed;seed.queryPort=65534;seed.nodeId=*id;seed.destinationHash=hash;hints.seeds.push_back(seed);
+    const auto path=f.key.parent_path()/(mixed?"dht.config":"dht1.config");std::string original;
+    if(saved){
+      std::string encoded;unsigned accumulator=0,bits=0;for(const auto byte:*id){accumulator=(accumulator<<8)|byte;bits+=8;while(bits>=5){bits-=5;encoded+="abcdefghijklmnopqrstuvwxyz234567"[(accumulator>>bits)&31U];}}
+      QCOMPARE(encoded.size(),std::size_t{32});original="# original untouched properties\nport="+std::to_string(port)+"\nnid="+encoded+"\nfuture.plugin.data=unchanged\n";owned_i2p_test::write(path,original);
+    }else{options.discovery=hints;}
+    const auto result=app::readI2pDiscoveryOptions(*f.lease,mixed,options);const bool valid=port>0&&port<65535;
+    QCOMPARE(result.has_value(),valid);if(valid){QVERIFY(result->has_value());QCOMPARE((**result).queryPort,port);QCOMPARE((**result).localId,*id);QVERIFY(!(**result).inbound);}
+    QCOMPARE(owned_i2p_test::read(f.path/"biglybt.config"),config);if(saved){QCOMPARE(owned_i2p_test::read(path),original);}
+  }
+  void explicitInboundDiscoveryPolicyRemainsSourceGatedAndHonoursSavedDisable(){
+    namespace dht=services::i2p::dht;
+    for(bool mixed:{false,true}){owned_i2p_test::Fixture f;services::i2p::Hash hash{};hash.fill(0x35);const auto id=dht::makeNodeId(hash,65534,services::i2p::Bytes(14,0x21));QVERIFY(id);
+      app::I2pServiceOptions options;options.discovery.emplace();options.discovery->queryPort=65534;options.discovery->inbound=true;options.discovery->inboundSleeping=true;options.discovery->inboundSuspended=true;
+      app::I2pDiscoverySeed seed;seed.queryPort=65534;seed.nodeId=*id;seed.destinationHash=hash;options.discovery->seeds.push_back(seed);
+      const auto config=owned_i2p_test::read(f.path/"biglybt.config");auto read=app::readI2pDiscoveryOptions(*f.lease,mixed,options);QVERIFY(read&&read->has_value());QVERIFY((**read).inbound&&(**read).inboundSleeping&&(**read).inboundSuspended);QCOMPARE(owned_i2p_test::read(f.path/"biglybt.config"),config);
+      auto file=storage::ConfigFile::load(*f.lease,"biglybt.config");QVERIFY(file);QVERIFY(file->document().replaceValue("Plugin.azneti2phelper.azi2phelper.dht.enable","i0e"));QVERIFY(file->save(*f.lease));const auto disabled=owned_i2p_test::read(f.path/"biglybt.config");read=app::readI2pDiscoveryOptions(*f.lease,mixed,options);QVERIFY(read&&!read->has_value());QCOMPARE(owned_i2p_test::read(f.path/"biglybt.config"),disabled);
+    }
+  }
   void pendingMixedSamAcceptFailurePreservesActualPublicAdmission(){
 #if !BIGLYBTC_TEST_MIXED_ACCEPT_SDK
     QSKIP("Mixed SDK header unavailable");

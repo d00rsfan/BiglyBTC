@@ -24,6 +24,8 @@ struct I2pDiscoverySeed {
 struct I2pDiscoveryOptions {
   std::array<std::uint8_t,20> nodeId{};std::uint16_t queryPort=0;
   std::vector<I2pDiscoverySeed> seeds;
+  // Explicit node policy request; actual source-held grants remain mandatory.
+  bool inbound=false,inboundSleeping=false,inboundSuspended=false;
 };
 struct I2pServiceOptions {
   std::uint16_t routerPort=7654;

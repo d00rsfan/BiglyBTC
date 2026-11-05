@@ -23,6 +23,12 @@ public:
   bool resumeAuthorizedInbound(); // Only actual worker-held channel grant succeeds.
   void close();
   Snapshot observation()const; // Owning hints; no filesystem/source authority.
+  struct InboundObservation {
+    bool requested=false,ready=false,retained=false,sourceCurrent=false,grantActive=false;
+    std::uint64_t scope=0,requests=0,replyPrepared=0,tokenRejected=0;
+    std::size_t tokenBindings=0,peerKeys=0,peerValues=0;
+  };
+  InboundObservation inboundObservation()const noexcept; // Passive owning hints; never an effect grant.
 signals:
   void changed(); // Queued/coalesced; synchronous close/deletion is safe.
 private:
