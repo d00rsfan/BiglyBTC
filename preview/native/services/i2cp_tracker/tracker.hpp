@@ -5,7 +5,6 @@
 namespace biglybtc::services::i2p::i2cp {
 inline constexpr Byte HostLookupType=38,HostReplyType=39,RawTrackerProtocol=18;
 inline constexpr std::uint16_t TrackerLocalPort=9000;
-inline constexpr std::size_t MaximumTrackerOperations=1024; // Lifetime nonreuse of wire transaction IDs.
 struct HostLookup {std::uint16_t sessionId=0;std::uint32_t request=0,timeoutMilliseconds=0;Hash hash{};};
 struct HostReply {std::uint16_t sessionId=0;std::uint32_t request=0;Byte result=0;std::optional<Destination> destination;};
 // Exact original LOOKUP_HASH/default reply only. No hostname/OS DNS/options.

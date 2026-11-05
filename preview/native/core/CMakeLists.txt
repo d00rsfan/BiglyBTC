@@ -70,3 +70,8 @@ target_sources(biglybtc_core PRIVATE src/queue_positions.cpp)
 
 # Value-only manual-download tag document edits; no profile or live activation.
 target_sources(biglybtc_core PRIVATE src/saved_download_tag_edits.cpp)
+# Pure original category definitions and selected-state attributes only.
+target_sources(biglybtc_core PRIVATE src/saved_categories.cpp)
+
+# Value-only source-defined automatic constraint compiler; no Host activation.
+target_sources(biglybtc_core PRIVATE src/tag_constraints.cpp src/tag_constraint_catalog.inc)

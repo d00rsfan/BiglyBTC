@@ -4,7 +4,7 @@
   StreamOptions streamOptions;
   Clock::time_point streamEnd{};
   std::uint64_t streamGeneration=0,nextStreamOperation=1;
-  std::array<std::uint32_t,1024> streamIds{};std::size_t streamIdCount=0;
+  WireIds streamIds; // One non-resetting permutation for legacy AND managed IDs.
   bool streamNotificationQueued=false,streamFlushing=false;
   static std::uint64_t streamNow(){return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count());}
   void clearStream(){clearManagedStreams();streamTimer.stop();stream.reset();streamNotificationQueued=false;streamFlushing=false;}
@@ -64,12 +64,11 @@
     using Code=::biglybtc::services::i2p::ErrorCode;auto reject=[](Code c,const char* why)->ConfigResult<std::uint64_t>{return std::unexpected(::biglybtc::services::i2p::Error{c,why});};
     if(!onThread()||(stream&&stream->active())||tracker||statusPending||state!=State::SessionCreated||waitingFirstLease||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0||fetch){return reject(Code::InvalidFormat,"Current owned LS2 and idle explicit channel required for stream");}
     if(!input.fromPort||!input.toPort||input.deadlineMilliseconds<1||input.deadlineMilliseconds>120000||input.maximumWindow<2||input.maximumWindow>streaming::MaximumWindow){return reject(Code::Unsupported,"Explicit Streaming ports/deadline and window2..8 required");}
-    if(streamIdCount==streamIds.size()||nextStreamOperation==std::numeric_limits<std::uint64_t>::max()){return reject(Code::TooLarge,"Streaming lifetime correlation exhausted");}
+    if(nextStreamOperation==std::numeric_limits<std::uint64_t>::max()){return reject(Code::TooLarge,"Streaming operation ID exhausted");}
     const auto end=Clock::now()+std::chrono::milliseconds(input.deadlineMilliseconds);
     try{
       auto peer=decodeDestination(destination);if(!peer){return std::unexpected(peer.error());}if(peer->hash==leaseSigner->destination()->hash){return reject(Code::InvalidFormat,"Streaming self-connect refused");}
-      std::uint32_t id=0;bool random=false;for(unsigned attempt=0;attempt<8;++attempt){if(RAND_bytes(reinterpret_cast<unsigned char*>(&id),sizeof(id))!=1){break;}if(id&&std::find(streamIds.begin(),streamIds.begin()+static_cast<std::ptrdiff_t>(streamIdCount),id)==streamIds.begin()+static_cast<std::ptrdiff_t>(streamIdCount)){random=true;break;}}
-      if(!random){return reject(Code::CryptoFailure,"Streaming ID entropy unavailable");}
+      auto reserved=nextWireId(streamIds,::biglybtc::services::protocol_ids::Zero::Skip);if(!reserved){return std::unexpected(reserved.error());}const auto id=*reserved;
       const auto entropy=[](unsigned bound)->unsigned{
         // Exact bounded integer draw; no modulo bias or deterministic runtime
         // fallback. The pure tests supply their own inert draw independently.
@@ -80,7 +79,7 @@
       };
       const auto at=generation,operation=nextStreamOperation;streaming::Connection prepared(operation,id,*leaseSigner->destination(),std::move(*peer),input.maximumWindow,streamNow(),entropy);
       if(!current(at)||!leaseCurrent()||Clock::now()>=end){return reject(Code::InvalidFormat,"Streaming preparation lost current identity/budget");}
-      stream.emplace(std::move(prepared));streamOptions=input;streamGeneration=at;streamEnd=end;streamIds[streamIdCount++]=id;++nextStreamOperation;
+      stream.emplace(std::move(prepared));streamOptions=input;streamGeneration=at;streamEnd=end;++nextStreamOperation;
       flushStream();if(!current(at)||!stream||!stream->active()){return reject(Code::CryptoFailure,"Streaming initial dispatch failed");}return operation;
     }catch(...){fail(Failure::Resources);return reject(Code::CryptoFailure,"Streaming resources unavailable");}
   }

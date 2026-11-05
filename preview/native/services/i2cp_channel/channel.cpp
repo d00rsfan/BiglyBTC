@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "channel.hpp"
+#include "unique32.hpp"
 #include <QMetaObject>
 #include <QNetworkProxy>
 #include <QPointer>
@@ -20,6 +21,27 @@
 namespace biglybtc::services::i2p::i2cp {
 struct InitialChannel::Impl {
   using Clock=std::chrono::steady_clock;
+  using WireIds=std::optional<std::expected<::biglybtc::services::protocol_ids::Unique32,
+      ::biglybtc::services::protocol_ids::Error>>;
+  // A factory result, including failure, is retained for the whole Impl
+  // lifetime. Session/stream/tracker clear must never rekey or reset it.
+  ConfigResult<std::uint32_t> nextWireId(WireIds& ids,::biglybtc::services::protocol_ids::Zero zero){
+    namespace unique=::biglybtc::services::protocol_ids;
+    using Code=::biglybtc::services::i2p::ErrorCode;
+    const auto refused=[](unique::Error why)->ConfigResult<std::uint32_t>{
+      switch(why){
+        case unique::Error::Exhausted:return std::unexpected(::biglybtc::services::i2p::Error{Code::TooLarge,"Protocol wire ID security budget exhausted"});
+        case unique::Error::Thread:return std::unexpected(::biglybtc::services::i2p::Error{Code::Unsupported,"Protocol ID allocator operating thread changed"});
+        case unique::Error::Resource:return std::unexpected(::biglybtc::services::i2p::Error{Code::CryptoFailure,"Protocol ID allocator resources unavailable"});
+        case unique::Error::Crypto:return std::unexpected(::biglybtc::services::i2p::Error{Code::CryptoFailure,"Protocol ID allocator entropy/PRF failed"});
+        case unique::Error::Closed:case unique::Error::Failed:return std::unexpected(::biglybtc::services::i2p::Error{Code::CryptoFailure,"Protocol ID allocator permanently unavailable"});
+      }
+      return std::unexpected(::biglybtc::services::i2p::Error{Code::CryptoFailure,"Protocol ID allocator failed"});
+    };
+    if(!ids){ids.emplace(unique::Unique32::create(zero));}
+    if(!ids->has_value()){return refused(ids->error());}
+    auto next=ids->value().next();if(!next){return refused(next.error());}return *next;
+  }
   InitialChannel* q;
   QTcpSocket socket;
   QTimer timer;

@@ -25,17 +25,14 @@
     if(auto due=blocked?managedStreams->hardWakeup():managedStreams->wakeup()){const auto stamp=streamNow();wait=std::min(wait,static_cast<std::int64_t>(*due>stamp?*due-stamp:1));}
     streamTimer.start(static_cast<int>(std::clamp<std::int64_t>(wait,1,std::numeric_limits<int>::max())));
   }catch(...){fail(Failure::Resources);}}
-  bool reserveManagedIdentity(std::uint64_t& operation,std::uint32_t& id){
-    if(streamIdCount==streamIds.size()||nextStreamOperation==std::numeric_limits<std::uint64_t>::max()){return false;}
-    bool selected=false;
-    for(unsigned attempt=0;attempt<8;++attempt){
-      if(RAND_bytes(reinterpret_cast<unsigned char*>(&id),sizeof(id))!=1){return false;}
-      if(id&&std::find(streamIds.begin(),streamIds.begin()+static_cast<std::ptrdiff_t>(streamIdCount),id)==streamIds.begin()+static_cast<std::ptrdiff_t>(streamIdCount)){selected=true;break;}
-    }
-    if(!selected){return false;}operation=nextStreamOperation;return true;
+  ConfigResult<std::uint32_t> reserveManagedIdentity(std::uint64_t& operation){
+    if(nextStreamOperation==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(::biglybtc::services::i2p::Error{::biglybtc::services::i2p::ErrorCode::TooLarge,"Streaming operation ID exhausted"});}
+    auto id=nextWireId(streamIds,::biglybtc::services::protocol_ids::Zero::Skip);
+    if(!id){return std::unexpected(id.error());}operation=nextStreamOperation;return *id;
   }
-  void commitManagedIdentity(std::uint64_t operation,std::uint32_t id)noexcept{
-    streamIds[streamIdCount++]=id;++nextStreamOperation;managedLastOperation=operation;
+  void commitManagedIdentity(std::uint64_t operation)noexcept{
+    // Wire ID was irrevocably consumed at reserve, even on later refusal.
+    ++nextStreamOperation;managedLastOperation=operation;
   }
   bool flushManagedLease(){
     if(!managedLease){return true;}
@@ -108,7 +105,7 @@
     const auto period=static_cast<std::uint64_t>(input.deadlineMilliseconds);
     if(entered>std::numeric_limits<std::uint64_t>::max()-period){return refuse(Code::Unsupported,"Handshake clock overflow");}
     const auto end=entered+period;
-    std::uint64_t operation=0;std::uint32_t id=0;if(!reserveManagedIdentity(operation,id)){return refuse(Code::TooLarge,"Streaming lifetime identity budget exhausted");}
+    std::uint64_t operation=0;auto reserved=reserveManagedIdentity(operation);if(!reserved){return std::unexpected(reserved.error());}const auto id=*reserved;
     try{
       ConfigResult<void> accepted;
       if(accepting){accepted=managedStreams->accept(operation,id,streamNow());}
@@ -118,7 +115,7 @@
         accepted=managedStreams->connect(operation,id,std::move(*peer),{{input.fromPort,input.toPort},static_cast<unsigned>(input.deadlineMilliseconds),input.maximumWindow},streamNow(),end);
       }
       if(!accepted){return std::unexpected(accepted.error());}
-      commitManagedIdentity(operation,id);flushManagedStreams();armManagedStreams();notifyStream();
+      commitManagedIdentity(operation);flushManagedStreams();armManagedStreams();notifyStream();
       if(!active()||!managedStreams){return refuse(Code::CryptoFailure,"Managed stream initial dispatch failed");}return operation;
     }catch(...){fail(Failure::Resources);return refuse(Code::CryptoFailure,"Managed stream resources unavailable");}
   }

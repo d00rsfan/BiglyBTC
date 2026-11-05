@@ -277,3 +277,15 @@ if(TARGET biglybtc_i2p_provider_owner)
   target_link_libraries(biglybtc_i2p_provider_owner PUBLIC biglybtc_i2p_contact_owner)
 endif()
 endif()
+# SOURCE candidate only: review/qualify the frozen helper before this adapter.
+# Apply only with the exact frozen helper source/header dependency. No fallback
+# to a rekeyed allocator, counter wire ID, or retired-ID eviction is allowed.
+if(NOT TARGET biglybtc_protocol_unique32)
+  find_package(Threads REQUIRED)
+  add_library(biglybtc_protocol_unique32 STATIC protocol_ids/unique32.cpp)
+  target_include_directories(biglybtc_protocol_unique32 PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/protocol_ids")
+  target_link_libraries(biglybtc_protocol_unique32 PRIVATE OpenSSL::Crypto Threads::Threads)
+  target_compile_features(biglybtc_protocol_unique32 PUBLIC cxx_std_23)
+  target_compile_options(biglybtc_protocol_unique32 PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+target_link_libraries(biglybtc_i2cp_initial_channel PRIVATE biglybtc_protocol_unique32)

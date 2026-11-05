@@ -11,7 +11,7 @@
   std::optional<TrackerObservation> trackerResult;
   std::uint64_t nextTrackerOperation=1,nextTrackerLookup=1;
   bool trackerNotificationQueued=false;
-  std::array<std::uint32_t,2*MaximumTrackerOperations> trackerTransactions{};std::size_t trackerTransactionCount=0;
+  WireIds trackerTransactions; // Distinct secret/cursor; zero is valid in BEP15.
   void clearTracker(){trackerTimer.stop();tracker.reset();trackerResult.reset();trackerConnection=0;trackerNotificationQueued=false;}
   void notifyTracker(){
     if(trackerNotificationQueued){return;}trackerNotificationQueued=true;bool queued=false;
@@ -69,15 +69,14 @@
     using Code=::biglybtc::services::i2p::ErrorCode;auto reject=[](Code c,const char* why)->ConfigResult<std::uint64_t>{return std::unexpected(::biglybtc::services::i2p::Error{c,why});};
     if(!onThread()||tracker||ownedLookup||streamsOutstanding()||statusPending||state!=State::SessionCreated||waitingFirstLease||!leaseCurrent()||socket.bytesToWrite()!=0||socket.bytesAvailable()!=0||decoder.bufferedBytes()!=0){return reject(Code::InvalidFormat,"Tracker needs current owned LS2 and idle explicit channel");}
     if(!input.port||input.deadlineMilliseconds<1||input.deadlineMilliseconds>60000){return reject(Code::Unsupported,"Explicit tracker port and bounded deadline required");}
-    if(trackerTransactionCount==trackerTransactions.size()||nextTrackerLookup>std::numeric_limits<std::uint32_t>::max()||nextTrackerOperation==std::numeric_limits<std::uint64_t>::max()){return reject(Code::TooLarge,"Tracker lifetime correlation exhausted");}
+    // HostLookup is a different namespace: owned requests use the HIGH half.
+    if(nextTrackerLookup>0x7fffffffULL||nextTrackerOperation==std::numeric_limits<std::uint64_t>::max()){return reject(Code::TooLarge,"Tracker lookup/operation ID exhausted");}
     try{
       const auto at=generation;TrackerRound prepared;prepared.request=input;prepared.operation=nextTrackerOperation;prepared.generation=at;prepared.lookup=static_cast<std::uint32_t>(nextTrackerLookup);prepared.end=Clock::now()+std::chrono::milliseconds(input.deadlineMilliseconds);
-      bool random=false;for(unsigned i=0;i<8;++i){if(RAND_bytes(reinterpret_cast<unsigned char*>(prepared.transactions.data()),sizeof(prepared.transactions))!=1){break;}if(prepared.transactions[0]!=prepared.transactions[1]&&std::none_of(trackerTransactions.begin(),trackerTransactions.begin()+static_cast<std::ptrdiff_t>(trackerTransactionCount),[&](auto prior){return prior==prepared.transactions[0]||prior==prepared.transactions[1];})){random=true;break;}}
-      if(!random){return reject(Code::CryptoFailure,"Tracker transaction entropy unavailable");}
+      for(auto& transaction:prepared.transactions){auto id=nextWireId(trackerTransactions,::biglybtc::services::protocol_ids::Zero::Allow);if(!id){return std::unexpected(id.error());}transaction=*id;}
       auto bytes=encodeHostLookup({*session,prepared.lookup,static_cast<std::uint32_t>(std::min(input.deadlineMilliseconds,30000)),input.destination});if(!bytes){return std::unexpected(bytes.error());}
       if(!current(at)||!leaseCurrent()||Clock::now()>=prepared.end){return reject(Code::InvalidFormat,"Tracker preparation lost lease/budget");}
       prepared.write=std::move(*bytes);const auto operation=prepared.operation;++nextTrackerLookup;++nextTrackerOperation;
-      trackerTransactions[trackerTransactionCount++]=prepared.transactions[0];trackerTransactions[trackerTransactionCount++]=prepared.transactions[1];
       trackerResult=TrackerObservation{operation,input,TrackerPhase::LookingUp,std::nullopt,0,0};tracker.emplace(std::move(prepared));trackerConnection=0;
       trackerDeadline();flushTrackerWrite();if(!tracker||!current(at)){return reject(Code::InvalidFormat,"Tracker request failed before dispatch");}notifyTracker();if(!current(at)||!tracker||tracker->operation!=operation){return reject(Code::CryptoFailure,"Tracker notification failed");}return operation;
     }catch(...){if(tracker){fail(Failure::Resources);}return reject(Code::CryptoFailure,"Tracker resources unavailable");}
