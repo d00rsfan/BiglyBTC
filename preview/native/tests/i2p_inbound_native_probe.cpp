@@ -8,12 +8,14 @@
 #include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
 #include <QTimer>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
+#include <cstdio>
 #include <future>
 #include <limits>
 #include <sys/stat.h>
@@ -31,6 +33,33 @@ QString digest(const QByteArray& bytes){return QString::fromLatin1(QCryptographi
 QByteArray b(const QByteArray& value){return QByteArray::number(value.size())+':'+value;}
 void directory(const QString& path){require(!QFileInfo::exists(path)&&QDir().mkdir(path)&&::chmod(path.toUtf8().constData(),0700)==0,"Fresh private profile directory required");}
 QJsonObject observation(const d::Actor::InboundObservation& value){return {{"requested",value.requested},{"ready",value.ready},{"retained",value.retained},{"sourceCurrent",value.sourceCurrent},{"grantActive",value.grantActive},{"scope",QString::number(value.scope)},{"requests",QString::number(value.requests)},{"replyPrepared",QString::number(value.replyPrepared)},{"tokenRejected",QString::number(value.tokenRejected)},{"tokenBindings",static_cast<qint64>(value.tokenBindings)},{"peerKeys",static_cast<qint64>(value.peerKeys)},{"peerValues",static_cast<qint64>(value.peerValues)}};}
+struct CounterSample {std::uint64_t requests,replies,rejected;};
+CounterSample sample(const d::Actor::InboundObservation& value){return {value.requests,value.replyPrepared,value.tokenRejected};}
+bool validRejectedInterval(CounterSample before,CounterSample after){
+  constexpr auto maximum=std::numeric_limits<std::uint64_t>::max();
+  if(after.requests==maximum||after.replies==maximum||after.rejected==maximum||after.requests<before.requests||after.replies<before.replies||after.rejected<before.rejected){return false;}
+  const auto requests=after.requests-before.requests,replies=after.replies-before.replies,rejected=after.rejected-before.rejected;
+  // Original managers also issue background valid requests. Every counted
+  // outcome must still be accounted for, with exactly one token rejection and
+  // at least one successful reply for the separately verified exact readback.
+  return rejected==1&&replies>=1&&requests>replies&&requests-replies==1;
+}
+int checkCounterInterval(){
+  QJsonArray cases;const CounterSample original{11,11,0};bool ok=true;
+  const auto check=[&](const char* name,CounterSample before,CounterSample after,bool expected){const auto actual=validRejectedInterval(before,after);ok=ok&&(actual==expected);cases.append(QJsonObject{{"case",name},{"expected",expected},{"actual",actual}});};
+  check("one reply plus rejection",original,{13,12,1},true);
+  check("actual original-manager regression",original,{18,17,1},true);
+  check("additional valid replies accounted",original,{23,22,1},true);
+  check("missing fresh reply",original,{12,11,1},false);
+  check("unaccounted request outcome",original,{18,16,1},false);
+  check("multiple token rejections",original,{14,12,2},false);
+  check("counter regression",original,{10,11,1},false);
+  check("missing token rejection",original,{12,12,0},false);
+  constexpr auto maximum=std::numeric_limits<std::uint64_t>::max();
+  check("saturated interval is ambiguous",{maximum-2,maximum-2,0},{maximum,maximum-1,1},false);
+  check("unsaturated near maximum",{maximum-3,maximum-3,0},{maximum-1,maximum-2,1},true);
+  QFile output;if(!output.open(stdout,QIODevice::WriteOnly)){return 1;}const auto bytes=QJsonDocument(QJsonObject{{"status",ok?"PASS_PURE_COUNTER_INTERVAL_REGRESSION":"FAIL"},{"cases",cases},{"network_or_source_effects",false}}).toJson();if(output.write(bytes)!=bytes.size()||!output.flush()){return 1;}return ok?0:1;
+}
 struct Prepared {std::shared_ptr<provider::ProfileSource> source;std::optional<i2p::ClientIdentity> identity;};
 Prepared prepare(){
   const QString profile="/work/inbound-profile";directory(profile);directory(profile+"/plugins");directory(profile+"/plugins/azneti2phelper");directory(profile+"/active");
@@ -51,7 +80,7 @@ struct Mutation {std::uint64_t before=0,after=0;};
 Mutation replaceKey(const std::shared_ptr<provider::ProfileSource>& source){auto gate=source->lease()->sourceAccess(true);require(gate.has_value(),"Actual mutation source access unavailable");const QString path="/work/inbound-profile/plugins/azneti2phelper/dest_key1.dat";struct stat before{},after{};require(::stat(path.toUtf8().constData(),&before)==0,"Fixture key inode unavailable");auto bytes=read(path,1024);struct Clean{QByteArray& value;~Clean(){OPENSSL_cleanse(value.data(),static_cast<std::size_t>(value.size()));}} clean{bytes};write(path,bytes);require(::stat(path.toUtf8().constData(),&after)==0&&before.st_dev==after.st_dev&&before.st_ino!=after.st_ino,"Actual generated key replacement not observed");return {static_cast<std::uint64_t>(before.st_ino),static_cast<std::uint64_t>(after.st_ino)};}
 }
 int main(int argc,char** argv){
-  QCoreApplication app(argc,argv);if(app.arguments().size()!=3||app.arguments()[2]!="/work"){return 2;}bool parsed=false;const auto port=app.arguments()[1].toUInt(&parsed);if(!parsed||port<1024||port>65535){return 2;}
+  QCoreApplication app(argc,argv);if(app.arguments().size()==2&&app.arguments()[1]=="--check-counter-interval"){return checkCounterInterval();}if(app.arguments().size()!=3||app.arguments()[2]!="/work"){return 2;}bool parsed=false;const auto port=app.arguments()[1].toUInt(&parsed);if(!parsed||port<1024||port>65535){return 2;}
   QElapsedTimer elapsed,heartbeat;elapsed.start();heartbeat.start();QTimer poll;cp::InitialChannel channel;std::unique_ptr<Driver> driver;std::unique_ptr<d::Actor> actor;std::optional<Prepared> prepared;
   auto preparing=std::async(std::launch::async,prepare);std::future<Mutation> mutation;std::optional<Mutation> mutated;
   bool done=false,success=false,createQueued=false,actorStarted=false,ready=false,baseline=false,badChecked=false,closedChecked=false,resumed=false,sourceLoss=false,sourceFailed=false;QString reason,command;int next=1;QByteArray commandBytes;std::optional<d::Actor::InboundObservation> beforeBad,beforeSource,resumeStart;
@@ -79,7 +108,7 @@ int main(int argc,char** argv){
     else if(command=="bad-token-baseline"){
       require(!baseline&&current.ready&&current.sourceCurrent&&current.peerKeys==2&&current.peerValues==2&&current.tokenBindings>=2,"Original two-target baseline missing");beforeBad=current;baseline=true;step(command);
     }else if(command=="bad-token-check"){
-      require(baseline&&!badChecked&&beforeBad&&current.scope==beforeBad->scope&&current.ready&&current.sourceCurrent,"Current original baseline lost");require(beforeBad->tokenRejected<std::numeric_limits<std::uint64_t>::max()&&beforeBad->requests<=std::numeric_limits<std::uint64_t>::max()-2&&beforeBad->replyPrepared<std::numeric_limits<std::uint64_t>::max()&&current.tokenRejected==beforeBad->tokenRejected+1&&current.requests>=beforeBad->requests+2&&current.replyPrepared==beforeBad->replyPrepared+1,"Actual invalid-token/refetch outcomes differ");require(current.peerKeys==beforeBad->peerKeys&&current.peerValues==beforeBad->peerValues&&current.tokenBindings==beforeBad->tokenBindings,"Bad token changed stored peer/binding counts");badChecked=true;step(command,{{"before",observation(*beforeBad)},{"actual_binding_rejection_delta",1},{"unchanged_store_counts",true},{"original_exact_peer_readback_required",true}});
+      require(baseline&&!badChecked&&beforeBad&&current.scope==beforeBad->scope&&current.ready&&current.sourceCurrent,"Current original baseline lost");json("/work/inbound-counter-interval.json",{{"before",observation(*beforeBad)},{"after",observation(current)},{"interval_valid",validRejectedInterval(sample(*beforeBad),sample(current))},{"extra_valid_requests_allowed",true},{"exact_original_peer_readback_still_required",true}});require(validRejectedInterval(sample(*beforeBad),sample(current)),"Actual invalid-token/refetch outcomes differ");require(current.peerKeys==beforeBad->peerKeys&&current.peerValues==beforeBad->peerValues&&current.tokenBindings==beforeBad->tokenBindings,"Bad token changed stored peer/binding counts");badChecked=true;step(command,{{"before",observation(*beforeBad)},{"actual_binding_rejection_delta",1},{"unchanged_store_counts",true},{"original_exact_peer_readback_required",true}});
     }else if(command=="close"){
       require(badChecked&&!closedChecked&&!sourceLoss,"Close control ordering differs");actor->stopInbound();const auto closed=actor->inboundObservation();require(!closed.requested&&!closed.ready&&closed.retained&&closed.sourceCurrent&&channel.socketActive(),"Explicit server stop did not preserve a live channel");closedChecked=true;step(command,{{"server_stop_only",true},{"channel_socket_active",channel.socketActive()}});
     }else if(command=="resume"){
