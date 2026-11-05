@@ -105,3 +105,8 @@ Native `f859404f63394add41c898d40e486499d3a45178` (tree `342bb186f44e10531938c0f
 ## 2026-11-06 protocol lifetime and library values
 
 Native `3142bd167a1d139897e471c6aa488c97ea5b651c` (tree `f96e90bbcdeb0c628174091c66c9238e4f5700b0`) passed13 affected suites per compiler and four actual original-Java contact-file exchanges. [Review](evidence/20261106-protocol-library/REVIEW.md) separates measured protocol/value scope, original public-constraint API differences and required full-feature follow-ups. Whole P07/P08 and registry integrated baselines remain in progress.
+
+
+## 2026-11-06 actual automatic-tag worker
+
+Native `7ea75586f12a19365fa37a4a3a531d6569f43a36` (tree `5bdd5dfbc9ffe1c1e99be18146cd78f18bb0d953`) integrates source-bound supported constraints and guarded category storage. [Review](evidence/20261106-library-worker/REVIEW.md) distinguishes final GCC2/final sanitizer5 and retained GCC3 evidence. Complete P08/providers/actions and category live-owner/journal/UI integration remain open; registry integrated baselines are unchanged.

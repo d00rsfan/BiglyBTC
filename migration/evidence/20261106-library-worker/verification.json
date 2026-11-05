@@ -1,0 +1,136 @@
+{
+  "implementation_commit": "7ea75586f12a19365fa37a4a3a531d6569f43a36",
+  "source_tree": "5bdd5dfbc9ffe1c1e99be18146cd78f18bb0d953",
+  "parent_commit": "313c9f6491f9d48d7c65666d9b1f2c759106dae8",
+  "source_map_sha256": "bc93503530914a808635b078294de388b7a3d3f7470a131a1beda7da25da9b3f",
+  "status": "PASS_BOUNDED_ACTUAL_AUTOMATIC_TAG_WORKER",
+  "results": {
+    "gcc": {
+      "raw_receipt_sha256": "916da31b1ede0bbec3a234fd0eac5f680c84b3e73a228a67c96d230779530cf5",
+      "expected_tests": [
+        "source-tag-runtime-facts",
+        "manual-tag-worker"
+      ],
+      "images": {
+        "biglybtc-tag-runtime-fact-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-tag-runtime-fact-tests",
+          "sha256": "fd6fc8ef9472d194bd95e7a0af4cf79a2ef5d9fd0e5cef04bb5d3611404dba0b",
+          "bytes": 425320
+        },
+        "biglybtc-manual-tag-bridge-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-manual-tag-bridge-tests",
+          "sha256": "41a79c0fb78583db679b32efaaa63b260ee0e7b4636bef089890405915106490",
+          "bytes": 15556512
+        },
+        "BiglyBTC": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/app/BiglyBTC",
+          "sha256": "9f7a20951b3668c2da804c2e38023e0c7bb70889819d3407d631b19ff4aecbf4",
+          "bytes": 15176448
+        },
+        "biglybtc-i2p-discovery-probe": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-discovery-probe",
+          "sha256": "65ec45d0e2e6b3d68fb5c526d0aba498b9526e9c99ec4906e87cca8b1c68e4e0",
+          "bytes": 12646264
+        },
+        "biglybtc-i2p-inbound-native-probe": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-inbound-native-probe",
+          "sha256": "3ee0f075121a2f5208ee7f082d603f983b33c6dd98596dbd5e02b16904a02d17",
+          "bytes": 7425736
+        }
+      },
+      "tests_xml_sha256": "6f0c843b7a87be0d044efe396373bc605d08814668e401aae527df7d17eb390c",
+      "elapsed_seconds": 136.461
+    },
+    "san": {
+      "raw_receipt_sha256": "9907c8147fd0072e3caad264f5c2cfc6c372382bdda4501d4eaa6e22e4384913",
+      "expected_tests": [
+        "source-tag-runtime-facts",
+        "original-category-worker-store",
+        "manual-tag-worker",
+        "statistics-window-worker",
+        "persistent-native-session-close-faults"
+      ],
+      "images": {
+        "biglybtc-tag-runtime-fact-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-tag-runtime-fact-tests",
+          "sha256": "d0c7b454111e8eaada156b181ed7c208ca6e661589a58c464669ec9048cdf5fd",
+          "bytes": 9391168
+        },
+        "biglybtc-category-store-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-category-store-tests",
+          "sha256": "80413125e0a3aa84abdbce13f2e5e3af8eef871d69e3effb7e5ff0ca3b640201",
+          "bytes": 11216992
+        },
+        "biglybtc-manual-tag-bridge-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-manual-tag-bridge-tests",
+          "sha256": "55856f32e2d8a500ecac2f723bdb5f3e2fbd9f2b5cbf973a6f23b2206d56fc75",
+          "bytes": 411050192
+        },
+        "biglybtc-statistics-integration-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-statistics-integration-tests",
+          "sha256": "c2f0167ac581ae66f7a5f7e1fad6ff1430ad797ced8aba133ea0f5cc732ceafa",
+          "bytes": 403458816
+        },
+        "biglybtc-app-close-fault-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-app-close-fault-tests",
+          "sha256": "9947a79da891bca285c1064a029cee649d40e621da545dc4d2d67a7e7584f926",
+          "bytes": 403982152
+        },
+        "BiglyBTC": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/app/BiglyBTC",
+          "sha256": "bd1fd959c857019db14895193e70c26d54c8066374f60d78d42a2c06596a618e",
+          "bytes": 406482248
+        },
+        "biglybtc-i2p-discovery-probe": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-discovery-probe",
+          "sha256": "3b1db37265a1747cdf0647895f0652732d0998c3071afedb1fe1d74fbaae4244",
+          "bytes": 320915848
+        },
+        "biglybtc-i2p-inbound-native-probe": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-inbound-native-probe",
+          "sha256": "09f022186ddc9fe884e3c64fd090d0e1d7471c995d0140ecc033fd7b1ffb0406",
+          "bytes": 166140776
+        }
+      },
+      "tests_xml_sha256": "75aa75b1a8d0598aaffede430f153759180fe5eb2b056a7074adfd5b5ae03524",
+      "elapsed_seconds": 697.833
+    }
+  },
+  "original_core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "capsules": [
+    [
+      "p08-tag-runtime-facts/manifest.json",
+      "a8594270dd019887f2f8490e3a0a2d9c690673a756c74b34198de38d2bd13fe2"
+    ],
+    [
+      "p08-category-store/manifest.json",
+      "9489e44ab415a0daf2ca87f1a77097ee9459aa95aedead9e9438c931f6902914"
+    ],
+    [
+      "p08-constraint-worker-integration/manifest.json",
+      "f6bf0dd4be6d0807d8dcf12e782357444259bc519f6150aa6122e16dd5220d4b"
+    ]
+  ],
+  "gcc_retained_from_prior_failed_cohort": {
+    "tests": [
+      "original-category-worker-store",
+      "statistics-window-worker",
+      "persistent-native-session-close-faults"
+    ],
+    "raw_receipt_sha256": "d532fa7b236e68b903ff17e2ffe562c4694e30f5d3054d935f55d5080f6c3c96",
+    "tests_xml_sha256": "bc8af192c610ce5d51dc426bbf5eece624fe513b26fb7bc8ea13549bc5f34feb",
+    "final_source_rerun": false
+  },
+  "corrections": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/library-worker-integration/amendments/fact-test-engine-dependency-r2/correction.json",
+      "sha256": "b05972211191999445d399daa71420532f6234ea455034e6a5621404e5f403ad"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/library-worker-integration/amendments/hash-provider-correction-r3/correction.json",
+      "sha256": "eba0d8efb563706cedfe6bc79b68757d0f9a5eab148f134812422b38a2a89a9f"
+    }
+  ],
+  "whole_P08_complete": false,
+  "default_dist_promoted": false
+}
