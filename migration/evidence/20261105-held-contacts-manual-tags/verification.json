@@ -1,0 +1,560 @@
+{
+  "implementation_commit": "f859404f63394add41c898d40e486499d3a45178",
+  "native_source_tree": "342bb186f44e10531938c0f55ad403bdd35f6a86",
+  "parent_commit": "3bf6e0aeb26bc9c32b896c4f35a23bac1970e329",
+  "source_map_sha256": "309fe1eec3e8acaddb04b4497f3c138c602f52513f887dcbcf0b127a45c056fc",
+  "status": "PASS_BOUNDED_AFFECTED_GCC_AND_SAN",
+  "upstream_core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "upstream_i2p_helper_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+  "lanes": {
+    "gcc": {
+      "raw_receipt": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/gcc/r3/result-raw.json",
+      "raw_receipt_sha256": "a82ec951949aef54568d1fd27c4b19fba9135d00fbde5c22761a17ca1bae5260",
+      "tests_xml_sha256": "9cb1d20e68408123dd5682dad04f0de7fa5491b854bc9d58d64730e57564a8c0",
+      "elapsed_seconds": 143.613,
+      "tests": [
+        "pure-i2p-dht",
+        "i2p-dht-channel",
+        "i2p-dht-inbound-source-actor",
+        "pure-i2p-inbound-state",
+        "pure-i2p-inbound-responder",
+        "i2p-classic-host",
+        "pure-i2p-saved-contacts",
+        "original-i2p-contact-store",
+        "i2p-dht-routing-maintenance",
+        "i2p-dht-routing-persistence-actor",
+        "pure-i2p-routing-persistence",
+        "i2cp-owned-lookup-lifetime",
+        "i2p-contact-worker-owner",
+        "owned-i2p-profile-source",
+        "i2cp-initial-channel",
+        "i2cp-explicit-tracker-channel",
+        "i2cp-bounded-stream-manager",
+        "saved-download-tag-edits",
+        "manual-tag-store",
+        "manual-tag-ui",
+        "manual-tag-worker",
+        "saved-download-tags",
+        "manual-tag-statistics",
+        "manual-tag-view",
+        "manual-tag-window",
+        "classic-library-layout",
+        "classic-view-navigation",
+        "classic-close-tab-lifecycle",
+        "desktop-model-and-lifecycle",
+        "library-action-ui",
+        "statistics-window-worker",
+        "persistent-native-session-close-faults"
+      ],
+      "images": {
+        "biglybtc-i2p-dht-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-dht-tests",
+          "sha256": "13b71c0b0bc570edf88e9ba65100e8ac0cc2827b18e5c03b0b8f7f1a2dbb22c0",
+          "bytes": 410224
+        },
+        "biglybtc-i2p-dht-channel-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-dht-channel-tests",
+          "sha256": "4fc0c8be25618820d83582cf5552e662393b44d369c84113e7ded6dba84991ce",
+          "bytes": 1363040
+        },
+        "biglybtc-i2p-dht-inbound-actor-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-dht-inbound-actor-tests",
+          "sha256": "d3a84fa8e94fb95211f6f54eb88b048ce8eada211742b01fa5878a991c1d64e9",
+          "bytes": 7939696
+        },
+        "biglybtc-i2p-dht-inbound-state-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-dht-inbound-state-tests",
+          "sha256": "1d5f97b5e3d091fda0b877aaf9d2678ff0d63e2a6f8c38f9557fb86048ce4069",
+          "bytes": 329808
+        },
+        "biglybtc-i2p-dht-inbound-responder-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-dht-inbound-responder-tests",
+          "sha256": "11f490fdb035b7d3de7fcd16cbc130a9bf82297d2399d151b546667e7e3be6a5",
+          "bytes": 468240
+        },
+        "biglybtc-i2p-classic-host-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-classic-host-tests",
+          "sha256": "09d8ac5fd0a74454c3d5227fe4c31fdda55caf8ab5109a362cae3daf53ec1a1b",
+          "bytes": 15026232
+        },
+        "biglybtc-i2p-saved-contacts-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-saved-contacts-tests",
+          "sha256": "78f4e41b8693c563c910b3a550aa00efd994372936132065f86aef4bccf93ff0",
+          "bytes": 349008
+        },
+        "biglybtc-i2p-contact-store-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-contact-store-tests",
+          "sha256": "7549e18385ec066eccc1c72db0d4f06f50be9175231cd575eac66f53d4552978",
+          "bytes": 514144
+        },
+        "biglybtc-i2p-dht-routing-maintenance-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-dht-routing-maintenance-tests",
+          "sha256": "0adf677250849608dafa1ce602a20bc01fc4f3f160b78e4a94dd19ad06fd9d4b",
+          "bytes": 7401312
+        },
+        "biglybtc-i2p-dht-routing-persistence-actor-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-dht-routing-persistence-actor-tests",
+          "sha256": "220a4e7976ae6ed27779993b9f065eb7c5073f94f839760526c889cfd80b4a4d",
+          "bytes": 7418040
+        },
+        "biglybtc-i2p-routing-persistence-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-routing-persistence-tests",
+          "sha256": "1e838d0dd978c6feaf5c6ecb3d6405a2faf12c6dd749025beaecb04044bd88d6",
+          "bytes": 339160
+        },
+        "biglybtc-i2cp-owned-lookup-lifetime-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2cp-owned-lookup-lifetime-tests",
+          "sha256": "e68090f0efba8094a9bea859785ad609e996bec0c587f95f7578f9b2ce155238",
+          "bytes": 7074304
+        },
+        "biglybtc-i2p-contact-owner-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-contact-owner-tests",
+          "sha256": "e064c0cf755b58ba1911f079f545f1aefcbb2f71798369c339e4b0561b9213cd",
+          "bytes": 7667888
+        },
+        "biglybtc-owned-i2p-source-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-owned-i2p-source-tests",
+          "sha256": "7f93f6bd5b05a66ee5520164cd7db69acba881e017c31bb861df93fedd517759",
+          "bytes": 7303584
+        },
+        "biglybtc-i2cp-initial-channel-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2cp-initial-channel-tests",
+          "sha256": "5db39cc61430e0b83bc86df8333e19db98a839658fb7daffacd4397ebfb07015",
+          "bytes": 1151848
+        },
+        "biglybtc-i2cp-tracker-channel-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2cp-tracker-channel-tests",
+          "sha256": "c7363dca292066a050f01195ccd3642b37c5c9e077844aaefb21da435f4f00cd",
+          "bytes": 908832
+        },
+        "biglybtc-i2cp-stream-manager-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2cp-stream-manager-tests",
+          "sha256": "0b50e20d8f6f888aa8caa0fa20cc94e19904249e953e45aab17e1ecd613bcc70",
+          "bytes": 920640
+        },
+        "biglybtc-saved-download-tag-edits-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-saved-download-tag-edits-tests",
+          "sha256": "8f585c07e6170676c56f25c248b40003953cb4590b87cb3c0ba1034740fb201c",
+          "bytes": 312416
+        },
+        "biglybtc-manual-tag-store-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-manual-tag-store-tests",
+          "sha256": "7ada7591984d602213be97cde2418285a1a010f04474ada62e7229d98c424fb6",
+          "bytes": 462512
+        },
+        "biglybtc-manual-tag-ui-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-manual-tag-ui-tests",
+          "sha256": "80444987d134e7ddcf45c098a3842e080ccbf97dedab00c1b984776d6ba15aff",
+          "bytes": 3150704
+        },
+        "biglybtc-manual-tag-bridge-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-manual-tag-bridge-tests",
+          "sha256": "96cff70ad8d8794c67bde033fcc8ef1df61ead10daf4419919b88f36c3bafa64",
+          "bytes": 15054096
+        },
+        "biglybtc-saved-download-tags-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-saved-download-tags-tests",
+          "sha256": "9c7a67ad1f3825e119329f09851835c330e933d029c76a84033394b804a261d7",
+          "bytes": 352968
+        },
+        "biglybtc-manual-tag-statistics-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-manual-tag-statistics-tests",
+          "sha256": "74b9ec50216f37bd0f7aae20ffd4cf127b349631490aa200a00e4acd75e0e461",
+          "bytes": 322680
+        },
+        "biglybtc-manual-tag-view-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-manual-tag-view-tests",
+          "sha256": "efa258a34148e2526cc7d51e06cb04802a3be72a2e8bf5574ece32560c129369",
+          "bytes": 3214336
+        },
+        "biglybtc-manual-tag-window-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-manual-tag-window-tests",
+          "sha256": "0f13b458bf79d43e92206cbf880b6085bafca59f9617a70674fca0fbdbcfe734",
+          "bytes": 3192328
+        },
+        "biglybtc-classic-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-classic-tests",
+          "sha256": "68ffd775ebf5f84388caf14e33b8288efaf718a8dadbd84062506f330b354216",
+          "bytes": 3182792
+        },
+        "biglybtc-navigation-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-navigation-tests",
+          "sha256": "a1ff1c90ccd81f56ec514fda54894d308b4a408673be8f46fd77f78aa925f346",
+          "bytes": 3162440
+        },
+        "biglybtc-classic-close-tab-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-classic-close-tab-tests",
+          "sha256": "5deccdde0982fe830d9aabbb4db720c495147c8d9a7d4827c63d2cc8c106293f",
+          "bytes": 3176688
+        },
+        "biglybtc-desktop-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-desktop-tests",
+          "sha256": "ed35155bbf18f64fac55cb7425888a763d3fcb08eab59f71a736b26ce53ee188",
+          "bytes": 14857224
+        },
+        "biglybtc-library-action-ui-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-library-action-ui-tests",
+          "sha256": "85e91f5e90d18c7b9ca535da26b1701b927e387d9550246d319b4531478767bd",
+          "bytes": 3161936
+        },
+        "biglybtc-statistics-integration-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-statistics-integration-tests",
+          "sha256": "7a02fae18bad35e443bde4737f0e45121e1f0168266ac121a1cecc9fbbbe87c5",
+          "bytes": 14898736
+        },
+        "biglybtc-app-close-fault-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-app-close-fault-tests",
+          "sha256": "467353e6e50bf0ef334453f5bf6f4eddfc788d436b0593ca6994fe0dd7256539",
+          "bytes": 14860224
+        },
+        "biglybtc-i2p-discovery-probe": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-discovery-probe",
+          "sha256": "db4c16be88cc08be9100ae374bf33fe8b0e8b5ab533ef0b537efa214f4a80070",
+          "bytes": 12338056
+        },
+        "biglybtc-i2p-inbound-native-probe": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-inbound-native-probe",
+          "sha256": "5b0b0b0323c568187e780b084340e86c8dd2085eaeaec127d015a9de3da515da",
+          "bytes": 7414416
+        },
+        "BiglyBTC": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/app/BiglyBTC",
+          "sha256": "ffe1d9ca2b0640795eea9f6ea1781d5ab6046e1bf317fdbe75539b417bbf87f2",
+          "bytes": 14876576
+        }
+      },
+      "inputs_sha256": {
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/amendments/routing-test-dependency-r3/batch.py": "7be28fc6eae2fa2f249e6d32f759afebf97625bb166d63887172f1d02c82acee",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/spec.json": "23475d9b40285f4ebc278ffa7d484e287e4d8871561152f7842383df8957e7a8",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/adoption.json": "661c421aa752848c7fa51b625e9bb9b5d56237567153156980118e260a0e52a4",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/amendments/compile-cleanup-r2/source-correction.json": "f24ac7a160d235b0e93c7c1b413b494739769ef3b30254ed18e16ad0740a2955",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/amendments/routing-test-dependency-r3/source-correction.json": "5d6bf9fde6358dc393dec0e156a56ef0f4ad0cb58864a6900ffbc64f9e2949ce",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-inputs.json": "6e582113e641f1390e55b53fbc2f1e355e54f7e206340f9aeae6f575660b006d",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/manifest.json": "f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/source-build-record-discovery-final.json": "e213ba3227a464fcb8eab1c7db3e3adef720f482fd352bb87ec12c3f27ec1e92",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-role-integration/final/root-artifact-review.json": "00cda3c48889d85c4b26a98f519cd0c6f60fad066609eef9c92f647183327322",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-role-integration/final/runtime-manifest.json": "0a89e6259888ef9d05db489d51875075c4d31148eb5eacaee7f453840f34fd88",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-role-integration/final/root-mixed-role-approval.json": "9631d9e89cccb9360d8661ade6a30bc6882cb7a1afd773ad703112d2694ddc9f",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/result.json": "bf825517300df125e1907dc9f715d33f7fd811d734006d57a41f7a32fc015aed",
+        "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3"
+      }
+    },
+    "san": {
+      "raw_receipt": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/san/r5/result-raw.json",
+      "raw_receipt_sha256": "1e2b2f33ebf66d6600b31eab37b8ff89112cf11929b1563d6e36072992e836f7",
+      "tests_xml_sha256": "0b0234309b1efae59a553d3498babe2ed3dca7442c59e3119facdb2bdec20ebc",
+      "elapsed_seconds": 704.936,
+      "tests": [
+        "pure-i2p-dht",
+        "i2p-dht-channel",
+        "i2p-dht-inbound-source-actor",
+        "pure-i2p-inbound-state",
+        "pure-i2p-inbound-responder",
+        "i2p-classic-host",
+        "pure-i2p-saved-contacts",
+        "original-i2p-contact-store",
+        "i2p-dht-routing-maintenance",
+        "i2p-dht-routing-persistence-actor",
+        "pure-i2p-routing-persistence",
+        "i2cp-owned-lookup-lifetime",
+        "i2p-contact-worker-owner",
+        "owned-i2p-profile-source",
+        "i2cp-initial-channel",
+        "i2cp-explicit-tracker-channel",
+        "i2cp-bounded-stream-manager",
+        "saved-download-tag-edits",
+        "manual-tag-store",
+        "manual-tag-ui",
+        "manual-tag-worker",
+        "saved-download-tags",
+        "manual-tag-statistics",
+        "manual-tag-view",
+        "manual-tag-window",
+        "classic-library-layout",
+        "classic-view-navigation",
+        "classic-close-tab-lifecycle",
+        "desktop-model-and-lifecycle",
+        "library-action-ui",
+        "statistics-window-worker",
+        "persistent-native-session-close-faults"
+      ],
+      "images": {
+        "biglybtc-i2p-dht-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-dht-tests",
+          "sha256": "b9e800b9e3c9984399a5815969a5b5642fefe1e818162f9de8446f258530d6f7",
+          "bytes": 8119312
+        },
+        "biglybtc-i2p-dht-channel-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-dht-channel-tests",
+          "sha256": "aa8aef62e9bedd074a4c352546aea2d7d5fce418e6131c662252cc09fbab9115",
+          "bytes": 33509064
+        },
+        "biglybtc-i2p-dht-inbound-actor-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-dht-inbound-actor-tests",
+          "sha256": "419904158369387a02643ee34271782b83adfbb36acde259bf8a101c81674ba0",
+          "bytes": 179850896
+        },
+        "biglybtc-i2p-dht-inbound-state-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-dht-inbound-state-tests",
+          "sha256": "fcbdc5cad91c301a8bcf1b1f70b91a08753b65f18b88560d87e91fa0d7e33e27",
+          "bytes": 7286976
+        },
+        "biglybtc-i2p-dht-inbound-responder-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-dht-inbound-responder-tests",
+          "sha256": "0547d5cd757a0bdd35463da0e2e27cc35cf400da69e63748f44e3cd6e8a7ef84",
+          "bytes": 9825536
+        },
+        "biglybtc-i2p-classic-host-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-classic-host-tests",
+          "sha256": "f7bce0278973162598b9fb42d29324620c7159da3b9413fcd8601d88d00fcf45",
+          "bytes": 398359768
+        },
+        "biglybtc-i2p-saved-contacts-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-saved-contacts-tests",
+          "sha256": "f564117e2748f5e25005e0f9c6d78dcb9cf1a092996add79bc2fda3ab9fbeaf6",
+          "bytes": 6593504
+        },
+        "biglybtc-i2p-contact-store-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-contact-store-tests",
+          "sha256": "dc2f3c39a003cc5c7af3efe433d521258acc0c9a6afcf845a8a77492c87db177",
+          "bytes": 9788184
+        },
+        "biglybtc-i2p-dht-routing-maintenance-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-dht-routing-maintenance-tests",
+          "sha256": "6067bb13d362a93718c550d74c5252ff716d308da3c7394ced79cf8ee86084f6",
+          "bytes": 165813128
+        },
+        "biglybtc-i2p-dht-routing-persistence-actor-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-dht-routing-persistence-actor-tests",
+          "sha256": "c3b589326d3ea5f4a9162977fedb09e14da90b6aede0a8039a0c2f8e9dd9d139",
+          "bytes": 166062632
+        },
+        "biglybtc-i2p-routing-persistence-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-routing-persistence-tests",
+          "sha256": "537e9fdf8476482f79a7328264bdec0a545ab04a6ebc357ef11890bc938b081d",
+          "bytes": 7809656
+        },
+        "biglybtc-i2cp-owned-lookup-lifetime-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2cp-owned-lookup-lifetime-tests",
+          "sha256": "21df6499b0dea6bd4fe09514bda6706ab58d3e1e19af9b957b0712fe5c8bcd84",
+          "bytes": 154506056
+        },
+        "biglybtc-i2p-contact-owner-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-contact-owner-tests",
+          "sha256": "f72dceba94a7b24d5c871b40a6b1d6e1cfb48b168e3ef167d8982ce50ca70ac4",
+          "bytes": 171309096
+        },
+        "biglybtc-owned-i2p-source-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-owned-i2p-source-tests",
+          "sha256": "c3a602d9300a272b27c4df2dfeffaed8aa1283547377a8e8ab205a827c1cf65b",
+          "bytes": 157534656
+        },
+        "biglybtc-i2cp-initial-channel-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2cp-initial-channel-tests",
+          "sha256": "49a69dd444b524348327b82f2f35a2e25a15b00d4c2cd2bdb623375001ffca30",
+          "bytes": 25054144
+        },
+        "biglybtc-i2cp-tracker-channel-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2cp-tracker-channel-tests",
+          "sha256": "a4f604be0d8dfba5fe7ffd448ef32c69c00947286a640f6d5c04a8c52fb77c7c",
+          "bytes": 20678336
+        },
+        "biglybtc-i2cp-stream-manager-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2cp-stream-manager-tests",
+          "sha256": "ab5be3c1835ddc47aed8652b1ae8cbb22602ddaacbafbc9d6fc328c5c1a912ad",
+          "bytes": 21183512
+        },
+        "biglybtc-saved-download-tag-edits-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-saved-download-tag-edits-tests",
+          "sha256": "0d5a629b95baf02525259356b5085dc6a1c39055f2d880ba52e9f045e54b790f",
+          "bytes": 6275288
+        },
+        "biglybtc-manual-tag-store-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-manual-tag-store-tests",
+          "sha256": "2c59c642abfc2be21e50dc35ae31c7190522d835172cf64a52a21b66c501c77b",
+          "bytes": 9490408
+        },
+        "biglybtc-manual-tag-ui-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-manual-tag-ui-tests",
+          "sha256": "6b1a532522e3e4d305a3ad00975fe5a614f7bd8efbc0059ed924e0a956bb62df",
+          "bytes": 95762296
+        },
+        "biglybtc-manual-tag-bridge-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-manual-tag-bridge-tests",
+          "sha256": "0cc4278728fcab2d01f0f62d01a34d591ed59961fff3bad0d81030bf6c281a25",
+          "bytes": 397338768
+        },
+        "biglybtc-saved-download-tags-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-saved-download-tags-tests",
+          "sha256": "47f4f926388e8bc1c66e5bd9aab646f78c40807bbb248888bf863f8515e8f315",
+          "bytes": 7059840
+        },
+        "biglybtc-manual-tag-statistics-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-manual-tag-statistics-tests",
+          "sha256": "cbd197b261bcb23eb37d344bdec65a93c8570a2be1ea40af137e44d687e1bc47",
+          "bytes": 5865232
+        },
+        "biglybtc-manual-tag-view-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-manual-tag-view-tests",
+          "sha256": "f4631295649d00e2895735c6178589a9a38e9164c012878493740981ddd73a06",
+          "bytes": 96298312
+        },
+        "biglybtc-manual-tag-window-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-manual-tag-window-tests",
+          "sha256": "b021b8bc0fd6f30ce8ccecd61946c6a2348ebc3e72f9419b4066ce6d839c5af5",
+          "bytes": 96458392
+        },
+        "biglybtc-classic-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-classic-tests",
+          "sha256": "0a669876a60df864058c8b0e45970154df30656a452974defc44f42263c19aea",
+          "bytes": 96610712
+        },
+        "biglybtc-navigation-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-navigation-tests",
+          "sha256": "9ab0874267f3dd9de3c13a58f08b85563c0c889be4900aa3bc9d1ccec982528b",
+          "bytes": 96024512
+        },
+        "biglybtc-classic-close-tab-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-classic-close-tab-tests",
+          "sha256": "72633eb46155e6d32cad5e0a4013ec132b1a73fe02bc39144c05b372616fb047",
+          "bytes": 96542560
+        },
+        "biglybtc-desktop-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-desktop-tests",
+          "sha256": "1137e97a1934713d5c88e235db2471a5827482e6c87ad023b393b900579c62b5",
+          "bytes": 392907720
+        },
+        "biglybtc-library-action-ui-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-library-action-ui-tests",
+          "sha256": "2c0bc372f3858521268a8ca4245cefc983d7da21ab4fb1affd4d9e38abe65cc2",
+          "bytes": 96587152
+        },
+        "biglybtc-statistics-integration-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-statistics-integration-tests",
+          "sha256": "e8cac6c8e97cb291cfa63f8901348be19dead1aa919ef20626888db982bcc7bd",
+          "bytes": 394358400
+        },
+        "biglybtc-app-close-fault-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-app-close-fault-tests",
+          "sha256": "a9ce560f7cc75d3645e054e2db48449367747dcdb78387c8433621d34743d10b",
+          "bytes": 394882184
+        },
+        "biglybtc-i2p-discovery-probe": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-discovery-probe",
+          "sha256": "8db6956745247e8b815f147859c757a14a0cf7e9dd4aad370d60581655a914ea",
+          "bytes": 311769112
+        },
+        "biglybtc-i2p-inbound-native-probe": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-inbound-native-probe",
+          "sha256": "9abeb15b8ba9001f7f6677f3abaa65d86320cd54f2c11ccf7eea73fe78293e71",
+          "bytes": 165797280
+        },
+        "BiglyBTC": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/app/BiglyBTC",
+          "sha256": "949eea1c579b831cc94507b1383b012ed52d94f51c08b7f43d9c33fb44452d65",
+          "bytes": 397381832
+        }
+      },
+      "inputs_sha256": {
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/amendments/san-resume-r5/batch.py": "30fcb0659765d378978f3ccc46ae40ddebd2cef364a647596c693eb6f57e74c0",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/spec.json": "23475d9b40285f4ebc278ffa7d484e287e4d8871561152f7842383df8957e7a8",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/adoption.json": "661c421aa752848c7fa51b625e9bb9b5d56237567153156980118e260a0e52a4",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/amendments/compile-cleanup-r2/source-correction.json": "f24ac7a160d235b0e93c7c1b413b494739769ef3b30254ed18e16ad0740a2955",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/amendments/routing-test-dependency-r3/source-correction.json": "5d6bf9fde6358dc393dec0e156a56ef0f4ad0cb58864a6900ffbc64f9e2949ce",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-inputs.json": "6e582113e641f1390e55b53fbc2f1e355e54f7e206340f9aeae6f575660b006d",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/manifest.json": "f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/source-build-record-discovery-final.json": "e213ba3227a464fcb8eab1c7db3e3adef720f482fd352bb87ec12c3f27ec1e92",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-role-integration/final/root-artifact-review.json": "00cda3c48889d85c4b26a98f519cd0c6f60fad066609eef9c92f647183327322",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-role-integration/final/runtime-manifest.json": "0a89e6259888ef9d05db489d51875075c4d31148eb5eacaee7f453840f34fd88",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-role-integration/final/root-mixed-role-approval.json": "9631d9e89cccb9360d8661ade6a30bc6882cb7a1afd773ad703112d2694ddc9f",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/result.json": "bf825517300df125e1907dc9f715d33f7fd811d734006d57a41f7a32fc015aed",
+        "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3"
+      }
+    }
+  },
+  "capsules": [
+    [
+      "i2p-contact-persistence/manifest.json",
+      "4985fc150b65454c38ca0a5225658f71ac2826bd8312749a4b937b03c2d570f4"
+    ],
+    [
+      "i2p-contact-store/manifest.json",
+      "df2e4e8bf10f575199d14da6724d2ae9f8e0089bfd4a9010cd4ce8cac704470e"
+    ],
+    [
+      "i2p-routing-maintenance/amendments/held-contact-persistence/manifest.json",
+      "03b98f4820d175072d347ba59c7a03fb1a67780a304f578c34d3752d93f53fd5"
+    ],
+    [
+      "owned-lookup-lifetime-progress/amendments/self-contained-channel-test/manifest.json",
+      "3a1865456f794cac41b23888ba724a1acce74e0c1c374f59bae6a668baa561f2"
+    ],
+    [
+      "i2p-contact-owner-integration/manifest.json",
+      "1927bc29d7753f11740363d60632d0b31aacf2bfb3b6f22921cb80df35d65b8f"
+    ],
+    [
+      "i2p-contact-owner-integration/amendments/final-epoch-and-local-restore/manifest.json",
+      "1735d87ac110e2c34f5178fd1e69a381a5369a057e12be4e9f39712fec5d8a50"
+    ],
+    [
+      "p08-manual-tags/manifest.json",
+      "a8e4524c7c9cf4f0ad0103229f7e503228b9dfee5f19c0be0a00c7a25a458c85"
+    ],
+    [
+      "p08-manual-tag-store/manifest.json",
+      "13bf68c5f83ddb3bfc375d2b46f37c3728d2a6b7b0b882df3d0c1ae77c4424d2"
+    ],
+    [
+      "p08-manual-tag-host/manifest.json",
+      "ec62dba37d28ab0cbf6caed0a7bbd85d2a07b9f4e10dc789215715d6c4e4069e"
+    ],
+    [
+      "p08-manual-tag-host/amendments/explicit-store-reopen/manifest.json",
+      "d7b72eed2fb2a2197894da746b85c5a0d66d94adb0f234a70e52cc4e1022178e"
+    ],
+    [
+      "p08-manual-tag-ui/manifest.json",
+      "aa4f5be1eb45b05dec70561a1c03129c468b24a3933b58340626e76c6c0d7ef5"
+    ],
+    [
+      "p08-manual-tag-ui/amendments/busy-dialog-lifetime/manifest.json",
+      "31f5d4cb7b6eacc4063d22a8d4fc4750683221ac36c40cbdae662e7434b43b38"
+    ]
+  ],
+  "visual": {
+    "status": "PASS_ACTUAL_OFFSCREEN_WIDGET_CAPTURE",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-manual-tag-ui-tests",
+      "managerCapture"
+    ],
+    "exit_code": 0,
+    "source_map_sha256": "309fe1eec3e8acaddb04b4497f3c138c602f52513f887dcbcf0b127a45c056fc",
+    "image": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-manual-tag-ui-tests",
+      "sha256": "80444987d134e7ddcf45c098a3842e080ccbf97dedab00c1b984776d6ba15aff",
+      "bytes": 3150704
+    },
+    "png": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/backend-foundations-integration/visual-r1/manual-tags.png",
+      "sha256": "66a37e96f483f248a55b35809c0c058dd5ecd7566d7a7265211c4269a8b7a0da",
+      "bytes": 16978
+    },
+    "log_sha256": "39639db1cba649930f606689953352b72367462e328dc1f6615bf2d889fc5f21",
+    "data": "owning generated presentation fixture, no profile/worker edit or whole-app runtime credit"
+  },
+  "original_guard": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "default_dist_promoted": false,
+  "full_P07_complete": false,
+  "full_P08_complete": false,
+  "limitations": [
+    "Generated source-bound fixtures; no fresh real-router inbound acceptance.",
+    "Actual original Java contacts.dat write/read round-trip remains unmeasured.",
+    "Manual tag widget capture is presentation-only, not a full application run.",
+    "Automatic tag constraints/actions, categories and remaining P08 features remain open.",
+    "No complete client, release or real-profile switching qualification."
+  ]
+}
