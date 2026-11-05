@@ -3,6 +3,12 @@
 #include "manual_tag_policy.hpp"
 #include "library_window.hpp"
 #include "manual_tag_view.hpp"
+#include "manual_tag_editor.hpp"
+#include <QAction>
+#include <QLineEdit>
+#include <QMenu>
+#include <QPushButton>
+#include <QTableWidget>
 #include <QBuffer>
 #include <QFile>
 #include <QPixmap>
@@ -556,6 +562,99 @@ private slots:
     connect(bridge,&app::SessionBridge::manualTagCommandFinished,&cleanup,[&](auto packet){QVERIFY(bridge->busy());QCOMPARE(packet->status,ui::ManualTagCommandStatus::Loaded);delete bridge;deleted=true;});
     ui::ManualTagCommand request;request.session=sessions.last().at(0).toULongLong();request.request=1;
     QVERIFY(bridge->manualTagCommand(request));QTRY_VERIFY(deleted&&alive.isNull());QCOMPARE(trailingIdle,0);auto released=storage::ProfileLease::acquire(fixture.native());QVERIFY(released);
+  }
+  void actualWindowWorkerTagWorkflowPreservesRawStateAcrossReopen() {
+    // Only this generated Stopped row is opened. Port0 intentionally keeps the
+    // Host engine absent; editable-window mode is a GUI hint, never a lease or
+    // file permission. No start/continue/peer endpoint is submitted.
+    test::OwnedEngineFixture fixture(false);
+    const auto inventoryPath=fixture.profile+QStringLiteral("/downloads.config");
+    auto inventory=test::read(inventoryPath);QCOMPARE(inventory.count("5:statei75e"),1);
+    inventory.replace("5:statei75e","5:statei70e");test::write(inventoryPath,inventory);
+    const auto path=fixture.profile+QStringLiteral("/tag.config");const auto original=tags(*fixture.hash);test::write(path,original);
+    const auto state=test::read(fixture.stateFile);const auto payload=test::read(fixture.payload+'/'+fixture.files.front().relative);
+    const auto preservesUnedited=[&](const QByteArray& bytes){
+      auto before=core::Document::parse(original.toStdString()),after=core::Document::parse(bytes.toStdString());
+      if(!before||!after){return false;}
+      const auto same=[&](const core::Node* a,const core::Node* b){return a&&b&&before->originalBytes().substr(a->begin,a->end-a->begin)==after->originalBytes().substr(b->begin,b->end-b->begin);};
+      if(!same(before->find("unknown-root"),after->find("unknown-root"))||!same(before->find("77"),after->find("77"))){return false;}
+      const auto* a=before->find("3");const auto* b=after->find("3");if(!a||!b){return false;}
+      for(const auto* key:{"c","1","2","3"}){if(!same(a->find(key),b->find(key))){return false;}}
+      return true; // Includes the unresolved original member's exact raw ID.
+    };
+    app::SessionBridge bridge;
+    QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady);
+    QSignalSpy finished(&bridge,&app::SessionBridge::manualTagCommandFinished),statistics(&bridge,&app::SessionBridge::manualTagStatisticsReady);
+    QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed),engineCommands(&bridge,&app::SessionBridge::engineStatisticsReady);
+    const auto result=[&]{return finished.empty()?ui::ManualTagCommandPresentation{}:qvariant_cast<ui::ManualTagCommandPresentation>(finished.last().at(0));};
+    // These are the production main_desktop connections, with the same guarded
+    // submission/refusal and session-close handshake. No callback performs IO.
+    const auto wire=[&](ui::LibraryWindow& window){
+      using Bridge=app::SessionBridge;using Window=ui::LibraryWindow;
+      window.setOfflinePreview(false);
+      connect(&bridge,&Bridge::manualTagCommandFinished,&window,&Window::setManualTagCommandFinished);
+      connect(&window,&Window::manualTagCommandRequested,&bridge,
+        [owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](ui::ManualTagCommand command){if(owner&&view&&!owner->manualTagCommand(command)&&view){view->rejectManualTagCommand(command);}});
+      connect(&bridge,&Bridge::snapshotReady,&window,&Window::setPresentation);
+      connect(&bridge,&Bridge::columnLayoutSessionReady,&window,&Window::beginColumnLayoutSession);
+      connect(&bridge,&Bridge::busyChanged,&window,&Window::setBusy);
+      connect(&bridge,&Bridge::messageReady,&window,&Window::setMessage);
+      connect(&bridge,&Bridge::manualTagStatisticsReady,&window,&Window::setManualTagStatistics);
+      connect(&window,&Window::manualTagStatisticsRequested,&bridge,&Bridge::manualTagStatistics);
+      connect(&window,&Window::refreshRequested,&bridge,&Bridge::refresh);
+      connect(&bridge,&Bridge::detailsReady,&window,&Window::setDetails);
+      connect(&window,&Window::detailsRequested,&bridge,&Bridge::details);
+      connect(&bridge,&Bridge::nativeSessionReady,&window,&Window::setNativeSession);
+      connect(&window,&Window::cancelRequested,&bridge,&Bridge::cancel);
+      window.enableSessionCloseHandshake();
+      const QPointer<Window> view(&window);
+      connect(&window,&Window::sessionCloseRequested,&bridge,[&,view]{if(view&&!bridge.closeSession()&&view){view->retrySessionClose();}});
+      connect(&bridge,&Bridge::sessionClosed,&window,[view](quint64,bool,bool){if(view){view->completeSessionClose();}});
+      connect(&bridge,&Bridge::sessionCloseFailed,&window,&Window::retrySessionClose);
+    };
+    qint32 createdId=0;quint64 firstSession=0;QByteArray committed;
+    {
+      ui::LibraryWindow window;wire(window);QSignalSpy intents(&window,&ui::LibraryWindow::manualTagCommandRequested);window.show();
+      QVERIFY(bridge.open(fixture.native(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!rows.empty()&&sessions.count()==1,10000);
+      firstSession=sessions.last().at(0).toULongLong();QVERIFY(firstSession);QCOMPARE(window.model().rowCount(),1);QVERIFY(window.model().targetAt(0));
+      auto* torrents=window.findChild<QTableView*>(QStringLiteral("incomplete-torrents"));QVERIFY(torrents);QTRY_COMPARE(torrents->model()->rowCount(),1);torrents->setCurrentIndex(torrents->model()->index(0,0));torrents->selectRow(0);
+      auto* manage=window.findChild<QAction*>(QStringLiteral("classic-manual-tags"));QVERIFY(manage);QTRY_VERIFY(!bridge.busy()&&manage->isEnabled());manage->trigger();
+      QPointer<ui::ManualTagManagerDialog> dialog=window.findChild<ui::ManualTagManagerDialog*>();QVERIFY(dialog&&dialog->isVisible());
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==1,10000);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Loaded);QCOMPARE(result()->session,firstSession);
+      QCOMPARE(result()->request,qvariant_cast<ui::ManualTagCommand>(intents.last().at(0)).request);QVERIFY(result()->writable);QCOMPARE(result()->tags->source->originalBytes(),original.toStdString());
+      auto* name=dialog->findChild<QLineEdit*>(QStringLiteral("manual-tag-name"));auto* create=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-new"));auto* table=dialog->findChild<QTableWidget*>(QStringLiteral("manual-tag-table"));QVERIFY(name&&create&&table);QCOMPARE(table->rowCount(),3);
+      name->setText(QStringLiteral("E2E Tag"));QVERIFY(create->isEnabled());create->click();QVERIFY(bridge.busy());QVERIFY(dialog&&dialog->isVisible());QVERIFY(!create->isEnabled());QCOMPARE(table->rowCount(),3);
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==2,10000);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QVERIFY(result()->createdId&&*result()->createdId>0);createdId=*result()->createdId;QCOMPARE(table->rowCount(),4);
+      QCOMPARE(result()->request,qvariant_cast<ui::ManualTagCommand>(intents.last().at(0)).request);QVERIFY(latest(statistics)&&latest(statistics)->tagRevision==result()->generation);
+      auto* menu=window.findChild<QMenu*>(QStringLiteral("classic-torrent-tags"));QVERIFY(menu);QVERIFY(QMetaObject::invokeMethod(menu,"aboutToShow",Qt::DirectConnection));
+      auto* member=menu->findChild<QAction*>(QStringLiteral("manual-tag-member-%1").arg(createdId));QVERIFY(member&&member->isEnabled()&&!member->isChecked());member->trigger();QVERIFY(bridge.busy());QVERIFY(!member->isChecked());
+      const auto assign=qvariant_cast<ui::ManualTagCommand>(intents.last().at(0));QCOMPARE(assign.kind,ui::ManualTagCommandKind::AddMember);QCOMPARE(assign.member.hash,QString::fromStdString(fixture.hash->hex()));QCOMPARE(assign.member,target(rows));
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==3,10000);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QCOMPARE(result()->request,assign.request);
+      const auto assigned=std::find_if(result()->tags->tags.begin(),result()->tags->tags.end(),[&](const auto& tag){return tag.id==createdId;});QVERIFY(assigned!=result()->tags->tags.end());QCOMPARE(assigned->uniqueHashes.size(),std::size_t{1});QVERIFY(assigned->uniqueHashes.front()==*fixture.hash);
+      QCOMPARE(latest(statistics)->tagRevision,result()->generation);QVERIFY(QMetaObject::invokeMethod(menu,"aboutToShow",Qt::DirectConnection));member=menu->findChild<QAction*>(QStringLiteral("manual-tag-member-%1").arg(createdId));QVERIFY(member&&member->isChecked());
+      int selected=-1;for(int row=0;row<table->rowCount();++row){if(table->item(row,0)->text()==QStringLiteral("E2E Tag")){selected=row;}}QVERIFY(selected>=0);table->setCurrentCell(selected,0);table->selectRow(selected);
+      auto* rename=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-rename"));QVERIFY(rename);name->setText(QStringLiteral("Renamed E2E"));QVERIFY(rename->isEnabled());rename->click();QVERIFY(bridge.busy());QVERIFY(dialog&&dialog->isVisible());
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==4,10000);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QCOMPARE(result()->kind,ui::ManualTagCommandKind::Rename);
+      const auto renamed=std::find_if(result()->tags->tags.begin(),result()->tags->tags.end(),[&](const auto& tag){return tag.id==createdId;});QVERIFY(renamed!=result()->tags->tags.end());QCOMPARE(renamed->rawName,std::optional<std::string>{"Renamed E2E"});QCOMPARE(renamed->uniqueHashes.size(),std::size_t{1});QVERIFY(renamed->uniqueHashes.front()==*fixture.hash);
+      committed=test::read(path);QVERIFY(preservesUnedited(committed));QVERIFY(!QFileInfo::exists(path+QStringLiteral(".saving")));
+      const auto stamp=tagStamp(path);auto* reload=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-reload"));QVERIFY(reload&&reload->isEnabled());reload->click();
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==5,10000);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Loaded);QCOMPARE(result()->tags->source->originalBytes(),committed.toStdString());QVERIFY(sameTag(stamp,path));QVERIFY(dialog&&dialog->isVisible());
+      QCOMPARE(latest(statistics)->tagRevision,result()->generation);QCOMPARE(latest(statistics)->traffic.state,core::ManualTagTrafficState::Unavailable);QVERIFY(!latest(statistics)->traffic.target);QVERIFY(!latest(statistics)->traffic.completeOwnedCoverage);QCOMPARE(engineCommands.count(),0);
+      window.close();QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.last().at(1).toBool()&&closed.last().at(2).toBool());QTRY_VERIFY(!window.isVisible());QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);QVERIFY(!dialog);
+    }
+    {auto released=storage::ProfileLease::acquire(fixture.native());QVERIFY(released);}
+    {
+      ui::LibraryWindow window;wire(window);QSignalSpy intents(&window,&ui::LibraryWindow::manualTagCommandRequested);window.show();
+      QVERIFY(bridge.open(fixture.native(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&sessions.count()==2,10000);QVERIFY(sessions.last().at(0).toULongLong()>firstSession);
+      auto* manage=window.findChild<QAction*>(QStringLiteral("classic-manual-tags"));QVERIFY(manage);QTRY_VERIFY(!bridge.busy()&&manage->isEnabled());manage->trigger();
+      QPointer<ui::ManualTagManagerDialog> dialog=window.findChild<ui::ManualTagManagerDialog*>();QVERIFY(dialog);QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==6,10000);
+      QCOMPARE(result()->status,ui::ManualTagCommandStatus::Loaded);QCOMPARE(result()->session,sessions.last().at(0).toULongLong());QCOMPARE(result()->request,qvariant_cast<ui::ManualTagCommand>(intents.last().at(0)).request);QCOMPARE(result()->tags->source->originalBytes(),committed.toStdString());
+      const auto saved=std::find_if(result()->tags->tags.begin(),result()->tags->tags.end(),[&](const auto& tag){return tag.id==createdId;});QVERIFY(saved!=result()->tags->tags.end());QCOMPARE(saved->rawName,std::optional<std::string>{"Renamed E2E"});QCOMPARE(saved->uniqueHashes.size(),std::size_t{1});QVERIFY(saved->uniqueHashes.front()==*fixture.hash);
+      auto* menu=window.findChild<QMenu*>(QStringLiteral("classic-torrent-tags"));QVERIFY(menu);QVERIFY(QMetaObject::invokeMethod(menu,"aboutToShow",Qt::DirectConnection));const auto* member=menu->findChild<QAction*>(QStringLiteral("manual-tag-member-%1").arg(createdId));QVERIFY(member&&member->isChecked());
+      window.close();QTRY_COMPARE_WITH_TIMEOUT(closed.count(),2,15000);QVERIFY(closed.last().at(1).toBool()&&closed.last().at(2).toBool());QTRY_VERIFY(!window.isVisible());QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);QVERIFY(!dialog);
+    }
+    {auto released=storage::ProfileLease::acquire(fixture.native());QVERIFY(released);}
+    QCOMPARE(test::read(path),committed);QVERIFY(preservesUnedited(committed));QCOMPARE(test::read(inventoryPath),inventory);QCOMPARE(test::read(fixture.stateFile),state);QCOMPARE(test::read(fixture.payload+'/'+fixture.files.front().relative),payload);QVERIFY(fixture.intact(false));QCOMPARE(engineCommands.count(),0);
   }
 };
 QTEST_MAIN(ManualTagBridgeTests)
