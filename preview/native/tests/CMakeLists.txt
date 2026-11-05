@@ -2395,3 +2395,11 @@ if(TARGET biglybtc_owned_i2p_source AND TARGET biglybtc_i2p_dht)
   add_test(NAME i2p-dht-inbound-source-actor COMMAND biglybtc-i2p-dht-inbound-actor-tests)
   set_tests_properties(i2p-dht-inbound-source-actor PROPERTIES TIMEOUT 30 LABELS "unit;i2p;owned-profile;discovery")
 endif()
+
+
+# Optional real original-manager inbound DHT acceptance; never a default CTest.
+if(TARGET biglybtc_i2p_dht AND TARGET biglybtc_owned_i2p_source)
+  add_executable(biglybtc-i2p-inbound-native-probe EXCLUDE_FROM_ALL i2p_inbound_native_probe.cpp)
+  target_link_libraries(biglybtc-i2p-inbound-native-probe PRIVATE biglybtc_i2p_dht biglybtc_owned_i2p_source Qt6::Core Qt6::Network OpenSSL::Crypto LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-i2p-inbound-native-probe PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
