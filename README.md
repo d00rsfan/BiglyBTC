@@ -141,3 +141,9 @@ saved DHT port65534. Six affected suites pass on GCC and ASan/UBSan at source
 `beae16828c58a538744c2559b7026a8bea1b50a9`; see the [bounded milestone](migration/evidence/20261105-i2p-long-running/REVIEW.md).
 Original-manager inbound runtime, routing/contact persistence and full P07 remain
 in progress.
+
+Actual cold GCC mixed-magnet and sanitizer pure-magnet payload transfers now
+pass, including graceful router shutdown and final isolation checks. The
+original-manager inbound diagnostic found an overly strict reply-count check;
+its correction passes ten short cases on both lanes. The remaining inbound
+controls and full P07 stay open. See the [actual results](migration/evidence/20261105-i2p-selected-magnets/REVIEW.md).

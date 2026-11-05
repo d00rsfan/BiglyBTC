@@ -1,0 +1,613 @@
+{
+  "status": "TWO_SELECTED_MAGNET_CASES_PASS_INBOUND_CONTROL_HARNESS_FAIL",
+  "native_commit": "1ff34a55033b00fa063de45a1754616ecf38cee4",
+  "native_tree": "b20d6b5c403e2908da7820940b37b616db77b667",
+  "production_basis_commit": "beae16828c58a538744c2559b7026a8bea1b50a9",
+  "original_baselines": {
+    "biglybt": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "azneti2phelper": "33d97eca67a9f332e3d4da7e7492ec54f4bec078"
+  },
+  "authentication_receipt": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/auth-receipts/20261105T194251Z-3203535.json",
+    "sha256": "4d5c1561ed9e625a558d054f4616ee5164ee57b506c03f141b9df8b3240615ac",
+    "bytes": 1918
+  },
+  "raw_group_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/grouped-sequence-r1/result.json",
+    "sha256": "3bc5ffa4366d3228826f23b88c7dfba6d59eeeb9889ff6e7ed07dc78f4b0ce38",
+    "bytes": 3218
+  },
+  "raw_group_status": "FAIL",
+  "raw_group_elapsed_seconds": 899.8,
+  "scope": "scoped per-case success only, not full P07/whole-client or complete matrix",
+  "cases": {
+    "gcc-mixed-magnet": {
+      "native": {
+        "HTTP_tracker_URIs": 0,
+        "cases": [
+          {
+            "actual_original_metadata_sha256": "0ad47d637a189250d4bcc71ed44287fbffe6413b7a1ea65c19437369be4763a8",
+            "case": "mixed-magnet",
+            "info_hash": "0FC21BD4D6B49586D72172B6A2E8502D50B3688A",
+            "joined_before_disk_read": true,
+            "magnet": true,
+            "mixed": true,
+            "one_handle_one_library_row": true,
+            "original_networks_preserved": true,
+            "payload_bytes": 262144,
+            "payload_sha256": "42f16dabf82c9cf2fddf1ad3d5975ee306d52732627783d0fc34acf432f9573f"
+          }
+        ],
+        "diagnostic_only": true,
+        "direct_peer_injection": false,
+        "elapsed_ms": 10288,
+        "joined_before_raw_disk_read": true,
+        "manual_ls2_store": false,
+        "reason": "Focused mixed-magnet diagnostic joined and payload verified",
+        "status": "PASS_FOCUSED_MIXED_MAGNET_DIAGNOSTIC"
+      },
+      "phase_result": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-gcc-mixed-magnet-r1/result.json",
+        "sha256": "63d0ac357dfa1fce55b0742d3520ca4a4929d3f97a4895476979c12dc66db32f",
+        "bytes": 2036
+      },
+      "inputs": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-gcc-mixed-magnet-r1/inputs.json",
+        "sha256": "a96277edf5ea0e40db24e657497cf6b3381eb81306d9a4fd5535bd4dee666b0a",
+        "bytes": 54753
+      },
+      "public_artifacts": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-gcc-mixed-magnet-r1/public-artifacts.json",
+        "sha256": "53ea3dc66b3afad09d2f5b44b06ac6673640e8f5e8ed77956d2d0fe245cf75f6",
+        "bytes": 19354
+      },
+      "namespace_exit": {
+        "exit_code": 0,
+        "no_fallback": true,
+        "parent_descriptors_unchanged": true
+      },
+      "final_fence": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-gcc-mixed-magnet-r1/fence-after.json",
+        "sha256": "70b7ba0d64be6591e4eba1bee70376ff834808b0677e3876b985c0d730d5fa53",
+        "bytes": 8633
+      },
+      "private_cleanup": {
+        "keys_published": false,
+        "owned_private_paths_removed": true
+      },
+      "graceful_router_results": {
+        "A": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-gcc-mixed-magnet-r1/router-A-result.json",
+          "sha256": "8732b5e295020d708b48a5dc5bc06b4b0338debcad70b5157160dfadd2b3ca40",
+          "bytes": 241
+        },
+        "B": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-gcc-mixed-magnet-r1/router-B-result.json",
+          "sha256": "70226610fdfe25431af5a8145e6c40b3773b6bcb1c69f64c0fadf5e4ef1ea5cb",
+          "bytes": 241
+        },
+        "F": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-gcc-mixed-magnet-r1/router-F-result.json",
+          "sha256": "b24255d4bf177d1598bec21729ca205062cb3e773beb4baae7fe0757b1c9b4e2",
+          "bytes": 241
+        }
+      },
+      "original_peer": {
+        "completed_output_closes": 2,
+        "connections": 2,
+        "metadata_chunks": 3,
+        "metadata_requests": 3,
+        "payload_bytes_sent": 262144,
+        "status": "ACTUAL_ORIGINAL_PEER_OBSERVATION",
+        "unique_payload_blocks": 16
+      }
+    },
+    "san-pure-magnet": {
+      "native": {
+        "HTTP_tracker_URIs": 0,
+        "cases": [
+          {
+            "actual_original_metadata_sha256": "d21f24e526031177ce044bfd36fe4b97db9d32c1174121a513638419314f0c99",
+            "case": "pure-magnet",
+            "info_hash": "FD180C11890B9C9264C718A14B365CE05B7FCE9B",
+            "joined_before_disk_read": true,
+            "magnet": true,
+            "mixed": false,
+            "one_handle_one_library_row": true,
+            "original_networks_preserved": true,
+            "payload_bytes": 262144,
+            "payload_sha256": "a2d094df2c8088b1236454eb5ee15c5286eeae8b19c3e8dc508f7a7cf9a6b401"
+          }
+        ],
+        "diagnostic_only": true,
+        "direct_peer_injection": false,
+        "elapsed_ms": 7471,
+        "joined_before_raw_disk_read": true,
+        "manual_ls2_store": false,
+        "reason": "Focused pure-magnet diagnostic joined and payload verified",
+        "status": "PASS_FOCUSED_PURE_MAGNET_DIAGNOSTIC"
+      },
+      "phase_result": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-san-pure-magnet-r1/result.json",
+        "sha256": "05beb014c60cf77b6254d365f2bb9127f98d131c0e3a69520e4ab09e5d970efc",
+        "bytes": 2031
+      },
+      "inputs": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-san-pure-magnet-r1/inputs.json",
+        "sha256": "d3944d3d5ed10de18eacadc8fef9a994bd61b00a95887e36ea6b534314fff8d8",
+        "bytes": 54733
+      },
+      "public_artifacts": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-san-pure-magnet-r1/public-artifacts.json",
+        "sha256": "7b05ef3d00f0c2228d8ec1d95b2beb009de84304ef167853ab817fd87f91f7d9",
+        "bytes": 19250
+      },
+      "namespace_exit": {
+        "exit_code": 0,
+        "no_fallback": true,
+        "parent_descriptors_unchanged": true
+      },
+      "final_fence": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-san-pure-magnet-r1/fence-after.json",
+        "sha256": "70b7ba0d64be6591e4eba1bee70376ff834808b0677e3876b985c0d730d5fa53",
+        "bytes": 8633
+      },
+      "private_cleanup": {
+        "keys_published": false,
+        "owned_private_paths_removed": true
+      },
+      "graceful_router_results": {
+        "A": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-san-pure-magnet-r1/router-A-result.json",
+          "sha256": "8732b5e295020d708b48a5dc5bc06b4b0338debcad70b5157160dfadd2b3ca40",
+          "bytes": 241
+        },
+        "B": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-san-pure-magnet-r1/router-B-result.json",
+          "sha256": "70226610fdfe25431af5a8145e6c40b3773b6bcb1c69f64c0fadf5e4ef1ea5cb",
+          "bytes": 241
+        },
+        "F": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-san-pure-magnet-r1/router-F-result.json",
+          "sha256": "b24255d4bf177d1598bec21729ca205062cb3e773beb4baae7fe0757b1c9b4e2",
+          "bytes": 241
+        }
+      },
+      "original_peer": {
+        "completed_output_closes": 2,
+        "connections": 2,
+        "metadata_chunks": 3,
+        "metadata_requests": 3,
+        "payload_bytes_sent": 262144,
+        "status": "ACTUAL_ORIGINAL_PEER_OBSERVATION",
+        "unique_payload_blocks": 16
+      }
+    }
+  },
+  "full_P07_complete": false,
+  "inbound_partial": {
+    "native_result": {
+      "commands": 1,
+      "elapsed_ms": 72570,
+      "payload_or_torrent_grants": 0,
+      "profile_lock_reacquired": true,
+      "reason": "Actual invalid-token/refetch outcomes differ",
+      "requires_original_peer_result": true,
+      "source_grants_minted_by_fixture": false,
+      "source_validation_failed": false,
+      "status": "FAIL",
+      "worker_joins_complete": true
+    },
+    "native_result_pin": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-native-result.json",
+      "sha256": "ab2996a5a7307d5c42940d7c546d06d36eeaa3706f0bd955f44370f92c734be5",
+      "bytes": 367
+    },
+    "before": {
+      "command": "bad-token-baseline",
+      "command_sha256": "ebfd4b95220cc82930f1874e6a032fddb7fcc9cdc03631e621805a0829aa2935",
+      "elapsed_ms": 38312,
+      "observation": {
+        "grantActive": false,
+        "peerKeys": 2,
+        "peerValues": 2,
+        "ready": true,
+        "replyPrepared": "11",
+        "requested": true,
+        "requests": "11",
+        "retained": true,
+        "scope": "1",
+        "sourceCurrent": true,
+        "tokenBindings": 2,
+        "tokenRejected": "0"
+      },
+      "sequence": 1,
+      "status": "ACTUAL_SOURCE_BOUND_INBOUND_CONTROL"
+    },
+    "before_pin": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-native-step-1.json",
+      "sha256": "a40cc1cada9c2c88b1fcdf4938db6a94ebb21335731a8758e3a7fd072faa57e3",
+      "bytes": 576
+    },
+    "last_progress": {
+      "command": "",
+      "create_requests": "1",
+      "elapsed_ms": 72012,
+      "held_turns": "41",
+      "observation": {
+        "grantActive": false,
+        "peerKeys": 2,
+        "peerValues": 2,
+        "ready": true,
+        "replyPrepared": "17",
+        "requested": true,
+        "requests": "18",
+        "retained": true,
+        "scope": "1",
+        "sourceCurrent": true,
+        "tokenBindings": 2,
+        "tokenRejected": "1"
+      },
+      "permit_phase": 0,
+      "validation_failed": false
+    },
+    "last_progress_pin": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-native-progress.json",
+      "sha256": "28a2e8506b5fc5e383b6e52e071d5aeb44667c3ab879fae4bf58e80d982ddb0b",
+      "bytes": 503
+    },
+    "proven_counter_delta_at_last_progress": {
+      "requests": 7,
+      "replyPrepared": 6,
+      "tokenRejected": 1
+    },
+    "actual_original_steps": [
+      {
+        "status": "ACTUAL_ORIGINAL_HELPER_CALLBACK",
+        "sequence": 1,
+        "command": "ping",
+        "callback": "ping",
+        "callbacks": 1,
+        "failure_class": "",
+        "values": 0,
+        "nodes": 0,
+        "requires_native_control_receipt": false,
+        "native_qualification": false
+      },
+      {
+        "status": "ACTUAL_ORIGINAL_HELPER_CALLBACK",
+        "sequence": 2,
+        "command": "find",
+        "callback": "nodes",
+        "callbacks": 1,
+        "failure_class": "",
+        "values": 0,
+        "nodes": 4,
+        "requires_native_control_receipt": false,
+        "native_qualification": false
+      },
+      {
+        "status": "ACTUAL_ORIGINAL_HELPER_CALLBACK",
+        "sequence": 3,
+        "command": "token",
+        "callback": "nodes",
+        "callbacks": 1,
+        "failure_class": "",
+        "values": 0,
+        "nodes": 4,
+        "requires_native_control_receipt": false,
+        "native_qualification": false
+      },
+      {
+        "status": "ACTUAL_ORIGINAL_HELPER_CALLBACK",
+        "sequence": 4,
+        "command": "seed",
+        "callback": "store",
+        "callbacks": 1,
+        "failure_class": "",
+        "values": 0,
+        "nodes": 0,
+        "requires_native_control_receipt": false,
+        "native_qualification": false
+      },
+      {
+        "status": "ACTUAL_ORIGINAL_HELPER_CALLBACK",
+        "sequence": 5,
+        "command": "read-seed",
+        "callback": "values",
+        "callbacks": 1,
+        "failure_class": "",
+        "values": 1,
+        "nodes": 0,
+        "requires_native_control_receipt": false,
+        "native_qualification": false
+      },
+      {
+        "status": "ACTUAL_ORIGINAL_HELPER_CALLBACK",
+        "sequence": 6,
+        "command": "downloader-token",
+        "callback": "nodes",
+        "callbacks": 1,
+        "failure_class": "",
+        "values": 0,
+        "nodes": 4,
+        "requires_native_control_receipt": false,
+        "native_qualification": false
+      },
+      {
+        "status": "ACTUAL_ORIGINAL_HELPER_CALLBACK",
+        "sequence": 7,
+        "command": "downloader",
+        "callback": "store",
+        "callbacks": 1,
+        "failure_class": "",
+        "values": 0,
+        "nodes": 0,
+        "requires_native_control_receipt": false,
+        "native_qualification": false
+      },
+      {
+        "status": "ACTUAL_ORIGINAL_HELPER_CALLBACK",
+        "sequence": 8,
+        "command": "read-downloader",
+        "callback": "values",
+        "callbacks": 1,
+        "failure_class": "",
+        "values": 1,
+        "nodes": 0,
+        "requires_native_control_receipt": false,
+        "native_qualification": false
+      },
+      {
+        "status": "ACTUAL_ORIGINAL_HELPER_CALLBACK",
+        "sequence": 9,
+        "command": "bad-token",
+        "callback": "failed",
+        "callbacks": 1,
+        "failure_class": "com.biglybt.core.dht.transport.DHTTransportException",
+        "values": 0,
+        "nodes": 0,
+        "requires_native_control_receipt": false,
+        "native_qualification": false
+      },
+      {
+        "status": "ACTUAL_ORIGINAL_HELPER_CALLBACK",
+        "sequence": 10,
+        "command": "read-after-bad-token",
+        "callback": "values",
+        "callbacks": 1,
+        "failure_class": "",
+        "values": 1,
+        "nodes": 0,
+        "requires_native_control_receipt": false,
+        "native_qualification": false
+      }
+    ],
+    "actual_original_steps_pins": [
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-original-step-1.json",
+        "sha256": "1fd77f187ef4e2750630ee16cb16590bff5853508fe71752de3175e670975348",
+        "bytes": 216
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-original-step-2.json",
+        "sha256": "40c993fd36cd0dbd533b85e416ec1e2f1144efe30c81f5ad32a6dbfe4e7e61c4",
+        "bytes": 217
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-original-step-3.json",
+        "sha256": "e0320ba243a461f00223cbe97c9a66cfc7766d967a698f130116f01d63b65e49",
+        "bytes": 218
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-original-step-4.json",
+        "sha256": "d73321b1503395892ddb24566853cd18eb88785d883cfdaf089cd5103cfd4e0f",
+        "bytes": 217
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-original-step-5.json",
+        "sha256": "54d02cac45a295e9f7dda9e8882105cba0d3a8c2f6687fd70a9ee810f9e798f8",
+        "bytes": 223
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-original-step-6.json",
+        "sha256": "83acb29eccfe11a1505c132fed4a6d01b5a47c647b1d4bb4d66fb3538f8442d9",
+        "bytes": 229
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-original-step-7.json",
+        "sha256": "9658941a238ec5d6140aeb81edbe43253c39b5abc7451837dc0152309ab292fd",
+        "bytes": 223
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-original-step-8.json",
+        "sha256": "77e968a246be91f6e46523ac2d47144465cad855523cf5a2ab6a91cb92cdd195",
+        "bytes": 229
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-original-step-9.json",
+        "sha256": "ba04175bdf10c80337f3847c2aebe1be3d4cd2a62060f16affe86648ae5f649c",
+        "bytes": 275
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/grouped-inbound-r1/inbound-original-step-10.json",
+        "sha256": "79c6129f77eed2d0bf76e05902298f7dfb20d26616691a9e379cf8802c90ffdf",
+        "bytes": 235
+      }
+    ],
+    "private_cleanup": {
+      "keys_published": false,
+      "owned_private_paths_removed": true
+    },
+    "namespace_exit": {
+      "exit_code": 1,
+      "no_fallback": true,
+      "parent_descriptors_unchanged": true
+    },
+    "original_manager_explicit_stop_and_close_result_executed": false,
+    "close_resume_source_loss_controls_executed": false,
+    "graceful_router_result_and_final_inside_fence_reached": false,
+    "cause": "probe required exactly one prepared reply despite additional successfully handled requests; last actual progress already exceeded that bound before the final check",
+    "background_timer_attribution": "inference from original manager behavior; counters prove extra valid outcomes, not their exact RPC method"
+  },
+  "counter_probe_correction": {
+    "implementation_commit": "b918932e6f250a3a8fd4754ce5db699fbfdca0a4",
+    "native_tree": "8a33e236a57d3dbf39e314d906c27e3388bfd8d0",
+    "source_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/inbound-counter-interval-review/review.json",
+      "sha256": "1891f95fa7dbb356987cf3feacf99f52a81c4b785c999a1501d8896e8ed98a06",
+      "bytes": 1379
+    },
+    "source_capsule": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/inbound-native-probe/amendments/counter-interval/manifest.json",
+      "sha256": "3828072493cefb0e715015e6c1a317144d4738b7bb66759550b1ba8b21e0adde",
+      "bytes": 1719
+    },
+    "source_changed": "only optional inbound probe CPP",
+    "network_reexecuted": false,
+    "lanes": {
+      "gcc": {
+        "build_result": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/inbound-counter-interval-integration/gcc/r1/result.json",
+          "sha256": "309acfc9e415aa8a63b65fd47bec85c012287c5537daa9fcc95b462b5e68dff9",
+          "bytes": 4742
+        },
+        "pure_cases": {
+          "cases": [
+            {
+              "actual": true,
+              "case": "one reply plus rejection",
+              "expected": true
+            },
+            {
+              "actual": true,
+              "case": "actual original-manager regression",
+              "expected": true
+            },
+            {
+              "actual": true,
+              "case": "additional valid replies accounted",
+              "expected": true
+            },
+            {
+              "actual": false,
+              "case": "missing fresh reply",
+              "expected": false
+            },
+            {
+              "actual": false,
+              "case": "unaccounted request outcome",
+              "expected": false
+            },
+            {
+              "actual": false,
+              "case": "multiple token rejections",
+              "expected": false
+            },
+            {
+              "actual": false,
+              "case": "counter regression",
+              "expected": false
+            },
+            {
+              "actual": false,
+              "case": "missing token rejection",
+              "expected": false
+            },
+            {
+              "actual": false,
+              "case": "saturated interval is ambiguous",
+              "expected": false
+            },
+            {
+              "actual": true,
+              "case": "unsaturated near maximum",
+              "expected": true
+            }
+          ],
+          "network_or_source_effects": false,
+          "status": "PASS_PURE_COUNTER_INTERVAL_REGRESSION"
+        },
+        "images": {
+          "biglybtc-i2p-inbound-native-probe": {
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-inbound-native-probe",
+            "sha256": "039430d9c3f7d30e25618428a8685dbd04fc22ef95cd515ecfa33fe6d1f7b961",
+            "bytes": 7345080
+          }
+        },
+        "elapsed_build_and_pure_checks_seconds": 12.631
+      },
+      "san": {
+        "build_result": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/inbound-counter-interval-integration/san/r1/result.json",
+          "sha256": "5f9e676517094f009976deabc00585f09192c42d47ad3b62f4285da026e6a7a2",
+          "bytes": 4740
+        },
+        "pure_cases": {
+          "cases": [
+            {
+              "actual": true,
+              "case": "one reply plus rejection",
+              "expected": true
+            },
+            {
+              "actual": true,
+              "case": "actual original-manager regression",
+              "expected": true
+            },
+            {
+              "actual": true,
+              "case": "additional valid replies accounted",
+              "expected": true
+            },
+            {
+              "actual": false,
+              "case": "missing fresh reply",
+              "expected": false
+            },
+            {
+              "actual": false,
+              "case": "unaccounted request outcome",
+              "expected": false
+            },
+            {
+              "actual": false,
+              "case": "multiple token rejections",
+              "expected": false
+            },
+            {
+              "actual": false,
+              "case": "counter regression",
+              "expected": false
+            },
+            {
+              "actual": false,
+              "case": "missing token rejection",
+              "expected": false
+            },
+            {
+              "actual": false,
+              "case": "saturated interval is ambiguous",
+              "expected": false
+            },
+            {
+              "actual": true,
+              "case": "unsaturated near maximum",
+              "expected": true
+            }
+          ],
+          "network_or_source_effects": false,
+          "status": "PASS_PURE_COUNTER_INTERVAL_REGRESSION"
+        },
+        "images": {
+          "biglybtc-i2p-inbound-native-probe": {
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-inbound-native-probe",
+            "sha256": "c9fbe0ce3c4aa7726d8186083f5b7cf6d87e31af4a7cd20a996682e7cdecaca1",
+            "bytes": 162833296
+          }
+        },
+        "elapsed_build_and_pure_checks_seconds": 27.647
+      }
+    }
+  }
+}
