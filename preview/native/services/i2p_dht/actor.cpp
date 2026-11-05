@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "actor.hpp"
+#include "inbound_responder.hpp"
+#include "../azureus_router/router.hpp"
+#include <QDateTime>
 #include <QMetaObject>
 #include <QPointer>
 #include <QThread>
@@ -15,7 +18,11 @@ struct Actor::Impl {
   Actor* q;QPointer<i2cp::InitialChannel> channel;QTimer timer;Options options;
   Lookup lookup;std::uint64_t nextOperation=1,scope=0,resolver=0;std::optional<std::size_t> resolving;
   std::vector<std::array<Byte,8>> transactions;Bytes localDestination;Hash localHash{};
-  bool enabled=false,pumping=false,wakeQueued=false,notificationQueued=false;
+  bool enabled=false,pumping=false,wakeQueued=false,notificationQueued=false,inboundRequested=false;
+  std::unique_ptr<inbound::Responder> responder;
+  std::unique_ptr<azureus_router::RouterOwner> router;
+  std::vector<Contact> routingContacts;
+  std::vector<std::uint64_t> replyTickets;
   explicit Impl(Actor* owner,i2cp::InitialChannel& c):q(owner),channel(&c),timer(owner){
     timer.setSingleShot(true);timer.setTimerType(Qt::PreciseTimer);transactions.reserve(1024);
     QObject::connect(&timer,&QTimer::timeout,q,[this]{safePump();});
@@ -37,7 +44,7 @@ struct Actor::Impl {
     if(wakeQueued){return;}wakeQueued=true;const QPointer<Actor> owner(q);
     if(!QMetaObject::invokeMethod(q,[owner]{if(!owner){return;}owner->impl_->wakeQueued=false;owner->impl_->safePump();},Qt::QueuedConnection)){wakeQueued=false;safeClose();}
   }
-  bool current(){
+  bool current()const{
     if(!enabled||!channel||scope!=channel->dhtScopeGeneration()){return false;}
     if(channel->state()==i2cp::InitialChannel::State::Reconfiguring){return true;}
     auto identity=channel->ownedLeaseDestination();return identity&&identity->wire==localDestination;
@@ -48,16 +55,90 @@ struct Actor::Impl {
   }
   void close(){
     const auto ownedScope=scope;
-    timer.stop();cancelPending();lookup.close();enabled=false;scope=0;localDestination.clear();
+    stopInbound();timer.stop();cancelPending();lookup.close();enabled=false;scope=0;localDestination.clear();
     if(channel&&onThread()&&ownedScope){channel->disableDhtDatagrams(ownedScope);}notify();
   }
-  void safeClose()noexcept{try{close();}catch(...){timer.stop();enabled=false;scope=0;lookup.close();}}
+  void safeClose()noexcept{try{close();}catch(...){timer.stop();stopInbound();enabled=false;scope=0;lookup.close();}}
   void safePump()noexcept{try{pump();}catch(...){safeClose();}}
   Result<Bytes> transaction(){
     if(transactions.size()==1024){return std::unexpected(Error{ErrorCode::TooLarge,"DHT lifetime transaction capacity exhausted"});}
     std::array<Byte,8> tx{};for(unsigned tries=0;tries<8;++tries){if(RAND_bytes(tx.data(),int(tx.size()))!=1){break;}
       if(std::find(transactions.begin(),transactions.end(),tx)==transactions.end()){transactions.push_back(tx);return Bytes(tx.begin(),tx.end());}}
     return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT transaction entropy unavailable"});
+  }
+  void stopInbound()noexcept{
+    inboundRequested=false;if(responder){responder->close();}responder.reset();router.reset();routingContacts.clear();
+    auto tickets=std::move(replyTickets);replyTickets.clear();
+    if(channel&&onThread()){for(const auto ticket:tickets){channel->cancelDhtDatagram(ticket);}}
+  }
+  bool enableInbound(){
+    if(!onThread()||!current()||inboundRequested||!channel->dhtScopeObservation(scope).sourceBound){return false;}
+    inboundRequested=true;channel->requestDhtEffects(scope);notify();return true;
+  }
+  bool inboundCurrent(Clock::time_point end)const{
+    return inboundRequested&&Clock::now()<end&&current()
+        &&channel->dhtScopeObservation(scope).granted;
+  }
+  bool learnRouting(const Contact& contact,bool alive,Clock::time_point end=Clock::time_point::max()){
+    if(!validContact(contact)||!router){return false;}
+    // Allocate the owning attachment before changing the routing tree. Existing
+    // instance0 attachments retain their original identity, as in the source.
+    auto found=std::find_if(routingContacts.begin(),routingContacts.end(),[&](const auto& c){return c.id==contact.id;});
+    bool inserted=false;
+    if(found==routingContacts.end()){
+      Contact prepared=contact;if(!inboundCurrent(end)){return false;}
+      std::erase_if(routingContacts,[&](const auto& c){auto known=router->find(c.id);return known&&!known->has_value();});
+      if(routingContacts.size()==azureus_router::MaximumRouterContacts){return false;}
+      routingContacts.push_back(std::move(prepared));inserted=true;
+    }
+    if(!inboundCurrent(end)){if(inserted){routingContacts.pop_back();}return false;}
+    azureus_router::ContactInput input;input.id=contact.id;input.maxFailLive=3;input.maxFailUnknown=2;
+    auto result=alive?router->contactAlive(input,now(),QDateTime::currentMSecsSinceEpoch()):router->contactKnown(input,now());
+    if(!result||*result==azureus_router::RouterChange::Dropped){if(inserted){routingContacts.pop_back();}return bool(result);}
+    return true;
+  }
+  bool prepareInbound(){
+    if(responder){return true;}if(!inboundCurrent(Clock::time_point::max())){return false;}
+    auto identity=channel->ownedLeaseDestination();if(!identity){return false;}
+    Contact local{options.localId,localHash,options.queryPort,*identity};
+    auto made=inbound::Responder::create(local);if(!made){return false;}
+    auto tree=azureus_router::RouterOwner::create(options.localId,{10,2,5,false},scope,now(),QDateTime::currentMSecsSinceEpoch());if(!tree){return false;}
+    routingContacts.reserve(azureus_router::MaximumRouterContacts);replyTickets.reserve(8);
+    if(!inboundCurrent(Clock::time_point::max())){return false;}
+    router=std::move(*tree);routingContacts.push_back(std::move(local));responder=std::move(*made);
+    if(!router->setSleeping(options.inboundSleeping,now())||!router->setSuspended(options.inboundSuspended,now())){return false;}
+    for(const auto& seed:options.seeds){if(!inboundCurrent(Clock::time_point::max())||!learnRouting(seed,false)){return false;}}
+    return true;
+  }
+  std::optional<inbound::RoutingSnapshot> routeInbound(const Contact& actual,Method method,const Id& target,bool existing,Clock::time_point end){
+    if(!inboundCurrent(end)||!learnRouting(actual,true,end)){return {};}
+    inbound::RoutingSnapshot result;
+    if(method==Method::FindNode||method==Method::GetPeers){
+      auto candidates=router->closest(target,10,true);if(!candidates){return {};}
+      for(std::size_t i=0;i<candidates->count;++i){
+        const auto id=candidates->values[i].id;auto at=std::find_if(routingContacts.begin(),routingContacts.end(),[&](const auto& c){return c.id==id;});
+        if(at==routingContacts.end()){return {};}result.closest.push_back(*at);
+      }
+      std::sort(result.closest.begin(),result.closest.end(),[&](const auto& a,const auto& b){for(std::size_t i=0;i<target.size();++i){const auto left=Byte(a.id[i]^target[i]),right=Byte(b.id[i]^target[i]);if(left!=right){return left<right;}}return false;});
+      if(result.closest.size()>10){result.closest.resize(10);}
+    }
+    if(method==Method::AnnouncePeer){auto local=router->localInClosest(target,10,true);if(!local){return {};}result.allowStore=existing||*local;}
+    return result;
+  }
+  void inboundPacket(const i2cp::InitialChannel::DhtDatagram& data){
+    if(!inboundCurrent(data.end)){return;}if(!prepareInbound()){stopInbound();return;}
+    const auto expected=scope;auto reply=responder->receive({data.payload,data.sender?&*data.sender:nullptr,data.fromPort,data.toPort},QDateTime::currentMSecsSinceEpoch(),{options.inboundSleeping,options.inboundSuspended},
+        [this,expected,end=data.end]{return scope==expected&&inboundCurrent(end);},
+        [this,end=data.end](const Contact& actual,Method method,const Id& target,bool existing){return routeInbound(actual,method,target,existing,end);});
+    if(!reply){if(!inboundCurrent(data.end)){return;}return;}
+    if(!*reply||!inboundCurrent(data.end)){return;}if(!(*reply)->recipient.destination){stopInbound();return;}
+    auto sent=channel->submitDhtReply(scope,(*reply)->recipient.destination->wire,(*reply)->payload,(*reply)->toPort,data.end);
+    if(sent){replyTickets.push_back(*sent);}
+  }
+  bool resumeInbound(){
+    if(!onThread()||!inboundRequested){return false;}if(!current()){close();return false;}if(!channel->dhtScopeObservation(scope).granted){return false;}
+    const bool starting=!responder;if(!prepareInbound()){stopInbound();return false;}if(starting){notify();}
+    if(channel->dhtScopeObservation(scope).queued){pump(true);}return inboundRequested&&current();
   }
   bool begin(const Options& value){
     if(!onThread()||enabled||!channel||value.seeds.empty()||value.seeds.size()>20||!value.parallelism||value.parallelism>3){return false;}
@@ -67,21 +148,40 @@ struct Actor::Impl {
     options=value;
     for(auto& c:options.seeds){if(c.destination){auto parsed=decodeDestination(c.destination->wire);if(!parsed||parsed->hash!=c.hash){return false;}c.destination=std::move(*parsed);}}
     localDestination=identity->wire;localHash=identity->hash;
-    if(!channel->enableDhtDatagrams(value.queryPort)){return false;}scope=channel->dhtScopeGeneration();enabled=true;notify();return true;
+    if(!channel->enableDhtDatagrams(value.queryPort)){return false;}scope=channel->dhtScopeGeneration();enabled=true;if(value.inbound&&!enableInbound()){close();return false;}notify();return true;
   }
   Result<std::uint64_t> start(const Id& target,bool seed,bool announce,unsigned timeout){
     if(!onThread()||!current()||lookup.running()||nextOperation>1024){return std::unexpected(Error{ErrorCode::InvalidFormat,"Current idle explicitly bound DHT actor required"});}
-    cancelPending();while(channel->takeDhtDatagram()){}while(channel->takeDhtDispatch()){}
+    cancelPending();
     const auto operation=nextOperation;
     if(!lookup.start(operation,{target,seed,announce,timeout,options.parallelism},options.seeds,now())){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid finite DHT lookup options"});}
     ++nextOperation;pump();return operation;
   }
-  void pump(){
+  void pump(bool heldInbound=false){
     if(pumping||!onThread()||!enabled){return;}
     if(!current()){close();return;}pumping=true;struct Guard{bool& v;~Guard(){v=false;}} guard{pumping};
-    lookup.tick(now());
-    for(std::size_t steps=0;steps<8;++steps){auto result=channel->takeDhtDispatch();if(!result){break;}lookup.dispatched(result->ticket,result->written,now());}
-    for(std::size_t steps=0;steps<8;++steps){auto data=channel->takeDhtDatagram();if(!data){break;}if(data->sender){continue;}auto message=decode(data->payload);if(message){std::erase_if(message->nodes,[&](const auto& c){return c.hash==localHash||c.id==options.localId;});lookup.reply(*message,data->fromPort,now());}}
+    const bool clientWasRunning=lookup.running();bool progressed=false;lookup.tick(now());
+    for(std::size_t steps=0;steps<8;++steps){auto result=channel->takeDhtDispatch();if(!result){break;}progressed=true;
+      auto server=std::find(replyTickets.begin(),replyTickets.end(),result->ticket);
+      if(server!=replyTickets.end()){replyTickets.erase(server);}else{lookup.dispatched(result->ticket,result->written,now());}
+    }
+    const bool receiveNow=!inboundRequested||(heldInbound&&channel->dhtScopeObservation(scope).granted);
+    if(inboundRequested&&!receiveNow&&channel->dhtScopeObservation(scope).queued){channel->requestDhtEffects(scope);}
+    for(std::size_t steps=0;receiveNow&&steps<8;++steps){
+      if(inboundRequested&&(!inboundCurrent(Clock::time_point::max())||!channel->dhtScopeObservation(scope).writeSlots)){break;}
+      auto data=channel->takeDhtDatagram();if(!data){break;}progressed=true;if(Clock::now()>=data->end){continue;}
+      auto message=decode(data->payload);if(!message){continue;}
+      if(message->kind==Kind::Query){if(inboundRequested){inboundPacket(*data);}continue;}
+      if(data->sender){continue;}
+      std::erase_if(message->nodes,[&](const auto& c){return c.hash==localHash||c.id==options.localId;});
+      std::optional<Contact> actual;
+      if(inboundRequested){for(const auto& n:lookup.nodes()){if(n.phase==NodePhase::Sent&&n.transaction==message->transaction&&n.contact.port==data->fromPort){actual=n.contact;break;}}}
+      if(lookup.reply(*message,data->fromPort,now())&&actual&&inboundCurrent(data->end)&&prepareInbound()){
+        if(!learnRouting(*actual,true,data->end)){stopInbound();continue;}
+        for(const auto& c:message->nodes){if(!inboundCurrent(data->end)||!learnRouting(c,false,data->end)){stopInbound();break;}}
+      }
+    }
+    if(!current()){close();return;}
     if(resolver){
       auto result=channel->destinationLookupObservation(resolver);
       if(result&&result->operation==resolver&&result->phase!=i2cp::InitialChannel::LookupPhase::Pending){
@@ -89,7 +189,7 @@ struct Actor::Impl {
         else if(resolving){
           lookup.failed(*resolving);
         }
-        resolver=0;resolving.reset();
+        resolver=0;resolving.reset();progressed=true;
       }
     }
     // At most three new RPCs per turn. No reentrant callback/foreign code is
@@ -103,8 +203,13 @@ struct Actor::Impl {
         const auto currentLookup=channel->destinationLookupObservation();
         if(currentLookup&&currentLookup->phase==i2cp::InitialChannel::LookupPhase::Pending){break;}
         auto op=channel->lookupDestination(node.contact.hash,30000);
-        if(!op){lookup.failed(*index);continue;}if(!lookup.resolving(*index)){channel->cancelDestinationLookup(*op);continue;}resolver=*op;resolving=*index;continue;
+        if(!op){lookup.failed(*index);continue;}if(!lookup.resolving(*index)){channel->cancelDestinationLookup(*op);continue;}resolver=*op;resolving=*index;progressed=true;continue;
       }
+      // Server replies and client RPCs share the existing eight slots. An
+      // unsent candidate waits for a real dispatch wake without consuming a
+      // transaction or extending the lookup end. Lifetime exhaustion differs.
+      const auto capacity=channel->dhtScopeObservation(scope);
+      if(!capacity.writeSlots){if(capacity.lifetimeExhausted){lookup.failed(*index);progressed=true;continue;}break;}
       const auto intended=now();auto tx=transaction();if(!tx){close();return;}
       Message message;message.transaction=*tx;message.id=options.localId;message.target=lookup.options().target;
       message.method=node.phase==NodePhase::Replied?Method::AnnouncePeer:Method::GetPeers;message.noSeed=lookup.options().seed;message.seed=lookup.options().seed;message.token=node.token;
@@ -114,12 +219,12 @@ struct Actor::Impl {
       const bool signedQuery=message.method!=Method::AnnouncePeer;
       const auto port=std::uint16_t(node.contact.port+(signedQuery?0:1));
       auto ticket=channel->submitDhtDatagram(node.contact.destination->wire,*packet,signedQuery,port,unsigned(std::min<std::int64_t>(30000,left)));
-      if(!ticket){lookup.failed(*index);continue;}if(!lookup.queued(*index,std::move(*tx),*ticket,intended)){channel->cancelDhtDatagram(*ticket);}
+      if(!ticket){lookup.failed(*index);continue;}if(!lookup.queued(*index,std::move(*tx),*ticket,intended)){channel->cancelDhtDatagram(*ticket);}else{progressed=true;}
     }
     lookup.tick(now());
-    if(!lookup.running()){timer.stop();cancelPending();notify();return;}
+    if(!lookup.running()){timer.stop();cancelPending();if(!inboundRequested||!heldInbound||progressed||clientWasRunning){notify();}return;}
     auto end=lookup.end();for(const auto& n:lookup.nodes()){if(n.phase==NodePhase::Resolving||n.phase==NodePhase::Queued||n.phase==NodePhase::Sent){end=std::min(end,n.end);}}
-    timer.start(int(std::max<std::int64_t>(1,end-now())));notify();
+    timer.start(int(std::max<std::int64_t>(1,end-now())));if(!inboundRequested||!heldInbound||progressed){notify();}
   }
 };
 Actor::Actor(i2cp::InitialChannel& c,QObject* parent):QObject(parent),impl_(std::make_unique<Impl>(this,c)){}
@@ -127,6 +232,10 @@ Actor::~Actor(){impl_->safeClose();}
 bool Actor::begin(const Options& value){try{return impl_->begin(value);}catch(...){impl_->safeClose();return false;}}
 Result<std::uint64_t> Actor::lookupPeers(const Id& target,bool seed,unsigned timeout){try{return impl_->start(target,seed,false,timeout);}catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}}
 Result<std::uint64_t> Actor::announceSelf(const Id& target,bool seed,unsigned timeout){try{return impl_->start(target,seed,true,timeout);}catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}}
+bool Actor::enableInbound(){try{return impl_->enableInbound();}catch(...){impl_->stopInbound();return false;}}
+void Actor::stopInbound(){if(impl_->onThread()){impl_->stopInbound();}}
+bool Actor::inboundEnabled()const noexcept{return impl_->onThread()&&impl_->enabled&&impl_->inboundRequested&&bool(impl_->responder)&&impl_->channel&&impl_->scope==impl_->channel->dhtScopeGeneration();}
+bool Actor::resumeAuthorizedInbound(){try{return impl_->resumeInbound();}catch(...){impl_->stopInbound();return false;}}
 bool Actor::cancel(std::uint64_t op){try{if(!impl_->onThread()||!impl_->lookup.running()||impl_->lookup.snapshot().operation!=op){return false;}impl_->lookup.cancel();impl_->cancelPending();impl_->timer.stop();impl_->notify();return true;}catch(...){impl_->safeClose();return false;}}
 void Actor::close(){if(impl_->onThread()){impl_->safeClose();}}
 Snapshot Actor::observation()const{if(!impl_->onThread()){return {};}return impl_->lookup.snapshot();}

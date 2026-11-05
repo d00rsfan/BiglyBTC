@@ -21,9 +21,16 @@ struct Message {
   Id id{},target{};bool seed=false,noSeed=false;unsigned version=0;
   Bytes token;std::vector<Contact> nodes;std::vector<Peer> peers;
   bool hasNodes=false,hasPeers=false;int errorCode=0;
+  bool wakeRequested=false; // Root z presence only; no source/storage grant.
+  std::optional<Bytes> findNodeTarget; // Engaged only for non20-byte decoded/explicit find_node target.
+  bool idIsTwentyBytes=true; // Raw announce ignores id; signed originators still require exact20.
 };
 Result<Message> decode(View);
 Result<Bytes> encode(const Message&);
+enum class PeerReplyMode {Azureus,Ordinary};
+// Local _v stays AZ4 for every caller, exactly as original sendResponse.
+// Ordinary get_peers omits flags; filtering is the responder's separate policy.
+Result<Bytes> encodeReply(const Message&,PeerReplyMode);
 struct LookupOptions {Id target{};bool seed=false,announce=false;unsigned timeoutMilliseconds=120000,parallelism=3;};
 enum class Phase {Idle,Running,Complete,TimedOut,Cancelled,Closed,Failed};
 enum class NodePhase {Candidate,Resolving,Queued,Sent,Replied,Failed};

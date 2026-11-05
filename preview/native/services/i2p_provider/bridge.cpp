@@ -78,7 +78,7 @@ struct Bridge::Impl {
     std::erase_if(discoveries,[&](const auto& value){return value.admission==route;});
   }
   void pumpDiscovery(){
-    if(!discovery||!executing||!current()){return;}const auto now=Clock::now();
+    if(!discovery||!executing||!current()){return;}discovery->resumeAuthorizedInbound();if(!current()){return;}const auto now=Clock::now();
     for(auto at=discoveries.begin();at!=discoveries.end();){
       if(!at->source->prepared()||!at->source->discoveryAllowed()){
         const auto id=at->admission;++at;cancelDiscovery(id);at=discoveries.begin();

@@ -11,6 +11,7 @@
 #include <QHostAddress>
 #include <QObject>
 #include <memory>
+#include <chrono>
 #include <optional>
 #include <string>
 #include <variant>
@@ -99,15 +100,20 @@ public:
   [[nodiscard]] ReceiverObservation receiverObservation()const noexcept;
   // One explicit legacy DHT port pair; no general raw18 admission. Query port
   // Q and reply Q+1 are disjoint from the existing tracker local port9000.
-  struct DhtDatagram {std::uint32_t messageId=0;std::uint16_t fromPort=0,toPort=0;std::optional<Destination> sender;Bytes payload;};
+  struct DhtDatagram {std::uint32_t messageId=0;std::uint16_t fromPort=0,toPort=0;std::optional<Destination> sender;Bytes payload;std::chrono::steady_clock::time_point end{};};
   struct DhtDispatch {std::uint64_t ticket=0;bool written=false;}; // socket enqueue only
   bool enableDhtDatagrams(std::uint16_t queryPort);
   void disableDhtDatagrams();
   // Conditional owner teardown; compares the raw epoch even after revocation.
   bool disableDhtDatagrams(std::uint64_t expectedScope);
+  struct DhtScopeObservation {bool sourceBound=false,granted=false;std::size_t queued=0,writeSlots=0;bool lifetimeExhausted=false;};
+  DhtScopeObservation dhtScopeObservation(std::uint64_t expectedScope)const noexcept;
+  bool requestDhtEffects(std::uint64_t expectedScope); // Actual bound source only; never mints a permit.
   std::uint64_t dhtScopeGeneration()const noexcept; // Passive active epoch;0 means disabled.
   [[nodiscard]] ConfigResult<std::uint64_t> submitDhtDatagram(View recipient,View payload,
       bool repliable,std::uint16_t toPort,unsigned timeoutMilliseconds=30000);
+  [[nodiscard]] ConfigResult<std::uint64_t> submitDhtReply(std::uint64_t expectedScope,View recipient,View payload,
+      std::uint16_t toPort,std::chrono::steady_clock::time_point absoluteEnd);
   bool cancelDhtDatagram(std::uint64_t ticket);
   [[nodiscard]] std::optional<DhtDatagram> takeDhtDatagram();
   [[nodiscard]] std::optional<DhtDispatch> takeDhtDispatch();

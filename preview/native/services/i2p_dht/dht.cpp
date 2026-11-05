@@ -18,7 +18,7 @@ std::string number(std::int64_t n){return "i"+std::to_string(n)+"e";}
 std::string dict(const std::map<std::string,std::string>& fields){std::string out="d";for(const auto& [key,value]:fields){out+=bytes(key);out+=value;}return out+'e';}
 bool is(const B* p,B::Type t){return p&&p->type==t;}
 template<std::size_t N>bool fixed(const B* p,std::array<Byte,N>& a){if(!is(p,B::Type::Bytes)||p->bytes.size()!=N){return false;}std::copy(p->bytes.begin(),p->bytes.end(),a.begin());return true;}
-bool flag(const B* p,bool& value){if(!p){value=false;return true;}if(!is(p,B::Type::Integer)||(p->integer!=0&&p->integer!=1)){return false;}value=p->integer==1;return true;}
+bool flag(const B* p,bool& value){if(!p){value=false;return true;}if(!is(p,B::Type::Integer)){return false;}value=static_cast<std::uint32_t>(p->integer)!=0;return true;}
 bool lessDistance(const Id& a,const Id& b,const Id& target){for(std::size_t i=0;i<a.size();++i){auto x=Byte(a[i]^target[i]),y=Byte(b[i]^target[i]);if(x!=y){return x<y;}}return false;}
 bool allZero(const auto& v){return std::all_of(v.begin(),v.end(),[](auto b){return b==0;});}
 }
@@ -46,7 +46,7 @@ Result<Message> decode(View wire){
   const auto& root=document->root();if(root.type!=B::Type::Dictionary){return bad("DHT root must be dictionary");}
   const auto* tx=root.find("t");const auto* type=root.find("y");
   if(!is(tx,B::Type::Bytes)||tx->bytes.empty()||tx->bytes.size()>16||!is(type,B::Type::Bytes)){return bad("DHT correlation/type invalid");}
-  Message m;m.transaction.assign(tx->bytes.begin(),tx->bytes.end());const B* body=nullptr;
+  Message m;m.wakeRequested=root.find("z")!=nullptr;m.transaction.assign(tx->bytes.begin(),tx->bytes.end());const B* body=nullptr;
   if(type->bytes=="q"){
     m.kind=Kind::Query;const auto* method=root.find("q");body=root.find("a");if(!is(method,B::Type::Bytes)){return bad("DHT query method missing");}
     if(method->bytes=="ping"){m.method=Method::Ping;}
@@ -58,17 +58,26 @@ Result<Message> decode(View wire){
   else if(type->bytes=="e"){
     m.kind=Kind::Error;const auto* e=root.find("e");if(!is(e,B::Type::List)||e->children.size()!=2||e->children[0].type!=B::Type::Integer||e->children[0].integer<0||e->children[0].integer>65535||e->children[1].type!=B::Type::Bytes||e->children[1].bytes.size()>256){return bad("DHT error tuple invalid");}m.errorCode=int(e->children[0].integer);return m;
   }else{return bad("Unknown DHT message kind");}
-  if(!is(body,B::Type::Dictionary)||!fixed(body->find("id"),m.id)){return bad("DHT responder/query NID invalid");}
+  if(!is(body,B::Type::Dictionary)){return bad("DHT body must be dictionary");}
+  if(m.kind==Kind::Query&&m.method==Method::AnnouncePeer){
+    const auto* id=body->find("id");if(id&&!is(id,B::Type::Bytes)){return bad("DHT query NID type invalid");}m.idIsTwentyBytes=id&&fixed(id,m.id);
+  }else if(!fixed(body->find("id"),m.id)){return bad("DHT responder/query NID invalid");}
   if(const auto* v=body->find("_v")){
     if(!is(v,B::Type::Bytes)){return bad("DHT version must be bytes");}
-    if(v->bytes.starts_with("AZ")){const auto s=v->bytes.substr(2);auto result=std::from_chars(s.data(),s.data()+s.size(),m.version);if(s.empty()||result.ec!=std::errc{}||result.ptr!=s.data()+s.size()||m.version<1||m.version>255){return bad("DHT AZ version invalid");}}
+    if(v->bytes.starts_with("AZ")){const auto s=v->bytes.substr(2);auto result=std::from_chars(s.data(),s.data()+s.size(),m.version);if(s.empty()||result.ec!=std::errc{}||result.ptr!=s.data()+s.size()||m.version>255){return bad("DHT AZ version invalid");}}
   }
-  if(const auto* p=body->find("token")){if(!is(p,B::Type::Bytes)||p->bytes.empty()||p->bytes.size()>64){return bad("DHT token invalid");}m.token.assign(p->bytes.begin(),p->bytes.end());}
+  if(const auto* p=body->find("token")){
+    if(m.kind==Kind::Query&&m.method==Method::AnnouncePeer){
+      // Signed announce ignores this field; raw invalid/absent tokens remain
+      // empty and cannot match the responder's original8-byte token map.
+      if(is(p,B::Type::Bytes)&&!p->bytes.empty()&&p->bytes.size()<=64){m.token.assign(p->bytes.begin(),p->bytes.end());}
+    }else{if(!is(p,B::Type::Bytes)||p->bytes.empty()||p->bytes.size()>64){return bad("DHT token invalid");}m.token.assign(p->bytes.begin(),p->bytes.end());}
+  }
   if(m.kind==Kind::Query){
-    if(m.method==Method::FindNode&&!fixed(body->find("target"),m.target)){return bad("find_node target invalid");}
+    if(m.method==Method::FindNode){const auto* target=body->find("target");if(!is(target,B::Type::Bytes)){return bad("find_node target type invalid");}if(!fixed(target,m.target)){m.findNodeTarget=Bytes(target->bytes.begin(),target->bytes.end());}}
     if((m.method==Method::GetPeers||m.method==Method::AnnouncePeer)&&!fixed(body->find("info_hash"),m.target)){return bad("DHT info_hash invalid");}
     if(m.method==Method::GetPeers&&!flag(body->find("noseed"),m.noSeed)){return bad("get_peers noseed invalid");}
-    if(m.method==Method::AnnouncePeer){const auto* port=body->find("port");if(m.token.empty()||!flag(body->find("seed"),m.seed)||!is(port,B::Type::Integer)||port->integer<1||port->integer>65535){return bad("announce_peer token/seed/port invalid");}}
+    if(m.method==Method::AnnouncePeer&&!flag(body->find("seed"),m.seed)){return bad("announce_peer seed invalid");} // Advertised TCP port is never read by original transport.
     return m;
   }
   if(const auto* n=body->find("nodes")){
@@ -83,28 +92,36 @@ Result<Message> decode(View wire){
   }else if(body->find("flags")){return bad("DHT flags without peer values");}
   return m;
 }
-Result<Bytes> encode(const Message& m){
+namespace {
+Result<Bytes> encodeVersioned(const Message& m,bool ordinary){
   if(m.transaction.empty()||m.transaction.size()>16||m.token.size()>64||m.nodes.size()>MaximumContacts||m.peers.size()>MaximumPeers){return bad("DHT message capacity invalid");}
   if(m.kind!=Kind::Query&&m.kind!=Kind::Reply&&m.kind!=Kind::Error){return bad("DHT message kind invalid");}
   if(m.kind==Kind::Query&&m.method!=Method::Ping&&m.method!=Method::FindNode&&m.method!=Method::GetPeers&&m.method!=Method::AnnouncePeer){return bad("DHT method invalid");}
+  if(m.kind==Kind::Query&&m.method==Method::AnnouncePeer&&m.token.empty()){return bad("Outgoing raw announce requires token");} // Preserve existing client encode contract.
   std::map<std::string,std::string> outer{{"t",bytes(m.transaction)}};
   if(m.kind==Kind::Error){outer["y"]=bytes("e");outer["e"]="l"+number(m.errorCode)+bytes("DHT request failed")+"e";}
   else{
     std::map<std::string,std::string> body{{"_v",bytes("AZ4")},{"id",bytes(m.id)}};
     if(!m.token.empty()){body["token"]=bytes(m.token);}
     if(m.kind==Kind::Query){
-      outer["y"]=bytes("q");const char* name="ping";
-      if(m.method==Method::FindNode){name="find_node";body["target"]=bytes(m.target);}
+      outer["y"]=bytes("q");if(m.wakeRequested){outer["z"]=number(0);}const char* name="ping";
+      if(m.method==Method::FindNode){name="find_node";body["target"]=bytes(m.findNodeTarget?View(*m.findNodeTarget):View(m.target));}
       else if(m.method==Method::GetPeers){name="get_peers";body["info_hash"]=bytes(m.target);if(m.noSeed){body["noseed"]=number(1);}}
       else if(m.method==Method::AnnouncePeer){name="announce_peer";body["info_hash"]=bytes(m.target);body["port"]=number(6881);body["seed"]=number(m.seed?1:0);}
       outer["q"]=bytes(name);outer["a"]=dict(body);
     }else{
       outer["y"]=bytes("r");if(m.hasNodes){Bytes contacts;for(const auto& c:m.nodes){auto n=encodeContact(c);if(!n){return std::unexpected(n.error());}contacts.insert(contacts.end(),n->begin(),n->end());}body["nodes"]=bytes(contacts);}
-      if(m.hasPeers){std::string values="l";Bytes flags((m.peers.size()+7)/8);for(std::size_t i=0;i<m.peers.size();++i){values+=bytes(m.peers[i].hash);if(m.peers[i].seed){flags[i/8]|=Byte(1U<<(7-(i%8)));}}body["values"]=values+'e';body["flags"]=bytes(flags);}
+      if(m.hasPeers){std::string values="l";Bytes flags((m.peers.size()+7)/8);for(std::size_t i=0;i<m.peers.size();++i){values+=bytes(m.peers[i].hash);if(m.peers[i].seed){flags[i/8]|=Byte(1U<<(7-(i%8)));}}body["values"]=values+'e';if(!ordinary){body["flags"]=bytes(flags);}}
       outer["r"]=dict(body);
     }
   }
   auto result=dict(outer);Bytes out(result.begin(),result.end());auto checked=decode(out);if(!checked){return std::unexpected(checked.error());}return out;
+}
+} // namespace
+Result<Bytes> encode(const Message& m){return encodeVersioned(m,false);}
+Result<Bytes> encodeReply(const Message& m,PeerReplyMode mode){
+  if(m.kind!=Kind::Reply||(mode!=PeerReplyMode::Azureus&&mode!=PeerReplyMode::Ordinary)){return bad("Explicit DHT reply projection required");}
+  return encodeVersioned(m,mode==PeerReplyMode::Ordinary);
 }
 
 bool Lookup::offer(const Contact& contact){

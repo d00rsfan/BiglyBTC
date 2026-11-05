@@ -244,3 +244,7 @@ if(TARGET biglybtc_i2p_provider_owner AND TARGET biglybtc_i2p_dht)
 endif()
 # Root supplies BIGLYBTC_I2P_DISCOVERY_ABI_V1 only from the exact approved
 # 42-export SDK feature probe. No old/default header or runtime gains effects.
+
+# Original I2P inbound KRPC state and source-bound actor.
+target_sources(biglybtc_i2p_dht PRIVATE i2p_dht/inbound_state.cpp i2p_dht/inbound_responder.cpp)
+target_link_libraries(biglybtc_i2p_dht PRIVATE biglybtc_azureus_owned_udp)

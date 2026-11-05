@@ -3,6 +3,7 @@
 #include "session_bridge.hpp"
 #include "owned_i2p_service.hpp"
 #include "../services/i2p_client/identity.hpp"
+#include "../services/i2cp_datagram/messages.hpp"
 #include "profile.hpp"
 #include "biglybtc/library.hpp"
 #include <libtorrent/bencode.hpp>
@@ -29,6 +30,7 @@
 #include <array>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -56,7 +58,7 @@ app::I2pServiceOptions options(quint16 port,bool mixed,const QByteArray& bootstr
   seed.destination.assign(reinterpret_cast<const std::uint8_t*>(destination.constData()),reinterpret_cast<const std::uint8_t*>(destination.constData()+destination.size()));
   app::I2pDiscoveryOptions discovery;discovery.queryPort=17401;discovery.seeds.push_back(std::move(seed));
   app::I2pServiceOptions result;result.routerPort=port;result.peerPort=6881;result.publicCoexistence=mixed;result.discovery=std::move(discovery);
-  result.sessionOptions={{"inbound.length","0"},{"outbound.length","0"},{"inbound.lengthVariance","0"},{"outbound.lengthVariance","0"},{"inbound.quantity","1"},{"outbound.quantity","1"},{"inbound.backupQuantity","0"},{"outbound.backupQuantity","0"},{"inbound.allowZeroHop","true"},{"outbound.allowZeroHop","true"},{"i2cp.leaseSetType","3"},{"i2cp.leaseSetEncType","4"},{"i2cp.dontPublishLeaseSet","false"},{"i2cp.fastReceive","true"},{"i2cp.messageReliability","none"}};return result;
+  result.sessionOptions={{"inbound.length","0"},{"outbound.length","1"},{"inbound.lengthVariance","0"},{"outbound.lengthVariance","0"},{"inbound.quantity","1"},{"outbound.quantity","1"},{"inbound.backupQuantity","0"},{"outbound.backupQuantity","0"},{"inbound.allowZeroHop","true"},{"outbound.allowZeroHop","false"},{"i2cp.leaseSetType","3"},{"i2cp.leaseSetEncType","4"},{"i2cp.dontPublishLeaseSet","false"},{"i2cp.fastReceive","true"},{"i2cp.messageReliability","none"}};return result;
 }
 struct Fixture {
   QString name,profile,parent,file,hash;bool mixed=false,magnet=false;QByteArray expected;std::optional<struct stat> initial;
@@ -95,6 +97,28 @@ struct Fixture {
 // no message is forged, decoded as authority, reordered, or acknowledged here.
 class LookupHold final:public QObject {
   QTcpServer server_;std::unique_ptr<QTcpSocket> upstream_;QTcpSocket* client_=nullptr;QByteArray input_,serverInput_,held_;QString work_,name_,error_;QByteArray target_;QElapsedTimer heldAge_;bool greeting_=false,released_=false;unsigned accepts_=0;quint32 timeout_=0,request_=0;
+  // Fixed observational counters only: never packet authority or a reply.
+  struct MuxCount {quint32 frames=0;quint16 from=0,to=0;};
+  std::array<std::array<quint32,256>,2> types_{};
+  std::array<std::array<MuxCount,2>,2> mux_{};
+  quint32 diagnosticErrors_=0;
+  static void increment(quint32& value)noexcept{if(value<std::numeric_limits<quint32>::max()){++value;}}
+  void observeFrame(const QByteArray& bytes,bool outbound)noexcept{
+    try{
+      if(bytes.size()<5){return;}const auto direction=outbound?0U:1U;
+      const auto type=static_cast<unsigned char>(bytes[4]);increment(types_[direction][type]);
+      namespace cp=i2p::i2cp;
+      if((outbound&&type!=cp::SendMessageExpiresType)||(!outbound&&type!=cp::MessagePayloadType)){return;}
+      const auto* begin=reinterpret_cast<const i2p::Byte*>(bytes.constData()+5);
+      cp::Frame frame{type,i2p::Bytes(begin,begin+static_cast<std::size_t>(bytes.size()-5))};
+      i2p::Bytes payload;
+      if(outbound){auto send=cp::decodeDhtSendDatagram(frame);if(!send){return;}payload=std::move(send->payload);}
+      else{auto received=cp::decodeMessagePayload(frame);if(!received){increment(diagnosticErrors_);return;}payload=std::move(received->payload);}
+      if(payload.size()<10||(payload[9]!=17&&payload[9]!=18)){return;}
+      auto mux=cp::decodeDhtMuxDatagram(payload);if(!mux){increment(diagnosticErrors_);return;}
+      auto& count=mux_[direction][mux->protocol==17?0U:1U];increment(count.frames);count.from=mux->fromPort;count.to=mux->toPort;
+    }catch(...){increment(diagnosticErrors_);}
+  }
   void failed(const char* text){if(error_.isEmpty()){error_=QString::fromLatin1(text);}if(client_){client_->abort();}if(upstream_){upstream_->abort();}}
   void pump(){
     if(!client_||!upstream_||upstream_->state()!=QAbstractSocket::ConnectedState||!error_.isEmpty()){return;}
@@ -102,7 +126,7 @@ class LookupHold final:public QObject {
       require(input_.size()+client_->bytesAvailable()<=131082,"Host38 proxy client buffer bound");input_+=client_->readAll();
       if(!greeting_&&!input_.isEmpty()){require(static_cast<unsigned char>(input_[0])==0x2a,"I2CP greeting mismatch");require(upstream_->write(input_.first(1))==1,"I2CP greeting enqueue failed");input_.remove(0,1);greeting_=true;}
       while(held_.isEmpty()&&input_.size()>=5&&upstream_->bytesToWrite()<65536){
-        const auto size=qFromBigEndian<quint32>(reinterpret_cast<const uchar*>(input_.constData()));require(size<=65536,"Host38 proxy frame bound");const auto total=static_cast<qsizetype>(size)+5;if(input_.size()<total){return;}const auto frame=input_.first(total);input_.remove(0,total);
+        const auto size=qFromBigEndian<quint32>(reinterpret_cast<const uchar*>(input_.constData()));require(size<=65536,"Host38 proxy frame bound");const auto total=static_cast<qsizetype>(size)+5;if(input_.size()<total){return;}const auto frame=input_.first(total);input_.remove(0,total);observeFrame(frame,true);
         if(!released_&&static_cast<unsigned char>(frame[4])==38&&frame.size()==48&&static_cast<unsigned char>(frame[15])==0&&frame.mid(16,32)==target_){
           held_=frame;request_=qFromBigEndian<quint32>(reinterpret_cast<const uchar*>(frame.constData()+7));timeout_=qFromBigEndian<quint32>(reinterpret_cast<const uchar*>(frame.constData()+11));require(timeout_>0&&timeout_<=30000,"Original Host38 timeout changed");heldAge_.start();json(work_+'/'+name_+"-host38-held.json",{{"status","ACTUAL_TARGET_HOST38_HELD"},{"frame_sha256",digest(held_)},{"timeout_ms",static_cast<qint64>(timeout_)},{"request",QString::number(qFromBigEndian<quint32>(reinterpret_cast<const uchar*>(held_.constData()+7)))}});return;
         }
@@ -115,7 +139,7 @@ class LookupHold final:public QObject {
     try{
       require(serverInput_.size()+upstream_->bytesAvailable()<=131082,"Host39 proxy router buffer bound");serverInput_+=upstream_->readAll();
       while(serverInput_.size()>=5&&client_->bytesToWrite()<65536){
-        const auto length=qFromBigEndian<quint32>(reinterpret_cast<const uchar*>(serverInput_.constData()));require(length<=65536,"Router I2CP frame bound");const auto total=static_cast<qsizetype>(length)+5;if(serverInput_.size()<total){return;}const auto frame=serverInput_.first(total);serverInput_.remove(0,total);
+        const auto length=qFromBigEndian<quint32>(reinterpret_cast<const uchar*>(serverInput_.constData()));require(length<=65536,"Router I2CP frame bound");const auto total=static_cast<qsizetype>(length)+5;if(serverInput_.size()<total){return;}const auto frame=serverInput_.first(total);serverInput_.remove(0,total);observeFrame(frame,false);
         if(released_&&static_cast<unsigned char>(frame[4])==39&&frame.size()>=12&&qFromBigEndian<quint32>(reinterpret_cast<const uchar*>(frame.constData()+7))==request_){
           const auto result=static_cast<unsigned char>(frame[11]);QJsonObject observation{{"status","ACTUAL_CORRELATED_HOST39_OBSERVED"},{"result",static_cast<int>(result)},{"frame_sha256",digest(frame)},{"request",QString::number(request_)}};
           if(result==0){const auto bytes=frame.mid(12);auto destination=i2p::decodeDestination({reinterpret_cast<const i2p::Byte*>(bytes.constData()),static_cast<std::size_t>(bytes.size())});require(destination&&QByteArray(reinterpret_cast<const char*>(destination->hash.data()),32)==target_,"Actual Host39 returned another Destination");observation.insert("requested_destination_exact",true);}
@@ -134,6 +158,16 @@ public:
         QObject::connect(client_,&QTcpSocket::readyRead,this,[this]{pump();});QObject::connect(upstream_.get(),&QTcpSocket::connected,this,[this]{pump();});QObject::connect(upstream_.get(),&QTcpSocket::bytesWritten,this,[this]{pump();});QObject::connect(upstream_.get(),&QTcpSocket::readyRead,this,[this]{back();});QObject::connect(client_,&QTcpSocket::bytesWritten,this,[this]{back();});QObject::connect(upstream_.get(),&QTcpSocket::disconnected,this,[this]{if(client_){client_->disconnectFromHost();}});QObject::connect(client_,&QTcpSocket::disconnected,this,[this]{if(upstream_){upstream_->disconnectFromHost();}});upstream_->connectToHost(QHostAddress::LocalHost,routerPort);
       }catch(const std::exception& e){failed(e.what());}
     });
+  }
+  QJsonObject diagnostic()const{
+    QJsonObject result;
+    for(unsigned direction=0;direction<2;++direction){
+      QJsonObject types,mux;
+      for(unsigned type=0;type<256;++type){if(types_[direction][type]){types.insert(QString::number(type),static_cast<qint64>(types_[direction][type]));}}
+      for(unsigned protocol=17;protocol<=18;++protocol){const auto& count=mux_[direction][protocol-17];mux.insert(QString::number(protocol),QJsonObject{{"frames",static_cast<qint64>(count.frames)},{"last_from_port",count.from},{"last_to_port",count.to}});}
+      result.insert(direction==0?"outbound_types":"inbound_types",types);result.insert(direction==0?"outbound_dht_mux":"inbound_dht_mux",mux);
+    }
+    result.insert("decode_errors",static_cast<qint64>(diagnosticErrors_));return result;
   }
   quint16 port()const{return server_.serverPort();}
   QString failure()const{return error_;}
@@ -163,10 +197,22 @@ int main(int argc,char** argv){
   };
   try{startCase();QObject::connect(&poll,&QTimer::timeout,&application,[&]{if(done||inTurn){return;}inTurn=true;struct Reset{bool& flag;~Reset(){flag=false;}}reset{inTurn};try{
       require(elapsed.elapsed()<1000000,"Absolute Native discovery acceptance deadline");require(callbackFailure.isEmpty(),callbackFailure.toUtf8().constData());proxy->tick();require(proxy->failure().isEmpty(),proxy->failure().toUtf8().constData());const auto& f=*fixture;const ui::LibraryItem* row=nullptr;if(latest){for(const auto& value:latest->items){if(value.hash.compare(f.hash,Qt::CaseInsensitive)==0){require(row==nullptr,"Duplicate Host handle/library row");row=&value;}}}
-      if(progressAge.elapsed()>=1000){progressAge.restart();json(work+"/native-progress.json",{{"case",f.name},{"phase",static_cast<int>(phase)},{"elapsed_ms",elapsed.elapsed()},{"busy",bridge->busy()},{"held_host38",proxy->held()},{"forwarded_host38",proxy->released()},{"row_state",row?row->state:QString{}},{"network_status",row?row->networkStatus:QString{}},{"completed",row&&row->completed?*row->completed:qint64{-1}},{"received",row&&row->received?*row->received:qint64{-1}}});}
+      if(progressAge.elapsed()>=1000){progressAge.restart();json(work+"/native-progress.json",{{"case",f.name},{"phase",static_cast<int>(phase)},{"elapsed_ms",elapsed.elapsed()},{"busy",bridge->busy()},{"held_host38",proxy->held()},{"forwarded_host38",proxy->released()},{"i2cp_proxy",proxy->diagnostic()},{"row_state",row?row->state:QString{}},{"network_status",row?row->networkStatus:QString{}},{"completed",row&&row->completed?*row->completed:qint64{-1}},{"received",row&&row->received?*row->received:qint64{-1}}});}
       if(phase==Phase::Opening&&!bridge->busy()&&latest){if(f.magnet&&!magnetSubmitted){require(latest->items.empty()&&!QFileInfo::exists(f.file),"Magnet admitted payload before metadata");require(bridge->magnetImport(f.uri(),f.parent),"Real Host trackerless magnet intake refused");magnetSubmitted=true;}phase=Phase::Transferring;}
       if(phase==Phase::Transferring){
-        if(proxy->held()&&f.magnet){require(!QFileInfo::exists(f.file)&&(!latest||latest->items.empty()),"Magnet created payload/library state before target lookup and metadata");}
+        if(proxy->held()&&f.magnet){
+          require(!QFileInfo::exists(f.file),"Magnet created payload before target lookup and metadata");
+          const QDir payloadParent(f.parent);require(payloadParent.exists()&&QFileInfo(f.parent).isReadable()&&payloadParent.entryList(QDir::Files|QDir::Hidden|QDir::System|QDir::NoDotAndDotDot).isEmpty(),"Magnet created payload-parent files before metadata");
+          require(!QFileInfo::exists(f.profile+"/active/"+f.hash+".dat"),"Magnet created active torrent state before metadata");
+          const auto inventory=decode(read(f.profile+"/downloads.config",262144));const auto* downloads=inventory.find_key("downloads");
+          require(downloads&&downloads->type()==lt::entry::list_t&&downloads->list().empty(),"Magnet admitted an ordinary saved torrent before metadata");
+          // The Host intentionally presents one pending metadata row. It must
+          // carry no ordinary payload counters or provider admission.
+          if(latest&&!latest->items.empty()){
+            require(latest->items.size()==1&&row,"Unexpected library row before magnet metadata");
+            require(row->state==QStringLiteral("Resolving metadata")&&!row->completed&&!row->received&&row->providerAdmission==0&&row->providerGeneration==0,"Pending magnet row gained payload state before metadata");
+          }
+        }
         if(packet){require(packet->failure.isEmpty(),packet->failure.toUtf8().constData());}
         if(row&&row->completed&&*row->completed==PayloadBytes&&row->state.contains("Seeding")){
           require(proxy->released()&&row->providerAdmission&&row->providerGeneration,"Actual cold lookup/provider admission missing");require(row->received&&*row->received>=(f.magnet?PayloadBytes:PayloadBytes+1000),"Actual payload counters missing");

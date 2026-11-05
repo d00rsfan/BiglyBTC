@@ -10,13 +10,17 @@ namespace biglybtc::services::i2p::dht {
 class Actor final:public QObject {
   Q_OBJECT
 public:
-  struct Options {Id localId{};std::uint16_t queryPort=0;std::vector<Contact> seeds;unsigned parallelism=3;};
+  struct Options {Id localId{};std::uint16_t queryPort=0;std::vector<Contact> seeds;unsigned parallelism=3;bool inbound=false,inboundSleeping=false,inboundSuspended=false;};
   explicit Actor(i2cp::InitialChannel&,QObject* parent=nullptr);
   ~Actor()override;
   bool begin(const Options&); // Exact local secure NID and explicit seed policy.
   Result<std::uint64_t> lookupPeers(const Id&,bool seeding,unsigned timeoutMilliseconds=120000);
   Result<std::uint64_t> announceSelf(const Id&,bool seeding,unsigned timeoutMilliseconds=120000);
   bool cancel(std::uint64_t);
+  bool enableInbound(); // Accept/defer an explicit source-bound request; no grant setter.
+  void stopInbound(); // Server state/replies only; client operation is preserved.
+  bool inboundEnabled()const noexcept; // Active only after actual held-grant initialization.
+  bool resumeAuthorizedInbound(); // Only actual worker-held channel grant succeeds.
   void close();
   Snapshot observation()const; // Owning hints; no filesystem/source authority.
 signals:

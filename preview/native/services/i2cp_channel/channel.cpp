@@ -498,14 +498,28 @@ std::optional<InitialChannel::DatagramObservation> InitialChannel::datagramObser
 bool InitialChannel::enableDhtDatagrams(std::uint16_t port){try{return impl_->enableDht(port);}catch(...){impl_->fail(Failure::Resources);return false;}}
 void InitialChannel::disableDhtDatagrams(){try{impl_->disableDht();}catch(...){impl_->fail(Failure::Resources);}}
 bool InitialChannel::disableDhtDatagrams(std::uint64_t expectedScope){try{if(!impl_->onThread()||!expectedScope||impl_->dhtEpoch!=expectedScope){return false;}impl_->disableDht();return impl_->dhtEpoch==0;}catch(...){impl_->fail(Failure::Resources);return false;}}
+InitialChannel::DhtScopeObservation InitialChannel::dhtScopeObservation(std::uint64_t expectedScope)const noexcept{
+  try{if(!impl_->onThread()||!expectedScope||impl_->dhtEpoch!=expectedScope||!impl_->dhtReceives()){return {};}
+  const auto used=impl_->dhtWrites.size()+impl_->dhtDispatches.size();
+  return {bool(impl_->sourceAuthority),impl_->sourceAuthority&&impl_->sourceAuthority->granted(),impl_->dhtReceived.size(),used<impl_->DhtQueueLimit&&impl_->nextDhtTicket<=8192?impl_->DhtQueueLimit-used:0,impl_->nextDhtTicket>8192};}catch(...){return {};}
+}
+bool InitialChannel::requestDhtEffects(std::uint64_t expectedScope){
+  try{if(!dhtScopeObservation(expectedScope).sourceBound){return false;}return impl_->effectReady()&&dhtScopeObservation(expectedScope).granted;}catch(...){impl_->fail(Failure::Resources);return false;}
+}
 std::uint64_t InitialChannel::dhtScopeGeneration()const noexcept{try{return impl_->onThread()&&impl_->dhtReceives()?impl_->dhtEpoch:0;}catch(...){return 0;}}
 ConfigResult<std::uint64_t> InitialChannel::submitDhtDatagram(View to,View data,bool repliable,std::uint16_t port,unsigned timeout){return impl_->sendDht(to,data,repliable,port,timeout);}
+ConfigResult<std::uint64_t> InitialChannel::submitDhtReply(std::uint64_t expectedScope,View recipient,View payload,std::uint16_t toPort,std::chrono::steady_clock::time_point absoluteEnd){
+  if(!dhtScopeObservation(expectedScope).granted||absoluteEnd<=Impl::Clock::now()){
+    return std::unexpected(::biglybtc::services::i2p::Error{::biglybtc::services::i2p::ErrorCode::InvalidFormat,"Current held source/epoch and unexpired inbound reply required"});
+  }
+  return impl_->sendDht(recipient,payload,false,toPort,30000,absoluteEnd);
+}
 bool InitialChannel::cancelDhtDatagram(std::uint64_t ticket){try{return impl_->cancelDht(ticket);}catch(...){impl_->fail(Failure::Resources);return false;}}
 std::optional<InitialChannel::DhtDispatch> InitialChannel::takeDhtDispatch(){if(!impl_->onThread()||impl_->dhtDispatches.empty()){return {};}auto result=impl_->dhtDispatches.front();impl_->dhtDispatches.pop_front();return result;}
 std::optional<InitialChannel::DhtDatagram> InitialChannel::takeDhtDatagram(){
   if(!impl_->onThread()||impl_->dhtReceived.empty()){return {};}
   if(!impl_->dhtReceives()){impl_->dhtReceived.clear();impl_->dhtBytes=0;return {};}
-  auto out=std::move(impl_->dhtReceived.front());impl_->dhtReceived.pop_front();impl_->dhtBytes-=out.payload.size()+(out.sender?out.sender->wire.size()+out.sender->signingPublicKey.size()+32:0);return out;
+  auto out=std::move(impl_->dhtReceived.front());impl_->dhtReceived.pop_front();impl_->dhtBytes-=out.payload.size()+(out.sender?out.sender->wire.size()+out.sender->signingPublicKey.size()+32:0);impl_->dhtDeadline();return out;
 }
 bool InitialChannel::enableDatagramReceiver(){return impl_->enableReceive();}
 void InitialChannel::disableDatagramReceiver(){impl_->disableReceive();}
