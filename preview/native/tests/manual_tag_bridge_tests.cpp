@@ -1,6 +1,9 @@
 #include "profile.hpp"
 #include "session_bridge.hpp"
 #include "manual_tag_policy.hpp"
+#include "tag_constraint_worker.hpp"
+#include <QTimer>
+#include <future>
 #include "library_window.hpp"
 #include "manual_tag_view.hpp"
 #include "manual_tag_editor.hpp"
@@ -196,6 +199,199 @@ extern "C" ssize_t __wrap_read(int descriptor, void* bytes, size_t size) {
 class ManualTagBridgeTests final : public QObject {
   Q_OBJECT
 private slots:
+  void normalProfileRulesPersistThroughActualWorkerStoreAndSharedMembership(){
+    test::OwnedEngineFixture fixture(false);
+    const auto tagPath=fixture.profile+QStringLiteral("/tag.config");
+    libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
+    const auto rule=[&](int id,const char* expression,const char* options,bool member){
+      auto& record=definitions["3"][std::to_string(id)];record["n"]="Rule "+std::to_string(id);
+      record["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(expression),libtorrent::entry(options)};
+      record["o"]=libtorrent::entry::list_type{};
+      if(member){record["o"].list().emplace_back(base32(*fixture.hash));}
+    };
+    rule(1,"size>0","",false);rule(2,"size<0","",true);
+    rule(3,"down_speed>0","",true);rule(4,"size>0","am=2;",false);
+    rule(5,"size<0","am=1;",true);rule(6,"true","am=3;",false);
+    rule(7,"unknownFunction()","",true);rule(8,"true","",false);
+    definitions["3"]["8"]["c"]["unimplemented.action"]=1;
+    rule(9,"true","",false);definitions["3"]["9"]["c"]["pp.enabled.constraint"]=0;
+    definitions["3"]["c"]["opaque"]=std::string("\0\xffT",3);
+    definitions["unknown-root"]=std::string("\0\xffR",3);
+    test::write(tagPath,QByteArray::fromStdString(test::encoded(definitions)));
+    auto inventory=core::Document::parse(test::read(fixture.profile+"/downloads.config").toStdString());QVERIFY(inventory);
+    const auto* first=&inventory->find("downloads")->children[0];
+    auto row=core::Document::parse(inventory->originalBytes().substr(first->begin,first->end-first->begin));QVERIFY(row);
+    QVERIFY(row->setInteger("state",70));QVERIFY(inventory->replaceValue("downloads","l"+row->serialize()+"e"));
+    const auto originalInventory=QByteArray::fromStdString(inventory->serialize());test::write(fixture.profile+"/downloads.config",originalInventory);
+    const auto originalState=test::read(fixture.stateFile),originalPayload=test::read(fixture.payload+"/sample.bin");
+    libtorrent::entry settings(libtorrent::entry::dictionary_type{});settings["Bind IP"]="127.0.0.1";settings["Enforce Bind IP"]=1;
+    settings["TCP.Listen.Port"]=6881;settings["UDP.Listen.Port"]=6881;settings["IPV6 Enable Support"]=0;
+    for(const auto* key:{"TCP.Listen.Port.Enable","peercontrol.udp.public.enable","Plugin.DHT.dht.enabled","Plugin.mldht.enable",
+        "PluginInfo.mldht.enabled","Peer Source Selection Default.DHT","Peer Source Selection Default.PeerExchange",
+        "Peer Source Selection Default.Tracker","Plugin.UPnP.upnp.enable","Plugin.UPnP.natpmp.enable"}){settings[key]=0;}
+    test::write(fixture.profile+"/biglybt.config",QByteArray::fromStdString(test::encoded(settings)));
+    app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),statistics(&bridge,&app::SessionBridge::manualTagStatisticsReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.openNormal(fixture.native()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);
+    const auto count=[&](int id){
+      const auto packet=latest(statistics);if(!packet||!packet->membership){return std::size_t{999999};}
+      const auto uid=(std::int64_t{3}<<32)|id;
+      for(const auto& value:packet->membership->rows()){if(value.uid==uid){return value.resolvedCount;}}
+      return std::size_t{999999};
+    };
+    QTRY_COMPARE_WITH_TIMEOUT(count(1),std::size_t{1},10000);
+    QTRY_COMPARE_WITH_TIMEOUT(count(2),std::size_t{0},10000);
+    QCOMPARE(count(3),std::size_t{1});QCOMPARE(count(4),std::size_t{0});QCOMPARE(count(5),std::size_t{1});
+    QCOMPARE(count(6),std::size_t{0});QCOMPARE(count(7),std::size_t{1});QCOMPARE(count(8),std::size_t{0});QCOMPARE(count(9),std::size_t{0});
+    QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);
+    QVERIFY(closed.last()[1].toBool()&&closed.last()[2].toBool());
+    const auto saved=core::readSavedDownloadTags(test::read(tagPath).toStdString());QVERIFY(saved);
+    const auto before=core::Document::parse(test::encoded(definitions));QVERIFY(before);
+    const auto raw=[](const core::Document& source,const core::Node* value){return source.originalBytes().substr(value->begin,value->end-value->begin);};
+    QCOMPARE(raw(*saved->source,saved->source->find("unknown-root")),raw(*before,before->find("unknown-root")));
+    QCOMPARE(raw(*saved->source,saved->source->find("3")->find("c")),raw(*before,before->find("3")->find("c")));
+    for(const auto& value:saved->tags){
+      const auto* current=saved->source->find("3")->find(value.idKey);
+      const auto* prior=before->find("3")->find(value.idKey);
+      QCOMPARE(raw(*saved->source,current->find("c")),raw(*before,prior->find("c")));
+    }
+    QCOMPARE(test::read(fixture.stateFile),originalState);QCOMPARE(test::read(fixture.profile+"/downloads.config"),originalInventory);
+    QCOMPARE(test::read(fixture.payload+"/sample.bin"),originalPayload);
+    auto released=storage::ProfileLease::acquire(fixture.native());QVERIFY(released);
+  }
+  void actualRuleWorkerRefusesStaleForeignCancelledAndClosedTurns(){
+    test::OwnedEngineFixture fixture(false),foreign(false);
+    libtorrent::entry definitions(libtorrent::entry::dictionary_type{});definitions["3"]["1"]["n"]="Rule";
+    definitions["3"]["1"]["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry("true")};
+    const auto original=QByteArray::fromStdString(test::encoded(definitions));
+    test::write(fixture.profile+"/tag.config",original);test::write(foreign.profile+"/tag.config",original);
+    // The test supplies an external worker. All Store/source operations below
+    // run there; no GUI callback, fabricated permit or provider is involved.
+    auto actual=std::async(std::launch::async,[&]{
+      auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Actual rule lease");
+      auto other=storage::ProfileLease::acquire(foreign.native());test::require(bool(other),"Actual foreign lease");
+      auto store=storage::ManualTagStore::open(*lease),foreignStore=storage::ManualTagStore::open(*other);
+      test::require(bool(store)&&bool(foreignStore),"Actual rule stores");
+      auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Actual rule preimage");
+      auto library=std::make_shared<ui::LibraryPresentation>();library->revision=7;
+      ui::LibraryItem row;row.hash=QString::fromStdString(fixture.hash->hex());row.name="sample.bin";row.bytes=test::OwnedEngineFixture::PayloadBytes;library->items.push_back(row);
+      app::ConstraintWorkerFrame frame;frame.session=71;frame.sequence=1;frame.library=library;frame.sourceRevision=lease->sourceRevision();
+      const auto worker=[&]{auto result=app::TagConstraintWorker::activate(*lease,71);test::require(bool(result),"Actual rule worker");return std::move(*result);};
+      {
+        auto value=worker();std::stop_source cancelled;cancelled.request_stop();
+        auto result=value->step(**store,*snapshot,frame,cancelled.get_token());test::require(!result&&result.error().code==storage::ErrorCode::Cancelled,"Cancelled rule turn published");
+      }
+      {
+        auto value=worker();auto stale=frame;stale.session=72;auto result=value->step(**store,*snapshot,stale);
+        test::require(!result&&result.error().code==storage::ErrorCode::Conflict,"Foreign session accepted");
+        stale=frame;++stale.sourceRevision;result=value->step(**store,*snapshot,stale);
+        test::require(bool(result)&&!result->changed&&result->kept&&result->kept->kind==core::tags::constraints::ProblemKind::Unavailable,"Stale source epoch authorized an edit");
+      }
+      {
+        auto value=worker();auto stale=frame;
+        auto rows=std::make_shared<ui::LibraryPresentation>(*library);rows->items[0].providerAdmission=91;rows->items[0].providerGeneration=frame.session;stale.library=rows;
+        engine::ManagedDownloadStatus status;status.hash=*fixture.hash;status.admission=92;status.retained=true;status.bytes=test::OwnedEngineFixture::PayloadBytes;
+        stale.managed.push_back(status);auto result=value->step(**store,*snapshot,stale);
+        test::require(bool(result)&&!result->changed&&result->kept&&result->kept->kind==core::tags::constraints::ProblemKind::Unavailable,"Stale provider admission did not remain unavailable");
+      }
+      // A literal true must still acquire a complete current fact capture.
+      // These negative DTO inputs cannot invent source authority or a provider.
+      for(unsigned kind=0;kind<5;++kind){
+        auto value=worker();auto stale=frame;
+        auto rows=std::make_shared<ui::LibraryPresentation>(*library);
+        rows->items[0].providerAdmission=91;rows->items[0].providerGeneration=frame.session;stale.library=rows;
+        engine::ManagedDownloadStatus status;status.hash=*fixture.hash;status.admission=91;status.retained=true;status.bytes=test::OwnedEngineFixture::PayloadBytes;
+        if(kind==0){/* advertised binding, no actual observation */}
+        if(kind==1){rows->items[0].providerGeneration=frame.session+1;stale.managed.push_back(status);}
+        if(kind==2){stale.managed.push_back(status);stale.managed.push_back(status);}
+        if(kind==3){status.retained=false;stale.managed.push_back(status);}
+        if(kind==4){rows->items[0].providerAdmission=rows->items[0].providerGeneration=0;stale.managed.push_back(status);}
+        auto result=value->step(**store,*snapshot,stale);
+        test::require(bool(result)&&!result->changed&&result->kept&&result->kept->kind==core::tags::constraints::ProblemKind::Unavailable,"Literal true bypassed missing/stale provider facts");
+        test::require(test::read(fixture.profile+"/tag.config")==original,"Refused literal true provider turn changed membership");
+      }
+      {
+        auto value=worker();auto foreignSnapshot=(*foreignStore)->snapshot();test::require(bool(foreignSnapshot),"Foreign preimage");
+        auto result=value->step(**foreignStore,*foreignSnapshot,frame);test::require(!result&&result.error().code==storage::ErrorCode::Conflict,"Equal bytes crossed OFD profile ownership");
+      }
+      {
+        auto value=worker();auto fresh=(*store)->reload();test::require(bool(fresh),"Actual newer snapshot");
+        test::require(snapshot->sameSource(*fresh),"Unchanged reload changed captured source identity");
+        auto result=value->step(**store,*snapshot,frame);test::require(!result&&result.error().code==storage::ErrorCode::Conflict,"Old tag generation accepted");snapshot=std::move(fresh);
+      }
+      {
+        const auto before=*snapshot;const auto replacement=fixture.profile+"/tag.config.rule-test";
+        test::write(replacement,original);std::filesystem::rename(replacement.toStdString(),(fixture.profile+"/tag.config").toStdString());
+        auto fresh=(*store)->reload();test::require(bool(fresh),"Actual same-byte identity reload");
+        test::require(before.rawBytes()==fresh->rawBytes()&&!before.sameSource(*fresh),"Same-byte atomic replacement hid a changed source identity");snapshot=std::move(fresh);
+      }
+      {
+        auto value=worker();value->close();auto result=value->step(**store,*snapshot,frame);
+        test::require(!result&&result.error().code==storage::ErrorCode::Conflict,"Closed rule worker restarted");
+      }
+      test::require(test::read(fixture.profile+"/tag.config")==original&&test::read(foreign.profile+"/tag.config")==original,"Refused rule turn changed a tag file");
+      {
+        auto value=worker();auto changed=definitions;
+        changed["3"]["1"]["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry("false")};
+        const auto bytes=QByteArray::fromStdString(test::encoded(changed));test::write(fixture.profile+"/tag.config",bytes);
+        frame.sourceRevision=lease->sourceRevision();auto refused=value->step(**store,*snapshot,frame);
+        test::require(!refused&&refused.error().code==storage::ErrorCode::Conflict,"Stale rule source overwrote user change");
+        test::require(test::read(fixture.profile+"/tag.config")==bytes,"Refused rule replay changed source");
+        auto fresh=(*store)->reload();test::require(bool(fresh),"Explicit source reload");
+        test::require(!snapshot->sameSource(*fresh),"External source mutation hid behind reload generation");snapshot=std::move(fresh);
+        auto replacement=worker();frame.sourceRevision=lease->sourceRevision();auto kept=replacement->step(**store,*snapshot,frame);
+        test::require(bool(kept)&&!kept->changed,"Fresh false rule retained old true decision");
+        test::write(fixture.profile+"/tag.config",original);fresh=(*store)->reload();test::require(bool(fresh),"Restore test-owned rule source");snapshot=std::move(fresh);
+      }
+      {
+        auto value=worker();frame.sourceRevision=lease->sourceRevision();auto result=value->step(**store,*snapshot,frame);
+        test::require(bool(result)&&result->changed&&result->hash==fixture.hash,"Actual valid rule did not commit");
+      }
+      test::require(bool((*store)->close())&&bool((*foreignStore)->close()),"Rule store close");
+      return true;
+    });
+    QVERIFY(actual.get());auto released=storage::ProfileLease::acquire(fixture.native());QVERIFY(released);
+    const auto saved=core::readSavedDownloadTags(test::read(fixture.profile+"/tag.config").toStdString());QVERIFY(saved);
+    QCOMPARE(saved->tags.front().uniqueHashes.size(),std::size_t{1});QVERIFY(saved->tags.front().uniqueHashes.front()==*fixture.hash);
+  }
+  void ruleCacheEvictionEventuallyCommitsBeyond128WithoutExtraTimers(){
+    test::OwnedEngineFixture fixture(false);libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
+    for(int id=1000;id<1130;++id){auto& row=definitions["3"][std::to_string(id)];row["n"]="Cached rule";
+      row["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry("true")};
+      row["o"]=libtorrent::entry::list_type{};if(id!=1129){row["o"].list().emplace_back(base32(*fixture.hash));}
+    }
+    test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(test::encoded(definitions)));
+    auto actual=std::async(std::launch::async,[&]{
+      auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Cache actual lease");
+      auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Cache actual Store");
+      auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Cache actual preimage");
+      auto worker=app::TagConstraintWorker::activate(*lease,88);test::require(bool(worker),"Cache actual worker");
+      auto rows=std::make_shared<ui::LibraryPresentation>();rows->revision=9;
+      ui::LibraryItem row;row.hash=QString::fromStdString(fixture.hash->hex());row.bytes=test::OwnedEngineFixture::PayloadBytes;rows->items.push_back(row);
+      app::ConstraintWorkerFrame frame;frame.session=88;frame.library=rows;unsigned evaluated=0,committed=0;
+      for(unsigned turn=1;turn<=5;++turn){frame.sequence=turn;frame.sourceRevision=lease->sourceRevision();
+        auto result=(*worker)->step(**store,*snapshot,frame);test::require(bool(result),"Cache turn refused");
+        test::require(result->evaluated<=32,"Rule turn exceeded finite work");evaluated+=result->evaluated;
+        if(result->changed){++committed;test::require(result->tag==1129,"Earlier already-present rule was rewritten");snapshot=result->snapshot;}
+      }
+      test::require(evaluated==130&&committed==1,"128-entry cache became a rule/lifetime cap");
+      (*worker)->close();test::require(bool((*store)->close()),"Cache store close");return true;
+    });
+    QVERIFY(actual.get());auto saved=core::readSavedDownloadTags(test::read(fixture.profile+"/tag.config").toStdString());QVERIFY(saved);
+    const auto final=std::find_if(saved->tags.begin(),saved->tags.end(),[](const auto& value){return value.id==1129;});
+    QVERIFY(final!=saved->tags.end()&&final->uniqueHashes.size()==1&&final->uniqueHashes.front()==*fixture.hash);
+  }
+  void offlinePreviewNeverActivatesAutomaticRules(){
+    test::OwnedEngineFixture fixture(false);libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
+    definitions["3"]["1"]["n"]="Must remain empty";
+    definitions["3"]["1"]["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry("true")};
+    const auto original=QByteArray::fromStdString(test::encoded(definitions));const auto path=fixture.profile+"/tag.config";test::write(path,original);Watch watch(path);
+    app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),statistics(&bridge,&app::SessionBridge::manualTagStatisticsReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.open(fixture.native(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);
+    QTimer* idle=nullptr;for(auto* timer:bridge.findChildren<QTimer*>()){if(timer->interval()==1000){idle=timer;}}
+    QVERIFY(idle);QSignalSpy turns(idle,&QTimer::timeout);QTRY_VERIFY_WITH_TIMEOUT(turns.count()>=2,4000);
+    QCOMPARE(tagReads.load(),0U);QCOMPARE(statistics.count(),0);QCOMPARE(test::read(path),original);
+    QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.last()[2].toBool());
+  }
   void offlineReadsAreLazyRefreshesAreExplicitAndFailuresInvalidateReady() {
     test::OwnedEngineFixture fixture(false);
     const auto path = fixture.profile + QStringLiteral("/tag.config");

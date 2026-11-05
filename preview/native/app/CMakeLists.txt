@@ -161,3 +161,13 @@ if(TARGET biglybtc_desktop_host)
     target_compile_definitions(biglybtc_desktop_host PUBLIC BIGLYBTC_HOST_I2P_OWNER=0)
   endif()
 endif()
+
+# Passive owning snapshots only. No Host activation, timer or provider effects.
+if(TARGET biglybtc_desktop_host)
+  target_sources(biglybtc_desktop_host PRIVATE tag_runtime_facts.hpp tag_runtime_facts.cpp)
+endif()
+
+# Real existing Host worker + one retained tag store; no extra timer or pool.
+if(TARGET biglybtc_desktop_host)
+  target_sources(biglybtc_desktop_host PRIVATE tag_constraint_worker.hpp tag_constraint_worker.cpp tag_constraint_host.inc)
+endif()

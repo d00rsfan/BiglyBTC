@@ -104,6 +104,9 @@ struct ManualTagSnapshot::Data {
 std::uint64_t ManualTagSnapshot::generation() const noexcept { return data_?data_->generation:0; }
 bool ManualTagSnapshot::missing() const noexcept { return data_&&!data_->recovery; }
 bool ManualTagSnapshot::writable() const noexcept { return data_&&data_->writable; }
+bool ManualTagSnapshot::sameSource(const ManualTagSnapshot& other) const noexcept {
+  return data_ && other.data_ && data_->preimage == other.data_->preimage;
+}
 std::optional<RecoverySource> ManualTagSnapshot::recoverySource() const noexcept { return data_?data_->recovery:std::nullopt; }
 const core::SavedDownloadTags* ManualTagSnapshot::tags() const noexcept { return data_?&data_->tags:nullptr; }
 std::optional<std::string_view> ManualTagSnapshot::rawBytes() const noexcept {

@@ -125,3 +125,5 @@ target_sources(biglybtc_profile PRIVATE azureus_public_policy.cpp)
 
 # Worker-only original tag.config edit store; no live tag actions.
 target_sources(biglybtc_profile PRIVATE manual_tag_store.cpp)
+# Owning filesystem worker only; reuses existing guarded state writer.
+target_sources(biglybtc_profile PRIVATE category_store.cpp)

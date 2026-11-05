@@ -13,7 +13,9 @@ public:
   bool valid() const noexcept { return bool(data_); }
   std::uint64_t generation() const noexcept;
   bool missing() const noexcept;
-  bool writable() const noexcept; // Passive captured-candidate hint, never an edit grant.
+  bool writable() const noexcept;
+  // Exact captured candidate bytes/metadata; excludes logical reload generation.
+  bool sameSource(const ManualTagSnapshot&) const noexcept; // Passive captured-candidate hint, never an edit grant.
   std::optional<RecoverySource> recoverySource() const noexcept;
   const core::SavedDownloadTags* tags() const noexcept;
   // Missing has no physical raw preimage; tags() owns a declared empty "de".
@@ -44,6 +46,10 @@ public:
   // Passive worker hint only. An explicit reader may close/open a poisoned or
   // closed instance; this never retries the failed edit or repairs candidates.
   bool recoveryRequired() const noexcept;
+  // Passive same-OFD identity only; never validates a source or grants an edit.
+  bool sharesOwnership(const ProfileLease& lease) const noexcept {
+    return lease_ && lease_->sharesOwnership(lease);
+  }
   std::expected<ManualTagSnapshot, Error> snapshot() const;
   std::expected<ManualTagSnapshot, Error> reload(std::stop_token stop = {});
   // expected must be this store's latest owning snapshot. Caller-supplied

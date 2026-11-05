@@ -42,6 +42,7 @@
 #include "saved_download_tags_view.hpp"
 #include "manual_tag_store.hpp"
 #include "manual_tag_policy.hpp"
+#include "tag_constraint_worker.hpp"
 #include "country_provider.hpp"
 #include "../adapters/saved_speed_manager_view.hpp"
 #include "../adapters/history_view.hpp"
@@ -210,7 +211,7 @@ void take(std::expected<void, storage::Error> value) {
 }
 }
 struct SessionBridge::Host {
-  ~Host(){mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
+  ~Host(){if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
   struct Known { QString name; std::optional<qint64> bytes{}; };
   std::filesystem::path profile;
   unsigned short peerPort;
@@ -491,6 +492,7 @@ struct SessionBridge::Host {
   storage::ManualTagSnapshot manualTagSnapshot;
   std::shared_ptr<const core::SavedDownloadTags> manualTagEditorSource;
   quint64 lastManualTagRequest=0;
+#include "tag_constraint_host.inc"
   void beginManualTagRead() {
     if(manualTagEnded||manualTagRevision==std::numeric_limits<quint64>::max()){
       throw Failure{{storage::ErrorCode::Unsupported,"Manual-tag presentation lifetime is exhausted"}};
@@ -515,6 +517,7 @@ struct SessionBridge::Host {
     if(manualTagStore&&manualTagStore->recoveryRequired()){take(manualTagStore->close());manualTagStore.reset();}
     if(!manualTagStore){manualTagStore=take(storage::ManualTagStore::open(lease,stop));acceptManualTagSnapshot(take(manualTagStore->snapshot()),holder);}
     else{acceptManualTagSnapshot(take(manualTagStore->reload(stop)),holder);}
+    constraintPaused=false;constraintReloadAt=std::chrono::steady_clock::now()+std::chrono::seconds(30);
   }
   void manualTagCommandState(ui::ManualTagCommandPacket& packet)const {
     packet.generation=manualTagRevision;packet.libraryRevision=revision;
@@ -1316,6 +1319,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             QMetaObject::invokeMethod(this,[this,snapshot,session]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit snapshotReady(snapshot);}},Qt::QueuedConnection);}
           for(const auto& [hash,p]:host_->i2pPackets){progress({{text(hash),host_->revision},p.verifiedBytes,p.downloadRate,p.uploadRate,p.state});}
         }
+        if(host_->tickConstraintTags(stop)){publishManualTags();}
       }
       return {};
       }catch(const Failure& failure){
@@ -1521,7 +1525,8 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     }
     host_->bootstrapMagnets(stop);
     host_->scheduleCoexistence();tickScheduler();
-    ready(host_->query(stop), host_->admissionFailures.empty() ? QString{} : tr("Some torrents require attention; saved data was preserved"));
+    const auto current=host_->query(stop);host_->constraintNormalReady=true;
+    ready(current, host_->admissionFailures.empty() ? QString{} : tr("Some torrents require attention; saved data was preserved"));
     publishI2p();
   });
 }
@@ -3255,6 +3260,8 @@ bool SessionBridge::closeSession() {
     ui::NativeSessionPresentation finalObservation;
     QString checkpointFailure;
     if(host_){
+      host_->constraintNormalReady=false;
+      if(host_->constraintWorker){host_->constraintWorker->close();}
       const auto mixedStopped=host_->stopMixed();joined=joined&&host_->mixedJoined;
       if(!mixedStopped){checkpointFailure=text(mixedStopped.error().message);}
       const auto stopped=host_->stopI2p();joined=joined&&host_->i2pJoined;
