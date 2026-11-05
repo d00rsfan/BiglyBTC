@@ -135,3 +135,9 @@ See [the final two-milestone record](migration/evidence/20261025-proxy-scheduler
 ## Bounded compatibility qualification — 2026-10-26
 
 Bounded compatibility batch1 is qualified at native `2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a`: 27 effective affected suites per GCC/Clang/leak-enabled sanitizer lane, selected individually from actual source-bound PASS rows; four actual original Java partial/complete hybrid/v2 handoffs; controlled SOCKS5 hostname webseed payload and deterministic file-operation read-work observations; Scheduler interrupted-intent recovery/editor capture. Failed case attempts remain uncredited history; successful cases completed before a different case failed are credited individually. The original empty-first hybrid and pure-V2 failures remain explicit limitations; separately named nonempty replacements supply the other two strict cases. Continue all remaining work autonomously with batched checks. All CF01–CF08 remain open. Future webseed provider remains unapproved and supplies no batch1 authority; this is no whole-client/performance/release closure.
+
+I2P discovery now survives the former lifetime request limits and accepts original
+saved DHT port65534. Six affected suites pass on GCC and ASan/UBSan at source
+`beae16828c58a538744c2559b7026a8bea1b50a9`; see the [bounded milestone](migration/evidence/20261105-i2p-long-running/REVIEW.md).
+Original-manager inbound runtime, routing/contact persistence and full P07 remain
+in progress.

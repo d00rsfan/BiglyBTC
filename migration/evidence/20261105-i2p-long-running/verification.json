@@ -1,0 +1,219 @@
+{
+  "status": "PASS_AFFECTED_COMMITTED",
+  "native_commit": "beae16828c58a538744c2559b7026a8bea1b50a9",
+  "native_tree": "aac4286af8ba3ccc4333d7d41577e856e4943ee2",
+  "parent_commit": "c55b4c3e6d3830b491f6d31ede96136a92d9d16c",
+  "adoption_sha256": "cf47ca7aa0e6c62ab6797745add1027ed6a0623157250c3f1e9d09f169686f0d",
+  "lanes": {
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-long-running-integration/private/r1/result.json": "75df0cc54fe31fca0974d1b5afef4c71db2e7eb45bfff23a7593817b2bf962cf",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-long-running-integration/san/r1/result.json": "a0631512205d076e009c7f4f9bc347014a67fec4ac75f5a9f2dba87631fabb31"
+  },
+  "original_index_preserved": true,
+  "network_acceptance_or_full_P07_complete": false,
+  "upstream_baselines": {
+    "biglybt": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "azneti2phelper": "33d97eca67a9f332e3d4da7e7492ec54f4bec078"
+  },
+  "lane_details": {
+    "private": {
+      "status": "PASS_AFFECTED_COMMITTED",
+      "elapsed_build_and_tests_seconds": 207.23,
+      "tests": [
+        "pure-i2p-dht",
+        "i2p-dht-channel",
+        "i2p-dht-inbound-source-actor",
+        "pure-i2p-inbound-state",
+        "pure-i2p-inbound-responder",
+        "i2p-classic-host"
+      ],
+      "images": {
+        "biglybtc-i2p-discovery-probe": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-discovery-probe",
+          "sha256": "1f2a2c6d5474c5ee4251891f7b6d1a348141c6bcce782e74212624706483aeab",
+          "bytes": 12020352
+        },
+        "biglybtc-i2p-dht-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-dht-tests",
+          "sha256": "13b71c0b0bc570edf88e9ba65100e8ac0cc2827b18e5c03b0b8f7f1a2dbb22c0",
+          "bytes": 410224
+        },
+        "biglybtc-i2p-dht-channel-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-dht-channel-tests",
+          "sha256": "3c22c88deae820377ad897d22dffdd2965c149356414c125f644e2aad8da514f",
+          "bytes": 1297856
+        },
+        "biglybtc-i2p-dht-inbound-actor-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-dht-inbound-actor-tests",
+          "sha256": "87ca0d04fe0dd5edaf13b4c6cdc1d825da6facf44c8c3546420711085e59c2d4",
+          "bytes": 7774552
+        },
+        "biglybtc-i2p-dht-inbound-state-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-dht-inbound-state-tests",
+          "sha256": "1d5f97b5e3d091fda0b877aaf9d2678ff0d63e2a6f8c38f9557fb86048ce4069",
+          "bytes": 329808
+        },
+        "biglybtc-i2p-dht-inbound-responder-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-dht-inbound-responder-tests",
+          "sha256": "11f490fdb035b7d3de7fcd16cbc130a9bf82297d2399d151b546667e7e3be6a5",
+          "bytes": 468240
+        },
+        "biglybtc-i2p-classic-host-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-classic-host-tests",
+          "sha256": "603670c5bfebf5051db7df97d762aa5c702bb10e39adfe671f03ffe130229ed0",
+          "bytes": 14633464
+        }
+      },
+      "source_map_sha256": "0ff4d9ff743e2a8d26fbd93d15b20d1790fce28f74c31b54b51fba70c4ffcc2d",
+      "tests_xml_sha256": "dcca8627020aa25c02fe52ca11cdb907579e3b2b6e33d0ef227be2a7ddd23b18",
+      "commands": [
+        {
+          "argv": [
+            "nice",
+            "-n",
+            "5",
+            "cmake",
+            "--build",
+            "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+            "--target",
+            "biglybtc-i2p-discovery-probe",
+            "biglybtc-i2p-dht-tests",
+            "biglybtc-i2p-dht-channel-tests",
+            "biglybtc-i2p-dht-inbound-actor-tests",
+            "biglybtc-i2p-dht-inbound-state-tests",
+            "biglybtc-i2p-dht-inbound-responder-tests",
+            "biglybtc-i2p-classic-host-tests",
+            "--",
+            "-k",
+            "0"
+          ],
+          "exit_code": 0,
+          "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-long-running-integration/private/r1/build.log",
+          "log_sha256": "ffe552177a58810fa6736fcbd24704401795a48553dbee667ce247ff1289d159"
+        },
+        {
+          "argv": [
+            "ctest",
+            "--test-dir",
+            "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+            "-R",
+            "^(pure-i2p-dht|i2p-dht-channel|i2p-dht-inbound-source-actor|pure-i2p-inbound-state|pure-i2p-inbound-responder|i2p-classic-host)$",
+            "--output-on-failure",
+            "--no-tests=error",
+            "--test-output-size-passed",
+            "32768",
+            "--output-junit",
+            "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-long-running-integration/private/r1/tests.xml",
+            "-j",
+            "1"
+          ],
+          "exit_code": 0,
+          "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-long-running-integration/private/r1/ctest.log",
+          "log_sha256": "c6d43de2b85c0279e858005c53105069ecd61e38001f91589f6ee94101f038b0"
+        }
+      ]
+    },
+    "san": {
+      "status": "PASS_AFFECTED_COMMITTED",
+      "elapsed_build_and_tests_seconds": 589.7,
+      "tests": [
+        "pure-i2p-dht",
+        "i2p-dht-channel",
+        "i2p-dht-inbound-source-actor",
+        "pure-i2p-inbound-state",
+        "pure-i2p-inbound-responder",
+        "i2p-classic-host"
+      ],
+      "images": {
+        "biglybtc-i2p-discovery-probe": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-discovery-probe",
+          "sha256": "c02b80e1bfb5d64a0396fcdd8fa7094e1c2d55b05e0dd896fad37b5fdd3b6b16",
+          "bytes": 301785816
+        },
+        "biglybtc-i2p-dht-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-dht-tests",
+          "sha256": "b9e800b9e3c9984399a5815969a5b5642fefe1e818162f9de8446f258530d6f7",
+          "bytes": 8119312
+        },
+        "biglybtc-i2p-dht-channel-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-dht-channel-tests",
+          "sha256": "79e34fa427a7750c4941c20b6e30053ea6087338d717b154c5d9d8c2d561ad25",
+          "bytes": 30512008
+        },
+        "biglybtc-i2p-dht-inbound-actor-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-dht-inbound-actor-tests",
+          "sha256": "6ccbca676944d1222477eb0ebb5eef67cb679d8f8fb07ba4d7dc7b38036ead4e",
+          "bytes": 174081696
+        },
+        "biglybtc-i2p-dht-inbound-state-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-dht-inbound-state-tests",
+          "sha256": "fcbdc5cad91c301a8bcf1b1f70b91a08753b65f18b88560d87e91fa0d7e33e27",
+          "bytes": 7286976
+        },
+        "biglybtc-i2p-dht-inbound-responder-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-dht-inbound-responder-tests",
+          "sha256": "0547d5cd757a0bdd35463da0e2e27cc35cf400da69e63748f44e3cd6e8a7ef84",
+          "bytes": 9825536
+        },
+        "biglybtc-i2p-classic-host-tests": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-classic-host-tests",
+          "sha256": "e43b2bd7c49cc1fd0500a5f63e22e050875c8f13ee900d4155d475cdd7d61238",
+          "bytes": 385867784
+        }
+      },
+      "source_map_sha256": "0ff4d9ff743e2a8d26fbd93d15b20d1790fce28f74c31b54b51fba70c4ffcc2d",
+      "tests_xml_sha256": "9eec43300e57c735214838c737aa185f8b6ccaa21c1b3d04e32d2b90d4767520",
+      "commands": [
+        {
+          "argv": [
+            "nice",
+            "-n",
+            "5",
+            "cmake",
+            "--build",
+            "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+            "--target",
+            "biglybtc-i2p-discovery-probe",
+            "biglybtc-i2p-dht-tests",
+            "biglybtc-i2p-dht-channel-tests",
+            "biglybtc-i2p-dht-inbound-actor-tests",
+            "biglybtc-i2p-dht-inbound-state-tests",
+            "biglybtc-i2p-dht-inbound-responder-tests",
+            "biglybtc-i2p-classic-host-tests",
+            "--",
+            "-k",
+            "0"
+          ],
+          "exit_code": 0,
+          "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-long-running-integration/san/r1/build.log",
+          "log_sha256": "89f74455d40f3df8586815c5c0a2cd0b92859f4b61251a839dba3402b6505419"
+        },
+        {
+          "argv": [
+            "ctest",
+            "--test-dir",
+            "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+            "-R",
+            "^(pure-i2p-dht|i2p-dht-channel|i2p-dht-inbound-source-actor|pure-i2p-inbound-state|pure-i2p-inbound-responder|i2p-classic-host)$",
+            "--output-on-failure",
+            "--no-tests=error",
+            "--test-output-size-passed",
+            "32768",
+            "--output-junit",
+            "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-long-running-integration/san/r1/tests.xml",
+            "-j",
+            "1"
+          ],
+          "exit_code": 0,
+          "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-long-running-integration/san/r1/ctest.log",
+          "log_sha256": "3f66a24619ce5b3c67755ab5d89ad56b6614e214c86060e06c56d50326e8d78e"
+        }
+      ]
+    }
+  },
+  "source_reviews": {
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/channel-lifetime-progress-review/review.json": "0c81d878b3642f56550413aa291350c3ba142f2e6d69bec4cdd453235ed778e2",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/actor-lifetime-progress-review/review.json": "12203165ea3d2ec416a1d79f52430187973703e50fa10c7b0a5205da74276589",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/discovery-options-review/review.json": "ef2742d92d6588636b67855b3b66c86e646c70ceeecbfc6948c6768b969190d9",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/inbound-observation-review/review.json": "46ecda01675625b5c3a20b9bb14d97ad353f3afa7197063c6a51ae1c20b8a0e0"
+  }
+}
