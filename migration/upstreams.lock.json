@@ -9295,7 +9295,9 @@
         "preview/native/services/i2p_provider/profile_owner.cpp",
         "preview/native/services/i2p_provider/profile_owner.hpp",
         "preview/native/app/owned_mixed_i2p_service.cpp",
-        "preview/native/app/owned_mixed_i2p_service.hpp"
+        "preview/native/app/owned_mixed_i2p_service.hpp",
+        "preview/native/services/i2p_dht/actor.cpp",
+        "preview/native/tests/i2p_dht_channel_tests.cpp"
       ],
       "source_coverage": [
         {
@@ -9709,6 +9711,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "90f1d3defd31acacb784cb8cda40d8d06ba6d76d",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "fd02a5ca95029e2150a9cddbd4b74612124fbd41",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -9728,7 +9735,8 @@
         "migration/updates/services.i2cp_initial_session/20261030-classic-host.md",
         "migration/updates/services.i2cp_initial_session/20261030-shared-multi-torrent.md",
         "migration/updates/services.i2cp_initial_session/20261031-public-i2p-coexistence.md",
-        "migration/updates/services.i2cp_initial_session/20261031-mixed-public-i2p.md"
+        "migration/updates/services.i2cp_initial_session/20261031-mixed-public-i2p.md",
+        "migration/evidence/20261105-i2p-dht-ownership/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
@@ -9747,7 +9755,8 @@
         "migration/evidence/20261030-i2p-classic-host/verification.json",
         "migration/evidence/20261030-i2p-multi-torrent/verification.json",
         "migration/evidence/20261031-public-i2p-coexistence/verification.json",
-        "migration/evidence/20261031-mixed-public-i2p/verification.json"
+        "migration/evidence/20261031-mixed-public-i2p/verification.json",
+        "migration/evidence/20261105-i2p-dht-ownership/verification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     }

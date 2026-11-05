@@ -1,0 +1,11 @@
+{
+  "source_commit": "fd02a5ca95029e2150a9cddbd4b74612124fbd41",
+  "native_tree": "e98742cbef19da1bc99633f80ad568ac2dbb464f",
+  "publication_parent": "35662b2ff9fdad3187b207cb4b86b07e9421f52b",
+  "original_java_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "upstream_helper_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+  "upstream_i2p_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "qualification": "verification.json",
+  "component_state": "in_progress",
+  "source_coverage_advanced": false
+}
