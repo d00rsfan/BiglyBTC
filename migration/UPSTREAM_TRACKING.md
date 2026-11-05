@@ -100,3 +100,8 @@ Native `90f1d3defd31acacb784cb8cda40d8d06ba6d76d` preserves one storage/checkpoi
 ## 2026-11-05 held contacts and classic manual tags
 
 Native `f859404f63394add41c898d40e486499d3a45178` (tree `342bb186f44e10531938c0f55ad403bdd35f6a86`) passed the same 32 affected GCC and ASan/UBSan suites. [Bounded review](evidence/20261105-held-contacts-manual-tags/REVIEW.md) records original core/helper identities, source and binary pins, worker ownership and remaining gates. Whole P07/P08 and registry integrated baselines remain in progress.
+
+
+## 2026-11-06 protocol lifetime and library values
+
+Native `3142bd167a1d139897e471c6aa488c97ea5b651c` (tree `f96e90bbcdeb0c628174091c66c9238e4f5700b0`) passed13 affected suites per compiler and four actual original-Java contact-file exchanges. [Review](evidence/20261106-protocol-library/REVIEW.md) separates measured protocol/value scope, original public-constraint API differences and required full-feature follow-ups. Whole P07/P08 and registry integrated baselines remain in progress.
