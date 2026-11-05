@@ -1,0 +1,34 @@
+BiglyBT public tag-constraint API: null-tag failure and lost evaluation diagnostics
+
+Scope
+These are public API reproductions against the retained biglybt-core-3.4.0.1-SNAPSHOT.jar below, on Linux amd64 with OpenJDK26. The small helper targets Java17 (--release17); this is not a JDK17-runtime reproduction. CoreFactory.create() was used after configuration initialisation; Core.start() was never called. Socket creation was denied by an independently checked seccomp wrapper. A fresh private configuration was removed afterwards. No UI reproduction or tag-membership change is claimed.
+
+Observed behaviour
+TagManager.compileConstraint(expression) returns a TagConstraint. With an inert DownloadManager supplying all getters needed by these literal expressions:
+  contains("HELLO","none|hello")       -> NullPointerException
+  contains("HELLO","none|hello",1)     -> NullPointerException
+  isEQ(1bad,0)                         -> false; getError() remains null
+  contains(1,"x")                     -> false; getError() remains null
+The valid single-needle forms are included among32 deterministic boolean observations that succeeded in the same run. Actual Java Pattern primitive checks separately returned true/false for the two alternative patterns. That primitive evidence is not a replacement for the failed public API calls.
+
+Causal evidence
+The inspected JAR's public compileConstraint constructs its internal constraint with a null Tag. In the alternatives branch, ConstraintExprFunction.eval unconditionally calls tag_maybe_null.getTagUID() to make the regex-cache key. Its disassembly shows access$6800 followed immediately by Tag.getTagUID at bytecode offsets2643/2646. The evaluator constructs a nonnull HashMap context; supplying a debug/explain context would not repair this null-tag dereference. The public TagConstraint interface has no such overload.
+
+A separate diagnostic problem is visible in the actual JAR: setError(String) starts with aconst_null / putfield error (offsets0..2), rather than retaining the supplied diagnostic. It forwards the text only to a nonnull tag's transient property. getError() reads that error field when compilation succeeded. Consequently the tagless public API loses the invalid-unit/string diagnostics while exposing a normal false result. The existing helper calls getError before and after evaluation, so its recorded false rows establish the null diagnostic dynamically; no reflection or private-field access was used.
+
+Expected behaviour
+A supported tagless public evaluator should handle valid contains alternatives without dereferencing an absent tag. Evaluation diagnostics should remain available to public callers, so malformed input is distinguishable from an ordinary false constraint. No claim is made that membership/UI behaviour was reproduced.
+
+Pins
+Original source commit: cb8c6cb9bb97916cbc7e80338a017200ffc3e71f
+Original path: core/src/com/biglybt/core/tag/impl/TagPropertyConstraintHandler.java
+Original blob: 0535a851d97400d48e47b07fdea533ae96c0043c
+Original source SHA256: 1d5b8f6e2a586300765f8287b733b98f50263c1680d9c68503f35bf0736ac245
+Relevant source: compileConstraint/null tag; setError1541..1575; public evaluator2105..2135; contains4208..4257; numeric invalid-unit6118 and string error5132.
+Actual compiled JAR SHA256: aec655f549167e22178a75f81e4bbc146a34192a2ff90278d74d98c304d2aec6
+Actual four-case output/line hashes, helper source/classes and the three relevant JAR class hashes: provenance.json.
+Actual42-row failed result: /home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/result.json
+Actual failed result SHA256: 9f03df2f9032be6cdedba36a97ff00db451e061287c3eeeb8fc2b7392abf97d9
+Actual comparisons SHA256: faa7b01c83654a4b642d43794a0c6e45201ecd0ae47d6dbeb1fcd63e018efbf4
+
+The source and compiled artefact were inspected independently; whole source/bytecode equivalence is not assumed. The original42-row FAIL and its raw output remain immutable. The four defects receive no Native parity credit; Native pipe semantics and conservative Invalid/Keep handling have not been changed.

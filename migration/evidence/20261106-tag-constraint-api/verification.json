@@ -1,0 +1,91 @@
+{
+  "status": "PASS_LIMITED_DIFFERENTIAL_WITH_EXPLICIT_ORIGINAL_DEFECTS",
+  "native_implementation_commit": "3142bd167a1d139897e471c6aa488c97ea5b651c",
+  "native_source_tree": "f96e90bbcdeb0c628174091c66c9238e4f5700b0",
+  "original_core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "focused_receipt_sha256": "ecb7473323a9d13a8d7afa7f4c53adc870ebf1594e1575db35e8e208f9097304",
+  "focused_result": {
+    "status": "PASS_FOCUSED_ORIGINAL_DEFECT_REPRODUCTION",
+    "scope": "FOUR_ORIGINAL_PUBLIC_API_DEFECTS_ONLY",
+    "original42_failure": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/result.json",
+      "sha256": "9f03df2f9032be6cdedba36a97ff00db451e061287c3eeeb8fc2b7392abf97d9",
+      "bytes": 9362
+    },
+    "compilers_executed": 0,
+    "green_rows_reexecuted": 0,
+    "native_semantic_changes": false,
+    "commands": [
+      {
+        "argv": [
+          "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+          "/usr/lib/jvm/java-26-openjdk-amd64/bin/java",
+          "-Xmx256m",
+          "-XX:ActiveProcessorCount=2",
+          "-XX:+DisableAttachMechanism",
+          "-Duser.home=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/private/home",
+          "-Djava.io.tmpdir=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/private/tmp",
+          "-Dazureus.config.path=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/private/config",
+          "-Dazureus.install.path=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/private/config",
+          "-cp",
+          "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/classes:/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+          "TagConstraintOriginalOracle",
+          "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/private/config",
+          "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/focused-corpus.txt",
+          "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/original.tsv"
+        ],
+        "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/focused-original.log",
+        "exit_code": 0,
+        "log_sha256": "a8272e897b526730f3aeb2a7ca4cb4d3cc9c2ad342ce864376c525bf4374c52a"
+      },
+      {
+        "argv": [
+          "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+          "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/constraint-corpus-cli",
+          "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/focused-corpus.txt",
+          "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/native.tsv"
+        ],
+        "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/focused-native.log",
+        "exit_code": 0,
+        "log_sha256": "3144a88e9c83a981b02ebd651c25f7cb012a679ea318e0f1e1981fe7e7392a8c"
+      }
+    ],
+    "defects": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/focused-defects.json",
+      "sha256": "069c35a597744030deb665a805cffb942cb6867461ef6a7086aa6ae9791b3314",
+      "bytes": 1980
+    },
+    "original": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/original.tsv",
+      "sha256": "b6b18e0d60805f3414bbff097821ddbf4c94565a55c377bc93cc1f0972b14dc3",
+      "bytes": 210
+    },
+    "native": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/runs/r1/native.tsv",
+      "sha256": "e6e27e13ecc2b6c7125791a3f7fc74bebb818f8d61c2a31bad53957af3034ba7",
+      "bytes": 169
+    },
+    "limited_qualification": {
+      "status": "PASS_LIMITED_ASCII_DIFFERENTIAL_WITH_EXPLICIT_ORIGINAL_DEFECTS",
+      "retained_boolean_rows": 32,
+      "retained_classification_rows": 4,
+      "explicit_unsupported_rows": 2,
+      "new_defect_rows": 4,
+      "defects_grant_parity_credit": false,
+      "full_provider_unicode_or_membership_parity": false,
+      "retained_evidence": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/comparisons.json",
+        "sha256": "faa7b01c83654a4b642d43794a0c6e45201ecd0ae47d6dbeb1fcd63e018efbf4",
+        "bytes": 8819
+      }
+    },
+    "private_cleanup": {
+      "removed": true,
+      "keys_published": false
+    },
+    "elapsed_seconds": 1.22
+  },
+  "static_source_provenance_sha256": "bfc666a356e23ecd1f5537ba6f87d4055a8c2e6fb88ede3db96445620644f64b",
+  "original42_failure_retained": true,
+  "full_constraint_or_P08_parity": false
+}

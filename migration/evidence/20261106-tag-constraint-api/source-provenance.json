@@ -1,0 +1,98 @@
+{
+  "original_source": {
+    "blob": "0535a851d97400d48e47b07fdea533ae96c0043c",
+    "bytes": 142719,
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_path": "core/src/com/biglybt/core/tag/impl/TagPropertyConstraintHandler.java",
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-constraints/original/core/src/com/biglybt/core/tag/impl/TagPropertyConstraintHandler.java",
+    "sha256": "1d5b8f6e2a586300765f8287b733b98f50263c1680d9c68503f35bf0736ac245"
+  },
+  "actual_jar": {
+    "path": "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+    "sha256": "aec655f549167e22178a75f81e4bbc146a34192a2ff90278d74d98c304d2aec6",
+    "bytes": 12774623
+  },
+  "actual_relevant_class_entries": {
+    "com/biglybt/core/tag/impl/TagPropertyConstraintHandler$TagConstraint$ConstraintExprFunction.class": "0faba42ffc22dbe75322a853def222ab73057e637c20e029385850b861577612",
+    "com/biglybt/core/tag/impl/TagPropertyConstraintHandler.class": "5595c3d8f2c102138dff5d44a63cf925940a7ba33e1915671f63fd10b5b6a11a",
+    "com/biglybt/core/tag/impl/TagPropertyConstraintHandler$TagConstraint.class": "10e99563d5dea378896c5e53770efc6b6b5c552ce33eeb8967f6d4a24359bf26"
+  },
+  "original_helper_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-constraints/amendments/oracle-evaluation-classification/oracle/TagConstraintOriginalOracle.java",
+    "sha256": "465ae643ae70554e53ae6086fc93fef32c6c0100382530a15f06957cd5256f91",
+    "bytes": 4845
+  },
+  "compiled_helpers": {
+    "ConstraintPrimitiveOracle.class": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/classes/ConstraintPrimitiveOracle.class",
+      "sha256": "e464be2d3258f0211364c1e510275a6033cf465298a9b7d913d327a522c30026",
+      "bytes": 2094
+    },
+    "TagConstraintOriginalOracle.class": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/classes/TagConstraintOriginalOracle.class",
+      "sha256": "0069b146e24dc7120afaabdd4d1f74be7294ed2bd971f452e31b7b793d544b80",
+      "bytes": 7616
+    }
+  },
+  "actual42_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/result.json",
+    "sha256": "9f03df2f9032be6cdedba36a97ff00db451e061287c3eeeb8fc2b7392abf97d9",
+    "bytes": 9362
+  },
+  "actual_four_row_bytes": {
+    "original.tsv": {
+      "case-024": {
+        "line_1based": 24,
+        "line_sha256": "63484fd056ad5eef77c3fbcf64efcafd5c696a858a587ed6ef0e0f29992af161"
+      },
+      "case-025": {
+        "line_1based": 25,
+        "line_sha256": "f87db5165def98f054e082b85caf13e1bbf59e3be7dcf4e8b1fc3d893d4fa6f0"
+      },
+      "case-037": {
+        "line_1based": 37,
+        "line_sha256": "26e650123ffd925519ed721de5791f99abb8ba208a169169f267d5ac6246908c"
+      },
+      "case-038": {
+        "line_1based": 38,
+        "line_sha256": "21891131d44e66f71ed2d36f916a0d95850dbcc87dbfc3082d76bfbcff2aeb09"
+      }
+    },
+    "native.tsv": {
+      "case-024": {
+        "line_1based": 24,
+        "line_sha256": "e3f420bdedda2563ede64733c3ed104c15153f12d60db560eeadefc2efe3fffe"
+      },
+      "case-025": {
+        "line_1based": 25,
+        "line_sha256": "f4efe38c3a29a399b20ea5f30cfddf8634307447fefcf2a79e6f20c8cb969746"
+      },
+      "case-037": {
+        "line_1based": 37,
+        "line_sha256": "80d186abdadea4d6c897ffec5a71cc06fdf63800ef161874574101bea3b57559"
+      },
+      "case-038": {
+        "line_1based": 38,
+        "line_sha256": "6e7fc4f6b128548ea520afd1f6e255057091ffaf6643567240e58ee18b25a437"
+      }
+    }
+  },
+  "read_only_actual_bytecode": {
+    "actual-jar-bytecode.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/actual-jar-bytecode.txt",
+      "sha256": "e5f67658ab9ed78520aafd6dea5664f2f49bdb9fd702bc5efdf11814651233d1",
+      "bytes": 12871
+    },
+    "actual-jar-tag-binding.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/actual-jar-tag-binding.txt",
+      "sha256": "061f0a5faefbd028dc97a74609578e42c58c8444595554ba3fdb3aef357cfdc5",
+      "bytes": 3104
+    },
+    "javap-inputs.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/original-public-api-defects/javap-inputs.json",
+      "sha256": "bc72d9adff0f313981c5e4269c5c64a3b0322fcb0e10a522a155c0cad30d3a29",
+      "bytes": 622
+    }
+  },
+  "context_conclusion": "The evaluator creates a fresh nonnull HashMap context; null debug is not the pipe NPE. compileConstraint deliberately creates a null Tag, then FT_CONTAINS alternatives dereferences that Tag for getTagUID. Public TagConstraint exposes only testConstraint/getError, no debug/explain overload."
+}

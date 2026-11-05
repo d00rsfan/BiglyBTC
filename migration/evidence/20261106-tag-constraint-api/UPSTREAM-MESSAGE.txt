@@ -1,0 +1,15 @@
+I have reproduced two issues in BiglyBT's public TagManager.compileConstraint API, using source commit cb8c6cb9bb97916cbc7e80338a017200ffc3e71f and the retained 3.4.0.1-SNAPSHOT core JAR. The runtime was OpenJDK 26 on Linux amd64; the helper targeted Java 17. These were isolated API checks, not UI tests.
+
+1. A valid contains expression with alternatives throws NullPointerException:
+contains("HELLO","none|hello")
+contains("HELLO","none|hello",1)
+
+The public compiler creates a tagless constraint, but the alternatives branch calls tag_maybe_null.getTagUID() to build its regex-cache key. A tagless evaluator should handle these valid expressions without requiring a tag.
+
+2. Evaluation errors disappear from getError():
+isEQ(1bad,0)
+contains(1,"x")
+
+Both return false, and getError() remains null before and after evaluation. In TagPropertyConstraintHandler, setError(String) clears its error field instead of retaining the supplied diagnostic; it only forwards the message to a nonnull tag's transient property. Public callers therefore cannot distinguish malformed input from an ordinary false condition.
+
+I reproduced all four cases twice, checked the relevant source and JAR bytecode, and can share the small helper and traces. Core.start() was never called, and no real profile or download was changed.
