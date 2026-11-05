@@ -130,15 +130,18 @@ std::expected<std::shared_ptr<OriginalControl>, Error> OriginalControl::open(con
     (void)take(result->load());return result;
   });
 }
+// Host snapshot validation and the original disk worker share this owner.
+// Serialize their real I/O; these operations never invoke user callbacks,
+// acquire a ProfileSource gate, or recursively enter another control method.
 std::expected<std::optional<std::string>, Error> OriginalControl::load() const {
   return guarded([&]()->std::expected<std::optional<std::string>,Error>{
-    const std::unique_lock lock(mutex_,std::try_to_lock);require(lock.owns_lock(),"Concurrent/reentrant original control operation",ErrorCode::Busy);
+    const std::lock_guard lock(mutex_);
     checkDirectories();noSaving(directory_.get(),leaf_);auto candidates=readCandidates(directory_.get(),leaf_,kind_);checkObserved(stamp(candidates.primary),stamp(candidates.backup));checkDirectories();checkCandidates(directory_.get(),leaf_,candidates);auto result=selected(candidates);remember(stamp(candidates.primary),stamp(candidates.backup));return result;
   });
 }
 std::expected<std::optional<std::string>, Error> OriginalControl::loadValidated(storage::OriginalFileGeometry geometry) const {
   return guarded([&]()->std::expected<std::optional<std::string>,Error>{
-    const std::unique_lock lock(mutex_,std::try_to_lock);require(lock.owns_lock(),"Concurrent/reentrant original control operation",ErrorCode::Busy);
+    const std::lock_guard lock(mutex_);
     checkDirectories();noSaving(directory_.get(),leaf_);auto candidates=readCandidates(directory_.get(),leaf_,kind_);checkObserved(stamp(candidates.primary),stamp(candidates.backup));
     candidates.primaryValid=candidates.primary.bytes&&storage::OriginalFileIo::validateControl(geometry,kind_,*candidates.primary.bytes).has_value();
     candidates.backupValid=candidates.backup.bytes&&storage::OriginalFileIo::validateControl(geometry,kind_,*candidates.backup.bytes).has_value();
@@ -150,7 +153,7 @@ storage::OriginalControlPublisher OriginalControl::publisher() {
 }
 std::expected<void, Error> OriginalControl::retire() {
   return guarded([&]()->std::expected<void,Error>{
-    const std::unique_lock lock(mutex_,std::try_to_lock);require(lock.owns_lock(),"Concurrent/reentrant original control operation",ErrorCode::Busy);
+    const std::lock_guard lock(mutex_);
     checkDirectories();noSaving(directory_.get(),leaf_);auto primary=readCandidate(directory_.get(),leaf_),backup=readCandidate(directory_.get(),leaf_+".bak");checkObserved(stamp(primary),stamp(backup));
     checkDirectories();checkCandidate(directory_.get(),leaf_,primary);checkCandidate(directory_.get(),leaf_+".bak",backup);
     for(const auto& entry:{std::pair{&primary,leaf_},std::pair{&backup,leaf_+".bak"}}){if(!entry.first->bytes){continue;}checkDirectories();checkCandidate(directory_.get(),entry.second,*entry.first);require(::unlinkat(directory_.get(),entry.second.c_str(),0) == 0,"Cannot retire exact original control",ErrorCode::Io);sync(directory_.get());}
@@ -159,7 +162,7 @@ std::expected<void, Error> OriginalControl::retire() {
 }
 std::expected<void, Error> OriginalControl::publish(const std::optional<std::string>& expected,std::string_view replacement) {
   return guarded([&]()->std::expected<void,Error>{
-    const std::unique_lock lock(mutex_,std::try_to_lock);require(lock.owns_lock(),"Concurrent/reentrant original control operation",ErrorCode::Busy);
+    const std::lock_guard lock(mutex_);
     require(replacement.size() <= MaximumControl && validControl(std::string(replacement),kind_),"Invalid original storage control replacement",ErrorCode::InvalidFormat);
     checkDirectories();noSaving(directory_.get(),leaf_);auto candidates=readCandidates(directory_.get(),leaf_,kind_);checkObserved(stamp(candidates.primary),stamp(candidates.backup));require(selected(candidates) == expected,"Original storage control changed",ErrorCode::Conflict);
     auto temporary=take(storage::detail::writeExclusiveOwned(directory_.get(),leaf_+".saving",replacement,0600));require(::fchmod(temporary.get(),0600) == 0,"Cannot protect original control temporary",ErrorCode::Io);sync(temporary.get());struct stat saved{};

@@ -6,6 +6,9 @@
 #include <iostream>
 #include <stdexcept>
 #include <unistd.h>
+#include <array>
+#include <barrier>
+#include <thread>
 namespace fs=std::filesystem;
 namespace st=biglybtc::storage;
 namespace en=biglybtc::engine::detail;
@@ -48,8 +51,36 @@ void unsafeCandidatesAndDetachedDirectories(){
   {Fixture f;write(f.leaf,compact(4));auto owner=f.open(false);const auto detached=f.profile/"active/detached";fs::rename(f.dir,detached);write(f.leaf,compact(4));check(!owner->load()&&!owner->publisher()(compact(4),compact(8))&&!owner->retire(),"replaced hash directory cannot receive detached writes or retirement");check(read(f.leaf)==compact(4)&&read(detached/"fmfile0.dat")==compact(4),"both original and replacement directory leaves retained");}
   {Fixture f;check(!en::OriginalControl::open(f.lease,"A",0,st::OriginalStorageKind::Compact,true)&&!fs::exists(f.profile/"active/A"),"short pseudo-hash cannot authorize a directory");}
 }
+void concurrentReadOnlySnapshotsShareOneControlWithoutBusyOrRecapture(){
+  Fixture f;const std::string opaque(1024*1024,'q');
+  const auto raw="d6:lengthi64e6:opaque"+std::to_string(opaque.size())+':'+opaque+"7:versioni0ee";
+  const auto backup=fs::path(f.leaf.string()+".bak");write(f.leaf,raw);write(backup,compact(32));auto owner=f.open(false);
+  struct stat before{},after{},backupBefore{},backupAfter{};check(::stat(f.leaf.c_str(),&before)==0&&::stat(backup.c_str(),&backupBefore)==0,"Pin actual concurrent control candidates");
+  std::barrier turn(2);std::array<unsigned,2> errors{},busy{};std::array<std::string,2> first;
+  {std::array<std::jthread,2> readers;
+    for(std::size_t n=0;n<readers.size();++n){readers[n]=std::jthread([&,n]{
+      // Real regular files and real decoder only: no injected mutex/fault hook.
+      // Both rounds exercise validated/validated and raw/validated overlap.
+      for(unsigned round=0;round<32;++round){turn.arrive_and_wait();try{
+        const auto loaded=(n==1||round%2==0)?owner->loadValidated({17,65536,16384}):owner->load();
+        if(!loaded){++errors[n];if(loaded.error().code==st::ErrorCode::Busy){++busy[n];}if(first[n].empty()){first[n]=loaded.error().message;}}
+        else if(!loaded->has_value()||**loaded!=raw){++errors[n];if(first[n].empty()){first[n]="Actual candidate bytes differ";}}
+      }catch(const std::exception& error){++errors[n];if(first[n].empty()){first[n]=error.what();}}}
+    });}
+  } // Both actual readers are joined before any failure or candidate edit.
+  if(errors[0]||errors[1]){throw std::runtime_error("Concurrent original-control readers failed: busy="+std::to_string(busy[0]+busy[1])+"; "+first[0]+"; "+first[1]);}
+  check(::stat(f.leaf.c_str(),&after)==0&&::stat(backup.c_str(),&backupAfter)==0,"Inspect actual concurrent control candidates");
+  const auto same=[](const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_uid==b.st_uid&&a.st_nlink==b.st_nlink&&a.st_size==b.st_size&&a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;};
+  check(same(before,after)&&same(backupBefore,backupAfter)&&read(f.leaf)==raw&&read(backup)==compact(32)
+      &&!fs::exists(fs::path(f.leaf.string()+".saving"))&&!fs::exists(fs::path(backup.string()+".saving")),"Concurrent read-only calls preserve actual candidate identities and bytes");
+  fs::rename(f.leaf,f.dir/"retained-primary");write(f.leaf,raw);
+  const auto generic=owner->load(),validated=owner->loadValidated({17,65536,16384});
+  check(!generic&&!validated&&generic.error().code==st::ErrorCode::Conflict&&validated.error().code==st::ErrorCode::Conflict,
+      "Serialization never recaptures a same-byte external replacement");
+  check(read(f.leaf)==raw&&read(f.dir/"retained-primary")==raw,"Refused replacement preserves both actual files");
+}
 void publisherOwnsOnlyItsSafeControlLifetime(){
   Fixture f;auto owner=f.open();auto publish=owner->publisher();owner.reset();take(publish({},compact(3)));check(read(f.leaf)==compact(3),"publisher safely retains authenticated directory descriptors");check(!st::ProfileLease::acquire(f.profile),"publisher lifetime does not bypass actual held profile lease");
 }
 }
-int main(){try{originalSelectionAndPublication();readOnlyGeometrySelectionNeverRepairsCandidates();identityCasAcrossCalls();unsafeCandidatesAndDetachedDirectories();publisherOwnsOnlyItsSafeControlLifetime();std::cout<<"five generated original-control families passed\n";return 0;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}
+int main(){try{originalSelectionAndPublication();readOnlyGeometrySelectionNeverRepairsCandidates();concurrentReadOnlySnapshotsShareOneControlWithoutBusyOrRecapture();identityCasAcrossCalls();unsafeCandidatesAndDetachedDirectories();publisherOwnsOnlyItsSafeControlLifetime();std::cout<<"six generated original-control families passed\n";return 0;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}
