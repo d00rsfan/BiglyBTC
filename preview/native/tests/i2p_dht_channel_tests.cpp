@@ -83,6 +83,28 @@ private slots:
     auto old=channel.destinationLookupObservation(*foreign);QVERIFY(old&&old->phase==Channel::LookupPhase::Cancelled);
     auto reply=cp::encodeHostReply({7,request->request,0,*remote.destination()});QVERIFY(reply&&router.send(*reply));QTRY_VERIFY(router.next());auto packet=cp::decodeDhtSendDatagram(router.take());QVERIFY(packet&&packet->recipient.wire==remote.destination()->wire);QVERIFY(actor.cancel(*operation));
   }
+  void unusedOrRejectedActorCannotDisableAnotherDhtOwner(){
+    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,"ed25519",true);
+    QVERIFY(channel.enableDhtDatagrams(10000));const auto scope=channel.dhtScopeGeneration();QVERIFY(scope);
+    {
+      d::Actor actor(channel);QVERIFY(!actor.begin({}));actor.close();
+      QCOMPARE(channel.dhtScopeGeneration(),scope);
+    }
+    QCOMPARE(channel.dhtScopeGeneration(),scope);
+    QVERIFY(!channel.disableDhtDatagrams(std::uint64_t{0}));QCOMPARE(channel.dhtScopeGeneration(),scope);
+    QVERIFY(channel.disableDhtDatagrams(scope));QCOMPARE(channel.dhtScopeGeneration(),std::uint64_t{0});
+  }
+  void staleActorCannotDisableReplacementDhtScope(){
+    Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,"ed25519",true);
+    auto remote=signer("dsa"),local=signer("ed25519");d::Contact seed;seed.hash=remote.destination()->hash;seed.port=10002;seed.destination=*remote.destination();
+    auto rid=d::makeNodeId(seed.hash,seed.port,i2p::Bytes(14,0x32));QVERIFY(rid);seed.id=*rid;
+    auto lid=d::makeNodeId(local.destination()->hash,10000,i2p::Bytes(14,0x31));QVERIFY(lid);
+    d::Actor actor(channel);QVERIFY(actor.begin({*lid,10000,{seed},3}));const auto oldScope=channel.dhtScopeGeneration();QVERIFY(oldScope);
+    channel.disableDhtDatagrams();QVERIFY(channel.enableDhtDatagrams(10000));const auto replacement=channel.dhtScopeGeneration();QVERIFY(replacement&&replacement!=oldScope);
+    QVERIFY(!channel.disableDhtDatagrams(oldScope));QCOMPARE(channel.dhtScopeGeneration(),replacement);
+    actor.close();QCOMPARE(channel.dhtScopeGeneration(),replacement);
+    QVERIFY(channel.disableDhtDatagrams(replacement));QCOMPARE(channel.dhtScopeGeneration(),std::uint64_t{0});
+  }
   void cancelledQueuedFramesNeverReachTheRouter(){
     Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,"ed25519",true);QVERIFY(channel.leaseSetSubmission());QVERIFY(channel.enableDhtDatagrams(10000));auto remote=signer("dsa");std::vector<std::uint64_t> tickets;
     for(unsigned n=0;n<8;++n){auto op=channel.submitDhtDatagram(remote.destination()->wire,{},false,10003);QVERIFY(op);tickets.push_back(*op);}QVERIFY(!channel.submitDhtDatagram(remote.destination()->wire,{},false,10003));

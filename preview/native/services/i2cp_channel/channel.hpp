@@ -103,6 +103,8 @@ public:
   struct DhtDispatch {std::uint64_t ticket=0;bool written=false;}; // socket enqueue only
   bool enableDhtDatagrams(std::uint16_t queryPort);
   void disableDhtDatagrams();
+  // Conditional owner teardown; compares the raw epoch even after revocation.
+  bool disableDhtDatagrams(std::uint64_t expectedScope);
   std::uint64_t dhtScopeGeneration()const noexcept; // Passive active epoch;0 means disabled.
   [[nodiscard]] ConfigResult<std::uint64_t> submitDhtDatagram(View recipient,View payload,
       bool repliable,std::uint16_t toPort,unsigned timeoutMilliseconds=30000);

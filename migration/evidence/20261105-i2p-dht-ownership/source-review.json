@@ -1,0 +1,22 @@
+{
+  "status": "SOURCE_PASS_DETACHED_DHT_EPOCH_OWNERSHIP_CORRECTION",
+  "candidate": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/inbound-actor-candidate/manifest.json",
+    "sha256": "d545ec818a7d2a70979c1eee44331d75defc4e27a315f570c1c9246de784ac71"
+  },
+  "exact_source_maps_and_patches": 4,
+  "findings": [],
+  "reviewed": [
+    "Conditional disable compares nonzero expected scope with actual raw epoch even if source/lease revocation makes the public current epoch0.",
+    "Actor close snapshots its own scope before clearing it and never invokes unscoped channel teardown. Unused/failed actor and stale replaced actor cannot clear foreign/current scope.",
+    "Existing unscoped manual API and source/lease/write fences remain unchanged; no responder or network authority is added.",
+    "Two appended genuine channel/Actor test methods cover rejected/unused actor destruction and stale actor close after a separately installed replacement epoch; old test bodies remain exact."
+  ],
+  "limits": {
+    "source_review_only": true,
+    "no_runtime_credit_from_this_review": true,
+    "reviewer_compiled_or_run": false,
+    "native_sdk_cache_head_changed_by_reviewer": false,
+    "diagnostic7_inputs_changed": false
+  }
+}

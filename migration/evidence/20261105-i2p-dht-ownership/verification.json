@@ -1,0 +1,41 @@
+{
+  "status": "PASS_DHT_EPOCH_OWNERSHIP_ONLY",
+  "frozen_native_test_baseline": "a8a8ba511dbcfe31daef9b8d49f547bbd31b4071",
+  "publication_parent": "35662b2ff9fdad3187b207cb4b86b07e9421f52b",
+  "source_baselines": {
+    "BiglyBT": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "azneti2phelper": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+    "i2p-java": "9134f808337b401e8e53c73734c81fab04280c9d"
+  },
+  "lanes": {
+    "gcc": {
+      "status": "PASS_DETACHED_OWNERSHIP_REGRESSION",
+      "image": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/inbound-actor-candidate/qualification-r1/gcc/i2p-dht-channel-tests",
+        "sha256": "797703913f37011624910a72b8bec0bb0be181c80a5e18969a2426cdc07fb0e6",
+        "bytes": 1137368
+      },
+      "test_seconds": 5.081,
+      "test_count": 10,
+      "leak_detection": false,
+      "receipt_sha256": "237d545b07e460660c405d5cf4393c2300795afe6f6a4091d7e5d1f1d0ec17b9"
+    },
+    "san": {
+      "status": "PASS_DETACHED_OWNERSHIP_REGRESSION",
+      "image": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/inbound-actor-candidate/qualification-resume-r1/san/i2p-dht-channel-tests",
+        "sha256": "7ce158ad4612f1248565db05c85247e5448e0d990135be155cb4befab0d04bc2",
+        "bytes": 25784048
+      },
+      "test_seconds": 5.181,
+      "test_count": 10,
+      "leak_detection": true,
+      "receipt_sha256": "f5ece31f3bfdb6e52997c8266397c0a1bd960c416f777ef7de7ae190156e1f0a"
+    }
+  },
+  "initial_socket_restricted_run_preserved": true,
+  "detached_build_used_existing_read_only_archives": true,
+  "prepared_diagnostic7_unchanged": true,
+  "production_inbound_server_qualified": false,
+  "whole_P07_or_client_qualified": false
+}

@@ -47,7 +47,9 @@ struct Actor::Impl {
     resolver=0;resolving.reset();
   }
   void close(){
-    timer.stop();cancelPending();lookup.close();enabled=false;scope=0;localDestination.clear();if(channel&&onThread()){channel->disableDhtDatagrams();}notify();
+    const auto ownedScope=scope;
+    timer.stop();cancelPending();lookup.close();enabled=false;scope=0;localDestination.clear();
+    if(channel&&onThread()&&ownedScope){channel->disableDhtDatagrams(ownedScope);}notify();
   }
   void safeClose()noexcept{try{close();}catch(...){timer.stop();enabled=false;scope=0;lookup.close();}}
   void safePump()noexcept{try{pump();}catch(...){safeClose();}}

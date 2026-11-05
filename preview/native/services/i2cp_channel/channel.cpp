@@ -497,6 +497,7 @@ bool InitialChannel::datagramPending()const noexcept{return impl_->statusPending
 std::optional<InitialChannel::DatagramObservation> InitialChannel::datagramObservation()const noexcept{return sessionId()?impl_->datagram:std::nullopt;}
 bool InitialChannel::enableDhtDatagrams(std::uint16_t port){try{return impl_->enableDht(port);}catch(...){impl_->fail(Failure::Resources);return false;}}
 void InitialChannel::disableDhtDatagrams(){try{impl_->disableDht();}catch(...){impl_->fail(Failure::Resources);}}
+bool InitialChannel::disableDhtDatagrams(std::uint64_t expectedScope){try{if(!impl_->onThread()||!expectedScope||impl_->dhtEpoch!=expectedScope){return false;}impl_->disableDht();return impl_->dhtEpoch==0;}catch(...){impl_->fail(Failure::Resources);return false;}}
 std::uint64_t InitialChannel::dhtScopeGeneration()const noexcept{try{return impl_->onThread()&&impl_->dhtReceives()?impl_->dhtEpoch:0;}catch(...){return 0;}}
 ConfigResult<std::uint64_t> InitialChannel::submitDhtDatagram(View to,View data,bool repliable,std::uint16_t port,unsigned timeout){return impl_->sendDht(to,data,repliable,port,timeout);}
 bool InitialChannel::cancelDhtDatagram(std::uint64_t ticket){try{return impl_->cancelDht(ticket);}catch(...){impl_->fail(Failure::Resources);return false;}}

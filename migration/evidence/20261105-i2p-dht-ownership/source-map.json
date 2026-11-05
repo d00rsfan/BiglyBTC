@@ -1,0 +1,18 @@
+{
+  "preview/native/services/i2cp_channel/channel.hpp": {
+    "before_sha256": "1eb8018550e46fc202a3c66c70acc30a6114088527e60b79c0cecf03b199a993",
+    "after_sha256": "6685fefd142de0c173e7588d5f5acd352e0cd5eb18ca5e09da3915acc517a31b"
+  },
+  "preview/native/services/i2cp_channel/channel.cpp": {
+    "before_sha256": "d316e17cf35a7c8bb69fd6c4dad8cc51d569f173eea111dfdcb48008bf5b3fa7",
+    "after_sha256": "6316114e3c584f104719cdd0ce83915955a251d7ac6f2a93548c88faab76a4e8"
+  },
+  "preview/native/services/i2p_dht/actor.cpp": {
+    "before_sha256": "459f28785b4c6a0591c0bbbd1e9eea6957b42d570574f06dda37bbef41b99992",
+    "after_sha256": "007d880cb17fece1d65da7a62dfbca8a8da3829fc410e98c28a1514955c21e1b"
+  },
+  "preview/native/tests/i2p_dht_channel_tests.cpp": {
+    "before_sha256": "cf85b3631a97e9553de71d59b207f1ab20b0f8e820274f5151425ca344721081",
+    "after_sha256": "3c8c373e09e98f338d4a62840b46a892b0859c935623b41a816430bc09e165ad"
+  }
+}
