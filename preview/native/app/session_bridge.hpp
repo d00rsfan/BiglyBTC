@@ -21,6 +21,7 @@
 #include "overall_presentation.hpp"
 #include "runtime_metrics_presentation.hpp"
 #include "manual_tag_presentation.hpp"
+#include "manual_tag_commands.hpp"
 #include "country_statistics_presentation.hpp"
 #include "live_speed_manager_presentation.hpp"
 
@@ -75,6 +76,7 @@ public:
   bool statistics(quint64 session, quint64 request);
   bool markStatistics(quint64 session, bool clear);
   bool manualTagStatistics(quint64 session);
+  bool manualTagCommand(ui::ManualTagCommand);
   bool countryStatistics(quint64 session);
   bool history(quint64 session, quint64 request, core::HistoryDate date);
   bool historyWeek(quint64 session, quint64 request, core::HistoryDate endingDate);
@@ -123,6 +125,7 @@ signals:
   void azureusStatisticsReady(biglybtc::ui::AzureusStatisticsPresentation);
   void liveSpeedManagerReady(biglybtc::ui::LiveSpeedManagerPresentation);
   void manualTagStatisticsReady(biglybtc::ui::ManualTagStatisticsPresentation);
+  void manualTagCommandFinished(biglybtc::ui::ManualTagCommandPresentation);
   void countryStatisticsReady(biglybtc::ui::CountryStatisticsPresentation);
   void sessionClosed(quint64 session, bool joined, bool storageReleased);
   void sessionCloseFailed();
@@ -154,6 +157,7 @@ private:
   ui::ManualTagStatisticsPresentation manualTagPacket();
   void publishManualTags() noexcept;
   void deliverManualTags(ui::ManualTagStatisticsPresentation);
+  void deliverManualTagCommand(ui::ManualTagCommandPresentation);
   ui::CountryStatisticsPresentation countryPacket();
   void publishCountries() noexcept;
   void deliverCountries(ui::CountryStatisticsPresentation);
@@ -185,6 +189,7 @@ private:
   std::optional<ui::ManualTagStatisticsPresentation> latestManualTags_;
   bool manualTagDeliveryQueued_ = false;
   ui::ManualTagStatisticsPresentation deliveredManualTags_; // GUI-only admission state.
+  std::optional<ui::ManualTagCommand> guiManualTagCommand_; // One current async completion, GUI only.
   std::optional<ui::CountryStatisticsPresentation> latestCountries_;
   bool countryDeliveryQueued_ = false;
   ui::CountryStatisticsPresentation deliveredCountries_; // GUI-only admission state.

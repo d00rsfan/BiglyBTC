@@ -100,6 +100,11 @@ int main(int argc, char** argv) {
     biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory), {}, std::move(schedulerFactory),std::move(i2pOptions));
     using Window = biglybtc::ui::LibraryWindow;
     using Bridge = biglybtc::app::SessionBridge;
+    QObject::connect(&bridge,&Bridge::manualTagCommandFinished,&window,&Window::setManualTagCommandFinished);
+    QObject::connect(&window,&Window::manualTagCommandRequested,&bridge,
+      [owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::ManualTagCommand command){
+        if(owner&&view&&!owner->manualTagCommand(command)&&view){view->rejectManualTagCommand(command);}
+      });
     QObject::connect(&bridge,&Bridge::localRatingReady,&window,&Window::setLocalRating);
     QObject::connect(&bridge,&Bridge::localRatingSaved,&window,&Window::setLocalRatingSaved);
     QObject::connect(&window,&Window::localRatingRequested,&bridge,

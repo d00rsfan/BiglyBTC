@@ -123,7 +123,8 @@ public:
   bool cancelTracker(std::uint64_t operation);
   [[nodiscard]] std::optional<TrackerObservation> trackerObservation()const;
   // Explicit current-session hash lookup, no OS resolver/address book. IDs use
-  // a disjoint high range; at most1024 lifetime operations, never reused.
+  // the disjoint high unsigned32 wire range, never wrapped/reset/reused. One
+  // active operation and eight owning terminal observations remain bounded.
   enum class LookupPhase {Pending,Resolved,Failed,Cancelled,Timeout,LeaseExpired};
   struct LookupObservation {std::uint64_t operation=0;Hash requested{};LookupPhase phase=LookupPhase::Pending;std::optional<Destination> destination;};
   [[nodiscard]] ConfigResult<std::uint64_t> lookupDestination(const Hash&,unsigned deadlineMilliseconds=30000);

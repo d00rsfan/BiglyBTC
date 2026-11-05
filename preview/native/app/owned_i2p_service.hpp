@@ -25,7 +25,7 @@ struct I2pDiscoveryOptions {
   std::array<std::uint8_t,20> nodeId{};std::uint16_t queryPort=0;
   std::vector<I2pDiscoverySeed> seeds;
   // Explicit node policy request; actual source-held grants remain mandatory.
-  bool inbound=false,inboundSleeping=false,inboundSuspended=false;
+  bool inbound=false,inboundSleeping=false,inboundSuspended=false,routingMaintenance=false;
 };
 struct I2pServiceOptions {
   std::uint16_t routerPort=7654;
@@ -100,6 +100,7 @@ public:
   // Provider/source joins and checkpoint IO may block on this Host worker.
   bool sourceCurrent()const noexcept; // No Qt/SDK/I/O.
   void revoke()noexcept; // Atomic source-only withdrawal; no Qt/SDK dispatch.
+  std::optional<storage::Error> contactCacheDiagnostic()const; // Existing external Host worker only.
   std::expected<void,storage::Error> close();
 private:
   struct Impl;explicit OwnedI2pService(std::unique_ptr<Impl>);

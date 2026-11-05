@@ -10,6 +10,7 @@
 #include "../engine/mixed_i2p_source.hpp"
 #include "../engine/mixed_i2p_transport.hpp"
 #include "../services/i2p_provider/bridge.hpp"
+#include "../services/i2p_provider/contact_owner.hpp"
 #include "../services/i2p_provider/source_permit.hpp"
 #include "../services/i2p_provider/pending_magnet_source.hpp"
 #include "../engine/pending_metadata_source.hpp"
@@ -53,13 +54,13 @@ struct OwnedMixedI2pService::Impl {
   struct Graph final:QObject {
     struct Route {Observation status;std::shared_ptr<provider::ProfileSource> child;std::shared_ptr<const engine::MixedManagedSource> managed;bool pending=false;std::shared_ptr<provider::PendingMagnetSource> magnet;std::shared_ptr<const engine::PendingMetadataSource> metadata;};
     std::shared_ptr<provider::ProfileSource> source;std::shared_ptr<engine::MixedI2pTransport> transport;
-    std::optional<services::i2p::ClientIdentity> identity;I2pServiceOptions options;std::optional<services::i2p::dht::Actor::Options> discoveryOptions;
+    std::optional<services::i2p::ClientIdentity> identity;I2pServiceOptions options;std::optional<services::i2p::dht::Actor::Options> discoveryOptions;std::shared_ptr<provider::ContactExchange> contactExchange;
     std::unique_ptr<i2cp::InitialChannel> channel;std::unique_ptr<provider::Bridge> bridge;std::unique_ptr<provider::SourcePermit> permit;
     std::map<std::string,Route> routes;std::string failure;std::optional<Error> closeError;
     bool begun=false,closing=false,configured=false,installQueued=false,startRequested=false,bridgeRequested=false,closeUncertain=false;
     std::uint64_t generation=0,bridgeAdmission=0;
     Graph(std::shared_ptr<provider::ProfileSource> s,std::shared_ptr<engine::MixedI2pTransport> t,
-        services::i2p::ClientIdentity key,I2pServiceOptions o,std::optional<services::i2p::dht::Actor::Options> discovery):source(std::move(s)),transport(std::move(t)),identity(std::move(key)),options(std::move(o)),discoveryOptions(std::move(discovery)){
+        services::i2p::ClientIdentity key,I2pServiceOptions o,std::optional<services::i2p::dht::Actor::Options> discovery,std::shared_ptr<provider::ContactExchange> contacts):source(std::move(s)),transport(std::move(t)),identity(std::move(key)),options(std::move(o)),discoveryOptions(std::move(discovery)),contactExchange(std::move(contacts)){
       channel=std::make_unique<i2cp::InitialChannel>(this);
       QObject::connect(channel.get(),&i2cp::InitialChannel::sourceEffectRequested,this,[this]{request();});
       QObject::connect(channel.get(),&i2cp::InitialChannel::dateReceived,this,[this]{if(!closing){startRequested=true;request();}});
@@ -117,7 +118,7 @@ struct OwnedMixedI2pService::Impl {
         }
         if(RAND_bytes(reinterpret_cast<unsigned char*>(&bridgeAdmission),sizeof(bridgeAdmission))!=1||!bridgeAdmission
             ||!bridge->begin({options.peerPort,options.peerPort},bridgeAdmission)){close("Cannot begin mixed I2P bridge");return;}
-        if(discoveryOptions&&!bridge->beginDiscovery(*discoveryOptions)){close("Cannot begin mixed I2P DHT");return;}
+        if(discoveryOptions&&!bridge->beginDiscovery(*discoveryOptions,contactExchange)){close("Cannot begin mixed I2P DHT");return;}
       }
       if(bridge&&bridge->observation().phase==provider::Bridge::Phase::Ready&&!configured&&!installQueued){
         installQueued=true;
@@ -212,12 +213,12 @@ struct OwnedMixedI2pService::Impl {
     }
   };
   std::shared_ptr<provider::ProfileSource> source;std::shared_ptr<Reservation> reservation;
-  std::unique_ptr<Graph> graph;QThread thread;QThread* caller=QThread::currentThread();
+  std::unique_ptr<Graph> graph;std::unique_ptr<provider::ContactOwner> contacts;QThread thread;QThread* caller=QThread::currentThread();
   struct PendingEntry {std::shared_ptr<provider::PendingMagnetSource> source;std::shared_ptr<const engine::PendingMetadataSource> metadata;};
   std::map<std::string,PendingEntry> pendingPrepared;
   std::map<std::string,Entry> prepared;std::map<std::string,Observation> attempts;mutable std::mutex mutex;mutable std::vector<Observation> last;
   bool closed=false,joined=false;std::optional<Error> closeError;
-  Impl(std::shared_ptr<provider::ProfileSource> s,std::shared_ptr<Reservation> r,std::unique_ptr<Graph> g):source(std::move(s)),reservation(std::move(r)),graph(std::move(g)){}
+  Impl(std::shared_ptr<provider::ProfileSource> s,std::shared_ptr<Reservation> r,std::unique_ptr<Graph> g,std::unique_ptr<provider::ContactOwner> cache):source(std::move(s)),reservation(std::move(r)),graph(std::move(g)),contacts(std::move(cache)){}
   bool onCaller()const noexcept{return QThread::currentThread()==caller;}
   template<class F>bool onGraph(F&& f)const{
     bool failed=false;const auto invoke=[&]{try{f();}catch(...){failed=true;graph->close("Mixed I2P internal dispatch failed");}};
@@ -229,7 +230,7 @@ struct OwnedMixedI2pService::Impl {
     if(!onGraph([&]{graph->close();last=graph->observations();closeError=graph->closeError;if(graph->closeUncertain){closeError=Error{Code::Io,"Mixed route withdrawal did not complete normally"};}if(graph->thread()!=caller){(void)graph->moveToThread(caller);}})){
       source->revoke();closeError=Error{Code::Io,"Mixed I2P event loop unavailable during close"};
     }
-    thread.quit();thread.wait();graph->join();graph.reset();joined=true;closed=true;reservation.reset();
+    thread.quit();thread.wait();graph->join();if(contacts){contacts->finish();}graph.reset();joined=true;closed=true;reservation.reset();
     for(auto& status:last){status.active=false;status.unavailable=true;status.joined=true;}
     return closeError?std::expected<void,Error>{std::unexpected(*closeError)}:std::expected<void,Error>{};
   }
@@ -241,7 +242,7 @@ std::expected<std::unique_ptr<OwnedMixedI2pService>,storage::Error> OwnedMixedI2
   if(!transport||!options.routerPort||options.peerPort!=6881||!QCoreApplication::instance()||QCoreApplication::closingDown()
       ||QThread::currentThread()==QCoreApplication::instance()->thread()){return refused("Mixed I2P requires its real Public transport, Host worker and original port6881");}
   try{
-    struct Bootstrap {std::shared_ptr<provider::ProfileSource> source;std::shared_ptr<Reservation> reservation;services::i2p::ClientIdentity identity;I2pServiceOptions options;std::optional<services::i2p::dht::Actor::Options> discovery;};
+    struct Bootstrap {std::shared_ptr<provider::ProfileSource> source;std::shared_ptr<Reservation> reservation;services::i2p::ClientIdentity identity;I2pServiceOptions options;std::optional<services::i2p::dht::Actor::Options> discovery;std::unique_ptr<provider::ContactOwner> contacts;};
     auto bootstrap=[&]()->std::expected<Bootstrap,Error>{
       auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
       auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}
@@ -250,13 +251,14 @@ std::expected<std::unique_ptr<OwnedMixedI2pService>,storage::Error> OwnedMixedI2
       auto actual=readSavedMixedI2pOptions(config->document(),std::move(options));if(!actual){return std::unexpected(actual.error());}
       auto discovery=readI2pDiscoveryOptions(lease,true,*actual);if(!discovery){return std::unexpected(discovery.error());}
       auto source=provider::ProfileSource::createMixedSession(lease);if(!source){return std::unexpected(source.error());}
+      auto contacts=provider::ContactOwner::open(lease,0,*discovery);if(!contacts){return std::unexpected(contacts.error());}
       auto reserved=reserveProfile((*source)->lease());if(!reserved){return refused("One live mixed I2P graph per profile is required");}
       auto identity=(*source)->takeIdentity();if(!identity){return std::unexpected(identity.error());}
-      return Bootstrap{std::move(*source),std::move(reserved),std::move(*identity),std::move(*actual),std::move(*discovery)};
+      return Bootstrap{std::move(*source),std::move(reserved),std::move(*identity),std::move(*actual),std::move(*discovery),std::move(*contacts)};
     }(); // Release source access BEFORE Qt startup or any provider operation.
     if(!bootstrap){return std::unexpected(bootstrap.error());}
-    auto graph=std::make_unique<Impl::Graph>(bootstrap->source,std::move(transport),std::move(bootstrap->identity),std::move(bootstrap->options),std::move(bootstrap->discovery));
-    auto service=std::unique_ptr<OwnedMixedI2pService>(new OwnedMixedI2pService(std::make_unique<Impl>(std::move(bootstrap->source),std::move(bootstrap->reservation),std::move(graph))));auto& s=*service->impl_;
+    auto graph=std::make_unique<Impl::Graph>(bootstrap->source,std::move(transport),std::move(bootstrap->identity),std::move(bootstrap->options),std::move(bootstrap->discovery),bootstrap->contacts?bootstrap->contacts->exchange():nullptr);
+    auto service=std::unique_ptr<OwnedMixedI2pService>(new OwnedMixedI2pService(std::make_unique<Impl>(std::move(bootstrap->source),std::move(bootstrap->reservation),std::move(graph),std::move(bootstrap->contacts))));auto& s=*service->impl_;
     QObject::connect(&s.thread,&QThread::finished,s.graph.get(),[&s]{
       if(s.graph&&s.graph->thread()==QThread::currentThread()){
         s.graph->close("Mixed I2P event loop ended");(void)s.graph->moveToThread(s.caller);
@@ -346,8 +348,9 @@ std::vector<OwnedMixedI2pService::Observation> OwnedMixedI2pService::observation
     // retired Public admission. No read-only result can restore I2P effects.
     const bool changed=!s.source->validateTransportSnapshot();for(auto& row:s.last){row.sourceChanged=changed;}
   }
-  for(auto& row:s.last){row.joined=s.joined;}return s.last;
+  for(auto& row:s.last){row.joined=s.joined;}if(!s.closed&&s.contacts){s.contacts->poll();}return s.last;
 }
+std::optional<storage::Error> OwnedMixedI2pService::contactCacheDiagnostic()const{auto& s=*impl_;std::lock_guard lock(s.mutex);return s.contacts?s.contacts->diagnostic():std::nullopt;}
 std::expected<void,storage::Error> OwnedMixedI2pService::close(){auto& s=*impl_;std::lock_guard lock(s.mutex);return s.shutdown();}
 OwnedMixedI2pService::~OwnedMixedI2pService(){try{auto& s=*impl_;std::lock_guard lock(s.mutex);(void)s.shutdown();}catch(...){}}
 }
@@ -368,6 +371,7 @@ std::expected<void,storage::Error> OwnedMixedI2pService::publishPositions(const 
 bool OwnedMixedI2pService::sourceCurrent()const noexcept{return false;}
 void OwnedMixedI2pService::revoke()noexcept{}
 std::vector<OwnedMixedI2pService::Observation> OwnedMixedI2pService::observations()const{return {};}
+std::optional<storage::Error> OwnedMixedI2pService::contactCacheDiagnostic()const{return std::nullopt;}
 std::expected<void,storage::Error> OwnedMixedI2pService::close(){return {};}
 std::expected<void,storage::Error> OwnedMixedI2pService::prepareMagnet(const engine::PendingMagnet&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed metadata unavailable"});}
 std::expected<void,storage::Error> OwnedMixedI2pService::bindMetadata(std::shared_ptr<const engine::PendingMetadataSource>){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed metadata unavailable"});}

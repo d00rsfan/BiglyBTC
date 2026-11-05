@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Inside InitialChannel::Impl. Tracker IDs are low (<=1024); these are high.
+// Inside InitialChannel::Impl. Owned wire IDs occupy the high unsigned32 half;
+// current bounded tracker IDs remain low. Never reset/reuse IDs on clear.
   struct OwnedLookup {std::uint64_t operation=0,generation=0;std::uint32_t request=0;Clock::time_point end{};Bytes write;bool sent=false;};
   std::optional<OwnedLookup> ownedLookup;
   std::optional<LookupObservation> ownedLookupResult;
   std::deque<LookupObservation> ownedLookupHistory; // Eight owning terminal facts, never grants.
-  std::uint32_t nextOwnedLookup=0;
+  std::uint64_t nextOwnedLookup=0x80000000ULL;
+  static_assert(std::numeric_limits<decltype(nextOwnedLookup)>::max()>std::numeric_limits<std::uint32_t>::max());
   bool lookupQueued=false;
   void clearLookup(){lookupTimer.stop();ownedLookup.reset();ownedLookupResult.reset();ownedLookupHistory.clear();lookupQueued=false;}
   void notifyOwnedLookup(){
@@ -47,9 +49,9 @@
     const auto end=Clock::now()+std::chrono::milliseconds(std::min(timeout,30000U));
     if(!onThread()||ownedLookup||tracker||state!=State::SessionCreated||!leaseCurrent()||waitingFirstLease||statusPending){return reject(Code::InvalidFormat,"Owned lookup requires current idle lookup/session");}
     if(!timeout||timeout>30000){return reject(Code::Unsupported,"Owned lookup deadline is1..30000ms");}
-    if(nextOwnedLookup>=1024){return reject(Code::TooLarge,"Owned lookup lifetime correlations exhausted");}
+    if(nextOwnedLookup>std::numeric_limits<std::uint32_t>::max()){return reject(Code::TooLarge,"Owned lookup wire identifier space exhausted");}
     try{
-      const auto request=0x80000000U+nextOwnedLookup;auto bytes=encodeHostLookup({*session,request,timeout,hash});if(!bytes){return std::unexpected(bytes.error());}
+      const auto request=static_cast<std::uint32_t>(nextOwnedLookup);auto bytes=encodeHostLookup({*session,request,timeout,hash});if(!bytes){return std::unexpected(bytes.error());}
       if(!leaseCurrent()||Clock::now()>=end){return reject(Code::InvalidFormat,"Owned lookup preparation lost lease/deadline");}
       ++nextOwnedLookup;const auto operation=static_cast<std::uint64_t>(request);
       ownedLookupResult=LookupObservation{operation,hash,LookupPhase::Pending,{}};

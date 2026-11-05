@@ -11,6 +11,7 @@ namespace biglybtc::app {class OwnedMixedI2pService;}
 namespace biglybtc::services::i2p::provider {
 class OwnedTorrent;
 class PendingMagnetSource;
+class ContactExchange;
 // Explicit optional private SAM-shaped endpoint, never a system SAM service.
 // All calls/destruction are on the same QObject thread as InitialChannel.
 class Bridge final:public QObject {
@@ -35,7 +36,7 @@ private:
   struct Impl;std::unique_ptr<Impl> impl_;
   // Private ephemeral capability is transferred only into the exact measured
   // provider hook. Not exposed by a public config/read/observation interface.
-  bool beginDiscovery(const dht::Actor::Options&);
+  bool beginDiscovery(const dht::Actor::Options&,std::shared_ptr<ContactExchange> ={});
   bool discover(std::shared_ptr<ProfileSource>,const core::TorrentHash&,const dht::Id&,
       std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)>);
   bool discover(std::shared_ptr<PendingMagnetSource>,const core::TorrentHash&,const dht::Id&,

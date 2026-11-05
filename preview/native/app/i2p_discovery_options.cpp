@@ -58,7 +58,7 @@ std::expected<std::optional<dht::Actor::Options>,storage::Error> readI2pDiscover
   dht::Actor::Options result;
   if(options.discovery){
     result.queryPort=options.discovery->queryPort;result.localId=options.discovery->nodeId;
-    result.inbound=options.discovery->inbound;result.inboundSleeping=options.discovery->inboundSleeping;result.inboundSuspended=options.discovery->inboundSuspended;
+    result.inbound=options.discovery->inbound;result.inboundSleeping=options.discovery->inboundSleeping;result.inboundSuspended=options.discovery->inboundSuspended;result.routingMaintenance=options.discovery->routingMaintenance;
     for(const auto& seed:options.discovery->seeds){
       dht::Contact value;value.id=seed.nodeId;value.hash=seed.destinationHash;value.port=seed.queryPort;
       if(!seed.destination.empty()){

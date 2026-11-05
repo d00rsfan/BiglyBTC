@@ -2,6 +2,7 @@
 #include "bridge.hpp"
 #include "sam_protocol.hpp"
 #include "source_permit.hpp"
+#include "contact_owner.hpp"
 #include "pending_magnet_source.hpp"
 #include <libtorrent/biglybtc_private_i2p_owner.hpp>
 #if __has_include(<libtorrent/biglybtc_mixed_i2p_transport.hpp>)
@@ -54,13 +55,14 @@ struct Bridge::Impl {
     std::uint64_t admission=0;bool seeding=false;Clock::time_point next{},end{};
     std::function<bool(const Hash&,std::uint64_t)> deliver;std::vector<Hash> delivered;
   };
+  std::shared_ptr<ContactExchange> contactExchange;
   std::unique_ptr<dht::Actor> discovery;std::vector<Discovery> discoveries;
   std::optional<std::uint64_t> discoveryAdmission;std::uint64_t discoveryOperation=0;
-  bool beginDiscovery(const dht::Actor::Options& options){
-    if(discovery||!channel||phase==Phase::Idle||phase==Phase::Withdrawn){return false;}
+  bool beginDiscovery(const dht::Actor::Options& options,std::shared_ptr<ContactExchange> contacts){
+    if(discovery||!channel||phase==Phase::Idle||phase==Phase::Withdrawn||(contacts&&(!options.inbound||!options.routingMaintenance))){return false;}
     auto actor=std::make_unique<dht::Actor>(*channel,q);
     if(!actor->begin(options)){return false;}
-    QObject::connect(actor.get(),&dht::Actor::changed,q,[this]{schedule();});discovery=std::move(actor);return true;
+    QObject::connect(actor.get(),&dht::Actor::changed,q,[this]{schedule();});discovery=std::move(actor);contactExchange=std::move(contacts);return true;
   }
   bool discover(std::shared_ptr<ProfileSource> child,const core::TorrentHash& selected,
       const dht::Id& wire,std::uint64_t route,bool seeding,std::function<bool(const Hash&,std::uint64_t)> deliver){
@@ -78,7 +80,9 @@ struct Bridge::Impl {
     std::erase_if(discoveries,[&](const auto& value){return value.admission==route;});
   }
   void pumpDiscovery(){
-    if(!discovery||!executing||!current()){return;}discovery->resumeAuthorizedInbound();if(!current()){return;}const auto now=Clock::now();
+    if(!discovery||!executing||!current()){return;}discovery->resumeAuthorizedInbound();if(!current()){return;}
+    if(contactExchange&&contactExchange->pending()){static_cast<void>(contactExchange->capture(*discovery,*channel,source));}
+    const auto now=Clock::now();
     for(auto at=discoveries.begin();at!=discoveries.end();){
       if(!at->source->prepared()||!at->source->discoveryAllowed()){
         const auto id=at->admission;++at;cancelDiscovery(id);at=discoveries.begin();
@@ -174,7 +178,7 @@ struct Bridge::Impl {
     if(reason&&!failure){failure=reason;}if(phase==Phase::Withdrawn){return;}phase=Phase::Withdrawn;wanted=false;server.close();timer.stop();if(watcher){watcher->setEnabled(false);}source->revoke();
     if(channel){channel->closeStreamListener();for(auto& item:sockets){if(item&&item->operation){channel->cancelStream(item->operation);}if(item&&item->lookup){channel->cancelDestinationLookup(item->lookup);}}}
     for(auto& item:sockets){if(item){QObject::disconnect(item->tcp.get(),nullptr,q,nullptr);item->tcp->abort();item.reset();}}
-    if(discovery){discovery->close();}discoveries.clear();discoveryAdmission.reset();discoveryOperation=0;control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());notify();
+    if(contactExchange){contactExchange->stop();}if(discovery){discovery->close();}discoveries.clear();discoveryAdmission.reset();discoveryOperation=0;control.reset();peers.clear();resolved.clear();retired.clear();sessionId.clear();if(permit){permit->stop();}OPENSSL_cleanse(capability.data(),capability.size());OPENSSL_cleanse(peerIdMask.data(),peerIdMask.size());notify();
   }
   void schedule(bool work=true){
     if(phase==Phase::Idle||phase==Phase::Withdrawn){return;}wanted|=work;if(queued){return;}queued=true;bool ok=false;
@@ -197,6 +201,7 @@ struct Bridge::Impl {
       const auto now=Clock::now();
       end=std::min(end,job.next<=now?now+std::chrono::milliseconds(250):job.next);
     }}
+    if(contactExchange){const auto check=contactExchange->nextCheck();if(check){end=std::min(end,*check);}}
     if(end==Clock::time_point::max()){timer.stop();return;}
     timer.start(static_cast<int>(std::max<std::int64_t>(1,std::chrono::duration_cast<std::chrono::milliseconds>(end-Clock::now()).count())));
   }
@@ -342,7 +347,7 @@ struct Bridge::Impl {
       if(phase==Phase::Withdrawn||phase==Phase::Idle){return;}
       // Revocation is local and never waits for a filesystem permit. In
       // particular, a blocked source read cannot extend a socket's budget.
-      const auto now=Clock::now();
+      const auto now=Clock::now();if(contactExchange){contactExchange->tick(now);}
       if(phase==Phase::Preparing&&now>=preparingEnd){close("I2P bridge preparation deadline expired");return;}
       for(std::size_t i=0;i<sockets.size()&&phase!=Phase::Withdrawn;++i){
         if(sockets[i]&&sockets[i]->phase!=SocketPhase::Control&&sockets[i]->phase!=SocketPhase::Data
@@ -448,7 +453,7 @@ bool Bridge::event(QEvent* event){if(event->type()==SourcePermit::wakeEvent()){c
 }
 
 namespace biglybtc::services::i2p::provider {
-bool Bridge::beginDiscovery(const dht::Actor::Options& options){return impl_->onThread()&&impl_->beginDiscovery(options);}
+bool Bridge::beginDiscovery(const dht::Actor::Options& options,std::shared_ptr<ContactExchange> contacts){return impl_->onThread()&&impl_->beginDiscovery(options,std::move(contacts));}
 bool Bridge::discover(std::shared_ptr<ProfileSource> source,const core::TorrentHash& hash,const dht::Id& wire,
     std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)> deliver){return impl_->discover(std::move(source),hash,wire,admission,seeding,std::move(deliver));}
 bool Bridge::discover(std::shared_ptr<PendingMagnetSource> source,const core::TorrentHash& hash,const dht::Id& wire,

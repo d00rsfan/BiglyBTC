@@ -248,3 +248,32 @@ endif()
 # Original I2P inbound KRPC state and source-bound actor.
 target_sources(biglybtc_i2p_dht PRIVATE i2p_dht/inbound_state.cpp i2p_dht/inbound_responder.cpp)
 target_link_libraries(biglybtc_i2p_dht PRIVATE biglybtc_azureus_owned_udp)
+
+# Original I2P contact persistence format only; no actor/profile activation.
+target_sources(biglybtc_i2p_dht PRIVATE i2p_dht/saved_contacts.cpp)
+
+# Original-profile I2P contacts are a separate filesystem worker library.
+# Profile remains independent of the I2P wire/identity code; no owner activation.
+add_library(biglybtc_i2p_contact_store STATIC i2p_provider/contact_store.cpp)
+target_include_directories(biglybtc_i2p_contact_store PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2p_provider")
+target_link_libraries(biglybtc_i2p_contact_store PUBLIC biglybtc_profile biglybtc_i2p_dht)
+target_compile_features(biglybtc_i2p_contact_store PUBLIC cxx_std_23)
+target_compile_options(biglybtc_i2p_contact_store PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+# Private I2P routing-maintenance state; no new activation or dependencies.
+target_sources(biglybtc_i2p_dht PRIVATE i2p_dht/routing_maintenance.hpp i2p_dht/routing_maintenance.inc)
+
+# Original I2P contact export selection; no filesystem or transport authority.
+target_sources(biglybtc_i2p_dht PRIVATE i2p_dht/saved_routing.cpp)
+
+if(TARGET biglybtc_i2p_contact_store AND TARGET biglybtc_owned_i2p_source)
+# Existing caller thread only; no additional filesystem/network worker.
+add_library(biglybtc_i2p_contact_owner STATIC i2p_provider/contact_owner.cpp)
+target_include_directories(biglybtc_i2p_contact_owner PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2p_provider")
+target_link_libraries(biglybtc_i2p_contact_owner PUBLIC biglybtc_i2p_contact_store biglybtc_owned_i2p_source)
+target_compile_features(biglybtc_i2p_contact_owner PUBLIC cxx_std_23)
+target_compile_options(biglybtc_i2p_contact_owner PRIVATE -Wall -Wextra -Wpedantic -Werror)
+if(TARGET biglybtc_i2p_provider_owner)
+  target_link_libraries(biglybtc_i2p_provider_owner PUBLIC biglybtc_i2p_contact_owner)
+endif()
+endif()

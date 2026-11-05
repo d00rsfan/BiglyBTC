@@ -1,5 +1,6 @@
 #include "profile.hpp"
 #include "session_bridge.hpp"
+#include "manual_tag_policy.hpp"
 #include "library_window.hpp"
 #include "manual_tag_view.hpp"
 #include <QBuffer>
@@ -16,6 +17,9 @@
 #include <QPointer>
 #include <QFileInfo>
 #include <QSignalSpy>
+#include <QScopeGuard>
+#include <condition_variable>
+#include <mutex>
 #include <QtTest>
 
 #include <algorithm>
@@ -33,6 +37,8 @@ using namespace biglybtc;
 std::atomic<bool> watched{false};
 std::atomic<std::uintmax_t> watchedDevice{0}, watchedInode{0};
 std::atomic<unsigned> tagReads{0};
+std::atomic<bool> holdTagRead{false},heldTagReadEntered{false};
+std::mutex tagReadMutex;std::condition_variable tagReadWake;
 struct Watch {
   explicit Watch(const QString& filename) {
     struct stat info{}; test::require(::stat(filename.toStdString().c_str(), &info) == 0, "Cannot watch owned tag file");
@@ -170,7 +176,13 @@ extern "C" ssize_t __wrap_read(int descriptor, void* bytes, size_t size) {
     struct stat info{};
     if (::fstat(descriptor, &info) == 0
         && static_cast<std::uintmax_t>(info.st_dev) == watchedDevice.load()
-        && static_cast<std::uintmax_t>(info.st_ino) == watchedInode.load()) { ++tagReads; }
+        && static_cast<std::uintmax_t>(info.st_ino) == watchedInode.load()) {
+      ++tagReads;
+      if(holdTagRead.load()){
+        std::unique_lock lock(tagReadMutex);heldTagReadEntered=true;
+        tagReadWake.wait_for(lock,std::chrono::seconds{5},[]{return !holdTagRead.load();});
+      }
+    }
   }
   return __real_read(descriptor, bytes, size);
 }
@@ -380,6 +392,170 @@ private slots:
     });
     QVERIFY(bridge->manualTagStatistics(session)); QTRY_VERIFY(deleted && alive.isNull()); QCOMPARE(trailingIdle, 0);
     auto lease = storage::ProfileLease::acquire(fixture.native()); QVERIFY(lease);
+  }
+  void originalSavedAutomationClassificationIsDirectionalWithoutRuleEvaluation() {
+    const auto string=[](std::string_view value){return std::to_string(value.size())+":"+std::string(value);};
+    const auto dictionary=[&](std::initializer_list<std::pair<std::string,std::string>> fields){std::string out="d";for(const auto& [name,value]:fields){out+=string(name)+value;}return out+"e";};
+    const auto list=[&](std::initializer_list<std::string_view> values){std::string out="l";for(const auto value:values){out+=string(value);}return out+"e";};
+    struct Case{std::string config;bool add,remove,other,malformed;};
+    const std::vector<Case> cases{
+      {"de",true,true,false,false},
+      {dictionary({{"pp.trackers",list({})},{"pp.untagged","i0e"},{"pp.constraint",list({})}}),true,true,false,false},
+      {dictionary({{"pp.trackers",list({"tracker"})},{"pp.constraint",list({"true","am=3;"})}}),false,false,false,false},
+      {dictionary({{"pp.untagged","i1e"}}),false,false,false,false},
+      {dictionary({{"pp.untagged","i2e"}}),true,true,false,false},
+      {dictionary({{"pp.tracker_templates",list({"inert template"})}}),true,true,false,false},
+      {dictionary({{"pp.constraint",list({"true"})},{"pp.enabled.constraint","i0e"}}),true,true,false,false},
+      {dictionary({{"pp.constraint",list({" \t\r\n"})}}),true,true,false,false},
+      {dictionary({{"pp.constraint",list({"never evaluated","am=1;"})}}),false,true,false,false},
+      {dictionary({{"pp.constraint",list({"never evaluated","am=2;"})}}),true,false,false,false},
+      {dictionary({{"pp.constraint",list({"never evaluated","am=3;"})}}),true,true,true,false},
+      {dictionary({{"pp.constraint",list({"never evaluated","am=3;am=2;am=1;"})}}),false,true,false,false},
+      {dictionary({{"pp.trackers","i1e"}}),false,false,false,true},
+      {dictionary({{"pp.constraint",list({"true"})},{"pp.enabled.constraint",string("wrong")}}),false,false,false,true},
+      {"i1e",false,false,false,true}
+    };
+    for(const auto& value:cases){
+      const auto raw=dictionary({{"c",value.config},{"unknown",string("preserved")}});auto parsed=core::Document::parse(raw);QVERIFY(parsed);
+      const auto classified=app::classifyManualTagMembership(parsed->root());
+      QCOMPARE(classified.addAllowed(),value.add);QCOMPARE(classified.removeAllowed(),value.remove);QCOMPARE(classified.other,value.other);QCOMPARE(classified.malformed,value.malformed);QCOMPARE(parsed->serialize(),raw);
+    }
+    // Every policy input is freshly parsed. The original map last-wins model
+    // is ambiguous here, so the shared strict parser rejects every duplicate.
+    const auto duplicateConfig=dictionary({{"c","de"},{"c","de"}});auto duplicate=core::Document::parse(duplicateConfig);QVERIFY(!duplicate&&duplicate.error().code=="duplicate_key");
+    for(const auto* key:{"pp.trackers","pp.untagged","pp.constraint","pp.enabled.constraint"}){
+      const auto raw=dictionary({{"c",dictionary({{key,"i0e"},{key,"i1e"}})}});duplicate=core::Document::parse(raw);QVERIFY(!duplicate&&duplicate.error().code=="duplicate_key");
+    }
+  }
+  void savedTagCommandsCreateAssignRenameRefreshAndJoinedClose() {
+    test::OwnedEngineFixture fixture(false);app::SessionBridge bridge;
+    QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady);
+    QSignalSpy commands(&bridge,&app::SessionBridge::manualTagCommandFinished),statistics(&bridge,&app::SessionBridge::manualTagStatisticsReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.open(fixture.native(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty()&&!rows.empty(),10000);
+    const auto session=sessions.last().at(0).toULongLong();const auto result=[&]{return qvariant_cast<ui::ManualTagCommandPresentation>(commands.last().at(0));};
+    ui::ManualTagCommand request;request.session=session;request.request=1;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==1);
+    QCOMPARE(result()->status,ui::ManualTagCommandStatus::Loaded);QCOMPARE(result()->readState,ui::ManualTagReadState::Missing);QVERIFY(result()->writable&&result()->tags&&result()->tags->source->originalBytes()=="de");
+    request={};request.session=session;request.request=2;request.generation=result()->generation;request.kind=ui::ManualTagCommandKind::Create;request.name=QStringLiteral("Created");
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==2);
+    QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QCOMPARE(result()->createdId,std::optional<qint32>{1});QVERIFY(result()->changed&&result()->writable);
+    request.request=3;request.generation=result()->generation;request.kind=ui::ManualTagCommandKind::AddMember;request.tagId=1;request.member=target(rows);
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==3);
+    QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QCOMPARE(result()->tags->tags.front().uniqueHashes.size(),std::size_t{1});QVERIFY(result()->tags->tags.front().uniqueHashes.front()==*fixture.hash);
+    QVERIFY(latest(statistics)&&latest(statistics)->membership);QCOMPARE(latest(statistics)->tagRevision,result()->generation);
+    request.request=4;request.generation=result()->generation;request.kind=ui::ManualTagCommandKind::Rename;request.name=QStringLiteral("Renamed");
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==4);
+    QCOMPARE(result()->tags->tags.front().rawName,std::optional<std::string>{"Renamed"});const auto oldGeneration=result()->generation;
+    QVERIFY(bridge.manualTagStatistics(session));QTRY_VERIFY(!bridge.busy()&&latest(statistics)->tagRevision>oldGeneration);
+    const auto path=fixture.profile+QStringLiteral("/tag.config");const auto before=test::read(path);
+    request.request=5;request.generation=oldGeneration;request.name=QStringLiteral("Must not overwrite");
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==5);
+    QCOMPARE(result()->status,ui::ManualTagCommandStatus::Rejected);QVERIFY(result()->failure.contains(QStringLiteral("stale")));QCOMPARE(test::read(path),before);
+    request.request=6;request.kind=ui::ManualTagCommandKind::Reload;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==6);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Loaded);
+    request.request=7;request.generation=result()->generation;request.kind=ui::ManualTagCommandKind::Create;request.name=QStringLiteral("Same actual session");
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==7);QCOMPARE(result()->createdId,std::optional<qint32>{2});
+    const auto heldPresentation=result();QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);
+    QVERIFY(closed.last().at(1).toBool()&&closed.last().at(2).toBool());QVERIFY(!bridge.manualTagCommand(request));
+    auto released=storage::ProfileLease::acquire(fixture.native());QVERIFY(released);QVERIFY(heldPresentation->tags&&heldPresentation->tags->tags.front().rawName==std::optional<std::string>{"Renamed"});
+  }
+  void savedTagNoopAndStaleLibrarySelectionNeverPublish() {
+    test::OwnedEngineFixture fixture(false);const auto path=fixture.profile+QStringLiteral("/tag.config");const auto raw=tags(*fixture.hash);test::write(path,raw);
+    app::SessionBridge bridge;QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),commands(&bridge,&app::SessionBridge::manualTagCommandFinished);
+    QVERIFY(bridge.open(fixture.native(),0));QTRY_VERIFY(!bridge.busy()&&!sessions.empty()&&!rows.empty());
+    ui::ManualTagCommand request;request.session=sessions.last().at(0).toULongLong();request.request=1;
+    const auto result=[&]{return qvariant_cast<ui::ManualTagCommandPresentation>(commands.last().at(0));};
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==1);const auto generation=result()->generation;const auto before=tagStamp(path);const auto owning=result()->tags;
+    request.request=2;request.generation=generation;request.kind=ui::ManualTagCommandKind::AddMember;request.tagId=1;request.member=target(rows);
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==2);
+    QCOMPARE(result()->status,ui::ManualTagCommandStatus::Unchanged);QVERIFY(!result()->changed&&result()->tags==owning);QCOMPARE(result()->generation,generation);QVERIFY(sameTag(before,path));QCOMPARE(test::read(path),raw);
+    ++request.request;++request.member.generation;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==3);
+    QCOMPARE(result()->status,ui::ManualTagCommandStatus::Rejected);QVERIFY(result()->failure.contains(QStringLiteral("stale")));QVERIFY(sameTag(before,path));
+    ++request.request;request.member=target(rows);request.member.hash=QString(40,QLatin1Char('F'));
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==4);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Rejected);QCOMPARE(test::read(path),raw);
+    QVERIFY(!QFileInfo::exists(path+QStringLiteral(".bak"))&&!QFileInfo::exists(path+QStringLiteral(".saving")));
+    auto automated=raw;QCOMPARE(automated.count("1:n6:Actual"),1);automated.replace("1:n6:Actual","1:cd13:pp.constraintl4:trueee1:n6:Actual");test::write(path,automated);
+    request.request=5;request.kind=ui::ManualTagCommandKind::Reload;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==5);
+    request.request=6;request.generation=result()->generation;request.kind=ui::ManualTagCommandKind::AddMember;request.member=target(rows);
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==6);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Rejected);QVERIFY(result()->failure.contains(QStringLiteral("Automatic")));QCOMPARE(test::read(path),automated);QVERIFY(!QFileInfo::exists(path+QStringLiteral(".saving")));
+    auto directional=raw;directional.replace("1:n6:Actual","1:cd13:pp.constraintl4:true5:am=1;ee1:n6:Actual");test::write(path,directional);
+    request.request=7;request.kind=ui::ManualTagCommandKind::Reload;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==7);
+    request.request=8;request.generation=result()->generation;request.kind=ui::ManualTagCommandKind::RemoveMember;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==8);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QVERIFY(result()->tags->tags.front().uniqueHashes.empty());
+    const auto removed=test::read(path);request.request=9;request.generation=result()->generation;request.kind=ui::ManualTagCommandKind::AddMember;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==9);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Rejected);QCOMPARE(test::read(path),removed);
+    auto disabled=removed;QCOMPARE(disabled.count("13:pp.constraint"),1);disabled.replace("13:pp.constraint","21:pp.enabled.constrainti0e13:pp.constraint");test::write(path,disabled);
+    request.request=10;request.kind=ui::ManualTagCommandKind::Reload;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==10);
+    request.request=11;request.generation=result()->generation;request.kind=ui::ManualTagCommandKind::AddMember;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==11);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QVERIFY(result()->tags->tags.front().uniqueHashes.front()==*fixture.hash);
+  }
+  void savedTagCancelledActualReadCreatesNoPublicationAndCanRetry() {
+    test::OwnedEngineFixture fixture(false);const auto path=fixture.profile+QStringLiteral("/tag.config");const auto raw=tags(*fixture.hash);test::write(path,raw);
+    app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),commands(&bridge,&app::SessionBridge::manualTagCommandFinished);
+    QVERIFY(bridge.open(fixture.native(),0));QTRY_VERIFY(!bridge.busy()&&!sessions.empty());
+    ui::ManualTagCommand request;request.session=sessions.last().at(0).toULongLong();request.request=1;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==1);
+    const auto first=qvariant_cast<ui::ManualTagCommandPresentation>(commands.last().at(0));Watch watch(path);
+    const auto release=qScopeGuard([]{holdTagRead=false;tagReadWake.notify_all();});
+    heldTagReadEntered=false;holdTagRead=true;
+    request.request=2;request.generation=first->generation;request.kind=ui::ManualTagCommandKind::Create;request.name=QStringLiteral("Cancelled");
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY_WITH_TIMEOUT(heldTagReadEntered.load(),3000);bridge.cancel();holdTagRead=false;tagReadWake.notify_all();
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&commands.count()==2,10000);
+    const auto cancelled=qvariant_cast<ui::ManualTagCommandPresentation>(commands.last().at(0));QCOMPARE(cancelled->status,ui::ManualTagCommandStatus::Cancelled);
+    QCOMPARE(test::read(path),raw);QVERIFY(!QFileInfo::exists(path+QStringLiteral(".saving")));QVERIFY(!QFileInfo::exists(path+QStringLiteral(".bak")));
+    request.request=3;request.generation=first->generation;request.name=QStringLiteral("Actual retry");
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==3);QCOMPARE(qvariant_cast<ui::ManualTagCommandPresentation>(commands.last().at(0))->status,ui::ManualTagCommandStatus::Saved);
+  }
+  void savedTagRecoveryIsReadOnlyAndChangedCandidatesRequireReload() {
+    test::OwnedEngineFixture fixture(false);const auto path=fixture.profile+QStringLiteral("/tag.config");const auto raw=tags(*fixture.hash);test::write(path,raw);test::write(path+QStringLiteral(".saving"),raw);
+    app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),commands(&bridge,&app::SessionBridge::manualTagCommandFinished);
+    QVERIFY(bridge.open(fixture.native(),0));QTRY_VERIFY(!bridge.busy()&&!sessions.empty());
+    ui::ManualTagCommand request;request.session=sessions.last().at(0).toULongLong();request.request=1;
+    const auto result=[&]{return qvariant_cast<ui::ManualTagCommandPresentation>(commands.last().at(0));};
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==1);QVERIFY(!result()->writable&&result()->tags);
+    request.request=2;request.generation=result()->generation;request.kind=ui::ManualTagCommandKind::Rename;request.tagId=1;request.name=QStringLiteral("Denied repair");
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==2);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Rejected);QCOMPARE(test::read(path),raw);QCOMPARE(test::read(path+QStringLiteral(".saving")),raw);
+    QVERIFY(QFile::remove(path+QStringLiteral(".saving")));request.request=3;request.kind=ui::ManualTagCommandKind::Reload;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==3);QVERIFY(result()->writable);
+    test::write(path+QStringLiteral(".replacement"),raw);QVERIFY(QFile::remove(path));QVERIFY(QFile::rename(path+QStringLiteral(".replacement"),path));
+    request.request=4;request.generation=result()->generation;request.kind=ui::ManualTagCommandKind::Rename;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==4);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Rejected);QVERIFY(!result()->writable);QCOMPARE(test::read(path),raw);QVERIFY(!QFileInfo::exists(path+QStringLiteral(".saving")));
+    request.request=5;request.kind=ui::ManualTagCommandKind::Reload;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==5);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Loaded);QVERIFY(result()->writable);
+  }
+  void savedTagExplicitReloadReopensUncertainStoreWithoutReplayingEdit() {
+    QVERIFY(::geteuid()!=0);test::OwnedEngineFixture fixture(false);app::SessionBridge bridge;
+    QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),commands(&bridge,&app::SessionBridge::manualTagCommandFinished);
+    QVERIFY(bridge.open(fixture.native(),0));QTRY_VERIFY(!bridge.busy()&&!sessions.empty());
+    ui::ManualTagCommand request;request.session=sessions.last().at(0).toULongLong();request.request=1;
+    const auto result=[&]{return qvariant_cast<ui::ManualTagCommandPresentation>(commands.last().at(0));};
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==1);
+    request.request=2;request.generation=result()->generation;request.kind=ui::ManualTagCommandKind::Create;request.name=QStringLiteral("Committed first");
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==2);QCOMPARE(result()->createdId,std::optional<qint32>{1});
+    const auto path=fixture.profile+QStringLiteral("/tag.config");const auto before=test::read(path);const auto generation=result()->generation;
+    const auto profile=fixture.native();struct stat profileBefore{};QVERIFY(::stat(profile.c_str(),&profileBefore)==0);const auto mode=profileBefore.st_mode&07777;
+    const auto restore=qScopeGuard([profile,mode]{(void)::chmod(profile.c_str(),mode);});QVERIFY(::chmod(profile.c_str(),0500)==0);
+    request.request=3;request.generation=generation;request.name=QStringLiteral("Must never replay");
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==3);QVERIFY(::chmod(profile.c_str(),mode)==0);
+    QCOMPARE(result()->status,ui::ManualTagCommandStatus::Rejected);QVERIFY(!result()->writable&&result()->generation>generation);const auto failedGeneration=result()->generation;
+    QCOMPARE(test::read(path),before);QVERIFY(!QFileInfo::exists(path+QStringLiteral(".saving"))&&!QFileInfo::exists(path+QStringLiteral(".bak")));
+    request.request=4;request.kind=ui::ManualTagCommandKind::Reload;
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==4);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Loaded);QVERIFY(result()->writable&&result()->generation>failedGeneration);QCOMPARE(result()->tags->tags.size(),std::size_t{1});QCOMPARE(test::read(path),before);
+    request.request=5;request.generation=result()->generation;request.kind=ui::ManualTagCommandKind::Create;request.name=QStringLiteral("New explicit edit");
+    QVERIFY(bridge.manualTagCommand(request));QTRY_VERIFY(!bridge.busy()&&commands.count()==5);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QCOMPARE(result()->createdId,std::optional<qint32>{3});QCOMPARE(result()->tags->tags.size(),std::size_t{2});
+    for(const auto& tag:result()->tags->tags){QVERIFY(tag.rawName!=std::optional<std::string>{"Must never replay"});}
+  }
+  void savedTagCommandDirectReceiverMayDeleteBridgeWhileBusy() {
+    test::OwnedEngineFixture fixture(false);QObject cleanup;auto* bridge=new app::SessionBridge(&cleanup);QPointer<app::SessionBridge> alive(bridge);QSignalSpy sessions(bridge,&app::SessionBridge::columnLayoutSessionReady);
+    QVERIFY(bridge->open(fixture.native(),0));QTRY_VERIFY(!bridge->busy()&&!sessions.empty());int trailingIdle=0;bool deleted=false;
+    connect(bridge,&app::SessionBridge::busyChanged,&cleanup,[&](bool busy){if(!busy){++trailingIdle;}});
+    connect(bridge,&app::SessionBridge::manualTagCommandFinished,&cleanup,[&](auto packet){QVERIFY(bridge->busy());QCOMPARE(packet->status,ui::ManualTagCommandStatus::Loaded);delete bridge;deleted=true;});
+    ui::ManualTagCommand request;request.session=sessions.last().at(0).toULongLong();request.request=1;
+    QVERIFY(bridge->manualTagCommand(request));QTRY_VERIFY(deleted&&alive.isNull());QCOMPARE(trailingIdle,0);auto released=storage::ProfileLease::acquire(fixture.native());QVERIFY(released);
   }
 };
 QTEST_MAIN(ManualTagBridgeTests)

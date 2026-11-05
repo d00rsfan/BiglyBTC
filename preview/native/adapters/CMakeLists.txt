@@ -122,3 +122,6 @@ target_sources(biglybtc_profile PRIVATE azureus_value_versions.cpp)
 target_sources(biglybtc_profile PRIVATE azureus_contacts.cpp)
 
 target_sources(biglybtc_profile PRIVATE azureus_public_policy.cpp)
+
+# Worker-only original tag.config edit store; no live tag actions.
+target_sources(biglybtc_profile PRIVATE manual_tag_store.cpp)

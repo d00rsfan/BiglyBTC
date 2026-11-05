@@ -7,6 +7,7 @@
 #endif
 #if BIGLYBTC_HOST_I2P_OWNER
 #include "../services/i2p_provider/profile_owner.hpp"
+#include "../services/i2p_provider/contact_owner.hpp"
 #include "i2p_discovery_options.hpp"
 #include "library_commands.hpp"
 #include "biglybtc/queue_policy.hpp"
@@ -38,13 +39,13 @@ std::expected<provider::OwnedProfile::Rates,Error> savedRates(const core::Docume
 }
 }
 struct OwnedI2pService::Impl {
-  std::unique_ptr<provider::OwnedProfile> owner;
+  std::unique_ptr<provider::OwnedProfile> owner;std::unique_ptr<provider::ContactOwner> contacts;
   std::shared_ptr<const storage::ProfileLease> lease;
   QThread thread;QThread* caller=QThread::currentThread();
   mutable std::mutex mutex;mutable std::vector<TorrentObservation> last;
   mutable Phase lastPhase=Phase::Prepared;std::map<std::string,engine::PendingMagnet> magnetIntents;
   bool closed=false,joined=false,externalQueue=false;std::optional<Error> closeError;
-  explicit Impl(std::unique_ptr<provider::OwnedProfile> p,std::shared_ptr<const storage::ProfileLease> l):owner(std::move(p)),lease(std::move(l)){}
+  explicit Impl(std::unique_ptr<provider::OwnedProfile> p,std::shared_ptr<const storage::ProfileLease> l,std::unique_ptr<provider::ContactOwner> cache):owner(std::move(p)),contacts(std::move(cache)),lease(std::move(l)){}
   template<class F> bool onOwner(F&& f)const{
     if(owner->thread()==QThread::currentThread()){f();return true;}
     return thread.isRunning()&&QMetaObject::invokeMethod(owner.get(),std::forward<F>(f),Qt::BlockingQueuedConnection);
@@ -96,7 +97,7 @@ struct OwnedI2pService::Impl {
       else{first=Error{Code::Io,"I2P event loop unavailable for close"};}
     }
     if(!onOwner([&]{moveClosed();})){first=Error{Code::Io,"Cannot close shared I2P event loop"};}
-    thread.quit();thread.wait();owner->join();joined=true;owner.reset();closed=true;
+    thread.quit();thread.wait();owner->join();joined=true;if(contacts){contacts->finish();}owner.reset();closed=true;
     for(auto& entry:last){entry.value.current=false;entry.value.joined=true;entry.value.phase=Phase::Withdrawn;entry.value.downloadRate=0;entry.value.uploadRate=0;}
     closeError=first;return first?std::expected<void,Error>{std::unexpected(*first)}:std::expected<void,Error>{};
   }
@@ -106,7 +107,7 @@ bool OwnedI2pService::available()noexcept{return true;}
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::start(const storage::ProfileLease& lease,const core::TorrentHash& hash,I2pServiceOptions options,const engine::RetainedPayloads& external){
   if(!QCoreApplication::instance()||QCoreApplication::closingDown()||QThread::currentThread()==QCoreApplication::instance()->thread()||!options.routerPort||!options.peerPort||(options.publicCoexistence&&!options.externalQueue)){return std::unexpected(Error{Code::Unsupported,"Live Qt Host worker, nonzero ports and a union queue for coexistence required"});}
   try{
-    struct Bootstrap {std::unique_ptr<provider::OwnedProfile> owner;std::shared_ptr<const storage::ProfileLease> lease;core::QueuePolicy queue;provider::OwnedProfile::Rates rates;std::optional<services::i2p::dht::Actor::Options> discovery;};
+    struct Bootstrap {std::unique_ptr<provider::OwnedProfile> owner;std::shared_ptr<const storage::ProfileLease> lease;core::QueuePolicy queue;provider::OwnedProfile::Rates rates;std::optional<services::i2p::dht::Actor::Options> discovery;std::unique_ptr<provider::ContactOwner> contacts;};
     auto bootstrap=[&]()->std::expected<Bootstrap,Error>{
       auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
       auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}const auto configBytes=config->document().serialize();
@@ -115,22 +116,23 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
       auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}
       auto discovery=readI2pDiscoveryOptions(lease,false,options);if(!discovery){return std::unexpected(discovery.error());}
       auto prepared=provider::OwnedProfile::prepare(lease,hash,external);if(!prepared){return std::unexpected(prepared.error());}
+      auto contacts=provider::ContactOwner::open(lease,1,*discovery);if(!contacts){return std::unexpected(contacts.error());}
       auto current=storage::ConfigFile::load(lease,"biglybt.config");if(!current||current->document().serialize()!=configBytes){return std::unexpected(Error{Code::Conflict,"Original I2P queue/rate configuration changed during preparation"});}
-      return Bootstrap{std::move(*prepared),std::move(*retained),std::move(*queue),*rates,std::move(*discovery)};
+      return Bootstrap{std::move(*prepared),std::move(*retained),std::move(*queue),*rates,std::move(*discovery),std::move(*contacts)};
     }(); // Release the source gate BEFORE starting or waiting on Qt sockets.
     if(!bootstrap){return std::unexpected(bootstrap.error());}
-    auto service=std::unique_ptr<OwnedI2pService>(new OwnedI2pService(std::make_unique<Impl>(std::move(bootstrap->owner),std::move(bootstrap->lease))));auto& s=*service->impl_;
+    auto service=std::unique_ptr<OwnedI2pService>(new OwnedI2pService(std::make_unique<Impl>(std::move(bootstrap->owner),std::move(bootstrap->lease),std::move(bootstrap->contacts))));auto& s=*service->impl_;
     provider::OwnedProfile::Options actual;actual.router={QHostAddress::LocalHost,options.routerPort,"2.13.0",false,30000,false};actual.session=std::move(options.sessionOptions);actual.ports={options.peerPort,options.peerPort};
     QObject::connect(&s.thread,&QThread::finished,s.owner.get(),[&s]{if(s.owner&&s.owner->thread()==QThread::currentThread()){s.moveClosed();}},Qt::DirectConnection);
     s.thread.start();if(!s.thread.isRunning()||!s.owner->moveToThread(&s.thread)){(void)s.shutdown(false);return std::unexpected(Error{Code::Io,"Cannot start shared I2P event loop"});}
     s.externalQueue=options.externalQueue;
-    bool began=false;if(!s.onOwner([&]{began=(!bootstrap->discovery||s.owner->configureDiscovery(*bootstrap->discovery))&&s.owner->configureExternalQueue(options.externalQueue)&&s.owner->begin(actual,std::move(bootstrap->queue),bootstrap->rates);s.capture();})||!began){(void)s.shutdown(false);return std::unexpected(Error{Code::Io,"Cannot begin shared I2P session"});}return service;
+    bool began=false;if(!s.onOwner([&]{began=(!bootstrap->discovery||s.owner->configureDiscovery(*bootstrap->discovery))&&(!s.contacts||!s.contacts->exchange()||s.owner->configureContactExchange(s.contacts->exchange()))&&s.owner->configureExternalQueue(options.externalQueue)&&s.owner->begin(actual,std::move(bootstrap->queue),bootstrap->rates);s.capture();})||!began){(void)s.shutdown(false);return std::unexpected(Error{Code::Io,"Cannot begin shared I2P session"});}return service;
   }catch(...){return std::unexpected(Error{Code::Io,"Cannot prepare shared I2P service"});}
 }
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startPending(const storage::ProfileLease& lease,const engine::PendingMagnet& intent,I2pServiceOptions options){
   if(!QCoreApplication::instance()||QCoreApplication::closingDown()||QThread::currentThread()==QCoreApplication::instance()->thread()||!options.routerPort||!options.peerPort||(options.publicCoexistence&&!options.externalQueue)){return std::unexpected(Error{Code::Unsupported,"Live Qt Host worker, nonzero ports and a union queue for coexistence required"});}
   try{
-    struct Bootstrap {std::unique_ptr<provider::OwnedProfile> owner;std::shared_ptr<const storage::ProfileLease> lease;core::QueuePolicy queue;provider::OwnedProfile::Rates rates;std::optional<services::i2p::dht::Actor::Options> discovery;};
+    struct Bootstrap {std::unique_ptr<provider::OwnedProfile> owner;std::shared_ptr<const storage::ProfileLease> lease;core::QueuePolicy queue;provider::OwnedProfile::Rates rates;std::optional<services::i2p::dht::Actor::Options> discovery;std::unique_ptr<provider::ContactOwner> contacts;};
     auto bootstrap=[&]()->std::expected<Bootstrap,Error>{
       auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
       auto config=storage::ConfigFile::load(lease,"biglybt.config");if(!config){return std::unexpected(config.error());}const auto configBytes=config->document().serialize();
@@ -139,16 +141,17 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
       auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}
       auto discovery=readI2pDiscoveryOptions(lease,false,options);if(!discovery){return std::unexpected(discovery.error());}
       auto prepared=provider::OwnedProfile::preparePending(lease,intent);if(!prepared){return std::unexpected(prepared.error());}
+      auto contacts=provider::ContactOwner::open(lease,1,*discovery);if(!contacts){return std::unexpected(contacts.error());}
       auto current=storage::ConfigFile::load(lease,"biglybt.config");if(!current||current->document().serialize()!=configBytes){return std::unexpected(Error{Code::Conflict,"Original I2P queue/rate configuration changed during preparation"});}
-      return Bootstrap{std::move(*prepared),std::move(*retained),std::move(*queue),*rates,std::move(*discovery)};
+      return Bootstrap{std::move(*prepared),std::move(*retained),std::move(*queue),*rates,std::move(*discovery),std::move(*contacts)};
     }(); // Release the source gate BEFORE starting or waiting on Qt sockets.
     if(!bootstrap){return std::unexpected(bootstrap.error());}
-    auto service=std::unique_ptr<OwnedI2pService>(new OwnedI2pService(std::make_unique<Impl>(std::move(bootstrap->owner),std::move(bootstrap->lease))));auto& s=*service->impl_;
+    auto service=std::unique_ptr<OwnedI2pService>(new OwnedI2pService(std::make_unique<Impl>(std::move(bootstrap->owner),std::move(bootstrap->lease),std::move(bootstrap->contacts))));auto& s=*service->impl_;
     provider::OwnedProfile::Options actual;actual.router={QHostAddress::LocalHost,options.routerPort,"2.13.0",false,30000,false};actual.session=std::move(options.sessionOptions);actual.ports={options.peerPort,options.peerPort};
     QObject::connect(&s.thread,&QThread::finished,s.owner.get(),[&s]{if(s.owner&&s.owner->thread()==QThread::currentThread()){s.moveClosed();}},Qt::DirectConnection);
     s.thread.start();if(!s.thread.isRunning()||!s.owner->moveToThread(&s.thread)){(void)s.shutdown(false);return std::unexpected(Error{Code::Io,"Cannot start shared I2P event loop"});}
     s.externalQueue=options.externalQueue;s.magnetIntents.emplace(intent.hash.hex(),intent);
-    bool began=false;if(!s.onOwner([&]{began=(!bootstrap->discovery||s.owner->configureDiscovery(*bootstrap->discovery))&&s.owner->configureExternalQueue(options.externalQueue)&&s.owner->begin(actual,std::move(bootstrap->queue),bootstrap->rates);s.capture();})||!began){(void)s.shutdown(false);return std::unexpected(Error{Code::Io,"Cannot begin shared I2P session"});}return service;
+    bool began=false;if(!s.onOwner([&]{began=(!bootstrap->discovery||s.owner->configureDiscovery(*bootstrap->discovery))&&(!s.contacts||!s.contacts->exchange()||s.owner->configureContactExchange(s.contacts->exchange()))&&s.owner->configureExternalQueue(options.externalQueue)&&s.owner->begin(actual,std::move(bootstrap->queue),bootstrap->rates);s.capture();})||!began){(void)s.shutdown(false);return std::unexpected(Error{Code::Io,"Cannot begin shared I2P session"});}return service;
   }catch(...){return std::unexpected(Error{Code::Io,"Cannot prepare shared I2P service"});}
 }
 
@@ -191,7 +194,7 @@ std::expected<void,storage::Error> OwnedI2pService::publishPendingMagnet(const c
   return s.owner->publishPendingMagnet(hash,operation);
 }
 std::vector<OwnedI2pService::TorrentObservation> OwnedI2pService::observations()const{
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.closed&&s.owner&&QThread::currentThread()==s.caller){s.settleCompletions();if(!s.onOwner([&]{s.capture();})){for(auto& e:s.last){e.value.current=false;e.value.failure="I2P event loop unavailable";}}}return s.last;
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.closed&&s.owner&&QThread::currentThread()==s.caller){s.settleCompletions();if(!s.onOwner([&]{s.capture();})){for(auto& e:s.last){e.value.current=false;e.value.failure="I2P event loop unavailable";}}if(s.contacts){s.contacts->poll();}}return s.last;
 }
 std::vector<std::array<std::uint8_t,20>> OwnedI2pService::peerIds(const core::TorrentHash& h)const{
   auto& s=*impl_;std::lock_guard lock(s.mutex);
@@ -200,6 +203,7 @@ std::vector<std::array<std::uint8_t,20>> OwnedI2pService::peerIds(const core::To
     if(!s.onOwner([&]{out=s.owner->peerIds(h);})){return {};}return out;
   }catch(...){return {};}
 }
+std::optional<storage::Error> OwnedI2pService::contactCacheDiagnostic()const{auto& s=*impl_;std::lock_guard lock(s.mutex);return s.contacts?s.contacts->diagnostic():std::nullopt;}
 OwnedI2pService::Observation OwnedI2pService::observation()const{
   const auto rows=observations();Observation out;out.joined=impl_->joined;if(rows.empty()){out.phase=impl_->closed?Phase::Withdrawn:impl_->lastPhase;return out;}out=rows.front().value;
   if(rows.size()>1){bool capped=false;out.verifiedBytes=0;out.payloadDownloaded=0;out.payloadUploaded=0;out.downloadRate=0;out.uploadRate=0;out.peers=0;out.seeds=0;out.checked=true;out.seeding=true;out.cumulativeReceived=0;out.cumulativeSent=0;out.trackerAnnounces=out.trackerReplies=out.trackerErrors=0;
@@ -288,6 +292,7 @@ OwnedI2pService::OwnedI2pService(std::unique_ptr<Impl> p):impl_(std::move(p)){}
 OwnedI2pService::~OwnedI2pService()=default;
 bool OwnedI2pService::available()noexcept{return false;}
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::start(const storage::ProfileLease&,const core::TorrentHash&,I2pServiceOptions,const engine::RetainedPayloads&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
+std::optional<storage::Error> OwnedI2pService::contactCacheDiagnostic()const{return std::nullopt;}
 OwnedI2pService::Observation OwnedI2pService::observation()const{Observation v;v.phase=Phase::Withdrawn;v.failure="Optional native I2P owner is unavailable";return v;}
 std::vector<OwnedI2pService::TorrentObservation> OwnedI2pService::observations()const{return {};}
 std::vector<std::array<std::uint8_t,20>> OwnedI2pService::peerIds(const core::TorrentHash&)const{return {};}

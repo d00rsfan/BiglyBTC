@@ -46,6 +46,7 @@ public:
   std::vector<Observation> observations()const;
   // Withdraw mixed routes and join the private Qt/source graph only. Does not
   // retire or checkpoint the borrowed Public session or any of its torrents.
+  std::optional<storage::Error> contactCacheDiagnostic()const; // Host worker only.
   std::expected<void,storage::Error> close();
 private:
   struct Impl;explicit OwnedMixedI2pService(std::unique_ptr<Impl>);

@@ -40,6 +40,8 @@
 #include "saved_service_view.hpp"
 #include "statistics_view.hpp"
 #include "saved_download_tags_view.hpp"
+#include "manual_tag_store.hpp"
+#include "manual_tag_policy.hpp"
 #include "country_provider.hpp"
 #include "../adapters/saved_speed_manager_view.hpp"
 #include "../adapters/history_view.hpp"
@@ -485,6 +487,40 @@ struct SessionBridge::Host {
   bool manualOwnerSampled = false, manualIdleAuthority = false;
   std::optional<core::TargetTraffic> manualTarget;
   core::ManualTagTraffic manualLastTraffic{};
+  std::unique_ptr<storage::ManualTagStore> manualTagStore;
+  storage::ManualTagSnapshot manualTagSnapshot;
+  std::shared_ptr<const core::SavedDownloadTags> manualTagEditorSource;
+  quint64 lastManualTagRequest=0;
+  void beginManualTagRead() {
+    if(manualTagEnded||manualTagRevision==std::numeric_limits<quint64>::max()){
+      throw Failure{{storage::ErrorCode::Unsupported,"Manual-tag presentation lifetime is exhausted"}};
+    }
+    manualTagsEnabled=true;++manualTagRevision;
+    manualTagSnapshot={};manualTagEditorSource.reset();manualTagSource.reset();manualMembership.reset();
+    manualTagReadState=ui::ManualTagReadState::Failed;manualTagFailure.clear();manualJoinFailure.clear();
+  }
+  void acceptManualTagSnapshot(storage::ManualTagSnapshot snapshot,
+      const std::shared_ptr<storage::ManualTagSnapshot>& holder) {
+    *holder=std::move(snapshot);manualTagSnapshot=*holder;
+    manualTagEditorSource=std::shared_ptr<const core::SavedDownloadTags>(holder,holder->tags());
+    manualTagSource=holder->missing()?nullptr:manualTagEditorSource;
+    manualTagReadState=holder->missing()?ui::ManualTagReadState::Missing:ui::ManualTagReadState::Ready;
+    manualTagFailure.clear();manualJoinFailure.clear();manualMembership.reset();
+    schedulerTagsLoaded=false;schedulerTagsAvailable=false;
+  }
+  void reloadManualTags(std::stop_token stop) {
+    auto holder=std::make_shared<storage::ManualTagSnapshot>();beginManualTagRead();
+    // Only an explicit read can reopen uncertainty; the failed edit is never
+    // replayed. Healthy unchanged reloads keep the actual session allocator.
+    if(manualTagStore&&manualTagStore->recoveryRequired()){take(manualTagStore->close());manualTagStore.reset();}
+    if(!manualTagStore){manualTagStore=take(storage::ManualTagStore::open(lease,stop));acceptManualTagSnapshot(take(manualTagStore->snapshot()),holder);}
+    else{acceptManualTagSnapshot(take(manualTagStore->reload(stop)),holder);}
+  }
+  void manualTagCommandState(ui::ManualTagCommandPacket& packet)const {
+    packet.generation=manualTagRevision;packet.libraryRevision=revision;
+    packet.readState=manualTagReadState;packet.writable=manualTagSnapshot.writable();
+    packet.tags=manualTagEditorSource;
+  }
   // Optional geography is never initialized by profile startup or transfers.
   bool countriesEnabled = false, countryProviderAttempted = false, countryEnded = false;
   quint64 countrySequence = 0;
@@ -1155,6 +1191,8 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
   qRegisterMetaType<ui::SavedServicesPresentation>();
   qRegisterMetaType<ui::StatisticsPresentation>();
   qRegisterMetaType<ui::ManualTagStatisticsPresentation>();
+  qRegisterMetaType<ui::ManualTagCommand>();
+  qRegisterMetaType<ui::ManualTagCommandPresentation>();
   qRegisterMetaType<ui::CountryStatisticsPresentation>();
   qRegisterMetaType<core::HistoryDate>();
   qRegisterMetaType<ui::HistoryPresentation>();
@@ -1186,6 +1224,13 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         idleMonitor_->start();
         emit sessionCloseFailed();
         if (!guard) { return; }
+      }
+      if(guiManualTagCommand_){
+        auto packet=std::make_shared<ui::ManualTagCommandPacket>();
+        packet->session=guiManualTagCommand_->session;packet->request=guiManualTagCommand_->request;packet->kind=guiManualTagCommand_->kind;
+        packet->status=result.error()==core::WorkError::Cancelled?ui::ManualTagCommandStatus::Cancelled:ui::ManualTagCommandStatus::Rejected;
+        packet->failure=result.error()==core::WorkError::Cancelled?tr("Cancelled"):tr("Session command failed");
+        deliverManualTagCommand(packet);if(!guard){return;}
       }
       busy_ = false;
       emit busyChanged(false);
@@ -1344,6 +1389,13 @@ void SessionBridge::reportIdlePollFailure(quint64 session,QString detail){
 void SessionBridge::failed(QString message) {
   QMetaObject::invokeMethod(this, [this, message = std::move(message)] {
     QPointer<SessionBridge> guard(this);
+    // Dispatch may observe cancellation before entering the command body.
+    if(guiManualTagCommand_){
+      auto packet=std::make_shared<ui::ManualTagCommandPacket>();
+      packet->session=guiManualTagCommand_->session;packet->request=guiManualTagCommand_->request;packet->kind=guiManualTagCommand_->kind;
+      packet->status=message==tr("Cancelled")?ui::ManualTagCommandStatus::Cancelled:ui::ManualTagCommandStatus::Rejected;
+      packet->failure=message.left(8192);deliverManualTagCommand(packet);if(!guard){return;}
+    }
     completionMonitor_->stop();
     busy_ = false;
     emit busyChanged(false);
@@ -2239,27 +2291,11 @@ bool SessionBridge::manualTagStatistics(quint64 session) {
       throw Failure{{storage::ErrorCode::Conflict, "This manual tag session is no longer active"}};
     }
     auto& host = *host_;
-    if (host.manualTagRevision == std::numeric_limits<quint64>::max()) {
-      throw Failure{{storage::ErrorCode::Unsupported, "Manual tag revisions are exhausted"}};
-    }
     checkpoint(stop);
-    // Every explicit Refresh reads anew; samples only reuse this result.
-    host.manualTagsEnabled = true; ++host.manualTagRevision;
-    host.manualTagReadState = ui::ManualTagReadState::Failed;
-    host.manualTagSource.reset(); host.manualMembership.reset();
-    host.manualTagFailure.clear(); host.manualJoinFailure.clear();
-    auto view = storage::readSavedDownloadTagsView(host.lease, stop);
-    checkpoint(stop);
-    if (!view) {
-      if (view.error().code == storage::ErrorCode::Cancelled) { throw Failure{view.error()}; }
-      host.manualTagFailure = text(view.error().message);
-    } else if (view->missing()) {
-      host.manualTagReadState = ui::ManualTagReadState::Missing;
-    } else if (!view->snapshot || !view->recoverySource) {
-      host.manualTagFailure = tr("Manual tag source is unavailable");
-    } else {
-      host.manualTagSource = std::make_shared<const core::SavedDownloadTags>(std::move(*view->snapshot));
-      host.manualTagReadState = ui::ManualTagReadState::Ready;
+    try{host.reloadManualTags(stop);}
+    catch(const Failure& failure){
+      if(failure.error.code==storage::ErrorCode::Cancelled){throw;}
+      host.manualTagFailure=text(failure.error.message).left(8192);
     }
     auto packet = manualTagPacket(); checkpoint(stop);
     QMetaObject::invokeMethod(this, [this, packet = std::move(packet), stop] {
@@ -2270,6 +2306,108 @@ bool SessionBridge::manualTagStatistics(quint64 session) {
       if (guard && stop.stop_requested()) { emit messageReady(tr("Cancelled")); }
     }, Qt::QueuedConnection);
   }, false);
+}
+void SessionBridge::deliverManualTagCommand(ui::ManualTagCommandPresentation packet) {
+  if(!packet||!guiManualTagCommand_||packet->session!=publishedColumnLayoutSession_
+      ||packet->session!=guiManualTagCommand_->session||packet->request!=guiManualTagCommand_->request){return;}
+  guiManualTagCommand_.reset();
+  emit manualTagCommandFinished(std::move(packet)); // Last access: direct receiver may delete Bridge.
+}
+bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
+  if(!request.session||!request.request||request.session!=publishedColumnLayoutSession_
+      ||busy_||closingSession_||guiManualTagCommand_){return false;}
+  switch(request.kind){
+    case ui::ManualTagCommandKind::Reload:case ui::ManualTagCommandKind::Create:
+    case ui::ManualTagCommandKind::Rename:case ui::ManualTagCommandKind::Remove:
+    case ui::ManualTagCommandKind::Visibility:case ui::ManualTagCommandKind::AddMember:
+    case ui::ManualTagCommandKind::RemoveMember:break;
+    default:return false;
+  }
+  if(request.name.size()>4096||request.member.hash.size()>64){return false;}
+  guiManualTagCommand_=request;
+  const QPointer<SessionBridge> alive(this);
+  const bool accepted=dispatch([this,request=std::move(request)](std::stop_token stop){
+    auto packet=std::make_shared<ui::ManualTagCommandPacket>();
+    packet->session=request.session;packet->request=request.request;packet->kind=request.kind;
+    bool applying=false;
+    try{
+      if(!host_||host_->columnLayoutSession!=request.session||host_->manualTagEnded){throw Failure{{storage::ErrorCode::Conflict,"This manual-tag profile is no longer active"}};}
+      auto& host=*host_;
+      if(request.request<=host.lastManualTagRequest){throw Failure{{storage::ErrorCode::Conflict,"This manual-tag request was already consumed"}};}
+      host.lastManualTagRequest=request.request;
+      checkpoint(stop);
+      if(request.kind==ui::ManualTagCommandKind::Reload){host.reloadManualTags(stop);packet->status=ui::ManualTagCommandStatus::Loaded;}
+      else{
+        if(!request.generation||request.generation!=host.manualTagRevision||!host.manualTagSnapshot.valid()||!host.manualTagStore){throw Failure{{storage::ErrorCode::Conflict,"This manual-tag presentation is stale; reload tags"}};}
+        if(host.manualTagRevision==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Unsupported,"Manual-tag presentation revisions are exhausted"}};}
+        // Allocate the owning projection alias before a synchronous commit.
+        auto holder=std::make_shared<storage::ManualTagSnapshot>();
+        auto edit=core::SavedTagEdit(core::SavedTagRemove{request.tagId});
+        const auto name=request.name.toUtf8();
+        if(request.kind==ui::ManualTagCommandKind::Create||request.kind==ui::ManualTagCommandKind::Rename){
+          if(name.size()>4096||QString::fromUtf8(name)!=request.name){throw Failure{{storage::ErrorCode::InvalidFormat,"Manual-tag name must be bounded valid UTF-8"}};}
+        }
+        std::optional<storage::ProfileSourceAccess> memberAccess;
+        switch(request.kind){
+          case ui::ManualTagCommandKind::Create:edit=core::SavedTagCreate{name.toStdString(),{}};break;
+          case ui::ManualTagCommandKind::Rename:edit=core::SavedTagRename{request.tagId,name.toStdString()};break;
+          case ui::ManualTagCommandKind::Remove:break;
+          case ui::ManualTagCommandKind::Visibility:edit=core::SavedTagVisibility{request.tagId,request.visible};break;
+          case ui::ManualTagCommandKind::AddMember:case ui::ManualTagCommandKind::RemoveMember:{
+            const auto* tags=host.manualTagSnapshot.tags();const auto* manual=tags?tags->source->find("3"):nullptr;
+            const auto* record=manual?manual->find(std::to_string(request.tagId)):nullptr;
+            if(record){
+              const auto policy=classifyManualTagMembership(*record);
+              if(request.kind==ui::ManualTagCommandKind::AddMember?!policy.addAllowed():!policy.removeAllowed()){
+                throw Failure{{storage::ErrorCode::Unsupported,"Automatic or ambiguous tag membership cannot be changed in this direction"}};
+              }
+            }
+            host.accepts(request.member);const auto hash=identity(request.member);
+            if(host.pendingTargets.contains(hash.hex())){throw Failure{{storage::ErrorCode::Unsupported,"Resolve magnet metadata before changing saved tag membership"}};}
+            // Membership is a current saved full-hash binding, never a handle or
+            // permission. Keep only filesystem work under this SAME-OFD gate.
+            memberAccess.emplace(take(host.lease.sourceAccess()));
+            const auto library=take(storage::readLibraryView(host.lease));
+            const auto count=std::count_if(library.items.begin(),library.items.end(),[&](const auto& row){return row.saved.hash&&*row.saved.hash==hash;});
+            if(count!=1){throw Failure{{storage::ErrorCode::Conflict,"The saved download selection changed; refresh the library"}};}
+            if(request.kind==ui::ManualTagCommandKind::AddMember){edit=core::SavedTagAddMember{request.tagId,hash,QDateTime::currentSecsSinceEpoch()};}
+            else{edit=core::SavedTagRemoveMember{request.tagId,hash};}break;
+          }
+          case ui::ManualTagCommandKind::Reload:break;
+        }
+        checkpoint(stop);applying=true;
+        auto committed=take(host.manualTagStore->apply(host.manualTagSnapshot,edit,stop));
+        memberAccess.reset(); // No Qt publication or SDK wait while holding FS access.
+        packet->status=committed.changed?ui::ManualTagCommandStatus::Saved:ui::ManualTagCommandStatus::Unchanged;
+        packet->changed=committed.changed;packet->createdId=committed.createdId;packet->createdUid=committed.createdUid;
+        if(committed.changed){
+          ++host.manualTagRevision;host.acceptManualTagSnapshot(std::move(committed.snapshot),holder);
+        }
+      }
+    }catch(const Failure& failure){
+      const bool cancelled=failure.error.code==storage::ErrorCode::Cancelled;
+      packet->status=cancelled?ui::ManualTagCommandStatus::Cancelled:ui::ManualTagCommandStatus::Rejected;
+      packet->failure=text(failure.error.message).left(8192);
+      if(host_&&host_->columnLayoutSession==request.session){
+        if(applying&&!cancelled){host_->beginManualTagRead();host_->manualTagFailure=packet->failure;}
+        else if(request.kind==ui::ManualTagCommandKind::Reload){host_->manualTagFailure=packet->failure;}
+      }
+    }catch(const std::bad_alloc&){
+      packet->status=ui::ManualTagCommandStatus::Rejected;packet->failure=tr("Insufficient memory for manual-tag command; reload before retry");
+      if(host_&&host_->columnLayoutSession==request.session){host_->beginManualTagRead();host_->manualTagFailure=packet->failure;}
+    }
+    if(host_&&host_->columnLayoutSession==request.session){host_->manualTagCommandState(*packet);}
+    ui::ManualTagStatisticsPresentation statistics;
+    try{statistics=manualTagPacket();}catch(...){} // Optional statistics cannot erase an actual commit result.
+    // A successful durable save remains Saved even if cancellation arrives now.
+    QMetaObject::invokeMethod(this,[this,packet=std::move(packet),statistics=std::move(statistics)]{
+      QPointer<SessionBridge> guard(this);
+      if(statistics){deliverManualTags(statistics);if(!guard){return;}}
+      deliverManualTagCommand(packet);if(!guard){return;}
+      completionMonitor_->stop();busy_=false;emit busyChanged(false);
+    },Qt::QueuedConnection);
+  },false);
+  if(alive&&!accepted){guiManualTagCommand_.reset();}return accepted;
 }
 bool SessionBridge::history(quint64 session, quint64 request, core::HistoryDate date) {
   if (session == 0 || request == 0 || session != publishedColumnLayoutSession_

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_owner.hpp"
+#include "contact_owner.hpp"
 #include "owner_runtime_guard.hpp"
 #include "source_permit.hpp"
 #include "retirement_counters.hpp"
@@ -95,7 +96,7 @@ struct OwnedProfile::Impl {
     auto& data(){return *prepared->impl_;}const auto& data()const{return *prepared->impl_;}
   };
   std::map<std::string,std::unique_ptr<Magnet>> magnets;
-  std::optional<dht::Actor::Options> discoveryOptions;
+  std::optional<dht::Actor::Options> discoveryOptions;std::shared_ptr<ContactExchange> contactExchange;
   std::shared_ptr<const engine::detail::MixedManagedOrigin> metadataOrigin=std::make_shared<engine::detail::MixedManagedOrigin>();
   OwnedProfile* q=nullptr;std::shared_ptr<ProfileSource> source;std::optional<ClientIdentity> identity;
   std::shared_ptr<void> pin;std::shared_ptr<engine::detail::MetadataDiskPolicy> disks=std::make_shared<engine::detail::MetadataDiskPolicy>();
@@ -253,7 +254,7 @@ struct OwnedProfile::Impl {
     }
     bool firstRecord=true;for(auto& [key,m]:members){(void)key;if(m->retired.requested){continue;}if(!install(*m,firstRecord)){return false;}firstRecord=false;}
     for(auto& [key,m]:magnets){(void)key;if(m->cancel||m->released.load()){continue;}if(!install(*m,firstRecord)){return false;}firstRecord=false;}
-    phase=Phase::Active;if(discoveryOptions&&!bridge->beginDiscovery(*discoveryOptions)){return false;}
+    phase=Phase::Active;if(discoveryOptions&&!bridge->beginDiscovery(*discoveryOptions,contactExchange)){return false;}
     for(auto& [key,m]:members){(void)key;startDiscovery(*m);}for(auto& [key,m]:magnets){(void)key;startDiscovery(*m);}timer.start(250);return true;
   }
   void alerts(){
@@ -456,6 +457,7 @@ std::expected<std::unique_ptr<OwnedProfile::PreparedMagnet>,Error> OwnedProfile:
   (void)intent;return std::unexpected(Error{Code::Unsupported,"Qualified discovery SDK unavailable"});
 #endif
 }
+bool OwnedProfile::configureContactExchange(std::shared_ptr<ContactExchange> value){auto& s=*impl_;if(!s.onThread()||s.phase!=Phase::Prepared||!s.discoveryOptions||!s.discoveryOptions->inbound||!s.discoveryOptions->routingMaintenance){return false;}s.contactExchange=std::move(value);return true;}
 bool OwnedProfile::configureDiscovery(const dht::Actor::Options& options){
   auto& s=*impl_;if(!s.onThread()||s.phase!=Phase::Prepared||s.discoveryOptions){return false;}auto accepted=options;
   if(std::ranges::all_of(accepted.localId,[](Byte b){return b==Byte{};})){

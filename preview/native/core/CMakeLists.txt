@@ -67,3 +67,6 @@ target_sources(biglybtc_core PRIVATE src/queue_target_statistics.cpp)
 
 # Original saved completion-group queue ordering.
 target_sources(biglybtc_core PRIVATE src/queue_positions.cpp)
+
+# Value-only manual-download tag document edits; no profile or live activation.
+target_sources(biglybtc_core PRIVATE src/saved_download_tag_edits.cpp)

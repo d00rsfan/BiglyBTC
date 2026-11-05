@@ -62,6 +62,7 @@ public:
   private:friend class OwnedProfile;struct Impl;explicit PreparedMagnet(std::unique_ptr<Impl>);std::unique_ptr<Impl> impl_;
   };
   std::expected<std::unique_ptr<PreparedMagnet>,storage::Error> prepareMagnet(const engine::PendingMagnet&); // Worker IO.
+  bool configureContactExchange(std::shared_ptr<ContactExchange>); // Qt, before begin; owning mailbox only.
   bool configureDiscovery(const dht::Actor::Options&); // Same Qt thread, before begin.
   std::expected<void,storage::Error> startMagnet(std::unique_ptr<PreparedMagnet>); // Qt, no IO.
   bool cancelMagnet(const core::TorrentHash&,std::chrono::steady_clock::time_point); // Qt.

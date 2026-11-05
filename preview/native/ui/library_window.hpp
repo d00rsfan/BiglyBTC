@@ -28,6 +28,7 @@
 #include "history_range_presentation.hpp"
 #include "engine_statistics_presentation.hpp"
 
+#include "../app/manual_tag_commands.hpp"
 #include <QMainWindow>
 #include <QPointer>
 
@@ -50,6 +51,7 @@ class TorrentCreationDialog;
 class OptionsDialog;
 class SchedulerDialog;
 class LocalRatingDialog;
+class ManualTagManagerDialog;
 class ClassicColumns;
 class StatisticsPage;
 class EngineActivityHistory;
@@ -97,6 +99,8 @@ public:
   void setLiveSpeedManager(LiveSpeedManagerPresentation);
   LiveSpeedManagerPresentation liveSpeedManagerSnapshot() const;
   void setManualTagStatistics(ManualTagStatisticsPresentation);
+  void setManualTagCommandFinished(ManualTagCommandPresentation);
+  void rejectManualTagCommand(const ManualTagCommand&);
   void setCountryStatistics(CountryStatisticsPresentation);
   AzureusStatisticsPresentation azureusStatisticsSnapshot() const { return latestAzureus_; }
   CountryStatisticsPresentation countryStatisticsSnapshot() const { return latestCountry_; }
@@ -140,6 +144,7 @@ public:
   bool submitTorrentImport(QString metadata, QString destination, bool start);
   bool submitMagnetImport(QString uri, QString destination);
 signals:
+  void manualTagCommandRequested(biglybtc::ui::ManualTagCommand);
   void fileOperationSequenceFinished(biglybtc::ui::FileOperationSequencePresentation);
   void fileOperationPlanRequested(biglybtc::ui::FileOperationRequest);
   void fileOperationExecuteRequested(biglybtc::ui::FileOperationSubmission);
@@ -188,6 +193,9 @@ private:
   void dispatchDownload(core::DownloadAction, bool all = false);
   void dispatchDownloadAlias(bool pauseResume);
   void bindDownloadMenu(QMenu*);
+  void openManualTags();
+  bool sendManualTagCommand(ManualTagCommand);
+  void rebuildManualTagMenu(QMenu*);
   void queueDownloadActions();
   void updateDownloadActions();
   struct FilePolicySelection {
@@ -394,6 +402,11 @@ private:
   AzureusStatisticsPresentation latestAzureus_{};
   LiveSpeedManagerPresentation latestLiveSpeed_{};
   ManualTagStatisticsPresentation latestManualTags_{};
+  QPointer<QAction> manualTagAction_;
+  QPointer<ManualTagManagerDialog> manualTagDialog_;
+  ManualTagCommandPresentation latestManualTagEditor_;
+  std::optional<ManualTagCommand> pendingManualTagCommand_;
+  quint64 manualTagRequest_=0;
   QPointer<StatisticsPage> pendingManualTagRead_;
   bool manualTagDispatchQueued_ = false;
   CountryStatisticsPresentation latestCountry_{};

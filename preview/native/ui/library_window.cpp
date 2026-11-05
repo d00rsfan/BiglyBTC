@@ -5,6 +5,7 @@
 #include "options_dialog.hpp"
 #include "scheduler_dialog.hpp"
 #include "local_rating_dialog.hpp"
+#include "manual_tag_editor.hpp"
 #include "classic_filter.hpp"
 #include "classic_columns.hpp"
 #include "statistics_page.hpp"
@@ -348,6 +349,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   localRatingAction_->setObjectName(QStringLiteral("classic-my-rating"));
   localRatingAction_->setEnabled(false);
   connect(localRatingAction_,&QAction::triggered,this,&LibraryWindow::openLocalRating);
+  auto* tagMenu=torrent->addMenu(tr("Tags"));tagMenu->setObjectName(QStringLiteral("classic-torrent-tags"));
+  connect(tagMenu,&QMenu::aboutToShow,this,[this,tagMenu]{rebuildManualTagMenu(tagMenu);});
   auto* hybridMenu=torrent->addMenu(tr("Add hybrid companion (stopped)"));
   hybridMenu->setObjectName(QStringLiteral("classic-hybrid-companion"));
   for(int index=0;index<2;++index){
@@ -380,6 +383,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   statistics->setShortcut(QKeySequence(QStringLiteral("Ctrl+5")));
   statistics->setShortcutContext(Qt::WindowShortcut);
   connect(statistics, &QAction::triggered, this, &LibraryWindow::showStatistics);
+  manualTagAction_=tools->addAction(tr("Tags…"));manualTagAction_->setObjectName(QStringLiteral("classic-manual-tags"));manualTagAction_->setEnabled(false);
+  connect(manualTagAction_,&QAction::triggered,this,&LibraryWindow::openManualTags);
   schedulerAction_=tools->addAction(tr("Speed Scheduler…"));
   schedulerAction_->setObjectName(QStringLiteral("classic-speed-scheduler"));
   connect(schedulerAction_,&QAction::triggered,this,&LibraryWindow::openScheduler);
@@ -1063,6 +1068,8 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
   latestI2p_.reset();
+  latestManualTagEditor_.reset();pendingManualTagCommand_.reset();
+  if(manualTagDialog_){const auto previous=manualTagDialog_;manualTagDialog_.clear();previous->invalidateSession();if(!guard){return;}}
   localRatingIdentity_.reset();localRatingLoading_=false;localRatingSaving_=false;
   if(localRatingDialog_){localRatingDialog_->reject();if(!guard){return;}}
   if(fileOperationSequence_){fileOperationSequence_->invalidateSession();if(!guard){return;}}
@@ -1392,6 +1399,8 @@ void LibraryWindow::updateActions() {
   if (optionsAction_) { optionsAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   queueDownloadActions();
   QPointer<LibraryWindow> guard(this);
+  if(manualTagAction_){manualTagAction_->setEnabled(!closing_&&!offlinePreview_&&columnSession_);if(!guard){return;}}
+  if(manualTagDialog_){manualTagDialog_->setAvailable(!busy_&&!closing_&&!offlinePreview_);if(!guard){return;}}
   if(localRatingAction_){localRatingAction_->setEnabled(fileActionsAllowed&&fileTargets->size()==1);}
   if(!guard){return;}
   for(const auto& action:hybridCompanionActions_){if(action){
@@ -1995,6 +2004,7 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
   if (!optionsGuard) { return; }
   pendingOptionsLoad_.reset();
   closing_ = true;
+  if(manualTagDialog_){const auto dialog=manualTagDialog_;manualTagDialog_.clear();dialog->invalidateSession();if(!optionsGuard){return;}}
   pendingSavedRequest_.reset();
   pendingColumnRequest_.reset();
   pendingStatisticsRequest_.reset();
@@ -2042,6 +2052,8 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
   menu->addAction(startStop_.data());
   menu->addAction(pauseResume_.data());
   if(localRatingAction_){menu->addAction(localRatingAction_);}
+  auto* tags=menu->addMenu(tr("Tags"));tags->setObjectName(QStringLiteral("classic-context-tags"));
+  connect(tags,&QMenu::aboutToShow,this,[this,tags]{rebuildManualTagMenu(tags);});
   for(const auto& action:fileOperationActions_){if(action){menu->addAction(action);}}
   menu->addSeparator();
   menu->addAction(continue_);
@@ -2058,6 +2070,7 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
 }
 
 #include "local_rating_window.inc"
+#include "manual_tag_window.inc"
 
 void LibraryWindow::openOptions() {
   if (closing_ || !columnSession_) { return; }
