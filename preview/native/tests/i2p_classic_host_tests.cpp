@@ -39,6 +39,7 @@ private slots:
     }}}
   }
   void originalDiscoveryPortBoundary(){
+#if BIGLYBTC_HOST_I2P_OWNER
     QFETCH(bool,mixed);QFETCH(bool,saved);QFETCH(quint16,port);namespace dht=services::i2p::dht;owned_i2p_test::Fixture f;
     const auto config=owned_i2p_test::read(f.path/"biglybt.config");services::i2p::Hash hash{};hash.fill(0x35);
     const auto id=dht::makeNodeId(hash,65534,services::i2p::Bytes(14,0x21));QVERIFY(id);app::I2pServiceOptions options;
@@ -51,8 +52,12 @@ private slots:
     const auto result=app::readI2pDiscoveryOptions(*f.lease,mixed,options);const bool valid=port>0&&port<65535;
     QCOMPARE(result.has_value(),valid);if(valid){QVERIFY(result->has_value());QCOMPARE((**result).queryPort,port);QCOMPARE((**result).localId,*id);QVERIFY(!(**result).inbound);}
     QCOMPARE(owned_i2p_test::read(f.path/"biglybt.config"),config);if(saved){QCOMPARE(owned_i2p_test::read(path),original);}
+#else
+    QSKIP("The optional original I2P discovery owner is disabled in this stock build");
+#endif
   }
   void explicitInboundDiscoveryPolicyRemainsSourceGatedAndHonoursSavedDisable(){
+#if BIGLYBTC_HOST_I2P_OWNER
     namespace dht=services::i2p::dht;
     for(bool mixed:{false,true}){owned_i2p_test::Fixture f;services::i2p::Hash hash{};hash.fill(0x35);const auto id=dht::makeNodeId(hash,65534,services::i2p::Bytes(14,0x21));QVERIFY(id);
       app::I2pServiceOptions options;options.discovery.emplace();options.discovery->queryPort=65534;options.discovery->inbound=true;options.discovery->inboundSleeping=true;options.discovery->inboundSuspended=true;
@@ -60,6 +65,9 @@ private slots:
       const auto config=owned_i2p_test::read(f.path/"biglybt.config");auto read=app::readI2pDiscoveryOptions(*f.lease,mixed,options);QVERIFY(read&&read->has_value());QVERIFY((**read).inbound&&(**read).inboundSleeping&&(**read).inboundSuspended);QCOMPARE(owned_i2p_test::read(f.path/"biglybt.config"),config);
       auto file=storage::ConfigFile::load(*f.lease,"biglybt.config");QVERIFY(file);QVERIFY(file->document().replaceValue("Plugin.azneti2phelper.azi2phelper.dht.enable","i0e"));QVERIFY(file->save(*f.lease));const auto disabled=owned_i2p_test::read(f.path/"biglybt.config");read=app::readI2pDiscoveryOptions(*f.lease,mixed,options);QVERIFY(read&&!read->has_value());QCOMPARE(owned_i2p_test::read(f.path/"biglybt.config"),disabled);
     }
+#else
+    QSKIP("The optional original I2P discovery owner is disabled in this stock build");
+#endif
   }
   void pendingMixedSamAcceptFailurePreservesActualPublicAdmission(){
 #if !BIGLYBTC_TEST_MIXED_ACCEPT_SDK
