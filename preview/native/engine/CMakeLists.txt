@@ -108,3 +108,12 @@ unset(CMAKE_REQUIRED_LIBRARIES)
 if(BIGLYBTC_HAS_I2P_DISCOVERY_SDK)
   target_compile_definitions(biglybtc_local_engine PUBLIC BIGLYBTC_I2P_DISCOVERY_ABI_V1=1)
 endif()
+
+# Shared owning HTTP values only. Socket/route/source authority stays in its owner.
+add_library(biglybtc_http_response STATIC ../services/http/http_response.cpp)
+target_include_directories(biglybtc_http_response PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../services/http")
+target_link_libraries(biglybtc_http_response PUBLIC Qt6::Core PRIVATE ZLIB::ZLIB)
+target_compile_features(biglybtc_http_response PUBLIC cxx_std_23)
+target_compile_options(biglybtc_http_response PRIVATE -Wall -Wextra -Wpedantic -Werror)
+set_target_properties(biglybtc_http_response PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_http_response)

@@ -1,5 +1,6 @@
 #pragma once
 #include "library_udp_tracker.hpp"
+#include "../services/http/http_response.hpp"
 #include <QHostAddress>
 #include <QHostInfo>
 #include <QSslConfiguration>
@@ -42,8 +43,7 @@ std::optional<std::int64_t> libraryHttpAnnounceScrapeDeadline(const core::QueueT
 std::optional<std::int64_t> libraryTrackerScrapeDelay(std::int32_t seeds);
 namespace http_tracker_wire {
 std::optional<std::int64_t> announceDeadline(const core::QueueTrackerTerminal&,unsigned fuzzSeconds);
-struct Body {bool complete=false,unsupported=false;QByteArray bytes;bool failed=false;QByteArray location={};
-  QByteArray basicRealm={};bool basicAuthentication=false;};
+using Body=services::http::Response;
 Body response(const QByteArray&,bool eof);
 core::QueueTrackerTerminal scrape(std::string_view,std::span<const std::byte,20>,
     std::int64_t now,std::int64_t wall,std::int64_t started,bool singleOnly,unsigned fuzzSeconds);

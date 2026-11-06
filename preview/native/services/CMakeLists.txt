@@ -304,3 +304,11 @@ target_include_directories(biglybtc_rss_document PUBLIC "${CMAKE_CURRENT_SOURCE_
 target_link_libraries(biglybtc_rss_document PUBLIC Qt6::Core)
 target_compile_features(biglybtc_rss_document PUBLIC cxx_std_23)
 target_compile_options(biglybtc_rss_document PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+# Read-only saved RSS description only; no worker or network activation.
+find_package(Threads REQUIRED)
+add_library(biglybtc_saved_rss_source STATIC search/saved_rss_source.cpp)
+target_include_directories(biglybtc_saved_rss_source PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/search" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../engine")
+target_link_libraries(biglybtc_saved_rss_source PUBLIC biglybtc_profile biglybtc_rss_document Qt6::Core Qt6::Network PRIVATE Threads::Threads)
+target_compile_features(biglybtc_saved_rss_source PUBLIC cxx_std_23)
+target_compile_options(biglybtc_saved_rss_source PRIVATE -Wall -Wextra -Wpedantic -Werror)
