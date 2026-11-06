@@ -1,0 +1,43 @@
+{
+  "status": "VERIFIED_LOCAL_OFFLINE_DEVELOPMENT_LAUNCHER_ONLY",
+  "implementation_commit": "2417a35d3863ef5a44b997a0efcf57f406ba9e5c",
+  "native_tree": "519aacb4fb6ead6ca701e09439bc0ca191271f9c",
+  "original_core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "pins": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/pins.json",
+    "sha256": "c88157c07e0f989978bdb001413e130e8fdba7b2b038883a0d1d7b7c05b9fd38",
+    "bytes": 4573
+  },
+  "helper": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/development_preview.py",
+    "sha256": "7236698c4bca7205d0ecdd0541f9b28eb051b4130fdb20569c1830285640a6e7",
+    "bytes": 7784
+  },
+  "installed_launcher": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/installed-launcher.json",
+    "sha256": "e0297a1c4a03cb2f5cd79e5c0a034e15cbb6b097e84e01fe7cf334448429ede9",
+    "bytes": 595
+  },
+  "source_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-plan-20261106/source-review.json",
+    "sha256": "0390c8a56070bc50dbcded3ab5b9558e74880b97fd6cc99079b01d95250a365f",
+    "bytes": 5047
+  },
+  "actual_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/independent-smoke-review.json",
+    "sha256": "768e9745c78a7c4e65a2dccdcc831d8ea811e2b924849a1b3a64fd756a318463",
+    "bytes": 7363
+  },
+  "current_smoke": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/smoke-r2/result.json",
+    "sha256": "6973b6bb547f61d78d0c8dc4611c792e280dd33cba93a25e56f22c0ce7f49b42",
+    "bytes": 897
+  },
+  "earlier_failed_supervisor": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/result.json",
+    "sha256": "8a253fa665f7c75b18ff8e5ebd484e034dce18bdc765764ed68a1dacfceba75f",
+    "bytes": 473
+  },
+  "normal_distribution_promoted": false,
+  "default_distribution_hashes_retained": true
+}

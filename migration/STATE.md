@@ -28,3 +28,7 @@ Implementation `f4bd9300c8df391750579e468a520ae379d13e0a`, Native subtree `9e639
 
 Implementation `2417a35d3863ef5a44b997a0efcf57f406ba9e5c`, Native subtree `519aacb4fb6ead6ca701e09439bc0ca191271f9c`, Original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`: explicit classic RSS Sources/manual one-shot consumer accepted at17 leaves with local-owned GCC/SAN, five current Bridge rows plus five carried r1 UI rows per lane; original aggregate failures retained, isolated Host/provider variants and owning UI capture. [Evidence](evidence/20261106-classic-rss-consumer/REVIEW.md). App built only; no automatic fetch/subscription/import or whole P08/P07/global baseline/distribution completion. Remaining RSS semantics, search and subscription chapters continue.
 
+
+## 2026-11-06 empty offline development launcher
+
+Qualified consumer `2417a35d3863ef5a44b997a0efcf57f406ba9e5c` / Native subtree `519aacb4fb6ead6ca701e09439bc0ca191271f9c` has a separate local empty offline development launcher. Exact consumer/provider/Qt and default-preservation checks plus one owned offscreen startup/lock-release/temp-cleanup test passed. [Evidence](evidence/20261106-rss-offline-development-preview/REVIEW.md). Existing normal distribution and global integration baselines remain open. This metadata records local development access, not a production runtime promotion.

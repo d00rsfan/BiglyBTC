@@ -1,0 +1,19 @@
+{
+  "status": "PASS_EMPTY_OFFSCREEN_PRODUCTION_APP_STARTUP_AND_OWNED_CLEANUP",
+  "mode": "owned offscreen production-app startup/loader/exit only",
+  "ui_menu_or_graceful_join_claimed": false,
+  "source_commit": "2417a35d3863ef5a44b997a0efcf57f406ba9e5c",
+  "native_tree": "519aacb4fb6ead6ca701e09439bc0ca191271f9c",
+  "wrapper_pid": 3362512,
+  "owned_app_pid": 3362513,
+  "owned_profile": "/tmp/biglybtc-rss-development-glv030jr/profile",
+  "mapped_provider": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "held_profile_lock_observed": true,
+  "wrapper_exit": 143,
+  "owned_child_gone": true,
+  "temporary_root_removed": true,
+  "profile_ofd_released": true,
+  "default_distribution_unchanged": true,
+  "elapsed_seconds": 2.844,
+  "startup_log_sha256": "1702bba340e03b3eca06956fa08f49c4bd7ff467bebaf58889372c5a118d2e4d"
+}

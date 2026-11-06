@@ -1,0 +1,7 @@
+/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12
+/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6Core.so.6
+/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6DBus.so.6
+/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6Gui.so.6
+/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6Network.so.6
+/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6Widgets.so.6
+/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/plugins/platforms/libqoffscreen.so

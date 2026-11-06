@@ -1,0 +1,109 @@
+{
+  "schema": "BIGLYBTC_DEVELOPMENT_PREVIEW_OWNED_SMOKE_INDEPENDENT_REVIEW_V1",
+  "status": "PASS_EMPTY_DEVELOPMENT_PREVIEW_SEALED_STARTUP_AND_OWNED_CLEANUP_REVIEW",
+  "implementation_commit": "2417a35d3863ef5a44b997a0efcf57f406ba9e5c",
+  "native_tree": "519aacb4fb6ead6ca701e09439bc0ca191271f9c",
+  "sealed_inputs": {
+    "seal": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/seal.json",
+      "bytes": 1199,
+      "sha256": "0ae01a861f8d02f4c0f333dbae68d92bf9f5c5781be0f9869ba602487d7ffee2"
+    },
+    "helper": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/development_preview.py",
+      "bytes": 7784,
+      "sha256": "7236698c4bca7205d0ecdd0541f9b28eb051b4130fdb20569c1830285640a6e7"
+    },
+    "pins": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/pins.json",
+      "bytes": 4573,
+      "sha256": "c88157c07e0f989978bdb001413e130e8fdba7b2b038883a0d1d7b7c05b9fd38"
+    },
+    "source_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-plan-20261106/source-review.json",
+      "sha256": "0390c8a56070bc50dbcded3ab5b9558e74880b97fd6cc99079b01d95250a365f",
+      "bytes": 5047
+    },
+    "source_template": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-plan-20261106/amendments/empty-owned-profile/amendments/isolated-state-and-owned-signals/development_preview.py.in",
+      "sha256": "44a02c0ca418a677fbc96d952e1895fb22ac658faa108ccb897d601aef61686f",
+      "bytes": 7722
+    },
+    "consumer_acceptance_review": {
+      "bytes": 21860,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-independent-acceptance-review.json",
+      "sha256": "9fa731098506de9951407c9efc075457cb67e7c63709fd47238ed2a3f893a515"
+    },
+    "qualified_gcc": {
+      "bytes": 64064,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/gcc/r1/result-stamped.json",
+      "sha256": "12a3b5c54d5ddfa016fd797329f7c05fd7f96a9bbd051d1b4d1b2cd7fedccae0"
+    },
+    "executable": {
+      "bytes": 16851568,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/app/BiglyBTC",
+      "sha256": "1f4386a08f7167effa9b211d62417b9dc98f891362d8a74cb64b9727e790c329"
+    }
+  },
+  "actual_evidence": {
+    "supervisor": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/smoke-r2.py",
+      "bytes": 4557,
+      "sha256": "6898b96c57436b221d982f695fefe5e7dc947e86b3b34b0ee045b9f6bb7d395e"
+    },
+    "result": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/smoke-r2/result.json",
+      "bytes": 897,
+      "sha256": "6973b6bb547f61d78d0c8dc4611c792e280dd33cba93a25e56f22c0ce7f49b42"
+    },
+    "startup_log": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/smoke-r2/startup.log",
+      "bytes": 205,
+      "sha256": "1702bba340e03b3eca06956fa08f49c4bd7ff467bebaf58889372c5a118d2e4d"
+    },
+    "mapped_images": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/smoke-r2/mapped-owned-images.txt",
+      "bytes": 561,
+      "sha256": "024a7b34ce7a512fdc61dcd7340b26d7120b5a3bf3e58e08ae2102b5062c3339"
+    },
+    "elapsed_seconds": 2.844
+  },
+  "earlier_attempt": {
+    "result": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/result.json",
+      "bytes": 473,
+      "sha256": "8a253fa665f7c75b18ff8e5ebd484e034dce18bdc765764ed68a1dacfceba75f"
+    },
+    "startup_log": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/startup.log",
+      "bytes": 205,
+      "sha256": "62749dc2b943dd0ed4991ab5037e7d5934d17781f94568c6669f867299d6a392"
+    },
+    "status": "FAIL",
+    "reason": "Supervisor expected version-suffixed Qt filenames; installed manifest and actual mapping use .so.6. Parent startup/cleanup remains an earlier attempt, not a green receipt.",
+    "retry_delta": "Supervisor output directory and installed Qt filename expectations only; sealed application/helper/pins unchanged."
+  },
+  "findings": [
+    "Final helper equals the reviewed 69a3 cleanup-child template with only its sealed plan SHA filled. Exact source-review and final consumer GCC receipt/image associations match actual 2417/Native519.",
+    "Read-only rehash verified all seven fixed inputs, five preserved default-distribution files and all 86 installed Qt manifest members. Provider is exact dfe07724; no alternate default provider was recorded in the captured mappings.",
+    "Supervisor used its own Popen child and verified literal --experimental-local generated-profile 0 arguments. Recorded maps identify admitted provider plus installed Qt Core/Gui/Widgets and offscreen platform plugin.",
+    "Supervisor recorded OFD contention while the app was alive, then acquired the same open lock inode after owned wrapper SIGTERM. Wrapper returned 143; startup log separately records child -15. It recorded child absence and temporary-root removal; the root remains absent at review.",
+    "TERM cleanup is exercised by this smoke. HUP/INT handlers and child-only HOME/all four XDG directories are covered by the previously sealed source review, without claiming additional signal subjects.",
+    "Metadata commits may follow actual implementation 2417; no helper HEAD-equals-implementation restriction was added. Exact tree/image/stamped receipt and acceptance-review pins remain the launch authority."
+  ],
+  "separate_wrapper_assessment": {
+    "ready_for_root_staging": true,
+    "path": "/home/yurii/Java/BiglyBTC/dist/BiglyBTC-development-preview",
+    "required_behavior": "Invoke the durable qualified helper at its exact path via /usr/bin/python3 -I -B with --launch; retain helper pin checks and generated empty offline profile. Keep existing launchers/default distribution files unchanged.",
+    "qualified_helper": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/development-preview-qualified-20261106/development_preview.py",
+    "copies_of_SDK_Qt_or_application_required": false
+  },
+  "scope_limits": [
+    "Owned offscreen production-app startup, captured loader mappings, profile OFD and forced owned exit/cleanup only.",
+    "No View/menu interaction, full desktop workflow, graceful application shutdown, live RSS fetch, normal-profile use, integrated P08/P07 acceptance or shipping promotion is claimed.",
+    "Independent review consumed existing artifacts and source only; it did not rerun any subject."
+  ],
+  "blocking_findings": [],
+  "Native_dist_cache_or_parent_environment_modified_by_reviewer": false,
+  "runtime_compiler_JVM_network_loader_or_GUI_subject_executed_by_reviewer": false
+}
