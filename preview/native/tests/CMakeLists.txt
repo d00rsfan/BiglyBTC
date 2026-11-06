@@ -2610,3 +2610,9 @@ target_compile_features(biglybtc-download-history-store-tests PRIVATE cxx_std_23
 target_compile_options(biglybtc-download-history-store-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME original-download-history-store COMMAND biglybtc-download-history-store-tests)
 set_tests_properties(original-download-history-store PROPERTIES TIMEOUT 30 LABELS "unit;download-history;owned-profile;filesystem;no-network")
+
+# Manual offline public-original API oracle, excluded from current ordinary suites.
+add_executable(biglybtc-download-history-java-handoff-probe EXCLUDE_FROM_ALL download_history_java_handoff_probe.cpp)
+target_link_libraries(biglybtc-download-history-java-handoff-probe PRIVATE biglybtc_profile OpenSSL::Crypto)
+target_compile_features(biglybtc-download-history-java-handoff-probe PRIVATE cxx_std_23)
+target_compile_options(biglybtc-download-history-java-handoff-probe PRIVATE -Wall -Wextra -Wpedantic -Werror)
