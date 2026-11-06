@@ -1,0 +1,132 @@
+{
+  "schema": "BIGLYBTC_NUMERIC_SUBSCRIPTION_PUBLICATION_VERIFICATION_V1",
+  "status": "PASS_BOUNDED_NUMERIC_SAVED_SOURCE_AND_EXPLICIT_ORIGINAL_VALUES",
+  "implementation_commit": "284cda11df71333d1f47724ffad45abc576ebb42",
+  "native_tree": "611e08879c3af4229f07e48766a6cf9355ebb243",
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "protected_original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "source_manifest": {
+    "bytes": 11957,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/integration/manifest.json",
+    "sha256": "3ebacacfe87bb932bdc3174b2a51026841521d0fb163a2354978df58a2e5947d"
+  },
+  "required_oracle_child": {
+    "bytes": 6626,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/native-filter-oracle/manifest.json",
+    "sha256": "fc7e525ba26bef729be501bfef6664c10b6e10fede58af9338507c0915658814"
+  },
+  "source_review": {
+    "bytes": 14654,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/integration/source-review.json",
+    "sha256": "2e517b87c669c89fd08b9876f2a0f8eef8d995310e4322fb5873001bf30623ab"
+  },
+  "oracle_child_review": {
+    "bytes": 13714,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/native-filter-oracle/source-review.json",
+    "sha256": "0ea0b1c9ea95aee910b41d99ce81fd2682f8fc05981565cdb30fd64f6f122525"
+  },
+  "spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/spec.json",
+    "sha256": "2cb7ad685124df0a0c6002f8e26b23e940997917a986bfbd9f28d86a2813d92f",
+    "bytes": 32811
+  },
+  "source_map": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/source.json",
+    "sha256": "777a9448d26a7fdd8a12ac48a1ce891af52538259f5a019f00baada6aef14212",
+    "bytes": 175018
+  },
+  "canonical_changed_leaves": 12,
+  "source_file_count": 1388,
+  "independent_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/independent-acceptance-review.json",
+    "sha256": "a46591e33c2ac861507f49ab7704af0051ed25fddcf16938d6087eb975d6f2ad",
+    "bytes": 11010
+  },
+  "raw_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/gcc/r1/result-raw.json",
+      "sha256": "6df2639c064eb6ff760a42293d67c3eec489abb5cc8fc0d2dd7035d67d4d6e75",
+      "bytes": 63476
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/san/r1/result-raw.json",
+      "sha256": "064739c9c659278eb9d84b7232fc70f8056021a28df8295bdd3563f61c8f0859",
+      "bytes": 64647
+    }
+  },
+  "stamped_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/gcc/r1/result-stamped.json",
+      "sha256": "e1daacb0ad3a728b0908c903c7546d95606d3155fa3d46484d4184d98ae71e3a",
+      "bytes": 63876
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/san/r1/result-stamped.json",
+      "sha256": "075eae38e4eb8fcf3da394a525495059f5df76efb7c5e5029eb7676b74d18a72",
+      "bytes": 65047
+    }
+  },
+  "coverage_per_lane": {
+    "actual_commands": 18,
+    "fresh_Qt_groups": 5,
+    "fresh_Qt_methods": 23,
+    "fresh_Qt_data_cases": 80,
+    "numeric_value_cases": 41,
+    "real_source_cases": 6,
+    "existing_service_cases": 12,
+    "existing_private_HTTP_cases": 17,
+    "existing_Bridge_cases": 4,
+    "Native_value_CLI": 1,
+    "actual_supported_value_comparisons": 50,
+    "actual_Malformed_refusals_outside_parity": 8,
+    "ELF_images": 7,
+    "archives": 11,
+    "actual_input_pins": 42,
+    "dependency_pins": 15,
+    "final_link_checks": 7,
+    "Host_compile_variants": 2,
+    "provider_compile_variants": 2
+  },
+  "elapsed_seconds": {
+    "gcc": 550.306,
+    "san": 646.068
+  },
+  "Original_value_evidence": {
+    "observations": {
+      "bytes": 25306,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/original-filter-oracle/actual-values-r1-20261106/observations.json",
+      "sha256": "f452f54bc059efd97a6e3dded4457a3b8f92893c7386829dee563f1ab4ae924a"
+    },
+    "result": {
+      "bytes": 12360,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/original-filter-oracle/actual-values-r1-20261106/result.json",
+      "sha256": "4fdc1238a5872dc64947c5b09d50857159f853916840cf72e8b26e0a4328fd02"
+    },
+    "scope": "actual public Original58 values;50 comparable+8explicitMalformed refusals, not Native qualification"
+  },
+  "Original_value_elapsed_seconds": 1.753,
+  "Original_value_commands": {
+    "javac": 1,
+    "JVM": 1
+  },
+  "Original_Java_or_control_rerun_in_Native_batch": false,
+  "Native_phase_getter_projection_qualified": false,
+  "Original_manager_history_UI_runtime_qualified": false,
+  "acquisition_or_intake_permission_added": false,
+  "source_fixes_or_retries_in_this_batch": 0,
+  "prior_Native_green_groups_carried": false,
+  "application_runtime_launched": false,
+  "sdk_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "sdk_record": {
+    "bytes": 192696,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/source-build-record-discovery-final.json",
+    "sha256": "e213ba3227a464fcb8eab1c7db3e3adef720f482fd352bb87ec12c3f27ec1e92"
+  },
+  "component_states_or_global_baselines_changed": false,
+  "full_P08_or_P07_complete": false,
+  "default_distribution_promoted": false,
+  "rawlogs_or_source_maps_copied": false
+}

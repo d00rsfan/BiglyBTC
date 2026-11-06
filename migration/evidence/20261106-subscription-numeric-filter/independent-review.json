@@ -1,0 +1,186 @@
+{
+  "schema": "BIGLYBTC_NUMERIC_SUBSCRIPTION_SOURCE_ACTUAL_ACCEPTANCE_REVIEW_V1",
+  "status": "PASS_NUMERIC_SUBSCRIPTION_REAL_SOURCE_GCC_SAN_AND_ORIGINAL_VALUE_COMPARISON_REVIEW",
+  "implementation_commit": "284cda11df71333d1f47724ffad45abc576ebb42",
+  "native_tree": "611e08879c3af4229f07e48766a6cf9355ebb243",
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "protected_original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "source_manifest": {
+    "bytes": 11957,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/integration/manifest.json",
+    "sha256": "3ebacacfe87bb932bdc3174b2a51026841521d0fb163a2354978df58a2e5947d"
+  },
+  "required_oracle_child": {
+    "bytes": 6626,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/native-filter-oracle/manifest.json",
+    "sha256": "fc7e525ba26bef729be501bfef6664c10b6e10fede58af9338507c0915658814"
+  },
+  "source_review": {
+    "bytes": 14654,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/integration/source-review.json",
+    "sha256": "2e517b87c669c89fd08b9876f2a0f8eef8d995310e4322fb5873001bf30623ab"
+  },
+  "oracle_child_review": {
+    "bytes": 13714,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/native-filter-oracle/source-review.json",
+    "sha256": "0ea0b1c9ea95aee910b41d99ce81fd2682f8fc05981565cdb30fd64f6f122525"
+  },
+  "spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/spec.json",
+    "sha256": "2cb7ad685124df0a0c6002f8e26b23e940997917a986bfbd9f28d86a2813d92f",
+    "bytes": 32811
+  },
+  "runner": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/runner.py",
+    "sha256": "03423ec760c8ffec194dd57fbd9d05f5ee4fd4b13b078acb43a279f95ef030a9",
+    "bytes": 16969
+  },
+  "source_map": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/source.json",
+    "sha256": "777a9448d26a7fdd8a12ac48a1ce891af52538259f5a019f00baada6aef14212",
+    "bytes": 175018
+  },
+  "source_file_count": 1388,
+  "canonical_changed_leaves": 12,
+  "raw_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/gcc/r1/result-raw.json",
+      "sha256": "6df2639c064eb6ff760a42293d67c3eec489abb5cc8fc0d2dd7035d67d4d6e75",
+      "bytes": 63476
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/san/r1/result-raw.json",
+      "sha256": "064739c9c659278eb9d84b7232fc70f8056021a28df8295bdd3563f61c8f0859",
+      "bytes": 64647
+    }
+  },
+  "stamped_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/gcc/r1/result-stamped.json",
+      "sha256": "e1daacb0ad3a728b0908c903c7546d95606d3155fa3d46484d4184d98ae71e3a",
+      "bytes": 63876
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/cohort/san/r1/result-stamped.json",
+      "sha256": "075eae38e4eb8fcf3da394a525495059f5df76efb7c5e5029eb7676b74d18a72",
+      "bytes": 65047
+    }
+  },
+  "lanes": {
+    "gcc": {
+      "elapsed_seconds": 550.306,
+      "actual_commands": 18,
+      "all_commands_exit_zero": true,
+      "fresh_Qt_groups": {
+        "numeric-filter-values": {
+          "methods": 4,
+          "cases": 41
+        },
+        "numeric-policy-real-source": {
+          "methods": 2,
+          "cases": 6
+        },
+        "subscription-values-source-store": {
+          "methods": 8,
+          "cases": 12
+        },
+        "subscription-concrete-http": {
+          "methods": 5,
+          "cases": 17
+        },
+        "subscriptions-concrete-worker": {
+          "methods": 4,
+          "cases": 4
+        }
+      },
+      "fresh_Qt_methods": 23,
+      "fresh_Qt_cases": 80,
+      "actual_Native_value_CLI": 1,
+      "Original_values_compared": 50,
+      "explicit_Malformed_refusals": 8,
+      "recorded_ELF_images_verified": 7,
+      "archives_verified": 11,
+      "actual_input_pins_verified": 42,
+      "dependency_pins_verified": 15
+    },
+    "san": {
+      "elapsed_seconds": 646.068,
+      "actual_commands": 18,
+      "all_commands_exit_zero": true,
+      "fresh_Qt_groups": {
+        "numeric-filter-values": {
+          "methods": 4,
+          "cases": 41
+        },
+        "numeric-policy-real-source": {
+          "methods": 2,
+          "cases": 6
+        },
+        "subscription-values-source-store": {
+          "methods": 8,
+          "cases": 12
+        },
+        "subscription-concrete-http": {
+          "methods": 5,
+          "cases": 17
+        },
+        "subscriptions-concrete-worker": {
+          "methods": 4,
+          "cases": 4
+        }
+      },
+      "fresh_Qt_methods": 23,
+      "fresh_Qt_cases": 80,
+      "actual_Native_value_CLI": 1,
+      "Original_values_compared": 50,
+      "explicit_Malformed_refusals": 8,
+      "recorded_ELF_images_verified": 7,
+      "archives_verified": 11,
+      "actual_input_pins_verified": 42,
+      "dependency_pins_verified": 15
+    }
+  },
+  "actual_Original_values": {
+    "observations": {
+      "bytes": 25306,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/original-filter-oracle/actual-values-r1-20261106/observations.json",
+      "sha256": "f452f54bc059efd97a6e3dded4457a3b8f92893c7386829dee563f1ab4ae924a"
+    },
+    "result": {
+      "bytes": 12360,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/next-acquisition-candidate/original-filter-oracle/actual-values-r1-20261106/result.json",
+      "sha256": "4fdc1238a5872dc64947c5b09d50857159f853916840cf72e8b26e0a4328fd02"
+    },
+    "scope": "actual public Original58 values;50 comparable+8explicitMalformed refusals, not Native qualification"
+  },
+  "actual_Original_value_elapsed_seconds": 1.753,
+  "actual_Original_JDK17_compile_count": 1,
+  "actual_Original_JVM_count": 1,
+  "Original_Java_or_control_rerun_in_Native_batch": false,
+  "sdk_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "sdk_record": {
+    "bytes": 192696,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/source-build-record-discovery-final.json",
+    "sha256": "e213ba3227a464fcb8eab1c7db3e3adef720f482fd352bb87ec12c3f27ec1e92"
+  },
+  "findings": [
+    "Both raw PASS_UNSTAMPED and exact root-stamped PASS receipts bind code284cda11/tree611e0887 to the same unchanged1388-file before/after source map777a9448. All12 selected afterimages,34declared/42actual input pins and15dependency pins per lane match; current committed source inventory and Originalcb8/indexac456 are unchanged.",
+    "Each lane ran18successful commands with no source fix/retry. Five fresh Qt groups contribute23methods/80data cases: numericvalues41,realsource6,service12,privateHTTP17,Bridge4. All requested selectors/data rows/init/cleanup are present; no skip/failure/error incident appears. No prior Native green group is carried into this current80.",
+    "The actual saved-source numeric test filters seven real loopback feed items to the two inclusive-boundary survivors before history; unsupported regex/category/age/dependency/auto-download rows retain zero provider/connections and unchanged source/history. Signed body/opaque metadata/read counts, source fences,cancel/recovery,close/join/OFD cases remain measured by the selected groups.",
+    "Both actual Native value CLI outputs contain the exact success marker and58unique labels matching the pinned f452 Original observations. For50supported labels,all5loaded thresholds,active and predicate match Original values exactly; the8malformed/partial-constructor labels each report actual Malformed refusal and unsupported_original_observation_only. None is credited as supported parity.",
+    "The separate existing Original value evidence is one JDK17 --release17 compile and one public map-constructor/value-interface JVM run in1.753s,58observations/50comparable+8malformed-only. Its inputs/logs/output/class-beforecleanup/private cleanup were reviewed with child0ea0; no Java/control rerun occurred in this Native cohort. Phase-specific getter projection is not measured by those explicit values.",
+    "All7recorded ELF images (five Qt test images,one value CLI,one build-only app) and11static archives match actual pins. Actual Host/provider compile pairs put the fixture macro only on fixture targets, and both fixture factory symbols are absent in production/present in fixture provider.",
+    "Seven actual final-link records match receipts: numeric value test/oracle exclude all Host/service/provider variants; numeric real-source/service/HTTP/Bridge fixture images exclude production counterparts; the application includes only production Host/service/provider. No opaque response-file evidence is used.",
+    "SAN current links/flags include address+undefined instrumentation and runtime enables leak detection/halt settings. All accepted test/CLI logs are clean; exact SDKdfe/cache role settings remain preserved. The application was built but not launched; no UI screenshot/run or old30s/whole corpus was repeated."
+  ],
+  "scope_limits": [
+    "This review independently reads/pins actual evidence; reviewer ran no compiler,JVM,Qt tests,Native CLI,network,app,cache locks,Native/Git mutation.",
+    "Supported numeric filtering of real saved RSS subscriptions before history and explicit public value predicates are qualified separately. Saved/fresh getter phase projection,acquisition/intake permission,auto-download,other filter effects,definition edits and general metasearch remain unsupported/unproved.",
+    "No Original Core/manager/scheduler/history-reconciliation/UI runtime claim follows. Prior Original healthy codec handback is retained separately and was not rerun here.",
+    "No whole P08/P07/global baseline/default distribution advancement. Earlier failed chapter receipts remain historical FAIL; this source-coherent numeric batch itself needed no correction/retry."
+  ],
+  "blocking_defects": []
+}
