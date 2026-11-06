@@ -3,6 +3,8 @@
 #include "torrent_intake_dialog.hpp"
 #include "library_window.hpp"
 #include "download_history_page.hpp"
+#include "rss_sources_page.hpp"
+#include <atomic>
 #include "options_dialog.hpp"
 #include "scheduler_dialog.hpp"
 #include "local_rating_dialog.hpp"
@@ -418,6 +420,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   myTorrents->setShortcut(QKeySequence(QStringLiteral("Ctrl+1")));
   myTorrents->setShortcutContext(Qt::WindowShortcut);
   connect(myTorrents, &QAction::triggered, this, &LibraryWindow::showMyTorrents);
+  rssAction_=view->addAction(tr("RSS Sources"));rssAction_->setObjectName(QStringLiteral("classic-rss-sources"));
+  connect(rssAction_,&QAction::triggered,this,&LibraryWindow::showRssSources);
   downloadHistoryAction_=view->addAction(tr("Download &History"));
   downloadHistoryAction_->setObjectName(QStringLiteral("classic-download-history"));
   connect(downloadHistoryAction_,&QAction::triggered,this,&LibraryWindow::showDownloadHistory);
@@ -454,6 +458,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   refresh_->setShortcut(QKeySequence(Qt::Key_F5));
   connect(refresh_, &QAction::triggered, this, [this] {
     if (closing_) { return; }
+    if(onRssSourcesPage()){rssPage_->refreshSources();return;}
     if(onDownloadHistoryPage()){downloadHistoryPage_->reload();return;}
     if (onStatisticsPage()) {
       if (statisticsPage_->countrySelected()) { pendingCountryRead_ = statisticsPage_; queueCountryStatistics(); }
@@ -575,6 +580,7 @@ void LibraryWindow::showMyShares() {
   if (guard && fresh) { refreshSavedServices(); }
 }
 #include "download_history_window.inc"
+#include "rss_sources_window.inc"
 StatisticsPage* LibraryWindow::statisticsPage() const { return statisticsPage_.data(); }
 bool LibraryWindow::onStatisticsPage() const {
   return statisticsPage_ && mainTabs_->currentWidget() == statisticsPage_.data();
@@ -1003,6 +1009,7 @@ void LibraryWindow::closePage(int index) {
   if (!retainedLibrary) {
     if (page == hostingPage_.data()) { hostingPage_.clear(); }
     else if (page == sharesPage_.data()) { sharesPage_.clear(); }
+    else if(page==rssPage_.data()){const auto old=rssPage_;rssPage_.clear();old->invalidateSession();if(!guard||!page){return;}}
     else if(page==downloadHistoryPage_.data()){downloadHistoryPage_->invalidateSession();downloadHistoryPage_.clear();pendingDownloadHistoryCommand_.reset();}
     else if (page == statisticsPage_.data()) {
       const QPointer<StatisticsPage> statisticsPage = statisticsPage_;
@@ -1016,7 +1023,7 @@ void LibraryWindow::closePage(int index) {
     }
     else { return; }
   }
-  mainTabs_->removeTab(index);
+  mainTabs_->removeTab(mainTabs_->indexOf(page));
   if (!guard) { return; }
   // Keep the library widgets and selection owned for View > My Torrents.
   if (!retainedLibrary && page) { page->deleteLater(); }
@@ -1089,6 +1096,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
+  if(rssPage_){const auto id=rssPage_->page()?rssPage_->page():reserveRssUiIdentity();rssPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
   pendingDownloadHistoryCommand_.reset();if(downloadHistoryPage_){downloadHistoryPage_->beginSession(session);if(!guard){return;}}
   latestI2p_.reset();
   latestManualTagEditor_.reset();pendingManualTagCommand_.reset();
@@ -1324,6 +1332,7 @@ void LibraryWindow::setColumnLayoutSaved(ColumnLayoutSavePresentation packet) {
 void LibraryWindow::setOfflinePreview(bool offline) {
   offlinePreview_ = offline;
   QPointer<LibraryWindow> guard(this);
+  if(rssPage_){rssPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   previewStatus_->setText(offline ? tr("Offline preview") : tr("Local test"));
   if (guard) { queueDownloadActions(); }
 }
@@ -1407,10 +1416,10 @@ void LibraryWindow::updateActions() {
   const auto target = actionTarget();
   continue_->setEnabled(!busy_ && !closing_ && target && model_->canContinue(*target));
   cancel_->setEnabled(busy_ && !closing_);
-  refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (!busy_&&(onDownloadHistoryPage()||mainTabs_->currentWidget()==torrentsPage_))));
+  refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (!busy_&&(onDownloadHistoryPage()||onRssSourcesPage()||mainTabs_->currentWidget()==torrentsPage_))));
   files_->setEnabled(!busy_ && !closing_ && target.has_value());
   padding_->setEnabled(!closing_ && mainTabs_->currentWidget() == torrentsPage_);
-  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || onDownloadHistoryPage()));
+  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || onDownloadHistoryPage() || onRssSourcesPage()));
   saveColumns_->setEnabled(!closing_ && !busy_ && columnSaveAvailable_ && columnSession_ != 0
       && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_ && !activeStatisticsRequest_
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());
@@ -1424,6 +1433,7 @@ void LibraryWindow::updateActions() {
   if (optionsAction_) { optionsAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   queueDownloadActions();
   QPointer<LibraryWindow> guard(this);
+  if(rssAction_){rssAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
   if(downloadHistoryAction_){downloadHistoryAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
   if(downloadHistoryPage_){downloadHistoryPage_->setAvailable(!closing_&&!busy_);if(!guard){return;}}
   if(categoryAction_){categoryAction_->setEnabled(!closing_&&!offlinePreview_&&columnSession_);if(!guard){return;}}
@@ -1959,6 +1969,7 @@ void LibraryWindow::setBusy(bool value) {
   }
   QPointer<LibraryWindow> guard(this);
   busy_ = value;
+  if(rssPage_){rssPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if (statisticsPage_) { statisticsPage_->setAccountingBusy(value); }
   if (!guard) { return; }
   updateActions();
@@ -2033,6 +2044,7 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
   if (!optionsGuard) { return; }
   pendingOptionsLoad_.reset();
   closing_ = true;
+  if(rssPage_){rssPage_->invalidateSession();if(!optionsGuard){return;}}
   pendingDownloadHistoryCommand_.reset();if(downloadHistoryPage_){downloadHistoryPage_->invalidateSession();if(!optionsGuard){return;}}
   if(categoryDialog_){const auto dialog=categoryDialog_;categoryDialog_.clear();dialog->invalidateSession();if(!optionsGuard){return;}}
   if(manualTagDialog_){const auto dialog=manualTagDialog_;manualTagDialog_.clear();dialog->invalidateSession();if(!optionsGuard){return;}}

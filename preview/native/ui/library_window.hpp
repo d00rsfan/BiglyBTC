@@ -31,6 +31,7 @@
 #include "../app/manual_tag_commands.hpp"
 #include "../app/category_commands.hpp"
 #include "../app/download_history_commands.hpp"
+#include "rss_sources_presentation.hpp"
 #include <QMainWindow>
 #include <QPointer>
 
@@ -58,6 +59,7 @@ class CategoryManagerDialog;
 class ClassicColumns;
 class StatisticsPage;
 class DownloadHistoryPage;
+class RssSourcesPage;
 class EngineActivityHistory;
 class NativeActivityHistory;
 
@@ -89,6 +91,11 @@ public:
   void setSavedServices(SavedServicesPresentation);
   StatisticsPage* statisticsPage() const;
   DownloadHistoryPage* downloadHistoryPage()const;
+  RssSourcesPage* rssSourcesPage()const;
+  void setRssCatalog(RssCatalogPresentation);
+  void setRssFetchResult(RssFetchPresentation);
+  void rejectRssCatalog(RssCatalogRequest);
+  void rejectRssFetch(const RssFetchCommand&);
   void setDownloadHistoryCommandFinished(DownloadHistoryCommandPresentation);
   void rejectDownloadHistoryCommand(const DownloadHistoryCommand&);
   void setStatistics(StatisticsPresentation);
@@ -157,6 +164,9 @@ signals:
   void manualTagCommandRequested(biglybtc::ui::ManualTagCommand);
   void categoryCommandRequested(biglybtc::ui::CategoryCommand);
   void downloadHistoryCommandRequested(biglybtc::ui::DownloadHistoryCommand);
+  void rssCatalogRequested(biglybtc::ui::RssCatalogRequest);
+  void rssFetchRequested(biglybtc::ui::RssFetchCommand);
+  void rssCancelRequested(biglybtc::ui::RssFetchKey);
   void fileOperationSequenceFinished(biglybtc::ui::FileOperationSequencePresentation);
   void fileOperationPlanRequested(biglybtc::ui::FileOperationRequest);
   void fileOperationExecuteRequested(biglybtc::ui::FileOperationSubmission);
@@ -234,6 +244,8 @@ private:
   void showMyShares();
   void showStatistics();
   void showDownloadHistory();
+  void showRssSources();
+  bool onRssSourcesPage()const;
   bool onDownloadHistoryPage()const;
   bool onStatisticsPage() const;
   void refreshStatistics();
@@ -306,6 +318,8 @@ private:
   QPointer<SavedHostingPage> hostingPage_;
   QPointer<SavedSharesPage> sharesPage_;
   QPointer<StatisticsPage> statisticsPage_;
+  QPointer<RssSourcesPage> rssPage_;
+  QAction* rssAction_=nullptr;
   QPointer<DownloadHistoryPage> downloadHistoryPage_;
   QAction* downloadHistoryAction_=nullptr;
   quint64 downloadHistoryRequest_=0;

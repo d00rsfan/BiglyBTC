@@ -72,3 +72,7 @@ target_sources(biglybtc_ui PRIVATE category_editor.hpp category_editor.cpp categ
 
 target_sources(biglybtc_ui PRIVATE download_history_page.hpp download_history_page.cpp download_history_window.inc
   "${PROJECT_SOURCE_DIR}/app/download_history_commands.hpp")
+
+if(TARGET biglybtc_ui)
+  target_sources(biglybtc_ui PRIVATE rss_sources_presentation.hpp rss_sources_page.hpp rss_sources_page.cpp rss_sources_window.inc)
+endif()

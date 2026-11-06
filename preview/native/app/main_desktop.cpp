@@ -100,6 +100,11 @@ int main(int argc, char** argv) {
     biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory), {}, std::move(schedulerFactory),std::move(i2pOptions));
     using Window = biglybtc::ui::LibraryWindow;
     using Bridge = biglybtc::app::SessionBridge;
+    QObject::connect(&bridge,&Bridge::rssCatalogReady,&window,&Window::setRssCatalog);
+    QObject::connect(&bridge,&Bridge::rssFetchReady,&window,&Window::setRssFetchResult);
+    QObject::connect(&window,&Window::rssCatalogRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::RssCatalogRequest request){if(owner&&view&&!owner->rssCatalog(request)&&view){view->rejectRssCatalog(request);}});
+    QObject::connect(&window,&Window::rssFetchRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::RssFetchCommand command){if(owner&&view&&!owner->rssFetch(command)&&view){view->rejectRssFetch(command);}});
+    QObject::connect(&window,&Window::rssCancelRequested,&bridge,&Bridge::cancelRssFetch);
     QObject::connect(&bridge,&Bridge::categoryCommandFinished,&window,&Window::setCategoryCommandFinished);
     QObject::connect(&window,&Window::downloadHistoryCommandRequested,&bridge,[&](biglybtc::ui::DownloadHistoryCommand request){
       if(!bridge.downloadHistoryCommand(request)){window.rejectDownloadHistoryCommand(request);}

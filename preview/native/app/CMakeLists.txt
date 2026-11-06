@@ -194,3 +194,11 @@ if(TARGET biglybtc_desktop_host)
 endif()
 
 target_sources(biglybtc_desktop_host PRIVATE download_history_completion.inc)
+
+if(TARGET biglybtc_desktop_host)
+  if(NOT TARGET biglybtc_rss_http_fetch)
+    message(FATAL_ERROR "RSS Sources consumer requires the reviewed concrete RSS HTTP owner")
+  endif()
+  target_sources(biglybtc_desktop_host PRIVATE rss_sources_catalog.hpp rss_sources_host.inc rss_sources_bridge.inc)
+  target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_rss_http_fetch)
+endif()

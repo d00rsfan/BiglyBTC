@@ -6,6 +6,7 @@
 #include "scheduler_presentation.hpp"
 #include "local_rating_presentation.hpp"
 #include "torrent_intake_presentation.hpp"
+#include "rss_sources_presentation.hpp"
 
 #include "biglybtc/executor.hpp"
 #include "column_layout_presentation.hpp"
@@ -38,6 +39,7 @@
 class QTimer;
 
 namespace biglybtc::engine { struct ApplicationPeerObservation; }
+namespace biglybtc::search { class RssHttpFetch; }
 namespace biglybtc::storage { class ProfileLease; class CountryProvider; class SchedulerService; }
 
 namespace biglybtc::app {
@@ -50,7 +52,8 @@ public:
   using CountryProviderFactory = std::function<std::unique_ptr<storage::CountryProvider>(const storage::ProfileLease&)>;
   using AzureusServiceFactory = std::function<std::unique_ptr<OwnedAzureusService>(const storage::ProfileLease&)>;
   using SchedulerFactory = std::function<std::unique_ptr<storage::SchedulerService>(const storage::ProfileLease&)>;
-  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {});
+  using RssFetchFactory=std::function<std::unique_ptr<search::RssHttpFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::RssSourceKey&,std::stop_token)>;
+  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {}, RssFetchFactory = {});
   ~SessionBridge() override;
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool openNormal(std::filesystem::path profile);
@@ -81,6 +84,9 @@ public:
   bool manualTagCommand(ui::ManualTagCommand);
   bool categoryCommand(ui::CategoryCommand);
   bool downloadHistoryCommand(ui::DownloadHistoryCommand);
+  bool rssCatalog(ui::RssCatalogRequest);
+  bool rssFetch(ui::RssFetchCommand);
+  void cancelRssFetch(ui::RssFetchKey);
   bool countryStatistics(quint64 session);
   bool history(quint64 session, quint64 request, core::HistoryDate date);
   bool historyWeek(quint64 session, quint64 request, core::HistoryDate endingDate);
@@ -133,6 +139,8 @@ signals:
   void manualTagCommandFinished(biglybtc::ui::ManualTagCommandPresentation);
   void categoryCommandFinished(biglybtc::ui::CategoryCommandPresentation);
   void downloadHistoryCommandFinished(biglybtc::ui::DownloadHistoryCommandPresentation);
+  void rssCatalogReady(biglybtc::ui::RssCatalogPresentation);
+  void rssFetchReady(biglybtc::ui::RssFetchPresentation);
   void countryStatisticsReady(biglybtc::ui::CountryStatisticsPresentation);
   void sessionClosed(quint64 session, bool joined, bool storageReleased);
   void sessionCloseFailed();
@@ -174,6 +182,14 @@ private:
   void publishCountries() noexcept;
   void deliverCountries(ui::CountryStatisticsPresentation);
   void closeFailed(QString);
+  void deliverRssCatalog(ui::RssCatalogPresentation);
+  void deliverRssFetch(ui::RssFetchPresentation);
+  void postRssFetch(ui::RssFetchPresentation);
+  void finishRssDispatch();
+  void rssDispatchInterrupted();
+  void stopRssReceiver()noexcept;
+  void closeWorkerRss();
+  void pollRssFetch();
   bool closeSessionImpl(bool withoutCheckpoint,quint64 expectedSession);
   std::unique_ptr<Host> host_;
   std::optional<core::Ticket> current_;
@@ -216,6 +232,10 @@ private:
   bool liveSpeedDeliveryQueued_ = false;
   std::optional<I2pServiceOptions> i2pOptions_;
   SchedulerFactory schedulerFactory_;
+  RssFetchFactory rssFetchFactory_;
+  std::optional<ui::RssCatalogRequest> guiRssCatalog_;
+  std::optional<ui::RssFetchCommand> guiRssFetch_;
+  std::optional<ui::RssFetchKey> rssStarting_;
   std::optional<ui::FileOperationRequest> guiFileOperation_;
   std::optional<ui::TorrentCreationRequest> guiCreation_;
   ui::TorrentCreationProgressPresentation latestCreationProgress_;
