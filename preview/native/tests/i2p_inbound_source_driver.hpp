@@ -11,7 +11,7 @@ namespace i2p=services::i2p;namespace cp=i2p::i2cp;namespace provider=i2p::provi
 class InboundSourceDriver final:public QObject {
 public:
   using Phase=provider::SourcePermit::Phase;
-  struct Observation {Phase phase=Phase::Idle;std::uint64_t heldTurns=0,createRequests=0;bool paused=false,failed=false,validationFailed=false;};
+  struct Observation {Phase phase=Phase::Idle;std::uint64_t heldTurns=0,createRequests=0;bool paused=false,failed=false,validationFailed=false,inboundPaused=false;};
   InboundSourceDriver(std::shared_ptr<provider::ProfileSource> source,cp::InitialChannel& channel)
       :channel_(channel),permit_(source,this){
     if(!source||!channel_.bindEffectAuthority(source->effectAuthority())){throw std::runtime_error("Real isolated source authority required");}
@@ -28,7 +28,11 @@ public:
   // consumed/ACKed without channel/Actor calls, so its real worker releases the
   // gate and cannot deadlock the mutator. No new request is made until resume.
   void pause(bool value){paused_=value;drain();if(!paused_){request();}}
-  Observation observation()const{return {permit_.phase(),heldTurns_,createRequests_,paused_,failed_,validationFailed_};}
+  // Leave real worker validation and channel effects running. The Actor is
+  // the sole DHT queue consumer, for inbound queries and finite client replies;
+  // neither may receive while this test-only barrier is active.
+  void pauseInbound(bool value){inboundPaused_=value;if(!value){request();}}
+  Observation observation()const{return {permit_.phase(),heldTurns_,createRequests_,paused_,failed_,validationFailed_,inboundPaused_};}
   std::optional<i2p::dht::Actor::InboundObservation> lastHeldInbound()const{return lastHeld_;}
   void withdraw(){if(actor_){actor_->close();}channel_.close();permit_.stop();}
   void join(){permit_.join();} // External lifetime, only after withdraw.
@@ -42,7 +46,7 @@ private:
   cp::InitialChannel& channel_;provider::SourcePermit permit_;
   QPointer<i2p::dht::Actor> actor_;std::optional<i2p::ClientIdentity> identity_;
   cp::SessionOptions options_;std::optional<i2p::dht::Actor::InboundObservation> lastHeld_;
-  std::uint64_t heldTurns_=0,createRequests_=0;bool paused_=false,failed_=false,validationFailed_=false;
+  std::uint64_t heldTurns_=0,createRequests_=0;bool paused_=false,failed_=false,validationFailed_=false,inboundPaused_=false;
   void drain(){
     if(permit_.phase()==Phase::Failed){failed_=validationFailed_=true;withdraw();return;}
     if(failed_||permit_.phase()!=Phase::Ready){return;}const auto revision=permit_.take();if(!revision){
@@ -58,7 +62,7 @@ private:
       auto created=channel_.createLeaseSession(std::move(*identity_),options_,static_cast<std::uint64_t>(wall));identity_.reset();++createRequests_;
       if(!created){failed_=true;channel_.close();return;}
     }
-    if(actor_){actor_->resumeAuthorizedInbound();lastHeld_=actor_->inboundObservation();}
+    if(actor_&&!inboundPaused_){actor_->resumeAuthorizedInbound();lastHeld_=actor_->inboundObservation();}
   }
 };
 }
