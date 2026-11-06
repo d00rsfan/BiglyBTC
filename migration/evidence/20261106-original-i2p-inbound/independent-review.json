@@ -1,0 +1,125 @@
+{
+  "acceptance": {
+    "bad_token_readback": "Pinned compiled helper requires exactly one peer equal to writer Destination hash with seed flag; post-rejection values callback passed.",
+    "cleanup_hard_end_seconds": 1300,
+    "close_resume_source_loss": "Stop preserves live source/channel; remote failure observed. Resume serves actual ping. Explicit source invalidation plus actual key inode replacement fails fresh validation and remote ping. No watcher latency claim.",
+    "counter_delta": {
+      "replyPrepared": 6,
+      "requests": 7,
+      "tokenRejected": 1
+    },
+    "counter_relation": "Requests equal prepared replies plus token rejections; exactly one rejection and at least one prepared reply.",
+    "elapsed_seconds": 380.836,
+    "fourteenth_command": "Explicit stop; completion receipt follows close of both original identities.",
+    "functional_budget_seconds": 1200,
+    "idle_reference_helper_exit": {
+      "code": 143,
+      "expected": true,
+      "reason": "Alive helper deliberately sent recorded SIGTERM; exit matches 128 + 15 and bounded join completed.",
+      "signal": 15
+    },
+    "native_controls": 6,
+    "native_worker_joins_complete": true,
+    "original_callback_receipts": 13,
+    "original_manager_commands": 14,
+    "profile_lock_reacquired": true,
+    "routers_native_and_inbound_original_exit_zero": true
+  },
+  "evidence": {
+    "aggregate": {
+      "bytes": 1878,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/single-inbound-sequence-20261106-r1/result.json",
+      "sha256": "9c64c67e36625294b5a8510ae9e797d30f9dc6dfe0e781239e2304df53e34764"
+    },
+    "cleanup": {
+      "bytes": 69,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/current-inbound-20261106-r1/private-cleanup.json",
+      "sha256": "eb4a9d2b4cdf2c6eb1befd7bf4df00423341effe9b68f88bcb1ede8914d48593"
+    },
+    "counter_interval": {
+      "bytes": 817,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/current-inbound-20261106-r1/inbound-counter-interval.json",
+      "sha256": "3d7b637ef5c7b82c0940ee19a5831073fed36119cffe0a84ebeb962bc48e0685"
+    },
+    "exchanges": {
+      "bytes": 10150,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/current-inbound-20261106-r1/inbound-exchanges.json",
+      "sha256": "8d51bf46efe784cb9ed68adc8484550a6f4e6a0592ae79cb060c711c3e8ea0db"
+    },
+    "image_binding": {
+      "bytes": 1152,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-return-20261106/current-image-binding.json",
+      "sha256": "77101cfa190f57b90fbbe9759b12e74a8fc7524635768edf3f7ae7ed383e1131"
+    },
+    "inputs": {
+      "bytes": 50542,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/current-inbound-20261106-r1/inputs.json",
+      "sha256": "0d9f0ea28008192c21c49f58298dfd293b7f370974351fb20ef007d76091aee9"
+    },
+    "namespace_exit": {
+      "bytes": 84,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/current-inbound-20261106-r1/namespace-exit.json",
+      "sha256": "30b36934914a32b56dc5f77c61b954f005051c7a31a8fcc532e7f7f60364924b"
+    },
+    "prior_review": {
+      "bytes": 974,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-return-20261106/completion-review.json",
+      "sha256": "689fdeffff12734ec8b0256fc93244953ad75b2f9e58164894ee9d69b6f2f399"
+    },
+    "public_artifacts": {
+      "bytes": 24794,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/current-inbound-20261106-r1/public-artifacts.json",
+      "sha256": "ba143c7684a9db92e27a16c626a22dae4d0466393945325ee172c51320968d51"
+    }
+  },
+  "fences_cleanup": {
+    "before_after_fences_identical": true,
+    "bounded_diagnostic_logs_mode": "0600",
+    "capabilities_zero": true,
+    "five_namespaces_differ_from_parent": true,
+    "host_network_modified": false,
+    "namespace_exit": 0,
+    "no_default_or_gateway_routes": true,
+    "no_fallback": true,
+    "no_new_privileges": true,
+    "owned_private_paths_absent": true,
+    "parent_descriptors_unchanged": true,
+    "private_keys_not_published": true,
+    "running_original_java_or_real_profile_touched_by_reviewer": false,
+    "unreachable_controls_errno": 101
+  },
+  "hash_verification": {
+    "current_native_source_files": 1328,
+    "public_artifacts": 120,
+    "scope": "Focused inbound run and pinned prerequisites; unrelated matrices and SAN image were not rehashed.",
+    "source_map_sha256": "c9b58b1bc510b5fb725ff8d07bab0cd2c4069225b06b91fa44d1e03d81e40505",
+    "unique_pinned_input_and_run_files": 191
+  },
+  "method": "Read-only artifact, source, Git identity and SHA-256 review. No subjects, compiler or network operations launched.",
+  "reviewed_utc": "2026-11-06T07:04:32.229331+00:00",
+  "reviewer_changes": "Only this review JSON; no source, adoption, Git, network, compiler or authorization changes.",
+  "schema": "BIGLYBTC_INDEPENDENT_FOCUSED_NETWORK_EVIDENCE_REVIEW_V1",
+  "scope_limits": [
+    "Accepted magnets retained, not replayed in this inbound run.",
+    "No new SAN inbound execution.",
+    "Standalone expiry-only and intentional router-EOF controls remain unexecuted.",
+    "No internet-tunnel, default-backend activation or remote-publication credit.",
+    "P07 and full migration remain incomplete."
+  ],
+  "source_image": {
+    "clean_worktree": true,
+    "compiled_implementation_commit": "7b3e55f9f8ea5cbd43791e11c1870890875d63a8",
+    "head": "a95bc831a1a5ec639194e79241c889eb10a3a9cf",
+    "image": {
+      "bytes": 8030144,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-inbound-native-probe",
+      "sha256": "cecc5808b6b584d15a6f703b9247ebe408013bd609f96a62568348309dfe52f4"
+    },
+    "loader_verified_with_resolved_soname_paths": true,
+    "native_tree": "fa98e0b8247185e976cf6a9371abe673248ee4f2",
+    "no_historical_six_suite_relabeling": true,
+    "raw_R7_build_receipt_label_preserved": true,
+    "same_native_tree_as_compiled_implementation": true
+  },
+  "status": "PASS_RECORDED_GCC_ORIGINAL_INBOUND_AND_SOURCE_CONTROLS"
+}

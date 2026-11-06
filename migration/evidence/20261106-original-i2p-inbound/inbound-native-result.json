@@ -1,0 +1,12 @@
+{
+    "commands": 6,
+    "elapsed_ms": 140076,
+    "payload_or_torrent_grants": 0,
+    "profile_lock_reacquired": true,
+    "reason": "Original inbound counters and actual source withdrawal complete",
+    "requires_original_peer_result": true,
+    "source_grants_minted_by_fixture": false,
+    "source_validation_failed": true,
+    "status": "PASS_ACTUAL_SOURCE_BOUND_INBOUND_NATIVE",
+    "worker_joins_complete": true
+}

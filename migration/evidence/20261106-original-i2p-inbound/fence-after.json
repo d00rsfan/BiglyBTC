@@ -1,0 +1,393 @@
+{
+  "addresses": {
+    "bbtc-v0": [
+      {
+        "family": "inet",
+        "local": "10.254.199.1",
+        "prefixlen": 30
+      },
+      {
+        "family": "inet6",
+        "local": "fe80::d087:2aff:fe6a:233f",
+        "prefixlen": 64
+      }
+    ],
+    "bbtc-v1": [
+      {
+        "family": "inet",
+        "local": "10.254.199.2",
+        "prefixlen": 30
+      },
+      {
+        "family": "inet6",
+        "local": "fe80::d8b1:66ff:fec3:13b9",
+        "prefixlen": 64
+      }
+    ],
+    "lo": [
+      {
+        "family": "inet",
+        "local": "127.0.0.1",
+        "prefixlen": 8
+      },
+      {
+        "family": "inet6",
+        "local": "::1",
+        "prefixlen": 128
+      }
+    ]
+  },
+  "capabilities": {
+    "CapAmb": 0,
+    "CapBnd": 0,
+    "CapEff": 0,
+    "CapInh": 0,
+    "CapPrm": 0
+  },
+  "functional_subjects_executed": true,
+  "gid": 1000,
+  "groups": [],
+  "host_network_modified": false,
+  "interfaces": [
+    "bbtc-v0",
+    "bbtc-v1",
+    "lo"
+  ],
+  "links": [
+    {
+      "address": "00:00:00:00:00:00",
+      "allmulti": 0,
+      "broadcast": "00:00:00:00:00:00",
+      "flags": [
+        "LOOPBACK",
+        "UP",
+        "LOWER_UP"
+      ],
+      "gro_ipv4_max_size": 65536,
+      "gro_max_size": 65536,
+      "group": "default",
+      "gso_ipv4_max_size": 65536,
+      "gso_max_segs": 65535,
+      "gso_max_size": 65536,
+      "ifindex": 1,
+      "ifname": "lo",
+      "inet6_addr_gen_mode": "eui64",
+      "link_type": "loopback",
+      "linkmode": "DEFAULT",
+      "max_mtu": 0,
+      "min_mtu": 0,
+      "mtu": 65536,
+      "netns-immutable": true,
+      "num_rx_queues": 1,
+      "num_tx_queues": 1,
+      "operstate": "UNKNOWN",
+      "promiscuity": 0,
+      "qdisc": "noqueue",
+      "tso_max_segs": 65535,
+      "tso_max_size": 524280,
+      "txqlen": 1000
+    },
+    {
+      "address": "da:b1:66:c3:13:b9",
+      "allmulti": 0,
+      "broadcast": "ff:ff:ff:ff:ff:ff",
+      "flags": [
+        "BROADCAST",
+        "MULTICAST",
+        "UP",
+        "LOWER_UP"
+      ],
+      "gro_ipv4_max_size": 65536,
+      "gro_max_size": 65536,
+      "group": "default",
+      "gso_ipv4_max_size": 65536,
+      "gso_max_segs": 65535,
+      "gso_max_size": 65536,
+      "ifindex": 2,
+      "ifname": "bbtc-v1",
+      "inet6_addr_gen_mode": "eui64",
+      "link": "bbtc-v0",
+      "link_type": "ether",
+      "linkinfo": {
+        "info_kind": "veth"
+      },
+      "linkmode": "DEFAULT",
+      "max_mtu": 65535,
+      "min_mtu": 68,
+      "mtu": 1500,
+      "num_rx_queues": 4,
+      "num_tx_queues": 4,
+      "operstate": "UP",
+      "promiscuity": 0,
+      "qdisc": "noqueue",
+      "tso_max_segs": 65535,
+      "tso_max_size": 524280,
+      "txqlen": 1000
+    },
+    {
+      "address": "d2:87:2a:6a:23:3f",
+      "allmulti": 0,
+      "broadcast": "ff:ff:ff:ff:ff:ff",
+      "flags": [
+        "BROADCAST",
+        "MULTICAST",
+        "UP",
+        "LOWER_UP"
+      ],
+      "gro_ipv4_max_size": 65536,
+      "gro_max_size": 65536,
+      "group": "default",
+      "gso_ipv4_max_size": 65536,
+      "gso_max_segs": 65535,
+      "gso_max_size": 65536,
+      "ifindex": 3,
+      "ifname": "bbtc-v0",
+      "inet6_addr_gen_mode": "eui64",
+      "link": "bbtc-v1",
+      "link_type": "ether",
+      "linkinfo": {
+        "info_kind": "veth"
+      },
+      "linkmode": "DEFAULT",
+      "max_mtu": 65535,
+      "min_mtu": 68,
+      "mtu": 1500,
+      "num_rx_queues": 4,
+      "num_tx_queues": 4,
+      "operstate": "UP",
+      "promiscuity": 0,
+      "qdisc": "noqueue",
+      "tso_max_segs": 65535,
+      "tso_max_size": 524280,
+      "txqlen": 1000
+    }
+  ],
+  "namespaces": {
+    "ipc": {
+      "actual": {
+        "device": 5,
+        "inode": 4026532865
+      },
+      "link": "ipc:[4026532865]",
+      "parent": {
+        "device": 5,
+        "inode": 4026531839
+      }
+    },
+    "net": {
+      "actual": {
+        "device": 5,
+        "inode": 4026532973
+      },
+      "link": "net:[4026532973]",
+      "parent": {
+        "device": 5,
+        "inode": 4026531833
+      }
+    },
+    "pid": {
+      "actual": {
+        "device": 5,
+        "inode": 4026532866
+      },
+      "link": "pid:[4026532866]",
+      "parent": {
+        "device": 5,
+        "inode": 4026531836
+      }
+    },
+    "user": {
+      "actual": {
+        "device": 5,
+        "inode": 4026532867
+      },
+      "link": "user:[4026532867]",
+      "parent": {
+        "device": 5,
+        "inode": 4026531837
+      }
+    },
+    "uts": {
+      "actual": {
+        "device": 5,
+        "inode": 4026532864
+      },
+      "link": "uts:[4026532864]",
+      "parent": {
+        "device": 5,
+        "inode": 4026531838
+      }
+    }
+  },
+  "no_default_or_gateway_routes": true,
+  "no_new_privileges": true,
+  "parent_sha256": "3b752e3fd39dadaf27b98f4296969024ddcfb0e453f91c1cb43ab57589db8bfa",
+  "proc_pid1_namespace": "pid:[4026532866]",
+  "routes": {
+    "-4": [
+      {
+        "dev": "bbtc-v0",
+        "dst": "10.254.199.0/30",
+        "flags": [],
+        "prefsrc": "10.254.199.1",
+        "protocol": "kernel",
+        "scope": "link"
+      },
+      {
+        "dev": "bbtc-v1",
+        "dst": "10.254.199.0/30",
+        "flags": [],
+        "prefsrc": "10.254.199.2",
+        "protocol": "kernel",
+        "scope": "link"
+      },
+      {
+        "dev": "bbtc-v0",
+        "dst": "10.254.199.1",
+        "flags": [],
+        "prefsrc": "10.254.199.1",
+        "protocol": "kernel",
+        "scope": "host",
+        "table": "local",
+        "type": "local"
+      },
+      {
+        "dev": "bbtc-v1",
+        "dst": "10.254.199.2",
+        "flags": [],
+        "prefsrc": "10.254.199.2",
+        "protocol": "kernel",
+        "scope": "host",
+        "table": "local",
+        "type": "local"
+      },
+      {
+        "dev": "bbtc-v0",
+        "dst": "10.254.199.3",
+        "flags": [],
+        "prefsrc": "10.254.199.1",
+        "protocol": "kernel",
+        "scope": "link",
+        "table": "local",
+        "type": "broadcast"
+      },
+      {
+        "dev": "bbtc-v1",
+        "dst": "10.254.199.3",
+        "flags": [],
+        "prefsrc": "10.254.199.2",
+        "protocol": "kernel",
+        "scope": "link",
+        "table": "local",
+        "type": "broadcast"
+      },
+      {
+        "dev": "lo",
+        "dst": "127.0.0.0/8",
+        "flags": [],
+        "prefsrc": "127.0.0.1",
+        "protocol": "kernel",
+        "scope": "host",
+        "table": "local",
+        "type": "local"
+      },
+      {
+        "dev": "lo",
+        "dst": "127.0.0.1",
+        "flags": [],
+        "prefsrc": "127.0.0.1",
+        "protocol": "kernel",
+        "scope": "host",
+        "table": "local",
+        "type": "local"
+      },
+      {
+        "dev": "lo",
+        "dst": "127.255.255.255",
+        "flags": [],
+        "prefsrc": "127.0.0.1",
+        "protocol": "kernel",
+        "scope": "link",
+        "table": "local",
+        "type": "broadcast"
+      }
+    ],
+    "-6": [
+      {
+        "dev": "bbtc-v1",
+        "dst": "fe80::/64",
+        "flags": [],
+        "metric": 256,
+        "pref": "medium",
+        "protocol": "kernel"
+      },
+      {
+        "dev": "bbtc-v0",
+        "dst": "fe80::/64",
+        "flags": [],
+        "metric": 256,
+        "pref": "medium",
+        "protocol": "kernel"
+      },
+      {
+        "dev": "lo",
+        "dst": "::1",
+        "flags": [],
+        "metric": 0,
+        "pref": "medium",
+        "protocol": "kernel",
+        "table": "local",
+        "type": "local"
+      },
+      {
+        "dev": "bbtc-v0",
+        "dst": "fe80::d087:2aff:fe6a:233f",
+        "flags": [],
+        "metric": 0,
+        "pref": "medium",
+        "protocol": "kernel",
+        "table": "local",
+        "type": "local"
+      },
+      {
+        "dev": "bbtc-v1",
+        "dst": "fe80::d8b1:66ff:fec3:13b9",
+        "flags": [],
+        "metric": 0,
+        "pref": "medium",
+        "protocol": "kernel",
+        "table": "local",
+        "type": "local"
+      },
+      {
+        "dev": "bbtc-v1",
+        "dst": "ff00::/8",
+        "flags": [],
+        "metric": 256,
+        "pref": "medium",
+        "protocol": "kernel",
+        "table": "local",
+        "type": "multicast"
+      },
+      {
+        "dev": "bbtc-v0",
+        "dst": "ff00::/8",
+        "flags": [],
+        "metric": 256,
+        "pref": "medium",
+        "protocol": "kernel",
+        "table": "local",
+        "type": "multicast"
+      }
+    ]
+  },
+  "scope": "selected real magnet or original-manager inbound; no unexecuted matrix credit",
+  "status": "PASS_FIVE_NAMESPACE_ISOLATED_VETH_FENCE",
+  "uid": 1000,
+  "unreachable_controls_errno": {
+    "10/1": 101,
+    "10/2": 101,
+    "2/1": 101,
+    "2/2": 101
+  }
+}

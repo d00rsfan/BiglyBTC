@@ -130,3 +130,8 @@ Native helper `0c36fa9a1b170a812c2f2bebd5323aa219b37581`, tree `67fd16ff480ecfe0
 ## 2026-11-06 durable intake history and classic library view
 
 Native `7b3e55f9f8ea5cbd43791e11c1870890875d63a8`, tree `fa98e0b8247185e976cf6a9371abe673248ee4f2`, original core `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`, original I2P helper `33d97eca67a9f332e3d4da7e7492ec54f4bec078`. [Review](evidence/20261106-history-library-view/REVIEW.md) records32 affected coverage cells/compiler, actual receipt/Window cases and remaining lifecycle/private gates. No global integration baseline advanced.
+
+
+## 2026-11-06 original I2P inbound runtime
+
+Implementation `7b3e55f9f8ea5cbd43791e11c1870890875d63a8`, launch `a95bc831a1a5ec639194e79241c889eb10a3a9cf`, Native subtree `fa98e0b8247185e976cf6a9371abe673248ee4f2`; core `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`, helper `33d97eca67a9f332e3d4da7e7492ec54f4bec078`. [Review](evidence/20261106-original-i2p-inbound/REVIEW.md) proves the actual6/14 original-manager exchange, stop/resume/source revocation, joins/lock reacquire and isolated cleanup. Existing magnets retained, no new SAN inbound/expiry/EOF credit. Whole P07 and integration baselines remain open.

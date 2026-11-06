@@ -1,0 +1,33 @@
+{
+    "after": {
+        "grantActive": false,
+        "peerKeys": 2,
+        "peerValues": 2,
+        "ready": true,
+        "replyPrepared": "17",
+        "requested": true,
+        "requests": "18",
+        "retained": true,
+        "scope": "1",
+        "sourceCurrent": true,
+        "tokenBindings": 2,
+        "tokenRejected": "1"
+    },
+    "before": {
+        "grantActive": false,
+        "peerKeys": 2,
+        "peerValues": 2,
+        "ready": true,
+        "replyPrepared": "11",
+        "requested": true,
+        "requests": "11",
+        "retained": true,
+        "scope": "1",
+        "sourceCurrent": true,
+        "tokenBindings": 2,
+        "tokenRejected": "0"
+    },
+    "exact_original_peer_readback_still_required": true,
+    "extra_valid_requests_allowed": true,
+    "interval_valid": true
+}
