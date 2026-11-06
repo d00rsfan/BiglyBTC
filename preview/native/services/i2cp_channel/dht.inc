@@ -4,14 +4,14 @@
   struct DhtWrite {std::uint64_t ticket=0,generation=0;Clock::time_point end{};Bytes frame;};
   std::uint16_t dhtQueryPort=0;std::uint64_t nextDhtTicket=1,dhtEpoch=0,nextDhtEpoch=1;
   std::deque<DhtWrite> dhtWrites;std::deque<DhtDispatch> dhtDispatches;
-  std::deque<DhtDatagram> dhtReceived;std::size_t dhtBytes=0;bool dhtQueued=false;
+  std::deque<DhtDatagram> dhtReceived;std::size_t dhtBytes=0;bool dhtQueued=false;std::uint64_t dhtReceiveExpired=0;
   bool dhtReceives()const{return dhtQueryPort&&receiverCurrent()&&(!sourceAuthority||sourceAuthority->current());}
   void notifyDht(){
     if(dhtQueued){return;}dhtQueued=true;bool ok=false;
     try{const QPointer<InitialChannel> owner(q);const auto at=generation;ok=QMetaObject::invokeMethod(q,[owner,at]{if(!owner){return;}auto* s=owner->impl_.get();if(s->generation!=at){return;}s->dhtQueued=false;if(s->active()){emit owner->dhtChanged();}},Qt::QueuedConnection);}catch(...){ok=false;}
     if(!ok){dhtQueued=false;fail(Failure::Resources);}
   }
-  void clearDht(){dhtTimer.stop();dhtQueryPort=0;dhtEpoch=0;dhtWrites.clear();dhtDispatches.clear();dhtReceived.clear();dhtBytes=0;dhtQueued=false;}
+  void clearDht(){dhtTimer.stop();dhtQueryPort=0;dhtEpoch=0;dhtWrites.clear();dhtDispatches.clear();dhtReceived.clear();dhtBytes=0;dhtQueued=false;dhtReceiveExpired=0;}
   void dhtDeadline(){
     if(!dhtQueryPort){return;}
     const auto now=Clock::now();
@@ -20,7 +20,7 @@
       if(it->generation!=generation||!dhtReceives()||now>=it->end){dhtDispatches.push_back({it->ticket,false});it=dhtWrites.erase(it);changed=true;}else{++it;}
     }
     for(auto it=dhtReceived.begin();it!=dhtReceived.end();){
-      if(now>=it->end){dhtBytes-=it->payload.size()+(it->sender?it->sender->wire.size()+it->sender->signingPublicKey.size()+32:0);it=dhtReceived.erase(it);changed=true;}else{++it;}
+      if(now>=it->end){if(dhtReceiveExpired!=std::numeric_limits<std::uint64_t>::max()){++dhtReceiveExpired;}dhtBytes-=it->payload.size()+(it->sender?it->sender->wire.size()+it->sender->signingPublicKey.size()+32:0);it=dhtReceived.erase(it);changed=true;}else{++it;}
     }
     if(changed){notifyDht();}if((dhtWrites.empty()&&dhtReceived.empty())||!active()){dhtTimer.stop();return;}
     auto end=Clock::time_point::max();for(const auto& w:dhtWrites){end=std::min(end,w.end);}for(const auto& received:dhtReceived){end=std::min(end,received.end);}

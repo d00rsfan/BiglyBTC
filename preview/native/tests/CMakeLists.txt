@@ -2393,7 +2393,7 @@ if(TARGET biglybtc_owned_i2p_source AND TARGET biglybtc_i2p_dht)
   endif()
   target_compile_options(biglybtc-i2p-dht-inbound-actor-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_test(NAME i2p-dht-inbound-source-actor COMMAND biglybtc-i2p-dht-inbound-actor-tests)
-  set_tests_properties(i2p-dht-inbound-source-actor PROPERTIES TIMEOUT 30 LABELS "unit;i2p;owned-profile;discovery")
+  set_tests_properties(i2p-dht-inbound-source-actor PROPERTIES TIMEOUT 90 LABELS "unit;i2p;owned-profile;discovery")
 endif()
 
 

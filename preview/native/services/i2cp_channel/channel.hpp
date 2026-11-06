@@ -106,7 +106,8 @@ public:
   void disableDhtDatagrams();
   // Conditional owner teardown; compares the raw epoch even after revocation.
   bool disableDhtDatagrams(std::uint64_t expectedScope);
-  struct DhtScopeObservation {bool sourceBound=false,granted=false;std::size_t queued=0,writeSlots=0;bool lifetimeExhausted=false;};
+  // Passive per-scope receive TTL erasures; saturates at UINT64_MAX.
+  struct DhtScopeObservation {bool sourceBound=false,granted=false;std::size_t queued=0,writeSlots=0;bool lifetimeExhausted=false;std::uint64_t receiveExpired=0;};
   DhtScopeObservation dhtScopeObservation(std::uint64_t expectedScope)const noexcept;
   bool requestDhtEffects(std::uint64_t expectedScope); // Actual bound source only; never mints a permit.
   std::uint64_t dhtScopeGeneration()const noexcept; // Passive active epoch;0 means disabled.

@@ -523,7 +523,7 @@ bool InitialChannel::disableDhtDatagrams(std::uint64_t expectedScope){try{if(!im
 InitialChannel::DhtScopeObservation InitialChannel::dhtScopeObservation(std::uint64_t expectedScope)const noexcept{
   try{if(!impl_->onThread()||!expectedScope||impl_->dhtEpoch!=expectedScope||!impl_->dhtReceives()){return {};}
   const auto used=impl_->dhtWrites.size()+impl_->dhtDispatches.size();
-  return {bool(impl_->sourceAuthority),impl_->sourceAuthority&&impl_->sourceAuthority->granted(),impl_->dhtReceived.size(),used<impl_->DhtQueueLimit&&impl_->nextDhtTicket<std::numeric_limits<std::uint64_t>::max()?impl_->DhtQueueLimit-used:0,impl_->nextDhtTicket==std::numeric_limits<std::uint64_t>::max()};}catch(...){return {};}
+  return {bool(impl_->sourceAuthority),impl_->sourceAuthority&&impl_->sourceAuthority->granted(),impl_->dhtReceived.size(),used<impl_->DhtQueueLimit&&impl_->nextDhtTicket<std::numeric_limits<std::uint64_t>::max()?impl_->DhtQueueLimit-used:0,impl_->nextDhtTicket==std::numeric_limits<std::uint64_t>::max(),impl_->dhtReceiveExpired};}catch(...){return {};}
 }
 bool InitialChannel::requestDhtEffects(std::uint64_t expectedScope){
   try{if(!dhtScopeObservation(expectedScope).sourceBound){return false;}return impl_->effectReady()&&dhtScopeObservation(expectedScope).granted;}catch(...){impl_->fail(Failure::Resources);return false;}

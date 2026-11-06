@@ -318,6 +318,70 @@ private slots:
     driver.pauseInbound(false);QTRY_VERIFY(router.next());auto reply=cp::decodeDhtSendDatagram(router.take());QVERIFY(reply);auto replyMux=cp::decodeDhtMuxDatagram(reply->payload);QVERIFY(replyMux&&replyMux->protocol==18);auto pong=d::decode(replyMux->datagram);QVERIFY(pong&&pong->kind==d::Kind::Reply&&pong->transaction==ping.transaction);
     QTRY_COMPARE(actor.observation().phase,d::Phase::Complete);QCOMPARE(actor.observation().replied,std::size_t(1));QCOMPARE(channel.dhtScopeObservation(scope).queued,std::size_t(0));QCOMPARE(actor.inboundObservation().requests,before.requests+1);QCOMPARE(actor.inboundObservation().replyPrepared,before.replyPrepared+1);QVERIFY(!driver.observation().failed);QVERIFY(router.failure.isEmpty());
   }
+  void receiveTtlCounterExpiresFirstInputWhileLaterQueryRemainsQueued(){
+    owned_i2p_test::Fixture fixture;auto source=provider::ProfileSource::open(*fixture.lease,fixture.hash);QVERIFY(source);auto storage=(*source)->prepareStorage();QVERIFY(storage);
+    Router router;QVERIFY(router.listen());Channel channel;biglybtc::p07_test::InboundSourceDriver driver(*source,channel);
+    QVERIFY(channel.begin(router.options()));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::GetDateType);
+    const auto testNow=static_cast<std::uint64_t>(QDateTime::currentMSecsSinceEpoch());
+    auto date=cp::encodeMessage(cp::SetDate{testNow,std::string("2.13.0")});QVERIFY(date&&router.send(*date));QTRY_VERIFY(channel.routerDate());auto identity=(*source)->takeIdentity();QVERIFY(identity);
+    QVERIFY(driver.queueCreate(std::move(*identity),{{"i2cp.fastReceive","true"}}));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateSessionType);
+    auto created=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});QVERIFY(created&&router.send(*created));QTRY_VERIFY(channel.sessionId());
+    QVERIFY(router.lease(testNow+600000));QTRY_VERIFY(router.next());QVERIFY(cp::decodeCreateLeaseSet2(router.take()));QTRY_VERIFY(channel.leaseSetSubmission());
+    auto remote=signer("dsa");d::Contact seed;seed.hash=remote.destination()->hash;seed.port=10002;seed.destination=*remote.destination();auto rid=d::makeNodeId(seed.hash,seed.port,i2p::Bytes(14,0x32));QVERIFY(rid);seed.id=*rid;
+    auto lid=d::makeNodeId((*source)->destination().hash,10000,i2p::Bytes(14,0x31));QVERIFY(lid);d::Actor actor(channel);driver.setActor(&actor);QVERIFY(actor.begin({*lid,10000,{seed},3,true}));QTRY_VERIFY(actor.inboundEnabled());
+    const auto clearActor=qScopeGuard([&]{driver.setActor(nullptr);actor.close();});
+    const auto scope=channel.dhtScopeGeneration(),revision=(*source)->lease()->sourceRevision(),turns=driver.observation().heldTurns;const auto session=channel.sessionId();const auto before=actor.inboundObservation();const auto baseline=channel.dhtScopeObservation(scope).receiveExpired;const auto drops=channel.receiverObservation().dropped;
+    QCOMPARE(baseline,std::uint64_t(0));driver.pauseInbound(true);QVERIFY(driver.observation().inboundPaused&&!driver.observation().paused);
+    QElapsedTimer age;age.start();d::Message first;first.id=seed.id;first.transaction={0x71,0x72};auto body=d::encode(first);QVERIFY(body);auto signedBody=i2p::encode1(remote.destination()->wire,remote.signingPrivateKey(),*body);QVERIFY(signedBody);
+    auto mux=cp::encodeDhtMuxDatagram({17,10002,10000,*signedBody},cp::GzipMode::Deflate);QVERIFY(mux);auto frame=cp::encodeMessagePayload({7,921,*mux});QVERIFY(frame&&router.send(*frame));QTRY_COMPARE(channel.dhtScopeObservation(scope).queued,std::size_t(1));
+    // Exercise the unchanged real30s receive lifetime, with a later datagram
+    // still live when the first expires. No fake clock or shortened TTL.
+    QTest::qWait(15000);QVERIFY(age.elapsed()>=15000);const auto middle=channel.dhtScopeObservation(scope);QCOMPARE(middle.receiveExpired,baseline);QCOMPARE(middle.queued,std::size_t(1));QCOMPARE(channel.dhtScopeObservation(scope).receiveExpired,middle.receiveExpired);QCOMPARE(channel.dhtScopeObservation(scope).queued,middle.queued);
+    d::Message later=first;later.transaction={0x73,0x74};body=d::encode(later);QVERIFY(body);signedBody=i2p::encode1(remote.destination()->wire,remote.signingPrivateKey(),*body);QVERIFY(signedBody);mux=cp::encodeDhtMuxDatagram({17,10002,10000,*signedBody},cp::GzipMode::Deflate);QVERIFY(mux);frame=cp::encodeMessagePayload({7,922,*mux});QVERIFY(frame&&router.send(*frame));QTRY_COMPARE(channel.dhtScopeObservation(scope).queued,std::size_t(2));
+    QTRY_VERIFY_WITH_TIMEOUT(channel.dhtScopeObservation(scope).receiveExpired>baseline,20000);QVERIFY(age.elapsed()>=30000);
+    const auto expired=channel.dhtScopeObservation(scope);QCOMPARE(expired.receiveExpired,baseline+1);QCOMPARE(expired.queued,std::size_t(1));QCOMPARE(channel.dhtScopeObservation(scope).receiveExpired,expired.receiveExpired);QCOMPARE(channel.dhtScopeObservation(scope).queued,expired.queued);
+    QCOMPARE(actor.inboundObservation().requests,before.requests);QCOMPARE(actor.inboundObservation().replyPrepared,before.replyPrepared);QVERIFY(!router.next());QCOMPARE(channel.receiverObservation().dropped,drops);QCOMPARE(channel.sessionId(),session);QCOMPARE(channel.dhtScopeGeneration(),scope);QCOMPARE((*source)->lease()->sourceRevision(),revision);QVERIFY((*source)->effectAuthority()->current());QVERIFY(channel.socketActive());QVERIFY(driver.observation().heldTurns>turns&&!driver.observation().failed&&!driver.observation().paused);
+    driver.pauseInbound(false);QTRY_VERIFY(router.next());auto reply=cp::decodeDhtSendDatagram(router.take());QVERIFY(reply);auto replyMux=cp::decodeDhtMuxDatagram(reply->payload);QVERIFY(replyMux&&replyMux->protocol==18);auto pong=d::decode(replyMux->datagram);QVERIFY(pong&&pong->kind==d::Kind::Reply&&pong->transaction==later.transaction&&pong->transaction!=first.transaction);
+    QCOMPARE(actor.inboundObservation().requests,before.requests+1);QCOMPARE(actor.inboundObservation().replyPrepared,before.replyPrepared+1);QCOMPARE(channel.dhtScopeObservation(scope).queued,std::size_t(0));QCOMPARE(channel.dhtScopeObservation(scope).receiveExpired,baseline+1);QVERIFY(!router.next());QVERIFY(router.failure.isEmpty());
+    actor.close();QCOMPARE(channel.dhtScopeGeneration(),std::uint64_t(0));QVERIFY(actor.begin({*lid,10000,{seed},3,true}));QTRY_VERIFY(actor.inboundEnabled());QVERIFY(channel.dhtScopeGeneration()!=scope);QCOMPARE(channel.dhtScopeObservation(channel.dhtScopeGeneration()).receiveExpired,std::uint64_t(0));
+  }
+  void actualRouterEofClearsBothConsumersAndRefusesLateRealPermit(){
+    owned_i2p_test::Fixture fixture;
+    {
+      auto source=provider::ProfileSource::open(*fixture.lease,fixture.hash);QVERIFY(source);auto storage=(*source)->prepareStorage();QVERIFY(storage);
+      std::optional<Channel::Failure> firstFailure;
+      Router router;QVERIFY(router.listen());Channel channel;biglybtc::p07_test::InboundSourceDriver driver(*source,channel);
+      QObject::connect(&channel,&Channel::failed,&channel,[&](Channel::Failure failure){if(!firstFailure){firstFailure=failure;}});
+      QVERIFY(channel.begin(router.options()));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::GetDateType);
+      const auto testNow=static_cast<std::uint64_t>(QDateTime::currentMSecsSinceEpoch());
+      auto date=cp::encodeMessage(cp::SetDate{testNow,std::string("2.13.0")});QVERIFY(date&&router.send(*date));QTRY_VERIFY(channel.routerDate());auto identity=(*source)->takeIdentity();QVERIFY(identity);
+      QVERIFY(driver.queueCreate(std::move(*identity),{{"i2cp.fastReceive","true"}}));QTRY_VERIFY(router.next());QCOMPARE(router.take().type,cp::CreateSessionType);
+      auto created=cp::encodeMessage(cp::SessionStatus{7,cp::SessionState::Created});QVERIFY(created&&router.send(*created));QTRY_VERIFY(channel.sessionId());
+      QVERIFY(router.lease(testNow+600000));QTRY_VERIFY(router.next());QVERIFY(cp::decodeCreateLeaseSet2(router.take()));QTRY_VERIFY(channel.leaseSetSubmission());
+      auto remote=signer("dsa");d::Contact seed;seed.hash=remote.destination()->hash;seed.port=10002;seed.destination=*remote.destination();auto rid=d::makeNodeId(seed.hash,seed.port,i2p::Bytes(14,0x32));QVERIFY(rid);seed.id=*rid;
+      auto lid=d::makeNodeId((*source)->destination().hash,10000,i2p::Bytes(14,0x31));QVERIFY(lid);d::Actor actor(channel);driver.setActor(&actor);QVERIFY(actor.begin({*lid,10000,{seed},3,true}));QTRY_VERIFY(actor.inboundEnabled());
+      const auto clearActor=qScopeGuard([&]{driver.setActor(nullptr);actor.close();});
+      d::Message ping;ping.id=seed.id;ping.transaction={0x64,0x65};auto body=d::encode(ping);QVERIFY(body);auto signedBody=i2p::encode1(remote.destination()->wire,remote.signingPrivateKey(),*body);QVERIFY(signedBody);
+      auto mux=cp::encodeDhtMuxDatagram({17,10002,10000,*signedBody},cp::GzipMode::Deflate);QVERIFY(mux);auto frame=cp::encodeMessagePayload({7,911,*mux});QVERIFY(frame&&router.send(*frame));
+      QTRY_VERIFY(router.next());auto sent=cp::decodeDhtSendDatagram(router.take());QVERIFY(sent);auto replyMux=cp::decodeDhtMuxDatagram(sent->payload);QVERIFY(replyMux&&replyMux->protocol==18);auto pong=d::decode(replyMux->datagram);QVERIFY(pong&&pong->transaction==ping.transaction);
+      const auto scope=channel.dhtScopeGeneration(),revision=(*source)->lease()->sourceRevision();driver.pauseInbound(true);
+      ping.transaction={0x66,0x67};body=d::encode(ping);QVERIFY(body);signedBody=i2p::encode1(remote.destination()->wire,remote.signingPrivateKey(),*body);QVERIFY(signedBody);mux=cp::encodeDhtMuxDatagram({17,10002,10000,*signedBody},cp::GzipMode::Deflate);QVERIFY(mux);frame=cp::encodeMessagePayload({7,912,*mux});QVERIFY(frame&&router.send(*frame));QTRY_COMPARE(channel.dhtScopeObservation(scope).queued,std::size_t(1));
+      d::Id target{};target.fill(0x53);auto operation=actor.lookupPeers(target,false,3000);QVERIFY(operation);QTRY_VERIFY(router.next());sent=cp::decodeDhtSendDatagram(router.take());QVERIFY(sent);auto queryMux=cp::decodeDhtMuxDatagram(sent->payload);QVERIFY(queryMux);auto signedQuery=i2p::decode1(queryMux->datagram);QVERIFY(signedQuery);auto query=d::decode(signedQuery->payload);QVERIFY(query);
+      d::Message answer;answer.kind=d::Kind::Reply;answer.id=seed.id;answer.transaction=query->transaction;answer.hasNodes=true;body=d::encode(answer);QVERIFY(body);mux=cp::encodeDhtMuxDatagram({18,10002,10001,*body},cp::GzipMode::Deflate);QVERIFY(mux);frame=cp::encodeMessagePayload({7,913,*mux});QVERIFY(frame&&router.send(*frame));QTRY_COMPARE(channel.dhtScopeObservation(scope).queued,std::size_t(2));
+      QTRY_VERIFY(!channel.sourceEffectsPending());QVERIFY(channel.ownedTransportIdle());QVERIFY(!router.next());
+      // A pending Ready event must not erase TransportClosed before capture.
+      // The explicit fault pause is short; no queue/source deadline is awaited.
+      driver.pause(true);const auto bytesBeforeFault=router.bytes.size();QVERIFY(router.peer);router.peer->abort();
+      QTRY_VERIFY(firstFailure);QVERIFY(*firstFailure==Channel::Failure::TransportClosed);QCOMPARE(channel.failure(),Channel::Failure::TransportClosed);QTRY_COMPARE(actor.observation().phase,d::Phase::Closed);
+      QVERIFY(!channel.socketActive());QVERIFY(!channel.sessionId());QVERIFY(!channel.leaseSetSubmission());QCOMPARE(channel.dhtScopeGeneration(),std::uint64_t(0));QCOMPARE(channel.dhtScopeObservation(scope).queued,std::size_t(0));QVERIFY(!channel.sourceEffectsPending());QVERIFY(!actor.inboundEnabled());
+      QVERIFY(!actor.lookupPeers(target,false,1000));QVERIFY(!actor.resumeAuthorizedInbound());QVERIFY(!channel.requestDhtEffects(scope));
+      // A genuine post-fault worker turn refuses inactive channel effects.
+      driver.pause(false);QTRY_VERIFY(driver.observation().failed);QVERIFY(!channel.resumeAuthorizedEffects());QVERIFY(!(*source)->effectAuthority()->granted());QVERIFY((*source)->effectAuthority()->current());QCOMPARE((*source)->lease()->sourceRevision(),revision);
+      QCOMPARE(router.bytes.size(),bytesBeforeFault);QVERIFY(!router.next());QVERIFY(*firstFailure==Channel::Failure::TransportClosed);QCOMPARE(channel.failure(),Channel::Failure::None);
+      driver.withdraw();driver.join();QCOMPARE(driver.observation().phase,biglybtc::p07_test::InboundSourceDriver::Phase::Stopped);QVERIFY(!(*source)->effectAuthority()->granted());
+    }
+    fixture.lease.reset();auto released=biglybtc::storage::ProfileLease::acquire(fixture.path);QVERIFY(released);
+  }
   void channelTicketsProgressPast8192WithRealSourcePermitAndBoundedEightSlots(){
     owned_i2p_test::Fixture fixture;auto source=provider::ProfileSource::open(*fixture.lease,fixture.hash);QVERIFY(source);auto storage=(*source)->prepareStorage();QVERIFY(storage);
     const auto config=owned_i2p_test::read(fixture.path/"biglybt.config"),key=owned_i2p_test::read(fixture.key),state=owned_i2p_test::read(fixture.state());
