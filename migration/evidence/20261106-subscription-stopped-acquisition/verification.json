@@ -1,0 +1,153 @@
+{
+  "status": "PASS_EXPLICIT_STOPPED_SUBSCRIPTION_ACQUISITION_LOCAL_OWNED_GCC_SAN_REVIEW",
+  "native_commit": "ee20f6fa37b8cd228474f0acc560f6c3aba4a496",
+  "native_tree": "aa11e703dbc0aab6af3dddf96bb842a61bcb4fa9",
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r2/source-manifest.json",
+    "sha256": "e11a348b8f6cdbe037d5f332dbd17b41324a571431c3b6e9a88a72e3281e9560",
+    "bytes": 89188
+  },
+  "cohort_spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r3/spec.json",
+    "sha256": "ba80e2a4deddc609c69d28e4402dc1cd29898bf8e84a72d8c7da9aed87535a77",
+    "bytes": 146265
+  },
+  "runner": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r3/runner.py",
+    "sha256": "01c506510090a19637d231a5af6fa26cdd20c192bc100f78170b3e8f63ac55cc",
+    "bytes": 17258
+  },
+  "files": {
+    "source-map.json": {
+      "path": "source-map.json",
+      "sha256": "c8c3f6d22a734686b9d6fa4ba29dc82b86d2462025c236f9d0b8bc1a1bad123b",
+      "bytes": 177022
+    },
+    "original-source-map.json": {
+      "path": "original-source-map.json",
+      "sha256": "369183d28a907881091d2c3339761db65ef5775342fec02aa5d178849e0ea396",
+      "bytes": 7451
+    },
+    "source-selection.json": {
+      "path": "source-selection.json",
+      "sha256": "e11a348b8f6cdbe037d5f332dbd17b41324a571431c3b6e9a88a72e3281e9560",
+      "bytes": 89188
+    },
+    "source-review.json": {
+      "path": "source-review.json",
+      "sha256": "0038178c0c5b333a19bb44fe1fb13f0eba5113d0bc5213dd3cda0be81f707c28",
+      "bytes": 2858
+    },
+    "gcc-stamped.json": {
+      "path": "gcc-stamped.json",
+      "sha256": "d40f04dbee9f345960f4031c36e1dd5ad5379472b4e5cec0c0b903aa7e94bab1",
+      "bytes": 174059
+    },
+    "san-stamped.json": {
+      "path": "san-stamped.json",
+      "sha256": "91323b87d2df4b87e2d7a5c8f041ebade652d48f4da3ce2ceb3c40e19cc5a30c",
+      "bytes": 176897
+    },
+    "subscriptions-acquisition-ui.png": {
+      "path": "subscriptions-acquisition-ui.png",
+      "sha256": "0f99bf36f6016d437f94690b884e738ae8ca9bb808b017608bc91896dc5eaad7",
+      "bytes": 50818
+    },
+    "compatibility-limits.txt": {
+      "path": "compatibility-limits.txt",
+      "sha256": "4536208b7468970fafa114428c095379e53578f04d6474806b993aaf145dcf68",
+      "bytes": 880
+    },
+    "original-getters/observations-recovered.json": {
+      "path": "original-getters/observations-recovered.json",
+      "sha256": "88781425c474c535dcaef01175a9f8055ffc144ffb324ebaf0b134845f6d065a",
+      "bytes": 11440
+    },
+    "original-getters/raw-supervisor.json": {
+      "path": "original-getters/raw-supervisor.json",
+      "sha256": "bfbc6ba2a7925995bca6f6e7918eb33066c824946d620b7173ee46f53299cf59",
+      "bytes": 14410
+    },
+    "original-getters/stdout.log": {
+      "path": "original-getters/stdout.log",
+      "sha256": "ed84ec06c9b8c3a7c26e2c492d570cde04ac7af3948ef600f89dd666610590f0",
+      "bytes": 11496
+    },
+    "original-getters/stderr.log": {
+      "path": "original-getters/stderr.log",
+      "sha256": "7616cabc9dcc1cddab0837930fb8d9a6b62409e55cbf5be816eb900a710bf68f",
+      "bytes": 2327
+    },
+    "original-getters/recovery.json": {
+      "path": "original-getters/recovery.json",
+      "sha256": "4b923a845bca62fdfb9554a8db2ddb92d22cf3f46dea40d92f009584b01bbcad",
+      "bytes": 5310
+    },
+    "original-getters/SUMMARY.txt": {
+      "path": "original-getters/SUMMARY.txt",
+      "sha256": "f97d0019d2cee83c8f13d2f6268b94c4c96508dbec8a219852c467e52953229c",
+      "bytes": 1470
+    },
+    "original-getters/source-pins.json": {
+      "path": "original-getters/source-pins.json",
+      "sha256": "13d865b90aa57ceae7772f7592120fd28077a8a3b79ceb856da56d7d57a32761",
+      "bytes": 6009
+    },
+    "original-getters/SavedResultValueOracle.java": {
+      "path": "original-getters/SavedResultValueOracle.java",
+      "sha256": "0b83fe9c0a3193b635b06697c841b57461f72600862703e348d9df83769414fe",
+      "bytes": 8930
+    },
+    "independent-acceptance-review.json": {
+      "path": "independent-acceptance-review.json",
+      "sha256": "9212aea277c2610b95ec58aa0369c060bf1fa6dbc16a2c14f76a13c9aebc441e",
+      "bytes": 21199
+    }
+  },
+  "independent_actual_review": {
+    "path": "independent-acceptance-review.json",
+    "sha256": "9212aea277c2610b95ec58aa0369c060bf1fa6dbc16a2c14f76a13c9aebc441e",
+    "bytes": 21199
+  },
+  "whole_P08_or_scheduler_complete": false,
+  "Original_value_characterization": {
+    "subjects": "one javac and one JVM, both exit0",
+    "raw_supervisor_status": "FAIL preserved; one logger-inserted LF reconstructed exactly as documented",
+    "saved_rows": 22,
+    "property_map_exceptions": 8,
+    "RootPage_values": 4,
+    "Native_one_to_one_runtime_comparison_claim": false,
+    "manager_history_scheduler_UI_or_zero_internal_init_claim": false
+  },
+  "actual_per_lane": {
+    "commands": 39,
+    "ELFs": 17,
+    "archives": 12,
+    "Qt_rows": 138,
+    "Qt_methods": 52,
+    "native_guards": 55,
+    "HTTP_families": 8,
+    "owned_crashed_children": 10,
+    "unique_crash_checkpoints": 9
+  },
+  "local_development_preview": {
+    "status": "PASS_SEPARATE_DEVELOPMENT_OFFLINE_PREVIEW_INPUTS",
+    "sealed_plan": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/development-preview/pins.json",
+      "sha256": "a5f226c619a75c9cbbbcc3a26587654357945fea2f2b0435f16a40578ee61e22",
+      "bytes": 4730
+    },
+    "same_helper_source_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/development-preview/source-review.json",
+      "sha256": "3cbda82ef9556f79d3fcb3ca4cfe242653a9204549c641e0afb007a866146ad5",
+      "bytes": 860
+    },
+    "launcher": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/development-preview/BiglyBTC-development-preview",
+      "sha256": "f01f9fad7cfa3ed7791082ca0271a660de573542aad7af329c18f6570442f560",
+      "bytes": 840
+    },
+    "new_runtime_or_default_distribution_promotion": false
+  }
+}

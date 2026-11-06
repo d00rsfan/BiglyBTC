@@ -1,0 +1,129 @@
+{
+  "status": "SOURCE_ONLY_NO_COMPILE_OR_JVM",
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "helper": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/original-saved-getter-oracle/SavedResultValueOracle.java",
+    "bytes": 8930,
+    "sha256": "0b83fe9c0a3193b635b06697c841b57461f72600862703e348d9df83769414fe"
+  },
+  "core_jar": {
+    "path": "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+    "bytes": 12774623,
+    "sha256": "aec655f549167e22178a75f81e4bbc146a34192a2ff90278d74d98c304d2aec6"
+  },
+  "Original_sources": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/subs/impl/SubscriptionResultImpl.java",
+      "bytes": 16349,
+      "sha256": "1c69a55571b50f7c56d25ff5dcde7230714d22798167dc63d6eb44cd9a239575",
+      "git_blob": "4a6416c51ed034ec03582404b6f26fb4d2b10775"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/subs/util/SubscriptionResultFilterable.java",
+      "bytes": 7438,
+      "sha256": "418476068f676e81056d02eed76f23efbb38d17ed5577d3a44d25ff0e31d778b",
+      "git_blob": "cba7138dd7561556a9d51dcd3a89aa5ebab414aa"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/subs/SubscriptionResult.java",
+      "bytes": 1644,
+      "sha256": "6eb186f1db82350eedd978b3ae8d7d73cb84f2aa00b0f19752d5f03bd3cff946",
+      "git_blob": "c732a210ef7e202b39d8b0caa83ee3b75bd5fe8f"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/subs/util/SearchSubsResultBase.java",
+      "bytes": 1738,
+      "sha256": "e3f754641d2ea48cc5e278ead80831e9a8d2f9b3be5a4f77b3f6bff2e649dcd8",
+      "git_blob": "82d96a0985295260784f79a1c8227623ac384a97"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/metasearch/Result.java",
+      "bytes": 10661,
+      "sha256": "0623b4233364b61cb80927b09a15b604b0f7158e225efc7c6ff46573e74b2629",
+      "git_blob": "1d7219a63deeaa7ebaf527a402495a6cdfce50e0"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/metasearch/impl/web/WebResult.java",
+      "bytes": 12863,
+      "sha256": "ae0a724533d0edc0400e5c6b2864a55b9a51663a3d313a3ad3df8d823b4934b6",
+      "git_blob": "67a80bca778e948a3504641e2b536bb6e27b2d09"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/metasearch/impl/web/rss/RSSEngine.java",
+      "bytes": 26201,
+      "sha256": "b170b7d5fdcda4bb69304291d9f8ae4a85b320df13321cb2b787d753cfb5ad7c",
+      "git_blob": "3c478fd230f35c35a74b515ddf7c42b222acb7cf"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/metasearch/impl/web/WebEngine.java",
+      "bytes": 37047,
+      "sha256": "82a0ea033ed156697dbb5478f839d08ff323dfceae0f9992091efb72da55a59b",
+      "git_blob": "78a8f76bbbd4c1d538fd8021cec65a148015c3d9"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/metasearch/impl/EngineImpl.java",
+      "bytes": 32122,
+      "sha256": "dc949c0367c229958069eee19c49fd77cb1fb5fe4e9b9c8022992a99982ff3e8",
+      "git_blob": "af711efa8f37a8bd4f1570b2db6922448e8ba9e7"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/metasearch/impl/DateParserRegex.java",
+      "bytes": 16743,
+      "sha256": "8fba33dea01033e8fcb88b63e08d033b33457adddb80166ceec1aec13f6f137c",
+      "git_blob": "c3f36b12face9813e207602f2d2bb061d607a338"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/metasearch/MetaSearchManagerFactory.java",
+      "bytes": 1171,
+      "sha256": "c6c0d69af66b6ffdd37391c412e1c3ea90984e1a50a68400ba1aae8119534052",
+      "git_blob": "d375eddf3d0b3a81557e43160705d602e8fa0e73"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/metasearch/impl/MetaSearchManagerImpl.java",
+      "bytes": 44442,
+      "sha256": "a926b5b0ff71306f66d70071133768314dd97ec9cd30220a7e35125939f3ece2",
+      "git_blob": "cf954c3b1a5eaa6800467fdddfbcf5c0e9979992"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/metasearch/MetaSearchManager.java",
+      "bytes": 1923,
+      "sha256": "2fee42c6c897e0acb65dee0fcabadcbfca88c60b5ad394adb9c1fe859f823986",
+      "git_blob": "432c759514d35b16b9b634938edef9794c3413ee"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/subs/impl/SubscriptionImpl.java",
+      "bytes": 49885,
+      "sha256": "83b23f0dc29f01eb0535ec44dbad9dcc85bc1853417a4871c27fd624cff9e57b",
+      "git_blob": "307bd4e1cbd628271c387cadbc0765a1621ee749"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/subs/impl/SubscriptionHistoryImpl.java",
+      "bytes": 28425,
+      "sha256": "05d5b1598cc54369fa84b6ae5d84c4206587b1abc4e0f360e0154c8a4f9d8ef7",
+      "git_blob": "85e32d45734b251ee5fffd0affaa4c095783d512"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/subs/impl/SubscriptionSchedulerImpl.java",
+      "bytes": 24418,
+      "sha256": "069bead57affce7f13760b56d5703ce12f08952231faec989e028c3501743655",
+      "git_blob": "ce792d6776c925f4907553d3d6e27777091b69ec"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/subs/impl/SubscriptionManagerImpl.java",
+      "bytes": 180565,
+      "sha256": "9a67458e5fdfd25e51f5b43d9f7c4da99b7073d11a7fa3249d561d277585880a",
+      "git_blob": "bc652c6ac16634ef772cc4f6dddf110b3f068632"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/util/UrlUtils.java",
+      "bytes": 57340,
+      "sha256": "68c2eb353276e353548fda08759e1eb0d3fde353e8257f8e43670720c59670f4",
+      "git_blob": "464dc49955102dfde4f8f120f54dde6b9e4e6c68"
+    }
+  ],
+  "accepted_Native_proxy_guard": {
+    "path": "/home/yurii/Java/BiglyBTC/preview/native/services/search/rss_source_internal.inc",
+    "bytes": 12512,
+    "sha256": "fcb6d98900ef53efde1bff52ad846ea844613cf4612ce170fff13e376af12ec3"
+  }
+}

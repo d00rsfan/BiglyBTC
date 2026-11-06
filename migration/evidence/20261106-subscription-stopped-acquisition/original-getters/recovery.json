@@ -1,0 +1,98 @@
+{
+  "schema": "BIGLYBTC_SAVED_GETTER_IMMUTABLE_STDOUT_RECOVERY_V1",
+  "status": "OBSERVATIONS_RECOVERED_FROM_SUCCESSFUL_SUBJECTS_RAW_SUPERVISOR_FAIL_PRESERVED",
+  "raw_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/original-saved-getter-oracle/actual-values-r1-20261106/result.json",
+    "bytes": 14410,
+    "sha256": "bfbc6ba2a7925995bca6f6e7918eb33066c824946d620b7173ee46f53299cf59"
+  },
+  "stdout": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/original-saved-getter-oracle/actual-values-r1-20261106/values.stdout.log",
+    "bytes": 11496,
+    "sha256": "ed84ec06c9b8c3a7c26e2c492d570cde04ac7af3948ef600f89dd666610590f0"
+  },
+  "stderr": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/original-saved-getter-oracle/actual-values-r1-20261106/values.stderr.log",
+    "bytes": 2327,
+    "sha256": "7616cabc9dcc1cddab0837930fb8d9a6b62409e55cbf5be816eb900a710bf68f"
+  },
+  "recovered_observations": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/original-saved-getter-oracle/actual-values-r1-20261106/observations-recovered.json",
+    "bytes": 11440,
+    "sha256": "88781425c474c535dcaef01175a9f8055ffc144ffb324ebaf0b134845f6d065a"
+  },
+  "transformation": {
+    "input_physical_lines": 3,
+    "JSON_line_lengths": [
+      8192,
+      3247
+    ],
+    "removed_only_one_inserted_LF_at_byte_offset": 8192,
+    "joined_document_bytes": 11439,
+    "marker_exact_once": true,
+    "data_fields_or_values_rewritten": false,
+    "exact_original_stream_reconstructed_including_marker_and_all_LFs": true,
+    "unique_saved_labels": 22
+  },
+  "actual_counts": {
+    "javac": 1,
+    "JVM": 1,
+    "saved_rows": 22,
+    "malformed_property_map_exceptions": {
+      "NumberFormatException": 4,
+      "ClassCastException": 3,
+      "ArrayStoreException": 1
+    },
+    "RootPage_referer_values": 4,
+    "fresh_default_projection": 1,
+    "deleted_zero_presence_projection": 1,
+    "malformed_original_observation_only": 8
+  },
+  "source_explanation": "LoggerImpl.RedirectorStream.flush emits partial buffers >=2048 as LogEvents; LoggerImpl.log prints each STDOUT event via psOldOut.println. Observed JDK print chunk is8192 bytes, causing one inserted LF inside a JSON key; joining only that boundary gives one valid complete document. This is log decoding, not a second subject run.",
+  "startup_limits": [
+    "Original COConfigurationManager.preInitialise attempted AENameServiceJava12 reflective access to java.net.InetAddress.nameService; JDK17 module access denied. No add-opens or retry was used.",
+    "Original initialization called deprecated System.setSecurityManager, reported on stderr. Helper itself creates no Core/subscription/metasearch manager and invokes no HTTP adjustLink/search/manager preparation.",
+    "Only two class images were hashed before cleanup. The parser failed before the private file inventory step, so no private configuration-file postimage inventory is claimed after removal."
+  ],
+  "source_authority": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/logging/impl/LoggerImpl.java",
+      "bytes": 9249,
+      "sha256": "10c850704324886c9481a5717347ea2979ddec46c0313ed4e02a2cbdab0c8912",
+      "git_blob": "d6ace2ede76eeb396c4be680689497afccdc0049"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/config/COConfigurationManager.java",
+      "bytes": 23323,
+      "sha256": "5c966082555816d9df5fcc62e2f727ca6a9fbd9317554a66ea72123fea7df99c",
+      "git_blob": "cf9d6d9e7da4091964cac5e9a95bc7e931d6339c"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/util/spi/AENameServiceJava12.java",
+      "bytes": 7666,
+      "sha256": "8dfe1676157a362b156e3fd301004503085dfaf632377279fd2eebf9e8150b76",
+      "git_blob": "94f3110065643c115a82b801dd9a91a1c5b84938"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/config/impl/ConfigurationChecker.java",
+      "bytes": 35577,
+      "sha256": "79c718dac6d1f44d62938e8dda4168fa024066caff6e5af8887b27cf598e9b76",
+      "git_blob": "1cd59fb32f1879b0ff8dde5aaa2dbeebc6100721"
+    }
+  ],
+  "class_images_recorded_before_cleanup": [
+    {
+      "path": "/tmp/biglybtc-saved-getter-values-16h738_6/classes/SavedResultValueOracle$ReadOnlySavedResult.class",
+      "bytes": 839,
+      "sha256": "09d92cc49986df0896b3acff3f0847eccc69f995901d46fe9a5326a6b5470f93"
+    },
+    {
+      "path": "/tmp/biglybtc-saved-getter-values-16h738_6/classes/SavedResultValueOracle.class",
+      "bytes": 8851,
+      "sha256": "edd183f35a14fc55ae5ed89d68198b1a3dd28ae416ca5d25daee2e3335c29407"
+    }
+  ],
+  "scope": "Actual limited getters/opaque-magnet selection and separate genuine-engine RootPage values. Source-derived cache formula is not manager.prepareDownload execution; no full HTTP getter/phase/intake/acquisition claim.",
+  "new_subjects_or_control_rerun": false,
+  "Native_cache_current_images_or_real_Original_profile_modified": false
+}

@@ -1,0 +1,23 @@
+BB_CONSTRAINT_SOCKET_DENY_READY arch=amd64 x32=denied socket=EPERM socketpair=owned-unix-stream-only connect-bind-listen-accept=EPERM nnp=1
+java.lang.reflect.InaccessibleObjectException: Unable to make field private static transient java.net.InetAddress$NameService java.net.InetAddress.nameService accessible: module java.base does not "opens java.net" to unnamed module @768debd
+	at java.base/java.lang.reflect.AccessibleObject.checkCanSetAccessible(AccessibleObject.java:354)
+	at java.base/java.lang.reflect.AccessibleObject.checkCanSetAccessible(AccessibleObject.java:297)
+	at java.base/java.lang.reflect.Field.checkCanSetAccessible(Field.java:178)
+	at java.base/java.lang.reflect.Field.setAccessible(Field.java:172)
+	at com.biglybt.core.util.spi.AENameServiceJava12.init(AENameServiceJava12.java:39)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at com.biglybt.core.config.COConfigurationManager.preInitialise(COConfigurationManager.java:245)
+	at com.biglybt.core.config.impl.ConfigurationChecker.setSystemProperties(ConfigurationChecker.java:88)
+	at com.biglybt.core.config.impl.ConfigurationManager.initialise(ConfigurationManager.java:177)
+	at com.biglybt.core.config.impl.ConfigurationManager.getInstance(ConfigurationManager.java:110)
+	at com.biglybt.core.config.COConfigurationManager.getIntParameter(COConfigurationManager.java:373)
+	at com.biglybt.core.subs.impl.SubscriptionResultImpl.<clinit>(SubscriptionResultImpl.java:47)
+	at SavedResultValueOracle.add(SavedResultValueOracle.java:59)
+	at SavedResultValueOracle.main(SavedResultValueOracle.java:96)
+WARNING: A terminally deprecated method in java.lang.System has been called
+WARNING: System::setSecurityManager has been called by com.biglybt.core.security.impl.ClientSecurityManager (file:/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar)
+WARNING: Please consider reporting this to the maintainers of com.biglybt.core.security.impl.ClientSecurityManager
+WARNING: System::setSecurityManager will be removed in a future release

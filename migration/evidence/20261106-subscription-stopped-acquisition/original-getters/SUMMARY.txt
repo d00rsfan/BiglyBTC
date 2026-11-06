@@ -1,0 +1,21 @@
+One javac and one JVM both exited0 (1.370s/0.566s; total2.242s).
+The raw supervisor result remains FAIL: its single-line JSON parser encountered
+Original logger output split after8192bytes. recovery.json documents exact
+removal of that one inserted LF, with no other line/value dropped or rerun.
+Recovered document has22unique saved cases,8actual property-map exceptions,
+4genuine-engine RootPage values, fresh-1 getters and deleted0 presence=true.
+
+Measured: public saved wrapper missing size/seeds/peers0; direct result getter
+missing size throws NPE; fresh WebResult defaults-1. Actual raw64 count values
+remain distinct from int32 narrowing. Actual opaque/magnet link selection differs
+from UI torrent-link projection. HTTP getter remains excluded; Referer RootPage
+is measured separately. Cache packing is source-derived from actual rawLongs,
+not execution of manager.prepareDownload or any admission/read/intake effect.
+
+Observed config startup attempted JDK-denied Java17 NameService reflective access
+and printed InaccessibleObjectException; it also printed deprecated
+System.setSecurityManager warnings. No opens/suppression/retry was used. This
+measurement cannot claim zero internal Java reflection or pure zero-init config.
+The owned private root was removed. Two class images were pinned before cleanup;
+private configuration-file inventory was not reached after the parser failure.
+No Native/cache/current-image/real Original-profile action was performed.

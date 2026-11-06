@@ -1,0 +1,218 @@
+{
+  "schema": "BIGLYBTC_STOPPED_SUBSCRIPTION_ACQUISITION_ORIGINAL_SOURCE_MAP_V1",
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_implementation_basis": "284cda11df71333d1f47724ffad45abc576ebb42",
+  "native_repository_basis": "ba7114808e69cc3dd2e04ef0a21cf4df2789c4a5",
+  "native_tree": "611e08879c3af4229f07e48766a6cf9355ebb243",
+  "files": {
+    "core/src/com/biglybt/core/subs/impl/SubscriptionResultImpl.java": {
+      "git_blob": "4a6416c51ed034ec03582404b6f26fb4d2b10775",
+      "sha256": "1c69a55571b50f7c56d25ff5dcde7230714d22798167dc63d6eb44cd9a239575",
+      "bytes": 16349
+    },
+    "core/src/com/biglybt/core/subs/util/SubscriptionResultFilterable.java": {
+      "git_blob": "cba7138dd7561556a9d51dcd3a89aa5ebab414aa",
+      "sha256": "418476068f676e81056d02eed76f23efbb38d17ed5577d3a44d25ff0e31d778b",
+      "bytes": 7438
+    },
+    "core/src/com/biglybt/core/subs/impl/SubscriptionImpl.java": {
+      "git_blob": "307bd4e1cbd628271c387cadbc0765a1621ee749",
+      "sha256": "83b23f0dc29f01eb0535ec44dbad9dcc85bc1853417a4871c27fd624cff9e57b",
+      "bytes": 49885
+    },
+    "core/src/com/biglybt/core/subs/impl/SubscriptionManagerImpl.java": {
+      "git_blob": "bc652c6ac16634ef772cc4f6dddf110b3f068632",
+      "sha256": "9a67458e5fdfd25e51f5b43d9f7c4da99b7073d11a7fa3249d561d277585880a",
+      "bytes": 180565
+    },
+    "core/src/com/biglybt/core/subs/impl/SubscriptionHistoryImpl.java": {
+      "git_blob": "85e32d45734b251ee5fffd0affaa4c095783d512",
+      "sha256": "05d5b1598cc54369fa84b6ae5d84c4206587b1abc4e0f360e0154c8a4f9d8ef7",
+      "bytes": 28425
+    },
+    "core/src/com/biglybt/core/metasearch/impl/web/WebEngine.java": {
+      "git_blob": "78a8f76bbbd4c1d538fd8021cec65a148015c3d9",
+      "sha256": "82a0ea033ed156697dbb5478f839d08ff323dfceae0f9992091efb72da55a59b",
+      "bytes": 37047
+    },
+    "core/src/com/biglybt/core/util/UrlUtils.java": {
+      "git_blob": "464dc49955102dfde4f8f120f54dde6b9e4e6c68",
+      "sha256": "68c2eb353276e353548fda08759e1eb0d3fde353e8257f8e43670720c59670f4",
+      "bytes": 57340
+    },
+    "core/src/com/biglybt/core/metasearch/Result.java": {
+      "git_blob": "1d7219a63deeaa7ebaf527a402495a6cdfce50e0",
+      "sha256": "0623b4233364b61cb80927b09a15b604b0f7158e225efc7c6ff46573e74b2629",
+      "bytes": 10661
+    },
+    "core/src/com/biglybt/core/subs/impl/SubscriptionSchedulerImpl.java": {
+      "git_blob": "ce792d6776c925f4907553d3d6e27777091b69ec",
+      "sha256": "069bead57affce7f13760b56d5703ce12f08952231faec989e028c3501743655",
+      "bytes": 24418
+    }
+  },
+  "entries": [
+    {
+      "path": "core/src/com/biglybt/core/subs/impl/SubscriptionResultImpl.java",
+      "symbol": "getDownloadLink",
+      "line_ranges": [
+        [
+          592,
+          620
+        ]
+      ],
+      "contract": "dbl first; magnet dbl prefers any nonnull dl; null dbl uses dl; empty dbl stays; pl is not a fallback. Actual HTTP adjustLink manager runtime is outside the value-only oracle."
+    },
+    {
+      "path": "core/src/com/biglybt/core/subs/impl/SubscriptionResultImpl.java",
+      "symbol": "toPropertyMap",
+      "line_ranges": [
+        [
+          660,
+          772
+        ]
+      ],
+      "contract": "Raw saved Long fields and auxiliary property casts; malformed supported property shapes refuse rather than issue a partial preparation cache."
+    },
+    {
+      "path": "core/src/com/biglybt/core/subs/util/SubscriptionResultFilterable.java",
+      "symbol": "constructor/updateMutables/getSize/getNbSeeds/getNbPeers",
+      "line_ranges": [
+        [
+          68,
+          98
+        ],
+        [
+          145,
+          180
+        ],
+        [
+          245,
+          264
+        ]
+      ],
+      "contract": "Saved UI phase: absent size0; negative seeds/peers0 then int narrowing. These are distinct from fresh search -1 and raw64 prepareDownload data."
+    },
+    {
+      "path": "core/src/com/biglybt/core/subs/impl/SubscriptionImpl.java",
+      "symbol": "MAX_ASSOCIATIONS/addAssociationSupport/association serialization",
+      "line_ranges": [
+        [
+          57,
+          75
+        ],
+        [
+          498,
+          519
+        ],
+        [
+          614,
+          627
+        ],
+        [
+          2045,
+          2073
+        ]
+      ],
+      "contract": "Default256/recent16, duplicate before append/time, h+signed w; Native appends below cap or retains a duplicate, refuses unproved random eviction/custom JVM maximum."
+    },
+    {
+      "path": "core/src/com/biglybt/core/subs/impl/SubscriptionManagerImpl.java",
+      "symbol": "prepareDownload",
+      "line_ranges": [
+        [
+          5454,
+          5536
+        ]
+      ],
+      "contract": "Only both raw Long s/p>=0 derive scsrc1 and ((seeds&0xffffff)<<32)|(peers&0xffffff); cat/tag/network preparation is conservatively refused."
+    },
+    {
+      "path": "core/src/com/biglybt/core/subs/impl/SubscriptionHistoryImpl.java",
+      "symbol": "getDownloadWithReferer/loadConfig",
+      "line_ranges": [
+        [
+          69,
+          69
+        ],
+        [
+          1330,
+          1347
+        ],
+        [
+          1378,
+          1379
+        ]
+      ],
+      "contract": "Missing saved dl_with_ref defaults true; explicit0 omits source Referer."
+    },
+    {
+      "path": "core/src/com/biglybt/core/subs/impl/SubscriptionImpl.java",
+      "symbol": "getReferer",
+      "line_ranges": [
+        [
+          1856,
+          1877
+        ]
+      ],
+      "contract": "Referer comes from the actual selected engine; no caller header or fabricated catalog row."
+    },
+    {
+      "path": "core/src/com/biglybt/core/metasearch/impl/web/WebEngine.java",
+      "symbol": "getReferer",
+      "line_ranges": [
+        [
+          516,
+          521
+        ]
+      ],
+      "contract": "Actual RSS/Web source RootPage; distinct from final redirected response URL."
+    },
+    {
+      "path": "core/src/com/biglybt/core/util/UrlUtils.java",
+      "symbol": "last_headers/setBrowserHeaders",
+      "line_ranges": [
+        [
+          1535,
+          1583
+        ]
+      ],
+      "contract": "Nonempty persisted metasearch.web.last.headers is unsupported; the narrow implementation uses only owned validated Referer and fixed transport headers."
+    },
+    {
+      "path": "core/src/com/biglybt/core/metasearch/Result.java",
+      "symbol": "adjustLink",
+      "line_ranges": [
+        [
+          431,
+          486
+        ]
+      ],
+      "contract": "Current proxy/overlay settings must refuse before DNS; no plugin/browser/proxy fallback."
+    },
+    {
+      "path": "core/src/com/biglybt/core/subs/impl/SubscriptionSchedulerImpl.java",
+      "symbol": "download saved result",
+      "line_ranges": [
+        [
+          312,
+          321
+        ],
+        [
+          367,
+          375
+        ],
+        [
+          450,
+          468
+        ],
+        [
+          521,
+          595
+        ]
+      ],
+      "contract": "Actual getter/Referer and stopped import branch; prepareDownload then association then mark read. Native explicit action always stopped; automatic start is excluded. A/R/F joint-intent recovery is Native-owned durability, not an Original atomicity claim."
+    }
+  ],
+  "scope": "Source provenance only. Actual saved getter observations are separately recovered with exact log-line rejoin; current C++/Host/crash/UI qualification remains pending. Full P08/automatic acquisition/manager runtime parity is not claimed."
+}

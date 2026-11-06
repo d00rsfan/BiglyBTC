@@ -1,0 +1,53 @@
+{
+  "amendments": [
+    {
+      "bytes": 794,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/compile-amendment-r1/manifest.json",
+      "sha256": "994743aedcf006861a044ad84adafadf04b8ad5c84fe0add44b32d9258b80099"
+    },
+    {
+      "bytes": 2148,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/compile-amendment-metainfo-r1/manifest.json",
+      "sha256": "106278724d0030e22662f1113db06d0850653281d7c0662083ff3a9677b1ea6e"
+    },
+    {
+      "bytes": 2733,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/compile-amendment-result-moc-r1/final/manifest.json",
+      "sha256": "767c3f0c5a693f35784d703e48415a2b8e6b7d79a8b5ffcabdb5f0c6dd52ffcc"
+    }
+  ],
+  "changed_paths": [
+    "preview/native/app/subscriptions_bridge.inc",
+    "preview/native/tests/saved_subscription_result_source_tests.cpp",
+    "preview/native/tests/subscription_metainfo_fetch_tests.cpp"
+  ],
+  "manifest": {
+    "bytes": 89188,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r2/source-manifest.json",
+    "sha256": "e11a348b8f6cdbe037d5f332dbd17b41324a571431c3b6e9a88a72e3281e9560"
+  },
+  "parent_source_review": {
+    "bytes": 3684,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/integration/source-review.json",
+    "sha256": "d4259f5ad58c1723beb7ae53f8dd513288cb5b5f2540a70ec6f688a99504be79"
+  },
+  "runtime_qualification": null,
+  "source_reviews": [
+    {
+      "bytes": 3210,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/compile-amendment-r1/source-review.json",
+      "sha256": "693dfd1847b7ef2a4f5e935478f06a7506549c0af03d8129dee67ebc23ccc290"
+    },
+    {
+      "bytes": 1910,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/compile-amendment-metainfo-r1/source-review.json",
+      "sha256": "f7cd1e0e244d6dac08ee5729885b8a5c240be4bddddd44297dce5990181dfe98"
+    },
+    {
+      "bytes": 2492,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/compile-amendment-result-moc-r1/final/source-review.json",
+      "sha256": "8392622ea082478305aa4106f0a5751d2b6d58883860dbbb08e45c93620da2cf"
+    }
+  ],
+  "status": "PASS_SOURCE_ONLY_PARENT_PLUS_THREE_COMPILE_CORRECTIONS"
+}

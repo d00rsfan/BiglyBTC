@@ -1,0 +1,387 @@
+{
+  "schema": "BIGLYBTC_EXPLICIT_STOPPED_SUBSCRIPTION_ACQUISITION_ACTUAL_ACCEPTANCE_REVIEW_V1",
+  "status": "PASS_EXPLICIT_STOPPED_SUBSCRIPTION_ACQUISITION_LOCAL_OWNED_GCC_SAN_REVIEW",
+  "implementation_commit": "ee20f6fa37b8cd228474f0acc560f6c3aba4a496",
+  "native_tree": "aa11e703dbc0aab6af3dddf96bb842a61bcb4fa9",
+  "spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r3/spec.json",
+    "bytes": 146265,
+    "sha256": "ba80e2a4deddc609c69d28e4402dc1cd29898bf8e84a72d8c7da9aed87535a77"
+  },
+  "raw_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r3/gcc/r1/result-raw.json",
+      "bytes": 173655,
+      "sha256": "4a3a1a91e0f59984d3a4c7e8874f95d61f0d22b969e030f65b0d6e7d7a2ba13a"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r3/san/r1/result-raw.json",
+      "bytes": 176493,
+      "sha256": "3c13c44d3927c3bbafb8e4809798615d33bcd8d27457ef86dd29f8e4819d9912"
+    }
+  },
+  "stamped_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r3/gcc/r1/result-stamped.json",
+      "bytes": 174059,
+      "sha256": "d40f04dbee9f345960f4031c36e1dd5ad5379472b4e5cec0c0b903aa7e94bab1"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r3/san/r1/result-stamped.json",
+      "bytes": 176897,
+      "sha256": "91323b87d2df4b87e2d7a5c8f041ebade652d48f4da3ce2ceb3c40e19cc5a30c"
+    }
+  },
+  "evidence": {
+    "source_map": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r3/source.json",
+      "bytes": 177022,
+      "sha256": "c8c3f6d22a734686b9d6fa4ba29dc82b86d2462025c236f9d0b8bc1a1bad123b"
+    },
+    "source_manifest": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r2/source-manifest.json",
+      "bytes": 89188,
+      "sha256": "e11a348b8f6cdbe037d5f332dbd17b41324a571431c3b6e9a88a72e3281e9560"
+    },
+    "cohesive_source_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r2/source-review.json",
+      "bytes": 2858,
+      "sha256": "0038178c0c5b333a19bb44fe1fb13f0eba5113d0bc5213dd3cda0be81f707c28"
+    },
+    "Original_source_map": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ORIGINAL-SOURCE-MAP.json",
+      "bytes": 7451,
+      "sha256": "369183d28a907881091d2c3339761db65ef5775342fec02aa5d178849e0ea396"
+    },
+    "runtime_harness_only_correction": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r3/correction.json",
+      "bytes": 5558,
+      "sha256": "b5cdc4708f2766e8d00b30dc4a1b520f01c87432ce6cdc1f42de7110fdb8eb40"
+    },
+    "literal_only_moc_correction": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/compile-amendment-result-moc-r1/final/manifest.json",
+      "bytes": 2733,
+      "sha256": "767c3f0c5a693f35784d703e48415a2b8e6b7d79a8b5ffcabdb5f0c6dd52ffcc"
+    },
+    "literal_only_moc_source_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/compile-amendment-result-moc-r1/final/source-review.json",
+      "bytes": 2492,
+      "sha256": "8392622ea082478305aa4106f0a5751d2b6d58883860dbbb08e45c93620da2cf"
+    },
+    "actual_prior_moc_diagnostic": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/compile-amendment-result-moc-r1/final/moc-result.json",
+      "bytes": 8785,
+      "sha256": "00baadf6dca5595b8bfd63dfc76be6f71b8b4db2a4c484f96b69eaf4521eba3c"
+    },
+    "limitations": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/LIMITATIONS.txt",
+      "bytes": 880,
+      "sha256": "4536208b7468970fafa114428c095379e53578f04d6474806b993aaf145dcf68"
+    }
+  },
+  "source_and_sdk": {
+    "committed_Native_files_verified": 1403,
+    "selected_changed_leaves": 54,
+    "spec_input_pins_verified": 211,
+    "Original_committed_source_files_verified": 9,
+    "Original_head_index_preserved": true,
+    "sdk": {
+      "artifact": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+        "bytes": 10137344,
+        "sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3"
+      },
+      "record": {
+        "bytes": 192696,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/source-build-record-discovery-final.json",
+        "sha256": "e213ba3227a464fcb8eab1c7db3e3adef720f482fd352bb87ec12c3f27ec1e92"
+      },
+      "42_exports_carried_not_rerun": true
+    },
+    "closure": "Both before/after SourceMaps equal the1403-file committed tracked Native closure; all54 afterimages, current211 spec inputs, per-lane231 input pins,16 dependencies,17 ELF images and12 archives independently hashed. Current Native subtree is the exact committed tree."
+  },
+  "measured": {
+    "gcc": {
+      "elapsed_seconds": 114.119,
+      "commands": 39,
+      "images": 17,
+      "archives": 12,
+      "input_pins_verified": 231,
+      "dependency_pins_verified": 16,
+      "Qt_rows": 138,
+      "Qt_methods": 52,
+      "qt_groups": [
+        {
+          "name": "actual-saved-result-reader",
+          "methods": 5,
+          "rows": 20
+        },
+        {
+          "name": "association-values",
+          "methods": 4,
+          "rows": 11
+        },
+        {
+          "name": "actual-stopped-acquisition-worker",
+          "methods": 4,
+          "rows": 8
+        },
+        {
+          "name": "actual-binary-metainfo-get",
+          "methods": 6,
+          "rows": 27
+        },
+        {
+          "name": "owned-acquisition-process-recovery",
+          "methods": 1,
+          "rows": 10
+        },
+        {
+          "name": "classic-subscriptions-acquisition-ui",
+          "methods": 7,
+          "rows": 7
+        },
+        {
+          "name": "subscription-values-source-store",
+          "methods": 8,
+          "rows": 12
+        },
+        {
+          "name": "numeric-policy-real-source",
+          "methods": 2,
+          "rows": 6
+        },
+        {
+          "name": "subscriptions-concrete-worker",
+          "methods": 4,
+          "rows": 4
+        },
+        {
+          "name": "subscription-concrete-http",
+          "methods": 5,
+          "rows": 17
+        },
+        {
+          "name": "existing-rss-transport-controls",
+          "methods": 4,
+          "rows": 14
+        },
+        {
+          "name": "existing-rss-host-controls",
+          "methods": 2,
+          "rows": 2
+        }
+      ],
+      "test_xml_sha256": {
+        "config-acquisition-pending-guards.xml": "025150533a69b4e47c3dd93f2fbc1b81096cffc1f72544eefcd9b5edd4faa57b",
+        "state-acquisition-pending-guards.xml": "e3cd9242d144868add008d2d7b0c4bb32e76a92610cd9f82cb9592e3e92c3636",
+        "intake-acquisition-pending-guards.xml": "72632ab0b7c450cfbfd723851e4a5d47da3ae5cc431ba26b3211adde6815ec4d",
+        "actual-saved-result-reader.xml": "610e54ca8e043d44dc0eaf704799461cdc8122d333825de2d89ed3144ee24026",
+        "association-values.xml": "af9ffa5a9b16c42f81d46663902ff32e6362b011c8459d10cff9001019818a47",
+        "actual-stopped-acquisition-worker.xml": "b77f6775e2fd080e33cd86affd5921fe6d5ab210dc8ab89f0b6db1342ce50098",
+        "actual-binary-metainfo-get.xml": "4293e0e910164384a2329f6381d025b65e715c866d80e393b3176788857a9b55",
+        "binary-http-response-values.xml": "9fcb1fb8877de6ba79e5291813b62e63da68e410ac638fa405c5f594840c897f",
+        "owned-acquisition-process-recovery.xml": "fb5693d1c32876b88b67d23bbd1fab5882fc3c561925c0c57062d6f4b0b04182",
+        "classic-subscriptions-acquisition-ui.xml": "e9821fa93c43ead472d2104770c09ff929a2f0fdae6e4e69fcfdce998afce275",
+        "subscription-values-source-store.xml": "07367d1a712dec5a905e54060c43356fef8f2e630c3dd600e8ccba2d775a25a3",
+        "numeric-policy-real-source.xml": "2d4e1ee1dfcf2ac5a0d0b2fd0e97404b763f78cbacc077542aed72800a0236d1",
+        "subscriptions-concrete-worker.xml": "71ced9a00f3cd698949bb04f5e7f89171759f1ac46fd331723130aba71baf878",
+        "subscription-concrete-http.xml": "943fb892518c4eebe4fc4060dbcdbb555c59c98b1633438b33a3fff82006e9be",
+        "existing-rss-transport-controls.xml": "2928cc2bde83461f127e4eb9346a0841108555752751e56daa2fe0410aaf644c",
+        "existing-rss-host-controls.xml": "a155c0166a7ca172d8a4e62624179a7f8bba6c77f98b29867493fb1e466e9ea6"
+      },
+      "guard_cases": 55,
+      "framing_families": 8,
+      "recovery_pass_rows": [
+        "BeforeIntake",
+        "JournalSynced",
+        "StatePublished",
+        "ArchivePublished",
+        "InventoryPublished",
+        "AssociationPublished",
+        "ReadPublished",
+        "FinalPublished",
+        "Done",
+        "FinalPublished-impossible-F-beforeResults"
+      ],
+      "parent_r2": {
+        "raw_FAIL": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r2/gcc/r1/result-raw.json",
+          "bytes": 131602,
+          "sha256": "ffc134a6de65e63082ffe80fcfdfc1d8964263ed0f33ca92a68330ea8d432242"
+        },
+        "build_PASS_seconds": 561.592,
+        "build_log": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r2/gcc/r1/build.log",
+          "bytes": 2741,
+          "sha256": "976583d2a3f16788062ab58a618982839163aab71c8a2657db5b9d27fdd93aaa"
+        },
+        "same_source_images_archives": true
+      },
+      "no_work_seconds": 0.266,
+      "macro_link_nm_roles_verified": true,
+      "production_crash_env_absent": true
+    },
+    "san": {
+      "elapsed_seconds": 154.82,
+      "commands": 39,
+      "images": 17,
+      "archives": 12,
+      "input_pins_verified": 231,
+      "dependency_pins_verified": 16,
+      "Qt_rows": 138,
+      "Qt_methods": 52,
+      "qt_groups": [
+        {
+          "name": "actual-saved-result-reader",
+          "methods": 5,
+          "rows": 20
+        },
+        {
+          "name": "association-values",
+          "methods": 4,
+          "rows": 11
+        },
+        {
+          "name": "actual-stopped-acquisition-worker",
+          "methods": 4,
+          "rows": 8
+        },
+        {
+          "name": "actual-binary-metainfo-get",
+          "methods": 6,
+          "rows": 27
+        },
+        {
+          "name": "owned-acquisition-process-recovery",
+          "methods": 1,
+          "rows": 10
+        },
+        {
+          "name": "classic-subscriptions-acquisition-ui",
+          "methods": 7,
+          "rows": 7
+        },
+        {
+          "name": "subscription-values-source-store",
+          "methods": 8,
+          "rows": 12
+        },
+        {
+          "name": "numeric-policy-real-source",
+          "methods": 2,
+          "rows": 6
+        },
+        {
+          "name": "subscriptions-concrete-worker",
+          "methods": 4,
+          "rows": 4
+        },
+        {
+          "name": "subscription-concrete-http",
+          "methods": 5,
+          "rows": 17
+        },
+        {
+          "name": "existing-rss-transport-controls",
+          "methods": 4,
+          "rows": 14
+        },
+        {
+          "name": "existing-rss-host-controls",
+          "methods": 2,
+          "rows": 2
+        }
+      ],
+      "test_xml_sha256": {
+        "config-acquisition-pending-guards.xml": "9e2e05e888c5e33089769abf8113d96bd77532a6e06cf66df319835b13d62034",
+        "state-acquisition-pending-guards.xml": "99bee2488ad1033870ca77cd83c3cd121bdc254ba897f696a8cc121e4bf313c7",
+        "intake-acquisition-pending-guards.xml": "f8a00730c3614136013db4e08b7709a392d46cc2f26e30dbc0537f7557dfed29",
+        "actual-saved-result-reader.xml": "db967eb4ee27e0fb4a275dad8ca79b0a9c4bfda3edfa711ed6c50eaf56e83fe0",
+        "association-values.xml": "c620bebe2f7f1f2f3e8b989b46fb43b955b7ec6dd35319e806f2464bd648f22e",
+        "actual-stopped-acquisition-worker.xml": "62aee621f2da877646314741e8724db423aac1c10a6f2de1d92a5bd934f8f02c",
+        "actual-binary-metainfo-get.xml": "fe42fc780b3634aa8d368a718a8368a076cad7bea0d7172abc03504d5bbf00d0",
+        "binary-http-response-values.xml": "1cf006467a150fb3b7e6dfba64d97bb2ca710fd6320b964fd87deee901942643",
+        "owned-acquisition-process-recovery.xml": "7ed01d24d82d772fd4a15e04af08e922181da3a2fd66b89636b81d5b957e5828",
+        "classic-subscriptions-acquisition-ui.xml": "a014da5ad9624031c03e0f0c4a7955a12dc4c46a26b17e39b037c762cb50947e",
+        "subscription-values-source-store.xml": "aedc6f6ee5055a8b26cbae8e9c3d1ef15be509b955dbb041ca449c02ba270276",
+        "numeric-policy-real-source.xml": "d8c62ee35f9b197271e75b2c079714719d1167cca69992a1c5537c89a2c66c0c",
+        "subscriptions-concrete-worker.xml": "2f3c354e22b17db53e01e2f0d81d16a00521026600ca1c1dd5addc403dda3add",
+        "subscription-concrete-http.xml": "c5fe8de95b5b48ff8d0f83d16ef2904cbb5568be490a091953e02bd4d04a9cae",
+        "existing-rss-transport-controls.xml": "ff1328868891f0658ee6f7d1f8d60b9a907c111e3369b1df055cc68218fc9875",
+        "existing-rss-host-controls.xml": "bdf977467b2d3e7deecf9453d24157f90e90d4179d42d2372de69327dbb11042"
+      },
+      "guard_cases": 55,
+      "framing_families": 8,
+      "recovery_pass_rows": [
+        "BeforeIntake",
+        "JournalSynced",
+        "StatePublished",
+        "ArchivePublished",
+        "InventoryPublished",
+        "AssociationPublished",
+        "ReadPublished",
+        "FinalPublished",
+        "Done",
+        "FinalPublished-impossible-F-beforeResults"
+      ],
+      "parent_r2": {
+        "raw_FAIL": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r2/san/r1/result-raw.json",
+          "bytes": 134447,
+          "sha256": "6694abb73ddcf3d0fbe8593ad4555a5f13dfe7fe9c7fe550d20cc6020b002b4b"
+        },
+        "build_PASS_seconds": 676.946,
+        "build_log": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r2/san/r1/build.log",
+          "bytes": 2741,
+          "sha256": "ab7e895a6c30e37c51a8e003416600460dc30cdc420d60caba8fc427efb02970"
+        },
+        "same_source_images_archives": true
+      },
+      "no_work_seconds": 0.215,
+      "macro_link_nm_roles_verified": true,
+      "production_crash_env_absent": true
+    }
+  },
+  "runtime_findings": [
+    "Every r3 command exits0 with no failure field. XML independently gives138 non-lifecycle Qt pass rows/52 methods across12 groups per lane, plus init/cleanup incidents; all expected method/data-tag counts match. Separate real markers prove config40/state7/intake8 guards and8 pure framing families.",
+    "All10 actual process rows pass per lane: expected owned child exit86 at9 distinct checkpoints, plus FinalPublished impossible F/B pair. BeforeIntake has no import/association/read; later unchanged-source rows assert exactly one pure-v1 stopped Public import, unforced/unpaused/downloaded0, raw cache4294967298, association/read, body/opaque/last_scan preservation, zero new factories, second-startup byte stability and no duplicate/timestamp rewrite.",
+    "Recovery assertions verify explicit joined/storageReleased close receipts and actual profile lock reacquisition while the bridge wrapper survives. Healthy recovery removes the exact recorded metadata temp; impossible F/B retains source bytes/owner marker and read-only actionMask0 through a second startup, then explicitly cleans only that captured uid/dev/inode-owned temp. Child profile trees belong to parent QTemporaryDir. No post-cleanup file rehash is claimed.",
+    "The positive actualNormalStoppedImportAssociatesAndReadsWithoutStarting bridge row enables history and asserts one genuine fresh hash record with completion0. All10 process-recovery rows disable history; they do not prove history-enabled crash receipt recovery. The private recovery path does not reconstruct/reissue a fresh auxiliary receipt.",
+    "Actual Host/provider/acquisition compile inventories each show exactly one production and one fixture compile with fixture macro only on the latter. All17 final image link roles are checked from exact output tokens; production excludes all fixture archives. Recorded nm output proves all3 fixture factories absent from production provider and present in fixture. The crash-hook environment literal is absent from production Host archive and present only in fixture Host.",
+    "Parent r2 aggregates remain FAIL at the stale harness marker. Their successful builds are retained (GCC561.592s/SAN676.946s), with source/images/dependencies byte-identical to r3. r3 Ninja no-work is0.266/0.215s; all r3 runtime groups ran fresh. Earlier compile/MOC failures and failed diagnostic hypotheses remain preserved.",
+    "The final literal-only MOC correction retains7 decoded JSON payloads and5 methods/20 rows. Its prior actual equal-option moc diagnostic distinguishes original empty output from final class metaobject. Both current lane C++ builds and the20 result-reader rows pass; no new moc or test invocation was performed by this reviewer.",
+    "SAN command flags and reviewed runner retain address/undefined instrumentation plus leak detection/halt settings; recorded current logs contain no sanitizer/runtime/fatal-test diagnostic. The pinned prebuilt SDK and Qt dependencies are carried; they are not claimed freshly rebuilt or fully sanitizer-instrumented here."
+  ],
+  "visual": {
+    "gcc_image": {
+      "bytes": 50818,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r3/gcc/r1/subscriptions-acquisition-ui.png",
+      "sha256": "0f99bf36f6016d437f94690b884e738ae8ca9bb808b017608bc91896dc5eaad7"
+    },
+    "san_image": {
+      "bytes": 50818,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/cohort-r3/san/r1/subscriptions-acquisition-ui.png",
+      "sha256": "0f99bf36f6016d437f94690b884e738ae8ca9bb808b017608bc91896dc5eaad7"
+    },
+    "same_sha256": true,
+    "independently_viewed": "GCC1280x800 controlled fixture image is readable; Add stopped fits and is disabled with no selection. SAN image is byte-identical. Footer column-layout refusal is a known controlled-fixture status. Layout-only evidence; no real-profile/locale/DPI acceptance."
+  },
+  "scope": {
+    "accepted": "Explicit one unread saved-result source-owned binary metainfo fetch and bounded new pure-v1 stopped Public import, subscription-side association/read and owned process recovery, within the declared supported policies.",
+    "current54_limits": [
+      "Download-side Plugin.<internal>.azsubs.subs_info.s SID callback is missing. This review does not grant Original prepareDownload/callback completion.",
+      "Existing duplicate intake refuses and preserves unread source; no existing-target acquisition success is qualified.",
+      "Auto-download, wider preparation/start/route/tag policies, unsupported active filters and broader Scheduler/P08 completion remain unimplemented or refused.",
+      "The55 actual runtime guard cases are config40/state7/intake8. Other guarded tag/category/file/rating and inventory paths are compiled/source-reviewed; not every path was directly exercised.",
+      "OS process crash checkpoints are tested, not power loss. No public DNS/internet GET, global resolver-worker shutdown or protected Original profile execution is claimed.",
+      "Original saved-getter22row/4Referer observations are historical carried evidence with raw supervisor FAIL and exact logger-split recovery preserved; no JVM rerun, full HTTP adjustLink, manager.prepareDownload or full phase projection claim."
+    ]
+  },
+  "review_actions": {
+    "tests_compilers_JVM_network_or_subjects_started": false,
+    "Native_source_HEAD_cache_or_image_writes": false,
+    "read_only_existing_evidence_and_local_artifact_hashes": true
+  }
+}
