@@ -110,3 +110,8 @@ Native `3142bd167a1d139897e471c6aa488c97ea5b651c` (tree `f96e90bbcdeb0c628174091
 ## 2026-11-06 actual automatic-tag worker
 
 Native `7ea75586f12a19365fa37a4a3a531d6569f43a36` (tree `5bdd5dfbc9ffe1c1e99be18146cd78f18bb0d953`) integrates source-bound supported constraints and guarded category storage. [Review](evidence/20261106-library-worker/REVIEW.md) distinguishes final GCC2/final sanitizer5 and retained GCC3 evidence. Complete P08/providers/actions and category live-owner/journal/UI integration remain open; registry integrated baselines are unchanged.
+
+
+## 2026-11-06 classic category workflow
+
+Native `a0b1debe1428c7c413a118c7e0fe2ef0aef2146d` (tree `21a7d021f33f33635523e94123171fc21e6d16ed`) integrates the worker/UI, guarded deletion and category-only owner state rebase. [Review](evidence/20261106-category-workflow/REVIEW.md) separates final GCC2/retained GCC10/final sanitizer12 and records limits/recovery/private-publication work. Whole P08 and registry integrated baselines remain open.
