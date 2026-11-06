@@ -120,3 +120,8 @@ Native `a0b1debe1428c7c413a118c7e0fe2ef0aef2146d` (tree `21a7d021f33f33635523e94
 ## 2026-11-06 library rules, recovery and identity bootstrap
 
 Native `7335aba21d8d12c7dab9e2df04a51c4aa4673610`, tree `6b120fe2359d235a27f981775b454926078f0b51`, original core `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`, original I2P helper `33d97eca67a9f332e3d4da7e7492ec54f4bec078`. [Bounded review](evidence/20261106-library-policy-recovery/REVIEW.md) records24 passing coverage cells per compiler, unchanged-image retention, real Public omission drain and actual Java identity/category API checks. No full P07/P08 or global registry baseline advancement.
+
+
+## 2026-11-06 original history public API handoff
+
+Native helper `0c36fa9a1b170a812c2f2bebd5323aa219b37581`, tree `67fd16ff480ecfe0c4c3a8203a5ec97438d3cece`, original core `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`. [Actual API/file/timer roundtrip](evidence/20261106-original-history-handoff/REVIEW.md) passed; lifecycle/GUI and whole P08 remain open.

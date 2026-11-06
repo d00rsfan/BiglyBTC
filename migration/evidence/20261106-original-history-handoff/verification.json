@@ -1,0 +1,55 @@
+{
+  "status": "PASS_ACTUAL_ORIGINAL_HISTORY_PUBLIC_API_HANDOFF",
+  "native_commit": "0c36fa9a1b170a812c2f2bebd5323aa219b37581",
+  "native_tree": "afc4faebd4f1bbecfa800bb85fedcd2fc1103eaf",
+  "native_preview_tree": "67fd16ff480ecfe0c4c3a8203a5ec97438d3cece",
+  "original_core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_core_jar_sha256": "aec655f549167e22178a75f81e4bbc146a34192a2ff90278d74d98c304d2aec6",
+  "build_receipt_sha256": "a9189ad180e7bb5895ac3262a6b1cbebc05ac9c5fe3c4556278d113ce26bad64",
+  "actual_oracle_receipt_sha256": "1575c6b4cc0c0d1cb7a656291619fd6241f8c4df839f52f786e51da0bf3b6d22",
+  "source_review_sha256": "226338de90eda70340836d199566c41a7430c256a983d801ec4aa1dc8445b00a",
+  "image": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-download-history-java-handoff-probe",
+    "sha256": "a2b52b9f9bcee19237208797b71c15fc08c59feb50bfe02b3cf619f90ee8964f",
+    "bytes": 426128
+  },
+  "source_map": {
+    "preview/native/core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "preview/native/core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+    "preview/native/core/include/biglybtc/saved_download_history.hpp": "20ed79ca6abf0932c94c18d5e7050fcf07c18360b247df6fabf3fe9be627556b",
+    "preview/native/core/src/saved_download_history.cpp": "3c20ad84eb3d2a5bc8ccbff57ca594b1ca1c132ac1dc39119c7bfa3e1e789786",
+    "preview/native/adapters/profile.hpp": "5e8d47cc73d10f62cc2746416c0565fca53359aec3e0a33480622f255f5fa41d",
+    "preview/native/adapters/profile.cpp": "93e151e3b31eca4503ec8d33989802bac23a24f5cf8656979addd951f0c4fa31",
+    "preview/native/adapters/file_io.hpp": "8d0fc78f8b6fd62932c8ff07fcbcd8203d6bac0ca2255d86bb849c4b1b413cb6",
+    "preview/native/adapters/file_io.cpp": "a3fd490e8e49b8d066f27205ab25636ac51c5e0715bf5c25f169e877da17f89c",
+    "preview/native/adapters/encoded_document.hpp": "fce354efe66973b5ad655b9d0fd09891bc610206d54918bdc0f4ca6ae6b333be",
+    "preview/native/adapters/encoded_document.cpp": "6963883e88118c95d2668c926cb6c15b78c5eb299ccf2f98bbba5b0026f276a2",
+    "preview/native/adapters/download_history_store.hpp": "b4e300a15507c20ca9e958b09b00bcbc109e22c91f4f8c5c3a657fad0107f269",
+    "preview/native/adapters/download_history_store.cpp": "e1e0a43fcb6c84b89736e6f449d7aa0e0e05d2b4a7bd5a15ae0695da6d38722f",
+    "preview/native/tests/download_history_java_handoff_probe.cpp": "27dffcedffcbfd26632cdcdede05373e5623d2e7949fcb108a83ef7a1161bb48"
+  },
+  "original_write": {
+    "before_sha256": {
+      "dlhistorya.config": "8c5d9ba31d03180b6834d1db7458abfb9372e0b4ae2251e406a9e04df2e0e38c",
+      "dlhistoryd.config": "864605569d0c221033ab96040d87883b33bbcd8ba2ff828d3938d8591590a70d"
+    },
+    "after_sha256": {
+      "dlhistorya.config": "bdda91e362934a5c756ee76fa45c65b64348dbce55ab8bf2847741db1c241105",
+      "dlhistoryd.config": "6b8cfd6078e8e047cec4c3cfd0b1f788f4948d9c98aac1de38382088bd097e4f"
+    },
+    "completion": "actual-original-15s-timer-and-disk-observation"
+  },
+  "prefix_observation": {
+    "selected_sha256": {
+      "dlhistorya.config": "267ad0f4686cef334295ff5ad66432fe726ec6de45caa93a0a0d2ce62b7c85f4",
+      "dlhistoryd.config": "0ea0536a7161c3fbf557fdf717f77d948566ccf9919664e143c22122848682f2",
+      "BiglyBTC.download-history.config": "42fe6b9ce00e3744d9d854184e983b2973640ca4e65b0468beed1418afac71ee"
+    },
+    "replayed": false,
+    "Java_aware_recovery_claim": false
+  },
+  "core_started": false,
+  "network_permitted": false,
+  "temporary_profiles_payloads_classes_removed": true,
+  "whole_history_complete": false
+}
