@@ -356,3 +356,10 @@ if(TARGET biglybtc_rss_http_fetch)
   endif()
   target_link_libraries(biglybtc_rss_http_fetch PUBLIC biglybtc_saved_subscription_source)
 endif()
+
+# Integrate values in the existing reader archive; do not also append the
+# provisional standalone numeric-library fragment (it would form a cycle).
+if(TARGET biglybtc_saved_subscription_source)
+  target_sources(biglybtc_saved_subscription_source PRIVATE
+    search/subscription_numeric_filter.hpp search/subscription_numeric_filter.cpp search/subscription_numeric_json.inc)
+endif()

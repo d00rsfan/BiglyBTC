@@ -33,7 +33,7 @@ struct Profile {
   std::unique_ptr<EVP_PKEY,decltype(&EVP_PKEY_free)> secret{nullptr,EVP_PKEY_free};
   QByteArray publicKey,shortId,metadataRow,configuration,body,settings="de";
   static constexpr std::int64_t engineId=-7;
-  explicit Profile(const std::string& url,const QSslCertificate* trust=nullptr,bool autoDownload=false){
+  explicit Profile(const std::string& url,const QSslCertificate* trust=nullptr,bool autoDownload=false,const QJsonObject& filters={}){
     wire::require(root.isValid(),"Cannot create subscription transport fixture");path=root.filePath("profile");
     wire::require(QDir().mkpath(path+"/subs"),"Cannot create real subscription directory");
     secret.reset(EVP_PKEY_Q_keygen(nullptr,nullptr,"EC","prime192v2"));
@@ -45,7 +45,7 @@ struct Profile {
     shortId=QCryptographicHash::hash(publicKey,QCryptographicHash::Sha1).left(10);
     const auto name=QString::fromLatin1(shortId.toHex().toUpper());bodyPath=path+"/subs/"+name+".biglybt";resultsPath=path+"/subs/"+name+".results";
     const auto engine=engineRow(url,"embedded-rss");
-    const QJsonObject definition{{"engine_id",qint64{engineId}},{"search_term",QString{}},{"filters",QJsonObject{}},{"options",QJsonObject{}},
+    const QJsonObject definition{{"engine_id",qint64{engineId}},{"search_term",QString{}},{"filters",filters},{"options",QJsonObject{}},
       {"schedule",QJsonObject{{"interval",qint64{60}},{"days",QJsonArray{"1","2","3","4","5","6","7"}}}},
       {"engines",QJsonObject{{QString::number(static_cast<qlonglong>(engineId)),QJsonObject{{"content",QString::fromLatin1(engine.toBase64())}}}}}};
     const auto json=QJsonDocument(definition).toJson(QJsonDocument::Compact);
