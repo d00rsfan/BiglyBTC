@@ -1,0 +1,21 @@
+{
+    "commands": 3,
+    "elapsed_ms": 70204,
+    "exact_commanded_expiry_transaction_identified": false,
+    "first_router_failure_transport_closed": true,
+    "global_queue_empty_required": false,
+    "independent_router_eof_fault_executed": true,
+    "payload_or_torrent_grants": 0,
+    "profile_lock_reacquired": true,
+    "reason": "Actual owned router EOF and failclosed network withdrawal complete",
+    "receive_expiry_counter_increased": false,
+    "receive_expiry_only_mode": false,
+    "receive_only_expiry_completed": false,
+    "requires_original_peer_result": true,
+    "router_eof_mode": true,
+    "source_grants_minted_by_fixture": false,
+    "source_revocation_claimed_for_router_fault": false,
+    "source_validation_failed": false,
+    "status": "PASS_ACTUAL_OWNED_ROUTER_EOF_NATIVE",
+    "worker_joins_complete": true
+}

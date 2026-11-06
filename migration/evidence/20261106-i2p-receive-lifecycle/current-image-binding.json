@@ -1,0 +1,36 @@
+{
+  "compiled_implementation_commit": "00e2e70a58bf0a0d73f548c0cf785779b5792f55",
+  "images": {
+    "gcc": {
+      "biglybtc-i2p-inbound-native-probe": {
+        "bytes": 8068544,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-i2p-inbound-native-probe",
+        "sha256": "470db16d6ce21eb23b5964c8dadcf306dd8dd6049bd51b81ffc8e0116ea3d059"
+      }
+    },
+    "san": {
+      "biglybtc-i2p-inbound-native-probe": {
+        "bytes": 183185864,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-i2p-inbound-native-probe",
+        "sha256": "0b61523903eda171587e7867f7c1523648c2f3c6f81e4fba87d62a3cb6ec822e"
+      }
+    }
+  },
+  "native_commit": "00e2e70a58bf0a0d73f548c0cf785779b5792f55",
+  "native_tree": "d85be38ad6bea02eb010f1f9cf7f741ae9f7dc6a",
+  "qualification_receipts": {
+    "gcc": {
+      "bytes": 12143,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/gcc/r1/result-stamped.json",
+      "sha256": "d606a68c73b57f11f52b876b7d016f60872e32253a571686af522be6d3e8e726"
+    },
+    "san": {
+      "bytes": 12149,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/san/r1/result-stamped.json",
+      "sha256": "a99486e4fecfb65aef412729a4184537d01f6b6586a3ec344aecb067aa428803"
+    }
+  },
+  "runtime_acceptance_performed": false,
+  "schema": "BIGLYBTC_FOCUSED_EXPIRY_EOF_CURRENT_IMAGE_BINDING_V1",
+  "status": "PASS_CURRENT_FOCUSED_EXPIRY_EOF_TARGETED_QUALIFICATION"
+}

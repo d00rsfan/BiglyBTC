@@ -1,0 +1,68 @@
+{
+  "actual_cold_targets": 0,
+  "controlled_loopback_exploratory_outbound_observed": true,
+  "controlled_loopback_outbound_tunnel_observed": false,
+  "default_backend_activated": false,
+  "diagnostic_only": false,
+  "direct_peer_injections": 0,
+  "elapsed_seconds": 306.833,
+  "eligible_for_acceptance": true,
+  "explicit_ls2_stores": 0,
+  "focus_case": null,
+  "functional_checks_status": "PASS",
+  "independent_router_eof_fault_executed": false,
+  "intentional_unexecuted_peer_workers_cleanup": true,
+  "internet_tunnels_qualified": false,
+  "native": {
+    "commands": 5,
+    "elapsed_ms": 70510,
+    "exact_commanded_expiry_transaction_identified": false,
+    "first_router_failure_transport_closed": false,
+    "global_queue_empty_required": false,
+    "independent_router_eof_fault_executed": false,
+    "payload_or_torrent_grants": 0,
+    "profile_lock_reacquired": true,
+    "reason": "Actual per-scope receive TTL expiry and original recovery complete",
+    "receive_expiry_counter_increased": true,
+    "receive_expiry_only_mode": true,
+    "receive_only_expiry_completed": true,
+    "requires_original_peer_result": true,
+    "router_eof_mode": false,
+    "source_grants_minted_by_fixture": false,
+    "source_revocation_claimed_for_router_fault": false,
+    "source_validation_failed": false,
+    "status": "PASS_ACTUAL_RECEIVE_EXPIRY_ONLY_NATIVE",
+    "worker_joins_complete": true
+  },
+  "original_peer": {
+    "commands": 4,
+    "identities": 2,
+    "native_qualification": false,
+    "original_close_returned": true,
+    "receive_expiry_only_mode": true,
+    "router_eof_mode": false,
+    "source_grants_minted": 0,
+    "status": "ORIGINAL_RECEIVE_EXPIRY_EXCHANGES_COMPLETE_NOT_NATIVE_QUALIFICATION"
+  },
+  "original_peer_cleanup": {
+    "alive_before_terminate": true,
+    "exit_code": 143,
+    "matched_signal": 15,
+    "signals_sent": [
+      15
+    ]
+  },
+  "phase": "san-receive-expiry-only",
+  "receive_expiry_qualified": true,
+  "scope": "fresh GCC/SAN receive TTL expiry or GCC owned-router EOF in independent lifetimes; prior controls retained",
+  "status": "PASS_ACTUAL_SAN_RECEIVE_EXPIRY_ONLY_PHASE",
+  "subject_count": 6,
+  "subject_exit_codes": [
+    0,
+    0,
+    0,
+    143,
+    0,
+    0
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "alive_before_terminate": true,
+  "exit_code": 143,
+  "matched_signal": 15,
+  "signals_sent": [
+    15
+  ]
+}

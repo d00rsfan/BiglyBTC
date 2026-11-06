@@ -1,0 +1,16 @@
+{
+    "armed": true,
+    "armed_ms": 37398,
+    "channel_state": 5,
+    "dht_scope": "0",
+    "elapsed_ms": 37419,
+    "failure_code": 14,
+    "lease_set_retained": false,
+    "observation_origin": "failed-signal",
+    "session_retained": false,
+    "socket_active": false,
+    "source_authority_current": true,
+    "source_revocation_claimed": false,
+    "status": "ACTUAL_FIRST_I2CP_FAILURE_BEFORE_LOCAL_CLEANUP",
+    "transport_closed": true
+}

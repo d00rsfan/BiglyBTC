@@ -1,0 +1,13 @@
+{
+    "exact_commanded_transaction_identified": false,
+    "first_observation_ms": 37532,
+    "first_observed_expiry_ms": 67606,
+    "global_queue_empty_required": false,
+    "last_unchanged_counter_ms": 67581,
+    "maximum_observation_gap_ms": 27,
+    "queued_at_first_expiry_observation": 5,
+    "receive_expired_after": "1",
+    "receive_expired_baseline": "0",
+    "receive_expired_delta": "1",
+    "status": "ACTUAL_PER_SCOPE_RECEIVE_TTL_ERASURE_WITH_LIVE_SOURCE"
+}

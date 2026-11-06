@@ -1,0 +1,91 @@
+{
+  "auth_network_compiler_or_runtime_executed": false,
+  "bindings": {
+    "build_contract": {
+      "bytes": 4848,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/amendments/focused-expiry-eof-20261106/build-contract.json",
+      "sha256": "01b7bf70a5d9bc10696d8c87b0e896799cf73c34324b3ba8f5292275d14f0991"
+    },
+    "configuration": {
+      "bytes": 59113,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/prepared-terminal-inputs-focused-expiry-eof-20261106-r1.json",
+      "sha256": "3e2c4716cee269d97517050cd2b9d0a75f3454eb14177b43ba6d130316bf613e"
+    },
+    "driver": {
+      "bytes": 27451,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/amendments/focused-expiry-eof-20261106/driver.py",
+      "sha256": "71244f7b19f9cb74c08473c538ca69f450db5ee8c5f5f9981c4a42db22efab69"
+    },
+    "driver_manifest": {
+      "bytes": 4433,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/amendments/focused-expiry-eof-20261106/manifest.json",
+      "sha256": "3e1c1c96205f9952d8b93cbd0fe0891d6ab6bb0dca5d6f9b14eb09db5ee6df12"
+    },
+    "image_binding": {
+      "bytes": 1662,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/amendments/focused-expiry-eof-20261106/current-image-binding.json",
+      "sha256": "59411c14f9ae454c5a9ab4590cf3b47ad94d83cdd32260ceca507f093d40a788"
+    },
+    "reference_pins": {
+      "bytes": 1473,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/amendments/focused-expiry-eof-20261106/reference-pins.json",
+      "sha256": "e148762c0607b5371abe28bb5752f3e2233f81c90b2bb26a9a431e1eb80e16cb"
+    },
+    "runner": {
+      "bytes": 58427,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/amendments/focused-expiry-eof-20261106/run.py",
+      "sha256": "0601d42660fb762b4af638b148673a74b23999c097c2fea6f853d3af85843b17"
+    },
+    "runner_manifest": {
+      "bytes": 3111,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/amendments/focused-expiry-eof-20261106/manifest.json",
+      "sha256": "b2d4a6bc17e95cd5b079bc682c952a51f4d70be9fafc72162d91b5b950dbe04d"
+    },
+    "wrapper": {
+      "bytes": 5497,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/run_from_terminal-focused-expiry-eof-20261106-r1.py",
+      "sha256": "474235d121d5ecbd7fb2f3f1abba861c7faf838a275446be354aeb38d2dceee2"
+    }
+  },
+  "blocking_defects": [],
+  "checks": {
+    "budgets_and_boundary": "One functional1200s/cleanup1300s group, per-lifetime1000s clamped to shared end. No budget extension or privilege-path expansion; unchanged f31e2d helper and4b18cb launcher. No process discovery or signal to original running Java.",
+    "expiry_witness": "Actual unsaturated after>baseline delta plus first-witness receipt and unchanged Actor/source/session/scope/drop predicates. Nonempty queues qualify; no exact commanded transaction, packet residence time or inferred observed30s hold is claimed. Fresh original positive callback and Native request/prepared-reply counters follow explicit resume.",
+    "fresh_fixed_lifetimes": "Exactly GCC expiry5/4, SAN expiry5/4 and GCC EOF3/3. Distinct fresh output/work directories and Popen subjects; actual new qualified images/classes/source pins checked before/after. No prior full controls, magnet cases or old green result is credited.",
+    "joins_and_evidence": "Native/original helper normal exits and worker join/profile lock receipts required. EOF waives only A normal PASS; B/F remain normal PASS. Idle generated DiscoveryPeer cleanup requires its recorded actually sent signal and matching joined exit. Parent descriptors, before/after fences, private loader/source/image checks and private cleanup remain mandatory; cleanup/final guards turn result FAIL on error.",
+    "owned_eof": "Only the exact routers[A] Popen is the fault target; kill/wait must yield -SIGKILL. Owned Native is live after positive ping and arm; first actual armed TransportClosed before cleanup and current filesystem authority are required. Wrong exit or alternate first cause cannot qualify; no fault retry, discovered PID, process-group or other victim.",
+    "preauth_reference_check": "Wrapper --check invokes the shared complete read-only source/class/jar/compiler proof. Declared absolute compiler/nice paths are preserved while content/size are checked; no compiler is invoked by checking. Wrapper now uses the focused driver in both readonly and execution paths."
+  },
+  "manifest_entries_verified": 15,
+  "native_or_cache_modified": false,
+  "native_tree": "d85be38ad6bea02eb010f1f9cf7f741ae9f7dc6a",
+  "patches_reconstruct_reviewed_runner_and_driver": true,
+  "phases": [
+    "gcc-receive-expiry-only",
+    "san-receive-expiry-only",
+    "gcc-router-eof"
+  ],
+  "privilege_helpers": {
+    "helper": {
+      "bytes": 41408,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/authenticated-build/i2p-veth-admin",
+      "sha256": "f31e2df7c3782cffd312a01bad5d94ef62633e2c02c55c0e23cf0e60802564d8"
+    },
+    "launcher": {
+      "bytes": 11738,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/authenticated-source/azureus_public_admin_launcher.py",
+      "sha256": "4b18cbf95e00d8deca0d6974415334f95ecdd2d76325a237041968266ebd7769"
+    }
+  },
+  "resolved_blocking_defects": [
+    {
+      "defect": "Wrapper copied two old receive-expiry driver references.",
+      "resolution": "Both readonly sequence and authenticated payload now point to focused-expiry-eof-20261106/driver.py; final frozen wrapper hash verified."
+    }
+  ],
+  "reviewed_at_utc": "2026-11-06T08:22:35.990420+00:00",
+  "runtime_acceptance_claimed": false,
+  "scope": "Independent focused supervisor source review. Root owns final complete configuration/hash review and --check; no authorization, network, compilation or runtime execution by this review.",
+  "source_commit": "00e2e70a58bf0a0d73f548c0cf785779b5792f55",
+  "status": "PASS_SOURCE_REVIEW_NOT_PRIVILEGED_RUNTIME"
+}

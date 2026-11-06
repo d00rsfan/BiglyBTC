@@ -1,0 +1,420 @@
+{
+  "P08_candidate_adopted": false,
+  "actual_java_compiler_driver": {
+    "bytes": 7473,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/amendments/focused-expiry-eof-20261106/amendments/preserve-declared-pin-paths/compile_reference.py",
+    "sha256": "172c9ac890ff538dddf59f091b538dc71345508058a4cac56f58b618b9e2d98e"
+  },
+  "aggregate": {
+    "bytes": 5503,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/focused-expiry-eof-sequence-20261106-r1/result.json",
+    "sha256": "ee5a6f96392b2acbc2b8667e869f658d252cfce8750cfbd1861701b005b87758"
+  },
+  "bundled_inputs": {
+    "InboundOriginalPeer.java": {
+      "bytes": 16252,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/staging/reference/InboundOriginalPeer.java",
+      "sha256": "672a5f12c256bf3a879d1524838ef08c079198d5d168dbbd85850a2d6dbf2fd1"
+    },
+    "aggregate-result.json": {
+      "bytes": 5503,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/focused-expiry-eof-sequence-20261106-r1/result.json",
+      "sha256": "ee5a6f96392b2acbc2b8667e869f658d252cfce8750cfbd1861701b005b87758"
+    },
+    "current-image-binding.json": {
+      "bytes": 1662,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/amendments/focused-expiry-eof-20261106/current-image-binding.json",
+      "sha256": "59411c14f9ae454c5a9ab4590cf3b47ad94d83cdd32260ceca507f093d40a788"
+    },
+    "gcc-build-receipt.json": {
+      "bytes": 12143,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/gcc/r1/result-stamped.json",
+      "sha256": "d606a68c73b57f11f52b876b7d016f60872e32253a571686af522be6d3e8e726"
+    },
+    "gcc-receive-expiry-only/fence-after.json": {
+      "bytes": 8662,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/fence-after.json",
+      "sha256": "0c36403b4a405d15767105c91c0491274fc839b1fa7b103cf9286e9591e462a5"
+    },
+    "gcc-receive-expiry-only/fence-before.json": {
+      "bytes": 8662,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/fence-before.json",
+      "sha256": "0c36403b4a405d15767105c91c0491274fc839b1fa7b103cf9286e9591e462a5"
+    },
+    "gcc-receive-expiry-only/inbound-exchanges.json": {
+      "bytes": 11507,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/inbound-exchanges.json",
+      "sha256": "da16ed8cb9457c9c1a385e405ebf6f2a9bc53cc67ba976ceedfc0e3d52c9703a"
+    },
+    "gcc-receive-expiry-only/inbound-native-result.json": {
+      "bytes": 843,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/inbound-native-result.json",
+      "sha256": "bc3320b94a827ced659a33c3d52dd48d8aea80b47897afff430908370fbe55ab"
+    },
+    "gcc-receive-expiry-only/inbound-original-result.json": {
+      "bytes": 250,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/inbound-original-result.json",
+      "sha256": "8f8adb57e3e0d5af9df859a2557b20cd4fa5af3ce6de774adc6a4ee7e1b6b679"
+    },
+    "gcc-receive-expiry-only/inbound-receive-expiry-witness.json": {
+      "bytes": 471,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/inbound-receive-expiry-witness.json",
+      "sha256": "76caf91558635f5d6f3865cde8cb169fa688a00fd0f6f4f4c47a036e02c7067f"
+    },
+    "gcc-receive-expiry-only/namespace-exit.json": {
+      "bytes": 84,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/namespace-exit.json",
+      "sha256": "30b36934914a32b56dc5f77c61b954f005051c7a31a8fcc532e7f7f60364924b"
+    },
+    "gcc-receive-expiry-only/original-peer-cleanup.json": {
+      "bytes": 113,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/original-peer-cleanup.json",
+      "sha256": "4520d8b71f6cc670498806b16d36419710b162b9e3ae9c2a2b1815df9e1f30ee"
+    },
+    "gcc-receive-expiry-only/private-cleanup.json": {
+      "bytes": 69,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/private-cleanup.json",
+      "sha256": "eb4a9d2b4cdf2c6eb1befd7bf4df00423341effe9b68f88bcb1ede8914d48593"
+    },
+    "gcc-receive-expiry-only/receive-expiry.json": {
+      "bytes": 4522,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/receive-expiry.json",
+      "sha256": "992c51b28105f0b024d584d81d3e618d55e4ac09c5b7a2179639dbd0b02092f6"
+    },
+    "gcc-receive-expiry-only/result.json": {
+      "bytes": 2224,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/result.json",
+      "sha256": "e406e9c1cf4524513241305bd6a388d7773687d7c381ddd42c995fdceb08003a"
+    },
+    "gcc-router-eof/fence-after.json": {
+      "bytes": 8662,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/fence-after.json",
+      "sha256": "c8e877540f29d505df6e885ea3cf4ae05e9d819f3efb5529319c83fb79a9b87d"
+    },
+    "gcc-router-eof/fence-before.json": {
+      "bytes": 8662,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/fence-before.json",
+      "sha256": "c8e877540f29d505df6e885ea3cf4ae05e9d819f3efb5529319c83fb79a9b87d"
+    },
+    "gcc-router-eof/inbound-exchanges.json": {
+      "bytes": 6505,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/inbound-exchanges.json",
+      "sha256": "d5c3e7972da27ec7320451dcd75845ce6ce11d84f4a768d30d5064505915c6b4"
+    },
+    "gcc-router-eof/inbound-native-result.json": {
+      "bytes": 840,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/inbound-native-result.json",
+      "sha256": "afaf0f46f41103c3402ff1b392dc2c9f978dd7c720136cb991c33de7e6731c4c"
+    },
+    "gcc-router-eof/inbound-original-result.json": {
+      "bytes": 246,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/inbound-original-result.json",
+      "sha256": "5ff9cb5c7e5bce291e2bac49d4b8c0e67c09df8d05d2e51d1569d674279cf2ec"
+    },
+    "gcc-router-eof/inbound-router-eof-first-failure.json": {
+      "bytes": 447,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/inbound-router-eof-first-failure.json",
+      "sha256": "ecd23172cdb95009d8eb1badc50ec699b6989eeed8e32e8a486bfb7b18f67870"
+    },
+    "gcc-router-eof/namespace-exit.json": {
+      "bytes": 84,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/namespace-exit.json",
+      "sha256": "30b36934914a32b56dc5f77c61b954f005051c7a31a8fcc532e7f7f60364924b"
+    },
+    "gcc-router-eof/original-peer-cleanup.json": {
+      "bytes": 113,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/original-peer-cleanup.json",
+      "sha256": "4520d8b71f6cc670498806b16d36419710b162b9e3ae9c2a2b1815df9e1f30ee"
+    },
+    "gcc-router-eof/private-cleanup.json": {
+      "bytes": 69,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/private-cleanup.json",
+      "sha256": "eb4a9d2b4cdf2c6eb1befd7bf4df00423341effe9b68f88bcb1ede8914d48593"
+    },
+    "gcc-router-eof/result.json": {
+      "bytes": 2207,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/result.json",
+      "sha256": "afd2b13f773851e38acd99a0ebc0e4b19edb642dcc93fd23498518b9c0d0d91e"
+    },
+    "gcc-router-eof/router-eof-fault.json": {
+      "bytes": 1405,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/router-eof-fault.json",
+      "sha256": "5442f985c4130f1c6cfdc7d899742035c4885e16e5b027d38c9e568129e6e2af"
+    },
+    "independent-review.json": {
+      "bytes": 9506,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-lifecycle-acceptance-review-20261106/result.json",
+      "sha256": "b11ba5bd769fe039a77cc7bf5f896379e362760185023c3026f261c32cedc5fc"
+    },
+    "reference-qualification.json": {
+      "bytes": 13244,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/result.json",
+      "sha256": "4c363962077149d89c76c92922fd960910d72360d0898df99e3a9a4f8d4e9537"
+    },
+    "san-build-receipt.json": {
+      "bytes": 12149,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/san/r1/result-stamped.json",
+      "sha256": "a99486e4fecfb65aef412729a4184537d01f6b6586a3ec344aecb067aa428803"
+    },
+    "san-receive-expiry-only/fence-after.json": {
+      "bytes": 8662,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/fence-after.json",
+      "sha256": "c8e877540f29d505df6e885ea3cf4ae05e9d819f3efb5529319c83fb79a9b87d"
+    },
+    "san-receive-expiry-only/fence-before.json": {
+      "bytes": 8662,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/fence-before.json",
+      "sha256": "c8e877540f29d505df6e885ea3cf4ae05e9d819f3efb5529319c83fb79a9b87d"
+    },
+    "san-receive-expiry-only/inbound-exchanges.json": {
+      "bytes": 11501,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/inbound-exchanges.json",
+      "sha256": "eed821500cec6e9c3bbdf9b43afbce7154273368abc9be148fe0581f41762730"
+    },
+    "san-receive-expiry-only/inbound-native-result.json": {
+      "bytes": 843,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/inbound-native-result.json",
+      "sha256": "3cfbee0b3b7ff5d45ffce810f3a6d548906b19910de94f82bc318f158cb74779"
+    },
+    "san-receive-expiry-only/inbound-original-result.json": {
+      "bytes": 250,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/inbound-original-result.json",
+      "sha256": "8f8adb57e3e0d5af9df859a2557b20cd4fa5af3ce6de774adc6a4ee7e1b6b679"
+    },
+    "san-receive-expiry-only/inbound-receive-expiry-witness.json": {
+      "bytes": 471,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/inbound-receive-expiry-witness.json",
+      "sha256": "50752c35dc6810b5a21c91cae7e13575607cc443f2f477fc9442b4dec7272dec"
+    },
+    "san-receive-expiry-only/namespace-exit.json": {
+      "bytes": 84,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/namespace-exit.json",
+      "sha256": "30b36934914a32b56dc5f77c61b954f005051c7a31a8fcc532e7f7f60364924b"
+    },
+    "san-receive-expiry-only/original-peer-cleanup.json": {
+      "bytes": 113,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/original-peer-cleanup.json",
+      "sha256": "4520d8b71f6cc670498806b16d36419710b162b9e3ae9c2a2b1815df9e1f30ee"
+    },
+    "san-receive-expiry-only/private-cleanup.json": {
+      "bytes": 69,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/private-cleanup.json",
+      "sha256": "eb4a9d2b4cdf2c6eb1befd7bf4df00423341effe9b68f88bcb1ede8914d48593"
+    },
+    "san-receive-expiry-only/receive-expiry.json": {
+      "bytes": 4520,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/receive-expiry.json",
+      "sha256": "bff9e91620f7b24a61038da5d473f797e9ec863a699b06f2ac453605a391add1"
+    },
+    "san-receive-expiry-only/result.json": {
+      "bytes": 2225,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/result.json",
+      "sha256": "ebca527c6e8ef15c035e95659fb0304d0a051c999a243c3b11eabe68d5647651"
+    },
+    "source-review.json": {
+      "bytes": 6240,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/amendments/focused-expiry-eof-20261106/independent-supervisor-source-review.json",
+      "sha256": "7cc84f323f2b5c961ca5acbd063f6acac001f3534d334ecab7dcb9fd20fad834"
+    }
+  },
+  "configuration": {
+    "bytes": 59113,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/prepared-terminal-inputs-focused-expiry-eof-20261106-r1.json",
+    "sha256": "3e2c4716cee269d97517050cd2b9d0a75f3454eb14177b43ba6d130316bf613e"
+  },
+  "counter_cli_executions": 2,
+  "elapsed_seconds": 1007.423,
+  "full_P07_complete": false,
+  "global_integration_baselines_advanced": false,
+  "implementation_commit": "00e2e70a58bf0a0d73f548c0cf785779b5792f55",
+  "independent_review": {
+    "bytes": 9506,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-lifecycle-acceptance-review-20261106/result.json",
+    "sha256": "b11ba5bd769fe039a77cc7bf5f896379e362760185023c3026f261c32cedc5fc"
+  },
+  "modified_router_artifact_sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+  "native_frozen_reference_helper_sha256": "932ca3388c6924cc93431f53262ab289a8ffc3bb0d0a090c97c288303d3daacc",
+  "native_tree": "d85be38ad6bea02eb010f1f9cf7f741ae9f7dc6a",
+  "new_compiler_auth_or_runtime_subjects_executed_for_publication": false,
+  "official_i2p_source_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "original_core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_i2p_helper_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+  "phase_summaries": [
+    {
+      "evidence": {
+        "exchanges": {
+          "bytes": 11507,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/inbound-exchanges.json",
+          "sha256": "da16ed8cb9457c9c1a385e405ebf6f2a9bc53cc67ba976ceedfc0e3d52c9703a"
+        },
+        "phase_result": {
+          "bytes": 2224,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/result.json",
+          "sha256": "e406e9c1cf4524513241305bd6a388d7773687d7c381ddd42c995fdceb08003a"
+        },
+        "public_artifacts": {
+          "bytes": 23339,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/public-artifacts.json",
+          "sha256": "57883a046c3d9f96314ef333493170e4656e041c3aadefb5de338eb8e68d0393"
+        }
+      },
+      "lane": "gcc",
+      "native_commands": 5,
+      "original_commands": 4,
+      "outer_phase_seconds": 312.963,
+      "phase": "gcc-receive-expiry-only",
+      "phase_seconds": 307.22,
+      "published_artifact_hashes_verified": 109,
+      "receive_expiry": {
+        "after": 1,
+        "baseline": 0,
+        "delta": 1,
+        "exact_commanded_transaction_identified": false,
+        "first_witness": {
+          "bytes": 471,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-expiry-only-20261106-r1/inbound-receive-expiry-witness.json",
+          "sha256": "76caf91558635f5d6f3865cde8cb169fa688a00fd0f6f4f4c47a036e02c7067f"
+        },
+        "fresh_original_and_native_recovery": true,
+        "global_empty_required": false,
+        "maximum_observation_gap_ms": 27,
+        "queued_at_check": 5,
+        "queued_at_first_witness": 5
+      },
+      "status": "PASS_INDEPENDENT_ACTUAL_EVIDENCE_REVIEW",
+      "subject_exit_codes": [
+        0,
+        0,
+        0,
+        143,
+        0,
+        0
+      ],
+      "survivor_joins_fences_parent_descriptors_private_cleanup": true,
+      "worker_joins_and_profile_lock_reacquired": true
+    },
+    {
+      "evidence": {
+        "exchanges": {
+          "bytes": 11501,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/inbound-exchanges.json",
+          "sha256": "eed821500cec6e9c3bbdf9b43afbce7154273368abc9be148fe0581f41762730"
+        },
+        "phase_result": {
+          "bytes": 2225,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/result.json",
+          "sha256": "ebca527c6e8ef15c035e95659fb0304d0a051c999a243c3b11eabe68d5647651"
+        },
+        "public_artifacts": {
+          "bytes": 23339,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/public-artifacts.json",
+          "sha256": "d57184c022b03bdf1b6793908d8ca12d144b0a43d7b7e3c1a789b55d6855d6ee"
+        }
+      },
+      "lane": "san",
+      "native_commands": 5,
+      "original_commands": 4,
+      "outer_phase_seconds": 314.77,
+      "phase": "san-receive-expiry-only",
+      "phase_seconds": 306.833,
+      "published_artifact_hashes_verified": 109,
+      "receive_expiry": {
+        "after": 1,
+        "baseline": 0,
+        "delta": 1,
+        "exact_commanded_transaction_identified": false,
+        "first_witness": {
+          "bytes": 471,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-san-expiry-only-20261106-r1/inbound-receive-expiry-witness.json",
+          "sha256": "50752c35dc6810b5a21c91cae7e13575607cc443f2f477fc9442b4dec7272dec"
+        },
+        "fresh_original_and_native_recovery": true,
+        "global_empty_required": false,
+        "maximum_observation_gap_ms": 30,
+        "queued_at_check": 3,
+        "queued_at_first_witness": 2
+      },
+      "sanitizers": {
+        "halt_on_asan_ubsan_error": true,
+        "leak_detection": true,
+        "native_and_namespace_error_markers": 0,
+        "native_exit_code": 0
+      },
+      "status": "PASS_INDEPENDENT_ACTUAL_EVIDENCE_REVIEW",
+      "subject_exit_codes": [
+        0,
+        0,
+        0,
+        143,
+        0,
+        0
+      ],
+      "survivor_joins_fences_parent_descriptors_private_cleanup": true,
+      "worker_joins_and_profile_lock_reacquired": true
+    },
+    {
+      "evidence": {
+        "exchanges": {
+          "bytes": 6505,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/inbound-exchanges.json",
+          "sha256": "d5c3e7972da27ec7320451dcd75845ce6ce11d84f4a768d30d5064505915c6b4"
+        },
+        "phase_result": {
+          "bytes": 2207,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/result.json",
+          "sha256": "afd2b13f773851e38acd99a0ebc0e4b19edb642dcc93fd23498518b9c0d0d91e"
+        },
+        "public_artifacts": {
+          "bytes": 21936,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/public-artifacts.json",
+          "sha256": "0f14b1002156d32c9fb84a11f671127de6d8e436c1179b72b5a13de9afe69d5d"
+        }
+      },
+      "lane": "gcc",
+      "native_commands": 3,
+      "original_commands": 3,
+      "outer_phase_seconds": 311.974,
+      "owned_router_eof": {
+        "fault": {
+          "bytes": 1405,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/router-eof-fault.json",
+          "sha256": "5442f985c4130f1c6cfdc7d899742035c4885e16e5b027d38c9e568129e6e2af"
+        },
+        "filesystem_source_authority_current": true,
+        "first_cause": "TransportClosed",
+        "first_failure": {
+          "bytes": 447,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/runs/focused-gcc-router-eof-20261106-r1/inbound-router-eof-first-failure.json",
+          "sha256": "ecd23172cdb95009d8eb1badc50ec699b6989eeed8e32e8a486bfb7b18f67870"
+        },
+        "native_pid": 256,
+        "source_revocation_claimed": false,
+        "victim_exit_code": -9,
+        "victim_pid": 7
+      },
+      "phase": "gcc-router-eof",
+      "phase_seconds": 306.326,
+      "published_artifact_hashes_verified": 103,
+      "status": "PASS_INDEPENDENT_ACTUAL_EVIDENCE_REVIEW",
+      "subject_exit_codes": [
+        -9,
+        0,
+        0,
+        143,
+        0,
+        0
+      ],
+      "survivor_joins_fences_parent_descriptors_private_cleanup": true,
+      "worker_joins_and_profile_lock_reacquired": true
+    }
+  ],
+  "sdk_artifact_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "status": "PASS_FOCUSED_I2P_RECEIVE_LIFECYCLE_ACCEPTANCE",
+  "targeted_ctests": 6,
+  "total_ctest_seconds": 134.73633,
+  "wrapper": {
+    "bytes": 5497,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/network-veth-20261105/run_from_terminal-focused-expiry-eof-20261106-r1.py",
+    "sha256": "474235d121d5ecbd7fb2f3f1abba861c7faf838a275446be354aeb38d2dceee2"
+  }
+}

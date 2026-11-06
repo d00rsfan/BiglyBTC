@@ -1,0 +1,50 @@
+{
+  "exit_code": -9,
+  "fault_monotonic_ns": 7291487637699793,
+  "native_alive_before_signal": true,
+  "native_arm": {
+    "armed_ms": 37398,
+    "command": "router-eof-arm",
+    "command_sha256": "dca6971b70fdc92facea28e521137203bcaa5c231930c5b137991eb5e65102e2",
+    "driver_effects_paused_for_cause_capture": true,
+    "elapsed_ms": 37398,
+    "fault_deadline_ms": 47398,
+    "fault_mode": "owned-router-A-SIGKILL-only",
+    "no_preexisting_pending_dht_write": true,
+    "observation": {
+      "grantActive": false,
+      "peerKeys": 0,
+      "peerValues": 0,
+      "ready": true,
+      "replyPrepared": "4",
+      "requested": true,
+      "requests": "4",
+      "retained": true,
+      "scope": "1",
+      "sourceCurrent": true,
+      "tokenBindings": 0,
+      "tokenRejected": "0"
+    },
+    "original_positive_ping_receipt_required": true,
+    "sequence": 1,
+    "source_revision": "1",
+    "status": "ACTUAL_SOURCE_BOUND_INBOUND_CONTROL"
+  },
+  "native_pid": 256,
+  "original_java_signalled": false,
+  "positive_original_callback": {
+    "callback": "ping",
+    "callbacks": 1,
+    "command": "ping",
+    "failure_class": "",
+    "native_qualification": false,
+    "nodes": 0,
+    "requires_native_control_receipt": false,
+    "sequence": 1,
+    "status": "ACTUAL_ORIGINAL_HELPER_CALLBACK",
+    "values": 0
+  },
+  "router_pid": 7,
+  "signal": 9,
+  "status": "EXACT_OWNED_ROUTER_A_SIGKILL_JOINED"
+}

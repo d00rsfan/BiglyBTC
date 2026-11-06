@@ -1,0 +1,203 @@
+{
+  "changed_class_count": 3,
+  "changed_classes": {
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/InboundOriginalPeer$Peer.class": {
+      "bytes": 2554,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/InboundOriginalPeer$Peer.class",
+      "sha256": "669820d5968646e7623dd7b527bc47a4b23925fd94177b5eecf1ff5d58259704"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/InboundOriginalPeer$Reply.class": {
+      "bytes": 3810,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/InboundOriginalPeer$Reply.class",
+      "sha256": "f598225d3290fd3556d73a7147e4653490db9e71734acdee4d97b121c64fb22a"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/InboundOriginalPeer.class": {
+      "bytes": 16605,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/InboundOriginalPeer.class",
+      "sha256": "26630eac9b9210a2ac16a54d146930197dfcaba36c8de1a710799886f0d61c1d"
+    }
+  },
+  "classes": {
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryColdProbe.class": {
+      "bytes": 9186,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryColdProbe.class",
+      "sha256": "08a9d8147fafc94bd2f145a169b2d68d5a8564a03ed18fc530eb9d7fa47b671d"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryFixture.class": {
+      "bytes": 7604,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryFixture.class",
+      "sha256": "bfd904527df5745f9f604f1fd23f4a479ce14ed59b5b79fb2e0b9ead030ea032"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$1.class": {
+      "bytes": 2321,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$1.class",
+      "sha256": "d1762e62d453028e1a47485c4d386fce0d3dda4babf567393eb75aa653651fc5"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Adapter.class": {
+      "bytes": 2202,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Adapter.class",
+      "sha256": "0c7d543d7d26a2154ca3c172b3be069b927e3ba12c21239d589ebf2f0dcfb10f"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Holder.class": {
+      "bytes": 1965,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Holder.class",
+      "sha256": "a5722efc35b997bfb5599442d827b07fa3b7e742bb96c575cd365a6e70e9adfa"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Node.class": {
+      "bytes": 3703,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Node.class",
+      "sha256": "777512727f317648e43eecbc33fbe439711e50f1870b00c4dbe819810ebce33c"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Torrent.class": {
+      "bytes": 5863,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Torrent.class",
+      "sha256": "81c3dd5044eeb4e76e1bb4f8ed70516a3f0e006438ada155442dd72edff0f51e"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer.class": {
+      "bytes": 25440,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer.class",
+      "sha256": "dac86245ab833ce2dfa4266191b70f7deb39d88c6a18f44ad4948fe87cdb97a5"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryRouter$ClassicalRouter.class": {
+      "bytes": 2993,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryRouter$ClassicalRouter.class",
+      "sha256": "e4552339706346c3ce3af1041f0b560f053c2fe401507d86b9192a0b5fdf6c6c"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryRouter.class": {
+      "bytes": 35461,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryRouter.class",
+      "sha256": "ce9c1b37ca58137c97907f9d379ec6e1d37c1c17509723783c796853b1709a2f"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/InboundOriginalPeer$Peer.class": {
+      "bytes": 2554,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/InboundOriginalPeer$Peer.class",
+      "sha256": "669820d5968646e7623dd7b527bc47a4b23925fd94177b5eecf1ff5d58259704"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/InboundOriginalPeer$Reply.class": {
+      "bytes": 3810,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/InboundOriginalPeer$Reply.class",
+      "sha256": "f598225d3290fd3556d73a7147e4653490db9e71734acdee4d97b121c64fb22a"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/InboundOriginalPeer.class": {
+      "bytes": 16605,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/InboundOriginalPeer.class",
+      "sha256": "26630eac9b9210a2ac16a54d146930197dfcaba36c8de1a710799886f0d61c1d"
+    }
+  },
+  "commands": {
+    "bytes": 1202,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/commands.json",
+    "sha256": "279e7f058e75068dd4baf894750e7d390f3367db1e5db9cd17bdd39307d8d228"
+  },
+  "compiled_changed_sources": [
+    {
+      "bytes": 16252,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/staging/reference/InboundOriginalPeer.java",
+      "sha256": "672a5f12c256bf3a879d1524838ef08c079198d5d168dbbd85850a2d6dbf2fd1"
+    }
+  ],
+  "compiler_driver": {
+    "bytes": 7473,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/amendments/focused-expiry-eof-20261106/amendments/preserve-declared-pin-paths/compile_reference.py",
+    "sha256": "172c9ac890ff538dddf59f091b538dc71345508058a4cac56f58b618b9e2d98e"
+  },
+  "compiler_elapsed_seconds": 1.673,
+  "derived_total_class_count": 13,
+  "exit_code": 0,
+  "failure_class": null,
+  "javac_invocations": 1,
+  "native_qualification": false,
+  "parent": {
+    "bytes": 5552,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/compiled-reference-group-r1/result.json",
+    "sha256": "981c05cc425e9578aa3675b0a0053dfdbdb1d4a9123ae31fd4697c92d735f6d2"
+  },
+  "parent_source_freeze": {
+    "bytes": 2435,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-next-acceptance/java-source-freeze.json",
+    "sha256": "cffd1c504baec944765f4d26a8d8021dc96d16e6374c39eaf632d0f464aced39"
+  },
+  "retained_class_count": 10,
+  "retained_classes": {
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryColdProbe.class": {
+      "bytes": 9186,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/compiled-reference-group-r1/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryColdProbe.class",
+      "sha256": "08a9d8147fafc94bd2f145a169b2d68d5a8564a03ed18fc530eb9d7fa47b671d"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryFixture.class": {
+      "bytes": 7604,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/compiled-reference-group-r1/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryFixture.class",
+      "sha256": "bfd904527df5745f9f604f1fd23f4a479ce14ed59b5b79fb2e0b9ead030ea032"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$1.class": {
+      "bytes": 2321,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/compiled-reference-group-r1/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$1.class",
+      "sha256": "d1762e62d453028e1a47485c4d386fce0d3dda4babf567393eb75aa653651fc5"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Adapter.class": {
+      "bytes": 2202,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/compiled-reference-group-r1/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Adapter.class",
+      "sha256": "0c7d543d7d26a2154ca3c172b3be069b927e3ba12c21239d589ebf2f0dcfb10f"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Holder.class": {
+      "bytes": 1965,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/compiled-reference-group-r1/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Holder.class",
+      "sha256": "a5722efc35b997bfb5599442d827b07fa3b7e742bb96c575cd365a6e70e9adfa"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Node.class": {
+      "bytes": 3703,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/compiled-reference-group-r1/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Node.class",
+      "sha256": "777512727f317648e43eecbc33fbe439711e50f1870b00c4dbe819810ebce33c"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Torrent.class": {
+      "bytes": 5863,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/compiled-reference-group-r1/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer$Torrent.class",
+      "sha256": "81c3dd5044eeb4e76e1bb4f8ed70516a3f0e006438ada155442dd72edff0f51e"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer.class": {
+      "bytes": 25440,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/compiled-reference-group-r1/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryPeer.class",
+      "sha256": "dac86245ab833ce2dfa4266191b70f7deb39d88c6a18f44ad4948fe87cdb97a5"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryRouter$ClassicalRouter.class": {
+      "bytes": 2993,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/compiled-reference-group-r1/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryRouter$ClassicalRouter.class",
+      "sha256": "e4552339706346c3ce3af1041f0b560f053c2fe401507d86b9192a0b5fdf6c6c"
+    },
+    "org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryRouter.class": {
+      "bytes": 35461,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/compiled-reference-group-r1/classes/org/parg/azureus/plugins/networks/i2p/vuzedht/DiscoveryRouter.class",
+      "sha256": "ce9c1b37ca58137c97907f9d379ec6e1d37c1c17509723783c796853b1709a2f"
+    }
+  },
+  "retained_sources": [
+    {
+      "bytes": 4279,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/amendments/one-hop-ready/DiscoveryFixture.java",
+      "sha256": "ec98ea2a346a4905ea62b6bd73a6c8068825b2c9f9d4275c54f7de1a07015766"
+    },
+    {
+      "bytes": 31584,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/amendments/condition-based-router-drain/DiscoveryRouter.java",
+      "sha256": "321be30e87d059666de8ca4c92cde923b305a2b11e479ac888acc8d5f9d755df"
+    },
+    {
+      "bytes": 5093,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/DiscoveryColdProbe.java",
+      "sha256": "1941030e4ae0654bfc697b9ca6242eb6248cb3dcb88545800a0e6e44470775b1"
+    },
+    {
+      "bytes": 25437,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/oracle-implementation/amendments/peer-stream-progress/DiscoveryPeer.java",
+      "sha256": "4cc74ab6e5f5e1b209a9074ab681904a8de1d09c3981732f5c3ca3500b82af2d"
+    }
+  ],
+  "runtime_subjects_executed": false,
+  "source_and_reference_images_unchanged": true,
+  "source_freeze": {
+    "bytes": 2421,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p07-receive-lifecycle-20261106/qualification/reference/java-source-freeze.json",
+    "sha256": "0e7f88ae6f09ef327ae761c72e5d8aa8b8fa8e1f07e38ab045ee192cd47a5cf7"
+  },
+  "status": "PASS_REFERENCE_FIXTURE_COMPILE_ONLY"
+}

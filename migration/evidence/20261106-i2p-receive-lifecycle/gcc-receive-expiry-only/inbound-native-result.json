@@ -1,0 +1,21 @@
+{
+    "commands": 5,
+    "elapsed_ms": 70470,
+    "exact_commanded_expiry_transaction_identified": false,
+    "first_router_failure_transport_closed": false,
+    "global_queue_empty_required": false,
+    "independent_router_eof_fault_executed": false,
+    "payload_or_torrent_grants": 0,
+    "profile_lock_reacquired": true,
+    "reason": "Actual per-scope receive TTL expiry and original recovery complete",
+    "receive_expiry_counter_increased": true,
+    "receive_expiry_only_mode": true,
+    "receive_only_expiry_completed": true,
+    "requires_original_peer_result": true,
+    "router_eof_mode": false,
+    "source_grants_minted_by_fixture": false,
+    "source_revocation_claimed_for_router_fault": false,
+    "source_validation_failed": false,
+    "status": "PASS_ACTUAL_RECEIVE_EXPIRY_ONLY_NATIVE",
+    "worker_joins_complete": true
+}
