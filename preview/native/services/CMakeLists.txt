@@ -312,3 +312,13 @@ target_include_directories(biglybtc_saved_rss_source PUBLIC "${CMAKE_CURRENT_SOU
 target_link_libraries(biglybtc_saved_rss_source PUBLIC biglybtc_profile biglybtc_rss_document Qt6::Core Qt6::Network PRIVATE Threads::Threads)
 target_compile_features(biglybtc_saved_rss_source PUBLIC cxx_std_23)
 target_compile_options(biglybtc_saved_rss_source PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+# Concrete one-shot provider, callable by the existing serialized profile worker.
+# No Host/UI/default invocation is registered here. The fixture macro is absent.
+find_package(Threads REQUIRED)
+add_library(biglybtc_rss_http_fetch STATIC search/rss_http_fetch.cpp)
+target_include_directories(biglybtc_rss_http_fetch PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/search")
+target_link_libraries(biglybtc_rss_http_fetch PUBLIC biglybtc_saved_rss_source biglybtc_rss_document Qt6::Core Qt6::Network PRIVATE biglybtc_http_response biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Threads::Threads)
+target_compile_features(biglybtc_rss_http_fetch PUBLIC cxx_std_23)
+target_compile_options(biglybtc_rss_http_fetch PRIVATE -Wall -Wextra -Wpedantic -Werror)
+set_target_properties(biglybtc_rss_http_fetch PROPERTIES POSITION_INDEPENDENT_CODE ON)
