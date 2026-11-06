@@ -164,3 +164,7 @@ Implementation `2417a35d3863ef5a44b997a0efcf57f406ba9e5c`, Native subtree `519aa
 ## 2026-11-06 empty offline development launcher
 
 Qualified consumer `2417a35d3863ef5a44b997a0efcf57f406ba9e5c` / Native subtree `519aacb4fb6ead6ca701e09439bc0ca191271f9c` has a separate local empty offline development launcher. Exact consumer/provider/Qt and default-preservation checks plus one owned offscreen startup/lock-release/temp-cleanup test passed. [Evidence](evidence/20261106-rss-offline-development-preview/REVIEW.md). Existing normal distribution and global integration baselines remain open. This metadata records local development access, not a production runtime promotion.
+
+## 2026-11-06 Original Atom timestamp offset defect
+
+Public Original `RSSUtils.parseAtomDate` on JDK17/core `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f` reproduced four offset mismatches among six fixed values. [Evidence and GB-English message](evidence/20261106-original-atom-date/REVIEW.md). This records a value-API defect, not UI/subscription-runtime reproduction. Future Native explicit-offset handling must preserve the represented instant; this is a planned corrected divergence, not yet a general date-codec parity qualification. No integration baseline advances.

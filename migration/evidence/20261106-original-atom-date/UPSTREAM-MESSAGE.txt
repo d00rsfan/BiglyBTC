@@ -1,0 +1,11 @@
+I've reproduced an Atom timestamp parsing issue in the Java API on JDK 17, using commit cb8c6cb9bb97916cbc7e80338a017200ffc3e71f.
+
+Set the JVM default time zone to GMT+02:00 and call RSSUtils.parseAtomDate("2026-11-06T10:30:00Z"). It returns 08:30:00Z, although the timestamp explicitly means 10:30:00Z. The same happens with "2026-11-06T10:30:00.000Z".
+
+With the default time zone set to UTC, parseAtomDate("2026-11-06T10:30:00+01:00") returns 10:30:00Z instead of 09:30:00Z.
+
+Source inspection points to the initial SimpleDateFormat patterns treating 'Z' as a literal while retaining the default time zone. For the numeric-offset example, a later time-zone-free pattern accepts the timestamp prefix and leaves the offset unconsumed.
+
+Expected behaviour: an explicit Z or numeric offset should determine the instant independently of the JVM default time zone.
+
+These were direct public API checks against the compiled Original core; I have not tested this through the UI or subscription scheduler. The helper does not start Core, uses private development settings and verifies that socket connections are blocked. I can share the small helper and raw output.

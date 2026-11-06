@@ -1,0 +1,68 @@
+{
+  "status": "ORIGINAL_PUBLIC_ATOM_DATE_API_REPRODUCED",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "jar_sha256": "aec655f549167e22178a75f81e4bbc146a34192a2ff90278d74d98c304d2aec6",
+  "helper_sha256": "396f359f0ede25a9f2534cb434f99d45767b23de201eb49e77b66c7883efa136",
+  "java_image_sha256": "0e72dac1212b98b6450d1b17d403680be25002d47465dbdb460d24c45cbbde3c",
+  "host_run": {
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-Djava.security.manager=allow",
+      "-Duser.home=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/rss-atom-date-original-20261106/home",
+      "-Dazureus.config.path=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/rss-atom-date-original-20261106/home",
+      "-cp",
+      "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/rss-atom-date-original-20261106/classes:/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+      "AtomDateProbe"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.408,
+    "log_sha256": "3e0081e683949b598296e0bd25e051d79a6209e55196a2031301fd0ca73d21d5"
+  },
+  "earlier_sandbox_control": "failed before date rows because sandbox denied socket descriptor; unchanged compiled helper reused",
+  "socket_guard_control": true,
+  "Core_start_or_UI": false,
+  "rows": [
+    {
+      "zone": "UTC",
+      "input": "2026-11-06T10:30:00Z",
+      "actual": 1793961000000,
+      "expected": 1793961000000,
+      "difference_ms": 0
+    },
+    {
+      "zone": "UTC",
+      "input": "2026-11-06T10:30:00.000Z",
+      "actual": 1793961000000,
+      "expected": 1793961000000,
+      "difference_ms": 0
+    },
+    {
+      "zone": "UTC",
+      "input": "2026-11-06T10:30:00+01:00",
+      "actual": 1793961000000,
+      "expected": 1793957400000,
+      "difference_ms": 3600000
+    },
+    {
+      "zone": "GMT+02:00",
+      "input": "2026-11-06T10:30:00Z",
+      "actual": 1793953800000,
+      "expected": 1793961000000,
+      "difference_ms": -7200000
+    },
+    {
+      "zone": "GMT+02:00",
+      "input": "2026-11-06T10:30:00.000Z",
+      "actual": 1793953800000,
+      "expected": 1793961000000,
+      "difference_ms": -7200000
+    },
+    {
+      "zone": "GMT+02:00",
+      "input": "2026-11-06T10:30:00+01:00",
+      "actual": 1793953800000,
+      "expected": 1793957400000,
+      "difference_ms": -3600000
+    }
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "schema": "BIGLYBT_ORIGINAL_ATOM_DATE_INDEPENDENT_SOURCE_OUTPUT_REVIEW_V1",
+  "status": "CONFIRMED_ORIGINAL_PUBLIC_ATOM_DATE_OFFSET_DEFECT_JDK17_API_ONLY",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "method": "com.biglybt.pifimpl.local.utils.xml.rss.RSSUtils.parseAtomDate(String)",
+  "source": {
+    "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/pifimpl/local/utils/xml/rss/RSSUtils.java",
+    "bytes": 4314,
+    "sha256": "d022ae3a4639799411bb39c29a92dbe23a492bb5801043d2c4992c874f1740e0",
+    "git_blob": "df5f25098d55498a8e3cca91707f91c71f77b2f1",
+    "method_lines": [
+      108,
+      161
+    ],
+    "bytes_equal_immutable_cb8": true
+  },
+  "evidence": {
+    "result": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/rss-atom-date-original-20261106/result.json",
+      "bytes": 2341,
+      "sha256": "1194a474d81494a02523d8c31d70e4e9fd848bba332d18872711689e70a0b793"
+    },
+    "helper": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/rss-atom-date-original-20261106/AtomDateProbe.java",
+      "bytes": 1424,
+      "sha256": "396f359f0ede25a9f2534cb434f99d45767b23de201eb49e77b66c7883efa136"
+    },
+    "compile_log": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/rss-atom-date-original-20261106/compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "successful_host_log": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/rss-atom-date-original-20261106/run-host.log",
+      "bytes": 788,
+      "sha256": "3e0081e683949b598296e0bd25e051d79a6209e55196a2031301fd0ca73d21d5"
+    },
+    "earlier_sandbox_log": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/rss-atom-date-original-20261106/run.log",
+      "bytes": 783,
+      "sha256": "ef4c7a323b07023c2ef090791d62dd4985c0a7c8bfaed61cc225a7c7c0c3b502"
+    },
+    "classes": [
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/rss-atom-date-original-20261106/classes/AtomDateProbe$1.class",
+        "bytes": 830,
+        "sha256": "bc14fd31ec42b8b5e48a06a20f7a8870fd60df6f9d02e34c20e2b836c9afebbb"
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/rss-atom-date-original-20261106/classes/AtomDateProbe.class",
+        "bytes": 2568,
+        "sha256": "326e89ca0e0481b45b27d9c08da1189cbc5bb576552f0ac73287e3a20fd9d59d"
+      }
+    ],
+    "core_jar": {
+      "path": "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+      "bytes": 12774623,
+      "sha256": "aec655f549167e22178a75f81e4bbc146a34192a2ff90278d74d98c304d2aec6"
+    },
+    "RSSUtils_jar_class": {
+      "member": "com/biglybt/pifimpl/local/utils/xml/rss/RSSUtils.class",
+      "bytes": 3926,
+      "sha256": "9daa86a937a54a2a83d506503de7d64bc25926392f76edd548d41e595530ce1f",
+      "class_major": 52
+    },
+    "java": {
+      "path": "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "bytes": 14544,
+      "sha256": "0e72dac1212b98b6450d1b17d403680be25002d47465dbdb460d24c45cbbde3c"
+    },
+    "jdk_release": {
+      "path": "/usr/lib/jvm/java-17-openjdk-amd64/release",
+      "bytes": 1228,
+      "sha256": "ec61e7fb37ddd8368f2f07e3c75e23ca1e51e544af5b39c5c297f5cee9917606"
+    }
+  },
+  "actual_rows": [
+    {
+      "zone": "UTC",
+      "input": "2026-11-06T10:30:00Z",
+      "actual": 1793961000000,
+      "expected": 1793961000000,
+      "difference_ms": 0
+    },
+    {
+      "zone": "UTC",
+      "input": "2026-11-06T10:30:00.000Z",
+      "actual": 1793961000000,
+      "expected": 1793961000000,
+      "difference_ms": 0
+    },
+    {
+      "zone": "UTC",
+      "input": "2026-11-06T10:30:00+01:00",
+      "actual": 1793961000000,
+      "expected": 1793957400000,
+      "difference_ms": 3600000
+    },
+    {
+      "zone": "GMT+02:00",
+      "input": "2026-11-06T10:30:00Z",
+      "actual": 1793953800000,
+      "expected": 1793961000000,
+      "difference_ms": -7200000
+    },
+    {
+      "zone": "GMT+02:00",
+      "input": "2026-11-06T10:30:00.000Z",
+      "actual": 1793953800000,
+      "expected": 1793961000000,
+      "difference_ms": -7200000
+    },
+    {
+      "zone": "GMT+02:00",
+      "input": "2026-11-06T10:30:00+01:00",
+      "actual": 1793953800000,
+      "expected": 1793957400000,
+      "difference_ms": -3600000
+    }
+  ],
+  "summary": {
+    "actual_rows": 6,
+    "matching_rows": 2,
+    "mismatching_rows": 4,
+    "recorded_JDK": "17.0.20",
+    "successful_host_exit": 0,
+    "successful_host_elapsed_seconds": 0.408,
+    "expected_epochs_independently_recomputed": true
+  },
+  "findings": [
+    "In UTC, the explicit +01:00 vector returns 2026-11-06T10:30:00Z; its correct instant is 09:30:00Z, a 3600000 ms error.",
+    "With JVM default GMT+02:00, both Z and .000Z vectors return 08:30:00Z instead of 10:30:00Z, errors of -7200000 ms; +01:00 returns 08:30:00Z instead of 09:30:00Z, an error of -3600000 ms.",
+    "The two UTC-default Z/.000Z matching rows do not disprove the offset defect: default UTC masks the missing explicit-zone handling for these values.",
+    "Source inference, not an instrumented pattern trace: the first format quotes Z as literal text without setting UTC; later timezone-free patterns accept a prefix. No fractional-second format is supplied. Java DateFormat.parse(String) permits unconsumed suffix text, consistent with the observed .000Z and colon-offset outputs.",
+    "The helper directly invokes the public Original RSSUtils method from the exact existing CoreJar. Classpath classes contain only the probe and its SecurityManager subclass; no RSSUtils replacement, reflection, Core creation/start or UI invocation is present."
+  ],
+  "primary_references": [
+    {
+      "url": "https://www.rfc-editor.org/rfc/rfc3339#section-4.2",
+      "support": "UTC is local time minus the numeric offset, so 10:30+01:00 denotes 09:30Z."
+    },
+    {
+      "url": "https://www.rfc-editor.org/rfc/rfc3339#section-5.6",
+      "support": "Z/numeric offsets and optional fractional seconds are valid timestamp syntax; Z denotes UTC as explained in sections 4.2/4.3."
+    },
+    {
+      "url": "https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/text/DateFormat.html#parse(java.lang.String)",
+      "support": "parse(String) may succeed after consuming only an input prefix."
+    },
+    {
+      "url": "https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/text/SimpleDateFormat.html",
+      "support": "Quoted pattern characters are literal; z/Z/X are zone pattern letters."
+    }
+  ],
+  "network_control": {
+    "successful_control": "Actual host log contains SOCKET_GUARD_CONTROL_PASS before all 6 date rows. The JDK17 SecurityManager rejects Java connect/listen/accept calls; the helper tests a loopback Socket and expects SecurityException.",
+    "scope": "Java API-level guard; no claim of OS seccomp/socket-deny-exec isolation or a successful network connection.",
+    "earlier_failure": "Sandbox Socket creation throws SocketException(Operation not permitted), wrapped in AssertionError, before guardPASS/date output. This is not a date result and remains a separate failed control attempt.",
+    "reuse": "Root reports reusing unchanged compiled classes for the host attempt. Current class/source images are pinned here; no additional compilation or JVM execution was performed by the reviewer."
+  },
+  "scope_limits": [
+    "Measured public method behavior on Original cb8 through existing CoreJar and JDK17.0.20 only; no full feed, subscription engine, GUI display, live profile or Core.start reproduction.",
+    "RSSItemImpl/RSSChannelImpl source call this method for Atom publication dates, but those caller/UI paths were not executed by this probe.",
+    "No claim about every date shape, nonzero fractional precision, midnight/leap handling, other JDK versions, current upstream fixes or installed shipped distributions.",
+    "This is a new Original Atom date parsing finding; it supplies no evidence about prior v2 or I2P findings."
+  ],
+  "blocking_evidence_defects": [],
+  "reviewer_reran_JVM_compiler_or_network_subject": false,
+  "reviewer_mutated_Original_Native_cache_or_runtime": false
+}
