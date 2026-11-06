@@ -297,3 +297,10 @@ target_include_directories(biglybtc_i2p_profile_bootstrap PUBLIC "${CMAKE_CURREN
 target_link_libraries(biglybtc_i2p_profile_bootstrap PUBLIC biglybtc_profile biglybtc_i2p_client_identity biglybtc_i2p_dht PRIVATE biglybtc_plugin_settings OpenSSL::Crypto)
 target_compile_features(biglybtc_i2p_profile_bootstrap PUBLIC cxx_std_23)
 target_compile_options(biglybtc_i2p_profile_bootstrap PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+# Owning untrusted RSS/Atom values only; no loader/fetch/engine activation.
+add_library(biglybtc_rss_document STATIC search/rss_document.cpp)
+target_include_directories(biglybtc_rss_document PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/search")
+target_link_libraries(biglybtc_rss_document PUBLIC Qt6::Core)
+target_compile_features(biglybtc_rss_document PUBLIC cxx_std_23)
+target_compile_options(biglybtc_rss_document PRIVATE -Wall -Wextra -Wpedantic -Werror)
