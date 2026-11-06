@@ -9,6 +9,18 @@
 #include "biglybtc/library.hpp"
 #include "biglybtc/saved_download_history.hpp"
 #include <QAction>
+#include <QApplication>
+#include <QCryptographicHash>
+#include <QDirIterator>
+#include <QFileInfo>
+#include <QFile>
+#include <QDir>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QStringList>
+#include <cstdio>
+#include <optional>
+#include <map>
 #include <QDateTime>
 #include <QSignalSpy>
 #include <QUdpSocket>
@@ -77,6 +89,78 @@ ExistingFiles existingStopped(f::Profile& area,const QString& save,int mode){
 }
 void absentIntent(f::Profile& area){for(const auto* name:{"BiglyBTC.subscription-acquire","BiglyBTC.torrent-import",".subscriptions-native-write"}){for(const auto* suffix:{"",".saving",".bak"}){w::require(!QFile::exists(area.path+"/"+name+suffix),"Unexpected acquisition journal retained");}}}
 }
+#if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
+// Local one-shot value handback only. This path is an output owner, never a
+// caller-supplied profile/URL or production effect permission.
+const QString StateHandbackParent=QStringLiteral("/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/owned-native-fixture");
+const QString StateHandbackReceipt=StateHandbackParent+"/native-state-export.json";
+constexpr const char* StateHandbackEnvironment="BIGLYBTC_ORIGINAL_STATE_FIXTURE_EXPORT";
+QString digest(const QByteArray& value){return QString::fromLatin1(QCryptographicHash::hash(value,QCryptographicHash::Sha256).toHex());}
+QString canonicalDirectory(const QString& path){const QFileInfo file(path);w::require(file.isDir()&&!file.isSymLink()&&file.canonicalFilePath()==QDir::cleanPath(path),"Unsafe handback owner directory");return file.canonicalFilePath();}
+void handbackParent(){
+  canonicalDirectory(StateHandbackParent);const auto temporary=canonicalDirectory(StateHandbackParent+"/tmp");
+  w::require(qEnvironmentVariable("TMPDIR")==temporary&&QDir::tempPath()==temporary,"Handback requires its exact private TMPDIR");
+}
+QJsonObject filePin(const QString& path){const QFileInfo file(path);w::require(file.isFile()&&!file.isSymLink()&&file.size()<=64*1024*1024,"Unsafe handback fixture file");const auto value=bytes(path);return {{"bytes",QString::number(value.size())},{"sha256",digest(value)}};}
+void equalPin(const QString& path,const QJsonObject& pin){w::require(filePin(path)==pin,"Handback changed an immutable fixture file");}
+void stateCandidateAbsence(const QString& profile,const QString& stem){
+  for(const auto* name:{"BiglyBTC.subscription-acquire","BiglyBTC.torrent-import",".subscriptions-native-write"}){
+    for(const auto* suffix:{"",".saving",".bak"}){w::require(!QFileInfo::exists(profile+"/"+name+suffix),"Pending handback owner intent");}
+  }
+  for(const auto* suffix:{".saving","._az"}){w::require(!QFileInfo::exists(profile+"/active/"+stem+".dat"+suffix),"Pending handback state writer");}
+}
+void exportOriginalStateFixture(f::Profile& area,const QString& save,const QByteArray& hash){
+  if(qEnvironmentVariableIsEmpty(StateHandbackEnvironment)){return;}
+  w::require(qEnvironmentVariable(StateHandbackEnvironment)=="qualified-fresh-v1","Unknown handback export mode");handbackParent();
+  const auto root=canonicalDirectory(area.root.path()),profile=canonicalDirectory(area.path);w::require(root.startsWith(StateHandbackParent+"/tmp/")&&profile==root+"/profile"&&!area.lease,"Fixture escaped owned generated root");
+  {auto probe=storage::ProfileLease::acquire(profile.toStdString());w::require(bool(probe),"Native did not release the export lease");}
+  const auto stem=QString::fromLatin1(hash.toHex().toUpper());w::require(hash.size()==20&&area.shortId.size()==10,"Unexpected fixture identity");stateCandidateAbsence(profile,stem);
+  QJsonObject pins;QDirIterator files(profile,QDir::Files|QDir::Hidden|QDir::System|QDir::NoDotAndDotDot,QDirIterator::Subdirectories);qsizetype count=0;quint64 total=0;
+  while(files.hasNext()){const auto path=files.next();const auto info=QFileInfo(path);w::require(!info.isSymLink()&&info.isFile()&&++count<=128,"Unbounded handback fixture inventory");total+=static_cast<quint64>(info.size());w::require(total<=128ULL*1024*1024,"Handback fixture aggregate bound");pins.insert(QDir(profile).relativeFilePath(path),filePin(path));}
+  const auto statePath=profile+"/active/"+stem+".dat";const auto state=bytes(statePath);w::require(state.size()<=256*1024,"Handback state receipt bound");
+  const QJsonObject receipt{{"schema","BiglyBTC.OwnedOriginalStateFixture.V1"},{"fixture_root",root},{"profile",profile},{"payload",save},{"hash",stem},{"selected_sid",QString::fromLatin1(area.shortId.toHex().toUpper())},{"scsrc","1"},{"scrapecache","4294967298"},{"state_before_base64",QString::fromLatin1(state.toBase64())},{"profile_files_before_Java",pins},{"body_relative",QDir(profile).relativeFilePath(area.bodyPath)},{"results_relative",QDir(profile).relativeFilePath(area.resultsPath)},{"Native_joined_and_lease_released",true}};
+  const auto encoded=QJsonDocument(receipt).toJson(QJsonDocument::Compact);w::require(encoded.size()<=1024*1024,"Handback receipt bound");QFile output(StateHandbackReceipt);w::require(output.open(QIODevice::WriteOnly|QIODevice::NewOnly)&&output.write(encoded+"\n")==encoded.size()+1&&output.flush(),"Cannot publish new handback receipt");output.close();area.root.setAutoRemove(false);
+  std::puts("PASS_NATIVE_PUBLIC_STATE_FIXTURE_EXPORTED");
+}
+// Exact bencode values: dictionaries have unique unordered keys; lists stay ordered.
+bool sameHandbackValue(const core::Node& a,const core::Node& b,unsigned depth=0){
+  if(depth>128||a.type!=b.type){return false;}
+  if(a.type==core::Node::Type::Integer){return a.integer==b.integer;}
+  if(a.type==core::Node::Type::Bytes){return a.bytes==b.bytes;}
+  if(a.children.size()!=b.children.size()){return false;}
+  if(a.type==core::Node::Type::List){
+    for(std::size_t n=0;n<a.children.size();++n){if(!sameHandbackValue(a.children[n],b.children[n],depth+1)){return false;}}
+    return true;
+  }
+  if(a.type!=core::Node::Type::Dictionary||a.children.size()%2!=0){return false;}
+  std::map<std::string_view,const core::Node*> left,right;
+  for(std::size_t n=0;n<a.children.size();n+=2){
+    if(a.children[n].type!=core::Node::Type::Bytes||b.children[n].type!=core::Node::Type::Bytes||!left.emplace(a.children[n].bytes,&a.children[n+1]).second||!right.emplace(b.children[n].bytes,&b.children[n+1]).second){return false;}
+  }
+  for(const auto& [key,value]:left){const auto found=right.find(key);if(found==right.end()||!sameHandbackValue(*value,*found->second,depth+1)){return false;}}
+  return true;
+}
+std::string_view rawHandbackInfo(const core::Document& document){
+  const auto* info=document.find("info");w::require(info&&info->type==core::Node::Type::Dictionary&&!info->changed&&info->begin<info->end&&info->end<=document.originalBytes().size(),"Missing actual unchanged raw info");
+  return std::string_view(document.originalBytes()).substr(info->begin,info->end-info->begin);
+}
+int originalStateReturn(){
+  w::require(qEnvironmentVariableIsEmpty(StateHandbackEnvironment),"Readback is separate from export");handbackParent();const auto encoded=bytes(StateHandbackReceipt);w::require(encoded.size()<=1024*1024,"Handback receipt bound");const auto json=QJsonDocument::fromJson(encoded);w::require(json.isObject(),"Invalid handback receipt");const auto receipt=json.object();w::require(receipt.value("schema")=="BiglyBTC.OwnedOriginalStateFixture.V1"&&receipt.value("Native_joined_and_lease_released").toBool(),"Wrong handback fixture schema");
+  const auto root=canonicalDirectory(receipt.value("fixture_root").toString()),profile=canonicalDirectory(receipt.value("profile").toString());w::require(root.startsWith(StateHandbackParent+"/tmp/")&&profile==root+"/profile","Readback escaped owned generated fixture");
+  const auto stem=receipt.value("hash").toString();const auto sid=QByteArray::fromHex(receipt.value("selected_sid").toString().toLatin1()),rawHash=QByteArray::fromHex(stem.toLatin1());w::require(rawHash.size()==20&&stem==QString::fromLatin1(rawHash.toHex().toUpper())&&sid.size()==10&&receipt.value("selected_sid").toString()==QString::fromLatin1(sid.toHex().toUpper()),"Invalid handback identity");stateCandidateAbsence(profile,stem);
+  {auto lease=storage::ProfileLease::acquire(profile.toStdString());w::require(bool(lease),"Cannot own returned Native fixture");auto store=storage::TorrentStateStore::open(*lease);w::require(bool(store),"Cannot open returned Native state store");auto hash=core::TorrentHash::parse(rawHash.toStdString());w::require(bool(hash),"Returned hash invalid");auto actual=store->loadAttributes(*lease,*hash);w::require(bool(actual)&&!actual->recoveredBackup(),"Returned primary state was not read");
+  const auto before=core::Document::parse(QByteArray::fromBase64(receipt.value("state_before_base64").toString().toLatin1()).toStdString());w::require(bool(before),"Missing genuine original Native state");const auto* oldAttrs=before->find("attributes");const auto* attrs=actual->document().find("attributes");w::require(oldAttrs&&attrs&&attrs->find("scsrc")&&attrs->find("scrapecache")&&attrs->find("scsrc")->integer==1&&attrs->find("scrapecache")->integer==4294967298LL,"Public returned cache mismatch");
+  const auto* oldMap=oldAttrs->find("Plugin.<internal>.azsubs.subs_info");const auto* map=attrs->find("Plugin.<internal>.azsubs.subs_info");w::require(oldMap&&map,"Returned SID map missing");auto expected=core::Document::parse(*core::encodeValue(*oldMap));w::require(bool(expected)&&bool(expected->replaceValue("native_original_handback",w::b("public-DownloadManagerState-V1").toStdString()))&&sameHandbackValue(*map,expected->root()),"Returned SID order/opaque map changed");
+  const auto* beforeResume=before->find("resume");const auto* returnedResume=actual->document().find("resume");w::require(beforeResume&&returnedResume&&beforeResume->type==core::Node::Type::Dictionary&&returnedResume->type==core::Node::Type::Dictionary,"Actual fresh resume section missing");const auto* beforeResumeData=beforeResume->find("data");w::require(beforeResumeData&&beforeResumeData->type==core::Node::Type::Dictionary&&beforeResumeData->find("resume data")&&beforeResumeData->find("resume data")->type==core::Node::Type::Bytes,"Actual Native resume piece flags missing");
+  w::require(rawHandbackInfo(*before)==rawHandbackInfo(actual->document()),"Returned raw info bytes changed");
+  for(const auto* key:{"resume","resume_history","tracker_cache","future"}){const auto* a=before->find(key);const auto* b=actual->document().find(key);w::require((a==nullptr)==(b==nullptr)&&(!a||sameHandbackValue(*a,*b)),"Returned resume/opaque property changed");}
+  const auto pins=receipt.value("profile_files_before_Java").toObject();for(const auto& name:QStringList{"downloads.config","torrents/"+stem+".torrent","subscriptions.config",receipt.value("body_relative").toString(),receipt.value("results_relative").toString()}){w::require(!name.startsWith("/")&&!name.split('/').contains("..")&&pins.contains(name),"Invalid immutable return path");equalPin(profile+"/"+name,pins.value(name).toObject());}
+  w::require(bytes(profile+"/active/"+stem+".dat.bak")==QByteArray::fromBase64(receipt.value("state_before_base64").toString().toLatin1()),"Original did not retain exact previous primary backup");const auto result=QJsonDocument::fromJson(bytes(profile+"/original-download-state-handback.json")).object();w::require(result.value("status")=="PASS_PUBLIC_STATE_PROPERTY_HANDBACK"&&result.value("hash")==stem&&result.value("selected_sid")==receipt.value("selected_sid")&&result.value("cache_after")=="4294967298"&&result.value("state_after_sha256").toString().toLower()==digest(bytes(profile+"/active/"+stem+".dat"))&&result.value("state_before_sha256").toString().toLower()==digest(QByteArray::fromBase64(receipt.value("state_before_base64").toString().toLatin1())),"Missing public Original handback proof");
+  }{auto probe=storage::ProfileLease::acquire(profile.toStdString());w::require(bool(probe),"Readback retained profile aliases");}
+  std::puts("PASS_NATIVE_PUBLIC_STATE_HANDBACK_RETURN");return 0;
+}
+#endif
+
 class SubscriptionAcquisitionBridgeTests final:public QObject {
  Q_OBJECT
 private slots:
@@ -90,6 +174,9 @@ private slots:
   const auto history=core::readSavedDownloadHistory(bytes(area.path+"/dlhistorya.config").toStdString());QVERIFY(history&&history->records.size()==1&&history->records[0].hash==hash.toStdString());QCOMPARE(history->records[0].completeTime,std::int64_t{0});
   auto config=core::Document::parse(bytes(area.path+"/subscriptions.config").toStdString());auto prior=core::Document::parse(beforeConfig.toStdString());QVERIFY(config&&prior);const auto& row=config->find("subs")->children[0];QCOMPARE(row.find("assoc")->children.size(),std::size_t{1});QCOMPARE(row.find("assoc")->children[0].find("h")->bytes,hash.toStdString());QCOMPARE(row.find("history")->find("last_scan")->integer,prior->find("subs")->children[0].find("history")->find("last_scan")->integer);QCOMPARE(row.find("fixture_future")->bytes,std::string("preserve"));auto results=s::parseSubscriptionResults(bytes(area.resultsPath).toStdString());QVERIFY(results&&results->rows.size()==1&&results->rows[0].read&&!results->rows[0].deleted);QCOMPARE(bytes(area.bodyPath),body);absentIntent(area);
   QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,15000);QVERIFY(storage::ProfileLease::acquire(area.path.toStdString()));QVERIFY(server.failure.isEmpty());
+#if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
+  exportOriginalStateFixture(area,save,hash);
+#endif
  }
  void cancelBeforeBodyCommitAndFreshAttemptRecovers(){
   w::Server server;server.body=metainfo();server.holdBody=true;f::Profile area(server.url());prepare(area,server.url("/owned.torrent"));const auto config=bytes(area.path+"/subscriptions.config"),results=bytes(area.resultsPath),inventory=bytes(area.path+"/downloads.config");const auto save=destination(area);std::atomic<int> made{0};app::SessionBridge bridge(nullptr,{},{},{},{},{},{},factory(area,made));ui::LibraryWindow window;wire(bridge,window);QSignalSpy notices(&bridge,&app::SessionBridge::messageReady);QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),catalogs(&bridge,&app::SessionBridge::subscriptionCatalogReady),packets(&bridge,&app::SessionBridge::subscriptionReady),closed(&bridge,&app::SessionBridge::sessionClosed);
@@ -125,5 +212,23 @@ private slots:
  }
 
 };
+#if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
+std::optional<int> dispatchOriginalStateHandback(const QStringList& arguments){
+  if(arguments.size()==2&&arguments[1]=="--original-state-handback-return"){try{return originalStateReturn();}catch(const std::exception& error){std::fprintf(stderr,"Owned state return failed: %.256s\n",error.what());return 12;}}
+  if(arguments.contains("--original-state-handback-return")){return 2;}
+  if(!qEnvironmentVariableIsEmpty(StateHandbackEnvironment)){
+    if(qEnvironmentVariable(StateHandbackEnvironment)!="qualified-fresh-v1"||arguments.size()!=2||arguments[1]!="actualNormalStoppedImportAssociatesAndReadsWithoutStarting"){return 2;}
+    try{handbackParent();w::require(!QFileInfo::exists(StateHandbackReceipt)&&!QFileInfo(StateHandbackReceipt).isSymLink(),"Owned export already exists");}catch(const std::exception& error){std::fprintf(stderr,"Owned export setup failed: %.256s\n",error.what());return 13;}
+  }
+  return std::nullopt;
+}
+// Preserve installed Qt6.12 initMain, AA_Use96Dpi, source-path and qExec setup.
+QTEST_MAIN_WRAPPER(SubscriptionAcquisitionBridgeTests,
+  QTEST_MAIN_SETUP()
+  const auto dispatched=dispatchOriginalStateHandback(QCoreApplication::arguments());
+  if(dispatched){return *dispatched;}
+)
+#else
 QTEST_MAIN(SubscriptionAcquisitionBridgeTests)
+#endif
 #include "subscription_acquisition_bridge_tests.moc"
