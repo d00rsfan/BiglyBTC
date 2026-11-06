@@ -22,6 +22,7 @@ struct SubscriptionRssDescription : RssGetDescription {
 class SavedSubscriptionService;
 class SavedSubscriptionResultSnapshot;
 struct SubscriptionNumericFilter;
+struct SubscriptionLiteralFilter;
 struct SubscriptionHistoryCommit;
 struct SubscriptionSavedRow;
 struct SubscriptionResults;
@@ -59,6 +60,7 @@ private:
   std::string_view selectedSourceBytes()const noexcept;
   std::expected<std::string,SavedRssSourceError> freezeAcquisitionSource(const storage::ProfileLease&,std::uint64_t)const;
   const SubscriptionNumericFilter* numericFilter()const noexcept;
+  const SubscriptionLiteralFilter* literalFilter()const noexcept;
   static std::expected<RssContext,SavedRssSourceError> resultUrlContext(std::string_view);
   std::expected<void,SavedRssSourceError> resultHeaderPolicy()const;
   std::expected<std::optional<QList<QSslCertificate>>,SavedRssSourceError> resultTrust(

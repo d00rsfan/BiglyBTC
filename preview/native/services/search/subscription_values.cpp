@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "subscription_values.hpp"
 #include "subscription_numeric_filter.hpp"
+#include "subscription_literal_filter.hpp"
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QJsonArray>
@@ -118,7 +119,7 @@ std::expected<SubscriptionDefinition,V> parseSubscriptionDefinition(std::string 
   for(const auto* key:{"options"}){const auto v=json->value.value(QLatin1String(key));if(!v.isUndefined()&&(!v.isObject()||!v.toObject().isEmpty())){return std::unexpected(V::Unsupported);}}
   const auto schedule=json->value.value("schedule");if(!schedule.isObject()||schedule.toObject().isEmpty()){return std::unexpected(V::Unsupported);}auto interval=jsonInteger(schedule.toObject().value("interval"));if(!interval){return std::unexpected(interval.error());}
   SubscriptionDefinition out;out.engineId=*engineId;out.intervalMinutes=*interval;
-  const auto filters=json->value.value("filters");auto numeric=parseSubscriptionNumericFilter(filters.isUndefined()?std::nullopt:std::optional{json->slice("filters")});if(!numeric){return std::unexpected(numeric.error());}out.numericFilter=std::make_shared<const SubscriptionNumericFilter>(std::move(*numeric));
+  const auto filters=json->value.value("filters");auto policy=parseSubscriptionScanFilter(filters.isUndefined()?std::nullopt:std::optional{json->slice("filters")});if(!policy){return std::unexpected(policy.error());}out.numericFilter=std::make_shared<const SubscriptionNumericFilter>(std::move(policy->numeric));out.literalFilter=std::make_shared<const SubscriptionLiteralFilter>(std::move(policy->literal));
   if(catalog){const auto* engines=catalog->find("engines");if(!engines||engines->type!=core::Node::Type::List||!unique(catalog->root())){return std::unexpected(V::Malformed);}for(const auto& engine:engines->children){if(number(engine,"id",std::numeric_limits<std::int64_t>::min())==std::optional{*engineId}){if(out.engine){return std::unexpected(V::Ambiguous);}auto value=document(encoded(engine));if(!value){return std::unexpected(value.error());}out.engine=*value;}}}
   if(!out.engine){const auto engines=json->value.value("engines");const auto embedded=engines.toObject().value(QString::number(static_cast<qlonglong>(*engineId))).toObject().value("content");if(!engines.isObject()||!embedded.isString()){return std::unexpected(V::Unsupported);}const auto value=embedded.toString().toLatin1();const auto decoded=QByteArray::fromBase64Encoding(value,QByteArray::AbortOnBase64DecodingErrors);if(!decoded||decoded.decoded.toBase64()!=value){return std::unexpected(V::Malformed);}auto engine=document(decoded.decoded.toStdString());if(!engine){return std::unexpected(engine.error());}if(number((*engine)->root(),"id",0)!=std::optional{*engineId}){return std::unexpected(V::Malformed);}out.engine=*engine;out.embedded=true;}
   return out;
@@ -138,12 +139,13 @@ std::int64_t subscriptionNextScan(std::int64_t last,std::int64_t over,std::int64
 }
 std::int64_t subscriptionRetryTime(std::int64_t failed,unsigned count)noexcept{std::int64_t delay=600000;for(unsigned i=1;i<count&&delay<28800000;++i){delay=std::min<std::int64_t>(delay*2,28800000);}return failed>std::numeric_limits<std::int64_t>::max()-delay?std::numeric_limits<std::int64_t>::max():failed+delay;}
 
-std::expected<SubscriptionHistoryCommit,V> reconcileSubscriptionResults(const SubscriptionIndex& index,std::size_t selected,const SubscriptionResults& prior,const RssDocument& incoming,std::int64_t engineId,std::int64_t now,const SubscriptionNumericFilter* numericFilter){try{
+std::expected<SubscriptionHistoryCommit,V> reconcileSubscriptionResults(const SubscriptionIndex& index,std::size_t selected,const SubscriptionResults& prior,const RssDocument& incoming,std::int64_t engineId,std::int64_t now,const SubscriptionNumericFilter* numericFilter,const SubscriptionLiteralFilter* literalFilter){try{
   if(selected>=index.rows.size()||index.rows[selected].issue||now<0||incoming.results.size()>4096||!incoming.issues.empty()){return std::unexpected(V::Unsupported);}const auto& sub=index.rows[selected];auto rows=prior.rows;std::map<std::string,std::size_t> primary,secondary;for(std::size_t i=0;i<rows.size();++i){primary.emplace(rows[i].key,i);if(rows[i].secondaryKey&&!secondary.emplace(*rows[i].secondaryKey,i).second){return std::unexpected(V::Ambiguous);}}
   std::int64_t newest=sub.lastNew;const auto day=now/86400000;
   for(const auto& result:incoming.results){
     // Match the fresh WebResult getter phase before history reconciliation.
     // Saved-result normalization belongs to the separate acquisition phase.
+    if(literalFilter){auto filtered=isSubscriptionLiteralFiltered(*literalFilter,result.title);if(!filtered){return std::unexpected(filtered.error());}if(*filtered){continue;}}
     if(numericFilter&&isSubscriptionNumericFiltered(*numericFilter,{result.title.has_value(),result.size.value_or(-1),result.seeds.value_or(-1),result.peers.value_or(-1)})){continue;}
     if(index.markLibraryRead&&result.hash&&!result.hash->isEmpty()){return std::unexpected(V::Unsupported);}const auto name=result.title.value_or(QString{});auto published=publication(incoming,result);if(!published){return std::unexpected(published.error());}const auto key=hash10(std::to_string(engineId)+":"+name.toUtf8().toStdString());std::optional<std::string> uid;if(result.uid&&!result.uid->isEmpty()){uid=hash10(std::to_string(engineId)+":"+result.uid->toUtf8().toStdString());}
     auto found=primary.find(key);std::optional<std::size_t> at;if(found!=primary.end()){at=found->second;}else if(uid){const auto second=secondary.find(*uid);if(second!=secondary.end()){at=second->second;}}

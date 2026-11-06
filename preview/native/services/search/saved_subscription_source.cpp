@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "saved_subscription_source.hpp"
 #include "subscription_values.hpp"
+#include "subscription_literal_filter.hpp"
 #include "subscription_store_internal.hpp"
 #include "file_io.hpp"
 #include "library_http_trust.hpp"
@@ -60,6 +61,7 @@ struct SavedSubscriptionSourceSnapshot::Impl {
   SubscriptionIndex index;
   SubscriptionResults stored;
   std::shared_ptr<const SubscriptionNumericFilter> numericFilter;
+  std::shared_ptr<const SubscriptionLiteralFilter> literalFilter;
   SubscriptionRssDescription description;
   std::string resultsName;
   std::expected<void,E> stable(const storage::ProfileLease& caller)const{
@@ -78,6 +80,7 @@ const SubscriptionResults& SavedSubscriptionSourceSnapshot::results()const noexc
 const core::Node& SavedSubscriptionSourceSnapshot::selectedSourceRow()const noexcept{return impl_->index.source->find("subs")->children[impl_->description.selected.sourceIndex];}
 std::string_view SavedSubscriptionSourceSnapshot::selectedSourceBytes()const noexcept{const auto& row=selectedSourceRow();return std::string_view(impl_->index.source->originalBytes()).substr(row.begin,row.end-row.begin);}
 const SubscriptionNumericFilter* SavedSubscriptionSourceSnapshot::numericFilter()const noexcept{return impl_->numericFilter.get();}
+const SubscriptionLiteralFilter* SavedSubscriptionSourceSnapshot::literalFilter()const noexcept{return impl_->literalFilter.get();}
 std::expected<std::string,E> SavedSubscriptionSourceSnapshot::freezeAcquisitionSource(const storage::ProfileLease& caller,std::uint64_t session)const{try{
   if(!impl_||impl_->worker!=std::this_thread::get_id()){return std::unexpected(E::WrongWorker);}if(session!=impl_->session||!caller.sharesOwnership(*impl_->lease)){return std::unexpected(E::Lease);}auto access=caller.sourceAccess();if(!access||!access->observationsAllowed()){return std::unexpected(E::SourceChanged);}auto stable=impl_->stable(caller);if(!stable){return std::unexpected(stable.error());}
   const auto stamp=[](const struct stat& f){return std::to_string(f.st_dev)+":"+std::to_string(f.st_ino)+":"+std::to_string(f.st_mode)+":"+std::to_string(f.st_uid)+":"+std::to_string(f.st_gid)+":"+std::to_string(f.st_nlink)+":"+std::to_string(f.st_size)+":"+std::to_string(f.st_mtim.tv_sec)+":"+std::to_string(f.st_mtim.tv_nsec)+":"+std::to_string(f.st_ctim.tv_sec)+":"+std::to_string(f.st_ctim.tv_nsec);};
@@ -125,7 +128,7 @@ std::expected<SavedSubscriptionSourceSnapshot,E> SavedSubscriptionSourceSnapshot
     if(!definition->embedded){const auto* list=catalog->find("engines");std::optional<std::size_t> at;for(std::size_t i=0;i<list->children.size();++i){const auto* id=list->children[i].find("id");if(id&&id->type==core::Node::Type::Integer&&id->integer==definition->engineId){at=i;break;}}if(!at){return std::unexpected(E::Ambiguous);}auto actual=describe(*catalog,{*at,definition->engineId,std::string(uid->bytes)});if(!actual){return std::unexpected(actual.error());}transport=static_cast<RssGetDescription&&>(*actual);}
     if(!transport){return std::unexpected(transport.error());}const auto* settingsFile=findFile(data->rootFiles,"biglybt.config");auto settingsDoc=core::Document::parse(settingsFile&&settingsFile->present?settingsFile->bytes:"de",{SettingsBytes,SettingsBytes,65536,64});if(!settingsDoc){return std::unexpected(E::Malformed);}auto policy=settings(settingsDoc->root(),definition->engineId);if(!policy){return std::unexpected(policy.error());}
     if(!zero(settingsDoc->root(),"subscriptions.config.activate.sub.on.change")||!emptyBytes(settingsDoc->root(),"subscriptions.gmar.id")){return std::unexpected(E::Unsupported);}const auto* libraryRead=settingsDoc->find("subscriptions.config.mark.lib.results.read");if(libraryRead&&(libraryRead->type!=core::Node::Type::Integer||(libraryRead->integer!=0&&libraryRead->integer!=1))){return std::unexpected(E::Malformed);}data->index.markLibraryRead=!libraryRead||libraryRead->integer==1;
-    data->index.rows[selected.sourceIndex].intervalMinutes=definition->intervalMinutes;data->numericFilter=definition->numericFilter;
+    data->index.rows[selected.sourceIndex].intervalMinutes=definition->intervalMinutes;data->numericFilter=definition->numericFilter;data->literalFilter=definition->literalFilter;
     const auto* defaultPeriod=settingsDoc->find("subscriptions.check.period.mins.default");if(defaultPeriod&&defaultPeriod->type!=core::Node::Type::Integer){return std::unexpected(E::Malformed);}data->index.rows[selected.sourceIndex].defaultCheckMinutes=defaultPeriod&&defaultPeriod->integer>0?defaultPeriod->integer:120;
     if(data->index.rows[selected.sourceIndex].maxResults<0){const auto* maximum=settingsDoc->find("subscriptions.max.non.deleted.results");if(maximum&&(maximum->type!=core::Node::Type::Integer||maximum->integer<0||maximum->integer>std::numeric_limits<std::int32_t>::max())){return std::unexpected(E::Unsupported);}data->index.rows[selected.sourceIndex].maxResults=maximum?maximum->integer:512;}
     if(transport->literalGetUrl.starts_with("https://")){auto trust=engine::detail::libraryHttpTrust(lease);if(!trust){return std::unexpected(E::Unsupported);}transport->trustAnchors=std::move(trust->anchors);}
@@ -137,7 +140,7 @@ std::expected<SavedSubscriptionSourceSnapshot,E> SavedSubscriptionSourceSnapshot
 std::expected<std::uint64_t,E> SavedSubscriptionSourceSnapshot::current(const storage::ProfileLease& caller,std::uint64_t session)const{
   try{if(!impl_||impl_->worker!=std::this_thread::get_id()){return std::unexpected(E::WrongWorker);}if(session!=impl_->session||!caller.sharesOwnership(*impl_->lease)){return std::unexpected(E::Lease);}auto access=caller.sourceAccess();if(!access||!access->observationsAllowed()){return std::unexpected(E::SourceChanged);}auto stable=impl_->stable(caller);if(!stable){return std::unexpected(stable.error());}return access->revision();}catch(const std::bad_alloc&){return std::unexpected(E::Memory);}
 }
-std::expected<SubscriptionHistoryCommit,E> SavedSubscriptionSourceSnapshot::prepareCheck(const RssDocument& document,std::int64_t now)const{auto value=reconcileSubscriptionResults(impl_->index,description().selected.sourceIndex,impl_->stored,document,description().engineId,now,impl_->numericFilter.get());if(!value){return std::unexpected(valueError(value.error()));}return std::move(*value);}
+std::expected<SubscriptionHistoryCommit,E> SavedSubscriptionSourceSnapshot::prepareCheck(const RssDocument& document,std::int64_t now)const{auto value=reconcileSubscriptionResults(impl_->index,description().selected.sourceIndex,impl_->stored,document,description().engineId,now,impl_->numericFilter.get(),impl_->literalFilter.get());if(!value){return std::unexpected(valueError(value.error()));}return std::move(*value);}
 std::expected<SubscriptionHistoryCommit,E> SavedSubscriptionSourceSnapshot::prepareState(const std::vector<std::string>& keys,bool read,bool deleted,std::int64_t now)const{auto value=changeSubscriptionResultState(impl_->index,description().selected.sourceIndex,impl_->stored,keys,read,deleted,now);if(!value){return std::unexpected(valueError(value.error()));}return std::move(*value);}
 
 std::expected<void,E> SavedSubscriptionSourceSnapshot::publish(const storage::ProfileLease& caller,std::uint64_t session,const SubscriptionHistoryCommit& value){

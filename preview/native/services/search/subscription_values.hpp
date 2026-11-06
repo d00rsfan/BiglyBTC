@@ -19,11 +19,13 @@ struct SubscriptionIndex {
   std::vector<SubscriptionSavedRow> rows;
 };
 struct SubscriptionNumericFilter;
+struct SubscriptionLiteralFilter;
 struct SubscriptionDefinition {
   std::int64_t engineId=0,intervalMinutes=0;
   bool embedded=false;
   std::shared_ptr<const core::Document> engine;
   std::shared_ptr<const SubscriptionNumericFilter> numericFilter;
+  std::shared_ptr<const SubscriptionLiteralFilter> literalFilter;
 };
 struct SubscriptionResultValue {
   std::string key;
@@ -49,7 +51,8 @@ std::expected<SubscriptionDefinition,SubscriptionValueError> parseSubscriptionDe
 std::expected<SubscriptionResults,SubscriptionValueError> parseSubscriptionResults(std::string);
 std::expected<SubscriptionHistoryCommit,SubscriptionValueError> reconcileSubscriptionResults(
     const SubscriptionIndex&,std::size_t,const SubscriptionResults&,const RssDocument&,
-    std::int64_t engineId,std::int64_t nowMillis,const SubscriptionNumericFilter* numericFilter=nullptr);
+    std::int64_t engineId,std::int64_t nowMillis,const SubscriptionNumericFilter* numericFilter=nullptr,
+    const SubscriptionLiteralFilter* literalFilter=nullptr);
 std::expected<SubscriptionHistoryCommit,SubscriptionValueError> changeSubscriptionResultState(
     const SubscriptionIndex&,std::size_t,const SubscriptionResults&,
     const std::vector<std::string>& exactKeys,bool read,bool deleted,std::int64_t nowMillis);

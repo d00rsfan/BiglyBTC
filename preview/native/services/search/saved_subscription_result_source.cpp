@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "saved_subscription_result_source.hpp"
 #include "subscription_numeric_filter.hpp"
+#include "subscription_literal_filter.hpp"
 #include "subscription_values.hpp"
 #include "subscription_association_values.hpp"
 #include <QJsonArray>
@@ -78,6 +79,7 @@ std::expected<SavedSubscriptionResultSnapshot,E> SavedSubscriptionResultSnapshot
   auto rawCounts=rawScrapeCounts(object);if(!rawCounts){return std::unexpected(rawCounts.error());}value.rawScrapeCounts=std::move(*rawCounts);
   if(*seeds>=0&&*peers>=0){value.initialScrapeCache=static_cast<std::int64_t>(((static_cast<std::uint64_t>(*seeds)&0x00ffffffULL)<<32)|(static_cast<std::uint64_t>(*peers)&0x00ffffffULL));}
   auto associations=detail::parseSubscriptionAssociations(std::string(parent->selectedSourceBytes()));if(!associations){return std::unexpected(associations.error()==SubscriptionValueError::Memory?E::Memory:E::Malformed);}if(detail::subscriptionAssociationCapacity(*associations,value.expectedV1Hash)==detail::SubscriptionAssociationCapacity::OriginalRandomEvictionRequired){return std::unexpected(E::Unsupported);}
+  if(!parent->literalFilter()){return std::unexpected(E::Unsupported);}auto literalFiltered=isSubscriptionLiteralFiltered(*parent->literalFilter(),*name);if(!literalFiltered){return std::unexpected(literalFiltered.error()==SubscriptionValueError::Memory?E::Memory:literalFiltered.error()==SubscriptionValueError::Limit?E::Limit:E::Unsupported);}if(*literalFiltered){return std::unexpected(E::Unsupported);}
   if(!*name||!parent->numericFilter()||isSubscriptionNumericFiltered(*parent->numericFilter(),{true,value.size,value.seeds,value.peers})){return std::unexpected(E::Unsupported);}
   // Original getDownloadLink: dbl first; magnet dbl chooses any nonnull dl;
   // null dbl falls back to dl. Empty/plugin/chosen magnet never tries pl/other.
