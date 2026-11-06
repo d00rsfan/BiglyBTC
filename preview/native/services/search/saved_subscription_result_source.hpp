@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "saved_subscription_source.hpp"
+#include "subscription_download_values.hpp"
 #include <array>
 #include <cstddef>
 namespace biglybtc::app {class SavedSubscriptionAcquisition;}
@@ -17,6 +18,7 @@ struct SavedSubscriptionResultValue {
   std::int64_t size=0;
   std::int32_t seeds=0,peers=0;
   std::optional<std::array<std::byte,20>> expectedV1Hash;
+  detail::SubscriptionRawScrapeCounts rawScrapeCounts; // True saved presence/Longs, before getter folding.
   std::optional<std::int64_t> initialScrapeCache; // Actual raw64 s/p, not normalized getter values.
 };
 struct SubscriptionResultGetDescription : RssGetDescription {
@@ -44,6 +46,8 @@ public:
 private:
   friend class ::biglybtc::app::SavedSubscriptionAcquisition;
   std::expected<std::string,SavedRssSourceError> freezeAcquisitionSource(const storage::ProfileLease&,std::uint64_t)const;
+  // Pure frozen-row scalars for private recovery binding; no profile/effect grant.
+  static std::expected<detail::SubscriptionRawScrapeCounts,SavedRssSourceError> frozenRawScrapeCounts(std::string_view);
   struct Impl;
   explicit SavedSubscriptionResultSnapshot(std::unique_ptr<Impl>)noexcept;
   std::unique_ptr<Impl> impl_;

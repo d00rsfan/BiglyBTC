@@ -117,3 +117,18 @@ target_compile_features(biglybtc_http_response PUBLIC cxx_std_23)
 target_compile_options(biglybtc_http_response PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_target_properties(biglybtc_http_response PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_http_response)
+
+# Intake.cpp is added to profile by this module only when LOCAL_ENGINE exists.
+# The fixed codec is Qt-free and links only Core, including headless builds.
+if(TARGET biglybtc_profile AND TARGET biglybtc_local_engine)
+  if(NOT TARGET biglybtc_subscription_download_values)
+    add_library(biglybtc_subscription_download_values STATIC ../services/search/subscription_download_values.cpp)
+    target_include_directories(biglybtc_subscription_download_values PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../services/search")
+    target_link_libraries(biglybtc_subscription_download_values PUBLIC BiglyBTC::Core)
+    target_compile_features(biglybtc_subscription_download_values PUBLIC cxx_std_23)
+    target_compile_options(biglybtc_subscription_download_values PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  endif()
+  target_link_libraries(biglybtc_profile PUBLIC biglybtc_subscription_download_values)
+  target_sources(biglybtc_profile PRIVATE ../adapters/subscription_download_preparation.hpp
+    ../adapters/subscription_state_images.inc ../adapters/existing_subscription_target.hpp ../adapters/existing_subscription_target.inc)
+endif()

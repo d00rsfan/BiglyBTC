@@ -11,17 +11,18 @@ class SessionBridge;
 // to the actual bridge; no URL/hash/receipt/serialized-plan grant is accepted.
 class SavedSubscriptionAcquisition final {
 public:
-  struct Outcome {bool imported=false,associated=false,read=false,cancelled=false,needsReview=false;std::optional<core::TorrentHash> hash;QString warning;};
+  struct Outcome {bool imported=false,associated=false,read=false,cancelled=false,needsReview=false;std::optional<core::TorrentHash> hash;QString warning;bool alreadyPresent=false;};
   ~SavedSubscriptionAcquisition();
   SavedSubscriptionAcquisition(const SavedSubscriptionAcquisition&)=delete;
   void cancel()noexcept;
   std::expected<void,storage::Error> close();
 private:
   friend class SessionBridge;
+  using RuntimeTargetCheck=std::function<std::expected<void,storage::Error>(const core::TorrentHash&)>;
   using Factory=std::function<std::unique_ptr<search::SubscriptionMetainfoFetch>(const storage::ProfileLease&,const std::filesystem::path&,std::uint64_t,const search::SavedSubscriptionResultSelector&,std::stop_token)>;
   static std::expected<std::unique_ptr<SavedSubscriptionAcquisition>,storage::Error> begin(
       const storage::ProfileLease&,std::filesystem::path,std::uint64_t,search::SavedSubscriptionResultSelector,
-      std::filesystem::path destination,std::stop_token receiver,Factory={});
+      std::filesystem::path destination,std::stop_token receiver,Factory={},RuntimeTargetCheck={});
   // Null outcome: pending network or ready for private stopped intake. No effect
   // is imported by poll; Host::publishTarget must surround saveIntake.
   std::expected<std::optional<Outcome>,storage::Error> poll(storage::ProfileLease&,std::uint64_t);
@@ -31,7 +32,10 @@ private:
   std::expected<void,storage::Error> saveIntake(storage::ProfileLease&,std::uint64_t,storage::IntakeHistoryOutcome*);
   // Consume any genuine fresh auxiliary history receipt BEFORE this A/R/F step.
   std::expected<Outcome,storage::Error> finishSubscription(storage::ProfileLease&,std::uint64_t);
-  static std::expected<std::optional<Outcome>,storage::Error> recover(storage::ProfileLease&,const std::filesystem::path&);
+  // Actual SessionBridge startup only, before Host/engine construction.
+  static std::expected<std::optional<Outcome>,storage::Error> recoverBeforeHost(storage::ProfileLease&,const std::filesystem::path&);
+  static std::expected<std::optional<Outcome>,storage::Error> recover(storage::ProfileLease&,const std::filesystem::path&,RuntimeTargetCheck);
+  static std::expected<std::optional<Outcome>,storage::Error> recoverImpl(storage::ProfileLease&,const std::filesystem::path&,RuntimeTargetCheck);
   struct Impl;explicit SavedSubscriptionAcquisition(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;
 };

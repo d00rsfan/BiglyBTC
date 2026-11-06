@@ -378,3 +378,18 @@ endif()
 if(TARGET biglybtc_rss_http_fetch)
   target_sources(biglybtc_rss_http_fetch PRIVATE search/subscription_metainfo_fetch.hpp)
 endif()
+
+
+# Replaces the frozen value-only services fragment during NEXT composition.
+# Local-engine/headless builds may have already created this Core-only target.
+if(NOT TARGET biglybtc_subscription_download_values)
+  add_library(biglybtc_subscription_download_values STATIC search/subscription_download_values.cpp)
+  target_include_directories(biglybtc_subscription_download_values PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/search")
+  target_link_libraries(biglybtc_subscription_download_values PUBLIC BiglyBTC::Core)
+  target_compile_features(biglybtc_subscription_download_values PUBLIC cxx_std_23)
+  target_compile_options(biglybtc_subscription_download_values PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+
+if(TARGET biglybtc_saved_subscription_source)
+  target_link_libraries(biglybtc_saved_subscription_source PUBLIC biglybtc_subscription_download_values)
+endif()

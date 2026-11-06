@@ -7,6 +7,7 @@
 #include "biglybtc/torrent_intake_trackers.hpp"
 #include "biglybtc/torrent_layout.hpp"
 #include "profile.hpp"
+#include "subscription_download_preparation.hpp"
 #include "original_torrent_identity.hpp"
 
 #include <expected>
@@ -57,6 +58,7 @@ private:
   std::shared_ptr<const Data> data_;
   explicit TorrentIntakeMetadata(std::shared_ptr<const Data>);
   friend class PreparedStoppedPublicIntake;
+  friend class ExistingStoppedPublicSubscriptionTarget;
   friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token,std::string,bool);
   friend std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
       const TorrentIntakeMetadata&, const std::filesystem::path&, bool, std::span<const compat::FilePolicy>,
@@ -82,17 +84,30 @@ private:
     core::TorrentHash hash;
     std::optional<std::string_view> beforeInventory,beforeInventoryBackup;
     std::string_view afterInventory,afterState,afterArchive;
+    std::string_view afterAssociationState;
   };
   struct Data;std::unique_ptr<Data> data_;
   explicit PreparedStoppedPublicIntake(std::unique_ptr<Data>)noexcept;
   static std::expected<PreparedStoppedPublicIntake,Error> prepare(ProfileLease&,
       const TorrentIntakeMetadata&,const std::filesystem::path& destination,
-      std::optional<std::int64_t> derivedScrapeCache,std::stop_token={});
+      std::optional<std::int64_t> derivedScrapeCache,std::stop_token={},
+      std::optional<FixedSubscriptionDownloadPreparation> preparation={});
   static std::expected<PreparedStoppedPublicIntake,Error> restore(ProfileLease&,
       std::string frozenJournal);
   std::string_view frozenJournal()const noexcept;
+  const FixedSubscriptionDownloadPreparation* fixedPreparation()const noexcept;
   const Images& images()const noexcept;
   std::expected<State,Error> inspect(ProfileLease&,std::string_view exactOwnerIntent)const;
+  enum class AssociationStatePhase : std::uint8_t { Base=1,Associated=2 };
+  struct AssociationStateObservation {
+    std::uint8_t primaryMatches=0;std::optional<std::uint8_t> savingMatches;
+    bool primaryIs(AssociationStatePhase phase)const noexcept{return (primaryMatches&static_cast<std::uint8_t>(phase))!=0;}
+    bool savingIs(AssociationStatePhase phase)const noexcept{return savingMatches&&( *savingMatches&static_cast<std::uint8_t>(phase))!=0;}
+  };
+  std::expected<AssociationStateObservation,Error> inspectAssociationState(ProfileLease&,std::string_view exactOwnerIntent)const;
+  std::expected<void,Error> publishAssociationState(ProfileLease&,std::string_view exactOwnerIntent,
+      void(*observer)(SubscriptionDownloadStateStage)=nullptr);
+  std::expected<void,Error> rollbackAssociationState(ProfileLease&,std::string_view exactOwnerIntent);
   // Existing commit point: cancellation before the intake journal means no
   // effects. Pending recovery completes only this exact stopped recipe; a
   // committed recipe is idempotent. Only prepare-here plus fresh Before may

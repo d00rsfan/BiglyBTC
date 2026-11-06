@@ -1,4 +1,5 @@
 #include "torrent_intake.hpp"
+#include "existing_subscription_target.hpp"
 #include "durable_intake_receipt.hpp"
 #include "verified_seeding.hpp"
 #include "allocation_intent.hpp"
@@ -65,6 +66,9 @@ void require(bool value, ErrorCode code, const char* message) { if (!value) { fa
 template<class T> T take(std::expected<T, Error> value) {
   if (!value) { throw Failure{std::move(value.error())}; }
   return std::move(*value);
+}
+void take(std::expected<void, Error> value) {
+  if (!value) { throw Failure{std::move(value.error())}; }
 }
 void sync(int fd) { require(::fsync(fd) == 0, ErrorCode::Io, "Cannot synchronize intake transaction"); }
 bool identity(const struct stat& a, const struct stat& b) {
@@ -503,6 +507,8 @@ std::int64_t intakeAddedTime(){
   }else{unique=-1;}}
   return now;
 }
+#include "subscription_state_images.inc"
+
 struct Plan {
   core::TorrentHash hash;
   std::string metadata, archive, destination, profile, state, inventory;
@@ -1172,23 +1178,30 @@ std::expected<TorrentIntakeMetadata,Error> inspectTorrentIntake(const fs::path& 
 struct PreparedStoppedPublicIntake::Data {
   std::shared_ptr<const ProfileLease> lease;
   std::thread::id worker=std::this_thread::get_id();
-  Plan plan;std::string journal;Images view;
+  Plan plan;std::string journal,frozen,associationState;std::optional<FixedSubscriptionDownloadPreparation> preparation;Images view;
   fs::path source;std::optional<File> input;bool fresh=false;
-  Data(std::shared_ptr<const ProfileLease> held,Plan value)
-      :lease(std::move(held)),plan(std::move(value)),journal(journalBytes(plan)),
-       view{plan.hash,plan.before?std::optional<std::string_view>{*plan.before}:std::nullopt,
+  std::expected<State,Error> inspectBound(ProfileLease&,std::string_view,bool strictSourceSettings)const;
+  Data(std::shared_ptr<const ProfileLease> held,Plan value,std::optional<FixedSubscriptionDownloadPreparation> fixed={})
+      :lease(std::move(held)),plan(std::move(value)),journal(journalBytes(plan)),frozen(journal),associationState(plan.state),preparation(std::move(fixed)) {
+    if(preparation){
+      require(search::detail::subscriptionRawScrapeCache(preparation->rawCounts)==plan.initialScrapeCache,ErrorCode::Conflict,"Legacy packed cache differs from actual raw subscription counts");
+      auto images=fixedSubscriptionStateImages(plan.state,*preparation,true);require(images.prepared==plan.state,ErrorCode::Conflict,"Fresh S0 cache preparation changed");associationState=std::move(images.associated);frozen=fixedFreshRecipe(journal,*preparation);
+    }
+    view={plan.hash,plan.before?std::optional<std::string_view>{*plan.before}:std::nullopt,
           plan.oldBackup?std::optional<std::string_view>{*plan.oldBackup}:std::nullopt,
-          plan.inventory,plan.state,plan.archive} {}
+          plan.inventory,plan.state,plan.archive,associationState};
+  }
 };
 PreparedStoppedPublicIntake::PreparedStoppedPublicIntake(std::unique_ptr<Data> data)noexcept:data_(std::move(data)){}
 PreparedStoppedPublicIntake::PreparedStoppedPublicIntake(PreparedStoppedPublicIntake&&)noexcept=default;
 PreparedStoppedPublicIntake& PreparedStoppedPublicIntake::operator=(PreparedStoppedPublicIntake&&)noexcept=default;
 PreparedStoppedPublicIntake::~PreparedStoppedPublicIntake()=default;
-std::string_view PreparedStoppedPublicIntake::frozenJournal()const noexcept{return data_?std::string_view(data_->journal):std::string_view{};}
+std::string_view PreparedStoppedPublicIntake::frozenJournal()const noexcept{return data_?std::string_view(data_->frozen):std::string_view{};}
+const FixedSubscriptionDownloadPreparation* PreparedStoppedPublicIntake::fixedPreparation()const noexcept{return data_&&data_->preparation?&*data_->preparation:nullptr;}
 const PreparedStoppedPublicIntake::Images& PreparedStoppedPublicIntake::images()const noexcept{return data_->view;}
 std::expected<PreparedStoppedPublicIntake,Error> PreparedStoppedPublicIntake::prepare(ProfileLease& lease,
     const TorrentIntakeMetadata& metadata,const fs::path& destination,
-    std::optional<std::int64_t> initialScrapeCache,std::stop_token stop) {
+    std::optional<std::int64_t> initialScrapeCache,std::stop_token stop,std::optional<FixedSubscriptionDownloadPreparation> preparation) {
   try {
     require(bool(metadata.data_),ErrorCode::Conflict,"Missing sealed acquisition metainfo");
     require(metadata.data_->initialDestinations.empty(),ErrorCode::Unsupported,"Acquisition refuses inherited file-destination overrides");
@@ -1201,8 +1214,8 @@ std::expected<PreparedStoppedPublicIntake,Error> PreparedStoppedPublicIntake::pr
         &metadata.data_->decoderShowAll,core::TorrentAllocationMode::None,&prepared,initialScrapeCache);
     if(!result){return std::unexpected(result.error());}
     require(prepared.has_value(),ErrorCode::Conflict,"Private acquisition plan was not prepared");
-    auto data=std::make_unique<Data>(take(lease.retain()),std::move(*prepared));
-    require(data->journal.size()<=MaximumJournal,ErrorCode::Unsupported,"Frozen acquisition intake plan exceeds bounds");
+    auto data=std::make_unique<Data>(take(lease.retain()),std::move(*prepared),std::move(preparation));
+    require(data->frozen.size()<=MaximumJournal,ErrorCode::Unsupported,"Frozen acquisition intake plan exceeds bounds");
     data->source=metadata.data_->path;data->input=metadata.data_->input;data->fresh=true;
     return PreparedStoppedPublicIntake(std::move(data));
   }catch(const Failure& e){return std::unexpected(e.error);}
@@ -1211,27 +1224,35 @@ std::expected<PreparedStoppedPublicIntake,Error> PreparedStoppedPublicIntake::pr
 std::expected<PreparedStoppedPublicIntake,Error> PreparedStoppedPublicIntake::restore(ProfileLease& lease,std::string journal) {
   try {
     require(!journal.empty()&&journal.size()<=MaximumJournal,ErrorCode::InvalidFormat,"Frozen acquisition plan exceeds bounds");
-    auto value=readJournal(journal,profilePath(lease),lease,true);
-    require(value.subscriptionAcquisition&&journalBytes(value)==journal,ErrorCode::InvalidFormat,"Only the canonical marked acquisition plan can be restored");
-    auto data=std::make_unique<Data>(take(lease.retain()),std::move(value));
-    require(data->journal==journal,ErrorCode::Conflict,"Frozen acquisition plan changed during restore");
+    std::string ordinary=journal;std::optional<FixedSubscriptionDownloadPreparation> preparation;
+    const auto wrapper=parse(journal,MaximumJournal);uniqueKeys(wrapper.root());if(const auto* schema=wrapper.find("schema")){
+      require(schema->type==Node::Type::Bytes&&schema->bytes=="BiglyBTC.StoppedPublicSubscriptionIntake.V2"&&wrapper.root().children.size()==6,ErrorCode::InvalidFormat,"Unknown frozen subscription intake schema");
+      const auto* inner=wrapper.find("journal"),*fixed=wrapper.find("preparation");require(inner&&inner->type==Node::Type::Bytes&&fixed,ErrorCode::InvalidFormat,"Frozen subscription intake fields missing");ordinary=std::string(inner->bytes);preparation=fixedPreparationValue(*fixed);
+    }
+    auto value=readJournal(ordinary,profilePath(lease),lease,true);
+    require(value.subscriptionAcquisition&&journalBytes(value)==ordinary,ErrorCode::InvalidFormat,"Only the canonical marked acquisition plan can be restored");
+    auto data=std::make_unique<Data>(take(lease.retain()),std::move(value),std::move(preparation));
+    require(data->frozen==journal,ErrorCode::Conflict,"Frozen acquisition plan changed during restore");
     return PreparedStoppedPublicIntake(std::move(data));
   }catch(const Failure& e){return std::unexpected(e.error);}
   catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot restore stopped acquisition intake"});}
 }
-std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicIntake::inspect(
-    ProfileLease& lease,std::string_view ownerIntent)const {
+std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicIntake::inspect(ProfileLease& lease,std::string_view owner)const{
+  if(!data_){return std::unexpected(Error{ErrorCode::Conflict,"Prepared intake was consumed"});}return data_->inspectBound(lease,owner,true);
+}
+std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicIntake::Data::inspectBound(
+    ProfileLease& lease,std::string_view ownerIntent,bool strictSourceSettings)const {
   try {
-    require(data_&&data_->worker==std::this_thread::get_id()&&data_->lease->sharesOwnership(lease),
+    require(worker==std::this_thread::get_id()&&this->lease->sharesOwnership(lease),
         ErrorCode::Conflict,"Missing,foreign-worker or foreign-OFD acquisition intake plan");
-    const auto& p=data_->plan;const int root=lease.directoryHandle();
+    const auto& p=this->plan;const int root=lease.directoryHandle();
     require(profilePath(lease)==p.profile,ErrorCode::Conflict,"Acquisition profile moved");
     acquisitionOwnerCurrent(lease,ownerIntent);
     const auto journal=read(root,Journal,MaximumJournal),journalSaving=read(root,JournalSaving,MaximumJournal);
-    require((!journal||journal->bytes==data_->journal)&&(!journalSaving||journalSaving->bytes==data_->journal),
+    require((!journal||journal->bytes==this->journal)&&(!journalSaving||journalSaving->bytes==this->journal),
         ErrorCode::Conflict,"Another intake journal conflicts with the acquisition");
     const bool pending=journal.has_value()||journalSaving.has_value();
-    inventoryCurrent(root,p);checkSaveNameScope(lease,p);cacheAbsent(root,p.hash);
+    inventoryCurrent(root,p);if(strictSourceSettings){checkSaveNameScope(lease,p);}cacheAbsent(root,p.hash);
     auto active=childDirectory(root,"active",false),archive=childDirectory(root,"torrents",false);
     if(active.get()>=0){
       require(read(active.get(),"cache.dat",MaximumInventory).has_value()||!read(active.get(),"cache.dat.bak",MaximumInventory),
@@ -1239,16 +1260,17 @@ std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicInt
       absent(active.get(),"cache.dat.saving");
     }
     const auto stateName=p.hash.hex()+".dat",archiveName=p.hash.hex()+".torrent";
-    std::optional<File> state,source,stateStage,archiveStage;
+    std::optional<File> state,source,stateStage,archiveStage,callbackStage;
     if(active.get()>=0){
-      for(const auto* suffix:{".bak",".saving",".bak.saving"}){absent(active.get(),stateName+suffix);}
+      for(const auto* suffix:{".bak",".bak.saving",".saving.bak"}){absent(active.get(),stateName+suffix);}
+      if(this->preparation){callbackStage=read(active.get(),stateName+".saving",MaximumInventory);}else{absent(active.get(),stateName+".saving");}
       state=read(active.get(),stateName,MaximumInventory);stateStage=read(active.get(),stateName+".import",MaximumInventory);
     }
     if(archive.get()>=0){
       for(const auto* suffix:{".bak",".saving",".bak.saving"}){absent(archive.get(),archiveName+suffix);}
       source=read(archive.get(),archiveName,MaximumMetadata);archiveStage=read(archive.get(),archiveName+".import",MaximumMetadata);
     }
-    require((!state||state->bytes==p.state)&&(!source||source->bytes==p.archive)
+    require((!state||state->bytes==p.state||(this->preparation&&state->bytes==this->associationState))&&(!source||source->bytes==p.archive)
         &&(!stateStage||stateStage->bytes==p.state)&&(!archiveStage||archiveStage->bytes==p.archive),
         ErrorCode::Conflict,"Acquisition intake artifacts conflict with the frozen plan");
     const auto inventory=read(root,"downloads.config",MaximumInventory),backup=read(root,"downloads.config.bak",MaximumInventory);
@@ -1259,6 +1281,10 @@ std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicInt
       require(state&&source&&contents(backup)==(p.before?p.before:p.oldBackup),ErrorCode::Conflict,"Inventory postimage lacks the matching state/archive/backup");
     }
     require(!source||state.has_value(),ErrorCode::Conflict,"Archive exists before its expected intake state");
+    if(callbackStage|| (state&&state->bytes!=p.state)){
+      require(this->preparation&&!pending&&state&&source&&contents(inventory)==std::optional{p.inventory},ErrorCode::Conflict,"Callback state appeared before complete stopped intake");
+      require(!callbackStage||callbackStage->bytes==p.state||callbackStage->bytes==this->associationState,ErrorCode::Conflict,"Unknown subscription callback state stage");
+    }
     if(pending){return State::Pending;}
     require(!inventoryStage&&!backupStage&&!stateStage&&!archiveStage,ErrorCode::Conflict,"Acquisition staging remains without its intake journal");
     if(contents(inventory)==std::optional{p.inventory}&&state&&source){
@@ -1314,6 +1340,135 @@ std::expected<core::TorrentHash,Error> PreparedStoppedPublicIntake::commit(Profi
   }catch(const Failure& e){return std::unexpected(e.error);}
   catch(...){return std::unexpected(Error{ErrorCode::Io,"Stopped acquisition intake requires explicit recovery"});}
 }
+
+std::expected<PreparedStoppedPublicIntake::AssociationStateObservation,Error> PreparedStoppedPublicIntake::inspectAssociationState(ProfileLease& lease,std::string_view owner)const{
+  try{
+    require(data_&&take(data_->inspectBound(lease,owner,false))==State::Committed,ErrorCode::Conflict,"Association callback observation requires complete stopped intake");auto active=childDirectory(lease.directoryHandle(),"active",false);require(active.get()>=0,ErrorCode::Conflict,"Callback state directory missing");
+    const auto& p=data_->plan;const auto observed=observeFixedSubscriptionState(active.get(),p.hash.hex()+".dat",{}, {p.state,p.state,data_->associationState});
+    const auto matches=[](std::uint8_t bits){return static_cast<std::uint8_t>(((bits&3U)?1U:0U)|((bits&4U)?2U:0U));};
+    return AssociationStateObservation{matches(observed.primaryMatches),observed.savingMatches?std::optional<std::uint8_t>{matches(*observed.savingMatches)}:std::nullopt};
+  }catch(const Failure& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Conflict,"Cannot inspect fixed subscription callback state"});}
+}
+std::expected<void,Error> PreparedStoppedPublicIntake::publishAssociationState(ProfileLease& lease,std::string_view owner,void(*observer)(SubscriptionDownloadStateStage)){
+  try{
+    auto access=take(lease.sourceAccess(true));require(take(inspect(lease,owner))==State::Committed,ErrorCode::Conflict,"Callback forward publication needs strict stopped-intake proof");const auto phase=take(inspectAssociationState(lease,owner));require(!phase.savingMatches||phase.savingIs(AssociationStatePhase::Associated),ErrorCode::Conflict,"Callback forward publication crossed rollback staging");auto active=childDirectory(lease.directoryHandle(),"active",false);const auto& p=data_->plan;
+    publishFixedSubscriptionState(lease,active.get(),p.hash.hex()+".dat",{}, {p.state,p.state,data_->associationState},2,owner,observer);
+    require(take(inspect(lease,owner))==State::Committed,ErrorCode::Conflict,"Stopped intake proof changed after callback");return {};
+  }catch(const Failure& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Conflict,"Subscription callback state requires review"});}
+}
+std::expected<void,Error> PreparedStoppedPublicIntake::rollbackAssociationState(ProfileLease& lease,std::string_view owner){
+  try{
+    auto access=take(lease.sourceAccess(true));require(data_&&take(data_->inspectBound(lease,owner,false))==State::Committed,ErrorCode::Conflict,"Callback rollback needs actual complete stopped intake");auto active=childDirectory(lease.directoryHandle(),"active",false);const auto& p=data_->plan;
+    publishFixedSubscriptionState(lease,active.get(),p.hash.hex()+".dat",{}, {p.state,p.state,data_->associationState},0,owner);
+    require(take(data_->inspectBound(lease,owner,false))==State::Committed,ErrorCode::Conflict,"Stopped intake proof changed after callback rollback");return {};
+  }catch(const Failure& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Conflict,"Subscription callback rollback requires review"});}
+}
+
+// Private existing-target helpers and sealed Data live in the primary TU,
+// alongside PreparedStoppedPublicIntake::Data, not in a multiply includable file.
+namespace {
+constexpr auto ExistingRootPending=std::array{Journal,JournalSaving,InventorySaving,BackupSaving,"BiglyBTC.file-operation","BiglyBTC.file-operation.BiglyBTC.fileop-saving",
+  ".BiglyBTC.linear-to-compact",".BiglyBTC.linear-to-compact.saving","BiglyBTC.category-delete.config","BiglyBTC.category-delete.config.bak","BiglyBTC.category-delete.config.saving",
+  ".BiglyBTC.category-delete",".BiglyBTC.category-delete.bak",".BiglyBTC.category-delete.saving",".subscriptions-native-write",".subscriptions-native-write.bak",".subscriptions-native-write.saving","downloads.config.saving","downloads.config.saving.bak"};
+constexpr auto ExistingSettings=std::array{"biglybt.config","biglybt.config.bak","azureus.config","azureus.config.bak"};
+constexpr auto ExistingSettingsPending=std::array{"biglybt.config.saving","biglybt.config.saving.bak","azureus.config.saving","azureus.config.saving.bak"};
+constexpr auto ExistingStatePending=std::array{".saving",".saving.bak",".bak.saving",".import"};
+constexpr auto ExistingCachePending=std::array{"cache.dat.saving","cache.dat.saving.bak","cache.dat.bak.saving"};
+void existingSameLayout(const compat::OriginalLayout& actual,const compat::OriginalLayout& expected){
+  require(actual.name==expected.name&&actual.multifile==expected.multifile&&actual.files.size()==expected.files.size(),ErrorCode::Conflict,"Existing target filename geometry differs");
+  for(std::size_t n=0;n<actual.files.size();++n){require(actual.files[n].path==expected.files[n].path&&actual.files[n].bytes==expected.files[n].bytes&&actual.files[n].padding==expected.files[n].padding,ErrorCode::Conflict,"Existing target file geometry differs");}
+}
+void existingReadonlyOwner(const ProfileLease& lease,std::string_view expected){
+  require(!expected.empty()&&expected.size()<=MaximumJournal,ErrorCode::Conflict,"Missing existing-target owner candidate");const int root=lease.directoryHandle();absent(root,AcquisitionIntentBackup);
+  const auto primary=read(root,AcquisitionIntent,MaximumJournal),saving=read(root,AcquisitionIntentSaving,MaximumJournal);
+  require((saving&&saving->bytes==expected)||(!saving&&primary&&primary->bytes==expected),ErrorCode::Conflict,"Existing-target selected owner candidate changed");
+}
+std::string existingDictionary(const std::map<std::string,std::string>& values){std::string out="d";for(const auto& [key,value]:values){out+=b(key)+value;}return out+'e';}
+std::string existingStampBytes(const struct stat& stamp){
+  return existingDictionary({{"dev",b(std::to_string(stamp.st_dev))},{"ino",b(std::to_string(stamp.st_ino))},{"mode",b(std::to_string(stamp.st_mode))},{"uid",b(std::to_string(stamp.st_uid))},{"gid",b(std::to_string(stamp.st_gid))},{"links",b(std::to_string(stamp.st_nlink))},{"size",b(std::to_string(stamp.st_size))},{"mtsec",b(std::to_string(stamp.st_mtim.tv_sec))},{"mtns",b(std::to_string(stamp.st_mtim.tv_nsec))},{"ctsec",b(std::to_string(stamp.st_ctim.tv_sec))},{"ctns",b(std::to_string(stamp.st_ctim.tv_nsec))}});
+}
+struct stat existingStampValue(const Node& node){
+  require(node.type==Node::Type::Dictionary&&node.children.size()==22,ErrorCode::InvalidFormat,"Unknown existing-target stamp field");uniqueKeys(node);struct stat stamp{};
+  const auto number=[&](auto& destination,std::string_view key){const auto* value=node.find(key);require(value&&value->type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Missing existing-target stamp");const auto result=std::from_chars(value->bytes.data(),value->bytes.data()+value->bytes.size(),destination);require(result.ec==std::errc{}&&result.ptr==value->bytes.data()+value->bytes.size(),ErrorCode::InvalidFormat,"Malformed existing-target stamp");};
+  number(stamp.st_dev,"dev");number(stamp.st_ino,"ino");number(stamp.st_mode,"mode");number(stamp.st_uid,"uid");number(stamp.st_gid,"gid");number(stamp.st_nlink,"links");number(stamp.st_size,"size");number(stamp.st_mtim.tv_sec,"mtsec");number(stamp.st_mtim.tv_nsec,"mtns");number(stamp.st_ctim.tv_sec,"ctsec");number(stamp.st_ctim.tv_nsec,"ctns");
+  require(stamp.st_mtim.tv_nsec>=0&&stamp.st_mtim.tv_nsec<1000000000&&stamp.st_ctim.tv_nsec>=0&&stamp.st_ctim.tv_nsec<1000000000,ErrorCode::InvalidFormat,"Invalid existing-target timestamp");return stamp;
+}
+}
+struct ExistingStoppedPublicSubscriptionTarget::Data {
+  static constexpr std::size_t DocumentBytes=16*1024*1024,TotalBytes=64*1024*1024,MaximumRows=4096;
+  struct Directory {fs::path path;Descriptor held{-1};struct stat stamp{};};
+  std::shared_ptr<const ProfileLease> lease;
+  std::uint64_t session=0;
+  std::thread::id worker=std::this_thread::get_id();
+  fs::path profile;
+  std::vector<Directory> directories;
+  std::vector<std::string> knownHashes;
+  std::map<fs::path,std::optional<File>> inputs;
+  std::size_t bytes=0;
+  std::string rawInfo,attributes;
+  Plan independence{};
+  fs::path statePath,archivePath;
+  std::optional<FixedSubscriptionDownloadPreparation> preparation;
+  SubscriptionStateImages states;std::string recipe;
+  Images view{};
+  std::set<fs::path> expectedPaths()const{
+    std::set<fs::path> out;for(const auto* name:ExistingRootPending){out.insert(profile/name);}for(const auto* name:ExistingSettings){out.insert(profile/name);}for(const auto* name:ExistingSettingsPending){out.insert(profile/name);}
+    out.insert(profile/"downloads.config");out.insert(profile/"downloads.config.bak");
+    for(const auto& hash:knownHashes){const auto state=profile/"active"/(hash+".dat");out.insert(state);out.insert(fs::path(state.native()+".bak"));for(const auto* suffix:ExistingStatePending){out.insert(fs::path(state.native()+suffix));}}
+    out.insert(profile/"active"/view.hash.hex());out.insert(archivePath);out.insert(fs::path(archivePath.native()+".bak"));for(const auto* suffix:ExistingStatePending){out.insert(fs::path(archivePath.native()+suffix));}
+    for(const auto* name:{"cache.dat","cache.dat.bak"}){out.insert(profile/"active"/name);}for(const auto* name:ExistingCachePending){out.insert(profile/"active"/name);}return out;
+  }
+  void closedPaths()const{std::set<fs::path> actual;for(const auto& [path,value]:inputs){static_cast<void>(value);actual.insert(path);}require(actual==expectedPaths(),ErrorCode::InvalidFormat,"Existing-target recipe omitted or added a candidate path");}
+  void bindViews(){
+    const auto viewFile=[](const std::optional<File>& value)->std::optional<std::string_view>{return value?std::optional<std::string_view>{value->bytes}:std::nullopt;};
+    const auto& inventory=inputs.at(profile/"downloads.config"),&archive=inputs.at(archivePath),&state=inputs.at(statePath);require(inventory&&archive&&state,ErrorCode::InvalidFormat,"Existing-target primary images missing");attributes=subscriptionStateAttributes(state->bytes);
+    view.rawInfo=rawInfo;view.inventory=inventory->bytes;view.archive=archive->bytes;view.state=state->bytes;view.attributes=attributes;view.inventoryBackup=viewFile(inputs.at(profile/"downloads.config.bak"));view.archiveBackup=viewFile(inputs.at(fs::path(archivePath.native()+".bak")));view.stateBackup=viewFile(inputs.at(fs::path(statePath.native()+".bak")));
+    view.statePrepared=preparation?std::string_view(states.prepared):view.state;view.stateAfterAssociation=preparation?std::string_view(states.associated):view.state;
+  }
+  std::string encodeRecipe()const{
+    require(preparation.has_value(),ErrorCode::Conflict,"Existing-target fixed preparation is absent");std::map<std::string,std::string> files,scopes;
+    for(const auto& [path,value]:inputs){files[path.native()]=value?existingDictionary({{"bytes",b(value->bytes)},{"stamp",existingStampBytes(value->info)}}):"i0e";}
+    for(const auto& observed:directories){scopes[observed.path.native()]=existingStampBytes(observed.stamp);}
+    return existingDictionary({{"schema",b("BiglyBTC.ExistingStoppedSubscriptionTarget.V1")},{"profile",b(profile.native())},{"destination",b(view.destination.native())},{"metadata",b(independence.metadata)},{"conversions",b(independence.filenameConversions.value_or(std::string(compat::OriginalDefaultFilenameConversions)))},{"showAll",i(independence.decoderShowAll.value_or(false)?1:0)},{"preparation",fixedPreparationBytes(*preparation)},{"files",existingDictionary(files)},{"directories",existingDictionary(scopes)}});
+  }
+  void scope(const fs::path& path){
+    if(std::ranges::any_of(directories,[&](const auto& value){return value.path==path;})){return;}
+    auto fd=directory(path);struct stat value{};
+    require(::fstat(fd.get(),&value)==0&&S_ISDIR(value.st_mode)&&value.st_uid==::geteuid(),ErrorCode::UnsafePath,"Existing target directory is not owned");
+    directories.push_back({path,std::move(fd),value});
+  }
+  const std::optional<File>& observe(const fs::path& path,std::size_t maximum=DocumentBytes){
+    if(const auto found=inputs.find(path);found!=inputs.end()){return found->second;}
+    require(inputs.size()<32768,ErrorCode::Unsupported,"Existing target candidate count exceeds bound");
+    auto parent=directory(path.parent_path());auto value=read(parent.get(),path.filename().native(),maximum);
+    if(value){require(value->bytes.size()<=TotalBytes-bytes,ErrorCode::Unsupported,"Existing target observations exceed total bound");bytes+=value->bytes.size();}
+    return inputs.emplace(path,std::move(value)).first->second;
+  }
+  void missing(const fs::path& path){require(!observe(path),ErrorCode::Conflict,"Existing target has a pending or unsupported candidate");}
+  void checkDirectories()const{
+    for(const auto& observed:directories){auto now=directory(observed.path);struct stat held{},named{};
+      require(::fstat(observed.held.get(),&held)==0&&::fstat(now.get(),&named)==0&&identity(held,observed.stamp)&&identity(named,observed.stamp)
+          &&held.st_uid==observed.stamp.st_uid&&named.st_uid==observed.stamp.st_uid&&held.st_mode==observed.stamp.st_mode&&named.st_mode==observed.stamp.st_mode&&held.st_gid==observed.stamp.st_gid&&named.st_gid==observed.stamp.st_gid,
+          ErrorCode::Conflict,"Existing target directory scope changed");}
+  }
+  bool sourceSetting(const fs::path& path)const{
+    if(path.parent_path()!=profile){return false;}const auto leaf=path.filename().native();return leaf=="biglybt.config"||leaf=="biglybt.config.bak"||leaf=="biglybt.config.saving"||leaf=="biglybt.config.saving.bak"||leaf=="azureus.config"||leaf=="azureus.config.bak"||leaf=="azureus.config.saving"||leaf=="azureus.config.saving.bak";
+  }
+  void checkInputs(bool strictSettings,bool fixedState)const{
+    for(const auto& [path,before]:inputs){
+      if((!strictSettings&&sourceSetting(path))||(fixedState&&(path==statePath||path==fs::path(statePath.native()+".saving")))){continue;}auto parent=directory(path.parent_path());auto now=read(parent.get(),path.filename().native(),std::max(DocumentBytes,before?before->bytes.size():std::size_t{}));
+      require(bool(now)==bool(before)&&(!before||(now->bytes==before->bytes&&unchanged(now->info,before->info))),ErrorCode::Conflict,"Existing target candidate changed");}
+  }
+  void verify(const ProfileLease& caller,std::uint64_t currentSession,std::string_view owner,bool strictSettings=true,bool fixedState=false)const{
+    require(lease&&lease->sharesOwnership(caller)&&worker==std::this_thread::get_id()&&session&&session==currentSession,ErrorCode::Conflict,"Existing target worker/session/SAMEOFD changed");
+    require(profilePath(caller)==profile,ErrorCode::Conflict,"Existing target profile path changed");
+    if(owner.empty()){noAcquisitionIntent(caller);}else{acquisitionOwnerCurrent(caller,owner);}
+    checkDirectories();checkInputs(strictSettings,fixedState);if(strictSettings){checkSaveNameScope(caller,independence);}checkInputs(strictSettings,fixedState);checkDirectories();
+    if(owner.empty()){noAcquisitionIntent(caller);}else{acquisitionOwnerCurrent(caller,owner);}
+  }
+};
+
+#include "existing_subscription_target.inc"
 
 std::expected<core::TorrentHash,Error> importTorrent(ProfileLease& lease,const fs::path& source,
     const fs::path& destination,bool stopped,void(*observer)(TorrentIntakeStage),bool forceStart,TorrentIntakeNetwork network,IntakeHistoryOutcome* history) {

@@ -2968,3 +2968,12 @@ if(TARGET biglybtc-torrent-state-driver)
   set_tests_properties(subscription-acquisition-state-writer-guards PROPERTIES
     TIMEOUT 60 LABELS "integration;state;subscriptions;owned-profile;no-network")
 endif()
+
+
+if(TARGET biglybtc_subscription_download_values)
+  add_executable(biglybtc-subscription-download-values-tests subscription_download_values_tests.cpp)
+  target_link_libraries(biglybtc-subscription-download-values-tests PRIVATE biglybtc_subscription_download_values)
+  target_compile_options(biglybtc-subscription-download-values-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME subscription-download-association-values COMMAND biglybtc-subscription-download-values-tests)
+  set_tests_properties(subscription-download-association-values PROPERTIES TIMEOUT 30 LABELS "unit;subscriptions;pure-values;no-network")
+endif()

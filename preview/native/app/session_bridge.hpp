@@ -196,8 +196,11 @@ private:
   void pollSubscriptionAcquisition();
   void closeWorkerSubscriptionAcquisition();
   void finishWorkerSubscriptionAcquisition(QString failure = {});
-  static std::expected<bool,storage::Error> recoverSubscriptionAcquisition(storage::ProfileLease&,const std::filesystem::path&);
-  static std::expected<bool,storage::Error> recoverTorrentIntakeAfterSubscription(storage::ProfileLease&,const std::filesystem::path&);
+  using SubscriptionTargetCheck=std::function<std::expected<void,storage::Error>(const core::TorrentHash&)>;
+  static std::expected<bool,storage::Error> recoverSubscriptionAcquisitionBeforeHost(storage::ProfileLease&,const std::filesystem::path&);
+  static std::expected<bool,storage::Error> recoverSubscriptionAcquisition(storage::ProfileLease&,const std::filesystem::path&,SubscriptionTargetCheck);
+  static std::expected<bool,storage::Error> recoverTorrentIntakeBeforeHost(storage::ProfileLease&,const std::filesystem::path&);
+  static std::expected<bool,storage::Error> recoverTorrentIntakeAfterSubscription(storage::ProfileLease&,const std::filesystem::path&,SubscriptionTargetCheck);
   void closeWorkerSubscriptions();
   void stopSubscriptionReceiver()noexcept;
   void subscriptionsDispatchInterrupted();
