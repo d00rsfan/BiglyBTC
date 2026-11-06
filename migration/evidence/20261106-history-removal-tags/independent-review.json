@@ -1,0 +1,160 @@
+{
+  "blocking_defects": [],
+  "evidence": {
+    "actual_handoff": {
+      "bytes": 51736,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/java-handoff/r1/actual-handoff/result.json",
+      "sha256": "a98dcf92ef67ccf3c916a41892d861a428f0158037ca8ec20783070b8605c413"
+    },
+    "cohort": {
+      "bytes": 949,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/result.json",
+      "sha256": "2870654b176c5f3d061b940848a9358ca6faa85b96f4618648b68a68df1b5ab8"
+    },
+    "current_java_handoff": {
+      "bytes": 27745,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/java-handoff/r1/current-java-handoff.json",
+      "sha256": "facb0cb57423de91d5bca51dc9cf5d13a3974c24760e4b85065fc51e59cc3bb7"
+    },
+    "helper_build": {
+      "bytes": 173254,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/java-handoff/r1/helper-build.json",
+      "sha256": "7766ba323b88f42293d9c202cf123a314e475ba9c7e74085070d6aeb8cc7f448"
+    },
+    "source_approval": {
+      "bytes": 12940,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualified-source.json",
+      "sha256": "b566c61477bd59ed50b8405db418501e97e374bca38f8f623355ef0b9e9dff6d"
+    },
+    "spec": {
+      "bytes": 10417,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/spec.json",
+      "sha256": "77d950fe0a764be4bbae5d5c9dcb2bd80211139dc60d1e91917a315b2005d296"
+    },
+    "static_basic_persistence_note": {
+      "bytes": 9436,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/evidence/followup-note.json",
+      "sha256": "418d52e4575b2be30a8490a75d7a50adb119fd6b071b79d42c2c428b3f8e6af9"
+    }
+  },
+  "implementation_commit": "b77eb40adf8ed44ea2caeacb561428eb08311f09",
+  "integrity": {
+    "all_recorded_log_image_XML_input_and_source_pins_match": true,
+    "deduplicated_current_files_hashed": 1476,
+    "original_HEAD_index_preserved_in_receipts": {
+      "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+    },
+    "source_approval_is_source_only": true,
+    "source_maps_before_after_and_handoff_equal": true
+  },
+  "java_handoff": {
+    "Core_started": false,
+    "actual_original_15s_timer_disk_write": true,
+    "all_exit_codes": 0,
+    "children_joined": true,
+    "class_image_hashes_retained_after_private_cleanup": {
+      "HistoryOriginalHandoff.class": "e972d3536773c275fc64cdb2629d1b3c5834c54b35d5ca8676494c7994c11671"
+    },
+    "commands": 10,
+    "elapsed_seconds": 46.152,
+    "full32_GM_restore_claimed": false,
+    "full_digest_boundary_bytes": 2281368360,
+    "functional_seconds": 28.306,
+    "helper_build_seconds": 8.049,
+    "named_files_guarded": 1464,
+    "named_parents_guarded": 211,
+    "network_permitted": false,
+    "original_timer_write_command_seconds": 16.164,
+    "prefix_replayed_or_Java_aware_recovery_claimed": false,
+    "private_profile_payload_home_install_classes_removed": true,
+    "proof_seconds": 17.777,
+    "socket_negative_control_passed": true,
+    "status": "PASS_OFFLINE_HISTORY_PUBLIC_API_HANDOFF_NOT_GM_LIFECYCLE",
+    "tag_producer_or_corpus_replayed": false
+  },
+  "lanes": [
+    {
+      "App_built_not_launched": true,
+      "XML": {
+        "bytes": 27607,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/gcc/r1/tests.xml",
+        "sha256": "8ae68df3789d0dbf001a228c326a1ec882807d6090face36d345e5d4211e24fb"
+      },
+      "critical_Host_rows": 21,
+      "elapsed_seconds": 767.58,
+      "images_including_App": 10,
+      "lane": "gcc",
+      "new_value_cases": 64,
+      "raw_eligible_for_acceptance_retained": false,
+      "receipt": {
+        "bytes": 18655,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/gcc/r1/result-stamped.json",
+        "sha256": "1f3340297f4868eedd453bcc219beef2cb9788ad70d733e3fb52062174e53a7b"
+      },
+      "sanitizer_error_markers": 0,
+      "status": "PASS_ACTUAL_AFFECTED_COHORT",
+      "suite_seconds": 211.05012695,
+      "suites": 9
+    },
+    {
+      "App_built_not_launched": true,
+      "XML": {
+        "bytes": 27451,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/san/r1/tests.xml",
+        "sha256": "e2f0dcac16a3a7a4f842d8eb1c1aa043d08aafcea493174b90088d9c68f3fd1d"
+      },
+      "critical_Host_rows": 21,
+      "elapsed_seconds": 938.735,
+      "images_including_App": 10,
+      "lane": "san",
+      "new_value_cases": 64,
+      "raw_eligible_for_acceptance_retained": false,
+      "receipt": {
+        "bytes": 18669,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/san/r1/result-stamped.json",
+        "sha256": "13b829f1efb61b36da049b1e13f0df7c8d43cb7fda0d5af386871d1d1c514057"
+      },
+      "sanitizer_error_markers": 0,
+      "status": "PASS_ACTUAL_AFFECTED_COHORT",
+      "suite_seconds": 227.64096179999999,
+      "suites": 9
+    }
+  ],
+  "native_repository_tree": "15ecdd6c8f48e2e41c409f72417eb20d9f8f0670",
+  "native_tree": "04e4a8b61071bedf85e529d7cc390fd59833d2e5",
+  "prior_value_evidence": {
+    "carried_4318_manifest": {
+      "bytes": 10057,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/manifest.json",
+      "sha256": "4318d91f40ca1947d94dadbf97e7a2a9dfc901579b44710bef9b2ed2315689ec"
+    },
+    "new_native_value_cases_per_lane": 64,
+    "not_rerun": true
+  },
+  "remaining_limits": [
+    "Raw suite eligible_for_acceptance=false is retained; PASS/current-source stamps and this bounded review do not claim whole P08.",
+    "Live MessageText localization, distinct comparator-equal manager insertion order, Unicode-ID and broader TagManager lifecycle remain unavailable.",
+    "Unbound other-full32 owner/selected20 alias ambiguity stays refused rather than merged.",
+    "Explicitfull32 reader compatibility is separate from ordinary selected20 persistence; no full32 GM restore, full V2 lifecycle/network/override or complete BasicPersistence interchange is claimed.",
+    "Original Java writer unknown-field preservation, atomic cross-file transaction/recovery and source/JAR equivalence are not claimed."
+  ],
+  "reviewed_at_utc": "2026-11-06T10:25:58.599559+00:00",
+  "reviewer_actions": "Read-only evidence/source/hash/XML consumption plus this artifact. No N/cache edits, compiler/JVM/test/auth/runtime/promotion actions.",
+  "schema": "BIGLYBTC_P08_INDEPENDENT_MEASURED_ACCEPTANCE_REVIEW_V1",
+  "scope": "Actual bounded Native Qt Host tag-capture/removal producer and affected GCC/SAN preservation cohort, plus a separate current-source offline original history codec/public-API handoff. The handoff does not repeat or qualify the producer, Unicode corpus, full32 GlobalManager restoration or whole P08.",
+  "source_reviews": [
+    {
+      "bytes": 4632,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/source-review.json",
+      "sha256": "d5cdd0d9de734ce524ab8993c13b9162a21d789ba2054b71acc6011be0ba50ec"
+    },
+    {
+      "bytes": 6923,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/source-review.json",
+      "sha256": "2943f80a83017e762c169108e7d52a736b81999a8d1a026eb1dc7296d12444dd"
+    }
+  ],
+  "static_note_scope": "418d is an unchanged source-only creator/import/selected20 BasicPersistence trace. It is separate from actual producer and Java codec/API runtime proofs and does not prove full32 GM reopening.",
+  "status": "PASS_P08_MEASURED_SUPPORTED_COHORT_AND_CODEC_HANDOFF_REVIEW"
+}

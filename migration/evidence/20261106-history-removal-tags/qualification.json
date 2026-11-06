@@ -1,0 +1,21 @@
+{
+  "app_build_only_no_preview_execution": true,
+  "current_source_original_java_history_handoff": "PENDING_SEPARATE_HANDOFF",
+  "full_P08_complete": false,
+  "implementation_commit": "b77eb40adf8ed44ea2caeacb561428eb08311f09",
+  "native_tree": "04e4a8b61071bedf85e529d7cc390fd59833d2e5",
+  "receipts": {
+    "gcc": {
+      "bytes": 18655,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/gcc/r1/result-stamped.json",
+      "sha256": "1f3340297f4868eedd453bcc219beef2cb9788ad70d733e3fb52062174e53a7b"
+    },
+    "san": {
+      "bytes": 18669,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/san/r1/result-stamped.json",
+      "sha256": "13b829f1efb61b36da049b1e13f0df7c8d43cb7fda0d5af386871d1d1c514057"
+    }
+  },
+  "status": "PASS_P08_TAG_HISTORY_AFFECTED_GCC_SAN_QUALIFICATION",
+  "suites_per_lane": 9
+}

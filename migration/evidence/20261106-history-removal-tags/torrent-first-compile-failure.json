@@ -1,0 +1,66 @@
+{
+  "status": "FAIL",
+  "scope": "Generated nonempty pure-v2/hybrid public torrent/hash APIs; sockets denied, no Core.start, no reflection/fake Taggable, one tiny javac only",
+  "commands": [
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.004,
+      "stdout_sha256": "6e31c8da3440d2cdbc09df707894c4709a5a5af85bca1c76fa82917897c29fb5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/usr/bin/nice",
+        "-n",
+        "5",
+        "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac",
+        "-J-Xmx128m",
+        "-J-XX:ActiveProcessorCount=1",
+        "--release",
+        "8",
+        "-proc:none",
+        "-implicit:none",
+        "-sourcepath",
+        "",
+        "-classpath",
+        "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "-d",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/evidence/classes",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/TorrentIdentityProbe.java"
+      ],
+      "exit_code": 1,
+      "elapsed_seconds": 2.29,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "8f9231ba470136e3bc42a9d5061e06b34dc74522901ecea635c5166a7db45b23"
+    }
+  ],
+  "pins": {
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/TorrentIdentityProbe.java": {
+      "sha256": "00e4260f17687922b5997a8dc360b630a9f71306cabf06f0e2d93b8002c28792",
+      "bytes": 3575
+    },
+    "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar": {
+      "sha256": "aec655f549167e22178a75f81e4bbc146a34192a2ff90278d74d98c304d2aec6",
+      "bytes": 12774623
+    },
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec": {
+      "sha256": "c4944939a921a868aa19cf9ca8d869288851a2c97e8b78ed3f3c2f3b7fccd87e",
+      "bytes": 16920
+    },
+    "/usr/lib/jvm/java-26-openjdk-amd64/bin/java": {
+      "sha256": "347282b66d7dfa462f84190f4254b3f5647c791b4250fe84ed0028fc9343f9ae",
+      "bytes": 14536
+    },
+    "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac": {
+      "sha256": "4d08eaac44a80fb0142bc001123ebfbc8aa4121801d4cd24711d1394733767f4",
+      "bytes": 14592
+    }
+  },
+  "jvm_profile": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/evidence/profile",
+  "native_cache_original_profile_changed": false
+}

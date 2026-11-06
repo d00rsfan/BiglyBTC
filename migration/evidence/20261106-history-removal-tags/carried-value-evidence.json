@@ -1,0 +1,79 @@
+{
+  "artifact_hashes_reverified": 31,
+  "generated_common_properties": {
+    "bytes": 17482,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/measured/java_common_properties.hpp",
+    "sha256": "247534bbd63951644c40a2b83691402fd67c6113e66dc230b044664759160335"
+  },
+  "limits": [
+    "Focused offline value result only, not integrated Native/Store/Host/SAN or current69-source handoff qualification",
+    "Future saved-removal wiring still needs strict bounded UTF8 conversion and existing private-capture/OFD/source authority preserved",
+    "Localized tag.* expansion and missing live stable-tie order remain separate unavailable cases; differing reference properties are refused"
+  ],
+  "manifest": {
+    "bytes": 10057,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/manifest.json",
+    "sha256": "4318d91f40ca1947d94dadbf97e7a2a9dfc901579b44710bef9b2ed2315689ec"
+  },
+  "new_native_or_jvm_execution": false,
+  "qualified_algorithm": {
+    "bytes": 3248,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/source/original_tag_order_algorithm.hpp",
+    "sha256": "8768e2dc282a43512bd13aa550ff40e5f913aad2ff3f8683135918fdd12453ba"
+  },
+  "raw_receipt": {
+    "bytes": 22093,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/result.json",
+    "sha256": "7573063bde501863c6578cebb09b736fdfb17809d0a5e4e6d1a2bd08ff26323c"
+  },
+  "status": "PRIOR_ACTUAL_VALUE_ONLY_NOT_RERUN",
+  "summary": {
+    "bytes": 3059,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/summary.json",
+    "sha256": "147b53a488de024d1e005d9cec1b2ce5d867ac68c3fe3c2a022d54ec3c629ebf"
+  },
+  "summary_actual_execution": {
+    "character_units_per_jdk": 65536,
+    "compiler": "javac26 --release8 once in successful attempt; actual runtime17 and26 remain separately measured",
+    "cpp": "GCC16 -std=c++23 -O1 -Wall -Wextra -Wpedantic -Werror, two sequential isolated images, no Native/SDK dependency",
+    "digit_units_each": 370,
+    "input_pins_after": "UNCHANGED",
+    "java17_nonidentity_lowercase_units": 1168,
+    "java26_nonidentity_lowercase_units": 1181,
+    "jdk_differing_units": [
+      "U+1C89",
+      "U+2C2F",
+      "U+A7C0",
+      "U+A7CB",
+      "U+A7CC",
+      "U+A7CE",
+      "U+A7D0",
+      "U+A7D2",
+      "U+A7D4",
+      "U+A7D6",
+      "U+A7D8",
+      "U+A7DA",
+      "U+A7DC"
+    ],
+    "pair_counts": {
+      "actual_jdk_comparator_output_differences": 84,
+      "common_pairs_exact_with_both_actual_jvms": 5936,
+      "different_bmp_units": 13,
+      "generated_header": {
+        "bytes": 17482,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/measured/java_common_properties.hpp",
+        "sha256": "247534bbd63951644c40a2b83691402fd67c6113e66dc230b044664759160335"
+      },
+      "pairs": 6042,
+      "table_inputs": {
+        "bytes": 1272,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/measured/table-inputs.json",
+        "sha256": "31a83b0fbb7cea40800ba17a1caf7207aee06c3fb55f1aec2d5438517d3552f4"
+      },
+      "value_test": "PASS",
+      "version_ambiguous_pairs_explicitly_unavailable": 106
+    },
+    "socket_negative_control": "PASS; same retained strict wrapper used by compiler/JVM/Native helper subjects",
+    "temporary_classes_and_images_removed": true
+  }
+}

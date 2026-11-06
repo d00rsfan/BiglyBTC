@@ -1,0 +1,138 @@
+{
+  "status": "PASS_ACTUAL_PUBLIC_TORRENT_IDENTITY_API",
+  "scope": "Generated nonempty pure-v2/hybrid public torrent/hash APIs; existing sockets-denied wrapper; no Core.start/reflection/fake Taggable",
+  "commands": [
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/usr/bin/nice",
+        "-n",
+        "5",
+        "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac",
+        "-J-Xmx128m",
+        "-J-XX:ActiveProcessorCount=1",
+        "--release",
+        "8",
+        "-proc:none",
+        "-implicit:none",
+        "-sourcepath",
+        "",
+        "-classpath",
+        "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "-d",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/r2/classes",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/r2/TorrentIdentityProbe.java"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.12,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "55dc1ac38ba4b83fcaf97874327b52134f037cd8d0cbf692c6951089c583d588"
+    },
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/usr/bin/nice",
+        "-n",
+        "5",
+        "/usr/lib/jvm/java-26-openjdk-amd64/bin/java",
+        "-Xms32m",
+        "-Xmx128m",
+        "-XX:ActiveProcessorCount=1",
+        "-Djava.awt.headless=true",
+        "-Djava.net.preferIPv4Stack=true",
+        "-Duser.home=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/r2/home",
+        "-Dazureus.config.path=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/r2/profile",
+        "-Djava.io.tmpdir=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/r2/tmp",
+        "-Dtime.disabled=true",
+        "-Djbigi.enable=false",
+        "-Djcpuid.enable=false",
+        "-cp",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/r2/classes:/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "TorrentIdentityProbe",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/r2/fixtures"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.07,
+      "stdout_sha256": "10673cff26db8ea08c12733ebe4f8cb5ce50e73e7376d4f2dec8bae1fe016bd5",
+      "stderr_sha256": "bfeb7a6e0a932f017d1c68ddd3dd9eeeb0d52a0b8a4755cb0be1957076ee806a"
+    }
+  ],
+  "cases": [
+    {
+      "case": "pure-v2",
+      "torrent_type": 3,
+      "selected_v2": true,
+      "selected_key": "8178bf66daf38c8f4a23edbe084c9b165b400680",
+      "full_v1": "",
+      "full_v2": "8178bf66daf38c8f4a23edbe084c9b165b4006808560bedd003e9da840368e86",
+      "base32_selected_id": "QF4L6ZW26OGI6SRD5W7AQTE3CZNUABUA",
+      "base32_full_v2_id": "QF4L6ZW26OGI6SRD5W7AQTE3CZNUABUAQVQL5XIAH2O2QQBWR2DA",
+      "public_roundtrip_verified": true
+    },
+    {
+      "case": "hybrid-default-v1",
+      "torrent_type": 2,
+      "selected_v2": false,
+      "selected_key": "ac50508e319321143294485f2335a7d10a34b47f",
+      "full_v1": "ac50508e319321143294485f2335a7d10a34b47f",
+      "full_v2": "10b12a1fcb447a3438a82158056fb9ae6b1813e7c2e6c5d61388e04282d1912a",
+      "base32_selected_id": "VRIFBDRRSMQRIMUUJBPSGNNH2EFDJND7",
+      "base32_full_v2_id": "CCYSUH6LIR5DIOFIEFMAK35ZVZVRQE7HYLTMLVQTRDQEFAWRSEVA",
+      "public_roundtrip_verified": true
+    },
+    {
+      "case": "hybrid-selected-v2",
+      "torrent_type": 2,
+      "selected_v2": true,
+      "selected_key": "10b12a1fcb447a3438a82158056fb9ae6b1813e7",
+      "full_v1": "ac50508e319321143294485f2335a7d10a34b47f",
+      "full_v2": "10b12a1fcb447a3438a82158056fb9ae6b1813e7c2e6c5d61388e04282d1912a",
+      "base32_selected_id": "CCYSUH6LIR5DIOFIEFMAK35ZVZVRQE7H",
+      "base32_full_v2_id": "CCYSUH6LIR5DIOFIEFMAK35ZVZVRQE7HYLTMLVQTRDQEFAWRSEVA",
+      "public_roundtrip_verified": true
+    },
+    {
+      "case": "hybrid-reselected-v1",
+      "torrent_type": 2,
+      "selected_v2": false,
+      "selected_key": "ac50508e319321143294485f2335a7d10a34b47f",
+      "full_v1": "ac50508e319321143294485f2335a7d10a34b47f",
+      "full_v2": "10b12a1fcb447a3438a82158056fb9ae6b1813e7c2e6c5d61388e04282d1912a",
+      "base32_selected_id": "VRIFBDRRSMQRIMUUJBPSGNNH2EFDJND7",
+      "base32_full_v2_id": "CCYSUH6LIR5DIOFIEFMAK35ZVZVRQE7HYLTMLVQTRDQEFAWRSEVA",
+      "public_roundtrip_verified": true
+    },
+    {
+      "case": "hash-override-policy-counterexample",
+      "selected_key_bytes": 32,
+      "ordinary_mapping_eligible": false
+    }
+  ],
+  "pins": {
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/r2/TorrentIdentityProbe.java": {
+      "sha256": "38d80d7b1588d2789e78aab62deb59d17969feff5da32fe6221fbd1ea1419e6e",
+      "bytes": 3597
+    },
+    "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar": {
+      "sha256": "aec655f549167e22178a75f81e4bbc146a34192a2ff90278d74d98c304d2aec6",
+      "bytes": 12774623
+    },
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec": {
+      "sha256": "c4944939a921a868aa19cf9ca8d869288851a2c97e8b78ed3f3c2f3b7fccd87e",
+      "bytes": 16920
+    },
+    "/usr/lib/jvm/java-26-openjdk-amd64/bin/java": {
+      "sha256": "347282b66d7dfa462f84190f4254b3f5647c791b4250fe84ed0028fc9343f9ae",
+      "bytes": 14536
+    },
+    "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac": {
+      "sha256": "4d08eaac44a80fb0142bc001123ebfbc8aa4121801d4cd24711d1394733767f4",
+      "bytes": 14592
+    }
+  },
+  "preserved_first_compile_failure": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/evidence/result.json",
+  "one_java_helper_program": true,
+  "total_javac_invocations_including_preserved_failed_attempt": 2,
+  "new_core_or_cpp_builds": 0,
+  "native_cache_original_profile_changed": false
+}

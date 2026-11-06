@@ -1,0 +1,148 @@
+{
+  "changes_by_audit": "Only evidence/followup-note.json; frozen manifests/source/Native/cache unchanged.",
+  "child_regression_assessment": {
+    "child_full32_test_rows": "Explicit full32 reader-compatibility fixtures, not evidence that default Native creation persists full32 or that Java reopens such a profile.",
+    "conclusion": "Child tag/history binding does not replace persisted runtime keys or filenames; ordinary Native creation/import already carries selected20 through the authoritative writer.",
+    "creator_intake_and_core_hex_writers_modified_by_child": false,
+    "creator_method_byte_identical_current_base_child": true,
+    "creator_method_suffix_hashes": {
+      "base": "14f9d932d0041b840677b93654445f04b3fa36e54399b2068d81206de48d0f0c",
+      "child": "14f9d932d0041b840677b93654445f04b3fa36e54399b2068d81206de48d0f0c",
+      "current": "14f9d932d0041b840677b93654445f04b3fa36e54399b2068d81206de48d0f0c"
+    },
+    "new_default_writer_of_full32": false
+  },
+  "filename_roles": {
+    "archive": "torrents/<UPPERCASE40HEX-selected20>.torrent",
+    "creator_output": "Caller-selected output filename; creation staging is a private random .biglybtc-create-* directory/metadata, not a full32-derived persisted state filename.",
+    "intake_temps": "The same selected20-derived names plus .import; global BiglyBTC.torrent-import* names carry/revalidate metadata and are cleaned on successful intake.",
+    "inventory_primary_hash": "Original selected20 bytes",
+    "state": "active/<UPPERCASE40HEX-selected20>.dat"
+  },
+  "frozen_inputs": {
+    "base_manifest": {
+      "bytes": 7990,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/manifest.json",
+      "sha256": "e60eb77a91f24216a42090558f453c16c65443b5f97492f63ec59e2bbea5bcdc"
+    },
+    "child_manifest": {
+      "bytes": 9314,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/manifest.json",
+      "sha256": "c96ee920f8281bd4bd0937937e33648739d618aacd9f719c24c149ff85753af4"
+    },
+    "previous_actual_public_api_measurement": {
+      "bytes": 6630,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/r2/result.json",
+      "sha256": "57b86b0a1f698340c13b07e324f5a66a11b32a61109be8a9e88bc3368b5b3ee3"
+    }
+  },
+  "immutable_original_sources": {
+    "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": {
+      "bytes": 183839,
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "99617ee6753153c8af1598fc17cf28ed7631319b",
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "sha256": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda"
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": {
+      "bytes": 107520,
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "12c9b2e45ab7fa3a9839672087ec207ef83d9e35",
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "sha256": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a"
+    },
+    "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": {
+      "bytes": 144403,
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "f992aecdc28168d656c322512434ff1cbaf95c02",
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39"
+    },
+    "core/src/com/biglybt/core/util/ByteFormatter.java": {
+      "bytes": 5167,
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "3316a55349229cdcb6293e6723bce5ae91a57e05",
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/util/ByteFormatter.java",
+      "sha256": "b1eb635fddd00ad72301128231a756ce6b95d6a7a6721e1d2be3841bbad53560"
+    }
+  },
+  "native_sources": {
+    "preview/native/adapters/original_torrent_identity.hpp": {
+      "bytes": 2555,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/adapters/original_torrent_identity.hpp",
+      "sha256": "877e7547a25d20b1ff7c2502107deb2d5985431baab7b7843406efb82e1694ca"
+    },
+    "preview/native/adapters/torrent_intake.cpp": {
+      "bytes": 98032,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/adapters/torrent_intake.cpp",
+      "sha256": "19c9f5ce1ffaf6cf543daf5957a1f389b84aa9ea9ce25f2510eb3935ca1ab05f"
+    },
+    "preview/native/app/file_operations_bridge.inc": {
+      "bytes": 25977,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/app/file_operations_bridge.inc",
+      "sha256": "cf0c82f3d26a5fadeaed1d0b6c9a0b7cfc20f8bbc900623d4b159c5cdb77036c"
+    },
+    "preview/native/core/src/library.cpp": {
+      "bytes": 6670,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/core/src/library.cpp",
+      "sha256": "3ba21404a77e0e3c9e23cbf267be130609598ed6646693df7c4f656306895348"
+    },
+    "preview/native/engine/torrent_creator.cpp": {
+      "bytes": 48119,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/engine/torrent_creator.cpp",
+      "sha256": "3d74cd191141b37f5fa458e6403df38a70b503feb9350ec94298c3480a5834ca"
+    }
+  },
+  "remaining_scope": [
+    "A pre-existing explicitfull32 inventory/state is still a distinct reader-compatibility input. Passing that32-byte inventory key to an ordinary Original DownloadManager conflicts with getHash20; its64hex state name also differs from Original40hex. The child does not convert/normalize such profiles.",
+    "No actual Native-create/import/close -> Java reopen -> Native reopen lifecycle was executed in this audit or in the previous public torrent/hash API probe. Source correctness is not a full pureV2 restoration pass.",
+    "The migration plan retains earlier unresolved pureV2 original-only8/9 evidence; do not reinterpret this source audit or the child as complete V2 restore/network/override qualification.",
+    "Interrupted Native intake journal interoperability, every backup/candidate/recovery path and all V2 workflows are outside this narrow audit. Pending transactions still require the existing explicit recovery fences."
+  ],
+  "reviewed_utc": "2026-11-06T09:44:14.642902+00:00",
+  "schema": "BIGLYBTC_READ_ONLY_NATIVE_V2_PERSISTED_IDENTITY_FOLLOWUP_V1",
+  "scope": "Bounded source-only creator/import/inventory/state/archive/temp identity audit on current code and composed22-leaf draft. No new JVM/compiler/runtime execution, source amendment, adoption or cache action.",
+  "source_trace": [
+    {
+      "finding": "Independent format/geometry/hash validation selects OriginalTorrentIdentity from exact raw info. CreateResult.selectedHash is selected->originalKey20; fullInfoHashV2 is retained separately32. PureV2 infoHashV1 is intentionally empty.",
+      "line": 818,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/engine/torrent_creator.cpp"
+    },
+    {
+      "finding": "Creation UI reports created.selectedHash and import-after-creation calls storage::importTorrent on the published metadata, rather than persisting a full32 runtime/display hash.",
+      "line": 235,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/app/file_operations_bridge.inc"
+    },
+    {
+      "finding": "metadataSubject validates original layout and qualified engine metadata, then hash=identity.originalKey. Explicit hash-override inputs are refused to their separate metadata-pending intake.",
+      "line": 246,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/adapters/torrent_intake.cpp"
+    },
+    {
+      "finding": "New inventory torrent_hash is explicitly20 bytes. torrents/<selected20.hex()>.torrent is the saved torrent path. knownAlias checks prevent selected/full-hash and pause-record co-admission.",
+      "line": 553,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/adapters/torrent_intake.cpp"
+    },
+    {
+      "finding": "Published active state and archive names derive from the same p.hash selected20. publishNew stages those names with .import and removes exact temporary/journal files after successful inventory publication.",
+      "line": 962,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/adapters/torrent_intake.cpp"
+    },
+    {
+      "finding": "TorrentHash::hex emits uppercase digits, yielding40hex characters for selected20 and matching the case-sensitive Original ByteFormatter state-name convention.",
+      "line": 91,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/core/src/library.cpp"
+    },
+    {
+      "finding": "Original saves torrent_hash=torrent.getHash; loading passes persisted torrent_hash into DownloadManagerFactory.",
+      "line": 3447,
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java"
+    },
+    {
+      "finding": "Original getStateFile uses ACTIVE_DIR/ByteFormatter.encodeString(torrent_hash)+.dat. Ordinary public torrent API measurement proves selected getHash20 for pureV2 and explicit hybrid selection.",
+      "line": 628,
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java"
+    }
+  ],
+  "status": "DEFAULT_NATIVE_CREATE_IMPORT_ALREADY_PRESERVES_ORIGINAL_SELECTED20_NO_CHILD_WRITER_REGRESSION_FOUND"
+}

@@ -1,0 +1,82 @@
+{
+  "blocking_correctness_ownership_or_compatibility_defects": [],
+  "checks": {
+    "evidence_boundary": "Pinned Original DownloadManager/TagWithState/history source supports ID serialization and h/v/UID roles. The actual small public torrent/hash API probe supplies four ordinary selection/serialization cases and one override counterexample, not a live TagManager/DownloadManager oracle. Failed first compile remains FAIL; two javac calls/one successful runtime are not relabeled as one successful compile attempt.",
+    "identity_and_history": "Existing source-validated helper computes both present full digests, refuses override/conflicting selectors/full suffixes, and compares complete hashes AND selection at receipt issue. UID uses first four selected getHash bytes plus added seconds; h uses full v1 when present else selected20; v retains complete v2. Pure-v2 UID is not falsely claimed to change merely because its runtime key is32.",
+    "membership_and_collisions": "Membership matches proven original selected20; wrong ordinary full32 member strings are excluded. Nonempty full32 capture needs exactly one runtime owner and no selected20 alias; further unbound full32 owners are conservatively unavailable. Committed inventory and captured receipt candidates are rechecked. Ambiguity refuses mapped history authority while actual removal remains saved.",
+    "ordering_and_lifetime_preservation": "Parent strict UTF8/common Java ordering and explicit unsupported stable ties/localization remain unchanged. Capture precedes checkpoint/stop/forget; no source gate crosses a wait. Optional stale/unavailable text before issue preserves prior tags, and warning follows saved.changed; post-issue mutation remains essential receipt/history CAS refusal.",
+    "private_source_binding": "Actual PreparedFileOperation Keep Data plan, construction worker/SAME OFD, exact prepared controls/settings/journal candidates and raw info digest are revalidated privately. Native coreRuntimeHash remains distinct from exact selected original20/full-hash identity; no DTO can construct a positive capture.",
+    "source_tests": "Five existing Host data rows cover pure-v2, default hybrid, selected-v2 hybrid with full-v1 history h, unsupported text retaining prior tags, and selected20 alias retaining active history. Embedded metadata bytes and hashes exactly match frozen real public API fixtures. Tests assert payload preservation, tag.config unchanged, expected UID/h/v, wrong32 exclusion and close/lock; not compiled or run."
+  },
+  "child_leaves_verified": 10,
+  "child_manifest": {
+    "bytes": 9314,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/manifest.json",
+    "sha256": "c96ee920f8281bd4bd0937937e33648739d618aacd9f719c24c149ff85753af4"
+  },
+  "compiler_jvm_tests_auth_network_or_runtime_executed_by_reviewer": false,
+  "delta_patch": {
+    "bytes": 34745,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/delta.patch",
+    "sha256": "8c596ade1a65eabc0a061d6e7f8db6f27c43ad67314149d498825114661c42fa"
+  },
+  "delta_reconstructs_staging_exactly": true,
+  "implementation_basis_commit": "00e2e70a58bf0a0d73f548c0cf785779b5792f55",
+  "java_api_evidence": {
+    "first_failed_compile": {
+      "bytes": 3104,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/evidence/result.json",
+      "sha256": "134f3ee37022fcff5cf11a5f00454714bfd419e8a7e30ea79821582ee5aac799"
+    },
+    "fixture_header": {
+      "bytes": 5747,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/staging/preview/native/tests/full32_tag_fixture.hpp",
+      "sha256": "a54e058cb742bd81c00f9a241757f8bd2a7dc3a94c7fdd44da79fd81753b8a65"
+    },
+    "measured_api_output": {
+      "bytes": 1729,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/r2/public-api.stdout",
+      "sha256": "10673cff26db8ea08c12733ebe4f8cb5ce50e73e7376d4f2dec8bae1fe016bd5"
+    },
+    "ordinary_cases": 4,
+    "override_counterexample": 1,
+    "reviewer_reran_jvm_or_compiler": false,
+    "source_pins": {
+      "bytes": 3036,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/original-source-pins.json",
+      "sha256": "8a4a5c2fe93940d249707d2f59ccd87b27b40b92316fd472315a0d47535968ec"
+    },
+    "successful_receipt": {
+      "bytes": 6630,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/r2/result.json",
+      "sha256": "57b86b0a1f698340c13b07e324f5a66a11b32a61109be8a9e88bc3368b5b3ee3"
+    }
+  },
+  "native_cache_or_profile_modified": false,
+  "native_tree": "d85be38ad6bea02eb010f1f9cf7f741ae9f7dc6a",
+  "parent_manifest": {
+    "bytes": 7990,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/manifest.json",
+    "sha256": "e60eb77a91f24216a42090558f453c16c65443b5f97492f63ec59e2bbea5bcdc"
+  },
+  "parent_preimages_match_exactly": true,
+  "parent_source_review": {
+    "bytes": 4632,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/source-review.json",
+    "sha256": "d5cdd0d9de734ce524ab8993c13b9162a21d789ba2054b71acc6011be0ba50ec"
+  },
+  "remaining_explicit_limits": [
+    "Another full32 library owner lacks independently bound selector evidence and is conservatively unavailable.",
+    "Identity alias/ambiguous owner refuses mapped history authority; actual removal remains saved for essential review.",
+    "Existing localization/stable-tie/Unicode-ID/metadata-pending override/full-V2-network/whole-P08 limits remain.",
+    "Actual TagManager/DownloadManager lifecycle was not instantiated; ID serialization chain is pinned source evidence plus real public torrent APIs.",
+    "Parent localization/stable-tie/Unicode-ID/bounds and whole-P08 limitations remain.",
+    "New C++/Host integration and reviewed affected GCC/leak-enabled SAN cohort remain unqualified."
+  ],
+  "reviewed_at_utc": "2026-11-06T09:27:00.808378+00:00",
+  "runtime_or_complete_p08_acceptance_claimed": false,
+  "schema": "BIGLYBTC_P08_FULL32_INDEPENDENT_SOURCE_REVIEW_V1",
+  "scope": "Cohesive base21 plus10-leaf child source review,22 unique leaves. No adoption or Native qualification; prior4318 common-order evidence is reused and the frozen small Java API proof is consumed without execution.",
+  "status": "PASS_SOURCE_REVIEW_BASE_AND_FULL32_CHILD_SUPPORTED_DOMAIN",
+  "upstream_source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+}

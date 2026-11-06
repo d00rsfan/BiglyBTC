@@ -1,0 +1,178 @@
+{
+  "schema": "BIGLYBTC_MEASURED_UNICODE_COMMON_DATA_AND_FOCUSED_RESULTS_V1",
+  "status": "FROZEN_ACTUAL_FOCUSED_VALUE_PASS_NOT_NATIVE_INTEGRATION",
+  "source_parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/manifest.json",
+    "sha256": "3226960953f4b560fcfed2487f19d10bf525e6b20d37a7b7885c1a96738dcc67",
+    "bytes": 7063
+  },
+  "summary": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/summary.json",
+    "sha256": "147b53a488de024d1e005d9cec1b2ce5d867ac68c3fe3c2a022d54ec3c629ebf",
+    "bytes": 3059
+  },
+  "preserved_failed_attempt": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r1/result.json",
+    "sha256": "40cdad79ad94866e20545b20c7de97692a1ac6fa70c9bb8bffeafd446fa636e4",
+    "bytes": 6376
+  },
+  "artifacts": {
+    "qualification-r2/compile-cpp-probe.stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/compile-cpp-probe.stderr",
+      "sha256": "3144a88e9c83a981b02ebd651c25f7cb012a679ea318e0f1e1981fe7e7392a8c",
+      "bytes": 90
+    },
+    "qualification-r2/compile-cpp-probe.stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/compile-cpp-probe.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "qualification-r2/compile-cpp-values.stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/compile-cpp-values.stderr",
+      "sha256": "3144a88e9c83a981b02ebd651c25f7cb012a679ea318e0f1e1981fe7e7392a8c",
+      "bytes": 90
+    },
+    "qualification-r2/compile-cpp-values.stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/compile-cpp-values.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "qualification-r2/compile-java.stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/compile-java.stderr",
+      "sha256": "55dc1ac38ba4b83fcaf97874327b52134f037cd8d0cbf692c6951089c583d588",
+      "bytes": 358
+    },
+    "qualification-r2/compile-java.stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/compile-java.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "qualification-r2/convert-measured-maps.stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/convert-measured-maps.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "qualification-r2/convert-measured-maps.stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/convert-measured-maps.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "qualification-r2/generate-pairs.stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/generate-pairs.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "qualification-r2/generate-pairs.stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/generate-pairs.stdout",
+      "sha256": "7bcc2e44dd1a7eb83e54a7722fed38c0fa0e259af1dfea17ed76a149f093e70e",
+      "bytes": 298
+    },
+    "qualification-r2/java17-map.stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/java17-map.stderr",
+      "sha256": "3144a88e9c83a981b02ebd651c25f7cb012a679ea318e0f1e1981fe7e7392a8c",
+      "bytes": 90
+    },
+    "qualification-r2/java17-map.stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/java17-map.stdout",
+      "sha256": "391d9f9ece7d6cf78db0eed82577241ca54ff7d6a520e8af7321f2dead954241",
+      "bytes": 14518
+    },
+    "qualification-r2/java17-pairs.stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/java17-pairs.stderr",
+      "sha256": "3144a88e9c83a981b02ebd651c25f7cb012a679ea318e0f1e1981fe7e7392a8c",
+      "bytes": 90
+    },
+    "qualification-r2/java17-pairs.stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/java17-pairs.stdout",
+      "sha256": "9fa8348abff076b13d4199ab70abe36eab18b18a908625e660ec9761bf5036f0",
+      "bytes": 26238
+    },
+    "qualification-r2/java26-map.stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/java26-map.stderr",
+      "sha256": "3144a88e9c83a981b02ebd651c25f7cb012a679ea318e0f1e1981fe7e7392a8c",
+      "bytes": 90
+    },
+    "qualification-r2/java26-map.stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/java26-map.stdout",
+      "sha256": "9032a176cd6239293fbf712c6be749789a97bb25deb808289914c9c14c813fc6",
+      "bytes": 14676
+    },
+    "qualification-r2/java26-pairs.stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/java26-pairs.stderr",
+      "sha256": "3144a88e9c83a981b02ebd651c25f7cb012a679ea318e0f1e1981fe7e7392a8c",
+      "bytes": 90
+    },
+    "qualification-r2/java26-pairs.stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/java26-pairs.stdout",
+      "sha256": "e885038df2a39ad24da7fe1f4133fe4a807a87df8527d776906933941d29d360",
+      "bytes": 26109
+    },
+    "qualification-r2/measured/java_common_properties.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/measured/java_common_properties.hpp",
+      "sha256": "247534bbd63951644c40a2b83691402fd67c6113e66dc230b044664759160335",
+      "bytes": 17482
+    },
+    "qualification-r2/measured/table-inputs.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/measured/table-inputs.json",
+      "sha256": "31a83b0fbb7cea40800ba17a1caf7207aee06c3fb55f1aec2d5438517d3552f4",
+      "bytes": 1272
+    },
+    "qualification-r2/pair-input.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/pair-input.txt",
+      "sha256": "0df7b35bc0a3ad630ad6734f2748b0075674a63b0f0fb6fd4bb9fefea4a92812",
+      "bytes": 514800
+    },
+    "qualification-r2/result.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/result.json",
+      "sha256": "7573063bde501863c6578cebb09b736fdfb17809d0a5e4e6d1a2bd08ff26323c",
+      "bytes": 22093
+    },
+    "qualification-r2/run-cpp-pairs.stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/run-cpp-pairs.stderr",
+      "sha256": "3144a88e9c83a981b02ebd651c25f7cb012a679ea318e0f1e1981fe7e7392a8c",
+      "bytes": 90
+    },
+    "qualification-r2/run-cpp-pairs.stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/run-cpp-pairs.stdout",
+      "sha256": "b9a4179c834525e61123e7427801480c3d3fc2e3cd972a125eeff158861e07d0",
+      "bytes": 26851
+    },
+    "qualification-r2/run-cpp-values.stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/run-cpp-values.stderr",
+      "sha256": "3144a88e9c83a981b02ebd651c25f7cb012a679ea318e0f1e1981fe7e7392a8c",
+      "bytes": 90
+    },
+    "qualification-r2/run-cpp-values.stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/run-cpp-values.stdout",
+      "sha256": "ca7a5fbdd5c6850a4b5854a8b245cbe0581f4687238de7098e221eccea6063d9",
+      "bytes": 39
+    },
+    "qualification-r2/run-measured.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/run-measured.py",
+      "sha256": "dc9943f05d37cd5c39c67713eb7b1cccefc9dbe015c459258f4256a2777866c7",
+      "bytes": 8113
+    },
+    "qualification-r2/socket-negative.stderr": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/socket-negative.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "qualification-r2/socket-negative.stdout": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/socket-negative.stdout",
+      "sha256": "6e31c8da3440d2cdbc09df707894c4709a5a5af85bca1c76fa82917897c29fb5",
+      "bytes": 170
+    },
+    "qualification-r2/summary.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/summary.json",
+      "sha256": "147b53a488de024d1e005d9cec1b2ce5d867ac68c3fe3c2a022d54ec3c629ebf",
+      "bytes": 3059
+    },
+    "qualification-r2/value-probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/value-probe.cpp",
+      "sha256": "a698d2795c729eabb39d13491173c3e58f869fef528d870d0683b8e1ca0301d2",
+      "bytes": 1787
+    }
+  },
+  "source_paths": {},
+  "no_native_or_cache_or_profile_changes": true
+}

@@ -1,0 +1,202 @@
+{
+  "cache": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+  "commands": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "-k",
+        "1",
+        "BiglyBTC",
+        "biglybtc-original-tag-order-tests",
+        "biglybtc-file-operations-tests",
+        "biglybtc-file-operations-host-tests",
+        "biglybtc-manual-tag-store-tests",
+        "biglybtc-download-history-store-tests",
+        "biglybtc-download-history-intake-tests",
+        "biglybtc-download-history-completion-tests",
+        "biglybtc-download-history-bridge-tests",
+        "biglybtc-original-torrent-identity-tests"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 697.143,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/san/r1/build.log",
+      "log_sha256": "43c39e25230a725d72918fd3cb997c66a94c27f5d89aa5cf615d8e76ad3a2072"
+    },
+    {
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "-R",
+        "^(original\\-tag\\-order|file\\-operations|file\\-operations\\-host|manual\\-tag\\-store|original\\-download\\-history\\-store|original\\-download\\-history\\-intake\\-owner|original\\-download\\-history\\-completion\\-owner|original\\-download\\-history\\-classic\\-view|original\\-torrent\\-identity)$",
+        "--no-tests=error",
+        "--output-on-failure",
+        "--test-output-size-passed",
+        "262144",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/san/r1/tests.xml",
+        "-j",
+        "1"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 227.725,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/san/r1/ctest.log",
+      "log_sha256": "4942a56391f8771663a7a042a13f5b1f71ef6b88e09bc443d3eb645de2a1eb51"
+    }
+  ],
+  "coverage_guards": {
+    "BiglyBTC_built_not_launched": true,
+    "carried_jvm_corpus_rerun": false,
+    "host_rows_required_and_passed": 21,
+    "value_corpus_cases": 64
+  },
+  "dependencies_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/CMakeCache.txt": "0311868c559dd1f3bb72e1244ac5071455f61d221af420d3bedb01809a7c5486",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/CMakeFiles/rules.ninja": "c9d1e049ee94d93bc32d960cf67502b4697f9917672b24674bf445f55e9d45f4",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/build.ninja": "5314202a059485bedaf6378bea1a69a04d6afae7d931538863bef1ce4d6cb207"
+  },
+  "elapsed_seconds": 938.735,
+  "eligible_for_acceptance": false,
+  "expected_tests": [
+    "original-tag-order",
+    "file-operations",
+    "file-operations-host",
+    "manual-tag-store",
+    "original-download-history-store",
+    "original-download-history-intake-owner",
+    "original-download-history-completion-owner",
+    "original-download-history-classic-view",
+    "original-torrent-identity"
+  ],
+  "images": {
+    "BiglyBTC": {
+      "bytes": 439227464,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/app/BiglyBTC",
+      "sha256": "c60d14ca96941f09028680b9c68ce01a73a4ec48d43e2aa79fdc1999341785e9"
+    },
+    "biglybtc-download-history-bridge-tests": {
+      "bytes": 435968656,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-download-history-bridge-tests",
+      "sha256": "491c5b091d2e4af98369e853dbc6aa66ac94661c4d8e5068666e9d1aad4f1578"
+    },
+    "biglybtc-download-history-completion-tests": {
+      "bytes": 160317728,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-download-history-completion-tests",
+      "sha256": "af63e40a23a60c298c4f4f873c932c5fb8e6cc901f2387154f91aa581934e685"
+    },
+    "biglybtc-download-history-intake-tests": {
+      "bytes": 438047688,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-download-history-intake-tests",
+      "sha256": "cbfb8e775b60a4f7c1ab1a1aaf9c715e7da639d7809608a16d37fe5b30036c50"
+    },
+    "biglybtc-download-history-store-tests": {
+      "bytes": 65299792,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-download-history-store-tests",
+      "sha256": "2a01c197a280297ed2ad6f05da6954c130cd2ae2c825de89e602afe822b7248a"
+    },
+    "biglybtc-file-operations-host-tests": {
+      "bytes": 442904592,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-file-operations-host-tests",
+      "sha256": "106fb337b953a5c7ecbd629e300f2e62ef95ab4d6094374865e6b1692302ad0c"
+    },
+    "biglybtc-file-operations-tests": {
+      "bytes": 71069960,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-file-operations-tests",
+      "sha256": "be01d81763d7b25adb5724415aec227fce6cf52478cb306203f77d120d75992e"
+    },
+    "biglybtc-manual-tag-store-tests": {
+      "bytes": 60119136,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-manual-tag-store-tests",
+      "sha256": "83b2140cfdaa9a1f1044a50b8fab2192eb415f13c01b5603d0fa71274307fa3c"
+    },
+    "biglybtc-original-tag-order-tests": {
+      "bytes": 507712,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-original-tag-order-tests",
+      "sha256": "2612fbe98a46b465d51770cc19dd735c76bc6a5aad7e009ad3ffd9cfbde55681"
+    },
+    "biglybtc-original-torrent-identity-tests": {
+      "bytes": 3748056,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-original-torrent-identity-tests",
+      "sha256": "a22dae84ec6cf4d00458ec8b4391436bace0ba3b0fcd7a0a77a0b0056412e710"
+    }
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/cpp-syntax-gate/gate.py": "b16d70a42b8098d5a0be1fbfa7f7902cc724d180622a8d101bdddaf99bbac2a1",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/manifest.json": "c96ee920f8281bd4bd0937937e33648739d618aacd9f719c24c149ff85753af4",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/source-review.json": "2943f80a83017e762c169108e7d52a736b81999a8d1a026eb1dc7296d12444dd",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/carried-value-evidence.json": "0d390390c666b233bdcb53ca1c777c0c7db1319f2b78619131b2072133d3e0f9",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/manifest.json": "e60eb77a91f24216a42090558f453c16c65443b5f97492f63ec59e2bbea5bcdc",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/source-review.json": "d5cdd0d9de734ce524ab8993c13b9162a21d789ba2054b71acc6011be0ba50ec",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/adopt.py": "07fdaa1196fd30e8660a46900bea90095dc6f6265a02ee8989ee4866c6d29833",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/batch.mk": "c1b664609ee99c43e844a4bc0f8a5d9ff690c1308aa909bb9fa613a9276331b2",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/common.py": "cb6f3358a27ce0588c2e4c138ae1d1950995ddcb6c807937d8f9422d58d61166",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/frontcheck.py": "0e57ffb83962f7a4bbc4f4625aa52a2d00f0629d6a0f495b3d6b953fbbde47ff",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/merged-source.json": "89c7cf6cf3a955495887bceaa06024297686b53aa3c91655db2ed34917f11832",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/preflight.py": "feaa1bb562505a744b80f860c5e7e64a02c8f94e8328c74a83745bafee54d91a",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/frontend/r1/result.json": "047c0661040558edeefbdeb238cb1c5e7bf84484879db69be3a3c5a42a92e9ff",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/preflight/gcc/r1/result.json": "5422b92cecbe9d37fc6a8ccab66e5a30cf5b60c442551e7c35d6ab1ea6820baa",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/preflight/san/r1/result.json": "5dafb04bb3b7feec86bf914271c6118afaf3dcffb9f173bb5ff211c6c7c1ff66",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualified-source.json": "b566c61477bd59ed50b8405db418501e97e374bca38f8f623355ef0b9e9dff6d",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualify.py": "2eaaafcce675f2f7f82c0f0a57cc973ef7261081389b50146de87060284c9a03",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/spec.json": "77d950fe0a764be4bbae5d5c9dcb2bd80211139dc60d1e91917a315b2005d296",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/adapters/captured_removal_tags.hpp": "a468039f0f7a79a04c9298aba10ed1a43f7db958748c860f62150bafc0aa70e5",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/adapters/download_history_store.cpp": "1c89a2816fd874c345d33af323abaf413ae12f1a39b0f5aebecf45f65cd0cf1a",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/adapters/durable_removal_receipt.cpp": "60d63055e6bae3f4b4424289013dd801d4045ab8be9091f4764d7205842a80de",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/adapters/durable_removal_receipt.hpp": "1661a16df015a8176c3320068b214ae9cb762eb8b8b61c6e97fc3b5317efa153",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/adapters/file_operations.cpp": "58e7ec8783d71a2e5e999976bb61363a9e167426ac08a171042c0f4e861e2b5f",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/adapters/file_operations.hpp": "1ae81d785af38136cffdb6a96f134300960cf281d9b92b6ac2dfe989ba7df885",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/adapters/manual_tag_store.cpp": "b08f6aaf2f8111ae180e98ad866737b4b0fd96f7884c041277b1c522cb66c6c0",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/adapters/manual_tag_store.hpp": "6aa68520548c30b77784c5e9cb1533852bd3296bd16591a807aaa4e234fcbd2e",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/app/download_history_intake.inc": "e6eb7c73f3469e82070b1d366c2e40e072eb47cf29ee19bb41866693f294baaa",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/app/file_operations_bridge.inc": "afd3c207b47bab628836b53263e80a76f8f0ff1d37290c4e573ccc0ced80cdba",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/app/session_bridge.cpp": "6a19fe546e62b65ff7b9567ba9bc08cdb12362f917414906324c5811d4a99b2a",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/core/CMakeLists.txt": "d3ffcf9f406b93905891d8d82b726d86f64bf2ab9274631cfbdbadcf7bc4cfec",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/core/include/biglybtc/original_tag_order.hpp": "b6c9f4a256c8ccec6a08513f2f845ca53cd5cc8032b6b02e6c2f4583f52b9505",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/core/src/original_tag_order.cpp": "d407a301cde196aeb6f10d32e295fc3657ce0ecc41fa568f9814c59d6f9b980d",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/core/src/original_tag_order_algorithm.hpp": "8768e2dc282a43512bd13aa550ff40e5f913aad2ff3f8683135918fdd12453ba",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/core/src/original_tag_order_properties.hpp": "247534bbd63951644c40a2b83691402fd67c6113e66dc230b044664759160335",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/tests/CMakeLists.txt": "84ac5c627c642548513fbb34e5b8389cc76be25380ec7376aaf760764dbfd707",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/tests/file_operations_bridge_tests.cpp": "59b866fd48fc65f94c1669f53214baa38d17751d4246c40ede3b113830c1ddb7",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/tests/file_operations_tests.cpp": "896e97259397f8c33d993546c243efd08db388f5da2ccdd636387cfdc186fcbb",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/tests/full32_tag_fixture.hpp": "a54e058cb742bd81c00f9a241757f8bd2a7dc3a94c7fdd44da79fd81753b8a65",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/tests/original_tag_order_corpus.inc": "b14be59559477e3100f4301b9200af98e33ea1325caf496f416cbf87f9eb4cac",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/staging/preview/native/tests/original_tag_order_tests.cpp": "abdaa4d1c8aaab83b8dbc17c91c1f39f7686042a8c227a47826d69558f5ab0c3",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/stamp.py": "75eb79786a48d40ff6caebde45124aac47edd0a2e9b607089f4b4c6a2fd86516",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/tools-manifest.json": "5e2be39b4db2a6fb7cf44d9983c5fedc8a80eb0b9932b20d2162ac94e2f0427a",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/receive-lifecycle-build-20261106/finish-qualification.py": "f735dc5a485ef24c0bedd3877698244f20be20bb9c7844487c94b9503c4145ab",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/receive-lifecycle-build-20261106/frontcheck.py": "ec919afb53087f94172e7b41094325d0eca8c70f3e78d139ef58c6a6090c2131",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/receive-lifecycle-build-20261106/preflight.py": "589cc6f450ed3c0ec6f32eb2567bc21adcc7dac0660e1add85ff97c6f4381f32",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/receive-lifecycle-build-20261106/qualify.py": "58e2a4851cff2ac2cc04da8e59fb90d9ebcddf3f12a94afae8c6600a701c3e1e",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/run-inbound-batch.py": "f87cba0f208073b81757f41a65901581a6733874ab58f198406fbb2ef566d6a8",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/manifest.json": "f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/result.json": "bf825517300df125e1907dc9f715d33f7fd811d734006d57a41f7a32fc015aed",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-inputs.json": "6e582113e641f1390e55b53fbc2f1e355e54f7e206340f9aeae6f575660b006d",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-role-integration/final/root-artifact-review.json": "00cda3c48889d85c4b26a98f519cd0c6f60fad066609eef9c92f647183327322",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-role-integration/final/root-mixed-role-approval.json": "9631d9e89cccb9360d8661ade6a30bc6882cb7a1afd773ad703112d2694ddc9f",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-role-integration/final/runtime-manifest.json": "0a89e6259888ef9d05db489d51875075c4d31148eb5eacaee7f453840f34fd88",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/source-build-record-discovery-final.json": "e213ba3227a464fcb8eab1c7db3e3adef720f482fd352bb87ec12c3f27ec1e92"
+  },
+  "lane": "san",
+  "original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "source_after_sha256": "7017a7b4af6664e98c267170ad4ebadbc6f329bbeea51f920de6c26d04915df2",
+  "source_map_sha256": "7017a7b4af6664e98c267170ad4ebadbc6f329bbeea51f920de6c26d04915df2",
+  "status": "PASS",
+  "tests_xml_sha256": "e2f0dcac16a3a7a4f842d8eb1c1aa043d08aafcea493174b90088d9c68f3fd1d",
+  "source_commit": "b77eb40adf8ed44ea2caeacb561428eb08311f09",
+  "source_tree": "04e4a8b61071bedf85e529d7cc390fd59833d2e5",
+  "unstamped_receipt": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/san/r1/result-raw.json",
+  "unstamped_receipt_sha256": "17ff21f8a725bd2f814dcbdc1eefcf37c66d24f192cd73bf08d74d2d1bf1ccca"
+}

@@ -24,3 +24,8 @@ Latest bounded library-policy implementation `7335aba21d8d12c7dab9e2df04a51c4aa4
 
 
 History/library `7b3e55f9f8ea5cbd43791e11c1870890875d63a8`, tree `fa98e0b8247185e976cf6a9371abe673248ee4f2`: real fresh intake/magnet receipts, classic history tab and ordinary group/colour edits qualified within evidence/20261106-history-library-view/REVIEW.md. Full completion producer/removal/reset/archive remain open.
+
+## 2026-11-06 supported removal tags and current-source history handoff
+
+Implementation `b77eb40adf8ed44ea2caeacb561428eb08311f09`, Native subtree `04e4a8b61071bedf85e529d7cc390fd59833d2e5`, original core `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`: GCC/SAN nine affected suites plus application builds passed;21 critical actual Host rows and64 value cases per lane. Current-source original history ten-command handoff passed in 46.152s with real timer write, return/prefix checks, joins, private cleanup and digest guards. [Evidence](../evidence/20261106-history-removal-tags/REVIEW.md). Selected original identity h/v/UID and full32 ambiguity checks, preissue optional capture warnings and postissue essential CAS refusal are bounded by the recorded limits. Prior JVM value proof `4318d91f40ca1947d94dadbf97e7a2a9dfc901579b44710bef9b2ed2315689ec` is carried, not rerun; separate public torrent API child is two javac attempts/one run. This supersedes the older statement that this P08 candidate was only prepared:22 merged leaves are adopted/qualified at this implementation. Full P08/global baselines/default distribution remain open; prior P07 provenance `15012726f798ea813053eed665c12693a795fa0b` is retained.
+

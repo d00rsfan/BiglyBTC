@@ -1,0 +1,219 @@
+{
+  "bundled_inputs": {
+    "base-source-review.json": {
+      "bytes": 4632,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/source-review.json",
+      "sha256": "d5cdd0d9de734ce524ab8993c13b9162a21d789ba2054b71acc6011be0ba50ec"
+    },
+    "carried-value-evidence.json": {
+      "bytes": 3594,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/carried-value-evidence.json",
+      "sha256": "0d390390c666b233bdcb53ca1c777c0c7db1319f2b78619131b2072133d3e0f9"
+    },
+    "carried-value-manifest.json": {
+      "bytes": 10057,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-unicode-order/qualification-r2/manifest.json",
+      "sha256": "4318d91f40ca1947d94dadbf97e7a2a9dfc901579b44710bef9b2ed2315689ec"
+    },
+    "current-java-handoff.json": {
+      "bytes": 27745,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/java-handoff/r1/current-java-handoff.json",
+      "sha256": "facb0cb57423de91d5bca51dc9cf5d13a3974c24760e4b85065fc51e59cc3bb7"
+    },
+    "full32-source-review.json": {
+      "bytes": 6923,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/source-review.json",
+      "sha256": "2943f80a83017e762c169108e7d52a736b81999a8d1a026eb1dc7296d12444dd"
+    },
+    "gcc-qualification.json": {
+      "bytes": 18655,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/gcc/r1/result-stamped.json",
+      "sha256": "1f3340297f4868eedd453bcc219beef2cb9788ad70d733e3fb52062174e53a7b"
+    },
+    "independent-review.json": {
+      "bytes": 8137,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/independent-acceptance-review.json",
+      "sha256": "be16dba6ef2b42c1d2cd03a142cfd046ee726a62b62d9d2427544a5c30dc54f5"
+    },
+    "java-handoff-result.json": {
+      "bytes": 51736,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/java-handoff/r1/actual-handoff/result.json",
+      "sha256": "a98dcf92ef67ccf3c916a41892d861a428f0158037ca8ec20783070b8605c413"
+    },
+    "java-helper-build.json": {
+      "bytes": 173254,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/java-handoff/r1/helper-build.json",
+      "sha256": "7766ba323b88f42293d9c202cf123a314e475ba9c7e74085070d6aeb8cc7f448"
+    },
+    "qualification-spec.json": {
+      "bytes": 10417,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/spec.json",
+      "sha256": "77d950fe0a764be4bbae5d5c9dcb2bd80211139dc60d1e91917a315b2005d296"
+    },
+    "qualification.json": {
+      "bytes": 949,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/result.json",
+      "sha256": "2870654b176c5f3d061b940848a9358ca6faa85b96f4618648b68a68df1b5ab8"
+    },
+    "qualified-source.json": {
+      "bytes": 12940,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualified-source.json",
+      "sha256": "b566c61477bd59ed50b8405db418501e97e374bca38f8f623355ef0b9e9dff6d"
+    },
+    "san-qualification.json": {
+      "bytes": 18669,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/san/r1/result-stamped.json",
+      "sha256": "13b829f1efb61b36da049b1e13f0df7c8d43cb7fda0d5af386871d1d1c514057"
+    },
+    "static-basic-persistence-note.json": {
+      "bytes": 9436,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/evidence/followup-note.json",
+      "sha256": "418d52e4575b2be30a8490a75d7a50adb119fd6b071b79d42c2c428b3f8e6af9"
+    },
+    "torrent-first-compile-failure.json": {
+      "bytes": 3104,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/evidence/result.json",
+      "sha256": "134f3ee37022fcff5cf11a5f00454714bfd419e8a7e30ea79821582ee5aac799"
+    },
+    "torrent-public-api.json": {
+      "bytes": 6630,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-history-tag-completion-20261106/amendments/full32-taggable-binding/r2/result.json",
+      "sha256": "57b86b0a1f698340c13b07e324f5a66a11b32a61109be8a9e88bc3368b5b3ee3"
+    }
+  },
+  "carried_JVM_value_corpus_rerun": false,
+  "carried_value_manifest_sha256": "4318d91f40ca1947d94dadbf97e7a2a9dfc901579b44710bef9b2ed2315689ec",
+  "child_public_torrent_API": {
+    "java_runs": 1,
+    "javac_including_failed_first_attempt": 2,
+    "programs": 1
+  },
+  "current_original_history_API": {
+    "children_joined": true,
+    "class_images_retained_as_receipt_only": {
+      "HistoryOriginalHandoff.class": "e972d3536773c275fc64cdb2629d1b3c5834c54b35d5ca8676494c7994c11671"
+    },
+    "commands": 10,
+    "elapsed_seconds": 46.152,
+    "full_digest_boundaries": [
+      {
+        "boundary": "pre-subjects",
+        "bytes_hashed": 2281368360,
+        "elapsed_seconds": 8.242,
+        "files": 1464
+      },
+      {
+        "boundary": "post-joined-cleanup",
+        "bytes_hashed": 2281368360,
+        "elapsed_seconds": 9.535,
+        "files": 1464
+      }
+    ],
+    "javac": 1,
+    "private_profile_payload_home_install_classes_removed": true
+  },
+  "default_distribution_promoted": false,
+  "full_P08_complete": false,
+  "global_integration_baselines_advanced": false,
+  "implementation_commit": "b77eb40adf8ed44ea2caeacb561428eb08311f09",
+  "independent_review": {
+    "bytes": 8137,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/independent-acceptance-review.json",
+    "sha256": "be16dba6ef2b42c1d2cd03a142cfd046ee726a62b62d9d2427544a5c30dc54f5"
+  },
+  "measured_coverage": {
+    "gcc": {
+      "build_and_tests_elapsed_seconds": 767.58,
+      "required_host_rows_passed": [
+        "FileOperationsBridgeTests::actualNormalWindowTransferRemovalMovesOnlyExistingHistory(enabled-actual-active-to-dead)",
+        "FileOperationsBridgeTests::actualNormalWindowTransferRemovalMovesOnlyExistingHistory(unicode-common-literal-names-and-groups)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(disabled-startup-mode-not-current-toggle)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(empty-list-preserves-old)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(localized-name-unavailable)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(unicode-reference-properties-unavailable)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(case-equal-order-ambiguous)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(saving-candidate-read-only)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(externally-stale-actual-store)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(malformed-whole-namespace)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(more-than-history-bound-never-truncates)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(original-invalid-property-skips-member)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(aliased-canonical-group-lookup-unavailable)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(malformed-utf8-name-preserved)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(group-reference-properties-unavailable)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(unicode-case-equal-order-ambiguous)",
+        "FileOperationsBridgeTests::actualFull32RemovalUsesPreparedSelectedOriginalTaggable(pure-v2-selected20-full32-v)",
+        "FileOperationsBridgeTests::actualFull32RemovalUsesPreparedSelectedOriginalTaggable(hybrid-default-v1-is-not-v2-prefix)",
+        "FileOperationsBridgeTests::actualFull32RemovalUsesPreparedSelectedOriginalTaggable(hybrid-selected-v2-keeps-v1-history-h)",
+        "FileOperationsBridgeTests::actualFull32RemovalUsesPreparedSelectedOriginalTaggable(full32-unavailable-tag-retains-prior-after-move)",
+        "FileOperationsBridgeTests::actualFull32RemovalUsesPreparedSelectedOriginalTaggable(selected20-alias-cannot-borrow-history-identity)"
+      ],
+      "test_seconds": 211.05012695,
+      "tests": [
+        "original-tag-order",
+        "file-operations",
+        "file-operations-host",
+        "manual-tag-store",
+        "original-download-history-store",
+        "original-download-history-intake-owner",
+        "original-download-history-completion-owner",
+        "original-download-history-classic-view",
+        "original-torrent-identity"
+      ],
+      "value_corpus_cases": 64,
+      "xml": {
+        "bytes": 27607,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/gcc/r1/tests.xml",
+        "sha256": "8ae68df3789d0dbf001a228c326a1ec882807d6090face36d345e5d4211e24fb"
+      }
+    },
+    "san": {
+      "build_and_tests_elapsed_seconds": 938.735,
+      "required_host_rows_passed": [
+        "FileOperationsBridgeTests::actualNormalWindowTransferRemovalMovesOnlyExistingHistory(enabled-actual-active-to-dead)",
+        "FileOperationsBridgeTests::actualNormalWindowTransferRemovalMovesOnlyExistingHistory(unicode-common-literal-names-and-groups)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(disabled-startup-mode-not-current-toggle)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(empty-list-preserves-old)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(localized-name-unavailable)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(unicode-reference-properties-unavailable)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(case-equal-order-ambiguous)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(saving-candidate-read-only)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(externally-stale-actual-store)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(malformed-whole-namespace)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(more-than-history-bound-never-truncates)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(original-invalid-property-skips-member)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(aliased-canonical-group-lookup-unavailable)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(malformed-utf8-name-preserved)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(group-reference-properties-unavailable)",
+        "FileOperationsBridgeTests::actualRemovalTagCapturePreservesPreviousTagsWhenUnavailable(unicode-case-equal-order-ambiguous)",
+        "FileOperationsBridgeTests::actualFull32RemovalUsesPreparedSelectedOriginalTaggable(pure-v2-selected20-full32-v)",
+        "FileOperationsBridgeTests::actualFull32RemovalUsesPreparedSelectedOriginalTaggable(hybrid-default-v1-is-not-v2-prefix)",
+        "FileOperationsBridgeTests::actualFull32RemovalUsesPreparedSelectedOriginalTaggable(hybrid-selected-v2-keeps-v1-history-h)",
+        "FileOperationsBridgeTests::actualFull32RemovalUsesPreparedSelectedOriginalTaggable(full32-unavailable-tag-retains-prior-after-move)",
+        "FileOperationsBridgeTests::actualFull32RemovalUsesPreparedSelectedOriginalTaggable(selected20-alias-cannot-borrow-history-identity)"
+      ],
+      "test_seconds": 227.64096179999999,
+      "tests": [
+        "original-tag-order",
+        "file-operations",
+        "file-operations-host",
+        "manual-tag-store",
+        "original-download-history-store",
+        "original-download-history-intake-owner",
+        "original-download-history-completion-owner",
+        "original-download-history-classic-view",
+        "original-torrent-identity"
+      ],
+      "value_corpus_cases": 64,
+      "xml": {
+        "bytes": 27451,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/qualification/san/r1/tests.xml",
+        "sha256": "e2f0dcac16a3a7a4f842d8eb1c1aa043d08aafcea493174b90088d9c68f3fd1d"
+      }
+    }
+  },
+  "native_tree": "04e4a8b61071bedf85e529d7cc390fd59833d2e5",
+  "new_compiler_auth_or_runtime_subjects_executed_for_publication": false,
+  "original_core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "prior_P07_provenance_commit_retained": "15012726f798ea813053eed665c12693a795fa0b",
+  "status": "PASS_SUPPORTED_HISTORY_REMOVAL_TAGS_AND_CURRENT_CODEC_HANDOFF"
+}
