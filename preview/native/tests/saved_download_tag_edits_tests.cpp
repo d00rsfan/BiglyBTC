@@ -134,8 +134,59 @@ void quotasAndFreshOwnership() {
   limits={};++limits.document.depth;refused(input,c::SavedTagRename{1,"x"},c::SavedTagEditError::Limit,limits);
   limits={};limits.textBytes=2;refused(input,c::SavedTagRename{1,"x"},c::SavedTagEditError::Limit,limits);
 }
+void constraintPropertyPreservesUnknownsAndNeverEditsMembers() {
+  const auto tail=dict({{"unknown",bytes(std::string("x\0y",3))}});
+  const auto members=list({bytes(H20),bytes("future-raw-id")});
+  const auto props=list({dict({{"a","i2e"}}),dict({{"future","i9e"}})});
+  const auto config=dict({{"pp.constraint",list({bytes("old"),bytes("am=1;"),tail,bytes("future-string")})},{"future",tail}});
+  const auto input=dict({{"other-type",tail},{"3",dict({{"1",dict({{"n",bytes("rule")},{"c",config},{"o",members},{"p",props},{"future-record",tail}})},{"c",tail}})}});
+  const auto result=edited(input,c::SavedTagSetConstraint{1,"isNew() && broken(","am=2;future-option;",false});
+  const auto& row=record(result,"1");const auto* changed=row.find("c");const auto* property=changed->find("pp.constraint");
+  check(result.changed&&property&&property->children.size()==4&&property->children[0].bytes=="isNew() && broken("&&property->children[1].bytes=="am=2;future-option;","Expression must save as configuration without a compiler gate");
+  check(raw(result,property->children[2])==tail&&property->children[3].bytes=="future-string"&&raw(result,*changed->find("future"))==tail,"Unknown property tail/configuration lost");
+  check(raw(result,*row.find("o"))==members&&raw(result,*row.find("p"))==props&&raw(result,*row.find("future-record"))==tail&&raw(result,*result.value.source->find("other-type"))==tail,"Configuration save changed raw membership/other data");
+  check(changed->find("pp.enabled.constraint")->integer==0,"Original enabled property encoding differs");
+  const auto noop=edited(wire(result),c::SavedTagSetConstraint{1,"isNew() && broken(","am=2;future-option;",false});check(!noop.changed&&wire(noop)==wire(result),"Equivalent property save rewrote bytes");
+  const auto clear=edited(wire(result),c::SavedTagSetConstraint{1,"","",true});check(record(clear,"1").find("c")->find("pp.constraint")->children.size()==4&&raw(clear,*record(clear,"1").find("o"))==members,"Empty inactive property lost unknown list tail or members");
+  const auto empty=dict({{"3",dict({{"1",dict({{"n",bytes("empty")}})}})}});check(!edited(empty,c::SavedTagSetConstraint{1,"","",true}).changed,"Absent default constraint should remain a no-op");
+  const auto noncanonical=dict({{"3",dict({{"1",dict({{"n",bytes("disabled")},{"c",dict({{"pp.enabled.constraint","i9e"}})}})}})}});check(!edited(noncanonical,c::SavedTagSetConstraint{1,"","",false}).changed,"Original Boolean enabled must mean exactly integer1");
+  const auto malformed=[&](std::string value){return dict({{"3",dict({{"1",dict({{"n",bytes("bad")},{"c",dict({{"pp.constraint",value}})}})}})}});};
+  refused(malformed("i1e"),c::SavedTagSetConstraint{1,"true","",true},c::SavedTagEditError::MalformedConfiguration);
+  refused(malformed(list({"i1e"})),c::SavedTagSetConstraint{1,"true","",true},c::SavedTagEditError::MalformedConfiguration);
+  refused(empty,c::SavedTagSetConstraint{1,std::string("\xff",1),"",true},c::SavedTagEditError::InvalidConstraint);
+  auto limits=c::SavedTagLimits{};limits.fieldBytes=3;refused(empty,c::SavedTagSetConstraint{1,"true","",true},c::SavedTagEditError::Limit,limits);
+}
+void configuredGroupEffectsCannotBorrowOrdinaryMembershipEdits(){
+  const auto make=[&](std::string groupSettings,bool member=true,std::string group="G"){
+    return dict({{"3",dict({{"c",std::move(groupSettings)},{"1",dict({{"n",bytes("Grouped")},{"c",dict({{"gr",bytes(group)}})},{"o",member?list({bytes(H20)}):"le"}})}})}});
+  };
+  for(const auto& value:{dict({{"x","i1e"}}),dict({{"ar",bytes("")}}),dict({{"gc","le"}}),dict({{"future","i0e"}}),std::string("i0e")}){
+    const auto current=make(dict({{"I4",value}}));
+    refused(current,c::SavedTagRemoveMember{1,hash(20)},c::SavedTagEditError::UnsupportedGroupSettings);
+    refused(current,c::SavedTagAddMember{1,hash(32),100},c::SavedTagEditError::UnsupportedGroupSettings);
+  }
+  for(const auto& settings:{std::string("de"),dict({{"I4","de"}}),dict({{"I4",dict({{"x","i0e"}})}}),dict({{"I4",dict({{"x","i2e"}})}}),dict({{"UNRELATED",dict({{"x","i1e"}})}})}){
+    check(edited(make(settings),c::SavedTagRemoveMember{1,hash(20)}).changed,"Ordinary/independent group membership was blanket refused");
+  }
+  const auto unknown=dict({{"3",dict({{"c",dict({{"I4",dict({{"x","i1e"}})}})},{"1",dict({{"n",bytes("Ungrouped")}})}})}});
+  check(edited(unknown,c::SavedTagAddMember{1,hash(20),1}).changed,"Unrelated group settings blocked an ungrouped row");
+  const auto nonAscii=make(dict({{"UNRELATED","de"}}),true,"\xC3\xA9");
+  refused(nonAscii,c::SavedTagRemoveMember{1,hash(20)},c::SavedTagEditError::UnsupportedGroupSettings);
+  check(edited(make("de",true,"\xC3\xA9"),c::SavedTagRemoveMember{1,hash(20)}).changed,"Absent group definitions should not invent charset policy");
+}
+void configuredPerTagEffectsRemainDataOnlyUntilActualExecutor(){
+  for(const auto& config:{dict({{"rl.up","i1024e"}}),dict({{"rl.down","i512e"}}),dict({{"pp.2","i1e"}}),dict({{"pp.tracker_templates",list({bytes("apply:template")})}}),dict({{"pp.trackers",list({bytes("tracker")})}}),dict({{"pp.untagged","i1e"}}),dict({{"future-effect","i0e"}})}){
+    const auto before=dict({{"3",dict({{"1",dict({{"n",bytes("Configured")},{"c",config}})}})}});
+    const auto data=edited(before,c::SavedTagAddMember{1,hash(20),1});check(data.changed,"Value-only membership projection unexpectedly became runtime permission");
+    const auto* row=data.value.source->find("3")->find("1");check(!c::ordinarySavedTagMembershipEffects(data.value,*row),"Configured effect was treated as a supported executor");
+    check(raw(data,*row->find("c"))==config,"Data projection changed configured effect bytes");
+  }
+  for(const auto& config:{std::string("de"),dict({{"vis","i1e"},{"oname",bytes("original")}}),dict({{"pp.trackers","le"},{"pp.tracker_templates","le"},{"pp.untagged","i0e"},{"pp.2","i0e"}}),dict({{"pp.constraint",list({bytes("true"),bytes("am=1;")})},{"pp.enabled.constraint","i0e"}})}){
+    auto tags=c::readSavedDownloadTags(dict({{"3",dict({{"1",dict({{"n",bytes("Metadata")},{"c",config}})}})}}));check(bool(tags)&&c::ordinarySavedTagMembershipEffects(*tags,*tags->source->find("3")->find("1")),"Supported metadata-only/default property was blanket refused");
+  }
+}
 } // namespace
 int main() {
-  try {allocationNamesAndUid();localizedRenameAndVisibility();rawPreservationAndRemoval();alignedMembershipAndUnknownIds();malformedAndAmbiguousRefuse();quotasAndFreshOwnership();std::cout<<"PASS six pure saved manual-tag edit families\n";return 0;}
+  try {allocationNamesAndUid();localizedRenameAndVisibility();rawPreservationAndRemoval();alignedMembershipAndUnknownIds();malformedAndAmbiguousRefuse();quotasAndFreshOwnership();constraintPropertyPreservesUnknownsAndNeverEditsMembers();configuredGroupEffectsCannotBorrowOrdinaryMembershipEdits();configuredPerTagEffectsRemainDataOnlyUntilActualExecutor();std::cout<<"PASS seven pure saved manual-tag edit families\n";return 0;}
   catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}
 }

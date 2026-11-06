@@ -19,7 +19,11 @@ bool LibraryWindow::sendCategoryCommand(CategoryCommand request){
   if(closing_||offlinePreview_||busy_||!columnSession_||pendingCategoryCommand_||categoryRequest_==std::numeric_limits<quint64>::max()){return false;}
   if(request.session&&request.session!=columnSession_){return false;}
   if(request.kind!=CategoryCommandKind::Reload){
-    if(!latestCategoryEditor_||!latestCategoryEditor_->writable||latestCategoryEditor_->recoveryRequired||!latestCategoryEditor_->generation){return false;}
+    if(!latestCategoryEditor_||!latestCategoryEditor_->generation){return false;}
+    if(request.kind==CategoryCommandKind::ResumeRemove){
+      if(!latestCategoryEditor_->deletionSupported||latestCategoryEditor_->recovery.state!=CategoryRecoveryInfo::State::Resumable
+          ||!request.name||*request.name!=latestCategoryEditor_->recovery.name){return false;}
+    }else if(!latestCategoryEditor_->writable||latestCategoryEditor_->recoveryRequired){return false;}
     if(request.generation&&request.generation!=latestCategoryEditor_->generation){return false;}
     request.generation=latestCategoryEditor_->generation;
     if(request.kind==CategoryCommandKind::Assign){
@@ -37,7 +41,9 @@ bool LibraryWindow::sendCategoryCommand(CategoryCommand request){
 void LibraryWindow::setCategoryCommandFinished(CategoryCommandPresentation packet){
   if(!packet||!pendingCategoryCommand_||packet->session!=columnSession_||packet->session!=pendingCategoryCommand_->session
       ||packet->request!=pendingCategoryCommand_->request||packet->kind!=pendingCategoryCommand_->kind
-      ||packet->requestedTarget!=pendingCategoryCommand_->target||packet->failure.size()>8192||packet->refreshFailure.size()>8192){return;}
+      ||packet->requestedTarget!=pendingCategoryCommand_->target||packet->failure.size()>8192||packet->refreshFailure.size()>8192||packet->recovery.name.toUtf8().size()>4096
+      ||packet->recovery.reason.size()>1024||packet->recovery.totalMembers>128
+      ||packet->recovery.acknowledgedMembers>packet->recovery.totalMembers){return;}
   const auto command=*pendingCategoryCommand_;
   const bool success=packet->status==CategoryCommandStatus::Loaded||packet->status==CategoryCommandStatus::Saved||packet->status==CategoryCommandStatus::Unchanged;
   if(success){
@@ -59,7 +65,7 @@ void LibraryWindow::setCategoryCommandFinished(CategoryCommandPresentation packe
   const QPointer<LibraryWindow> guard(this);
   if(categoryDialog_){categoryDialog_->setResult(packet);if(!guard){return;}}
   setMessage(!packet->refreshFailure.isEmpty()?tr("Categories saved; reload required: %1").arg(packet->refreshFailure.left(512)):
-      packet->status==CategoryCommandStatus::Saved?tr("Categories saved"):packet->status==CategoryCommandStatus::Unchanged?tr("Categories unchanged"):
+      packet->status==CategoryCommandStatus::Saved?(packet->restartRequired?tr("Categories saved. Close and reopen the profile before starting transfers."):tr("Categories saved")):packet->status==CategoryCommandStatus::Unchanged?tr("Categories unchanged"):
       packet->status==CategoryCommandStatus::Loaded?tr("Categories loaded"):packet->status==CategoryCommandStatus::Cancelled?tr("Category command cancelled"):tr("Category command rejected: %1").arg(packet->failure.left(512)));
 }
 void LibraryWindow::rejectCategoryCommand(const CategoryCommand& request){

@@ -220,17 +220,20 @@ struct OwnedMixedI2pService::Impl {
   bool closed=false,joined=false;std::optional<Error> closeError;
   Impl(std::shared_ptr<provider::ProfileSource> s,std::shared_ptr<Reservation> r,std::unique_ptr<Graph> g,std::unique_ptr<provider::ContactOwner> cache):source(std::move(s)),reservation(std::move(r)),graph(std::move(g)),contacts(std::move(cache)){}
   bool onCaller()const noexcept{return QThread::currentThread()==caller;}
-  template<class F>bool onGraph(F&& f)const{
+  template<class F>bool onGraph(F&& f,bool stopping=false)const{
+    if(checkpointOmitted&&!stopping){return false;}
     bool failed=false;const auto invoke=[&]{try{f();}catch(...){failed=true;graph->close("Mixed I2P internal dispatch failed");}};
     if(graph->thread()==QThread::currentThread()){invoke();return !failed;}
     return thread.isRunning()&&QMetaObject::invokeMethod(graph.get(),invoke,Qt::BlockingQueuedConnection)&&!failed;
   }
-  std::expected<void,Error> shutdown(){
-    if(!onCaller()){return refused("Mixed I2P close requires its Host worker");}if(closed){return closeError?std::expected<void,Error>{std::unexpected(*closeError)}:std::expected<void,Error>{};}
-    if(!onGraph([&]{graph->close();last=graph->observations();closeError=graph->closeError;if(graph->closeUncertain){closeError=Error{Code::Io,"Mixed route withdrawal did not complete normally"};}if(graph->thread()!=caller){(void)graph->moveToThread(caller);}})){
+  bool checkpointOmitted=false;
+  std::expected<void,Error> shutdown(bool saveContacts=true){
+    if(!onCaller()){return refused("Mixed I2P close requires its Host worker");}if(!saveContacts){checkpointOmitted=true;source->revoke();}if(checkpointOmitted){saveContacts=false;}if(closed){return closeError?std::expected<void,Error>{std::unexpected(*closeError)}:std::expected<void,Error>{};}
+    if(!onGraph([&]{graph->close();last=graph->observations();closeError=graph->closeError;if(graph->closeUncertain){closeError=Error{Code::Io,"Mixed route withdrawal did not complete normally"};}if(graph->thread()!=caller){(void)graph->moveToThread(caller);}},true)){
       source->revoke();closeError=Error{Code::Io,"Mixed I2P event loop unavailable during close"};
+      if(checkpointOmitted){return std::unexpected(*closeError);} // No joined claim; retain graph/lease.
     }
-    thread.quit();thread.wait();graph->join();if(contacts){contacts->finish();}graph.reset();joined=true;closed=true;reservation.reset();
+    thread.quit();thread.wait();graph->join();if(contacts&&saveContacts){contacts->finish();}graph.reset();joined=true;closed=true;reservation.reset();
     for(auto& status:last){status.active=false;status.unavailable=true;status.joined=true;}
     return closeError?std::expected<void,Error>{std::unexpected(*closeError)}:std::expected<void,Error>{};
   }
@@ -270,71 +273,74 @@ std::expected<std::unique_ptr<OwnedMixedI2pService>,storage::Error> OwnedMixedI2
 }
 
 std::expected<void,storage::Error> OwnedMixedI2pService::prepareMagnet(const engine::PendingMagnet& intent){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||s.closed||s.pendingPrepared.contains(intent.hash.hex())||s.prepared.contains(intent.hash.hex())){return refused("Current unretained mixed pending intent required");}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||(s.closed||s.checkpointOmitted)||s.pendingPrepared.contains(intent.hash.hex())||s.prepared.contains(intent.hash.hex())){return refused("Current unretained mixed pending intent required");}
   auto source=s.source->preparePendingMagnet(intent);if(!source){return std::unexpected(source.error());}
   s.pendingPrepared.emplace(intent.hash.hex(),Impl::PendingEntry{std::move(*source),{}});return {};
 }
 std::expected<void,storage::Error> OwnedMixedI2pService::bindMetadata(std::shared_ptr<const engine::PendingMetadataSource> metadata){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||s.closed||!metadata){return refused("Current actual metadata seal required");}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||(s.closed||s.checkpointOmitted)||!metadata){return refused("Current actual metadata seal required");}
   auto found=s.pendingPrepared.find(metadata->hash().hex());if(found==s.pendingPrepared.end()){return refused("Prepared pending source required");}
   auto result=found->second.source->bindMetadata(metadata);if(result){found->second.metadata=std::move(metadata);}return result;
 }
 std::expected<void,storage::Error> OwnedMixedI2pService::attachMetadata(std::shared_ptr<const engine::PendingMetadataSource> metadata){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||s.closed||!metadata){return refused("Current actual metadata seal required");}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||(s.closed||s.checkpointOmitted)||!metadata){return refused("Current actual metadata seal required");}
   auto found=s.pendingPrepared.find(metadata->hash().hex());if(found==s.pendingPrepared.end()||found->second.metadata!=metadata){return refused("Exact bound pending source required");}
   std::expected<void,Error> result;if(!s.onGraph([&]{result=s.graph->addMetadata(found->second.source,metadata);})){return refused("Mixed metadata event loop unavailable");}return result;
 }
 std::expected<void,storage::Error> OwnedMixedI2pService::removeMetadata(const core::TorrentHash& hash){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||s.closed){return refused("Live mixed Host worker required");}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||(s.closed||s.checkpointOmitted)){return refused("Live mixed Host worker required");}
   auto found=s.pendingPrepared.find(hash.hex());if(found==s.pendingPrepared.end()){return {};}
   std::expected<void,Error> result;if(!s.onGraph([&]{result=s.graph->suspend(hash);if(result){s.graph->routes.erase(hash.hex());}})){return refused("Mixed metadata event loop unavailable");}
   if(!result){return result;}auto released=found->second.source->release();if(!released){return released;}s.pendingPrepared.erase(found);s.attempts.erase(hash.hex());return {};
 }
 std::expected<void,storage::Error> OwnedMixedI2pService::publishPendingMagnet(const core::TorrentHash& hash,const std::function<std::expected<void,storage::Error>()>& operation){
-  auto& s=*impl_;if(!s.onCaller()||s.closed){return refused("Live mixed pending publication owner required");}return s.source->publishPendingMagnet(hash,operation);
+  auto& s=*impl_;if(!s.onCaller()||(s.closed||s.checkpointOmitted)){return refused("Live mixed pending publication owner required");}return s.source->publishPendingMagnet(hash,operation);
 }
 std::expected<void,storage::Error> OwnedMixedI2pService::prepare(const core::TorrentHash& hash){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||s.closed){return refused("Live mixed Host worker required");}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||(s.closed||s.checkpointOmitted)){return refused("Live mixed Host worker required");}
   if(s.prepared.contains(hash.hex())){return refused("Mixed child already prepared");}
   Observation attempted;attempted.hash=hash;
   auto child=s.source->prepareMixedChild(hash);if(!child){attempted.unavailable=true;attempted.failure=child.error().message;s.attempts[hash.hex()]=std::move(attempted);return std::unexpected(child.error());}
   s.attempts[hash.hex()]=std::move(attempted);s.prepared.emplace(hash.hex(),Impl::Entry{std::move(*child),{}});return {};
 }
 std::expected<void,storage::Error> OwnedMixedI2pService::bind(std::shared_ptr<const engine::MixedManagedSource> managed){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||s.closed){return refused("Live mixed Host worker required");}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||(s.closed||s.checkpointOmitted)){return refused("Live mixed Host worker required");}
   if(!managed){return refused("Actual mixed engine seal required");}const auto found=s.prepared.find(managed->identity().originalKey.hex());
   if(found==s.prepared.end()){return {};} // Explicit Public-only continuation; no child means no grant.
   auto result=found->second.child->bindMixedManaged(managed);if(result){found->second.managed=std::move(managed);}return result;
 }
 std::expected<void,storage::Error> OwnedMixedI2pService::attach(std::shared_ptr<const engine::MixedManagedSource> managed){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||s.closed||!managed){return refused("Live mixed engine attachment required");}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||(s.closed||s.checkpointOmitted)||!managed){return refused("Live mixed engine attachment required");}
   const auto found=s.prepared.find(managed->identity().originalKey.hex());
   if(found==s.prepared.end()||found->second.managed!=managed){return refused("No bound mixed source for this actual admission");}
   std::expected<void,Error> result;
   if(!s.onGraph([&]{result=s.graph->add(found->second.child,managed);})){return refused("Mixed I2P event loop unavailable");}return result;
 }
 std::expected<void,storage::Error> OwnedMixedI2pService::suspend(const core::TorrentHash& hash){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||s.closed){return refused("Live mixed Host worker required");}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||(s.closed||s.checkpointOmitted)){return refused("Live mixed Host worker required");}
   std::expected<void,Error> result;if(!s.onGraph([&]{result=s.graph->suspend(hash);})){return refused("Mixed I2P event loop unavailable");}return result;
 }
 std::expected<void,storage::Error> OwnedMixedI2pService::remove(const core::TorrentHash& hash){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||s.closed){return refused("Live mixed Host worker required");}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()||(s.closed||s.checkpointOmitted)){return refused("Live mixed Host worker required");}
   const auto found=s.prepared.find(hash.hex());if(found==s.prepared.end()){s.attempts.erase(hash.hex());return {};}
   std::expected<void,Error> result;if(!s.onGraph([&]{result=s.graph->suspend(hash);if(result){s.graph->routes.erase(hash.hex());}})){return refused("Mixed I2P event loop unavailable");}
   if(!result){return result;}auto released=s.source->releaseMixedChild(hash);if(!released){return released;}s.prepared.erase(found);s.attempts.erase(hash.hex());return {};
 }
 std::expected<void,storage::Error> OwnedMixedI2pService::publish(const core::TorrentHash& hash,const std::function<std::expected<void,storage::Error>()>& operation){
-  auto& s=*impl_;if(!s.onCaller()||s.closed){return refused("Live mixed publication owner required");}return s.source->publish(hash,operation);
+  auto& s=*impl_;if(!s.onCaller()||(s.closed||s.checkpointOmitted)){return refused("Live mixed publication owner required");}return s.source->publish(hash,operation);
 }
 std::expected<void,storage::Error> OwnedMixedI2pService::publishPositions(const std::function<std::expected<void,storage::Error>()>& operation){
-  auto& s=*impl_;if(!s.onCaller()||s.closed){return refused("Live mixed publication owner required");}return s.source->publishPositions(operation);
+  auto& s=*impl_;if(!s.onCaller()||(s.closed||s.checkpointOmitted)){return refused("Live mixed publication owner required");}return s.source->publishPositions(operation);
 }
-bool OwnedMixedI2pService::sourceCurrent()const noexcept{return impl_->source->prepared();}
+bool OwnedMixedI2pService::sourceCurrent()const noexcept{
+  return impl_->onCaller()&&!impl_->closed&&!impl_->checkpointOmitted&&impl_->source->prepared();
+}
 void OwnedMixedI2pService::revoke()noexcept{impl_->source->revoke();}
 std::vector<OwnedMixedI2pService::Observation> OwnedMixedI2pService::observations()const{
   auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.onCaller()){return s.last;}
-  bool graphFailed=s.closed;std::string graphFailure;std::uint64_t generation=s.last.empty()?0:s.last.front().generation;
-  if(!s.closed&&!s.onGraph([&]{s.last=s.graph->observations();graphFailed=s.graph->closing;graphFailure=s.graph->failure;generation=s.graph->generation;})){
+  if(s.checkpointOmitted){for(auto& row:s.last){row.active=false;row.unavailable=true;row.joined=s.joined;if(!s.joined&&row.failure.empty()){row.failure="Explicit drain incomplete; retained mixed graph is not joined";}}return s.last;}
+  bool graphFailed=(s.closed||s.checkpointOmitted);std::string graphFailure;std::uint64_t generation=s.last.empty()?0:s.last.front().generation;
+  if(!(s.closed||s.checkpointOmitted)&&!s.onGraph([&]{s.last=s.graph->observations();graphFailed=s.graph->closing;graphFailure=s.graph->failure;generation=s.graph->generation;})){
     graphFailed=true;graphFailure="Mixed I2P event loop unavailable";
   }
   // A real router failure can precede the first attached route. Keep its
@@ -348,10 +354,12 @@ std::vector<OwnedMixedI2pService::Observation> OwnedMixedI2pService::observation
     // retired Public admission. No read-only result can restore I2P effects.
     const bool changed=!s.source->validateTransportSnapshot();for(auto& row:s.last){row.sourceChanged=changed;}
   }
-  for(auto& row:s.last){row.joined=s.joined;}if(!s.closed&&s.contacts){s.contacts->poll();}return s.last;
+  for(auto& row:s.last){row.joined=s.joined;}if(!(s.closed||s.checkpointOmitted)&&s.contacts){s.contacts->poll();}return s.last;
 }
 std::optional<storage::Error> OwnedMixedI2pService::contactCacheDiagnostic()const{auto& s=*impl_;std::lock_guard lock(s.mutex);return s.contacts?s.contacts->diagnostic():std::nullopt;}
 std::expected<void,storage::Error> OwnedMixedI2pService::close(){auto& s=*impl_;std::lock_guard lock(s.mutex);return s.shutdown();}
+std::expected<void,storage::Error> OwnedMixedI2pService::closeWithoutCheckpoint(){auto& s=*impl_;std::lock_guard lock(s.mutex);return s.shutdown(false);}
+bool OwnedMixedI2pService::joined()const noexcept{return impl_->onCaller()&&impl_->closed&&impl_->joined;}
 OwnedMixedI2pService::~OwnedMixedI2pService(){try{auto& s=*impl_;std::lock_guard lock(s.mutex);(void)s.shutdown();}catch(...){}}
 }
 #else
@@ -373,6 +381,8 @@ void OwnedMixedI2pService::revoke()noexcept{}
 std::vector<OwnedMixedI2pService::Observation> OwnedMixedI2pService::observations()const{return {};}
 std::optional<storage::Error> OwnedMixedI2pService::contactCacheDiagnostic()const{return std::nullopt;}
 std::expected<void,storage::Error> OwnedMixedI2pService::close(){return {};}
+std::expected<void,storage::Error> OwnedMixedI2pService::closeWithoutCheckpoint(){return {};}
+bool OwnedMixedI2pService::joined()const noexcept{return true;}
 std::expected<void,storage::Error> OwnedMixedI2pService::prepareMagnet(const engine::PendingMagnet&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed metadata unavailable"});}
 std::expected<void,storage::Error> OwnedMixedI2pService::bindMetadata(std::shared_ptr<const engine::PendingMetadataSource>){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed metadata unavailable"});}
 std::expected<void,storage::Error> OwnedMixedI2pService::attachMetadata(std::shared_ptr<const engine::PendingMetadataSource>){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Mixed metadata unavailable"});}

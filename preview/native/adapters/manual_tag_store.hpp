@@ -50,6 +50,12 @@ public:
   bool sharesOwnership(const ProfileLease& lease) const noexcept {
     return lease_ && lease_->sharesOwnership(lease);
   }
+  // Passive cached lineage only: no filesystem/source validation, edit or
+  // registry authority. Held-turn reads and actual precommit CAS stay required.
+  bool matchesSnapshotLineage(const ManualTagSnapshot& snapshot,const ProfileLease& lease) const noexcept {
+    return std::this_thread::get_id()==worker_&&!poisoned_&&sharesOwnership(lease)
+        &&snapshot.data_&&snapshot.data_==latest_&&snapshot.generation()==generation_;
+  }
   std::expected<ManualTagSnapshot, Error> snapshot() const;
   std::expected<ManualTagSnapshot, Error> reload(std::stop_token stop = {});
   // expected must be this store's latest owning snapshot. Caller-supplied

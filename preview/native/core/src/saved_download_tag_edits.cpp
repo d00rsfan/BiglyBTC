@@ -86,6 +86,35 @@ const Node* configuration(const Node& record) {
   const auto* config = record.find("c");
   require(!config || config->type == Node::Type::Dictionary, SavedTagEditError::MalformedConfiguration); return config;
 }
+std::vector<Change> constraint(const Document& doc,const Node& record,
+    const SavedTagSetConstraint& action,const SavedTagLimits& limits) {
+  const auto* config=configuration(record);
+  const auto* property=config?config->find("pp.constraint"):nullptr;
+  const auto* enabled=config?config->find("pp.enabled.constraint"):nullptr;
+  require(!property||property->type==Node::Type::List,SavedTagEditError::MalformedConfiguration);
+  require(!enabled||enabled->type==Node::Type::Integer,SavedTagEditError::MalformedConfiguration);
+  const auto count=property?property->children.size():0;
+  for(std::size_t i=0;i<std::min<std::size_t>(count,2);++i){
+    require(property->children[i].type==Node::Type::Bytes,SavedTagEditError::MalformedConfiguration);
+  }
+  for(const auto& value:{std::string_view(action.expression),std::string_view(action.options)}){
+    require(value.size()<=limits.fieldBytes&&value.size()<=limits.textBytes,SavedTagEditError::Limit);
+    require(utf8(value),SavedTagEditError::InvalidConstraint);
+  }
+  const std::string_view oldExpression=count?property->children[0].bytes:std::string_view{};
+  const std::string_view oldOptions=count>1?property->children[1].bytes:std::string_view{};
+  std::vector<Change> changes;
+  if(oldExpression!=action.expression||oldOptions!=action.options){
+    std::string list;append(list,"l",limits);bytes(list,action.expression,limits);bytes(list,action.options,limits);
+    for(std::size_t i=2;i<count;++i){append(list,raw(doc,property->children[i]),limits);}
+    append(list,"e",limits);changes.emplace_back("pp.constraint",std::move(list));
+  }
+  if((enabled?enabled->integer==1:true)!=action.enabled){
+    changes.emplace_back("pp.enabled.constraint",integer(action.enabled?1:0));
+  }
+  if(changes.empty()){return {};}
+  return {{"c",dictionary(doc,config,changes,limits)}};
+}
 std::string memberId(const TorrentHash& hash) {
   const auto source = hash.bytes(); require(source.size() == 20 || source.size() == 32, SavedTagEditError::InvalidMember);
   constexpr std::string_view alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
@@ -127,6 +156,57 @@ std::vector<Change> membership(const Document& doc, const Node& record,
   return {{"o", std::move(nextMembers)}, {"p", std::move(nextProps)}};
 }
 } // namespace
+
+bool ordinarySavedTagGroup(const SavedDownloadTags& tags,const Node& record)noexcept{
+  try{
+    if(!tags.source||tags.source->root().changed||record.type!=Node::Type::Dictionary){return false;}
+    const auto* config=record.find("c");if(!config){return true;}
+    if(config->type!=Node::Type::Dictionary){return false;}
+    const auto* group=config->find("gr");if(!group){return true;}
+    if(group->type!=Node::Type::Bytes||group->bytes.size()>4096||!utf8(group->bytes)){return false;}
+    const auto* manual=tags.source->find("3");if(!manual||manual->type!=Node::Type::Dictionary){return false;}
+    const auto* groups=manual->find("c");if(!groups){return true;}
+    if(groups->type!=Node::Type::Dictionary){return false;}
+    if(groups->children.empty()){return true;}
+    // Original getGroupID uses JVM default encoding, not the UTF8 attribute
+    // codec. Non-ASCII IDs with saved group settings need a proven mapping.
+    if(std::any_of(group->bytes.begin(),group->bytes.end(),[](unsigned char c){return c>=128;})){return false;}
+    constexpr std::string_view alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    std::string key;key.reserve((group->bytes.size()*8+4)/5);std::uint32_t bits=0;unsigned count=0;
+    for(const auto byte:group->bytes){bits=(bits<<8)|static_cast<unsigned char>(byte);count+=8;
+      while(count>=5){count-=5;key.push_back(alphabet[(bits>>count)&31]);}bits&=(std::uint32_t{1}<<count)-1;}
+    if(count){key.push_back(alphabet[(bits<<(5-count))&31]);}
+    const auto* settings=groups->find(key);if(!settings){return true;}
+    if(settings->type!=Node::Type::Dictionary){return false;}
+    for(std::size_t i=0;i<settings->children.size();i+=2){
+      const auto& name=settings->children[i].bytes;const auto& value=settings->children[i+1];
+      // MapUtils.getMapBoolean treats only long1 as true. Colour/assign-root
+      // have setter side effects even for empty values; unknowns are not defaults.
+      if(name!="x"||value.type!=Node::Type::Integer||value.integer==1){return false;}
+    }
+    return true;
+  }catch(...){return false;}
+}
+
+bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{
+  if(!ordinarySavedTagGroup(tags,record)){return false;}
+  const auto* config=record.find("c");if(!config){return true;}
+  for(std::size_t i=0;i<config->children.size();i+=2){
+    const auto& key=config->children[i].bytes;const auto& value=config->children[i+1];
+    if((key=="gr"||key=="oname")&&value.type==Node::Type::Bytes){continue;}
+    if((key=="vis"||key=="pp.enabled.constraint")&&value.type==Node::Type::Integer){continue;}
+    if((key=="pp.trackers"||key=="pp.tracker_templates")&&value.type==Node::Type::List&&value.children.empty()){continue;}
+    if((key=="pp.untagged"||key=="pp.2")&&value.type==Node::Type::Integer&&value.integer!=1){continue;}
+    if(key=="pp.constraint"&&value.type==Node::Type::List&&value.children.size()<=64){
+      bool valid=true;for(const auto& text:value.children){if(text.type!=Node::Type::Bytes||text.bytes.size()>65536||!utf8(text.bytes)){valid=false;break;}}
+      if(valid){continue;}
+    }
+    // Rates, actions, nonempty tracker rewrites and unknown fields need their
+    // real owner/executor. Saving a member cannot stand in for that dispatch.
+    return false;
+  }
+  return true;
+}
 
 std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
     std::string_view pristine, const SavedTagEdit& edit, SavedTagLimits limits) {
@@ -186,8 +266,12 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
             }
           } else if constexpr (std::is_same_v<T, SavedTagAddMember>) {
             changes = membership(doc, *record, *found, action.hash, true, action.addedTimeSeconds, limits);
+            if(!changes.empty()){require(ordinarySavedTagGroup(baseline,*record),SavedTagEditError::UnsupportedGroupSettings);}
           } else if constexpr (std::is_same_v<T, SavedTagRemoveMember>) {
             changes = membership(doc, *record, *found, action.hash, false, 0, limits);
+            if(!changes.empty()){require(ordinarySavedTagGroup(baseline,*record),SavedTagEditError::UnsupportedGroupSettings);}
+          } else if constexpr (std::is_same_v<T, SavedTagSetConstraint>) {
+            changes = constraint(doc,*record,action,limits);
           }
           recordReplacement = changes.empty() ? raw(doc, *record) : dictionary(doc, record, changes, limits);
         }

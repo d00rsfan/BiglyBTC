@@ -1,6 +1,8 @@
 // Included inside worker-affine SessionBridge::Host. No GUI/provider callback.
   std::unique_ptr<storage::CategoryStore> categoryStore;
   storage::CategorySnapshot categorySnapshot;
+  storage::CategoryDeletionRecovery categoryRecovery;
+  bool categoryRecoveryStartup=false,recoveryDrainOffered=false,recoveryDrainStarted=false;
   storage::CategoryTargetSnapshot categoryAssignment;
   ui::Target categorySelection;
   std::shared_ptr<const core::SavedCategories> categorySource;
@@ -9,7 +11,7 @@
     if(categoryRevision==std::numeric_limits<quint64>::max()){
       throw Failure{{storage::ErrorCode::Unsupported,"Category presentation revisions are exhausted"}};
     }
-    ++categoryRevision;categorySnapshot={};categorySource.reset();categoryAssignment={};categorySelection={};
+    ++categoryRevision;categoryRecovery={};categorySnapshot={};categorySource.reset();categoryAssignment={};categorySelection={};
   }
   void acceptCategories(storage::CategorySnapshot value,
       const std::shared_ptr<storage::CategorySnapshot>& holder){
@@ -22,6 +24,7 @@
     if(categoryStore&&categoryStore->recoveryRequired()){take(categoryStore->close());categoryStore.reset();}
     if(!categoryStore){categoryStore=take(storage::CategoryStore::open(lease,stop));acceptCategories(take(categoryStore->snapshot()),holder);}
     else{acceptCategories(take(categoryStore->reload(stop)),holder);}
+    categoryRecovery=take(categoryStore->inspectRemove(categorySnapshot,stop));
   }
   void categoryState(ui::CategoryCommandPacket& packet)const{
     packet.generation=categoryRevision;packet.libraryRevision=revision;
@@ -30,6 +33,17 @@
         categorySnapshot.missing()?ui::CategoryReadState::Missing:ui::CategoryReadState::Ready;
     packet.deletionSupported=categoryStore&&categoryDeletionSupported(*categoryStore);
     packet.recoveryRequired=categoryStore&&categoryStore->recoveryRequired();
+    using Source=storage::CategoryDeletionRecovery;using View=ui::CategoryRecoveryInfo;
+    switch(categoryRecovery.state){
+      case Source::State::None:packet.recovery.state=View::State::None;break;
+      case Source::State::Resumable:packet.recovery.state=View::State::Resumable;break;
+      case Source::State::Review:packet.recovery.state=View::State::Review;break;
+    }
+    packet.recovery.name=text(categoryRecovery.name);packet.recovery.reason=text(categoryRecovery.reason);
+    packet.recovery.acknowledgedMembers=categoryRecovery.acknowledgedMembers;
+    packet.recovery.totalMembers=categoryRecovery.totalMembers;
+    packet.recovery.definitionAcknowledged=categoryRecovery.definitionAcknowledged;
+    packet.restartRequired=categoryRecoveryStartup;
   }
   void categoryTarget(ui::CategoryCommandPacket& packet,const ui::Target& target,std::stop_token stop){
     accepts(target);const auto hash=identity(target);
@@ -51,6 +65,21 @@
     if(engine){auto rebased=engine->rebaseCategory(lease,hash);if(!rebased){return std::unexpected(rebased.error());}}
     if(i2p){auto rebased=i2p->rebaseCategory(lease,hash);if(!rebased){return std::unexpected(rebased.error());}}
     return {};
+  }
+  bool categoryRetainedOwners()const{
+    // Actual owner observations, outside any source gate. An idle engine alone
+    // does not prevent category recovery or ordinary close.
+    if(i2p||mixed){return true;}
+    if(engine){
+      for(const auto& row:engine->managedDownloads()){if(row.retained){return true;}}
+      for(const auto& row:engine->pendingMagnets()){if(row.retained){return true;}}
+    }
+    return false;
+  }
+  void requireCategoryInventoryWritable()const{
+    if(recoveryDrainStarted||storage::hasPendingCategoryDeletion(lease)){
+      throw Failure{{storage::ErrorCode::Conflict,"Category deletion is pending; guarded inventory/state writes require explicit recovery or review"}};
+    }
   }
   ui::Details categoryDetails(const ui::Target& target){
     const auto value = take(engine::queryTorrent(lease, identity(target)));

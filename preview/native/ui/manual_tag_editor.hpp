@@ -3,12 +3,14 @@
 #include "../app/manual_tag_commands.hpp"
 #include <QDialog>
 #include <QPointer>
-class QTableWidget;class QLineEdit;class QLabel;class QPushButton;class QCheckBox;
+class QTableWidget;class QLineEdit;class QLabel;class QPushButton;class QCheckBox;class QPlainTextEdit;
 namespace biglybtc::ui {
 struct ManualTagEditorRow {
   std::optional<qint32> id;
   QString label,name,detail;
   bool editable=false,canAddMember=false,canRemoveMember=false,visible=true;
+  QString constraintExpression,constraintOptions;
+  bool constraintEditable=false,constraintEnabled=true;
   std::size_t members=0;
 };
 struct ManualTagEditorValues {
@@ -32,7 +34,7 @@ public:
 signals:
   void commandRequested(biglybtc::ui::ManualTagCommand);
 private:
-  void selectRow();void updateButtons();void create();void rename();void remove();void visibility(bool);
+  void selectRow();void updateButtons();void create();void rename();void remove();void visibility(bool);void saveConstraint();
   void intent(ManualTagCommand);
   const ManualTagEditorRow* selected() const;
   quint64 session_=0,generation_=0,lastRequest_=0;
@@ -41,5 +43,7 @@ private:
   std::vector<ManualTagEditorRow> rows_;
   QPointer<QTableWidget> table_;QPointer<QLineEdit> name_;QPointer<QLabel> status_;
   QPointer<QPushButton> create_,rename_,remove_,reload_;QPointer<QCheckBox> visible_;
+  QPointer<QPlainTextEdit> constraintExpression_;QPointer<QLineEdit> constraintOptions_;
+  QPointer<QCheckBox> constraintEnabled_;QPointer<QPushButton> constraintSave_;
 };
 } // namespace biglybtc::ui

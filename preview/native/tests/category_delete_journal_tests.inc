@@ -70,3 +70,26 @@ void categoryDeletionExternalChangesAndCancellation(){
   {Area a;a.target("Alpha");cdDefinitions(a);const auto b=cdAddTarget(a,"second.bin","Alpha");auto store=opened(a);std::stop_source stop;cdStopSource=&stop;auto result=store->remove(snap(*store),"Alpha",stop.get_token(),s::CategoryStore::Deadline::max(),cdCancelAfterMember);cdStopSource=nullptr;error(result,s::ErrorCode::Cancelled);check(store->recoveryRequired(),"Partial cancellation lost journal");take(store->close());auto reopened=opened(a);check(cdHas(snap(*reopened),"Alpha"),"Cancellation published definition early");auto done=take(reopened->resumeRemove(snap(*reopened),"Alpha"));check(done.changed&&!take(reopened->readTarget(done.snapshot,b)).assignment()->declaredName,"Explicit cancellation recovery failed");}
   {Area a;a.target("Alpha");cdDefinitions(a);auto d=c::Document::parse(read(a.root/"downloads.config"));const auto* rows=d->find("downloads");check(rows,"Duplicate inventory fixture");const auto duplicate=raw(*d,&rows->children[0]);check(d->replaceValue("downloads",list({duplicate,duplicate})).has_value(),"Duplicate inventory edit");write(a.root/"downloads.config",d->serialize());auto store=opened(a);const auto before=files(a);check(!store->remove(snap(*store),"Alpha"),"Ambiguous inventory accepted");check(files(a)==before,"Ambiguous inventory modified");}
 }
+
+void categoryRecoveryInspectionOwnsNoContinuationAuthority(){
+  using State=s::CategoryDeletionRecovery::State;
+  {Area a;a.target("Alpha");cdDefinitions(a);auto store=opened(a);auto defs=snap(*store);
+    check(take(store->inspectRemove(defs)).state==State::None&&!s::hasPendingCategoryDeletion(*a.lease),"No-journal inspection invented recovery");
+    auto newer=take(store->reload());error(store->inspectRemove(defs),s::ErrorCode::Conflict);
+    std::stop_source stop;stop.request_stop();error(store->inspectRemove(newer,stop.get_token()),s::ErrorCode::Cancelled);
+  }
+  for(const auto stage:{s::CategoryDeletionStage::JournalSynced,s::CategoryDeletionStage::MemberWritten,s::CategoryDeletionStage::MemberAcknowledged,s::CategoryDeletionStage::DefinitionWritten,s::CategoryDeletionStage::DefinitionAcknowledged}){
+    Area a;a.target("Alpha");cdDefinitions(a);const auto second=cdAddTarget(a,"second.bin","Alpha");static_cast<void>(second);cdRunCrash(a,stage);
+    const auto before=files(a);auto store=opened(a);auto defs=snap(*store);auto info=take(store->inspectRemove(defs));
+    const bool unack=stage==s::CategoryDeletionStage::MemberWritten||stage==s::CategoryDeletionStage::DefinitionWritten;
+    check(info.name=="Alpha"&&info.totalMembers==2&&info.acknowledgedMembers<=2&&info.state==(unack?State::Review:State::Resumable),"Actual prefix diagnosis differs from exact recovery boundary");
+    check(s::hasPendingCategoryDeletion(*a.lease)&&files(a)==before,"Passive inspection mutated recovery or its guarded files");
+    if(!unack){
+      // An owning value summary may stay alive after a foreign change; it may
+      // not authorize replay using bytes or the old diagnosis.
+      auto d=c::Document::parse(read(a.state()));check(d&&d->replaceValue("external-after-inspection","i1e"),"External change fixture");write(a.state(),d->serialize());
+      const auto external=files(a);check(!store->resumeRemove(defs,info.name),"Old diagnosis blessed a later external edit");check(files(a)==external,"Rejected stale recovery changed files");
+    }
+    take(store->close());a.lease.reset();auto acquired=s::ProfileLease::acquire(a.root);check(bool(acquired)&&info.name=="Alpha","Owning recovery summary retained a lease/capability");
+  }
+}

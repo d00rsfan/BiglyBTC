@@ -289,3 +289,11 @@ if(NOT TARGET biglybtc_protocol_unique32)
   target_compile_options(biglybtc_protocol_unique32 PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 target_link_libraries(biglybtc_i2cp_initial_channel PRIVATE biglybtc_protocol_unique32)
+
+# Source-only additive target; no default startup/Host invocation or SDK change.
+target_sources(biglybtc_i2p_client_identity PRIVATE i2p_client/generate_identity.cpp)
+add_library(biglybtc_i2p_profile_bootstrap STATIC i2p_provider/profile_bootstrap.cpp)
+target_include_directories(biglybtc_i2p_profile_bootstrap PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/i2p_provider")
+target_link_libraries(biglybtc_i2p_profile_bootstrap PUBLIC biglybtc_profile biglybtc_i2p_client_identity biglybtc_i2p_dht PRIVATE biglybtc_plugin_settings OpenSSL::Crypto)
+target_compile_features(biglybtc_i2p_profile_bootstrap PUBLIC cxx_std_23)
+target_compile_options(biglybtc_i2p_profile_bootstrap PRIVATE -Wall -Wextra -Wpedantic -Werror)

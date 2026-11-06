@@ -65,6 +65,9 @@ struct PendingMagnetStatus {
   MagnetPhase phase = MagnetPhase::Resolving;
   bool retained = false;
   std::optional<storage::Error> failure{};
+  // Actual completed fresh import only, never a recovered already-present row.
+  bool newlyImported=false;std::uint64_t importGeneration=0;
+
 };
 struct ManagedDownloadOptions {
   core::TorrentHash hash;

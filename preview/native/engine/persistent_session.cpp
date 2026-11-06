@@ -266,6 +266,7 @@ struct PersistentSession::Impl {
   bool storageError = false;
   bool transferError = false;
   std::optional<RetirementReceipt> retirement{};
+  std::optional<CloseWithoutCheckpointReceipt> drainReceipt;
   std::optional<ApplicationPeerObservation> observation{};
   ApplicationObservationSink sink{};
   std::function<void(const core::EngineStatistics&)> operationSink{};
@@ -1421,7 +1422,9 @@ struct PersistentSession::Impl {
               if (existing.error().code != storage::ErrorCode::Missing) { throw detail::Failure{existing.error()}; }
               static_cast<void>(detail::take(storage::ConfigFile::createMissing(*magnetLease, filename, value.metadata)));
             }
-            const auto hash = detail::take(completePendingMagnet(*magnetLease, value.intent, magnetProfile / filename, *network));
+            value.status.newlyImported=false;value.status.importGeneration=0;
+            const auto hash = detail::take(completePendingMagnet(*magnetLease, value.intent, magnetProfile / filename, *network,&value.status.newlyImported));
+            if(value.status.newlyImported){value.status.importGeneration=identity.engineEpoch;}
             value.status.phase = MagnetPhase::Imported;
             // These numeric hints were admitted under this owner's immutable
             // bind/proxy policy. Retain them across metadata and payload handles
@@ -1430,8 +1433,9 @@ struct PersistentSession::Impl {
             if (!value.intent.stopped && !closingAdmission) { autoStarts.push_back({hash, 0, value.intent.forceStart, false}); }
             value.metadata.clear(); value.metadata.shrink_to_fit();
           } else { value.status.phase = MagnetPhase::Resolving; } // Normal close preserves unresolved original intent.
-        } catch (const detail::Failure& failure) { value.status.failure = failure.error; value.status.phase = MagnetPhase::Failed; }
+        } catch (const detail::Failure& failure) { value.status.newlyImported=false;value.status.importGeneration=0;value.status.failure = failure.error; value.status.phase = MagnetPhase::Failed; }
         catch (...) {
+          value.status.newlyImported=false;value.status.importGeneration=0;
           value.status.failure = storage::Error{storage::ErrorCode::Io, "Magnet import failed; recovery intent retained"};
           value.status.phase = MagnetPhase::Failed;
         }
@@ -2610,6 +2614,62 @@ std::expected<void, AccountingError> PersistentSession::poll() {
   }
   if (impl_->counterFailure) { return std::unexpected(*impl_->counterFailure); }
   return {};
+}
+CloseWithoutCheckpointReceipt PersistentSession::closeWithoutCheckpoint(Clock::time_point deadline)noexcept{
+  if(!impl_->onWorker()){return {false,false,AccountingError::WrongThread};}
+  if(impl_->call){return {false,false,AccountingError::ActiveOperation};}
+  if(impl_->drainReceipt){return *impl_->drainReceipt;}
+  impl_->call=true;impl_->closingAdmission=true;impl_->phase=AccountingState::Closing;
+  impl_->sink={};impl_->operationSink={};impl_->operationBaseline.reset();
+  std::optional<AccountingError> diagnostic;
+  // Stop optional actors WITHOUT their persistence paths. No fresh source
+  // observation, authentication callback, metadata import or queue evaluation.
+  impl_->retireMainlinePorts();impl_->closeMainline();impl_->mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
+  impl_->libraryHttp.close();impl_->libraryUdp.cancel();
+  for(auto& [key,m]:impl_->managed){(void)key;if(m->mixedLifetime){m->mixedLifetime->attached=false;m->mixedLifetime->retained=false;}}
+  for(auto& [key,m]:impl_->magnets){(void)key;if(m->pendingLifetime){m->pendingLifetime->authorized=false;m->pendingLifetime->retiring=true;m->pendingLifetime->retained=false;}}
+  if(impl_->mixedTransport){impl_->mixedTransport->retire();impl_->mixedTransport.reset();}
+  try{
+    if(impl_->session){
+      const auto end=std::min(deadline,Clock::now()+CertificationBudget);
+      // Sole owner-thread drain, mutually exclusive with normal pop()/poll().
+      // Drop older responses, then request real payload flushes. These alerts
+      // are diagnostic effort only: they do NOT mint a causal saved-piece seal.
+      std::vector<lt::alert*> alerts;impl_->session->pop_alerts(&alerts);
+      std::map<lt::torrent_handle,bool> waiting;
+      for(const auto& [key,m]:impl_->managed){(void)key;if(Clock::now()>=end){diagnostic=AccountingError::Deadline;break;}if(m->handle.is_valid()){waiting.emplace(m->handle,false);}}
+      if(impl_->registered&&impl_->active.is_valid()){waiting.emplace(impl_->active,false);}
+      impl_->session->pause();
+      for(const auto& [handle,done]:waiting){(void)done;if(Clock::now()>=end){diagnostic=AccountingError::Deadline;break;}handle.pause();handle.save_resume_data(lt::torrent_handle::flush_disk_cache);}
+      const auto pending=[&]{return std::any_of(waiting.begin(),waiting.end(),[](const auto& item){return !item.second;});};
+      while(pending()&&Clock::now()<end){
+        impl_->session->pop_alerts(&alerts);
+        if(alerts.size()>4096){diagnostic=AccountingError::StorageFenceLost;break;}
+        for(auto* alert:alerts){
+          if(const auto* saved=lt::alert_cast<lt::save_resume_data_alert>(alert)){if(auto found=waiting.find(saved->handle);found!=waiting.end()){found->second=true;}}
+          if(lt::alert_cast<lt::save_resume_data_failed_alert>(alert)||lt::alert_cast<lt::file_error_alert>(alert)
+              ||lt::alert_cast<lt::alerts_dropped_alert>(alert)){diagnostic=AccountingError::StorageFenceLost;}
+        }
+        if(pending()){std::this_thread::sleep_for(20ms);}
+      }
+      if(pending()){diagnostic=AccountingError::Deadline;}
+    }
+  }catch(...){diagnostic=AccountingError::Engine;}
+  // Mandatory actual abort/join even after flush failure/deadline. Do not use
+  // retire/advanceManaged/joinPoisoned: all can publish profile state/settlement.
+  // SDK disk shutdown retains the original disk objects through its callbacks.
+  impl_->session.reset();
+  impl_->active={};impl_->registered=false;impl_->outstanding=false;
+  impl_->managedByHandle.clear();impl_->managed.clear();impl_->magnets.clear();
+  impl_->autoStarts.clear();impl_->importPeers.clear();
+  impl_->mixedBinder={};impl_->targetPublication={};impl_->positionsPublication={};
+  impl_->releaseRegularTrackerLease();impl_->managedLease=nullptr;impl_->magnetLease=nullptr;
+  impl_->externalSnapshotValid=false;impl_->closed=true;impl_->poisoned=true;impl_->phase=AccountingState::Closed;
+  impl_->retirement=RetirementReceipt{impl_->operation,false,{},AccountingError::OwnerResetRequired};
+  if(!impl_->counterFailure){impl_->counterFailure=AccountingError::OwnerResetRequired;}
+  impl_->publish(); // Owning Uncertified observation only; both sinks are clear.
+  impl_->call=false;
+  impl_->drainReceipt=CloseWithoutCheckpointReceipt{true,true,diagnostic};return *impl_->drainReceipt;
 }
 CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   if (!impl_->onWorker()) { return {{0, false, {}, AccountingError::WrongThread}, false}; }

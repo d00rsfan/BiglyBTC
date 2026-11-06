@@ -75,3 +75,6 @@ target_sources(biglybtc_core PRIVATE src/saved_categories.cpp)
 
 # Value-only source-defined automatic constraint compiler; no Host activation.
 target_sources(biglybtc_core PRIVATE src/tag_constraints.cpp src/tag_constraint_catalog.inc)
+
+# Owning original download-list history; distinct from Statistics saved_history.
+target_sources(biglybtc_core PRIVATE src/saved_download_history.cpp)

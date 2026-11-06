@@ -16,7 +16,7 @@ namespace fs=std::filesystem;
 namespace core=biglybtc::core;namespace storage=biglybtc::storage;
 inline std::string b(std::string_view value){return std::to_string(value.size())+':'+std::string(value);}
 inline std::string dict(std::initializer_list<std::pair<std::string,std::string>> entries){std::vector<std::pair<std::string,std::string>> sorted(entries);std::sort(sorted.begin(),sorted.end());std::string out="d";for(const auto& [key,value]:sorted){out+=b(key)+value;}return out+'e';}
-inline void write(const fs::path& path,std::string_view bytes){std::ofstream output(path,std::ios::binary|std::ios::trunc);output.write(bytes.data(),static_cast<std::streamsize>(bytes.size()));if(!output){throw std::runtime_error("Owned I2P fixture write");}}
+inline void write(const fs::path& path,std::string_view bytes){std::ofstream output(path,std::ios::binary|std::ios::trunc);output.write(bytes.data(),static_cast<std::streamsize>(bytes.size()));output.close();if(!output||::chmod(path.c_str(),0600)!=0){throw std::runtime_error("Owned I2P fixture write/mode");}}
 inline std::string read(const fs::path& path){std::ifstream input(path,std::ios::binary);if(!input){throw std::runtime_error("Owned I2P fixture read");}return {std::istreambuf_iterator<char>(input),{}};}
 inline std::string sha1(std::string_view bytes){std::string result(20,'\0');unsigned n=0;if(EVP_Digest(bytes.data(),bytes.size(),reinterpret_cast<unsigned char*>(result.data()),&n,EVP_sha1(),nullptr)!=1||n!=20){throw std::runtime_error("Owned I2P fixture digest");}return result;}
 struct Fixture {
@@ -28,7 +28,9 @@ struct Fixture {
   fs::path state()const{return path/"active"/(hash.hex()+".dat");}
   explicit Fixture(bool publicNetwork=false){
     if(!temporary.isValid()||!payloadDirectory.isValid()){throw std::runtime_error("Owned I2P temporary profile");}
-    fs::create_directories(key.parent_path());fs::create_directory(path/"active");
+    fs::create_directories(key.parent_path());
+    if(::chmod((path/"plugins").c_str(),0700)!=0||::chmod(key.parent_path().c_str(),0700)!=0){throw std::runtime_error("Owned I2P fixture plugin directory mode");}
+    fs::create_directory(path/"active");
     const auto fixture=fs::path(BIGLYBTC_I2P_TEST_KEYS_DIR);
     const auto destination=read(fixture/"ed25519.sender"),secret=read(fixture/"ed25519.known-test-key");
     write(key,destination+std::string(256,'e')+secret);if(::chmod(key.c_str(),0600)!=0){throw std::runtime_error("Owned fixture key mode");}

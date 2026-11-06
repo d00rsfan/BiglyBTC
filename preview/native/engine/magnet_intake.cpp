@@ -604,7 +604,8 @@ std::expected<libtorrent::add_torrent_params, Error> metadataOnlyParameters(cons
   catch (const std::exception&) { return std::unexpected(Error{Code::Io, "Cannot prepare metadata-only magnet parameters"}); }
 }
 std::expected<core::TorrentHash, Error> completePendingMagnet(storage::ProfileLease& lease,
-    const PendingMagnet& expected, const fs::path& actualMetadata, const NetworkPolicy& network) {
+    const PendingMagnet& expected, const fs::path& actualMetadata, const NetworkPolicy& network,bool* newlyImported) {
+  if(newlyImported){*newlyImported=false;}
   try {
     auto c = load(lease); auto intent = current(c, expected, network);
     require(intent.destination.has_value(), Code::Unsupported, "Recovered magnet needs an explicit destination");
@@ -683,6 +684,7 @@ std::expected<core::TorrentHash, Error> completePendingMagnet(storage::ProfileLe
       require(::unlinkat(root, sourceName.c_str(), 0) == 0 && ::fsync(root) == 0,
           Code::Io, "Magnet imported but metadata-source cleanup failed");
     }
+    if(newlyImported){*newlyImported=!already;}
     return intent.hash;
   } catch (const Failure& error) { return std::unexpected(error.error); }
   catch (const std::exception&) { return std::unexpected(Error{Code::Io, "Magnet completion may be indeterminate; recover intake and reload pending state"}); }

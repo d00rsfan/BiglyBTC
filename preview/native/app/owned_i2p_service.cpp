@@ -44,9 +44,10 @@ struct OwnedI2pService::Impl {
   QThread thread;QThread* caller=QThread::currentThread();
   mutable std::mutex mutex;mutable std::vector<TorrentObservation> last;
   mutable Phase lastPhase=Phase::Prepared;std::map<std::string,engine::PendingMagnet> magnetIntents;
-  bool closed=false,joined=false,externalQueue=false;std::optional<Error> closeError;
+  bool closed=false,joined=false,externalQueue=false,checkpointOmitted=false;std::optional<Error> closeError;
   explicit Impl(std::unique_ptr<provider::OwnedProfile> p,std::shared_ptr<const storage::ProfileLease> l,std::unique_ptr<provider::ContactOwner> cache):owner(std::move(p)),contacts(std::move(cache)),lease(std::move(l)){}
-  template<class F> bool onOwner(F&& f)const{
+  template<class F> bool onOwner(F&& f,bool stopping=false)const{
+    if(checkpointOmitted&&!stopping){return false;}
     if(owner->thread()==QThread::currentThread()){f();return true;}
     return thread.isRunning()&&QMetaObject::invokeMethod(owner.get(),std::forward<F>(f),Qt::BlockingQueuedConnection);
   }
@@ -62,7 +63,7 @@ struct OwnedI2pService::Impl {
     }last=std::move(next);
   }
   std::expected<void,Error> stop(const core::TorrentHash& h){
-    if(closed||QThread::currentThread()!=caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
+    if(closed||checkpointOmitted||QThread::currentThread()!=caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
     const auto end=std::chrono::steady_clock::now()+std::chrono::seconds{5};bool began=false,ready=false;std::optional<Error> error;
     if(!onOwner([&]{began=owner->retire(h,end);if(!began){error=owner->retirement(h).failure.value_or(Error{Code::Conflict,"Cannot start target I2P retirement"});}})){return std::unexpected(Error{Code::Io,"I2P event loop unavailable"});}
     while(began&&!ready&&!error&&std::chrono::steady_clock::now()<end){
@@ -80,7 +81,7 @@ struct OwnedI2pService::Impl {
     if(!onOwner([&]{applied=owner->applyQueueState(std::move(*state));})||!applied){return std::unexpected(Error{Code::Conflict,"I2P queue source changed before application"});}return {};
   }
   void settleCompletions(){
-    if(externalQueue){return;} // The single Host plan owns completion effects.
+    if(checkpointOmitted||externalQueue){return;} // No completion publication after terminal omission.
     std::vector<core::TorrentHash> rows;if(!onOwner([&]{rows=owner->completedForceStarts();})){return;}
     for(const auto& h:rows){const auto saved=owner->publish(h,[&]()->std::expected<void,Error>{auto result=storage::clearLibraryForceStart(*lease,h);return result?std::expected<void,Error>{}:std::expected<void,Error>{std::unexpected(result.error())};});
       if(!saved||!refreshQueue()){(void)onOwner([&]{owner->close();});return;}(void)onOwner([&]{owner->acknowledgeCompletion(h);});}
@@ -88,16 +89,23 @@ struct OwnedI2pService::Impl {
   void moveClosed()noexcept{
     try{owner->close();if(owner->thread()!=caller){(void)owner->moveToThread(caller);}}catch(...){}
   }
-  std::expected<void,Error> shutdown(bool graceful){
+  std::expected<void,Error> shutdown(bool graceful,bool saveContacts=true){
     if(QThread::currentThread()!=caller){return std::unexpected(Error{Code::Unsupported,"I2P close requires its Host worker"});}
+    if(!saveContacts){checkpointOmitted=true;if(owner){owner->revokeSource();}}
+    if(checkpointOmitted){graceful=false;saveContacts=false;}
     if(closed){return closeError?std::expected<void,Error>{std::unexpected(*closeError)}:std::expected<void,Error>{};}
     std::optional<Error> first;
     if(graceful){
       if(onOwner([&]{capture();})){const auto selected=last;for(const auto& entry:selected){auto saved=stop(entry.hash);if(!saved&&!first){first=saved.error();}}}
       else{first=Error{Code::Io,"I2P event loop unavailable for close"};}
     }
-    if(!onOwner([&]{moveClosed();})){first=Error{Code::Io,"Cannot close shared I2P event loop"};}
-    thread.quit();thread.wait();owner->join();joined=true;if(contacts){contacts->finish();}owner.reset();closed=true;
+    if(!onOwner([&]{moveClosed();},true)){
+      first=Error{Code::Io,"Cannot close shared I2P event loop"};
+      // Ready/Executing source workers cannot be joined without actual Qt
+      // close/ack. Keep this retained service; no forced destruction receipt.
+      if(checkpointOmitted){return std::unexpected(*first);}
+    }
+    thread.quit();thread.wait();owner->join();if(contacts&&saveContacts){contacts->finish();}owner.reset();joined=true;closed=true;
     for(auto& entry:last){entry.value.current=false;entry.value.joined=true;entry.value.phase=Phase::Withdrawn;entry.value.downloadRate=0;entry.value.uploadRate=0;}
     closeError=first;return first?std::expected<void,Error>{std::unexpected(*first)}:std::expected<void,Error>{};
   }
@@ -157,7 +165,7 @@ std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::
 
 std::expected<void,storage::Error> OwnedI2pService::addMagnet(const engine::PendingMagnet& intent){
   auto& s=*impl_;std::lock_guard lock(s.mutex);
-  if(s.closed||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
+  if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
   auto prepared=s.owner->prepareMagnet(intent);if(!prepared){return std::unexpected(prepared.error());}
   std::expected<void,Error> result;
   if(!s.onOwner([&]{result=s.owner->startMagnet(std::move(*prepared));})){return std::unexpected(Error{Code::Io,"I2P metadata event loop unavailable"});}
@@ -165,12 +173,12 @@ std::expected<void,storage::Error> OwnedI2pService::addMagnet(const engine::Pend
 }
 std::expected<void,storage::Error> OwnedI2pService::cancelMagnet(const core::TorrentHash& hash){
   auto& s=*impl_;std::lock_guard lock(s.mutex);bool result=false;
-  if(s.closed||QThread::currentThread()!=s.caller||!s.onOwner([&]{result=s.owner->cancelMagnet(hash,std::chrono::steady_clock::now()+std::chrono::seconds(30));})||!result){
+  if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller||!s.onOwner([&]{result=s.owner->cancelMagnet(hash,std::chrono::steady_clock::now()+std::chrono::seconds(30));})||!result){
     return std::unexpected(Error{Code::Conflict,"Cannot retire I2P metadata admission"});}return {};
 }
 std::vector<engine::PendingMagnetStatus> OwnedI2pService::pendingMagnets()const{
   auto& s=*impl_;std::lock_guard lock(s.mutex);std::vector<engine::PendingMagnetStatus> out;
-  if(s.closed||QThread::currentThread()!=s.caller){return out;}
+  if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return out;}
   if(!s.onOwner([&]{for(const auto& value:s.owner->magnetObservations()){
     engine::PendingMagnetStatus status;status.hash=value.hash;status.admission=value.admission;
     const auto found=s.magnetIntents.find(value.hash.hex());status.name=found==s.magnetIntents.end()?value.hash.hex():found->second.displayName;
@@ -183,22 +191,24 @@ std::vector<engine::PendingMagnetStatus> OwnedI2pService::pendingMagnets()const{
 }
 std::expected<std::string,storage::Error> OwnedI2pService::takeCompletedMetadata(const core::TorrentHash& hash){
   auto& s=*impl_;std::lock_guard lock(s.mutex);std::expected<std::string,Error> result=std::unexpected(Error{Code::Io,"I2P metadata event loop unavailable"});
-  if(!s.closed&&QThread::currentThread()==s.caller){s.onOwner([&]{result=s.owner->takeCompletedMetadata(hash);});}return result;
+  if(!(s.closed||s.checkpointOmitted)&&QThread::currentThread()==s.caller){s.onOwner([&]{result=s.owner->takeCompletedMetadata(hash);});}return result;
 }
 std::expected<void,storage::Error> OwnedI2pService::releaseMagnet(const core::TorrentHash& hash){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(s.closed||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
   auto result=s.owner->releaseMagnet(hash);if(result){s.magnetIntents.erase(hash.hex());}return result;
 }
 std::expected<void,storage::Error> OwnedI2pService::publishPendingMagnet(const core::TorrentHash& hash,const std::function<std::expected<void,storage::Error>()>& operation){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(s.closed||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
   return s.owner->publishPendingMagnet(hash,operation);
 }
 std::vector<OwnedI2pService::TorrentObservation> OwnedI2pService::observations()const{
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.closed&&s.owner&&QThread::currentThread()==s.caller){s.settleCompletions();if(!s.onOwner([&]{s.capture();})){for(auto& e:s.last){e.value.current=false;e.value.failure="I2P event loop unavailable";}}if(s.contacts){s.contacts->poll();}}return s.last;
+  auto& s=*impl_;std::lock_guard lock(s.mutex);
+  if(s.checkpointOmitted){for(auto& entry:s.last){entry.value.current=false;entry.value.joined=s.joined;if(!s.joined&&entry.value.failure.empty()){entry.value.failure="Explicit drain incomplete; retained I2P owner is not joined";}}return s.last;}
+  if(!s.closed&&s.owner&&QThread::currentThread()==s.caller){s.settleCompletions();if(!s.onOwner([&]{s.capture();})){for(auto& e:s.last){e.value.current=false;e.value.failure="I2P event loop unavailable";}}if(s.contacts){s.contacts->poll();}}return s.last;
 }
 std::vector<std::array<std::uint8_t,20>> OwnedI2pService::peerIds(const core::TorrentHash& h)const{
   auto& s=*impl_;std::lock_guard lock(s.mutex);
-  if(s.closed||!s.owner||QThread::currentThread()!=s.caller){return {};}
+  if((s.closed||s.checkpointOmitted)||!s.owner||QThread::currentThread()!=s.caller){return {};}
   try{std::vector<std::array<std::uint8_t,20>> out;
     if(!s.onOwner([&]{out=s.owner->peerIds(h);})){return {};}return out;
   }catch(...){return {};}
@@ -215,7 +225,7 @@ OwnedI2pService::Observation OwnedI2pService::observation()const{
   return out;
 }
 std::expected<void,storage::Error> OwnedI2pService::add(const core::TorrentHash& h,const engine::RetainedPayloads& external){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(s.closed||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
   provider::OwnedProfile::Retained retained;if(!s.onOwner([&]{retained=s.owner->retained();})){return std::unexpected(Error{Code::Io,"I2P event loop unavailable"});}
   if(retained.claims.size()>engine::detail::MaximumManagedPayloadClaims||external.claims.size()>engine::detail::MaximumManagedPayloadClaims-retained.claims.size()||external.identities.size()>core::MaximumQueueTorrents){return std::unexpected(Error{Code::Unsupported,"Cross-provider claim or identity bound exceeded"});}
   retained.claims.insert(retained.claims.end(),external.claims.begin(),external.claims.end());retained.identities.insert(retained.identities.end(),external.identities.begin(),external.identities.end());
@@ -224,7 +234,7 @@ std::expected<void,storage::Error> OwnedI2pService::add(const core::TorrentHash&
 }
 std::expected<void,storage::Error> OwnedI2pService::stop(const core::TorrentHash& h){auto& s=*impl_;std::lock_guard lock(s.mutex);return s.stop(h);}
 std::expected<void,storage::Error> OwnedI2pService::publish(const core::TorrentHash& h,const std::function<std::expected<void,storage::Error>()>& f){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(s.closed||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}return s.owner->publish(h,f);
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}return s.owner->publish(h,f);
 }
 std::expected<void,storage::Error> OwnedI2pService::command(const core::TorrentHash& h,core::DownloadAction action,const engine::RetainedPayloads& external){
   // Serialize on the existing Host worker. A saved-intent edit is allowed only
@@ -234,34 +244,34 @@ std::expected<void,storage::Error> OwnedI2pService::command(const core::TorrentH
   return start&&(action==core::DownloadAction::Start||action==core::DownloadAction::Resume||action==core::DownloadAction::Queue||action==core::DownloadAction::ForceStart)?add(h,external):std::expected<void,Error>{};
 }
 std::expected<void,storage::Error> OwnedI2pService::move(const core::TorrentHash& h,core::DownloadAction action,std::span<const storage::LibraryCompletionPool> pools){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(s.closed||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
   auto changed=s.owner->publishPositions([&]()->std::expected<void,Error>{auto r=storage::applyLibraryCommand(*s.lease,h,action,pools);return r?std::expected<void,Error>{}:std::expected<void,Error>{std::unexpected(r.error())};});if(!changed){return changed;}return s.refreshQueue();
 }
 std::expected<bool,storage::Error> OwnedI2pService::rebaseCategory(const storage::ProfileLease& lease,const core::TorrentHash& hash){
   // All service control and destruction is serialized on caller. publish()
   // already holds mutex here, so re-locking it would deadlock the FS callback.
-  auto& s=*impl_;if(QThread::currentThread()!=s.caller||s.closed||!s.owner||!s.lease||!s.lease->sharesOwnership(lease)){
+  auto& s=*impl_;if(QThread::currentThread()!=s.caller||(s.closed||s.checkpointOmitted)||!s.owner||!s.lease||!s.lease->sharesOwnership(lease)){
     return std::unexpected(Error{Code::Conflict,"Live I2P Host/profile required for category rebase"});
   }
   return s.owner->rebaseCategory(lease,hash);
 }
 std::expected<void,storage::Error> OwnedI2pService::publishPositions(const engine::SourceMutation& f){
-  auto& s=*impl_;std::lock_guard lock(s.mutex);if(s.closed||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
+  auto& s=*impl_;std::lock_guard lock(s.mutex);if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
   auto saved=s.owner->publishPositions(f);if(!saved){return saved;}return s.refreshQueue();
 }
 std::expected<void,storage::Error> OwnedI2pService::configureExternalQueue(bool enabled){
   auto& s=*impl_;std::lock_guard lock(s.mutex);bool done=false;
-  if(s.closed||QThread::currentThread()!=s.caller||!s.onOwner([&]{done=s.owner->configureExternalQueue(enabled);})||!done){return std::unexpected(Error{Code::Conflict,"Configure external I2P queue before begin"});}
+  if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller||!s.onOwner([&]{done=s.owner->configureExternalQueue(enabled);})||!done){return std::unexpected(Error{Code::Conflict,"Configure external I2P queue before begin"});}
   s.externalQueue=enabled;return {};
 }
 std::expected<engine::ExternalQueueSnapshot,storage::Error> OwnedI2pService::externalQueueSnapshot(){
   auto& s=*impl_;std::lock_guard lock(s.mutex);std::expected<engine::ExternalQueueSnapshot,Error> out;
-  if(s.closed||QThread::currentThread()!=s.caller||!s.onOwner([&]{out=s.owner->externalQueueSnapshot();})){return std::unexpected(Error{Code::Conflict,"External I2P snapshot unavailable"});}return out;
+  if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller||!s.onOwner([&]{out=s.owner->externalQueueSnapshot();})){return std::unexpected(Error{Code::Conflict,"External I2P snapshot unavailable"});}return out;
 }
 std::expected<bool,storage::Error> OwnedI2pService::applyExternalQueue(std::uint64_t sequence,
     std::span<const engine::ExternalQueueDecision> rows,std::uint32_t unavailable,core::QueueAction action){
   auto& s=*impl_;std::lock_guard lock(s.mutex);bool current=false;
-  if(s.closed||QThread::currentThread()!=s.caller||!s.onOwner([&]{current=s.owner->externalQueueCurrent(sequence,rows);})||!current){return std::unexpected(Error{Code::Conflict,"External I2P plan binding changed"});}
+  if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller||!s.onOwner([&]{current=s.owner->externalQueueCurrent(sequence,rows);})||!current){return std::unexpected(Error{Code::Conflict,"External I2P plan binding changed"});}
   // The Queue phase installs all passive decisions before any Run; these
   // source writes run on the Host worker, outside every Qt/provider wait.
   if(action==core::QueueAction::Queue||action==core::QueueAction::Preserve){
@@ -278,19 +288,21 @@ std::expected<bool,storage::Error> OwnedI2pService::applyExternalQueue(std::uint
 }
 std::expected<void,storage::Error> OwnedI2pService::applyExternalQueuePositions(std::span<const std::pair<engine::QueueBinding,std::uint32_t>> rows){
   auto& s=*impl_;std::lock_guard lock(s.mutex);std::expected<void,Error> out;
-  if(s.closed||QThread::currentThread()!=s.caller||!s.onOwner([&]{out=s.owner->applyExternalQueuePositions(rows);})){return std::unexpected(Error{Code::Conflict,"External I2P positions unavailable"});}return out;
+  if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller||!s.onOwner([&]{out=s.owner->applyExternalQueuePositions(rows);})){return std::unexpected(Error{Code::Conflict,"External I2P positions unavailable"});}return out;
 }
 std::expected<void,storage::Error> OwnedI2pService::applyExternalRateLimits(const core::SessionRateLimits& limits){
   auto& s=*impl_;std::lock_guard lock(s.mutex);std::expected<void,Error> out;
-  if(s.closed||QThread::currentThread()!=s.caller||!s.onOwner([&]{out=s.owner->applyExternalRateLimits(limits);})){return std::unexpected(Error{Code::Conflict,"External I2P caps unavailable"});}return out;
+  if((s.closed||s.checkpointOmitted)||QThread::currentThread()!=s.caller||!s.onOwner([&]{out=s.owner->applyExternalRateLimits(limits);})){return std::unexpected(Error{Code::Conflict,"External I2P caps unavailable"});}return out;
 }
 engine::RetainedPayloads OwnedI2pService::retainedPayloads()const{
   auto& s=*impl_;std::lock_guard lock(s.mutex);engine::RetainedPayloads out;
-  if(!s.closed&&QThread::currentThread()==s.caller){(void)s.onOwner([&]{out=s.owner->retained();});}return out;
+  if(!(s.closed||s.checkpointOmitted)&&QThread::currentThread()==s.caller){(void)s.onOwner([&]{out=s.owner->retained();});}return out;
 }
-bool OwnedI2pService::sourceCurrent()const noexcept{auto& s=*impl_;std::lock_guard lock(s.mutex);return !s.closed&&s.owner&&QThread::currentThread()==s.caller&&s.owner->sourceCurrent();}
+bool OwnedI2pService::sourceCurrent()const noexcept{auto& s=*impl_;std::lock_guard lock(s.mutex);return !(s.closed||s.checkpointOmitted)&&s.owner&&QThread::currentThread()==s.caller&&s.owner->sourceCurrent();}
 void OwnedI2pService::revoke()noexcept{auto& s=*impl_;std::lock_guard lock(s.mutex);if(!s.closed&&s.owner&&QThread::currentThread()==s.caller){s.owner->revokeSource();}}
 std::expected<void,storage::Error> OwnedI2pService::close(){auto& s=*impl_;std::lock_guard lock(s.mutex);return s.shutdown(true);}
+std::expected<void,storage::Error> OwnedI2pService::closeWithoutCheckpoint(){auto& s=*impl_;std::lock_guard lock(s.mutex);return s.shutdown(false,false);}
+bool OwnedI2pService::joined()const noexcept{return QThread::currentThread()==impl_->caller&&impl_->closed&&impl_->joined;}
 OwnedI2pService::~OwnedI2pService(){try{auto& s=*impl_;std::lock_guard lock(s.mutex);(void)s.shutdown(false);}catch(...){}}
 }
 #else
@@ -320,6 +332,8 @@ engine::RetainedPayloads OwnedI2pService::retainedPayloads()const{return {};}
 bool OwnedI2pService::sourceCurrent()const noexcept{return false;}
 void OwnedI2pService::revoke()noexcept{}
 std::expected<void,storage::Error> OwnedI2pService::close(){return {};}
+std::expected<void,storage::Error> OwnedI2pService::closeWithoutCheckpoint(){return {};}
+bool OwnedI2pService::joined()const noexcept{return true;}
 std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> OwnedI2pService::startPending(const storage::ProfileLease&,const engine::PendingMagnet&,I2pServiceOptions){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::addMagnet(const engine::PendingMagnet&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::cancelMagnet(const core::TorrentHash&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}

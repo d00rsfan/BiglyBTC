@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "biglybtc/tag_constraints.hpp"
+#include "../app/constraint_cadence.hpp"
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -167,6 +168,32 @@ namespace {
     },false);
     check(disabled&&c::project(f,*disabled,false,true).membership==c::Membership::Keep,"Saved disabled property removed membership");
   }
+  void originalTimeClassificationAndCadence(){
+    namespace detail=biglybtc::app::detail;using Cadence=detail::ConstraintCadence;using Clock=Cadence::Clock;
+    const auto timed=[](std::u16string_view text,bool expected){auto expression=c::compile(text);check(expression&&expression->dependsOnTime()==expected,"Original parsed time dependency differs");};
+    for(const auto* token:{u"age",u"seedcount",u"seed_count",u"peercount",u"peer_count",u"seedpeerratio",u"seed_peer_ratio",u"resumein",u"resume_in",u"minofhour",u"min_of_hour",u"hourofday",u"hour_of_day",u"dayofweek",u"day_of_week",u"tagage",u"tag_age",u"completedage",u"completed_age",u"targetratio",u"target_ratio",u"my_rating",u"myrating"}){
+      timed(std::u16string(token)+u">=0",true);
+    }
+    timed(u"(true)||(tag_age>=0)",true);timed(u"ifThenElse(isEQ(1,1),age,0)",true);
+    timed(u"contains(\"tag_age\",\"age\")",false);timed(u"hasTag(\"age\")",false);timed(u"timeToElapsed(0)>=0",false);
+    timed(u"size>0",false);timed(u"session_age>0",false);timed(u"(false)&&isEQ(downloading_for,0)",false);
+    check(!c::Expression{}.dependsOnTime(),"Uncompiled value acquired time scheduling");
+    const auto zero=Clock::time_point{};Cadence cadence;
+    auto due=cadence.poll(zero,30);check(!due.full&&!due.time,"New timer fired immediately");
+    due=cadence.poll(zero+std::chrono::milliseconds(4999),30);check(!due.full&&!due.time,"Early5s tick");
+    due=cadence.poll(zero+std::chrono::seconds(5),30);check(due.time&&!due.full,"Exact5s time tick missing");
+    due=cadence.poll(zero-std::chrono::hours(1),30);check(!due.full&&!due.time,"Backward observation advanced timer");
+    due=cadence.poll(zero+std::chrono::seconds(9),30);check(!due.full&&!due.time,"Wall-independent tick moved after backward observation");
+    for(int tick=2;tick<=6;++tick){due=cadence.poll(zero+std::chrono::seconds(5*tick),30);check(due.full==(tick==6)&&due.time==(tick!=6),"Full apply did not suppress same-tick time duplicate");if(due.full){cadence.fullQueued();}}
+    Cadence disabled;disabled.poll(zero,0);due=disabled.poll(zero+std::chrono::seconds(5),0);check(due.full&&!due.time,"Disabled full period lost original first timer apply");
+    disabled.fullQueued();due=disabled.poll(zero+std::chrono::seconds(10),0);check(due.time&&!due.full,"Disabled full period disabled time rules");
+    due=disabled.poll(zero+std::chrono::seconds(1000),0);check(due.time&&!due.full,"Delayed callback lost time work");
+    due=disabled.poll(zero+std::chrono::seconds(1000),0);check(!due.full&&!due.time,"Delayed timer burst historical callbacks");
+    Cadence rounded;rounded.poll(zero,11);due=rounded.poll(zero+std::chrono::seconds(5),11);check(due.time,"First11s tick changed");due=rounded.poll(zero+std::chrono::seconds(10),11);check(due.full&&!due.time,"Original integer period/5 was rounded up");
+    Cadence limits;limits.poll(Clock::time_point::max(),0);check(!limits.ready(Clock::time_point::max()),"Clock range overflow rearmed an immediate loop");
+    auto wrapped=Cadence::dueForTick(0x80000000U,10,true);check(wrapped.full&&!wrapped.time,"Java signed tick wrap changed modulo boundary");
+    disabled.reset();due=disabled.poll(zero,0);check(!due.full&&!due.time,"Terminal reset fired immediately");
+  }
 }
 int main(){
   try{
@@ -174,6 +201,7 @@ int main(){
     javaNumbersAndConversions();
     stringsFactsAndProviderSeparation();
     exactOptionsAndSafeMembership();
+    originalTimeClassificationAndCadence();
     std::cout<<"PASS source-compatible constraint value families\n";
     return 0;
   }

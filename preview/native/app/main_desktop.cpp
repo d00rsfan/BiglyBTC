@@ -208,6 +208,11 @@ int main(int argc, char** argv) {
       window.completeSessionClose();
     });
     QObject::connect(&bridge, &Bridge::sessionCloseFailed, &window, &Window::retrySessionClose);
+    QObject::connect(&bridge,&Bridge::recoveryCloseOffered,&window,&Window::offerRecoveryClose);
+    QObject::connect(&window,&Window::sessionCloseWithoutCheckpointRequested,&bridge,[&](quint64 session){
+      if(!bridge.closeSessionWithoutCheckpoint(session)){window.retrySessionClose();}
+    });
+    QObject::connect(&bridge,&Bridge::sessionClosedWithoutCheckpoint,&window,[&](quint64,bool,bool){window.completeSessionClose();});
     window.show();
     return application.exec();
   } catch (const std::exception& error) {

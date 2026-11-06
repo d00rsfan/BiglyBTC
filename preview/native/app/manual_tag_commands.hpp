@@ -5,7 +5,7 @@
 #include "biglybtc/saved_download_tags.hpp"
 
 namespace biglybtc::ui {
-enum class ManualTagCommandKind { Reload, Create, Rename, Remove, Visibility, AddMember, RemoveMember };
+enum class ManualTagCommandKind { Reload, Create, Rename, Remove, Visibility, AddMember, RemoveMember, SetConstraint };
 enum class ManualTagCommandStatus { Loaded, Saved, Unchanged, Rejected, Cancelled };
 struct ManualTagCommand {
   quint64 session=0,request=0,generation=0;
@@ -16,6 +16,8 @@ struct ManualTagCommand {
   // Only membership commands use this actual current library selection.
   // It grants neither a torrent handle nor payload/rule/network permission.
   Target member;
+  QString constraintExpression,constraintOptions;
+  bool constraintEnabled=true;
 };
 struct ManualTagCommandPacket {
   quint64 session=0,request=0,generation=0,libraryRevision=0;
@@ -28,6 +30,7 @@ struct ManualTagCommandPacket {
   std::optional<qint32> createdId;
   std::optional<qint64> createdUid;
   QString failure;
+  QString constraintStatus; // Configuration diagnostic only, never evaluator/provider authority.
 };
 using ManualTagCommandPresentation=std::shared_ptr<const ManualTagCommandPacket>;
 // One request slot. Reload ignores generation; all edits require the latest

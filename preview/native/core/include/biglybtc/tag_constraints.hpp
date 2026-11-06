@@ -39,6 +39,8 @@ namespace biglybtc::core::tags::constraints {
     public:
     struct Impl;
     Expression()=default;
+    // Original parsed-keyword DEP_TIME classification, not a provider/clock grant.
+    bool dependsOnTime()const noexcept;
     private:
     std::shared_ptr<const Impl> impl_;
     friend Result<Expression> compile(std::u16string_view,Limits);

@@ -33,6 +33,7 @@ Error cancelled() { return {ErrorCode::Cancelled,"Manual-tag operation cancelled
 Error uncertain() { return {ErrorCode::Conflict,"Manual-tag publication outcome uncertain; close and reopen before retry"}; }
 Error editError(core::SavedTagEditError error) {
   switch (error) {
+    case core::SavedTagEditError::UnsupportedGroupSettings: return {ErrorCode::Unsupported,"Configured or ambiguous tag group effects are unavailable; saved membership was preserved"};
     case core::SavedTagEditError::Memory: return {ErrorCode::Io,"Insufficient memory for manual-tag edit"};
     case core::SavedTagEditError::Limit:
     case core::SavedTagEditError::IdExhausted: return {ErrorCode::Unsupported,"Manual-tag edit exceeds compatible bounded limits"};
@@ -175,6 +176,13 @@ std::expected<ManualTagCommit,Error> ManualTagStore::apply(const ManualTagSnapsh
     if(!edited){return std::unexpected(editError(edited.error()));}
     if(stop.stop_requested()){return std::unexpected(cancelled());}
     if(!edited->changed){return ManualTagCommit{ManualTagSnapshot(latest_),false,{},{}};}
+    const auto memberId=std::get_if<core::SavedTagAddMember>(&action)?std::optional{std::get<core::SavedTagAddMember>(action).id}
+        :std::get_if<core::SavedTagRemoveMember>(&action)?std::optional{std::get<core::SavedTagRemoveMember>(action).id}:std::nullopt;
+    if(memberId){const auto* type=loaded->tags.source->find("3");const auto* record=type?type->find(std::to_string(*memberId)):nullptr;
+      if(record&&!core::ordinarySavedTagMembershipEffects(loaded->tags,*record)){
+        return std::unexpected(Error{ErrorCode::Unsupported,"Configured tag or group membership effects are unavailable; original source was preserved"});
+      }
+    }
     if(loaded->file&&(loaded->file->recoverySource()!=RecoverySource::Primary||loaded->candidates[2].bytes)){
       return std::unexpected(Error{ErrorCode::Conflict,"Manual-tag recovery candidates require explicit resolution before editing"});
     }

@@ -29,6 +29,14 @@ bool sameFile(const struct stat& a,const struct stat& b){return S_ISREG(a.st_mod
 bool absent(int directory,const std::string& name){struct stat st{};if(::fstatat(directory,name.c_str(),&st,AT_SYMLINK_NOFOLLOW)==0){return false;}return errno==ENOENT;}
 constexpr core::Limits SourceLimits{.inputBytes=8*1024*1024,.stringBytes=8*1024*1024,.nodes=100000,.depth=64};
 struct Stamp {std::string config,inventory,state;bool operator==(const Stamp&)const=default;};
+// Read-only pending-bootstrap refusal. Exact index-specific native paths only;
+// no writes, automatic replay, fallback or directory traversal on socket turns.
+bool bootstrapSettled(int directory,bool mixed)noexcept{
+  const auto names=mixed?std::array<const char*,3>{".BiglyBTC.i2p-bootstrap",".BiglyBTC.dest_key.dat.pending",".BiglyBTC.dht.config.pending"}:
+      std::array<const char*,3>{".BiglyBTC.i2p-bootstrap1",".BiglyBTC.dest_key1.dat.pending",".BiglyBTC.dht1.config.pending"};
+  for(const auto* name:names){struct stat value{};if(::fstatat(directory,name,&value,AT_SYMLINK_NOFOLLOW)==0||errno!=ENOENT){return false;}}
+  return true;
+}
 std::string folded(std::string_view value){std::string out(value);for(auto& c:out){if(c>='A'&&c<='Z'){c=static_cast<char>(c+'a'-'A');}}return out;}
 struct Sources {bool tracker=false,discovery=false;};
 Sources sourceSelection(const core::Document& state,const core::Document& config){
@@ -207,7 +215,7 @@ struct ProfileSource::Impl {
     const bool files=std::all_of(bound.begin(),bound.end(),[](const auto& file){struct stat held{},named{};return ::fstat(file.fd.get(),&held)==0&&sameFile(file.stat,held)&&::fstatat(file.directory,file.name.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&sameFile(held,named);});
     struct stat activeHeld{},activeNamed{};const bool activeCurrent=active.get()<0||(::fstat(active.get(),&activeHeld)==0&&sameDirectory(activeStat,activeHeld)&&::fstatat(lease->directoryHandle(),"active",&activeNamed,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(activeHeld,activeNamed));
     if(anchor){return files&&activeCurrent&&lease->valid();}
-    return files&&activeCurrent&&lease->valid()&&::fstat(lease->directoryHandle(),&profile)==0&&sameDirectory(profileStat,profile)
+    return files&&activeCurrent&&lease->valid()&&bootstrapSettled(plugin.get(),mixed)&&::fstat(lease->directoryHandle(),&profile)==0&&sameDirectory(profileStat,profile)
       &&::fstat(plugins.get(),&a)==0&&sameDirectory(pluginsStat,a)&&::fstatat(lease->directoryHandle(),"plugins",&b,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(a,b)
       &&::fstat(plugin.get(),&c)==0&&sameDirectory(pluginStat,c)&&::fstatat(plugins.get(),directory.c_str(),&d,AT_SYMLINK_NOFOLLOW)==0&&sameDirectory(c,d)
       &&::fstat(key.get(),&e)==0&&sameFile(keyStat,e)&&::fstatat(plugin.get(),keyName(),&f,AT_SYMLINK_NOFOLLOW)==0&&sameFile(e,f);
@@ -228,6 +236,7 @@ std::expected<std::shared_ptr<ProfileSource>,storage::Error> ProfileSource::open
     require(impl->plugins.get()>=0&&::fstat(impl->plugins.get(),&impl->pluginsStat)==0,ErrorCode::UnsafePath,"Existing held plugin directories required");
     impl->plugin=Descriptor(::openat(impl->plugins.get(),impl->directory.c_str(),O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
     require(impl->plugin.get()>=0&&::fstat(impl->plugin.get(),&impl->pluginStat)==0,ErrorCode::UnsafePath,"Existing original I2P plugin directory required");
+    require(bootstrapSettled(impl->plugin.get(),mixed),ErrorCode::Conflict,"Pending native I2P bootstrap; review preserved files and reopen before creating a source");
     impl->key=Descriptor(::openat(impl->plugin.get(),impl->keyName(),O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));
     require(impl->key.get()>=0&&::fstat(impl->key.get(),&impl->keyStat)==0&&S_ISREG(impl->keyStat.st_mode)&&impl->keyStat.st_uid==::geteuid()&&impl->keyStat.st_nlink==1&&(impl->keyStat.st_mode&0077)==0&&impl->keyStat.st_size>0&&impl->keyStat.st_size<=static_cast<off_t>(MaximumClientIdentityInputBytes),ErrorCode::UnsafePath,mixed?"Private original mixed identity key required":"Private original pure identity key required");
     std::array<Byte,MaximumClientIdentityInputBytes> bytes{};struct Wipe{decltype(bytes)& value;~Wipe(){OPENSSL_cleanse(value.data(),value.size());}} wipe{bytes};

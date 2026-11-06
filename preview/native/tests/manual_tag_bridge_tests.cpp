@@ -3,6 +3,8 @@
 #include "manual_tag_policy.hpp"
 #include "tag_constraint_worker.hpp"
 #include <QTimer>
+#include <QPlainTextEdit>
+#include <QCheckBox>
 #include <future>
 #include "library_window.hpp"
 #include "manual_tag_view.hpp"
@@ -199,6 +201,130 @@ extern "C" ssize_t __wrap_read(int descriptor, void* bytes, size_t size) {
 class ManualTagBridgeTests final : public QObject {
   Q_OBJECT
 private slots:
+  void actualTimeRuleUsesFiveSecondTickWithoutNewnessOrStaticReapply(){
+    test::OwnedEngineFixture fixture(false);const auto path=fixture.profile+"/tag.config";
+    libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
+    const auto rule=[&](int id,const char* name,const char* expression,const char* options){auto& row=definitions["3"][std::to_string(id)];row["n"]=name;row["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(expression),libtorrent::entry(options)};row["o"]=libtorrent::entry::list_type{};};
+    rule(1,"Own age","tag_age<4","am=2;");rule(2,"Static","size>=0","");rule(3,"Not a creation event","(true)||(tag_age>=0)","am=3;");
+    definitions["3"]["2"]["o"].list().emplace_back(base32(*fixture.hash));
+    // >128 rules evict the first AST; static99 is the final lexicographic row.
+    // Four bounded turns leave exactly four ordinary pairs unvisited.
+    for(int id=10;id<=138;++id){rule(id,"Static tail","size>=0","");if(id!=99){definitions["3"][std::to_string(id)]["o"].list().emplace_back(base32(*fixture.hash));}}
+    definitions["future-root"]=std::string("x\0y",3);const auto original=QByteArray::fromStdString(test::encoded(definitions));test::write(path,original);
+    auto actual=std::async(std::launch::async,[&]{
+      auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Actual timed source OFD");auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Actual timed writer");auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Actual timed snapshot");
+      // Real saved p.a from this actual writer, sampled immediately before the
+      // initial pass. No injected worker clock, SourcePermit or due-bit exists.
+      const auto seconds=std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+      auto added=(*store)->apply(*snapshot,core::SavedTagAddMember{1,*fixture.hash,seconds});test::require(bool(added)&&added->changed,"Actual initial timed membership");snapshot=added->snapshot;
+      auto rows=std::make_shared<ui::LibraryPresentation>();rows->revision=9;ui::LibraryItem row;row.hash=QString::fromStdString(fixture.hash->hex());row.bytes=test::OwnedEngineFixture::PayloadBytes;rows->items.push_back(row);
+      app::ConstraintWorkerFrame frame;frame.session=89;frame.library=rows;auto worker=app::TagConstraintWorker::activate(*lease,frame.session);test::require(bool(worker),"Actual timed worker");
+      const auto turn=[&](std::stop_token stop={}){++frame.sequence;frame.sourceRevision=lease->sourceRevision();auto result=(*worker)->step(**store,*snapshot,frame,stop);test::require(bool(result),"Actual timed turn refused");test::require(result->evaluated<=32,"Timed work exceeded shared pair budget");if(result->changed){snapshot=result->snapshot;}return std::move(*result);};
+      for(unsigned i=0;i<4;++i){auto initial=turn();test::require(!initial.changed&&initial.evaluated==32,"Initial bounded partial normal pass/new-only semantics differ");}
+      std::this_thread::sleep_for(std::chrono::seconds(5));
+      unsigned evaluated=0;bool removed=false;const auto end=std::chrono::steady_clock::now()+std::chrono::seconds(2);
+      while(std::chrono::steady_clock::now()<end&&!removed){auto next=turn();evaluated+=next.evaluated;if(next.changed){test::require(next.tag==1,"A static/new-only rule published on a time-only tick");removed=true;}else if(!next.evaluated){std::this_thread::sleep_for(std::chrono::milliseconds(10));}}
+      test::require(removed&&evaluated==1,"Genuine5s own-age rule did not remove with the first time-only pair");
+      auto tail=turn();test::require(tail.changed&&tail.tag==99&&tail.evaluated==4,"Time work or membership callback reset the partial normal cursor");
+      auto timedRemainder=turn();test::require(!timedRemainder.changed&&timedRemainder.evaluated==1,"Ordinary progress erased/starved the remaining time/new-only pair");
+      const auto count=[&](int id){for(const auto& tag:snapshot->tags()->tags){if(tag.id==id){return tag.uniqueHashes.size();}}return std::size_t{999};};
+      test::require(count(1)==0&&count(2)==1&&count(3)==0&&count(99)==1,"Timed tick altered static membership or invented newness");
+      // The real removal may legitimately wake same-DM rules. Unknown removed
+      // transient age stays unavailable, and a timer never marks a new event.
+      for(unsigned i=0;i<3;++i){auto next=turn();test::require(!next.changed&&count(3)==0,"Timed followup invented creation/removed age authority");}
+      std::stop_source cancelled;cancelled.request_stop();++frame.sequence;frame.sourceRevision=lease->sourceRevision();auto denied=(*worker)->step(**store,*snapshot,frame,cancelled.get_token());test::require(!denied&&denied.error().code==storage::ErrorCode::Cancelled,"Cancelled timed work was accepted");
+      (*worker)->close();++frame.sequence;denied=(*worker)->step(**store,*snapshot,frame);test::require(!denied,"Closed timed worker resumed");test::require(bool((*store)->close()),"Actual timed writer close");return true;
+    });
+    QVERIFY(actual.get());auto after=core::Document::parse(test::read(path).toStdString()),before=core::Document::parse(original.toStdString());QVERIFY(after&&before);const auto* a=after->find("future-root");const auto* b=before->find("future-root");QVERIFY(a&&b);QCOMPARE(after->originalBytes().substr(a->begin,a->end-a->begin),before->originalBytes().substr(b->begin,b->end-b->begin));
+  }
+  void actualManualDependenciesUsePositiveSourcesAndNeverInventAbsence(){
+    test::OwnedEngineFixture fixture(false);const auto path=fixture.profile+"/tag.config";
+    libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
+    auto& manual=definitions["3"]["1"];manual["n"]="Manual";manual["c"]["gr"]="Group";manual["o"]=libtorrent::entry::list_type{};manual["p"]=libtorrent::entry::list_type{};
+    const auto rule=[&](int id,const char* name,const char* expression,bool member){auto& row=definitions["3"][std::to_string(id)];row["n"]=name;row["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(expression)};row["o"]=libtorrent::entry::list_type{};if(member){row["o"].list().emplace_back(base32(*fixture.hash));}};
+    rule(2,"Consumer","hasTag(\"Manual\")",false);rule(3,"Negative","!hasTag(\"Manual\")",true);rule(4,"Negative group","!hasTagGroup(\"Group\")",true);rule(5,"Cycle","hasTag(\"Cycle\")",true);
+    definitions["3"]["6"]["n"]="tag.localized";definitions["3"]["6"]["o"]=libtorrent::entry::list_type{libtorrent::entry(base32(*fixture.hash))};rule(7,"Localized consumer","hasTag(\"tag.localized\")",true);
+    definitions["future-root"]=std::string("x\0y",3);const auto original=QByteArray::fromStdString(test::encoded(definitions));test::write(path,original);
+    auto actual=std::async(std::launch::async,[&]{
+      auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Actual dependency source OFD");auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Actual dependency writer");auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Actual dependency source snapshot");
+      auto rows=std::make_shared<ui::LibraryPresentation>();rows->revision=9;ui::LibraryItem row;row.hash=QString::fromStdString(fixture.hash->hex());row.bytes=test::OwnedEngineFixture::PayloadBytes;rows->items.push_back(row);
+      app::ConstraintWorkerFrame frame;frame.session=88;frame.library=rows;auto worker=app::TagConstraintWorker::activate(*lease,frame.session);test::require(bool(worker),"Actual dependency worker");
+      const auto turn=[&]{++frame.sequence;frame.sourceRevision=lease->sourceRevision();auto result=(*worker)->step(**store,*snapshot,frame);test::require(bool(result),"Dependency turn refused");test::require(result->evaluated<=32,"Dependency work lost bounded scheduling");if(result->changed){snapshot=result->snapshot;}return std::move(*result);};
+      auto initial=turn();test::require(!initial.changed&&initial.kept&&initial.kept->kind==core::tags::constraints::ProblemKind::Unavailable,"Missing membership/partial registry became false or a removal");
+      auto added=(*store)->apply(*snapshot,core::SavedTagAddMember{1,*fixture.hash,100});test::require(bool(added)&&added->changed,"Actual manual membership add");snapshot=added->snapshot;
+      unsigned writes=0;for(unsigned i=0;i<8;++i){auto next=turn();writes+=next.changed?1U:0U;}
+      const auto count=[&](int id){for(const auto& tag:snapshot->tags()->tags){if(tag.id==id){return tag.uniqueHashes.size();}}return std::size_t{999};};
+      test::require(writes==3&&count(1)==1&&count(2)==1&&count(3)==0&&count(4)==0&&count(5)==1&&count(7)==1,"Actual stable manual witnesses failed cross-tag Add/negative removal or altered unresolved cycles/localization");
+      auto removed=(*store)->apply(*snapshot,core::SavedTagRemoveMember{1,*fixture.hash});test::require(bool(removed)&&removed->changed,"Actual manual member removal");snapshot=removed->snapshot;
+      auto absent=turn();test::require(absent.evaluated>0&&!absent.changed&&absent.kept&&absent.kept->kind==core::tags::constraints::ProblemKind::Unavailable&&count(2)==1,"Fresh source change was ignored or absence fabricated/removal authorized");
+      (*worker)->close();test::require(bool((*store)->close()),"Dependency writer close");return true;
+    });
+    QVERIFY(actual.get());auto after=core::Document::parse(test::read(path).toStdString()),before=core::Document::parse(original.toStdString());QVERIFY(after&&before);const auto* a=after->find("future-root");const auto* b=before->find("future-root");QVERIFY(a&&b);QCOMPARE(after->originalBytes().substr(a->begin,a->end-a->begin),before->originalBytes().substr(b->begin,b->end-b->begin));
+  }
+  void actualWindowConstraintConfigDrivesOnlySupportedNormalRules(){
+    test::OwnedEngineFixture fixture(false);const auto inventoryPath=fixture.profile+"/downloads.config";
+    auto inventory=test::read(inventoryPath);QCOMPARE(inventory.count("5:statei75e"),1);inventory.replace("5:statei75e","5:statei70e");test::write(inventoryPath,inventory);
+    const auto path=fixture.profile+"/tag.config";
+    libtorrent::entry definitions(libtorrent::entry::dictionary_type{});auto& rule=definitions["3"]["1"];
+    rule["n"]="Editable";rule["o"]=libtorrent::entry::list_type{};rule["p"]=libtorrent::entry::list_type{};
+    rule["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(""),libtorrent::entry(""),libtorrent::entry("future-tail")};
+    rule["c"]["pp.enabled.constraint"]=0;rule["c"]["vis"]=1;rule["future-record"]="keep-record";definitions["future-root"]=std::string("x\0y",3);
+    const auto original=QByteArray::fromStdString(test::encoded(definitions));test::write(path,original);
+    const auto oldState=test::read(fixture.stateFile),oldPayload=test::read(fixture.payload+"/sample.bin");
+    libtorrent::entry settings(libtorrent::entry::dictionary_type{});settings["Bind IP"]="127.0.0.1";settings["Enforce Bind IP"]=1;
+    settings["TCP.Listen.Port"]=6881;settings["UDP.Listen.Port"]=6881;settings["IPV6 Enable Support"]=0;
+    for(const auto* key:{"TCP.Listen.Port.Enable","peercontrol.udp.public.enable","Plugin.DHT.dht.enabled","Plugin.mldht.enable","PluginInfo.mldht.enabled","Peer Source Selection Default.DHT","Peer Source Selection Default.PeerExchange","Peer Source Selection Default.Tracker","Plugin.UPnP.upnp.enable","Plugin.UPnP.natpmp.enable"}){settings[key]=0;}
+    test::write(fixture.profile+"/biglybt.config",QByteArray::fromStdString(test::encoded(settings)));
+    app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),finished(&bridge,&app::SessionBridge::manualTagCommandFinished),statistics(&bridge,&app::SessionBridge::manualTagStatisticsReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+    const auto result=[&]{return finished.empty()?ui::ManualTagCommandPresentation{}:qvariant_cast<ui::ManualTagCommandPresentation>(finished.last()[0]);};
+    const auto members=[&]{const auto packet=latest(statistics);if(packet&&packet->membership){for(const auto& row:packet->membership->rows()){if(row.uid==((std::int64_t{3}<<32)|1)){return row.resolvedCount;}}}return std::size_t{999};};
+    const auto wire=[&](ui::LibraryWindow& window){
+      window.setOfflinePreview(false); // Presentation hint; only worker owns source/file permission.
+      connect(&bridge,&app::SessionBridge::snapshotReady,&window,&ui::LibraryWindow::setPresentation);
+      connect(&bridge,&app::SessionBridge::columnLayoutSessionReady,&window,&ui::LibraryWindow::beginColumnLayoutSession);
+      connect(&bridge,&app::SessionBridge::busyChanged,&window,&ui::LibraryWindow::setBusy);
+      connect(&bridge,&app::SessionBridge::manualTagStatisticsReady,&window,&ui::LibraryWindow::setManualTagStatistics);
+      connect(&bridge,&app::SessionBridge::manualTagCommandFinished,&window,&ui::LibraryWindow::setManualTagCommandFinished);
+      const QPointer<ui::LibraryWindow> view(&window);
+      connect(&window,&ui::LibraryWindow::manualTagCommandRequested,&bridge,[&,view](ui::ManualTagCommand command){if(view&&!bridge.manualTagCommand(command)&&view){view->rejectManualTagCommand(command);}});
+      window.enableSessionCloseHandshake();connect(&window,&ui::LibraryWindow::sessionCloseRequested,&bridge,[&,view]{if(view&&!bridge.closeSession()&&view){view->retrySessionClose();}});
+      connect(&bridge,&app::SessionBridge::sessionClosed,&window,[view](quint64,bool,bool){if(view){view->completeSessionClose();}});connect(&bridge,&app::SessionBridge::sessionCloseFailed,&window,&ui::LibraryWindow::retrySessionClose);
+    };
+    quint64 firstSession=0;
+    {
+      ui::LibraryWindow window;wire(window);QSignalSpy intents(&window,&ui::LibraryWindow::manualTagCommandRequested);window.show();
+      QVERIFY(bridge.openNormal(fixture.native()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);firstSession=sessions.last()[0].toULongLong();
+      auto* action=window.findChild<QAction*>(QStringLiteral("classic-manual-tags"));QVERIFY(action);action->trigger();QTRY_VERIFY(!bridge.busy()&&result());
+      QPointer<ui::ManualTagManagerDialog> dialog=window.findChild<ui::ManualTagManagerDialog*>();QVERIFY(dialog);auto* expression=dialog->findChild<QPlainTextEdit*>(QStringLiteral("manual-tag-constraint-expression"));auto* options=dialog->findChild<QLineEdit*>(QStringLiteral("manual-tag-constraint-options"));auto* enabled=dialog->findChild<QCheckBox*>(QStringLiteral("manual-tag-constraint-enabled"));auto* save=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-constraint-save"));auto* reload=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-reload"));QVERIFY(expression&&options&&enabled&&save&&reload);
+      const auto before=result()->generation;expression->setPlainText(QStringLiteral("size>0"));options->setText(QStringLiteral("am=0;"));enabled->setChecked(true);const auto n=finished.count();save->click();QVERIFY(bridge.busy());QVERIFY(dialog&&dialog->isVisible()&&!save->isEnabled());
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==n+1,10000);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QVERIFY(result()->generation>before);QVERIFY(!result()->constraintStatus.isEmpty());QTRY_COMPARE_WITH_TIMEOUT(members(),std::size_t{1},10000);
+      // The automatic save has a new source generation: explicitly reload it.
+      auto count=finished.count();reload->click();QTRY_VERIFY(!bridge.busy()&&finished.count()==count+1);
+      const auto capture=qEnvironmentVariable("BIGLYBTC_CONSTRAINT_EDITOR_CAPTURE_FILE");
+      if(!capture.isEmpty()){
+        const QFileInfo info(capture);QVERIFY(info.isAbsolute()&&!info.exists()&&!info.isSymLink());
+        QVERIFY(info.dir().canonicalPath()==info.dir().absolutePath());QVERIFY(dialog&&dialog->isVisible());
+        QTRY_COMPARE(expression->toPlainText(),QStringLiteral("size>0"));QCOMPARE(options->text(),QStringLiteral("am=0;"));QVERIFY(enabled->isChecked());
+        QFile output(capture);QVERIFY(output.open(QIODevice::WriteOnly|QIODevice::NewOnly));QVERIFY(dialog->grab().save(&output,"PNG"));QVERIFY(output.flush());output.close();
+      }
+      expression->setPlainText(QStringLiteral("size<0"));count=finished.count();save->click();QTRY_VERIFY(!bridge.busy()&&finished.count()==count+1);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QTRY_COMPARE_WITH_TIMEOUT(members(),std::size_t{0},10000);
+      count=finished.count();reload->click();QTRY_VERIFY(!bridge.busy()&&finished.count()==count+1);expression->setPlainText(QStringLiteral("unknownFunction()"));count=finished.count();save->click();QTRY_VERIFY(!bridge.busy()&&finished.count()==count+1);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QVERIFY(result()->constraintStatus.contains(QStringLiteral("unavailable")));QCOMPARE(members(),std::size_t{0});
+      // A stale command cannot replace the just-committed expression.
+      auto stale=qvariant_cast<ui::ManualTagCommand>(intents.last()[0]);++stale.request;stale.generation=before;stale.constraintExpression=QStringLiteral("true");count=finished.count();QVERIFY(bridge.manualTagCommand(stale));QTRY_VERIFY(!bridge.busy()&&finished.count()==count+1);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Rejected);
+      window.close();QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.last()[1].toBool()&&closed.last()[2].toBool());QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);QVERIFY(!dialog);
+    }
+    {auto lease=storage::ProfileLease::acquire(fixture.native());QVERIFY(lease);}
+    {
+      ui::LibraryWindow window;wire(window);window.show();QVERIFY(bridge.open(fixture.native(),0));QTRY_VERIFY(!bridge.busy()&&sessions.count()==2);QVERIFY(sessions.last()[0].toULongLong()!=firstSession);
+      auto* action=window.findChild<QAction*>(QStringLiteral("classic-manual-tags"));QVERIFY(action);auto count=finished.count();action->trigger();QTRY_VERIFY(!bridge.busy()&&finished.count()==count+1);auto* dialog=window.findChild<ui::ManualTagManagerDialog*>();QVERIFY(dialog);
+      auto* expression=dialog->findChild<QPlainTextEdit*>(QStringLiteral("manual-tag-constraint-expression"));auto* enabled=dialog->findChild<QCheckBox*>(QStringLiteral("manual-tag-constraint-enabled"));auto* save=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-constraint-save"));QVERIFY(expression&&enabled&&save);QCOMPARE(expression->toPlainText(),QStringLiteral("unknownFunction()"));
+      // Preview may save config, but never activates the automatic worker.
+      expression->setPlainText(QStringLiteral("true &&"));enabled->setChecked(false);count=finished.count();save->click();QTRY_VERIFY(!bridge.busy()&&finished.count()==count+1);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QCOMPARE(members(),std::size_t{0});
+      window.close();QTRY_COMPARE_WITH_TIMEOUT(closed.count(),2,15000);QVERIFY(closed.last()[1].toBool()&&closed.last()[2].toBool());
+    }
+    auto saved=core::readSavedDownloadTags(test::read(path).toStdString());QVERIFY(saved);const auto* record=saved->source->find("3")->find("1");const auto* config=record->find("c");const auto* property=config->find("pp.constraint");QVERIFY(property&&property->children.size()==3);QCOMPARE(property->children[0].bytes,std::string("true &&"));QCOMPARE(property->children[2].bytes,std::string("future-tail"));QCOMPARE(config->find("pp.enabled.constraint")->integer,0);QVERIFY(saved->tags.front().members.empty());QCOMPARE(record->find("future-record")->bytes,std::string("keep-record"));QCOMPARE(saved->source->find("future-root")->bytes,std::string("x\0y",3));
+    QCOMPARE(test::read(fixture.stateFile),oldState);QCOMPARE(test::read(fixture.payload+"/sample.bin"),oldPayload);
+  }
   void normalProfileRulesPersistThroughActualWorkerStoreAndSharedMembership(){
     test::OwnedEngineFixture fixture(false);
     const auto tagPath=fixture.profile+QStringLiteral("/tag.config");
@@ -852,6 +978,23 @@ private slots:
     {auto released=storage::ProfileLease::acquire(fixture.native());QVERIFY(released);}
     QCOMPARE(test::read(path),committed);QVERIFY(preservesUnedited(committed));QCOMPARE(test::read(inventoryPath),inventory);QCOMPARE(test::read(fixture.stateFile),state);QCOMPARE(test::read(fixture.payload+'/'+fixture.files.front().relative),payload);QVERIFY(fixture.intact(false));QCOMPARE(engineCommands.count(),0);
   }
+  void actualUnsafeGroupWitnessesNeverDriveDependentMembership(){
+    test::OwnedEngineFixture fixture(false);const auto path=fixture.profile+"/tag.config";libtorrent::entry definitions(libtorrent::entry::dictionary_type{});
+    definitions["3"]["c"]["I5ZG65LQ"]["x"]=1;
+    auto& manual=definitions["3"]["1"];manual["n"]="Manual";manual["c"]["gr"]="Group";manual["o"]=libtorrent::entry::list_type{libtorrent::entry(base32(*fixture.hash))};
+    const auto rule=[&](int id,const char* expression,bool member){auto& value=definitions["3"][std::to_string(id)];value["n"]="Dependent";value["c"]["pp.constraint"]=libtorrent::entry::list_type{libtorrent::entry(expression)};value["o"]=libtorrent::entry::list_type{};if(member){value["o"].list().emplace_back(base32(*fixture.hash));}};
+    rule(2,"hasTagGroup(\"Group\")",false);rule(3,"!hasTag(\"Manual\")",true);definitions["future-root"]=std::string("x\0y",3);const auto before=QByteArray::fromStdString(test::encoded(definitions));test::write(path,before);
+    auto actual=std::async(std::launch::async,[&]{
+      auto lease=storage::ProfileLease::acquire(fixture.native());test::require(bool(lease),"Actual unsafe-group OFD");auto store=storage::ManualTagStore::open(*lease);test::require(bool(store),"Actual unsafe-group store");auto snapshot=(*store)->snapshot();test::require(bool(snapshot),"Actual unsafe-group snapshot");
+      auto rows=std::make_shared<ui::LibraryPresentation>();rows->revision=9;ui::LibraryItem row;row.hash=QString::fromStdString(fixture.hash->hex());row.bytes=test::OwnedEngineFixture::PayloadBytes;rows->items.push_back(row);
+      app::ConstraintWorkerFrame frame;frame.session=90;frame.sequence=1;frame.sourceRevision=lease->sourceRevision();frame.library=rows;auto worker=app::TagConstraintWorker::activate(*lease,frame.session);test::require(bool(worker),"Actual unsafe-group worker");
+      auto result=(*worker)->step(**store,*snapshot,frame);test::require(result&&!result->changed&&result->evaluated==2&&result->kept&&result->kept->kind==core::tags::constraints::ProblemKind::Unavailable,"Unsafe group witness drove an automatic dependent edit");
+      auto denied=(*store)->apply(*snapshot,core::SavedTagRemoveMember{1,*fixture.hash});test::require(!denied&&denied.error().code==storage::ErrorCode::Unsupported,"Manual path bypassed the shared group policy");
+      (*worker)->close();test::require(bool((*store)->close()),"Close unsafe-group store");return true;
+    });
+    QVERIFY(actual.get());QCOMPARE(test::read(path),before);QVERIFY(!QFileInfo::exists(path+".bak")&&!QFileInfo::exists(path+".saving"));
+  }
+
 };
 QTEST_MAIN(ManualTagBridgeTests)
 #include "manual_tag_bridge_tests.moc"

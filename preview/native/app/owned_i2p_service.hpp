@@ -105,6 +105,10 @@ public:
   void revoke()noexcept; // Atomic source-only withdrawal; no Qt/SDK dispatch.
   std::optional<storage::Error> contactCacheDiagnostic()const; // Existing external Host worker only.
   std::expected<void,storage::Error> close();
+  // Explicit terminal drain: no member checkpoint or final contact-cache save.
+  // Actual Qt/SourcePermit/SDK joins still precede storage/lease destruction.
+  std::expected<void,storage::Error> closeWithoutCheckpoint();
+  bool joined()const noexcept; // Actual terminal lifetime fact; Host worker only.
 private:
   struct Impl;explicit OwnedI2pService(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;

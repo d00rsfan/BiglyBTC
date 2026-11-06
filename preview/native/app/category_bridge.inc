@@ -10,7 +10,7 @@ bool SessionBridge::categoryCommand(ui::CategoryCommand request){
       ||busy_||closingSession_||guiCategoryCommand_||request.target.hash.size()>64
       ||(request.name&&request.name->size()>4096)){return false;}
   switch(request.kind){case ui::CategoryCommandKind::Reload:case ui::CategoryCommandKind::Create:
-    case ui::CategoryCommandKind::Assign:case ui::CategoryCommandKind::Remove:break;default:return false;}
+    case ui::CategoryCommandKind::Assign:case ui::CategoryCommandKind::Remove:case ui::CategoryCommandKind::ResumeRemove:break;default:return false;}
   guiCategoryCommand_=request;const QPointer<SessionBridge> alive(this);
   const bool accepted=dispatch([this,request=std::move(request)](std::stop_token stop){
     auto packet=std::make_shared<ui::CategoryCommandPacket>();
@@ -60,7 +60,7 @@ bool SessionBridge::categoryCommand(ui::CategoryCommand request){
           // Capture actual owner identities before any multi-file mutation;
           // no provider/status call is made while the store holds its FS gate.
           std::vector<core::TorrentHash> retained;
-          if(request.kind==ui::CategoryCommandKind::Remove&&host.engine){
+          if((request.kind==ui::CategoryCommandKind::Remove||request.kind==ui::CategoryCommandKind::ResumeRemove)&&host.engine){
             for(const auto& row:host.engine->managedDownloads()){retained.push_back(row.hash);}
           }
           std::expected<storage::CategoryCommit,storage::Error> result=std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Category command is unavailable"});
@@ -69,7 +69,22 @@ bool SessionBridge::categoryCommand(ui::CategoryCommand request){
             if(!categoryDeletionSupported(*host.categoryStore)){throw Failure{{storage::ErrorCode::Unsupported,"Category deletion requires the journal-enabled backend"}};}
             // Multi-file deletion is not a single-target source publication.
             // Keep active private/mixed authorities intact by refusing first.
-            host.requireI2pIdle();attempted=true;result=categoryRemove(*host.categoryStore,host.categorySnapshot,*name,stop);
+            // Never close/checkpoint a private owner on top of a pending
+            // journal. The old idle close is safe only BEFORE a new deletion.
+            if(storage::hasPendingCategoryDeletion(host.lease)&&host.categoryRetainedOwners()){
+              throw Failure{{storage::ErrorCode::Busy,"Pending category recovery conflicts with retained owners; preserve files for review"}};
+            }
+            host.requireI2pIdle(true);
+            if(host.categoryRetainedOwners()){
+              throw Failure{{storage::ErrorCode::Busy,"Stop and retire Public torrents and metadata handles before deleting or resuming a category"}};
+            }
+            if(request.kind==ui::CategoryCommandKind::ResumeRemove){
+              if(host.categoryRecovery.state!=storage::CategoryDeletionRecovery::State::Resumable
+                  ||host.categoryRecovery.name!=*name){
+                throw Failure{{storage::ErrorCode::Conflict,"Reload and select the exact acknowledged deletion before resuming"}};
+              }
+              attempted=true;result=host.categoryStore->resumeRemove(host.categorySnapshot,*name,stop);
+            }else{attempted=true;result=categoryRemove(*host.categoryStore,host.categorySnapshot,*name,stop);}
           }
           auto changed=take(std::move(result));host.acceptCategories(std::move(changed.snapshot),holder);committedStatus(changed.changed);
           if(changed.changed){
@@ -79,6 +94,7 @@ bool SessionBridge::categoryCommand(ui::CategoryCommand request){
             if(firstFailure){throw Failure{std::move(*firstFailure)};}
           }
         }
+        host.categoryRecovery=take(host.categoryStore->inspectRemove(host.categorySnapshot,{}));
         if(packet->changed){
           // Save already happened: no post-commit cancellation checkpoint.
           // Refresh binds the same full hash to a NEW revision; never recheck

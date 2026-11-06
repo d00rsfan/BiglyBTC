@@ -242,6 +242,7 @@ namespace biglybtc::core::tags::constraints {
       std::size_t count=0,depth=0;
       std::map<Text,Reference> context;
       std::vector<Text> requiredTags;bool requiresJavaPattern=false;
+      bool timeDependent=false;
       struct Depth {
         Parser& p;
         explicit Depth(Parser& v):p(v){
@@ -406,6 +407,13 @@ namespace biglybtc::core::tags::constraints {
         t=trim(std::move(t));
         if(!t.empty()&&quote(t.front())){
           return make(Node::Kind::Raw,std::move(t));
+        }
+        // cb8 ConstraintExprParams inspects exact unquoted parameter tokens.
+        // A string literal or wall-reading function alone is not DEP_TIME.
+        for(const auto key:{u"age",u"seedcount",u"seed_count",u"peercount",u"peer_count",u"seedpeerratio",u"seed_peer_ratio",
+            u"resumein",u"resume_in",u"minofhour",u"min_of_hour",u"hourofday",u"hour_of_day",u"dayofweek",u"day_of_week",
+            u"tagage",u"tag_age",u"completedage",u"completed_age",u"targetratio",u"target_ratio",u"my_rating",u"myrating"}){
+          if(t==key){timeDependent=true;break;}
         }
         if(t.starts_with(u"{")){
           return dereference(t);
@@ -691,8 +699,9 @@ namespace biglybtc::core::tags::constraints {
   struct Expression::Impl {
     Ptr root;
     Limits limits;
-    std::vector<Text> requiredTags;bool requiresJavaPattern=false;
+    std::vector<Text> requiredTags;bool requiresJavaPattern=false,timeDependent=false;
   };
+  bool Expression::dependsOnTime()const noexcept{return impl_&&impl_->timeDependent;}
   namespace {
     struct Evaluator {
       const Facts& facts;
@@ -1152,6 +1161,13 @@ namespace biglybtc::core::tags::constraints {
           boolean(value);
           return value;
         }
+        if(f=="hastag"||f=="hastaggroup"){
+          const auto values=fact(f=="hastag"?"present_manual_tag_names":"present_manual_tag_groups");
+          need(std::holds_alternative<Strings>(values),"Owned positive tag witnesses required");
+          const auto name=literal(a[0]->raw);const auto& names=std::get<Strings>(values);
+          if(std::find(names.begin(),names.end(),name)!=names.end()){return true;}
+          reject(ProblemKind::Unavailable,"Complete original runtime tag registry is unavailable; absence is not false");
+        }
         throw Rejected{
           {
             ProblemKind::Unavailable,f=="matches"?"Java Pattern.find/Unicode flags provider required":"Original provider/effect unavailable: "+f
@@ -1198,10 +1214,10 @@ namespace biglybtc::core::tags::constraints {
       if(source.size()>limits.sourceUnits||!limits.nodes||limits.nodes>65536||!limits.depth||limits.depth>256||!limits.arguments){
         reject(ProblemKind::Bounds,"Constraint source/resource bound exceeded");
       }
-      Parser parser{limits,0,0,{}, {},false};
+      Parser parser{limits,0,0,{}, {},false,false};
       Expression e;
       e.impl_=std::make_shared<const Expression::Impl>(Expression::Impl{
-        parser.start(Text(source)),limits,parser.requiredTags,parser.requiresJavaPattern
+        parser.start(Text(source)),limits,parser.requiredTags,parser.requiresJavaPattern,parser.timeDependent
       });
       return e;
     }
@@ -1222,7 +1238,7 @@ namespace biglybtc::core::tags::constraints {
       if(e.impl_->requiresJavaPattern){reject(ProblemKind::Unavailable,"Java Pattern compile provider required before rule admission");}
       if(!e.impl_->requiredTags.empty()){
         auto catalog=evaluator.fact("registered_tags");need(std::holds_alternative<Strings>(catalog),"Owned registered tag catalog required");
-        for(const auto& name:e.impl_->requiredTags){need(std::find(std::get<Strings>(catalog).begin(),std::get<Strings>(catalog).end(),name)!=std::get<Strings>(catalog).end(),"Original constraint tag name not found");}
+        for(const auto& name:e.impl_->requiredTags){if(std::find(std::get<Strings>(catalog).begin(),std::get<Strings>(catalog).end(),name)==std::get<Strings>(catalog).end()){reject(ProblemKind::Unavailable,"Original tag name is not resolved by the retained partial registry");}}
       }
       return evaluator.eval(e.impl_->root);
     }

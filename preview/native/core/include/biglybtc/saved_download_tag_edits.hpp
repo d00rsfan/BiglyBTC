@@ -7,8 +7,15 @@ namespace biglybtc::core {
 enum class SavedTagEditError {
   Format, Root, ManualType, Limit, Memory, AmbiguousId, MissingTag,
   MalformedRecord, MalformedConfiguration, MalformedMembership,
-  InvalidName, InvalidMember, InvalidCounter, IdExhausted
+  InvalidName, InvalidMember, InvalidCounter, IdExhausted, InvalidConstraint, UnsupportedGroupSettings
 };
+// Passive raw-source policy only, not a group registry or membership grant.
+// Ungrouped rows are independent. Grouped effects require exact ordinary
+// affected-group settings; unknown/exclusive/colour/assign-root refuse.
+bool ordinarySavedTagGroup(const SavedDownloadTags&,const Node& record)noexcept;
+// Known supported membership configuration only. This value check never grants
+// effects; the real Store repeats it from fresh source before a changed save.
+bool ordinarySavedTagMembershipEffects(const SavedDownloadTags&,const Node& record)noexcept;
 struct SavedTagCreate {
   std::string name;
   // Absent: exact original reload counter=max(0,id+1), then increment.
@@ -26,8 +33,16 @@ struct SavedTagAddMember {
   std::int64_t addedTimeSeconds;
 };
 struct SavedTagRemoveMember { std::int32_t id; TorrentHash hash; };
+// Only known property slots0/1 and enabled are edited. Unknown tail entries,
+// other configuration, raw members and their per-member properties survive.
+// Text is configuration, not a compiled expression or membership authority.
+struct SavedTagSetConstraint {
+  std::int32_t id;
+  std::string expression, options;
+  bool enabled=true;
+};
 using SavedTagEdit = std::variant<SavedTagCreate, SavedTagRename, SavedTagRemove,
-    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember>;
+    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint>;
 struct SavedTagEditResult {
   SavedDownloadTags value;
   bool changed = false;

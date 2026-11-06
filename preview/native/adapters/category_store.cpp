@@ -106,6 +106,9 @@ struct CategoryStore::Impl {
   }
 };
 CategoryStore::CategoryStore(std::unique_ptr<Impl> value):impl_(std::move(value)){}CategoryStore::~CategoryStore()=default;
+bool hasPendingCategoryDeletion(const ProfileLease& lease)noexcept{
+  return categoryJournalPending(lease.directoryHandle());
+}
 bool CategoryStore::recoveryRequired()const noexcept{return std::this_thread::get_id()!=impl_->worker||!impl_->lease||impl_->poisoned||categoryJournalPending(impl_->lease->directoryHandle());}
 std::expected<std::unique_ptr<CategoryStore>,Error> CategoryStore::open(const ProfileLease& lease,std::stop_token stop,Deadline end){
   try{auto allowed=budget(stop,end);if(!allowed){return std::unexpected(allowed.error());}auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}auto impl=std::make_unique<Impl>();impl->lease=std::move(*retained);auto path=profilePath(impl->lease->directoryHandle());if(!path){return std::unexpected(path.error());}impl->profile=std::move(*path);if(::fstat(impl->lease->directoryHandle(),&impl->profileStamp)!=0){return fail(ErrorCode::Io,"Cannot identify category profile");}auto result=std::unique_ptr<CategoryStore>(new CategoryStore(std::move(impl)));auto loaded=result->reload(stop,end);if(!loaded){return std::unexpected(loaded.error());}return result;}catch(const std::bad_alloc&){return fail(ErrorCode::Io,"Insufficient memory opening category store");}

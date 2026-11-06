@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tag_runtime_facts.hpp"
+#include "manual_tag_policy.hpp"
 #include <algorithm>
 #include <QByteArray>
 #include <bit>
@@ -228,6 +229,8 @@ c::Result<ConstraintFactSnapshot> captureConstraintFacts(
 c::Result<c::Value> evaluateCurrentConstraint(const c::Expression& expression,
     const ConstraintFactStamp& current,const ConstraintFactSnapshot& snapshot){
   if(!valid(current)||current!=snapshot.stamp()){return std::unexpected(unavailable("Constraint fact snapshot is stale"));}
+  if(snapshot.hasTagScope()){return std::unexpected(unavailable("Current tag source generation is required for tag facts"));}
   return c::evaluate(expression,snapshot.facts());
 }
+#include "tag_membership_facts.inc"
 } // namespace biglybtc::app

@@ -90,6 +90,7 @@ public:
   bool continueDownload(ui::Target target);
   void cancel();
   bool closeSession();
+  bool closeSessionWithoutCheckpoint(quint64 session);
   bool busy() const { return busy_; }
 signals:
   void fileOperationPrepared(biglybtc::ui::FileOperationPlanPresentation);
@@ -132,6 +133,8 @@ signals:
   void countryStatisticsReady(biglybtc::ui::CountryStatisticsPresentation);
   void sessionClosed(quint64 session, bool joined, bool storageReleased);
   void sessionCloseFailed();
+  void recoveryCloseOffered(quint64 session);
+  void sessionClosedWithoutCheckpoint(quint64 session,bool joined,bool storageReleased);
   void busyChanged(bool);
   void messageReady(QString);
 private:
@@ -166,6 +169,7 @@ private:
   void publishCountries() noexcept;
   void deliverCountries(ui::CountryStatisticsPresentation);
   void closeFailed(QString);
+  bool closeSessionImpl(bool withoutCheckpoint,quint64 expectedSession);
   std::unique_ptr<Host> host_;
   std::optional<core::Ticket> current_;
   std::shared_ptr<std::atomic_bool> completionPosted_;

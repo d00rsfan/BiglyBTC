@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tag_runtime_facts.hpp"
 #include <algorithm>
+#include <filesystem>
+#include <cstdlib>
+#include <fstream>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
@@ -144,8 +149,65 @@ void inactiveCachedDndAndPrivateOwner(){
   missing(*out,p.stamp,u"isPaused()");missing(*out,p.stamp,u"downloaded>=0");
   owner.value.generation=73;check(!a::captureConstraintFacts(p.stamp,p.input),"Foreign private group accepted");
 }
+void actualManualTagWitnessesAgeAndStaleSources(){
+  namespace s=biglybtc::storage;namespace fs=std::filesystem;
+  std::string temporary="/tmp/biglybtc-tag-facts-XXXXXX";check(::mkdtemp(temporary.data()),"Create actual tag fact profile");
+  const fs::path root=temporary;const auto cleanup=[&]{std::error_code error;fs::remove_all(root,error);};
+  const auto bytes=[](std::string_view value){return std::to_string(value.size())+':'+std::string(value);};
+  const auto dictionary=[&](std::initializer_list<std::pair<std::string,std::string>> values){std::string out="d";for(const auto& [key,value]:values){out+=bytes(key)+value;}return out+'e';};
+  const std::string member="VKVKVKVKVKVKVKVKVKVKVKVKVKVKVKVK"; // Actual uppercase Base32 of20 AA bytes.
+  const auto source=[&](bool blocked,bool unknownMember=false){
+    const auto stable=dictionary({{"n",bytes("Manual")},{"c",dictionary({{"gr",bytes("Group")}})},{"o","l"+bytes(member)+"e"},{"p","ld1:ai100eee"}});
+    const auto own=dictionary({{"n",bytes("Rule")},{"c",dictionary({{"pp.constraint","l4:truee"}})},{"o","l"+bytes(unknownMember?"unknown-alias":member)+"e"},{"p","ld1:ai100eee"}});
+    const auto alias=blocked?dictionary({{"n",bytes("Manual")},{"c",dictionary({{"pp.constraint","l4:truee"}})}}):dictionary({{"n",bytes("tag.localized")}});
+    return dictionary({{"3",dictionary({{"1",stable},{"2",own},{"3",alias}})},{"future-root",bytes("keep")}});
+  };
+  const auto write=[&](const std::string& value){std::ofstream file(root/"tag.config",std::ios::binary|std::ios::trunc);file.write(value.data(),static_cast<std::streamsize>(value.size()));file.close();check(bool(file)&&::chmod((root/"tag.config").c_str(),0600)==0,"Write actual tag facts source");};
+  try{
+    write(source(false));{auto lease=s::ProfileLease::acquire(root);check(bool(lease),"Actual profile OFD");auto store=s::ManualTagStore::open(*lease);check(bool(store),"Actual ManualTagStore");auto snapshot=(*store)->snapshot();check(bool(snapshot),"Actual owning tag snapshot");
+    Source current;auto base=a::captureConstraintFacts(current.stamp,current.input);check(bool(base),"Existing owning DTO snapshot (no provider authority)");
+    auto captured=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*snapshot,2,current.library,150100);check(bool(captured),"Actual owning tag witness capture");
+    const auto runTags=[&](std::u16string_view text,const auto& facts,const auto& tags){auto expression=c::compile(text);check(bool(expression),"Compile tag witness expression");return a::evaluateCurrentConstraint(*expression,current.stamp,facts,**store,*lease,tags);};
+    auto good=runTags(u"hasTag(\"Manual\")&&hasTagGroup(\"Group\")&&(tag_age==50)",*captured,*snapshot);check(good&&c::truth(*good)&&*c::truth(*good),"Actual manual positive/group/ownage facts differ");
+    // Same owning source with deterministic second-boundary/backward samples.
+    for(const auto& [wall,expected]:{std::pair<std::int64_t,std::int64_t>{149999,49},{150000,50},{99999,0},{100000,0},{-100000,0}}){
+      auto sampled=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*snapshot,2,current.library,wall);check(bool(sampled),"Actual source age sample refused");
+      const auto test=std::u16string(u"tag_age==")+QString::number(static_cast<qlonglong>(expected)).toStdU16String();
+      auto value=runTags(test,*sampled,*snapshot);check(value&&c::truth(*value)&&*c::truth(*value),"Actual own age boundary/backward wall differs");
+    }
+    for(const auto* text:{u"!hasTag(\"Absent\")",u"!hasTagGroup(\"Absent\")",u"hasTagAge(\"Manual\")>=0",u"countTag(\"Manual\")>=0",u"tagPosition(\"Manual\")>=0",u"contains(tag_names,\"Manual\")",u"hasTag(\"Rule\")",u"hasTag(\"tag.localized\")"}){
+      auto kept=runTags(text,*captured,*snapshot);check(!kept&&kept.error().kind==c::ProblemKind::Unavailable&&c::project(kept,{},true,false,true).membership==c::Membership::Keep,"Incomplete registry/dependency became false or removal");
+    }
+    auto expression=c::compile(u"true");check(expression&&!a::evaluateCurrentConstraint(*expression,current.stamp,*captured),"Tag-bound facts used without current tag generation");
+    const auto beforeReopen=*captured;const auto sourceBeforeReopen=*snapshot;
+    check(bool((*store)->close()),"Close first exact writer");store->reset();store=s::ManualTagStore::open(*lease);check(bool(store),"Explicit equal-source writer reopen");snapshot=(*store)->snapshot();check(bool(snapshot)&&snapshot->generation()==sourceBeforeReopen.generation()&&snapshot->sameSource(sourceBeforeReopen),"Reopen must have equal bytes/metadata/counter for lineage regression");
+    check(!runTags(u"hasTag(\"Manual\")",beforeReopen,*snapshot),"Reopened equal-generation writer resurrected old captured provider scope");
+    captured=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*snapshot,2,current.library,150100);check(bool(captured),"Fresh source-bound recapture after explicit reopen");
+    auto fresh=(*store)->reload();check(bool(fresh)&&snapshot->sameSource(*fresh),"Same-source explicit reload fixture");check(!runTags(u"hasTag(\"Manual\")",*captured,*fresh),"Old tag generation survived a reload");
+    auto wrong=current.stamp;++wrong.sequence;check(!a::captureConstraintTagMembership(*base,wrong,**store,*lease,*fresh,2,current.library,150100),"Stale fact turn accepted a new tag scope");
+    // Existing ordinary source becomes unsafe only through actual selected
+    // group settings; no caller registry-complete flag or fabricated packet.
+    auto unsafe=biglybtc::core::Document::parse(source(false));check(bool(unsafe),"Unsafe group source parse");
+    auto manual=biglybtc::core::Document::parse(biglybtc::core::encodeValue(*unsafe->find("3")).value());check(bool(manual)&&manual->replaceValue("c","d8:I5ZG65LQd1:xi1eee"),"Unsafe selected group settings");
+    check(bool(unsafe->replaceValue("3",manual->serialize())),"Unsafe owning group source edit");write(unsafe->serialize());fresh=(*store)->reload();check(bool(fresh),"Reload actual unsafe group source");
+    auto unsafeFacts=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*fresh,2,current.library,150100);check(bool(unsafeFacts),"Capture current unsafe group scope");
+    for(const auto* text:{u"hasTag(\"Manual\")",u"hasTagGroup(\"Group\")",u"!hasTag(\"Manual\")"}){auto value=runTags(text,*unsafeFacts,*fresh);check(!value&&value.error().kind==c::ProblemKind::Unavailable&&c::project(value,{},true,false,true).membership==c::Membership::Keep,"Unsafe group supplied a positive or negative membership effect");}
+    auto unsafeOwn=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*fresh,1,current.library,150100);check(bool(unsafeOwn)&&!runTags(u"tag_age>=0",*unsafeOwn,*fresh),"Unsafe own group retained an actionable tag-age provider");
+    write(source(true));fresh=(*store)->reload();check(bool(fresh),"Actual active alias source");captured=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*fresh,2,current.library,150100);check(bool(captured),"Capture owning blocked dependency");auto blocked=runTags(u"hasTag(\"Manual\")",*captured,*fresh);check(!blocked&&blocked.error().kind==c::ProblemKind::Unavailable,"Active alias dependency was silently settled");
+    write(source(false,true));fresh=(*store)->reload();check(bool(fresh),"Actual unknown member source");captured=a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*fresh,2,current.library,150100);check(bool(captured),"Capture unknown member snapshot");check(!runTags(u"tag_age>=0",*captured,*fresh),"Unknown member alias fabricated own age0");
+    const auto foreignPath=root/"foreign";check(fs::create_directory(foreignPath)&&::chmod(foreignPath.c_str(),0700)==0,"Create foreign actual profile");
+    {std::ofstream file(foreignPath/"tag.config",std::ios::binary);const auto value=source(false,true);file.write(value.data(),static_cast<std::streamsize>(value.size()));file.close();check(bool(file)&&::chmod((foreignPath/"tag.config").c_str(),0600)==0,"Write foreign owning preimage");}
+    auto foreignLease=s::ProfileLease::acquire(foreignPath);check(bool(foreignLease),"Foreign real OFD");auto foreignStore=s::ManualTagStore::open(*foreignLease);check(bool(foreignStore),"Foreign real writer");auto foreign=(*foreignStore)->snapshot();check(bool(foreign),"Foreign equal-byte preimage");
+    check(!a::captureConstraintTagMembership(*base,current.stamp,**store,*lease,*foreign,2,current.library,150100),"Equal bytes crossed current cached snapshot lineage");
+    check(!a::captureConstraintTagMembership(*base,current.stamp,**foreignStore,*lease,*foreign,2,current.library,150100),"Foreign writer crossed actual OFD lineage");
+    check(bool((*store)->close()),"Release actual tag store");check(!(*store)->matchesSnapshotLineage(*fresh,*lease),"Closed writer lineage remained current");store->reset();
+    auto reopened=s::ManualTagStore::open(*lease);check(bool(reopened),"Explicit actual writer reopen");fresh=(*reopened)->snapshot();check(bool(fresh),"Reopened actual source");
+    check(expression&&!a::evaluateCurrentConstraint(*expression,current.stamp,*captured,**reopened,*lease,*fresh),"Identical reopened writer resurrected an old captured fact scope");
+    check(bool((*reopened)->close())&&bool((*foreignStore)->close()),"Close actual read stores");}cleanup();
+  }catch(...){cleanup();throw;}
+}
 } // namespace
 int main(){
-  try{canonicalIdentitiesAndMissingProviders();identitiesAndOwningSnapshots();originalPercentAndUnavailableRates();queueRatioAndSourceState();inactiveCachedDndAndPrivateOwner();}
+  try{canonicalIdentitiesAndMissingProviders();identitiesAndOwningSnapshots();originalPercentAndUnavailableRates();queueRatioAndSourceState();inactiveCachedDndAndPrivateOwner();actualManualTagWitnessesAgeAndStaleSources();}
   catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}return 0;
 }

@@ -122,6 +122,12 @@ struct RetirementReceipt {
   // No value means no diagnostics failure; presence never fabricates a seal.
   std::optional<AccountingError> accountingFailure;
 };
+// Explicit omission of profile checkpoints. A successful lifetime join is
+// NOT a saved-piece/counter/durability/normal-retirement certificate.
+struct CloseWithoutCheckpointReceipt {
+  bool sessionJoined=false,storageReleased=false;
+  std::optional<AccountingError> diagnostic;
+};
 struct CloseReceipt {
   RetirementReceipt retirement;
   // Epoch-final evidence requires this successful explicit close (permanently
@@ -283,6 +289,10 @@ public:
   // Deadline bounds certification effort, not an OS/LT thread-join guarantee.
   // Failure returns uncertified; no destructor callback or inferred final0.
   CloseReceipt close(std::chrono::steady_clock::time_point deadline) noexcept;
+  // Actual retained ownership is sufficient to stop; no profile/source
+  // revalidation grants new effects. Never calls Native profile publishers.
+  // Deadline bounds flush effort only. The final SDK/actor join may outlive it.
+  CloseWithoutCheckpointReceipt closeWithoutCheckpoint(std::chrono::steady_clock::time_point deadline)noexcept;
 private:
   friend class detail::PersistentCall;
   friend class detail::PersistentOperation;

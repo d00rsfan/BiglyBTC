@@ -2,12 +2,16 @@
 #include "session_bridge.hpp"
 #include "library_window.hpp"
 #include "category_editor.hpp"
+#include "category_store.hpp"
+#include <future>
 #include "owned_engine_fixture.hpp"
 #include <QAction>
 #include <QAbstractButton>
 #include <QApplication>
 #include <QFileInfo>
 #include <QDir>
+#include <QDirIterator>
+#include <array>
 #include <QPixmap>
 #include <QLineEdit>
 #include <QMenu>
@@ -55,6 +59,52 @@ void wire(app::SessionBridge& bridge,ui::LibraryWindow& window){
   QObject::connect(&window,&Window::sessionCloseRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view]{if(owner&&view&&!owner->closeSession()&&view){view->retrySessionClose();}});
   QObject::connect(&bridge,&Bridge::sessionClosed,&window,[view](quint64,bool,bool){if(view){view->completeSessionClose();}});
   QObject::connect(&bridge,&Bridge::sessionCloseFailed,&window,&Window::retrySessionClose);
+  QObject::connect(&bridge,&Bridge::recoveryCloseOffered,&window,&Window::offerRecoveryClose);
+  QObject::connect(&window,&Window::sessionCloseWithoutCheckpointRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view](quint64 session){if(owner&&view&&!owner->closeSessionWithoutCheckpoint(session)){view->retrySessionClose();}});
+  QObject::connect(&bridge,&Bridge::sessionClosedWithoutCheckpoint,&window,[view](quint64,bool,bool){if(view){view->completeSessionClose();}});
+}
+struct GuardedProfileFile {
+  QByteArray bytes;std::array<long long,8> stamp;
+  bool operator==(const GuardedProfileFile&)const=default;
+};
+std::map<QString,GuardedProfileFile> profileImage(const QString& root){
+  std::map<QString,GuardedProfileFile> out;
+  QDirIterator entries(root,QDir::Files|QDir::Hidden|QDir::System,QDirIterator::Subdirectories);
+  while(entries.hasNext()){
+    const auto path=entries.next();struct stat s{};test::require(::lstat(path.toStdString().c_str(),&s)==0&&S_ISREG(s.st_mode),"Generated profile regular file");
+    out.emplace(QDir(root).relativeFilePath(path),GuardedProfileFile{test::read(path),{static_cast<long long>(s.st_dev),static_cast<long long>(s.st_ino),static_cast<long long>(s.st_mode),s.st_size,s.st_mtim.tv_sec,s.st_mtim.tv_nsec,s.st_ctim.tv_sec,s.st_ctim.tv_nsec}});
+  }
+  return out;
+}
+thread_local std::stop_source* recoveryStop=nullptr;
+thread_local bool recoveryUnacknowledged=false;
+void pauseCategoryDeletion(storage::CategoryDeletionStage stage,std::size_t){
+  if(recoveryUnacknowledged&&stage==storage::CategoryDeletionStage::MemberWritten){
+    throw std::runtime_error("Generated unacknowledged writer prefix");
+  }
+  if(!recoveryUnacknowledged&&stage==storage::CategoryDeletionStage::JournalSynced){recoveryStop->request_stop();}
+}
+void prepareCategoryRecovery(test::OwnedEngineFixture& fixture,const QString& kind){
+  // Real generated store/lease on its construction worker. No serialized
+  // journal synthesis, GUI grant, network service or authority test hook.
+  auto work=std::async(std::launch::async,[&]{
+    auto take=[]<class T>(std::expected<T,storage::Error> value)->T{
+      if(!value){throw std::runtime_error(value.error().message);}return std::move(*value);
+    };
+    auto lease=take(storage::ProfileLease::acquire(fixture.native()));
+    auto store=take(storage::CategoryStore::open(lease));
+    auto defs=take(store->create(take(store->snapshot()),"Recover me")).snapshot;
+    const auto target=take(store->readTarget(defs,*fixture.hash));
+    take(store->assign(defs,target,std::string("Recover me")));
+    std::stop_source stop;recoveryStop=&stop;recoveryUnacknowledged=kind==QStringLiteral("unacknowledged");
+    const auto reset=qScopeGuard([]{recoveryStop=nullptr;recoveryUnacknowledged=false;});
+    auto result=store->remove(defs,"Recover me",stop.get_token(),storage::CategoryStore::Deadline::max(),pauseCategoryDeletion);
+    test::require(!result&&result.error().code==(recoveryUnacknowledged?storage::ErrorCode::Conflict:storage::ErrorCode::Cancelled),"Real deletion prefix was not retained");
+    test::require(bool(store->close()),"Close generated category writer");
+  });
+  work.get();
+  if(kind==QStringLiteral("external")){auto bytes=test::read(fixture.stateFile);test::require(QFile::rename(fixture.stateFile,fixture.stateFile+".foreign"),"Replace generated physical preimage");test::write(fixture.stateFile,bytes);} // Same bytes are not the same inode.
+  if(kind==QStringLiteral("legacy")){test::write(fixture.profile+"/.BiglyBTC.category-delete","legacy preserved review");}
 }
 bool rawPreserved(const QByteArray& before,const QByteArray& after,std::initializer_list<const char*> keys){
   const auto a=core::Document::parse(before.toStdString()),b=core::Document::parse(after.toStdString());if(!a||!b){return false;}
@@ -70,6 +120,120 @@ extern "C" ssize_t __wrap_read(int fd,void* buffer,size_t size){
 class CategoryBridgeTests final:public QObject {
   Q_OBJECT
 private slots:
+  void actualRetainedPublicRecoveryCloseRequiresRefusalAndPreservesProfile(){
+    test::OwnedEngineFixture fixture(false,true);stopped(fixture);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+    app::SessionBridge bridge;ui::LibraryWindow window;wire(bridge,window);window.show();
+    QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),traffic(&bridge,&app::SessionBridge::progressReady),failed(&bridge,&app::SessionBridge::sessionCloseFailed),offered(&bridge,&app::SessionBridge::recoveryCloseOffered),normalClosed(&bridge,&app::SessionBridge::sessionClosed),drained(&bridge,&app::SessionBridge::sessionClosedWithoutCheckpoint),intent(&window,&ui::LibraryWindow::sessionCloseWithoutCheckpointRequested);
+    QVERIFY(bridge.open(fixture.native(),fixture.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!rows.empty()&&!sessions.empty(),30000);
+    const auto session=sessions.last()[0].toULongLong();QVERIFY(!bridge.closeSessionWithoutCheckpoint(session+1));
+    // Same-session scalar is insufficient: no ordinary refusal has occurred.
+    QVERIFY(bridge.closeSessionWithoutCheckpoint(session));QTRY_VERIFY(!bridge.busy()&&failed.count()==1);QVERIFY(drained.empty()&&normalClosed.empty());
+    QVERIFY(bridge.downloadAction({target(rows)},core::DownloadAction::Start));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy(),10000);
+    const auto progressed=[&]{for(const auto& row:traffic){if(qvariant_cast<ui::Telemetry>(row[0]).completed>0){return true;}}return false;};
+    QTRY_VERIFY_WITH_TIMEOUT(progressed()&&qvariant_cast<ui::Presentation>(rows.last()[0])->items.front().providerAdmission,30000);
+    const auto live=qvariant_cast<ui::Presentation>(rows.last()[0]);QVERIFY(live->items.front().providerAdmission);
+    // Fence the existing serial worker with an actual read. A preceding idle
+    // accounting turn must finish before this read starts; injecting the external
+    // candidate here cannot race a prior already-authorized profile save.
+    struct stat inventoryInfo{};QVERIFY(::stat((fixture.profile+"/downloads.config").toStdString().c_str(),&inventoryInfo)==0);
+    watchedDevice=inventoryInfo.st_dev;watchedInode=inventoryInfo.st_ino;readEntered=false;holdRead=true;watchRead=true;
+    const auto releaseRead=qScopeGuard([]{watchRead=false;stopRead();});
+    QVERIFY(bridge.refresh());QTRY_VERIFY_WITH_TIMEOUT(readEntered.load(),10000);
+    // Real external source-review candidate, deliberately legacy/ambiguous;
+    // never a fabricated safe acknowledgement or a new source permission.
+    test::write(fixture.profile+"/.BiglyBTC.category-delete","preserve external recovery evidence");
+    stopRead();watchRead=false;QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy(),10000);
+    const auto before=profileImage(fixture.profile);const auto bytesBefore=test::read(fixture.stateFile);
+    bool declined=false,confirmed=false;
+    // The actual backend refusal is async. Drive the modal only when it exists,
+    // without guessing its timing or accepting an unrelated dialog.
+    QTimer answer;answer.setInterval(10);QObject::connect(&answer,&QTimer::timeout,&window,[&]{if(auto* question=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());question&&question->windowTitle()==QStringLiteral("Close without saving progress")){if(auto* button=question->button(QMessageBox::No)){declined=true;button->click();}}});answer.start();
+    window.close();QTRY_VERIFY_WITH_TIMEOUT(failed.count()==2&&offered.count()==1&&declined&&!bridge.busy(),10000);answer.stop();
+    QVERIFY(drained.empty()&&normalClosed.empty()&&intent.empty());QVERIFY(profileImage(fixture.profile)==before);QVERIFY(window.isVisible());
+    QObject::disconnect(&answer,nullptr,&window,nullptr);QObject::connect(&answer,&QTimer::timeout,&window,[&]{if(auto* question=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());question&&question->windowTitle()==QStringLiteral("Close without saving progress")){if(auto* button=question->button(QMessageBox::Yes)){confirmed=true;button->click();}}});answer.start();
+    const auto stopAnswers=qScopeGuard([&]{answer.stop();});window.close();
+    QTRY_VERIFY_WITH_TIMEOUT(drained.count()==1&&!bridge.busy(),15000);QVERIFY(confirmed);QCOMPARE(intent.count(),1);QCOMPARE(intent.last()[0].toULongLong(),session);QVERIFY(normalClosed.empty());
+    QVERIFY(drained.last()[1].toBool()&&drained.last()[2].toBool());QVERIFY(profileImage(fixture.profile)==before);QCOMPARE(test::read(fixture.stateFile),bytesBefore);
+    QVERIFY(!bridge.closeSessionWithoutCheckpoint(session));
+    {auto lease=storage::ProfileLease::acquire(fixture.native());QVERIFY(lease);} // Actual SDK/actors/disk and same-OFD lease ended.
+    // Reopen preserves the unresolved evidence and uses recovery-only startup;
+    // omission never forges a successful checkpoint or automatically replays it.
+    app::SessionBridge reopened;QSignalSpy fresh(&reopened,&app::SessionBridge::snapshotReady),ended(&reopened,&app::SessionBridge::sessionClosed);
+    QVERIFY(reopened.openNormal(fixture.native()));QTRY_VERIFY(!reopened.busy()&&!fresh.empty());
+    QVERIFY(profileImage(fixture.profile)==before);const auto view=qvariant_cast<ui::Presentation>(fresh.last()[0]);QCOMPARE(view->items.front().providerAdmission,quint64{0});
+    QVERIFY(reopened.closeSession());QTRY_COMPARE_WITH_TIMEOUT(ended.count(),1,15000);QVERIFY(ended.last()[1].toBool()&&ended.last()[2].toBool());
+  }
+  void interruptedDeletionRequiresExplicitCurrentWorkerResume_data(){
+    QTest::addColumn<QString>("kind");
+    for(const auto* kind:{"acknowledged","unacknowledged","external","legacy"}){QTest::newRow(kind)<<QString::fromLatin1(kind);}
+  }
+  void interruptedDeletionRequiresExplicitCurrentWorkerResume(){
+    QFETCH(QString,kind);test::OwnedEngineFixture fixture(false); // Existing generated fixture only.
+    const auto path=fixture.profile+"/categories.config",journal=fixture.profile+"/BiglyBTC.category-delete.config";
+    prepareCategoryRecovery(fixture,kind);
+    const auto definitionsBefore=test::read(path),stateBefore=test::read(fixture.stateFile),journalBefore=test::read(journal);
+    const auto inventory=test::read(fixture.profile+"/downloads.config"),payload=test::read(fixture.payload+'/'+fixture.files.front().relative);
+    app::SessionBridge bridge;ui::LibraryWindow window;wire(bridge,window);window.show();
+    QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),finished(&bridge,&app::SessionBridge::categoryCommandFinished),closed(&bridge,&app::SessionBridge::sessionClosed),intents(&window,&ui::LibraryWindow::categoryCommandRequested),traffic(&bridge,&app::SessionBridge::progressReady);
+    // Fixture row is queued75, not stopped70. Pending journal must prevent
+    // normal automatic owner startup BEFORE any resilient writer can run.
+    QVERIFY(bridge.openNormal(fixture.native()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!rows.empty()&&!sessions.empty(),10000);
+    auto* table=window.findChild<QTableView*>(QStringLiteral("incomplete-torrents"));auto* model=window.findChild<ui::LibraryModel*>();QVERIFY(table&&model);QTRY_COMPARE(table->model()->rowCount(),1);QTRY_COMPARE(model->revision(),target(rows).generation);table->setCurrentIndex(table->model()->index(0,0));table->selectRow(0);
+    auto shown=qvariant_cast<ui::Presentation>(rows.last()[0]);QCOMPARE(shown->items.front().providerAdmission,quint64{0});QCOMPARE(shown->items.front().providerGeneration,quint64{0});QVERIFY(traffic.empty());
+    QCOMPARE(test::read(path),definitionsBefore);QCOMPARE(test::read(fixture.stateFile),stateBefore);QCOMPARE(test::read(journal),journalBefore);QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);
+    auto* manage=window.findChild<QAction*>(QStringLiteral("classic-categories"));QVERIFY(manage&&manage->isEnabled());manage->trigger();
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==1,10000);QCOMPARE(latest(finished)->status,ui::CategoryCommandStatus::Loaded);QVERIFY(latest(finished)->recoveryRequired&&!latest(finished)->writable);
+    QPointer<ui::CategoryManagerDialog> dialog=window.findChild<ui::CategoryManagerDialog*>();QVERIFY(dialog);
+    auto* resume=dialog->findChild<QPushButton*>(QStringLiteral("category-resume-delete"));auto* reload=dialog->findChild<QPushButton*>(QStringLiteral("category-reload"));QVERIFY(resume&&reload);
+    const bool safe=kind==QStringLiteral("acknowledged");
+    QCOMPARE(latest(finished)->recovery.state,safe?ui::CategoryRecoveryInfo::State::Resumable:ui::CategoryRecoveryInfo::State::Review);QCOMPARE(resume->isEnabled(),safe);
+    if(safe){
+      QCOMPARE(latest(finished)->recovery.name,QStringLiteral("Recover me"));QCOMPARE(latest(finished)->recovery.acknowledgedMembers,quint64{0});QCOMPARE(latest(finished)->recovery.totalMembers,quint64{1});
+      const auto stale=*latest(finished);reload->click();QTRY_VERIFY(!bridge.busy()&&finished.count()==2);
+      ui::CategoryCommand forged;forged.session=stale.session;forged.request=100;forged.generation=stale.generation;forged.kind=ui::CategoryCommandKind::ResumeRemove;forged.name=QStringLiteral("Recover me");
+      QVERIFY(bridge.categoryCommand(forged));QTRY_VERIFY(!bridge.busy()&&finished.count()==3);QCOMPARE(latest(finished)->status,ui::CategoryCommandStatus::Rejected);QCOMPARE(test::read(journal),journalBefore);
+      // Use a fresh Window session below because its request IDs are real and
+      // independent of the deliberately forged worker sequence just consumed.
+      QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.last()[1].toBool()&&closed.last()[2].toBool());
+      QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);
+      QVERIFY(bridge.openNormal(fixture.native()));QTRY_VERIFY(!bridge.busy()&&sessions.count()==2);QTRY_COMPARE(model->revision(),target(rows).generation);QTRY_COMPARE(table->model()->rowCount(),1);table->setCurrentIndex(table->model()->index(0,0));table->selectRow(0);manage->trigger();QTRY_VERIFY(!bridge.busy()&&finished.count()==4);
+      dialog=window.findChild<ui::CategoryManagerDialog*>();QVERIFY(dialog);resume=dialog->findChild<QPushButton*>(QStringLiteral("category-resume-delete"));QVERIFY(resume&&resume->isEnabled());
+      bool declined=false;QTimer::singleShot(0,&window,[&]{if(auto* question=qobject_cast<QMessageBox*>(QApplication::activeModalWidget())){if(auto* button=question->button(QMessageBox::No)){declined=true;button->click();}}});
+      QTimer::singleShot(1500,&window,[]{if(auto* question=qobject_cast<QMessageBox*>(QApplication::activeModalWidget())){question->reject();}});
+      resume->click();QVERIFY(declined);QCOMPARE(finished.count(),4);QCOMPARE(test::read(journal),journalBefore);
+      bool confirmed=false;QTimer::singleShot(0,&window,[&]{if(auto* question=qobject_cast<QMessageBox*>(QApplication::activeModalWidget())){if(auto* button=question->button(QMessageBox::Yes)){confirmed=true;button->click();}}});
+      QTimer::singleShot(1500,&window,[]{if(auto* question=qobject_cast<QMessageBox*>(QApplication::activeModalWidget())){question->reject();}});
+      const auto oldIntents=intents.count();resume->click();QVERIFY(confirmed);QCOMPARE(intents.count(),oldIntents+1);QCOMPARE(qvariant_cast<ui::CategoryCommand>(intents.last()[0]).kind,ui::CategoryCommandKind::ResumeRemove);QVERIFY(dialog&&!resume->isEnabled());
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==5,10000);QCOMPARE(latest(finished)->status,ui::CategoryCommandStatus::Saved);QVERIFY(latest(finished)->refreshFailure.isEmpty());QCOMPARE(latest(finished)->recovery.state,ui::CategoryRecoveryInfo::State::None);QVERIFY(latest(finished)->restartRequired);QVERIFY(!QFileInfo::exists(journal));
+      auto state=core::Document::parse(test::read(fixture.stateFile).toStdString());QVERIFY(state&&state->find("attributes")&&!state->find("attributes")->find("category"));
+      QVERIFY(rawPreserved(stateBefore,test::read(fixture.stateFile),{"info","resume","opaque.fixture"}));
+      shown=qvariant_cast<ui::Presentation>(rows.last()[0]);QCOMPARE(shown->items.front().providerAdmission,quint64{0});QVERIFY(traffic.empty()); // Successful resume does not implicitly start queued row.
+    }else{
+      const auto packet=latest(finished);ui::CategoryCommand forged;forged.session=packet->session;forged.request=100;forged.generation=packet->generation;forged.kind=ui::CategoryCommandKind::ResumeRemove;forged.name=QStringLiteral("Recover me");
+      QVERIFY(bridge.categoryCommand(forged));QTRY_VERIFY(!bridge.busy()&&finished.count()==2);QCOMPARE(latest(finished)->status,ui::CategoryCommandStatus::Rejected);
+      QCOMPARE(test::read(path),definitionsBefore);QCOMPARE(test::read(fixture.stateFile),stateBefore);QCOMPARE(test::read(journal),journalBefore);
+      if(kind==QStringLiteral("legacy")){QCOMPARE(test::read(fixture.profile+"/.BiglyBTC.category-delete"),QByteArray("legacy preserved review"));}
+    }
+    QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);QCOMPARE(test::read(fixture.payload+'/'+fixture.files.front().relative),payload);
+    const int expected=closed.count()+1;window.close();QTRY_COMPARE_WITH_TIMEOUT(closed.count(),expected,15000);QVERIFY(closed.last()[1].toBool()&&closed.last()[2].toBool());
+    {auto lease=storage::ProfileLease::acquire(fixture.native());QVERIFY(lease);} // Owning summaries retain no OFD.
+  }
+  void pendingResumeCancelledBeforePublicationAndJoinedClosePreservesPrefix(){
+    test::OwnedEngineFixture fixture(false);prepareCategoryRecovery(fixture,QStringLiteral("acknowledged"));
+    const auto path=fixture.profile+"/categories.config",journal=fixture.profile+"/BiglyBTC.category-delete.config";
+    const auto before=test::read(journal),state=test::read(fixture.stateFile),defs=test::read(path);
+    app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),finished(&bridge,&app::SessionBridge::categoryCommandFinished),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.open(fixture.native(),0));QTRY_VERIFY(!bridge.busy()&&!sessions.empty());
+    ui::CategoryCommand command;command.session=sessions.last()[0].toULongLong();command.request=1;QVERIFY(bridge.categoryCommand(command));QTRY_VERIFY(!bridge.busy()&&finished.count()==1);QCOMPARE(latest(finished)->recovery.state,ui::CategoryRecoveryInfo::State::Resumable);
+    struct stat info{};QVERIFY(::stat(path.toStdString().c_str(),&info)==0);watchedDevice=info.st_dev;watchedInode=info.st_ino;readEntered=false;holdRead=true;watchRead=true;
+    const auto unblock=qScopeGuard([]{watchRead=false;stopRead();});
+    command.kind=ui::CategoryCommandKind::ResumeRemove;command.name=QStringLiteral("Recover me");command.generation=latest(finished)->generation;command.request=2;
+    QVERIFY(bridge.categoryCommand(command));QTRY_VERIFY_WITH_TIMEOUT(readEntered.load(),10000);bridge.cancel();stopRead();watchRead=false;
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==2,10000);QCOMPARE(latest(finished)->status,ui::CategoryCommandStatus::Cancelled);
+    QCOMPARE(test::read(journal),before);QCOMPARE(test::read(fixture.stateFile),state);QCOMPARE(test::read(path),defs);
+    QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.last()[1].toBool()&&closed.last()[2].toBool());
+    command.request=3;QVERIFY(!bridge.categoryCommand(command));QCOMPARE(test::read(journal),before);
+  }
   void actualWindowCreateAssignUncategoriseReloadAndJoinedReopen(){
     test::OwnedEngineFixture fixture(false);stopped(fixture);const auto path=fixture.profile+"/categories.config";
     const auto original=definitions();test::write(path,original);
@@ -139,6 +303,13 @@ private slots:
     request.kind=ui::CategoryCommandKind::Reload;request.request=3;request.target=target(rows);QVERIFY(bridge.categoryCommand(request));QTRY_VERIFY(!bridge.busy()&&finished.count()==3);QCOMPARE(latest(finished)->status,ui::CategoryCommandStatus::Loaded);
     request.kind=ui::CategoryCommandKind::Assign;request.request=4;request.generation=latest(finished)->generation;request.target=target(rows);QVERIFY(bridge.categoryCommand(request));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==4,10000);
     QCOMPARE(latest(finished)->status,ui::CategoryCommandStatus::Saved);QVERIFY(latest(finished)->refreshFailure.isEmpty());QCOMPARE(presentation()->items.front().providerAdmission,admission);QVERIFY(progress()>0);
+    // A retained real Public owner can checkpoint a guarded state. Refuse
+    // before creating ANY journal rather than promising active-owner recovery.
+    const auto retainedState=test::read(fixture.stateFile),retainedDefs=test::read(path);
+    request.kind=ui::CategoryCommandKind::Remove;request.request=5;request.generation=latest(finished)->generation;request.target=target(rows);
+    QVERIFY(bridge.categoryCommand(request));QTRY_VERIFY(!bridge.busy()&&finished.count()==5);QCOMPARE(latest(finished)->status,ui::CategoryCommandStatus::Rejected);
+    QVERIFY(!QFileInfo::exists(fixture.profile+"/BiglyBTC.category-delete.config"));QCOMPARE(test::read(fixture.stateFile),retainedState);QCOMPARE(test::read(path),retainedDefs);
+    QCOMPARE(presentation()->items.front().providerAdmission,admission);
     QVERIFY(bridge.downloadAction({target(rows)},core::DownloadAction::Stop));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy(),15000);
     QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.last()[1].toBool()&&closed.last()[2].toBool());
     auto saved=core::Document::parse(test::read(fixture.stateFile).toStdString());QVERIFY(saved);const auto* attrs=saved->find("attributes");QVERIFY(attrs&&attrs->find("category"));QCOMPARE(attrs->find("category")->bytes,std::string("Retained"));

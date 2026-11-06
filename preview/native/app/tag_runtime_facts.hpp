@@ -6,6 +6,7 @@
 #include "coexist_queue.hpp"
 #include "owned_i2p_service.hpp"
 #include "torrent_state.hpp"
+#include "manual_tag_store.hpp"
 
 namespace biglybtc::app {
 // Exact existing SessionBridge UI convention: canonical uppercase 40/64 hex
@@ -48,11 +49,21 @@ class ConstraintFactSnapshot final {
 public:
   const ConstraintFactStamp& stamp()const noexcept{return stamp_;}
   const core::tags::constraints::Facts& facts()const noexcept{return facts_;}
+  bool hasTagScope()const noexcept{return tagSnapshot_.valid();}
 private:
   ConstraintFactStamp stamp_;
   core::tags::constraints::Facts facts_;
+  storage::ManualTagSnapshot tagSnapshot_; // Owning preimage, never a lease/grant.
   friend core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintFacts(
       const ConstraintFactStamp&,const ConstraintFactInputs&);
+  friend core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintTagMembership(
+      ConstraintFactSnapshot,const ConstraintFactStamp&,const storage::ManualTagStore&,
+      const storage::ProfileLease&,const storage::ManualTagSnapshot&,
+      std::int32_t,ui::Presentation,std::int64_t);
+  friend core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentConstraint(
+      const core::tags::constraints::Expression&,const ConstraintFactStamp&,
+      const ConstraintFactSnapshot&,const storage::ManualTagStore&,
+      const storage::ProfileLease&,const storage::ManualTagSnapshot&);
 };
 // All supplied optional records must be captured in the SAME existing worker
 // turn. Every explicit identity/generation is checked. Missing records remain
@@ -64,4 +75,17 @@ core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintFacts(
 core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentConstraint(
     const core::tags::constraints::Expression&,const ConstraintFactStamp& current,
     const ConstraintFactSnapshot&);
+// Source-bound positive witnesses from actual manual tags. Unknown registry
+// absence is not false. Selected-own tag_age uses original aligned o/p.a.
+// wallMilliseconds must be sampled by the same serialized worker turn.
+core::tags::constraints::Result<ConstraintFactSnapshot> captureConstraintTagMembership(
+    ConstraintFactSnapshot,const ConstraintFactStamp&,const storage::ManualTagStore&,
+      const storage::ProfileLease&,const storage::ManualTagSnapshot&,
+    std::int32_t selectedTag,ui::Presentation currentLibrary,std::int64_t wallMilliseconds);
+// A snapshot containing tag facts cannot use the old overload: the actual
+// current store generation and physical captured source must be supplied.
+core::tags::constraints::Result<core::tags::constraints::Value> evaluateCurrentConstraint(
+    const core::tags::constraints::Expression&,const ConstraintFactStamp&,
+    const ConstraintFactSnapshot&,const storage::ManualTagStore&,
+    const storage::ProfileLease&,const storage::ManualTagSnapshot& currentTags);
 } // namespace biglybtc::app

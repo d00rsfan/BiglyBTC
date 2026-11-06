@@ -73,6 +73,7 @@ std::expected<libtorrent::add_torrent_params, storage::Error> metadataOnlyParame
 // explicit destination choice. New force-start is committed in the same import
 // transaction; an already imported row keeps any later user's state/force edits.
 std::expected<core::TorrentHash, storage::Error> completePendingMagnet(storage::ProfileLease&,
-    const PendingMagnet&, const std::filesystem::path& actualMetadata, const NetworkPolicy&);
+    const PendingMagnet&, const std::filesystem::path& actualMetadata, const NetworkPolicy&,
+    bool* newlyImported=nullptr); // Observational causality only; false on errors/already-present recovery.
 
 } // namespace biglybtc::engine

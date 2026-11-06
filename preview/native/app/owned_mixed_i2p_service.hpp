@@ -48,6 +48,8 @@ public:
   // retire or checkpoint the borrowed Public session or any of its torrents.
   std::optional<storage::Error> contactCacheDiagnostic()const; // Host worker only.
   std::expected<void,storage::Error> close();
+  std::expected<void,storage::Error> closeWithoutCheckpoint(); // No optional contact publication.
+  bool joined()const noexcept; // Actual terminal lifetime fact; Host worker only.
 private:
   struct Impl;explicit OwnedMixedI2pService(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;

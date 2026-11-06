@@ -113,6 +113,7 @@ public:
   NativeActivityPresentation nativeActivitySnapshot() const { return latestNativeActivity_; }
   void enableSessionCloseHandshake() { sessionCloseEnabled_ = true; }
   void completeSessionClose();
+  void offerRecoveryClose(quint64 session);
   void retrySessionClose() { sessionCloseRequested_ = false; closing_ = false; updateActions(); }
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
@@ -185,6 +186,7 @@ signals:
   void detailsRequested(biglybtc::ui::Target);
   void cancelRequested();
   void sessionCloseRequested();
+  void sessionCloseWithoutCheckpointRequested(quint64 session);
   void markRequested(quint64 session, bool clear);
 protected:
   void closeEvent(QCloseEvent*) override;

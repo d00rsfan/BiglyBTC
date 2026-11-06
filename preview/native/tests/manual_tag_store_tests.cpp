@@ -93,5 +93,26 @@ void workerAndOfdLifetime(){
   check(bool(store->close()),"Worker close failed");auto released=s::ProfileLease::acquire(area.root);check(bool(released)&&ownedSnapshot.valid()&&ownedSnapshot.tags(),"Owning snapshot retained profile OFD or lost its bytes");
   Area replacement;replacement.write("tag.config",one());auto current=opened(replacement);auto expected=snapshot(*current);replacement.write("new-lock","");std::filesystem::rename(replacement.root/"new-lock",replacement.root/".azlock");auto refusedLock=current->apply(expected,c::SavedTagRename{1,"must refuse"});check(!refusedLock&&refusedLock.error().code==s::ErrorCode::Conflict&&replacement.read("tag.config")==one(),"Changed actual named OFD lock accepted");
 }
+void actualConfiguredGroupMembershipRefusesWithoutPublication(){
+  Area area;const auto grouped=dict({{"3",dict({{"c",dict({{"I4",dict({{"x","i1e"}})}})},{"1",dict({{"n",bytes("Grouped")},{"c",dict({{"gr",bytes("G")}})},{"o",list({bytes("AAAQEAYEAUDAOCAJBIFQYDIOB4IBCEQT")})}})}})}});
+  area.write("tag.config",grouped);auto store=opened(area);const auto expected=snapshot(*store);const auto before=area.read("tag.config");const auto identity=stamp(area.root/"tag.config");
+  refused(*store,expected,c::SavedTagRemoveMember{1,hash()},s::ErrorCode::Unsupported);
+  const auto another=c::TorrentHash::parse(std::string(20,'Q'));check(bool(another),"Actual distinct typed member identity");
+  refused(*store,expected,c::SavedTagAddMember{1,*another,1},s::ErrorCode::Unsupported);
+  check(!apply(*store,c::SavedTagAddMember{1,hash(),1}).changed&&!apply(*store,c::SavedTagRemoveMember{1,*another}).changed,"No-event group membership no-op was refused");
+  check(area.read("tag.config")==before&&stamp(area.root/"tag.config")==identity&&!std::filesystem::exists(area.root/"tag.config.bak")&&!std::filesystem::exists(area.root/"tag.config.saving")&&snapshot(*store).generation()==expected.generation(),"Group policy refusal wrote/rotated sources or changed lineage");
+  check(bool(store->close()),"Actual grouped writer close");
+}
+void actualConfiguredTagChangesRefuseButNoEventNoopsStayUnchanged(){
+  for(const auto& config:{dict({{"rl.up","i1024e"}}),dict({{"rl.down","i512e"}}),dict({{"pp.2","i1e"}}),dict({{"pp.tracker_templates",list({bytes("apply:template")})}}),dict({{"pp.trackers",list({bytes("tracker")})}}),dict({{"future-effect","i0e"}})}){
+    Area area;const auto before=dict({{"future",bytes("keep")},{"3",dict({{"1",dict({{"n",bytes("Configured")},{"c",config},{"o",list({bytes("AAAQEAYEAUDAOCAJBIFQYDIOB4IBCEQT")})}})}})}});area.write("tag.config",before);
+    auto store=opened(area);const auto expected=snapshot(*store);const auto identity=stamp(area.root/"tag.config");
+    refused(*store,expected,c::SavedTagRemoveMember{1,hash()},s::ErrorCode::Unsupported);
+    const auto another=c::TorrentHash::parse(std::string(20,'Q'));check(bool(another),"Distinct typed member fixture");refused(*store,expected,c::SavedTagAddMember{1,*another,1},s::ErrorCode::Unsupported);
+    check(!apply(*store,c::SavedTagAddMember{1,hash(),2}).changed&&!apply(*store,c::SavedTagRemoveMember{1,*another}).changed,"No-event membership no-op was rejected or mutated");
+    check(area.read("tag.config")==before&&stamp(area.root/"tag.config")==identity&&snapshot(*store).generation()==expected.generation()&&!std::filesystem::exists(area.root/"tag.config.bak")&&!std::filesystem::exists(area.root/"tag.config.saving"),"Refused configured effect changed actual profile source/lineage");
+    check(bool(store->close()),"Configured actual store close");
+  }
+}
 } // namespace
-int main(){try{absenceFirstCreateAndSessionCounter();unknownBytesMembershipNoopAndBackup();staleGenerationAndExactCandidateCas();recoveryCandidatesStayReadOnly();cancellationMalformedAndFirstCreateRace();uncertainSavePoisonsCounter();workerAndOfdLifetime();std::cout<<"PASS seven isolated worker manual-tag store families\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}
+int main(){try{absenceFirstCreateAndSessionCounter();unknownBytesMembershipNoopAndBackup();staleGenerationAndExactCandidateCas();recoveryCandidatesStayReadOnly();cancellationMalformedAndFirstCreateRace();uncertainSavePoisonsCounter();workerAndOfdLifetime();actualConfiguredGroupMembershipRefusesWithoutPublication();actualConfiguredTagChangesRefuseButNoEventNoopsStayUnchanged();std::cout<<"PASS seven isolated worker manual-tag store families\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}

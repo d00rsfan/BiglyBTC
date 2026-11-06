@@ -914,6 +914,16 @@ void LibraryWindow::setNativeSession(NativeSessionPresentation packet) {
   const QPointer<StatisticsPage> page = statisticsPage_;
   if (page) { page->setNativeActivity(latestNativeActivity_); }
 }
+void LibraryWindow::offerRecoveryClose(quint64 session){
+  if(!session||session!=columnSession_||busy_||closing_||!sessionCloseEnabled_){return;}
+  const QPointer<LibraryWindow> guard(this);
+  const auto answer=QMessageBox::warning(this,tr("Close without saving progress"),
+      tr("The pending category journal prevents normal checkpointing. Close the retained transfers without saving their latest piece map and transfer counters? Saved profile and journal files will be preserved; later startup may recheck downloaded data."),
+      QMessageBox::Yes|QMessageBox::No,QMessageBox::No);
+  if(!guard||answer!=QMessageBox::Yes||session!=columnSession_||busy_||closing_){return;}
+  closing_=true;sessionCloseRequested_=true;updateActions();if(!guard){return;}
+  emit sessionCloseWithoutCheckpointRequested(session);
+}
 void LibraryWindow::completeSessionClose() {
   if (!closing_ || !sessionCloseRequested_ || sessionCloseAcknowledged_) { return; }
   sessionCloseAcknowledged_ = true;

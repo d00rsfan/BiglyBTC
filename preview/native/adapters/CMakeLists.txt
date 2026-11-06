@@ -130,3 +130,6 @@ target_sources(biglybtc_profile PRIVATE category_store.cpp)
 # Append after the original9489 category_store.cpp target binding.
 set_source_files_properties(category_delete_journal.inc PROPERTIES HEADER_FILE_ONLY TRUE)
 target_sources(biglybtc_profile PRIVATE category_delete_journal.inc)
+
+# Existing profile/worker only, dependent on frozen pure download-history core.
+target_sources(biglybtc_profile PRIVATE download_history_store.cpp)

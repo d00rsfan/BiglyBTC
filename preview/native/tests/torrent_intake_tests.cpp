@@ -370,6 +370,16 @@ int main(int argc,char** argv) {
         area.noPayload();
       }
     });
+    run("original added time is frozen once in accepted journal and recovery", [] {
+      Area area;const auto child=::fork();CHECK(child>=0);
+      if(child==0){const auto observer=+[](Stage stage){if(stage==Stage::JournalSynced){::_exit(41);}};
+        (void)storage::importTorrent(*area.lease,area.metadata,area.destination,true,observer);::_exit(42);}
+      int status=0;CHECK(::waitpid(child,&status,0)==child&&WIFEXITED(status)&&WEXITSTATUS(status)==41);
+      const auto journal=document(area.profile/"BiglyBTC.torrent-import");const auto* frozen=journal.find("addedTime");CHECK(frozen&&frozen->type==core::Node::Type::Integer&&frozen->integer>0);const auto added=frozen->integer;
+      area.reopen();const auto recovered=storage::recoverTorrentIntake(*area.lease);CHECK(recovered&&recovered->has_value());
+      const auto state=document(area.state());const auto* parameters=state.find("attributes")->find("parameters");CHECK(parameters&&parameters->find("stats.download.added.time")->integer==added);
+      const auto stable=read(area.state());CHECK(storage::recoverTorrentIntake(*area.lease));CHECK(read(area.state())==stable);area.noPayload();
+    });
     std::cout << families << " torrent-intake families, " << assertions << " assertions passed\n";
     return 0;
   } catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }

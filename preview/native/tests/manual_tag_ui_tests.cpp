@@ -2,6 +2,8 @@
 // Presentation/controller tests only; packets grant no profile/live authority.
 #include "library_window.hpp"
 #include "manual_tag_editor.hpp"
+#include "biglybtc/saved_download_tag_edits.hpp"
+#include <QPlainTextEdit>
 #include <QAction>
 #include <QApplication>
 #include <QCheckBox>
@@ -32,6 +34,42 @@ void setup(ui::LibraryWindow& window){window.setOfflinePreview(false);window.beg
 class ManualTagUiTests final:public QObject {
   Q_OBJECT
 private slots:
+  void firstConstraintOnSavedMembersRequiresOriginalUserConfirmation(){
+    ui::ManualTagCommand request;request.session=7;request.request=1;
+    ui::ManualTagManagerDialog dialog(7);dialog.setPresentation(loaded(request,40,9,tags(true)));dialog.show();QSignalSpy commands(&dialog,&ui::ManualTagManagerDialog::commandRequested);
+    auto* expression=dialog.findChild<QPlainTextEdit*>(QStringLiteral("manual-tag-constraint-expression"));auto* save=dialog.findChild<QPushButton*>(QStringLiteral("manual-tag-constraint-save"));QVERIFY(expression&&save);expression->setPlainText(QStringLiteral("true"));
+    const auto respond=[&](QMessageBox::StandardButton answer){
+      bool clicked=false;QTimer response,watchdog;response.setSingleShot(true);watchdog.setSingleShot(true);
+      connect(&response,&QTimer::timeout,&dialog,[&]{
+        auto* box=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        if(!box||box->parentWidget()!=&dialog||box->standardButtons()!=(QMessageBox::Ok|QMessageBox::Cancel)){return;}
+        if(auto* button=box->button(answer);button&&button->isEnabled()){clicked=true;button->click();}
+      });
+      connect(&watchdog,&QTimer::timeout,&dialog,[&]{if(auto* box=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());box&&box->parentWidget()==&dialog){box->reject();}});
+      response.start(0);watchdog.start(1500);save->click();response.stop();watchdog.stop();return clicked;
+    };
+    QVERIFY(save->isEnabled());QVERIFY(respond(QMessageBox::Cancel));QVERIFY(commands.isEmpty());
+    QVERIFY(save->isEnabled());QVERIFY(respond(QMessageBox::Ok));QCOMPARE(commands.count(),1);QCOMPARE(take(commands).kind,ui::ManualTagCommandKind::SetConstraint);
+  }
+  void constraintIntentKeepsPendingSourceAndBusyLifecycle(){
+    ui::LibraryWindow window;setup(window);QSignalSpy commands(&window,&ui::LibraryWindow::manualTagCommandRequested);
+    const QPointer<ui::ManualTagManagerDialog> dialog(open(window));QVERIFY(dialog);window.setManualTagCommandFinished(loaded(take(commands)));
+    auto* expression=dialog->findChild<QPlainTextEdit*>(QStringLiteral("manual-tag-constraint-expression"));
+    auto* options=dialog->findChild<QLineEdit*>(QStringLiteral("manual-tag-constraint-options"));
+    auto* enabled=dialog->findChild<QCheckBox*>(QStringLiteral("manual-tag-constraint-enabled"));
+    auto* save=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-constraint-save"));QVERIFY(expression&&options&&enabled&&save&&save->isEnabled());
+    expression->setPlainText(QStringLiteral("  size>0  "));options->setText(QStringLiteral("am=1;future;"));save->click();
+    const auto request=take(commands);QCOMPARE(request.kind,ui::ManualTagCommandKind::SetConstraint);QCOMPARE(request.tagId,1);QCOMPARE(request.generation,quint64(40));
+    QCOMPARE(request.constraintExpression,QStringLiteral("size>0"));QCOMPARE(request.constraintOptions,QStringLiteral("am=1;future;"));QVERIFY(request.constraintEnabled);
+    window.setBusy(true);QVERIFY(dialog&&dialog->isVisible());QVERIFY(!save->isEnabled());QCOMPARE(expression->toPlainText(),QStringLiteral("  size>0  "));
+    window.setBusy(false);QVERIFY(!save->isEnabled());
+    auto changed=core::editSavedDownloadTags(tags(),core::SavedTagSetConstraint{1,"size>0","am=1;future;",true});QVERIFY(changed);
+    auto packet=std::make_shared<ui::ManualTagCommandPacket>(*loaded(request,41,9,changed->value.source->originalBytes(),ui::ManualTagCommandStatus::Saved));packet->constraintStatus=QStringLiteral("Configured; current facts required");
+    auto stale=std::make_shared<ui::ManualTagCommandPacket>(*packet);++stale->request;window.setManualTagCommandFinished(stale);QVERIFY(!save->isEnabled());
+    window.setManualTagCommandFinished(packet);QVERIFY(save->isEnabled());QCOMPARE(expression->toPlainText(),QStringLiteral("size>0"));QCOMPARE(options->text(),QStringLiteral("am=1;future;"));
+    QVERIFY(dialog->findChild<QLabel*>(QStringLiteral("manual-tag-status"))->text().contains(QStringLiteral("current facts")));
+    window.close();QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);QVERIFY(!dialog);window.setManualTagCommandFinished(packet);QVERIFY(!window.findChild<ui::ManualTagManagerDialog*>());
+  }
   void workerBusyKeepsPendingDialogUntilActualResult(){
     ui::LibraryWindow window;setup(window);QSignalSpy commands(&window,&ui::LibraryWindow::manualTagCommandRequested);
     const QPointer<ui::ManualTagManagerDialog> dialog(open(window));QVERIFY(dialog);const auto reload=take(commands);

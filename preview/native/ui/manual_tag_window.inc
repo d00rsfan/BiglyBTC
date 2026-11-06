@@ -31,7 +31,7 @@ bool LibraryWindow::sendManualTagCommand(ManualTagCommand value){
   emit manualTagCommandRequested(std::move(value));return true;
 }
 void LibraryWindow::setManualTagCommandFinished(ManualTagCommandPresentation packet){
-  if(!packet||closing_||!pendingManualTagCommand_||packet->session!=columnSession_||packet->session!=pendingManualTagCommand_->session||packet->request!=pendingManualTagCommand_->request||packet->kind!=pendingManualTagCommand_->kind||packet->failure.size()>8192){return;}
+  if(!packet||closing_||!pendingManualTagCommand_||packet->session!=columnSession_||packet->session!=pendingManualTagCommand_->session||packet->request!=pendingManualTagCommand_->request||packet->kind!=pendingManualTagCommand_->kind||packet->failure.size()>8192||packet->constraintStatus.size()>8192){return;}
   const auto command=*pendingManualTagCommand_;
   const bool success=packet->status==ManualTagCommandStatus::Loaded||packet->status==ManualTagCommandStatus::Saved||packet->status==ManualTagCommandStatus::Unchanged;
   if(success){
@@ -49,6 +49,7 @@ void LibraryWindow::setManualTagCommandFinished(ManualTagCommandPresentation pac
   pendingManualTagCommand_.reset();const QPointer<LibraryWindow> guard(this);
   if(manualTagDialog_){manualTagDialog_->setResult(packet);if(!guard){return;}}
   setMessage(packet->status==ManualTagCommandStatus::Saved?tr("Tags saved"):packet->status==ManualTagCommandStatus::Unchanged?tr("Tags unchanged"):packet->status==ManualTagCommandStatus::Loaded?tr("Tags loaded"):packet->status==ManualTagCommandStatus::Cancelled?tr("Tag command cancelled"):tr("Tag command rejected: %1").arg(packet->failure.left(512)));if(!guard){return;}
+  if(!packet->constraintStatus.isEmpty()&&success){setMessage(packet->constraintStatus.left(512));if(!guard){return;}}
   // Host publishes the shared Stats join before this command result.
 }
 void LibraryWindow::rejectManualTagCommand(const ManualTagCommand& command){

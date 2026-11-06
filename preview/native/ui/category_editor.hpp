@@ -19,13 +19,14 @@ public:
 signals:
   void commandRequested(biglybtc::ui::CategoryCommand);
 private:
-  void updateButtons();void create();void remove();void intent(CategoryCommand);
+  void updateButtons();void create();void remove();void resumeRemove();void intent(CategoryCommand);
   const core::SavedCategory* selected()const;
   quint64 session_=0,generation_=0,lastRequest_=0;
   bool available_=true,writable_=false,deletionSupported_=false;
+  CategoryRecoveryInfo recovery_;
   std::optional<CategoryCommand> pending_;
   std::shared_ptr<const core::SavedCategories> categories_;
   QPointer<QTableWidget> table_;QPointer<QLineEdit> name_;QPointer<QLabel> status_;
-  QPointer<QPushButton> create_,remove_,reload_;
+  QPointer<QPushButton> create_,remove_,reload_,resume_;
 };
 } // namespace biglybtc::ui

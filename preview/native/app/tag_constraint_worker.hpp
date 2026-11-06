@@ -6,6 +6,7 @@
 #include <thread>
 
 namespace biglybtc::app {
+class SessionBridge;
 // Owning values collected by the EXISTING serialized Host worker, with no FS
 // gate held across provider calls. These stamps are observations, not grants.
 struct ConstraintWorkerFrame {
@@ -43,6 +44,10 @@ public:
   // Close is terminal. No source grant or automatic retry after uncertainty.
   void close() noexcept;
 private:
+  friend class SessionBridge;
+  // Genuine durable intake hook only. No public/UI setter for newness.
+  std::expected<bool,storage::Error> recordIntake(storage::ManualTagStore&,
+      const storage::ManualTagSnapshot&,const core::TorrentHash&,std::uint64_t event);
   struct Impl;
   explicit TagConstraintWorker(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;

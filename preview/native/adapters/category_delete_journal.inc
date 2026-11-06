@@ -96,6 +96,39 @@ std::map<std::string,std::string> cdMemberAfter(const CdCapture& before,const co
 }
 void cdVerifyEffects(const CdCapture& before,const CdCapture& after,const std::map<std::string,std::string>& changed){require(before.rootId==after.rootId&&before.activeId==after.activeId&&before.guards.size()==after.guards.size(),ErrorCode::Conflict,"Deletion source directories changed");for(const auto& [key,old]:before.guards){const auto next=after.guards.find(key);require(next!=after.guards.end(),ErrorCode::Conflict,"Deletion source set changed");if(const auto expected=changed.find(key);expected!=changed.end()){const auto actual=after.bytes.find(key);require(actual!=after.bytes.end()&&actual->second==expected->second,ErrorCode::Conflict,"Category writer postimage differs; preserve review");}else{require(next->second==old,ErrorCode::Conflict,"External edit during category publication; preserve review");}}}
 } // namespace
+std::expected<CategoryDeletionRecovery,Error> CategoryStore::inspectRemove(
+    const CategorySnapshot& expected,std::stop_token stop,Deadline end)const{
+  CategoryDeletionRecovery result;
+  try{
+    cdTake(impl_->current());cdTake(budget(stop,end));
+    auto access=cdTake(impl_->lease->sourceAccess());
+    const auto defs=cdTake(impl_->fresh(expected));
+    if(!categoryJournalPending(impl_->lease->directoryHandle())){return result;}
+    result.state=CategoryDeletionRecovery::State::Review;
+    for(const auto& name:LegacyCategoryJournalNames){struct stat s{};
+      require(::fstatat(impl_->lease->directoryHandle(),name.c_str(),&s,AT_SYMLINK_NOFOLLOW)!=0&&errno==ENOENT,
+          ErrorCode::Conflict,"Legacy deletion candidate requires preserved review");
+    }
+    auto journal=cdReadJournal(*impl_->lease);
+    // Display only validated bounded owning fields, even when the physical
+    // source below proves this prefix cannot safely continue.
+    result.name=journal.plan.name;result.acknowledgedMembers=journal.plan.done;
+    result.totalMembers=journal.plan.members.size();result.definitionAcknowledged=journal.plan.published;
+    require(defs.writable,ErrorCode::Conflict,"Category companion files require preserved review");
+    const auto hashes=cdInventory(journal.plan.inventory);
+    cdVerify(journal.plan,cdCapture(*impl_->lease,hashes));cdTake(impl_->roots());
+    require(equal(journal.inputs,cdJournalInputs(impl_->lease->directoryHandle())),
+        ErrorCode::Conflict,"Deletion journal changed during inspection");
+    cdTake(budget(stop,end));result.state=CategoryDeletionRecovery::State::Resumable;
+    return result;
+  }catch(const fileop::Failure& f){
+    if(f.error.code==ErrorCode::Cancelled){return std::unexpected(f.error);}
+    // An invalid/stale caller is an error, not a fresh source observation.
+    if(result.state==CategoryDeletionRecovery::State::None){return std::unexpected(f.error);}
+    result.reason=f.error.message.substr(0,1024);return result;
+  }catch(const std::bad_alloc&){return fail(ErrorCode::Io,"Insufficient memory inspecting category recovery");}
+   catch(...){return fail(ErrorCode::Conflict,"Cannot inspect category recovery; preserve all candidates");}
+}
 std::expected<CategoryCommit,Error> CategoryStore::remove(const CategorySnapshot& expected,std::string_view name,std::stop_token stop,Deadline end,CategoryDeletionObserver observer){return removeInternal(expected,name,false,stop,end,observer);}
 std::expected<CategoryCommit,Error> CategoryStore::resumeRemove(const CategorySnapshot& expected,std::string_view name,std::stop_token stop,Deadline end,CategoryDeletionObserver observer){return removeInternal(expected,name,true,stop,end,observer);}
 std::expected<CategoryCommit,Error> CategoryStore::removeInternal(const CategorySnapshot& expected,std::string_view name,bool resume,std::stop_token stop,Deadline end,CategoryDeletionObserver observer){
@@ -103,7 +136,12 @@ std::expected<CategoryCommit,Error> CategoryStore::removeInternal(const Category
   try{
     cdTake(impl_->current());require(!impl_->deleting,ErrorCode::Conflict,"Category deletion is already active");cdTake(budget(stop,end));auto access=cdTake(impl_->lease->sourceAccess());auto defs=cdTake(impl_->fresh(expected));require(defs.writable,ErrorCode::Conflict,"Resolve category companion files before deletion");require(impl_->generation<std::numeric_limits<std::uint64_t>::max(),ErrorCode::Conflict,"Category generations exhausted");impl_->deleting=true;reset.armed=true;
     std::optional<CdJournalFile> journal;std::vector<core::TorrentHash> hashes;
-    if(resume){journal.emplace(cdReadJournal(*impl_->lease));require(journal->plan.name==name,ErrorCode::Conflict,"Explicit deletion selection differs from pending journal");hashes=cdInventory(journal->plan.inventory);}
+    if(resume){
+      for(const auto& candidate:LegacyCategoryJournalNames){struct stat info{};
+        require(::fstatat(impl_->lease->directoryHandle(),candidate.c_str(),&info,AT_SYMLINK_NOFOLLOW)!=0&&errno==ENOENT,
+            ErrorCode::Conflict,"Legacy deletion candidate requires preserved review");
+      }
+      journal.emplace(cdReadJournal(*impl_->lease));require(journal->plan.name==name,ErrorCode::Conflict,"Explicit deletion selection differs from pending journal");hashes=cdInventory(journal->plan.inventory);}
     else{
       require(!categoryJournalPending(impl_->lease->directoryHandle()),ErrorCode::Conflict,"Existing deletion requires explicit recovery/review");auto edit=core::editSavedCategories(defs.value.source->originalBytes(),core::SavedCategoryDelete{std::string(name)});require(edit&&edit->changed&&edit->clearResolvedAssignments,ErrorCode::InvalidFormat,"A current user category is required for deletion");
       auto inventory=cdTake(capture(impl_->lease->directoryHandle(),InventoryNames[0],true,CdDocument));require(inventory.bytes.has_value(),ErrorCode::Conflict,"Complete primary downloads inventory required before deletion");hashes=cdInventory(*inventory.bytes);

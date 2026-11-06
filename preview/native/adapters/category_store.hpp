@@ -9,6 +9,18 @@
 namespace biglybtc::storage {
 enum class CategoryDeletionStage {JournalSynced,MemberWritten,MemberAcknowledged,DefinitionWritten,DefinitionAcknowledged,Completed};
 using CategoryDeletionObserver=void(*)(CategoryDeletionStage,std::size_t);
+// Owning read-only diagnosis. It is never a continuation token or permission.
+// Even Resumable must pass resumeRemove's fresh same-OFD/source checks again.
+struct CategoryDeletionRecovery {
+  enum class State {None,Resumable,Review};
+  State state=State::None;
+  std::string name,reason;
+  std::size_t acknowledgedMembers=0,totalMembers=0;
+  bool definitionAcknowledged=false;
+};
+// Conservative presence check, no parsing/recovery/mutation. Errors count as
+// pending. Startup must not rewrite the inventory/state set guarded by a journal.
+bool hasPendingCategoryDeletion(const ProfileLease&)noexcept;
 class CategoryStore;
 class CategorySnapshot final {
 public:
@@ -68,6 +80,8 @@ public:
   // recovery. Unacknowledged or externally edited prefixes require review.
   std::expected<CategoryCommit,Error> remove(const CategorySnapshot&,std::string_view,
       std::stop_token={},Deadline=Deadline::max(),CategoryDeletionObserver=nullptr);
+  std::expected<CategoryDeletionRecovery,Error> inspectRemove(const CategorySnapshot&,
+      std::stop_token={},Deadline=Deadline::max())const;
   std::expected<CategoryCommit,Error> resumeRemove(const CategorySnapshot&,std::string_view,
       std::stop_token={},Deadline=Deadline::max(),CategoryDeletionObserver=nullptr);
   std::expected<void,Error> close();

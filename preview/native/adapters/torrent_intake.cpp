@@ -22,6 +22,8 @@
 #include <libtorrent/torrent_info.hpp>
 #include <libtorrent/address.hpp>
 #include <charconv>
+#include <chrono>
+#include <mutex>
 
 #include <algorithm>
 #include <array>
@@ -471,6 +473,21 @@ void applyIntakeNetwork(core::Document& attributes,TorrentIntakeNetwork network,
   // An explicit existing mixed list retains its original order/raw encoding.
   if(!mixed||!inherited){put(attributes,"networks",mixed?"l6:Public3:I2Pe":"l3:I2Pe");}
 }
+// Original SystemTime.getCurrentTimeUnique ordering, including wall rollback.
+std::int64_t intakeAddedTime(){
+  static std::mutex mutex;static std::int64_t previous=-1,unique=-1;
+  std::lock_guard lock(mutex);
+  auto now=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+  require(now>0,ErrorCode::Unsupported,"Original download added time is unavailable");
+  if(previous==-1||now<previous){previous=now;unique=-1;}
+  else if(now==previous){
+    if(unique==-1){unique=now;}
+    require(unique<std::numeric_limits<std::int64_t>::max(),ErrorCode::Unsupported,"Original added time exhausted");now=++unique;
+  }else{previous=now;if(unique!=-1&&now<=unique){
+    require(unique<std::numeric_limits<std::int64_t>::max(),ErrorCode::Unsupported,"Original added time exhausted");now=++unique;
+  }else{unique=-1;}}
+  return now;
+}
 struct Plan {
   core::TorrentHash hash;
   std::string metadata, archive, destination, profile, state, inventory;
@@ -482,9 +499,11 @@ struct Plan {
   std::optional<std::string> filenameConversions;
   std::optional<bool> decoderShowAll; // absent accepted journals retain false, never current inferred permission.
   TorrentIntakeNetwork network=TorrentIntakeNetwork::Public;
+  std::optional<std::int64_t> addedTime{}; // Frozen once; absent old journals remain byte compatible.
 };
 Plan plan(std::string metadata, std::string destination, std::string profile,
-    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={},TorrentIntakeNetwork network=TorrentIntakeNetwork::Public) {
+    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={},TorrentIntakeNetwork network=TorrentIntakeNetwork::Public,std::optional<std::int64_t> addedTime={}) {
+  require(!addedTime||*addedTime>0,ErrorCode::InvalidFormat,"Invalid original added time");
   require(network==TorrentIntakeNetwork::Public||network==TorrentIntakeNetwork::I2p||network==TorrentIntakeNetwork::Mixed,ErrorCode::InvalidFormat,"Invalid intake network context");
   require(network!=TorrentIntakeNetwork::I2p||(!alias
       &&(!options||(!options->verifyExisting&&options->allocation==core::TorrentAllocationMode::None))),
@@ -568,6 +587,9 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   const auto flags=core::originalDownloadFlags(torrent.find("attributes"));
   require(flags.has_value(),ErrorCode::InvalidFormat,"Invalid original download flags");
   auto attributes = section(torrent.find("attributes"));
+  if(addedTime){auto parameters=section(attributes.find("parameters"));
+    put(parameters,"stats.download.added.time",i(*addedTime));put(attributes,"parameters",parameters.serialize());}
+
   if(options&&options->allocation!=core::TorrentAllocationMode::None){put(attributes,"fas","i2e");}
   if(options&&original->files.size()==1&&!options->destinations.empty()
       &&fs::path(options->destinations.front().path).filename().string()!=fs::path(original->files[0].path).filename().string()){
@@ -627,10 +649,11 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   require((pause!=verify->paused.end())==paused&&verify->paused.size()==saved->paused.size()+(paused?1U:0U)
       &&(!paused||(!pause->forceStart&&pause->owner==1)),ErrorCode::InvalidFormat,"New paused intent failed its original reader");
   return {*hash, std::move(metadata), std::move(archive), std::move(destination), std::move(profile), std::move(state), std::move(after),
-      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options),std::move(alias),std::move(filenameConversions),decoderShowAll,network};
+      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options),std::move(alias),std::move(filenameConversions),decoderShowAll,network,addedTime};
 }
 std::string journalBytes(const Plan& p) {
   std::string optionalOptions;
+  if(p.addedTime){optionalOptions+=b("addedTime")+i(*p.addedTime);}
   if(p.options) {
     std::string value="d"+b("policy")+b(p.options->policy)+b("stores")+b(p.options->stores);
     if(p.options->reorderMinimumMiB){value+=b("reordermb")+i(*p.options->reorderMinimumMiB);}
@@ -650,7 +673,7 @@ std::string journalBytes(const Plan& p) {
     if(p.options->trackers){
       value+=b("trackers")+'l';for(const auto& tier:*p.options->trackers){value+='l';for(const auto& url:tier){value+=b(url);}value+='e';}value+='e';
     }
-    optionalOptions=b("fileOptions")+value+'e';
+    optionalOptions+=b("fileOptions")+value+'e';
   }
   if(p.network==TorrentIntakeNetwork::I2p){optionalOptions+=b("network")+b("I2P");}
   else if(p.network==TorrentIntakeNetwork::Mixed){optionalOptions+=b("network")+b("Public+I2P");}
@@ -681,6 +704,8 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   auto document = parse(std::move(bytes), MaximumJournal);
   uniqueKeys(document.root());
   const auto* force = document.find("forceStart");
+  const auto* addedNode=document.find("addedTime");std::optional<std::int64_t> addedTime;
+  if(addedNode){addedTime=integer(addedNode);require(*addedTime>0,ErrorCode::InvalidFormat,"Invalid accepted original added time");}
   const auto* optionsNode=document.find("fileOptions");
   const auto* networkNode=document.find("network");
   const auto networkText=networkNode?text(networkNode):std::string{};
@@ -691,7 +716,7 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   const auto* decoderNode=document.find("decoderShowAll");std::optional<bool> decoderShowAll;
   if(decoderNode){const auto value=integer(decoderNode);require((value==0||value==1)&&conversionsNode,ErrorCode::InvalidFormat,"Invalid accepted decoder context");decoderShowAll=value==1;require(*decoderShowAll==take(readOriginalDecoderShowAll(lease)),ErrorCode::Conflict,"Decoder registration setting changed since intake acceptance");}
   std::optional<std::string> conversions;if(conversionsNode){conversions=text(conversionsNode);const auto current=take(readOriginalFilenameConversions(lease));require(*conversions==current,ErrorCode::Conflict,"Filename conversion policy changed since intake acceptance");}
-  require(document.root().children.size()==20+(force?2U:0U)+(optionsNode?2U:0U)+(aliasNode?2U:0U)+(conversionsNode?2U:0U)+(decoderNode?2U:0U)+(networkNode?2U:0U)
+  require(document.root().children.size()==20+(addedNode?2U:0U)+(force?2U:0U)+(optionsNode?2U:0U)+(aliasNode?2U:0U)+(conversionsNode?2U:0U)+(decoderNode?2U:0U)+(networkNode?2U:0U)
       && integer(document.find("version")) == 1,
       ErrorCode::Unsupported, "Unknown intake journal version or fields");
   const auto before = integer(document.find("before_present"));
@@ -758,7 +783,7 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   }
   auto result=plan(text(document.find("metadata")), std::move(destination), profile,
       before ? std::optional{std::move(old)} : std::nullopt,
-      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias),std::move(conversions),decoderShowAll,network);
+      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias),std::move(conversions),decoderShowAll,network,addedTime);
   if(!result.filenameConversions){
     const auto current=take(readOriginalFilenameContext(lease));const auto original=metadataSubject(result.metadata);const auto projected=metadataSubject(result.metadata,current.conversions,current.decoderShowAll);
     require(original.layout.name==projected.layout.name&&original.layout.files.size()==projected.layout.files.size()
@@ -1067,7 +1092,7 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     const auto backup = read(root, "downloads.config.bak", MaximumInventory);
     require(before || !backup, ErrorCode::Conflict, "Resolve missing inventory primary before intake");
     auto p = plan(std::move(source->bytes), effectiveDestination.native(), profile, contents(before), contents(backup),
-        stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options),{},conversions,context.decoderShowAll,network);
+        stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options),{},conversions,context.decoderShowAll,network,intakeAddedTime());
     return commitIntakePlan(lease,p,observer,stop);
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io, "Torrent intake failed; inspect pending journal before retry"}); }
@@ -1165,7 +1190,7 @@ std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,con
     const auto encoded=compat::encodeOriginalFilePolicy(policy);
     require(encoded.has_value(),ErrorCode::Unsupported,"Cannot encode explicit alias selection");
     auto planValue=plan(selected.serialize(),old->saveDirectory,profile,contents(before),contents(backup),true,
-        before->info.st_mode,false,IntakeFileOptions{*encoded,std::move(stores),{}, {},false,false,false,{},{}},std::move(proof),conversions,context.decoderShowAll);
+        before->info.st_mode,false,IntakeFileOptions{*encoded,std::move(stores),{}, {},false,false,false,{},{}},std::move(proof),conversions,context.decoderShowAll,TorrentIntakeNetwork::Public,intakeAddedTime());
     return commitIntakePlan(lease,planValue,observer,stop);
   }catch(const Failure& failure){return std::unexpected(failure.error);}
   catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Hybrid companion publication failed; inspect pending intake"});}

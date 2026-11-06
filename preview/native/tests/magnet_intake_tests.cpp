@@ -456,6 +456,17 @@ int main() {
         CHECK(read(area.profile/"biglybt.config")==primary&&read(area.profile/"biglybt.config.bak")==backup);area.noNormalDownload();
       }
     });
+    run("fresh completion causality is false on errors duplicate and already-present recovery", [] {
+      {Area area;const auto queued=area.queue(uri(),true);bool created=true;
+        write(area.actual,metainfo('z'));CHECK(!engine::completePendingMagnet(*area.lease,queued,area.actual,normal(),&created));CHECK(!created);area.noNormalDownload();
+        write(area.actual,metainfo());created=false;CHECK(engine::completePendingMagnet(*area.lease,queued,area.actual,normal(),&created));CHECK(created);
+        const auto state=document(area.profile/"active"/(queued.hash.hex()+".dat"));const auto* p=state.find("attributes")->find("parameters");CHECK(p&&p->find("stats.download.added.time")&&p->find("stats.download.added.time")->integer>0);
+        created=true;CHECK(!engine::completePendingMagnet(*area.lease,queued,area.actual,normal(),&created));CHECK(!created);
+      }
+      {Area area;const auto queued=area.queue();CHECK(storage::importTorrent(*area.lease,area.actual,area.destination,false));
+        const auto before=read(area.profile/"downloads.config");bool created=true;CHECK(engine::completePendingMagnet(*area.lease,queued,area.actual,normal(),&created));CHECK(!created);CHECK(read(area.profile/"downloads.config")==before);
+      }
+    });
     std::cout << families << " magnet-intake families, " << assertions << " assertions passed\n";
     return 0;
   } catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }

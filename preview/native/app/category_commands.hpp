@@ -3,7 +3,7 @@
 #include "../ui/library_model.hpp"
 #include "biglybtc/saved_categories.hpp"
 namespace biglybtc::ui {
-enum class CategoryCommandKind {Reload,Create,Assign,Remove};
+enum class CategoryCommandKind {Reload,Create,Assign,Remove,ResumeRemove};
 enum class CategoryCommandStatus {Loaded,Saved,Unchanged,Rejected,Cancelled};
 enum class CategoryReadState {Ready,Missing,Failed};
 struct CategoryCommand {
@@ -12,6 +12,13 @@ struct CategoryCommand {
   // Null for Assign means original setCategory(null), not an empty user name.
   std::optional<QString> name;
   Target target;
+};
+struct CategoryRecoveryInfo {
+  enum class State {None,Resumable,Review};
+  State state=State::None;
+  QString name,reason;
+  quint64 acknowledgedMembers=0,totalMembers=0;
+  bool definitionAcknowledged=false;
 };
 struct CategoryCommandPacket {
   quint64 session=0,request=0,generation=0,libraryRevision=0;
@@ -25,6 +32,8 @@ struct CategoryCommandPacket {
   std::optional<QString> assignedName;
   bool assignmentLoaded=false,assignmentResolved=false;
   QString failure,refreshFailure;
+  CategoryRecoveryInfo recovery; // Value-only hint; Host retains all real sources.
+  bool restartRequired=false;
 };
 using CategoryCommandPresentation=std::shared_ptr<const CategoryCommandPacket>;
 // Observational owning values only. No CategoryTargetSnapshot/file/lease enters
