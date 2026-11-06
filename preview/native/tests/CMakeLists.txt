@@ -2895,3 +2895,76 @@ if(TARGET biglybtc_saved_subscription_source)
   target_compile_features(biglybtc-subscription-numeric-oracle PRIVATE cxx_std_23)
   target_compile_options(biglybtc-subscription-numeric-oracle PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
+
+
+if(TARGET biglybtc-config-create-tests)
+  add_test(NAME subscription-acquisition-config-pending-guards
+    COMMAND biglybtc-config-create-tests --acquisition-pending-guards)
+  set_tests_properties(subscription-acquisition-config-pending-guards PROPERTIES
+    TIMEOUT 60 LABELS "unit;fixtures;subscriptions;intake;storage")
+endif()
+
+
+if(TARGET biglybtc_rss_http_fetch_fixture)
+  add_executable(biglybtc-saved-subscription-result-source-tests saved_subscription_result_source_tests.cpp subscription_result_source_fixture.hpp)
+  set_target_properties(biglybtc-saved-subscription-result-source-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-saved-subscription-result-source-tests PRIVATE biglybtc_rss_http_fetch_fixture Qt6::Test OpenSSL::Crypto ZLIB::ZLIB Threads::Threads)
+  target_compile_options(biglybtc-saved-subscription-result-source-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME saved-subscription-result-source COMMAND biglybtc-saved-subscription-result-source-tests)
+  set_tests_properties(saved-subscription-result-source PROPERTIES TIMEOUT 30 LABELS "unit;subscriptions;owned-profile;no-network")
+endif()
+
+
+if(TARGET biglybtc_rss_consumer_host_fixture)
+  add_executable(biglybtc-subscription-acquisition-bridge-tests subscription_acquisition_bridge_tests.cpp)
+  set_target_properties(biglybtc-subscription-acquisition-bridge-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-subscription-acquisition-bridge-tests PRIVATE biglybtc_rss_consumer_host_fixture biglybtc_ui Qt6::Test OpenSSL::Crypto ZLIB::ZLIB Threads::Threads)
+  target_compile_options(biglybtc-subscription-acquisition-bridge-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME explicit-subscription-stopped-intake-worker COMMAND biglybtc-subscription-acquisition-bridge-tests)
+  set_tests_properties(explicit-subscription-stopped-intake-worker PROPERTIES TIMEOUT 120 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;fixtures;subscriptions;owned-loopback;intake;ui")
+endif()
+
+
+if(TARGET biglybtc_saved_subscription_source AND Qt6Test_FOUND)
+  add_executable(biglybtc-subscription-association-values-tests subscription_association_values_tests.cpp)
+  set_target_properties(biglybtc-subscription-association-values-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-subscription-association-values-tests PRIVATE biglybtc_saved_subscription_source Qt6::Test)
+  target_compile_options(biglybtc-subscription-association-values-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME subscription-association-values COMMAND biglybtc-subscription-association-values-tests)
+  set_tests_properties(subscription-association-values PROPERTIES TIMEOUT 30 LABELS "unit;subscriptions;association-values;no-network")
+endif()
+
+
+if(TARGET biglybtc_rss_http_fetch_fixture AND Qt6Test_FOUND)
+  target_sources(biglybtc_rss_http_fetch_fixture PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../services/search/subscription_metainfo_fetch.hpp")
+  add_executable(biglybtc-subscription-metainfo-fetch-tests subscription_metainfo_fetch_tests.cpp)
+  set_target_properties(biglybtc-subscription-metainfo-fetch-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-subscription-metainfo-fetch-tests PRIVATE biglybtc_rss_http_fetch_fixture Qt6::Test OpenSSL::Crypto ZLIB::ZLIB Threads::Threads)
+  target_compile_options(biglybtc-subscription-metainfo-fetch-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME owned-subscription-metainfo-fetch COMMAND biglybtc-subscription-metainfo-fetch-tests)
+  set_tests_properties(owned-subscription-metainfo-fetch PROPERTIES TIMEOUT 120 LABELS "subscriptions;metainfo;owned-http;private-profile;loopback")
+endif()
+
+
+if(TARGET biglybtc_rss_consumer_host_fixture)
+  add_executable(biglybtc-subscription-acquisition-recovery-tests subscription_acquisition_recovery_tests.cpp)
+  set_target_properties(biglybtc-subscription-acquisition-recovery-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-subscription-acquisition-recovery-tests PRIVATE biglybtc_rss_consumer_host_fixture biglybtc_ui Qt6::Test OpenSSL::Crypto ZLIB::ZLIB Threads::Threads)
+  target_compile_options(biglybtc-subscription-acquisition-recovery-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME owned-process-subscription-stopped-intake-recovery COMMAND biglybtc-subscription-acquisition-recovery-tests)
+  set_tests_properties(owned-process-subscription-stopped-intake-recovery PROPERTIES TIMEOUT 360 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;fixtures;subscriptions;owned-loopback;intake;recovery;process-crash")
+endif()
+
+
+if(TARGET biglybtc-torrent-intake-tests)
+  add_test(NAME subscription-acquisition-intake-pending-guards COMMAND biglybtc-torrent-intake-tests --acquisition-pending-guards)
+  set_tests_properties(subscription-acquisition-intake-pending-guards PROPERTIES TIMEOUT 30 LABELS "integration;intake;subscriptions;owned-profile;no-network")
+endif()
+
+if(TARGET biglybtc-torrent-state-driver)
+  add_test(NAME subscription-acquisition-state-writer-guards COMMAND Python3::Interpreter
+    "${CMAKE_CURRENT_SOURCE_DIR}/torrent_state_writer_guards.py"
+    --driver "$<TARGET_FILE:biglybtc-torrent-state-driver>" --acquisition-pending-guards)
+  set_tests_properties(subscription-acquisition-state-writer-guards PROPERTIES
+    TIMEOUT 60 LABELS "integration;state;subscriptions;owned-profile;no-network")
+endif()

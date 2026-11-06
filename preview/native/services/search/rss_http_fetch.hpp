@@ -76,6 +76,7 @@ public:
       SavedSubscriptionSelector,PrivateEndpointFixture,std::stop_token receiverStop={});
 #endif
 private:
+  friend class SubscriptionMetainfoFetch;
   friend class ::biglybtc::app::SessionBridge;
   friend class SavedSubscriptionService;
   // Concrete owners may verify a returned factory object's domain and exact

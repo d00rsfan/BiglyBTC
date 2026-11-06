@@ -7,7 +7,7 @@
 namespace biglybtc::storage {
 class DownloadHistoryStore;
 // A single-use owning witness of a NEW completed import, never a hash/UI grant.
-// Only the three fresh durable import entry points can issue one. Recovery and
+// Only fresh imports or the private fresh stopped-plan commit can issue one. Recovery and
 // read/start/reopen paths have no issuer. No provider/network capability lives here.
 class DurableIntakeReceipt final {
 public:
@@ -24,6 +24,7 @@ private:
   const core::DownloadHistoryNewRecord& record()const;
   bool monitored()const;
   friend class DownloadHistoryStore;
+  friend class PreparedStoppedPublicIntake;
   friend std::expected<core::TorrentHash,Error> importTorrent(ProfileLease&,const std::filesystem::path&,const std::filesystem::path&,bool,void(*)(TorrentIntakeStage),bool,TorrentIntakeNetwork,IntakeHistoryOutcome*);
   friend std::expected<core::TorrentHash,Error> importTorrentWithFileOptions(ProfileLease&,const TorrentIntakeMetadata&,const std::filesystem::path&,bool,std::span<const compat::FilePolicy>,void(*)(TorrentIntakeStage),bool,std::stop_token,core::TorrentIntakeLimits,bool,bool,bool,std::optional<core::TorrentIntakeTrackerTiers>,std::optional<std::string>,bool,std::optional<core::TorrentIntakeFileDestinations>,core::ExistingVerificationGoal,core::TorrentAllocationMode,TorrentIntakeNetwork,IntakeHistoryOutcome*);
   friend std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease&,const core::TorrentHash&,OriginalSelectedHash,std::span<const OriginalTorrentIdentity>,void(*)(TorrentIntakeStage),std::stop_token,IntakeHistoryOutcome*);

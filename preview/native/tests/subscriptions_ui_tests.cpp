@@ -5,6 +5,9 @@
 #include <QAction>
 #include <QComboBox>
 #include <QLabel>
+#include <QFileDialog>
+#include <QTimer>
+#include <QTemporaryDir>
 #include <QPointer>
 #include <QPixmap>
 #include <QPushButton>
@@ -26,6 +29,7 @@ ui::SubscriptionCommand command(const QSignalSpy& spy){return qvariant_cast<ui::
 class SubscriptionsUiTests final:public QObject {
   Q_OBJECT
 private slots:
+  void initTestCase(){QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);}
   void classicViewReadsSavedResultsAndUsesExactResultKeysWithoutAutomaticCheck(){
     ui::LibraryWindow window;window.setOfflinePreview(false);window.beginColumnLayoutSession(101);window.resize(1280,800);window.show();
     QSignalSpy catalogs(&window,&ui::LibraryWindow::subscriptionCatalogRequested),commands(&window,&ui::LibraryWindow::subscriptionCommandRequested);
@@ -40,7 +44,7 @@ private slots:
     page->findChild<QPushButton*>("subscriptions-read")->click();QCOMPARE(commands.count(),2);const auto mark=command(commands);QCOMPARE(mark.key.action,ui::SubscriptionAction::MarkRead);QCOMPARE(mark.resultKeys,std::vector<QByteArray>{QByteArray(10,'r')});QVERIFY(mark.key.request>read.key.request);QCOMPARE(mark.key.target,read.key.target);
     auto marked=std::make_shared<ui::SubscriptionPacket>(*ready(mark.key));marked->rows[0].read=true;window.setSubscriptionResult(marked);QCOMPARE(table->item(0,0)->text(),QStringLiteral("Yes"));
     table->selectRow(0);combo->setCurrentIndex(1);QCOMPARE(commands.count(),3);const auto otherRead=command(commands);QCOMPARE(otherRead.key.action,ui::SubscriptionAction::ReadResults);QVERIFY(otherRead.key.target!=read.key.target);QCOMPARE(table->rowCount(),0);window.rejectSubscriptionCommand(otherRead);QCOMPARE(table->rowCount(),0);
-    for(const auto* name:{"subscriptions-read","subscriptions-unread","subscriptions-delete"}){QVERIFY(!page->findChild<QPushButton*>(name)->isEnabled());}window.setSubscriptionResult(ready(read.key,QStringLiteral("Old selected subscription")));QCOMPARE(table->rowCount(),0);
+    for(const auto* name:{"subscriptions-read","subscriptions-unread","subscriptions-delete","subscriptions-acquire"}){QVERIFY(!page->findChild<QPushButton*>(name)->isEnabled());}window.setSubscriptionResult(ready(read.key,QStringLiteral("Old selected subscription")));QCOMPARE(table->rowCount(),0);
     page->findChild<QPushButton*>("subscriptions-check")->click();QCOMPARE(commands.count(),4);QCOMPARE(command(commands).key.action,ui::SubscriptionAction::Check);QVERIFY(command(commands).receiver&&!command(commands).receiver->stop_requested());
   }
   void closingAndChangingSessionStopReceiverAndRejectOldPagePackets(){
@@ -56,7 +60,7 @@ private slots:
   void previewReadsHistoryButCannotCheckOrMutateEvenWithNormalCatalogHint(){
     ui::LibraryWindow window;window.setOfflinePreview(true);window.beginColumnLayoutSession(301);QSignalSpy catalogs(&window,&ui::LibraryWindow::subscriptionCatalogRequested),commands(&window,&ui::LibraryWindow::subscriptionCommandRequested);
     window.findChild<QAction*>("classic-subscriptions")->trigger();window.setSubscriptionCatalog(catalog(qvariant_cast<ui::SubscriptionCatalogKey>(catalogs.last()[0])));QCOMPARE(commands.count(),1);QCOMPARE(command(commands).key.action,ui::SubscriptionAction::ReadResults);window.setSubscriptionResult(ready(command(commands).key));
-    auto* page=window.subscriptionsPage();page->findChild<QTableWidget*>("subscription-results")->selectRow(0);for(const auto* name:{"subscriptions-check","subscriptions-read","subscriptions-unread","subscriptions-delete"}){auto* button=page->findChild<QPushButton*>(name);QVERIFY(button);QVERIFY(!button->isEnabled());button->click();}QCOMPARE(commands.count(),1);
+    auto* page=window.subscriptionsPage();page->findChild<QTableWidget*>("subscription-results")->selectRow(0);for(const auto* name:{"subscriptions-check","subscriptions-read","subscriptions-unread","subscriptions-delete","subscriptions-acquire"}){auto* button=page->findChild<QPushButton*>(name);QVERIFY(button);QVERIFY(!button->isEnabled());button->click();}QCOMPARE(commands.count(),1);
   }
   void sharedCancellationPrecedesSignalAndReentrantSessionCannotRestoreRows(){
     ui::SubscriptionsPage page;page.beginSession(401,1);page.setAvailable(true,false);ui::SubscriptionCommand captured;bool stoppedAtSignal=false;
@@ -64,6 +68,27 @@ private slots:
     page.setCatalogPending({401,1,2});page.setCatalog(catalog({401,1,2}));
     QObject::connect(&page,&ui::SubscriptionsPage::cancelRequested,&page,[&](ui::SubscriptionCommandKey){stoppedAtSignal=captured.receiver&&captured.receiver->stop_requested();page.beginSession(402,2);});
     page.findChild<QPushButton*>("subscriptions-check")->click();QVERIFY(captured.receiver);page.findChild<QPushButton*>("subscriptions-cancel")->click();QVERIFY(stoppedAtSignal);QCOMPARE(page.session(),quint64{402});QCOMPARE(page.page(),quint64{2});page.setResult(ready(captured.key));QCOMPARE(page.findChild<QTableWidget*>("subscription-results")->rowCount(),0);
+  }
+  void addStoppedChoosesDirectoryForOneUnreadKeyAndSharesCancellation(){
+    QTemporaryDir destination;QVERIFY(destination.isValid());ui::LibraryWindow window;window.setOfflinePreview(false);window.beginColumnLayoutSession(601);
+    QSignalSpy catalogs(&window,&ui::LibraryWindow::subscriptionCatalogRequested),commands(&window,&ui::LibraryWindow::subscriptionCommandRequested),cancels(&window,&ui::LibraryWindow::subscriptionCancelRequested);
+    window.findChild<QAction*>("classic-subscriptions")->trigger();window.setSubscriptionCatalog(catalog(qvariant_cast<ui::SubscriptionCatalogKey>(catalogs.last()[0])));
+    const auto read=command(commands);auto packet=std::make_shared<ui::SubscriptionPacket>(*ready(read.key));auto second=packet->rows.front();second.key=QByteArray(10,'s');second.read=true;packet->rows.push_back(second);window.setSubscriptionResult(packet);
+    auto* page=window.subscriptionsPage();auto* table=page->findChild<QTableWidget*>("subscription-results");auto* add=page->findChild<QPushButton*>("subscriptions-acquire");QVERIFY(add);QVERIFY(!add->isEnabled());table->selectRow(1);QVERIFY(!add->isEnabled());table->selectRow(0);QVERIFY(add->isEnabled());
+    table->selectionModel()->select(table->model()->index(1,0),QItemSelectionModel::Select|QItemSelectionModel::Rows);QVERIFY(!add->isEnabled());table->selectRow(0);
+    bool seen=false;QTimer::singleShot(0,&window,[&]{if(auto* dialog=window.findChild<QFileDialog*>()){seen=true;dialog->setDirectory(destination.path());dialog->selectFile(destination.path());QMetaObject::invokeMethod(dialog,"accept",Qt::QueuedConnection);}});
+    add->click();QVERIFY(seen);QCOMPARE(commands.count(),2);const auto acquire=command(commands);QCOMPARE(acquire.key.action,ui::SubscriptionAction::AcquireStopped);QCOMPARE(acquire.key.target,read.key.target);QVERIFY(acquire.key.request>read.key.request);QCOMPARE(acquire.resultKeys,std::vector<QByteArray>{QByteArray(10,'r')});QCOMPARE(acquire.destination,destination.path());QVERIFY(acquire.receiver&&!acquire.receiver->stop_requested());
+    bool stoppedBeforeSignal=false;QObject::connect(&window,&ui::LibraryWindow::subscriptionCancelRequested,&window,[&](ui::SubscriptionCommandKey){stoppedBeforeSignal=acquire.receiver->stop_requested();});auto* cancel=page->findChild<QPushButton*>("subscriptions-cancel");QVERIFY(cancel->isEnabled());cancel->click();QVERIFY(stoppedBeforeSignal);QCOMPARE(cancels.count(),1);
+    auto cancelled=std::make_shared<ui::SubscriptionPacket>();cancelled->key=acquire.key;cancelled->state=ui::SubscriptionState::Cancelled;window.setSubscriptionResult(cancelled);QVERIFY(add->isEnabled());
+    seen=false;QTimer::singleShot(0,&window,[&]{if(auto* dialog=window.findChild<QFileDialog*>()){seen=true;QMetaObject::invokeMethod(dialog,"reject",Qt::QueuedConnection);}});add->click();QVERIFY(seen);QCOMPARE(commands.count(),2);QVERIFY(add->isEnabled());
+    QTimer::singleShot(0,&window,[&]{if(auto* dialog=window.findChild<QFileDialog*>()){dialog->setDirectory(destination.path());dialog->selectFile(destination.path());QMetaObject::invokeMethod(dialog,"accept",Qt::QueuedConnection);}});add->click();QCOMPARE(commands.count(),3);const auto pending=command(commands);cancel->click();QVERIFY(pending.receiver->stop_requested());
+    auto review=std::make_shared<ui::SubscriptionPacket>();review->key=pending.key;review->state=ui::SubscriptionState::Rejected;review->committed=true;review->message=QStringLiteral("The addition needs review; saved files were retained.");window.setSubscriptionResult(review);QCOMPARE(page->findChild<QLabel*>("subscriptions-status")->text(),review->message);QCOMPARE(table->rowCount(),2);
+
+  }
+  void directoryChooserCannotSubmitIntoAReplacedSession(){
+    QTemporaryDir destination;QVERIFY(destination.isValid());ui::LibraryWindow window;window.setOfflinePreview(false);window.beginColumnLayoutSession(701);QSignalSpy catalogs(&window,&ui::LibraryWindow::subscriptionCatalogRequested),commands(&window,&ui::LibraryWindow::subscriptionCommandRequested);
+    window.findChild<QAction*>("classic-subscriptions")->trigger();window.setSubscriptionCatalog(catalog(qvariant_cast<ui::SubscriptionCatalogKey>(catalogs.last()[0])));window.setSubscriptionResult(ready(command(commands).key));auto* page=window.subscriptionsPage();page->findChild<QTableWidget*>("subscription-results")->selectRow(0);QVERIFY(page->findChild<QPushButton*>("subscriptions-acquire")->isEnabled());
+    bool seen=false;QTimer::singleShot(0,&window,[&]{if(auto* dialog=window.findChild<QFileDialog*>()){seen=true;window.beginColumnLayoutSession(702);dialog->setDirectory(destination.path());dialog->selectFile(destination.path());QMetaObject::invokeMethod(dialog,"accept",Qt::QueuedConnection);}});page->findChild<QPushButton*>("subscriptions-acquire")->click();QVERIFY(seen);QCOMPARE(commands.count(),1);QCOMPARE(page->session(),quint64{702});QCOMPARE(page->findChild<QTableWidget*>("subscription-results")->rowCount(),0);QVERIFY(!page->findChild<QPushButton*>("subscriptions-acquire")->isEnabled());
   }
   void comboAndModelReentryCannotFinishAnOldCatalogOrResult(){
     ui::SubscriptionsPage page;page.beginSession(501,1);page.setAvailable(true,false);auto* combo=page.findChild<QComboBox*>("subscription-selector");auto* table=page.findChild<QTableWidget*>("subscription-results");auto* status=page.findChild<QLabel*>("subscriptions-status");QSignalSpy requests(&page,&ui::SubscriptionsPage::commandRequested);

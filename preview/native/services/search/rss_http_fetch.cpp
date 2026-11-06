@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "rss_http_fetch.hpp"
+#include "subscription_metainfo_fetch.hpp"
+#include "saved_subscription_result_source.hpp"
 #include "../http/http_response.hpp"
 #include "../../engine/network_binding.hpp"
 #include <QCoreApplication>
@@ -37,6 +39,7 @@ std::atomic<bool> activeSlot{false};
 std::atomic<std::uint64_t> nextNonce{1};
 using Phase=RssFetchPhase;
 using Error=RssFetchError;
+enum class BodyKind {RssDocument,TorrentMetainfo};
 bool pending(Phase phase){return phase==Phase::BeforeDNS||phase==Phase::BeforeConnect||phase==Phase::BeforeGET;}
 bool publicAddress(const QHostAddress& value){
   if(value.isNull()||value.isLoopback()||value.isMulticast()||!value.scopeId().isEmpty()){return false;}
@@ -99,6 +102,8 @@ struct Mailbox {
 struct Configuration {
   QUrl initial;
   RssGetDescription description;
+  BodyKind bodyKind=BodyKind::RssDocument;
+  QByteArray referer; // Only actual saved-result source supplies this owned header.
   QSslConfiguration tls;
   std::vector<QHostAddress> locals;
   bool ipv6=false;
@@ -244,7 +249,10 @@ private:
     if(url_.hasQuery()){path+='?';path+=url_.query(QUrl::FullyEncoded).toUtf8();}
     auto host=url_.host().contains(':')?url_.host().toUtf8():QUrl::toAce(url_.host());if(host.contains(':')){host='['+host+']';}
     if(url_.port()!=-1){host+=':'+QByteArray::number(url_.port());}
-    const auto packet="GET "+path+" HTTP/1.1\r\nHost: "+host+"\r\nUser-Agent: BiglyBTC\r\nAccept-Encoding: gzip\r\nConnection: close\r\n\r\n";
+    auto packet="GET "+path+" HTTP/1.1\r\nHost: "+host+"\r\nUser-Agent: BiglyBTC\r\nAccept-Encoding: gzip\r\nConnection: close\r\n\r\n";
+    if(config_.bodyKind==BodyKind::TorrentMetainfo&&!config_.referer.isEmpty()){
+      packet.chop(2);packet+="Referer: "+config_.referer+"\r\n\r\n";
+    }
     if(packet.size()>8192||gets_>=config_.description.maximumGets){fail(Error::Limit);return;}
     if(!current(hop_)||config_.epoch->sourceRevision()!=revision){return;}
     if(socket_->write(packet)!=packet.size()){fail(Error::Http);return;}
@@ -276,8 +284,9 @@ private:
     transferred_+=static_cast<std::size_t>(fresh.size());received_+=fresh;
     const auto header=received_.indexOf("\r\n\r\n");
     if((header<0&&static_cast<std::size_t>(received_.size())>config_.description.headerBytes)||(header>=0&&static_cast<std::size_t>(header)>config_.description.headerBytes)){fail(Error::Limit);return;}
-    if(!utf8ContentType()){fail(Error::Encoding);return;}
-    const auto value=services::http::decodeResponse(received_,eof,services::http::ResponseProfile::RssDocument);
+    if(config_.bodyKind==BodyKind::RssDocument&&!utf8ContentType()){fail(Error::Encoding);return;}
+    const auto profile=config_.bodyKind==BodyKind::TorrentMetainfo?services::http::ResponseProfile::TorrentMetainfo:services::http::ResponseProfile::RssDocument;
+    const auto value=services::http::decodeResponse(received_,eof,profile);
     if(value.unsupported){fail(Error::Http);return;}if(!value.complete){phase(Phase::Reading);return;}
     if(value.failed||value.basicAuthentication){fail(Error::Http);return;}
     if(!value.location.isEmpty()){
@@ -344,9 +353,10 @@ struct RssHttpFetch::Impl {
   std::thread::id worker=std::this_thread::get_id();
   std::shared_ptr<const storage::ProfileLease> lease;
   // Closed owning source set. No virtual/callback source can mint a phase.
-  using Source=std::variant<SavedRssSourceSnapshot,SavedSubscriptionSourceSnapshot>;
-  using Selected=std::variant<SavedRssSelector,SavedSubscriptionSelector>;
+  using Source=std::variant<SavedRssSourceSnapshot,SavedSubscriptionSourceSnapshot,SavedSubscriptionResultSnapshot>;
+  using Selected=std::variant<SavedRssSelector,SavedSubscriptionSelector,SavedSubscriptionResultSelector>;
   std::optional<Source> source;
+  BodyKind bodyKind=BodyKind::RssDocument;
   std::filesystem::path profile;
   std::stop_token receiverToken;
   engine::NetworkBinding binding;
@@ -377,11 +387,15 @@ struct RssHttpFetch::Impl {
         auto saved=SavedRssSourceSnapshot::read(caller,path,session,std::move(identity),SavedRssReadReason::ExplicitOneShotDescription);
         if(!saved){return std::unexpected(Error::Source);}
         return Source{std::in_place_type<SavedRssSourceSnapshot>,std::move(*saved)};
-      }else{
-        static_assert(std::is_same_v<Identity,SavedSubscriptionSelector>);
+      }else if constexpr(std::is_same_v<Identity,SavedSubscriptionSelector>){
         auto saved=SavedSubscriptionSourceSnapshot::read(caller,path,session,std::move(identity));
         if(!saved){return std::unexpected(Error::Source);}
         return Source{std::in_place_type<SavedSubscriptionSourceSnapshot>,std::move(*saved)};
+      }else{
+        static_assert(std::is_same_v<Identity,SavedSubscriptionResultSelector>);
+        auto saved=SavedSubscriptionResultSnapshot::read(caller,path,session,std::move(identity));
+        if(!saved){return std::unexpected(Error::Source);}
+        return Source{std::in_place_type<SavedSubscriptionResultSnapshot>,std::move(*saved)};
       }
     },std::move(selected));
   }
@@ -405,8 +419,14 @@ struct RssHttpFetch::Impl {
       auto retained=caller.retain();if(!retained){return std::unexpected(Error::Source);}result->lease=*retained;
       auto source=readSource(caller,path,session,std::move(selector));
       if(!source){return std::unexpected(Error::Source);}result->source.emplace(std::move(*source));
+      if(std::holds_alternative<SavedSubscriptionResultSnapshot>(*result->source)){result->bodyKind=BodyKind::TorrentMetainfo;}
       result->profile=path;result->receiverToken=stop;
       const auto& description=result->description();
+      // The real result reader supplies URL/trust values, never configurable
+      // metainfo resource limits. This private binary mode has one fixed cap.
+      if(result->bodyKind==BodyKind::TorrentMetainfo&&(description.responseOctets!=8*1024*1024
+          ||description.headerBytes!=16384||description.maximumGets!=6
+          ||description.phaseMillis!=30000||description.totalMillis!=60000)){return std::unexpected(Error::Limit);}
       if(description.responseOctets>8*1024*1024||description.headerBytes>16384||description.maximumGets>6||!description.maximumGets
           ||description.phaseMillis<=0||description.phaseMillis>30000||description.totalMillis<=0||description.totalMillis>60000){return std::unexpected(Error::Limit);}
       Configuration config;config.initial=QUrl::fromEncoded(QByteArray::fromStdString(description.literalGetUrl),QUrl::StrictMode);
@@ -416,6 +436,13 @@ struct RssHttpFetch::Impl {
       (void)fixture;
 #endif
       if(!canonicalUrl(config.initial)){return std::unexpected(Error::UnsupportedRoute);}
+      if(const auto* saved=std::get_if<SavedSubscriptionResultSnapshot>(&*result->source)){
+        if(const auto& referer=saved->description().referer;referer&&!referer->empty()){
+          config.referer=QByteArray::fromStdString(*referer);
+          if(config.referer.size()>2048||!std::ranges::all_of(config.referer,[](unsigned char c){return c>=33&&c<=126;})
+              ||!canonicalUrl(QUrl::fromEncoded(config.referer,QUrl::StrictMode))){return std::unexpected(Error::UnsupportedRoute);}
+        }
+      }
       auto settings=storage::ConfigFile::load(caller,"biglybt.config",{1024*1024,1024*1024,65536,64});
       const core::Document* document=settings?&settings->document():nullptr;
       if(!settings&&settings.error().code!=storage::ErrorCode::Missing){return std::unexpected(Error::Source);}
@@ -432,7 +459,7 @@ struct RssHttpFetch::Impl {
       const auto checked=result->sourceCurrent(caller,session);if(!checked){return std::unexpected(Error::Source);}
       auto nonce=nextNonce.load();while(nonce!=std::numeric_limits<std::uint64_t>::max()&&!nextNonce.compare_exchange_weak(nonce,nonce+1)){}
       if(!nonce||nonce==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(Error::Limit);}result->nonce=nonce;
-      config.nonce=nonce;config.epoch=result->lease;config.ipv6=result->binding.effective.ipv6;config.description=description;
+      config.nonce=nonce;config.epoch=result->lease;config.ipv6=result->binding.effective.ipv6;config.description=description;config.bodyKind=result->bodyKind;
       config.tls=QSslConfiguration::defaultConfiguration();
       if(description.trustAnchors){config.tls.setCaCertificates(*description.trustAnchors);}
       config.tls.setProtocol(QSsl::TlsV1_2OrLater);
@@ -573,6 +600,94 @@ std::expected<std::optional<RssFetchCompletion>,RssFetchError> RssHttpFetch::pol
   // Reject outside its mutex; stop/join must never recursively acquire it.
   if(lateFailure){return reject(*lateFailure);}
   return std::optional<RssFetchCompletion>{std::move(result)};
+  }catch(const std::bad_alloc&){const auto first=value.stop(Error::Memory);value.join();return std::unexpected(first);}
+}
+
+SubscriptionMetainfoFetch::SubscriptionMetainfoFetch(std::unique_ptr<RssHttpFetch::Impl> value):impl_(std::move(value)){}
+SubscriptionMetainfoFetch::~SubscriptionMetainfoFetch(){close();}
+std::expected<std::unique_ptr<SubscriptionMetainfoFetch>,RssFetchError> SubscriptionMetainfoFetch::openOneShot(
+    const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,
+    SavedSubscriptionSelector selected,std::string resultKey,std::stop_token stop){
+  auto value=RssHttpFetch::Impl::make(lease,path,session,SavedSubscriptionResultSelector{std::move(selected),std::move(resultKey)},stop);
+  if(!value){return std::unexpected(value.error());}
+  try{return std::unique_ptr<SubscriptionMetainfoFetch>(new SubscriptionMetainfoFetch(std::move(*value)));}
+  catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
+}
+#if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
+std::expected<std::unique_ptr<SubscriptionMetainfoFetch>,RssFetchError> SubscriptionMetainfoFetch::openFixture(
+    const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,
+    SavedSubscriptionSelector selected,std::string resultKey,RssHttpFetch::PrivateEndpointFixture fixture,std::stop_token stop){
+  auto value=RssHttpFetch::Impl::make(lease,path,session,SavedSubscriptionResultSelector{std::move(selected),std::move(resultKey)},stop,std::move(fixture));
+  if(!value){return std::unexpected(value.error());}
+  try{return std::unique_ptr<SubscriptionMetainfoFetch>(new SubscriptionMetainfoFetch(std::move(*value)));}
+  catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
+}
+#endif
+bool SubscriptionMetainfoFetch::matchesSubscriptionResultSource(const storage::ProfileLease& caller,
+    const std::filesystem::path& profile,std::uint64_t session,const SavedSubscriptionSelector& selected,
+    std::string_view resultKey,std::stop_token receiver)const noexcept{
+  try{
+    if(!impl_||impl_->closed||std::this_thread::get_id()!=impl_->worker||!impl_->lease||!impl_->source
+        ||impl_->bodyKind!=BodyKind::TorrentMetainfo||!caller.sharesOwnership(*impl_->lease)
+        ||impl_->profile!=profile||impl_->session!=session||impl_->receiverToken!=receiver){return false;}
+    const auto* saved=std::get_if<SavedSubscriptionResultSnapshot>(&*impl_->source);if(!saved){return false;}
+    const auto& actual=saved->description().selected;
+    return actual.subscription==selected&&std::string_view(actual.resultKey)==resultKey;
+  }catch(...){return false;}
+}
+RssFetchObservation SubscriptionMetainfoFetch::observation()const{std::lock_guard lock(impl_->box->mutex);return impl_->box->view;}
+void SubscriptionMetainfoFetch::requestCancel()noexcept{impl_->box->cancel();}
+void SubscriptionMetainfoFetch::close()noexcept{if(impl_){impl_->close();}}
+std::expected<std::optional<SubscriptionMetainfoCompletion>,RssFetchError> SubscriptionMetainfoFetch::poll(
+    const storage::ProfileLease& caller,std::uint64_t session){
+  auto& value=*impl_;
+  try{
+  const auto reject=[&](Error error){const auto first=value.stop(error);value.join();return std::unexpected(first);};
+  if(std::this_thread::get_id()!=value.worker){return std::unexpected(Error::WrongWorker);}
+  if(value.closed){std::lock_guard lock(value.box->mutex);return std::unexpected(value.box->view.failure.value_or(Error::Closed));}
+  if(value.bodyKind!=BodyKind::TorrentMetainfo){return reject(Error::Source);}
+  if(value.delivered){return std::optional<SubscriptionMetainfoCompletion>{};}
+  if(value.box->cancelled){return reject(value.box->cancelReason.load());}
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-value.started).count()>=value.description().totalMillis){return reject(Error::Deadline);}
+  const auto view=observation();
+  if(view.failure){value.join();return std::unexpected(*view.failure);}
+  const auto observed=value.validate(caller,session);
+  if(!observed){return reject(observed.error());}
+  if(value.box->cancelled){return reject(value.box->cancelReason.load());}
+  if(pending(view.phase)){
+    {std::lock_guard lock(value.box->mutex);if(value.box->approvalInFlight){return std::optional<SubscriptionMetainfoCompletion>{};}}
+    {std::lock_guard lock(value.box->mutex);value.box->approvalInFlight=true;}
+    if(!value.network||!value.network->approve(view.phase,value.nonce,view.hop,*observed)){return reject(Error::Closed);}
+    return std::optional<SubscriptionMetainfoCompletion>{};
+  }
+  if(view.phase!=Phase::BeforeDelivery){return std::optional<SubscriptionMetainfoCompletion>{};}
+  value.join();const auto before=value.validate(caller,session);
+  if(!before){return reject(before.error());}
+  QByteArray body;QUrl finalUrl;std::chrono::steady_clock::time_point deliveryStarted;
+  {std::lock_guard lock(value.box->mutex);body=std::move(value.box->body);finalUrl=value.box->finalUrl;deliveryStarted=value.box->phaseStarted;}
+  const auto expired=[&]{const auto now=std::chrono::steady_clock::now();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(now-deliveryStarted).count()>=value.description().phaseMillis
+        ||std::chrono::duration_cast<std::chrono::milliseconds>(now-value.started).count()>=value.description().totalMillis;};
+  if(expired()){return reject(Error::Deadline);}
+  if(body.isEmpty()){return reject(Error::Parse);}
+  if(body.size()>4*1024*1024){return reject(Error::Limit);}
+  // Binary bytes are never decoded as text/XML, written to a profile, treated
+  // as an inspected torrent or permitted to mutate read/scan/intake state here.
+  SubscriptionMetainfoCompletion result;result.session=value.session;result.nonce=value.nonce;
+  result.initialUrl=QUrl::fromEncoded(QByteArray::fromStdString(value.description().literalGetUrl),QUrl::StrictMode);
+  result.finalUrl=std::move(finalUrl);result.bytes=std::move(body);result.gets=view.gets;result.responseOctets=view.responseOctets;
+  const auto after=value.validate(caller,session);
+  if(value.box->cancelled){return reject(value.box->cancelReason.load());}
+  if(!after){return reject(after.error());}
+  if(expired()){return reject(Error::Deadline);}
+  std::optional<Error> lateFailure;
+  {std::lock_guard lock(value.box->mutex);
+    if(value.box->cancelled||value.box->view.failure){lateFailure=value.box->view.failure.value_or(value.box->cancelReason.load());}
+    else if(!value.lease||value.lease->sourceRevision()!=*after){lateFailure=Error::Source;}
+    else{value.delivered=true;value.box->view.phase=Phase::Complete;}
+  }
+  if(lateFailure){return reject(*lateFailure);}
+  return std::optional<SubscriptionMetainfoCompletion>{std::move(result)};
   }catch(const std::bad_alloc&){const auto first=value.stop(Error::Memory);value.join();return std::unexpected(first);}
 }
 } // namespace biglybtc::search

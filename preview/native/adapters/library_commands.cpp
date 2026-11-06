@@ -143,6 +143,7 @@ static std::expected<LibraryCommandResult,Error> applyLibraryCommandImpl(const P
     const core::TorrentHash& hash, Action action, std::span<const LibraryCompletionPool> pools, bool clearForceOnly) {
   bool saving = false;
   try {
+    auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
     if (static_cast<unsigned>(action) > static_cast<unsigned>(Action::MoveBottom)) {
       return failure(ErrorCode::Unsupported,"Unknown saved-download action");
     }
@@ -254,6 +255,7 @@ static std::expected<LibraryCommandResult,Error> applyLibraryCommandImpl(const P
     // Stage the whole returned intent before publication; success performs only
     // moves afterward. ConfigFile retains its actual CAS/recovery/error policy.
     std::expected<LibraryCommandResult,Error> prepared(std::move(result));
+    allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
     saving = true;
     auto committed = file->save(lease);
     if (!committed) { return std::unexpected(committed.error()); }

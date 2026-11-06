@@ -4,9 +4,9 @@
 
 namespace biglybtc::services::http {
 // Closed pure-decoder profiles. Neither profile grants a route or performs IO.
-// Tracker preserves the existing128KiB contract; RSS cannot exceed the shared
-// document parser's4MiB input ceiling. Transport aggregate quotas are separate.
-enum class ResponseProfile {Tracker,RssDocument};
+// Tracker preserves the existing128KiB contract. RSS and binary metainfo have
+// separate closed4MiB profiles. Transport aggregate quotas are separate.
+enum class ResponseProfile {Tracker,RssDocument,TorrentMetainfo};
 struct Response {
   bool complete=false,unsupported=false;
   QByteArray bytes;

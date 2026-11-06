@@ -13,9 +13,9 @@ struct SubscriptionCatalogKey {quint64 session=0,page=0,request=0;bool operator=
 struct SubscriptionChoice {SubscriptionKey key;QString name,status;bool canCheck=false;};
 struct SubscriptionCatalogPacket {SubscriptionCatalogKey key;quint64 generation=0;bool normalNetwork=false,truncated=false;std::vector<SubscriptionChoice> sources;QString failure;};
 using SubscriptionCatalogPresentation=std::shared_ptr<const SubscriptionCatalogPacket>;
-enum class SubscriptionAction {ReadResults,Check,MarkRead,MarkUnread,Delete};
+enum class SubscriptionAction {ReadResults,Check,MarkRead,MarkUnread,Delete,AcquireStopped};
 struct SubscriptionCommandKey {quint64 session=0,page=0,request=0,generation=0;SubscriptionKey target;SubscriptionAction action=SubscriptionAction::ReadResults;bool operator==(const SubscriptionCommandKey&)const=default;};
-struct SubscriptionCommand {SubscriptionCommandKey key;std::vector<QByteArray> resultKeys;std::shared_ptr<std::stop_source> receiver;};
+struct SubscriptionCommand {SubscriptionCommandKey key;std::vector<QByteArray> resultKeys;std::shared_ptr<std::stop_source> receiver;QString destination{};};
 enum class SubscriptionState {Started,Ready,Rejected,Cancelled};
 struct SubscriptionResultRow {QByteArray key;bool read=false;QString title,size,seeds,peers,publication,link;};
 struct SubscriptionPacket {SubscriptionCommandKey key;SubscriptionState state=SubscriptionState::Rejected;bool committed=false,truncated=false;std::vector<SubscriptionResultRow> rows;QString message;};

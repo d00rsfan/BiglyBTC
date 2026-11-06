@@ -85,9 +85,10 @@ std::expected<void, Error> recheck(EncodedDocument& envelope) {
   return {};
 }
 
-std::expected<void, Error> replace(int directory, const std::string& filename,
+std::expected<void, Error> replace(const ProfileLease& lease, int directory, const std::string& filename,
     const std::optional<std::string>& original, std::string_view encoded, std::string_view backup,
     void (*observer)(StateSaveStage), ProfileSourceAccess* access=nullptr) {
+  auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
   auto current = readFile(directory, filename, compatibleConfigLimits().inputBytes);
   if (!current) { return std::unexpected(current.error()); }
   if (*current != original) { return error(ErrorCode::Conflict, "Saved state changed since loading"); }
@@ -101,9 +102,11 @@ std::expected<void, Error> replace(int directory, const std::string& filename,
   struct stat info{};
   if (::fstatat(directory, filename.c_str(), &info, AT_SYMLINK_NOFOLLOW) == 0) { mode = info.st_mode & 0777; }
   const auto saving = filename + ".saving";
+  allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
   auto written = writeExclusive(directory, saving, encoded, mode);
   if (!written) { return written; }
   if (observer) { if(access){access->outside([&]{observer(StateSaveStage::TemporarySynced);});}else{observer(StateSaveStage::TemporarySynced);} }
+  allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
   const auto backupSaving = filename + ".bak.saving";
   written = writeExclusive(directory, backupSaving, backup, mode);
   if (!written) { return written; }
@@ -113,12 +116,14 @@ std::expected<void, Error> replace(int directory, const std::string& filename,
   safe = sync(directory);
   if (!safe) { return safe; }
   if (observer) { if(access){access->outside([&]{observer(StateSaveStage::BackupSynced);});}else{observer(StateSaveStage::BackupSynced);} }
+  allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
   // The primary stays present through backup preparation; Java can always read
   // its old or new state, even though it ignores an unfinished .saving file.
   if (::renameat(directory, saving.c_str(), directory, filename.c_str()) != 0) {
     return error(ErrorCode::Io, "Unable to replace saved state; primary retained");
   }
   if (observer) { if(access){access->outside([&]{observer(StateSaveStage::PrimaryRenamed);});}else{observer(StateSaveStage::PrimaryRenamed);} }
+  allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
   return sync(directory);
 }
 } // namespace
@@ -192,7 +197,7 @@ std::expected<TorrentStateFile, Error> TorrentStateStore::load(const ProfileLeas
   return error(ErrorCode::InvalidFormat, "No complete compatible torrent state or backup");
 }
 
-std::expected<void, Error> TorrentStateStore::saveInternal(TorrentStateFile& state,
+std::expected<void, Error> TorrentStateStore::saveInternal(const ProfileLease& lease, TorrentStateFile& state,
     void (*observer)(StateSaveStage), ProfileSourceAccess* access) const {
   if (state.device_ != activeDevice_ || state.inode_ != activeInode_) {
     return error(ErrorCode::UnsafePath, "Torrent state belongs to a different profile directory");
@@ -204,7 +209,7 @@ std::expected<void, Error> TorrentStateStore::saveInternal(TorrentStateFile& sta
   if (!checked) { return checked; }
   auto backupBytes = backup.serialize();
   if (!backupBytes) { return error(ErrorCode::InvalidFormat, "Unable to encode recheck-safe state backup"); }
-  auto written = replace(active_, state.hash_.hex() + ".dat", state.original_, *encoded, *backupBytes, observer, access);
+  auto written = replace(lease, active_, state.hash_.hex() + ".dat", state.original_, *encoded, *backupBytes, observer, access);
   if (!written) { return written; }
   state.original_ = std::move(*encoded);
   state.backup_ = false;
@@ -215,14 +220,15 @@ std::expected<void, Error> TorrentStateStore::save(const ProfileLease& lease, To
     void (*observer)(StateSaveStage)) const {
 
   auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
+  auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
   if(observer&&!access->observationsAllowed()){return error(ErrorCode::Unsupported,"Observed state writes require an unnested source boundary");}
   auto valid = validate(lease);
   if (!valid) { return valid; }
   if (!state.prepared_) { return error(ErrorCode::Conflict, "State ownership must be prepared before saving"); }
-  return saveInternal(state, observer, &*access);
+  return saveInternal(lease, state, observer, &*access);
 }
 
-std::expected<void, Error> TorrentStateStore::removeCachedEntry(TorrentStateFile& state) const {
+std::expected<void, Error> TorrentStateStore::removeCachedEntry(const ProfileLease& lease, TorrentStateFile& state) const {
   auto raw = readFile(active_, "cache.dat", compatibleConfigLimits().inputBytes);
   if (!raw) { return std::unexpected(raw.error()); }
   if (!*raw) { return {}; }
@@ -230,6 +236,7 @@ std::expected<void, Error> TorrentStateStore::removeCachedEntry(TorrentStateFile
   if (!cache || !cache->compressed()) {
     auto safe = regularOrMissing(active_, "cache.dat.bak");
     if (!safe) { return safe; }
+    auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return allowed;}
     if (::renameat(active_, "cache.dat", active_, "cache.dat.bak") != 0) {
       return error(ErrorCode::Io, "Cannot retain corrupt original state cache");
     }
@@ -266,13 +273,13 @@ std::expected<void, Error> TorrentStateStore::removeCachedEntry(TorrentStateFile
   }
   // Persist the authoritative cache view before dropping its entry. A crash at
   // this point still lets Java use its unchanged cache and matching state.
-  auto saved = saveInternal(state, nullptr);
+  auto saved = saveInternal(lease, state, nullptr);
   if (!saved) { return saved; }
   retained += 'e';
   if (!cache->replaceValue("state", std::move(retained))) { return error(ErrorCode::InvalidFormat, "Cannot update original state cache"); }
   auto encoded = cache->serialize();
   if (!encoded) { return error(ErrorCode::InvalidFormat, "Cannot encode original state cache"); }
-  return replace(active_, "cache.dat", *raw, *encoded, **raw, nullptr);
+  return replace(lease, active_, "cache.dat", *raw, *encoded, **raw, nullptr);
 }
 
 // Attribute-only edits share the existing resilient state/cache publication
@@ -317,6 +324,7 @@ std::expected<TorrentStateFile, Error> TorrentStateStore::loadAttributes(
 std::expected<void, Error> TorrentStateStore::saveAttributes(const ProfileLease& lease,
     TorrentStateFile& state, std::string encodedAttributes) const {
   auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
+  auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
   auto valid = validate(lease);
   if (!valid) { return valid; }
   if (!state.attributesOnly_ || state.prepared_ || state.device_ != activeDevice_ || state.inode_ != activeInode_) {
@@ -365,28 +373,29 @@ std::expected<void, Error> TorrentStateStore::saveAttributes(const ProfileLease&
   if (replacementCache) {
     // First persist the authoritative old cache view. A crash before dropping
     // that entry still leaves a matching primary. Then publish the local edit.
-    auto saved = saveInternal(state, nullptr);
+    auto saved = saveInternal(lease, state, nullptr);
     if (!saved) { return saved; }
-    saved = replace(active_, "cache.dat", state.attributeCache_, *replacementCache, *state.attributeCache_, nullptr);
+    saved = replace(lease, active_, "cache.dat", state.attributeCache_, *replacementCache, *state.attributeCache_, nullptr);
     if (!saved) { return saved; }
     state.attributeCache_ = std::move(replacementCache);
   }
   state.document_ = std::move(changed);
   state.attributesOnly_ = false; // Never silently repeat a partly published edit.
-  return saveInternal(state, nullptr);
+  return saveInternal(lease, state, nullptr);
 }
 
 #include "category_state_rebase.inc"
 
 std::expected<TorrentStateFile, Error> TorrentStateStore::beginUpdate(const ProfileLease& lease, const core::TorrentHash& hash) const {
   auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}
+  auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
   auto state = load(lease, hash);
   if (!state) { return std::unexpected(state.error()); }
-  auto prepared = removeCachedEntry(*state);
+  auto prepared = removeCachedEntry(lease, *state);
   if (!prepared) { return std::unexpected(prepared.error()); }
   prepared = recheck(state->document_);
   if (!prepared) { return std::unexpected(prepared.error()); }
-  prepared = saveInternal(*state, nullptr);
+  prepared = saveInternal(lease, *state, nullptr);
   if (!prepared) { return std::unexpected(prepared.error()); }
   state->prepared_ = true;
   return std::move(*state);

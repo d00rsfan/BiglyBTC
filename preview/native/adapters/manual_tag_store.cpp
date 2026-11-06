@@ -263,6 +263,7 @@ std::expected<ManualTagCommit,Error> ManualTagStore::apply(const ManualTagSnapsh
   const auto poison=[&]{poisoned_=true;counter_.reset();latest_.reset();};
   try {
     auto state=current();if(!state){return std::unexpected(state.error());}
+    auto allowed=requireNoPendingSubscriptionAcquisition(*lease_);if(!allowed){return std::unexpected(allowed.error());}
     if(stop.stop_requested()){return std::unexpected(cancelled());}
     if(!expected.data_||expected.data_!=latest_||expected.generation()!=generation_){return std::unexpected(conflict());}
     if(generation_==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(conflict());}
@@ -300,6 +301,7 @@ std::expected<ManualTagCommit,Error> ManualTagStore::apply(const ManualTagSnapsh
     }
     auto finalIdentity=lease_->retain();if(!finalIdentity){return std::unexpected(finalIdentity.error());}
     if(stop.stop_requested()){return std::unexpected(cancelled());}
+    allowed=requireNoPendingSubscriptionAcquisition(*lease_);if(!allowed){return std::unexpected(allowed.error());}
     attempted=true;
     if(loaded->file){
       auto saved=loaded->file->save(*lease_);if(!saved){poison();return std::unexpected(saved.error());}

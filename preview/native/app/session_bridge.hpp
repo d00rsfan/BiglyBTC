@@ -40,7 +40,7 @@
 class QTimer;
 
 namespace biglybtc::engine { struct ApplicationPeerObservation; }
-namespace biglybtc::search { class RssHttpFetch; class SavedSubscriptionService; }
+namespace biglybtc::search { class RssHttpFetch; class SavedSubscriptionService; class SubscriptionMetainfoFetch; }
 namespace biglybtc::storage { class ProfileLease; class CountryProvider; class SchedulerService; }
 
 namespace biglybtc::app {
@@ -55,7 +55,8 @@ public:
   using SchedulerFactory = std::function<std::unique_ptr<storage::SchedulerService>(const storage::ProfileLease&)>;
   using RssFetchFactory=std::function<std::unique_ptr<search::RssHttpFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::RssSourceKey&,std::stop_token)>;
   using SubscriptionFetchFactory=std::function<std::unique_ptr<search::RssHttpFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::SubscriptionKey&,std::stop_token)>;
-  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {}, RssFetchFactory = {}, SubscriptionFetchFactory = {});
+  using SubscriptionAcquisitionFactory=std::function<std::unique_ptr<search::SubscriptionMetainfoFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::SubscriptionKey&,const QByteArray&,std::stop_token)>;
+  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {}, RssFetchFactory = {}, SubscriptionFetchFactory = {}, SubscriptionAcquisitionFactory = {});
   ~SessionBridge() override;
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool openNormal(std::filesystem::path profile);
@@ -192,6 +193,11 @@ private:
   void closeFailed(QString);
   search::SavedSubscriptionService& ensureSubscriptions();
   void pollSubscriptions();
+  void pollSubscriptionAcquisition();
+  void closeWorkerSubscriptionAcquisition();
+  void finishWorkerSubscriptionAcquisition(QString failure = {});
+  static std::expected<bool,storage::Error> recoverSubscriptionAcquisition(storage::ProfileLease&,const std::filesystem::path&);
+  static std::expected<bool,storage::Error> recoverTorrentIntakeAfterSubscription(storage::ProfileLease&,const std::filesystem::path&);
   void closeWorkerSubscriptions();
   void stopSubscriptionReceiver()noexcept;
   void subscriptionsDispatchInterrupted();
@@ -251,6 +257,7 @@ private:
   SchedulerFactory schedulerFactory_;
   RssFetchFactory rssFetchFactory_;
   SubscriptionFetchFactory subscriptionFetchFactory_;
+  SubscriptionAcquisitionFactory subscriptionAcquisitionFactory_;
   std::optional<ui::SubscriptionCatalogKey> guiSubscriptionCatalog_;
   std::optional<ui::SubscriptionCommand> guiSubscription_;
   std::optional<ui::SubscriptionCommandKey> startingSubscription_;

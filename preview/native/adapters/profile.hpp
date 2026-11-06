@@ -97,6 +97,10 @@ private:
   std::shared_ptr<ProfileSourceState> ownership_;
 };
 
+// Read-only fixed-marker refusal for cooperating mutation entrypoints. Call
+// again inside the actual mutation boundary; success grants no mutation rights.
+std::expected<void, Error> requireNoPendingSubscriptionAcquisition(const ProfileLease&);
+
 enum class RecoverySource { Primary, Backup, Saving };
 enum class SaveStage { TemporarySynced, BackupRenamed, PrimaryRenamed };
 
@@ -109,6 +113,8 @@ class ConfigFile final {
 public:
   static std::expected<ConfigFile, Error> load(const ProfileLease& lease,
       std::string filename, core::Limits limits = compatibleConfigLimits());
+  // Generic downloads.config writes refuse any pending subscription-acquisition
+  // marker/candidate. The acquisition owner publishes its frozen plan privately.
   // First publication only: all three fixed candidate pathnames must be absent.
   // Existing regular/symlink/directory/other entries are Conflict, never followed,
   // opened, repaired or removed. Validate/allocate the full returned Primary
@@ -127,6 +133,8 @@ public:
   const core::Document& document() const { return document_; }
   RecoverySource recoverySource() const { return source_; }
   // The optional observer is for deterministic crash/fault tests and diagnostics.
+  // Inventory publication rechecks the acquisition marker after observer yields;
+  // a late marker leaves any already-written owned recovery candidates intact.
   std::expected<void, Error> save(const ProfileLease& lease,
       void (*observer)(SaveStage) = nullptr);
 private:

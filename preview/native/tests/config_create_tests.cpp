@@ -265,6 +265,19 @@ void candidate(Area& area, const std::filesystem::path& path, int kind) {
   else if (kind == 4) { area.symlink(path, area.root / "sentinel"); }
   else { area.track(path); require(::mkfifo(path.c_str(), 0600) == 0, "unable to create owned candidate FIFO"); }
 }
+thread_local Area* acquisitionMarkerArea = nullptr;
+thread_local storage::SaveStage acquisitionMarkerStage = storage::SaveStage::TemporarySynced;
+void introduceAcquisitionMarker(storage::SaveStage stage) {
+  if (acquisitionMarkerArea && stage == acquisitionMarkerStage) {
+    acquisitionMarkerArea->write(acquisitionMarkerArea->profile / "BiglyBTC.subscription-acquire", "owned pending attempt");
+  }
+}
+struct AcquisitionMarkerObserver {
+  explicit AcquisitionMarkerObserver(Area& area, storage::SaveStage stage) {
+    acquisitionMarkerArea = &area; acquisitionMarkerStage = stage;
+  }
+  ~AcquisitionMarkerObserver() { acquisitionMarkerArea = nullptr; }
+};
 enum class Action { Record, IntroducePrimary, IntroduceBackup, ReplaceSaving, EditSaving, TruncateSaving, SymlinkSaving, LinkSaving, FinalSyncFailure };
 struct State {
   Area* area;
@@ -339,10 +352,13 @@ std::string atSize(std::size_t total) {
 }
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
   std::string active; std::size_t cases = 0;
   try {
+    const bool acquisitionOnly = argc == 2 && std::string_view(argv[1]) == "--acquisition-pending-guards";
+    require(argc == 1 || acquisitionOnly, "Unknown test selection");
     const auto run = [&](std::string name, auto body) { active = std::move(name); body(); ++cases; };
+    if (!acquisitionOnly) {
     run("absent candidates create pristine owned mode0600 primary without backup", [&] {
       Area area; tracks(area); area.hold(); auto encoded = raw(); const auto original = encoded;
       area.write(area.root / "sentinel", "untouched unrelated file"); const auto sentinel = stamp(area.root / "sentinel");
@@ -487,7 +503,56 @@ int main() {
       auto loaded = storage::ConfigFile::load(area.held(), "tables.config", core::Limits{});
       require(loaded && loaded->recoverySource() == storage::RecoverySource::Primary && loaded->document().serialize() == raw(), "committed primary not readable after reported sync error");
     });
-    std::cout << "PASS " << cases << " create-missing config cases; " << assertions << " assertions\n";
+    }
+    for (const auto* suffix : {"", ".saving", ".bak"}) {
+      for (int kind = 0; kind < 6; ++kind) {
+        for (const bool existing : {false, true}) {
+          run(std::string("pending acquisition blocks inventory ") + (existing ? "save" : "create") + suffix + "/" + std::to_string(kind), [&] {
+            Area area; tracks(area, "downloads.config"); area.write(area.root / "sentinel", "unchanged unrelated file");
+            if (existing) { area.write(area.profile / "downloads.config", raw()); }
+            area.hold(); auto loaded = storage::ConfigFile::load(area.held(), "downloads.config");
+            if (existing) { require(loaded.has_value(), "inventory load failed"); require(loaded->document().setInteger("port", 8), "inventory edit failed"); }
+            const auto marker = area.profile / (std::string("BiglyBTC.subscription-acquire") + suffix); candidate(area, marker, kind);
+            const auto before = area.observe("downloads.config");
+            if (existing) { error(loaded->save(area.held()), storage::ErrorCode::Conflict); }
+            else { error(storage::ConfigFile::createMissing(area.held(), "downloads.config", raw()), storage::ErrorCode::Conflict); }
+            unchanged(before);
+            require(std::filesystem::remove(marker), "could not remove owned pending fixture");
+            if (existing) { require(loaded->save(area.held()).has_value(), "resolved inventory save failed"); }
+            else { require(storage::ConfigFile::createMissing(area.held(), "downloads.config", raw()).has_value(), "resolved inventory creation failed"); }
+          });
+        }
+      }
+    }
+    run("pending acquisition does not block unrelated configuration", [&] {
+      Area area; tracks(area); area.write(area.profile / "BiglyBTC.subscription-acquire", "pending"); area.hold();
+      const auto marker = stamp(area.profile / "BiglyBTC.subscription-acquire");
+      auto file = storage::ConfigFile::createMissing(area.held(), "tables.config", raw()); require(file.has_value(), "unrelated creation blocked");
+      require(file->document().setInteger("port", 8) && file->save(area.held()).has_value(), "unrelated save blocked");
+      require(same(marker, stamp(area.profile / "BiglyBTC.subscription-acquire")), "unrelated write changed pending intent");
+    });
+    for (const bool existing : {false, true}) {
+      run(existing ? "late pending marker stops inventory save before backup" : "late pending marker stops first inventory publication", [&] {
+        Area area; tracks(area, "downloads.config"); if (existing) { area.write(area.profile / "downloads.config", raw()); } area.hold();
+        auto loaded = storage::ConfigFile::load(area.held(), "downloads.config");
+        if (existing) { require(loaded.has_value() && loaded->document().setInteger("port", 8), "inventory edit failed"); }
+        { AcquisitionMarkerObserver observed(area, storage::SaveStage::TemporarySynced);
+          if (existing) { error(loaded->save(area.held(), introduceAcquisitionMarker), storage::ErrorCode::Conflict); }
+          else { error(storage::ConfigFile::createMissing(area.held(), "downloads.config", raw(), storage::compatibleConfigLimits(), introduceAcquisitionMarker), storage::ErrorCode::Conflict); }
+        }
+        require(bool(stamp(area.profile / "downloads.config")) == existing, "late marker changed primary presence");
+        if (existing) { require(readBytes(area.profile / "downloads.config") == raw(), "late marker replaced primary"); }
+        require(!stamp(area.profile / "downloads.config.bak") && stamp(area.profile / "downloads.config.saving"), "late marker lost owned saving or invented backup");
+      });
+    }
+    run("late marker retains already moved inventory backup", [&] {
+      Area area; tracks(area, "downloads.config"); area.write(area.profile / "downloads.config", raw()); area.hold();
+      auto loaded = storage::ConfigFile::load(area.held(), "downloads.config"); require(loaded && loaded->document().setInteger("port", 8), "inventory edit failed");
+      { AcquisitionMarkerObserver observed(area, storage::SaveStage::BackupRenamed); error(loaded->save(area.held(), introduceAcquisitionMarker), storage::ErrorCode::Conflict); }
+      require(!stamp(area.profile / "downloads.config") && readBytes(area.profile / "downloads.config.bak") == raw()
+          && readBytes(area.profile / "downloads.config.saving") == changed(raw()), "late marker lost actual recoverable inventory images");
+    });
+    std::cout << "PASS " << cases << (acquisitionOnly ? " acquisition inventory guard cases; " : " create-missing config cases; ") << assertions << " assertions\n";
     return 0;
   } catch (const std::exception& failure) {
     std::cerr << "FAIL " << active << ": " << failure.what() << '\n'; return 1;

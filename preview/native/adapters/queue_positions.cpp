@@ -53,6 +53,7 @@ std::expected<LibraryPositionNormalization,Error> normalizeLibraryPositions(cons
     std::span<const LibraryPositionObservation> observations,std::span<const LibraryGroupTransition> transitions,bool newSeedsTop,bool* saveAttempted){
   if(saveAttempted){*saveAttempted=false;}
   try{
+    auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
     auto file=ConfigFile::load(lease,"downloads.config");if(!file){return std::unexpected(file.error());}
     if(file->recoverySource()==RecoverySource::Saving){return fail(ErrorCode::Conflict,"Resolve inventory recovery before queue normalization");}
     const auto saved=core::readLibrary(file->document());if(!saved){return fail(ErrorCode::InvalidFormat,"Invalid queue normalization inventory");}
@@ -145,6 +146,7 @@ std::expected<LibraryPositionNormalization,Error> normalizeLibraryPositions(cons
     const auto checked=core::readLibrary(*reparsed);
     if(!checked||checked->downloads.size()!=inputs.size()){return fail(ErrorCode::InvalidFormat,"Normalized inventory failed validation");}
     for(std::size_t i=0;i<checked->downloads.size();++i){if(checked->downloads[i].hash!=saved->downloads[i].hash||checked->downloads[i].position!=(*normalized)[i]){return fail(ErrorCode::InvalidFormat,"Normalized position roundtrip failed");}}
+    allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
     if(saveAttempted){*saveAttempted=true;}
     const auto committed=file->save(lease);if(!committed){return std::unexpected(committed.error());}result.changed=true;return result;
   }catch(const std::bad_alloc&){return fail(ErrorCode::Io,"Insufficient memory normalizing queue positions; inspect publication before retry");}

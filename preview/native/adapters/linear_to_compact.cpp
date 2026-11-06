@@ -534,27 +534,29 @@ void validateIntent(const ProfileLease& lease,const Plan& p){
   require(actual==required,ErrorCode::InvalidFormat,"Compaction journal omitted an ownership/source guard");
 }
 OriginalCompactionResult execute(const ProfileLease& lease,JournalFile& journal,bool recovered,Observer observer){
+  done(requireNoPendingSubscriptionAcquisition(lease));
+  const auto notify=[&](OriginalCompactionStage stage){observe(observer,stage);done(requireNoPendingSubscriptionAcquisition(lease));};
   const auto& p=journal.plan;require(!hasPendingFileOperation(lease),ErrorCode::Conflict,"File-operation recovery must finish before compaction replay");identity(lease,p);verifyGuards(p);verifyEdits(p.controls);verifyEdits(p.state);verifyEdits(p.inventory);validateIntent(lease,p);
   const auto source=inspect(p.source);require(source.has_value()==p.present,ErrorCode::Conflict,"Compaction payload presence changed");
   if(p.present){require(source->st_dev==p.sourceDevice&&source->st_ino==p.sourceInode&&source->st_nlink==1
       && (source->st_size==static_cast<off_t>(p.oldLength)||source->st_size==static_cast<off_t>(p.packed())),ErrorCode::Conflict,"Compaction payload identity/length changed");
     auto fd=openPayload(p.source,*source,true);require(rangeHash(fd.get(),0,p.prefix)==p.prefixHash,ErrorCode::Conflict,"Compaction preserved prefix changed");
-    auto md=hash();stream(journal.fd.get(),journal.bodyOffset,p.tail,fd.get(),p.prefix,md);static_cast<void>(finish(md));
+    done(requireNoPendingSubscriptionAcquisition(lease));auto md=hash();stream(journal.fd.get(),journal.bodyOffset,p.tail,fd.get(),p.prefix,md);static_cast<void>(finish(md));
     require(::ftruncate(fd.get(),static_cast<off_t>(p.packed()))==0,ErrorCode::Io,"Cannot truncate compacted payload");sync(fd.get());
     const auto now=inspect(p.source);struct stat held{};require(now&&::fstat(fd.get(),&held)==0&&unchanged(held,*now)&&now->st_dev==p.sourceDevice&&now->st_ino==p.sourceInode&&now->st_size==static_cast<off_t>(p.packed()),ErrorCode::Conflict,"Compaction payload name changed during pack");
     require(rangeHash(fd.get(),0,p.prefix)==p.prefixHash&&rangeHash(fd.get(),p.prefix,p.tail)==rangeHash(journal.fd.get(),journal.bodyOffset,p.tail),ErrorCode::Io,"Compacted payload does not match durable preserved bytes");
   }
   struct stat journalNow{};const auto journalName=inspect(p.profile/Journal);
   require(::fstat(journal.fd.get(),&journalNow)==0&&journalName&&unchanged(journal.stamp,journalNow)&&unchanged(journal.stamp,*journalName),ErrorCode::Conflict,"Compaction journal changed during pack");
-  observe(observer,OriginalCompactionStage::PayloadSynced);
+  notify(OriginalCompactionStage::PayloadSynced);
   // Revalidate all frozen authorities again before any original-document write.
   verifyGuards(p);verifyEdits(p.controls);verifyEdits(p.state);verifyEdits(p.inventory);
   if(p.present){static_cast<void>(directory(p.controls[0].path.parent_path(),true));}
-  publish(p.controls);observe(observer,OriginalCompactionStage::ControlPublished);
-  publish(p.state);observe(observer,OriginalCompactionStage::StatePublished);
-  publish(p.inventory);observe(observer,OriginalCompactionStage::InventoryPublished);
+  publish(p.controls);notify(OriginalCompactionStage::ControlPublished);
+  publish(p.state);notify(OriginalCompactionStage::StatePublished);
+  publish(p.inventory);notify(OriginalCompactionStage::InventoryPublished);
   const auto named=inspect(p.profile/Journal);struct stat held{};require(named&&::fstat(journal.fd.get(),&held)==0&&unchanged(held,journal.stamp)&&unchanged(*named,journal.stamp),ErrorCode::Conflict,"Compaction journal changed before retirement");
-  erase(p.profile/Journal,journal.stamp);observe(observer,OriginalCompactionStage::Completed);
+  erase(p.profile/Journal,journal.stamp);notify(OriginalCompactionStage::Completed);
   return {p.hash,p.index,p.oldLength,p.packed(),recovered};
 }
 } // namespace
@@ -563,13 +565,13 @@ bool hasPendingOriginalCompaction(const ProfileLease& lease) noexcept {
   try{const auto root=fs::path(fileop::profilePath(lease));return fileop::inspect(root/Journal).has_value()||fileop::inspect(root/Saving).has_value();}catch(...){return true;}
 }
 std::expected<OriginalCompactionResult,Error> compactOriginalFile(const ProfileLease& lease,const core::TorrentHash& hash,std::size_t index,std::stop_token stop,Observer observer){
-  return guarded([&]()->std::expected<OriginalCompactionResult,Error>{auto p=prepare(lease,hash,index,stop);fileop::Fd fd(-1);
+  return guarded([&]()->std::expected<OriginalCompactionResult,Error>{done(requireNoPendingSubscriptionAcquisition(lease));auto p=prepare(lease,hash,index,stop);fileop::Fd fd(-1);
     if(p.present){const auto actual=fileop::inspect(p.source);require(actual.has_value(),ErrorCode::Missing,"Compaction payload disappeared");fd=openPayload(p.source,*actual,false);}
-    verifyGuards(p);verifyEdits(p.state);verifyEdits(p.inventory);saveJournal(lease,p,fd.get(),stop);
+    verifyGuards(p);verifyEdits(p.state);verifyEdits(p.inventory);done(requireNoPendingSubscriptionAcquisition(lease));saveJournal(lease,p,fd.get(),stop);
     observe(observer,OriginalCompactionStage::JournalSynced);auto journal=openJournal(lease);return execute(lease,journal,false,observer);});
 }
 std::expected<std::optional<OriginalCompactionResult>,Error> recoverOriginalCompaction(const ProfileLease& lease,Observer observer){
-  return guarded([&]()->std::expected<std::optional<OriginalCompactionResult>,Error>{const auto root=fs::path(fileop::profilePath(lease));
+  return guarded([&]()->std::expected<std::optional<OriginalCompactionResult>,Error>{done(requireNoPendingSubscriptionAcquisition(lease));const auto root=fs::path(fileop::profilePath(lease));
     if(!fileop::inspect(root/Journal)){require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Interrupted unpublished compaction journal requires explicit review; no payload packing was authorized");return std::nullopt;}
     require(!fileop::inspect(root/Saving),ErrorCode::Conflict,"Unexpected second compaction journal");auto journal=openJournal(lease);return std::optional<OriginalCompactionResult>(execute(lease,journal,true,observer));});
 }

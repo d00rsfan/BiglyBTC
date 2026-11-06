@@ -14,6 +14,9 @@
 #include <optional>
 #include <memory>
 #include <stop_token>
+#include <string_view>
+
+namespace biglybtc::app { class SavedSubscriptionAcquisition; }
 
 namespace biglybtc::storage {
 
@@ -53,6 +56,7 @@ private:
   struct Data;
   std::shared_ptr<const Data> data_;
   explicit TorrentIntakeMetadata(std::shared_ptr<const Data>);
+  friend class PreparedStoppedPublicIntake;
   friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token,std::string,bool);
   friend std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
       const TorrentIntakeMetadata&, const std::filesystem::path&, bool, std::span<const compat::FilePolicy>,
@@ -61,6 +65,43 @@ private:
 std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
     const std::filesystem::path&, std::stop_token = {},
     std::string filenameConversions=std::string(compat::OriginalDefaultFilenameConversions),bool decoderShowAll=false);
+// Storage-built frozen recipe for the one concrete acquisition coordinator.
+// It is never constructible from a public hash/receipt/description. Ordinary
+// imports and recovery refuse its owner marker or its marked journal section.
+class PreparedStoppedPublicIntake final {
+public:
+  PreparedStoppedPublicIntake(PreparedStoppedPublicIntake&&)noexcept;
+  PreparedStoppedPublicIntake& operator=(PreparedStoppedPublicIntake&&)noexcept;
+  ~PreparedStoppedPublicIntake();
+  PreparedStoppedPublicIntake(const PreparedStoppedPublicIntake&)=delete;
+  PreparedStoppedPublicIntake& operator=(const PreparedStoppedPublicIntake&)=delete;
+private:
+  friend class biglybtc::app::SavedSubscriptionAcquisition;
+  enum class State { Before, Pending, Committed };
+  struct Images {
+    core::TorrentHash hash;
+    std::optional<std::string_view> beforeInventory,beforeInventoryBackup;
+    std::string_view afterInventory,afterState,afterArchive;
+  };
+  struct Data;std::unique_ptr<Data> data_;
+  explicit PreparedStoppedPublicIntake(std::unique_ptr<Data>)noexcept;
+  static std::expected<PreparedStoppedPublicIntake,Error> prepare(ProfileLease&,
+      const TorrentIntakeMetadata&,const std::filesystem::path& destination,
+      std::optional<std::int64_t> derivedScrapeCache,std::stop_token={});
+  static std::expected<PreparedStoppedPublicIntake,Error> restore(ProfileLease&,
+      std::string frozenJournal);
+  std::string_view frozenJournal()const noexcept;
+  const Images& images()const noexcept;
+  std::expected<State,Error> inspect(ProfileLease&,std::string_view exactOwnerIntent)const;
+  // Existing commit point: cancellation before the intake journal means no
+  // effects. Pending recovery completes only this exact stopped recipe; a
+  // committed recipe is idempotent. Only prepare-here plus fresh Before may
+  // issue the existing optional auxiliary history receipt; recovery never does.
+  std::expected<core::TorrentHash,Error> commit(ProfileLease&,
+      std::string_view exactOwnerIntent,std::stop_token={},
+      void(*observer)(TorrentIntakeStage)=nullptr,IntakeHistoryOutcome* history=nullptr);
+};
+
 // Worker previews supply readOriginalFilenameContext under the same sole
 // lease. Both sealed settings are rechecked at import; these arguments grant no
 // filesystem authority and never changes raw metadata/full torrent identities.

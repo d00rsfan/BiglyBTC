@@ -183,6 +183,7 @@ std::expected<LocalRatingSnapshot, Error> readLocalRating(const ProfileLease& le
 std::expected<LocalRatingSaved, Error> saveLocalRating(const ProfileLease& lease, const core::TorrentHash& hash,
     const std::array<std::uint8_t,32>& expected, std::int32_t score, std::u16string comment) {
   try {
+    auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
     if (score > 5 || comment.size() > rating::maximumLocalTextUnits) { return bad(ErrorCode::InvalidFormat,"Rating or comment exceeds supported limits"); }
     auto target = savedTarget(lease,hash); if (!target) { return std::unexpected(target.error()); }
     auto store = TorrentStateStore::open(lease); if (!store) { return std::unexpected(store.error()); }
@@ -207,6 +208,7 @@ std::expected<LocalRatingSaved, Error> saveLocalRating(const ProfileLease& lease
       }
     }
     auto after = snapshot(*state,*attrs,*nick); if (!after) { return std::unexpected(after.error()); }
+    allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
     auto saved = store->saveAttributes(lease,*state,attrs->serialize());
     if (!saved) { return std::unexpected(saved.error()); }
     result.snapshot = std::move(*after);

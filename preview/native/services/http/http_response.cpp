@@ -49,7 +49,7 @@ std::optional<QByteArray> gunzip(const QByteArray& encoded,qsizetype bodyLimit){
 Response decodeResponse(const QByteArray& wire,bool eof,ResponseProfile profile){
   constexpr qsizetype HeaderLimit=16384;
   const qsizetype BodyLimit=profile==ResponseProfile::Tracker?128*1024:
-      profile==ResponseProfile::RssDocument?4*1024*1024:0;
+      (profile==ResponseProfile::RssDocument||profile==ResponseProfile::TorrentMetainfo)?4*1024*1024:0;
   if(!BodyLimit){return {false,true,{}};}
   const auto split=wire.indexOf("\r\n\r\n");if(split<0){return {false,wire.size()>HeaderLimit||eof,{}};}
   if(split>HeaderLimit){return {false,true,{}};}const auto lines=wire.left(split).split('\n');

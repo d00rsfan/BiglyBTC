@@ -3,6 +3,7 @@
 #include <charconv>
 #include <fstream>
 #include <iostream>
+#include <sys/stat.h>
 #include <unistd.h>
 
 using namespace biglybtc;
@@ -11,7 +12,33 @@ using namespace biglybtc::storage;
 namespace {
 StateSaveStage crashStage = StateSaveStage::TemporarySynced;
 bool crash = false;
-void observer(StateSaveStage stage) { if (crash && stage == crashStage) { ::_exit(66); } }
+bool pendingAtStage = false, pendingCreated = false;
+struct stat pendingIdentity{};
+std::filesystem::path pendingMarker;
+constexpr std::string_view PendingBytes = "unknown acquisition fixture; preserve exactly\n";
+bool putPending(const std::filesystem::path& marker) {
+  std::ofstream file(marker, std::ios::binary); file << PendingBytes; file.flush(); return bool(file);
+}
+bool sameStamp(const std::filesystem::path& path, const struct stat& before) {
+  struct stat after{};
+  return ::lstat(path.c_str(), &after) == 0 && before.st_dev == after.st_dev && before.st_ino == after.st_ino
+      && before.st_mode == after.st_mode && before.st_nlink == after.st_nlink && before.st_size == after.st_size
+      && before.st_mtim.tv_sec == after.st_mtim.tv_sec && before.st_mtim.tv_nsec == after.st_mtim.tv_nsec
+      && before.st_ctim.tv_sec == after.st_ctim.tv_sec && before.st_ctim.tv_nsec == after.st_ctim.tv_nsec;
+}
+template<class F> int deniedStateWrite(const std::filesystem::path& profile, const core::TorrentHash& hash, F&& write) {
+  const auto marker=profile/"BiglyBTC.subscription-acquire", primary=profile/"active"/(hash.hex()+".dat"), backup=std::filesystem::path(primary.string()+".bak");
+  if (!putPending(marker)) { return 4; }
+  struct stat oldMarker{}, oldPrimary{}, oldBackup{};
+  if (::lstat(marker.c_str(), &oldMarker) || ::lstat(primary.c_str(), &oldPrimary) || ::lstat(backup.c_str(), &oldBackup)) { return 4; }
+  const auto blocked=write();
+  return !blocked && blocked.error().code==ErrorCode::Conflict && sameStamp(marker,oldMarker)
+      && sameStamp(primary,oldPrimary) && sameStamp(backup,oldBackup) ? 0 : 4;
+}
+void observer(StateSaveStage stage) {
+  if (pendingAtStage && stage == crashStage) { pendingCreated=putPending(pendingMarker) && ::lstat(pendingMarker.c_str(),&pendingIdentity)==0; }
+  if (crash && stage == crashStage) { ::_exit(66); }
+}
 int failed(const Error& value) {
   std::cerr << value.message << '\n';
   return value.code == ErrorCode::Busy ? 3 : 2;
@@ -43,6 +70,14 @@ int main(int argc, char** argv) {
     const auto blocked = state->replaceSection("attributes", "de");
     return !blocked && blocked.error().code == ErrorCode::Conflict ? 0 : 4;
   }
+  if (command == "acquisition-blocked-begin") {
+    const auto blocked=store->beginUpdate(*lease,*hash);
+    return !blocked && blocked.error().code==ErrorCode::Conflict ? 0 : 4;
+  }
+  if (command == "acquisition-attributes") {
+    auto attributes=store->loadAttributes(*lease,*hash);if(!attributes){return failed(attributes.error());}
+    return deniedStateWrite(argv[1],*hash,[&]{return store->saveAttributes(*lease,*attributes,"d14:native.fixturei7ee");});
+  }
   auto state = store->beginUpdate(*lease, *hash);
   if (!state) { return failed(state.error()); }
   if (command == "begin") { return 0; }
@@ -63,7 +98,8 @@ int main(int argc, char** argv) {
     const auto blocked = otherStore->save(*other, *state);
     return !blocked && blocked.error().code == ErrorCode::UnsafePath ? 0 : 4;
   }
-  if (command != "edit" || argc != 5) { return 1; }
+  const bool acquisitionSave=command=="acquisition-save";
+  if ((!acquisitionSave && command != "edit") || argc != (acquisitionSave ? 4 : 5)) { return 1; }
   const auto* original = state->document().find("attributes");
   if (!original) { return 4; }
   auto encoded = core::encodeValue(*original, compatibleConfigLimits());
@@ -72,10 +108,17 @@ int main(int argc, char** argv) {
   if (!attributes || !attributes->replaceValue("native.fixture", "i7e")) { return 4; }
   auto edited = state->replaceSection("attributes", attributes->serialize());
   if (!edited) { return failed(edited.error()); }
+  if (acquisitionSave) {
+    return deniedStateWrite(argv[1],*hash,[&]{return store->save(*lease,*state);});
+  }
   const std::string_view stage(argv[4]);
-  crash = stage != "normal";
-  crashStage = stage == "temp" ? StateSaveStage::TemporarySynced
-      : stage == "backup" ? StateSaveStage::BackupSynced : StateSaveStage::PrimaryRenamed;
+  pendingAtStage=stage.starts_with("acquisition-");
+  pendingMarker=std::filesystem::path(argv[1])/"BiglyBTC.subscription-acquire";
+  const auto phase=pendingAtStage ? stage.substr(12) : stage;
+  crash = !pendingAtStage && stage != "normal";
+  crashStage = phase == "temp" ? StateSaveStage::TemporarySynced
+      : phase == "backup" ? StateSaveStage::BackupSynced : StateSaveStage::PrimaryRenamed;
   const auto saved = store->save(*lease, *state, observer);
+  if (pendingAtStage) { return pendingCreated && sameStamp(pendingMarker,pendingIdentity) && !saved && saved.error().code==ErrorCode::Conflict ? 0 : 4; }
   return saved ? 0 : failed(saved.error());
 }

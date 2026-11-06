@@ -27,10 +27,11 @@ signals:
   void cancelRequested(biglybtc::ui::SubscriptionCommandKey);
 private:
   void updateControls();void request(SubscriptionAction);void cancel();
+  std::optional<QByteArray> acquisitionSelection()const;
   quint64 session_=0,page_=0,generation_=0,revision_=0;
-  bool available_=true,preview_=true,normal_=false,updating_=false,cancelling_=false;
+  bool available_=true,preview_=true,normal_=false,updating_=false,cancelling_=false,choosingDestination_=false;
   std::vector<SubscriptionChoice> choices_;std::optional<SubscriptionCatalogKey> catalogPending_;std::optional<SubscriptionCommand> pending_;
-  QComboBox* choicesBox_=nullptr;QPushButton* refresh_=nullptr;QPushButton* check_=nullptr;QPushButton* cancel_=nullptr;QPushButton* read_=nullptr;QPushButton* unread_=nullptr;QPushButton* erase_=nullptr;
+  QComboBox* choicesBox_=nullptr;QPushButton* refresh_=nullptr;QPushButton* check_=nullptr;QPushButton* cancel_=nullptr;QPushButton* read_=nullptr;QPushButton* unread_=nullptr;QPushButton* erase_=nullptr;QPushButton* acquire_=nullptr;
   QLabel* status_=nullptr;QTableWidget* table_=nullptr;
 };
 }

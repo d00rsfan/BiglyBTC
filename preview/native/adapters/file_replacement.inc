@@ -12,14 +12,15 @@ void validatePreimage(Plan& p){
   preimageDirectoryIdentity(p);const auto& f=p.files.front();const auto path=p.replacement->root/"data";const auto now=inspect(path);
   require(now&&f.destination&&identity(*now,*f.destination)&&now->st_nlink==1&&now->st_size==f.destination->st_size&&p.payloadDigests.digest(path,*now)==p.replacement->sha256,ErrorCode::Conflict,"Retained destination preimage changed; source is not discarded");
 }
-void preserveDestination(Plan& p,void(*observer)(FileOperationStage)){
-  auto& r=*p.replacement;const auto& f=p.files.front();targetIdentity(p);
+void preserveDestination(const ProfileLease& lease,Plan& p,void(*observer)(FileOperationStage)){
+  acquisitionAvailable(lease);auto& r=*p.replacement;const auto& f=p.files.front();targetIdentity(p);
   if(!r.directoryInode){
     // Do not adopt even an apparently empty directory created by somebody else.
     auto parent=directory(r.root.parent_path());require(::mkdirat(parent.get(),r.root.filename().c_str(),0700)==0,ErrorCode::Conflict,"Cannot exclusively create reviewed preimage directory");sync(parent.get());
     auto fd=directory(r.root);struct stat created{};require(::fstat(fd.get(),&created)==0&&created.st_uid==::geteuid()&&(created.st_mode&0077)==0,ErrorCode::UnsafePath,"Unsafe preimage directory");
     r.directoryDevice=created.st_dev;r.directoryInode=created.st_ino;saveJournal(p);
     if(observer) observer(FileOperationStage::PreimageDirectorySealed);
+    acquisitionAvailable(lease);
   }
   preimageDirectoryIdentity(p);const auto path=r.root/"data";
   const auto source=inspect(f.view.source);const auto destination=inspect(f.view.destination);
@@ -28,6 +29,6 @@ void preserveDestination(Plan& p,void(*observer)(FileOperationStage)){
   if(inspect(path)){validatePreimage(p);return;}
   const auto prior=inspect(f.view.destination);require(prior&&f.destination&&unchanged(*prior,*f.destination)&&p.payloadDigests.digest(f.view.destination,*prior)==r.sha256,ErrorCode::Conflict,"Prior destination is not the reviewed preimage");
   auto from=directory(f.view.destination.parent_path());auto to=directory(r.root);
-  require(::syscall(SYS_renameat2,from.get(),f.view.destination.filename().c_str(),to.get(),"data",RENAME_NOREPLACE)==0,ErrorCode::Conflict,"Cannot preserve exact prior destination without overwrite");sync(to.get());sync(from.get());
-  validatePreimage(p);if(observer) observer(FileOperationStage::PreimagePreserved);
+  acquisitionAvailable(lease);require(::syscall(SYS_renameat2,from.get(),f.view.destination.filename().c_str(),to.get(),"data",RENAME_NOREPLACE)==0,ErrorCode::Conflict,"Cannot preserve exact prior destination without overwrite");sync(to.get());sync(from.get());
+  validatePreimage(p);if(observer) observer(FileOperationStage::PreimagePreserved);acquisitionAvailable(lease);
 }

@@ -20,6 +20,7 @@ def encode(value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--driver", type=pathlib.Path, required=True)
+    parser.add_argument("--acquisition-pending-guards", action="store_true")
     args = parser.parse_args()
     driver = args.driver.resolve(strict=True)
     # Same deterministic info/resume shape as existing local_rating_tests.cpp.
@@ -52,6 +53,44 @@ def main():
             assert encode(info) in prepared and encode(b"untouched") in prepared
             assert prepared.count(b"14:native.fixturei2e") == 1
             return profile, path, prepared
+
+        if args.acquisition_pending_guards:
+            marker_bytes = b"unknown acquisition fixture; preserve exactly\n"
+            cases = ["normal", "begin", "save", "attributes", "temp", "backup", "primary"]
+            for case in cases:
+                profile, path, prepared = fresh("acquisition-" + case)
+                marker = profile / "BiglyBTC.subscription-acquire"
+                before_files = {p.name: p.read_bytes() for p in (profile / "active").iterdir()}
+                expected_after = prepared.replace(b"14:native.fixturei2e", b"14:native.fixturei7e")
+                if case == "begin":
+                    marker.write_bytes(marker_bytes)
+                    before_marker = marker.stat()
+                    run(profile, "acquisition-blocked-begin")
+                    after_marker = marker.stat()
+                    assert (before_marker.st_dev, before_marker.st_ino, before_marker.st_mtime_ns, before_marker.st_ctime_ns) == (after_marker.st_dev, after_marker.st_ino, after_marker.st_mtime_ns, after_marker.st_ctime_ns)
+                elif case in ("save", "attributes"):
+                    run(profile, "acquisition-" + case)
+                else:
+                    run(profile, "edit", "normal" if case == "normal" else "acquisition-" + case)
+                if case in ("begin", "save", "attributes"):
+                    assert {p.name: p.read_bytes() for p in (profile / "active").iterdir()} == before_files
+                else:
+                    assert path.read_bytes() == (expected_after if case in ("normal", "primary") else prepared)
+                    backup = path.with_name(path.name + ".bak")
+                    assert backup.read_bytes() == (expected_after if case in ("normal", "backup", "primary") else prepared)
+                    saving = path.with_name(path.name + ".saving")
+                    assert saving.exists() == (case in ("temp", "backup"))
+                    if saving.exists():
+                        assert saving.read_bytes() == expected_after
+                    assert not path.with_name(path.name + ".bak.saving").exists()
+                    assert not (profile / "active" / "cache.dat").exists()
+                assert marker.exists() == (case != "normal")
+                if marker.exists():
+                    assert marker.read_bytes() == marker_bytes
+                assert not (profile / "BiglyBTC.subscription-acquire.saving").exists()
+                assert not (profile / "BiglyBTC.subscription-acquire.bak").exists()
+            print("PASS acquisition pending state writer guards " + json.dumps({"cases": 7, "driver_sha256": hashlib.sha256(driver.read_bytes()).hexdigest(), "fixture_sha256": hashlib.sha256(state).hexdigest(), "commands": rows}, sort_keys=True))
+            return
 
         for stage in ("normal", "temp", "backup", "primary"):
             profile, path, prepared = fresh(stage)

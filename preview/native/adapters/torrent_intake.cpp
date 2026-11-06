@@ -25,6 +25,7 @@
 #include <charconv>
 #include <chrono>
 #include <mutex>
+#include <thread>
 
 #include <algorithm>
 #include <array>
@@ -55,6 +56,9 @@ constexpr const char* Journal = "BiglyBTC.torrent-import";
 constexpr const char* JournalSaving = "BiglyBTC.torrent-import.saving";
 constexpr const char* InventorySaving = "BiglyBTC.torrent-import.inventory";
 constexpr const char* BackupSaving = "BiglyBTC.torrent-import.backup";
+constexpr const char* AcquisitionIntent = "BiglyBTC.subscription-acquire";
+constexpr const char* AcquisitionIntentSaving = "BiglyBTC.subscription-acquire.saving";
+constexpr const char* AcquisitionIntentBackup = "BiglyBTC.subscription-acquire.bak";
 struct Failure { Error error; };
 [[noreturn]] void fail(ErrorCode code, std::string message) { throw Failure{{code, std::move(message)}}; }
 void require(bool value, ErrorCode code, const char* message) { if (!value) { fail(code, message); } }
@@ -109,6 +113,15 @@ std::optional<File> read(int directory, const std::string& name, std::size_t max
 }
 void absent(int directory, const std::string& name) {
   require(!named(directory, name), ErrorCode::Conflict, "An intake target or recovery pathname already exists");
+}
+void noAcquisitionIntent(const ProfileLease& lease) {
+  for(const auto* leaf:{AcquisitionIntent,AcquisitionIntentSaving,AcquisitionIntentBackup}){absent(lease.directoryHandle(),leaf);}
+}
+void acquisitionOwnerCurrent(const ProfileLease& lease,std::string_view expected) {
+  require(!expected.empty()&&expected.size()<=MaximumJournal,ErrorCode::Conflict,"Missing bounded acquisition owner intent");
+  const int root=lease.directoryHandle();absent(root,AcquisitionIntentSaving);absent(root,AcquisitionIntentBackup);
+  const auto owner=read(root,AcquisitionIntent,MaximumJournal);
+  require(owner&&owner->bytes==expected,ErrorCode::Conflict,"Acquisition owner intent changed or is unavailable");
 }
 void pathShape(const fs::path& path) {
   const auto& text = path.native();
@@ -501,10 +514,18 @@ struct Plan {
   std::optional<bool> decoderShowAll; // absent accepted journals retain false, never current inferred permission.
   TorrentIntakeNetwork network=TorrentIntakeNetwork::Public;
   std::optional<std::int64_t> addedTime{}; // Frozen once; absent old journals remain byte compatible.
+  bool subscriptionAcquisition=false;
+  std::optional<std::int64_t> initialScrapeCache;
 };
 Plan plan(std::string metadata, std::string destination, std::string profile,
-    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={},TorrentIntakeNetwork network=TorrentIntakeNetwork::Public,std::optional<std::int64_t> addedTime={}) {
+    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={},TorrentIntakeNetwork network=TorrentIntakeNetwork::Public,std::optional<std::int64_t> addedTime={},bool subscriptionAcquisition=false,std::optional<std::int64_t> initialScrapeCache={}) {
   require(!addedTime||*addedTime>0,ErrorCode::InvalidFormat,"Invalid original added time");
+  require(!initialScrapeCache||subscriptionAcquisition,ErrorCode::InvalidFormat,"Scrape preparation requires the private acquisition recipe");
+  if(initialScrapeCache){require(*initialScrapeCache>=0&&(static_cast<std::uint64_t>(*initialScrapeCache)&~std::uint64_t{0x00ffffff00ffffff})==0,ErrorCode::InvalidFormat,"Invalid subscription scrape cache preparation");}
+  if(subscriptionAcquisition){
+    require(stopped&&!forceStart&&!alias&&network==TorrentIntakeNetwork::Public&&addedTime.has_value(),ErrorCode::Unsupported,"Acquisition requires frozen new stopped Public intake");
+    require(options&&!options->verifyExisting&&options->allocation==core::TorrentAllocationMode::None&&!options->sequentialDownload&&!options->queued&&!options->paused&&!options->trackers&&!options->saveName&&options->destinations.empty()&&!options->limits.downloadBytesPerSecond&&!options->limits.uploadBytesPerSecond,ErrorCode::Unsupported,"Unsupported acquisition intake options");
+  }
   require(network==TorrentIntakeNetwork::Public||network==TorrentIntakeNetwork::I2p||network==TorrentIntakeNetwork::Mixed,ErrorCode::InvalidFormat,"Invalid intake network context");
   require(network!=TorrentIntakeNetwork::I2p||(!alias
       &&(!options||(!options->verifyExisting&&options->allocation==core::TorrentAllocationMode::None))),
@@ -520,6 +541,12 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   const auto hash=std::optional{subject.hash};const auto key=hash->bytes();
   const auto* digest=reinterpret_cast<const char*>(key.data());
   const auto& identity=subject.identity;
+  if(subscriptionAcquisition){
+    require(identity.full.v1&&!identity.full.v2,ErrorCode::Unsupported,"Acquisition requires pure v1 metadata, never hybrid or v2");
+    std::vector<compat::FilePolicy> selected;for(const auto& file:subject.layout.files){selected.push_back({file.padding,0});}
+    const auto policy=compat::encodeOriginalFilePolicy(selected);
+    require(policy&&*policy==options->policy&&initialFileDestinations(subject).empty(),ErrorCode::Unsupported,"Acquisition requires storage-derived default file choices");
+  }
   const auto knownAlias=[&](const core::TorrentHash& candidate){
     const auto value=candidate.bytes();
     return (value.size()==20&&((identity.full.v1&&std::equal(value.begin(),value.end(),identity.full.v1->begin()))
@@ -588,6 +615,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   const auto flags=core::originalDownloadFlags(torrent.find("attributes"));
   require(flags.has_value(),ErrorCode::InvalidFormat,"Invalid original download flags");
   auto attributes = section(torrent.find("attributes"));
+  if(initialScrapeCache){put(attributes,"scsrc","i1e");put(attributes,"scrapecache",i(*initialScrapeCache));}
   if(addedTime){auto parameters=section(attributes.find("parameters"));
     put(parameters,"stats.download.added.time",i(*addedTime));put(attributes,"parameters",parameters.serialize());}
 
@@ -650,11 +678,12 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   require((pause!=verify->paused.end())==paused&&verify->paused.size()==saved->paused.size()+(paused?1U:0U)
       &&(!paused||(!pause->forceStart&&pause->owner==1)),ErrorCode::InvalidFormat,"New paused intent failed its original reader");
   return {*hash, std::move(metadata), std::move(archive), std::move(destination), std::move(profile), std::move(state), std::move(after),
-      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options),std::move(alias),std::move(filenameConversions),decoderShowAll,network,addedTime};
+      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options),std::move(alias),std::move(filenameConversions),decoderShowAll,network,addedTime,subscriptionAcquisition,initialScrapeCache};
 }
 std::string journalBytes(const Plan& p) {
   std::string optionalOptions;
   if(p.addedTime){optionalOptions+=b("addedTime")+i(*p.addedTime);}
+  if(p.subscriptionAcquisition){optionalOptions+=b("subscriptionAcquisition")+"d"+(p.initialScrapeCache?b("scrapeCache")+i(*p.initialScrapeCache):std::string{})+"e";}
   if(p.options) {
     std::string value="d"+b("policy")+b(p.options->policy)+b("stores")+b(p.options->stores);
     if(p.options->reorderMinimumMiB){value+=b("reordermb")+i(*p.options->reorderMinimumMiB);}
@@ -701,13 +730,21 @@ std::int64_t integer(const Node* value) {
   return value->integer;
 }
 void checkSaveNameScope(const ProfileLease&,const Plan&);
-Plan readJournal(std::string bytes, const std::string& profile,const ProfileLease& lease) {
+Plan readJournal(std::string bytes, const std::string& profile,const ProfileLease& lease,bool allowSubscriptionAcquisition=false) {
   auto document = parse(std::move(bytes), MaximumJournal);
   uniqueKeys(document.root());
   const auto* force = document.find("forceStart");
   const auto* addedNode=document.find("addedTime");std::optional<std::int64_t> addedTime;
   if(addedNode){addedTime=integer(addedNode);require(*addedTime>0,ErrorCode::InvalidFormat,"Invalid accepted original added time");}
   const auto* optionsNode=document.find("fileOptions");
+  const auto* acquisition=document.find("subscriptionAcquisition");std::optional<std::int64_t> initialScrapeCache;
+  if(acquisition){
+    require(allowSubscriptionAcquisition,ErrorCode::Conflict,"Subscription intake requires its private owned recovery");
+    require(acquisition->type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid acquisition intake journal");
+    const auto* scrape=acquisition->find("scrapeCache");
+    require(acquisition->children.size()==(scrape?2U:0U),ErrorCode::InvalidFormat,"Unknown acquisition preparation field");
+    if(scrape){initialScrapeCache=integer(scrape);}
+  }
   const auto* networkNode=document.find("network");
   const auto networkText=networkNode?text(networkNode):std::string{};
   require(!networkNode||networkText=="I2P"||networkText=="Public+I2P",ErrorCode::InvalidFormat,"Invalid accepted intake network context");
@@ -717,7 +754,7 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   const auto* decoderNode=document.find("decoderShowAll");std::optional<bool> decoderShowAll;
   if(decoderNode){const auto value=integer(decoderNode);require((value==0||value==1)&&conversionsNode,ErrorCode::InvalidFormat,"Invalid accepted decoder context");decoderShowAll=value==1;require(*decoderShowAll==take(readOriginalDecoderShowAll(lease)),ErrorCode::Conflict,"Decoder registration setting changed since intake acceptance");}
   std::optional<std::string> conversions;if(conversionsNode){conversions=text(conversionsNode);const auto current=take(readOriginalFilenameConversions(lease));require(*conversions==current,ErrorCode::Conflict,"Filename conversion policy changed since intake acceptance");}
-  require(document.root().children.size()==20+(addedNode?2U:0U)+(force?2U:0U)+(optionsNode?2U:0U)+(aliasNode?2U:0U)+(conversionsNode?2U:0U)+(decoderNode?2U:0U)+(networkNode?2U:0U)
+  require(document.root().children.size()==20+(addedNode?2U:0U)+(force?2U:0U)+(optionsNode?2U:0U)+(aliasNode?2U:0U)+(conversionsNode?2U:0U)+(decoderNode?2U:0U)+(networkNode?2U:0U)+(acquisition?2U:0U)
       && integer(document.find("version")) == 1,
       ErrorCode::Unsupported, "Unknown intake journal version or fields");
   const auto before = integer(document.find("before_present"));
@@ -784,7 +821,7 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   }
   auto result=plan(text(document.find("metadata")), std::move(destination), profile,
       before ? std::optional{std::move(old)} : std::nullopt,
-      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias),std::move(conversions),decoderShowAll,network,addedTime);
+      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias),std::move(conversions),decoderShowAll,network,addedTime,acquisition!=nullptr,initialScrapeCache);
   if(!result.filenameConversions){
     const auto current=take(readOriginalFilenameContext(lease));const auto original=metadataSubject(result.metadata);const auto projected=metadataSubject(result.metadata,current.conversions,current.decoderShowAll);
     require(original.layout.name==projected.layout.name&&original.layout.files.size()==projected.layout.files.size()
@@ -950,7 +987,8 @@ void inventoryCurrent(int root, const Plan& p) {
   require(backup == p.oldBackup || (p.before && backup == p.before), ErrorCode::Conflict, "Inventory backup changed outside pending intake");
 }
 void notify(void (*observer)(TorrentIntakeStage), TorrentIntakeStage value) { if (observer) { observer(value); } }
-void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*observer)(TorrentIntakeStage)) {
+void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*observer)(TorrentIntakeStage),bool ownedAcquisition=false,std::string_view ownerIntent={}) {
+  const auto guard=[&]{if(ownedAcquisition){acquisitionOwnerCurrent(lease,ownerIntent);}else{noAcquisitionIntent(lease);}};guard();
   const int root = lease.directoryHandle();
   require(profilePath(lease) == p.profile, ErrorCode::Conflict, "Profile moved during intake");
   inventoryCurrent(root, p);
@@ -962,11 +1000,11 @@ void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*
   const auto stateName = p.hash.hex() + ".dat";
   const auto archiveName = p.hash.hex() + ".torrent";
   for (const auto& suffix : {".bak", ".saving", ".bak.saving"}) { absent(active.get(), stateName + suffix); }
-  publishNew(active.get(), stateName, p.state);
-  notify(observer, TorrentIntakeStage::StatePublished);
+  guard();publishNew(active.get(), stateName, p.state);
+  notify(observer, TorrentIntakeStage::StatePublished);guard();
   checkSaveNameScope(lease,p);
   publishNew(archive.get(), archiveName, p.archive);
-  notify(observer, TorrentIntakeStage::ArchivePublished);
+  notify(observer, TorrentIntakeStage::ArchivePublished);guard();
   childIdentity(root, "active", active.get()); childIdentity(root, "torrents", archive.get());
   const auto state = read(active.get(), stateName, MaximumInventory);
   const auto source = read(archive.get(), archiveName, MaximumMetadata);
@@ -990,12 +1028,12 @@ void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*
     inventoryCurrent(root, p);
     // Cooperative lease + exact preimage check; Linux has no primary inode CAS.
     move(root, InventorySaving, "downloads.config", p.before ? 0U : RENAME_NOREPLACE);
-    notify(observer, TorrentIntakeStage::InventoryPublished);
+    notify(observer, TorrentIntakeStage::InventoryPublished);guard();
   }
   checkSaveNameScope(lease,p);
   require(contents(read(root, "downloads.config", MaximumInventory)) == std::optional{p.inventory},
       ErrorCode::Conflict, "Published inventory changed before intake acknowledgement");
-  removeExact(active.get(), stateName + ".import", p.state);
+  guard();removeExact(active.get(), stateName + ".import", p.state);
   removeExact(archive.get(), archiveName + ".import", p.archive);
   removeExact(root, InventorySaving, p.inventory);
   if (p.before) { removeExact(root, BackupSaving, *p.before); }
@@ -1013,7 +1051,8 @@ void cacheAbsent(int root, const core::TorrentHash& hash) {
   require(cache && cache->issues.empty() && !cache->torrents.contains(hash.hex()),
       ErrorCode::Conflict, "Existing cached identity conflicts with new intake");
 }
-core::TorrentHash commitIntakePlan(ProfileLease& lease,Plan& p,void(*observer)(TorrentIntakeStage),std::stop_token stop) {
+core::TorrentHash commitIntakePlan(ProfileLease& lease,Plan& p,void(*observer)(TorrentIntakeStage),std::stop_token stop,bool ownedAcquisition=false,std::string_view ownerIntent={}) {
+  if(ownedAcquisition){acquisitionOwnerCurrent(lease,ownerIntent);}else{noAcquisitionIntent(lease);require(!p.subscriptionAcquisition,ErrorCode::Conflict,"Marked acquisition intake requires its private owner");}
   const int root=lease.directoryHandle();
   checkSaveNameScope(lease,p);
   auto active = childDirectory(root, "active", false);
@@ -1038,7 +1077,7 @@ core::TorrentHash commitIntakePlan(ProfileLease& lease,Plan& p,void(*observer)(T
     inventoryCurrent(root, p);
     move(root, JournalSaving, Journal, RENAME_NOREPLACE);
     notify(observer, TorrentIntakeStage::JournalSynced);
-    apply(lease, p, journal, observer);
+    apply(lease, p, journal, observer,ownedAcquisition,ownerIntent);
     return p.hash;
 }
 } // namespace
@@ -1049,8 +1088,9 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     const fs::path& metadata, const fs::path& destination, bool stopped,
     void (*observer)(TorrentIntakeStage), bool forceStart,TorrentIntakeNetwork network=TorrentIntakeNetwork::Public,HistoryPostimages* historyExpected=nullptr,
     std::optional<std::span<const compat::FilePolicy>> policies = {},const File* expected = nullptr, std::stop_token stop = {},
-    core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false,const std::string* expectedConversions=nullptr,std::optional<core::TorrentIntakeFileDestinations> fileDestinations={},core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent,const bool* expectedDecoderShowAll=nullptr,core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None) {
+    core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false,const std::string* expectedConversions=nullptr,std::optional<core::TorrentIntakeFileDestinations> fileDestinations={},core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent,const bool* expectedDecoderShowAll=nullptr,core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None,std::optional<Plan>* preparedPlan=nullptr,std::optional<std::int64_t> initialScrapeCache={}) {
   try {
+    noAcquisitionIntent(lease);
     require(network==TorrentIntakeNetwork::Public||network==TorrentIntakeNetwork::I2p||network==TorrentIntakeNetwork::Mixed,ErrorCode::InvalidFormat,"Invalid intake network context");
     require(network!=TorrentIntakeNetwork::I2p||(!verifyExisting&&allocation==core::TorrentAllocationMode::None),
         ErrorCode::Unsupported,"I2P intake requires ordinary intent without verification or allocation");
@@ -1095,7 +1135,8 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     const auto backup = read(root, "downloads.config.bak", MaximumInventory);
     require(before || !backup, ErrorCode::Conflict, "Resolve missing inventory primary before intake");
     auto p = plan(std::move(source->bytes), effectiveDestination.native(), profile, contents(before), contents(backup),
-        stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options),{},conversions,context.decoderShowAll,network,intakeAddedTime());
+        stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options),{},conversions,context.decoderShowAll,network,intakeAddedTime(),preparedPlan!=nullptr,initialScrapeCache);
+    if(preparedPlan){preparedPlan->emplace(std::move(p));return preparedPlan->value().hash;}
     auto imported=commitIntakePlan(lease,p,observer,stop);
     if(historyExpected){*historyExpected={std::move(p.inventory),std::move(p.state),std::move(p.archive)};}
     return imported;
@@ -1127,6 +1168,152 @@ std::expected<TorrentIntakeMetadata,Error> inspectTorrentIntake(const fs::path& 
   } catch(const Failure& failure){return std::unexpected(failure.error);}
   catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot inspect torrent metadata"});}
 }
+struct PreparedStoppedPublicIntake::Data {
+  std::shared_ptr<const ProfileLease> lease;
+  std::thread::id worker=std::this_thread::get_id();
+  Plan plan;std::string journal;Images view;
+  fs::path source;std::optional<File> input;bool fresh=false;
+  Data(std::shared_ptr<const ProfileLease> held,Plan value)
+      :lease(std::move(held)),plan(std::move(value)),journal(journalBytes(plan)),
+       view{plan.hash,plan.before?std::optional<std::string_view>{*plan.before}:std::nullopt,
+          plan.oldBackup?std::optional<std::string_view>{*plan.oldBackup}:std::nullopt,
+          plan.inventory,plan.state,plan.archive} {}
+};
+PreparedStoppedPublicIntake::PreparedStoppedPublicIntake(std::unique_ptr<Data> data)noexcept:data_(std::move(data)){}
+PreparedStoppedPublicIntake::PreparedStoppedPublicIntake(PreparedStoppedPublicIntake&&)noexcept=default;
+PreparedStoppedPublicIntake& PreparedStoppedPublicIntake::operator=(PreparedStoppedPublicIntake&&)noexcept=default;
+PreparedStoppedPublicIntake::~PreparedStoppedPublicIntake()=default;
+std::string_view PreparedStoppedPublicIntake::frozenJournal()const noexcept{return data_?std::string_view(data_->journal):std::string_view{};}
+const PreparedStoppedPublicIntake::Images& PreparedStoppedPublicIntake::images()const noexcept{return data_->view;}
+std::expected<PreparedStoppedPublicIntake,Error> PreparedStoppedPublicIntake::prepare(ProfileLease& lease,
+    const TorrentIntakeMetadata& metadata,const fs::path& destination,
+    std::optional<std::int64_t> initialScrapeCache,std::stop_token stop) {
+  try {
+    require(bool(metadata.data_),ErrorCode::Conflict,"Missing sealed acquisition metainfo");
+    require(metadata.data_->initialDestinations.empty(),ErrorCode::Unsupported,"Acquisition refuses inherited file-destination overrides");
+    std::vector<compat::FilePolicy> policies;
+    for(const auto& file:metadata.data_->layout.files){policies.push_back({file.padding,0});}
+    std::optional<Plan> prepared;
+    auto result=importImpl(lease,metadata.data_->path,destination,true,nullptr,false,TorrentIntakeNetwork::Public,nullptr,
+        std::span<const compat::FilePolicy>{policies},&metadata.data_->input,stop,{},false,false,false,{},{},false,
+        &metadata.data_->filenameConversions,{},core::ExistingVerificationGoal::FullTorrent,
+        &metadata.data_->decoderShowAll,core::TorrentAllocationMode::None,&prepared,initialScrapeCache);
+    if(!result){return std::unexpected(result.error());}
+    require(prepared.has_value(),ErrorCode::Conflict,"Private acquisition plan was not prepared");
+    auto data=std::make_unique<Data>(take(lease.retain()),std::move(*prepared));
+    require(data->journal.size()<=MaximumJournal,ErrorCode::Unsupported,"Frozen acquisition intake plan exceeds bounds");
+    data->source=metadata.data_->path;data->input=metadata.data_->input;data->fresh=true;
+    return PreparedStoppedPublicIntake(std::move(data));
+  }catch(const Failure& e){return std::unexpected(e.error);}
+  catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot freeze stopped acquisition intake"});}
+}
+std::expected<PreparedStoppedPublicIntake,Error> PreparedStoppedPublicIntake::restore(ProfileLease& lease,std::string journal) {
+  try {
+    require(!journal.empty()&&journal.size()<=MaximumJournal,ErrorCode::InvalidFormat,"Frozen acquisition plan exceeds bounds");
+    auto value=readJournal(journal,profilePath(lease),lease,true);
+    require(value.subscriptionAcquisition&&journalBytes(value)==journal,ErrorCode::InvalidFormat,"Only the canonical marked acquisition plan can be restored");
+    auto data=std::make_unique<Data>(take(lease.retain()),std::move(value));
+    require(data->journal==journal,ErrorCode::Conflict,"Frozen acquisition plan changed during restore");
+    return PreparedStoppedPublicIntake(std::move(data));
+  }catch(const Failure& e){return std::unexpected(e.error);}
+  catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot restore stopped acquisition intake"});}
+}
+std::expected<PreparedStoppedPublicIntake::State,Error> PreparedStoppedPublicIntake::inspect(
+    ProfileLease& lease,std::string_view ownerIntent)const {
+  try {
+    require(data_&&data_->worker==std::this_thread::get_id()&&data_->lease->sharesOwnership(lease),
+        ErrorCode::Conflict,"Missing,foreign-worker or foreign-OFD acquisition intake plan");
+    const auto& p=data_->plan;const int root=lease.directoryHandle();
+    require(profilePath(lease)==p.profile,ErrorCode::Conflict,"Acquisition profile moved");
+    acquisitionOwnerCurrent(lease,ownerIntent);
+    const auto journal=read(root,Journal,MaximumJournal),journalSaving=read(root,JournalSaving,MaximumJournal);
+    require((!journal||journal->bytes==data_->journal)&&(!journalSaving||journalSaving->bytes==data_->journal),
+        ErrorCode::Conflict,"Another intake journal conflicts with the acquisition");
+    const bool pending=journal.has_value()||journalSaving.has_value();
+    inventoryCurrent(root,p);checkSaveNameScope(lease,p);cacheAbsent(root,p.hash);
+    auto active=childDirectory(root,"active",false),archive=childDirectory(root,"torrents",false);
+    if(active.get()>=0){
+      require(read(active.get(),"cache.dat",MaximumInventory).has_value()||!read(active.get(),"cache.dat.bak",MaximumInventory),
+          ErrorCode::Conflict,"Missing state-cache primary has a recovery candidate");
+      absent(active.get(),"cache.dat.saving");
+    }
+    const auto stateName=p.hash.hex()+".dat",archiveName=p.hash.hex()+".torrent";
+    std::optional<File> state,source,stateStage,archiveStage;
+    if(active.get()>=0){
+      for(const auto* suffix:{".bak",".saving",".bak.saving"}){absent(active.get(),stateName+suffix);}
+      state=read(active.get(),stateName,MaximumInventory);stateStage=read(active.get(),stateName+".import",MaximumInventory);
+    }
+    if(archive.get()>=0){
+      for(const auto* suffix:{".bak",".saving",".bak.saving"}){absent(archive.get(),archiveName+suffix);}
+      source=read(archive.get(),archiveName,MaximumMetadata);archiveStage=read(archive.get(),archiveName+".import",MaximumMetadata);
+    }
+    require((!state||state->bytes==p.state)&&(!source||source->bytes==p.archive)
+        &&(!stateStage||stateStage->bytes==p.state)&&(!archiveStage||archiveStage->bytes==p.archive),
+        ErrorCode::Conflict,"Acquisition intake artifacts conflict with the frozen plan");
+    const auto inventory=read(root,"downloads.config",MaximumInventory),backup=read(root,"downloads.config.bak",MaximumInventory);
+    const auto inventoryStage=read(root,InventorySaving,MaximumInventory),backupStage=read(root,BackupSaving,MaximumInventory);
+    require((!inventoryStage||inventoryStage->bytes==p.inventory)
+        &&(!backupStage||(p.before&&backupStage->bytes==*p.before)),ErrorCode::Conflict,"Acquisition intake staging bytes changed");
+    if(contents(inventory)==std::optional{p.inventory}){
+      require(state&&source&&contents(backup)==(p.before?p.before:p.oldBackup),ErrorCode::Conflict,"Inventory postimage lacks the matching state/archive/backup");
+    }
+    require(!source||state.has_value(),ErrorCode::Conflict,"Archive exists before its expected intake state");
+    if(pending){return State::Pending;}
+    require(!inventoryStage&&!backupStage&&!stateStage&&!archiveStage,ErrorCode::Conflict,"Acquisition staging remains without its intake journal");
+    if(contents(inventory)==std::optional{p.inventory}&&state&&source){
+      require(contents(backup)==(p.before?p.before:p.oldBackup),ErrorCode::Conflict,"Committed intake backup differs from the frozen preimage");
+      return State::Committed;
+    }
+    require(contents(inventory)==p.before&&contents(backup)==p.oldBackup&&!state&&!source,
+        ErrorCode::Conflict,"Acquisition has neither exact before nor all three committed postimages");
+    return State::Before;
+  }catch(const Failure& e){return std::unexpected(e.error);}
+  catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot inspect stopped acquisition intake"});}
+}
+std::expected<core::TorrentHash,Error> PreparedStoppedPublicIntake::commit(ProfileLease& lease,
+    std::string_view ownerIntent,std::stop_token stop,void(*observer)(TorrentIntakeStage),IntakeHistoryOutcome* history) {
+  if(history){*history={};}
+  try {
+    const auto state=take(inspect(lease,ownerIntent));
+    if(state==State::Committed){return data_->plan.hash;}
+    if(state==State::Before){
+      require(!stop.stop_requested(),ErrorCode::Cancelled,"Acquisition cancelled before intake commit");
+      if(data_->input){
+        auto directoryHandle=directory(data_->source.parent_path());
+        const auto current=read(directoryHandle.get(),data_->source.filename().native(),MaximumMetadata);
+        require(current&&unchanged(current->info,data_->input->info)&&current->bytes==data_->input->bytes,
+            ErrorCode::Conflict,"Owned acquisition metainfo changed after freezing");
+      }
+      std::optional<ProfileSourceAccess> historySource;
+      const bool freshHistory=history&&data_->fresh;
+      if(freshHistory){
+        require(!observer,ErrorCode::Unsupported,"Observed acquisition intake cannot issue auxiliary history");
+        historySource.emplace(take(lease.sourceAccess(true)));
+      }
+      acquisitionOwnerCurrent(lease,ownerIntent);
+      const auto imported=commitIntakePlan(lease,data_->plan,observer,stop,true,ownerIntent);
+      data_->fresh=false;data_->input.reset();
+      require(take(inspect(lease,ownerIntent))==State::Committed,ErrorCode::Conflict,"New acquisition intake lacks its exact committed postimages");
+      if(freshHistory){
+        auto issued=DurableIntakeReceipt::issue(lease,imported,data_->plan.inventory,data_->plan.state,data_->plan.archive);
+        if(issued){history->receipt.emplace(std::move(*issued));}else{history->warning=std::move(issued.error());}
+      }
+      return imported;
+    }
+    const int root=lease.directoryHandle();
+    const auto journal=read(root,Journal,MaximumJournal);
+    if(!journal){
+      const auto staged=read(root,JournalSaving,MaximumJournal);
+      require(staged&&staged->bytes==data_->journal,ErrorCode::Conflict,"Owned acquisition intake journal disappeared");
+      acquisitionOwnerCurrent(lease,ownerIntent);move(root,JournalSaving,Journal,RENAME_NOREPLACE);
+    }
+    acquisitionOwnerCurrent(lease,ownerIntent);apply(lease,data_->plan,data_->journal,observer,true,ownerIntent);
+    require(take(inspect(lease,ownerIntent))==State::Committed,ErrorCode::Conflict,"Acquisition intake is not fully committed");
+    return data_->plan.hash;
+  }catch(const Failure& e){return std::unexpected(e.error);}
+  catch(...){return std::unexpected(Error{ErrorCode::Io,"Stopped acquisition intake requires explicit recovery"});}
+}
+
 std::expected<core::TorrentHash,Error> importTorrent(ProfileLease& lease,const fs::path& source,
     const fs::path& destination,bool stopped,void(*observer)(TorrentIntakeStage),bool forceStart,TorrentIntakeNetwork network,IntakeHistoryOutcome* history) {
   if(history){*history={};}
@@ -1174,6 +1361,7 @@ std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,con
     auto held=lease.sourceAccess(true);if(!held){return std::unexpected(held.error());}historySource.emplace(std::move(*held));
   }
   try {
+    noAcquisitionIntent(lease);
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Hybrid alias cancelled before commit");
     require(target==OriginalSelectedHash::V1||target==OriginalSelectedHash::V2,ErrorCode::InvalidFormat,"Invalid hybrid target version");
     require(from.bytes().size()==20&&retained.size()<=100000,ErrorCode::InvalidFormat,"Bounded original hybrid source required");
@@ -1230,13 +1418,14 @@ std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,con
 bool hasPendingTorrentIntake(const ProfileLease& lease) noexcept {
   try{
     if(!lease.valid()){return true;}
-    for(const auto* leaf:{Journal,JournalSaving,InventorySaving,BackupSaving}){if(named(lease.directoryHandle(),leaf)){return true;}}
+    for(const auto* leaf:{Journal,JournalSaving,InventorySaving,BackupSaving,AcquisitionIntent,AcquisitionIntentSaving,AcquisitionIntentBackup}){if(named(lease.directoryHandle(),leaf)){return true;}}
     return false;
   }catch(...){return true;}
 }
 std::expected<std::optional<core::TorrentHash>, Error> recoverTorrentIntake(
     ProfileLease& lease, void (*observer)(TorrentIntakeStage)) {
   try {
+    noAcquisitionIntent(lease);
     const auto profile = profilePath(lease);
     const int root = lease.directoryHandle();
     auto journal = read(root, Journal, MaximumJournal);

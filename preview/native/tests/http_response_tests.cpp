@@ -82,12 +82,24 @@ void responseStatusAndChallengeValues(){
   check(h::decodeResponse("HTTP/1.1 404 Missing\r\n\r\n",true).failed,"HTTP failure became empty success");
   check(h::decodeResponse("HTTP/1.1 304 Not Modified\r\n\r\n",true,h::ResponseProfile::RssDocument).unsupported,"Unsolicited304 became empty document");
 }
+void binaryMetainfoProfile(){
+  const auto profile=h::ResponseProfile::TorrentMetainfo;
+  QByteArray bytes(RssBytes,'\0');bytes[0]='d';bytes[1]=static_cast<char>(0xff);bytes.back()='e';
+  check(h::decodeResponse(fixed(bytes),true,profile).bytes==bytes,"Metainfo binary4MiB boundary changed");
+  check(h::decodeResponse(fixed(QByteArray(RssBytes+1,'m')),true,profile).unsupported,"Metainfo body cap widened");
+  check(h::decodeResponse(gzipWire(compressed(bytes)),true,profile).bytes==bytes,"Binary gzip was decoded as text");
+  check(h::decodeResponse(gzipWire(compressed(QByteArray(RssBytes+1,'m'))),true,profile).unsupported,"Metainfo gzip cap widened");
+  const auto chunk=QByteArray("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")+QByteArray::number(bytes.size(),16)+"\r\n"+bytes+"\r\n0\r\n\r\n";
+  check(h::decodeResponse(chunk,true,profile).bytes==bytes,"Binary chunked4MiB boundary changed");
+  check(h::decodeResponse(chunk+"tail",true,profile).unsupported,"Metainfo accepted trailing chunks");
+  check(h::decodeResponse(fixed(bytes),true,h::ResponseProfile::Tracker).unsupported,"New profile widened tracker default");
+}
 void invalidProfileRefused(){
-  const auto value=h::decodeResponse(fixed("x"),true,static_cast<h::ResponseProfile>(2));
+  const auto value=h::decodeResponse(fixed("x"),true,static_cast<h::ResponseProfile>(255));
   check(value.unsupported&&!value.complete&&value.bytes.isEmpty(),"Unknown closed profile widened body policy");
 }
 }
 int main(){try{
-  owningPartialBodies();closedBodyProfiles();strictChunkedFraming();boundedGzipProfilesAndMembers();headerLimitsAndAmbiguity();responseStatusAndChallengeValues();invalidProfileRefused();
-  std::cout<<"PASS bounded HTTP response values7families\n";return 0;
+  owningPartialBodies();closedBodyProfiles();strictChunkedFraming();boundedGzipProfilesAndMembers();headerLimitsAndAmbiguity();responseStatusAndChallengeValues();binaryMetainfoProfile();invalidProfileRefused();
+  std::cout<<"PASS bounded HTTP response values8families\n";return 0;
 }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}

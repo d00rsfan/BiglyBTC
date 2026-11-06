@@ -20,6 +20,8 @@ struct SubscriptionRssDescription : RssGetDescription {
   bool embeddedEngine=false;
 };
 class SavedSubscriptionService;
+class SavedSubscriptionResultSnapshot;
+struct SubscriptionNumericFilter;
 struct SubscriptionHistoryCommit;
 struct SubscriptionSavedRow;
 struct SubscriptionResults;
@@ -47,11 +49,20 @@ public:
       const storage::ProfileLease& callerHeldSameOFD,std::uint64_t currentSession)const;
 private:
   friend class SavedSubscriptionService;
+  friend class SavedSubscriptionResultSnapshot;
   struct Impl;
   explicit SavedSubscriptionSourceSnapshot(std::unique_ptr<Impl>)noexcept;
   std::unique_ptr<Impl> impl_;
   const SubscriptionSavedRow& metadata()const noexcept;
   const SubscriptionResults& results()const noexcept;
+  const core::Node& selectedSourceRow()const noexcept;
+  std::string_view selectedSourceBytes()const noexcept;
+  std::expected<std::string,SavedRssSourceError> freezeAcquisitionSource(const storage::ProfileLease&,std::uint64_t)const;
+  const SubscriptionNumericFilter* numericFilter()const noexcept;
+  static std::expected<RssContext,SavedRssSourceError> resultUrlContext(std::string_view);
+  std::expected<void,SavedRssSourceError> resultHeaderPolicy()const;
+  std::expected<std::optional<QList<QSslCertificate>>,SavedRssSourceError> resultTrust(
+      const storage::ProfileLease&,std::uint64_t)const;
   std::expected<SubscriptionHistoryCommit,SavedRssSourceError> prepareCheck(const RssDocument&,std::int64_t)const;
   std::expected<SubscriptionHistoryCommit,SavedRssSourceError> prepareState(const std::vector<std::string>&,bool,bool,std::int64_t)const;
   std::expected<void,SavedRssSourceError> publish(

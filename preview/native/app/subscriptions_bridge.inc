@@ -56,7 +56,7 @@ void SessionBridge::subscriptionsDispatchInterrupted(){
   if(guiSubscriptionCatalog_){auto packet=std::make_shared<ui::SubscriptionCatalogPacket>();packet->key=*guiSubscriptionCatalog_;packet->failure=tr("Subscription read was interrupted; refresh after the current operation.");deliverSubscriptionCatalog(packet);}
 }
 void SessionBridge::closeWorkerSubscriptions(){
-  if(!host_){return;}if(host_->subscriptionCommand&&host_->subscriptionCommand->receiver){host_->subscriptionCommand->receiver->request_stop();}
+  if(!host_){return;}closeWorkerSubscriptionAcquisition();if(host_->subscriptionCommand&&host_->subscriptionCommand->receiver){host_->subscriptionCommand->receiver->request_stop();}
   if(host_->subscriptions){auto closed=host_->subscriptions->close();if(!closed){throw Failure{{storage::ErrorCode::Conflict,"Subscription write recovery is pending"}};}host_->subscriptions.reset();}
   if(host_->subscriptionCommand){auto packet=std::make_shared<ui::SubscriptionPacket>();packet->key=host_->subscriptionCommand->key;packet->committed=host_->subscriptionCommitted&&host_->subscriptionCommitted->load();packet->state=packet->committed?ui::SubscriptionState::Ready:ui::SubscriptionState::Cancelled;packet->message=packet->committed?tr("Changes were saved. Refresh Subscriptions."):tr("Cancelled");host_->subscriptionCommand.reset();host_->subscriptionCommitted.reset();postSubscription(std::move(packet));}
   host_->subscriptionsNormal=false;
@@ -77,8 +77,10 @@ bool SessionBridge::subscriptionCatalog(ui::SubscriptionCatalogKey request){
 }
 bool SessionBridge::subscriptionCommand(ui::SubscriptionCommand command){
   const auto& key=command.key;
-  switch(key.action){case ui::SubscriptionAction::ReadResults:case ui::SubscriptionAction::Check:case ui::SubscriptionAction::MarkRead:case ui::SubscriptionAction::MarkUnread:case ui::SubscriptionAction::Delete:break;default:return false;}
+  switch(key.action){case ui::SubscriptionAction::ReadResults:case ui::SubscriptionAction::Check:case ui::SubscriptionAction::MarkRead:case ui::SubscriptionAction::MarkUnread:case ui::SubscriptionAction::Delete:case ui::SubscriptionAction::AcquireStopped:break;default:return false;}
   if(profileClosed_||closingSession_||busy_||guiSubscription_||!command.receiver||command.receiver->stop_requested()||!key.session||!key.page||!key.request||!key.generation||key.session!=publishedColumnLayoutSession_||!subscription_bridge_detail::valid(key.target)||command.resultKeys.size()>ui::MaximumSubscriptionRows){return false;}
+  if(key.action==ui::SubscriptionAction::AcquireStopped&&(command.resultKeys.size()!=1||command.destination.isEmpty()
+      ||command.destination.size()>4096||command.destination.contains(QChar::Null))){return false;}
   for(const auto& value:command.resultKeys){if(value.size()!=10){return false;}}
   guiSubscription_=command;startingSubscription_=key;subscriptionCommitted_=std::make_shared<std::atomic_bool>(false);const auto receipt=subscriptionCommitted_;const QPointer<SessionBridge> alive(this);
   const bool accepted=dispatch([this,command=std::move(command),receipt](std::stop_token stop){
@@ -87,6 +89,21 @@ bool SessionBridge::subscriptionCommand(ui::SubscriptionCommand command){
       host_->subscriptionLastRequest=command.key.request;auto& service=ensureSubscriptions();const auto selected=subscription_bridge_detail::selector(command.key.target);
       if(command.receiver->stop_requested()){packet->state=ui::SubscriptionState::Cancelled;packet->message=tr("Cancelled");}
       else if(command.key.action!=ui::SubscriptionAction::ReadResults&&!host_->rssFetchAllowed()){packet->message=tr("Preview reads saved history only.");}
+      else if(command.key.action!=ui::SubscriptionAction::ReadResults&&!storage::requireNoPendingSubscriptionAcquisition(host_->lease)){packet->message=tr("A subscription addition needs review before another change.");}
+      else if(command.key.action==ui::SubscriptionAction::AcquireStopped){
+        if(host_->i2p||host_->mixed){throw Failure{{storage::ErrorCode::Unsupported,"Adding a subscription torrent is unavailable while anonymous-network services are active"}};}
+        if(host_->subscriptionAcquisition){throw Failure{{storage::ErrorCode::Busy,"A subscription addition is already closing"}};}
+        std::error_code ec;const auto profile=std::filesystem::canonical(host_->profile,ec);if(ec){throw Failure{{storage::ErrorCode::UnsafePath,"Subscription profile changed"}};}
+        SavedSubscriptionAcquisition::Factory factory;
+        if(subscriptionAcquisitionFactory_){factory=[chosen=subscriptionAcquisitionFactory_](const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,const search::SavedSubscriptionResultSelector& target,std::stop_token token){
+          return chosen(lease,path,session,subscription_bridge_detail::key(target.subscription),QByteArray::fromStdString(target.resultKey),token);};}
+        auto opened=SavedSubscriptionAcquisition::begin(host_->lease,profile,command.key.session,
+            {selected,command.resultKeys.front().toStdString()},std::filesystem::path(command.destination.toStdString()),command.receiver->get_token(),std::move(factory));
+        if(!opened){packet->message=text(opened.error().message);}else{
+          host_->subscriptionAcquisition=std::move(*opened);host_->acquisitionCommand=command;host_->acquisitionCommitted=receipt;
+          packet->state=ui::SubscriptionState::Started;packet->message=tr("Fetching torrent metadata…");
+        }
+      }
       else if(command.key.action==ui::SubscriptionAction::Check){
         auto started=service.check(host_->lease,command.key.session,selected,command.receiver->get_token());if(!started){packet->message=subscription_bridge_detail::failure(started.error());}
         else{host_->subscriptionCommand=command;host_->subscriptionCommitted=receipt;packet->state=ui::SubscriptionState::Started;packet->message=tr("Checking saved subscription…");}
@@ -118,4 +135,73 @@ void SessionBridge::pollSubscriptions(){
       host_->subscriptionCommand.reset();host_->subscriptionCommitted.reset();postSubscription(std::move(packet));
     }else if(outcome.stored){const auto session=host_->columnLayoutSession;QMetaObject::invokeMethod(this,[this,session]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit subscriptionHistoryChanged(session);}},Qt::QueuedConnection);}
   }catch(...){if(host_->subscriptions){host_->subscriptions->cancel();const auto retired=host_->subscriptions->close();if(retired){host_->subscriptions.reset();}}if(host_->subscriptionCommand){auto packet=std::make_shared<ui::SubscriptionPacket>();packet->key=host_->subscriptionCommand->key;packet->committed=host_->subscriptionCommitted&&host_->subscriptionCommitted->load();packet->state=packet->committed?ui::SubscriptionState::Ready:ui::SubscriptionState::Rejected;packet->message=tr("Refresh Subscriptions to review the current saved history.");host_->subscriptionCommand.reset();host_->subscriptionCommitted.reset();postSubscription(std::move(packet));}}
+}
+
+std::expected<bool,storage::Error> SessionBridge::recoverSubscriptionAcquisition(storage::ProfileLease& lease,const std::filesystem::path& path){
+  std::error_code ec;const auto canonical=std::filesystem::canonical(path,ec);
+  if(ec){return std::unexpected(storage::Error{storage::ErrorCode::UnsafePath,"Subscription profile directory changed"});}
+  auto recovered=SavedSubscriptionAcquisition::recover(lease,canonical);if(!recovered){return std::unexpected(recovered.error());}
+  return recovered->has_value()&&(**recovered).needsReview;
+}
+std::expected<bool,storage::Error> SessionBridge::recoverTorrentIntakeAfterSubscription(storage::ProfileLease& lease,const std::filesystem::path& path){
+  const auto recovered=recoverSubscriptionAcquisition(lease,path);if(!recovered){return std::unexpected(recovered.error());}
+  if(*recovered){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Subscription addition needs review before inventory recovery"});}
+  const auto intake=storage::recoverTorrentIntake(lease);
+  if(!intake){return std::unexpected(intake.error());}
+  return intake->has_value();
+}
+void SessionBridge::finishWorkerSubscriptionAcquisition(QString failure){
+  if(!host_||!host_->subscriptionAcquisition){return;}
+  auto outcome=host_->subscriptionAcquisition->outcome();const auto closed=host_->subscriptionAcquisition->close();
+  outcome=host_->subscriptionAcquisition->outcome();if(!closed&&failure.isEmpty()){failure=text(closed.error().message);}
+  const auto command=host_->acquisitionCommand;
+  if((outcome.imported||outcome.needsReview)&&host_->acquisitionCommitted){host_->acquisitionCommitted->store(true);}
+  host_->subscriptionAcquisition.reset();host_->acquisitionCommand.reset();host_->acquisitionCommitted.reset();
+  if(!command){return;}
+  auto packet=std::make_shared<ui::SubscriptionPacket>();packet->key=command->key;packet->committed=outcome.imported||outcome.needsReview;
+  const bool stopped=command->receiver&&command->receiver->stop_requested();
+  if(outcome.imported){
+    packet->state=ui::SubscriptionState::Rejected; // Keep old rows unless a fresh read succeeds.
+    packet->message=outcome.associated&&outcome.read?tr("Torrent added stopped; the subscription result was marked read.")
+        :tr("Torrent added stopped. Review the subscription update before retrying.");
+    if(host_->subscriptions&&storage::requireNoPendingSubscriptionAcquisition(host_->lease)){
+      auto values=host_->subscriptions->results(host_->lease,host_->columnLayoutSession,subscription_bridge_detail::selector(command->key.target));
+      if(values){subscription_bridge_detail::rows(*packet,*values);packet->state=ui::SubscriptionState::Ready;}
+    }
+    try{ready(host_->query({}));}catch(...){if(failure.isEmpty()){failure=tr("Refresh My Torrents to review the saved stopped torrent.");}}
+  }else if(outcome.needsReview){
+    packet->state=ui::SubscriptionState::Rejected;packet->message=tr("The addition needs review before retrying; saved files were retained.");
+  }else{
+    packet->state=stopped||outcome.cancelled?ui::SubscriptionState::Cancelled:ui::SubscriptionState::Rejected;
+    packet->message=packet->state==ui::SubscriptionState::Cancelled?tr("Cancelled; no torrent was added."):tr("The subscription torrent could not be added.");
+  }
+  if(!outcome.warning.isEmpty()){packet->message+=' '+outcome.warning;}
+  if(!failure.isEmpty()){packet->message+=' '+failure;}
+  postSubscription(std::move(packet));
+}
+void SessionBridge::closeWorkerSubscriptionAcquisition(){
+  if(!host_||!host_->subscriptionAcquisition){return;}
+  if(host_->acquisitionCommand&&host_->acquisitionCommand->receiver){host_->acquisitionCommand->receiver->request_stop();}
+  host_->subscriptionAcquisition->cancel();finishWorkerSubscriptionAcquisition();
+}
+void SessionBridge::pollSubscriptionAcquisition(){
+  if(!host_||!host_->subscriptionAcquisition){return;}
+  try{
+    if(!host_->rssFetchAllowed()&&host_->acquisitionCommand&&host_->acquisitionCommand->receiver){host_->acquisitionCommand->receiver->request_stop();}
+    if(host_->acquisitionCommand&&host_->acquisitionCommand->receiver&&host_->acquisitionCommand->receiver->stop_requested()){host_->subscriptionAcquisition->cancel();}
+    auto polled=host_->subscriptionAcquisition->poll(host_->lease,host_->columnLayoutSession);
+    if(!polled){finishWorkerSubscriptionAcquisition(text(polled.error().message));return;}
+    if(host_->subscriptionAcquisition->readyForIntake()){
+      const auto hash=host_->subscriptionAcquisition->intakeHash();storage::IntakeHistoryOutcome history;
+      const auto imported=host_->publishTarget(hash,[&]{auto result=host_->subscriptionAcquisition->saveIntake(host_->lease,host_->columnLayoutSession,&history);
+        if((host_->subscriptionAcquisition->outcome().imported||host_->subscriptionAcquisition->outcome().needsReview)&&host_->acquisitionCommitted){host_->acquisitionCommitted->store(true);}return result;});
+      QString warning;if(history.receipt||history.warning){warning=host_->consumeHistoryIntake(std::move(history),{});}
+      if(!imported){if(!warning.isEmpty()){warning+=' ';}warning+=text(imported.error().message);finishWorkerSubscriptionAcquisition(std::move(warning));return;}
+      auto finished=host_->subscriptionAcquisition->finishSubscription(host_->lease,host_->columnLayoutSession);
+      if(!finished){if(!warning.isEmpty()){warning+=' ';}warning+=text(finished.error().message);}
+      finishWorkerSubscriptionAcquisition(std::move(warning));return;
+    }
+    if(polled->has_value()){finishWorkerSubscriptionAcquisition();}
+  }catch(const Failure& failure){finishWorkerSubscriptionAcquisition(text(failure.error.message));}
+  catch(...){finishWorkerSubscriptionAcquisition(tr("Review the subscription addition before retrying."));}
 }

@@ -25,6 +25,20 @@ std::unexpected<Error> error(ErrorCode code, std::string message) {
 }
 
 
+std::expected<void, Error> requireInventoryAvailable(int directory, std::string_view filename) {
+  if (filename != "downloads.config") { return {}; }
+  for (const auto* name : {"BiglyBTC.subscription-acquire", "BiglyBTC.subscription-acquire.saving",
+      "BiglyBTC.subscription-acquire.bak"}) {
+    struct stat entry{};
+    if (::fstatat(directory, name, &entry, AT_SYMLINK_NOFOLLOW) == 0) {
+      return error(ErrorCode::Conflict, "Pending subscription acquisition must be resolved before inventory writes");
+    }
+    if (errno != ENOENT) { return error(ErrorCode::Io, "Unable to check pending subscription acquisition"); }
+  }
+  return {};
+}
+
+
 bool validName(std::string_view name) {
   if (name.empty() || name.size() > 240 || name.front() == '.' || (!name.ends_with(".config") && name != "BiglyBT.statistics")) {
     return false;
@@ -40,6 +54,11 @@ bool validName(std::string_view name) {
 
 
 } // namespace
+
+std::expected<void, Error> requireNoPendingSubscriptionAcquisition(const ProfileLease& lease) {
+  if (!lease.valid()) { return error(ErrorCode::UnsafePath, "Held profile lease required"); }
+  return requireInventoryAvailable(lease.directoryHandle(), "downloads.config");
+}
 
 std::expected<ProfileLease, Error> ProfileLease::acquire(const std::filesystem::path& profile) {
   std::error_code ec;
@@ -167,6 +186,8 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
     if (::fstat(handle, &directory) != 0 || !S_ISDIR(directory.st_mode)) {
       return error(ErrorCode::UnsafePath, "Unable to identify held profile directory safely");
     }
+    const auto inventory = requireInventoryAvailable(handle, filename);
+    if (!inventory) { return std::unexpected(inventory.error()); }
     if (encoded.size() > limits.inputBytes) {
       return error(ErrorCode::InvalidFormat, "New configuration exceeds the selected input limit");
     }
@@ -245,6 +266,8 @@ std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& l
     }
     identity = owned();
     if (!identity) { return std::unexpected(identity.error()); }
+    const auto beforePrimary = requireInventoryAvailable(handle, prepared->filename_);
+    if (!beforePrimary) { return std::unexpected(beforePrimary.error()); }
     if (::renameat2(handle, saving.c_str(), handle, prepared->filename_.c_str(), RENAME_NOREPLACE) != 0) {
       const auto code = errno == EEXIST || errno == ENOTEMPTY ? ErrorCode::Conflict
           : errno == ENOSYS || errno == EINVAL || errno == EOPNOTSUPP ? ErrorCode::Unsupported : ErrorCode::Io;
@@ -268,6 +291,8 @@ std::expected<void, Error> ConfigFile::save(const ProfileLease& lease, void (*ob
       || directory.st_dev != device_ || directory.st_ino != inode_) {
     return error(ErrorCode::UnsafePath, "Configuration belongs to a different or released profile lease");
   }
+  const auto inventory = requireInventoryAvailable(lease.directoryHandle(), filename_);
+  if (!inventory) { return std::unexpected(inventory.error()); }
   if (source_ == RecoverySource::Saving) {
     return error(ErrorCode::Conflict, "Existing recovery file must be resolved before saving");
   }
@@ -296,6 +321,8 @@ std::expected<void, Error> ConfigFile::save(const ProfileLease& lease, void (*ob
     return std::unexpected(written.error());
   }
   if (observer) { access->outside([&]{observer(SaveStage::TemporarySynced);}); }
+  const auto afterTemporary = requireInventoryAvailable(lease.directoryHandle(), filename_);
+  if (!afterTemporary) { return std::unexpected(afterTemporary.error()); }
   if (source_ == RecoverySource::Primary) {
     const auto backup = filename_ + ".bak";
     if (::renameat(lease.directoryHandle(), filename_.c_str(), lease.directoryHandle(), backup.c_str()) != 0
@@ -304,6 +331,8 @@ std::expected<void, Error> ConfigFile::save(const ProfileLease& lease, void (*ob
     }
     if (observer) { access->outside([&]{observer(SaveStage::BackupRenamed);}); }
   }
+  const auto beforePrimary = requireInventoryAvailable(lease.directoryHandle(), filename_);
+  if (!beforePrimary) { return std::unexpected(beforePrimary.error()); }
   if (::renameat(lease.directoryHandle(), saving.c_str(), lease.directoryHandle(), filename_.c_str()) != 0) {
     return error(ErrorCode::Io, "Configuration replacement failed; recovery files retained");
   }

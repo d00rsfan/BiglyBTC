@@ -210,3 +210,12 @@ if(TARGET biglybtc_desktop_host)
   target_sources(biglybtc_desktop_host PRIVATE subscriptions_host.inc subscriptions_bridge.inc)
   target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_saved_subscription_service)
 endif()
+
+
+if(TARGET biglybtc_desktop_host)
+  target_sources(biglybtc_desktop_host PRIVATE subscription_acquisition.cpp subscription_acquisition.hpp
+    subscription_acquisition_values.inc subscription_acquisition_io.inc)
+  target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_saved_subscription_source)
+endif()
+# The existing separate fixture Host copies the production Host source list
+# AFTER this append; it compiles this TU with its existing fixture-only macro.

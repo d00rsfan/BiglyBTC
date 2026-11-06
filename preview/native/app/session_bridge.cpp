@@ -1,3 +1,4 @@
+#include "subscription_acquisition.hpp"
 #include "original_filename_policy.hpp"
 #include "torrent_intake.hpp"
 #include "durable_intake_receipt.hpp"
@@ -235,7 +236,7 @@ template<class Store> std::expected<storage::CategoryCommit,storage::Error> cate
 }
 }
 struct SessionBridge::Host {
-  ~Host(){closeRssFetch();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
+  ~Host(){if(subscriptionAcquisition){subscriptionAcquisition->cancel();subscriptionAcquisition.reset();}closeRssFetch();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
   struct Known { QString name; std::optional<qint64> bytes{}; };
   std::filesystem::path profile;
   unsigned short peerPort;
@@ -322,12 +323,14 @@ struct SessionBridge::Host {
 #endif
   }
   std::expected<void,storage::Error> publishTarget(const core::TorrentHash& hash,const std::function<std::expected<void,storage::Error>()>& f){
+    const auto acquisition=storage::requireNoPendingSubscriptionAcquisition(lease);if(!acquisition){return std::unexpected(acquisition.error());}
     if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
     const auto inner=[&]{return mixed?mixed->publish(hash,f):f();};
     auto result=i2p?i2p->publish(hash,inner):inner();
     if(!result&&((i2p&&!i2p->sourceCurrent())||(mixed&&!mixed->sourceCurrent()))){if(i2p){i2p->revoke();}if(mixed){mixed->revoke();}}return result;
   }
   std::expected<void,storage::Error> publishPositions(const std::function<std::expected<void,storage::Error>()>& f){
+    const auto acquisition=storage::requireNoPendingSubscriptionAcquisition(lease);if(!acquisition){return std::unexpected(acquisition.error());}
     if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
     const auto inner=[&]{return mixed?mixed->publishPositions(f):f();};
     auto result=i2p?i2p->publishPositions(inner):inner();
@@ -415,6 +418,7 @@ struct SessionBridge::Host {
     if(!done){return std::unexpected(done.error());}return std::move(*result);
   }
   std::expected<void,storage::Error> startPublic(engine::ManagedDownloadOptions options){
+    const auto acquisition=storage::requireNoPendingSubscriptionAcquisition(lease);if(!acquisition){return std::unexpected(acquisition.error());}
     if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
     const auto selected=route(options.hash);const bool both=selected==Route::Mixed&&mixedCapable();
     if(!engine||privateOnly()||(selected!=Route::Public&&!both)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Saved torrent networks require a provider that is not available; the selection was preserved"});}
@@ -432,6 +436,7 @@ struct SessionBridge::Host {
     return started;
   }
   std::expected<void,storage::Error> startSaved(const core::TorrentHash& hash,bool force=false,bool queued=false){
+    const auto acquisition=storage::requireNoPendingSubscriptionAcquisition(lease);if(!acquisition){return std::unexpected(acquisition.error());}
     return route(hash)==Route::I2p?startI2p(hash):startPublic({hash,peerPort,force,queued});
   }
   CoexistCoordinator coexistQueue;
@@ -460,6 +465,7 @@ struct SessionBridge::Host {
     if(!stopped){i2pPacket.failure=text(stopped.error().message);return std::unexpected(stopped.error());}return {};
   }
   std::expected<void,storage::Error> startI2p(const core::TorrentHash& hash){
+    const auto acquisition=storage::requireNoPendingSubscriptionAcquisition(lease);if(!acquisition){return std::unexpected(acquisition.error());}
     if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
     if(const auto& failure=bootstrapFailure(false);failure){return std::unexpected(*failure);}
     if(!i2pOptions||!pureI2p(hash)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"This private preview requires an explicitly saved I2P-only torrent"});}
@@ -885,6 +891,7 @@ struct SessionBridge::Host {
     return result;
   }
   std::expected<void,storage::Error> startPending(const engine::PendingMagnet& intent){
+    const auto acquisition=storage::requireNoPendingSubscriptionAcquisition(lease);if(!acquisition){return std::unexpected(acquisition.error());}
     if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
     const auto previous=pendingMagnets();const auto old=std::ranges::find(previous,intent.hash,&engine::PendingMagnetStatus::hash);
     if(old!=previous.end()&&old->retained){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata admission is still resolving or retiring"});}
@@ -1272,8 +1279,8 @@ struct SessionBridge::Host {
   }
 };
 
-SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions, RssFetchFactory rssFactory, SubscriptionFetchFactory subscriptionFactory)
-    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)), rssFetchFactory_(std::move(rssFactory)), subscriptionFetchFactory_(std::move(subscriptionFactory)) {
+SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions, RssFetchFactory rssFactory, SubscriptionFetchFactory subscriptionFactory, SubscriptionAcquisitionFactory acquisitionFactory)
+    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)), rssFetchFactory_(std::move(rssFactory)), subscriptionFetchFactory_(std::move(subscriptionFactory)), subscriptionAcquisitionFactory_(std::move(acquisitionFactory)) {
   qRegisterMetaType<ui::SubscriptionKey>();qRegisterMetaType<ui::SubscriptionCatalogKey>();qRegisterMetaType<ui::SubscriptionCatalogPresentation>();qRegisterMetaType<ui::SubscriptionCommandKey>();qRegisterMetaType<ui::SubscriptionCommand>();qRegisterMetaType<ui::SubscriptionPresentation>();
   qRegisterMetaType<ui::RssCatalogRequest>();qRegisterMetaType<ui::RssCatalogPresentation>();qRegisterMetaType<ui::RssFetchKey>();qRegisterMetaType<ui::RssFetchCommand>();qRegisterMetaType<ui::RssFetchPresentation>();
   qRegisterMetaType<ui::I2pPresentation>();
@@ -1381,7 +1388,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
       const auto session=host_?host_->columnLayoutSession:quint64{0};
       try{
       if (!stop.stop_requested() && host_) {
-        pollRssFetch();pollSubscriptions();
+        pollSubscriptionAcquisition();take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));pollRssFetch();pollSubscriptions();
         if(host_->recoveryDrainStarted){throw Failure{{storage::ErrorCode::Busy,"Explicit close without checkpoint is incomplete; retained owners may remain live"}};}
         if((storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))){
           // Poll may complete metadata imports or write retirement checkpoints.
@@ -1625,6 +1632,12 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
     if(i2pOptions_&&i2pOptions_->publicCoexistence){throw Failure{{storage::ErrorCode::Unsupported,"Use normal profile startup for the shared Public and I2P queue"}};}
     if (host_) { throw Failure{{storage::ErrorCode::Conflict, "A profile is already open"}}; }
     auto lease = take(storage::ProfileLease::acquire(profile));
+    const auto acquisition=recoverSubscriptionAcquisition(lease,profile);
+    if(!acquisition||*acquisition){
+      host_=std::make_unique<Host>(profile,0,std::move(lease),reserveColumnLayoutSession());
+      host_->normalNetwork=false;host_->i2pOptions=i2pOptions_;host_->fileRecoveryRequired=true;
+      ready(host_->query(stop),tr("Interrupted subscription addition needs review. Transfers remain stopped; saved files were preserved."));return;
+    }
     // The journal guards ALL original inventory/state/cache candidates. Do
     // not run an unrelated recovery or create/checkpoint an owner first.
     if(storage::hasPendingCategoryDeletion(lease)){
@@ -1640,7 +1653,7 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
     }
     static_cast<void>(take(storage::recoverOriginalCompaction(lease)));
     const bool reviewOnly=recoverOrReviewReplacement(lease);
-    if(!reviewOnly){static_cast<void>(take(storage::recoverTorrentIntake(lease)));}
+    if(!reviewOnly){static_cast<void>(take(recoverTorrentIntakeAfterSubscription(lease,profile)));}
     const auto session = reserveColumnLayoutSession();
     host_ = std::make_unique<Host>(profile, ownedPeerPort, std::move(lease), session);
     host_->i2pOptions=i2pOptions_;
@@ -1667,6 +1680,12 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
   return dispatch([this, profile = std::move(profile)](std::stop_token stop) {
     if (host_) { throw Failure{{storage::ErrorCode::Conflict, "A profile is already open"}}; }
     auto lease = take(storage::ProfileLease::acquire(profile));
+    const auto acquisition=recoverSubscriptionAcquisition(lease,profile);
+    if(!acquisition||*acquisition){
+      host_=std::make_unique<Host>(profile,0,std::move(lease),reserveColumnLayoutSession());
+      host_->normalNetwork=false;host_->i2pOptions=i2pOptions_;host_->fileRecoveryRequired=true;
+      ready(host_->query(stop),tr("Interrupted subscription addition needs review. Transfers remain stopped; saved files were preserved."));return;
+    }
     // The journal guards ALL original inventory/state/cache candidates. Do
     // not run an unrelated recovery or create/checkpoint an owner first.
     if(storage::hasPendingCategoryDeletion(lease)){
@@ -1682,7 +1701,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     }
     static_cast<void>(take(storage::recoverOriginalCompaction(lease)));
     const bool reviewOnly=recoverOrReviewReplacement(lease);
-    if(!reviewOnly){static_cast<void>(take(storage::recoverTorrentIntake(lease)));}
+    if(!reviewOnly){static_cast<void>(take(recoverTorrentIntakeAfterSubscription(lease,profile)));}
     // Do not let dispatch's repairable-policy fallback publish an ordinary Host
     // after storage recovery failed. Only a validated review gets a read-only Host.
     host_ = std::make_unique<Host>(profile, 0, std::move(lease), reserveColumnLayoutSession());
@@ -1733,6 +1752,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
 bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAction action) {
   if (profileClosed_ || targets.empty()) { return false; }
   return dispatch([this, targets = std::move(targets), action](std::stop_token stop) {
+    if(host_){take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));}
     if(host_&&host_->privateOnly()&&host_->lastSnapshot&&std::ranges::none_of(targets,[&](const auto& target){return host_->pendingTargets.contains(target.hash.toStdString());})){
       host_->i2pCommands(targets,action,stop);publishI2p();ready(host_->query(stop));return;
     }
@@ -1740,7 +1760,7 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
     if (host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
-    if (take(storage::recoverTorrentIntake(host_->lease))) {
+    if (take(recoverTorrentIntakeAfterSubscription(host_->lease,host_->profile))) {
       throw Failure{{storage::ErrorCode::Conflict, "Recovered a pending torrent import; library refreshed"}};
     }
     // Validate the entire UI selection before any saved intent or engine effect.
@@ -1912,7 +1932,7 @@ bool SessionBridge::torrentImport(QString metadata, QString destination, bool st
     }
     checkpoint(stop);
     if (host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
-    static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
+    static_cast<void>(take(recoverTorrentIntakeAfterSubscription(host_->lease,host_->profile)));
     const auto metadataPath=std::filesystem::path(metadata.toUtf8().toStdString());
     const auto filenameContext=take(storage::readOriginalFilenameContext(host_->lease));
     const auto inspected=take(storage::inspectTorrentIntake(metadataPath,stop,filenameContext.conversions,filenameContext.decoderShowAll));
@@ -2049,7 +2069,7 @@ bool SessionBridge::magnetImport(QString uri, QString destination) {
     }
     checkpoint(stop);
     if (host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
-    static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
+    static_cast<void>(take(recoverTorrentIntakeAfterSubscription(host_->lease,host_->profile)));
     const auto intent = take(engine::parseMagnetIntent(uri.toUtf8().toStdString(),
         std::filesystem::path(destination.toUtf8().toStdString()), false, host_->networkPolicy,host_->magnetContext()));
     const auto library = take(storage::readLibraryView(host_->lease));
@@ -2097,7 +2117,7 @@ bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int 
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
     if (host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
-    if (take(storage::recoverTorrentIntake(host_->lease))) {
+    if (take(recoverTorrentIntakeAfterSubscription(host_->lease,host_->profile))) {
       throw Failure{{storage::ErrorCode::Conflict, "Recovered a pending torrent import; library refreshed"}};
     }
     host_->accepts(target);

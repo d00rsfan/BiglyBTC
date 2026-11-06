@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <span>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -123,7 +124,57 @@ void editStateAtPublished(Stage stage) {
 }
 } // namespace
 
+namespace {
+fs::path acquisitionGuardPath;
+Stage acquisitionGuardStage=Stage::JournalSynced;
+void introduceAcquisitionGuard(Stage stage){
+  if(stage==acquisitionGuardStage){write(acquisitionGuardPath,"unrecognized-acquisition-intent");}
+}
+int acquisitionPendingGuardRows(){
+  try{
+    std::size_t cases=0;
+    for(const auto* marker:{"BiglyBTC.subscription-acquire","BiglyBTC.subscription-acquire.saving","BiglyBTC.subscription-acquire.bak"}){
+      Area area;const auto prepared=storage::inspectTorrentIntake(area.metadata);CHECK(prepared);
+      const auto inventory=area.profile/"downloads.config";const auto before=fs::exists(inventory)?std::optional{read(inventory)}:std::nullopt;
+      const auto path=area.profile/marker;write(path,"unrecognized-acquisition-intent");
+      CHECK(storage::hasPendingTorrentIntake(*area.lease));
+      const auto plain=storage::importTorrent(*area.lease,area.metadata,area.destination,true);CHECK(!plain&&plain.error().code==Code::Conflict);
+      const std::array<compat::FilePolicy,1> choices{{{false,0}}};
+      const auto selected=storage::importTorrentWithFileOptions(*area.lease,*prepared,area.destination,true,choices);CHECK(!selected&&selected.error().code==Code::Conflict);
+      const auto alias=storage::importHybridAlias(*area.lease,identity(),storage::OriginalSelectedHash::V2,std::span<const storage::OriginalTorrentIdentity>{});CHECK(!alias&&alias.error().code==Code::Conflict);
+      const auto recovered=storage::recoverTorrentIntake(*area.lease);CHECK(!recovered&&recovered.error().code==Code::Conflict);
+      CHECK(read(path)=="unrecognized-acquisition-intent"&&!fs::exists(area.profile/"BiglyBTC.torrent-import"));
+      CHECK((fs::exists(inventory)?std::optional{read(inventory)}:std::nullopt)==before);
+      CHECK(!fs::exists(area.profile/"active")&&!fs::exists(area.profile/"torrents"));area.noPayload();++cases;
+    }
+    for(const auto stage:{Stage::JournalSynced,Stage::StatePublished,Stage::ArchivePublished,Stage::InventoryPublished}){
+      Area area;acquisitionGuardPath=area.profile/"BiglyBTC.subscription-acquire";acquisitionGuardStage=stage;
+      const auto imported=storage::importTorrent(*area.lease,area.metadata,area.destination,true,introduceAcquisitionGuard);
+      CHECK(!imported&&imported.error().code==Code::Conflict);
+      CHECK(read(acquisitionGuardPath)=="unrecognized-acquisition-intent"&&fs::exists(area.profile/"BiglyBTC.torrent-import"));
+      const auto journal=read(area.profile/"BiglyBTC.torrent-import");
+      CHECK(!storage::recoverTorrentIntake(*area.lease)&&read(area.profile/"BiglyBTC.torrent-import")==journal);
+      if(stage==Stage::JournalSynced){CHECK(!fs::exists(area.state())&&!fs::exists(area.archive())&&!fs::exists(area.profile/"downloads.config"));}
+      if(stage==Stage::StatePublished){CHECK(fs::exists(area.state())&&!fs::exists(area.archive())&&!fs::exists(area.profile/"downloads.config"));}
+      if(stage==Stage::ArchivePublished){CHECK(fs::exists(area.state())&&fs::exists(area.archive())&&!fs::exists(area.profile/"downloads.config"));}
+      if(stage==Stage::InventoryPublished){CHECK(area.saved().downloads.size()==1&&fs::exists(area.state())&&fs::exists(area.archive()));}
+      area.noPayload();++cases;
+    }
+    {
+      Area area;const auto interrupted=+[](Stage stage){if(stage==Stage::JournalSynced){throw std::runtime_error("Owned marked-journal negative fixture");}};
+      CHECK(!storage::importTorrent(*area.lease,area.metadata,area.destination,true,interrupted));
+      auto journal=document(area.profile/"BiglyBTC.torrent-import");CHECK(journal.replaceValue("subscriptionAcquisition","de"));
+      const auto bytes=journal.serialize();write(area.profile/"BiglyBTC.torrent-import",bytes);
+      const auto recovered=storage::recoverTorrentIntake(*area.lease);CHECK(!recovered&&recovered.error().code==Code::Conflict);
+      CHECK(read(area.profile/"BiglyBTC.torrent-import")==bytes&&!fs::exists(area.state())&&!fs::exists(area.archive()));
+      area.noPayload();++cases;
+    }
+    CHECK(cases==8);std::cout<<"PASS_ACQUISITION_PENDING_INTAKE_GUARDS cases="<<cases<<'\n';return 0;
+  }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}
+}
+} // namespace
 int main(int argc,char** argv) {
+  if(argc==2&&std::string_view(argv[1])=="--acquisition-pending-guards"){return acquisitionPendingGuardRows();}
   if(argc==6&&std::string_view(argv[1])=="--prepare-save-name"){
     try{
       const auto request=document(argv[5]);const auto* node=request.find("saveName");

@@ -17,6 +17,7 @@ std::string raw(const core::Document& document,const core::Node& node) {
 }
 std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::TorrentHash& hash,
     std::span<const compat::FilePolicy> policies) {
+  auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
   if(hasPendingOriginalCompaction(lease)){return bad(ErrorCode::Conflict,"Recover pending explicit compaction before editing file preferences");}
   auto config=ConfigFile::load(lease,"downloads.config"); if(!config) { return std::unexpected(config.error()); }
   auto library=core::readLibrary(config->document());
@@ -60,6 +61,7 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
       for(std::size_t i=0;i<rows->children.size();++i){list+=i==selected->sourceIndex?entry->serialize():raw(config->document(),rows->children[i]);}
       if(!config->document().replaceValue("downloads",list+'e')){return bad(ErrorCode::InvalidFormat,"Cannot edit file priorities");}
     }
+    allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
     auto prepared=store->beginUpdate(lease,hash);if(!prepared){return std::unexpected(prepared.error());}
     return config->save(lease);
   }
