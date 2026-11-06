@@ -18,3 +18,6 @@ Required subsequent closures:
 - Remaining original tag features/settings and classic/API consumers. Whole P08 also needs history/archive, search/subscriptions/RSS, sharing/tracker and advanced services inventoried in MIGRATION_PLAN.md.
 
 Root alone mutates Native/build caches. Stage independent work under durable build/i2p-discovery-20261101. Reuse existing GCC/SAN caches with a shared3-job FIFO, per-cache exclusive ownership, nice5, >=5GiB reserve. Inspect stage summaries and relevant failures; retain green receipts. No full cache/clones or preview rollback images.
+
+
+Latest bounded library-policy implementation `7335aba21d8d12c7dab9e2df04a51c4aa4673610`, tree `6b120fe2359d235a27f981775b454926078f0b51`; review ../evidence/20261106-library-policy-recovery/REVIEW.md. Editor/intake-only/time/source witnesses, explicit category recovery/Public omission and history store are qualified within recorded limits. Future groups/colours/full lifecycle/UI remain in progress.
