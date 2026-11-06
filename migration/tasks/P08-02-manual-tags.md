@@ -21,3 +21,6 @@ Root alone mutates Native/build caches. Stage independent work under durable bui
 
 
 Latest bounded library-policy implementation `7335aba21d8d12c7dab9e2df04a51c4aa4673610`, tree `6b120fe2359d235a27f981775b454926078f0b51`; review ../evidence/20261106-library-policy-recovery/REVIEW.md. Editor/intake-only/time/source witnesses, explicit category recovery/Public omission and history store are qualified within recorded limits. Future groups/colours/full lifecycle/UI remain in progress.
+
+
+History/library `7b3e55f9f8ea5cbd43791e11c1870890875d63a8`, tree `fa98e0b8247185e976cf6a9371abe673248ee4f2`: real fresh intake/magnet receipts, classic history tab and ordinary group/colour edits qualified within evidence/20261106-history-library-view/REVIEW.md. Full completion producer/removal/reset/archive remain open.

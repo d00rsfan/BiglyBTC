@@ -125,3 +125,8 @@ Native `7335aba21d8d12c7dab9e2df04a51c4aa4673610`, tree `6b120fe2359d235a27f9817
 ## 2026-11-06 original history public API handoff
 
 Native helper `0c36fa9a1b170a812c2f2bebd5323aa219b37581`, tree `67fd16ff480ecfe0c4c3a8203a5ec97438d3cece`, original core `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`. [Actual API/file/timer roundtrip](evidence/20261106-original-history-handoff/REVIEW.md) passed; lifecycle/GUI and whole P08 remain open.
+
+
+## 2026-11-06 durable intake history and classic library view
+
+Native `7b3e55f9f8ea5cbd43791e11c1870890875d63a8`, tree `fa98e0b8247185e976cf6a9371abe673248ee4f2`, original core `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`, original I2P helper `33d97eca67a9f332e3d4da7e7492ec54f4bec078`. [Review](evidence/20261106-history-library-view/REVIEW.md) records32 affected coverage cells/compiler, actual receipt/Window cases and remaining lifecycle/private gates. No global integration baseline advanced.
