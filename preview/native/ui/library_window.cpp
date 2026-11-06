@@ -2,6 +2,7 @@
 #include "torrent_creation_dialog.hpp"
 #include "torrent_intake_dialog.hpp"
 #include "library_window.hpp"
+#include "download_history_page.hpp"
 #include "options_dialog.hpp"
 #include "scheduler_dialog.hpp"
 #include "local_rating_dialog.hpp"
@@ -417,6 +418,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   myTorrents->setShortcut(QKeySequence(QStringLiteral("Ctrl+1")));
   myTorrents->setShortcutContext(Qt::WindowShortcut);
   connect(myTorrents, &QAction::triggered, this, &LibraryWindow::showMyTorrents);
+  downloadHistoryAction_=view->addAction(tr("Download &History"));
+  downloadHistoryAction_->setObjectName(QStringLiteral("classic-download-history"));
+  connect(downloadHistoryAction_,&QAction::triggered,this,&LibraryWindow::showDownloadHistory);
   auto* myTracker = view->addAction(tr("My &Tracker"));
   myTracker->setObjectName(QStringLiteral("classic-my-tracker"));
   myTracker->setShortcut(QKeySequence(QStringLiteral("Ctrl+2")));
@@ -450,6 +454,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   refresh_->setShortcut(QKeySequence(Qt::Key_F5));
   connect(refresh_, &QAction::triggered, this, [this] {
     if (closing_) { return; }
+    if(onDownloadHistoryPage()){downloadHistoryPage_->reload();return;}
     if (onStatisticsPage()) {
       if (statisticsPage_->countrySelected()) { pendingCountryRead_ = statisticsPage_; queueCountryStatistics(); }
       else if (statisticsPage_->manualTagsSelected()) { pendingManualTagRead_ = statisticsPage_; queueManualTagStatistics(); }
@@ -569,6 +574,7 @@ void LibraryWindow::showMyShares() {
   sharesPage_->table().setFocus(Qt::ShortcutFocusReason);
   if (guard && fresh) { refreshSavedServices(); }
 }
+#include "download_history_window.inc"
 StatisticsPage* LibraryWindow::statisticsPage() const { return statisticsPage_.data(); }
 bool LibraryWindow::onStatisticsPage() const {
   return statisticsPage_ && mainTabs_->currentWidget() == statisticsPage_.data();
@@ -918,7 +924,7 @@ void LibraryWindow::offerRecoveryClose(quint64 session){
   if(!session||session!=columnSession_||busy_||closing_||!sessionCloseEnabled_){return;}
   const QPointer<LibraryWindow> guard(this);
   const auto answer=QMessageBox::warning(this,tr("Close without saving progress"),
-      tr("The pending category journal prevents normal checkpointing. Close the retained transfers without saving their latest piece map and transfer counters? Saved profile and journal files will be preserved; later startup may recheck downloaded data."),
+      tr("The pending profile journal prevents normal checkpointing. Close the retained transfers without saving their latest piece map and transfer counters? Saved profile and journal files will be preserved; later startup may recheck downloaded data."),
       QMessageBox::Yes|QMessageBox::No,QMessageBox::No);
   if(!guard||answer!=QMessageBox::Yes||session!=columnSession_||busy_||closing_){return;}
   closing_=true;sessionCloseRequested_=true;updateActions();if(!guard){return;}
@@ -997,6 +1003,7 @@ void LibraryWindow::closePage(int index) {
   if (!retainedLibrary) {
     if (page == hostingPage_.data()) { hostingPage_.clear(); }
     else if (page == sharesPage_.data()) { sharesPage_.clear(); }
+    else if(page==downloadHistoryPage_.data()){downloadHistoryPage_->invalidateSession();downloadHistoryPage_.clear();pendingDownloadHistoryCommand_.reset();}
     else if (page == statisticsPage_.data()) {
       const QPointer<StatisticsPage> statisticsPage = statisticsPage_;
       const auto session = columnSession_;
@@ -1082,6 +1089,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
+  pendingDownloadHistoryCommand_.reset();if(downloadHistoryPage_){downloadHistoryPage_->beginSession(session);if(!guard){return;}}
   latestI2p_.reset();
   latestManualTagEditor_.reset();pendingManualTagCommand_.reset();
   latestCategoryEditor_.reset();pendingCategoryCommand_.reset();
@@ -1399,10 +1407,10 @@ void LibraryWindow::updateActions() {
   const auto target = actionTarget();
   continue_->setEnabled(!busy_ && !closing_ && target && model_->canContinue(*target));
   cancel_->setEnabled(busy_ && !closing_);
-  refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (!busy_ && mainTabs_->currentWidget() == torrentsPage_)));
+  refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (!busy_&&(onDownloadHistoryPage()||mainTabs_->currentWidget()==torrentsPage_))));
   files_->setEnabled(!busy_ && !closing_ && target.has_value());
   padding_->setEnabled(!closing_ && mainTabs_->currentWidget() == torrentsPage_);
-  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage()));
+  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || onDownloadHistoryPage()));
   saveColumns_->setEnabled(!closing_ && !busy_ && columnSaveAvailable_ && columnSession_ != 0
       && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_ && !activeStatisticsRequest_
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());
@@ -1416,6 +1424,8 @@ void LibraryWindow::updateActions() {
   if (optionsAction_) { optionsAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   queueDownloadActions();
   QPointer<LibraryWindow> guard(this);
+  if(downloadHistoryAction_){downloadHistoryAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
+  if(downloadHistoryPage_){downloadHistoryPage_->setAvailable(!closing_&&!busy_);if(!guard){return;}}
   if(categoryAction_){categoryAction_->setEnabled(!closing_&&!offlinePreview_&&columnSession_);if(!guard){return;}}
   if(categoryDialog_){categoryDialog_->setAvailable(!busy_&&!closing_&&!offlinePreview_);if(!guard){return;}}
   if(manualTagAction_){manualTagAction_->setEnabled(!closing_&&!offlinePreview_&&columnSession_);if(!guard){return;}}
@@ -2023,6 +2033,7 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
   if (!optionsGuard) { return; }
   pendingOptionsLoad_.reset();
   closing_ = true;
+  pendingDownloadHistoryCommand_.reset();if(downloadHistoryPage_){downloadHistoryPage_->invalidateSession();if(!optionsGuard){return;}}
   if(categoryDialog_){const auto dialog=categoryDialog_;categoryDialog_.clear();dialog->invalidateSession();if(!optionsGuard){return;}}
   if(manualTagDialog_){const auto dialog=manualTagDialog_;manualTagDialog_.clear();dialog->invalidateSession();if(!optionsGuard){return;}}
   pendingSavedRequest_.reset();

@@ -51,6 +51,9 @@ struct ManagedQueueMetadata {
 // seed_mode, verified resume, permission to auto-resume or an engine admission.
 enum class ManagedStoragePurpose { Download, VerifyExistingReadOnly, VerifySelectedReadOnly, AllocateOnly };
 struct ManagedAllocationProgress { std::int64_t completedBytes=0,totalBytes=0;bool complete=false; };
+// Retained actual matched checked-state event, independent of later final
+// piece status at stop. Internal metadata input, never a GUI/payload grant.
+struct ManagedHistoryCompletionEvent {std::int64_t wallMillis=0;bool complete=false,checkedIncompleteObserved=false;};
 
 // Owns authenticated payload descriptors/state for ONE managed admission. The
 // caller retains the same profile lease for preparation, engine use and save.
@@ -73,6 +76,11 @@ public:
       std::span<const storage::OriginalTorrentIdentity>,
       std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose);
   std::string preparedStateSnapshot()const;
+  // Internal checkpoint metadata result only; neither getter mints a receipt.
+  bool historyCompletionRecorded()const noexcept;
+  std::optional<std::int64_t> historyCheckpointBytes()const noexcept;
+  std::optional<storage::ErrorCode> historyCompletionProblem()const noexcept;
+
   // Actual committed category metadata only; prepared owner/lease stays exact.
   // FS/pure only, safe inside a trusted publication boundary (no SDK waits).
   std::expected<void,storage::Error> rebaseCategory(const storage::ProfileLease&);
@@ -119,7 +127,7 @@ public:
       std::int64_t secondsDownloading = 0, std::int64_t secondsSeeding = 0,
       std::optional<std::int32_t> secondsSinceUpload = {},
       std::optional<ManagedBadPayloadBytes> badPayloadBytes = {},
-      bool badPayloadComplete = true);
+      bool badPayloadComplete = true,std::optional<ManagedHistoryCompletionEvent> historyEvent = {});
 private:
   static std::expected<ManagedStorage,storage::Error> prepareImpl(
       const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,

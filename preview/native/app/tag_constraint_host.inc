@@ -7,7 +7,7 @@
   void noteConstraintIntake(const core::TorrentHash& hash)noexcept{
     // Called ONLY from an actual successful fresh durable intake result. This
     // is not a UI/row/startup hook, and must not fail an already-saved import.
-    if(!normalNetwork||!constraintNormalReady||replacementReviewOnly||fileRecoveryRequired||manualTagEnded||constraintPaused||storage::hasPendingCategoryDeletion(lease)){return;}
+    if(!normalNetwork||!constraintNormalReady||replacementReviewOnly||fileRecoveryRequired||manualTagEnded||constraintPaused||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return;}
     try{
       if(!constraintWorker){constraintWorker=take(TagConstraintWorker::activate(lease,columnLayoutSession));}
       if(manualTagStore&&manualTagStore->recoveryRequired()){
@@ -32,7 +32,7 @@
   bool tickConstraintTags(std::stop_token stop){
     // Category-derived membership may be partial; do not persist rules from
     // it while ANY category journal candidate remains unresolved.
-    if(storage::hasPendingCategoryDeletion(lease)){return false;}
+    if((storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return false;}
     if(!normalNetwork||!constraintNormalReady||replacementReviewOnly||fileRecoveryRequired||manualTagEnded
         ||constraintPaused||!lastSnapshot||lastSnapshot->revision!=revision||stop.stop_requested()){
       return false;

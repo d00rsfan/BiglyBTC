@@ -77,8 +77,8 @@
     return false;
   }
   void requireCategoryInventoryWritable()const{
-    if(recoveryDrainStarted||storage::hasPendingCategoryDeletion(lease)){
-      throw Failure{{storage::ErrorCode::Conflict,"Category deletion is pending; guarded inventory/state writes require explicit recovery or review"}};
+    if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){
+      throw Failure{{storage::ErrorCode::Conflict,"Profile recovery is pending; guarded inventory/state writes require explicit recovery or review"}};
     }
   }
   ui::Details categoryDetails(const ui::Target& target){

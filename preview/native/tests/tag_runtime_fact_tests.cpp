@@ -157,8 +157,8 @@ void actualManualTagWitnessesAgeAndStaleSources(){
   const auto dictionary=[&](std::initializer_list<std::pair<std::string,std::string>> values){std::string out="d";for(const auto& [key,value]:values){out+=bytes(key)+value;}return out+'e';};
   const std::string member="VKVKVKVKVKVKVKVKVKVKVKVKVKVKVKVK"; // Actual uppercase Base32 of20 AA bytes.
   const auto source=[&](bool blocked,bool unknownMember=false){
-    const auto stable=dictionary({{"n",bytes("Manual")},{"c",dictionary({{"gr",bytes("Group")}})},{"o","l"+bytes(member)+"e"},{"p","ld1:ai100eee"}});
-    const auto own=dictionary({{"n",bytes("Rule")},{"c",dictionary({{"pp.constraint","l4:truee"}})},{"o","l"+bytes(unknownMember?"unknown-alias":member)+"e"},{"p","ld1:ai100eee"}});
+    const auto stable=dictionary({{"n",bytes("Manual")},{"c",dictionary({{"gr",bytes("Group")},{"col.rgb",bytes("+01,2,3,,")}})},{"o","l"+bytes(member)+"e"},{"p","ld1:ai100eee"}});
+    const auto own=dictionary({{"n",bytes("Rule")},{"c",dictionary({{"pp.constraint","l4:truee"},{"col.rgb",bytes("0,140,66")}})},{"o","l"+bytes(unknownMember?"unknown-alias":member)+"e"},{"p","ld1:ai100eee"}});
     const auto alias=blocked?dictionary({{"n",bytes("Manual")},{"c",dictionary({{"pp.constraint","l4:truee"}})}}):dictionary({{"n",bytes("tag.localized")}});
     return dictionary({{"3",dictionary({{"1",stable},{"2",own},{"3",alias}})},{"future-root",bytes("keep")}});
   };

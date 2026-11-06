@@ -1,5 +1,7 @@
 #include "persistent_session.hpp"
 #include "magnet_intake.hpp"
+#include "durable_intake_receipt.hpp"
+#include "download_history_store.hpp"
 #include "owned_engine_fixture.hpp"
 
 #include <QCryptographicHash>
@@ -244,6 +246,54 @@ bool noPayloadFiles(const Client& client) {
 class ManagedMagnetTests final : public QObject {
   Q_OBJECT
 private slots:
+  void realMetadataHistoryIsConsumedBeforeCleanup_data(){
+    QTest::addColumn<int>("mode");
+    QTest::newRow("enabled")<<0;QTest::newRow("disabled")<<1;
+    QTest::newRow("corrupt-history-warning")<<2;QTest::newRow("stale-epoch-warning")<<3;
+    QTest::newRow("hook-throw-warning")<<4;
+  }
+  void realMetadataHistoryIsConsumedBeforeCleanup(){
+    QFETCH(int,mode);
+    // Actual bounded loopback BEP9 delivery + actual handle retirement. No
+    // synthetic metadata alert, bool receipt, provider grant or payload start.
+    test::OwnedEngineFixture seed(false);QTRY_VERIFY_WITH_TIMEOUT(seed.ready(),30000);
+    Client client;const auto pending=client.queue(*seed.hash,seed.port(),true);
+    auto config=storage::ConfigFile::load(*client.lease,"biglybt.config");QVERIFY(config);
+    QVERIFY(config->document().replaceValue("Download History Enabled",mode==1?"i0e":"i1e"));QVERIFY(config->save(*client.lease));
+    const auto historyPath=client.profile+QStringLiteral("/dlhistorya.config");
+    if(mode==2){test::write(historyPath,QByteArray("invalid history preserved"));}
+    auto service=owner(client);int calls=0;bool beforeCleanup=false;
+    std::unique_ptr<storage::DownloadHistoryStore> history;
+    QVERIFY(service->configureMagnetCompletionHook(*client.lease,[&](storage::IntakeHistoryOutcome event)->std::optional<storage::Error>{
+      ++calls;const auto intents=engine::readPendingMagnets(*client.lease,localPolicy());
+      beforeCleanup=intents&&intents->size()==1&&intents->front().sourceEntry==pending.sourceEntry;
+      test::require(beforeCleanup&&event.receipt&&!event.warning,"Actual fresh receipt/pending row absent at hook");
+      if(mode==4){throw std::runtime_error("Generated auxiliary hook failure");}
+      if(mode==3){auto epoch=client.lease->sourceAccess(true);test::require(bool(epoch),"Actual same-OFD epoch turn");}
+      auto opened=storage::DownloadHistoryStore::open(*client.lease);if(!opened){return opened.error();}history=std::move(*opened);
+      auto snapshot=history->snapshot();if(!snapshot){return snapshot.error();}
+      auto result=history->appendIntake(*snapshot,std::move(*event.receipt));if(!result){return result.error();}
+      test::require(result->changed==(mode==0),"Disabled history manufactured a row");
+      return {};
+    }));
+    QVERIFY(service->startMagnet(*client.lease,pending,client.native()));
+    const auto initial=magnet(*service,pending.hash);QVERIFY(initial&&initial->retained&&initial->admission);
+    QTRY_VERIFY2_WITH_TIMEOUT(pump(*service,pending.hash,MagnetPhase::Imported),magnetDiagnostic(*service,pending.hash).constData(),30000);
+    const auto completed=magnet(*service,pending.hash);QVERIFY(completed&&!completed->failure&&!completed->retained);
+    QCOMPARE(calls,1);QVERIFY(beforeCleanup);QCOMPARE(completed->admission,initial->admission);
+    QVERIFY(completed->newlyImported);QCOMPARE(completed->importGeneration,std::uint64_t{903});
+    QCOMPARE(bool(completed->historyWarning),mode>=2);
+    const auto remaining=engine::readPendingMagnets(*client.lease,localPolicy());QVERIFY(remaining&&remaining->empty());
+    QCOMPARE(saved(client).downloads.size(),std::size_t{1});QVERIFY(noPayloadFiles(client)&&service->managedDownloads().empty());
+    if(mode==0){auto raw=core::readSavedDownloadHistory(test::read(historyPath).toStdString());QVERIFY(raw&&raw->records.size()==1);QCOMPARE(raw->records.front().hash,std::optional<std::string>{std::string(reinterpret_cast<const char*>(pending.hash.bytes().data()),pending.hash.bytes().size())});}
+    else if(mode==2){QCOMPARE(test::read(historyPath),QByteArray("invalid history preserved"));}
+    else{QVERIFY(!QFileInfo::exists(historyPath));}
+    for(int i=0;i<3;++i){QVERIFY(service->poll());}QCOMPARE(calls,1);
+    if(history){QVERIFY(history->close());history.reset();}
+    const auto ended=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(ended.sessionJoined&&ended.retirement.storageReleased);
+    QVERIFY(!service->configureMagnetCompletionHook(*client.lease,[](storage::IntakeHistoryOutcome){return std::optional<storage::Error>{};}));
+    QVERIFY(client.sentinelIntact()&&seed.intact(false));
+  }
   void actualMetadataThenMaterialPayload_data() {
     QTest::addColumn<bool>("multifile"); QTest::addColumn<bool>("force");
     QTest::newRow("single-forced") << false << true;

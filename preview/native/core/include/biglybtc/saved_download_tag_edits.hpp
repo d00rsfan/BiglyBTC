@@ -2,6 +2,7 @@
 #pragma once
 #include "biglybtc/saved_download_tags.hpp"
 #include <variant>
+#include <array>
 
 namespace biglybtc::core {
 enum class SavedTagEditError {
@@ -13,6 +14,7 @@ enum class SavedTagEditError {
 // Ungrouped rows are independent. Grouped effects require exact ordinary
 // affected-group settings; unknown/exclusive/colour/assign-root refuse.
 bool ordinarySavedTagGroup(const SavedDownloadTags&,const Node& record)noexcept;
+bool ordinarySavedTagGroup(const SavedDownloadTags&,std::optional<std::string_view> group)noexcept;
 // Known supported membership configuration only. This value check never grants
 // effects; the real Store repeats it from fresh source before a changed save.
 bool ordinarySavedTagMembershipEffects(const SavedDownloadTags&,const Node& record)noexcept;
@@ -25,6 +27,16 @@ struct SavedTagCreate {
 };
 struct SavedTagRename { std::int32_t id; std::string name; };
 struct SavedTagRemove { std::int32_t id; };
+// Original setter: null erases c/gr; empty is a distinct saved string.
+struct SavedTagSetGroup { std::int32_t id; std::optional<std::string> group; };
+using SavedTagRgb=std::array<std::int32_t,3>;
+// cb8 manual-download type default. Effective inheritance is not inferred here.
+inline constexpr SavedTagRgb ManualTagDefaultRgb{0,140,66};
+// Missing => null/default. Bounded ASCII Java int/split forms are decoded;
+// malformed, duplicate or unqualified Unicode numeric input is preserved/refused.
+std::expected<std::optional<SavedTagRgb>,SavedTagEditError> readSavedTagColour(const Node& record)noexcept;
+struct SavedTagSetColour { std::int32_t id; std::optional<SavedTagRgb> colour; };
+
 struct SavedTagVisibility { std::int32_t id; bool visible; };
 struct SavedTagAddMember {
   std::int32_t id;
@@ -42,7 +54,7 @@ struct SavedTagSetConstraint {
   bool enabled=true;
 };
 using SavedTagEdit = std::variant<SavedTagCreate, SavedTagRename, SavedTagRemove,
-    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint>;
+    SavedTagVisibility, SavedTagAddMember, SavedTagRemoveMember, SavedTagSetConstraint, SavedTagSetGroup, SavedTagSetColour>;
 struct SavedTagEditResult {
   SavedDownloadTags value;
   bool changed = false;

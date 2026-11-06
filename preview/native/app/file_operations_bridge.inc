@@ -61,13 +61,16 @@ bool SessionBridge::prepareFileOperation(ui::FileOperationRequest request) {
         if(prepared.preview().hash!=identity(request.target)){throw Failure{{storage::ErrorCode::Conflict,"Select the torrent named by the interrupted replacement"}};}
         result=filePlanPacket(request,prepared.preview());host_->filePlan.emplace(std::move(prepared));host_->filePlanPacket=result;
       }else{
-      if(host_->fileRecoveryRequired){throw Failure{{storage::ErrorCode::Conflict,"Restart to recover the interrupted file operation before changing the profile"}};}
+      if(host_->fileRecoveryRequired||storage::hasPendingFileOperation(host_->lease)){throw Failure{{storage::ErrorCode::Conflict,"Interrupted file-operation files require explicit review"}};}
       if(take(storage::recoverTorrentIntake(host_->lease))){throw Failure{{storage::ErrorCode::Conflict,"A torrent import was recovered; refresh the library"}};}
       host_->accepts(request.target);
       if(host_->pendingTargets.contains(request.target.hash.toStdString())){throw Failure{{storage::ErrorCode::Unsupported,"Metadata must be resolved before operating on torrent files"}};}
       const bool removal=request.operation==ui::FileOperation::RemoveKeepData||request.operation==ui::FileOperation::RemoveDeleteData;
       if(request.operation>=ui::FileOperation::MoveFile){const auto held=take(storage::readVerifiedSeedIntent(host_->lease,identity(request.target)));if(held){throw Failure{{storage::ErrorCode::Unsupported,"Per-file edits of verified-existing seeds need a new approved read-only scope; no data was changed"}};}}
-      const bool deleteArchive=removal?(request.deleteTorrentFile?*request.deleteTorrentFile:take(storage::torrentArchiveDeletionPreference(host_->lease,stop))):false;
+      if(request.operation==ui::FileOperation::RemoveKeepData&&host_->route(identity(request.target))!=Host::Route::Public){throw Failure{{storage::ErrorCode::Unsupported,"Keep Data removal currently supports only an actual Public torrent"}};}
+      // This workflow preserves external metadata. Only a separate, explicit
+      // deletion workflow can remove an externally referenced torrent file.
+      const bool deleteArchive=removal?(request.deleteTorrentFile?*request.deleteTorrentFile:(request.operation==ui::FileOperation::RemoveKeepData?false:take(storage::torrentArchiveDeletionPreference(host_->lease,stop)))):false;
       if(!removal&&request.deleteTorrentFile.value_or(false)){throw Failure{{storage::ErrorCode::Unsupported,"Archive deletion requires a removal request"}};}
       const bool recycle=request.operation==ui::FileOperation::RemoveDeleteData?(request.recyclePayload?*request.recyclePayload:take(storage::payloadRecyclePreference(host_->lease,stop))):false;
       if(request.operation!=ui::FileOperation::RemoveDeleteData&&request.recyclePayload.value_or(false)){throw Failure{{storage::ErrorCode::InvalidFormat,"Recycling belongs only to data removal"}};}
@@ -87,11 +90,12 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
   if(profileClosed_||!value.plan||value.plan->request.session!=publishedColumnLayoutSession_||!value.plan->failure.isEmpty()){return false;}
   const auto request=value.plan->request;
   const bool accepted=dispatch([this,value=std::move(value)](std::stop_token stop){
-    if(host_){host_->requireI2pIdle();}
     const auto request=value.plan->request;auto result=std::make_shared<ui::FileOperationResultPacket>();result->request=request;
     try{
       if(!host_||host_->columnLayoutSession!=request.session||!host_->filePlan||!host_->filePlanPacket||!sameFilePlan(*host_->filePlanPacket,*value.plan)){throw Failure{{storage::ErrorCode::Conflict,"This file-operation plan was replaced; prepare it again"}};}
       if(request.operation==ui::FileOperation::ReviewReplacement){
+        host_->requireI2pIdle(true);
+        if(storage::hasPendingCategoryDeletion(host_->lease)){throw Failure{{storage::ErrorCode::Conflict,"Category recovery prevents file replacement review"}};}
         if(!host_->replacementReviewOnly||!host_->fileRecoveryRequired||host_->engine||host_->azureus){throw Failure{{storage::ErrorCode::Conflict,"Replacement review requires the read-only reopened profile"}};}
         host_->accepts(request.target);const auto approved=value.plan->approvalScopeDigest.toStdString();
         auto current=take(storage::prepareInterruptedReplacementReview(host_->lease,stop));
@@ -104,9 +108,12 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
         // Keep this session read-only even after repair. Closing/reopening uses
         // ordinary saved queue/pause/force intent; no hidden automatic readmission.
       }else{
-      if(host_->fileRecoveryRequired){throw Failure{{storage::ErrorCode::Conflict,"Restart to recover the interrupted file operation first"}};}
+      host_->requireI2pIdle();
+      if(host_->fileRecoveryRequired||storage::hasPendingFileOperation(host_->lease)){throw Failure{{storage::ErrorCode::Conflict,"Interrupted file-operation files require explicit review"}};}
       host_->accepts(request.target);
-      const auto stored=storageRequest(request,value.plan->deleteTorrentFile,value.plan->recyclePayload);const auto approved=value.plan->approvalScopeDigest.toStdString();
+      const auto stored=storageRequest(request,value.plan->deleteTorrentFile,value.plan->recyclePayload);
+      if(request.operation==ui::FileOperation::RemoveKeepData&&host_->route(stored.hash)!=Host::Route::Public){throw Failure{{storage::ErrorCode::Unsupported,"Keep Data removal requires the retained Public route"}};}
+      const auto approved=value.plan->approvalScopeDigest.toStdString();
       take(storage::confirmFileOperation(*host_->filePlan,approved,value.deleteConfirmed,value.archiveConfirmed));
       // Revalidate user-visible scope before stopping anything. Ordinary rates,
       // counts and active-time updates do not change this approval digest.
@@ -137,16 +144,31 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
         for(;;){
           checkpoint(stop);const auto rows=host_->engine->managedDownloads();const auto found=std::ranges::find(rows,stored.hash,&engine::ManagedDownloadStatus::hash);
           if(found==rows.end()){break;}if(found->failure){throw Failure{*found->failure};}
-          if(!found->retained){take(host_->engine->forgetManaged(stored.hash,removal));break;}
+          if(!found->retained){
+            // Consume the actual checkpoint-derived event while its original
+            // retained owner/OFD still exists, before forget destroys it.
+            publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop,true));
+            take(host_->engine->forgetManaged(stored.hash,removal));break;
+          }
           if(std::chrono::steady_clock::now()>=deadline){throw Failure{{storage::ErrorCode::Busy,"Torrent files are still retained; no file operation was performed"}};}
           const auto poll=host_->engine->poll();if(!poll){throw Failure{{storage::ErrorCode::Io,"Cannot certify torrent retirement"}};}
+          publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop));
           std::this_thread::sleep_for(std::chrono::milliseconds{20});
         }
       }
       // Retirement checkpoints legitimately update saved counters/time. Bind a
       // fresh execution CAS only if the exact approved path/inode scope survives.
-      auto current=take(storage::prepareFileOperation(host_->lease,stored,stop));auto confirmed=take(storage::confirmFileOperation(current,approved,value.deleteConfirmed,value.archiveConfirmed));
-      auto applied=storage::applyFileOperation(host_->lease,std::move(current),confirmed,nullptr,stop);
+      auto applied=[&]{
+        // Retirement/SDK/Qt work is complete. Hold one cooperative FS-only turn
+        // from final route/preimage validation through exact journal publication.
+        auto access=take(host_->lease.sourceAccess(true));
+        if(request.operation==ui::FileOperation::RemoveKeepData&&host_->route(stored.hash)!=Host::Route::Public){throw Failure{{storage::ErrorCode::Conflict,"Saved route changed while retiring the Public torrent"}};}
+        auto current=take(storage::prepareFileOperation(host_->lease,stored,stop));auto confirmed=take(storage::confirmFileOperation(current,approved,value.deleteConfirmed,value.archiveConfirmed));
+        storage::RemovalHistoryOutcome history;
+        auto committed=storage::applyFileOperation(host_->lease,std::move(current),confirmed,nullptr,stop,&history);
+        if(committed){const auto warning=host_->consumeHistoryRemoval(std::move(history),stop);if(!warning.isEmpty()){result->failure=warning;}}
+        return committed;
+      }();
       if(!applied){host_->fileRecoveryRequired=storage::hasPendingFileOperation(host_->lease);throw Failure{applied.error()};}
       host_->filePlanPacket.reset();host_->known.erase(stored.hash.hex());host_->admissionFailures.erase(stored.hash.hex());host_->lastManagedPhases.erase(stored.hash.hex());host_->schedulerMemberships.erase(stored.hash.hex());
       if(readmit&&!removal&&host_->engine){

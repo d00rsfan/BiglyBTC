@@ -2,6 +2,7 @@
 #include "biglybtc/file_policy.hpp"
 #include "file_operations.hpp"
 #include "torrent_intake.hpp"
+#include "category_store.hpp"
 #include "application_settings.hpp"
 #include "linear_to_compact.hpp"
 #include "original_torrent_identity.hpp"
@@ -24,6 +25,7 @@
 #include <map>
 #include <set>
 #include <span>
+#include <thread>
 #include <sys/syscall.h>
 #include <unistd.h>
 
@@ -69,6 +71,18 @@ struct Plan {
   std::vector<Control> controls;
   std::vector<OriginalFileGeometry> controlGeometry;
   std::vector<Edit> edits;
+  // Memory-only prepared owner and exact read-only inputs. Journal bytes never
+  // reconstruct either a live OFD or permission to resume a removal.
+  std::shared_ptr<const ProfileLease> preparedLease;
+  std::thread::id preparedWorker;
+  std::vector<Control> removalGuards;
+  std::optional<Raw> ownedRemovalJournal;
+  std::string removalInfoSha256,removalBeforeState;
+  std::optional<core::SavedDownload> removalBeforeSaved;
+  std::array<std::uint64_t,2> removalActiveDirectory{};
+  std::vector<Control> removalPublished;
+  std::int64_t removalEventMillis=0;
+  std::chrono::steady_clock::time_point removalEventEnd;
   std::optional<Archive> archive;
   std::optional<Trash> trash;
   std::optional<Replacement> replacement;
@@ -79,11 +93,14 @@ struct Plan {
   bool attempted=false,journalCreated=false;
   PayloadDigestCache payloadDigests; // Empty on decode; at most eight pinned fds.
 };
-void profileIdentity(const ProfileLease& lease,const Plan& plan){const auto path=profilePath(lease);struct stat s{};require(path==plan.profile&&::fstat(lease.directoryHandle(),&s)==0&&s.st_dev==plan.profileDevice&&s.st_ino==plan.profileInode,ErrorCode::Conflict,"File-operation lease/profile identity changed");}
+void profileIdentity(const ProfileLease& lease,const Plan& plan){
+  if(plan.preparedLease){require(plan.preparedWorker==std::this_thread::get_id()&&lease.sharesOwnership(*plan.preparedLease),ErrorCode::Conflict,"File-operation prepared owner/worker changed");}
+  const auto path=profilePath(lease);struct stat s{};require(path==plan.profile&&::fstat(lease.directoryHandle(),&s)==0&&s.st_dev==plan.profileDevice&&s.st_ino==plan.profileInode,ErrorCode::Conflict,"File-operation lease/profile identity changed");}
 std::string stampText(const struct stat& s){auto d=parse("de");put(d,"dev",b(std::to_string(s.st_dev)));put(d,"ino",b(std::to_string(s.st_ino)));put(d,"size",number(s.st_size));put(d,"mode",number(s.st_mode));put(d,"uid",number(s.st_uid));put(d,"links",number(s.st_nlink));put(d,"ms",number(s.st_mtim.tv_sec));put(d,"mn",number(s.st_mtim.tv_nsec));put(d,"cs",number(s.st_ctim.tv_sec));put(d,"cn",number(s.st_ctim.tv_nsec));return d.serialize();}
 struct stat readStamp(const Node& n){require(n.type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid journal stat");struct stat s{};s.st_dev=unsignedText(n.find("dev"));s.st_ino=unsignedText(n.find("ino"));s.st_size=integer(n.find("size"));s.st_mode=static_cast<mode_t>(integer(n.find("mode")));s.st_uid=static_cast<uid_t>(integer(n.find("uid")));s.st_nlink=static_cast<nlink_t>(integer(n.find("links")));s.st_mtim={integer(n.find("ms")),integer(n.find("mn"))};s.st_ctim={integer(n.find("cs")),integer(n.find("cn"))};require(S_ISREG(s.st_mode)&&s.st_uid==::geteuid()&&s.st_size>=0&&s.st_nlink>=1&&s.st_nlink<=2&&s.st_mtim.tv_nsec>=0&&s.st_mtim.tv_nsec<1000000000,ErrorCode::InvalidFormat,"Unsafe journal file stamp");return s;}
 std::string canonical(const Plan& p,bool stable){
   auto d=parse("de",MaximumJournal);put(d,"kind",number(static_cast<int>(p.preview.kind)));put(d,"hash",b(p.preview.hash.hex()));put(d,"profile",b(p.profile.string()));put(d,"source",b(p.preview.sourceRoot.string()));put(d,"target",b(p.preview.targetRoot.string()));put(d,"parent",b(p.destinationParent.string()));put(d,"td",b(std::to_string(p.targetDevice)));put(d,"ti",b(std::to_string(p.targetInode)));put(d,"selection",b(p.scopeSelection));
+  if(!p.removalInfoSha256.empty()){put(d,"fullInfoSha256",b(p.removalInfoSha256));}
   std::string rows="l";for(const auto& f:p.files){auto row=parse("de");put(row,"i",number(static_cast<std::int64_t>(f.view.index)));put(row,"s",b(f.view.source.string()));put(row,"d",b(f.view.destination.string()));put(row,"bytes",number(f.view.logicalBytes));
     if(f.source){put(row,"dev",b(std::to_string(f.source->st_dev)));put(row,"ino",b(std::to_string(f.source->st_ino)));if(!stable){put(row,"stamp",stampText(*f.source));}}
     if(f.destination){put(row,"dd",b(std::to_string(f.destination->st_dev)));put(row,"di",b(std::to_string(f.destination->st_ino)));if(!stable){put(row,"destination",stampText(*f.destination));}}
@@ -93,6 +110,7 @@ std::string canonical(const Plan& p,bool stable){
   if(p.decoderShowAll){put(d,"decoderShowAll",number(*p.decoderShowAll?1:0));}
   if(p.trash){auto t=parse("de");put(t,"root",b(p.trash->root.string()));if(!stable){put(t,"date",b(p.trash->deletionDate));}put(d,"trash",t.serialize());}
   if(!p.controls.empty()){std::string controls="l";for(const auto& c:p.controls){auto item=parse("de",MaximumJournal);put(item,"path",b(c.path.string()));if(!stable&&c.before.bytes){put(item,"before",b(*c.before.bytes));put(item,"stamp",stampText(*c.before.stamp));}controls+=item.serialize();}put(d,"controls",controls+'e');}
+  if(!stable&&!p.removalGuards.empty()){std::string rows="l";for(const auto& c:p.removalGuards){auto item=parse("de",MaximumJournal);put(item,"path",b(c.path.string()));if(c.before.bytes){put(item,"before",b(*c.before.bytes));put(item,"stamp",stampText(*c.before.stamp));}rows+=item.serialize();}put(d,"removalGuards",rows+'e');}
   if(!stable){std::string edits="l";for(const auto& e:p.edits){auto item=parse("de",MaximumJournal);put(item,"path",b(e.path.string()));put(item,"stage",number(static_cast<int>(e.stage)));if(e.before.bytes){put(item,"before",b(*e.before.bytes));put(item,"stamp",stampText(*e.before.stamp));}if(e.after){put(item,"after",b(*e.after));}edits+=item.serialize();}put(d,"edits",edits+'e');}
   if(p.archive){const auto& a=*p.archive;auto row=parse("de",MaximumJournal);put(row,"path",b(a.path.string()));put(row,"internal",number(a.internalState));
     // Selected internal state already has exact execution CAS below; legitimate
@@ -112,6 +130,7 @@ void saveJournal(Plan& p){const auto path=p.profile/JournalName;auto old=read(pa
   require(bool(old.bytes)==p.journalCreated,ErrorCode::Conflict,"File-operation journal appeared/disappeared unexpectedly");
   if(old.bytes){auto outer=parse(*old.bytes,MaximumJournal);const auto body=text(outer.find("payload"));require(digest(body)==text(outer.find("sha256")),ErrorCode::Conflict,"Existing operation journal changed");auto prior=parse(body,MaximumJournal);require(text(prior.find("scope"))==p.preview.approvalScopeDigest&&text(prior.find("cas"))==p.preview.executionCasDigest,ErrorCode::Conflict,"Existing journal belongs to another operation");}
   publish(path,old,journal(p),MaximumJournal);p.journalCreated=true;
+  if(p.preview.kind==FileOperationKind::RemoveKeepData){p.ownedRemovalJournal=read(path,MaximumJournal);}
 }
 void hashMatches(const EncodedDocument& doc,const core::TorrentHash& hash){
   const auto subject=originalTorrentInfoSubject(doc.document());require(subject.has_value(),subject?ErrorCode::Io:subject.error().code,subject?"Original info subject":subject.error().message.c_str());
@@ -162,9 +181,9 @@ void markRecheck(EncodedDocument& state,core::Document attributes){
   put(data,"valid","i0e");put(data,"blocks","de");put(resume,"data",data.serialize());put(attributes,"resumecomplete","i1e");require(state.replaceValue("resume",resume.serialize()).has_value()&&state.replaceValue("attributes",attributes.serialize()).has_value(),ErrorCode::InvalidFormat,"Cannot invalidate original resume data");
 }
 std::string serialize(const EncodedDocument& d){auto out=d.serialize();require(out.has_value(),ErrorCode::InvalidFormat,"Cannot encode original state");return std::move(*out);}
-const Node* cacheEntry(const EncodedDocument* cache,const core::TorrentHash& hash){
+const Node* cacheEntry(const EncodedDocument* cache,const core::TorrentHash& hash,bool unique=false){
   if(!cache){return nullptr;}const auto* rows=cache->document().find("state");if(!rows){return nullptr;}require(rows->type==Node::Type::List,ErrorCode::InvalidFormat,"Invalid state cache list");const Node* found=nullptr;
-  for(const auto& row:rows->children){const auto* key=row.find("hash");if(key&&key->type==Node::Type::Bytes&&key->bytes.size()==hash.bytes().size()&&std::equal(hash.bytes().begin(),hash.bytes().end(),reinterpret_cast<const std::byte*>(key->bytes.data()))){found=&row;}}return found;
+  for(const auto& row:rows->children){const auto* key=row.find("hash");if(key&&key->type==Node::Type::Bytes&&key->bytes.size()==hash.bytes().size()&&std::equal(hash.bytes().begin(),hash.bytes().end(),reinterpret_cast<const std::byte*>(key->bytes.data()))){require(!unique||!found,ErrorCode::Conflict,"Duplicate selected state-cache identity");found=&row;}}return found;
 }
 OriginalStorageKind storageKind(const Node& attrs,std::size_t index,std::size_t count){
   const auto& stores=field(attrs,"storetypes",Node::Type::List);require(stores.children.size()==count&&index<count,ErrorCode::InvalidFormat,"Storage types do not match metadata");const auto value=text(&stores.children[index]);
@@ -389,8 +408,20 @@ void restoreStorageProjection(core::Document& attrs,const Plan& p,const compat::
   }
   put(attrs,"storetypes",encoded(*actual));
 }
+void checkRemovalGuards(const Plan& p){
+  for(const auto& c:p.removalGuards){check(c.path,c.before,MaximumDocument);}
+  if(p.ownedRemovalJournal){check(p.profile/JournalName,*p.ownedRemovalJournal,MaximumJournal);}
+}
+bool journalIsKeepData(const Raw& raw){
+  require(raw.bytes.has_value(),ErrorCode::Missing,"Removal journal is absent");
+  const auto outer=parse(*raw.bytes,MaximumJournal);require(integer(outer.find("version"))==1,ErrorCode::Unsupported,"Unknown operation journal");
+  const auto body=text(outer.find("payload"));require(digest(body)==text(outer.find("sha256")),ErrorCode::InvalidFormat,"Operation journal checksum mismatch");
+  const auto value=parse(body,MaximumJournal);return integer(value.find("kind"))==static_cast<int>(FileOperationKind::RemoveKeepData);
+}
 Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::stop_token stop){
-  checkpoint(stop);Plan p;p.profile=profilePath(lease);p.preview.kind=request.kind;p.preview.hash=request.hash;struct stat profile{};require(::fstat(lease.directoryHandle(),&profile)==0,ErrorCode::Io,"Cannot inspect held profile");p.profileDevice=profile.st_dev;p.profileInode=profile.st_ino;
+  checkpoint(stop);Plan p;
+  if(request.kind==FileOperationKind::RemoveKeepData){p.preparedLease=expectedValue(lease.retain());p.preparedWorker=std::this_thread::get_id();}
+  p.profile=profilePath(lease);p.preview.kind=request.kind;p.preview.hash=request.hash;struct stat profile{};require(::fstat(lease.directoryHandle(),&profile)==0,ErrorCode::Io,"Cannot inspect held profile");p.profileDevice=profile.st_dev;p.profileInode=profile.st_ino;
   require(request.kind>=FileOperationKind::RemoveKeepData&&request.kind<=FileOperationKind::ReplaceFile&&(request.hash.bytes().size()==20||request.hash.bytes().size()==32),ErrorCode::InvalidFormat,"Invalid file-operation request");
   require(!inspect(p.profile/JournalName)&&!inspect(p.profile/(std::string(JournalName)+".BiglyBTC.fileop-saving")),ErrorCode::Conflict,"File operation recovery is required before preparing another operation");
   require(!inspect(p.profile/"BiglyBTC.torrent-import"),ErrorCode::Conflict,"Torrent import recovery is pending");
@@ -399,8 +430,32 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
   require(saved&&saved->persistent,ErrorCode::Unsupported,"Selected original save mapping is unavailable");const auto rawSaved=*saved;
   const auto statePath=p.profile/"active"/(request.hash.hex()+".dat");const auto stateRaw=read(statePath,MaximumDocument);auto state=envelope(stateRaw);
   require(!inspect(fs::path(statePath.string()+".saving"))&&!inspect(fs::path(statePath.string()+".bak.saving")),ErrorCode::Conflict,"Active state has unresolved temporary data");
-  const auto cachePath=p.profile/"active/cache.dat";const auto cacheRaw=read(cachePath,MaximumDocument);auto cache=cacheDocument(cacheRaw);hydrate(state,cacheEntry(cache?&*cache:nullptr,request.hash));hashMatches(state,request.hash);
+  const auto cachePath=p.profile/"active/cache.dat";const auto cacheRaw=read(cachePath,MaximumDocument);auto cache=cacheDocument(cacheRaw);hydrate(state,cacheEntry(cache?&*cache:nullptr,request.hash,request.kind==FileOperationKind::RemoveKeepData));hashMatches(state,request.hash);
+  if(request.kind==FileOperationKind::RemoveKeepData){
+    p.removalInfoSha256=digest(expectedValue(originalTorrentInfoSubject(state.document())));
+    p.removalBeforeState=serialize(state);p.removalBeforeSaved=rawSaved;
+    auto active=directory(p.profile/"active");struct stat activeStamp{};require(::fstat(active.get(),&activeStamp)==0,ErrorCode::Io,"Cannot retain prepared active directory identity");p.removalActiveDirectory={static_cast<std::uint64_t>(activeStamp.st_dev),static_cast<std::uint64_t>(activeStamp.st_ino)};
+    require(!hasPendingCategoryDeletion(lease),ErrorCode::Conflict,"Category recovery prevents Keep Data removal");
+    // A cache backup is an original recovery candidate, never a substitute for
+    // an absent primary during a removal. Preserve all foreign/sibling rows.
+    const auto backup=read(p.profile/"active/cache.dat.bak",MaximumDocument);
+    require(cacheRaw.bytes||!backup.bytes,ErrorCode::Conflict,"State cache recovery requires review before removal");
+    for(const auto& path:{p.profile/"downloads.config.saving",p.profile/"downloads.config.bak.saving",p.profile/"active/cache.dat.saving",p.profile/"active/cache.dat.bak.saving",fs::path(statePath.string()+".saving"),fs::path(statePath.string()+".bak.saving"),p.profile/"BiglyBTC.torrent-import"}){
+      auto raw=read(path,MaximumDocument);require(!raw.bytes,ErrorCode::Conflict,"Profile recovery candidate prevents removal");p.removalGuards.push_back({path,std::move(raw)});
+    }
+    // Filename/storage defaults are inputs too; no callback or SDK wait occurs
+    // while Host holds the source turn around the final reprepare and apply.
+    for(const auto* name:{"biglybt.config","biglybt.config.bak","biglybt.config.saving"}){const auto path=p.profile/name;auto raw=read(path,MaximumDocument);if(std::string_view(name)=="biglybt.config.saving"){require(!raw.bytes,ErrorCode::Conflict,"Settings recovery prevents removal");}p.removalGuards.push_back({path,std::move(raw)});}
+    const fs::path reference(rawSaved.torrentFile);
+    if(!request.deleteTorrentFile&&reference!=statePath&&reference!=fs::path(statePath.string()+".bak")){
+      for(const auto& path:{reference,fs::path(reference.string()+".bak")}){
+        auto raw=read(path,MaximumDocument);if(raw.bytes){auto archive=envelope(raw);hashMatches(archive,request.hash);require(expectedValue(originalTorrentInfoSubject(archive.document()))==expectedValue(originalTorrentInfoSubject(state.document())),ErrorCode::Conflict,"Referenced archive differs from retained full info");}
+        p.removalGuards.push_back({path,std::move(raw)});
+      }
+    }
+  }
   const auto filenameContext=expectedValue(readOriginalFilenameContext(lease));p.filenameConversions=filenameContext.conversions;p.decoderShowAll=filenameContext.decoderShowAll;auto layout=compat::originalLayout(state.document(),MaximumFiles,*p.filenameConversions,*p.decoderShowAll);require(layout.has_value(),ErrorCode::Unsupported,"Unsupported original payload layout");auto attrs=section(state.document().find("attributes"));const auto originalAttributes=attrs;
+  if(request.kind==FileOperationKind::RemoveKeepData){if(const auto* networks=attrs.find("networks")){require(networks->type==Node::Type::List&&networks->children.size()==1&&networks->children[0].type==Node::Type::Bytes&&networks->children[0].bytes=="Public",ErrorCode::Unsupported,"Keep Data removal requires an exact Public saved network");}}
   auto root=resolveOriginalSaveRoot(*saved,*layout);require(root.has_value(),root?ErrorCode::Io:root.error().code,root?"Original root resolution":root.error().message.c_str());saved=std::move(*root);
   auto saveParent=fs::path(saved->saveDirectory);pathShape(saveParent);p.preview.sourceRoot=saveParent/ *saved->saveFile;pathShape(p.preview.sourceRoot);require(!intersects(p.preview.sourceRoot,p.profile),ErrorCode::UnsafePath,"Payload may not contain or reside inside the held profile");
   auto defaults=resolveOriginalStorageTypes(lease,request.hash,*layout,attrs.root());require(defaults.has_value(),defaults?ErrorCode::Io:defaults.error().code,defaults?"Storage default resolution":defaults.error().message.c_str());
@@ -507,6 +562,15 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
   if(fileSelection){selection+=b("BiglyBTC.selection.policy")+b(*request.selectionPolicyEncoding);}
   p.scopeSelection=selection;
   if(cache){const auto* entries=cache->document().find("state");if(entries){require(cache->replaceValue("state",withoutSelected(entries,request.hash,false,std::nullopt,"hash")).has_value(),ErrorCode::InvalidFormat,"Cannot remove selected state cache entry");const auto after=serialize(*cache);if(after!=*cacheRaw.bytes){p.edits.push_back({cachePath,cacheRaw,after,FileOperationStage::CachePublished});}}}
+  if(request.kind==FileOperationKind::RemoveKeepData){
+    if(std::ranges::none_of(p.edits,[&](const Edit& e){return e.path==cachePath;})){p.removalGuards.push_back({cachePath,cacheRaw});}
+    const auto path=p.profile/"active/cache.dat.bak";auto raw=read(path,MaximumDocument);auto backup=cacheDocument(raw);
+    if(backup){static_cast<void>(cacheEntry(&*backup,request.hash,true));if(const auto* rows=backup->document().find("state")){require(backup->replaceValue("state",withoutSelected(rows,request.hash,false,std::nullopt,"hash")).has_value(),ErrorCode::InvalidFormat,"Cannot remove selected backup-cache entry");}const auto after=serialize(*backup);if(after!=*raw.bytes){p.edits.push_back({path,raw,after,FileOperationStage::CachePublished});}else{p.removalGuards.push_back({path,std::move(raw)});}}
+    else{p.removalGuards.push_back({path,std::move(raw)});}
+    const auto inventoryBackup=p.profile/"downloads.config.bak";auto before=read(inventoryBackup,MaximumDocument);
+    if(before.bytes){auto backupInventory=parse(*before.bytes);static_cast<void>(parsedInventory(backupInventory));editInventory(backupInventory,request.hash);if(const auto* pauses=backupInventory.find("pause_data")){put(backupInventory,"pause_data",withoutSelected(pauses,request.hash,true));}const auto after=backupInventory.serialize();if(after!=*before.bytes){p.edits.push_back({inventoryBackup,before,after,FileOperationStage::InventoryPublished});}else{p.removalGuards.push_back({inventoryBackup,std::move(before)});}}
+    else{p.removalGuards.push_back({inventoryBackup,std::move(before)});}
+  }
   if(fileSelection){
     put(updatedRow,"file_priorities_c",*request.selectionPolicyEncoding);
     // Preserve all existing resolved links, including actual incomplete names.
@@ -545,8 +609,8 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
     editInventory(inventory,request.hash);if(const auto* pauses=inventory.find("pause_data")){put(inventory,"pause_data",withoutSelected(pauses,request.hash,true));}
   }
   p.edits.push_back({p.profile/"downloads.config",inventoryRaw,inventory.serialize(),FileOperationStage::InventoryPublished});
-  if(!moving(request.kind)){p.edits.push_back({statePath,stateRaw,std::nullopt,FileOperationStage::StateRemoved});const auto backup=fs::path(statePath.string()+".bak");auto raw=read(backup,MaximumDocument);if(raw.bytes){p.edits.push_back({backup,std::move(raw),std::nullopt,FileOperationStage::StateRemoved});}}
-  for(const auto& path:controlPaths(p.profile,request.hash,layout->files.size())){require(!inspect(fs::path(path.string()+".saving")),ErrorCode::Conflict,"Original control recovery is pending");p.controls.push_back({path,read(path,MaximumDocument)});}
+  if(!moving(request.kind)){p.edits.push_back({statePath,stateRaw,std::nullopt,FileOperationStage::StateRemoved});const auto backup=fs::path(statePath.string()+".bak");auto raw=read(backup,MaximumDocument);if(raw.bytes){if(request.kind==FileOperationKind::RemoveKeepData){auto prior=envelope(raw);hashMatches(prior,request.hash);require(expectedValue(originalTorrentInfoSubject(prior.document()))==expectedValue(originalTorrentInfoSubject(state.document())),ErrorCode::Conflict,"State backup differs from selected full info");}p.edits.push_back({backup,std::move(raw),std::nullopt,FileOperationStage::StateRemoved});}else if(request.kind==FileOperationKind::RemoveKeepData){p.removalGuards.push_back({backup,std::move(raw)});}}
+  for(const auto& path:controlPaths(p.profile,request.hash,layout->files.size())){require(!inspect(fs::path(path.string()+".saving")),ErrorCode::Conflict,"Original control recovery is pending");p.controls.push_back({path,read(path,MaximumDocument)});if(request.kind==FileOperationKind::RemoveKeepData){const auto saving=fs::path(path.string()+".saving");p.removalGuards.push_back({saving,read(saving,MaximumDocument)});}}
   captureControlGeometry(p,*layout);validateCompletionControls(p.controls,p.controlGeometry);
   auto checkedDefaults=resolveOriginalStorageTypes(lease,request.hash,*layout,originalAttributes.root());require(checkedDefaults&&*checkedDefaults==*defaults,ErrorCode::Conflict,"Storage controls/defaults changed during file-operation preparation");
   auto checkedRoot=resolveOriginalSaveRoot(rawSaved,*layout);require(checkedRoot&&checkedRoot->saveDirectory==saved->saveDirectory&&checkedRoot->saveFile==saved->saveFile,ErrorCode::Conflict,"Original root changed during file-operation preparation");
@@ -601,20 +665,23 @@ void publishEdit(const Plan& p,const Edit& edit){
 FileOperationResult execute(const ProfileLease& lease,Plan& p,bool recovered,void(*observer)(FileOperationStage)){
   if(p.decoderShowAll){const auto current=expectedValue(readOriginalFilenameContext(lease));require(p.filenameConversions&&current.conversions==*p.filenameConversions&&current.decoderShowAll==*p.decoderShowAll,ErrorCode::Conflict,"Filename context changed before file-operation effects");}
   profileIdentity(lease,p);targetIdentity(p);checkControls(p,recovered);const auto notify=[&](FileOperationStage stage){if(observer){observer(stage);}};
+  if(p.preview.kind==FileOperationKind::RemoveKeepData){require(!recovered&&p.preparedLease&&p.ownedRemovalJournal,ErrorCode::Conflict,"Interrupted Keep Data removal requires explicit review");checkRemovalGuards(p);}
   if(p.archive&&!p.archive->internalState){checkArchive(*p.archive,recovered);}
   if(recycling(p.preview.kind)){ensureTrash(p);}
   if(p.replacement){preserveDestination(p,observer);}
   if(relocating(p.preview.kind)){for(auto& f:p.files){readyDestination(p,f);if(f.source){notify(FileOperationStage::DestinationPublished);}}}
   if(retargeting(p.preview.kind)){for(const auto& f:p.files){const auto now=inspect(f.view.destination);require(bool(now)==bool(f.destination)&&(!now||(identity(*now,*f.destination)&&p.payloadDigests.digest(f.view.destination,*f.destination)==f.sha256)),ErrorCode::Conflict,"Relink target changed after confirmation");}}
   if(recycling(p.preview.kind)){publishTrashInfo(p);notify(FileOperationStage::TrashInfoPublished);}
-  for(const auto& e:p.edits){if(e.after){publishEdit(p,e);notify(e.stage);}}
+  for(const auto& e:p.edits){if(e.after){if(p.preview.kind==FileOperationKind::RemoveKeepData){checkRemovalGuards(p);publish(e.path,e.before,*e.after,MaximumDocument);auto committed=read(e.path,MaximumDocument);require(committed.bytes==e.after,ErrorCode::Conflict,"Fresh removal publication changed");p.removalPublished.push_back({e.path,std::move(committed)});}else{publishEdit(p,e);}notify(e.stage);}}
   FileOperationResult result{p.preview.kind,p.preview.hash,0,0,recovered};
   if(relocating(p.preview.kind)||p.preview.kind==FileOperationKind::RemoveDeleteData){for(const auto& f:p.files){if(!f.source){continue;}if(fileMapping(p.preview.kind)){targetIdentity(p);const auto destination=inspect(f.view.destination);require(destination&&(identity(*destination,*f.source)||(f.temporary&&identity(*destination,*f.temporary)))&&p.payloadDigests.digest(f.view.destination,*destination)==f.sha256,ErrorCode::Conflict,"Per-file destination changed before source removal");if(p.replacement){validatePreimage(p);}}if(recycling(p.preview.kind)){ensureTrash(p);const auto destination=inspect(f.view.destination);require(destination&&(identity(*destination,*f.source)||(f.temporary&&identity(*destination,*f.temporary)))&&p.payloadDigests.digest(f.view.destination,*destination)==f.sha256,ErrorCode::Conflict,"Trash data changed before source removal");const auto info=read(p.trash->root/"info"/(f.view.destination.filename().string()+".trashinfo"),16384);require(info.bytes&&*info.bytes==trashInfo(p,f),ErrorCode::Conflict,"Trash information changed before source removal");}const auto now=inspect(f.view.source);if(now){require(identity(*now,*f.source)&&p.payloadDigests.digest(f.view.source,*f.source)==f.sha256,ErrorCode::Conflict,"Source changed before final removal");erase(f.view.source,*now);}if(recycling(p.preview.kind)){++result.filesRecycled;}else if(relocating(p.preview.kind)){++result.filesMoved;}else{++result.filesDeleted;}notify(FileOperationStage::SourceRemoved);}}
-  for(const auto& e:p.edits){if(!e.after){const auto current=read(e.path,MaximumDocument);if(current.bytes){require(current.bytes==e.before.bytes&&current.stamp&&e.before.stamp&&unchanged(*current.stamp,*e.before.stamp),ErrorCode::Conflict,"Active cleanup source changed");erase(e.path,*current.stamp);}notify(FileOperationStage::StateRemoved);}}
-  if(!moving(p.preview.kind)){for(const auto& c:p.controls){const auto current=read(c.path,MaximumDocument);if(current.bytes){require(current.bytes==c.before.bytes&&current.stamp&&c.before.stamp&&unchanged(*current.stamp,*c.before.stamp),ErrorCode::Conflict,"Original control changed before removal");erase(c.path,*current.stamp);}notify(FileOperationStage::StateRemoved);}}
+  for(const auto& e:p.edits){if(!e.after){if(p.preview.kind==FileOperationKind::RemoveKeepData){checkRemovalGuards(p);check(e.path,e.before,MaximumDocument);}const auto current=read(e.path,MaximumDocument);if(current.bytes){require(current.bytes==e.before.bytes&&current.stamp&&e.before.stamp&&unchanged(*current.stamp,*e.before.stamp),ErrorCode::Conflict,"Active cleanup source changed");erase(e.path,*current.stamp);}if(p.preview.kind==FileOperationKind::RemoveKeepData){auto removed=read(e.path,MaximumDocument);require(!removed.bytes,ErrorCode::Conflict,"Fresh removed state reappeared");p.removalPublished.push_back({e.path,std::move(removed)});}notify(FileOperationStage::StateRemoved);}}
+  if(!moving(p.preview.kind)){for(const auto& c:p.controls){if(p.preview.kind==FileOperationKind::RemoveKeepData){checkRemovalGuards(p);check(c.path,c.before,MaximumDocument);}const auto current=read(c.path,MaximumDocument);if(current.bytes){require(current.bytes==c.before.bytes&&current.stamp&&c.before.stamp&&unchanged(*current.stamp,*c.before.stamp),ErrorCode::Conflict,"Original control changed before removal");erase(c.path,*current.stamp);}notify(FileOperationStage::StateRemoved);}}
   if(p.archive){const auto& a=*p.archive;if(!a.internalState){const auto remove=[&](const fs::path& path,const Raw& before){const auto current=read(path,MaximumDocument);if(current.bytes){check(path,before,MaximumDocument);erase(path,*current.stamp);result.torrentArchiveDeleted=true;notify(FileOperationStage::ArchiveFileRemoved);}};remove(a.path,a.before);remove(fs::path(a.path.string()+".bak"),a.backup);}notify(FileOperationStage::ArchiveRemoved);}
   if(p.replacement){validatePreimage(p);result.retainedPreimage=p.replacement->root/"data";}
-  const auto raw=read(p.profile/JournalName,MaximumJournal);require(raw.stamp.has_value(),ErrorCode::Conflict,"File-operation journal disappeared");erase(p.profile/JournalName,*raw.stamp);notify(FileOperationStage::Completed);return result;
+  if(p.preview.kind==FileOperationKind::RemoveKeepData){checkRemovalGuards(p);for(const auto& committed:p.removalPublished){check(committed.path,committed.before,MaximumDocument);}}
+  const auto raw=read(p.profile/JournalName,MaximumJournal);require(raw.stamp.has_value(),ErrorCode::Conflict,"File-operation journal disappeared");erase(p.profile/JournalName,*raw.stamp);if(p.preview.kind==FileOperationKind::RemoveKeepData){p.removalEventMillis=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();p.removalEventEnd=std::chrono::steady_clock::now()+std::chrono::seconds(30);}
+  notify(FileOperationStage::Completed);return result;
 }
 }
 namespace {
@@ -728,7 +795,8 @@ std::expected<PreparedFileOperation,Error> prepareInterruptedReplacementReview(c
   });
 }
 std::expected<FileOperationConfirmation,Error> confirmFileOperation(const PreparedFileOperation& p,std::string_view accepted,bool deleteConfirmed,bool archiveConfirmed){return guarded([&]()->std::expected<FileOperationConfirmation,Error>{require(accepted==p.preview().approvalScopeDigest,ErrorCode::Conflict,"File-operation approved scope changed");require(!(deleting(p.preview().kind)||p.preview().kind==FileOperationKind::ReplaceFile)||deleteConfirmed,ErrorCode::Conflict,"Explicit payload deletion confirmation is required");require(!p.preview().torrentArchive||archiveConfirmed,ErrorCode::Conflict,"Explicit reviewed torrent archive confirmation is required");return FileOperationConfirmation{std::string(accepted),deleteConfirmed,archiveConfirmed};});}
-std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease& lease,PreparedFileOperation&& prepared,const FileOperationConfirmation& confirmation,void(*observer)(FileOperationStage),std::stop_token stop){
+std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease& lease,PreparedFileOperation&& prepared,const FileOperationConfirmation& confirmation,void(*observer)(FileOperationStage),std::stop_token stop,RemovalHistoryOutcome* history){
+  if(history){*history={};}
   return guarded([&]()->std::expected<FileOperationResult,Error>{require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Recover pending explicit compaction before applying file operations");require(bool(prepared.impl_),ErrorCode::Conflict,"Prepared file operation was moved/consumed");auto& p=prepared.impl_->plan;
     // The rvalue reference does not destroy the caller's prepared object. Drop
     // every transient pinned fd on success and exception, leaving its attempted
@@ -738,13 +806,27 @@ std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease& 
     const auto currentContext=expectedValue(readOriginalFilenameContext(lease));
     if(p.filenameConversions){require(currentContext.conversions==*p.filenameConversions,ErrorCode::Conflict,"Original filename policy changed after preparation");}
     if(p.decoderShowAll){require(currentContext.decoderShowAll==*p.decoderShowAll,ErrorCode::Conflict,"Original decoder context changed after preparation");}
-    if(p.archive){checkArchive(*p.archive,false);}checkControls(p);for(const auto& e:p.edits){check(e.path,e.before,MaximumDocument);}for(auto it=p.files.rbegin();it!=p.files.rend();++it){auto& f=*it;checkpoint(stop);const auto& expected=retargeting(p.preview.kind)?f.destination:f.source;const auto& path=retargeting(p.preview.kind)?f.view.destination:f.view.source;const auto now=inspect(path);require(bool(now)==bool(expected)&&(!now||unchanged(*now,*expected)),ErrorCode::Conflict,"Payload changed after preparation");if(expected&&p.preview.kind!=FileOperationKind::RemoveKeepData){f.sha256=p.payloadDigests.digest(path,*expected,stop);}}
+    if(p.preview.kind==FileOperationKind::RemoveKeepData){require(!hasPendingCategoryDeletion(lease),ErrorCode::Conflict,"Category recovery prevents Keep Data removal");}
+    checkRemovalGuards(p);if(p.archive){checkArchive(*p.archive,false);}checkControls(p);for(const auto& e:p.edits){check(e.path,e.before,MaximumDocument);}for(auto it=p.files.rbegin();it!=p.files.rend();++it){auto& f=*it;checkpoint(stop);const auto& expected=retargeting(p.preview.kind)?f.destination:f.source;const auto& path=retargeting(p.preview.kind)?f.view.destination:f.view.source;const auto now=inspect(path);require(bool(now)==bool(expected)&&(!now||unchanged(*now,*expected)),ErrorCode::Conflict,"Payload changed after preparation");if(expected&&p.preview.kind!=FileOperationKind::RemoveKeepData){f.sha256=p.payloadDigests.digest(path,*expected,stop);}}
     if(p.replacement){checkReplacementBeforeJournal(p,stop);}
     checkpoint(stop);p.attempted=true;if(p.reviewedJournal){
       // Replace ONLY the exact confirmed old journal, before any new payload or
       // profile effect. The old uncertain directory is never adopted or removed.
       publish(p.profile/JournalName,*p.reviewedJournal,journal(p),MaximumJournal);p.reviewedJournal.reset();p.journalCreated=true;
-    }else{saveJournal(p);}if(observer){observer(FileOperationStage::JournalSynced);}return execute(lease,p,false,observer);
+    }else{saveJournal(p);}if(observer){observer(FileOperationStage::JournalSynced);}auto result=execute(lease,p,false,observer);
+    // No receipt exists until this exact fresh apply has completed and removed
+    // its own journal. Errors here are auxiliary to the already durable removal.
+    if(history&&p.preview.kind==FileOperationKind::RemoveKeepData){
+      try{
+        require(p.removalBeforeSaved.has_value(),ErrorCode::Conflict,"Prepared removal history source absent");
+        std::vector<DurableRemovalReceipt::Postimage> postimages;
+        const auto add=[&](const Control& source){DurableRemovalReceipt::Postimage out;out.name=source.path.lexically_relative(p.profile).generic_string();if(source.before.bytes){out.bytes=*source.before.bytes;}if(source.before.stamp){const auto& v=*source.before.stamp;out.metadata=std::array<std::uint64_t,11>{static_cast<std::uint64_t>(v.st_dev),static_cast<std::uint64_t>(v.st_ino),static_cast<std::uint64_t>(v.st_mode),static_cast<std::uint64_t>(v.st_uid),static_cast<std::uint64_t>(v.st_gid),static_cast<std::uint64_t>(v.st_nlink),static_cast<std::uint64_t>(v.st_size),static_cast<std::uint64_t>(v.st_mtim.tv_sec),static_cast<std::uint64_t>(v.st_mtim.tv_nsec),static_cast<std::uint64_t>(v.st_ctim.tv_sec),static_cast<std::uint64_t>(v.st_ctim.tv_nsec)};}postimages.push_back(std::move(out));};
+        for(const auto& source:p.removalPublished){add(source);}
+        auto issued=DurableRemovalReceipt::issue(lease,*p.removalBeforeSaved,p.removalBeforeState,postimages,p.removalActiveDirectory,p.removalEventMillis,p.removalEventEnd);
+        if(issued){history->receipt.emplace(std::move(*issued));}else{history->warning=issued.error();}
+      }catch(const Failure& failure){try{history->warning=failure.error;}catch(...){}}catch(...){try{history->warning=Error{ErrorCode::Io,"Removal committed; history witness unavailable"};}catch(...){}}
+    }
+    return result;
   });
 }
 std::expected<bool,Error> torrentArchiveDeletionPreference(const ProfileLease& lease,std::stop_token stop){
@@ -766,8 +848,15 @@ std::expected<fs::path,Error> linuxHomeTrashRoot(){return guarded([]()->std::exp
 bool hasPendingFileOperation(const ProfileLease& lease) noexcept {
   try{const auto profile=fs::path(profilePath(lease));return inspect(profile/JournalName).has_value()||inspect(profile/(std::string(JournalName)+".BiglyBTC.fileop-saving")).has_value();}catch(...){return true;}
 }
+bool keepDataRemovalNeedsReview(const ProfileLease& lease) noexcept {
+  try{
+    const auto profile=fs::path(profilePath(lease));
+    if(inspect(profile/(std::string(JournalName)+".BiglyBTC.fileop-saving"))){return true;}
+    const auto raw=read(profile/JournalName,MaximumJournal);return raw.bytes&&journalIsKeepData(raw);
+  }catch(...){return true;}
+}
 std::expected<std::optional<FileOperationResult>,Error> recoverFileOperation(const ProfileLease& lease,void(*observer)(FileOperationStage)){
-  return guarded([&]()->std::expected<std::optional<FileOperationResult>,Error>{require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Recover pending explicit compaction before file-operation recovery");const auto profile=fs::path(profilePath(lease));auto raw=read(profile/JournalName,MaximumJournal);if(!raw.bytes){require(!hasPendingFileOperation(lease),ErrorCode::Conflict,"Unpublished file-operation journal requires explicit review");return std::nullopt;}auto p=decode(raw);profileIdentity(lease,p);validateLegacyNaming(lease,p);validateCurrentIndependence(lease,p);
+  return guarded([&]()->std::expected<std::optional<FileOperationResult>,Error>{require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Recover pending explicit compaction before file-operation recovery");const auto profile=fs::path(profilePath(lease));auto raw=read(profile/JournalName,MaximumJournal);if(!raw.bytes){require(!hasPendingFileOperation(lease),ErrorCode::Conflict,"Unpublished file-operation journal requires explicit review");return std::nullopt;}require(!journalIsKeepData(raw),ErrorCode::Conflict,"Interrupted Keep Data removal requires explicit review; no files were replayed");auto p=decode(raw);profileIdentity(lease,p);validateLegacyNaming(lease,p);validateCurrentIndependence(lease,p);
     // Check every affected document before any further data mutation. Sparse
     // target row/pauses/cache merges tolerate unrelated owner checkpoints.
     for(const auto& e:p.edits){const auto now=read(e.path,MaximumDocument);if(e.after){static_cast<void>(mergedDocument(p,e,now));}else if(now.bytes){require(now.bytes==e.before.bytes&&now.stamp&&e.before.stamp&&unchanged(*now.stamp,*e.before.stamp),ErrorCode::Conflict,"Removal state changed during recovery");}}

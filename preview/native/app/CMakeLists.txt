@@ -188,3 +188,9 @@ endif()
 if(TARGET biglybtc_desktop_host)
   target_sources(biglybtc_desktop_host PRIVATE tag_membership_facts.inc)
 endif()
+
+if(TARGET biglybtc_desktop_host)
+  target_sources(biglybtc_desktop_host PRIVATE download_history_commands.hpp download_history_view_host.inc download_history_bridge.inc)
+endif()
+
+target_sources(biglybtc_desktop_host PRIVATE download_history_completion.inc)

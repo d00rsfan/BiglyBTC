@@ -78,3 +78,6 @@ target_sources(biglybtc_core PRIVATE src/tag_constraints.cpp src/tag_constraint_
 
 # Owning original download-list history; distinct from Statistics saved_history.
 target_sources(biglybtc_core PRIVATE src/saved_download_history.cpp)
+
+# Inert original metasearch.config inventory; no engines or network activated.
+target_sources(biglybtc_core PRIVATE src/saved_search_engines.cpp)

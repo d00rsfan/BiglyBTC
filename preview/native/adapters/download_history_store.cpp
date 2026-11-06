@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "download_history_store.hpp"
+#include "durable_intake_receipt.hpp"
+#include "durable_completion_receipt.hpp"
+#include "durable_removal_receipt.hpp"
+#include "history_reconstruction_receipt.hpp"
 #include "file_io.hpp"
 #include <openssl/evp.h>
 #include <array>
+#include <algorithm>
 #include <cerrno>
 #include <fcntl.h>
 #include <limits>
@@ -94,17 +99,105 @@ std::expected<DownloadHistoryCommit,Error> DownloadHistoryStore::apply(const Dow
   const bool deletion=std::holds_alternative<core::DownloadHistoryErase>(edit)||std::holds_alternative<core::DownloadHistoryClear>(edit);require(expected.enabled()||deletion,ErrorCode::Unsupported,"Disabled history does not accept lifecycle updates");
   auto result=core::editSavedDownloadHistory(expected.history(which)->source->originalBytes(),edit);if(!result){throw projectionError(result.error());}std::array<std::optional<std::string>,2> after;if(result->changed){after[index]=result->value.source->originalBytes();}return commit(expected,std::move(after),stop,end,observer);
 }catch(const Error& error){return std::unexpected(error);}catch(const std::bad_alloc&){return fail(ErrorCode::Io,"History edit allocation failed");}}
+std::expected<DownloadHistoryCommit,Error> DownloadHistoryStore::appendIntake(const DownloadHistorySnapshot& expected,DurableIntakeReceipt receipt,std::stop_token stop,Deadline end){try{
+  impl_->fresh(expected);budget(stop,end);
+  {auto access=take(impl_->lease->sourceAccess());take(receipt.current(*impl_->lease,true));}
+  // Disabled and excluded original flags consume the event without creating
+  // history or manufacturing a later startup/backfill event.
+  if(!expected.enabled()||!receipt.monitored()){return commit(expected,{},stop,end,nullptr,&receipt);}
+  const auto& record=receipt.record();
+  for(const auto& existing:expected.history(DownloadHistorySide::Dead)->records){require(existing.uid!=record.uid,ErrorCode::Conflict,"Intake history UID collides with dead history; preserve for review");}
+  auto edited=core::editSavedDownloadHistory(expected.history(DownloadHistorySide::Active)->source->originalBytes(),core::DownloadHistoryAppend{record});
+  if(!edited){throw projectionError(edited.error());}std::array<std::optional<std::string>,2> after;
+  if(edited->changed){after[0]=edited->value.source->originalBytes();}
+  return commit(expected,std::move(after),stop,end,nullptr,&receipt);
+}catch(const Error& error){return std::unexpected(error);}catch(...){return fail(ErrorCode::Io,"Import remains saved; history intake could not be recorded");}}
+std::expected<DownloadHistoryCommit,Error> DownloadHistoryStore::complete(const DownloadHistorySnapshot& expected,DurableCompletionReceipt receipt,std::stop_token stop,Deadline end){try{
+  impl_->fresh(expected);budget(stop,end);
+  {auto access=take(impl_->lease->sourceAccess());take(receipt.current(*impl_->lease,true));}
+  if(!expected.enabled()||!receipt.monitored()){return commit(expected,{},stop,end,nullptr,nullptr,&receipt);}
+  const auto& actual=receipt.record();const auto& rows=expected.history(DownloadHistorySide::Active)->records;
+  const auto found=std::find_if(rows.begin(),rows.end(),[&](const auto& row){return row.uid==actual.uid;});
+  // Original completionChanged only updates a currently active history entry.
+  // A removed/disabled/missing history record is never reconstructed here.
+  if(found==rows.end()){return commit(expected,{},stop,end,nullptr,nullptr,&receipt);}
+  require(found->hash==actual.hash&&found->hashV2==actual.hashV2&&found->addTime==actual.addTime,ErrorCode::Conflict,"Completion UID/full identity/add-time conflicts with active history");
+  auto result=core::editSavedDownloadHistory(expected.history(DownloadHistorySide::Active)->source->originalBytes(),core::DownloadHistorySetCompleteTime{actual.uid,actual.completeTime});
+  if(!result){throw projectionError(result.error());}std::array<std::optional<std::string>,2> after;if(result->changed){after[0]=result->value.source->originalBytes();}
+  return commit(expected,std::move(after),stop,end,nullptr,nullptr,&receipt);
+}catch(const Error& error){return std::unexpected(error);}catch(...){return fail(ErrorCode::Io,"Checkpoint remains saved; completion history needs review");}}
+std::expected<DownloadHistoryCommit,Error> DownloadHistoryStore::remove(const DownloadHistorySnapshot& expected,DurableRemovalReceipt receipt,std::stop_token stop,Deadline end){try{
+  impl_->fresh(expected);budget(stop,end);
+  {auto access=take(impl_->lease->sourceAccess());take(receipt.current(*impl_->lease,true));}
+  if(!expected.enabled()||!receipt.monitored()){return commit(expected,{},stop,end,nullptr,nullptr,nullptr,nullptr,&receipt);}
+  const auto& actual=receipt.record();const auto* active=expected.history(DownloadHistorySide::Active);const auto* dead=expected.history(DownloadHistorySide::Dead);
+  const auto found=std::find_if(active->records.begin(),active->records.end(),[&](const auto& row){return row.uid==actual.uid;});
+  // Removing a saved torrent is not evidence of a missing history entry.
+  if(found==active->records.end()){return commit(expected,{},stop,end,nullptr,nullptr,nullptr,nullptr,&receipt);}
+  require(found->hash==actual.hash&&found->hashV2==actual.hashV2&&found->addTime==actual.addTime,ErrorCode::Conflict,"Removal UID/full identity/add-time conflicts with active history");
+  require(std::none_of(dead->records.begin(),dead->records.end(),[&](const auto& row){return row.uid==actual.uid;}),ErrorCode::Conflict,"Removal history UID already occurs in dead history");
+  // Original setRemoved keeps existing tags when no actual live Tag-cache list
+  // is available. Preserve the entire actual active record, including unknowns.
+  const auto removed=core::editSavedDownloadHistory(active->source->originalBytes(),core::DownloadHistorySetRemoved{actual.uid,actual.removeTime,{}});if(!removed){throw projectionError(removed.error());}
+  const auto* records=removed->value.source->find("records");require(records&&found->sourceIndex<records->children.size(),ErrorCode::InvalidFormat,"Removed history record unavailable");const auto& row=records->children[found->sourceIndex];
+  const auto rawRecord=removed->value.source->originalBytes().substr(row.begin,row.end-row.begin);
+  auto next=core::Document::parse(dead->source->originalBytes());require(bool(next),ErrorCode::InvalidFormat,"Invalid dead history source");std::string rows="l";
+  if(const auto* existing=next->find("records")){for(const auto& value:existing->children){rows+=next->originalBytes().substr(value.begin,value.end-value.begin);}}
+  require(rows.size()<=core::Limits{}.inputBytes&&rawRecord.size()<=core::Limits{}.inputBytes-rows.size(),ErrorCode::Unsupported,"Removed history byte bound");rows+=rawRecord;rows+='e';
+  require(bool(next->replaceValue("records",rows)),ErrorCode::InvalidFormat,"Cannot append actual removed record");const auto deadAfter=next->serialize();require(bool(core::readSavedDownloadHistory(deadAfter)),ErrorCode::InvalidFormat,"Removed dead history is ambiguous/bounded");
+  const auto erased=core::editSavedDownloadHistory(active->source->originalBytes(),core::DownloadHistoryErase{actual.uid});if(!erased){throw projectionError(erased.error());}
+  std::array<std::optional<std::string>,2> after;after[0]=erased->value.source->originalBytes();after[1]=deadAfter;
+  // Existing durable intent writes dead first, then removes active. An
+  // interrupted duplicate/prefix stays read-only review; there is no replay.
+  return commit(expected,std::move(after),stop,end,nullptr,nullptr,nullptr,nullptr,&receipt);
+}catch(const Error& error){return std::unexpected(error);}catch(...){return fail(ErrorCode::Io,"Removal remains saved; history move needs review");}}
+std::expected<DownloadHistoryCommit,Error> DownloadHistoryStore::reset(const DownloadHistorySnapshot& expected,HistoryReconstructionReceipt receipt,std::stop_token stop,Deadline end){try{
+  impl_->fresh(expected);budget(stop,end);require(expected.enabled(),ErrorCode::Unsupported,"Enable history before an explicit Reset");
+  {auto access=take(impl_->lease->sourceAccess());take(receipt.current(*impl_->lease,true));}
+  const auto* active=expected.history(DownloadHistorySide::Active);std::string rows="l";
+  // Preserve unknown root bytes and unknown fields of the SAME actual UID/full
+  // hash/add-time. Known reset fields come from actual current backend values;
+  // original reset intentionally drops history rows absent from the library.
+  for(const auto& record:receipt.records()){
+    auto encoded=core::editSavedDownloadHistory("de",core::DownloadHistoryAppend{record});if(!encoded){throw projectionError(encoded.error());}
+    const auto& canonical=*encoded->value.source;const auto& row=canonical.find("records")->children.front();std::string extra;
+    const auto old=std::find_if(active->records.begin(),active->records.end(),[&](const auto& value){return value.uid==record.uid&&value.hash==record.hash&&value.hashV2==record.hashV2&&value.addTime==record.addTime;});
+    if(old!=active->records.end()){
+      const auto* oldRows=active->source->find("records");const auto& oldRow=oldRows->children.at(old->sourceIndex);
+      for(std::size_t n=0;n+1<oldRow.children.size();n+=2){const auto& key=oldRow.children[n];const auto& value=oldRow.children[n+1];
+        if(key.bytes!="u"&&key.bytes!="h"&&key.bytes!="v"&&key.bytes!="n"&&key.bytes!="z"&&key.bytes!="s"&&key.bytes!="a"&&key.bytes!="c"&&key.bytes!="r"&&key.bytes!="t"){
+          extra+=active->source->originalBytes().substr(key.begin,value.end-key.begin);
+        }
+      }
+    }
+    rows+='d'+extra+canonical.originalBytes().substr(row.begin+1,row.end-row.begin-2)+'e';
+    require(rows.size()<=core::Limits{}.inputBytes,ErrorCode::Unsupported,"Reset history output byte bound");
+  }
+  rows+='e';std::array<std::optional<std::string>,2> after;
+  auto next=core::Document::parse(active->source->originalBytes());require(bool(next)&&bool(next->replaceValue("records",rows)),ErrorCode::InvalidFormat,"Reset active projection failed");
+  const auto output=next->serialize();require(bool(core::readSavedDownloadHistory(output)),ErrorCode::InvalidFormat,"Reset active projection is ambiguous");if(output!=active->source->originalBytes()){after[0]=output;}
+  auto dead=core::editSavedDownloadHistory(expected.history(DownloadHistorySide::Dead)->source->originalBytes(),core::DownloadHistoryClear{});if(!dead){throw projectionError(dead.error());}if(dead->changed){after[1]=dead->value.source->originalBytes();}
+  return commit(expected,std::move(after),stop,end,nullptr,nullptr,nullptr,&receipt);
+}catch(const Error& error){return std::unexpected(error);}catch(...){return fail(ErrorCode::Io,"History Reset could not be saved; inspect any retained intent");}}
 std::expected<DownloadHistoryCommit,Error> DownloadHistoryStore::clear(const DownloadHistorySnapshot& expected,std::stop_token stop,Deadline end,DownloadHistoryObserver observer){try{impl_->fresh(expected);budget(stop,end);std::array<std::optional<std::string>,2> after;for(std::size_t g=0;g<2;++g){const auto value=core::editSavedDownloadHistory(expected.data_->history[g].source->originalBytes(),core::DownloadHistoryClear{});if(!value){throw projectionError(value.error());}if(value->changed){after[g]=value->value.source->originalBytes();}}return commit(expected,std::move(after),stop,end,observer);}catch(const Error& error){return std::unexpected(error);}catch(const std::bad_alloc&){return fail(ErrorCode::Io,"History clear allocation failed");}}
-std::expected<DownloadHistoryCommit,Error> DownloadHistoryStore::commit(const DownloadHistorySnapshot& expected,std::array<std::optional<std::string>,2> after,std::stop_token stop,Deadline end,DownloadHistoryObserver observer){bool attempted=false;try{
+std::expected<DownloadHistoryCommit,Error> DownloadHistoryStore::commit(const DownloadHistorySnapshot& expected,std::array<std::optional<std::string>,2> after,std::stop_token stop,Deadline end,DownloadHistoryObserver observer,const DurableIntakeReceipt* intake,const DurableCompletionReceipt* completion,const HistoryReconstructionReceipt* reconstruction,const DurableRemovalReceipt* removal){bool attempted=false;try{
   impl_->fresh(expected);budget(stop,end);require(impl_->generation<std::numeric_limits<std::uint64_t>::max(),ErrorCode::Conflict,"History generation exhausted");Loaded working;
-  {auto reading=take(impl_->lease->sourceAccess());working=load(*impl_->lease);impl_->roots();require(equal(impl_->basis->inputs,working.inputs),ErrorCode::Conflict,"History/settings candidates changed since presentation");if(!after[0]&&!after[1]){return DownloadHistoryCommit{expected,false};}}
+  // Causal receipt exact-epoch validation and the own write turn are ONE continuous
+  // real source section. A cooperative writer cannot enter the old read->write
+  // gap and have its epoch drift mistaken for our own ConfigFile increments.
+  // The recursive nested writer is valid; this path has no outside observer.
+  require(static_cast<unsigned>(bool(intake))+static_cast<unsigned>(bool(completion))+static_cast<unsigned>(bool(reconstruction))+static_cast<unsigned>(bool(removal))<=1,ErrorCode::Conflict,"History commit has conflicting causal receipts");
+  const auto receiptCurrent=[&](bool exact){if(intake){take(intake->current(*impl_->lease,exact));}if(completion){take(completion->current(*impl_->lease,exact));}if(reconstruction){take(reconstruction->current(*impl_->lease,exact));}if(removal){take(removal->current(*impl_->lease,exact));}};
+  std::optional<ProfileSourceAccess> intakeSource;
+  if(intake||completion||reconstruction||removal){require(!observer,ErrorCode::Unsupported,"Causal history has no outside observer");intakeSource.emplace(take(impl_->lease->sourceAccess()));}
+  {auto reading=take(impl_->lease->sourceAccess());working=load(*impl_->lease);impl_->roots();if(intake||completion||reconstruction||removal){receiptCurrent(true);}require(equal(impl_->basis->inputs,working.inputs),ErrorCode::Conflict,"History/settings candidates changed since presentation");if(!after[0]&&!after[1]){return DownloadHistoryCommit{expected,false};}}
   require(expected.writable()&&working.review==DownloadHistoryReadOnly::None,ErrorCode::Conflict,"Resolve pending/ambiguous history before editing");
-  auto access=take(impl_->lease->sourceAccess(true));require(!observer||access.observationsAllowed(),ErrorCode::Unsupported,"Observed history save requires unnested source boundary");auto verified=load(*impl_->lease);impl_->roots();require(equal(working.inputs,verified.inputs),ErrorCode::Conflict,"History/settings changed before write gate");working=std::move(verified);budget(stop,end);
+  auto access=take(impl_->lease->sourceAccess(true));require(!observer||access.observationsAllowed(),ErrorCode::Unsupported,"Observed history save requires unnested source boundary");auto verified=load(*impl_->lease);impl_->roots();require(equal(working.inputs,verified.inputs),ErrorCode::Conflict,"History/settings changed before write gate");working=std::move(verified);budget(stop,end);if(intake||completion||reconstruction||removal){receiptCurrent(false);}
   const auto note=intent(working,after);attempted=true;(void)take(ConfigFile::createMissing(*impl_->lease,Names[3],note,core::Limits{}));
   auto next=load(*impl_->lease);for(std::size_t g=0;g<3;++g){for(std::size_t n=0;n<3;++n){require(equal(working.inputs[g][n],next.inputs[g][n]),ErrorCode::Conflict,"History changed during intent publication");}}require(next.inputs[3][0].bytes==note&&!next.inputs[3][1].bytes&&!next.inputs[3][2].bytes,ErrorCode::Conflict,"Owned history intent differs");working=std::move(next);
   auto observe=[&](DownloadHistoryWriteStage stage,std::size_t count){if(observer){impl_->observing=true;try{access.outside([&]{observer(stage,count);});}catch(...){impl_->observing=false;throw;}impl_->observing=false;impl_->roots();auto now=load(*impl_->lease);require(equal(working.inputs,now.inputs),ErrorCode::Conflict,"History source changed across observer");working=std::move(now);}};
   observe(DownloadHistoryWriteStage::IntentDurable,0);std::size_t count=0;
-  for(const std::size_t g:{1U,0U}){if(!after[g]){continue;}budget(stop,end);impl_->roots();auto now=load(*impl_->lease);require(equal(working.inputs,now.inputs),ErrorCode::Conflict,"History changed before selected save");working=std::move(now);
+  for(const std::size_t g:{1U,0U}){if(!after[g]){continue;}budget(stop,end);impl_->roots();auto now=load(*impl_->lease);require(equal(working.inputs,now.inputs),ErrorCode::Conflict,"History changed before selected save");working=std::move(now);if(intake||completion||reconstruction||removal){receiptCurrent(false);}
     if(working.files[g]){auto output=core::Document::parse(*after[g]);require(bool(output)&&output->find("records"),ErrorCode::InvalidFormat,"Prepared history records absent");const auto* records=output->find("records");const auto changed=working.files[g]->document().replaceValue("records",output->originalBytes().substr(records->begin,records->end-records->begin));require(bool(changed),ErrorCode::InvalidFormat,"Prepared history replacement failed");take(working.files[g]->save(*impl_->lease));}
     else{(void)take(ConfigFile::createMissing(*impl_->lease,Names[g],*after[g],core::Limits{}));}
     next=load(*impl_->lease);impl_->roots();for(std::size_t other=0;other<4;++other){if(other==g){continue;}for(std::size_t n=0;n<3;++n){require(equal(working.inputs[other][n],next.inputs[other][n]),ErrorCode::Conflict,"Unrelated history/settings/intent changed during save");}}
@@ -112,6 +205,7 @@ std::expected<DownloadHistoryCommit,Error> DownloadHistoryStore::commit(const Do
     working=std::move(next);observe(DownloadHistoryWriteStage::FilePublished,++count);
   }
   impl_->roots();next=load(*impl_->lease);require(equal(working.inputs,next.inputs),ErrorCode::Conflict,"History changed before intent completion");
+  if(intake||completion||reconstruction||removal){receiptCurrent(false);}
   const auto& marker=next.inputs[3][0];require(marker.bytes==note&&held(marker),ErrorCode::Conflict,"History intent changed before removal");require(::unlinkat(impl_->lease->directoryHandle(),Names[3],0)==0&&::fsync(impl_->lease->directoryHandle())==0,ErrorCode::Io,"History completion uncertain; preserve/review");
   auto final=load(*impl_->lease);impl_->roots();for(std::size_t g=0;g<3;++g){for(std::size_t n=0;n<3;++n){require(equal(next.inputs[g][n],final.inputs[g][n]),ErrorCode::Conflict,"History changed at final publication");}}require(final.review==DownloadHistoryReadOnly::None,ErrorCode::Conflict,"History remains review-only after publication");impl_->publish(std::move(final));return DownloadHistoryCommit{DownloadHistorySnapshot(impl_->latest),true};
 }catch(const Error& error){if(attempted){impl_->poison();}return std::unexpected(error);}catch(const std::bad_alloc&){if(attempted){impl_->poison();}return fail(ErrorCode::Io,"History allocation failed; review any retained intent");}catch(...){if(attempted){impl_->poison();}return fail(ErrorCode::Conflict,"History observer interrupted; preserve intent for review");}}

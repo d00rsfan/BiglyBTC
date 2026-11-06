@@ -20,6 +20,7 @@
 #include "queue_positions.hpp"
 #include "magnet_intake.hpp"
 #include "torrent_intake.hpp"
+#include "durable_intake_receipt.hpp"
 #include "metadata_disk_router.hpp"
 #include "pending_metadata_source.hpp"
 #include "mmap_disk_latency.hpp"
@@ -120,6 +121,13 @@ struct PersistentSession::Impl {
     Clock::time_point mainlineNext{};
     bool policyHeld = false, completedTransition = false, completionHandled = false;
     bool externalPauseSettled=false,externalPausePending=false,checkedAlert=false;
+    std::shared_ptr<const storage::ProfileLease> historyLease;
+    std::optional<bool> historyPreviousComplete;
+    bool historySawIncomplete=false,historyEventComplete=false;
+    std::optional<std::int64_t> historyCompletionMillis;
+    std::optional<storage::ErrorCode> historyCompletionProblem;
+    bool historyCheckpointed=false,historyTaken=false;Clock::time_point historyCheckpointEnd{};
+
     core::QueueActivityMemory activity;
     std::optional<core::QueueFilePriorityStats> filePriority;
     std::optional<std::int64_t> queueObservedMillis;
@@ -186,6 +194,7 @@ struct PersistentSession::Impl {
   std::map<std::string, std::unique_ptr<Managed>> managed;
   std::map<lt::torrent_handle, Managed*> managedByHandle;
   const storage::ProfileLease* managedLease = nullptr; // Same bound lease, owned by Host.
+  std::shared_ptr<const storage::ProfileLease> historyConsumerLease; // Explicit optional consumer only.
   std::optional<NetworkPolicy> network;
   std::optional<NetworkBinding> networkBinding;
   std::optional<LiveQueueLimits> liveQueueLimits;
@@ -269,6 +278,8 @@ struct PersistentSession::Impl {
   std::optional<CloseWithoutCheckpointReceipt> drainReceipt;
   std::optional<ApplicationPeerObservation> observation{};
   ApplicationObservationSink sink{};
+  MagnetCompletionHook magnetCompletionHook{};
+  std::shared_ptr<const storage::ProfileLease> magnetCompletionLease;
   std::function<void(const core::EngineStatistics&)> operationSink{};
   std::optional<core::EngineCounters> operationBaseline{};
   core::EngineStatisticsAccumulator operationAccumulator{};
@@ -578,6 +589,7 @@ struct PersistentSession::Impl {
     } catch (...) { counterError(AccountingError::Engine); return false; }
   }
   void joinPoisoned() noexcept {
+    magnetCompletionHook={};magnetCompletionLease.reset();
     operationSink = {};
     poisoned = true;
     phase = AccountingState::Uncertified;
@@ -906,6 +918,24 @@ struct PersistentSession::Impl {
         && sample.state != lt::torrent_status::checking_resume_data
         && sample.state != lt::torrent_status::downloading_metadata;
     value.status.selectedComplete = sample.is_finished;
+    // Neither startup checking nor an already-complete saved/zero-size row is
+    // a new completion event. Require two actual accepted checked observations.
+    if(value.checkedAlert&&value.status.checked&&!value.stop&&!value.status.failure
+        &&value.storage.purpose()==detail::ManagedStoragePurpose::Download&&value.status.bytes>0&&value.status.totalPieces>0
+        &&std::ranges::none_of(value.storage.capturedFilePolicy(),[](const auto& policy){return policy.skipped;})){
+      const bool complete=sample.is_seeding;
+      // First real checked-incomplete is the negative producer. An initially
+      // checked complete row is NOT an event; no saved/startup reconstruction.
+      const bool event=(!complete&&!value.historyPreviousComplete)||(value.historyPreviousComplete&&*value.historyPreviousComplete!=complete);
+      if(event){
+        if(!complete){value.historySawIncomplete=true;}value.historyEventComplete=complete;
+        const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        if(now>0){value.historyCompletionMillis=now;value.historyCompletionProblem.reset();}
+        else{value.historyCompletionMillis.reset();value.historyCompletionProblem=storage::ErrorCode::InvalidFormat;}
+      }
+      value.historyPreviousComplete=complete;
+    }
+
     value.seedPiecesExact=needPieces&&sample.pieces.size()==value.status.totalPieces;
     if (needPieces) {
       value.verified.assign(static_cast<std::size_t>(value.status.totalPieces), 0);
@@ -1278,8 +1308,19 @@ struct PersistentSession::Impl {
               value.status.received, value.status.sent, value.secondsDownloading, value.secondsSeeding,
               value.idleCheckpoint&&value.idleCheckpoint->second==value.status.sent
                   ?std::optional<std::int32_t>{value.idleCheckpoint->first}:std::nullopt,value.badPayloadBytes,
-              value.status.discardedBytes.has_value()&&value.status.hashFailedBytes.has_value());});
+              value.status.discardedBytes.has_value()&&value.status.hashFailedBytes.has_value(),
+              value.historyCompletionMillis?std::optional<detail::ManagedHistoryCompletionEvent>{detail::ManagedHistoryCompletionEvent{*value.historyCompletionMillis,value.historyEventComplete,value.historySawIncomplete}}:std::nullopt);});
           if (!saved) { value.status.failure = saved.error(); }
+          else if(historyConsumerLease){
+            value.historyCheckpointed=true;value.historyCheckpointEnd=Clock::now()+std::chrono::seconds(30);
+            if(const auto problem=value.storage.historyCompletionProblem()){value.historyCompletionProblem=*problem;}
+            if(value.historyCompletionMillis&&!value.storage.historyCompletionRecorded()){value.historyCompletionMillis.reset();}
+            if(value.historyCompletionMillis||value.historyCompletionProblem){
+              try{auto retained=managedLease->retain();
+                if(retained){value.historyLease=std::move(*retained);}else{value.historyCompletionProblem=retained.error().code;}
+              }catch(...){value.historyCompletionProblem=storage::ErrorCode::Io;}
+            }
+          }
         }
         value.status.retained = false;
         if(value.mmapLatency){value.mmapLatency->retire();}
@@ -1423,7 +1464,10 @@ struct PersistentSession::Impl {
               static_cast<void>(detail::take(storage::ConfigFile::createMissing(*magnetLease, filename, value.metadata)));
             }
             value.status.newlyImported=false;value.status.importGeneration=0;
-            const auto hash = detail::take(completePendingMagnet(*magnetLease, value.intent, magnetProfile / filename, *network,&value.status.newlyImported));
+            const auto hash = detail::take(completePendingMagnet(*magnetLease, value.intent, magnetProfile / filename, *network,&value.status.newlyImported,
+                !closingAdmission&&magnetCompletionHook&&magnetCompletionLease
+                    &&magnetCompletionLease->sharesOwnership(*magnetLease)?magnetCompletionHook:MagnetCompletionHook{},
+                &value.status.historyWarning));
             if(value.status.newlyImported){value.status.importGeneration=identity.engineEpoch;}
             value.status.phase = MagnetPhase::Imported;
             // These numeric hints were admitted under this owner's immutable
@@ -1551,6 +1595,7 @@ std::expected<std::unique_ptr<PersistentSession>, AccountingError> PersistentSes
 PersistentSession::~PersistentSession() {
   // Owner-thread destruction is a lifetime precondition. No destructor signal,
   // fresh measurement, final seal or bounded join is promised by this fallback.
+  impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();
   impl_->sink = {}; impl_->operationSink = {};
   impl_->retireMainlinePorts();
   impl_->closeMainline();
@@ -1559,6 +1604,20 @@ PersistentSession::~PersistentSession() {
   if(impl_->mixedTransport){impl_->mixedTransport->retire();impl_->mixedTransport.reset();}
   impl_->session.reset();
   impl_->releaseRegularTrackerLease();
+}
+std::expected<void,storage::Error> PersistentSession::configureMagnetCompletionHook(
+    const storage::ProfileLease& lease,MagnetCompletionHook hook){
+  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||impl_->closingAdmission
+      ||!impl_->magnets.empty()||impl_->magnetCompletionHook||!hook){
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Magnet history hook requires current owner before metadata admission"});
+  }
+  try{impl_->bind(lease);auto held=lease.retain();if(!held){return std::unexpected(held.error());}
+    impl_->magnetCompletionLease=std::move(*held);impl_->magnetCompletionHook=std::move(hook);return {};
+  }catch(const detail::Failure& e){return std::unexpected(e.error);}
+  catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot retain optional magnet history owner"});}
+}
+void PersistentSession::clearMagnetCompletionHook()noexcept{
+  if(impl_->onWorker()&&!impl_->call){impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();}
 }
 std::expected<void, AccountingError> PersistentSession::startIdle(const storage::ProfileLease& lease) {
   if (!impl_->onWorker()) { return std::unexpected(AccountingError::WrongThread); }
@@ -1868,11 +1927,15 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
   if(impl_->externalQueue&&(options.verifyExisting||options.allocationMode!=core::TorrentAllocationMode::None)){
     return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"External queue admits ordinary downloads only"});
   }
+  if(impl_->historyConsumerLease&&!impl_->historyConsumerLease->sharesOwnership(lease)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Managed history consumer profile OFD differs"});}
   const auto key = options.hash.hex();
   if(const auto pending=impl_->magnets.find(key);pending!=impl_->magnets.end()&&pending->second->pendingSource&&pending->second->status.retained){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Retire actual metadata before payload admission"});}
   const auto previous=impl_->managed.find(key);
   if(previous!=impl_->managed.end()) {
     const auto& row=*previous->second;
+    if(impl_->historyConsumerLease&&!row.historyTaken&&row.historyCheckpointed&&(row.historyCompletionMillis||row.historyCompletionProblem)){
+      return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Consume the prior durable completion before replacing its owner"});
+    }
     if(row.handle.is_valid()||row.removing||row.status.retained||row.status.phase!=ManagedPhase::Stopped
         ||!row.flushed||!row.removed||row.status.failure) {
       return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Torrent is already admitted or retirement is uncertified"});
@@ -2203,6 +2266,9 @@ std::expected<void, storage::Error> PersistentSession::forgetManaged(const core:
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Torrent files are still retained or retirement is uncertified"});
   }
   if (value.status.failure) { return std::unexpected(*value.status.failure); }
+  if(impl_->historyConsumerLease&&!value.historyTaken&&value.historyCheckpointed&&(value.historyCompletionMillis||value.historyCompletionProblem)){
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Consume the durable completion before releasing its owner"});
+  }
   impl_->managedByHandle.erase(value.handle);
   impl_->managed.erase(found); // Releases ManagedStorage's path/file descriptors.
   impl_->queuePositionsPending=true;impl_->queuePositionsUnavailable=true;
@@ -2210,7 +2276,7 @@ std::expected<void, storage::Error> PersistentSession::forgetManaged(const core:
   return {};
 }
 std::expected<core::TorrentHash,storage::Error> PersistentSession::createHybridCompanion(
-    storage::ProfileLease& lease,const core::TorrentHash& source,storage::OriginalSelectedHash target,std::stop_token stop) {
+    storage::ProfileLease& lease,const core::TorrentHash& source,storage::OriginalSelectedHash target,std::stop_token stop,storage::IntakeHistoryOutcome* history) {
   if(!managedAvailable()||impl_->call||impl_->closingAdmission){
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Hybrid companion owner is unavailable"});
   }
@@ -2228,7 +2294,7 @@ std::expected<core::TorrentHash,storage::Error> PersistentSession::createHybridC
     struct Reset {Impl& value;~Reset(){value.call=false;}} reset{*impl_};
     std::vector<storage::OriginalTorrentIdentity> retained;
     for(const auto& [key,value]:impl_->managed){(void)key;retained.push_back(value->storage.identity());}
-    return storage::importHybridAlias(lease,source,target,retained,nullptr,stop);
+    return storage::importHybridAlias(lease,source,target,retained,nullptr,stop,history);
   }catch(const detail::Failure& failure){return std::unexpected(failure.error);}
   catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Hybrid companion failed; inspect pending import before retry"});}
 }
@@ -2442,6 +2508,74 @@ std::vector<std::uint8_t> PersistentSession::verifiedSeedPieces(const core::Torr
   return found!=impl_->managed.end()&&found->second->seedIntent&&found->second->seedPiecesExact
       ?found->second->verified:std::vector<std::uint8_t>{};
 }
+std::expected<void,storage::Error> PersistentSession::configureHistoryCompletions(const storage::ProfileLease& lease){
+  if(!impl_->onWorker()||impl_->call||impl_->registered||impl_->closed||impl_->poisoned||impl_->closingAdmission){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"History interest requires the actual idle owner worker"});}
+  try{
+    if(impl_->historyConsumerLease){detail::require(impl_->historyConsumerLease->sharesOwnership(lease),"History interest cannot cross profile OFDs",storage::ErrorCode::Conflict);(void)detail::take(lease.retain());return {};}
+    detail::require(impl_->managed.empty(),"History interest must precede managed admissions; no retrospective capture",storage::ErrorCode::Conflict);
+    auto access=detail::take(lease.sourceAccess());auto held=detail::take(lease.retain());struct stat profile{};
+    detail::require(::fstat(lease.directoryHandle(),&profile)==0&&S_ISDIR(profile.st_mode),"History interest profile is unavailable",storage::ErrorCode::UnsafePath);
+    detail::require(!impl_->profileBound||(profile.st_dev==impl_->profileDevice&&profile.st_ino==impl_->profileInode),"History interest actual profile changed",storage::ErrorCode::Conflict);
+    for(const auto* actual:std::array<const storage::ProfileLease*,4>{impl_->managedLease,impl_->magnetLease,impl_->regularTrackerLease.get(),impl_->mainlineOriginalLease.get()}){detail::require(!actual||lease.sharesOwnership(*actual),"History interest actual OFD changed",storage::ErrorCode::Conflict);}
+    impl_->historyConsumerLease=std::move(held);return {};
+  }catch(const detail::Failure& failure){return std::unexpected(failure.error);}catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Optional history interest could not be retained"});}
+}
+std::expected<std::optional<storage::CompletionHistoryOutcome>,storage::Error> PersistentSession::takeHistoryCompletion(){
+  if(!impl_->onWorker()||impl_->call){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Completion receipt requires the actual idle owner worker"});}
+  if(!impl_->historyConsumerLease){return std::optional<storage::CompletionHistoryOutcome>{};}
+  if(impl_->poisoned){for(auto& [key,m]:impl_->managed){(void)key;m->historyTaken=true;m->historyCompletionMillis.reset();m->historyCompletionProblem.reset();m->historyLease.reset();}return std::optional<storage::CompletionHistoryOutcome>{};}
+  for(auto& [key,m]:impl_->managed){(void)key;auto& value=*m;
+    if(value.historyTaken||!value.historyCheckpointed||value.status.retained||value.status.failure
+        ||(!value.historyCompletionMillis&&!value.historyCompletionProblem)){continue;}
+    value.historyTaken=true;storage::CompletionHistoryOutcome outcome;
+    try{
+      if(Clock::now()>=value.historyCheckpointEnd){outcome.warning=storage::Error{storage::ErrorCode::Conflict,"Checkpoint saved; delayed completion history event expired without replay"};}
+      else if(value.historyCompletionProblem){outcome.warning=storage::Error{*value.historyCompletionProblem,"Checkpoint saved; original completion metadata needs review"};}
+      else if(value.historyLease&&value.historyCompletionMillis&&value.storage.historyCompletionRecorded()&&value.storage.historyCheckpointBytes()){
+        auto issued=storage::DurableCompletionReceipt::issue(*value.historyLease,value.storage.identity(),value.storage.capturedDownload(),
+            {impl_->identity.applicationRun,impl_->identity.profileSession,impl_->identity.engineEpoch},value.status.admission,
+            value.storage.preparedStateSnapshot(),*value.historyCompletionMillis,
+            value.historyEventComplete?storage::DurableCompletionReceipt::Transition::Complete:storage::DurableCompletionReceipt::Transition::Incomplete,
+            *value.storage.historyCheckpointBytes(),value.status.received,value.status.sent,value.storage.originalBytes());
+        if(issued){outcome.receipt.emplace(std::move(*issued));}else{outcome.warning=issued.error();}
+      }else{outcome.warning=storage::Error{storage::ErrorCode::Conflict,"Checkpoint saved; completion source ownership is unavailable"};}
+    }catch(...){outcome.warning=storage::Error{storage::ErrorCode::Io,"Checkpoint saved; completion history proof could not be captured"};}
+    value.historyLease.reset();
+    return std::optional<storage::CompletionHistoryOutcome>{std::move(outcome)};
+  }
+  return std::optional<storage::CompletionHistoryOutcome>{};
+}
+
+bool PersistentSession::historyReconstructionAvailable()const noexcept{
+  if(!impl_->onWorker()||impl_->call||impl_->registered||impl_->closed||impl_->poisoned
+      ||impl_->closingAdmission||!impl_->network||impl_->network->mode!=NetworkMode::Normal){return false;}
+  return std::ranges::none_of(impl_->managed,[](const auto& pair){const auto& m=*pair.second;return m.status.retained||m.handle.is_valid()||m.status.failure.has_value();})
+      &&std::ranges::none_of(impl_->magnets,[](const auto& pair){return pair.second->status.retained||pair.second->handle.is_valid();});
+}
+std::expected<storage::HistoryReconstructionReceipt,storage::Error> PersistentSession::prepareHistoryReconstruction(
+    const storage::ProfileLease& lease,std::stop_token stop,std::chrono::steady_clock::time_point end){
+  if(!historyReconstructionAvailable()){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"History Reset requires the complete stopped normal library; retire retained owners first"});}
+  try{
+    // Do not call bind()/bindingHealthy(): a snapshot operation must never
+    // join or call the provider while its caller holds a source read section.
+    struct stat profile{};detail::require(lease.valid()&&::fstat(lease.directoryHandle(),&profile)==0&&S_ISDIR(profile.st_mode),"History Reset requires the retained profile",storage::ErrorCode::UnsafePath);
+    detail::require(!impl_->profileBound||(profile.st_dev==impl_->profileDevice&&profile.st_ino==impl_->profileInode),"History Reset cannot cross actual owner profiles",storage::ErrorCode::Conflict);
+    detail::require(!impl_->managedLease||lease.sharesOwnership(*impl_->managedLease),"History Reset managed profile OFD changed",storage::ErrorCode::Conflict);
+    detail::require(!impl_->magnetLease||lease.sharesOwnership(*impl_->magnetLease),"History Reset metadata profile OFD changed",storage::ErrorCode::Conflict);
+    detail::require(!impl_->regularTrackerLease||lease.sharesOwnership(*impl_->regularTrackerLease),"History Reset profile OFD changed",storage::ErrorCode::Conflict);
+    detail::require(!impl_->mainlineOriginalLease||lease.sharesOwnership(*impl_->mainlineOriginalLease),"History Reset discovery profile OFD changed",storage::ErrorCode::Conflict);
+    return storage::HistoryReconstructionReceipt::issue(lease,{impl_->identity.applicationRun,impl_->identity.profileSession,impl_->identity.engineEpoch},stop,end);
+  }catch(const detail::Failure& failure){return std::unexpected(failure.error);}catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot capture actual normal history Reset source"});}
+}
+
+void PersistentSession::discardHistoryCompletions()noexcept{
+  if(!impl_->onWorker()||impl_->call){return;}
+  // Explicit auxiliary-history abandonment. This cannot grant effects, write
+  // files or erase an actual owner; future Reload must not replay old events.
+  for(auto& [key,m]:impl_->managed){(void)key;if(!m->historyCheckpointed){continue;}
+    m->historyTaken=true;m->historyCompletionMillis.reset();m->historyCompletionProblem.reset();m->historyLease.reset();}
+}
+
 std::vector<ManagedDownloadStatus> PersistentSession::managedDownloads() const {
   std::vector<ManagedDownloadStatus> result;
   if (!impl_->onWorker()) { return result; }
@@ -2620,6 +2754,9 @@ CloseWithoutCheckpointReceipt PersistentSession::closeWithoutCheckpoint(Clock::t
   if(impl_->call){return {false,false,AccountingError::ActiveOperation};}
   if(impl_->drainReceipt){return *impl_->drainReceipt;}
   impl_->call=true;impl_->closingAdmission=true;impl_->phase=AccountingState::Closing;
+  for(auto& [key,m]:impl_->managed){(void)key;m->historyTaken=true;m->historyCompletionMillis.reset();m->historyCompletionProblem.reset();m->historyLease.reset();}
+  impl_->historyConsumerLease.reset();
+  impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();
   impl_->sink={};impl_->operationSink={};impl_->operationBaseline.reset();
   std::optional<AccountingError> diagnostic;
   // Stop optional actors WITHOUT their persistence paths. No fresh source
@@ -2678,6 +2815,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   impl_->call = true;
   impl_->closingAdmission = true;
   impl_->phase = AccountingState::Closing;
+  impl_->magnetCompletionHook={};impl_->magnetCompletionLease.reset();
   const auto result = impl_->retire(std::min(deadline, Clock::now() + CertificationBudget));
   impl_->persistMainline();
   impl_->retireMainlinePorts();

@@ -1,5 +1,6 @@
 #include "original_filename_policy.hpp"
 #include "magnet_intake.hpp"
+#include "../adapters/durable_intake_receipt.hpp"
 #include "../adapters/file_io.hpp"
 #include "../adapters/torrent_intake.hpp"
 
@@ -604,9 +605,13 @@ std::expected<libtorrent::add_torrent_params, Error> metadataOnlyParameters(cons
   catch (const std::exception&) { return std::unexpected(Error{Code::Io, "Cannot prepare metadata-only magnet parameters"}); }
 }
 std::expected<core::TorrentHash, Error> completePendingMagnet(storage::ProfileLease& lease,
-    const PendingMagnet& expected, const fs::path& actualMetadata, const NetworkPolicy& network,bool* newlyImported) {
+    const PendingMagnet& expected, const fs::path& actualMetadata, const NetworkPolicy& network,bool* newlyImported,const MagnetCompletionHook& onFreshImport,std::optional<Error>* historyWarning) {
   if(newlyImported){*newlyImported=false;}
+  if(historyWarning){historyWarning->reset();}
   try {
+    // Own the callable and its fallback diagnostic BEFORE durable mutation.
+    const auto completed=onFreshImport;
+    std::optional<Error> hookFailure=Error{Code::Io,"Import saved; download-history completion hook failed"};
     auto c = load(lease); auto intent = current(c, expected, network);
     require(intent.destination.has_value(), Code::Unsupported, "Recovered magnet needs an explicit destination");
     pathShape(actualMetadata);
@@ -673,10 +678,20 @@ std::expected<core::TorrentHash, Error> completePendingMagnet(storage::ProfileLe
       }
     }
     if (!already) {
+      storage::IntakeHistoryOutcome history;
       const auto imported = take(storage::importTorrent(lease, fs::path(profile) / sourceName,
           *intent.destination, intent.stopped, nullptr, intent.forceStart,
-          intent.network==MagnetNetwork::I2p?storage::TorrentIntakeNetwork::I2p:intent.network==MagnetNetwork::PublicAndI2p?storage::TorrentIntakeNetwork::Mixed:storage::TorrentIntakeNetwork::Public));
+          intent.network==MagnetNetwork::I2p?storage::TorrentIntakeNetwork::I2p:intent.network==MagnetNetwork::PublicAndI2p?storage::TorrentIntakeNetwork::Mixed:storage::TorrentIntakeNetwork::Public,
+          completed?&history:nullptr));
       require(imported == intent.hash, Code::Conflict, "Imported identity differs from pending request");
+      if(completed){
+        std::optional<Error> warning;
+        try{warning=completed(std::move(history));if(warning&&warning->message.size()>512){warning->message.resize(512);}}
+        catch(...){warning=std::move(hookFailure);}
+        if(historyWarning){*historyWarning=std::move(warning);}
+      }
+      // The real sealed receipt is consumed before our later settings cleanup.
+      // Hook failure MUST NOT throw across the already committed import.
     }
     take(cancelPendingMagnet(lease, intent));
     // Source is an owned recovery artifact; only remove exact matching bytes.

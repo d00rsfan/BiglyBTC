@@ -69,3 +69,6 @@ target_sources(biglybtc_ui PRIVATE i2p_presentation.hpp i2p_statistics_view.hpp 
 target_sources(biglybtc_ui PRIVATE manual_tag_editor.hpp manual_tag_editor.cpp manual_tag_window.inc)
 # Intent-only category manager and selected-download menu.
 target_sources(biglybtc_ui PRIVATE category_editor.hpp category_editor.cpp category_window.inc)
+
+target_sources(biglybtc_ui PRIVATE download_history_page.hpp download_history_page.cpp download_history_window.inc
+  "${PROJECT_SOURCE_DIR}/app/download_history_commands.hpp")

@@ -656,6 +656,7 @@ struct ManagedStorage::Impl {
   ManagedStoragePurpose purpose=ManagedStoragePurpose::Download;
   std::vector<storage::VerifiedExistingScope::Proof> approvedProofs;
   bool attempted=false;
+  bool historyRecorded=false;std::optional<storage::ErrorCode> historyProblem;std::optional<std::int64_t> historyBytes;
   bool progressFromPieces=false;
   std::unique_ptr<AllocationWork> allocation;
   std::vector<std::uint8_t> requiredPieces;
@@ -721,6 +722,9 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareMixedPublic(const sto
   return prepareImpl(lease,hash,policy,claimed,identities,std::move(bridge),purpose,nullptr,&mixed);
 }
 std::string ManagedStorage::preparedStateSnapshot()const{return impl_->state.document().serialize();}
+bool ManagedStorage::historyCompletionRecorded()const noexcept{return impl_&&impl_->historyRecorded;}
+std::optional<std::int64_t> ManagedStorage::historyCheckpointBytes()const noexcept{return impl_?impl_->historyBytes:std::nullopt;}
+std::optional<storage::ErrorCode> ManagedStorage::historyCompletionProblem()const noexcept{return impl_?impl_->historyProblem:std::optional{ErrorCode::Conflict};}
 std::expected<void,Error> ManagedStorage::rebaseCategory(const storage::ProfileLease& lease){
   try{
     require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict);auto& owner=*impl_;
@@ -1064,7 +1068,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
 std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease& lease,std::span<const std::uint8_t> verified,
     bool complete,std::int64_t received,std::int64_t sent,
     std::int64_t secondsDownloading,std::int64_t secondsSeeding,std::optional<std::int32_t> secondsSinceUpload,
-    std::optional<ManagedBadPayloadBytes> badPayloadBytes,bool badPayloadComplete) {
+    std::optional<ManagedBadPayloadBytes> badPayloadBytes,bool badPayloadComplete,std::optional<ManagedHistoryCompletionEvent> historyEvent) {
   try {
     require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict); auto& owner=*impl_;
     require(owner.purpose!=ManagedStoragePurpose::AllocateOnly,"Allocation cannot publish verified piece progress",ErrorCode::Conflict);
@@ -1170,6 +1174,31 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       put(attributes,"timesinceul",intValue(*secondsSinceUpload));
       done(owner.state.replaceSection("attributes",attributes.serialize()));
     }
+    // A real accepted checked-state event supplies its retained time and state.
+    // Prepare the metadata in a local dictionary; malformed auxiliary fields
+    // do not turn a real payload checkpoint into an invented rollback/failure.
+    owner.historyRecorded=false;owner.historyProblem.reset();owner.historyBytes.reset();
+    if(historyEvent&&owner.purpose==ManagedStoragePurpose::Download){
+      try{
+        require(historyEvent->wallMillis>0,"Invalid actual completion wall time",ErrorCode::InvalidFormat);
+        require(owner.layout.bytes>0&&std::ranges::none_of(owner.filePolicies,[](const auto& value){return value.skipped;}),"Selected/DND completion producer is not qualified",ErrorCode::Unsupported);
+        const auto unique=[](const Node& map,std::string_view key){std::size_t count=0;require(map.type==Node::Type::Dictionary,"Malformed original completion dictionary",ErrorCode::InvalidFormat);for(std::size_t n=0;n+1<map.children.size();n+=2){if(map.children[n].bytes==key){++count;}}require(count<=1,"Duplicate original completion producer field",ErrorCode::InvalidFormat);};
+        unique(owner.state.document().root(),"attributes");auto attributes=dictionary(owner.state.document().find("attributes"));unique(attributes.root(),"complt");unique(attributes.root(),"parameters");const auto* oldLast=attributes.find("complt");
+        require(!oldLast||oldLast->type==Node::Type::Integer,"Unknown original completion attribute",ErrorCode::InvalidFormat);
+        // Apply the genuine accepted false callback before any later true one.
+        // The boolean is private per-admission owner evidence, never a UI flag.
+        if(historyEvent->checkedIncompleteObserved){put(attributes,"complt",intValue(-1));}
+        if(historyEvent->complete){
+          const auto* negative=attributes.find("complt");require(negative&&negative->type==Node::Type::Integer&&negative->integer==-1,"Original negative completion producer is required",ErrorCode::Unsupported);
+          auto parameters=dictionary(attributes.find("parameters"));unique(parameters.root(),"stats.download.completed.time");const auto* first=parameters.find("stats.download.completed.time");
+          require(!first||first->type==Node::Type::Integer,"Unknown original completed parameter",ErrorCode::InvalidFormat);
+          if(!first||first->integer<=0){put(parameters,"stats.download.completed.time",intValue(historyEvent->wallMillis));}
+          put(attributes,"parameters",parameters.serialize());put(attributes,"complt",intValue(historyEvent->wallMillis));
+        }else{require(historyEvent->checkedIncompleteObserved,"Incomplete history needs a genuine checked event",ErrorCode::Conflict);}
+        done(owner.state.replaceSection("attributes",attributes.serialize()));owner.historyRecorded=true;
+      }catch(const Failure& f){owner.historyProblem=f.error.code;}
+      catch(...){owner.historyProblem=ErrorCode::Io;}
+    }
     writeProgress(owner.state,counts,verified.size(),complete); done(owner.store.save(lease,owner.state));
     const bool completedFiles=!owner.pending.empty()||std::ranges::any_of(owner.slots,[&](const auto& slot){return !slot.padding&&counts[slot.index]==slot.bytes;});
     if (completedFiles) {
@@ -1209,7 +1238,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       }
       if (!owner.pending.empty()) { saveJournal(owner.state,owner.store,lease,owner.layout.multifile,{}); }
     }
-    return {};
+    owner.historyBytes=total;return {};
   } catch (const Failure& error) { return std::unexpected(error.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io,"Managed checkpoint failed; original state or inventory may already have changed"}); }
 }

@@ -1,5 +1,6 @@
 #include "file_operations.hpp"
 #include "file_policy_commands.hpp"
+#include "download_history_store.hpp"
 #include "encoded_document.hpp"
 #include "file_operation_io.hpp"
 #include <openssl/evp.h>
@@ -14,6 +15,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <type_traits>
+#include <thread>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -77,7 +79,9 @@ void keepAndDelete(){
   {
     Fixture f;const auto other=record(f.profile,f.area.root/"other","survivor.bin",false);f.inventory(other.row);auto inventory=doc(read(f.profile/"downloads.config"));const auto target=pauseRow(f.selected.hash,true,7)+b(hashBytes(f.selected.hash));put(inventory,"pause_data","l"+target+pauseRow(other.hash,false,19)+'e');write(f.profile/"downloads.config",inventory.serialize());auto p=f.plan(st::FileOperationKind::RemoveKeepData);auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));interruptAt=st::FileOperationStage::JournalSynced;interruptArmed=true;check(!st::applyFileOperation(f.lease,std::move(p),c,interrupt)&&st::hasPendingFileOperation(f.lease),"pause recovery has durable confirmed journal before publication");
     auto changed=doc(read(f.profile/"downloads.config"));put(changed,"pause_data","l"+pauseRow(f.selected.hash,false,7)+b(hashBytes(f.selected.hash))+pauseRow(other.hash,false,19)+'e');write(f.profile/"downloads.config",changed.serialize());auto conflict=st::recoverFileOperation(f.lease);check(!conflict&&conflict.error().code==st::ErrorCode::Conflict&&st::hasPendingFileOperation(f.lease)&&fs::exists(f.selected.state)&&read(f.selected.files[0])=="hello","changed modern target pause refuses recovery before effects");
-    const auto survivorPauses=b(hashBytes(other.hash))+pauseRow(other.hash,true,29);put(changed,"pause_data","l"+target+survivorPauses+'e');auto otherRow=doc(other.row);put(otherRow,"downloaded","i99e");put(changed,"downloads","l"+f.selected.row+otherRow.serialize()+'e');write(f.profile/"downloads.config",changed.serialize());auto recovered=take(st::recoverFileOperation(f.lease));check(recovered&&recovered->recovered&&!st::hasPendingFileOperation(f.lease),"sparse recovery removes selected mixed pauses");auto after=doc(read(f.profile/"downloads.config"));check(core::encodeValue(*after.find("pause_data")).value()=="l"+survivorPauses+'e',"recovery preserves independently changed survivor pause/opaque fields");auto parsed=core::readLibrary(after);check(parsed&&parsed->downloads.size()==1&&parsed->downloads[0].hash==other.hash&&parsed->downloads[0].downloaded==99&&parsed->paused.size()==2&&std::ranges::all_of(parsed->paused,[&](const auto& row){return row.hash==other.hash;}),"sparse recovery retains unrelated row checkpoint and no target ownership");check(after.find("opaque")->bytes=="raw"&&read(f.selected.files[0])=="hello"&&read(other.files[0])==other.values[0],"recovered Keep preserves both payloads and unknown root");
+    const auto survivorPauses=b(hashBytes(other.hash))+pauseRow(other.hash,true,29);put(changed,"pause_data","l"+target+survivorPauses+'e');auto otherRow=doc(other.row);put(otherRow,"downloaded","i99e");put(changed,"downloads","l"+f.selected.row+otherRow.serialize()+'e');write(f.profile/"downloads.config",changed.serialize());
+    const auto before=read(f.profile/"downloads.config"),journal=read(f.profile/"BiglyBTC.file-operation");auto reviewed=st::recoverFileOperation(f.lease);
+    check(!reviewed&&st::keepDataRemovalNeedsReview(f.lease)&&read(f.profile/"downloads.config")==before&&read(f.profile/"BiglyBTC.file-operation")==journal&&fs::exists(f.selected.state)&&read(f.selected.files[0])=="hello"&&read(other.files[0])==other.values[0],"even an apparently matching Keep Data prefix is preserved for explicit review, never replayed from bytes");
   }
 
 }
@@ -363,7 +367,7 @@ void archiveControlsAndRecovery(){
       check(!st::applyFileOperation(f.lease,std::move(p),confirmation,interrupt)&&!interruptArmed&&st::hasPendingFileOperation(f.lease),"backup-reference recovery has an actual durable pre-effect journal");
       f.inventory(other.row);const auto before=read(f.profile/"downloads.config");
       const auto rejected=st::recoverFileOperation(f.lease);
-      check(!rejected&&rejected.error().code==st::ErrorCode::Conflict&&rejected.error().message=="Torrent archive is referenced by another library item"
+      check(!rejected&&rejected.error().code==st::ErrorCode::Conflict&&st::keepDataRemovalNeedsReview(f.lease)
           &&read(f.profile/"downloads.config")==before&&read(protectedBackup)==f.selected.metadata
           &&fs::exists(f.selected.state)&&fs::exists(other.state)&&st::hasPendingFileOperation(f.lease),"recovery rechecks newly added backup references before sparse publication or archive deletion");
     }
@@ -394,8 +398,11 @@ void archiveControlsAndRecovery(){
     Fixture f;const auto backup=fs::path(f.selected.archive.string()+".bak");write(backup,f.selected.metadata);auto p=archivePlan(f,st::FileOperationKind::RemoveKeepData);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false,true));
     interruptAt=point;interruptArmed=true;check(!st::applyFileOperation(f.lease,std::move(p),c,interrupt)&&!interruptArmed&&st::hasPendingFileOperation(f.lease),"archive transaction interruption keeps exact durable journal");
     check(fs::exists(f.selected.archive)==(point!=st::FileOperationStage::ArchiveFileRemoved&&point!=st::FileOperationStage::ArchiveRemoved)&&fs::exists(backup)==(point!=st::FileOperationStage::ArchiveRemoved),"archive is removed only at its final acknowledged stage");
-    const auto recovered=take(st::recoverFileOperation(f.lease));check(recovered&&recovered->recovered&&!fs::exists(f.selected.archive)&&!fs::exists(backup)&&!fs::exists(f.selected.state)
-        &&read(f.selected.files[0])=="hello"&&!st::hasPendingFileOperation(f.lease),"recovery revalidates and finishes archive deletion idempotently");
+    const auto inventory=read(f.profile/"downloads.config"),journal=read(f.profile/"BiglyBTC.file-operation");
+    const auto statePresent=fs::exists(f.selected.state),archivePresent=fs::exists(f.selected.archive),backupPresent=fs::exists(backup);
+    const auto recovered=st::recoverFileOperation(f.lease);check(!recovered&&st::keepDataRemovalNeedsReview(f.lease)
+        &&fs::exists(f.selected.state)==statePresent&&fs::exists(f.selected.archive)==archivePresent&&fs::exists(backup)==backupPresent
+        &&read(f.profile/"downloads.config")==inventory&&read(f.profile/"BiglyBTC.file-operation")==journal&&read(f.selected.files[0])=="hello","each interrupted Keep Data prefix preserves exactly the already published files and never resumes archive/state deletion");
   }
   {
     Fixture f;auto p=archivePlan(f,st::FileOperationKind::RemoveKeepData);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false,true));
@@ -784,5 +791,109 @@ void coldPerFileJournalKeepsRootAndAuthenticatesEachDestination(){
     const auto inventory=doc(read(f.profile/"downloads.config"));const auto& row=inventory.find("downloads")->children[0];check(row.find("forceStart")->integer==1&&row.find("state")->integer==0&&row.find("downloaded")->integer==11&&row.find("opaque.row"),"Cold per-file replay preserves saved intent/counters/opaque state");
   }
 }
+void replaceRemovalJournal(st::FileOperationStage stage){
+  if(stage!=st::FileOperationStage::JournalSynced){return;}
+  const auto bytes=read(mutationPath);fs::rename(mutationPath,mutationPath.string()+".retained-test-prefix");write(mutationPath,bytes);check(::chmod(mutationPath.c_str(),0600)==0,"private replacement journal");
+}
+std::string compressedRemovalCache(std::string rows){
+  const std::string emptyGzip("\x1f\x8b\x08\x00\x00\x00\x00\x00\x02\xff\x4b\x49\x05\x00\x8b\x29\x90\x7d\x02\x00\x00\x00",22);
+  auto compressed=st::EncodedDocument::parse(emptyGzip);check(compressed&&compressed->compressed(),"original gzip cache fixture");
+  check(compressed->replaceValue("state",std::move(rows)).has_value()&&compressed->replaceValue("opaque","3:raw").has_value(),"gzip owning rows");
+  const auto saved=compressed->serialize();check(saved.has_value(),"gzip fixture serialization");return *saved;
+}
+void keepDataOwnerBackupsAndRecoveryCandidates(){
+  for(const bool gzip:{false,true}){
+    Fixture f;const auto other=record(f.profile,f.area.root/"other","survivor.bin",false);f.inventory(other.row);
+    const auto old=read(f.profile/"downloads.config");write(f.profile/"downloads.config.bak",old);
+    const auto rows="l"+std::string("d4:hash")+b(hashBytes(f.selected.hash))+"e"+"d4:hash"+b(hashBytes(other.hash))+"6:opaque3:rawee";
+    const auto cacheBytes=gzip?compressedRemovalCache(rows):"d5:state"+rows+"6:opaque3:rawe";
+    write(f.profile/"active/cache.dat",cacheBytes);write(f.profile/"active/cache.dat.bak",cacheBytes);
+    write(f.selected.state.string()+".bak",read(f.selected.state));
+    const auto foreign=read(other.state),payload=read(f.selected.files[0]),archive=read(f.selected.archive),state=read(f.selected.state);
+    if(!gzip){
+      const auto refused=st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}});
+      check(!refused&&refused.error().code==st::ErrorCode::InvalidFormat&&read(f.profile/"downloads.config")==old&&read(f.profile/"downloads.config.bak")==old&&read(f.profile/"active/cache.dat")==cacheBytes&&read(f.profile/"active/cache.dat.bak")==cacheBytes&&read(f.selected.state)==state&&read(other.state)==foreign&&read(f.selected.files[0])==payload&&read(f.selected.archive)==archive&&!st::hasPendingFileOperation(f.lease),"uncompressed cache is not original removal provenance and remains untouched");
+      continue;
+    }
+    auto plan=f.plan(st::FileOperationKind::RemoveKeepData);const auto confirmation=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));
+    auto alias=take(f.lease.retain());const auto result=take(st::applyFileOperation(*alias,std::move(plan),confirmation));
+    check(!result.recovered&&result.filesDeleted==0&&!st::hasPendingFileOperation(f.lease),"same actual OFD alias applies once without payload deletion");
+    for(const auto* leaf:{"downloads.config","downloads.config.bak"}){const auto after=doc(read(f.profile/leaf));const auto rows=take(core::readLibrary(after).transform_error([](auto){return st::Error{st::ErrorCode::InvalidFormat,"inventory"};}));check(rows.downloads.size()==1&&rows.downloads[0].hash==other.hash&&after.find("opaque")->bytes=="raw","primary and backup inventory cannot resurrect selected row; sibling/unknown remain");}
+    for(const auto* leaf:{"active/cache.dat","active/cache.dat.bak"}){const auto wrapped=st::EncodedDocument::parse(read(f.profile/leaf));check(wrapped&&wrapped->compressed()==gzip,"cache compression preserved");const auto& after=wrapped->document();const auto* rows=after.find("state");check(rows&&rows->children.size()==1&&rows->children[0].find("hash")->bytes==hashBytes(other.hash)&&rows->children[0].find("opaque")->bytes=="raw"&&after.find("opaque")->bytes=="raw","both cache candidates remove only selected identity");}
+    check(!fs::exists(f.selected.state)&&!fs::exists(f.selected.state.string()+".bak")&&read(other.state)==foreign&&read(f.selected.files[0])==payload&&read(f.selected.archive)==archive,"state-only cleanup preserves payload/external archive and every sibling");
+  }
+  {
+    Fixture f;const auto before=read(f.profile/"downloads.config"),state=read(f.selected.state);auto plan=f.plan(st::FileOperationKind::RemoveKeepData);const auto confirmed=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));mutationPath=f.profile/"BiglyBTC.file-operation";
+    check(!st::applyFileOperation(f.lease,std::move(plan),confirmed,replaceRemovalJournal)&&st::keepDataRemovalNeedsReview(f.lease)&&read(f.profile/"downloads.config")==before&&read(f.selected.state)==state&&read(f.selected.files[0])=="hello","same bytes on a replacement journal inode cannot authorize even the first live removal effect");
+  }
+  for(const auto* leaf:{"downloads.config.saving","downloads.config.bak.saving","active/cache.dat.saving","active/cache.dat.bak.saving","biglybt.config.saving"}){
+    Fixture f;write(f.profile/leaf,"uncertain");const auto inventory=read(f.profile/"downloads.config"),state=read(f.selected.state);check(!st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}})&&read(f.profile/"downloads.config")==inventory&&read(f.selected.state)==state&&!st::hasPendingFileOperation(f.lease),"unresolved candidate refuses before a removal journal");
+  }
+  {
+    Fixture f;const auto row="d4:hash"+b(hashBytes(f.selected.hash))+"e";write(f.profile/"active/cache.dat",compressedRemovalCache("l"+row+row+"e"));const auto before=read(f.profile/"downloads.config");const auto refused=st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}});check(!refused&&refused.error().code==st::ErrorCode::Conflict&&refused.error().message=="Duplicate selected state-cache identity"&&read(f.profile/"downloads.config")==before&&fs::exists(f.selected.state)&&!st::hasPendingFileOperation(f.lease),"duplicate identity in an actual compressed cache is not fresh removal provenance");
+  }
+  {
+    Fixture f;write(f.profile/"active/cache.dat.bak",compressedRemovalCache("le"));check(!st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}})&&fs::exists(f.selected.state),"missing primary plus backup is recovery, not fresh removal authority");
+  }
+  {
+    Fixture f;auto plan=f.plan(st::FileOperationKind::RemoveKeepData);const auto confirmed=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));std::optional<st::Error> failure;
+    std::thread otherWorker([&]{auto value=st::applyFileOperation(f.lease,std::move(plan),confirmed);if(!value){failure=value.error();}});otherWorker.join();
+    check(failure&&failure->code==st::ErrorCode::Conflict&&!st::hasPendingFileOperation(f.lease)&&fs::exists(f.selected.state),"preparation cannot migrate into another worker or mint ownership from journal bytes");
+    write(f.profile/"downloads.config.bak",read(f.profile/"downloads.config"));check(!st::applyFileOperation(f.lease,std::move(plan),confirmed)&&!st::hasPendingFileOperation(f.lease)&&fs::exists(f.selected.state),"previously absent backup candidate is exact prepared CAS");
+  }
+  {
+    Fixture f;auto plan=f.plan(st::FileOperationKind::RemoveKeepData);const auto confirmed=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));std::stop_source stop;stop.request_stop();check(!st::applyFileOperation(f.lease,std::move(plan),confirmed,nullptr,stop.get_token())&&!st::hasPendingFileOperation(f.lease)&&fs::exists(f.selected.state),"cancellation before publication leaves no removal prefix");
+  }
+  {
+    Fixture f;write(f.profile/"BiglyBTC.file-operation.BiglyBTC.fileop-saving","partial");const auto before=read(f.profile/"downloads.config");check(st::keepDataRemovalNeedsReview(f.lease)&&!st::recoverFileOperation(f.lease)&&read(f.profile/"downloads.config")==before&&fs::exists(f.selected.state),"unpublished journal stays explicit review with no byte-only replay");
+  }
+}
 
-int main(){try{coldPerFileJournalKeepsRootAndAuthenticatesEachDestination();showAllFileOperationBindsOriginalRootAndRecoveryContext();interruptedUnsealedReplacementNeedsFreshReviewAndJournalCas();interruptedReplacementReviewRefusesChangedPreimages();explicitReplacementPreservesReviewedPriorInodeAndOriginalIntent();explicitReplacementColdRecoveryAndUnknownSources();trashDirectoryReplacementNeverFallsBackToDelete();perFileNonlinearMoveKeepsControlAndRetargetRefuses();individualFileMappingsAndRevert();individualFileMappingRecoveryAndRefusals();ownedTrashPublicationAndRecovery();manyPayloadDigestTraversal();canonicalLatin1MoveUsesActualDecodedLeaves();archiveControlsAndRecovery();digestReceiptsEndWithApply();payloadDigestWorkAndInterference();selectionPoliciesMoveAndRecover();selectionCollisionAndStaleSource();keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+std::string removalHistoryFixture(Fixture& f){
+  auto state=doc(read(f.selected.state)),attrs=doc(*core::encodeValue(*state.find("attributes")));put(attrs,"stats.download.added.time","i42000e");put(attrs,"parameters","d25:stats.download.added.timei51000ee");put(state,"attributes",attrs.serialize());write(f.selected.state,state.serialize());
+  core::DownloadHistoryNewRecord row;row.uid=core::originalDownloadHistoryUid(hashBytes(f.selected.hash),42000);row.hash=hashBytes(f.selected.hash);row.name="Actual old active";row.saveLocation=f.selected.files[0].string();row.size=5;row.addTime=51000;row.completeTime=123;row.tags={"historic-tag"};
+  const auto created=core::editSavedDownloadHistory("d6:opaque3:rawe",core::DownloadHistoryAppend{row});check(created.has_value(),"active history fixture");auto active=doc(created->value.source->originalBytes());const auto* records=active.find("records");auto record=doc(active.originalBytes().substr(records->children[0].begin,records->children[0].end-records->children[0].begin));put(record,"opaque.removal","d4:keep2:"+std::string("\0\xff",2)+"e");put(active,"records","l"+record.serialize()+"e");write(f.profile/"dlhistorya.config",active.serialize());write(f.profile/"dlhistoryd.config","d6:opaque4:deade");return active.serialize();
+}
+void changeRemovedPostimage(st::FileOperationStage stage){if(stage==st::FileOperationStage::Completed){auto value=doc(read(mutationPath));put(value,"opaque.external","i9e");write(mutationPath,value.serialize());}}
+void actualRemovalHistoryIsSingleUseAndSourceBound(){
+  static_assert(!std::is_default_constructible_v<st::DurableRemovalReceipt>);
+  static_assert(!std::is_copy_constructible_v<st::DurableRemovalReceipt>);
+  for(const auto stage:{st::FileOperationStage::JournalSynced,st::FileOperationStage::InventoryPublished,st::FileOperationStage::StateRemoved}){
+    Fixture f;const auto active=removalHistoryFixture(f);auto plan=f.plan(st::FileOperationKind::RemoveKeepData);const auto confirmation=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));st::RemovalHistoryOutcome history;interruptAt=stage;interruptArmed=true;
+    check(!st::applyFileOperation(f.lease,std::move(plan),confirmation,interrupt,{},&history)&&!interruptArmed&&!history.receipt&&!history.warning&&st::hasPendingFileOperation(f.lease)&&read(f.profile/"dlhistorya.config")==active,"interrupted actual prefixes never issue a fresh removal witness");
+    const auto journal=read(f.profile/"BiglyBTC.file-operation"),inventory=read(f.profile/"downloads.config");check(!st::recoverFileOperation(f.lease)&&read(f.profile/"BiglyBTC.file-operation")==journal&&read(f.profile/"downloads.config")==inventory&&read(f.profile/"dlhistorya.config")==active,"reviewed journal bytes cannot create a historical removal event");
+  }
+  {
+    Fixture f;const auto active=removalHistoryFixture(f);auto plan=f.plan(st::FileOperationKind::RemoveKeepData);const auto confirmation=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));st::RemovalHistoryOutcome history;mutationPath=f.profile/"downloads.config";
+    const auto removed=st::applyFileOperation(f.lease,std::move(plan),confirmation,changeRemovedPostimage,{},&history);check(removed&&history.warning&&!history.receipt&&!fs::exists(f.selected.state)&&!st::hasPendingFileOperation(f.lease)&&read(f.profile/"dlhistorya.config")==active,"postcommit external inventory replacement refuses witness without falsifying successful removal");
+  }
+  for(const int mode:{0,1,2,3,4,5}){
+    Fixture f;const auto original=removalHistoryFixture(f),payload=read(f.selected.files[0]);
+    if(mode==1){write(f.profile/"biglybt.config","d24:Download History Enabledi0ee");}
+    if(mode==2){fs::remove(f.profile/"dlhistorya.config");fs::remove(f.profile/"dlhistoryd.config");}
+    auto store=take(st::DownloadHistoryStore::open(f.lease));auto snapshot=take(store->snapshot());auto plan=f.plan(st::FileOperationKind::RemoveKeepData);const auto confirmation=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));st::RemovalHistoryOutcome history;
+    const auto earliest=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();const auto removed=take(st::applyFileOperation(f.lease,std::move(plan),confirmation,nullptr,{},&history));
+    check(!removed.recovered&&history.receipt&&!history.warning&&!fs::exists(f.selected.state)&&!st::hasPendingFileOperation(f.lease)&&read(f.selected.files[0])==payload,"only actual fresh metadata commit yields the private removal witness");
+    if(mode==3){snapshot=take(store->reload());auto inventory=doc(read(f.profile/"downloads.config"));put(inventory,"opaque.external","i1e");write(f.profile/"downloads.config",inventory.serialize());}
+    if(mode==4){auto changed=f.lease.sourceAccess(true);check(changed.has_value(),"actual unrelated source epoch");}
+    if(mode==5){const auto current=take(store->reload());check(current.generation()!=snapshot.generation(),"actual store generation invalidates stale snapshot");}
+    const auto moved=store->remove(snapshot,std::move(*history.receipt));
+    if(mode>=3){check(!moved&&read(f.profile/"dlhistorya.config")==original&&read(f.profile/"dlhistoryd.config")=="d6:opaque4:deade"&&!fs::exists(f.selected.state)&&read(f.selected.files[0])==payload,"foreign postimage/epoch/stale history refuses without undoing actual removal or editing history");continue;}
+    check(moved.has_value(),"actual removal history consumption");
+    if(mode==1){check(!moved->changed&&read(f.profile/"dlhistorya.config")==original&&!fs::exists(f.profile/"BiglyBTC.download-history.config"),"disabled history consumes removal once without writing");continue;}
+    if(mode==2){check(!moved->changed&&!fs::exists(f.profile/"dlhistorya.config")&&!fs::exists(f.profile/"dlhistoryd.config"),"missing active history never backfills from a removed saved row");continue;}
+    check(moved->changed,"existing active moved to dead");const auto* active=moved->snapshot.history(st::DownloadHistorySide::Active);const auto* dead=moved->snapshot.history(st::DownloadHistorySide::Dead);check(active&&active->records.empty()&&dead&&dead->records.size()==1,"actual pair transition has one dead and no active record");
+    const auto& row=dead->records[0];const auto latest=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();check(row.uid==core::originalDownloadHistoryUid(hashBytes(f.selected.hash),42000)&&row.addTime==51000&&row.hash==hashBytes(f.selected.hash)&&row.completeTime==123&&row.removeTime>=earliest&&row.removeTime<=latest&&row.tags==std::vector<std::string>{"historic-tag"},"actual event time/distinct UID attribute/add parameter/full identity and existing tags preserved");
+    const auto* records=dead->source->find("records");const auto* unknown=records->children[0].find("opaque.removal");check(unknown&&dead->source->originalBytes().substr(unknown->begin,unknown->end-unknown->begin)=="d4:keep2:"+std::string("\0\xff",2)+"e"&&dead->source->find("opaque")->bytes=="dead"&&active->source->find("opaque")->bytes=="raw","raw unknown record and both original root fields survive dead-first publication");
+    const auto beforeA=read(f.profile/"dlhistorya.config"),beforeD=read(f.profile/"dlhistoryd.config");check(!store->remove(moved->snapshot,std::move(*history.receipt))&&read(f.profile/"dlhistorya.config")==beforeA&&read(f.profile/"dlhistoryd.config")==beforeD,"moved receipt cannot replay the removal");
+  }
+  {
+    Fixture f;const auto original=removalHistoryFixture(f);auto store=take(st::DownloadHistoryStore::open(f.lease));auto snapshot=take(store->snapshot());auto plan=f.plan(st::FileOperationKind::RemoveKeepData);const auto consent=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));st::RemovalHistoryOutcome history;take(st::applyFileOperation(f.lease,std::move(plan),consent,nullptr,{},&history));check(history.receipt.has_value(),"real removal before cancellation");std::stop_source stop;stop.request_stop();check(!store->remove(snapshot,std::move(*history.receipt),stop.get_token())&&read(f.profile/"dlhistorya.config")==original&&!fs::exists(f.selected.state),"cancelled optional history cannot reverse an already saved removal");
+  }
+  {
+    Fixture f;removalHistoryFixture(f);auto state=doc(read(f.selected.state)),attrs=doc(*core::encodeValue(*state.find("attributes")));put(attrs,"stats.download.added.time","3:bad");put(state,"attributes",attrs.serialize());write(f.selected.state,state.serialize());auto plan=f.plan(st::FileOperationKind::RemoveKeepData);const auto consent=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));st::RemovalHistoryOutcome history;auto removed=st::applyFileOperation(f.lease,std::move(plan),consent,nullptr,{},&history);check(removed&&history.warning&&!history.receipt&&!fs::exists(f.selected.state)&&!st::hasPendingFileOperation(f.lease)&&read(f.selected.files[0])=="hello","malformed auxiliary history input warns after actual removal, never reports import/removal rollback");
+  }
+}
+
+
+int main(){try{actualRemovalHistoryIsSingleUseAndSourceBound();keepDataOwnerBackupsAndRecoveryCandidates();coldPerFileJournalKeepsRootAndAuthenticatesEachDestination();showAllFileOperationBindsOriginalRootAndRecoveryContext();interruptedUnsealedReplacementNeedsFreshReviewAndJournalCas();interruptedReplacementReviewRefusesChangedPreimages();explicitReplacementPreservesReviewedPriorInodeAndOriginalIntent();explicitReplacementColdRecoveryAndUnknownSources();trashDirectoryReplacementNeverFallsBackToDelete();perFileNonlinearMoveKeepsControlAndRetargetRefuses();individualFileMappingsAndRevert();individualFileMappingRecoveryAndRefusals();ownedTrashPublicationAndRecovery();manyPayloadDigestTraversal();canonicalLatin1MoveUsesActualDecodedLeaves();archiveControlsAndRecovery();digestReceiptsEndWithApply();payloadDigestWorkAndInterference();selectionPoliciesMoveAndRecover();selectionCollisionAndStaleSource();keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

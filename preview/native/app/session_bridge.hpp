@@ -23,6 +23,7 @@
 #include "manual_tag_presentation.hpp"
 #include "manual_tag_commands.hpp"
 #include "category_commands.hpp"
+#include "download_history_commands.hpp"
 #include "country_statistics_presentation.hpp"
 #include "live_speed_manager_presentation.hpp"
 
@@ -79,6 +80,7 @@ public:
   bool manualTagStatistics(quint64 session);
   bool manualTagCommand(ui::ManualTagCommand);
   bool categoryCommand(ui::CategoryCommand);
+  bool downloadHistoryCommand(ui::DownloadHistoryCommand);
   bool countryStatistics(quint64 session);
   bool history(quint64 session, quint64 request, core::HistoryDate date);
   bool historyWeek(quint64 session, quint64 request, core::HistoryDate endingDate);
@@ -130,6 +132,7 @@ signals:
   void manualTagStatisticsReady(biglybtc::ui::ManualTagStatisticsPresentation);
   void manualTagCommandFinished(biglybtc::ui::ManualTagCommandPresentation);
   void categoryCommandFinished(biglybtc::ui::CategoryCommandPresentation);
+  void downloadHistoryCommandFinished(biglybtc::ui::DownloadHistoryCommandPresentation);
   void countryStatisticsReady(biglybtc::ui::CountryStatisticsPresentation);
   void sessionClosed(quint64 session, bool joined, bool storageReleased);
   void sessionCloseFailed();
@@ -152,6 +155,7 @@ private:
   void publishMainlineFailure() noexcept;
   void publishI2p();
   void reportIdlePollFailure(quint64 session,QString detail);
+  void publishDownloadHistoryCompletionNotice(QString);
   void observeNative(const engine::ApplicationPeerObservation&) noexcept;
   void refreshDhtAccounting(bool ending = false) noexcept;
   void tickAccounting(bool force = false, bool ending = false) noexcept;
@@ -165,6 +169,7 @@ private:
   void deliverManualTags(ui::ManualTagStatisticsPresentation);
   void deliverManualTagCommand(ui::ManualTagCommandPresentation);
   void deliverCategoryCommand(ui::CategoryCommandPresentation);
+  void deliverDownloadHistoryCommand(ui::DownloadHistoryCommandPresentation);
   ui::CountryStatisticsPresentation countryPacket();
   void publishCountries() noexcept;
   void deliverCountries(ui::CountryStatisticsPresentation);
@@ -198,6 +203,7 @@ private:
   bool manualTagDeliveryQueued_ = false;
   ui::ManualTagStatisticsPresentation deliveredManualTags_; // GUI-only admission state.
   std::optional<ui::CategoryCommand> guiCategoryCommand_;
+  std::optional<ui::DownloadHistoryCommand> guiDownloadHistoryCommand_;
   std::optional<ui::ManualTagCommand> guiManualTagCommand_; // One current async completion, GUI only.
   std::optional<ui::CountryStatisticsPresentation> latestCountries_;
   bool countryDeliveryQueued_ = false;

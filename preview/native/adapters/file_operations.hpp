@@ -1,5 +1,6 @@
 #pragma once
 #include "profile.hpp"
+#include "durable_removal_receipt.hpp"
 #include "biglybtc/library.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -91,7 +92,7 @@ private:
   std::unique_ptr<Impl> impl_;
   friend std::expected<PreparedFileOperation,Error> prepareInterruptedReplacementReview(const ProfileLease&,std::stop_token);
   friend std::expected<PreparedFileOperation,Error> prepareFileOperation(const ProfileLease&,const FileOperationRequest&,std::stop_token);
-  friend std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease&,PreparedFileOperation&&,const FileOperationConfirmation&,void(*)(FileOperationStage),std::stop_token);
+  friend std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease&,PreparedFileOperation&&,const FileOperationConfirmation&,void(*)(FileOperationStage),std::stop_token,RemovalHistoryOutcome*);
 };
 // Worker-only preparation is read-only. Host may show this scope while live,
 // then must stop/certify/revoke scheduler ownership and reprepare. Confirmation
@@ -110,9 +111,11 @@ std::expected<FileOperationConfirmation,Error> confirmFileOperation(
     bool archiveConfirmed=false);
 // Borrowed lease; caller guarantees no retained handle and no concurrent profile
 // work. Cancellation is observed before the first durable journal only. Errors
-// after mutation require explicit recovery; never retry a consumed plan.
+// after mutation require explicit recovery; never retry a consumed plan. Keep
+// Data binds its preparing worker and SAME OFD and is never replayed from disk.
 std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease&,PreparedFileOperation&&,
-    const FileOperationConfirmation&,void(*observer)(FileOperationStage) = nullptr,std::stop_token = {});
+    const FileOperationConfirmation&,void(*observer)(FileOperationStage) = nullptr,std::stop_token = {},
+    RemovalHistoryOutcome* = nullptr);
 // Original default true; Boolean tests the low32 integer from held biglybt.config. Read-only;
 // malformed values/errors remain explicit, never materialized or overwritten.
 std::expected<bool,Error> torrentArchiveDeletionPreference(const ProfileLease&,std::stop_token = {});
@@ -121,6 +124,9 @@ std::expected<bool,Error> torrentArchiveDeletionPreference(const ProfileLease&,s
 std::expected<bool,Error> payloadRecyclePreference(const ProfileLease&,std::stop_token = {});
 std::expected<std::filesystem::path,Error> linuxHomeTrashRoot();
 bool hasPendingFileOperation(const ProfileLease&) noexcept;
+// Read-only restriction only: Keep Data journals, malformed journals and uncertain
+// publication candidates need human review. Does not authorize any recovery.
+bool keepDataRemovalNeedsReview(const ProfileLease&) noexcept;
 std::expected<std::optional<FileOperationResult>,Error> recoverFileOperation(
     const ProfileLease&,void(*observer)(FileOperationStage) = nullptr);
 }

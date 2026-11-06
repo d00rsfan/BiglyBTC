@@ -74,6 +74,7 @@ bool SessionBridge::categoryCommand(ui::CategoryCommand request){
             if(storage::hasPendingCategoryDeletion(host.lease)&&host.categoryRetainedOwners()){
               throw Failure{{storage::ErrorCode::Busy,"Pending category recovery conflicts with retained owners; preserve files for review"}};
             }
+            if(storage::hasPendingFileOperation(host.lease)){throw Failure{{storage::ErrorCode::Conflict,"File-operation recovery must be reviewed before category removal or resume"}};}
             host.requireI2pIdle(true);
             if(host.categoryRetainedOwners()){
               throw Failure{{storage::ErrorCode::Busy,"Stop and retire Public torrents and metadata handles before deleting or resuming a category"}};

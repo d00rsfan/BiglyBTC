@@ -9,10 +9,13 @@
 #include <cstdint>
 #include <expected>
 #include <filesystem>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
+
+namespace biglybtc::storage {struct IntakeHistoryOutcome;}
 
 namespace biglybtc::engine {
 
@@ -66,6 +69,12 @@ std::expected<void, storage::Error> cancelPendingMagnet(storage::ProfileLease&, 
 std::expected<libtorrent::add_torrent_params, storage::Error> metadataOnlyParameters(
     const PendingMagnet&, const NetworkPolicy&, const std::filesystem::path& ownedMetadataDirectory);
 
+// Trusted existing owner worker only: consume the sealed actual import outcome
+// BEFORE pending-row cleanup changes its source epoch. The hook may perform
+// synchronous Store filesystem work only, never SDK/Qt waits or owner reentry.
+// A callback cannot issue a receipt; optional errors are auxiliary, not rollback.
+using MagnetCompletionHook=std::function<std::optional<storage::Error>(storage::IntakeHistoryOutcome)>;
+
 // Input is ACTUAL received complete metainfo. Verify every requested full hash,
 // merge admitted magnet sources, then journaled ordinary import. Idempotently
 // retires the pending row after a matching already-published import on restart.
@@ -74,6 +83,7 @@ std::expected<libtorrent::add_torrent_params, storage::Error> metadataOnlyParame
 // transaction; an already imported row keeps any later user's state/force edits.
 std::expected<core::TorrentHash, storage::Error> completePendingMagnet(storage::ProfileLease&,
     const PendingMagnet&, const std::filesystem::path& actualMetadata, const NetworkPolicy&,
-    bool* newlyImported=nullptr); // Observational causality only; false on errors/already-present recovery.
+    bool* newlyImported=nullptr, const MagnetCompletionHook& onFreshImport={},
+    std::optional<storage::Error>* historyWarning=nullptr); // Outputs are observations, never receipt authority.
 
 } // namespace biglybtc::engine

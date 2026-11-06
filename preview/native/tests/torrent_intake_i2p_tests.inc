@@ -29,7 +29,17 @@ void i2pNetworkContexts(){
         ?take(storage::importTorrent(*area.lease,area.input,area.destination,true,nullptr,false,Network::Public))
         :take(storage::importTorrent(*area.lease,area.input,area.destination,true));
     const auto bytes=read(area.profile/"active"/(hash.hex()+".dat"));
-    if(explicitPublic){check(bytes==defaultPublicState,"Explicit Public preserves byte-exact default state");}else{defaultPublicState=bytes;}
+    // Separate real imports receive their own original added timestamp. Only
+    // that producer-owned leaf differs; network choice must preserve all other
+    // bytes, including parameters/attributes unknowns and raw info geometry.
+    auto comparable=parse(bytes);auto attributes=parse(rawValue(comparable,"attributes"));
+    auto parameters=parse(rawValue(attributes,"parameters"));const auto* added=parameters.find("stats.download.added.time");
+    check(added&&added->type==core::Node::Type::Integer&&added->integer>0,"Each real Public import records its own positive added time");
+    check(parameters.replaceValue("stats.download.added.time","i0e").has_value()
+        &&attributes.replaceValue("parameters",parameters.serialize()).has_value()
+        &&comparable.replaceValue("attributes",attributes.serialize()).has_value(),"Normalize only real added-time leaf for comparison");
+    const auto withoutAddedTime=comparable.serialize();
+    if(explicitPublic){check(withoutAddedTime==defaultPublicState,"Explicit Public preserves default state except fresh added time");}else{defaultPublicState=withoutAddedTime;}
     const auto state=parse(bytes);const auto* networks=state.find("attributes")->find("networks");
     check(networks&&networks->children.size()==1&&networks->children[0].bytes=="Public","Old default remains Public despite tracker hostname");
     check(read(area.input)==original&&read(area.profile/"torrents"/(hash.hex()+".torrent"))==original,"Public archive/source bytes unchanged");

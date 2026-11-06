@@ -101,6 +101,10 @@ int main(int argc, char** argv) {
     using Window = biglybtc::ui::LibraryWindow;
     using Bridge = biglybtc::app::SessionBridge;
     QObject::connect(&bridge,&Bridge::categoryCommandFinished,&window,&Window::setCategoryCommandFinished);
+    QObject::connect(&window,&Window::downloadHistoryCommandRequested,&bridge,[&](biglybtc::ui::DownloadHistoryCommand request){
+      if(!bridge.downloadHistoryCommand(request)){window.rejectDownloadHistoryCommand(request);}
+    });
+    QObject::connect(&bridge,&Bridge::downloadHistoryCommandFinished,&window,&Window::setDownloadHistoryCommandFinished);
     QObject::connect(&window,&Window::categoryCommandRequested,&bridge,
       [owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::CategoryCommand command){
         if(owner&&view&&!owner->categoryCommand(command)&&view){view->rejectCategoryCommand(command);}

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "biglybtc/saved_download_tag_edits.hpp"
 #include <array>
+#include <source_location>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
@@ -17,8 +18,9 @@ c::SavedTagEditResult edited(std::string_view raw, c::SavedTagEdit edit, c::Save
   auto result = c::editSavedDownloadTags(raw, edit, limits); check(bool(result), "Expected pure saved-tag edit"); return std::move(*result);
 }
 std::string wire(const c::SavedTagEditResult& result) { return result.value.source->serialize(); }
-void refused(std::string_view raw, c::SavedTagEdit edit, c::SavedTagEditError error, c::SavedTagLimits limits = {}) {
+void refused(std::string_view raw, c::SavedTagEdit edit, c::SavedTagEditError error, c::SavedTagLimits limits = {},std::source_location loc=std::source_location::current()) {
   const std::string original(raw); auto result = c::editSavedDownloadTags(raw, edit, limits);
+  if(result||result.error()!=error||raw!=original){std::cerr<<"refusal line="<<loc.line()<<" edit="<<edit.index()<<" expected="<<static_cast<int>(error)<<" actual="<<(result?-1:static_cast<int>(result.error()))<<'\n';}
   check(!result && result.error() == error && raw == original, "Wrong refusal or mutated input");
 }
 c::TorrentHash hash(std::size_t size) {
@@ -185,8 +187,47 @@ void configuredPerTagEffectsRemainDataOnlyUntilActualExecutor(){
     auto tags=c::readSavedDownloadTags(dict({{"3",dict({{"1",dict({{"n",bytes("Metadata")},{"c",config}})}})}}));check(bool(tags)&&c::ordinarySavedTagMembershipEffects(*tags,*tags->source->find("3")->find("1")),"Supported metadata-only/default property was blanket refused");
   }
 }
+void ordinaryGroupSetterPreservesNullEmptyAndRawFields(){
+  const auto opaque=dict({{"later",bytes("keep\0raw"sv)}});
+  const auto before=dict({{"future",opaque},{"3",dict({{"c",dict({{"UNRELATED",dict({{"x","i1e"}})}})},{"1",dict({{"n",bytes("Tag")},{"c",dict({{"future",opaque}})},{"o",list({bytes("unresolved")})},{"p",list({opaque})}})}})}});
+  auto grouped=edited(before,c::SavedTagSetGroup{1,std::string(" Work ")});const auto& tag=record(grouped,"1");
+  check(tag.find("c")->find("gr")->bytes==" Work ","Typed group setter trimmed original exact String");check(raw(grouped,*tag.find("o"))==list({bytes("unresolved")})&&raw(grouped,*tag.find("p"))==list({opaque})&&raw(grouped,*tag.find("c")->find("future"))==opaque,"Group edit changed unknown/member raw bytes");
+  auto empty=edited(wire(grouped),c::SavedTagSetGroup{1,std::string{}});check(record(empty,"1").find("c")->find("gr")&&record(empty,"1").find("c")->find("gr")->bytes.empty(),"Empty String was converted to null");
+  check(!edited(wire(empty),c::SavedTagSetGroup{1,std::string{}}).changed,"Same empty group was rewritten");
+  auto clear=edited(wire(empty),c::SavedTagSetGroup{1,{}});check(!record(clear,"1").find("c")->find("gr")&&raw(clear,*record(clear,"1").find("c")->find("future"))==opaque,"Null did not remove only gr");check(!edited(wire(clear),c::SavedTagSetGroup{1,{}}).changed,"Absent group clear wrote a default");
+  auto unsafe=dict({{"3",dict({{"c",dict({{"I4",dict({{"gc","le"}})}})},{"1",dict({{"n",bytes("Tag")}})}})}});
+  refused(unsafe,c::SavedTagSetGroup{1,std::string("G")},c::SavedTagEditError::UnsupportedGroupSettings);
+  const auto old=dict({{"3",dict({{"c",dict({{"I4",dict({{"x","i1e"}})}})},{"1",dict({{"n",bytes("Tag")},{"c",dict({{"gr",bytes("G")}})}})}})}});
+  check(!edited(old,c::SavedTagSetGroup{1,std::string("G")}).changed,"Exact setter no-op invented group effects");refused(old,c::SavedTagSetGroup{1,{}},c::SavedTagEditError::UnsupportedGroupSettings);
+  const auto simple=dict({{"3",dict({{"1",dict({{"n",bytes("Tag")}})}})}});
+  const auto nbsp=edited(simple,c::SavedTagSetGroup{1,std::string("\xC2\xA0Work\xC2\xA0")});check(record(nbsp,"1").find("c")->find("gr")->bytes=="\xC2\xA0Work\xC2\xA0","Typed group setter lost non-Java-trim Unicode spaces");
+  refused(before,c::SavedTagSetGroup{1,std::string("\xff",1)},c::SavedTagEditError::InvalidName);
+}
+void originalColourStringsDefaultsAndBenignPolicy(){
+  const auto make=[&](std::string value){return dict({{"future-root",bytes("keep")},{"3",dict({{"1",dict({{"n",bytes("Tag")},{"c",dict({{"col.rgb",std::move(value)},{"future",bytes("raw")}})},{"o",list({bytes("unresolved")})},{"p",list({dict({{"u","i9e"}})})}})}})}});};
+  const auto before=make(bytes("+01,2,3,,"));auto parsed=c::readSavedDownloadTags(before);check(bool(parsed),"Actual source colour parse");
+  const auto decoded=c::readSavedTagColour(*parsed->source->find("3")->find("1"));check(decoded&&*decoded&&**decoded==c::SavedTagRgb{1,2,3},"Original leading plus/zero/trailing empty split semantics differ");
+  auto canonical=edited(before,c::SavedTagSetColour{1,c::SavedTagRgb{1,2,3}});check(canonical.changed&&record(canonical,"1").find("c")->find("col.rgb")->bytes=="1,2,3","Setter wrongly treated decoded equality as an encoded-string no-op");
+  check(!edited(wire(canonical),c::SavedTagSetColour{1,c::SavedTagRgb{1,2,3}}).changed,"Exact encoded colour no-op changed bytes");
+  const auto cleared=edited(wire(canonical),c::SavedTagSetColour{1,{}});check(!record(cleared,"1").find("c")->find("col.rgb")&&raw(cleared,*record(cleared,"1").find("c")->find("future"))==bytes("raw")&&raw(cleared,*record(cleared,"1").find("o"))==list({bytes("unresolved")})&&raw(cleared,*record(cleared,"1").find("p"))==list({dict({{"u","i9e"}})}),"Default clear changed unknown/member/property bytes");
+  check(!edited(wire(cleared),c::SavedTagSetColour{1,{}}).changed,"Absent ordinary default clear invented a colour key");
+  check(c::ManualTagDefaultRgb==c::SavedTagRgb{0,140,66},"Pinned original manual default differs");
+  const auto edge=edited(make(bytes("-2147483648,+2147483647,-0")),c::SavedTagSetColour{1,c::SavedTagRgb{std::numeric_limits<std::int32_t>::min(),std::numeric_limits<std::int32_t>::max(),0}});check(edge.changed,"Signed32 edge parse/set failed");
+  for(const auto& value:{std::string(""),std::string("1,2"),std::string("1,,3"),std::string("1,2,3,4"),std::string(" 1,2,3"),std::string("2147483648,2,3"),std::string("-2147483649,2,3"),std::string("1,2,+"),std::string("1,2,\xD9\xA1")}){refused(make(bytes(value)),c::SavedTagSetColour{1,c::SavedTagRgb{1,2,3}},c::SavedTagEditError::MalformedConfiguration);}
+  refused(make("i1e"),c::SavedTagSetColour{1,{}},c::SavedTagEditError::MalformedConfiguration);
+  const auto duplicate=dict({{"3",dict({{"1",dict({{"n",bytes("Tag")},{"c",dict({{"col.rgb",bytes("1,2,3")},{"col.rgb",bytes("4,5,6")}})}})}})}});refused(duplicate,c::SavedTagSetColour{1,{}},c::SavedTagEditError::Format);
+  const auto unsafe=dict({{"3",dict({{"c",dict({{"I4",dict({{"gc","li1ei2ei3ee"}})}})},{"1",dict({{"n",bytes("Tag")},{"c",dict({{"gr",bytes("G")},{"col.rgb",bytes("1,2,3")}})}})},{"2",dict({{"n",bytes("No own colour")},{"c",dict({{"gr",bytes("G")}})}})}})}});
+  refused(unsafe,c::SavedTagSetColour{1,{}},c::SavedTagEditError::UnsupportedGroupSettings);refused(unsafe,c::SavedTagSetColour{2,{}},c::SavedTagEditError::UnsupportedGroupSettings);check(!edited(unsafe,c::SavedTagSetColour{1,c::SavedTagRgb{1,2,3}}).changed,"Explicit equal encoded colour invented inherited effects");
+  for(const auto& colour:{bytes("1,2,3"),bytes("+01,2,3,,"),bytes("-1,256,2147483647")}){
+    auto tags=c::readSavedDownloadTags(dict({{"3",dict({{"1",dict({{"n",bytes("Ordinary")},{"c",dict({{"col.rgb",colour}})}})}})}}));check(tags&&c::ordinarySavedTagMembershipEffects(*tags,*tags->source->find("3")->find("1")),"Benign decoded colour metadata disabled ordinary membership");
+  }
+  c::SavedTagLimits lower;lower.fieldBytes=1;const auto tiny=dict({{"3",dict({{"1",dict({{"n",bytes("T")}})}})}});auto tooLong=c::editSavedDownloadTags(tiny,c::SavedTagSetColour{1,c::SavedTagRgb{1,2,3}},lower);check(!tooLong&&tooLong.error()==c::SavedTagEditError::Limit,"Colour encoder ignored the caller lower text field limit");
+  for(const auto& effect:{dict({{"col.rgb",bytes("1,2,3")},{"rl.up","i1e"}}),dict({{"col.rgb",bytes("1,2,3")},{"pp.2","i1e"}}),dict({{"col.rgb",bytes("bad")}})}){
+    auto tags=c::readSavedDownloadTags(dict({{"3",dict({{"1",dict({{"n",bytes("Unsafe")},{"c",effect}})}})}}));check(tags&&!c::ordinarySavedTagMembershipEffects(*tags,*tags->source->find("3")->find("1")),"Colour metadata opened unimplemented effects/malformed input");
+  }
+}
 } // namespace
 int main() {
-  try {allocationNamesAndUid();localizedRenameAndVisibility();rawPreservationAndRemoval();alignedMembershipAndUnknownIds();malformedAndAmbiguousRefuse();quotasAndFreshOwnership();constraintPropertyPreservesUnknownsAndNeverEditsMembers();configuredGroupEffectsCannotBorrowOrdinaryMembershipEdits();configuredPerTagEffectsRemainDataOnlyUntilActualExecutor();std::cout<<"PASS seven pure saved manual-tag edit families\n";return 0;}
+  try {allocationNamesAndUid();localizedRenameAndVisibility();rawPreservationAndRemoval();alignedMembershipAndUnknownIds();malformedAndAmbiguousRefuse();quotasAndFreshOwnership();constraintPropertyPreservesUnknownsAndNeverEditsMembers();configuredGroupEffectsCannotBorrowOrdinaryMembershipEdits();configuredPerTagEffectsRemainDataOnlyUntilActualExecutor();ordinaryGroupSetterPreservesNullEmptyAndRawFields();originalColourStringsDefaultsAndBenignPolicy();std::cout<<"PASS eleven pure saved manual-tag edit families\n";return 0;}
   catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}
 }

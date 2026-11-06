@@ -9,6 +9,8 @@ struct ManualTagEditorRow {
   std::optional<qint32> id;
   QString label,name,detail;
   bool editable=false,canAddMember=false,canRemoveMember=false,visible=true;
+  std::optional<QString> group;bool groupEditable=false;
+  std::optional<std::array<qint32,3>> colour;bool colourEditable=false;
   QString constraintExpression,constraintOptions;
   bool constraintEditable=false,constraintEnabled=true;
   std::size_t members=0;
@@ -34,7 +36,7 @@ public:
 signals:
   void commandRequested(biglybtc::ui::ManualTagCommand);
 private:
-  void selectRow();void updateButtons();void create();void rename();void remove();void visibility(bool);void saveConstraint();
+  void selectRow();void updateButtons();void create();void rename();void remove();void visibility(bool);void saveConstraint();void saveGroup();void chooseColour();void clearColour();
   void intent(ManualTagCommand);
   const ManualTagEditorRow* selected() const;
   quint64 session_=0,generation_=0,lastRequest_=0;
@@ -44,6 +46,8 @@ private:
   QPointer<QTableWidget> table_;QPointer<QLineEdit> name_;QPointer<QLabel> status_;
   QPointer<QPushButton> create_,rename_,remove_,reload_;QPointer<QCheckBox> visible_;
   QPointer<QPlainTextEdit> constraintExpression_;QPointer<QLineEdit> constraintOptions_;
+  QPointer<QLineEdit> group_;QPointer<QPushButton> groupSave_;
+  QPointer<QLabel> colourLabel_;QPointer<QPushButton> colourChoose_,colourDefault_;
   QPointer<QCheckBox> constraintEnabled_;QPointer<QPushButton> constraintSave_;
 };
 } // namespace biglybtc::ui

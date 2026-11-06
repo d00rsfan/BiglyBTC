@@ -1,4 +1,5 @@
 #include "torrent_intake.hpp"
+#include "durable_intake_receipt.hpp"
 #include "verified_seeding.hpp"
 #include "allocation_intent.hpp"
 #include "verified_existing_scope.hpp"
@@ -1042,9 +1043,11 @@ core::TorrentHash commitIntakePlan(ProfileLease& lease,Plan& p,void(*observer)(T
 }
 } // namespace
 
+struct HistoryPostimages {std::string inventory,state,archive;};
+
 static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     const fs::path& metadata, const fs::path& destination, bool stopped,
-    void (*observer)(TorrentIntakeStage), bool forceStart,TorrentIntakeNetwork network=TorrentIntakeNetwork::Public,
+    void (*observer)(TorrentIntakeStage), bool forceStart,TorrentIntakeNetwork network=TorrentIntakeNetwork::Public,HistoryPostimages* historyExpected=nullptr,
     std::optional<std::span<const compat::FilePolicy>> policies = {},const File* expected = nullptr, std::stop_token stop = {},
     core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false,const std::string* expectedConversions=nullptr,std::optional<core::TorrentIntakeFileDestinations> fileDestinations={},core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent,const bool* expectedDecoderShowAll=nullptr,core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None) {
   try {
@@ -1093,7 +1096,9 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     require(before || !backup, ErrorCode::Conflict, "Resolve missing inventory primary before intake");
     auto p = plan(std::move(source->bytes), effectiveDestination.native(), profile, contents(before), contents(backup),
         stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options),{},conversions,context.decoderShowAll,network,intakeAddedTime());
-    return commitIntakePlan(lease,p,observer,stop);
+    auto imported=commitIntakePlan(lease,p,observer,stop);
+    if(historyExpected){*historyExpected={std::move(p.inventory),std::move(p.state),std::move(p.archive)};}
+    return imported;
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io, "Torrent intake failed; inspect pending journal before retry"}); }
 }
@@ -1123,13 +1128,31 @@ std::expected<TorrentIntakeMetadata,Error> inspectTorrentIntake(const fs::path& 
   catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot inspect torrent metadata"});}
 }
 std::expected<core::TorrentHash,Error> importTorrent(ProfileLease& lease,const fs::path& source,
-    const fs::path& destination,bool stopped,void(*observer)(TorrentIntakeStage),bool forceStart,TorrentIntakeNetwork network) {
-  return importImpl(lease,source,destination,stopped,observer,forceStart,network);
+    const fs::path& destination,bool stopped,void(*observer)(TorrentIntakeStage),bool forceStart,TorrentIntakeNetwork network,IntakeHistoryOutcome* history) {
+  if(history){*history={};}
+  std::optional<ProfileSourceAccess> historySource;
+  if(history){
+    if(observer){return std::unexpected(Error{ErrorCode::Unsupported,"Observed intake cannot issue history under a nested callback boundary"});}
+    auto held=lease.sourceAccess(true);if(!held){return std::unexpected(held.error());}historySource.emplace(std::move(*held));
+  }
+  HistoryPostimages expected;
+  auto imported=importImpl(lease,source,destination,stopped,observer,forceStart,network,history?&expected:nullptr);
+  if(imported&&history){auto issued=DurableIntakeReceipt::issue(lease,*imported,expected.inventory,expected.state,expected.archive);if(issued){history->receipt.emplace(std::move(*issued));}else{history->warning=std::move(issued.error());}}
+  return imported;
 }
 std::expected<core::TorrentHash,Error> importTorrentWithFileOptions(ProfileLease& lease,
     const TorrentIntakeMetadata& metadata,const fs::path& destination,bool stopped,
-    std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting,std::optional<core::TorrentIntakeFileDestinations> fileDestinations,core::ExistingVerificationGoal goal,core::TorrentAllocationMode allocation,TorrentIntakeNetwork network) {
-  return importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,network,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting,&metadata.data_->filenameConversions,std::move(fileDestinations),goal,&metadata.data_->decoderShowAll,allocation);
+    std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting,std::optional<core::TorrentIntakeFileDestinations> fileDestinations,core::ExistingVerificationGoal goal,core::TorrentAllocationMode allocation,TorrentIntakeNetwork network,IntakeHistoryOutcome* history) {
+  if(history){*history={};}
+  std::optional<ProfileSourceAccess> historySource;
+  if(history){
+    if(observer){return std::unexpected(Error{ErrorCode::Unsupported,"Observed intake cannot issue history under a nested callback boundary"});}
+    auto held=lease.sourceAccess(true);if(!held){return std::unexpected(held.error());}historySource.emplace(std::move(*held));
+  }
+  HistoryPostimages expected;
+  auto imported=importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,network,history?&expected:nullptr,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting,&metadata.data_->filenameConversions,std::move(fileDestinations),goal,&metadata.data_->decoderShowAll,allocation);
+  if(imported&&history){auto issued=DurableIntakeReceipt::issue(lease,*imported,expected.inventory,expected.state,expected.archive);if(issued){history->receipt.emplace(std::move(*issued));}else{history->warning=std::move(issued.error());}}
+  return imported;
 }
 
 std::expected<std::string,Error> rewriteTorrentIntakeTrackers(std::string_view metadata,
@@ -1143,7 +1166,13 @@ std::expected<std::string,Error> rewriteTorrentIntakeTrackers(std::string_view m
 
 std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,const core::TorrentHash& from,
     OriginalSelectedHash target,std::span<const OriginalTorrentIdentity> retained,
-    void(*observer)(TorrentIntakeStage),std::stop_token stop) {
+    void(*observer)(TorrentIntakeStage),std::stop_token stop,IntakeHistoryOutcome* history) {
+  if(history){*history={};}
+  std::optional<ProfileSourceAccess> historySource;
+  if(history){
+    if(observer){return std::unexpected(Error{ErrorCode::Unsupported,"Observed intake cannot issue history under a nested callback boundary"});}
+    auto held=lease.sourceAccess(true);if(!held){return std::unexpected(held.error());}historySource.emplace(std::move(*held));
+  }
   try {
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Hybrid alias cancelled before commit");
     require(target==OriginalSelectedHash::V1||target==OriginalSelectedHash::V2,ErrorCode::InvalidFormat,"Invalid hybrid target version");
@@ -1191,7 +1220,9 @@ std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,con
     require(encoded.has_value(),ErrorCode::Unsupported,"Cannot encode explicit alias selection");
     auto planValue=plan(selected.serialize(),old->saveDirectory,profile,contents(before),contents(backup),true,
         before->info.st_mode,false,IntakeFileOptions{*encoded,std::move(stores),{}, {},false,false,false,{},{}},std::move(proof),conversions,context.decoderShowAll,TorrentIntakeNetwork::Public,intakeAddedTime());
-    return commitIntakePlan(lease,planValue,observer,stop);
+    auto imported=commitIntakePlan(lease,planValue,observer,stop);
+    if(history){auto issued=DurableIntakeReceipt::issue(lease,imported,planValue.inventory,planValue.state,planValue.archive);if(issued){history->receipt.emplace(std::move(*issued));}else{history->warning=std::move(issued.error());}}
+    return imported;
   }catch(const Failure& failure){return std::unexpected(failure.error);}
   catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Hybrid companion publication failed; inspect pending intake"});}
 }

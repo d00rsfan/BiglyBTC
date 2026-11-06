@@ -61,6 +61,15 @@ std::expected<void,storage::Error> saveIntent(Fixture& f,const core::TorrentHash
 class OwnedI2pSourceTests:public QObject {
   Q_OBJECT
 private slots:
+  void protectedLegacyMetadataRemainsAcceptedByActualReadOnlySource(){
+    Fixture f;QVERIFY(::chmod(f.path.c_str(),0700)==0);QVERIFY(::chmod((f.path/"biglybt.config").c_str(),0664)==0);
+    const auto beforeConfig=read(f.path/"biglybt.config"),beforeKey=read(f.key),beforeState=read(f.state());const auto epoch=f.lease->sourceRevision();
+    auto source=sam::ProfileSource::createSession(*f.lease);QVERIFY(source);QVERIFY((*source)->validate());
+    QVERIFY((*source)->effectAuthority());QVERIFY(!(*source)->effectAuthority()->granted());
+    QCOMPARE(read(f.path/"biglybt.config"),beforeConfig);QCOMPARE(read(f.key),beforeKey);QCOMPARE(read(f.state()),beforeState);QCOMPARE(f.lease->sourceRevision(),epoch);
+    QVERIFY(::chmod(f.path.c_str(),0755)==0);QVERIFY(!(*source)->validate());(*source)->revoke();
+  }
+
 // Real generated profile/source readers; no Mode or EffectAuthority setter.
   void pendingNativeBootstrapNeverBecomesAnOriginalSource_data(){
     QTest::addColumn<bool>("mixed");QTest::addColumn<int>("part");

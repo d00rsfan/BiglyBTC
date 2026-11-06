@@ -5,6 +5,7 @@
 #include <QTimer>
 #include <QPlainTextEdit>
 #include <QCheckBox>
+#include <QColorDialog>
 #include <future>
 #include "library_window.hpp"
 #include "manual_tag_view.hpp"
@@ -221,6 +222,10 @@ private slots:
       app::ConstraintWorkerFrame frame;frame.session=89;frame.library=rows;auto worker=app::TagConstraintWorker::activate(*lease,frame.session);test::require(bool(worker),"Actual timed worker");
       const auto turn=[&](std::stop_token stop={}){++frame.sequence;frame.sourceRevision=lease->sourceRevision();auto result=(*worker)->step(**store,*snapshot,frame,stop);test::require(bool(result),"Actual timed turn refused");test::require(result->evaluated<=32,"Timed work exceeded shared pair budget");if(result->changed){snapshot=result->snapshot;}return std::move(*result);};
       for(unsigned i=0;i<4;++i){auto initial=turn();test::require(!initial.changed&&initial.evaluated==32,"Initial bounded partial normal pass/new-only semantics differ");}
+      auto grouped=(*store)->apply(*snapshot,core::SavedTagSetGroup{1,std::string("Clock group")});test::require(grouped&&grouped->changed,"Actual ordinary group metadata save");snapshot=grouped->snapshot;
+      auto coloured=(*store)->apply(*snapshot,core::SavedTagSetColour{1,core::SavedTagRgb{12,34,56}});test::require(coloured&&coloured->changed,"Actual benign colour metadata save");snapshot=coloured->snapshot;
+      // Metadata is not a new rule version, full sweep or creation event. The
+      // following real tick must retain both time and partial normal cursors.
       std::this_thread::sleep_for(std::chrono::seconds(5));
       unsigned evaluated=0;bool removed=false;const auto end=std::chrono::steady_clock::now()+std::chrono::seconds(2);
       while(std::chrono::steady_clock::now()<end&&!removed){auto next=turn();evaluated+=next.evaluated;if(next.changed){test::require(next.tag==1,"A static/new-only rule published on a time-only tick");removed=true;}else if(!next.evaluated){std::this_thread::sleep_for(std::chrono::milliseconds(10));}}
@@ -958,9 +963,17 @@ private slots:
       auto* rename=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-rename"));QVERIFY(rename);name->setText(QStringLiteral("Renamed E2E"));QVERIFY(rename->isEnabled());rename->click();QVERIFY(bridge.busy());QVERIFY(dialog&&dialog->isVisible());
       QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==4,10000);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QCOMPARE(result()->kind,ui::ManualTagCommandKind::Rename);
       const auto renamed=std::find_if(result()->tags->tags.begin(),result()->tags->tags.end(),[&](const auto& tag){return tag.id==createdId;});QVERIFY(renamed!=result()->tags->tags.end());QCOMPARE(renamed->rawName,std::optional<std::string>{"Renamed E2E"});QCOMPARE(renamed->uniqueHashes.size(),std::size_t{1});QVERIFY(renamed->uniqueHashes.front()==*fixture.hash);
+      auto* group=dialog->findChild<QLineEdit*>(QStringLiteral("manual-tag-group"));auto* groupSave=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-group-save"));QVERIFY(group&&groupSave&&groupSave->isEnabled());
+      group->setText(QStringLiteral(" Work "));groupSave->click();QVERIFY(bridge.busy()&&dialog&&!groupSave->isEnabled());
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==5,10000);QCOMPARE(result()->kind,ui::ManualTagCommandKind::SetGroup);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QCOMPARE(group->text(),QStringLiteral("Work"));
+      const auto groupIntent=qvariant_cast<ui::ManualTagCommand>(intents.last().at(0));QCOMPARE(groupIntent.group,std::optional<QString>{QStringLiteral("Work")});
+      const auto groupStamp=tagStamp(path);const auto groupGeneration=result()->generation;groupSave->click();QTRY_VERIFY(!bridge.busy()&&finished.count()==6);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Unchanged);QCOMPARE(result()->generation,groupGeneration);QVERIFY(sameTag(groupStamp,path));
+      auto* chooseColour=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-colour-choose"));auto* defaultColour=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-colour-default"));QVERIFY(chooseColour&&defaultColour&&chooseColour->isEnabled()&&!defaultColour->isEnabled());
+      bool pickerAccepted=false;QTimer::singleShot(0,dialog,[&]{if(auto* picker=dialog->findChild<QColorDialog*>(QStringLiteral("manual-tag-colour-picker"))){picker->setCurrentColor(QColor(12,34,56));pickerAccepted=true;picker->accept();}});chooseColour->click();QVERIFY(pickerAccepted&&bridge.busy()&&!chooseColour->isEnabled());
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==7,10000);QCOMPARE(result()->kind,ui::ManualTagCommandKind::SetColour);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QVERIFY(defaultColour->isEnabled());const auto* colourRecord=result()->tags->source->find("3")->find(std::to_string(createdId));QVERIFY(colourRecord&&colourRecord->find("c")&&colourRecord->find("c")->find("col.rgb")&&colourRecord->find("c")->find("col.rgb")->bytes=="12,34,56");
       committed=test::read(path);QVERIFY(preservesUnedited(committed));QVERIFY(!QFileInfo::exists(path+QStringLiteral(".saving")));
       const auto stamp=tagStamp(path);auto* reload=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-reload"));QVERIFY(reload&&reload->isEnabled());reload->click();
-      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==5,10000);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Loaded);QCOMPARE(result()->tags->source->originalBytes(),committed.toStdString());QVERIFY(sameTag(stamp,path));QVERIFY(dialog&&dialog->isVisible());
+      QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==8,10000);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Loaded);QCOMPARE(result()->tags->source->originalBytes(),committed.toStdString());QVERIFY(sameTag(stamp,path));QVERIFY(dialog&&dialog->isVisible());
       QCOMPARE(latest(statistics)->tagRevision,result()->generation);QCOMPARE(latest(statistics)->traffic.state,core::ManualTagTrafficState::Unavailable);QVERIFY(!latest(statistics)->traffic.target);QVERIFY(!latest(statistics)->traffic.completeOwnedCoverage);QCOMPARE(engineCommands.count(),0);
       window.close();QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed.last().at(1).toBool()&&closed.last().at(2).toBool());QTRY_VERIFY(!window.isVisible());QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);QVERIFY(!dialog);
     }
@@ -969,10 +982,14 @@ private slots:
       ui::LibraryWindow window;wire(window);QSignalSpy intents(&window,&ui::LibraryWindow::manualTagCommandRequested);window.show();
       QVERIFY(bridge.open(fixture.native(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&sessions.count()==2,10000);QVERIFY(sessions.last().at(0).toULongLong()>firstSession);
       auto* manage=window.findChild<QAction*>(QStringLiteral("classic-manual-tags"));QVERIFY(manage);QTRY_VERIFY(!bridge.busy()&&manage->isEnabled());manage->trigger();
-      QPointer<ui::ManualTagManagerDialog> dialog=window.findChild<ui::ManualTagManagerDialog*>();QVERIFY(dialog);QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==6,10000);
+      QPointer<ui::ManualTagManagerDialog> dialog=window.findChild<ui::ManualTagManagerDialog*>();QVERIFY(dialog);QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==9,10000);
       QCOMPARE(result()->status,ui::ManualTagCommandStatus::Loaded);QCOMPARE(result()->session,sessions.last().at(0).toULongLong());QCOMPARE(result()->request,qvariant_cast<ui::ManualTagCommand>(intents.last().at(0)).request);QCOMPARE(result()->tags->source->originalBytes(),committed.toStdString());
       const auto saved=std::find_if(result()->tags->tags.begin(),result()->tags->tags.end(),[&](const auto& tag){return tag.id==createdId;});QVERIFY(saved!=result()->tags->tags.end());QCOMPARE(saved->rawName,std::optional<std::string>{"Renamed E2E"});QCOMPARE(saved->uniqueHashes.size(),std::size_t{1});QVERIFY(saved->uniqueHashes.front()==*fixture.hash);
       auto* menu=window.findChild<QMenu*>(QStringLiteral("classic-torrent-tags"));QVERIFY(menu);QVERIFY(QMetaObject::invokeMethod(menu,"aboutToShow",Qt::DirectConnection));const auto* member=menu->findChild<QAction*>(QStringLiteral("manual-tag-member-%1").arg(createdId));QVERIFY(member&&member->isChecked());
+      auto* tagTable=dialog->findChild<QTableWidget*>(QStringLiteral("manual-tag-table"));QVERIFY(tagTable);int selected=-1;for(int row=0;row<tagTable->rowCount();++row){if(tagTable->item(row,0)->text()==QStringLiteral("Renamed E2E")){selected=row;}}QVERIFY(selected>=0);tagTable->setCurrentCell(selected,0);tagTable->selectRow(selected);
+      auto* colourDefault=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-colour-default"));QVERIFY(colourDefault&&colourDefault->isEnabled());const auto* reopenedColour=result()->tags->source->find("3")->find(std::to_string(createdId))->find("c")->find("col.rgb");QVERIFY(reopenedColour&&reopenedColour->bytes=="12,34,56");colourDefault->click();QVERIFY(bridge.busy()&&!colourDefault->isEnabled());QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished.count()==10,10000);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);QVERIFY(!result()->tags->source->find("3")->find(std::to_string(createdId))->find("c")->find("col.rgb"));
+      auto* group=dialog->findChild<QLineEdit*>(QStringLiteral("manual-tag-group"));auto* saveGroup=dialog->findChild<QPushButton*>(QStringLiteral("manual-tag-group-save"));QVERIFY(group&&saveGroup&&saveGroup->isEnabled());QCOMPARE(group->text(),QStringLiteral("Work"));group->setText(QStringLiteral("   "));saveGroup->click();QTRY_VERIFY(!bridge.busy()&&finished.count()==11);QCOMPARE(result()->status,ui::ManualTagCommandStatus::Saved);committed=test::read(path);
+      const auto* cleared=result()->tags->source->find("3")->find(std::to_string(createdId));QVERIFY(cleared&&cleared->find("c")&&!cleared->find("c")->find("gr"));
       window.close();QTRY_COMPARE_WITH_TIMEOUT(closed.count(),2,15000);QVERIFY(closed.last().at(1).toBool()&&closed.last().at(2).toBool());QTRY_VERIFY(!window.isVisible());QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);QVERIFY(!dialog);
     }
     {auto released=storage::ProfileLease::acquire(fixture.native());QVERIFY(released);}

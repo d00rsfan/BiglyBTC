@@ -9,9 +9,10 @@ bool SessionBridge::createHybridCompanion(ui::Target source,bool selectV2) {
     }
     // No caller-provided empty retained list: the real owner gathers its live
     // and uncertified states and validates the actual source removal fence.
+    storage::IntakeHistoryOutcome history;
     const auto key=take(host_->engine->createHybridCompanion(host_->lease,identity(source),
-        selectV2?storage::OriginalSelectedHash::V2:storage::OriginalSelectedHash::V1,stop));
-    host_->noteConstraintIntake(key);
-    ready(host_->query({}),tr("Stopped hybrid companion added: %1. Source data is preserved. Start one identity at a time.").arg(text(key.hex())));
+        selectV2?storage::OriginalSelectedHash::V2:storage::OriginalSelectedHash::V1,stop,host_->normalNetwork?&history:nullptr));
+    const auto historyWarning=host_->consumeHistoryIntake(std::move(history),stop);host_->noteConstraintIntake(key);
+    ready(host_->query({}),historyWarning.isEmpty()?tr("Stopped hybrid companion added: %1. Source data is preserved. Start one identity at a time.").arg(text(key.hex())):historyWarning);
   });
 }

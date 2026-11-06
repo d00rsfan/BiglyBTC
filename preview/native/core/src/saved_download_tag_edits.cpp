@@ -157,23 +157,21 @@ std::vector<Change> membership(const Document& doc, const Node& record,
 }
 } // namespace
 
-bool ordinarySavedTagGroup(const SavedDownloadTags& tags,const Node& record)noexcept{
+bool ordinarySavedTagGroup(const SavedDownloadTags& tags,std::optional<std::string_view> group)noexcept{
   try{
-    if(!tags.source||tags.source->root().changed||record.type!=Node::Type::Dictionary){return false;}
-    const auto* config=record.find("c");if(!config){return true;}
-    if(config->type!=Node::Type::Dictionary){return false;}
-    const auto* group=config->find("gr");if(!group){return true;}
-    if(group->type!=Node::Type::Bytes||group->bytes.size()>4096||!utf8(group->bytes)){return false;}
+    if(!tags.source||tags.source->root().changed){return false;}
+    if(!group){return true;}
+    if(group->size()>4096||!utf8(*group)){return false;}
     const auto* manual=tags.source->find("3");if(!manual||manual->type!=Node::Type::Dictionary){return false;}
     const auto* groups=manual->find("c");if(!groups){return true;}
     if(groups->type!=Node::Type::Dictionary){return false;}
     if(groups->children.empty()){return true;}
     // Original getGroupID uses JVM default encoding, not the UTF8 attribute
     // codec. Non-ASCII IDs with saved group settings need a proven mapping.
-    if(std::any_of(group->bytes.begin(),group->bytes.end(),[](unsigned char c){return c>=128;})){return false;}
+    if(std::any_of(group->begin(),group->end(),[](unsigned char c){return c>=128;})){return false;}
     constexpr std::string_view alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-    std::string key;key.reserve((group->bytes.size()*8+4)/5);std::uint32_t bits=0;unsigned count=0;
-    for(const auto byte:group->bytes){bits=(bits<<8)|static_cast<unsigned char>(byte);count+=8;
+    std::string key;key.reserve((group->size()*8+4)/5);std::uint32_t bits=0;unsigned count=0;
+    for(const auto byte:*group){bits=(bits<<8)|static_cast<unsigned char>(byte);count+=8;
       while(count>=5){count-=5;key.push_back(alphabet[(bits>>count)&31]);}bits&=(std::uint32_t{1}<<count)-1;}
     if(count){key.push_back(alphabet[(bits<<(5-count))&31]);}
     const auto* settings=groups->find(key);if(!settings){return true;}
@@ -188,12 +186,49 @@ bool ordinarySavedTagGroup(const SavedDownloadTags& tags,const Node& record)noex
   }catch(...){return false;}
 }
 
+std::expected<std::optional<SavedTagRgb>,SavedTagEditError> readSavedTagColour(const Node& record)noexcept{
+  const auto bad=[](){return std::unexpected(SavedTagEditError::MalformedConfiguration);};
+  if(record.type!=Node::Type::Dictionary||record.children.size()%2){return bad();}
+  const Node* config=nullptr;
+  for(std::size_t i=0;i<record.children.size();i+=2){if(record.children[i].type!=Node::Type::Bytes){return bad();}if(record.children[i].bytes=="c"){
+    if(config){return bad();}config=&record.children[i+1];}}
+  if(!config){return std::optional<SavedTagRgb>{};}
+  if(config->type!=Node::Type::Dictionary||config->children.size()%2){return bad();}
+  const Node* stored=nullptr;
+  for(std::size_t i=0;i<config->children.size();i+=2){if(config->children[i].type!=Node::Type::Bytes){return bad();}if(config->children[i].bytes=="col.rgb"){
+    if(stored){return bad();}stored=&config->children[i+1];}}
+  if(!stored){return std::optional<SavedTagRgb>{};}
+  if(stored->type!=Node::Type::Bytes||stored->bytes.size()>4096){return bad();}
+  std::string_view text=stored->bytes;
+  // Java String.split(",") removes every trailing empty element.
+  while(!text.empty()&&text.back()==','){text.remove_suffix(1);}
+  SavedTagRgb rgb{};
+  for(std::size_t i=0;i<rgb.size();++i){
+    const auto comma=text.find(',');
+    if((i+1<rgb.size())!=(comma!=std::string_view::npos)){return bad();}
+    auto part=text.substr(0,comma);if(part.empty()){return bad();}
+    bool negative=false;if(part.front()=='+'||part.front()=='-'){negative=part.front()=='-';part.remove_prefix(1);}
+    if(part.empty()){return bad();}
+    const std::uint64_t limit=negative?2147483648ULL:2147483647ULL;std::uint64_t value=0;
+    for(const unsigned char digit:part){
+      // Java's non-ASCII Character.digit repertoire requires a qualified
+      // Unicode provider; never silently reinterpret/normalise those bytes.
+      if(digit<'0'||digit>'9'||value>(limit-(digit-'0'))/10){return bad();}
+      value=value*10+(digit-'0');
+    }
+    rgb[i]=negative?(value==2147483648ULL?std::numeric_limits<std::int32_t>::min():-static_cast<std::int32_t>(value)):static_cast<std::int32_t>(value);
+    if(comma!=std::string_view::npos){text.remove_prefix(comma+1);}
+  }
+  return std::optional<SavedTagRgb>{rgb};
+}
+
 bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node& record)noexcept{
   if(!ordinarySavedTagGroup(tags,record)){return false;}
   const auto* config=record.find("c");if(!config){return true;}
   for(std::size_t i=0;i<config->children.size();i+=2){
     const auto& key=config->children[i].bytes;const auto& value=config->children[i+1];
     if((key=="gr"||key=="oname")&&value.type==Node::Type::Bytes){continue;}
+    if(key=="col.rgb"&&readSavedTagColour(record)){continue;}
     if((key=="vis"||key=="pp.enabled.constraint")&&value.type==Node::Type::Integer){continue;}
     if((key=="pp.trackers"||key=="pp.tracker_templates")&&value.type==Node::Type::List&&value.children.empty()){continue;}
     if((key=="pp.untagged"||key=="pp.2")&&value.type==Node::Type::Integer&&value.integer!=1){continue;}
@@ -206,6 +241,15 @@ bool ordinarySavedTagMembershipEffects(const SavedDownloadTags& tags,const Node&
     return false;
   }
   return true;
+}
+
+bool ordinarySavedTagGroup(const SavedDownloadTags& tags,const Node& record)noexcept{
+  if(record.type!=Node::Type::Dictionary){return false;}
+  const auto* config=record.find("c");if(!config){return ordinarySavedTagGroup(tags,std::nullopt);}
+  if(config->type!=Node::Type::Dictionary){return false;}
+  const auto* group=config->find("gr");if(!group){return ordinarySavedTagGroup(tags,std::nullopt);}
+  if(group->type!=Node::Type::Bytes){return false;}
+  return ordinarySavedTagGroup(tags,std::optional<std::string_view>{group->bytes});
 }
 
 std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
@@ -258,6 +302,27 @@ std::expected<SavedTagEditResult, SavedTagEditError> editSavedDownloadTags(
               require(!original || original->type == Node::Type::Bytes, SavedTagEditError::MalformedConfiguration);
               if (!original) { std::string value; bytes(value, old->bytes, limits); changes.emplace_back("c", dictionary(doc, config, {{"oname", std::move(value)}}, limits)); }
             }
+          } else if constexpr (std::is_same_v<T, SavedTagSetGroup>) {
+            const auto* config=configuration(*record);const auto* old=config?config->find("gr"):nullptr;
+            require(!old||old->type==Node::Type::Bytes,SavedTagEditError::MalformedConfiguration);
+            std::optional<std::string> encoded;
+            if(action.group){encoded=nameValue(*action.group,limits);}
+            const bool same=old?bool(action.group)&&old->bytes==*action.group:!action.group;
+            if(!same){
+              require(ordinarySavedTagGroup(baseline,*record)
+                  &&ordinarySavedTagGroup(baseline,action.group?std::optional<std::string_view>{*action.group}:std::nullopt),SavedTagEditError::UnsupportedGroupSettings);
+              changes.emplace_back("c",dictionary(doc,config,{{"gr",std::move(encoded)}},limits));
+            }
+          } else if constexpr (std::is_same_v<T, SavedTagSetColour>) {
+            const auto current=readSavedTagColour(*record);require(bool(current),SavedTagEditError::MalformedConfiguration);
+            const auto* config=configuration(*record);const auto* old=config?config->find("col.rgb"):nullptr;
+            std::optional<std::string> encoded;
+            if(action.colour){std::string text;for(const auto channel:*action.colour){if(!text.empty()){text+=',';}text+=std::to_string(channel);}encoded=nameValue(text,limits);}
+            const bool same=old?encoded&&raw(doc,*old)==*encoded:!encoded;
+            // A null setter can inherit group gc even with no own key. Only
+            // an explicit equal encoded value proves a no-event no-op alone.
+            if(!same||!action.colour){require(ordinarySavedTagGroup(baseline,*record),SavedTagEditError::UnsupportedGroupSettings);}
+            if(!same){changes.emplace_back("c",dictionary(doc,config,{{"col.rgb",std::move(encoded)}},limits));}
           } else if constexpr (std::is_same_v<T, SavedTagVisibility>) {
             const auto* config = configuration(*record); const auto* old = config ? config->find("vis") : nullptr;
             require(!old || old->type == Node::Type::Integer, SavedTagEditError::MalformedConfiguration);

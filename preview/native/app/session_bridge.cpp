@@ -1,5 +1,7 @@
 #include "original_filename_policy.hpp"
 #include "torrent_intake.hpp"
+#include "durable_intake_receipt.hpp"
+#include "download_history_store.hpp"
 #include "verified_seeding.hpp"
 #include "allocation_intent.hpp"
 #include "file_operations.hpp"
@@ -228,7 +230,7 @@ template<class Store> std::expected<storage::CategoryCommit,storage::Error> cate
 }
 }
 struct SessionBridge::Host {
-  ~Host(){if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
+  ~Host(){if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
   struct Known { QString name; std::optional<qint64> bytes{}; };
   std::filesystem::path profile;
   unsigned short peerPort;
@@ -315,13 +317,13 @@ struct SessionBridge::Host {
 #endif
   }
   std::expected<void,storage::Error> publishTarget(const core::TorrentHash& hash,const std::function<std::expected<void,storage::Error>()>& f){
-    if(recoveryDrainStarted||storage::hasPendingCategoryDeletion(lease)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit category recovery or review"});}
+    if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
     const auto inner=[&]{return mixed?mixed->publish(hash,f):f();};
     auto result=i2p?i2p->publish(hash,inner):inner();
     if(!result&&((i2p&&!i2p->sourceCurrent())||(mixed&&!mixed->sourceCurrent()))){if(i2p){i2p->revoke();}if(mixed){mixed->revoke();}}return result;
   }
   std::expected<void,storage::Error> publishPositions(const std::function<std::expected<void,storage::Error>()>& f){
-    if(recoveryDrainStarted||storage::hasPendingCategoryDeletion(lease)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit category recovery or review"});}
+    if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
     const auto inner=[&]{return mixed?mixed->publishPositions(f):f();};
     auto result=i2p?i2p->publishPositions(inner):inner();
     if(!result&&((i2p&&!i2p->sourceCurrent())||(mixed&&!mixed->sourceCurrent()))){if(i2p){i2p->revoke();}if(mixed){mixed->revoke();}}return result;
@@ -408,9 +410,13 @@ struct SessionBridge::Host {
     if(!done){return std::unexpected(done.error());}return std::move(*result);
   }
   std::expected<void,storage::Error> startPublic(engine::ManagedDownloadOptions options){
-    if(recoveryDrainStarted||storage::hasPendingCategoryDeletion(lease)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit category recovery or review"});}
+    if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
     const auto selected=route(options.hash);const bool both=selected==Route::Mixed&&mixedCapable();
     if(!engine||privateOnly()||(selected!=Route::Public&&!both)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Saved torrent networks require a provider that is not available; the selection was preserved"});}
+    // Retired completion sources must be consumed before prepare mutates
+    // their checkpoint postimages. Optional history failure never blocks Start.
+    const auto historyWarning=consumeHistoryCompletions({},true);
+    if(!historyWarning.isEmpty()){downloadHistoryIntakeNotice=historyWarning;}
     const auto hash=options.hash;
     if(both){options.mixedNetworks=true;const auto prepared=prepareMixed(hash);
       if(prepared){mixedBindingTargets.insert(hash.hex());}else{rememberMixedFailure(hash,prepared.error());}
@@ -449,7 +455,7 @@ struct SessionBridge::Host {
     if(!stopped){i2pPacket.failure=text(stopped.error().message);return std::unexpected(stopped.error());}return {};
   }
   std::expected<void,storage::Error> startI2p(const core::TorrentHash& hash){
-    if(recoveryDrainStarted||storage::hasPendingCategoryDeletion(lease)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit category recovery or review"});}
+    if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
     if(const auto& failure=bootstrapFailure(false);failure){return std::unexpected(*failure);}
     if(!i2pOptions||!pureI2p(hash)){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"This private preview requires an explicitly saved I2P-only torrent"});}
     if(i2p){auto added=i2p->add(hash,engine?engine->retainedPayloads():engine::RetainedPayloads{});pollI2p();return added;}
@@ -571,6 +577,9 @@ struct SessionBridge::Host {
   std::shared_ptr<const core::SavedDownloadTags> manualTagEditorSource;
   quint64 lastManualTagRequest=0;
 #include "tag_constraint_host.inc"
+#include "download_history_intake.inc"
+  #include "download_history_completion.inc"
+#include "download_history_view_host.inc"
   void beginManualTagRead() {
     if(manualTagEnded||manualTagRevision==std::numeric_limits<quint64>::max()){
       throw Failure{{storage::ErrorCode::Unsupported,"Manual-tag presentation lifetime is exhausted"}};
@@ -857,7 +866,7 @@ struct SessionBridge::Host {
     return !i2pOptions?engine::MagnetNetwork::Public:privateOnly()?engine::MagnetNetwork::I2p:engine::MagnetNetwork::PublicAndI2p;
   }
   std::expected<void,storage::Error> publishPending(const core::TorrentHash& hash,const std::function<std::expected<void,storage::Error>()>& operation){
-    if(recoveryDrainStarted||storage::hasPendingCategoryDeletion(lease)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit category recovery or review"});}
+    if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
     const auto inner=[&]{return mixed?mixed->publishPendingMagnet(hash,operation):operation();};
     auto result=i2p?i2p->publishPendingMagnet(hash,inner):inner();
     if(!result&&((i2p&&!i2p->sourceCurrent())||(mixed&&!mixed->sourceCurrent()))){if(i2p){i2p->revoke();}if(mixed){mixed->revoke();}}
@@ -869,7 +878,7 @@ struct SessionBridge::Host {
     return result;
   }
   std::expected<void,storage::Error> startPending(const engine::PendingMagnet& intent){
-    if(recoveryDrainStarted||storage::hasPendingCategoryDeletion(lease)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit category recovery or review"});}
+    if(recoveryDrainStarted||(storage::hasPendingCategoryDeletion(lease)||storage::hasPendingFileOperation(lease))){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Guarded inventory/state writes require explicit profile recovery or review"});}
     const auto previous=pendingMagnets();const auto old=std::ranges::find(previous,intent.hash,&engine::PendingMagnetStatus::hash);
     if(old!=previous.end()&&old->retained){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Metadata admission is still resolving or retiring"});}
     if(old!=previous.end()&&intent.network!=engine::MagnetNetwork::Public){
@@ -942,7 +951,8 @@ struct SessionBridge::Host {
         auto existing=storage::ConfigFile::load(lease,filename);
         if(existing){if(existing->recoverySource()!=storage::RecoverySource::Primary||existing->document().serialize()!=metadata){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Received metadata staging conflicts with an earlier result"});}}
         else{if(existing.error().code!=storage::ErrorCode::Missing){return std::unexpected(existing.error());}auto made=storage::ConfigFile::createMissing(lease,filename,metadata);if(!made){return std::unexpected(made.error());}}
-        auto imported=engine::completePendingMagnet(lease,intent,profile/filename,networkPolicy,&newlyImported);return imported?std::expected<void,storage::Error>{}:std::expected<void,storage::Error>{std::unexpected(imported.error())};
+        auto imported=engine::completePendingMagnet(lease,intent,profile/filename,networkPolicy,&newlyImported,
+            normalNetwork?engine::MagnetCompletionHook{[this](storage::IntakeHistoryOutcome outcome){return consumeMagnetHistoryIntake(std::move(outcome));}}:engine::MagnetCompletionHook{});return imported?std::expected<void,storage::Error>{}:std::expected<void,storage::Error>{std::unexpected(imported.error())};
       });
       if(!completed){admissionFailures.insert_or_assign(value.hash.hex(),completed.error());privateImports.erase(at);continue;}
       at->second.committed=true;if(newlyImported){noteConstraintIntake(value.hash);}
@@ -995,6 +1005,7 @@ struct SessionBridge::Host {
         return SessionBridge::tr("A recovered magnet needs an explicit destination; its saved intent was retained");
       }
     }
+    if(!downloadHistoryIntakeNotice.isEmpty()){return downloadHistoryIntakeNotice;}
     return {};
   }
   quint16 magnetActions(const engine::PendingMagnet* intent, const engine::PendingMagnetStatus* live) const {
@@ -1050,6 +1061,7 @@ struct SessionBridge::Host {
     const auto trackerResponses=engine?engine->libraryTrackerResponses():std::vector<engine::LibraryTrackerResponse>{};
     readMagnets();
     checkpoint(stop);
+    const bool guardedFileReview=fileRecoveryRequired||storage::hasPendingFileOperation(lease);
     auto result = std::make_shared<ui::LibraryPresentation>();
     result->revision = revision = reserveLibraryRevision();
     std::map<std::string, int> counts;
@@ -1185,6 +1197,7 @@ struct SessionBridge::Host {
         if(activeI2p){state=i2pPackets.at(hash).state;}
 
       }
+      if(guardedFileReview){actions=0;}
       auto completed = saved.completedBytes && *saved.completedBytes >= 0 ? saved.completedBytes : std::nullopt;
       if (retained) { completed = active->second.completed; size = active->second.bytes; }
       if(i2pRow&&i2p&&i2pPackets.contains(hash)){completed=i2pPackets.at(hash).verifiedBytes;}
@@ -1194,7 +1207,7 @@ struct SessionBridge::Host {
       result->items.push_back({.key = text(key), .hash = text(hash), .name = name, .state = state,
           .bytes = size, .completed = completed,
           .received = received, .sent = sent,
-          .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained && !magnetRetained && !i2pOptions && selectedRoute==Route::Public,
+          .canContinue = !guardedFileReview && peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained && !magnetRetained && !i2pOptions && selectedRoute==Route::Public,
           .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions});
       if(retained){result->items.back().providerAdmission=active->second.admission;result->items.back().providerGeneration=columnLayoutSession;}
       if(i2pRow&&i2pFacts.contains(hash)){result->items.back().providerAdmission=i2pFacts.at(hash).admission;result->items.back().providerGeneration=i2pFacts.at(hash).generation;}
@@ -1255,6 +1268,8 @@ struct SessionBridge::Host {
 SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions)
     : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)) {
   qRegisterMetaType<ui::I2pPresentation>();
+  qRegisterMetaType<ui::DownloadHistoryCommand>();
+  qRegisterMetaType<ui::DownloadHistoryCommandPresentation>();
   qRegisterMetaType<ui::LocalRatingRequest>();
   qRegisterMetaType<ui::LocalRatingSubmission>();
   qRegisterMetaType<ui::LocalRatingPresentation>();
@@ -1357,18 +1372,18 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
       try{
       if (!stop.stop_requested() && host_) {
         if(host_->recoveryDrainStarted){throw Failure{{storage::ErrorCode::Busy,"Explicit close without checkpoint is incomplete; retained owners may remain live"}};}
-        if(storage::hasPendingCategoryDeletion(host_->lease)){
+        if((storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))){
           // Poll may complete metadata imports or write retirement checkpoints.
           // Leave existing owners intact; this is NOT a stopped receipt.
           if(host_->categoryRetainedOwners()){
-            throw Failure{{storage::ErrorCode::Conflict,"Category recovery is pending. Background checkpoint/import work paused; existing network and payload activity may remain live"}};
+            throw Failure{{storage::ErrorCode::Conflict,"Profile recovery is pending. Background checkpoint/import work paused; existing network and payload activity may remain live"}};
           }
           return {};
         }
         if(host_->i2pOptions){host_->pollI2p();host_->pollMixed();host_->pollPrivateMagnets();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
-          const auto polled=host_->engine->poll();publishMainlineFailure();
+          const auto polled=host_->engine->poll();publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop));publishMainlineFailure();
           if(!polled&&!host_->engine->managedAvailable()){
             auto detail=QStringLiteral("Engine owner unavailable (poll %1)").arg(static_cast<int>(polled.error()));
             if(const auto listener=host_->engine->lastListenerFailure()){
@@ -1450,6 +1465,12 @@ SessionBridge::~SessionBridge() {
 }
 namespace { QString optionDefaultPath(const storage::ApplicationSettingsSnapshot&); engine::LiveQueueLimits optionQueues(const core::Document&); }
 
+void SessionBridge::publishDownloadHistoryCompletionNotice(QString message){
+  if(message.isEmpty()||!host_){return;}const auto session=host_->columnLayoutSession;
+  QMetaObject::invokeMethod(this,[this,session,message=std::move(message)]{
+    if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(message);}
+  },Qt::QueuedConnection); // Last access after direct receiver may delete Bridge.
+}
 void SessionBridge::ready(ui::Presentation snapshot, QString message) {
   if (host_ && !host_->intakeDefaultLoaded) {
     host_->intakeDefaultLoaded = true;
@@ -1499,6 +1520,13 @@ void SessionBridge::failed(QString message) {
   QMetaObject::invokeMethod(this, [this, message = std::move(message)] {
     QPointer<SessionBridge> guard(this);
     // Dispatch may observe cancellation before entering the command body.
+    if(guiDownloadHistoryCommand_){
+      auto packet=std::make_shared<ui::DownloadHistoryCommandPacket>();
+      packet->session=guiDownloadHistoryCommand_->session;packet->request=guiDownloadHistoryCommand_->request;packet->kind=guiDownloadHistoryCommand_->kind;
+      packet->side=guiDownloadHistoryCommand_->side;packet->uid=guiDownloadHistoryCommand_->uid;
+      packet->status=message==tr("Cancelled")?ui::DownloadHistoryStatus::Cancelled:ui::DownloadHistoryStatus::Rejected;
+      packet->failure=message.left(512);deliverDownloadHistoryCommand(packet);if(!guard){return;}
+    }
     if(guiCategoryCommand_){
       auto packet=std::make_shared<ui::CategoryCommandPacket>();
       packet->session=guiCategoryCommand_->session;packet->request=guiCategoryCommand_->request;packet->kind=guiCategoryCommand_->kind;packet->requestedTarget=guiCategoryCommand_->target;
@@ -1592,6 +1620,11 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
       host_->categoryRecoveryStartup=true;host_->fileRecoveryRequired=true;
       ready(host_->query(stop),tr("Interrupted category deletion: open Categories to resume an acknowledged prefix or review preserved files. Transfers remain stopped; close and reopen after resolution."));return;
     }
+    if(storage::keepDataRemovalNeedsReview(lease)){
+      host_=std::make_unique<Host>(profile,0,std::move(lease),reserveColumnLayoutSession());
+      host_->normalNetwork=false;host_->i2pOptions=i2pOptions_;host_->fileRecoveryRequired=true;
+      ready(host_->query(stop),tr("Interrupted Keep Data removal requires review. Profile files and payloads were preserved; no removal was replayed. Close this read-only session before external review."));return;
+    }
     static_cast<void>(take(storage::recoverOriginalCompaction(lease)));
     const bool reviewOnly=recoverOrReviewReplacement(lease);
     if(!reviewOnly){static_cast<void>(take(storage::recoverTorrentIntake(lease)));}
@@ -1628,6 +1661,11 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
       host_->normalNetwork=true;host_->i2pOptions=i2pOptions_;
       host_->categoryRecoveryStartup=true;host_->fileRecoveryRequired=true;
       ready(host_->query(stop),tr("Interrupted category deletion: open Categories to resume an acknowledged prefix or review preserved files. Transfers remain stopped; close and reopen after resolution."));return;
+    }
+    if(storage::keepDataRemovalNeedsReview(lease)){
+      host_=std::make_unique<Host>(profile,0,std::move(lease),reserveColumnLayoutSession());
+      host_->normalNetwork=false;host_->i2pOptions=i2pOptions_;host_->fileRecoveryRequired=true;
+      ready(host_->query(stop),tr("Interrupted Keep Data removal requires review. Profile files and payloads were preserved; no removal was replayed. Close this read-only session before external review."));return;
     }
     static_cast<void>(take(storage::recoverOriginalCompaction(lease)));
     const bool reviewOnly=recoverOrReviewReplacement(lease);
@@ -1687,7 +1725,7 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
     if (!host_ || (!host_->engine&&!host_->privateOnly()) || !host_->lastSnapshot) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
-    if (host_->fileRecoveryRequired || storage::hasPendingCategoryDeletion(host_->lease) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
+    if (host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     if (take(storage::recoverTorrentIntake(host_->lease))) {
       throw Failure{{storage::ErrorCode::Conflict, "Recovered a pending torrent import; library refreshed"}};
     }
@@ -1859,25 +1897,26 @@ bool SessionBridge::torrentImport(QString metadata, QString destination, bool st
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
     checkpoint(stop);
-    if (host_->fileRecoveryRequired || storage::hasPendingCategoryDeletion(host_->lease) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
+    if (host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
     const auto metadataPath=std::filesystem::path(metadata.toUtf8().toStdString());
     const auto filenameContext=take(storage::readOriginalFilenameContext(host_->lease));
     const auto inspected=take(storage::inspectTorrentIntake(metadataPath,stop,filenameContext.conversions,filenameContext.decoderShowAll));
     const auto hash=inspected.hash();
+    storage::IntakeHistoryOutcome history;QString historyWarning;
     const auto import=[&]()->std::expected<void,storage::Error>{auto imported=storage::importTorrent(host_->lease,
         std::filesystem::path(metadata.toUtf8().toStdString()),
         std::filesystem::path(destination.toUtf8().toStdString()), !start, nullptr, false,
-        host_->privateOnly()?storage::TorrentIntakeNetwork::I2p:storage::TorrentIntakeNetwork::Public);if(!imported){return std::unexpected(imported.error());}if(*imported!=hash){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Imported torrent identity changed"});}return {};};
-    take(host_->publishTarget(hash,import));host_->noteConstraintIntake(hash);
+        host_->privateOnly()?storage::TorrentIntakeNetwork::I2p:storage::TorrentIntakeNetwork::Public,host_->normalNetwork?&history:nullptr);if(!imported){return std::unexpected(imported.error());}if(*imported!=hash){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Imported torrent identity changed"});}return {};};
+    take(host_->publishTarget(hash,import));historyWarning=host_->consumeHistoryIntake(std::move(history),stop);host_->noteConstraintIntake(hash);
     const auto details = engine::queryTorrent(host_->lease, hash);
     if (details) { host_->known.insert_or_assign(hash.hex(), Host::Known{text(details->name), details->bytes}); }
-    QString message = tr("Torrent added");
+    QString message = historyWarning.isEmpty()?tr("Torrent added"):historyWarning;
     if (start) {
       auto admitted = host_->startSaved(hash);
       if (!admitted) {
         host_->admissionFailures.insert_or_assign(hash.hex(), admitted.error());
-        message = text(admitted.error().message);
+        message = historyWarning.isEmpty()?text(admitted.error().message):historyWarning+QStringLiteral("\n")+text(admitted.error().message);
       }
     }
     publishI2p();ready(host_->query({}), message);
@@ -1923,7 +1962,7 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
           ||submission.request!=host_->intakeRequest->request||submission.revision!=host_->intakePreviewRevision){
         throw Failure{{storage::ErrorCode::Conflict,"The file preview is stale; load the torrent again"}};
       }
-      if(host_->fileRecoveryRequired||storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)
+      if(host_->fileRecoveryRequired||(storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))
           ||storage::hasPendingOriginalCompaction(host_->lease)||storage::hasPendingTorrentIntake(host_->lease)){
         throw Failure{{storage::ErrorCode::Conflict,"Restart to finish pending storage recovery before importing"}};
       }
@@ -1961,10 +2000,11 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       if(!privateI2p&&(start||submission.verifyExisting||allocating)&&(!host_->engine||!host_->engine->managedAvailable())){throw Failure{{storage::ErrorCode::Unsupported,"The engine is unavailable; add this torrent stopped instead"}};}
       checkpoint(stop); // No payload/network work happens before the explicit commit.
       const auto hash=host_->intakeMetadata->hash();
+      storage::IntakeHistoryOutcome history;
       const auto import=[&]()->std::expected<void,storage::Error>{auto imported=storage::importTorrentWithFileOptions(host_->lease,*host_->intakeMetadata,
-          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal,submission.allocation,privateI2p?storage::TorrentIntakeNetwork::I2p:mixedNetwork?storage::TorrentIntakeNetwork::Mixed:storage::TorrentIntakeNetwork::Public);if(!imported){return std::unexpected(imported.error());}if(*imported!=hash){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Imported torrent identity changed"});}return {};};
+          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal,submission.allocation,privateI2p?storage::TorrentIntakeNetwork::I2p:mixedNetwork?storage::TorrentIntakeNetwork::Mixed:storage::TorrentIntakeNetwork::Public,host_->normalNetwork?&history:nullptr);if(!imported){return std::unexpected(imported.error());}if(*imported!=hash){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Imported torrent identity changed"});}return {};};
       take(host_->publishTarget(hash,import));
-      result->imported=true;result->hash=text(hash.hex());host_->intakeMetadata.reset();host_->noteConstraintIntake(hash);
+      result->imported=true;result->hash=text(hash.hex());host_->intakeMetadata.reset();result->failure=host_->consumeHistoryIntake(std::move(history),stop);host_->noteConstraintIntake(hash);
       const auto details=engine::queryTorrent(host_->lease,hash);
       if(details){host_->known.insert_or_assign(hash.hex(),Host::Known{text(details->displayName&&!details->displayName->empty()?*details->displayName:details->name),details->bytes});}
       if(start||submission.verifyExisting||allocating){
@@ -1973,7 +2013,7 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
         const auto admitted=privateI2p?host_->startI2p(hash):host_->startPublic(
             {.hash=hash,.ownedLoopbackPeerPort=(submission.verifyExisting||allocating)?std::uint16_t{0}:host_->peerPort,.forceStart=force,.queued=queued,.verifyExisting=submission.verifyExisting,.allocationMode=submission.allocation});
         if(admitted){result->started=!submission.verifyExisting&&!allocating;result->verificationPending=submission.verifyExisting;result->allocationPending=allocating;host_->admissionFailures.erase(hash.hex());}
-        else{host_->admissionFailures.insert_or_assign(hash.hex(),admitted.error());result->failure=(allocating?tr("Torrent added stopped; allocation could not start: %1"):submission.verifyExisting?tr("Torrent added stopped; existing-data verification could not start: %1"):tr("Torrent added; download could not start: %1")).arg(text(admitted.error().message));}
+        else{host_->admissionFailures.insert_or_assign(hash.hex(),admitted.error());if(!result->failure.isEmpty()){result->failure+=QStringLiteral("\n");}result->failure+=(allocating?tr("Torrent added stopped; allocation could not start: %1"):submission.verifyExisting?tr("Torrent added stopped; existing-data verification could not start: %1"):tr("Torrent added; download could not start: %1")).arg(text(admitted.error().message));}
       }
     }catch(const Failure& error){result->failure=text(error.error.message);}
     catch(const std::exception&){result->failure=tr("Torrent import did not finish; inspect recovery status before retrying");}
@@ -1994,7 +2034,7 @@ bool SessionBridge::magnetImport(QString uri, QString destination) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
     checkpoint(stop);
-    if (host_->fileRecoveryRequired || storage::hasPendingCategoryDeletion(host_->lease) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
+    if (host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
     const auto intent = take(engine::parseMagnetIntent(uri.toUtf8().toStdString(),
         std::filesystem::path(destination.toUtf8().toStdString()), false, host_->networkPolicy,host_->magnetContext()));
@@ -2042,7 +2082,7 @@ bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int 
     if (!host_ || !host_->engine || !host_->engine->managedAvailable()) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
-    if (host_->fileRecoveryRequired || storage::hasPendingCategoryDeletion(host_->lease) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
+    if (host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     if (take(storage::recoverTorrentIntake(host_->lease))) {
       throw Failure{{storage::ErrorCode::Conflict, "Recovered a pending torrent import; library refreshed"}};
     }
@@ -2089,7 +2129,8 @@ bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int 
         if(found->failure){throw Failure{*found->failure};}
         if(!found->retained){take(host_->engine->forgetManaged(hash));break;}
         if(std::chrono::steady_clock::now()>=deadline){throw Failure{{storage::ErrorCode::Busy,"Torrent files are still retained; file selection was not changed"}};}
-        if(!host_->engine->poll()){throw Failure{{storage::ErrorCode::Io,"Cannot certify file-selection retirement"}};}
+        const auto polled=host_->engine->poll();publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop));
+        if(!polled){throw Failure{{storage::ErrorCode::Io,"Cannot certify file-selection retirement"}};}
         std::this_thread::sleep_for(std::chrono::milliseconds{20});
       }
     }
@@ -2116,8 +2157,9 @@ bool SessionBridge::compactFile(ui::Target target, int originalIndex) {
     if(host_){host_->requireI2pIdle();}
     if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
     host_->accepts(target);
-    if (host_->engine && !host_->engine->poll()) {
-      throw Failure{{storage::ErrorCode::Io, "The engine cannot confirm safe idle storage; close the profile before reclaiming space"}};
+    if (host_->engine) {
+      const auto polled=host_->engine->poll();publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop));
+      if(!polled){throw Failure{{storage::ErrorCode::Io, "The engine cannot confirm safe idle storage; close the profile before reclaiming space"}};}
     }
     if (!host_->compactionReady()) {
       throw Failure{{storage::ErrorCode::Busy, "Stop all torrents and metadata downloads, wait for retirement, then refresh file details before reclaiming space"}};
@@ -2473,11 +2515,11 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
     case ui::ManualTagCommandKind::Reload:case ui::ManualTagCommandKind::Create:
     case ui::ManualTagCommandKind::Rename:case ui::ManualTagCommandKind::Remove:
     case ui::ManualTagCommandKind::Visibility:case ui::ManualTagCommandKind::AddMember:
-    case ui::ManualTagCommandKind::RemoveMember:case ui::ManualTagCommandKind::SetConstraint:break;
+    case ui::ManualTagCommandKind::RemoveMember:case ui::ManualTagCommandKind::SetConstraint:case ui::ManualTagCommandKind::SetGroup:case ui::ManualTagCommandKind::SetColour:break;
     default:return false;
   }
   if(request.name.size()>4096||request.member.hash.size()>64
-      ||request.constraintExpression.size()>4096||request.constraintOptions.size()>4096){return false;}
+      ||request.constraintExpression.size()>4096||request.constraintOptions.size()>4096||(request.group&&request.group->size()>4096)){return false;}
   guiManualTagCommand_=request;
   const QPointer<SessionBridge> alive(this);
   const bool accepted=dispatch([this,request=std::move(request)](std::stop_token stop){
@@ -2507,6 +2549,19 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
           case ui::ManualTagCommandKind::Rename:edit=core::SavedTagRename{request.tagId,name.toStdString()};break;
           case ui::ManualTagCommandKind::Remove:break;
           case ui::ManualTagCommandKind::Visibility:edit=core::SavedTagVisibility{request.tagId,request.visible};break;
+          case ui::ManualTagCommandKind::SetGroup:{
+            std::optional<std::string> group;
+            if(request.group){const auto bytes=request.group->toUtf8();
+              if(bytes.size()>4096||QString::fromUtf8(bytes)!=*request.group){throw Failure{{storage::ErrorCode::InvalidFormat,"Tag group must be bounded valid UTF-8"}};}
+              group=bytes.toStdString();
+            }
+            edit=core::SavedTagSetGroup{request.tagId,std::move(group)};break;
+          }
+          case ui::ManualTagCommandKind::SetColour:{
+            std::optional<core::SavedTagRgb> colour;
+            if(request.colour){colour=core::SavedTagRgb{(*request.colour)[0],(*request.colour)[1],(*request.colour)[2]};}
+            edit=core::SavedTagSetColour{request.tagId,colour};break;
+          }
           case ui::ManualTagCommandKind::SetConstraint:{
             const auto expression=request.constraintExpression.toUtf8(),options=request.constraintOptions.toUtf8();
             if(expression.size()>4096||options.size()>4096||QString::fromUtf8(expression)!=request.constraintExpression
@@ -2582,6 +2637,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
   if(alive&&!accepted){guiManualTagCommand_.reset();}return accepted;
 }
 #include "category_bridge.inc"
+#include "download_history_bridge.inc"
 bool SessionBridge::history(quint64 session, quint64 request, core::HistoryDate date) {
   if (session == 0 || request == 0 || session != publishedColumnLayoutSession_
       || !core::validHistoryDate(date)) { return false; }
@@ -2786,7 +2842,7 @@ bool SessionBridge::saveColumnLayout(ui::ColumnLayoutSaveSubmission submission) 
     packet->session = session;
     packet->request = request;
     checkpoint(stop);
-    if (!host_ || host_->fileRecoveryRequired || storage::hasPendingCategoryDeletion(host_->lease) || host_->columnLayoutSession != session || host_->columnBaselineReadStop.stop_requested()
+    if (!host_ || host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || host_->columnLayoutSession != session || host_->columnBaselineReadStop.stop_requested()
         || (!host_->columnBaselineMissing && (!host_->columnBaseline || !host_->columnBaselineSource))) {
       packet->failure = tr("Reload the saved column layout before saving");
     } else {
@@ -2930,7 +2986,7 @@ bool SessionBridge::continueDownload(ui::Target target) {
     if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
     host_->accepts(target);
     if(host_->i2pOptions||host_->route(identity(target))!=Host::Route::Public){throw Failure{{storage::ErrorCode::Unsupported,"Use the managed Start command for this torrent's saved networks"}};}
-    if(host_->fileRecoveryRequired||storage::hasPendingCategoryDeletion(host_->lease)){throw Failure{{storage::ErrorCode::Conflict,"Profile recovery must finish before starting a transfer"}};}
+    if(host_->fileRecoveryRequired||(storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))){throw Failure{{storage::ErrorCode::Conflict,"Profile recovery must finish before starting a transfer"}};}
     if (host_->engineOperation == std::numeric_limits<quint64>::max()) {
       throw Failure{{storage::ErrorCode::Unsupported, "Engine operation identities are exhausted"}};
     }
@@ -3008,7 +3064,7 @@ void SessionBridge::publishMainlineFailure() noexcept {
   }catch(...){}
 }
 void SessionBridge::initializePersistentOwner(std::stop_token stop) {
-  if (!host_ || host_->privateOnly() || host_->fileRecoveryRequired || storage::hasPendingCategoryDeletion(host_->lease) || (host_->peerPort == 0 && !host_->normalNetwork) || host_->engine) { return; }
+  if (!host_ || host_->privateOnly() || host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || (host_->peerPort == 0 && !host_->normalNetwork) || host_->engine) { return; }
   checkpoint(stop);
   // Preserve the exact source/runtime guard and default unbound fallback.
   auto owner = engine::PersistentSession::create({1, host_->columnLayoutSession, 1});
@@ -3061,6 +3117,21 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
   }
   checkpoint(stop); // Local owning pointer aborts/joins before a cancelled publication.
   host_->engine = std::move(*owner);
+  if(host_->normalNetwork){
+    const auto session=host_->columnLayoutSession;auto* actual=host_->engine.get();
+    // Optional payload-history retention is opt-in; ordinary engine clients
+    // keep their original restart/forget lifecycle when no consumer exists.
+    const auto completionInterest=actual->configureHistoryCompletions(host_->lease);
+    if(!completionInterest){host_->downloadHistoryPaused=true;host_->downloadHistoryIntakeNotice=tr("Transfer history is unavailable; torrent startup remains independent.");}
+    const auto configured=actual->configureMagnetCompletionHook(host_->lease,[this,session,actual](storage::IntakeHistoryOutcome outcome)->std::optional<storage::Error>{
+      if(!host_||host_->columnLayoutSession!=session||host_->engine.get()!=actual
+          ||host_->recoveryDrainStarted||!host_->normalNetwork){
+        return storage::Error{storage::ErrorCode::Conflict,"Import saved; magnet history owner/session changed"};
+      }
+      return host_->consumeMagnetHistoryIntake(std::move(outcome));
+    });
+    if(!configured){host_->downloadHistoryPaused=true;host_->downloadHistoryIntakeNotice=tr("Download history is unavailable; torrent startup remains independent.");}
+  }
   try { host_->liveSpeedMapper = std::make_unique<LiveSpeedMapperBinding>(host_->columnLayoutSession); } catch (...) {}
   // Optional accounting setup cannot change transfer/storage success.
   try {
@@ -3429,7 +3500,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
   const bool accepted = dispatch([this,withoutCheckpoint,expectedSession](std::stop_token) {
     const auto session = host_ ? host_->columnLayoutSession : quint64{0};
     if(withoutCheckpoint&&(!host_||session!=expectedSession||!host_->recoveryDrainOffered
-        ||(!host_->recoveryDrainStarted&&!storage::hasPendingCategoryDeletion(host_->lease)))){
+        ||(!host_->recoveryDrainStarted&&!(storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))))){
       throw Failure{{storage::ErrorCode::Conflict,"Close without checkpoint requires this session's actual pending-journal close refusal"}};
     }
     if(withoutCheckpoint){host_->recoveryDrainStarted=true;} // Actual accepted worker attempt; never reset.
@@ -3437,16 +3508,18 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
     bool released = true;
     ui::NativeSessionPresentation finalObservation;
     QString checkpointFailure;
+    QString historyCompletionWarning;
     if(!withoutCheckpoint&&host_&&(host_->recoveryDrainStarted
-        ||(storage::hasPendingCategoryDeletion(host_->lease)&&host_->categoryRetainedOwners()))){
+        ||((storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))&&host_->categoryRetainedOwners()))){
       host_->recoveryDrainOffered=true;
-      closeFailed(tr("A pending category journal prevents checkpointing close. Transfers may remain live. You may explicitly close without saving the latest transfer progress."));
+      closeFailed(tr("A pending profile journal prevents checkpointing close. Transfers may remain live. You may explicitly close without saving the latest transfer progress."));
       QMetaObject::invokeMethod(this,[this,session]{
         if(!profileClosed_&&!closingSession_&&session==publishedColumnLayoutSession_){emit recoveryCloseOffered(session);}
       },Qt::QueuedConnection);
       return;
     }
     if(host_){
+      if(host_->engine){host_->engine->clearMagnetCompletionHook();}
       host_->constraintNormalReady=false;
       if(host_->constraintWorker){host_->constraintWorker->close();}
       std::expected<void,storage::Error> mixedStopped;
@@ -3479,6 +3552,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
     if (!withoutCheckpoint && host_ && host_->engine) {
       host_->engine->clearObservationSink();
       const auto receipt = host_->engine->close(std::chrono::steady_clock::now() + std::chrono::seconds{5});
+      historyCompletionWarning=host_->consumeHistoryCompletions({},true);
       joined = joined && receipt.sessionJoined;
       released = receipt.retirement.storageReleased;
       if (receipt.checkpointFailure) { checkpointFailure = text(receipt.checkpointFailure->message); }
@@ -3514,7 +3588,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
     }
     host_.reset(); // Required lifetime barrier before GUI close acknowledgement.
     try { nativeSession(std::move(finalObservation)); } catch (...) {}
-    QMetaObject::invokeMethod(this, [this, session, joined, released, checkpointFailure,withoutCheckpoint] {
+    QMetaObject::invokeMethod(this, [this, session, joined, released, checkpointFailure,historyCompletionWarning,withoutCheckpoint] {
       QPointer<SessionBridge> guard(this);
       completionMonitor_->stop();
       publishedColumnLayoutSession_ = 0; // Reject old-session requests before releasing busy.
@@ -3525,6 +3599,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       closingSession_ = false;
       idleMonitor_->start();
       if (!checkpointFailure.isEmpty()) { emit messageReady(checkpointFailure); if (!guard) { return; } }
+      if (!historyCompletionWarning.isEmpty()) { emit messageReady(historyCompletionWarning); if (!guard) { return; } }
       if(withoutCheckpoint){emit sessionClosedWithoutCheckpoint(session,joined,released);}
       else{emit sessionClosed(session, joined, released);} // Final access: receiver may reopen/delete Bridge.
     }, Qt::QueuedConnection);
@@ -3650,7 +3725,7 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
     if(host_){host_->requireI2pIdle();}
     auto packet = std::make_shared<ui::OptionsSavePacket>();
     packet->session = submission.session; packet->request = submission.request; packet->revision = submission.revision;
-    if (!host_ || host_->fileRecoveryRequired || storage::hasPendingCategoryDeletion(host_->lease) || host_->columnLayoutSession != submission.session || !host_->optionsBaseline
+    if (!host_ || host_->fileRecoveryRequired || (storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease)) || host_->columnLayoutSession != submission.session || !host_->optionsBaseline
         || host_->optionsRevision != submission.revision || host_->optionsReadStop.stop_requested()
         || host_->optionsRevision == std::numeric_limits<quint64>::max()) {
       packet->failure = tr("Reload settings before saving; this snapshot is no longer current");
@@ -3777,7 +3852,7 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
   return dispatch([this,value=std::move(value)](std::stop_token stop){
     if(host_){host_->requireI2pIdle();}
     auto result=std::make_shared<ui::SchedulerSavePacket>();result->session=value.session;result->request=value.request;result->revision=value.revision;
-    if(!host_||host_->fileRecoveryRequired||storage::hasPendingCategoryDeletion(host_->lease)||host_->columnLayoutSession!=value.session||!host_->scheduler){result->failure=tr("Reload schedules before saving");}
+    if(!host_||host_->fileRecoveryRequired||(storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))||host_->columnLayoutSession!=value.session||!host_->scheduler){result->failure=tr("Reload schedules before saving");}
     else try{
       const auto& current=host_->scheduler->snapshot();
       if(current.revision!=value.revision){throw Failure{{storage::ErrorCode::Conflict,"Schedules changed; reload before saving"}};}
@@ -3854,7 +3929,7 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
 void SessionBridge::tickScheduler() noexcept {
   if(!host_||!host_->engine){return;}
   try{
-    if(host_->fileRecoveryRequired||storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingOriginalCompaction(host_->lease)){return;}
+    if(host_->fileRecoveryRequired||(storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))||storage::hasPendingOriginalCompaction(host_->lease)){return;}
     ensureScheduler();if(!host_->scheduler){return;}
     if(host_->coexistence()&&host_->i2p&&host_->scheduler->snapshot().settings.enabled){
       throw Failure{{storage::ErrorCode::Unsupported,"Speed Scheduler cannot change the shared profile while I2P torrents are running. Stop I2P torrents before applying scheduled profile changes."}};

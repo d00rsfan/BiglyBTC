@@ -133,3 +133,16 @@ target_sources(biglybtc_profile PRIVATE category_delete_journal.inc)
 
 # Existing profile/worker only, dependent on frozen pure download-history core.
 target_sources(biglybtc_profile PRIVATE download_history_store.cpp)
+
+# Receipt uses existing core/EVP/encoded-source adapters, never an SDK owner.
+target_sources(biglybtc_profile PRIVATE durable_intake_receipt.cpp)
+
+# One source-bound metadata receipt, no SDK dependency or active owner.
+target_sources(biglybtc_profile PRIVATE durable_completion_receipt.cpp)
+
+# Explicit owning Reset witness, no SDK or UI dependency in profile.
+target_sources(biglybtc_profile PRIVATE history_reconstruction_receipt.cpp)
+
+
+# Private one-shot fresh Keep Data history witness; no SDK/provider dependency.
+target_sources(biglybtc_profile PRIVATE durable_removal_receipt.cpp)

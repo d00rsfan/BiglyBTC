@@ -17,12 +17,14 @@ namespace c=core::tags::constraints;
 namespace {
 storage::Error error(storage::ErrorCode code,const char* text){return {code,text};}
 c::Problem unavailable(const char* text){return {c::ProblemKind::Unavailable,text};}
-bool compatibleConfiguration(const core::Node& record){
+bool compatibleConfiguration(const core::Node& record,bool ordinaryGroup){
   const auto* config=record.find("c");if(!config){return true;}
   if(config->type!=core::Node::Type::Dictionary){return false;}
   for(std::size_t i=0;i<config->children.size();i+=2){
     const auto key=config->children[i].bytes;const auto& value=config->children[i+1];
     if(key=="pp.constraint"||key=="pp.enabled.constraint"||key=="vis"){continue;}
+    if(key=="gr"&&ordinaryGroup&&value.type==core::Node::Type::Bytes){continue;}
+    if(key=="col.rgb"&&core::readSavedTagColour(record)){continue;}
     if(key=="pp.trackers"&&value.type==core::Node::Type::List&&value.children.empty()){continue;}
     if(key=="pp.untagged"&&value.type==core::Node::Type::Integer&&value.integer!=1){continue;}
     // Unimplemented tag actions/rates/properties must not be bypassed by a
@@ -127,12 +129,20 @@ struct TagConstraintWorker::Impl {
       if(!row.id||row.duplicateId||row.membersMalformed||!manual){continue;}
       const auto& record=manual->children[row.sourceIndex*2+1];const auto* config=record.find("c");
       if(!config||!config->find("pp.constraint")){continue;}
-      const auto raw=tags.source->originalBytes().substr(config->begin,config->end-config->begin);
+      const bool ordinaryGroup=core::ordinarySavedTagGroup(tags,record);
+      // Benign group/colour metadata fires checkStuff(), not apply/recompile.
+      // Neither is a rule version or a new-download event boundary in cb8.
+      const bool ordinaryMetadata=ordinaryGroup&&bool(core::readSavedTagColour(record));
+      std::string raw=ordinaryMetadata?"0d":"1d";
+      for(std::size_t i=0;i<config->children.size();i+=2){if(config->children[i].bytes!="gr"&&config->children[i].bytes!="col.rgb"){
+        raw+=tags.source->originalBytes().substr(config->children[i].begin,config->children[i+1].end-config->children[i].begin);
+      }}
+      raw+='e';
       const auto old=std::find_if(rules.begin(),rules.end(),[&](const auto& value){return value.id==*row.id&&value.configuration==raw;});
       if(old!=rules.end()){next.push_back(*old);continue;}
       Rule value;value.id=*row.id;value.configuration=raw;
       auto parsed=property(record);
-      if(!compatibleConfiguration(record)){value.problem=unavailable("Tag has unsupported configured actions or properties");}
+      if(!compatibleConfiguration(record,ordinaryGroup)){value.problem=unavailable("Tag has unsupported configured actions or properties");}
       else if(!parsed){value.problem=parsed.error();}
       else{value.property=std::move(*parsed);
       }

@@ -30,6 +30,7 @@
 
 #include "../app/manual_tag_commands.hpp"
 #include "../app/category_commands.hpp"
+#include "../app/download_history_commands.hpp"
 #include <QMainWindow>
 #include <QPointer>
 
@@ -56,6 +57,7 @@ class ManualTagManagerDialog;
 class CategoryManagerDialog;
 class ClassicColumns;
 class StatisticsPage;
+class DownloadHistoryPage;
 class EngineActivityHistory;
 class NativeActivityHistory;
 
@@ -86,6 +88,9 @@ public:
   SavedSharesPage* sharesPage() const { return sharesPage_.data(); }
   void setSavedServices(SavedServicesPresentation);
   StatisticsPage* statisticsPage() const;
+  DownloadHistoryPage* downloadHistoryPage()const;
+  void setDownloadHistoryCommandFinished(DownloadHistoryCommandPresentation);
+  void rejectDownloadHistoryCommand(const DownloadHistoryCommand&);
   void setStatistics(StatisticsPresentation);
   void setHistoryRevision(quint64 session, quint64 revision);
   void setHistory(HistoryPresentation);
@@ -151,6 +156,7 @@ public:
 signals:
   void manualTagCommandRequested(biglybtc::ui::ManualTagCommand);
   void categoryCommandRequested(biglybtc::ui::CategoryCommand);
+  void downloadHistoryCommandRequested(biglybtc::ui::DownloadHistoryCommand);
   void fileOperationSequenceFinished(biglybtc::ui::FileOperationSequencePresentation);
   void fileOperationPlanRequested(biglybtc::ui::FileOperationRequest);
   void fileOperationExecuteRequested(biglybtc::ui::FileOperationSubmission);
@@ -227,6 +233,8 @@ private:
   void showMyTracker();
   void showMyShares();
   void showStatistics();
+  void showDownloadHistory();
+  bool onDownloadHistoryPage()const;
   bool onStatisticsPage() const;
   void refreshStatistics();
   void refreshHistory(core::HistoryDate);
@@ -298,6 +306,10 @@ private:
   QPointer<SavedHostingPage> hostingPage_;
   QPointer<SavedSharesPage> sharesPage_;
   QPointer<StatisticsPage> statisticsPage_;
+  QPointer<DownloadHistoryPage> downloadHistoryPage_;
+  QAction* downloadHistoryAction_=nullptr;
+  quint64 downloadHistoryRequest_=0;
+  std::optional<DownloadHistoryCommand> pendingDownloadHistoryCommand_;
   I2pPresentation latestI2p_;
   struct StatisticsNavigationRecord {
     quint64 session = 0;

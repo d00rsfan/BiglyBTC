@@ -3,6 +3,7 @@
 #include "biglybtc/saved_download_tag_edits.hpp"
 #include "../app/manual_tag_policy.hpp"
 #include <QCheckBox>
+#include <QColorDialog>
 #include <QDialogButtonBox>
 #include <QHeaderView>
 #include <QHBoxLayout>
@@ -14,6 +15,7 @@
 #include <QSignalBlocker>
 #include <QTableWidget>
 #include <QVBoxLayout>
+#include <algorithm>
 namespace biglybtc::ui {
 namespace {
 QString originalTrim(const QString& value){qsizetype first=0,last=value.size();while(first<last&&value[first].unicode()<=0x20){++first;}while(last>first&&value[last-1].unicode()<=0x20){--last;}return value.mid(first,last-first);}
@@ -54,6 +56,16 @@ std::optional<ManualTagEditorValues> manualTagEditorValues(ManualTagCommandPrese
       if(validName&&tag.nameMayRequireLocalization){row.label+=QObject::tr(" [localization key]");row.detail=QObject::tr("Saved localization key: %1").arg(row.name);}
       row.editable=out.writable&&row.id&&tag.idKey==std::to_string(*row.id)&&validName&&!issues;
       row.constraintEditable=row.editable;
+      row.groupEditable=row.editable&&record&&core::ordinarySavedTagGroup(*out.tags,*record);
+      if(config){if(const auto* group=config->find("gr")){
+        if(group->type!=core::Node::Type::Bytes||group->bytes.size()>4096){row.groupEditable=false;}
+        else{const auto text=QString::fromUtf8(group->bytes.data(),static_cast<qsizetype>(group->bytes.size()));
+          if(text.toUtf8().toStdString()!=group->bytes){row.groupEditable=false;}else{row.group=text;}}
+      }}
+      if(record){const auto colour=core::readSavedTagColour(*record);
+        row.colourEditable=row.editable&&core::ordinarySavedTagGroup(*out.tags,*record)&&bool(colour);
+        if(colour&&*colour){const auto& rgb=**colour;row.colour=std::array<qint32,3>{rgb[0],rgb[1],rgb[2]};}
+      }
       const auto text=[&](const core::Node* value,QString& destination){
         if(!value){return;}if(value->type!=core::Node::Type::Bytes){row.constraintEditable=false;return;}
         destination=QString::fromUtf8(value->bytes.data(),static_cast<qsizetype>(value->bytes.size()));
@@ -88,6 +100,8 @@ ManualTagManagerDialog::ManualTagManagerDialog(quint64 session,QWidget* parent):
   auto* commands=new QHBoxLayout;create_=new QPushButton(tr("New"),this);rename_=new QPushButton(tr("Rename"),this);remove_=new QPushButton(tr("Delete…"),this);visible_=new QCheckBox(tr("Visible"),this);reload_=new QPushButton(tr("Reload"),this);
   create_->setObjectName(QStringLiteral("manual-tag-new"));rename_->setObjectName(QStringLiteral("manual-tag-rename"));remove_->setObjectName(QStringLiteral("manual-tag-delete"));visible_->setObjectName(QStringLiteral("manual-tag-visible"));reload_->setObjectName(QStringLiteral("manual-tag-reload"));
   commands->addWidget(create_);commands->addWidget(rename_);commands->addWidget(remove_);commands->addWidget(visible_);commands->addStretch();commands->addWidget(reload_);layout->addLayout(commands);
+  auto* groupRow=new QHBoxLayout;group_=new QLineEdit(this);group_->setObjectName(QStringLiteral("manual-tag-group"));group_->setMaxLength(4096);group_->setPlaceholderText(tr("Group (blank clears)"));groupSave_=new QPushButton(tr("Save group"),this);groupSave_->setObjectName(QStringLiteral("manual-tag-group-save"));groupRow->addWidget(group_);groupRow->addWidget(groupSave_);layout->addLayout(groupRow);
+  auto* colourRow=new QHBoxLayout;colourLabel_=new QLabel(this);colourLabel_->setObjectName(QStringLiteral("manual-tag-colour-value"));colourChoose_=new QPushButton(tr("Choose colour…"),this);colourChoose_->setObjectName(QStringLiteral("manual-tag-colour-choose"));colourDefault_=new QPushButton(tr("Default colour"),this);colourDefault_->setObjectName(QStringLiteral("manual-tag-colour-default"));colourRow->addWidget(colourLabel_);colourRow->addStretch();colourRow->addWidget(colourChoose_);colourRow->addWidget(colourDefault_);layout->addLayout(colourRow);
   layout->addWidget(new QLabel(tr("Automatic membership constraint"),this));
   constraintExpression_=new QPlainTextEdit(this);constraintExpression_->setObjectName(QStringLiteral("manual-tag-constraint-expression"));constraintExpression_->setMaximumHeight(90);layout->addWidget(constraintExpression_);
   constraintOptions_=new QLineEdit(this);constraintOptions_->setObjectName(QStringLiteral("manual-tag-constraint-options"));constraintOptions_->setMaxLength(4096);constraintOptions_->setPlaceholderText(tr("Options: am=0; add/remove, am=1; add, am=2; remove, am=3; new downloads"));layout->addWidget(constraintOptions_);
@@ -95,6 +109,8 @@ ManualTagManagerDialog::ManualTagManagerDialog(quint64 session,QWidget* parent):
   auto* scope=new QLabel(tr("Saving configures the original tag property. Invalid, unsupported or unavailable rules leave membership unchanged. Automatic rules run only in a normal profile session."),this);scope->setWordWrap(true);layout->addWidget(scope);
   status_=new QLabel(tr("Load the saved tag list to edit tags."),this);status_->setObjectName(QStringLiteral("manual-tag-status"));status_->setWordWrap(true);layout->addWidget(status_);
   auto* close=new QDialogButtonBox(QDialogButtonBox::Close,this);connect(close,&QDialogButtonBox::rejected,this,&QDialog::reject);layout->addWidget(close);
+  connect(colourChoose_,&QPushButton::clicked,this,&ManualTagManagerDialog::chooseColour);connect(colourDefault_,&QPushButton::clicked,this,&ManualTagManagerDialog::clearColour);
+  connect(group_,&QLineEdit::textChanged,this,[this]{updateButtons();});connect(groupSave_,&QPushButton::clicked,this,&ManualTagManagerDialog::saveGroup);
   connect(constraintExpression_,&QPlainTextEdit::textChanged,this,[this]{updateButtons();});connect(constraintOptions_,&QLineEdit::textChanged,this,[this]{updateButtons();});connect(constraintEnabled_,&QCheckBox::toggled,this,[this]{updateButtons();});connect(constraintSave_,&QPushButton::clicked,this,&ManualTagManagerDialog::saveConstraint);
   connect(table_,&QTableWidget::itemSelectionChanged,this,&ManualTagManagerDialog::selectRow);connect(name_,&QLineEdit::textChanged,this,[this]{updateButtons();});
   connect(create_,&QPushButton::clicked,this,&ManualTagManagerDialog::create);connect(rename_,&QPushButton::clicked,this,&ManualTagManagerDialog::rename);connect(remove_,&QPushButton::clicked,this,&ManualTagManagerDialog::remove);connect(visible_,&QCheckBox::clicked,this,&ManualTagManagerDialog::visibility);connect(reload_,&QPushButton::clicked,this,[this]{ManualTagCommand command;command.kind=ManualTagCommandKind::Reload;intent(std::move(command));});updateButtons();
@@ -108,11 +124,18 @@ void ManualTagManagerDialog::updateButtons(){
   const bool constraint=edit&&row&&row->constraintEditable;
   constraintExpression_->setEnabled(constraint);if(!guard){return;}constraintOptions_->setEnabled(constraint);if(!guard){return;}constraintEnabled_->setEnabled(constraint);if(!guard){return;}
   constraintSave_->setEnabled(constraint&&constraintExpression_->toPlainText().toUtf8().size()<=4096&&constraintOptions_->text().toUtf8().size()<=4096);
+  if(!guard){return;}const bool group=edit&&row&&row->groupEditable;group_->setEnabled(group);if(!guard){return;}groupSave_->setEnabled(group&&originalTrim(group_->text()).toUtf8().size()<=4096);
+  if(!guard){return;}const bool colour=edit&&row&&row->colourEditable;
+  const bool displayable=!row||!row->colour||std::all_of(row->colour->begin(),row->colour->end(),[](qint32 channel){return channel>=0&&channel<=255;});
+  colourChoose_->setEnabled(colour&&displayable);if(!guard){return;}colourDefault_->setEnabled(colour&&row->colour.has_value());
 }
 void ManualTagManagerDialog::selectRow(){
-  if(rendering_){return;}const auto* row=selected();const QSignalBlocker a(visible_),b(constraintExpression_),c(constraintOptions_),d(constraintEnabled_),e(name_);
-  if(row){name_->setText(row->name);visible_->setChecked(row->visible);constraintExpression_->setPlainText(row->constraintExpression);constraintOptions_->setText(row->constraintOptions);constraintEnabled_->setChecked(row->constraintEnabled);if(!row->detail.isEmpty()){status_->setText(row->detail);}}
-  else{constraintExpression_->clear();constraintOptions_->clear();constraintEnabled_->setChecked(true);}updateButtons();
+  if(rendering_){return;}const auto* row=selected();const QSignalBlocker a(visible_),b(constraintExpression_),c(constraintOptions_),d(constraintEnabled_),e(name_),f(group_);
+  if(row){group_->setText(row->group.value_or(QString{}));name_->setText(row->name);visible_->setChecked(row->visible);constraintExpression_->setPlainText(row->constraintExpression);constraintOptions_->setText(row->constraintOptions);constraintEnabled_->setChecked(row->constraintEnabled);if(!row->detail.isEmpty()){status_->setText(row->detail);}}
+  else{group_->clear();constraintExpression_->clear();constraintOptions_->clear();constraintEnabled_->setChecked(true);}
+  if(row&&row->colour){const auto& rgb=*row->colour;const bool displayable=std::all_of(rgb.begin(),rgb.end(),[](qint32 channel){return channel>=0&&channel<=255;});colourLabel_->setText(tr("Saved colour: %1,%2,%3%4").arg(rgb[0]).arg(rgb[1]).arg(rgb[2]).arg(displayable?QString{}:tr(" (outside display range)")));}
+  else{colourLabel_->setText(row&&row->colourEditable?tr("Default colour: %1,%2,%3").arg(core::ManualTagDefaultRgb[0]).arg(core::ManualTagDefaultRgb[1]).arg(core::ManualTagDefaultRgb[2]):tr("Colour/default inheritance unavailable; saved data preserved."));}
+  updateButtons();
 }
 void ManualTagManagerDialog::setPresentation(ManualTagCommandPresentation packet){
   if(!session_||!packet||packet->session!=session_||packet->request<lastRequest_||packet->generation<generation_){return;}
@@ -168,5 +191,29 @@ void ManualTagManagerDialog::saveConstraint(){
     if(originalTrim(constraintExpression_->toPlainText())!=expression||constraintOptions_->text()!=options||constraintEnabled_->isChecked()!=enabled){return;}
   }
   ManualTagCommand command;command.kind=ManualTagCommandKind::SetConstraint;command.tagId=id;command.constraintExpression=expression;command.constraintOptions=options;command.constraintEnabled=enabled;intent(std::move(command));
+}
+void ManualTagManagerDialog::saveGroup(){
+  const auto* row=selected();if(!row||!row->id||!groupSave_->isEnabled()){return;}
+  ManualTagCommand command;command.kind=ManualTagCommandKind::SetGroup;command.tagId=*row->id;
+  const auto value=originalTrim(group_->text());if(!value.isEmpty()){command.group=value;}
+  // Exact original classic entry: trim, then blank means setGroup(null).
+  // The typed worker API separately preserves an explicit empty string.
+  intent(std::move(command));
+}
+void ManualTagManagerDialog::chooseColour(){
+  const auto* row=selected();if(!row||!row->id||!colourChoose_->isEnabled()){return;}
+  const auto id=*row->id;const auto generation=generation_;const auto rgb=row->colour.value_or(std::array<qint32,3>{core::ManualTagDefaultRgb[0],core::ManualTagDefaultRgb[1],core::ManualTagDefaultRgb[2]});
+  const QPointer<ManualTagManagerDialog> guard(this);
+  QPointer<QColorDialog> picker(new QColorDialog(QColor(rgb[0],rgb[1],rgb[2]),this));
+  if(!guard||!picker){return;}picker->setObjectName(QStringLiteral("manual-tag-colour-picker"));picker->setOption(QColorDialog::DontUseNativeDialog);
+  if(!guard||!picker){return;}const auto result=picker->exec();
+  if(!guard){return;}if(!picker){return;}const auto selectedColour=picker->selectedColor();picker->deleteLater();
+  if(result!=QDialog::Accepted||!selectedColour.isValid()||generation_!=generation||!colourChoose_->isEnabled()){return;}
+  row=selected();if(!row||row->id!=id){return;}
+  ManualTagCommand command;command.kind=ManualTagCommandKind::SetColour;command.tagId=id;command.colour=std::array<qint32,3>{selectedColour.red(),selectedColour.green(),selectedColour.blue()};intent(std::move(command));
+}
+void ManualTagManagerDialog::clearColour(){
+  const auto* row=selected();if(!row||!row->id||!colourDefault_->isEnabled()){return;}
+  ManualTagCommand command;command.kind=ManualTagCommandKind::SetColour;command.tagId=*row->id;intent(std::move(command));
 }
 } // namespace biglybtc::ui

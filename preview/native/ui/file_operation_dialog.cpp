@@ -187,7 +187,7 @@ FileOperationDialog::FileOperationDialog(QWidget* parent):QDialog(parent),impl_(
   impl_->table=new QTableView(this);impl_->table->setObjectName(QStringLiteral("file-operation-paths"));impl_->model=new PathsModel(impl_->table);impl_->table->setModel(impl_->model);
   impl_->table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);impl_->table->setColumnWidth(0,370);impl_->table->setColumnWidth(1,300);layout->addWidget(impl_->table,1);
   impl_->archive=new QCheckBox(QStringLiteral("Delete the .torrent archive and backup permanently"),this);impl_->archive->setObjectName(QStringLiteral("file-operation-delete-archive"));
-  impl_->archive->setToolTip(QStringLiteral("The saved preference is loaded by the worker. Changing this choice requires a new path review."));layout->addWidget(impl_->archive);
+  impl_->archive->setToolTip(QStringLiteral("Keep Data preserves separate torrent files by default. Deleting a torrent archive is a separate reviewed choice. Changing it requires a new path review."));layout->addWidget(impl_->archive);
   impl_->recycle=new QCheckBox(QStringLiteral("Move data to Trash (clear for permanent deletion)"),this);impl_->recycle->setObjectName(QStringLiteral("file-operation-recycle"));layout->addWidget(impl_->recycle);
   connect(impl_->recycle,&QCheckBox::toggled,this,[this]{impl_->recycleChoiceKnown=true;impl_->edited();});
   impl_->confirm=new QCheckBox(QStringLiteral("Delete the listed data files permanently"),this);impl_->confirm->setObjectName(QStringLiteral("file-operation-confirm-delete"));layout->addWidget(impl_->confirm);
@@ -195,6 +195,8 @@ FileOperationDialog::FileOperationDialog(QWidget* parent):QDialog(parent),impl_(
   auto* buttons=new QHBoxLayout;impl_->review=new QPushButton(QStringLiteral("Review paths"),this);impl_->execute=new QPushButton(QStringLiteral("Confirm"),this);impl_->cancel=new QPushButton(QStringLiteral("Cancel"),this);
   impl_->review->setObjectName(QStringLiteral("file-operation-review"));impl_->execute->setObjectName(QStringLiteral("file-operation-execute"));impl_->cancel->setObjectName(QStringLiteral("file-operation-cancel"));
   buttons->addWidget(impl_->review);buttons->addStretch();buttons->addWidget(impl_->execute);buttons->addWidget(impl_->cancel);layout->addLayout(buttons);
+  impl_->execute->setAutoDefault(false);impl_->review->setAutoDefault(false);
+  impl_->browse->setAutoDefault(false);impl_->cancel->setAutoDefault(true);impl_->cancel->setDefault(true);
   connect(impl_->destination,&QLineEdit::textChanged,this,[this]{impl_->edited();});connect(impl_->browse,&QPushButton::clicked,this,[this]{impl_->choose();});
   connect(impl_->review,&QPushButton::clicked,this,[this]{impl_->prepare();});connect(impl_->execute,&QPushButton::clicked,this,&FileOperationDialog::accept);connect(impl_->cancel,&QPushButton::clicked,this,&FileOperationDialog::reject);
   connect(impl_->archive,&QCheckBox::toggled,this,[this]{impl_->archiveChoiceKnown=true;impl_->edited();});

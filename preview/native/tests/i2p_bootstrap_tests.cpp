@@ -101,6 +101,33 @@ void partialBootstrapIsPreservedReview(){
   {Area a;std::stop_source source;cancelling=&source;auto result=p::bootstrapI2pProfile(*a.lease,normal(),source.get_token(),std::chrono::steady_clock::now()+std::chrono::seconds{5},cancel);cancelling=nullptr;check(!result&&result.error().code==s::ErrorCode::Cancelled&&fs::exists(a.key())&&!fs::exists(a.properties())&&fs::exists(a.plugin()/".BiglyBTC.i2p-bootstrap1"),"Partial cancellation claimed complete bootstrap");}
   {Area a;externalEdit=&a;auto result=p::bootstrapI2pProfile(*a.lease,normal(),{},std::chrono::steady_clock::now()+std::chrono::seconds{5},editConfiguration);externalEdit=nullptr;auto configuration=biglybtc::core::Document::parse(read(a.root/"biglybt.config"));check(!result&&result.error().code==s::ErrorCode::Conflict&&configuration&&configuration->find("future")->bytes=="external"&&!fs::exists(a.key())&&fs::exists(a.plugin()/".BiglyBTC.i2p-bootstrap1"),"Foreign configuration change was overwritten or authorized publication");}
 }
+Area* changingPermissions=nullptr;bool replacePermissionLock=false;
+void changePermissionProof(p::BootstrapStage stage){if(stage==p::BootstrapStage::JournalSynced){
+  if(replacePermissionLock){fs::rename(changingPermissions->root/".azlock",changingPermissions->root/"held-old-lock");write(changingPermissions->root/".azlock","");}
+  else{check(::chmod(changingPermissions->root.c_str(),0755)==0,"Change generated root privacy");}
+}}
+void protectedLegacyMetadataAndUnchangedPrivateKeyPolicy(){
+  // Actual new key/config, then read-only existing-pair handoff. No process
+  // umask or supplied privacy flag; all permissions belong to generated files.
+  for(const bool pure:{false,true}){Area a;check(::chmod((a.root/"biglybt.config").c_str(),0664)==0,"Legacy config fixture mode");const auto originalConfig=read(a.root/"biglybt.config");
+    auto first=take(p::bootstrapI2pProfile(*a.lease,normal(pure)));check(first.keyCreated&&first.configCreated,"Protected0664 profile did not bootstrap");
+    check(::chmod(a.properties(pure).c_str(),0664)==0,"Legacy DHT metadata fixture mode");const auto before=files(a);const auto epoch=a.lease->sourceRevision();
+    auto again=take(p::bootstrapI2pProfile(*a.lease,normal(pure)));check(!again.keyCreated&&!again.configCreated&&again.destination.hash==first.destination.hash&&again.nodeId==first.nodeId&&again.queryPort==first.queryPort&&files(a)==before&&a.lease->sourceRevision()==epoch&&read(a.root/"biglybt.config")==originalConfig,"Protected legacy no-op changed files/identity/epoch");
+    struct stat key{};check(::stat(a.key(pure).c_str(),&key)==0&&(key.st_mode&07777)==0600,"Legacy metadata widened private key policy");
+  }
+  for(unsigned kind=0;kind<5;++kind){Area a;(void)take(p::bootstrapI2pProfile(*a.lease,normal()));
+    if(kind==0){check(::chmod((a.root/"biglybt.config").c_str(),0664)==0&&::chmod(a.root.c_str(),0755)==0,"Accessible profile fixture");}
+    if(kind==1){check(::chmod(a.properties().c_str(),0664)==0&&::chmod(a.root.c_str(),0755)==0,"Accessible metadata fixture");}
+    if(kind==2){check(::chmod((a.root/"biglybt.config").c_str(),0666)==0,"World-writable metadata fixture");}
+    if(kind==3){check(::chmod(a.key().c_str(),0664)==0,"Private key mode fixture");}
+    if(kind==4){check(::chmod((a.root/"plugins").c_str(),0775)==0&&::chmod((a.root/"biglybt.config").c_str(),0664)==0,"Unqualified plugin directory fixture");}
+    const auto before=files(a);auto result=p::bootstrapI2pProfile(*a.lease,normal());check(!result&&files(a)==before,"Accessible/unsafe legacy permissions silently authorised a bootstrap/no-op");
+  }
+  for(const bool foreignLock:{false,true}){Area a;check(::chmod((a.root/"biglybt.config").c_str(),0664)==0,"Protected source-change fixture");changingPermissions=&a;replacePermissionLock=foreignLock;
+    auto result=p::bootstrapI2pProfile(*a.lease,normal(),{},std::chrono::steady_clock::now()+std::chrono::seconds(5),changePermissionProof);changingPermissions=nullptr;
+    check(!result&&result.error().code==s::ErrorCode::Conflict&&!fs::exists(a.key())&&!fs::exists(a.properties())&&fs::exists(a.plugin()/".BiglyBTC.i2p-bootstrap1"),"Changed root privacy/OFD published key material or lost review prefix");
+  }
+}
 void emitInterop(const fs::path& root){
   Area a(root);
   for(const bool pure:{false,true}){const auto result=take(p::bootstrapI2pProfile(*a.lease,normal(pure)));const auto keyBytes=read(a.key(pure));auto identity=crypto(i::decodeClientIdentity(view(keyBytes)));const std::string label=pure?"pure":"mixed";
@@ -115,7 +142,7 @@ void verifyInterop(const fs::path& root){
 int main(int argc,char** argv){try{
   if(argc==3&&std::string_view(argv[1])=="--emit-interop"){emitInterop(argv[2]);}
   else if(argc==3&&std::string_view(argv[1])=="--verify-interop"){verifyInterop(argv[2]);}
-  else if(argc==1){generationAndHealthyProfiles();disabledPreviewAndMissingConfig();foreignAmbiguousAndUnsafeInputs();partialBootstrapIsPreservedReview();}
+  else if(argc==1){generationAndHealthyProfiles();disabledPreviewAndMissingConfig();foreignAmbiguousAndUnsafeInputs();partialBootstrapIsPreservedReview();protectedLegacyMetadataAndUnchangedPrivateKeyPolicy();}
   else{throw std::runtime_error("Unsupported bootstrap test arguments");}
   std::cout<<"PASS original-compatible offline I2P bootstrap\n";return 0;
 }catch(const std::exception& failure){std::cerr<<failure.what()<<'\n';return 1;}}

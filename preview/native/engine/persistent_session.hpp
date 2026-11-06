@@ -3,6 +3,9 @@
 
 #include "local_session.hpp"
 #include "managed_download.hpp"
+#include "durable_completion_receipt.hpp"
+#include "history_reconstruction_receipt.hpp"
+#include "magnet_intake.hpp"
 #include "coexist_queue.hpp"
 #include "original_torrent_identity.hpp"
 #include "live_settings.hpp"
@@ -18,6 +21,8 @@
 #include <memory>
 #include <optional>
 #include <vector>
+
+namespace biglybtc::storage {struct IntakeHistoryOutcome;}
 
 namespace biglybtc::engine {
 
@@ -176,6 +181,11 @@ public:
   void revokeMainlineScrape(const core::TorrentHash&) noexcept;
   // Call only after a successful explicit saved-intent/controller transaction.
   std::expected<void,storage::Error> rearmMainlineScrape(const core::TorrentHash&);
+  // Optional trusted same-worker FS hook; configure before metadata admission.
+  // Its retained SAME-OFD lifetime is not a new download/source capability.
+  std::expected<void,storage::Error> configureMagnetCompletionHook(
+      const storage::ProfileLease&,MagnetCompletionHook);
+  void clearMagnetCompletionHook()noexcept;
   // Host calls pure prepareLiveSettings BEFORE persistence, this method only
   // AFTER successful save. Routing changes remain pending for owner recreation.
   // Before startIdle this caches safe values without creating an LT session.
@@ -225,8 +235,26 @@ public:
   // first; certified source retirement releases obsolete descriptors through
   // forgetManaged. New companion remains stopped and is never auto-admitted.
   std::expected<core::TorrentHash, storage::Error> createHybridCompanion(
-      storage::ProfileLease&, const core::TorrentHash&, storage::OriginalSelectedHash, std::stop_token = {});
+      storage::ProfileLease&, const core::TorrentHash&, storage::OriginalSelectedHash, std::stop_token = {},storage::IntakeHistoryOutcome* history=nullptr);
   std::vector<ManagedDownloadStatus> managedDownloads() const;
+  // Existing worker only, one private actual checkpoint event at a time.
+  // No status query, SDK call or startup scan. Consume before next issuance;
+  // normal joined close remains readable, poison/NoCP suppress all events.
+  // Explicit optional-history interest on the actual worker/profile OFD,
+  // before managed admissions. No callbacks/SDK effects or retrospective events.
+  // Direct clients that never register retain default restart/forget semantics.
+  std::expected<void,storage::Error> configureHistoryCompletions(const storage::ProfileLease&);
+  std::expected<std::optional<storage::CompletionHistoryOutcome>,storage::Error> takeHistoryCompletion();
+  // Worker-only auxiliary abandonment after history is paused/unavailable.
+  // No filesystem/SDK effects; no replay after explicit history Reload.
+  void discardHistoryCompletions()noexcept;
+  // Explicit history Reset only: complete idle normal-owner saved backend.
+  // No SDK call, intake event, live-row assumption or filesystem write.
+  bool historyReconstructionAvailable()const noexcept;
+  std::expected<storage::HistoryReconstructionReceipt,storage::Error> prepareHistoryReconstruction(
+      const storage::ProfileLease&,std::stop_token={},
+      std::chrono::steady_clock::time_point=std::chrono::steady_clock::time_point::max());
+
   // Passive worker-only copy of the current rich library response. No RPC,
   // callback draining, status query or new permission; exact admission required.
   std::optional<core::QueueOriginalScrapeResponse> managedTrackerResponse(

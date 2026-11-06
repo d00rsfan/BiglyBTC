@@ -67,6 +67,7 @@ struct PendingMagnetStatus {
   std::optional<storage::Error> failure{};
   // Actual completed fresh import only, never a recovered already-present row.
   bool newlyImported=false;std::uint64_t importGeneration=0;
+  std::optional<storage::Error> historyWarning{}; // Auxiliary: import still succeeded.
 
 };
 struct ManagedDownloadOptions {
