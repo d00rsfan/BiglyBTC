@@ -1,0 +1,167 @@
+{
+  "XML": {
+    "focused-values": {
+      "bytes": 5885,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/cohort-r4/gcc/r1/focused-values.xml",
+      "sha256": "3b62a84343d074d7f9406dbb46cca4ef6e05a2c128cfbac6ee31b2a23c163af8"
+    },
+    "http-regression": {
+      "bytes": 2546,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/cohort-r4/gcc/r1/http-regression.xml",
+      "sha256": "6bc2e3c0a378190ee4e2169e49d5cfa50f66f08fd7f70652b1fba265bb2163bb"
+    }
+  },
+  "commands": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-k",
+        "0",
+        "biglybtc_http_response",
+        "biglybtc-http-response-tests",
+        "biglybtc_saved_rss_source",
+        "biglybtc-saved-rss-source-tests",
+        "biglybtc-mainline-single-http-tests"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 22.905,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/cohort-r4/gcc/r1/build.log",
+      "log_sha256": "65dba00fa217622add76cb1535c62b372dee74d1be8ce26e2478a373c800b5fe"
+    },
+    {
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-R",
+        "^(bounded\\-http\\-response\\-values|saved\\-rss\\-source\\-description)$",
+        "--no-tests=error",
+        "--output-on-failure",
+        "--test-output-size-passed",
+        "65536",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/cohort-r4/gcc/r1/focused-values.xml",
+        "-j",
+        "1"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 0.417,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/cohort-r4/gcc/r1/focused-values.log",
+      "log_sha256": "6d22e719e9f66b8a247f521dbe601852ea4738caf4eb5d02f310247c07dc11cf"
+    },
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-mainline-single-http-tests",
+        "sourceBodyMissingFailureNarrowingAndIntervals",
+        "savedBasicChallengeAndCacheAreExactRealmOriginAndSecretFreeScope",
+        "originalMinimumFailureAndSingleOnlyDialectAreSourceDerived",
+        "gzipMemberBoundsCrcAndRedirectScopeAreExplicit",
+        "actualHostnameHttpChunkedAndCancellationReuse",
+        "actualSameHostRedirectRequiresFreshAuthorityAndDecodesGzip",
+        "actualGzipBombAndRedirectLoopAreUnavailableRatherThanError",
+        "redirectedProposalRevocationAndLateCompressedReplyCannotGrant",
+        "actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls:http",
+        "actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls:verified-https",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/cohort-r4/gcc/r1/http-regression.xml,xml"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 1.621,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/cohort-r4/gcc/r1/http-regression.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "coverage": {
+    "focused-values": {
+      "suites": [
+        "bounded-http-response-values",
+        "saved-rss-source-description"
+      ]
+    },
+    "http-regression": {
+      "actual_pass_rows": [
+        "initTestCase",
+        "sourceBodyMissingFailureNarrowingAndIntervals",
+        "savedBasicChallengeAndCacheAreExactRealmOriginAndSecretFreeScope",
+        "originalMinimumFailureAndSingleOnlyDialectAreSourceDerived",
+        "gzipMemberBoundsCrcAndRedirectScopeAreExplicit",
+        "actualHostnameHttpChunkedAndCancellationReuse",
+        "actualSameHostRedirectRequiresFreshAuthorityAndDecodesGzip",
+        "actualGzipBombAndRedirectLoopAreUnavailableRatherThanError",
+        "redirectedProposalRevocationAndLateCompressedReplyCannotGrant",
+        "actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls:http",
+        "actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls:verified-https",
+        "cleanupTestCase"
+      ],
+      "selectors": [
+        "sourceBodyMissingFailureNarrowingAndIntervals",
+        "savedBasicChallengeAndCacheAreExactRealmOriginAndSecretFreeScope",
+        "originalMinimumFailureAndSingleOnlyDialectAreSourceDerived",
+        "gzipMemberBoundsCrcAndRedirectScopeAreExplicit",
+        "actualHostnameHttpChunkedAndCancellationReuse",
+        "actualSameHostRedirectRequiresFreshAuthorityAndDecodesGzip",
+        "actualGzipBombAndRedirectLoopAreUnavailableRatherThanError",
+        "redirectedProposalRevocationAndLateCompressedReplyCannotGrant",
+        "actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls:http",
+        "actualSavedBasicIsChallengedBeforeCredentialsAndUsesHttpOrTls:verified-https"
+      ]
+    }
+  },
+  "elapsed_seconds": 25.684,
+  "images": {
+    "biglybtc-http-response-tests": {
+      "bytes": 67304,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-http-response-tests",
+      "sha256": "7e2d0627b433697c04744f67e244bc0ec69d795ed4e077b547b2431a47cffab9"
+    },
+    "biglybtc-mainline-single-http-tests": {
+      "bytes": 7695608,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-mainline-single-http-tests",
+      "sha256": "9387306cc2baf43270e25ea1f1e721fb8b3724c70325581a27e3c4f4fe69447a"
+    },
+    "biglybtc-saved-rss-source-tests": {
+      "bytes": 399480,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-saved-rss-source-tests",
+      "sha256": "ceb938951b68c50a74a1a4dedc261b3eabf8b8be94e54009080c67838ea931a6"
+    }
+  },
+  "implementation_commit": "4fa9715c0a6f94b3668d3079bc92cee06229787e",
+  "lane": "gcc",
+  "library_dependencies": {
+    "engine/libbiglybtc_http_response.a": "afe5f1708649bae07ee4dcdf4bd5061236c366de2d1acc0aa27493979fa7ce8d",
+    "services/libbiglybtc_saved_rss_source.a": "c3dca02f1d6f69565bfcbdf8d514e97d81d93f2400eccd98c6942d2bdbfd1f00"
+  },
+  "native_tree": "af5efce8af90ede28ae968e975f0d4c8f9ac68c0",
+  "raw_receipt": {
+    "bytes": 19834,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/cohort-r4/gcc/r1/result-raw.json",
+    "sha256": "07da145b4e839ddf91a19bac90644ce675cc8c0188b4497bf6ec65c89c431d4f"
+  },
+  "source_after": {
+    "bytes": 169916,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/cohort-r4/gcc/r1/source-after.json",
+    "sha256": "455ed2453273b481026eaaa9e8a4746b38bffb61b767e7f8a2da07e3d2f4b992"
+  },
+  "source_before": {
+    "bytes": 169916,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/cohort-r4/gcc/r1/source-before.json",
+    "sha256": "455ed2453273b481026eaaa9e8a4746b38bffb61b767e7f8a2da07e3d2f4b992"
+  },
+  "stamped_receipt": {
+    "bytes": 20182,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/cohort-r4/gcc/r1/result-stamped.json",
+    "sha256": "082d38e2d83741f5e9c8a097f2f6bf57f8ff0ca4462e29ab624d110c3da26796"
+  },
+  "status": "PASS"
+}
