@@ -1,0 +1,82 @@
+{
+  "schema": "BiglyBTC.PublicStateHandbackEvidence.V1",
+  "status": "PASS_PUBLIC_DOWNLOAD_STATE_MAP_PROPERTY_HANDBACK_LOCAL_GCC_SAN_REVIEW",
+  "implementation_commit": "af45fbab82d3e4f7e3c438ae06aea4e5d0e2bf2f",
+  "native_tree": "652fb06a7908f99aa528cb9bea09c80093d3c2af",
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "independent_review_sha256": "d33ad0ea71824b17ac540dcfd6335f9748070165693325d8b6b44e637c0e22e9",
+  "actual_receipt_sha256": "36813e4cdf232bfcce8e465dc5fe601814f3adf63cb144e96e33bd2fcff7c785",
+  "source_association_sha256": "be2943c51ecf164eae50045b8127b1e389491f4834c943050807b29b4b97fb0a",
+  "normal_GCC_seconds": 44.983,
+  "normal_SAN_seconds": 88.394,
+  "normal_commands_per_lane": 6,
+  "normal_Qt_rows_per_lane": 1,
+  "actual_handback_commands": 4,
+  "actual_handback_seconds": 9.269,
+  "javac": 1,
+  "JVM": 1,
+  "cache_before_after": 4294967298,
+  "owned_root_removed": true,
+  "prior_failures_preserved": {
+    "r1": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort/actual-handback-r1/result.json",
+      "sha256": "d402d86ce0a5c4ee9882ebac058ad5eb287e415fd960f47c7c9cc7f6f6df2efd",
+      "bytes": 39185
+    },
+    "r2": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r2/actual-handback-r2/result.json",
+      "sha256": "dd09710ecaa765f310da5cd79d85ee2d0b1007bcbfcd8b94adc5b6c78f6ab4a1",
+      "bytes": 51121
+    }
+  },
+  "files": {
+    "OriginalDownloadStateHandback.java": {
+      "bytes": 9821,
+      "sha256": "d76d6d895cdaaa02151e488b1a2f0e09dfac4e87ba47fa8f7e8ac657bf4dc65c"
+    },
+    "REVIEW.md": {
+      "bytes": 2026,
+      "sha256": "e973ca519b0ada99cff233922d65912e8594998eb709fb9d180eaf8239d633e0"
+    },
+    "UPSTREAM-MESSAGE.txt": {
+      "bytes": 1069,
+      "sha256": "32b67710422fcc19cf588a059413bd576186ac5c3dd7dd62cc7334c12e131c04"
+    },
+    "actual-handback-result.json": {
+      "bytes": 58287,
+      "sha256": "36813e4cdf232bfcce8e465dc5fe601814f3adf63cb144e96e33bd2fcff7c785"
+    },
+    "actual-public-report.json": {
+      "bytes": 824,
+      "sha256": "40a6bf4e4605ded6f359a0b8517aec4aa0e2b89799b28e9b46de52691051f845"
+    },
+    "gcc-result-stamped.json": {
+      "bytes": 36758,
+      "sha256": "5438d6fe75138769084979a1efe8363bf4a46cce557d5a5988cacf7202383948"
+    },
+    "independent-review.json": {
+      "bytes": 8871,
+      "sha256": "d33ad0ea71824b17ac540dcfd6335f9748070165693325d8b6b44e637c0e22e9"
+    },
+    "original-returned-state.dat": {
+      "bytes": 984,
+      "sha256": "c4a74e484fbb265a1c8d0e926738ac33a7fcd4ea30d185262fc055085cfe4981"
+    },
+    "san-result-stamped.json": {
+      "bytes": 36926,
+      "sha256": "eabcef46f55819021282a075709a7dfde99feddad0a85870d677f242589fe72a"
+    },
+    "source-association.json": {
+      "bytes": 1937,
+      "sha256": "be2943c51ecf164eae50045b8127b1e389491f4834c943050807b29b4b97fb0a"
+    },
+    "source-map.json": {
+      "bytes": 178487,
+      "sha256": "1e56e6ab2e90c311bbbf58a80c7e2b04e7a76a6635c90241db90506dae1cf600"
+    },
+    "source-selection.json": {
+      "bytes": 3131,
+      "sha256": "9513800e313726ce132bef63e969d32e4ebc10c5f638227a9b859a77eeb6ac41"
+    }
+  }
+}

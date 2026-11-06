@@ -1,0 +1,29 @@
+{
+  "schema": "BiglyBTC.ActualPublicStateHandbackSourceAssociation.V1",
+  "status": "PASS_PRECOMMIT_HANDOFF_ASSOCIATED_WITH_EXACT_COMMITTED_SOURCE",
+  "implementation_commit": "af45fbab82d3e4f7e3c438ae06aea4e5d0e2bf2f",
+  "native_tree": "652fb06a7908f99aa528cb9bea09c80093d3c2af",
+  "handback_receipt": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/actual-handback-r3/result.json",
+    "sha256": "36813e4cdf232bfcce8e465dc5fe601814f3adf63cb144e96e33bd2fcff7c785",
+    "bytes": 58287
+  },
+  "source_map": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/source.json",
+    "sha256": "1e56e6ab2e90c311bbbf58a80c7e2b04e7a76a6635c90241db90506dae1cf600",
+    "bytes": 178487
+  },
+  "normal_stamped_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/gcc/r1/result-stamped.json",
+      "sha256": "5438d6fe75138769084979a1efe8363bf4a46cce557d5a5988cacf7202383948",
+      "bytes": 36758
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/san/r1/result-stamped.json",
+      "sha256": "eabcef46f55819021282a075709a7dfde99feddad0a85870d677f242589fe72a",
+      "bytes": 36926
+    }
+  },
+  "assertion": "Recorded handback map equals both passing normal lane maps and current committed Native sources. Raw/precommit/failed receipts are preserved unchanged."
+}

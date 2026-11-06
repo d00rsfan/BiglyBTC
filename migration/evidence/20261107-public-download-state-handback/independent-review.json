@@ -1,0 +1,144 @@
+{
+  "schema": "BiglyBTC.PublicDownloadStateMapHandbackIndependentAcceptance.V1",
+  "status": "PASS_PUBLIC_DOWNLOAD_STATE_MAP_PROPERTY_HANDBACK_LOCAL_GCC_SAN_REVIEW",
+  "implementation_commit": "af45fbab82d3e4f7e3c438ae06aea4e5d0e2bf2f",
+  "native_tree": "652fb06a7908f99aa528cb9bea09c80093d3c2af",
+  "spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/spec.json",
+    "sha256": "0668c55534e2f0e56b51237dd59c8cd4a170b952de0ab76cd9cd796b823ce3ce",
+    "bytes": 32729
+  },
+  "source_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/native-candidate/amendments/resume-root-and-standard-Qt-main/amendments/managerless-cache-readonly/amendments/semantic-dictionary-order/root-source-review.json",
+    "bytes": 986,
+    "sha256": "6015dbcdc29e3d8b72f7f4d22952adabf4be16a64ab73bee0231aef8503207c8"
+  },
+  "selected_source_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/native-candidate/amendments/resume-root-and-standard-Qt-main/amendments/managerless-cache-readonly/amendments/semantic-dictionary-order/manifest.json",
+    "bytes": 4318,
+    "sha256": "0db9af575fd7fe30b4482d9ece82ad27edd2c25b94f92ce22ccb5fde02b675b4"
+  },
+  "source_map": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/source.json",
+    "sha256": "1e56e6ab2e90c311bbbf58a80c7e2b04e7a76a6635c90241db90506dae1cf600",
+    "bytes": 178487
+  },
+  "source_files": 1414,
+  "selected_Native_leaves": 1,
+  "normal_lanes": {
+    "gcc": {
+      "raw": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/gcc/r1/result-raw.json",
+        "sha256": "d9b11cea6a4744e556058c4e0767391231dca813815f104d09e7a876b30bc4bc",
+        "bytes": 36301
+      },
+      "stamp": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/gcc/r1/result-stamped.json",
+        "sha256": "5438d6fe75138769084979a1efe8363bf4a46cce557d5a5988cacf7202383948",
+        "bytes": 36758
+      },
+      "xml": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/gcc/r1/normal-fresh-positive-main.xml",
+        "sha256": "12227a7905129f3e7ad343167f365bd61c48fcbc3472594961933eaff240a46a",
+        "bytes": 847
+      },
+      "seconds": 44.983,
+      "commands": 6,
+      "normal_Qt_rows": 1,
+      "ELFs": 1,
+      "archives": 16
+    },
+    "san": {
+      "raw": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/san/r1/result-raw.json",
+        "sha256": "f4ea8defc675ac76bce6774588814ee9ef6ffd4ada39e7add7399f13aae7e3be",
+        "bytes": 36469
+      },
+      "stamp": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/san/r1/result-stamped.json",
+        "sha256": "eabcef46f55819021282a075709a7dfde99feddad0a85870d677f242589fe72a",
+        "bytes": 36926
+      },
+      "xml": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/san/r1/normal-fresh-positive-main.xml",
+        "sha256": "39d6d272f36e152ad4f497b9df5c6261fe3712451c7579c5808c0218b420cbfd",
+        "bytes": 846
+      },
+      "seconds": 88.394,
+      "commands": 6,
+      "normal_Qt_rows": 1,
+      "ELFs": 1,
+      "archives": 16
+    }
+  },
+  "actual_handback": {
+    "receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/actual-handback-r3/result.json",
+      "sha256": "36813e4cdf232bfcce8e465dc5fe601814f3adf63cb144e96e33bd2fcff7c785",
+      "bytes": 58287
+    },
+    "source_association": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/actual-handback-r3/committed-source-association.json",
+      "sha256": "be2943c51ecf164eae50045b8127b1e389491f4834c943050807b29b4b97fb0a",
+      "bytes": 1937
+    },
+    "public_report": {
+      "bytes": 824,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/actual-handback-r3/original-state-handback.json",
+      "sha256": "40a6bf4e4605ded6f359a0b8517aec4aa0e2b89799b28e9b46de52691051f845"
+    },
+    "returned_primary": {
+      "bytes": 984,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r3/actual-handback-r3/original-returned-state.dat",
+      "sha256": "c4a74e484fbb265a1c8d0e926738ac33a7fcd4ea30d185262fc055085cfe4981"
+    },
+    "seconds": 9.269,
+    "commands": 4,
+    "javac": 1,
+    "JVM": 1,
+    "scsrc": 1,
+    "cache_before_after": 4294967298,
+    "returned_SID_dictionary_key_order_observed": [
+      "native_original_handback",
+      "s"
+    ],
+    "actual_dictionary_values_exact_lists_ordered": true,
+    "raw_info_and_entire_resume_unchanged": true,
+    "exact_previous_primary_backup_recorded_before_cleanup": true,
+    "immutable_profile_file_pins_match_before_Java": true,
+    "scoped_cleanup_receipt_and_actual_absence": true
+  },
+  "verified": {
+    "all_spec_inputs_dependencies_images_archives_and_logs_rehashed": true,
+    "actual_macro_nm_final_link_roles_checked": true,
+    "normal_Qt_1row_per_lane_and_4_actual_exit0_markers_checked": true,
+    "current_Original_and_SDK_unchanged": true,
+    "all_current_source_files_match_approved_and_both_runtime_maps": true,
+    "no_new_detected_SAN_failure": true
+  },
+  "Original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "SDK_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "preserved_failures": {
+    "r1": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort/actual-handback-r1/result.json",
+      "sha256": "d402d86ce0a5c4ee9882ebac058ad5eb287e415fd960f47c7c9cc7f6f6df2efd",
+      "bytes": 39185
+    },
+    "r2": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r2/actual-handback-r2/result.json",
+      "sha256": "dd09710ecaa765f310da5cd79d85ee2d0b1007bcbfcd8b94adc5b6c78f6ab4a1",
+      "bytes": 51121
+    }
+  },
+  "blocking_findings": [],
+  "limits": [
+    "Public Factory state with null DownloadManager: genuine getters, map setter and save only; changed scrape-cache setter remains outside supported managerless scope after actual r1 NPE.",
+    "Single actual GCC retained Native fixture handback; SAN covers normal fresh positive test, not a second Java handback.",
+    "Private/class file hashes were recorded before cleanup; removed files are not claimed rehashed after cleanup.",
+    "Original startup warnings/internal reflective attempt are not evidence of zero class initialization; actual network constraint/control was reused without rerun.",
+    "No full DownloadManager restore, SubscriptionManager callback, prepareDownload, scheduler, arbitrary profile or whole-state-byte parity claim."
+  ]
+}

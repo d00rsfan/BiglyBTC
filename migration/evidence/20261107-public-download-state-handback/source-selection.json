@@ -1,0 +1,48 @@
+{
+  "schema": "BiglyBTC.PublicStateHandbackSourceSelection.V1",
+  "implementation_commit": "af45fbab82d3e4f7e3c438ae06aea4e5d0e2bf2f",
+  "native_tree": "652fb06a7908f99aa528cb9bea09c80093d3c2af",
+  "Native_selected_source": {
+    "preview/native/tests/subscription_acquisition_bridge_tests.cpp": {
+      "sha256": "0fe70cc9002e937e2227c70645c979145c3f7374c8255cf1c98d6b8e0bb4d7c0",
+      "scope": "Existing test TU only; no production/CMake change."
+    }
+  },
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "Original_helper": {
+    "file": "OriginalDownloadStateHandback.java",
+    "sha256": "d76d6d895cdaaa02151e488b1a2f0e09dfac4e87ba47fa8f7e8ac657bf4dc65c",
+    "public_class": "OriginalDownloadStateHandback"
+  },
+  "CoreJar_sha256": "aec655f549167e22178a75f81e4bbc146a34192a2ff90278d74d98c304d2aec6",
+  "SDK_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "qualified_socket_constraint_sha256": "82970c60379d6076e85e0c77c7f0de0180d3286b652bdfdb24297dc4a895ec79",
+  "carried_constraint_control_receipt_sha256": "50ea6b211115602560a03f0e7fce3cce40346ab2b5fe9032d2b51c454fafd854",
+  "constraint_control_rerun": false,
+  "SourceMap_file": "source-map.json",
+  "Root_source_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/native-candidate/amendments/resume-root-and-standard-Qt-main/amendments/managerless-cache-readonly/amendments/semantic-dictionary-order/root-source-review.json",
+    "bytes": 986,
+    "sha256": "6015dbcdc29e3d8b72f7f4d22952adabf4be16a64ab73bee0231aef8503207c8"
+  },
+  "recorded_before_cleanup_classes": [
+    {
+      "bytes": 11739,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/owned-native-fixture/classes/OriginalDownloadStateHandback.class",
+      "sha256": "969e780d13706259a7f5f0b27b9e19979a9ab4651d23e5a7156743a3f49a1523"
+    }
+  ],
+  "preserved_prior_failures": {
+    "r1": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort/actual-handback-r1/result.json",
+      "sha256": "d402d86ce0a5c4ee9882ebac058ad5eb287e415fd960f47c7c9cc7f6f6df2efd",
+      "bytes": 39185
+    },
+    "r2": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/original-state-handback/cohort-r2/actual-handback-r2/result.json",
+      "sha256": "dd09710ecaa765f310da5cd79d85ee2d0b1007bcbfcd8b94adc5b6c78f6ab4a1",
+      "bytes": 51121
+    }
+  },
+  "portable_scope": "Raw receipt paths record original execution locations; bundled files and their hashes retain the bounded acceptance evidence. Removed private files/classes are historical pre-cleanup records, not live inputs."
+}

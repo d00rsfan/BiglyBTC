@@ -1,0 +1,5 @@
+A managerless public state API edge case was observed on Original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f with JDK17 (release SHA256 ec61e7fb37ddd8368f2f07e3c75e23ca1e51e544af5b39c5c297f5cee9917606).
+
+DownloadManagerStateFactory.getDownloadState(a genuine Native-produced pure-v1 torrent) returned a state whose getDownloadManager() was null. Public map/cache getters succeeded. Changing AT_SCRAPE_CACHE from4294967298 to4294967299 using the actual public constant threw NullPointerException in DownloadManagerStateImpl.setLongAttribute, line2864: download_manager.getGlobalManager(). The attributes.put occurs before that dereference. The helper consequently never reached save or Native return; its private fixture was cleaned.
+
+Evidence: original-state-handback/cohort/actual-handback-r1/result.json and original-handback.log. This is a managerless factory/property observation, not a normal-application or fully attached DownloadManager reproduction, and no fix is proposed. The independent follow-up keeps cache unchanged and tests public map mutation/save only.
