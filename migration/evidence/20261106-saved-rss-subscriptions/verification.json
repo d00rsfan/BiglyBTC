@@ -1,0 +1,288 @@
+{
+  "schema": "BIGLYBTC_SAVED_RSS_SUBSCRIPTIONS_PUBLICATION_VERIFICATION_V1",
+  "status": "PASS_CPP_AND_SEPARATE_ORIGINAL_PUBLIC_CODEC_CRYPTO_HEALTHY_HANDBACK_ROOT_REVIEW_PENDING",
+  "implementation_commit": "99f91cb3661544d47a3c9e79227315134b726bb8",
+  "native_tree": "97f6c863cab284de2188d610f1f51d59cb744676",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "native_basis_commit": "93f1317ce174d578a30f38cfc2f0657acd4dba4e",
+  "native_basis_tree": "519aacb4fb6ead6ca701e09439bc0ca191271f9c",
+  "source_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/source-candidate/manifest.json",
+    "sha256": "903b4e220180284b1faaf42210b29672170c0e69118d77b48a17a6a63436164e",
+    "bytes": 25729
+  },
+  "required_child_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/source-candidate/amendments/remove-old-subscriptions-placeholder/manifest.json",
+    "sha256": "44b473e9b38d300a86ff1c0fe378515f194057db146b1bffa4e4a1b7ab691df8",
+    "bytes": 1145
+  },
+  "source_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/final-source-review.json",
+    "sha256": "7bb099b4074a667dfd4dfb7693ccfd727dc04308500ef9539f6af8794cf74057",
+    "bytes": 27139
+  },
+  "spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r4/spec.json",
+    "sha256": "8813bae0dea109f8cfcc0bc5712a9719877e010ff5fe2d0272eb1b77f740f8c0",
+    "bytes": 85387
+  },
+  "source_map": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r4/source.json",
+    "sha256": "3bb95c22ba690774a039891e9c05be892bb0d9e96f7e0caae62b5360736a0802",
+    "bytes": 174222
+  },
+  "canonical_changed_leaves": 37,
+  "source_file_count": 1382,
+  "independent_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/independent-acceptance-review.json",
+    "sha256": "1c88ab682e1b79b9a4270254f434702f6d187e3a75971de7596e02360316c7b1",
+    "bytes": 20035
+  },
+  "raw_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r4/gcc/r1/result-raw.json",
+      "sha256": "dd39cbba84df432ddb2cf1b91f099178964cce944eb9f4e36caec1bfabed7c40",
+      "bytes": 85764
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r4/san/r1/result-raw.json",
+      "sha256": "74bdfbbd4c4b3729ad8b02def400d333be6219129def23486455df51c2738a2c",
+      "bytes": 86605
+    }
+  },
+  "stamped_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r4/gcc/r1/result-stamped.json",
+      "sha256": "5de14c4aa74af49d4b2254958a75efc68ca504cfdc4ad6d690613d71d47b602b",
+      "bytes": 86140
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r4/san/r1/result-stamped.json",
+      "sha256": "11db81503068c895c965122ffef58a9ca7784177689e4670424c3aacf8a1ca70",
+      "bytes": 86981
+    }
+  },
+  "coverage_per_lane": {
+    "fresh_groups": 5,
+    "fresh_methods": 20,
+    "fresh_cases": 25,
+    "carried_HTTP_groups": 2,
+    "carried_HTTP_methods": 9,
+    "carried_HTTP_cases": 31,
+    "actual_current_commands": 15,
+    "ELF_images": 8,
+    "archives": 11,
+    "actual_inputs": 195,
+    "actual_dependencies": 15,
+    "carried_native_source_closure_files": 309,
+    "Host_compile_variants": 2,
+    "provider_compile_variants": 2,
+    "actual_final_link_checks": 5
+  },
+  "elapsed_seconds": {
+    "gcc": 110.027,
+    "san": 258.572
+  },
+  "carried_HTTP_proofs": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r4/gcc-carried-proof.json",
+      "sha256": "f77c0aeccf2f07b4c7a7db3a44954deb16977f4a6ee96f8c0217726bfc1236ec",
+      "bytes": 57987
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r4/san-carried-proof.json",
+      "sha256": "3d54673b7e80606f0cd2caac79e7a69ca96b1b1540714bad93da6603da0fbe8a",
+      "bytes": 58010
+    }
+  },
+  "failed_aggregates_preserved": {
+    "gcc": {
+      "cohort": {
+        "receipt": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort/gcc/r1/result-raw.json",
+          "sha256": "fd8b7384cfc74edd61f33bb2d41cf249d080c049c35e8171d2f33eb55f556f34",
+          "bytes": 22492
+        },
+        "status": "FAIL",
+        "runtime_credit": "none"
+      },
+      "cohort-r2": {
+        "receipt": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r2/gcc/r1/result-raw.json",
+          "sha256": "0c87ee49a8382b9504c49d02220cf864fb5ec12d9a9427672509d4e10e9a6ef7",
+          "bytes": 24181
+        },
+        "status": "FAIL",
+        "runtime_credit": "none"
+      },
+      "cohort-r3": {
+        "receipt": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r3/gcc/r1/result-raw.json",
+          "sha256": "66329d39a39617049052606dccef4d71aa2c2106cba96d98af88129b325dfbf1",
+          "bytes": 70577
+        },
+        "status": "FAIL",
+        "runtime_credit": "only explicitly carried two passing HTTP groups from r3"
+      }
+    },
+    "san": {
+      "cohort": {
+        "receipt": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort/san/r1/result-raw.json",
+          "sha256": "f0eca11ddb51f9258c51e3d6cb187b8d08214d3b255e535eb905d96b7269ca9b",
+          "bytes": 22493
+        },
+        "status": "FAIL",
+        "runtime_credit": "none"
+      },
+      "cohort-r2": {
+        "receipt": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r2/san/r1/result-raw.json",
+          "sha256": "f65a94a8baff98c83e2b892497a58ebf40b99646c4a21dc31c73e046e0a1deb5",
+          "bytes": 24181
+        },
+        "status": "FAIL",
+        "runtime_credit": "none"
+      },
+      "cohort-r3": {
+        "receipt": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r3/san/r1/result-raw.json",
+          "sha256": "e3686a1ca7121919d0a497c6565222d89516459ff959440c41934c26b02cb2af",
+          "bytes": 71416
+        },
+        "status": "FAIL",
+        "runtime_credit": "only explicitly carried two passing HTTP groups from r3"
+      }
+    }
+  },
+  "original_healthy_codec": {
+    "status": "PASS_ORIGINAL_PUBLIC_SUBSCRIPTION_CODEC_CRYPTO_FILE_HANDOFF",
+    "elapsed_seconds": 3.723,
+    "actual_commands": 6,
+    "qualified_by_CPP_review": false,
+    "protocol": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/qualified-adapter-runner-and-wall-bounded-state/manifest.json",
+      "sha256": "bd803ee28ccdc430eef3477853f8b3d46f93e851ca5052cdd85e6a8fc168351d",
+      "bytes": 5741
+    },
+    "constraint_source_manifest": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/manifest.json",
+      "sha256": "a61a635d41fb447e57138f8b182d4e7b502c8aa5cd22577fd6eabac29fbb1539",
+      "bytes": 5276
+    },
+    "constraint_source_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/source-review.json",
+      "sha256": "862dbbd47ad7db30bfa3c0061baa1b908829ba0b4e21a9b8fd7a2396f930a3c5",
+      "bytes": 5866
+    },
+    "binding": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/activation-20261106/binding-owned-pair-r2.json",
+      "sha256": "876952be2c443cd87f46795b48d42b690996c0d232187605ba7f52e774655e64",
+      "bytes": 3198
+    },
+    "actual_final_receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/result.json",
+      "sha256": "682e3dc8804923ec9cd3440a0ebbab40a407773178750629acee3995daadb516",
+      "bytes": 11713
+    },
+    "independent_actual_review": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/independent-handback-review.json",
+      "sha256": "6c8bb30efbd81bd4738f9ceef079662d2b4d470df3123b2bf0c5ac147308e7e5",
+      "bytes": 14130
+    },
+    "qualified_constraint": {
+      "image": {
+        "bytes": 17120,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+        "sha256": "82970c60379d6076e85e0c77c7f0de0180d3286b652bdfdb24297dc4a895ec79"
+      },
+      "qualification_receipt": {
+        "bytes": 2108,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/qualification-receipt.json",
+        "sha256": "50ea6b211115602560a03f0e7fce3cce40346ab2b5fe9032d2b51c454fafd854"
+      },
+      "source": {
+        "bytes": 9107,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/source/socket_deny_exec.c",
+        "sha256": "7a388b8ba7d41010c1a8af43a9e6b64652c2facb92a53820fdfcc203355c997e"
+      },
+      "status": "ROOT_QUALIFIED_OWNED_UNIX_STREAM_PAIR_CONSTRAINT"
+    },
+    "failed_r1_receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r1-20261106/result.json",
+      "sha256": "fe5478473c82c847ca75ed4d65c88adca6dbbf90b26295d824f6db85f2a12756",
+      "bytes": 2474
+    },
+    "r1_failure_diagnosis": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/startup-diagnostic-20261106/diagnosis.json",
+      "sha256": "cd3a76877e0ae47baa5dd4cd42ba2fda9e7030ee60822015d8b2608bb05534de",
+      "bytes": 3401
+    },
+    "Core_start_or_UI": false,
+    "Original_subscription_manager_history_runtime_qualified": false,
+    "healthy_primary_files_only": true,
+    "private_temporary_root_removed": true,
+    "ephemeral_digest_records_not_retained_bytes": {
+      "class_images": 1,
+      "frozen_generated_inputs": 5,
+      "final_profile_digests": 11
+    },
+    "root_must_finish_before_publication": false
+  },
+  "sdk_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "sdk_record": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/source-build-record-discovery-final.json",
+    "sha256": "e213ba3227a464fcb8eab1c7db3e3adef720f482fd352bb87ec12c3f27ec1e92",
+    "bytes": 192696
+  },
+  "source_corrections": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/build-correction-r2/source-review.json",
+      "sha256": "e798e5b3d3e5b463347c411fb3b215342630ae0e7e626addd40f1851d94184b3",
+      "bytes": 2838
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/build-correction-r3/source-review.json",
+      "sha256": "160515c8f82c6b37d83547bb7e119ce9e0096c480be71c952f1834a52ae9b96f",
+      "bytes": 2476
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/runtime-service-correction/source-review.json",
+      "sha256": "6f25c706029b65a67e7516c1781b3eb519a8b3fef124b7b7376585a5711894e8",
+      "bytes": 6840
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/runtime-bridge-correction/source-review.json",
+      "sha256": "c8ca2378df6411f79444327c64842e579c548b8240b8195ec5c1219a29927501",
+      "bytes": 2602
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/runtime-bridge-correction/root-source-review.json",
+      "sha256": "24dd71e311f9cbd5d929da86bc6933bdce412b59bae193739bd7e6a1fbfb197f",
+      "bytes": 2827
+    }
+  ],
+  "visual_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r4/visual-review.json",
+    "sha256": "6c6a4a682a93b95c7278d1649ec0f26e1d2b02044a4a0e44d7fa402bfdb5852d",
+    "bytes": 1114
+  },
+  "selected_GCC_capture": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r4/gcc/r1/subscriptions-window.png",
+    "sha256": "49ac90bc23b0e8dbc7d07f28d1aa53adb7f03b137a9eb2c292880963ba4294eb",
+    "bytes": 49741
+  },
+  "SAN_capture_reference_only": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r4/san/r1/subscriptions-window.png",
+    "sha256": "49ac90bc23b0e8dbc7d07f28d1aa53adb7f03b137a9eb2c292880963ba4294eb",
+    "bytes": 49741
+  },
+  "capture_bytes_equal": true,
+  "component_states_changed": false,
+  "global_integrated_baselines_changed": false,
+  "full_P08_complete": false,
+  "full_P07_complete": false,
+  "default_distribution_promoted": false,
+  "historical_rawlogs_or_source_maps_copied": false
+}

@@ -1,0 +1,213 @@
+{
+  "schema": "BIGLYBTC_ORIGINAL_PUBLIC_SUBSCRIPTION_CODEC_CRYPTO_HEALTHY_HANDBACK_REVIEW_V1",
+  "status": "PASS_ORIGINAL_PUBLIC_SUBSCRIPTION_CODEC_CRYPTO_HEALTHY_HANDBACK_REVIEW",
+  "implementation_commit": "99f91cb3661544d47a3c9e79227315134b726bb8",
+  "native_tree": "97f6c863cab284de2188d610f1f51d59cb744676",
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "core_jar": {
+    "path": "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+    "bytes": 12774623,
+    "sha256": "aec655f549167e22178a75f81e4bbc146a34192a2ff90278d74d98c304d2aec6"
+  },
+  "actual_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/result.json",
+    "sha256": "682e3dc8804923ec9cd3440a0ebbab40a407773178750629acee3995daadb516",
+    "bytes": 11713
+  },
+  "binding": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/activation-20261106/binding-owned-pair-r2.json",
+    "sha256": "876952be2c443cd87f46795b48d42b690996c0d232187605ba7f52e774655e64",
+    "bytes": 3198
+  },
+  "runner": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/source/run.py",
+    "sha256": "270e42eb5297d7109fa23140721d1326f8d6370b41afbd91b6204bf8feb51d18",
+    "bytes": 16992
+  },
+  "selected_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/source-selection.json",
+    "sha256": "449e9bb28e6e1813d5b08b0b0e8f261ad6503f0e174cfb084ba6a0b53108e935",
+    "bytes": 3856
+  },
+  "helper": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/qualified-adapter-runner-and-wall-bounded-state/source/SubscriptionCodecOracle.java",
+    "bytes": 20290,
+    "sha256": "cb899673ebc9fe9a28b6dbe22d4a6f2616a2fde6b9c879c9f5d049d359b0c7c9"
+  },
+  "protocol": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/qualified-adapter-runner-and-wall-bounded-state/source/protocol.json",
+    "bytes": 5129,
+    "sha256": "c29c316c1da2ebb83900b338a6c68c44c75ea8f587570490d73588c7b05127b5"
+  },
+  "oracle_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/manifest.json",
+    "sha256": "f68099a26c1f494603c8a2215b34797f5cbe15f411ffd3dbabc68c7735fd60e3",
+    "bytes": 1916
+  },
+  "refined_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/qualified-adapter-runner-and-wall-bounded-state/manifest.json",
+    "sha256": "bd803ee28ccdc430eef3477853f8b3d46f93e851ca5052cdd85e6a8fc168351d",
+    "bytes": 5741
+  },
+  "constraint_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/manifest.json",
+    "sha256": "a61a635d41fb447e57138f8b182d4e7b502c8aa5cd22577fd6eabac29fbb1539",
+    "bytes": 5276
+  },
+  "constraint_source_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/source-review.json",
+    "sha256": "862dbbd47ad7db30bfa3c0061baa1b908829ba0b4e21a9b8fd7a2396f930a3c5",
+    "bytes": 5866
+  },
+  "qualified_constraint": {
+    "image": {
+      "bytes": 17120,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+      "sha256": "82970c60379d6076e85e0c77c7f0de0180d3286b652bdfdb24297dc4a895ec79"
+    },
+    "qualification_receipt": {
+      "bytes": 2108,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/qualification-receipt.json",
+      "sha256": "50ea6b211115602560a03f0e7fce3cce40346ab2b5fe9032d2b51c454fafd854"
+    },
+    "source": {
+      "bytes": 9107,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/source/socket_deny_exec.c",
+      "sha256": "7a388b8ba7d41010c1a8af43a9e6b64652c2facb92a53820fdfcc203355c997e"
+    },
+    "status": "ROOT_QUALIFIED_OWNED_UNIX_STREAM_PAIR_CONSTRAINT"
+  },
+  "Native_adapter": {
+    "image": {
+      "bytes": 1121672,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-subscription-codec-adapter",
+      "sha256": "5b7acf9eccd7b4e871e77b71e84a1eaaa418843f7458c853f6178669fb07ad5c"
+    },
+    "qualification_receipt": {
+      "bytes": 86140,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/cohort-r4/gcc/r1/result-stamped.json",
+      "sha256": "5de14c4aa74af49d4b2254958a75efc68ca504cfdc4ad6d690613d71d47b602b"
+    },
+    "receipt_image_key": "subscription-codec-adapter"
+  },
+  "CPP_acceptance_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/independent-acceptance-review.json",
+    "sha256": "1c88ab682e1b79b9a4270254f434702f6d187e3a75971de7596e02360316c7b1",
+    "bytes": 20035
+  },
+  "elapsed_seconds": 3.723,
+  "actual_commands": 6,
+  "command_receipts": [
+    {
+      "label": "socket-control",
+      "exit_code": 0,
+      "elapsed_seconds": 0.002,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/socket-control.log",
+        "sha256": "a1aac51d106c7aab43d0f2fafcae5582ce2323897592fc26b99988694989d46f",
+        "bytes": 396
+      }
+    },
+    {
+      "label": "compile-original-helper",
+      "exit_code": 0,
+      "elapsed_seconds": 1.716,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/compile-original-helper.log",
+        "sha256": "cddb97d53d72af75aac7d566e5be697bffc863107bac345890a7ab0d1234b970",
+        "bytes": 140
+      }
+    },
+    {
+      "label": "original-emit",
+      "exit_code": 0,
+      "elapsed_seconds": 0.564,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/original-emit.log",
+        "sha256": "f44b946de2ce5809706434684ffc346e33826ac75b3b5335831476e3c288225e",
+        "bytes": 202
+      }
+    },
+    {
+      "label": "native-mark-read-delete",
+      "exit_code": 0,
+      "elapsed_seconds": 0.032,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/native-mark-read-delete.log",
+        "sha256": "e539d2fcee8df0fc1bbf0b1e16db5823962488038e5e06abc6ad85fceeda02bc",
+        "bytes": 189
+      }
+    },
+    {
+      "label": "original-read-native-write-return",
+      "exit_code": 0,
+      "elapsed_seconds": 0.415,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/original-read-native-write-return.log",
+        "sha256": "8fe14fbc56d10e6e84de9fde41769d7b661ea3a03756007c25a73499aa06ea83",
+        "bytes": 197
+      }
+    },
+    {
+      "label": "native-verify-original-return",
+      "exit_code": 0,
+      "elapsed_seconds": 0.016,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/native-verify-original-return.log",
+        "sha256": "05ae1cc8df0aaef2eef842f7f9b7836997ccd88c70bc6b8104cdcc1248e4f111",
+        "bytes": 188
+      }
+    }
+  ],
+  "recorded_class_images": {
+    "SubscriptionCodecOracle.class": "7d1824719d9a3eee8224adb2c8aca1e2f5c9244ffc8473d2635f9145703a67a3"
+  },
+  "frozen_generated_inputs_count": 5,
+  "final_profile_digests_count": 11,
+  "native_wall_bounds": {
+    "before_millis": 1793982506000,
+    "after_millis": 1793982506193
+  },
+  "native_clock_report_sha256": "02de1f960fd2d7f1b2852c1a9d092b52ee20256e25c543649165939c4c1e2705",
+  "observed_deletion_days": [
+    20763,
+    20763
+  ],
+  "temporary_root_removed": true,
+  "failed_first_handoff": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r1-20261106/result.json",
+    "sha256": "fe5478473c82c847ca75ed4d65c88adca6dbbf90b26295d824f6db85f2a12756",
+    "bytes": 2474
+  },
+  "failure_diagnosis": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/startup-diagnostic-20261106/diagnosis.json",
+    "sha256": "cd3a76877e0ae47baa5dd4cd42ba2fda9e7030ee60822015d8b2608bb05534de",
+    "bytes": 3401
+  },
+  "findings": [
+    "All retained manifest/source/selection/tool/Jar/constraint/image/binding/qualification/command-log pins match. Eleven relevant public API class entries are independently hashed from the pinned Original core Jar; helper javac uses the exact selected cb899 source and JDK17 --release17.",
+    "The freshly qualified C image82970 is bound to reviewed source7a388, actual strict-warning C compile, actual control receipt50ea6 and source review862d. The fresh first handback command repeats all denial/owned-pair controls successfully; every subsequent command runs through that exact wrapper. All socket() and external endpoint calls remain denied; only process-owned Unix stream pairs are available.",
+    "Six actual commands all exit0 with null failure: fresh constraint control, one javac, two public-codec JVM invocations and two actual qualified GCC Native adapter invocations; all expected success markers match exact log lines. Total measured time3.723s stays within the unchanged120s guard.",
+    "Original public Vuze/BEncoder/BDecoder/JSON/SHA1/CryptoECC primitives emit and verify two genuine signed ordinary/singleton definitions, a legacy az_version hash-fallback value and signature/tampered-details negative checks. This is explicit public-primitive composition following saved-body format; no protected SubscriptionBody/manager/import runtime is invoked.",
+    "The genuine production Native adapter uses actual public lease/service catalog/results/state APIs, marks read/deletes selected real result keys, closes/releases/reacquires the profile lease while its service wrapper remains alive, and invokes no HTTP check/poll/factory. Original public codecs and healthy FileUtil reads then validate exact allowed changes and unknown values; FileUtil writes an unread return, which Native rereads successfully.",
+    "Both signed body digests match the frozen post-emit inputs through final profile digests. Normal and singleton SID/report rows are unique, both key pairs independently match SHA1prefix10(engineID:name) for exact Keep μ/Delete Ω strings. Opaque bencode/JSON/config/history and old tombstones are checked by the executed helpers; current delete removes known result_json/tz while retaining prescribed fields.",
+    "Both observed dls values20763 lie inside their actual Native before/after UTC-day intervals and the independent runner1793982506000..1793982506193ms bounds. The copied clock-report value independently reconstructs its exact Qt-indented JSON SHA25602de1f96 and matches the immutable generated-input digest. No clock was injected into production APIs.",
+    "One compiled helper class digest, five frozen generated-input hashes and eleven final profile hashes were recorded before deliberate private-root removal. Both body digest crosschecks and report reconstruction validate retained associations. The removed class/profile bytes cannot be independently rehashed afterwards; acceptance relies on pinned runner guards plus successful executed helper checks, rather than claiming retained ephemeral artifacts.",
+    "All six owned subprocess commands were waited/joined by the runner; private root /tmp/biglybtc-subscriptions-oracle-7bszeoka is actually absent. Final profile inventory contains genuine .bak files and no .saving or pending Native intent; backups were preserved. Healthy primary-file exchange grants no crash-recovery/cross-file atomicity claim.",
+    "The first handback remains FAIL at the strict-wrapper javac FileDispatcher socketpair denial, with its exact descriptor diagnosis/host trace retained. Its failed subjects get no successful handback credit. Protected Original HEADcb8/indexac456 and current Native tree97f6 remain unchanged."
+  ],
+  "scope_limits": [
+    "No Core.start,Original subscription manager/history reconciliation/scheduler/acquisition runtime or UI was exercised; the helper composes public value/codec/crypto/FileUtil APIs only.",
+    "No real Original user profile,Internet endpoint,DNS/HTTP fetch,production route,Native subscription transport test or full P08/P07/default-distribution claim follows.",
+    "Private generated keys/fixtures/classes were intentionally removed; this review adds only compact receipt/review metadata and reruns no subject."
+  ],
+  "blocking_defects": [],
+  "reviewer_execution": {
+    "C_compiler": false,
+    "JVM_or_javac": false,
+    "wrapper_selftest": false,
+    "Native_adapter": false,
+    "network": false,
+    "Native_or_cache_or_Git_writes": false
+  }
+}

@@ -1,0 +1,205 @@
+{
+  "status": "PASS_ORIGINAL_PUBLIC_SUBSCRIPTION_CODEC_CRYPTO_FILE_HANDOFF",
+  "scope": "public Original codec/crypto healthy-file handback only",
+  "implementation_commit": "99f91cb3661544d47a3c9e79227315134b726bb8",
+  "native_tree": "97f6c863cab284de2188d610f1f51d59cb744676",
+  "binding_sha256": "876952be2c443cd87f46795b48d42b690996c0d232187605ba7f52e774655e64",
+  "source_selection_sha256": "449e9bb28e6e1813d5b08b0b0e8f261ad6503f0e174cfb084ba6a0b53108e935",
+  "socket_constraint": {
+    "image": {
+      "bytes": 17120,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+      "sha256": "82970c60379d6076e85e0c77c7f0de0180d3286b652bdfdb24297dc4a895ec79"
+    },
+    "qualification_receipt": {
+      "bytes": 2108,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/qualification-receipt.json",
+      "sha256": "50ea6b211115602560a03f0e7fce3cce40346ab2b5fe9032d2b51c454fafd854"
+    },
+    "source": {
+      "bytes": 9107,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/source/socket_deny_exec.c",
+      "sha256": "7a388b8ba7d41010c1a8af43a9e6b64652c2facb92a53820fdfcc203355c997e"
+    },
+    "status": "ROOT_QUALIFIED_OWNED_UNIX_STREAM_PAIR_CONSTRAINT"
+  },
+  "commands": [
+    {
+      "label": "socket-control",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.002,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/socket-control.log",
+      "log_sha256": "a1aac51d106c7aab43d0f2fafcae5582ce2323897592fc26b99988694989d46f"
+    },
+    {
+      "label": "compile-original-helper",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+        "/usr/bin/nice",
+        "-n",
+        "5",
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+        "-J-XX:ActiveProcessorCount=1",
+        "--release",
+        "17",
+        "-encoding",
+        "UTF-8",
+        "-cp",
+        "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "-d",
+        "/tmp/biglybtc-subscriptions-oracle-7bszeoka/classes",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/qualified-adapter-runner-and-wall-bounded-state/source/SubscriptionCodecOracle.java"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.716,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/compile-original-helper.log",
+      "log_sha256": "cddb97d53d72af75aac7d566e5be697bffc863107bac345890a7ab0d1234b970"
+    },
+    {
+      "label": "original-emit",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=1",
+        "-Duser.home=/tmp/biglybtc-subscriptions-oracle-7bszeoka/home",
+        "-Djava.io.tmpdir=/tmp/biglybtc-subscriptions-oracle-7bszeoka/tmp",
+        "-Dazureus.config.path=/tmp/biglybtc-subscriptions-oracle-7bszeoka/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-subscriptions-oracle-7bszeoka/install",
+        "-Djava.awt.headless=true",
+        "-cp",
+        "/tmp/biglybtc-subscriptions-oracle-7bszeoka/classes:/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "SubscriptionCodecOracle",
+        "emit",
+        "/tmp/biglybtc-subscriptions-oracle-7bszeoka"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.564,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/original-emit.log",
+      "log_sha256": "f44b946de2ce5809706434684ffc346e33826ac75b3b5335831476e3c288225e"
+    },
+    {
+      "label": "native-mark-read-delete",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-subscription-codec-adapter",
+        "--oracle-mutate-mark-read-delete",
+        "/tmp/biglybtc-subscriptions-oracle-7bszeoka"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.032,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/native-mark-read-delete.log",
+      "log_sha256": "e539d2fcee8df0fc1bbf0b1e16db5823962488038e5e06abc6ad85fceeda02bc"
+    },
+    {
+      "label": "original-read-native-write-return",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=1",
+        "-Duser.home=/tmp/biglybtc-subscriptions-oracle-7bszeoka/home",
+        "-Djava.io.tmpdir=/tmp/biglybtc-subscriptions-oracle-7bszeoka/tmp",
+        "-Dazureus.config.path=/tmp/biglybtc-subscriptions-oracle-7bszeoka/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-subscriptions-oracle-7bszeoka/install",
+        "-Djava.awt.headless=true",
+        "-cp",
+        "/tmp/biglybtc-subscriptions-oracle-7bszeoka/classes:/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "-Dbiglybtc.oracle.native.before.epochmillis=1793982506000",
+        "-Dbiglybtc.oracle.native.after.epochmillis=1793982506193",
+        "SubscriptionCodecOracle",
+        "check-native-write-return",
+        "/tmp/biglybtc-subscriptions-oracle-7bszeoka"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.415,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/original-read-native-write-return.log",
+      "log_sha256": "8fe14fbc56d10e6e84de9fde41769d7b661ea3a03756007c25a73499aa06ea83"
+    },
+    {
+      "label": "native-verify-original-return",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-subscription-codec-adapter",
+        "--oracle-verify-original-return",
+        "/tmp/biglybtc-subscriptions-oracle-7bszeoka"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.016,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/actual-handback-r2-20261106/native-verify-original-return.log",
+      "log_sha256": "05ae1cc8df0aaef2eef842f7f9b7836997ccd88c70bc6b8104cdcc1248e4f111"
+    }
+  ],
+  "Core_start_or_UI": false,
+  "Original_subscription_history_runtime_claimed": false,
+  "class_images": {
+    "SubscriptionCodecOracle.class": "7d1824719d9a3eee8224adb2c8aca1e2f5c9244ffc8473d2635f9145703a67a3"
+  },
+  "frozen_generated_inputs": {
+    "/tmp/biglybtc-subscriptions-oracle-7bszeoka/oracle-state.bencode": "e39a0f00efbc02bf24bfcdd33fb317fc1282bb2402618e79332be1be75abd790",
+    "/tmp/biglybtc-subscriptions-oracle-7bszeoka/legacy-az-fallback.biglybt": "0cf7306a6385674ab2bdd560fe3d80a4e07c9511c3d684659cec475455a8459a",
+    "/tmp/biglybtc-subscriptions-oracle-7bszeoka/profile/subs/A5FC1A69B9DEC77CE533.biglybt": "2aa9618bac0fbc7608d90d7d2be9254bacfd73d0410d82c5abd3b2ab536eae35",
+    "/tmp/biglybtc-subscriptions-oracle-7bszeoka/profile/subs/EA300CF8ABD323068E33.biglybt": "1dc4930ca5670f898ab80fc30054007202e8e0286040b7a1543ce522900e0c90",
+    "/tmp/biglybtc-subscriptions-oracle-7bszeoka/native-delete-day-bounds.json": "02de1f960fd2d7f1b2852c1a9d092b52ee20256e25c543649165939c4c1e2705"
+  },
+  "independent_native_wall_bounds": {
+    "before_millis": 1793982506000,
+    "after_millis": 1793982506193
+  },
+  "native_clock_report": {
+    "sha256": "02de1f960fd2d7f1b2852c1a9d092b52ee20256e25c543649165939c4c1e2705",
+    "value": {
+      "after_millis": 1793982506098,
+      "before_millis": 1793982506092,
+      "body_or_private_key_rebuilt": false,
+      "check_poll_or_factory_invoked": false,
+      "keys_from_actual_public_results": true,
+      "rows": [
+        {
+          "after_millis": 1793982506095,
+          "after_utc_day": 20763,
+          "before_millis": 1793982506094,
+          "before_utc_day": 20763,
+          "delete_key_hex": "39E2069ABFB87759BF51",
+          "keep_key_hex": "AB93CEB230B692246147",
+          "observed_dls": 20763,
+          "sid_hex": "A5FC1A69B9DEC77CE533"
+        },
+        {
+          "after_millis": 1793982506097,
+          "after_utc_day": 20763,
+          "before_millis": 1793982506096,
+          "before_utc_day": 20763,
+          "delete_key_hex": "9B8C101C346C732D4D56",
+          "keep_key_hex": "85F9A07BB5530B6B72B6",
+          "observed_dls": 20763,
+          "sid_hex": "EA300CF8ABD323068E33"
+        }
+      ],
+      "schema": "BIGLYBTC_SUBSCRIPTION_NATIVE_DELETE_DAY_BOUNDS_V1"
+    }
+  },
+  "final_profile_digests": {
+    "profile/.azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile/.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile/biglybt.config": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578",
+    "profile/subs/A5FC1A69B9DEC77CE533.biglybt": "2aa9618bac0fbc7608d90d7d2be9254bacfd73d0410d82c5abd3b2ab536eae35",
+    "profile/subs/A5FC1A69B9DEC77CE533.results": "08778869157aa20a9fce0f54b04fc16bbfc84daaeaaced6ee70626bbdeacfdce",
+    "profile/subs/A5FC1A69B9DEC77CE533.results.bak": "3776e0492138ab270864a675bd9acdc4bf6383ca21b465ccd8abd12ae35b6694",
+    "profile/subs/EA300CF8ABD323068E33.biglybt": "1dc4930ca5670f898ab80fc30054007202e8e0286040b7a1543ce522900e0c90",
+    "profile/subs/EA300CF8ABD323068E33.results": "bccddedbee0a3793ebc7f760cf8a47cfc37f99650458758a7849cd92cf3500ea",
+    "profile/subs/EA300CF8ABD323068E33.results.bak": "9e9fe3a7ae162301e27fac39879761079054fdbd3428e5cdecf6b8f36bd01ee9",
+    "profile/subscriptions.config": "5b24d683f6d7a6ae8718c0ab8f46c03164cd8549dd88b2900db8db7e69b64982",
+    "profile/subscriptions.config.bak": "dba7f2b17de29c171b732091c6a0128a76aefc2be97b2d9ca5010b2ac9b1757d"
+  },
+  "private_temporary_root_removed": true,
+  "elapsed_seconds": 3.723
+}
