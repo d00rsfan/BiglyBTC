@@ -115,6 +115,7 @@ void absent(int directory, const std::string& name) {
   require(!named(directory, name), ErrorCode::Conflict, "An intake target or recovery pathname already exists");
 }
 void noAcquisitionIntent(const ProfileLease& lease) {
+  require(lease.valid(), ErrorCode::UnsafePath, "Torrent intake requires a held profile lease");
   for(const auto* leaf:{AcquisitionIntent,AcquisitionIntentSaving,AcquisitionIntentBackup}){absent(lease.directoryHandle(),leaf);}
 }
 void acquisitionOwnerCurrent(const ProfileLease& lease,std::string_view expected) {
