@@ -1,0 +1,202 @@
+{
+  "approval": {
+    "bytes": 1269,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/approval.json",
+    "sha256": "5d6d21091dbea38d9a1d167eacd6de48b8ad53d55308aa131efeb1a60569d327"
+  },
+  "coverage_per_lane": {
+    "Qt_groups": 2,
+    "actual_test_data_rows_excluding_four_init_cleanup": 36,
+    "archives": 5,
+    "commands": 6,
+    "deadline_rows": 1,
+    "executables": 1,
+    "fixture_macro_variants": 1,
+    "main_rows": 35,
+    "methods": 13,
+    "provider_compile_variants": 2
+  },
+  "default_distribution_promoted": false,
+  "earlier_failed_core_probes": {
+    "transport-cohort-r2/core-config/r1/result.json": {
+      "commands": [
+        {
+          "argv": [
+            "nice",
+            "-n",
+            "5",
+            "cmake",
+            "-S",
+            "/home/yurii/Java/BiglyBTC/preview/native",
+            "-B",
+            "/home/yurii/Java/BiglyBT/build/.rss-cmake-6pclu78u",
+            "-G",
+            "Ninja",
+            "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+            "-DBIGLYBTC_LOCAL_ENGINE=OFF",
+            "-DBIGLYBTC_DESKTOP=OFF"
+          ],
+          "cwd": "/home/yurii/Java/BiglyBT",
+          "elapsed_seconds": 0.916,
+          "exit_code": 1,
+          "failure": null,
+          "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r2/core-config/r1/configure.log",
+          "log_sha256": "df00e1ca09f8b3df21fb52cd97f917be2336965e62230850f39cc69275a864c0"
+        }
+      ],
+      "configuration_only": true,
+      "failure": "AssertionError('Command failed; full diagnostics: /home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r2/core-config/r1/configure.log')",
+      "provider_CPP_or_test_credit": false,
+      "receipt": {
+        "bytes": 1667,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r2/core-config/r1/result.json",
+        "sha256": "295bdf94c77668c47c2edda761951bee8505158d9e1445601810e823391093f4"
+      },
+      "status": "FAIL",
+      "temporary_cache_removed": true
+    },
+    "transport-cohort/core-config/r1/result.json": {
+      "commands": [
+        {
+          "argv": [
+            "nice",
+            "-n",
+            "5",
+            "cmake",
+            "-S",
+            "/home/yurii/Java/BiglyBTC/preview/native",
+            "-B",
+            "/home/yurii/Java/BiglyBT/build/.rss-cmake-_f4qcefa",
+            "-G",
+            "Ninja",
+            "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+            "-DBIGLYBTC_LOCAL_ENGINE=OFF",
+            "-DBIGLYBTC_DESKTOP=OFF"
+          ],
+          "cwd": "/home/yurii/Java/BiglyBT",
+          "elapsed_seconds": 0.917,
+          "exit_code": 1,
+          "failure": null,
+          "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort/core-config/r1/configure.log",
+          "log_sha256": "51e98965033f81b5a91dd8594f176bd91fdabc9d49c9bde462db9d7b9a78f6c3"
+        }
+      ],
+      "configuration_only": true,
+      "failure": "AssertionError('Command failed; full diagnostics: /home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort/core-config/r1/configure.log')",
+      "provider_CPP_or_test_credit": false,
+      "receipt": {
+        "bytes": 1655,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort/core-config/r1/result.json",
+        "sha256": "ad6510b42512aa83e3d59b5c257e11cd9a9709105799b4afc1e85fa007d76f86"
+      },
+      "status": "FAIL",
+      "temporary_cache_removed": true
+    }
+  },
+  "final_default_core_configuration": {
+    "commands": [
+      {
+        "argv": [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBTC/preview/native",
+          "-B",
+          "/home/yurii/Java/BiglyBT/build/.rss-cmake-ddx45bn0",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DBIGLYBTC_LOCAL_ENGINE=OFF",
+          "-DBIGLYBTC_DESKTOP=OFF"
+        ],
+        "cwd": "/home/yurii/Java/BiglyBT",
+        "elapsed_seconds": 0.917,
+        "exit_code": 0,
+        "failure": null,
+        "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/core-config/r1/configure.log",
+        "log_sha256": "66bce38317e153052cc62501c280371eff06f7dac4d132fee95a66e349b67abd"
+      },
+      {
+        "argv": [
+          "ninja",
+          "-C",
+          "/home/yurii/Java/BiglyBT/build/.rss-cmake-ddx45bn0",
+          "-t",
+          "targets",
+          "all"
+        ],
+        "cwd": "/home/yurii/Java/BiglyBT",
+        "elapsed_seconds": 0.016,
+        "exit_code": 0,
+        "failure": null,
+        "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/core-config/r1/targets.log",
+        "log_sha256": "0df55c541f33ee01890c186eddd6e74623cf63d107b23363070d4f6c1759536c"
+      }
+    ],
+    "configuration_only": true,
+    "failure": null,
+    "provider_CPP_or_test_credit": false,
+    "receipt": {
+      "bytes": 2290,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/core-config/r1/result.json",
+      "sha256": "f3e8c0dba071d8d8f49b7e20d7417765537188673257e31cee3dab8d43ec7fcd"
+    },
+    "status": "PASS_DEFAULT_CORE_CONFIGURATION",
+    "temporary_cache_removed": true
+  },
+  "full_P08_complete": false,
+  "historical_corpora_recopied_or_rerun": false,
+  "implementation_commit": "f4bd9300c8df391750579e468a520ae379d13e0a",
+  "independent_review": {
+    "bytes": 18055,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-independent-acceptance-review.json",
+    "sha256": "2d09f27ce0471b2ac84656459e91f833b4a36eb2b80a4c273c22af3533b0caac"
+  },
+  "native_basis": "b5741f7ec329ab0b68e90e1139077c2ec31a9140",
+  "native_tree": "9e63927d57255803de933211f5e3a0d633962544",
+  "not_claimed": [
+    "Host/UI consumer integration",
+    "production Internet DNS/GET",
+    "proxy/auth/Tor/I2P/HEAD/cache providers",
+    "global resolver-thread join",
+    "new JVM/corpus/old tracker green reruns",
+    "full P08 parity",
+    "current dist promotion"
+  ],
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "provider_sdk_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "publisher": {
+    "bytes": 21645,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-publication/publish.py",
+    "sha256": "e3693d642dda1407ccd86a2bee071574144d4ec1427284d637dd6d2d149d76f0"
+  },
+  "registry_or_global_integration_baselines_advanced": false,
+  "schema": "BIGLYBTC_SOURCE_OWNED_RSS_PROVIDER_EVIDENCE_V1",
+  "source_input_pins_revalidated": 130,
+  "source_leaves": 6,
+  "source_map": {
+    "bytes": 170402,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/source.json",
+    "sha256": "fe3a9ffe826ae410331ad3ed8044ea19ff058c3a64605197ff25cbe18cbf7f86"
+  },
+  "source_reviews": {
+    "correction_review": {
+      "bytes": 6159,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/cmake-core-dependency-availability/source-review.json",
+      "sha256": "a2e3b130748b057f0481fdee3f41363b4d9174ede909b4d9c4ffa581ea53168e"
+    },
+    "source_review": {
+      "bytes": 10913,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-source-review.json",
+      "sha256": "f9436dd6f523504c2119f274cccab882bf93cf720f75ce4013218a9eb8501c5b"
+    }
+  },
+  "spec": {
+    "bytes": 41367,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/spec.json",
+    "sha256": "b3fd14d9fcef76713cec26fa31bafdad12f6910d4ddd39bf15eb237475ec3562"
+  },
+  "status": "PASS_LOCAL_OWNED_GCC_SAN_PROVIDER"
+}

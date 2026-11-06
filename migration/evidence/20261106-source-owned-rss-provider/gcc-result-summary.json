@@ -1,0 +1,262 @@
+{
+  "XML": {
+    "rss-fetch-main": {
+      "bytes": 5755,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/rss-fetch-main.xml",
+      "sha256": "7d57ce32285ae989c572eeed5a7363497853aff267680f78ef420d5560ebefb1"
+    },
+    "rss-fetch-real-deadline": {
+      "bytes": 999,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/rss-fetch-real-deadline.xml",
+      "sha256": "17ef12f7075e462fc4f0c5fda3935c73355cb91d9716744fb85282f08dc3e0b6"
+    }
+  },
+  "archives": {
+    "engine/libbiglybtc_http_response.a": "afe5f1708649bae07ee4dcdf4bd5061236c366de2d1acc0aa27493979fa7ce8d",
+    "services/libbiglybtc_rss_document.a": "651258b5e1d26a2d60be928b31fb9320b3ef0755d0a6f59321ec29427e2bedc2",
+    "services/libbiglybtc_rss_http_fetch.a": "2b1d27af4a1ffc663f173f176df17cdb794d941b27712313ae28ed219f22124e",
+    "services/libbiglybtc_saved_rss_source.a": "c3dca02f1d6f69565bfcbdf8d514e97d81d93f2400eccd98c6942d2bdbfd1f00",
+    "tests/libbiglybtc_rss_http_fetch_fixture.a": "17214f03679f55b041eca321a3abf134d1661381a10bf2d45bc139424f804dff"
+  },
+  "commands": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-k",
+        "0",
+        "biglybtc_rss_http_fetch",
+        "biglybtc_rss_http_fetch_fixture",
+        "biglybtc-rss-http-fetch-tests"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 64.026,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/build.log",
+      "log_sha256": "27049df54dcd7227bea415d9294f7d842562160f315c114bcaebf0edb6f4966e"
+    },
+    {
+      "argv": [
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-t",
+        "commands",
+        "biglybtc_rss_http_fetch",
+        "biglybtc_rss_http_fetch_fixture"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 0.066,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/variant-commands.log",
+      "log_sha256": "3f221f03dc13c894c2978d289c2dfaa762fa257761f2cff6e09bac2a5c3851ee"
+    },
+    {
+      "argv": [
+        "nm",
+        "--defined-only",
+        "--demangle",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/services/libbiglybtc_rss_http_fetch.a"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 0.068,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/production-symbols.log",
+      "log_sha256": "14e3643352986b30d1feedc879bd67b25f260dd6ed10d30e6f772e3559f37eb3"
+    },
+    {
+      "argv": [
+        "nm",
+        "--defined-only",
+        "--demangle",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/libbiglybtc_rss_http_fetch_fixture.a"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 0.065,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/fixture-symbols.log",
+      "log_sha256": "7e42cf0859c7f2732cdac0ebacd2fa95598f7926ecebd62924bf9a2c03b7483c"
+    },
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-rss-http-fetch-tests",
+        "actualSavedGetHasNoTrackerFieldsAndParsesOwningValues",
+        "redirectsKeepConfiguredRootBaseAndFirstHtmlBaseIsSeparate",
+        "realTlsTrustAndHostnameAreRequiredBeforeAnyGet",
+        "actualSourceRevocationAtHeldPhasesDropsCompletionAndRecovers",
+        "unrelatedProfileEpochBeforeGetDoesNotPoisonExactSource",
+        "receiverCancellationDiscardsLateResolverAndBusySlotThenReleases",
+        "externalReceiverCancelAbortsHeldBodyAndJoinsBeforeLockRelease",
+        "realResponseAndRedirectBoundsCannotBecomeEmptySuccess",
+        "redirectedSourceMustStillBeCurrentBeforeNextDns",
+        "firstRealHttpFailureRemainsStickyAcrossCancelAndClose",
+        "bomlessUtf16CannotBecomeADeclaredUtf8Feed",
+        "unsupportedSavedRoutesAndProxyRequirementsRefuseBeforeResolver",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/rss-fetch-main.xml,xml"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 4.974,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/rss-fetch-main.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-rss-http-fetch-tests",
+        "unapprovedBeforeDnsUsesTheRealConfiguredThirtySecondPhaseDeadline",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/rss-fetch-real-deadline.xml,xml"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 30.065,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/rss-fetch-real-deadline.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "coverage": {
+    "isolated-variants": {
+      "compile_commands": 2,
+      "fixture_macro_count": 1,
+      "production_has_fixture_symbol": false
+    },
+    "rss-fetch-main": {
+      "actual_pass_rows": [
+        "initTestCase",
+        "actualSavedGetHasNoTrackerFieldsAndParsesOwningValues:rss-content-length",
+        "actualSavedGetHasNoTrackerFieldsAndParsesOwningValues:rss-chunked",
+        "actualSavedGetHasNoTrackerFieldsAndParsesOwningValues:rss-gzip",
+        "actualSavedGetHasNoTrackerFieldsAndParsesOwningValues:atom",
+        "redirectsKeepConfiguredRootBaseAndFirstHtmlBaseIsSeparate:configured-prefixes",
+        "redirectsKeepConfiguredRootBaseAndFirstHtmlBaseIsSeparate:first-base-only",
+        "realTlsTrustAndHostnameAreRequiredBeforeAnyGet:saved-root-and-hostname",
+        "realTlsTrustAndHostnameAreRequiredBeforeAnyGet:unknown-root-no-GET",
+        "realTlsTrustAndHostnameAreRequiredBeforeAnyGet:wrong-hostname-no-GET",
+        "actualSourceRevocationAtHeldPhasesDropsCompletionAndRecovers:before-DNS",
+        "actualSourceRevocationAtHeldPhasesDropsCompletionAndRecovers:after-TCP-before-GET",
+        "actualSourceRevocationAtHeldPhasesDropsCompletionAndRecovers:after-TLS-before-GET",
+        "actualSourceRevocationAtHeldPhasesDropsCompletionAndRecovers:partial-real-body",
+        "actualSourceRevocationAtHeldPhasesDropsCompletionAndRecovers:before-delivery",
+        "actualSourceRevocationAtHeldPhasesDropsCompletionAndRecovers:held-resolver",
+        "unrelatedProfileEpochBeforeGetDoesNotPoisonExactSource",
+        "receiverCancellationDiscardsLateResolverAndBusySlotThenReleases",
+        "externalReceiverCancelAbortsHeldBodyAndJoinsBeforeLockRelease",
+        "realResponseAndRedirectBoundsCannotBecomeEmptySuccess:conflicting-length",
+        "realResponseAndRedirectBoundsCannotBecomeEmptySuccess:truncated-body",
+        "realResponseAndRedirectBoundsCannotBecomeEmptySuccess:unsupported-encoding",
+        "realResponseAndRedirectBoundsCannotBecomeEmptySuccess:decoded-gzip-over-four-MiB",
+        "realResponseAndRedirectBoundsCannotBecomeEmptySuccess:header-over-sixteen-KiB",
+        "realResponseAndRedirectBoundsCannotBecomeEmptySuccess:redirect-loop",
+        "realResponseAndRedirectBoundsCannotBecomeEmptySuccess:maximum-six-GETs",
+        "redirectedSourceMustStillBeCurrentBeforeNextDns",
+        "firstRealHttpFailureRemainsStickyAcrossCancelAndClose",
+        "bomlessUtf16CannotBecomeADeclaredUtf8Feed",
+        "unsupportedSavedRoutesAndProxyRequirementsRefuseBeforeResolver:tor",
+        "unsupportedSavedRoutesAndProxyRequirementsRefuseBeforeResolver:i2p",
+        "unsupportedSavedRoutesAndProxyRequirementsRefuseBeforeResolver:onion",
+        "unsupportedSavedRoutesAndProxyRequirementsRefuseBeforeResolver:numeric-loopback",
+        "unsupportedSavedRoutesAndProxyRequirementsRefuseBeforeResolver:private-v4",
+        "unsupportedSavedRoutesAndProxyRequirementsRefuseBeforeResolver:saved-proxy-type",
+        "unsupportedSavedRoutesAndProxyRequirementsRefuseBeforeResolver:legacy-proxy-required",
+        "cleanupTestCase"
+      ],
+      "selectors": [
+        "actualSavedGetHasNoTrackerFieldsAndParsesOwningValues",
+        "redirectsKeepConfiguredRootBaseAndFirstHtmlBaseIsSeparate",
+        "realTlsTrustAndHostnameAreRequiredBeforeAnyGet",
+        "actualSourceRevocationAtHeldPhasesDropsCompletionAndRecovers",
+        "unrelatedProfileEpochBeforeGetDoesNotPoisonExactSource",
+        "receiverCancellationDiscardsLateResolverAndBusySlotThenReleases",
+        "externalReceiverCancelAbortsHeldBodyAndJoinsBeforeLockRelease",
+        "realResponseAndRedirectBoundsCannotBecomeEmptySuccess",
+        "redirectedSourceMustStillBeCurrentBeforeNextDns",
+        "firstRealHttpFailureRemainsStickyAcrossCancelAndClose",
+        "bomlessUtf16CannotBecomeADeclaredUtf8Feed",
+        "unsupportedSavedRoutesAndProxyRequirementsRefuseBeforeResolver"
+      ]
+    },
+    "rss-fetch-real-deadline": {
+      "actual_pass_rows": [
+        "initTestCase",
+        "unapprovedBeforeDnsUsesTheRealConfiguredThirtySecondPhaseDeadline",
+        "cleanupTestCase"
+      ],
+      "selectors": [
+        "unapprovedBeforeDnsUsesTheRealConfiguredThirtySecondPhaseDeadline"
+      ]
+    }
+  },
+  "elapsed_seconds": 99.639,
+  "first_terminal": {
+    "XML": {
+      "bytes": 999,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/rss-fetch-real-deadline.xml",
+      "sha256": "17ef12f7075e462fc4f0c5fda3935c73355cb91d9716744fb85282f08dc3e0b6"
+    },
+    "accepted_sampling_range_ms": [
+      28000,
+      40000
+    ],
+    "configured_phase_ms": 30000,
+    "first_observed_terminal_ms": 30026,
+    "qt_coarse_timer_early_delivery_permitted": true,
+    "upper_bound_exclusive": true
+  },
+  "images": {
+    "biglybtc-rss-http-fetch-tests": {
+      "bytes": 879568,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-rss-http-fetch-tests",
+      "sha256": "f30db63e6643b273c1098266bfafefe26d189726b0a4227d9acec77df781675f"
+    }
+  },
+  "implementation_commit": "f4bd9300c8df391750579e468a520ae379d13e0a",
+  "lane": "gcc",
+  "method_row_counts": {
+    "actualSavedGetHasNoTrackerFieldsAndParsesOwningValues": 4,
+    "actualSourceRevocationAtHeldPhasesDropsCompletionAndRecovers": 6,
+    "bomlessUtf16CannotBecomeADeclaredUtf8Feed": 1,
+    "externalReceiverCancelAbortsHeldBodyAndJoinsBeforeLockRelease": 1,
+    "firstRealHttpFailureRemainsStickyAcrossCancelAndClose": 1,
+    "realResponseAndRedirectBoundsCannotBecomeEmptySuccess": 7,
+    "realTlsTrustAndHostnameAreRequiredBeforeAnyGet": 3,
+    "receiverCancellationDiscardsLateResolverAndBusySlotThenReleases": 1,
+    "redirectedSourceMustStillBeCurrentBeforeNextDns": 1,
+    "redirectsKeepConfiguredRootBaseAndFirstHtmlBaseIsSeparate": 2,
+    "unapprovedBeforeDnsUsesTheRealConfiguredThirtySecondPhaseDeadline": 1,
+    "unrelatedProfileEpochBeforeGetDoesNotPoisonExactSource": 1,
+    "unsupportedSavedRoutesAndProxyRequirementsRefuseBeforeResolver": 7
+  },
+  "native_tree": "9e63927d57255803de933211f5e3a0d633962544",
+  "raw_receipt": {
+    "bytes": 39310,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/result-raw.json",
+    "sha256": "078e773fc046cf90a5914c6ba429afb65827e19a677bb6dd77ab83f0aa1a9169"
+  },
+  "source_after": {
+    "bytes": 170402,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/source-after.json",
+    "sha256": "fe3a9ffe826ae410331ad3ed8044ea19ff058c3a64605197ff25cbe18cbf7f86"
+  },
+  "source_before": {
+    "bytes": 170402,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/source-before.json",
+    "sha256": "fe3a9ffe826ae410331ad3ed8044ea19ff058c3a64605197ff25cbe18cbf7f86"
+  },
+  "stamped_receipt": {
+    "bytes": 39668,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/transport-cohort-r3/gcc/r1/result-stamped.json",
+    "sha256": "2d01692f37e47ce2b40c9040a4c68da6dde0a1333ec7b1f1719f3ac57a34b481"
+  },
+  "status": "PASS"
+}

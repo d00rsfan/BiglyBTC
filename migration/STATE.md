@@ -20,3 +20,7 @@ Implementation `1cf7cb5ae92c0098bab2476a313c352b13e022a9`, Native subtree `266cf
 
 Implementation `4fa9715c0a6f94b3668d3079bc92cee06229787e`, Native subtree `af5efce8af90ede28ae968e975f0d4c8f9ac68c0`, original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`: bounded pure HTTP framing plus real-lease saved RSS description integrated at11 leaves. Corrected GCC/SAN each passed two new CTests (seven framing families/seven reader methods) plus ten selected existing HTTP Qt rows. [Evidence](evidence/20261106-rss-response-and-source/REVIEW.md). Initial compile-only failures remain failed evidence. This grants no RSS GET/transport authority and advances no whole P08/P07/global integration baseline or default distribution; source-owned fetch lifecycle remains open.
 
+## 2026-11-06 source-owned one-shot RSS provider
+
+Implementation `f4bd9300c8df391750579e468a520ae379d13e0a`, Native subtree `9e63927d57255803de933211f5e3a0d633962544`, Original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`: local-owned GCC/SAN one-shot provider accepted at 6 source leaves,13 Qt methods/36 test-data rows per lane and isolated production/fixture variants. [Evidence](evidence/20261106-source-owned-rss-provider/REVIEW.md). Earlier configure failures remain failed; final default-core acceptance is configure-only. Actual Host/UI consumer wiring, public-network qualification, whole P08/P07/global baselines and distribution promotion remain open.
+
