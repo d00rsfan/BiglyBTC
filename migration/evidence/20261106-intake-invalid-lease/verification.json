@@ -1,0 +1,68 @@
+{
+  "status": "PASS_INVALID_LEASE_INTAKE_CI_GCC_SAN_REVIEW",
+  "native_commit": "c34d691a7adc0386e4a653a3eb0a01e4a47e09ea",
+  "native_tree": "617b39df4457e57e662a6c1f8788f3e51fc8c37e",
+  "independent_actual_review": {
+    "path": "independent-acceptance-review.json",
+    "sha256": "401dcfc9645ba83b6c4616981afa2e4bb4b3434fa75754eba9e552d9a662a941",
+    "bytes": 9373
+  },
+  "files": {
+    "gcc-stamped.json": {
+      "path": "gcc-stamped.json",
+      "sha256": "d478b06d1b52abd9389c9312d4fbc8b93cc507149e59c910c67ceb0226e01473",
+      "bytes": 10653
+    },
+    "san-stamped.json": {
+      "path": "san-stamped.json",
+      "sha256": "6673a888df3e75fd65028101a5b30bb15a2da248383af47ac7ebae448ad151f1",
+      "bytes": 10654
+    },
+    "san-pending.xml": {
+      "path": "san-pending.xml",
+      "sha256": "1d80621311abada287129338cd0fd63dbe07b531153192cd31948400a3769f24",
+      "bytes": 564
+    },
+    "hosted-failure.txt": {
+      "path": "hosted-failure.txt",
+      "sha256": "1fd99546616a1eb0c74ca1e7036be57f4de4eb7a636f1867eebc7ba905afd88e",
+      "bytes": 275
+    },
+    "gcc-full-intake.xml": {
+      "path": "gcc-full-intake.xml",
+      "sha256": "a3aed29abcca3fc6ed761aa668c5cbc4208a8ae7e35f1f91820e7160715b83ce",
+      "bytes": 468
+    },
+    "REVIEW.md": {
+      "path": "REVIEW.md",
+      "sha256": "e42c150f1f8d188bf784560d69a864fce8981d33e475a77dde976ac60e62568f",
+      "bytes": 1213
+    },
+    "san-full-intake.xml": {
+      "path": "san-full-intake.xml",
+      "sha256": "b9a2c377bd906480afd9060afcf4235528be1af56a5a2b586762dc79037a38e2",
+      "bytes": 466
+    },
+    "source-review.json": {
+      "path": "source-review.json",
+      "sha256": "29ff877abb215af19d05859d4d8841ffe4ca96c6c7b2bb06d402d5f5a43d249b",
+      "bytes": 1164
+    },
+    "source-manifest.json": {
+      "path": "source-manifest.json",
+      "sha256": "7b92d33ce42571a9b40f9d69729172c7c6453818e0b69196bf1c8e41463d431e",
+      "bytes": 1172
+    },
+    "gcc-pending.xml": {
+      "path": "gcc-pending.xml",
+      "sha256": "8c16d28ea08544f96d3b43b21909cd58e0343b52d49d5bcfa13b76a9208694bd",
+      "bytes": 564
+    },
+    "independent-acceptance-review.json": {
+      "path": "independent-acceptance-review.json",
+      "sha256": "401dcfc9645ba83b6c4616981afa2e4bb4b3434fa75754eba9e552d9a662a941",
+      "bytes": 9373
+    }
+  },
+  "whole_component_or_plan_complete": false
+}

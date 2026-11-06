@@ -1,0 +1,14 @@
+{
+  "status": "FROZEN_SOURCE_ONE_LINE_CI_REGRESSION_FIX_NOT_COMPILED",
+  "basis_commit": "34faa23df0d2ec17b1b16b6426d03087baeb239d",
+  "basis_native_tree": "aa11e703dbc0aab6af3dddf96bb842a61bcb4fa9",
+  "cause": "New pending guard probed fd=-1 before the existing lease check, changing moved-from lease error UnsafePath to Io. Existing full torrent-intake regression reproduced locally and in hosted CI241/242. Validate lease before any guard filesystem probe.",
+  "source_paths": {
+    "preview/native/adapters/torrent_intake.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/basis/preview/native/adapters/torrent_intake.cpp",
+      "before_sha256": "3fc527b1a4d8575a9ddcdcea673128cb9195eaef10e96ecdc10769966d319705",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/source/preview/native/adapters/torrent_intake.cpp",
+      "after_sha256": "abbe64a7f5c6cb9d02cdaf6a07e803a7fd75232a71501baa229eee1e853200fb"
+    }
+  }
+}

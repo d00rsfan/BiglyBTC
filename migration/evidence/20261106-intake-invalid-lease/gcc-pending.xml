@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="1"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="0"
+	timestamp="2026-11-06T22:26:24"
+	>
+	<testcase name="subscription-acquisition-intake-pending-guards" classname="subscription-acquisition-intake-pending-guards" time="0.0135072" status="run">
+		<properties>
+			<property name="cmake_labels" value="intake;integration;no-network;owned-profile;subscriptions"/>
+		</properties>
+		<system-out>PASS_ACQUISITION_PENDING_INTAKE_GUARDS cases=8
+</system-out>
+	</testcase>
+</testsuite>

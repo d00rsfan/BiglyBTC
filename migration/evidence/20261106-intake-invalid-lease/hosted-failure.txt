@@ -1,0 +1,4 @@
+Hosted run: https://github.com/d00rsfan/BiglyBTC/actions/runs/42281706740
+241/242 passed; torrent-intake failed:
+no transaction and invalid lease are bounded: !result && result.error().code == Code::UnsafePath
+Current pre-fix GCC binary reproduced the same assertion, exit1.

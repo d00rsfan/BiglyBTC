@@ -1,0 +1,17 @@
+{
+  "status": "PASS_SOURCE_ONLY_ONE_LINE_INVALID_LEASE_ERROR_ORDER_FIX",
+  "manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/manifest.json",
+    "bytes": 1172,
+    "sha256": "7b92d33ce42571a9b40f9d69729172c7c6453818e0b69196bf1c8e41463d431e"
+  },
+  "checks": [
+    "One added lease.valid UnsafePath check precedes every noAcquisitionIntent fstatat probe. Exact removal reconstructs frozen beforeimage; all other CPP/API bytes unchanged.",
+    "Moved-from invalid lease refuses before fd=-1 inspection, matching existing full torrent-intake expected UnsafePath. Valid lease keeps all pending marker and later profile/OFD checks.",
+    "Current Native beforeimage matches frozen source. No reviewer adoption/compile/runtime."
+  ],
+  "failure_provenance": "Hosted241/242 and current GCC full-suite failure reported/reproduced by Root; not rerun by reviewer.",
+  "required_validation": [
+    "Both existing lanes: only biglybtc-torrent-intake-tests target; full default CTest torrent-intake and registered acquisition-pending guards8."
+  ]
+}

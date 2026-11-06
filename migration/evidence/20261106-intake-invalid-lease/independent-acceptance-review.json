@@ -1,0 +1,145 @@
+{
+  "status": "PASS_INVALID_LEASE_INTAKE_CI_GCC_SAN_REVIEW",
+  "implementation_commit": "c34d691a7adc0386e4a653a3eb0a01e4a47e09ea",
+  "native_tree": "617b39df4457e57e662a6c1f8788f3e51fc8c37e",
+  "spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/cohort/spec.json",
+    "bytes": 8518,
+    "sha256": "aa53ab2aac2a134d0386a27fd88277540d226bc6f638db6d76abcf77c7349ef9"
+  },
+  "source_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/manifest.json",
+    "bytes": 1172,
+    "sha256": "7b92d33ce42571a9b40f9d69729172c7c6453818e0b69196bf1c8e41463d431e"
+  },
+  "source_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/source-review.json",
+    "bytes": 1164,
+    "sha256": "29ff877abb215af19d05859d4d8841ffe4ca96c6c7b2bb06d402d5f5a43d249b"
+  },
+  "source_change": "Exactly one CPP line: lease.valid UnsafePath check before pending-marker fstatat; current afterimageabbe64a7. All other1402Native source entries equal prior qualified SourceMap.",
+  "Original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "SDK": {
+    "artifact": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "bytes": 10137344,
+      "sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3"
+    },
+    "record": {
+      "bytes": 192696,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/source-build-record-discovery-final.json",
+      "sha256": "e213ba3227a464fcb8eab1c7db3e3adef720f482fd352bb87ec12c3f27ec1e92"
+    },
+    "42_exports_carried_not_rerun": true
+  },
+  "lanes": {
+    "gcc": {
+      "raw_receipt": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/cohort/gcc/r1/result-raw.json",
+        "bytes": 10235,
+        "sha256": "85345a3a5f937369ba673bb8bc4c31c34e6fa0f4601721ceff3cfcb9c834f4f2"
+      },
+      "stamped_receipt": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/cohort/gcc/r1/result-stamped.json",
+        "bytes": 10653,
+        "sha256": "d478b06d1b52abd9389c9312d4fbc8b93cc507149e59c910c67ceb0226e01473"
+      },
+      "elapsed_seconds": 43.341,
+      "build_seconds": 42.287,
+      "commands": 3,
+      "XML": {
+        "full-torrent-intake": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/cohort/gcc/r1/full-torrent-intake.xml",
+          "bytes": 468,
+          "sha256": "a3aed29abcca3fc6ed761aa668c5cbc4208a8ae7e35f1f91820e7160715b83ce"
+        },
+        "acquisition-intake-pending-guards": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/cohort/gcc/r1/acquisition-intake-pending-guards.xml",
+          "bytes": 564,
+          "sha256": "8c16d28ea08544f96d3b43b21909cd58e0343b52d49d5bcfa13b76a9208694bd"
+        }
+      },
+      "measured": {
+        "full_families": 14,
+        "full_assertions": 632,
+        "pending_guard_cases": 8
+      },
+      "image": {
+        "bytes": 3828248,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-torrent-intake-tests",
+        "sha256": "7abf9a454122210b232562f8ac836e2722d7237843422b4a936a4af08677e80f"
+      },
+      "archives": {
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/adapters/libbiglybtc_profile.a": "30e1b9741b37179987201977f771f88517f07802418e22d46294774c64ffdda0",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/adapters/libbiglybtc_state_codec.a": "e7ec93331e0656c0ad2a79db85ff154ed1deead5af98c3c51c180aa8d5bcd660",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/core/libbiglybtc_core.a": "90039b8b59480656cb552778afeeee1a7fcfcf2af53c46c40596e3ce2fda01a1",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/plugin-sdk/libbiglybtc_plugin_host.a": "59df3f1c5b4a517a1d907526263e114445d7eee1f8236e6db24cf6db37d7b19a"
+      },
+      "source_map": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/cohort/gcc/r1/source-after.json",
+        "bytes": 177022,
+        "sha256": "f9a681cd8acb492ec6476260d124bb21a632041b3f31fc4780295723bbfba975"
+      },
+      "all_inputs_dependencies_logs_images_verified": true
+    },
+    "san": {
+      "raw_receipt": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/cohort/san/r1/result-raw.json",
+        "bytes": 10236,
+        "sha256": "c649916cd267eaa6d65e31fc1f168f99ec9a801a15a9c331340bb05fdf8412df"
+      },
+      "stamped_receipt": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/cohort/san/r1/result-stamped.json",
+        "bytes": 10654,
+        "sha256": "6673a888df3e75fd65028101a5b30bb15a2da248383af47ac7ebae448ad151f1"
+      },
+      "elapsed_seconds": 77.962,
+      "build_seconds": 75.517,
+      "commands": 3,
+      "XML": {
+        "full-torrent-intake": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/cohort/san/r1/full-torrent-intake.xml",
+          "bytes": 466,
+          "sha256": "b9a2c377bd906480afd9060afcf4235528be1af56a5a2b586762dc79037a38e2"
+        },
+        "acquisition-intake-pending-guards": {
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/cohort/san/r1/acquisition-intake-pending-guards.xml",
+          "bytes": 564,
+          "sha256": "1d80621311abada287129338cd0fd63dbe07b531153192cd31948400a3769f24"
+        }
+      },
+      "measured": {
+        "full_families": 14,
+        "full_assertions": 632,
+        "pending_guard_cases": 8
+      },
+      "image": {
+        "bytes": 60599408,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-torrent-intake-tests",
+        "sha256": "94ec63f629220413f34e8be72a1ef5f4e298b80c8bd5da5789abc3bfd3dcd541"
+      },
+      "archives": {
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/adapters/libbiglybtc_profile.a": "dd1b6b9b77de6f863fda4dd93a30c643cfa0e6effbed9fe9637379d952187f83",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/adapters/libbiglybtc_state_codec.a": "2d25af4684b72a1ff0566eeac51188365f116c15e35cc476fe9fe2d5af3e402f",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/core/libbiglybtc_core.a": "55c080e462507d5ac3c7ac91c069aaf553d45b895a833ce18056d81cf94cf6a5",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/plugin-sdk/libbiglybtc_plugin_host.a": "6e13a0d83109366ee4dcbe513a18556a61c7576a941ad1bfaf7623a5b594e6ef"
+      },
+      "source_map": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/ci-invalid-lease/cohort/san/r1/source-after.json",
+        "bytes": 177022,
+        "sha256": "f9a681cd8acb492ec6476260d124bb21a632041b3f31fc4780295723bbfba975"
+      },
+      "all_inputs_dependencies_logs_images_verified": true
+    }
+  },
+  "scope": [
+    "Both existing lanes built only biglybtc-torrent-intake-tests, one image/four linked archives, then full registered torrent-intake CTest with default CLI (14families/632assertions) and acquisition pending guards8.",
+    "Full default suite includes moved-from lease UnsafePath regression; no test source changed.",
+    "Both raw/stamped source maps are identical and match committed1403files with one changed leaf. Current Original head/index, SDK, all input/image/archive/command-log pins verified; no sanitizer failure diagnostics.",
+    "This qualifies the focused Native CI regression fix, not a rerun of the hosted242test cohort; hosted rerun remains Root-owned.",
+    "Review only; no adoption, compiler/test/JVM/network subject or Native/cache/image writes by reviewer."
+  ]
+}
