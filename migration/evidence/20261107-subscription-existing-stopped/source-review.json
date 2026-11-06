@@ -1,0 +1,42 @@
+{
+  "amendments": [
+    {
+      "bytes": 2638,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/runtime-amendment-bridge-idle-diagnostic-r4/manifest.json",
+      "sha256": "1adb1087983c020446861bf4de1d26ccbc70e1020a786913ed74df19e471ec68"
+    },
+    {
+      "bytes": 4389,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/runtime-amendment-isolated-ports-r4/manifest.json",
+      "sha256": "4b12136eb1d42c702001023e4227a70bfa595c200f80622201392c4d5b34a24c"
+    }
+  ],
+  "changed_paths": [
+    "preview/native/tests/subscription_acquisition_bridge_tests.cpp",
+    "preview/native/tests/subscription_acquisition_recovery_tests.cpp"
+  ],
+  "manifest": {
+    "bytes": 55892,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/source-manifest.json",
+    "sha256": "9c9e03407523465f562e68bea9825e29b5cc167a7c967522ac12fffea55386bf"
+  },
+  "parent_source_review": {
+    "bytes": 2364,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r4/source-review.json",
+    "sha256": "b6f3256046e84e664fbab4ed62e7fdbd96242c35fa918e68d3e67398a52cb105"
+  },
+  "runtime_qualification": null,
+  "source_reviews": [
+    {
+      "bytes": 1209,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/runtime-amendment-bridge-idle-diagnostic-r4/preparation-source-review.json",
+      "sha256": "9e7d770f20c386296b5cd95c353c1e9aa4e404bb144a686f2dc547bd0cad3bf9"
+    },
+    {
+      "bytes": 2058,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/runtime-amendment-isolated-ports-r4/preparation-source-review.json",
+      "sha256": "3dfb4a423e6056300bb3b66ef0a9a68d7b8bf547ec1d3daf24fe09c1b16b682f"
+    }
+  ],
+  "status": "PASS_SOURCE_ONLY_PARENT_PLUS_TWO_ORDERED_PORT_FIXTURE_AMENDMENTS"
+}

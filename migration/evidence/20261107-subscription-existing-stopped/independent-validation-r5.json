@@ -1,0 +1,225 @@
+{
+  "checks": {
+    "spec_inputs_verified": 176,
+    "r5_only_changes_from_r4": [
+      "preview/native/tests/subscription_acquisition_bridge_tests.cpp",
+      "preview/native/tests/subscription_acquisition_recovery_tests.cpp"
+    ],
+    "original": {
+      "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+    },
+    "selected_source_leaves": 23,
+    "all_current_source_files": 1410,
+    "all_selected_images_archives_inputs_dependencies_and_command_logs_rehashed": true
+  },
+  "lanes": {
+    "gcc": {
+      "raw": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/gcc/r1/result-raw.json",
+        "sha256": "b80aef08729a069bd83b8c5fdfdb90cef42cfdeb6c2191c4687573c6ec17f98d"
+      },
+      "stamp": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/gcc/r1/result-stamped.json",
+        "sha256": "1196a06436bd348111cc0eea1a93af732ef8ab71f3283d823eeeeca98fd771d5"
+      },
+      "elapsed_seconds": 249.226,
+      "commands": 42,
+      "ELFs": 18,
+      "archives": 16,
+      "source_map": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/gcc/r1/source-after.json",
+        "sha256": "cae29d32a59603eed8aed00452ba610c33612aaeb17899a559abfdbdc47176c4"
+      },
+      "source_files": 1410,
+      "qt_rows": 159,
+      "qt_methods": 54,
+      "qt_lifecycle_rows": 24,
+      "groups": {
+        "config-acquisition-pending-guards": 1,
+        "state-acquisition-pending-guards": 1,
+        "intake-acquisition-pending-guards": 1,
+        "actual-saved-result-reader": 20,
+        "association-values": 11,
+        "actual-stopped-acquisition-worker": 15,
+        "actual-binary-metainfo-get": 27,
+        "binary-http-response-values": 1,
+        "owned-acquisition-process-recovery": 24,
+        "classic-subscriptions-acquisition-ui": 7,
+        "subscription-values-source-store": 12,
+        "numeric-policy-real-source": 6,
+        "subscriptions-concrete-worker": 4,
+        "subscription-concrete-http": 17,
+        "existing-rss-transport-controls": 14,
+        "existing-rss-host-controls": 2,
+        "full-torrent-intake": 1,
+        "subscription-download-state-values": 1
+      },
+      "xml_sha256": {
+        "config-acquisition-pending-guards": "8d2293a095c3fa74516fb95a7cbddc9a0305d25c976fde00830712dda91a848d",
+        "state-acquisition-pending-guards": "b570adb25b7e31c8fa051dd23a5557ab5162af56edfe8d9994bccba13dfd3ad5",
+        "intake-acquisition-pending-guards": "f7c3190dffe4a95f53a0c5aa471695b5ffacfbb2e20a7b55da41c16cf1b619c8",
+        "actual-saved-result-reader": "bd237386794a6c137103a9f002eecbea109b15e9327c4c38fe25ed7d8752c076",
+        "association-values": "5d1b7f5c35ffcbf00573e1c87c36d67e2e267e0dfbcf3bb1615ec516070781a3",
+        "actual-stopped-acquisition-worker": "967bfe9f00f956af43f65fc9a45b357d716ad118920e72f88e3f0c055b92e80e",
+        "actual-binary-metainfo-get": "64888477136c2fc0c548e67d13282e9e8f46b2947831ac958fcaf6aec97f6cc3",
+        "binary-http-response-values": "737d204a43ea742208bee8e8f78b8cb7c9c6e9e1193925534c31a93e47547a5f",
+        "owned-acquisition-process-recovery": "f5ec395b71c1d0fe06af73dda6f14f79aa03cea4132fdcd88b1e1ab9d526c3c0",
+        "classic-subscriptions-acquisition-ui": "c99ed84e586b01174380c847252d82e166cea93538f5d71bd6c49a6fb69d94f7",
+        "subscription-values-source-store": "3fe938349bc77891b4af53a4371e16a4475c7057bb89185b1da4bb15a2e36710",
+        "numeric-policy-real-source": "fb08377b00b41ffff4d4b8af5f08a32ee899f41859dd91f383305d2d084cee50",
+        "subscriptions-concrete-worker": "09d9ebd411aec90b144e6259b629f4c9eeb34ca3ab08098951a2bdb1fc496bb2",
+        "subscription-concrete-http": "b4875fe303521f4c0c3c7ad07e906e0df5b3d455fa0033fea148130cc18d12b3",
+        "existing-rss-transport-controls": "2e9f71b58587f204306eed6db226f53bd3ea96a9d37c374e17aa77b1845027bb",
+        "existing-rss-host-controls": "7cea13e2ba5c2a98a3998d4912598b81ee9bcb6afff4508729223e4d5235556f",
+        "full-torrent-intake": "7d526dad3b9bcd74126ea3ad5a4226cdc908185014b8009e99108fa982ce62af",
+        "subscription-download-state-values": "c64cdc864cf5ed26d933234bd8ba343436c6d69b52832d8e4c755af1a4a799f0"
+      },
+      "ui_png": {
+        "bytes": 50818,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/gcc/r1/subscriptions-acquisition-ui.png",
+        "sha256": "0f99bf36f6016d437f94690b884e738ae8ca9bb808b017608bc91896dc5eaad7"
+      }
+    },
+    "san": {
+      "raw": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/san/r1/result-raw.json",
+        "sha256": "48baba0e2c3eb2e4471b3bad06ed28a3c502b799c650a96ac25a8ff1df94eb95"
+      },
+      "stamp": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/san/r1/result-stamped.json",
+        "sha256": "e8699376e8820f70d5ffa8fabc511f08b8308b7f01c5a02f25249b689eca360b"
+      },
+      "elapsed_seconds": 377.984,
+      "commands": 42,
+      "ELFs": 18,
+      "archives": 16,
+      "source_map": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/san/r1/source-after.json",
+        "sha256": "cae29d32a59603eed8aed00452ba610c33612aaeb17899a559abfdbdc47176c4"
+      },
+      "source_files": 1410,
+      "qt_rows": 159,
+      "qt_methods": 54,
+      "qt_lifecycle_rows": 24,
+      "groups": {
+        "config-acquisition-pending-guards": 1,
+        "state-acquisition-pending-guards": 1,
+        "intake-acquisition-pending-guards": 1,
+        "actual-saved-result-reader": 20,
+        "association-values": 11,
+        "actual-stopped-acquisition-worker": 15,
+        "actual-binary-metainfo-get": 27,
+        "binary-http-response-values": 1,
+        "owned-acquisition-process-recovery": 24,
+        "classic-subscriptions-acquisition-ui": 7,
+        "subscription-values-source-store": 12,
+        "numeric-policy-real-source": 6,
+        "subscriptions-concrete-worker": 4,
+        "subscription-concrete-http": 17,
+        "existing-rss-transport-controls": 14,
+        "existing-rss-host-controls": 2,
+        "full-torrent-intake": 1,
+        "subscription-download-state-values": 1
+      },
+      "xml_sha256": {
+        "config-acquisition-pending-guards": "2a5927ebb92d61d592e37383699ded1384df79b948af51e525bea7bc4c1615c5",
+        "state-acquisition-pending-guards": "6d7245a23bfe2cb65bb1bf85063b43bf774e8c3bc856d3d76a842bf629919bd0",
+        "intake-acquisition-pending-guards": "351c9caf0dbfa26cb1756c50a270ad3250e8255e8037df38b86debee6fd9c3f4",
+        "actual-saved-result-reader": "964dddc5f1edd6d2950a5d0ed91de846a16f785c38de96a95134e93065ebea14",
+        "association-values": "b0e4fd6b8c44bc0736562483ed8e3557ebc8d4aef3d0d2ac8514b19585dc667e",
+        "actual-stopped-acquisition-worker": "8cf53192225e446f82fae9ad0f38a6f6dc04a126f31a79b59d6d32f6287cc815",
+        "actual-binary-metainfo-get": "de98fc83e8c469a0f106e6fa71d49389dfdf26d835c9cbde550e135b2a112a28",
+        "binary-http-response-values": "1a474a1a7950843adcbd216902687ac2e04d92c00d33aee43c4e6ddf6eee8913",
+        "owned-acquisition-process-recovery": "ad0e31add7d7bb750e39e914d71a1967d5bac5932f3da47338663c763bb393cc",
+        "classic-subscriptions-acquisition-ui": "6d3ecc914de1e3b7ce7b212c1cfb5a5fd8ddf2d14ecca334d323d7e17b75c65e",
+        "subscription-values-source-store": "5be55cab2af89e9c43e6f1c7f0eb5c1109e195446c70390b105d49218cde4270",
+        "numeric-policy-real-source": "5268e63c148df7ab3ce685252c1e2a22582cc952f1c28016090b1a31c0474ff4",
+        "subscriptions-concrete-worker": "6d3e678476f24c41428877826e5b906c56630a7b7e7357ed38a5a8c633781164",
+        "subscription-concrete-http": "4e71b0432722c8d03cc47278545a0ca211830cf8afe2c7b538778d3ed7ff3a75",
+        "existing-rss-transport-controls": "ac34274ecdf9d047a57ba40a47d36d126d46208475d09b06ccf5497dd9bcf558",
+        "existing-rss-host-controls": "434084a4371fad27601d246e5b4baee71994f0a275df0c63965043ce6099ef1d",
+        "full-torrent-intake": "1cfe4b1a363fc1dac5192a75f3c33955e8092f1f00380d59254659664bd846fd",
+        "subscription-download-state-values": "5c2c7a63621627ea5718f25286bf3e6cb0b708c647c0aadad063bc1135d1e05a"
+      },
+      "ui_png": {
+        "bytes": 50818,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/san/r1/subscriptions-acquisition-ui.png",
+        "sha256": "0f99bf36f6016d437f94690b884e738ae8ca9bb808b017608bc91896dc5eaad7"
+      }
+    }
+  },
+  "spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/spec.json",
+    "sha256": "d347c8deb371975a52e5c78e394f983169ea6ad3eaa75b7596fc720247027212"
+  },
+  "source_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/source-manifest.json",
+    "sha256": "9c9e03407523465f562e68bea9825e29b5cc167a7c967522ac12fffea55386bf"
+  },
+  "implementation_commit": "b0493c710397236a0c915ed3f680b24d33719f13",
+  "native_tree": "51bd2d26d3fd7e9b68fe127e3f3e4fb71e96577d",
+  "roles": {
+    "gcc": {
+      "variant-commands": {
+        "actual_compiles": 2,
+        "fixture_macro_count": 1
+      },
+      "provider-variant-commands": {
+        "actual_compiles": 2,
+        "fixture_macro_count": 1
+      },
+      "acquisition-variant-commands": {
+        "actual_compiles": 2,
+        "fixture_macro_count": 1
+      },
+      "fixture_factory_symbols_absent_production_present_fixture": true,
+      "actual_link_commands_checked": 18,
+      "crash_hook_absent_production_present_fixture": true
+    },
+    "san": {
+      "variant-commands": {
+        "actual_compiles": 2,
+        "fixture_macro_count": 1
+      },
+      "provider-variant-commands": {
+        "actual_compiles": 2,
+        "fixture_macro_count": 1
+      },
+      "acquisition-variant-commands": {
+        "actual_compiles": 2,
+        "fixture_macro_count": 1
+      },
+      "fixture_factory_symbols_absent_production_present_fixture": true,
+      "actual_link_commands_checked": 18,
+      "crash_hook_absent_production_present_fixture": true
+    }
+  },
+  "legacy_upgrade": {
+    "receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/legacy-gcc-r1/result.json",
+      "sha256": "678a48f03100d65e7e43a79d861d028873d2bc15592bdaaeb67cdd3da5bcadb3"
+    },
+    "observation": {
+      "external_temporary_cleanup": true,
+      "factory_calls": 0,
+      "history_was_disabled": true,
+      "no_reimport": true,
+      "no_retroactive_download_sid_callback": true,
+      "old_manifest_sha256": "3317036021021fe8836a0401051464eada64e0ee686e512d010b8dd8e00d6978",
+      "preview_startups": 2,
+      "profile_cleanup": true,
+      "profile_files_verified_before_consumption": 14,
+      "schema": "BiglyBTC.LocalQualifiedLegacyV1Upgrade.V1",
+      "state_sha256": "c88261b445e50ae518b4c66a0e3cfc569749b9cbb61aa2b40a7954cb95e29a55",
+      "status": "PASS_LOCAL_QUALIFIED_V1_UPGRADE"
+    },
+    "old_manifest": {
+      "bytes": 16879,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/recovery-test-candidate/legacy-v1/manifest.json",
+      "sha256": "3317036021021fe8836a0401051464eada64e0ee686e512d010b8dd8e00d6978"
+    },
+    "historical_mutable_files_checked_before_consumption_not_rehashed_after_cleanup": true,
+    "current_cleanup_absence_independently_checked": true
+  }
+}

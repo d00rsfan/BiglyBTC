@@ -1,0 +1,77 @@
+{
+  "command": {
+    "argv": [
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-subscription-acquisition-recovery-tests",
+      "--legacy-upgrade"
+    ],
+    "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+    "elapsed_seconds": 0.265,
+    "exit_code": 0,
+    "failure": null,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/legacy-gcc-r1/legacy-upgrade.log",
+    "log_sha256": "436746527f6aee040d3657eccd4f6e041aad5b211d8a8b8ad56d39575a23927f"
+  },
+  "helper": {
+    "bytes": 4691,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/legacy.py",
+    "sha256": "7227a07552c6e0dc856704f987e9bf9f07e0618c3f4ba685da81a1020cdefc7c"
+  },
+  "main_gcc_stamped": {
+    "bytes": 182624,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/gcc/r1/result-stamped.json",
+    "sha256": "1196a06436bd348111cc0eea1a93af732ef8ab71f3283d823eeeeca98fd771d5"
+  },
+  "main_san_stamped": {
+    "bytes": 185635,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/san/r1/result-stamped.json",
+    "sha256": "e8699376e8820f70d5ffa8fabc511f08b8308b7f01c5a02f25249b689eca360b"
+  },
+  "mutable_fixture_consumed_once": true,
+  "new_image": {
+    "bytes": 18112776,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-subscription-acquisition-recovery-tests",
+    "sha256": "a7f54d6799559b7d2e9e57f08e9b05f7322a28ff10a95f2e6d0728eceb57728a"
+  },
+  "new_source": {
+    "bytes": 47871,
+    "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/subscription_acquisition_recovery_tests.cpp",
+    "sha256": "cad1c4ba49dc6a8b23d15e6d9ffc3337c225e2a1f954179e41a8e442692c7010"
+  },
+  "observation": {
+    "external_temporary_cleanup": true,
+    "factory_calls": 0,
+    "history_was_disabled": true,
+    "no_reimport": true,
+    "no_retroactive_download_sid_callback": true,
+    "old_manifest_sha256": "3317036021021fe8836a0401051464eada64e0ee686e512d010b8dd8e00d6978",
+    "preview_startups": 2,
+    "profile_cleanup": true,
+    "profile_files_verified_before_consumption": 14,
+    "schema": "BiglyBTC.LocalQualifiedLegacyV1Upgrade.V1",
+    "state_sha256": "c88261b445e50ae518b4c66a0e3cfc569749b9cbb61aa2b40a7954cb95e29a55",
+    "status": "PASS_LOCAL_QUALIFIED_V1_UPGRADE"
+  },
+  "old_manifest": {
+    "bytes": 16879,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/recovery-test-candidate/legacy-v1/manifest.json",
+    "sha256": "3317036021021fe8836a0401051464eada64e0ee686e512d010b8dd8e00d6978"
+  },
+  "original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "scope": "Preview startup only; no fresh fetch/import/history/SID callback. Profile-file hashes were checked before consumption, not after cleanup. No power-loss or SAN upgrade claim.",
+  "sdk": {
+    "bytes": 10137344,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+    "sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3"
+  },
+  "source_commit": "b0493c710397236a0c915ed3f680b24d33719f13",
+  "source_tree": "51bd2d26d3fd7e9b68fe127e3f3e4fb71e96577d",
+  "spec": {
+    "bytes": 116471,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/spec.json",
+    "sha256": "d347c8deb371975a52e5c78e394f983169ea6ad3eaa75b7596fc720247027212"
+  },
+  "status": "PASS_LOCAL_GCC_V1_UPGRADE"
+}

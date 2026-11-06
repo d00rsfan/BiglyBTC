@@ -1,0 +1,129 @@
+{
+  "schema": "BiglyBTC.ExistingStoppedSubscriptionAcquisitionAcceptanceReview.V1",
+  "status": "PASS_EXISTING_STOPPED_SUBSCRIPTION_ACQUISITION_LOCAL_OWNED_GCC_SAN_AND_V1_UPGRADE_REVIEW",
+  "implementation_commit": "b0493c710397236a0c915ed3f680b24d33719f13",
+  "native_tree": "51bd2d26d3fd7e9b68fe127e3f3e4fb71e96577d",
+  "spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/spec.json",
+    "sha256": "d347c8deb371975a52e5c78e394f983169ea6ad3eaa75b7596fc720247027212"
+  },
+  "source_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/source-manifest.json",
+    "sha256": "9c9e03407523465f562e68bea9825e29b5cc167a7c967522ac12fffea55386bf"
+  },
+  "independent_validation": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/independent-validation-r5.json",
+    "sha256": "27ef622c9e74d1e611d1925f5dad6a73ee0d7c39db85ca9f6e90bc22dc7b3075"
+  },
+  "raw_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/gcc/r1/result-raw.json",
+      "sha256": "b80aef08729a069bd83b8c5fdfdb90cef42cfdeb6c2191c4687573c6ec17f98d"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/san/r1/result-raw.json",
+      "sha256": "48baba0e2c3eb2e4471b3bad06ed28a3c502b799c650a96ac25a8ff1df94eb95"
+    }
+  },
+  "stamped_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/gcc/r1/result-stamped.json",
+      "sha256": "1196a06436bd348111cc0eea1a93af732ef8ab71f3283d823eeeeca98fd771d5"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/san/r1/result-stamped.json",
+      "sha256": "e8699376e8820f70d5ffa8fabc511f08b8308b7f01c5a02f25249b689eca360b"
+    }
+  },
+  "legacy_upgrade": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r5/legacy-gcc-r1/result.json",
+    "sha256": "678a48f03100d65e7e43a79d861d028873d2bc15592bdaaeb67cdd3da5bcadb3"
+  },
+  "source_findings": {
+    "blocking_findings": [],
+    "reviewed_scope": "Selected23 leaves: concrete Host/source identity and stopped-target exclusion, raw64/SID derivation, full pure-v1 archive/state/geometry binding, closed B/S0/S1 plus subscription-pair recovery, fixed primary writer/frozen backup, stopped rollback, V1 compatibility and scoped temporary retirement. R5 changes only two fixture test TUs from R4; production bytes unchanged.",
+    "authority": "Actual SAMEOFD/profile/session/full SID/result key/internal receiver remain bound. Hashes/checksums and recipes alone do not grant intake or mutation authority. Existing target requires unique stopped, unforced, unpaused Public inventory and authenticated archive/state with no active Host target/controller. Duplicate subscription association does not repair or repeat the SID callback.",
+    "recovery": "Source revocation permits owned stopped rollback only; unknown state/pair stays read-only review. Existing rollback preserves B; fresh rollback preserves stopped S0. Equal-byte state candidates retain all valid progress matches. Done/temp-retired is cleanup progress, not forward permission. V1 does not gain a retroactive SID callback."
+  },
+  "measured": {
+    "gcc_elapsed_seconds": 249.226,
+    "san_elapsed_seconds": 377.984,
+    "per_lane": {
+      "successful_commands": 42,
+      "ELF_images": 18,
+      "selected_archives": 16,
+      "fresh_test_groups": 18,
+      "Qt_groups": 12,
+      "Qt_methods": 54,
+      "Qt_data_rows": 159,
+      "Qt_lifecycle_rows": 24,
+      "native_guard_cases": 55,
+      "guard_breakdown": {
+        "config": 40,
+        "state": 7,
+        "intake": 8
+      },
+      "HTTP_framing_value_families": 8,
+      "download_state_value_groups": 8,
+      "ordinary_intake_families": 14,
+      "ordinary_intake_assertions": 632,
+      "real_process_recovery_rows": 24,
+      "unique_source_checkpoint_labels": 13
+    },
+    "legacy_GCC_only": {
+      "preview_startups": 2,
+      "factory_calls": 0,
+      "profile_files_checked_before_consumption": 14,
+      "elapsed_seconds": 0.265,
+      "no_reimport": true,
+      "no_retroactive_SID_callback": true,
+      "external_temp_and_profile_cleanup_independently_confirmed": true
+    }
+  },
+  "acceptance_checks": {
+    "all_spec_inputs_current_dependencies_command_logs_images_archives_and_XML_verified": true,
+    "selected23_afterimages_match_current_Native": true,
+    "both_lane_source_before_after_and_current_1410_files_match": true,
+    "stamps_exactly_bind_raw_receipts_and_committed_native_tree": true,
+    "three_actual_compile_variants_each_two_compiles_one_fixture_macro": true,
+    "fixture_factory_symbols_and_crash_hook_absent_production_present_fixture": true,
+    "eighteen_exact_final_link_roles_per_lane_checked": true,
+    "SAN_receipts_logs_no_detected_sanitizer_failure": true,
+    "legacy_mutable_fixture_consumed_once_no_copy_or_new_old_producer": true
+  },
+  "provenance": {
+    "original": {
+      "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+    },
+    "SDK_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+    "SDK_source_build_record": {
+      "bytes": 192696,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/source-build-record-discovery-final.json",
+      "sha256": "e213ba3227a464fcb8eab1c7db3e3adef720f482fd352bb87ec12c3f27ec1e92"
+    },
+    "previous_R4_aggregate_FAIL_preserved": {
+      "gcc": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r4/gcc/r1/result-raw.json",
+        "sha256": "ca1715db85a6f2b3d463f4079f6f921fc5f61e42d4c5d069823ff3a8f86d31ca"
+      },
+      "san": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/cohort-r4/san/r1/result-raw.json",
+        "sha256": "bd1a667ec42e760f9307176cd5082e7c5f328d2a2d37fbfa56067461999ae548"
+      }
+    },
+    "historical_Original_value_oracle": "Carried qualified value-only observations/source provenance; no new JVM or public HTTP getter/manager preparation claim.",
+    "legacy_historical_files": "Old3317 manifest and producer facts retained. Fourteen mutable profile files were verified by the actual upgrade subject before consumption; they are not claimed rehashed after cleanup."
+  },
+  "scope": {
+    "supported": "Local owned fixtures for explicit stopped pure-v1 Public acquisition: fresh import and bounded genuine existing-target association; source-owned binary GET; real normal startup recovery and one in-place V1 preview upgrade.",
+    "limits": [
+      "Recovery24 and legacy fixture use history disabled. Positive fresh Bridge asserts a genuine enabled-history receipt; history-enabled crash recovery/reissued receipts are not runtime-qualified.",
+      "OS process crash coverage does not prove power-loss durability.",
+      "Only config40/state7/intake8 mutator guard cases are direct runtime coverage; other guarded paths remain source/compile coverage.",
+      "No automatic acquisition, full Original scheduler/P08, arbitrary active-download stop/recreate, hybrid/v2/magnet/private-existing or broad preparation parity.",
+      "No public internet/DNS or global resolver-worker shutdown claim. UI capture is controlled layout evidence, not real-profile proof.",
+      "Prior failed cohorts remain failed; R5 supplies the current passing execution. No production fix is inferred from the prior parallel fixture-port collision."
+    ]
+  }
+}
