@@ -1,0 +1,379 @@
+{
+  "UI_capture": {
+    "height": 800,
+    "human_visual_acceptance_claimed": false,
+    "image": {
+      "bytes": 45226,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort/san/r1/rss-sources-window.png",
+      "sha256": "533f06bbf1459bcbe911922560950bdba0210d6491a091912494144324925763"
+    },
+    "kind": "test-only actual UI capture",
+    "width": 1250
+  },
+  "XML": {
+    "rss-sources-bridge": {
+      "bytes": 1865,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/san/r1/rss-sources-bridge.xml",
+      "sha256": "394f53a3998a812260506f417c9f3df6edc57e543353f542a2235ed76568b934"
+    }
+  },
+  "archives": {
+    "app/libbiglybtc_desktop_host.a": "e357f6351b442cd847ceb3b39b40416056f5132f364225ecde01afb43441f2d6",
+    "engine/libbiglybtc_http_response.a": "73c955e10959b3fee5cd99ef20ddd211c6b2ce311b26b647e7ecf65a66e7efa4",
+    "services/libbiglybtc_rss_document.a": "b5d9ef8ddbcb7aacd5e6733d01bc8a97445ff949754f805c1259ed0006517e26",
+    "services/libbiglybtc_rss_http_fetch.a": "231e97dc30664c103ab915905e55c3978337cabe1f811b90c1be74bcda5e25e0",
+    "services/libbiglybtc_saved_rss_source.a": "fc5c4dae62f462d978865e1e0392067b8cfdcdea07f0e8cd36d1c731a07eabde",
+    "tests/libbiglybtc_rss_consumer_host_fixture.a": "8fd74a0da659c5c4486da311a3d61362f1290fed8e2fa15a6f8f3214d09936ac",
+    "tests/libbiglybtc_rss_http_fetch_fixture.a": "6a184aa09bc5522b96f33fed0463e6befdf367158d678592b0550f26c7c30015",
+    "ui/libbiglybtc_ui.a": "3e13f80364c1b3ad1cd070f19be42e02762f5bb152c31a0e5c15c869fdb6afcd"
+  },
+  "carried_UI": {
+    "UI_capture": {
+      "height": 800,
+      "human_visual_acceptance_claimed": false,
+      "image": {
+        "bytes": 45226,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort/san/r1/rss-sources-window.png",
+        "sha256": "533f06bbf1459bcbe911922560950bdba0210d6491a091912494144324925763"
+      },
+      "kind": "test-only actual UI capture",
+      "width": 1250
+    },
+    "XML": {
+      "bytes": 1837,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort/san/r1/rss-sources-ui.xml",
+      "sha256": "b4f72081b37ecda843fefb4e081de33403e0f6f5e39c96506bd3ae54548f1e70"
+    },
+    "allowed_Native_changes": [
+      "preview/native/app/rss_sources_bridge.inc",
+      "preview/native/app/rss_sources_host.inc",
+      "preview/native/tests/rss_sources_bridge_tests.cpp"
+    ],
+    "coverage": {
+      "actual_pass_rows": [
+        "initTestCase",
+        "manualViewRejectsStaleCatalogAndResultPacketsWithoutAutoFetch",
+        "closeReopenAndSessionSwitchInvalidateTargetsAndStopReceiver",
+        "reentrantCancelSeesNewSessionAndCannotRestoreAnOldResult",
+        "previewIgnoresForgedNormalHintAndReadSignalCanDeleteItsPage",
+        "widgetSignalReentryCannotFinishAnOldCatalogOrResult",
+        "cleanupTestCase"
+      ],
+      "selectors": [
+        "manualViewRejectsStaleCatalogAndResultPacketsWithoutAutoFetch",
+        "closeReopenAndSessionSwitchInvalidateTargetsAndStopReceiver",
+        "reentrantCancelSeesNewSessionAndCannotRestoreAnOldResult",
+        "previewIgnoresForgedNormalHintAndReadSignalCanDeleteItsPage",
+        "widgetSignalReentryCannotFinishAnOldCatalogOrResult"
+      ]
+    },
+    "exact_UI_test_image": {
+      "bytes": 105739680,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-rss-sources-ui-tests",
+      "sha256": "4735e3b82d9d999a41897fc498d69cd95e55275005ced982719dd51466f883bf"
+    },
+    "new_UI_invocation": false,
+    "parent_raw": {
+      "bytes": 53897,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort/san/r1/result-raw.json",
+      "sha256": "e6a528bb65fe8e866c717d5ad9fe84045769324a62aea49a840773261d825f0b"
+    },
+    "parent_source": {
+      "bytes": 171446,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort/source.json",
+      "sha256": "79903de85f5821aa3d0b889c7663b68e3445e4bd1bfb9b0d03ab243286fe2d19"
+    },
+    "parent_spec": {
+      "bytes": 61761,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort/spec.json",
+      "sha256": "561dc0412623d463c31d10e82e238345f7b3bb6e82f9f89c8a5c5921f496bc2b"
+    },
+    "parent_status": "FAIL",
+    "passed_command": {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-rss-sources-ui-tests",
+        "manualViewRejectsStaleCatalogAndResultPacketsWithoutAutoFetch",
+        "closeReopenAndSessionSwitchInvalidateTargetsAndStopReceiver",
+        "reentrantCancelSeesNewSessionAndCannotRestoreAnOldResult",
+        "previewIgnoresForgedNormalHintAndReadSignalCanDeleteItsPage",
+        "widgetSignalReentryCannotFinishAnOldCatalogOrResult",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort/san/r1/rss-sources-ui.xml,xml"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 0.717,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort/san/r1/rss-sources-ui.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "standalone_link": {
+      "bytes": 3554,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/carried-ui-link-san.json",
+      "sha256": "659ca4396f179080476c7ced0bb829141fc2b7028149524f0d089689bfa3cc6b"
+    },
+    "status": "CARRIED_PASS_UI_SUBSET_PARENT_AGGREGATE_UNCHANGED"
+  },
+  "commands": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "-k",
+        "0",
+        "BiglyBTC",
+        "biglybtc_rss_consumer_host_fixture",
+        "biglybtc-rss-sources-bridge-tests"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 593.309,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/san/r1/build.log",
+      "log_sha256": "65f9216301f8992b9eba0f919dfaaec0cd370b945380fc7f38d8ddc2ba965f6c"
+    },
+    {
+      "argv": [
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "-t",
+        "commands",
+        "biglybtc_desktop_host",
+        "biglybtc_rss_consumer_host_fixture"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 0.066,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/san/r1/variant-commands.log",
+      "log_sha256": "35d678cb64b6869b6781c673746e86f0e6a8243c2c8330a4026d3ff812444622"
+    },
+    {
+      "argv": [
+        "nm",
+        "--defined-only",
+        "--demangle",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/services/libbiglybtc_rss_http_fetch.a"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 0.066,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/san/r1/production-symbols.log",
+      "log_sha256": "f69087b9000bd1a86fc4f29cbd645768853eaa7163c2b00d4142a000b7b35a3b"
+    },
+    {
+      "argv": [
+        "nm",
+        "--defined-only",
+        "--demangle",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/libbiglybtc_rss_http_fetch_fixture.a"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 0.066,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/san/r1/fixture-symbols.log",
+      "log_sha256": "e423544000cd38c523e8b84a0fa7c5ac1750fa0099896c059fb143bdd7b72cb5"
+    },
+    {
+      "argv": [
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "-t",
+        "commands",
+        "biglybtc-rss-sources-bridge-tests"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 0.068,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/san/r1/bridge-link.log",
+      "log_sha256": "e4c16fe292345dba2ada9373db2bbe280a6f81a5a1de6b5ae860b998f01f21fb"
+    },
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-rss-sources-bridge-tests",
+        "actualMalformedAndAmbiguousCatalogsCannotConstructAProvider",
+        "actualPreviewCatalogAndForgedFetchInvokeZeroConcreteFactories",
+        "genuineNormalWorkerManualFetchAndCancelRecoverWithoutAutoFetch",
+        "pageCloseReopenAndProfileSwitchRejectActualOldProducerPackets",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/san/r1/rss-sources-bridge.xml,xml"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 14.366,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/san/r1/rss-sources-bridge.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "coverage": {
+    "bridge-link": {
+      "actual_link_argv": [
+        ":",
+        "&&",
+        "/usr/bin/g++-16",
+        "-fsanitize=address,undefined",
+        "-fno-omit-frame-pointer",
+        "-fno-sanitize-recover=all",
+        "-O2",
+        "-g",
+        "-DNDEBUG",
+        "-fsanitize=address,undefined",
+        "-Wl,--dependency-file=tests/CMakeFiles/biglybtc-rss-sources-bridge-tests.dir/link.d",
+        "tests/CMakeFiles/biglybtc-rss-sources-bridge-tests.dir/biglybtc-rss-sources-bridge-tests_autogen/mocs_compilation.cpp.o",
+        "tests/CMakeFiles/biglybtc-rss-sources-bridge-tests.dir/rss_sources_bridge_tests.cpp.o",
+        "-o",
+        "tests/biglybtc-rss-sources-bridge-tests",
+        "-Wl,-rpath,/opt/Qt/6.12.0/gcc_64/lib:/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib",
+        "tests/libbiglybtc_rss_consumer_host_fixture.a",
+        "ui/libbiglybtc_ui.a",
+        "/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6.12.0",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so",
+        "/usr/lib/x86_64-linux-gnu/libz.so",
+        "/opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6.12.0",
+        "/opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6.12.0",
+        "/usr/lib/x86_64-linux-gnu/libGLX.so",
+        "/usr/lib/x86_64-linux-gnu/libOpenGL.so",
+        "adapters/libbiglybtc_saved_service_view.a",
+        "app/libbiglybtc_overall_service.a",
+        "app/libbiglybtc_source_rate_projection.a",
+        "app/libbiglybtc_owned_azureus_service.a",
+        "app/libbiglybtc_scheduler_service.a",
+        "app/libbiglybtc_scheduler_policy.a",
+        "app/libbiglybtc_local_rating_profile.a",
+        "plugins/BiglyBTC-plugin-azrating/libbiglybtc_rating_data.a",
+        "services/libbiglybtc_i2p_provider_owner.a",
+        "services/libbiglybtc_i2p_contact_owner.a",
+        "services/libbiglybtc_owned_i2p_source.a",
+        "services/libbiglybtc_owned_sam_protocol.a",
+        "services/libbiglybtc_i2p_contact_store.a",
+        "services/libbiglybtc_i2p_profile_bootstrap.a",
+        "services/libbiglybtc_i2p_dht.a",
+        "services/libbiglybtc_azureus_owned_udp.a",
+        "services/libbiglybtc_azureus_control.a",
+        "services/libbiglybtc_i2cp_initial_channel.a",
+        "services/libbiglybtc_i2cp_leaseset2.a",
+        "services/libbiglybtc_i2cp_tracker_codec.a",
+        "services/libbiglybtc_i2cp_datagram.a",
+        "services/libbiglybtc_i2cp_session_config.a",
+        "services/libbiglybtc_i2cp_protocol.a",
+        "services/libbiglybtc_i2p_streaming.a",
+        "/usr/lib/x86_64-linux-gnu/libz.so",
+        "services/libbiglybtc_protocol_unique32.a",
+        "services/libbiglybtc_i2p_client_identity.a",
+        "services/libbiglybtc_i2p_datagram.a",
+        "tests/libbiglybtc_rss_http_fetch_fixture.a",
+        "engine/libbiglybtc_local_engine.a",
+        "adapters/libbiglybtc_mainline_checkpoint.a",
+        "adapters/libbiglybtc_mldht_cache.a",
+        "engine/libbiglybtc_mainline_scrape.a",
+        "engine/libbiglybtc_mainline_bind_plan.a",
+        "adapters/libbiglybtc_plugin_settings.a",
+        "adapters/libbiglybtc_plugin_keys.a",
+        "/opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6.12.0",
+        "engine/libbiglybtc_http_response.a",
+        "/usr/lib/x86_64-linux-gnu/libz.so",
+        "/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6.12.0",
+        "services/libbiglybtc_saved_rss_source.a",
+        "adapters/libbiglybtc_profile.a",
+        "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+        "/usr/lib/x86_64-linux-gnu/libssl.so",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so",
+        "adapters/libbiglybtc_state_codec.a",
+        "core/libbiglybtc_core.a",
+        "/usr/lib/x86_64-linux-gnu/libz.so",
+        "plugin-sdk/libbiglybtc_plugin_host.a",
+        "-ldl",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so",
+        "/opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6.12.0",
+        "services/libbiglybtc_rss_document.a",
+        "/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6.12.0",
+        "-Wl,-rpath-link,/opt/Qt/6.12.0/gcc_64/lib",
+        "&&",
+        ":"
+      ],
+      "forbidden_archives_absent": [
+        "app/libbiglybtc_desktop_host.a",
+        "services/libbiglybtc_rss_http_fetch.a"
+      ],
+      "required_archives_present": [
+        "tests/libbiglybtc_rss_consumer_host_fixture.a",
+        "tests/libbiglybtc_rss_http_fetch_fixture.a"
+      ],
+      "target": "biglybtc-rss-sources-bridge-tests"
+    },
+    "isolated-variants": {
+      "compile_commands": 2,
+      "fixture_macro_count": 1,
+      "production_has_fixture_symbol": false
+    },
+    "rss-sources-bridge": {
+      "actual_pass_rows": [
+        "initTestCase",
+        "actualMalformedAndAmbiguousCatalogsCannotConstructAProvider:malformed-primary",
+        "actualMalformedAndAmbiguousCatalogsCannotConstructAProvider:duplicate-id-and-uid",
+        "actualPreviewCatalogAndForgedFetchInvokeZeroConcreteFactories",
+        "genuineNormalWorkerManualFetchAndCancelRecoverWithoutAutoFetch",
+        "pageCloseReopenAndProfileSwitchRejectActualOldProducerPackets",
+        "cleanupTestCase"
+      ],
+      "selectors": [
+        "actualMalformedAndAmbiguousCatalogsCannotConstructAProvider",
+        "actualPreviewCatalogAndForgedFetchInvokeZeroConcreteFactories",
+        "genuineNormalWorkerManualFetchAndCancelRecoverWithoutAutoFetch",
+        "pageCloseReopenAndProfileSwitchRejectActualOldProducerPackets"
+      ]
+    }
+  },
+  "elapsed_seconds": 621.43,
+  "images": {
+    "BiglyBTC": {
+      "bytes": 452738016,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/app/BiglyBTC",
+      "sha256": "fde1d596da03af12b1f7b270bfe7f5f4edbdef919aaaa7e391beadae93a6dc81"
+    },
+    "biglybtc-rss-sources-bridge-tests": {
+      "bytes": 448964352,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-rss-sources-bridge-tests",
+      "sha256": "6007fd99bd9a9af13b5c0047d39e144664b9f0fddfe2161504733819cbd83ab3"
+    },
+    "biglybtc-rss-sources-ui-tests": {
+      "bytes": 105739680,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-rss-sources-ui-tests",
+      "sha256": "4735e3b82d9d999a41897fc498d69cd95e55275005ced982719dd51466f883bf"
+    }
+  },
+  "implementation_commit": "2417a35d3863ef5a44b997a0efcf57f406ba9e5c",
+  "lane": "san",
+  "native_tree": "519aacb4fb6ead6ca701e09439bc0ca191271f9c",
+  "raw_receipt": {
+    "bytes": 63878,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/san/r1/result-raw.json",
+    "sha256": "78c1f3b4c26343a52f4d4c72b48e436a462cc10716888dd96ffd52aa4629cc97"
+  },
+  "source_after": {
+    "bytes": 171446,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/san/r1/source-after.json",
+    "sha256": "828b9b182c6a4d09830e3f6fc176bffc4fb1515c6aed57231035d76990a0de2d"
+  },
+  "source_before": {
+    "bytes": 171446,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/san/r1/source-before.json",
+    "sha256": "828b9b182c6a4d09830e3f6fc176bffc4fb1515c6aed57231035d76990a0de2d"
+  },
+  "stamped_receipt": {
+    "bytes": 64235,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/consumer-cohort-r2/san/r1/result-stamped.json",
+    "sha256": "5084009d6e2af9ce9616e1e9c8d0a126fef3d14ad52691a89fdee38e13be17a6"
+  },
+  "status": "PASS"
+}
