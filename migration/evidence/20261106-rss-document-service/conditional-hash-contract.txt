@@ -1,0 +1,43 @@
+Narrow conditional-magnet hash correction; source-only, not executed.
+
+Parent integration manifest56fabc337eee1c925d32724ec2aad3cb8a82db0554ecae62402c751717737da5
+remains frozen. Apply these two immediate deltas over its exact afterimages;
+retain the parent's actual Native preimages and all five unchanged leaves.
+There is no new API, target, translation unit, provider, fetch or runtime seam.
+
+Original RSSEngine's nested torrent/magnetURI setter is conditional on the
+effective getDownloadLink() being empty (pinned source745-785). An ordinary
+HTTP item link can become that download through a real HEAD/cache branch
+(455-486). Thus page+nested magnetA with no explicit hash has two possible
+outcomes: accepted page/no inferred hash, or rejected page/nested magnetA/hashA.
+The final original magnet-to-hash fallback (1000-1028) cannot supply a known
+hash until that link choice is known. No HEAD result is supplied by this draft.
+
+Only the final inferred-from-download magnet hash branch gains the same
+!headUnknown && !fallbackUnknown settled-choice condition as the exported
+link uncertainty. Explicit item/nested infoHash and Vuze hash setters are
+unchanged and remain independently known. A later unconditional enclosure or
+other existing setLink clears HEAD uncertainty, so a settled magnet's hash
+can still be inferred normally. Existing unavailable-link diagnostics remain.
+
+The new inferredMagnetHashRequiresSettledDownloadLink regression family covers:
+- exact page+nested canonical magnetA, no explicit hash: link/hash unavailable;
+- the same input plus independent explicit infohashB: known hashB retained;
+- the same page/nested magnetA plus later unconditional enclosure magnetB:
+  final chosen link/hashB retained and HEAD uncertainty settled.
+The existing seven families and every assertion remain. The current suite has
+eight families under the unchanged original-rss-document-values CTest/30s bound.
+
+Evidence boundary: prior r2 b348b1f3 remains actual20 commands/seven Native
+families/nine public RSSFeed/RSSItem/WebResult groups for the OLD parent value
+bytes. It is not relabelled as qualification for either amended leaf or the
+new eighth family. This child has only source/patch checks until the current
+affected optimized+leak-enabled SAN cohort runs. No new JVM is justified by
+this source-defined selector dependency; the earlier public API oracle never
+claimed RSSEngine.search/HEAD execution in the first place.
+
+The shared parser API, all caller-owned quotas/cancellation/lifecycle rules,
+date/raw-text/URL limitations and provider gaps stay as the parent records.
+No full RSS engine, consumer wiring, date, HEAD/cache, Engine.adjustLink or
+whole P08 parity claim is added. No Native/cache/profile/build/JVM/network/
+authorization action was performed to stage this correction.

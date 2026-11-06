@@ -1,0 +1,74 @@
+{
+  "cleanup": {
+    "all_subjects_joined": true,
+    "disposable_tree_removed": true,
+    "images_classes_removed_after_hash_capture": true
+  },
+  "comparisons": {
+    "bytes": 1366,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/comparisons.json",
+    "sha256": "6f9c6b6c84611695ebf94f9b73d077d39f4a99efc2475b052cbc45f42028d928"
+  },
+  "current_native_image_claim": false,
+  "deleted_images_and_classes": "recorded prior hashes only; not available or rehashed",
+  "evidence": {
+    "bytes": 4045,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/evidence.json",
+    "sha256": "b348b1f3682e7d51347e0119a8cc4360b1064edea666d6780fafc75de198af1f"
+  },
+  "independent_prior_review": {
+    "bytes": 5359,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/driver-rss-document-review/head-details-child-review.json",
+    "sha256": "cced8e89edfe35ebbb648b088858fd2e1e6d153c28326556bc8480f1f289437d"
+  },
+  "limits": [
+    "Source module remains in R staging; next cohesive Native integration/optimized+SAN qualification is separate.",
+    "Original oracle exercises supplied RSSFeed/RSSItem public parsing and WebResult deterministic setters, not RSSEngine.search or Engine.adjustLink.",
+    "HTTP HEAD/cache, description heuristics, date interpretation, noncanonical URL/Unicode edge forms, search/import/subscription/UI/provider ownership remain explicitly unqualified."
+  ],
+  "measured": {
+    "all_exit_zero": true,
+    "all_java_native_oracles_socket_denied": true,
+    "commands": 20,
+    "comparison_groups": 9,
+    "compiler_parallelism": 1,
+    "explicit_normalization_fields": 17,
+    "feed_groups": 2,
+    "feed_items": 3,
+    "java_class_target": 17,
+    "java_runtime": "JDK26",
+    "native_test_families": 7,
+    "normalization_rows": 7,
+    "qt_core_dso_inputs": 1,
+    "qt_header_inputs": 158,
+    "socket_negative_control": true
+  },
+  "new_compiler_or_JVM_commands": 0,
+  "production_qualification": false,
+  "result": {
+    "bytes": 32252,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/result.json",
+    "sha256": "b728f4101193593922dabff476da42cb548f2a697e3f49f05f3b6f8e65de8edc"
+  },
+  "schema": "BIGLYBTC_RSS_CARRIED_VALUE_EVIDENCE_V1",
+  "source_manifest": {
+    "bytes": 5663,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/amendments/ascii-canonical-hash/amendments/reconstructed-nested-links/amendments/head-dependent-details/amendments/range-loop-reference/manifest.json",
+    "sha256": "d4c920bd98d7922372b3048e77196f2cd4cf085bf5fc4d7b88691294ecc55678"
+  },
+  "source_map": {
+    "bytes": 1958,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/source-map.json",
+    "sha256": "7a4b917762d2e9bbb208f9ef52fe13c8c097793a8343c94e816d1dffeacdfd1d"
+  },
+  "status": "PRIOR_ACTUAL_VALUE_ONLY_NOT_RERUN",
+  "verified_on_rebase": {
+    "chain_manifests": 5,
+    "command_logs": 20,
+    "comparison_groups": 9,
+    "immediate_delta_steps": 12,
+    "immutable_original_blobs": 14,
+    "qualified_value_leaves": 5,
+    "retained_qualification_inputs": 182
+  }
+}

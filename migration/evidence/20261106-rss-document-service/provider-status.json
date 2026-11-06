@@ -1,0 +1,114 @@
+{
+  "schema": "BIGLYBTC_RSS_DOCUMENT_PROVIDER_COVERAGE_V1",
+  "status": "SOURCE_ONLY_NOT_QUALIFIED",
+  "rows": [
+    {
+      "field": "document",
+      "status": "Implemented bounded values",
+      "original": "RSSFeedImpl/SimpleXMLParserDocumentNodeImpl",
+      "notes": "RSS/Atom and immediate TEXT/CDATA; exact first child, local/full names; XML namespace/DOCTYPE policy is a conservative Native boundary."
+    },
+    {
+      "field": "name/uid",
+      "status": "Implemented source subset",
+      "original": "RSSItemImpl/WebResult.setNameFromHTML/Result.removeHTMLTags/Entities.HTML40",
+      "notes": "Original ASCII regex and Java trim;251 exact pinned named entities, numeric signed32 then UTF16 char conversion. Empty malformed entity is diagnosed instead of original throw."
+    },
+    {
+      "field": "sizes",
+      "status": "Implemented canonical ASCII decimal subset",
+      "original": "WebResult.setSizeFromHTML/GeneralUtils.getUnitMultiplier",
+      "notes": "Binary units; historical enclosure1MiB threshold; unknown units multiplier1; unsupported Unicode digits/hex floating forms remain absent and diagnostic. Extreme floating conversion not differentially qualified."
+    },
+    {
+      "field": "seeds/peers/completed",
+      "status": "Implemented structured values",
+      "original": "RSSEngine searchSupport",
+      "notes": "Vuze marker priority, ordinary exact integer fields, leechers preference, tracker first maximum with signed32 total wrap, attr fallback. No missing zero facts."
+    },
+    {
+      "field": "hash",
+      "status": "Implemented canonical subset",
+      "original": "WebResult.setHash/RSSEngine/UrlUtils",
+      "notes": "Raw32 text accepted as original setter; canonical40hex\u2192Base32; direct canonical btih/sha1 extraction. Malformed/other magnet forms explicitly not qualified."
+    },
+    {
+      "field": "raw publication",
+      "status": "Raw only",
+      "original": "RSSItemImpl.getPublicationDate",
+      "notes": "Publication text is owning; no epoch/date interpretation."
+    },
+    {
+      "field": "channel auto-download",
+      "status": "Value only",
+      "original": "RSSEngine auto_dl_enabled",
+      "notes": "Declared bool is data, not permission to enable automatic download."
+    },
+    {
+      "field": "link ordering",
+      "status": "Implemented supplied canonical ASCII subset",
+      "original": "RSSItemImpl.getLink/RSSEngine/WebResult.reConstructLink",
+      "notes": "Original channel concat, ordered enclosure/Atom/Vuze setters and last fallback; root/base reconstruction via raw concat. Validation does not normalize with QUrl.resolved."
+    },
+    {
+      "field": "HTTP HEAD/cache",
+      "status": "Unavailable provider",
+      "original": "RSSEngine.linkIsToTorrent/LD_LINK_IS_TORRENT",
+      "notes": "No HTTP request, cached engine state or guessed reply. Torrent link absent while a relevant ordering decision remains unknown."
+    },
+    {
+      "field": "description heuristic",
+      "status": "Unsupported fallback",
+      "original": "RSSEngine seed_leecher_pat1/2/completed_pat/size_pat",
+      "notes": "No approximate replacement; diagnostic even when exact structured fields still useful."
+    },
+    {
+      "field": "title/noncanonical magnet",
+      "status": "Unsupported fallback",
+      "original": "UrlUtils.parseTextForMagnets/getTruncatedHashFromMagnetURI",
+      "notes": "No btmh truncation/text extraction/percent-encoded alias parity. Raw source preserved."
+    },
+    {
+      "field": "URL edge forms",
+      "status": "Unsupported or unqualified",
+      "original": "java.net.URL/registered handlers",
+      "notes": "Noncanonical or nonASCII URL validation conservative; no userinfo/IDN/opaque-handler parity claim. Canonical HTTP oracle source is supplied."
+    },
+    {
+      "field": "date/assetdate",
+      "status": "Not projected",
+      "original": "RSSUtils.parseRSSDate/parseAtomDate via RSSItemImpl/WebResult",
+      "notes": "No fabricated current date/zero epoch."
+    },
+    {
+      "field": "category/tag/comments",
+      "status": "Not projected",
+      "original": "RSSEngine/WebResult category/tag/comment setters",
+      "notes": "No default category/tag registry/permission/membership effect."
+    },
+    {
+      "field": "superseeds/rank/contenttype",
+      "status": "Not projected",
+      "original": "RSSEngine Vuze setters",
+      "notes": "Superseed marker only suppresses lower-priority count fallback as original; no invented count/rank/type."
+    },
+    {
+      "field": "playlink/drmkey",
+      "status": "Not projected",
+      "original": "RSSEngine/WebResult",
+      "notes": "Raw XML preserved; no playback or DRM authority."
+    },
+    {
+      "field": "Engine.adjustLink",
+      "status": "Unavailable provider",
+      "original": "Result.adjustLink/WebResult.reConstructLink",
+      "notes": "No content proxy/engine anonymization policy facts; output is explicitly before engine adjustment."
+    },
+    {
+      "field": "engine/search/import",
+      "status": "Not activated",
+      "original": "RSSEngine/WebEngine/MetaSearch",
+      "notes": "No fetch, cookies, engine import, selection, installer, download/subscription/timer/UI ownership or result filtering."
+    }
+  ]
+}

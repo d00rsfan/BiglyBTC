@@ -1,0 +1,666 @@
+{
+  "status": "PASS_RSS_NATIVE_VALUES_AND_ORIGINAL_PUBLIC_API_SUBSET",
+  "production_qualification": false,
+  "commands": [
+    {
+      "name": "compile-rss",
+      "argv": [
+        "/usr/lib/cargo/bin/coreutils/nice",
+        "-n",
+        "5",
+        "/usr/bin/g++-16",
+        "-I/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/source/preview/native/services/search",
+        "-DBIGLYBTC_HOST_I2P_OWNER=1",
+        "-DQT_CORE_LIB",
+        "-DQT_GUI_LIB",
+        "-DQT_NETWORK_LIB",
+        "-DQT_NO_DEBUG",
+        "-DQT_TESTCASE_BUILDDIR=\"/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests\"",
+        "-DQT_TESTCASE_SOURCEDIR=\"/home/yurii/Java/BiglyBTC/preview/native/tests\"",
+        "-DQT_TESTLIB_LIB",
+        "-DQT_WIDGETS_LIB",
+        "-I/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-download-history-bridge-tests_autogen/include",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/app",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/core/include",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/ui",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/app/../plugins/BiglyBTC-plugin-SpeedScheduler",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_dht",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_ping",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_positions",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_contacts",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_nodes",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_values",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_packets",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_node",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_value",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_error",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_auth",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store_policy",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_router",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_value",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_mapping",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_runtime",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_control",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/adapters",
+        "-I/home/yurii/Java/BiglyBTC/plugin-sdk/include",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtWidgets",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtCore",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtGui",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtNetwork",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtTest",
+        "-O3",
+        "-DNDEBUG",
+        "-std=c++23",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+        "-Werror",
+        "-fPIC",
+        "-MD",
+        "-MF",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss.d",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss.o",
+        "-c",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/source/preview/native/services/search/rss_document.cpp"
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/compile-rss.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "name": "compile-tests",
+      "argv": [
+        "/usr/lib/cargo/bin/coreutils/nice",
+        "-n",
+        "5",
+        "/usr/bin/g++-16",
+        "-I/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/source/preview/native/services/search",
+        "-DBIGLYBTC_HOST_I2P_OWNER=1",
+        "-DQT_CORE_LIB",
+        "-DQT_GUI_LIB",
+        "-DQT_NETWORK_LIB",
+        "-DQT_NO_DEBUG",
+        "-DQT_TESTCASE_BUILDDIR=\"/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests\"",
+        "-DQT_TESTCASE_SOURCEDIR=\"/home/yurii/Java/BiglyBTC/preview/native/tests\"",
+        "-DQT_TESTLIB_LIB",
+        "-DQT_WIDGETS_LIB",
+        "-I/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-download-history-bridge-tests_autogen/include",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/app",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/core/include",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/ui",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/app/../plugins/BiglyBTC-plugin-SpeedScheduler",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_dht",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_ping",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_positions",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_contacts",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_nodes",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_values",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_packets",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_node",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_value",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_error",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_auth",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store_policy",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_router",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_value",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_mapping",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_runtime",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_control",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/adapters",
+        "-I/home/yurii/Java/BiglyBTC/plugin-sdk/include",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtWidgets",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtCore",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtGui",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtNetwork",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtTest",
+        "-O3",
+        "-DNDEBUG",
+        "-std=c++23",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+        "-Werror",
+        "-fPIC",
+        "-MD",
+        "-MF",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/tests.d",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/tests.o",
+        "-c",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/source/preview/native/tests/rss_document_tests.cpp"
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/compile-tests.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "name": "compile-probe",
+      "argv": [
+        "/usr/lib/cargo/bin/coreutils/nice",
+        "-n",
+        "5",
+        "/usr/bin/g++-16",
+        "-I/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/source/preview/native/services/search",
+        "-DBIGLYBTC_HOST_I2P_OWNER=1",
+        "-DQT_CORE_LIB",
+        "-DQT_GUI_LIB",
+        "-DQT_NETWORK_LIB",
+        "-DQT_NO_DEBUG",
+        "-DQT_TESTCASE_BUILDDIR=\"/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests\"",
+        "-DQT_TESTCASE_SOURCEDIR=\"/home/yurii/Java/BiglyBTC/preview/native/tests\"",
+        "-DQT_TESTLIB_LIB",
+        "-DQT_WIDGETS_LIB",
+        "-I/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-download-history-bridge-tests_autogen/include",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/app",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/core/include",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/ui",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/app/../plugins/BiglyBTC-plugin-SpeedScheduler",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_dht",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_ping",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_positions",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_contacts",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_nodes",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_values",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_packets",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_node",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_value",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_error",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_auth",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store_policy",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_router",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_value",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_mapping",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_runtime",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_control",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/adapters",
+        "-I/home/yurii/Java/BiglyBTC/plugin-sdk/include",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtWidgets",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtCore",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtGui",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtNetwork",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtTest",
+        "-O3",
+        "-DNDEBUG",
+        "-std=c++23",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+        "-Werror",
+        "-fPIC",
+        "-MD",
+        "-MF",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/probe.d",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/probe.o",
+        "-c",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/source/preview/native/tests/rss_document_probe.cpp"
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/compile-probe.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "name": "link-tests",
+      "argv": [
+        "/usr/lib/cargo/bin/coreutils/nice",
+        "-n",
+        "5",
+        "/usr/bin/g++-16",
+        "-O3",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss.o",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/tests.o",
+        "/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6.12.0",
+        "-Wl,-rpath,/opt/Qt/6.12.0/gcc_64/lib",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-tests"
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/link-tests.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "name": "link-probe",
+      "argv": [
+        "/usr/lib/cargo/bin/coreutils/nice",
+        "-n",
+        "5",
+        "/usr/bin/g++-16",
+        "-O3",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss.o",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/probe.o",
+        "/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6.12.0",
+        "-Wl,-rpath,/opt/Qt/6.12.0/gcc_64/lib",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-probe"
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/link-probe.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "name": "socket-negative-control",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/socket-negative-control.log",
+        "sha256": "6e31c8da3440d2cdbc09df707894c4709a5a5af85bca1c76fa82917897c29fb5",
+        "bytes": 170
+      }
+    },
+    {
+      "name": "native-values",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-tests"
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-values.log",
+        "sha256": "46413104fc3ebf9c519b38032d4eab8853bcafbb58b16e2d73996152a5090755",
+        "bytes": 132
+      }
+    },
+    {
+      "name": "javac-original",
+      "argv": [
+        "/usr/lib/cargo/bin/coreutils/nice",
+        "-n",
+        "5",
+        "/usr/lib/jvm/java-26-openjdk-amd64/bin/javac",
+        "--release",
+        "17",
+        "-cp",
+        "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "-d",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/classes",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/RssOriginalOracle.java"
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/javac-original.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "name": "original-rss-values",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/usr/lib/jvm/java-26-openjdk-amd64/bin/java",
+        "-Dazureus.config.path=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/original-rss-values/config",
+        "-Duser.home=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/original-rss-values/home",
+        "-Djava.io.tmpdir=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/original-rss-values/tmp",
+        "-cp",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/classes:/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "RssOriginalOracle",
+        "feed",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/corpus/rss-values.xml",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/original-rss-values.json"
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/original-rss-values.log",
+        "sha256": "b8ec23253e18707c777deb6469e14b3bd5afcaa02818dc643c681b381ca14628",
+        "bytes": 1799
+      }
+    },
+    {
+      "name": "native-rss-values",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-probe",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/corpus/rss-values.xml",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-rss-values.json",
+        "",
+        ""
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-rss-values.log",
+        "sha256": "95c8bb456a047177641005c31469b410f0d6f02eb5e69598d696c5f3f67665d8",
+        "bytes": 114
+      }
+    },
+    {
+      "name": "original-atom-values",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/usr/lib/jvm/java-26-openjdk-amd64/bin/java",
+        "-Dazureus.config.path=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/original-atom-values/config",
+        "-Duser.home=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/original-atom-values/home",
+        "-Djava.io.tmpdir=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/original-atom-values/tmp",
+        "-cp",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/classes:/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "RssOriginalOracle",
+        "feed",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/corpus/atom-values.xml",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/original-atom-values.json"
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/original-atom-values.log",
+        "sha256": "b8ec23253e18707c777deb6469e14b3bd5afcaa02818dc643c681b381ca14628",
+        "bytes": 1799
+      }
+    },
+    {
+      "name": "native-atom-values",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-probe",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/corpus/atom-values.xml",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-atom-values.json",
+        "",
+        ""
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-atom-values.log",
+        "sha256": "95c8bb456a047177641005c31469b410f0d6f02eb5e69598d696c5f3f67665d8",
+        "bytes": 114
+      }
+    },
+    {
+      "name": "original-normalize",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/usr/lib/jvm/java-26-openjdk-amd64/bin/java",
+        "-Dazureus.config.path=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/original-normalize/config",
+        "-Duser.home=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/original-normalize/home",
+        "-Djava.io.tmpdir=/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/original-normalize/tmp",
+        "-cp",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/classes:/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "RssOriginalOracle",
+        "normalize",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/corpus/normalize.tsv",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/original-normalize.json"
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/original-normalize.log",
+        "sha256": "b8ec23253e18707c777deb6469e14b3bd5afcaa02818dc643c681b381ca14628",
+        "bytes": 1799
+      }
+    },
+    {
+      "name": "native-normalize-html-title",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-probe",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/html-title.xml",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-html-title.json",
+        "",
+        ""
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-html-title.log",
+        "sha256": "95c8bb456a047177641005c31469b410f0d6f02eb5e69598d696c5f3f67665d8",
+        "bytes": 114
+      }
+    },
+    {
+      "name": "native-normalize-size-unknown-unit",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-probe",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/size-unknown-unit.xml",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-size-unknown-unit.json",
+        "",
+        ""
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-size-unknown-unit.log",
+        "sha256": "95c8bb456a047177641005c31469b410f0d6f02eb5e69598d696c5f3f67665d8",
+        "bytes": 114
+      }
+    },
+    {
+      "name": "native-normalize-canonical-hash",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-probe",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/canonical-hash.xml",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-canonical-hash.json",
+        "",
+        ""
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-canonical-hash.log",
+        "sha256": "95c8bb456a047177641005c31469b410f0d6f02eb5e69598d696c5f3f67665d8",
+        "bytes": 114
+      }
+    },
+    {
+      "name": "native-normalize-enclosure-too-small",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-probe",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/enclosure-too-small.xml",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-enclosure-too-small.json",
+        "",
+        ""
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-enclosure-too-small.log",
+        "sha256": "95c8bb456a047177641005c31469b410f0d6f02eb5e69598d696c5f3f67665d8",
+        "bytes": 114
+      }
+    },
+    {
+      "name": "native-normalize-xml-link",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-probe",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/xml-link.xml",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-xml-link.json",
+        "",
+        ""
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-xml-link.log",
+        "sha256": "95c8bb456a047177641005c31469b410f0d6f02eb5e69598d696c5f3f67665d8",
+        "bytes": 114
+      }
+    },
+    {
+      "name": "native-normalize-supplementary-numeric-entity",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-probe",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/supplementary-numeric-entity.xml",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-supplementary-numeric-entity.json",
+        "",
+        ""
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-supplementary-numeric-entity.log",
+        "sha256": "95c8bb456a047177641005c31469b410f0d6f02eb5e69598d696c5f3f67665d8",
+        "bytes": 114
+      }
+    },
+    {
+      "name": "native-normalize-single-tab",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/constraint-original-differential/amendments/drop-inherited-capabilities/runs/r1/socket-deny-exec",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-probe",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/single-tab.xml",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-single-tab.json",
+        "",
+        ""
+      ],
+      "exit_code": 0,
+      "log": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/native-normalize-single-tab.log",
+        "sha256": "95c8bb456a047177641005c31469b410f0d6f02eb5e69598d696c5f3f67665d8",
+        "bytes": 114
+      }
+    }
+  ],
+  "images": {
+    "tests": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-tests",
+      "sha256": "4e3c391fbe2b3f9cc0c24b661e4f0cd95cf425cb992a637dc6694ee185edcb18",
+      "bytes": 163736
+    },
+    "probe": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/rss-probe",
+      "sha256": "33a8c1f4f07218aca44a3d7fac6a5445b192c03af7035bb2dcdd09efd419b03c",
+      "bytes": 130504
+    }
+  },
+  "comparisons": [
+    {
+      "case": "rss-values",
+      "rows": 2,
+      "matched": true,
+      "scope": "Original RSSFeed/RSSItem and WebResult title public values; canonical HTTP-only fixture, no HEAD/search/adjustLink parity"
+    },
+    {
+      "case": "atom-values",
+      "rows": 1,
+      "matched": true,
+      "scope": "Original RSSFeed/RSSItem and WebResult title public values; canonical HTTP-only fixture, no HEAD/search/adjustLink parity"
+    },
+    {
+      "case": "html-title",
+      "matched": true,
+      "fields": {
+        "title": true,
+        "size": true,
+        "torrentLinkRaw": true,
+        "seeds": true,
+        "peers": true
+      }
+    },
+    {
+      "case": "size-unknown-unit",
+      "matched": true,
+      "fields": {
+        "title": true,
+        "size": true
+      }
+    },
+    {
+      "case": "canonical-hash",
+      "matched": true,
+      "fields": {
+        "title": true,
+        "hash": true
+      }
+    },
+    {
+      "case": "enclosure-too-small",
+      "matched": true,
+      "fields": {
+        "title": true,
+        "size": true
+      }
+    },
+    {
+      "case": "xml-link",
+      "matched": true,
+      "fields": {
+        "title": true,
+        "torrentLinkRaw": true,
+        "seeds": true,
+        "peers": true
+      }
+    },
+    {
+      "case": "supplementary-numeric-entity",
+      "matched": true,
+      "fields": {
+        "title": true
+      }
+    },
+    {
+      "case": "single-tab",
+      "matched": true,
+      "fields": {
+        "title": true
+      }
+    }
+  ],
+  "compiler_parallelism": 1,
+  "native_cache_writes": false,
+  "classes": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/work/classes/RssOriginalOracle.class",
+      "sha256": "cc1aa40df0c5ca67e08749f54672cc73be315aeec2c0f47da3227377f81e7b56",
+      "bytes": 8158
+    }
+  ],
+  "inputs_unchanged": true,
+  "provider_gaps": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/provider-status.json",
+    "sha256": "0a2fb511fab2a3ee0c64bd0db2735989db29764603914843d34ad91309e9657a",
+    "bytes": 5231
+  },
+  "java_runtime": "JDK26",
+  "java_class_target": 17,
+  "inputs": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/inputs.json",
+    "sha256": "a38c9a6c35ceee0461a289f13db281553d235344a3f924147f93e0be96db9774",
+    "bytes": 44659
+  },
+  "disposable_classes_images_temp_removed": true,
+  "elapsed_seconds": 21.145
+}

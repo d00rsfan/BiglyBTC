@@ -1,0 +1,187 @@
+{
+  "blocking_defects": [],
+  "carried_prior_value_proof": {
+    "new_Java_or_corpus_execution": false,
+    "old_matched_Java_public_API_groups": 9,
+    "old_native_families": 7,
+    "old_successful_commands": 20,
+    "scope": "Prior parent-r2 only; not rerun or relabeled as amended-child Java qualification.",
+    "source_only_boundary_preserved": true
+  },
+  "child_regressions": "Actual8-family executions include unresolved HEAD plus nested magnet withholding derived hash, independent explicit hash retained, and later unconditional magnet settling link/hash. Owning-buffer lifetime, malformed XML, DTD refusal and lowered quotas execute in the same suite.",
+  "current_families": [
+    "originalNodeAndHtmlValues",
+    "originalRelativeAndOrderedLinks",
+    "reconstructedNestedLinkConditions",
+    "realHeadDependencyIsUnavailable",
+    "dependentDetailUrlRemainsUnavailable",
+    "inferredMagnetHashRequiresSettledDownloadLink",
+    "trackerCountsAndFieldPrecedence",
+    "owningLimitsAndForbiddenXml"
+  ],
+  "current_source_execution_proof": "The qualified test main invokes every family exactly once before its sole PASS marker; any failed check throws to nonzero exit. Both actual bound XML executions return that marker with no failure/error/skipped element.",
+  "evidence": {
+    "base_manifest": {
+      "bytes": 9452,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/manifest.json",
+      "sha256": "56fabc337eee1c925d32724ec2aad3cb8a82db0554ecae62402c751717737da5"
+    },
+    "cohort": {
+      "bytes": 1286,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/result.json",
+      "sha256": "fd938d5a0b00e4d30f1c68a57ffa8e72f87f3d9c9afd2c1464de2ddb13c17691"
+    },
+    "frontend": {
+      "bytes": 7891,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/frontend/r1/result.json",
+      "sha256": "a9faa6b0d90152ba51696376537a640274355668f7949e90f69d9adbb9274da9"
+    },
+    "required_hash_child": {
+      "bytes": 4773,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/amendments/conditional-magnet-hash/manifest.json",
+      "sha256": "397a1b02392ebdd089011d1f56433ecde04c51ba57b951215aefea3add222537"
+    },
+    "source_QA": {
+      "bytes": 8207,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/source-review.json",
+      "sha256": "fa9f99e9fd67e9c3df08ab035d954f0fa242b365669677c14d098a039c3bc703"
+    },
+    "source_approval": {
+      "bytes": 8436,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualified-source.json",
+      "sha256": "924fbb5c1ebfdf4bc0b2f82df5c2fc0b3cf5ea08f71fb7cfbecb609261849c17"
+    },
+    "spec": {
+      "bytes": 6194,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/spec.json",
+      "sha256": "a8dd76b0196f9d98bf78f099b74519fde1ece1af7252c09e7886b4afbb52692f"
+    }
+  },
+  "implementation_commit": "1cf7cb5ae92c0098bab2476a313c352b13e022a9",
+  "integrity": {
+    "SourceQA_hash": "fa9f99e9fd67e9c3df08ab035d954f0fa242b365669677c14d098a039c3bc703",
+    "all_recorded_source_input_log_image_XML_and_library_pins_match": true,
+    "before_after_source_maps_equal": true,
+    "cache_settings_unchanged": true,
+    "current_files_hashed": 1407,
+    "exact_changed_leaves_vs_tag_history": 7,
+    "frontend_TUs": 3,
+    "private_SDK_artifact_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+    "private_SDK_required_exports": 42
+  },
+  "lanes": [
+    {
+      "CTest_count": 1,
+      "CTest_seconds": 0.00887467,
+      "ELF_images": 2,
+      "cache_hash_unchanged_from_tag_history_cohort": true,
+      "current_source_families_called_and_passed": 8,
+      "elapsed_seconds": 26.513,
+      "evidence": {
+        "XML": {
+          "bytes": 493,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/gcc/r1/tests.xml",
+          "sha256": "bc3a4a5fb611357ce54a88b7f177306b545cc0adb526f277598640d36e37114e"
+        },
+        "images": {
+          "biglybtc-rss-document-probe": {
+            "bytes": 130504,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-rss-document-probe",
+            "sha256": "12b01ad81f4f6335232911ddbcf90e1691c717245e389e5f9ad51b4b829fd049"
+          },
+          "biglybtc-rss-document-tests": {
+            "bytes": 168024,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-rss-document-tests",
+            "sha256": "fc76bc4dd9c4df0c677c9a5c05c16b10884c15d634bd92ff4c8f8afd173ed1e2"
+          }
+        },
+        "library_build_dependency": {
+          "biglybtc_rss_document": {
+            "bytes": 143028,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/services/libbiglybtc_rss_document.a",
+            "sha256": "651258b5e1d26a2d60be928b31fb9320b3ef0755d0a6f59321ec29427e2bedc2"
+          }
+        },
+        "preflight": {
+          "bytes": 1967,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/preflight/gcc/r1/result.json",
+          "sha256": "b35e809c4e58bb6a8839b55d8520ec8ff4c5aaee6ab95d757b676c579bc423a3"
+        },
+        "receipt": {
+          "bytes": 12224,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/gcc/r1/result-stamped.json",
+          "sha256": "e81699b8aedd8eac0ce24862ad4b2bb7770c941f000753fab50797fc206f3a7f"
+        }
+      },
+      "lane": "gcc",
+      "probe_built_not_executed": true,
+      "raw_eligible_for_acceptance_retained": false,
+      "sanitizer_error_markers": 0,
+      "static_library_build_dependency_only": true,
+      "status": "PASS_ACTUAL_CURRENT_RSS_VALUE_COHORT"
+    },
+    {
+      "CTest_count": 1,
+      "CTest_seconds": 0.0447872,
+      "ELF_images": 2,
+      "cache_hash_unchanged_from_tag_history_cohort": true,
+      "current_source_families_called_and_passed": 8,
+      "elapsed_seconds": 25.721,
+      "evidence": {
+        "XML": {
+          "bytes": 492,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/san/r1/tests.xml",
+          "sha256": "950117d78366284a508aa07ed7ce4e276416dfcb413383c68a1566e765244502"
+        },
+        "images": {
+          "biglybtc-rss-document-probe": {
+            "bytes": 3219120,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-rss-document-probe",
+            "sha256": "93ab71537e1e73afa4f39d80c5d50cd6c68f3997b06dcd01cf9a88b5d8bf405a"
+          },
+          "biglybtc-rss-document-tests": {
+            "bytes": 3500680,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-rss-document-tests",
+            "sha256": "d7e800e0ad4973b48a46e15fb56702646b78b59fb2aeee8a20911d218d3aa8dd"
+          }
+        },
+        "library_build_dependency": {
+          "biglybtc_rss_document": {
+            "bytes": 4084458,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/services/libbiglybtc_rss_document.a",
+            "sha256": "b5d9ef8ddbcb7aacd5e6733d01bc8a97445ff949754f805c1259ed0006517e26"
+          }
+        },
+        "preflight": {
+          "bytes": 1967,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/preflight/san/r1/result.json",
+          "sha256": "b0a0f0d5d40df6b4ef6c8a5e4c27913c0aa4634ecc5a65d60ecfc5f127f25c4e"
+        },
+        "receipt": {
+          "bytes": 12228,
+          "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/san/r1/result-stamped.json",
+          "sha256": "0a80fa6e6419a32b65e05885683935cfec81a57cb2d85d01068cbd6b980ae934"
+        }
+      },
+      "lane": "san",
+      "probe_built_not_executed": true,
+      "raw_eligible_for_acceptance_retained": false,
+      "sanitizer_error_markers": 0,
+      "static_library_build_dependency_only": true,
+      "status": "PASS_ACTUAL_CURRENT_RSS_VALUE_COHORT"
+    }
+  ],
+  "native_tree": "266cf68746e58b172c798b07e42fd663a09c60a3",
+  "remaining_limits": [
+    "HTTP fetch/search/subscription/provider activation, HEAD/cache and Engine.adjustLink remain absent.",
+    "Synchronous parser has logical quotas, not a CPU/peak-memory guarantee or mid-call cancellation; future consumer owns delivered-body/queue/source-generation/cancellation/joins.",
+    "Raw publication text has no date/assetdate interpretation parity; unsupported URL/Unicode/noncanonical hash/description heuristics remain diagnosed/unqualified.",
+    "Untrusted parsed links/hashes are data, not fetch/import/payload permissions.",
+    "Full RSS engine and wholeP08 completion are not claimed; original raw eligibility remains false outside this bounded review."
+  ],
+  "reviewed_at_utc": "2026-11-06T10:45:36.766851+00:00",
+  "reviewer_actions": "Read-only measured evidence/source/hash/XML review plus this artifact; no N/cache/compiler/JVM/test/auth/runtime/promotion actions.",
+  "schema": "BIGLYBTC_RSS_DOCUMENT_INDEPENDENT_MEASURED_REVIEW_V1",
+  "scope": "Current integrated owning synchronous RSS/Atom document value API only. GCC/SAN each execute one CTest covering all8 current source families; both test/probe ELFs and the static library are built. No HTTP/HEAD/fetch/search/subscription/profile/App/JVM or whole-P08 acceptance follows.",
+  "status": "PASS_RSS_CURRENT_VALUE_COHORT_INDEPENDENT_REVIEW"
+}

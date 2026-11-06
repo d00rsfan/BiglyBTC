@@ -1,0 +1,103 @@
+{
+  "schema": "BIGLYBTC_ORIGINAL_RSS_DOCUMENT_INPUTS_V1",
+  "originals": {
+    "core/src/com/biglybt/core/metasearch/impl/web/rss/RSSEngine.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "3c478fd230f35c35a74b515ddf7c42b222acb7cf",
+      "sha256": "b170b7d5fdcda4bb69304291d9f8ae4a85b320df13321cb2b787d753cfb5ad7c",
+      "bytes": 26201,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/core/metasearch/impl/web/rss/RSSEngine.java"
+    },
+    "core/src/com/biglybt/core/metasearch/impl/web/WebResult.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "67a80bca778e948a3504641e2b536bb6e27b2d09",
+      "sha256": "ae0a724533d0edc0400e5c6b2864a55b9a51663a3d313a3ad3df8d823b4934b6",
+      "bytes": 12863,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/core/metasearch/impl/web/WebResult.java"
+    },
+    "core/src/com/biglybt/core/metasearch/Result.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "1d7219a63deeaa7ebaf527a402495a6cdfce50e0",
+      "sha256": "0623b4233364b61cb80927b09a15b604b0f7158e225efc7c6ff46573e74b2629",
+      "bytes": 10661,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/core/metasearch/Result.java"
+    },
+    "core/src/com/biglybt/pifimpl/local/utils/xml/rss/RSSFeedImpl.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "fb89c03549bde303e9e77f45a68c613bb49151d9",
+      "sha256": "8b6f84ee41c4a89b3dc38d210acca1bacffd017701413f6ebcbff6fb6c4efbbc",
+      "bytes": 3061,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/pifimpl/local/utils/xml/rss/RSSFeedImpl.java"
+    },
+    "core/src/com/biglybt/pifimpl/local/utils/xml/rss/RSSChannelImpl.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "2bc1b3c79b17337dba55226345b430bda0bacd70",
+      "sha256": "8449b71b5614579be448b64636f3ea24a90fdd2ef4870d391b2b14deaee1275f",
+      "bytes": 3547,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/pifimpl/local/utils/xml/rss/RSSChannelImpl.java"
+    },
+    "core/src/com/biglybt/pifimpl/local/utils/xml/rss/RSSItemImpl.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "418d0ad0142c7f6ce9cbc348b8ef2e873327d5d6",
+      "sha256": "fb663c8751abd8774fcbc1aadb5fc116925377f30fba23eec6b2ae6f95b72ecd",
+      "bytes": 3582,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/pifimpl/local/utils/xml/rss/RSSItemImpl.java"
+    },
+    "core/src/com/biglybt/pifimpl/local/utils/xml/simpleparser/SimpleXMLParserDocumentNodeImpl.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "a7a1e54fb07a5d3ff10318ab5584e5f5c451de86",
+      "sha256": "058ed91066a7a59d8896296e3c87aa8eda5a4d4e14e2318ced1ef91e9023e375",
+      "bytes": 7503,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/pifimpl/local/utils/xml/simpleparser/SimpleXMLParserDocumentNodeImpl.java"
+    },
+    "core/src/com/biglybt/core/util/GeneralUtils.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "06ffc7850892e4de8a68347fbbc225f2f5be3372",
+      "sha256": "1d5fdc4528d74e64ee99f8104ae1427e0f48d47de39c2cfd6cacc923f3747fc6",
+      "bytes": 208187,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/core/util/GeneralUtils.java"
+    },
+    "core/src/com/biglybt/core/util/UrlUtils.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "464dc49955102dfde4f8f120f54dde6b9e4e6c68",
+      "sha256": "68c2eb353276e353548fda08759e1eb0d3fde353e8257f8e43670720c59670f4",
+      "bytes": 57340,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/core/util/UrlUtils.java"
+    },
+    "core/src/com/biglybt/core/util/ByteFormatter.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "3316a55349229cdcb6293e6723bce5ae91a57e05",
+      "sha256": "b1eb635fddd00ad72301128231a756ce6b95d6a7a6721e1d2be3841bbad53560",
+      "bytes": 5167,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/core/util/ByteFormatter.java"
+    },
+    "core/src/org/apache/commons/lang/Entities.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "d4ef6146c023f46c52529f7b11c5de72e08f676b",
+      "sha256": "fbdb5d3118d1e136c64798e73b6653d9396e324c22b9a8d000b8a223dd82d04b",
+      "bytes": 31115,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/org/apache/commons/lang/Entities.java"
+    },
+    "core/src/com/biglybt/core/util/Base32.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "d50e5c2fa78eb63bf8e8cc0bcfce6fc9b7ef37e4",
+      "sha256": "e5ec0434950921bc438975e564d36cc8efda7e2bb380ebc1e731cd9f57375c8f",
+      "bytes": 4316,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/core/util/Base32.java"
+    },
+    "core/src/com/biglybt/pif/utils/StaticUtilities.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "71913904c114f04ecd162c4471ebd0ad08f63baf",
+      "sha256": "d73a8d33fcd3e3d4c7f645631ad98c71fd8d91592402f2b644483b8da1510564",
+      "bytes": 4728,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/pif/utils/StaticUtilities.java"
+    },
+    "core/src/com/biglybt/pifimpl/local/utils/UtilitiesImpl.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "blob": "09fca3e5b7ea7290f323deac731a8f5a5806e208",
+      "sha256": "9354d7f14fab883cd7c8a0b63eebc14c886f8c6e894bba7e38d6eb7bed416579",
+      "bytes": 42962,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/original/core/src/com/biglybt/pifimpl/local/utils/UtilitiesImpl.java"
+    }
+  }
+}

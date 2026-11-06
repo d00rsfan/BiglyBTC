@@ -1,0 +1,110 @@
+{
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "affected_cohort": {
+    "bytes": 2919,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/amendments/conditional-magnet-hash/affected-cohort.json",
+    "sha256": "30d5feca86453c691c7c657f3f1cafadf93e3c3fd8cbf0ddbf82db765d921519"
+  },
+  "base_and_child_patches_reconstruct_exactly": true,
+  "base_manifest": {
+    "bytes": 9452,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/manifest.json",
+    "sha256": "56fabc337eee1c925d32724ec2aad3cb8a82db0554ecae62402c751717737da5"
+  },
+  "basis_commit": "b77eb40adf8ed44ea2caeacb561428eb08311f09",
+  "basis_native_tree": "04e4a8b61071bedf85e529d7cc390fd59833d2e5",
+  "blocking_correctness_ownership_or_compatibility_defects": [],
+  "carried_prior_value_evidence": {
+    "amended_leaves_qualified_by_old_proof": false,
+    "commands": 20,
+    "comparisons": {
+      "bytes": 1366,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/comparisons.json",
+      "sha256": "6f9c6b6c84611695ebf94f9b73d077d39f4a99efc2475b052cbc45f42028d928"
+    },
+    "evidence": {
+      "bytes": 4045,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/evidence.json",
+      "sha256": "b348b1f3682e7d51347e0119a8cc4360b1064edea666d6780fafc75de198af1f"
+    },
+    "images_classes_already_removed_not_recreated": true,
+    "logs_rehashed": 20,
+    "matched_public_API_groups": 9,
+    "old_native_families": 7,
+    "parent_value_leaves_byte_exact_to_old_source_map": 5,
+    "rerun": false,
+    "result": {
+      "bytes": 32252,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/result.json",
+      "sha256": "b728f4101193593922dabff476da42cb548f2a697e3f49f05f3b6f8e65de8edc"
+    },
+    "retained_inputs_rehashed": 182
+  },
+  "checks": {
+    "URI_hash_and_prefix_values": "Exact root/base prefixes concatenate as original reconstruction data; no QUrl resolution/fetch permission is implied. Raw32 setter text is separate from canonical ASCII Base32/40hex synthesis. HEAD/title fallback uncertainty withholds conditional link/details and now inferred magnet hash; independently supplied hash remains known and later unconditional link can settle the choice.",
+    "bounded_XML": "Caller limits cannot raise fixed ceilings. Input/context, nodes+attributes, depth, total items, field text, parsed text, exported result text and issues are bounded. DTD/EntityReference tokens are rejected and no external resolver is installed. Quotas are logical document bounds, not a peak-memory or CPU deadline claim.",
+    "integration_preservation": "Both CMake sources preserve exact current prefix bytes and append the reviewed fragment once. Tags/history/identity/I2P source and existing Actor90s timeout remain intact. New library has only QtCore/C++23 dependencies; existing suite/probe target pair and30s CTest remain.",
+    "lifecycle_boundary": "No thread/callback/retained work or mid-call cancellation seam is added. Future consumer owns pre-call delivery/queue quotas, off-UI execution, request/source cancellation, discard and joins; parser bounds grant none of those capabilities.",
+    "owning_API": "Input XML is owned by value and retained in RssDocument; Qt strings/vector fields own their data. Parser-only temporary nodes/pointers/views do not escape. No file/network/profile/Host/engine/provider operation exists in production code.",
+    "preserved_semantics": "Immediate text/CDATA, first-child and channel/item order, Java trim, HTML40 table, raw publication text, ordered field setters, count absence and tracker priority remain scoped to declared supported values. Unsupported URL/hash/fallback/provider forms are diagnosed rather than upgraded."
+  },
+  "compiler_jvm_tests_auth_network_or_runtime_executed": false,
+  "exact_append_only_CMake_leaves": 2,
+  "native_cache_or_profile_modified": false,
+  "new_paths_absent": 5,
+  "remaining_limits": [
+    "No wired fetch/search/subscription/Host/UI or saved engine activation",
+    "No HEAD/cache/Engine.adjustLink provider",
+    "Raw publication text only; no date interpretation parity",
+    "Synchronous bounded value parser; consumer cancellation/quota/joins remain separate",
+    "Explicit provider-status gaps retained; no whole RSSEngine or fullP08 claim",
+    "Current amended8-family RSS suite/probe GCC/leak-enabled SAN qualification remains pending.",
+    "HTTP fetch/search/subscription/HEAD/cache/Engine.adjustLink, date interpretation, mid-call cancellation and whole RSS/P08 parity remain unclaimed."
+  ],
+  "required_child_manifest": {
+    "bytes": 4773,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/amendments/conditional-magnet-hash/manifest.json",
+    "sha256": "397a1b02392ebdd089011d1f56433ecde04c51ba57b951215aefea3add222537"
+  },
+  "resolved_blocking_defect": {
+    "child_native_test_families": 8,
+    "new_test_family": "inferredMagnetHashRequiresSettledDownloadLink",
+    "parent_problem": "Unresolved HEAD could conditionally select a nested magnet while final extraction exported its hash as known.",
+    "resolution": "Only inferred-from-download magnet hash now requires settled head/fallback choice. Three source regressions cover unknown/no hash, independent explicit hash retained, and later unconditional magnet settled."
+  },
+  "reviewed_at_utc": "2026-11-06T10:36:27.934308+00:00",
+  "schema": "BIGLYBTC_RSS_DOCUMENT_INDEPENDENT_SOURCE_REVIEW_V1",
+  "scope": "Owning bounded synchronous RSS/Atom document values only. This verdict requires the conditional-magnet-hash child overlay on the frozen7-leaf parent. No adoption/current image/SAN/runtime/consumer qualification is claimed.",
+  "source_paths": {
+    "preview/native/services/CMakeLists.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/source/preview/native/services/CMakeLists.txt",
+      "sha256": "091d1f32d621910a9e13cdf2e32a1d008db7595d3a88583f3c69286e330707ea"
+    },
+    "preview/native/services/search/rss_document.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/amendments/conditional-magnet-hash/source/preview/native/services/search/rss_document.cpp",
+      "sha256": "9468d00375054a08b1b83764bb49cfdc21d24277d5a778c5fd26be5560591f8a"
+    },
+    "preview/native/services/search/rss_document.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/source/preview/native/services/search/rss_document.hpp",
+      "sha256": "3d50f58c4c13b7d1d9074c61423d226f917a1415d590d36fffb11a1cc9f8ece2"
+    },
+    "preview/native/services/search/rss_html40.inc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/source/preview/native/services/search/rss_html40.inc",
+      "sha256": "42bc5a087da49e6b5ceda5a4d4b4151068245fa0a4db513f7fb56f674d0070e3"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/source/preview/native/tests/CMakeLists.txt",
+      "sha256": "c81935554b07f75e73bb24837affea82c82e3077c2f0191640e39fdf8b36a30e"
+    },
+    "preview/native/tests/rss_document_probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/source/preview/native/tests/rss_document_probe.cpp",
+      "sha256": "b4272c21f8c537aafdbc58e2baf35ab470ed7ccf47a2233efb0f79761e9e30fd"
+    },
+    "preview/native/tests/rss_document_tests.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/amendments/conditional-magnet-hash/source/preview/native/tests/rss_document_tests.cpp",
+      "sha256": "015077eec45af31115e9f6d1d2cdfdd36a14554b5ee8f895592e1e83c12db2c8"
+    }
+  },
+  "status": "PASS_SOURCE_REVIEW_SEVEN_LEAF_RSS_WITH_REQUIRED_HASH_CHILD",
+  "verified_source_leaves": 7
+}

@@ -1,0 +1,95 @@
+Current-source RSS/Atom document service, source-only integration
+
+Basis: Native b77eb40adf8ed44ea2caeacb561428eb08311f09,
+preview/native tree04e4a8b61071bedf85e529d7cc390fd59833d2e5.
+Five new leaves are reconstructed through the12 immediate reviewed deltas from
+f2ae06d5 -> f73881aa ->9a10a6a1 ->48993ee1 ->d4c920bd. They match the actual
+qualification/r2 source map byte-for-byte. Two current CMake files are retained
+verbatim before the exact reviewed append-once fragments. No old cumulative
+CMake afterimage is used. Current tags/history, full torrent identity and I2P
+sources are untouched. This stage does not adopt, compile or launch anything.
+
+Service surface
+
+Link biglybtc_rss_document and include rss_document.hpp. Call
+biglybtc::search::parseRssDocument(QByteArray, RssContext, RssLimits), returning
+std::expected<RssDocument,RssError>. The library depends only on QtCore and
+C++23. The production implementation has no file, network, profile, engine,
+Host, timer or plugin operation. It owns the XML, strings, results and issues;
+no views into a parser, caller buffer or asynchronous producer escape.
+
+RssContext.rootPage and basePage are the exact original WebResult reconstruction
+prefixes. They are not a fetch base or a QUrl resolution request. RSS channel
+link concatenation, root/base string concatenation, raw-versus-reconstructed
+nested link decisions and ordered enclosure/Atom/Vuze overrides remain as
+reviewed. All result URLs precede Engine.adjustLink and remain untrusted data.
+The module does not determine whether a URL may be fetched or a result imported.
+
+Values and uncertainty
+
+Preserve immediate TEXT/CDATA and first matching child semantics, Java trim,
+HTML40 title conversion, item/channel order, GUID/Atom ID, raw publication
+text, binary-unit size setters, explicit peer counts and tracker priority.
+The251-entry HTML40 table and all value implementation/test bytes are unchanged.
+Raw32 hash setter text remains distinct from canonical ASCII Base32/40hex
+conversion and canonical magnet synthesis. No full32 torrent identity or
+download-manager restore claim follows from RSS hash text.
+
+Missing counts/sizes stay absent rather than acquiring a zero fact. Issues are
+structured field/channel/item diagnostics; XML itself must not be logged.
+Relevant unresolved HEAD decisions withhold torrentLink and any dependent final
+detailsLink; a later unconditional setter may settle the value. No HEAD answer
+or cached engine state is invented. Unsupported title-magnet/description
+heuristics remain diagnosed. A declared auto-download boolean is data only.
+publicationText is raw text: no epoch, timezone, assetdate or date-parity claim.
+
+Bounds and lifecycle
+
+Default ceilings are4MiB input,32768 element/attribute nodes,64 nesting levels,
+4096 items,65536 UTF16 units per field,2Mi UTF16 units in parsed text and
+separately2Mi in exported result text, and16384 issues. Caller limits may only
+lower these ceilings. Oversized input/context, exceeded counters and malformed
+XML return an error; allocation failure returns Memory. These are logical
+document quotas, not a measured peak-RSS or CPU deadline guarantee. Channel
+count is bounded through the node ceiling. Namespace declarations and Qt's own
+parser allocations are not separately charged as attribute nodes.
+
+DOCTYPE/entity-reference tokens are rejected before a resolver or provider is
+consulted. No external file/URL resolver is installed. This conservative XML
+boundary is intentional; it is not full original permissive XML parity.
+
+The call is synchronous with no thread, callback or retained work. It has no
+mid-call cancellation token or worker join receipt. Later consumers must bound
+the delivered body before calling, limit queued/in-flight documents, invoke it
+off the UI/event loop where needed, and discard completed values when their
+own source/request generation is cancelled. Cancellation/source revocation,
+aggregate quotas and joins belong to that future consumer, remain unqualified
+here, and must not be inferred from parser bounds. No worker is added by this
+integration. Caller ownership of permission and source lifetime is unchanged.
+
+Evidence and remaining work
+
+Carried prior evidence b348b1f3 records actual20 successful commands, seven
+Native value test families, two feed groups/three items and nine matched actual
+RSSFeed/RSSItem/WebResult public-API comparison groups,17 explicit normalization
+fields, JDK26/class target17, socket-denied subjects, all joins and disposable
+cleanup. It exercised the same five value leaves in an R-only disposable build.
+The prior images/classes were removed after recording hashes. This stage
+verifies retained receipts/logs/inputs; it does not rerun Java or claim a current
+Native ELF, production integration, SAN pass, whole RSSEngine or whole P08 pass.
+
+Keep provider-status.json from the original draft as the detailed gap inventory.
+Description heuristics, full URL/Unicode/handler edge forms, extreme floating
+size behavior, noncanonical magnet/BTMH extraction, date/assetdate interpretation,
+category/tag/comments/rank/contenttype/playlink/DRM projection, HEAD/cache and
+Engine.adjustLink are unsupported or unqualified as recorded there. The original
+oracle did not call RSSEngine.search or a download/URL-fetch overload.
+
+Next wiring is separate: a source-owned, bounded fetch worker supplies the exact
+prefixes and response bytes; real search/subscription consumers consume this
+shared owning document API and implement cancellation, filtering/deduplication,
+profile persistence, polling, selection/import authorization and UI receipt
+semantics. Any provider that changes an unavailable result requires its own
+actual evidence and a source-bound contract. Existing saved search-engine
+inventory is not a running search engine. No consumer is replaced by a fixture
+or synthetic result, and no network/HEAD permission is introduced here.

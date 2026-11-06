@@ -1,0 +1,202 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-t",
+        "commands",
+        "biglybtc_rss_document",
+        "biglybtc-rss-document-tests",
+        "biglybtc-rss-document-probe"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 0.064,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/frontend/r1/configured-commands.log",
+      "log_sha256": "878449a4dc63871b9e452bde0ed43933b99b8d4b710e5c94cf96d9b31d14df4d"
+    },
+    {
+      "argv": [
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-n",
+        "-v",
+        "services/CMakeFiles/biglybtc_rss_document.dir/search/rss_document.cpp.o",
+        "tests/CMakeFiles/biglybtc-rss-document-probe.dir/rss_document_probe.cpp.o",
+        "tests/CMakeFiles/biglybtc-rss-document-tests.dir/rss_document_tests.cpp.o"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 0.064,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/frontend/r1/prerequisite-plan.log",
+      "log_sha256": "07e7a25b37ad06085e4195a3309b0514fe902900453c0f84932c211b02d25f7f"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "/usr/bin/g++-16",
+        "-DQT_CORE_LIB",
+        "-DQT_NO_DEBUG",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/search",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtCore",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++",
+        "-DNDEBUG",
+        "-std=c++23",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+        "-Werror",
+        "-fPIC",
+        "/home/yurii/Java/BiglyBTC/preview/native/services/search/rss_document.cpp",
+        "-fsyntax-only",
+        "-O0"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 3.523,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/frontend/r1/frontend-0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "/usr/bin/g++-16",
+        "-DQT_CORE_LIB",
+        "-DQT_NO_DEBUG",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/search",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtCore",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++",
+        "-DNDEBUG",
+        "-std=c++23",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+        "-Werror",
+        "-fPIC",
+        "/home/yurii/Java/BiglyBTC/preview/native/tests/rss_document_tests.cpp",
+        "-fsyntax-only",
+        "-O0"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 2.22,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/frontend/r1/frontend-1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "/usr/bin/g++-16",
+        "-DQT_CORE_LIB",
+        "-DQT_NO_DEBUG",
+        "-I/home/yurii/Java/BiglyBTC/preview/native/services/search",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include/QtCore",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/include",
+        "-isystem",
+        "/opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++",
+        "-DNDEBUG",
+        "-std=c++23",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+        "-Werror",
+        "-fPIC",
+        "/home/yurii/Java/BiglyBTC/preview/native/tests/rss_document_probe.cpp",
+        "-fsyntax-only",
+        "-O0"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 3.623,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/frontend/r1/frontend-2.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "elapsed_seconds": 9.657,
+  "frontend_count": 3,
+  "full_build_qualification": false,
+  "inputs": [
+    {
+      "bytes": 6149,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/frontcheck.py",
+      "sha256": "0e57ffb83962f7a4bbc4f4625aa52a2d00f0629d6a0f495b3d6b953fbbde47ff"
+    },
+    {
+      "bytes": 6194,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/spec.json",
+      "sha256": "a8dd76b0196f9d98bf78f099b74519fde1ece1af7252c09e7886b4afbb52692f"
+    },
+    {
+      "bytes": 8436,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualified-source.json",
+      "sha256": "924fbb5c1ebfdf4bc0b2f82df5c2fc0b3cf5ea08f71fb7cfbecb609261849c17"
+    },
+    {
+      "bytes": 1967,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualification/preflight/gcc/r1/result.json",
+      "sha256": "b35e809c4e58bb6a8839b55d8520ec8ff4c5aaee6ab95d757b676c579bc423a3"
+    },
+    {
+      "bytes": 74012,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/CMakeCache.txt",
+      "sha256": "747d4ee796f949df723fe17799dc6f9048fefc398d85f70478394c6737762a5a"
+    },
+    {
+      "bytes": 3985885,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/build.ninja",
+      "sha256": "58b82e89169360887571c97f8769dc225cc0dcb341615610f5374d43edd6ad22"
+    },
+    {
+      "bytes": 751527,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/CMakeFiles/rules.ninja",
+      "sha256": "fa3e753a414b4a0d021916f849f13e9afff55c3d74502652e6a5d8ccd295caa0"
+    },
+    {
+      "bytes": 25056,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/services/search/rss_document.cpp",
+      "sha256": "9468d00375054a08b1b83764bb49cfdc21d24277d5a778c5fd26be5560591f8a"
+    },
+    {
+      "bytes": 2322,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/rss_document_probe.cpp",
+      "sha256": "b4272c21f8c537aafdbc58e2baf35ab470ed7ccf47a2233efb0f79761e9e30fd"
+    },
+    {
+      "bytes": 12378,
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/rss_document_tests.cpp",
+      "sha256": "015077eec45af31115e9f6d1d2cdfdd36a14554b5ee8f895592e1e83c12db2c8"
+    }
+  ],
+  "prerequisites": [],
+  "qualified_source": {
+    "bytes": 8436,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualified-source.json",
+    "sha256": "924fbb5c1ebfdf4bc0b2f82df5c2fc0b3cf5ea08f71fb7cfbecb609261849c17"
+  },
+  "source_map_sha256": "c4c4177228ba99dd5a0ec655b328ece91bc61c5f7a57ff3260d9b3e602d29a6d",
+  "status": "PASS_GCC_FRONTEND_AFTER_AUDITED_GENERATED_PREREQUISITES"
+}

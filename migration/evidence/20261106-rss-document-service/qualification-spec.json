@@ -1,0 +1,152 @@
+{
+  "HTTP_HEAD_network_or_auth": false,
+  "app_build_or_launch": false,
+  "autogen_command_seconds": 120,
+  "autogen_total_seconds": 600,
+  "basis_commit": "72f16c6f03abb3d4fe77a9152594799302e8d44c",
+  "basis_native_tree": "04e4a8b61071bedf85e529d7cc390fd59833d2e5",
+  "build_seconds": 3600,
+  "caches": {
+    "gcc": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+    "san": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san"
+  },
+  "candidate_basis_commit": "b77eb40adf8ed44ea2caeacb561428eb08311f09",
+  "candidate_manifests": [
+    {
+      "bytes": 9452,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/manifest.json",
+      "sha256": "56fabc337eee1c925d32724ec2aad3cb8a82db0554ecae62402c751717737da5"
+    },
+    {
+      "bytes": 4773,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/amendments/conditional-magnet-hash/manifest.json",
+      "sha256": "397a1b02392ebdd089011d1f56433ecde04c51ba57b951215aefea3add222537"
+    }
+  ],
+  "carried_value_evidence": {
+    "bytes": 3239,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/carried-value-evidence.json",
+    "sha256": "c313986e5132d8ccb870fd63de8aba38c3968312a7790bc3a6e28cc809404b55"
+  },
+  "executable_targets": [
+    "biglybtc-rss-document-tests",
+    "biglybtc-rss-document-probe"
+  ],
+  "final_source_pins_sealed": true,
+  "frontend_sources": [
+    "services/search/rss_document.cpp",
+    "tests/rss_document_tests.cpp",
+    "tests/rss_document_probe.cpp"
+  ],
+  "frontend_total_seconds": 600,
+  "full_search_subscriptions_or_P08_claim": false,
+  "library_build_dependency": "services/libbiglybtc_rss_document.a",
+  "minimum_autogen_generators": 0,
+  "native_test_families": [
+    "originalNodeAndHtmlValues",
+    "originalRelativeAndOrderedLinks",
+    "reconstructedNestedLinkConditions",
+    "realHeadDependencyIsUnavailable",
+    "dependentDetailUrlRemainsUnavailable",
+    "inferredMagnetHashRequiresSettledDownloadLink",
+    "trackerCountsAndFieldPrecedence",
+    "owningLimitsAndForbiddenXml"
+  ],
+  "new_Java_or_corpus_run": false,
+  "preserved_cache_keys": [
+    "CMAKE_CXX_COMPILER",
+    "CMAKE_CXX_FLAGS",
+    "CMAKE_BUILD_TYPE",
+    "CMAKE_EXE_LINKER_FLAGS",
+    "BIGLYBTC_PRIVATE_I2P_PROVIDER_OWNER",
+    "BIGLYBTC_PERSISTENT_MIXED_I2P_RUNTIME",
+    "BIGLYBTC_PERSISTENT_COEXISTENCE_RUNTIME",
+    "LibtorrentRasterbar_DIR",
+    "Qt6_DIR",
+    "BIGLYBTC_PERSISTENT_MIXED_I2P_APPROVAL_SHA256",
+    "BIGLYBTC_PRIVATE_I2P_OWNER_APPROVAL_SHA256"
+  ],
+  "protected_original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "qualified_source": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/qualified-source.json",
+  "required_output": [
+    {
+      "suite": "original-rss-document-values",
+      "text": "PASS bounded original RSS document values"
+    }
+  ],
+  "required_tool_inputs": [
+    "spec.json",
+    "source-selection.json",
+    "adopt.py",
+    "common.py",
+    "preflight.py",
+    "frontcheck.py",
+    "qualify.py",
+    "stamp.py",
+    "batch.mk",
+    "tools-manifest.json"
+  ],
+  "schema": "BIGLYBTC_RSS_DOCUMENT_COHORT_SPEC_V1",
+  "sdk_artifact_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "sdk_inputs": {
+    "approval": {
+      "bytes": 31041,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-role-integration/final/root-mixed-role-approval.json",
+      "sha256": "9631d9e89cccb9360d8661ade6a30bc6882cb7a1afd773ad703112d2694ddc9f"
+    },
+    "root_artifact_review": {
+      "bytes": 1672,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-role-integration/final/root-artifact-review.json",
+      "sha256": "00cda3c48889d85c4b26a98f519cd0c6f60fad066609eef9c92f647183327322"
+    },
+    "runtime_manifest": {
+      "bytes": 3720,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-role-integration/final/runtime-manifest.json",
+      "sha256": "0a89e6259888ef9d05db489d51875075c4d31148eb5eacaee7f453840f34fd88"
+    },
+    "sdk_measured_controls": {
+      "bytes": 1137,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/qualification/runs/r2/result.json",
+      "sha256": "bf825517300df125e1907dc9f715d33f7fd811d734006d57a41f7a32fc015aed"
+    },
+    "selection": {
+      "bytes": 829,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-inputs.json",
+      "sha256": "6e582113e641f1390e55b53fbc2f1e355e54f7e206340f9aeae6f575660b006d"
+    },
+    "source_build_record": {
+      "bytes": 192696,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/source-build-record-discovery-final.json",
+      "sha256": "e213ba3227a464fcb8eab1c7db3e3adef720f482fd352bb87ec12c3f27ec1e92"
+    },
+    "source_capsule": {
+      "bytes": 17073,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/sdk-dht-admission-fix/amendments/parsed-dht-marker/manifest.json",
+      "sha256": "f9afc758837d164662ae1ad4fdeec4b842b395ee1f09d30f5dd94d8e382ae5b6"
+    }
+  },
+  "source_review": {
+    "bytes": 8207,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/source-review.json",
+    "sha256": "fa9f99e9fd67e9c3df08ab035d954f0fa242b365669677c14d098a039c3bc703"
+  },
+  "source_review_status": "PASS_SOURCE_REVIEW_SEVEN_LEAF_RSS_WITH_REQUIRED_HASH_CHILD",
+  "source_selection": {
+    "bytes": 4698,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-cohort-20261106/source-selection.json",
+    "sha256": "1de9342ac2fc846fd99f0701558fd1ea38ed0d00c5419eb0fcc0f3f22e65fc0b"
+  },
+  "targets": [
+    "biglybtc_rss_document",
+    "biglybtc-rss-document-tests",
+    "biglybtc-rss-document-probe"
+  ],
+  "test_output_size_passed": 262144,
+  "test_seconds": 1000,
+  "tests": [
+    "original-rss-document-values"
+  ]
+}

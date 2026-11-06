@@ -1,0 +1,79 @@
+{
+  "basis_commit": "72f16c6f03abb3d4fe77a9152594799302e8d44c",
+  "basis_native_tree": "04e4a8b61071bedf85e529d7cc390fd59833d2e5",
+  "candidate_manifests": [
+    {
+      "bytes": 9452,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/manifest.json",
+      "sha256": "56fabc337eee1c925d32724ec2aad3cb8a82db0554ecae62402c751717737da5"
+    },
+    {
+      "bytes": 4773,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/amendments/conditional-magnet-hash/manifest.json",
+      "sha256": "397a1b02392ebdd089011d1f56433ecde04c51ba57b951215aefea3add222537"
+    }
+  ],
+  "prior_value_proof_retained_not_relabelled": true,
+  "source_paths": {
+    "preview/native/services/CMakeLists.txt": {
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/source/preview/native/services/CMakeLists.txt",
+      "after_sha256": "091d1f32d621910a9e13cdf2e32a1d008db7595d3a88583f3c69286e330707ea",
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/basis/preview/native/services/CMakeLists.txt",
+      "before_sha256": "b5b95ea27046f96fbc434bddcfa2b4a9a7f8dfe4c0d21f6dd2bbd6f7af1813e3",
+      "composition": "current-basis-verbatim-plus-one-reviewed-fragment",
+      "fragment": {
+        "bytes": 450,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/services.CMake.append",
+        "sha256": "41b0bc2076f05ef5666a34f25c288c660204c547c4c67213b746c9e0f6736272"
+      }
+    },
+    "preview/native/services/search/rss_document.cpp": {
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/amendments/conditional-magnet-hash/source/preview/native/services/search/rss_document.cpp",
+      "after_sha256": "9468d00375054a08b1b83764bb49cfdc21d24277d5a778c5fd26be5560591f8a",
+      "before_path": null,
+      "before_sha256": null,
+      "new_path_absent_at_basis": true
+    },
+    "preview/native/services/search/rss_document.hpp": {
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/source/preview/native/services/search/rss_document.hpp",
+      "after_sha256": "3d50f58c4c13b7d1d9074c61423d226f917a1415d590d36fffb11a1cc9f8ece2",
+      "before_path": null,
+      "before_sha256": null,
+      "new_path_absent_at_basis": true
+    },
+    "preview/native/services/search/rss_html40.inc": {
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/source/preview/native/services/search/rss_html40.inc",
+      "after_sha256": "42bc5a087da49e6b5ceda5a4d4b4151068245fa0a4db513f7fb56f674d0070e3",
+      "before_path": null,
+      "before_sha256": null,
+      "new_path_absent_at_basis": true
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/source/preview/native/tests/CMakeLists.txt",
+      "after_sha256": "c81935554b07f75e73bb24837affea82c82e3077c2f0191640e39fdf8b36a30e",
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/basis/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "84ac5c627c642548513fbb34e5b8389cc76be25380ec7376aaf760764dbfd707",
+      "composition": "current-basis-verbatim-plus-one-reviewed-fragment",
+      "fragment": {
+        "bytes": 745,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/tests.CMake.append",
+        "sha256": "e452d3a30fa9dd0bf591b0e64e15de188994f469201871a66d29be8bebeb1994"
+      }
+    },
+    "preview/native/tests/rss_document_probe.cpp": {
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/source/preview/native/tests/rss_document_probe.cpp",
+      "after_sha256": "b4272c21f8c537aafdbc58e2baf35ab470ed7ccf47a2233efb0f79761e9e30fd",
+      "before_path": null,
+      "before_sha256": null,
+      "new_path_absent_at_basis": true
+    },
+    "preview/native/tests/rss_document_tests.cpp": {
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document-integration-20261106/amendments/conditional-magnet-hash/source/preview/native/tests/rss_document_tests.cpp",
+      "after_sha256": "015077eec45af31115e9f6d1d2cdfdd36a14554b5ee8f895592e1e83c12db2c8",
+      "before_path": null,
+      "before_sha256": null,
+      "new_path_absent_at_basis": true
+    }
+  },
+  "status": "REVIEWED_SEVEN_LEAF_SOURCE_SELECTION"
+}

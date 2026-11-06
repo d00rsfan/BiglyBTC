@@ -1,0 +1,73 @@
+[
+  {
+    "case": "rss-values",
+    "rows": 2,
+    "matched": true,
+    "scope": "Original RSSFeed/RSSItem and WebResult title public values; canonical HTTP-only fixture, no HEAD/search/adjustLink parity"
+  },
+  {
+    "case": "atom-values",
+    "rows": 1,
+    "matched": true,
+    "scope": "Original RSSFeed/RSSItem and WebResult title public values; canonical HTTP-only fixture, no HEAD/search/adjustLink parity"
+  },
+  {
+    "case": "html-title",
+    "matched": true,
+    "fields": {
+      "title": true,
+      "size": true,
+      "torrentLinkRaw": true,
+      "seeds": true,
+      "peers": true
+    }
+  },
+  {
+    "case": "size-unknown-unit",
+    "matched": true,
+    "fields": {
+      "title": true,
+      "size": true
+    }
+  },
+  {
+    "case": "canonical-hash",
+    "matched": true,
+    "fields": {
+      "title": true,
+      "hash": true
+    }
+  },
+  {
+    "case": "enclosure-too-small",
+    "matched": true,
+    "fields": {
+      "title": true,
+      "size": true
+    }
+  },
+  {
+    "case": "xml-link",
+    "matched": true,
+    "fields": {
+      "title": true,
+      "torrentLinkRaw": true,
+      "seeds": true,
+      "peers": true
+    }
+  },
+  {
+    "case": "supplementary-numeric-entity",
+    "matched": true,
+    "fields": {
+      "title": true
+    }
+  },
+  {
+    "case": "single-tab",
+    "matched": true,
+    "fields": {
+      "title": true
+    }
+  }
+]

@@ -1,0 +1,85 @@
+{
+  "schema": "BIGLYBTC_RSS_VALUE_MODULE_QUALIFICATION_EVIDENCE_V1",
+  "status": "PASS_NATIVE_VALUES_AND_ORIGINAL_PUBLIC_API_SUBSET",
+  "source_manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/amendments/ascii-canonical-hash/amendments/reconstructed-nested-links/amendments/head-dependent-details/amendments/range-loop-reference/manifest.json",
+    "sha256": "d4c920bd98d7922372b3048e77196f2cd4cf085bf5fc4d7b88691294ecc55678",
+    "bytes": 5663
+  },
+  "reviewed_parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/amendments/ascii-canonical-hash/amendments/reconstructed-nested-links/amendments/head-dependent-details/manifest.json",
+    "sha256": "48993ee154a1800298bf73bd9ce0863bf9716c88246658bd29001daf2eb2a193",
+    "bytes": 6086
+  },
+  "independent_parent_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/driver-rss-document-review/head-details-child-review.json",
+    "sha256": "cced8e89edfe35ebbb648b088858fd2e1e6d153c28326556bc8480f1f289437d",
+    "bytes": 5359
+  },
+  "result": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/result.json",
+    "sha256": "b728f4101193593922dabff476da42cb548f2a697e3f49f05f3b6f8e65de8edc",
+    "bytes": 32252
+  },
+  "source_map": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/source-map.json",
+    "sha256": "7a4b917762d2e9bbb208f9ef52fe13c8c097793a8343c94e816d1dffeacdfd1d",
+    "bytes": 1958
+  },
+  "inputs": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/inputs.json",
+    "sha256": "a38c9a6c35ceee0461a289f13db281553d235344a3f924147f93e0be96db9774",
+    "bytes": 44659
+  },
+  "comparisons": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r2/comparisons.json",
+    "sha256": "6f9c6b6c84611695ebf94f9b73d077d39f4a99efc2475b052cbc45f42028d928",
+    "bytes": 1366
+  },
+  "failed_initial_attempt": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/qualification/r1/result.json",
+    "sha256": "311a7e31f7e08fd4bca531a7f484a899766a22fe46a89a7ab347ec55bcb402f7",
+    "bytes": 4720
+  },
+  "effective_change": "Actual GCC16/O3 range-loop-construct warning fixed by const reference to same QString initializer-list elements; no warning/semantic/assertion weakening.",
+  "measured": {
+    "commands": 20,
+    "all_exit_zero": true,
+    "native_test_families": 7,
+    "feed_groups": 2,
+    "feed_items": 3,
+    "normalization_rows": 7,
+    "comparison_groups": 9,
+    "explicit_normalization_fields": 17,
+    "socket_negative_control": true,
+    "all_java_native_oracles_socket_denied": true,
+    "java_runtime": "JDK26",
+    "java_class_target": 17,
+    "compiler_parallelism": 1,
+    "qt_header_inputs": 158,
+    "qt_core_dso_inputs": 1
+  },
+  "cleanup": {
+    "disposable_tree_removed": true,
+    "all_subjects_joined": true,
+    "images_classes_removed_after_hash_capture": true
+  },
+  "scope": {
+    "production_qualification": false,
+    "native_or_cache_changes": false,
+    "whole_RSS_engine_parity": false,
+    "whole_P08_complete": false,
+    "Core_start": false,
+    "fetch_or_HEAD": false,
+    "documented_provider_gaps": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-document/provider-status.json",
+      "sha256": "0a2fb511fab2a3ee0c64bd0db2735989db29764603914843d34ad91309e9657a",
+      "bytes": 5231
+    }
+  },
+  "limits": [
+    "Source module remains in R staging; next cohesive Native integration/optimized+SAN qualification is separate.",
+    "Original oracle exercises supplied RSSFeed/RSSItem public parsing and WebResult deterministic setters, not RSSEngine.search or Engine.adjustLink.",
+    "HTTP HEAD/cache, description heuristics, date interpretation, noncanonical URL/Unicode edge forms, search/import/subscription/UI/provider ownership remain explicitly unqualified."
+  ]
+}
