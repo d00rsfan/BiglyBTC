@@ -77,6 +77,9 @@ public:
   // External Host worker only: filesystem/key/source preparation/publication.
   std::expected<std::unique_ptr<Prepared>,storage::Error> prepareTorrent(
       const core::TorrentHash&,const Retained&);
+  // Original construction IO worker only; FS-only, no Qt/SDK dispatch.
+  // The Host serializes member insertion/removal; only retained state changes.
+  std::expected<bool,storage::Error> rebaseCategory(const storage::ProfileLease&,const core::TorrentHash&);
   std::expected<void,storage::Error> checkpoint(const core::TorrentHash&);
   std::expected<void,storage::Error> publish(const core::TorrentHash&,
       const std::function<std::expected<void,storage::Error>()>&);

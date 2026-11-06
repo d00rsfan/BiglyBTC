@@ -14,6 +14,8 @@
 #include <stdexcept>
 #include <sys/resource.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
+#include <sys/prctl.h>
 #include <thread>
 #include <unistd.h>
 namespace s=biglybtc::storage;namespace c=biglybtc::core;namespace fs=std::filesystem;
@@ -51,7 +53,7 @@ void firstCreatePrimaryOnlyAndOriginalSuffixes(){
   Area a;auto store=opened(a);auto empty=snap(*store);check(empty.missing()&&empty.writable(),"Missing definitions state");const auto old=files(a);check(!fs::exists(a.root/"categories.config"),"Read created config");
   auto first=take(store->create(empty,"Alpha"));check(first.changed&&first.createdName=="Alpha"&&!first.snapshot.missing(),"First category not committed");check(read(a.root/"categories.config")==first.snapshot.categories()->source->originalBytes(),"Actual saved projection differs");
   check(!fs::exists(a.root/"categories.config.new")&&!fs::exists(a.root/"categories.config.bak")&&!fs::exists(a.root/"categories.config.saving"),"Generic backup/saving semantics leaked into category file");
-  const auto committed=files(a);auto same=take(store->create(first.snapshot,"Alpha"));check(!same.changed&&same.snapshot.generation()==first.snapshot.generation()&&files(a)==committed,"Name no-op changed files/generation");error(store->create(empty,"stale"),s::ErrorCode::Conflict);error(store->remove(first.snapshot,"Alpha"),s::ErrorCode::Unsupported);check(files(a)==committed,"Unsupported deletion changed files");
+  const auto committed=files(a);auto same=take(store->create(first.snapshot,"Alpha"));check(!same.changed&&same.snapshot.generation()==first.snapshot.generation()&&files(a)==committed,"Name no-op changed files/generation");error(store->create(empty,"stale"),s::ErrorCode::Conflict);error(store->remove(first.snapshot,"Alpha"),s::ErrorCode::Conflict);check(files(a)==committed,"Incomplete inventory deletion changed files");
   take(store->close());auto reopened=opened(a);check(!snap(*reopened).missing()&&snap(*reopened).categories()->categories.front().name=="Alpha","Original primary did not reopen");check(read(a.payload)==old.at("payload.bin"),"Definition changed payload");
 }
 void primaryRecoveryCandidatesNeverFallbackOrDisappear(){
@@ -109,5 +111,6 @@ void actualWriteFailurePoisonsAndRequiresExplicitReadReopen(){
   {FileLimit limit;auto result=store->create(defs,"Must not be replayed");check(!result,"Actual bounded-file write unexpectedly succeeded");}
   check(store->recoveryRequired(),"Attempted write failure did not poison store");error(store->snapshot(),s::ErrorCode::Conflict);error(store->reload(),s::ErrorCode::Conflict);check(read(a.root/"categories.config")==before,"Failed .new write changed original primary");take(store->close());auto reopened=opened(a);check(snap(*reopened).categories()->source->originalBytes()==before,"Explicit reopen replayed an edit");
 }
+#include "category_delete_journal_tests.inc"
 }
-int main(){try{firstCreatePrimaryOnlyAndOriginalSuffixes();primaryRecoveryCandidatesNeverFallbackOrDisappear();actualSelectedStateAssignmentPreservesInfoResumePayloadAndUnknowns();authoritativeCacheOverlayIsUsedAndEntryRetiredByExistingWriter();externalChangesAndForeignSelectionsRefuseWithoutOverwrite();pathThreadBudgetAndRetainedLeaseBoundaries();actualWriteFailurePoisonsAndRequiresExplicitReadReopen();std::cout<<"PASS category worker store: seven generated-profile families\n";return EXIT_SUCCESS;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return EXIT_FAILURE;}}
+int main(){try{firstCreatePrimaryOnlyAndOriginalSuffixes();primaryRecoveryCandidatesNeverFallbackOrDisappear();actualSelectedStateAssignmentPreservesInfoResumePayloadAndUnknowns();authoritativeCacheOverlayIsUsedAndEntryRetiredByExistingWriter();externalChangesAndForeignSelectionsRefuseWithoutOverwrite();pathThreadBudgetAndRetainedLeaseBoundaries();actualWriteFailurePoisonsAndRequiresExplicitReadReopen();actualDeletionAndPrefixRecovery();categoryDeletionExternalChangesAndCancellation();std::cout<<"PASS category worker store: seven generated-profile families\n";return EXIT_SUCCESS;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return EXIT_FAILURE;}}

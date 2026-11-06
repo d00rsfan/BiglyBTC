@@ -2,6 +2,9 @@
 #include "file_io.hpp"
 
 #include <cerrno>
+#include <algorithm>
+#include <array>
+#include <new>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -372,6 +375,8 @@ std::expected<void, Error> TorrentStateStore::saveAttributes(const ProfileLease&
   state.attributesOnly_ = false; // Never silently repeat a partly published edit.
   return saveInternal(state, nullptr);
 }
+
+#include "category_state_rebase.inc"
 
 std::expected<TorrentStateFile, Error> TorrentStateStore::beginUpdate(const ProfileLease& lease, const core::TorrentHash& hash) const {
   auto access=lease.sourceAccess(true);if(!access){return std::unexpected(access.error());}

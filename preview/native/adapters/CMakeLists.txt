@@ -127,3 +127,6 @@ target_sources(biglybtc_profile PRIVATE azureus_public_policy.cpp)
 target_sources(biglybtc_profile PRIVATE manual_tag_store.cpp)
 # Owning filesystem worker only; reuses existing guarded state writer.
 target_sources(biglybtc_profile PRIVATE category_store.cpp)
+# Append after the original9489 category_store.cpp target binding.
+set_source_files_properties(category_delete_journal.inc PROPERTIES HEADER_FILE_ONLY TRUE)
+target_sources(biglybtc_profile PRIVATE category_delete_journal.inc)

@@ -86,6 +86,9 @@ public:
   // Internal Host worker publication; no UI/user observer may be called here.
   std::expected<void,storage::Error> publish(const core::TorrentHash&,
       const std::function<std::expected<void,storage::Error>()>&);
+  // Host worker FS-only. May run inside publish()'s held source/mutex turn;
+  // does not reenter that mutex, dispatch Qt, touch SDK or confer a new grant.
+  std::expected<bool,storage::Error> rebaseCategory(const storage::ProfileLease&,const core::TorrentHash&);
   std::expected<void,storage::Error> publishPositions(const engine::SourceMutation&);
   std::expected<void,storage::Error> configureExternalQueue(bool);
   std::expected<engine::ExternalQueueSnapshot,storage::Error> externalQueueSnapshot();

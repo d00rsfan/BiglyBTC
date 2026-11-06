@@ -49,6 +49,10 @@ public:
   // changes only attributes, retaining primary resume/info bytes. No payload IO.
   std::expected<TorrentStateFile, Error> loadAttributes(const ProfileLease&, const core::TorrentHash&) const;
   std::expected<void, Error> saveAttributes(const ProfileLease&, TorrentStateFile&, std::string encodedAttributes) const;
+  // Internal prepared-owner refresh after a durable category-only edit. Reads
+  // actual disk/cache, advances CAS bytes, keeps buffered native sections.
+  // No caller document, preparation, write, callback, payload or source grant.
+  std::expected<std::string, Error> rebaseCategory(const ProfileLease&, TorrentStateFile&) const;
   // Hydrate/remove this entry from the global cache, then durably mark all its
   // pieces for recheck before permitting payload allocation/writes.
   std::expected<TorrentStateFile, Error> beginUpdate(const ProfileLease& lease, const core::TorrentHash& hash) const;

@@ -32,6 +32,7 @@
 #include <map>
 #include <unistd.h>
 
+#include <thread>
 namespace biglybtc::services::i2p::provider {
 namespace {
 namespace lt=libtorrent;
@@ -71,6 +72,7 @@ struct OwnedProfile::QueueState::Impl {
 OwnedProfile::QueueState::QueueState(std::unique_ptr<Impl> p):impl_(std::move(p)){}
 OwnedProfile::QueueState::~QueueState()=default;
 struct OwnedProfile::Impl {
+  const std::thread::id ioWorker=std::this_thread::get_id();
   struct Member {
     std::unique_ptr<Prepared> prepared;lt::torrent_handle handle;
     std::shared_ptr<detail::RetirementCounters> counters=std::make_shared<detail::RetirementCounters>();
@@ -599,6 +601,20 @@ bool OwnedProfile::retire(const core::TorrentHash& hash,std::chrono::steady_cloc
   return true;
 }
 OwnedTorrent::RetirementObservation OwnedProfile::retirement(const core::TorrentHash& h){impl_->alerts();auto* m=impl_->find(h);return m?m->retired:OwnedTorrent::RetirementObservation{.failure=Error{Code::Missing,"I2P member is absent"}};}
+std::expected<bool,Error> OwnedProfile::rebaseCategory(const storage::ProfileLease& lease,const core::TorrentHash& hash){
+  auto& s=*impl_;
+  if(std::this_thread::get_id()!=s.ioWorker||!s.source->lease()->sharesOwnership(lease)){
+    return std::unexpected(Error{Code::Conflict,"Category rebase requires the original I2P IO worker and profile OFD"});
+  }
+  // Host control serializes add/release. Qt callbacks neither erase members nor
+  // access retained TorrentStateFile; their parameters/queue/counters stay intact.
+  auto* member=s.find(hash);if(!member||member->checkpointed.load(std::memory_order_acquire)){return false;}
+  if(member->data().hash!=hash||!member->data().admission){
+    s.source->revoke();return std::unexpected(Error{Code::Conflict,"I2P category admission is stale"});
+  }
+  auto result=member->data().storage.rebaseCategory(lease);
+  if(!result){s.source->revoke();return std::unexpected(result.error());}return true;
+}
 std::expected<void,Error> OwnedProfile::checkpoint(const core::TorrentHash& h){
   auto& s=*impl_;auto* m=s.find(h);if(!m||!m->retired.readyForJoin||!m->retired.joined||m->retired.failure||m->checkpointed.load()){return std::unexpected(Error{Code::Conflict,"Target I2P checkpoint requires exact flush/removal/storage expiration"});}
   if(m->installed&&!m->unchecked){auto result=s.source->publish(h,[&]()->std::expected<void,Error>{

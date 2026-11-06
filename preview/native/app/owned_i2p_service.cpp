@@ -237,6 +237,14 @@ std::expected<void,storage::Error> OwnedI2pService::move(const core::TorrentHash
   auto& s=*impl_;std::lock_guard lock(s.mutex);if(s.closed||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
   auto changed=s.owner->publishPositions([&]()->std::expected<void,Error>{auto r=storage::applyLibraryCommand(*s.lease,h,action,pools);return r?std::expected<void,Error>{}:std::expected<void,Error>{std::unexpected(r.error())};});if(!changed){return changed;}return s.refreshQueue();
 }
+std::expected<bool,storage::Error> OwnedI2pService::rebaseCategory(const storage::ProfileLease& lease,const core::TorrentHash& hash){
+  // All service control and destruction is serialized on caller. publish()
+  // already holds mutex here, so re-locking it would deadlock the FS callback.
+  auto& s=*impl_;if(QThread::currentThread()!=s.caller||s.closed||!s.owner||!s.lease||!s.lease->sharesOwnership(lease)){
+    return std::unexpected(Error{Code::Conflict,"Live I2P Host/profile required for category rebase"});
+  }
+  return s.owner->rebaseCategory(lease,hash);
+}
 std::expected<void,storage::Error> OwnedI2pService::publishPositions(const engine::SourceMutation& f){
   auto& s=*impl_;std::lock_guard lock(s.mutex);if(s.closed||QThread::currentThread()!=s.caller){return std::unexpected(Error{Code::Conflict,"Live I2P Host worker required"});}
   auto saved=s.owner->publishPositions(f);if(!saved){return saved;}return s.refreshQueue();
@@ -301,6 +309,7 @@ std::expected<void,storage::Error> OwnedI2pService::stop(const core::TorrentHash
 std::expected<void,storage::Error> OwnedI2pService::command(const core::TorrentHash&,core::DownloadAction,const engine::RetainedPayloads&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::publish(const core::TorrentHash&,const std::function<std::expected<void,storage::Error>()>&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::move(const core::TorrentHash&,core::DownloadAction,std::span<const storage::LibraryCompletionPool>){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
+std::expected<bool,storage::Error> OwnedI2pService::rebaseCategory(const storage::ProfileLease&,const core::TorrentHash&){return false;}
 std::expected<void,storage::Error> OwnedI2pService::publishPositions(const engine::SourceMutation&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::configureExternalQueue(bool){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}
 std::expected<engine::ExternalQueueSnapshot,storage::Error> OwnedI2pService::externalQueueSnapshot(){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Optional native I2P owner is unavailable"});}

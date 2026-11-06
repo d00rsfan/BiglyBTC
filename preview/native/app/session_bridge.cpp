@@ -41,6 +41,7 @@
 #include "statistics_view.hpp"
 #include "saved_download_tags_view.hpp"
 #include "manual_tag_store.hpp"
+#include "category_store.hpp"
 #include "manual_tag_policy.hpp"
 #include "tag_constraint_worker.hpp"
 #include "country_provider.hpp"
@@ -208,6 +209,16 @@ template<class T>T payloadSum(T a,T b,bool& capped){
 }
 void take(std::expected<void, storage::Error> value) {
   if (!value) { throw Failure{std::move(value.error())}; }
+}
+}
+namespace {
+template<class Store> bool categoryDeletionSupported(const Store& value){
+  if constexpr(requires{value.deletionSupported();}){return value.deletionSupported();}else{return false;}
+}
+template<class Store> std::expected<storage::CategoryCommit,storage::Error> categoryRemove(
+    Store& value,const storage::CategorySnapshot& expected,std::string_view name,std::stop_token stop){
+  if constexpr(requires{value.remove(expected,name,stop);}){return value.remove(expected,name,stop);}
+  else{return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Category deletion requires the journal-enabled backend"});}
 }
 }
 struct SessionBridge::Host {
@@ -524,6 +535,7 @@ struct SessionBridge::Host {
     packet.readState=manualTagReadState;packet.writable=manualTagSnapshot.writable();
     packet.tags=manualTagEditorSource;
   }
+#include "category_host.inc"
   // Optional geography is never initialized by profile startup or transfers.
   bool countriesEnabled = false, countryProviderAttempted = false, countryEnded = false;
   quint64 countrySequence = 0;
@@ -1228,6 +1240,13 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         emit sessionCloseFailed();
         if (!guard) { return; }
       }
+      if(guiCategoryCommand_){
+        auto packet=std::make_shared<ui::CategoryCommandPacket>();
+        packet->session=guiCategoryCommand_->session;packet->request=guiCategoryCommand_->request;packet->kind=guiCategoryCommand_->kind;packet->requestedTarget=guiCategoryCommand_->target;
+        packet->status=result.error()==core::WorkError::Cancelled?ui::CategoryCommandStatus::Cancelled:ui::CategoryCommandStatus::Rejected;
+        packet->failure=result.error()==core::WorkError::Cancelled?tr("Cancelled"):tr("Session command failed");
+        deliverCategoryCommand(packet);if(!guard){return;}
+      }
       if(guiManualTagCommand_){
         auto packet=std::make_shared<ui::ManualTagCommandPacket>();
         packet->session=guiManualTagCommand_->session;packet->request=guiManualTagCommand_->request;packet->kind=guiManualTagCommand_->kind;
@@ -1394,6 +1413,12 @@ void SessionBridge::failed(QString message) {
   QMetaObject::invokeMethod(this, [this, message = std::move(message)] {
     QPointer<SessionBridge> guard(this);
     // Dispatch may observe cancellation before entering the command body.
+    if(guiCategoryCommand_){
+      auto packet=std::make_shared<ui::CategoryCommandPacket>();
+      packet->session=guiCategoryCommand_->session;packet->request=guiCategoryCommand_->request;packet->kind=guiCategoryCommand_->kind;packet->requestedTarget=guiCategoryCommand_->target;
+      packet->status=message==tr("Cancelled")?ui::CategoryCommandStatus::Cancelled:ui::CategoryCommandStatus::Rejected;
+      packet->failure=message.left(8192);deliverCategoryCommand(packet);if(!guard){return;}
+    }
     if(guiManualTagCommand_){
       auto packet=std::make_shared<ui::ManualTagCommandPacket>();
       packet->session=guiManualTagCommand_->session;packet->request=guiManualTagCommand_->request;packet->kind=guiManualTagCommand_->kind;
@@ -2414,6 +2439,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
   },false);
   if(alive&&!accepted){guiManualTagCommand_.reset();}return accepted;
 }
+#include "category_bridge.inc"
 bool SessionBridge::history(quint64 session, quint64 request, core::HistoryDate date) {
   if (session == 0 || request == 0 || session != publishedColumnLayoutSession_
       || !core::validHistoryDate(date)) { return false; }

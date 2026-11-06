@@ -114,6 +114,7 @@ struct PersistentSession::Impl {
     lt::torrent_handle handle;
     ManagedDownloadStatus status;
     bool manualPaused = false, forceStart = false, stop = false;
+    bool categoryRebaseFailed=false; // SDK stop deferred until outside FS gate.
     std::shared_ptr<MainlinePortQueue> mainlinePort;
     bool mainlineTrackerHealthy=false;
     Clock::time_point mainlineNext{};
@@ -1247,6 +1248,7 @@ struct PersistentSession::Impl {
     for (auto& [key, entry] : managed) {
       static_cast<void>(key);
       auto& value = *entry;
+      if(value.categoryRebaseFailed){value.categoryRebaseFailed=false;requestStop(value);}
       if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());}
       if(value.allocationIntent){advanceAllocation(value);continue;}
       sampleManaged(value);
@@ -2143,6 +2145,37 @@ std::expected<void, storage::Error> PersistentSession::queueManaged(const core::
   } else { if(!value.seedIntent){value.handle.set_flags(lt::torrent_flags::auto_managed);} if (queued) { value.handle.pause(); } else { value.handle.resume(); } }
   if (impl_->queuePolicy) { impl_->sampleManaged(value); impl_->applyQueue(); }
   return {};
+}
+std::expected<bool,storage::Error> PersistentSession::rebaseCategory(const storage::ProfileLease& lease,const core::TorrentHash& hash){
+  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned){
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Category refresh requires the current owner worker and same profile OFD"});
+  }
+  const auto found=impl_->managed.find(hash.hex());
+  if(found==impl_->managed.end()||!found->second->status.retained){return false;}
+  if(!impl_->managedLease||!impl_->managedLease->sharesOwnership(lease)){
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Category refresh requires the actual profile OFD"});
+  }
+  auto& value=*found->second;
+  if(value.status.hash!=hash||!value.status.admission||value.status.failure){
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Category refresh admission is unavailable"});
+  }
+  auto rebased=value.storage.rebaseCategory(lease);
+  if(rebased&&value.mixedSource){
+    try{
+      const auto& old=*value.mixedSource;
+      auto replacement=std::shared_ptr<const MixedManagedSource>(new MixedManagedSource(old.lease_,old.identity_,old.admission_,
+          std::string(value.storage.categoryStateSnapshot()),old.trackers_,old.claims_,old.alive_,old.origin_));
+      value.mixedSource=std::move(replacement); // Old shared immutable seals are unchanged.
+    }catch(const std::bad_alloc&){rebased=std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot refresh immutable mixed category seal"});}
+  }
+  if(!rebased){
+    value.status.failure=rebased.error();value.status.phase=ManagedPhase::Failed;value.categoryRebaseFailed=true;
+    if(value.mixedLifetime){value.mixedLifetime->retained=false;value.mixedLifetime->attached=false;}
+    // No requestStop/status/SDK calls while the caller may hold publication F.
+    // Existing next poll stops/removes; failure prevents an unsafe checkpoint.
+    return std::unexpected(rebased.error());
+  }
+  return true;
 }
 std::expected<void, storage::Error> PersistentSession::stopManaged(const core::TorrentHash& hash) {
   revokeMainlineScrape(hash);

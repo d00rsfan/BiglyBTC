@@ -10,6 +10,7 @@
 #include "original_disk_io.hpp"
 #include "network_policy.hpp"
 #include "torrent_state.hpp"
+#include "category_store.hpp"
 
 #include <libtorrent/hasher.hpp>
 #include <libtorrent/torrent_info.hpp>
@@ -153,6 +154,67 @@ int main() {
   std::ranges::transform(filesystemEncoding,filesystemEncoding.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
   require(filesystemEncoding=="utf8","Actual generated Unicode fixtures require an installed UTF8 locale");
 
+  runCase("actual category assignment rebases prepared owner checkpoint and cache-equivalent attributes",[]{
+    for(const bool cached:{false,true}){
+      Fixture f;
+      if(cached){auto source=f.state();auto props=core::Document::parse(encode(*source.find("azureus_properties")));
+        require(props&&props->replaceValue("future-cache","li8e3:rawe").has_value()&&source.replaceValue("azureus_properties",props->serialize()).has_value(),"Cache equivalent plugin source");
+        write(f.profile/"active"/(f.hash.hex()+".dat"),source.serialize());
+      }
+      auto owner=f.prepare();const auto before=f.state();const auto resume=encode(*before.find("resume"));
+      if(cached){
+        const auto* attrs=before.find("attributes");std::string reordered="d";
+        for(std::size_t n=attrs->children.size();n>0;n-=2){reordered+=encode(attrs->children[n-2])+encode(attrs->children[n-1]);}reordered+='e';
+        const auto key=f.hash.bytes();const std::string bytes(reinterpret_cast<const char*>(key.data()),key.size());
+        const auto* props=before.find("azureus_properties");std::string reorderedProps="d";
+        for(std::size_t n=props->children.size();n>0;n-=2){reorderedProps+=encode(props->children[n-2])+encode(props->children[n-1]);}reorderedProps+='e';
+        write(f.profile/"active"/"cache.dat",gzip("d5:stateld4:hash"+b(bytes)+"10:attributes"+reordered+"3:azp"+reorderedProps+"eee"));
+      }
+      auto categories=storage::CategoryStore::open(*f.lease);require(categories.has_value(),"Actual category Store");
+      auto defs=(*categories)->snapshot();require(defs.has_value(),"Actual category preimage");
+      auto created=(*categories)->create(*defs,"Assigned");require(created.has_value(),"Actual definition commit");
+      auto target=(*categories)->readTarget(created->snapshot,f.hash);require(target.has_value(),"Actual selected source");
+      auto assigned=(*categories)->assign(created->snapshot,*target,std::string("Assigned"));require(assigned&&assigned->changed,"Actual durable category assignment");
+      require(owner.rebaseCategory(*f.lease).has_value(),"Category-only prepared-owner rebase");
+      const auto retained=core::Document::parse(owner.preparedStateSnapshot());require(retained&&retained->find("attributes")->find("category")->bytes=="Assigned","Retained owner sees committed category");
+      require(encode(*retained->find("info"))==f.info&&encode(*retained->find("resume"))==resume,"Rebase changes no info/native resume");
+      checkpoint(owner,f,{0,0},false);const auto actual=f.state();
+      require(actual.find("attributes")->find("category")->bytes=="Assigned"&&encode(*actual.find("info"))==f.info,"Real checkpoint preserves assigned category/full info");
+      require(!owner.rebaseCategory(*f.lease),"Attempted checkpoint cannot be reactivated by category rebase");
+      require((*categories)->close().has_value(),"Actual category Store close");
+    }
+  });
+  runCase("category rebase keeps actual buffered prepared resume and attributes",[]{
+    Fixture f;auto store=storage::TorrentStateStore::open(*f.lease);require(store.has_value(),"Actual state Store");
+    auto pending=store->beginUpdate(*f.lease,f.hash);require(pending.has_value(),"Actual prepared state");
+    auto resume=core::Document::parse(encode(*pending->document().find("resume")));require(resume&&resume->replaceValue("native-buffered",b("owned pending resume")).has_value(),"Prepare buffered native resume");
+    require(pending->replaceSection("resume",resume->serialize()).has_value(),"Buffer native resume on actual prepared object");
+    auto attrs=core::Document::parse(encode(*pending->document().find("attributes")));require(attrs&&attrs->replaceValue("native-buffered","i31e").has_value(),"Actual buffered attributes");
+    require(pending->replaceSection("attributes",attrs->serialize()).has_value(),"Retain buffered owner attrs");
+    auto categories=storage::CategoryStore::open(*f.lease);require(categories.has_value(),"Actual category Store");
+    auto defs=(*categories)->snapshot();require(defs.has_value(),"Actual categories snapshot");auto created=(*categories)->create(*defs,"Buffered");require(created.has_value(),"Create buffered category");
+    auto target=(*categories)->readTarget(created->snapshot,f.hash);require(target.has_value(),"Actual buffered target");
+    require((*categories)->assign(created->snapshot,*target,std::string("Buffered")).has_value(),"Commit category independently of buffered owner");
+    require(store->rebaseCategory(*f.lease,*pending).has_value()&&pending->prepared(),"Prepared flag survives category-only refresh");
+    require(encode(*pending->document().find("resume"))==resume->serialize()&&pending->document().find("attributes")->find("native-buffered")->integer==31,"Buffered resume/attributes were not replaced by disk state");
+    require(store->save(*f.lease,*pending).has_value(),"Prepared buffered save uses new exact CAS baseline");
+    const auto actual=f.state();require(actual.find("attributes")->find("category")->bytes=="Buffered"&&actual.find("resume")->find("native-buffered")->bytes=="owned pending resume","Actual later save keeps category and buffered resume");
+    require(actual.find("resume")->find("data")->find("valid")->integer==0,"Rebase never manufactures complete resume authority");
+  });
+  runCase("category rebase refuses every noncategory edit and foreign ownership",[]{
+    for(const auto kind:{0,1,2,3}){
+      Fixture f;auto owner=f.prepare();const auto before=owner.preparedStateSnapshot();auto current=f.state();
+      if(kind==0){auto attrs=core::Document::parse(encode(*current.find("attributes")));require(attrs&&attrs->replaceValue("networks","l3:I2Pe").has_value()&&current.replaceValue("attributes",attrs->serialize()).has_value(),"Actual changed network source");}
+      if(kind==1){auto attrs=core::Document::parse(encode(*current.find("attributes")));require(attrs&&attrs->replaceValue("unrelated-foreign","i8e").has_value()&&current.replaceValue("attributes",attrs->serialize()).has_value(),"Actual unrelated attr edit");}
+      if(kind==2){auto resume=core::Document::parse(encode(*current.find("resume")));require(resume&&resume->replaceValue("foreign","i7e").has_value()&&current.replaceValue("resume",resume->serialize()).has_value(),"Actual changed resume source");}
+      if(kind==3){auto info=core::Document::parse(encode(*current.find("info")));require(info&&info->replaceValue("name",b("foreign-name")).has_value()&&current.replaceValue("info",info->serialize()).has_value(),"Actual changed full info");}
+      write(f.profile/"active"/(f.hash.hex()+".dat"),current.serialize());const auto bytes=read(f.profile/"active"/(f.hash.hex()+".dat"));
+      const auto refused=owner.rebaseCategory(*f.lease);require(!refused&&refused.error().code==Code::Conflict,"Noncategory edit acquired rebase authority");
+      require(owner.preparedStateSnapshot()==before&&read(f.profile/"active"/(f.hash.hex()+".dat"))==bytes,"Refusal changed owner or current source");
+    }
+    Fixture a,other;auto owner=a.prepare();const auto before=owner.preparedStateSnapshot();
+    require(!owner.rebaseCategory(*other.lease)&&owner.preparedStateSnapshot()==before,"Equal hash under foreign actual OFD was accepted");
+  });
   runCase("exact-bad-byte-checkpoint-preserves-unknowns-and-sparse-zero",[]{
     Fixture f;f.fullPayload();
     auto source=f.saved();auto selected=core::Document::parse(encode(row(source)));require(selected.has_value(),"Bad-byte selected row");

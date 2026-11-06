@@ -171,3 +171,7 @@ endif()
 if(TARGET biglybtc_desktop_host)
   target_sources(biglybtc_desktop_host PRIVATE tag_constraint_worker.hpp tag_constraint_worker.cpp tag_constraint_host.inc)
 endif()
+# Category commands share the existing serialized Host worker and profile store.
+if(TARGET biglybtc_desktop_host)
+  target_sources(biglybtc_desktop_host PRIVATE category_commands.hpp category_host.inc category_bridge.inc)
+endif()

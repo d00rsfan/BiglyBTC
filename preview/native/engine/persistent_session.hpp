@@ -209,6 +209,9 @@ public:
   std::expected<void, storage::Error> pauseManaged(const core::TorrentHash&, bool paused);
   std::expected<void, storage::Error> queueManaged(const core::TorrentHash&, bool forceStart, bool queued);
   std::expected<void, storage::Error> stopManaged(const core::TorrentHash&);
+  // Internal FS-only refresh after a real category commit. Selects this exact
+  // retained admission; false means no active storage. No SDK/Qt dispatch.
+  std::expected<bool,storage::Error> rebaseCategory(const storage::ProfileLease&,const core::TorrentHash&);
   // Release retained path descriptors/obsolete overlay only after successful
   // flush, exact handle removal and compatible checkpoint. Owner counters stay.
   std::expected<void, storage::Error> forgetManaged(const core::TorrentHash&, bool removePeerHints = false);

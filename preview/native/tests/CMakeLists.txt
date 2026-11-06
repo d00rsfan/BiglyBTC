@@ -2560,3 +2560,16 @@ set_tests_properties(original-category-worker-store PROPERTIES TIMEOUT 30 LABELS
 if(TARGET biglybtc-tag-runtime-fact-tests)
   target_link_libraries(biglybtc-tag-runtime-fact-tests PRIVATE biglybtc_local_engine)
 endif()
+# Existing original-category-worker-store target/suite retained and extended.
+set_source_files_properties(category_delete_journal_tests.inc PROPERTIES HEADER_FILE_ONLY TRUE)
+target_sources(biglybtc-category-store-tests PRIVATE category_delete_journal_tests.inc)
+if(TARGET biglybtc_desktop_host AND TARGET biglybtc_ui AND TARGET biglybtc_local_engine AND TARGET Qt6::Test
+    AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-category-bridge-tests category_bridge_tests.cpp)
+  set_target_properties(biglybtc-category-bridge-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-category-bridge-tests PRIVATE biglybtc_desktop_host biglybtc_ui biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+  target_compile_options(biglybtc-category-bridge-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_link_options(biglybtc-category-bridge-tests PRIVATE LINKER:--wrap=read)
+  add_test(NAME category-worker-ui COMMAND biglybtc-category-bridge-tests)
+  set_tests_properties(category-worker-ui PROPERTIES TIMEOUT 180 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;categories;owned-profile;integration;loopback")
+endif()

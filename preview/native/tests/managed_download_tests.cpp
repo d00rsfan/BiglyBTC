@@ -11,6 +11,8 @@
 #include "selected_verified_seeding_fixture.hpp"
 #include "original_filename_policy.hpp"
 #include "library_commands.hpp"
+#include "category_store.hpp"
+#include "mixed_i2p_source.hpp"
 #include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -114,6 +116,52 @@ std::int64_t integer(const core::Node& node, std::string_view key) {
 class ManagedDownloadTests final : public QObject {
   Q_OBJECT
 private slots:
+  void actualCategoryAssignmentRetainsOneOwnerThroughCheckpointAndJoinedClose_data(){
+    QTest::addColumn<bool>("mixed");QTest::newRow("Public")<<false;QTest::newRow("Mixed-seal")<<true;
+  }
+  void actualCategoryAssignmentRetainsOneOwnerThroughCheckpointAndJoinedClose(){
+    QFETCH(bool,mixed);if(mixed&&!engine::PersistentSession::mixedNetworksAvailable()){QSKIP("Qualified mixed image is unavailable");}
+    test::OwnedEngineFixture fixture(false);
+    if(mixed){auto current=parse(test::read(fixture.stateFile));auto attrs=core::Document::parse(encoded(*current.find("attributes")));
+      QVERIFY(attrs&&attrs->replaceValue("networks","l6:Public3:I2Pe")&&current.replaceValue("attributes",attrs->serialize()));
+      test::write(fixture.stateFile,QByteArray::fromStdString(current.serialize()));
+    }
+    const auto originalPayload=test::read(fixture.payload+"/sample.bin");
+    {
+      auto lease=held(fixture);auto service=owner();
+      if(mixed){QVERIFY(service->configureNetwork(engine::NetworkPolicy{}));QVERIFY(service->configureMixedNetworks());}
+      const auto admitted=service->startManaged(lease,{.hash=*fixture.hash,.manuallyPaused=true,.mixedNetworks=mixed});QVERIFY2(admitted,admitted?"":admitted.error().message.c_str());
+      QTRY_VERIFY_WITH_TIMEOUT(service->poll().has_value()&&status(*service,*fixture.hash)&&status(*service,*fixture.hash)->checked,10000);
+      const auto before=status(*service,*fixture.hash);QVERIFY(before&&before->retained&&before->admission);
+      std::shared_ptr<const engine::MixedManagedSource> oldSeal;std::string oldSealBytes;
+      if(mixed){auto seal=service->mixedSource(*fixture.hash);QVERIFY(seal);oldSeal=*seal;oldSealBytes=oldSeal->stateSnapshot();}
+      auto categories=storage::CategoryStore::open(lease);QVERIFY(categories);auto defs=(*categories)->snapshot();QVERIFY(defs);
+      auto created=(*categories)->create(*defs,"Owned category");QVERIFY(created);
+      auto selected=(*categories)->readTarget(created->snapshot,*fixture.hash);QVERIFY(selected);
+      auto assigned=(*categories)->assign(created->snapshot,*selected,std::string("Owned category"));QVERIFY(assigned&&assigned->changed);
+      {
+        auto fsOnly=lease.sourceAccess();QVERIFY(fsOnly);
+        const auto refreshed=service->rebaseCategory(lease,*fixture.hash);QVERIFY(refreshed&&*refreshed);
+      }
+      QCOMPARE(status(*service,*fixture.hash)->admission,before->admission);QVERIFY(!status(*service,*fixture.hash)->failure);
+      if(mixed){auto seal=service->mixedSource(*fixture.hash);QVERIFY(seal&&seal->get()!=oldSeal.get());
+        QCOMPARE(std::string(oldSeal->stateSnapshot()),oldSealBytes);QCOMPARE((*seal)->admission(),oldSeal->admission());
+        QVERIFY((*seal)->identity().full==oldSeal->identity().full&&(*seal)->lease().sharesOwnership(oldSeal->lease()));
+        QCOMPARE((*seal)->claims().size(),oldSeal->claims().size());QVERIFY((*seal)->current()&&oldSeal->current());
+        const auto physical=parse(test::read(fixture.stateFile));QCOMPARE(std::string((*seal)->stateSnapshot()),physical.serialize());
+      }
+      QVERIFY(service->stopManaged(*fixture.hash));
+      QTRY_VERIFY_WITH_TIMEOUT(service->poll().has_value()&&phase(*service,*fixture.hash,Phase::Stopped),10000);
+      QVERIFY(!status(*service,*fixture.hash)->failure);if(oldSeal){QVERIFY(!oldSeal->current());}
+      const auto actual=parse(test::read(fixture.stateFile));QVERIFY(actual.find("attributes")->find("category"));
+      QCOMPARE(actual.find("attributes")->find("category")->bytes,std::string_view("Owned category"));
+      QVERIFY(actual.find("resume")&&actual.find("resume")->find("data"));
+      const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+      QVERIFY((*categories)->close());
+    }
+    QCOMPARE(test::read(fixture.payload+"/sample.bin"),originalPayload);
+    auto released=storage::ProfileLease::acquire(fixture.native());QVERIFY(released);
+  }
 
   void allocateOnlyUsesExistingPollWithoutNetworkOrVerifiedProgress_data(){QTest::addColumn<bool>("multi");QTest::addColumn<bool>("paused");QTest::newRow("single-stop")<<false<<false;QTest::newRow("single-pause")<<false<<true;QTest::newRow("multi-stop")<<true<<false;QTest::newRow("multi-pause")<<true<<true;}
   void allocateOnlyUsesExistingPollWithoutNetworkOrVerifiedProgress(){

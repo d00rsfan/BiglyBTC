@@ -7,6 +7,8 @@
 #include <stop_token>
 
 namespace biglybtc::storage {
+enum class CategoryDeletionStage {JournalSynced,MemberWritten,MemberAcknowledged,DefinitionWritten,DefinitionAcknowledged,Completed};
+using CategoryDeletionObserver=void(*)(CategoryDeletionStage,std::size_t);
 class CategoryStore;
 class CategorySnapshot final {
 public:
@@ -48,6 +50,8 @@ public:
   // Closed/poisoned instance needs explicit close/open. A healthy snapshot may
   // separately be read-only due to preserved candidates; reopening repairs none.
   bool recoveryRequired()const noexcept;
+  // Compiled backend availability only, never write/inventory authority.
+  bool deletionSupported()const noexcept{return true;}
   std::expected<CategorySnapshot,Error> snapshot()const;
   std::expected<CategorySnapshot,Error> reload(std::stop_token={},Deadline=Deadline::max());
   std::expected<CategoryCommit,Error> create(const CategorySnapshot&,std::string name,
@@ -59,11 +63,17 @@ public:
   std::expected<CategoryAssignmentCommit,Error> assign(const CategorySnapshot&,
       const CategoryTargetSnapshot&,const std::optional<std::string>& category,
       std::stop_token={},Deadline=Deadline::max());
-  // Explicitly unavailable until an inventory-complete multi-file category
-  // journal/publication contract exists; never reports partial deletion Saved.
-  std::expected<CategoryCommit,Error> remove(const CategorySnapshot&,std::string_view);
+  // Complete current inventory, matching primary/cache source CAS, definition
+  // last. Partial/cancelled work retains a bounded native journal for explicit
+  // recovery. Unacknowledged or externally edited prefixes require review.
+  std::expected<CategoryCommit,Error> remove(const CategorySnapshot&,std::string_view,
+      std::stop_token={},Deadline=Deadline::max(),CategoryDeletionObserver=nullptr);
+  std::expected<CategoryCommit,Error> resumeRemove(const CategorySnapshot&,std::string_view,
+      std::stop_token={},Deadline=Deadline::max(),CategoryDeletionObserver=nullptr);
   std::expected<void,Error> close();
 private:
+  std::expected<CategoryCommit,Error> removeInternal(const CategorySnapshot&,std::string_view,bool,
+      std::stop_token,Deadline,CategoryDeletionObserver);
   struct Impl;explicit CategoryStore(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;
 };

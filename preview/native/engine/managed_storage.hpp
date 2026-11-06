@@ -73,6 +73,11 @@ public:
       std::span<const storage::OriginalTorrentIdentity>,
       std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose);
   std::string preparedStateSnapshot()const;
+  // Actual committed category metadata only; prepared owner/lease stays exact.
+  // FS/pure only, safe inside a trusted publication boundary (no SDK waits).
+  std::expected<void,storage::Error> rebaseCategory(const storage::ProfileLease&);
+  // Validated committed physical afterimage, never pending native resume.
+  std::string_view categoryStateSnapshot() const noexcept;
   ManagedStorage(ManagedStorage&&) noexcept;
   ManagedStorage& operator=(ManagedStorage&&) noexcept;
   ManagedStorage(const ManagedStorage&) = delete;

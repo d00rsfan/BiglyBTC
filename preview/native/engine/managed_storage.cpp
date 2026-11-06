@@ -643,6 +643,8 @@ struct ManagedStorage::Impl {
   std::string queueMappingScope;
   storage::TorrentStateStore store;
   storage::TorrentStateFile state;
+  std::string categorySnapshot;
+  std::shared_ptr<const storage::ProfileLease> categoryLease; // Actual same-OFD identity through storage lifetime.
   compat::OriginalLayout layout;
   lt::add_torrent_params params;
   std::shared_ptr<OriginalDiskFiles> mapped;
@@ -719,8 +721,23 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareMixedPublic(const sto
   return prepareImpl(lease,hash,policy,claimed,identities,std::move(bridge),purpose,nullptr,&mixed);
 }
 std::string ManagedStorage::preparedStateSnapshot()const{return impl_->state.document().serialize();}
+std::expected<void,Error> ManagedStorage::rebaseCategory(const storage::ProfileLease& lease){
+  try{
+    require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict);auto& owner=*impl_;
+    require(!owner.attempted&&owner.categoryLease&&lease.sharesOwnership(*owner.categoryLease),
+        "Category rebase requires the actual uncheckpointed owner and same OFD",ErrorCode::Conflict);
+    struct stat root{};require(::fstat(lease.directoryHandle(),&root)==0&&root.st_dev==owner.profileDevice&&root.st_ino==owner.profileInode
+        &&owner.state.hash()==owner.hash,"Category rebase profile/full identity differs",ErrorCode::Conflict);
+    auto changed=owner.store.rebaseCategory(lease,owner.state);
+    if(!changed){return std::unexpected(changed.error());}owner.categorySnapshot=std::move(*changed);return {};
+  }catch(const Failure& failure){return std::unexpected(failure.error);}
+  catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Insufficient memory rebasing category owner"});}
+}
+
+std::string_view ManagedStorage::categoryStateSnapshot()const noexcept{return impl_?std::string_view(impl_->categorySnapshot):std::string_view{};}
 std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned,const MixedPublicPolicy* mixed) {
   try {
+    auto categoryLease=take(lease.retain());
     require(purpose==ManagedStoragePurpose::Download||purpose==ManagedStoragePurpose::VerifyExistingReadOnly||purpose==ManagedStoragePurpose::VerifySelectedReadOnly||purpose==ManagedStoragePurpose::AllocateOnly,"Unknown managed preparation purpose",ErrorCode::InvalidFormat);
     const bool allocationOnly=purpose==ManagedStoragePurpose::AllocateOnly;
     const auto allocationIntent=take(storage::readAllocationIntent(lease,hash));
@@ -1028,6 +1045,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     auto result=std::make_unique<Impl>(hash,std::move(identity),saved,std::move(store),std::move(state),std::move(layout),std::move(params),save,
       std::move(slots),std::move(pending),std::move(claimPlan.values),profile.st_dev,profile.st_ino);
     result->approvedProofs=std::move(approvedProofs);
+    result->categoryLease=std::move(categoryLease);
     result->mainline=mainline;
     result->purpose=purpose;result->requiredPieces=std::move(requiredPieces);result->selectedLease=selectedOnly?&lease:nullptr;result->selectedScope=std::move(selectedScope); result->queue=queue; result->swarmBridge=std::move(swarmBridge); result->filePolicies=std::move(*parsedPolicy);
     // Capture after authoritative cache hydration, defaults and conversions;

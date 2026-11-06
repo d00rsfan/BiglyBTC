@@ -29,6 +29,7 @@
 #include "engine_statistics_presentation.hpp"
 
 #include "../app/manual_tag_commands.hpp"
+#include "../app/category_commands.hpp"
 #include <QMainWindow>
 #include <QPointer>
 
@@ -52,6 +53,7 @@ class OptionsDialog;
 class SchedulerDialog;
 class LocalRatingDialog;
 class ManualTagManagerDialog;
+class CategoryManagerDialog;
 class ClassicColumns;
 class StatisticsPage;
 class EngineActivityHistory;
@@ -101,6 +103,8 @@ public:
   void setManualTagStatistics(ManualTagStatisticsPresentation);
   void setManualTagCommandFinished(ManualTagCommandPresentation);
   void rejectManualTagCommand(const ManualTagCommand&);
+  void setCategoryCommandFinished(CategoryCommandPresentation);
+  void rejectCategoryCommand(const CategoryCommand&);
   void setCountryStatistics(CountryStatisticsPresentation);
   AzureusStatisticsPresentation azureusStatisticsSnapshot() const { return latestAzureus_; }
   CountryStatisticsPresentation countryStatisticsSnapshot() const { return latestCountry_; }
@@ -145,6 +149,7 @@ public:
   bool submitMagnetImport(QString uri, QString destination);
 signals:
   void manualTagCommandRequested(biglybtc::ui::ManualTagCommand);
+  void categoryCommandRequested(biglybtc::ui::CategoryCommand);
   void fileOperationSequenceFinished(biglybtc::ui::FileOperationSequencePresentation);
   void fileOperationPlanRequested(biglybtc::ui::FileOperationRequest);
   void fileOperationExecuteRequested(biglybtc::ui::FileOperationSubmission);
@@ -193,6 +198,9 @@ private:
   void dispatchDownload(core::DownloadAction, bool all = false);
   void dispatchDownloadAlias(bool pauseResume);
   void bindDownloadMenu(QMenu*);
+  void openCategories();
+  bool sendCategoryCommand(CategoryCommand);
+  void rebuildCategoryMenu(QMenu*);
   void openManualTags();
   bool sendManualTagCommand(ManualTagCommand);
   void rebuildManualTagMenu(QMenu*);
@@ -402,6 +410,11 @@ private:
   AzureusStatisticsPresentation latestAzureus_{};
   LiveSpeedManagerPresentation latestLiveSpeed_{};
   ManualTagStatisticsPresentation latestManualTags_{};
+  QPointer<QAction> categoryAction_;
+  QPointer<CategoryManagerDialog> categoryDialog_;
+  CategoryCommandPresentation latestCategoryEditor_;
+  std::optional<CategoryCommand> pendingCategoryCommand_;
+  quint64 categoryRequest_=0;
   QPointer<QAction> manualTagAction_;
   QPointer<ManualTagManagerDialog> manualTagDialog_;
   ManualTagCommandPresentation latestManualTagEditor_;
