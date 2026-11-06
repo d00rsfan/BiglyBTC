@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "profile.hpp"
-#include "rss_document.hpp"
+#include "rss_get_description.hpp"
 #include <QList>
 #include <QSslCertificate>
 #include <expected>
@@ -17,17 +17,7 @@ struct SavedRssSelector {
 };
 enum class SavedRssReadReason { ExplicitOneShotDescription };
 enum class SavedRssSourceError { Lease,WrongWorker,SourceChanged,Malformed,Unsupported,Ambiguous,Limit,Memory };
-struct SavedRssDescription {
-  SavedRssSelector selected;
-  std::string literalGetUrl;
-  RssContext context; // Original configured root/base; never a response final URL.
-  RssLimits documentLimits;
-  std::size_t responseOctets=8*1024*1024,headerBytes=16*1024;
-  unsigned maximumGets=6;
-  std::int64_t phaseMillis=30000,totalMillis=60000;
-  // Absent is system-default trust; present is the complete decoded saved JKS.
-  std::optional<QList<QSslCertificate>> trustAnchors;
-};
+struct SavedRssDescription : RssGetDescription { SavedRssSelector selected; };
 // A worker-bound read-only description of a real saved row. This class neither
 // grants I/O nor creates an effect permit. It has no resolver/socket/worker,
 // request queue, HTTP operation, credential setter or loopback bypass.

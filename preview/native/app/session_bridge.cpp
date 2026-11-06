@@ -17,6 +17,9 @@
 #include "network_policy.hpp"
 #include "session_bridge.hpp"
 #include "rss_http_fetch.hpp"
+#include "saved_subscription_service.hpp"
+#include <QJsonDocument>
+#include <QJsonObject>
 #include "rss_sources_catalog.hpp"
 #include "i2p_saved_settings.hpp"
 #include "owned_mixed_i2p_service.hpp"
@@ -232,7 +235,7 @@ template<class Store> std::expected<storage::CategoryCommit,storage::Error> cate
 }
 }
 struct SessionBridge::Host {
-  ~Host(){closeRssFetch();if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
+  ~Host(){closeRssFetch();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
   struct Known { QString name; std::optional<qint64> bytes{}; };
   std::filesystem::path profile;
   unsigned short peerPort;
@@ -583,6 +586,7 @@ struct SessionBridge::Host {
   #include "download_history_completion.inc"
 #include "download_history_view_host.inc"
 #include "rss_sources_host.inc"
+#include "subscriptions_host.inc"
   void beginManualTagRead() {
     if(manualTagEnded||manualTagRevision==std::numeric_limits<quint64>::max()){
       throw Failure{{storage::ErrorCode::Unsupported,"Manual-tag presentation lifetime is exhausted"}};
@@ -1268,8 +1272,9 @@ struct SessionBridge::Host {
   }
 };
 
-SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions, RssFetchFactory rssFactory)
-    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)), rssFetchFactory_(std::move(rssFactory)) {
+SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions, RssFetchFactory rssFactory, SubscriptionFetchFactory subscriptionFactory)
+    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)), rssFetchFactory_(std::move(rssFactory)), subscriptionFetchFactory_(std::move(subscriptionFactory)) {
+  qRegisterMetaType<ui::SubscriptionKey>();qRegisterMetaType<ui::SubscriptionCatalogKey>();qRegisterMetaType<ui::SubscriptionCatalogPresentation>();qRegisterMetaType<ui::SubscriptionCommandKey>();qRegisterMetaType<ui::SubscriptionCommand>();qRegisterMetaType<ui::SubscriptionPresentation>();
   qRegisterMetaType<ui::RssCatalogRequest>();qRegisterMetaType<ui::RssCatalogPresentation>();qRegisterMetaType<ui::RssFetchKey>();qRegisterMetaType<ui::RssFetchCommand>();qRegisterMetaType<ui::RssFetchPresentation>();
   qRegisterMetaType<ui::I2pPresentation>();
   qRegisterMetaType<ui::DownloadHistoryCommand>();
@@ -1330,7 +1335,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         emit sessionCloseFailed();
         if (!guard) { return; }
       }
-      rssDispatchInterrupted();if(!guard){return;}
+      rssDispatchInterrupted();if(!guard){return;}subscriptionsDispatchInterrupted();if(!guard){return;}
       if(guiCategoryCommand_){
         auto packet=std::make_shared<ui::CategoryCommandPacket>();
         packet->session=guiCategoryCommand_->session;packet->request=guiCategoryCommand_->request;packet->kind=guiCategoryCommand_->kind;packet->requestedTarget=guiCategoryCommand_->target;
@@ -1376,7 +1381,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
       const auto session=host_?host_->columnLayoutSession:quint64{0};
       try{
       if (!stop.stop_requested() && host_) {
-        pollRssFetch();
+        pollRssFetch();pollSubscriptions();
         if(host_->recoveryDrainStarted){throw Failure{{storage::ErrorCode::Busy,"Explicit close without checkpoint is incomplete; retained owners may remain live"}};}
         if((storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))){
           // Poll may complete metadata imports or write retirement checkpoints.
@@ -1465,7 +1470,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
   idleMonitor_->start();
 }
 SessionBridge::~SessionBridge() {
-  stopRssReceiver();
+  stopRssReceiver();stopSubscriptionReceiver();
   idleMonitor_->stop();
   if (current_) { current_->cancel(); }
   worker_.requestShutdown();
@@ -1526,7 +1531,7 @@ void SessionBridge::reportIdlePollFailure(quint64 session,QString detail){
 void SessionBridge::failed(QString message) {
   QMetaObject::invokeMethod(this, [this, message = std::move(message)] {
     QPointer<SessionBridge> guard(this);
-    rssDispatchInterrupted();if(!guard){return;}
+    rssDispatchInterrupted();if(!guard){return;}subscriptionsDispatchInterrupted();if(!guard){return;}
     // Dispatch may observe cancellation before entering the command body.
     if(guiDownloadHistoryCommand_){
       auto packet=std::make_shared<ui::DownloadHistoryCommandPacket>();
@@ -2648,6 +2653,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
 #include "category_bridge.inc"
 #include "download_history_bridge.inc"
 #include "rss_sources_bridge.inc"
+#include "subscriptions_bridge.inc"
 bool SessionBridge::history(quint64 session, quint64 request, core::HistoryDate date) {
   if (session == 0 || request == 0 || session != publishedColumnLayoutSession_
       || !core::validHistoryDate(date)) { return false; }
@@ -3503,14 +3509,14 @@ bool SessionBridge::closeSessionWithoutCheckpoint(quint64 session){
   return closeSessionImpl(true,session);
 }
 bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSession) {
-  stopRssReceiver();
+  stopRssReceiver();stopSubscriptionReceiver();
   if (busy_ || closingSession_) { return false; }
   closingSession_ = true;
   idleMonitor_->stop();
   QPointer<SessionBridge> guard(this);
   const bool accepted = dispatch([this,withoutCheckpoint,expectedSession](std::stop_token) {
     const auto session = host_ ? host_->columnLayoutSession : quint64{0};
-    closeWorkerRss();
+    closeWorkerRss();closeWorkerSubscriptions();
     if(withoutCheckpoint&&(!host_||session!=expectedSession||!host_->recoveryDrainOffered
         ||(!host_->recoveryDrainStarted&&!(storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))))){
       throw Failure{{storage::ErrorCode::Conflict,"Close without checkpoint requires this session's actual pending-journal close refusal"}};

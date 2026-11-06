@@ -7,6 +7,7 @@
 #include "local_rating_presentation.hpp"
 #include "torrent_intake_presentation.hpp"
 #include "rss_sources_presentation.hpp"
+#include "subscriptions_presentation.hpp"
 
 #include "biglybtc/executor.hpp"
 #include "column_layout_presentation.hpp"
@@ -39,7 +40,7 @@
 class QTimer;
 
 namespace biglybtc::engine { struct ApplicationPeerObservation; }
-namespace biglybtc::search { class RssHttpFetch; }
+namespace biglybtc::search { class RssHttpFetch; class SavedSubscriptionService; }
 namespace biglybtc::storage { class ProfileLease; class CountryProvider; class SchedulerService; }
 
 namespace biglybtc::app {
@@ -53,7 +54,8 @@ public:
   using AzureusServiceFactory = std::function<std::unique_ptr<OwnedAzureusService>(const storage::ProfileLease&)>;
   using SchedulerFactory = std::function<std::unique_ptr<storage::SchedulerService>(const storage::ProfileLease&)>;
   using RssFetchFactory=std::function<std::unique_ptr<search::RssHttpFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::RssSourceKey&,std::stop_token)>;
-  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {}, RssFetchFactory = {});
+  using SubscriptionFetchFactory=std::function<std::unique_ptr<search::RssHttpFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::SubscriptionKey&,std::stop_token)>;
+  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {}, RssFetchFactory = {}, SubscriptionFetchFactory = {});
   ~SessionBridge() override;
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool openNormal(std::filesystem::path profile);
@@ -84,6 +86,9 @@ public:
   bool manualTagCommand(ui::ManualTagCommand);
   bool categoryCommand(ui::CategoryCommand);
   bool downloadHistoryCommand(ui::DownloadHistoryCommand);
+  bool subscriptionCatalog(ui::SubscriptionCatalogKey);
+  bool subscriptionCommand(ui::SubscriptionCommand);
+  void cancelSubscription(ui::SubscriptionCommandKey);
   bool rssCatalog(ui::RssCatalogRequest);
   bool rssFetch(ui::RssFetchCommand);
   void cancelRssFetch(ui::RssFetchKey);
@@ -139,6 +144,9 @@ signals:
   void manualTagCommandFinished(biglybtc::ui::ManualTagCommandPresentation);
   void categoryCommandFinished(biglybtc::ui::CategoryCommandPresentation);
   void downloadHistoryCommandFinished(biglybtc::ui::DownloadHistoryCommandPresentation);
+  void subscriptionCatalogReady(biglybtc::ui::SubscriptionCatalogPresentation);
+  void subscriptionReady(biglybtc::ui::SubscriptionPresentation);
+  void subscriptionHistoryChanged(quint64 session);
   void rssCatalogReady(biglybtc::ui::RssCatalogPresentation);
   void rssFetchReady(biglybtc::ui::RssFetchPresentation);
   void countryStatisticsReady(biglybtc::ui::CountryStatisticsPresentation);
@@ -182,6 +190,15 @@ private:
   void publishCountries() noexcept;
   void deliverCountries(ui::CountryStatisticsPresentation);
   void closeFailed(QString);
+  search::SavedSubscriptionService& ensureSubscriptions();
+  void pollSubscriptions();
+  void closeWorkerSubscriptions();
+  void stopSubscriptionReceiver()noexcept;
+  void subscriptionsDispatchInterrupted();
+  void finishSubscriptionDispatch();
+  void deliverSubscriptionCatalog(ui::SubscriptionCatalogPresentation);
+  void deliverSubscription(ui::SubscriptionPresentation);
+  void postSubscription(ui::SubscriptionPresentation);
   void deliverRssCatalog(ui::RssCatalogPresentation);
   void deliverRssFetch(ui::RssFetchPresentation);
   void postRssFetch(ui::RssFetchPresentation);
@@ -233,6 +250,11 @@ private:
   std::optional<I2pServiceOptions> i2pOptions_;
   SchedulerFactory schedulerFactory_;
   RssFetchFactory rssFetchFactory_;
+  SubscriptionFetchFactory subscriptionFetchFactory_;
+  std::optional<ui::SubscriptionCatalogKey> guiSubscriptionCatalog_;
+  std::optional<ui::SubscriptionCommand> guiSubscription_;
+  std::optional<ui::SubscriptionCommandKey> startingSubscription_;
+  std::shared_ptr<std::atomic_bool> subscriptionCommitted_;
   std::optional<ui::RssCatalogRequest> guiRssCatalog_;
   std::optional<ui::RssFetchCommand> guiRssFetch_;
   std::optional<ui::RssFetchKey> rssStarting_;

@@ -38,6 +38,27 @@ QByteArray readBytes(const QString& path){QFile file(path);f::require(file.open(
 class RssSourcesBridgeTests final:public QObject {
   Q_OBJECT
 private slots:
+  void genuineOwnerWithAnotherSourceOrReceiverIsRejectedBeforeDns_data(){QTest::addColumn<bool>("wrongSource");QTest::newRow("another-real-source")<<true;QTest::newRow("detached-receiver")<<false;}
+  void genuineOwnerWithAnotherSourceOrReceiverIsRejectedBeforeDns(){
+    QFETCH(bool,wrongSource);f::Server server;f::Profile area(server.url());
+    auto doc=core::Document::parse(readBytes(area.path+"/metasearch.config").toStdString());QVERIFY(doc);
+    const auto* rows=doc->find("engines");QVERIFY(rows&&rows->children.size()==1);const auto first=core::encodeValue(rows->children[0]);QVERIFY(first);
+    const auto second=f::dict({{"type","i4e"},{"id","i8e"},{"uid",f::b("other-rss")},{"name",f::b("Other RSS")},{"selected","i0e"},{"web.maps","le"},{"web.search_url_format",f::b(QByteArray::fromStdString(server.url("/other.xml")))}});
+    QVERIFY(doc->replaceValue("engines","l"+*first+second.toStdString()+"e"));f::write(area.path+"/metasearch.config",QByteArray::fromStdString(doc->serialize()));prepare(area);
+    std::atomic<int> calls{0},resolves{0},constructed{0};
+    auto swapped=[&](const storage::ProfileLease& lease,const std::filesystem::path& path,quint64 session,const ui::RssSourceKey& key,std::stop_token stop){
+      ++calls;auto endpoint=area.endpoint();auto resolve=endpoint.resolve;endpoint.resolve=[&,resolve](const QString& host,QObject* context,search::RssHttpFetch::PrivateEndpointFixture::Completion done){++resolves;return resolve(host,context,std::move(done));};
+      const auto selector=wrongSource?search::SavedRssSelector{1,8,"other-rss"}:search::SavedRssSelector{static_cast<std::size_t>(key.sourceIndex),key.id,key.uid.toStdString()};
+      auto owner=search::RssHttpFetch::openFixture(lease,path,session,selector,std::move(endpoint),wrongSource?stop:std::stop_token{});if(owner){++constructed;}return owner?std::move(*owner):std::unique_ptr<search::RssHttpFetch>{};
+    };
+    app::SessionBridge bridge(nullptr,{},{},{},{},swapped);ui::LibraryWindow window;wire(bridge,window,false);
+    QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),catalogs(&bridge,&app::SessionBridge::rssCatalogReady),fetched(&bridge,&app::SessionBridge::rssFetchReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.openNormal(area.path.toStdString()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&sessions.count()==1,15000);window.findChild<QAction*>("classic-rss-sources")->trigger();QTRY_VERIFY(!bridge.busy()&&catalogs.count()==1);
+    const auto catalog=qvariant_cast<ui::RssCatalogPresentation>(catalogs.last()[0]);QCOMPARE(catalog->sources.size(),std::size_t{2});
+    ui::RssFetchCommand command{{catalog->key.session,catalog->key.page,catalog->key.request+100,catalog->generation,catalog->sources[0].key},std::make_shared<std::stop_source>()};
+    QVERIFY(bridge.rssFetch(command));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&fetched.count()==1,5000);QCOMPARE(lastFetch(fetched)->state,ui::RssFetchState::Rejected);QCOMPARE(calls.load(),1);QCOMPARE(constructed.load(),1);QCOMPARE(resolves.load(),0);QCOMPARE(server.connections,0);
+    QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);auto lock=storage::ProfileLease::acquire(area.path.toStdString());QVERIFY(lock);
+  }
   void actualMalformedAndAmbiguousCatalogsCannotConstructAProvider_data(){QTest::addColumn<bool>("duplicate");QTest::newRow("malformed-primary")<<false;QTest::newRow("duplicate-id-and-uid")<<true;}
   void actualMalformedAndAmbiguousCatalogsCannotConstructAProvider(){
     QFETCH(bool,duplicate);f::Server server;f::Profile area(server.url());

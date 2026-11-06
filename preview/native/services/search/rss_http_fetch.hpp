@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "saved_rss_source.hpp"
+#include "saved_subscription_source.hpp"
 #include <QUrl>
 #include <optional>
 #include <stop_token>
@@ -12,6 +13,7 @@
 #include <functional>
 #endif
 
+namespace biglybtc::app {class SessionBridge;}
 namespace biglybtc::search {
 enum class RssFetchError {Source,WrongWorker,Busy,UnsupportedRoute,Limit,Dns,Tls,Http,
   Encoding,Parse,Cancelled,Deadline,Closed,Memory};
@@ -40,6 +42,11 @@ public:
   static std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> openOneShot(
       const storage::ProfileLease&,const std::filesystem::path& profileDirectory,
       std::uint64_t profileSession,SavedRssSelector,std::stop_token receiverStop={});
+  // Reads the actual saved subscription identity itself. The common GET
+  // description is never accepted as caller authority or a fabricated RSS row.
+  static std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> openSubscriptionOneShot(
+      const storage::ProfileLease&,const std::filesystem::path& profileDirectory,
+      std::uint64_t profileSession,SavedSubscriptionSelector,std::stop_token receiverStop={});
   ~RssHttpFetch();
   RssHttpFetch(const RssHttpFetch&)=delete;
   std::expected<std::optional<RssFetchCompletion>,RssFetchError> poll(
@@ -64,8 +71,19 @@ public:
   static std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> openFixture(
       const storage::ProfileLease&,const std::filesystem::path&,std::uint64_t,
       SavedRssSelector,PrivateEndpointFixture,std::stop_token receiverStop={});
+  static std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> openSubscriptionFixture(
+      const storage::ProfileLease&,const std::filesystem::path&,std::uint64_t,
+      SavedSubscriptionSelector,PrivateEndpointFixture,std::stop_token receiverStop={});
 #endif
 private:
+  friend class ::biglybtc::app::SessionBridge;
+  friend class SavedSubscriptionService;
+  // Concrete owners may verify a returned factory object's domain and exact
+  // receiver binding. These are identity predicates, never I/O permission.
+  bool matchesSavedRssSource(const storage::ProfileLease&,const std::filesystem::path&,
+      std::uint64_t,const SavedRssSelector&,std::stop_token)const noexcept;
+  bool matchesSubscriptionSource(const storage::ProfileLease&,const std::filesystem::path&,
+      std::uint64_t,const SavedSubscriptionSelector&,std::stop_token)const noexcept;
   struct Impl;
   explicit RssHttpFetch(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;

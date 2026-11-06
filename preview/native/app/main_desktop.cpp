@@ -100,6 +100,12 @@ int main(int argc, char** argv) {
     biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory), {}, std::move(schedulerFactory),std::move(i2pOptions));
     using Window = biglybtc::ui::LibraryWindow;
     using Bridge = biglybtc::app::SessionBridge;
+    QObject::connect(&bridge,&Bridge::subscriptionCatalogReady,&window,&Window::setSubscriptionCatalog);
+    QObject::connect(&bridge,&Bridge::subscriptionReady,&window,&Window::setSubscriptionResult);
+    QObject::connect(&bridge,&Bridge::subscriptionHistoryChanged,&window,&Window::subscriptionHistoryChanged);
+    QObject::connect(&window,&Window::subscriptionCatalogRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::SubscriptionCatalogKey key){if(owner&&view&&!owner->subscriptionCatalog(key)&&view){view->rejectSubscriptionCatalog(key);}});
+    QObject::connect(&window,&Window::subscriptionCommandRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::SubscriptionCommand command){if(owner&&view&&!owner->subscriptionCommand(command)&&view){view->rejectSubscriptionCommand(command);}});
+    QObject::connect(&window,&Window::subscriptionCancelRequested,&bridge,&Bridge::cancelSubscription);
     QObject::connect(&bridge,&Bridge::rssCatalogReady,&window,&Window::setRssCatalog);
     QObject::connect(&bridge,&Bridge::rssFetchReady,&window,&Window::setRssFetchResult);
     QObject::connect(&window,&Window::rssCatalogRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::RssCatalogRequest request){if(owner&&view&&!owner->rssCatalog(request)&&view){view->rejectRssCatalog(request);}});

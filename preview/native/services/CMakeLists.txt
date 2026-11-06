@@ -322,3 +322,37 @@ target_link_libraries(biglybtc_rss_http_fetch PUBLIC biglybtc_saved_rss_source b
 target_compile_features(biglybtc_rss_http_fetch PUBLIC cxx_std_23)
 target_compile_options(biglybtc_rss_http_fetch PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_target_properties(biglybtc_rss_http_fetch PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# Concrete original saved-subscription source/store and bounded values. No
+# network/Host effect is created by this target or by source descriptions.
+if(TARGET biglybtc_saved_rss_source)
+  target_sources(biglybtc_saved_rss_source PRIVATE
+    search/rss_get_description.hpp search/rss_source_internal.inc)
+  add_library(biglybtc_saved_subscription_source STATIC
+    search/saved_subscription_source.hpp search/saved_subscription_source.cpp
+    search/subscription_values.hpp search/subscription_values.cpp
+    search/subscription_store_internal.hpp search/subscription_store_internal.inc)
+  target_include_directories(biglybtc_saved_subscription_source PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/search" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../engine")
+  target_link_libraries(biglybtc_saved_subscription_source PUBLIC biglybtc_saved_rss_source PRIVATE Threads::Threads)
+  target_compile_features(biglybtc_saved_subscription_source PUBLIC cxx_std_23)
+  target_compile_options(biglybtc_saved_subscription_source PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  set_target_properties(biglybtc_saved_subscription_source PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
+
+# The current production provider exists in the canonical services prefix.
+# Compose this AFTER the closed-variant provider dependency append.
+if(TARGET biglybtc_rss_http_fetch AND TARGET biglybtc_saved_subscription_source)
+  add_library(biglybtc_saved_subscription_service STATIC search/saved_subscription_service.hpp search/saved_subscription_service.cpp)
+  target_include_directories(biglybtc_saved_subscription_service PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/search")
+  target_link_libraries(biglybtc_saved_subscription_service PUBLIC biglybtc_saved_subscription_source biglybtc_rss_http_fetch)
+  target_compile_features(biglybtc_saved_subscription_service PUBLIC cxx_std_23)
+  target_compile_options(biglybtc_saved_subscription_service PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  set_target_properties(biglybtc_saved_subscription_service PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
+
+if(TARGET biglybtc_rss_http_fetch)
+  if(NOT TARGET biglybtc_saved_subscription_source)
+    message(FATAL_ERROR "Concrete subscription RSS transport requires the reviewed saved subscription reader")
+  endif()
+  target_link_libraries(biglybtc_rss_http_fetch PUBLIC biglybtc_saved_subscription_source)
+endif()

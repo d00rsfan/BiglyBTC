@@ -32,6 +32,7 @@
 #include "../app/category_commands.hpp"
 #include "../app/download_history_commands.hpp"
 #include "rss_sources_presentation.hpp"
+#include "subscriptions_presentation.hpp"
 #include <QMainWindow>
 #include <QPointer>
 
@@ -60,6 +61,7 @@ class ClassicColumns;
 class StatisticsPage;
 class DownloadHistoryPage;
 class RssSourcesPage;
+class SubscriptionsPage;
 class EngineActivityHistory;
 class NativeActivityHistory;
 
@@ -91,6 +93,12 @@ public:
   void setSavedServices(SavedServicesPresentation);
   StatisticsPage* statisticsPage() const;
   DownloadHistoryPage* downloadHistoryPage()const;
+  SubscriptionsPage* subscriptionsPage()const;
+  void setSubscriptionCatalog(SubscriptionCatalogPresentation);
+  void setSubscriptionResult(SubscriptionPresentation);
+  void rejectSubscriptionCatalog(SubscriptionCatalogKey);
+  void rejectSubscriptionCommand(const SubscriptionCommand&);
+  void subscriptionHistoryChanged(quint64 session);
   RssSourcesPage* rssSourcesPage()const;
   void setRssCatalog(RssCatalogPresentation);
   void setRssFetchResult(RssFetchPresentation);
@@ -164,6 +172,9 @@ signals:
   void manualTagCommandRequested(biglybtc::ui::ManualTagCommand);
   void categoryCommandRequested(biglybtc::ui::CategoryCommand);
   void downloadHistoryCommandRequested(biglybtc::ui::DownloadHistoryCommand);
+  void subscriptionCatalogRequested(biglybtc::ui::SubscriptionCatalogKey);
+  void subscriptionCommandRequested(biglybtc::ui::SubscriptionCommand);
+  void subscriptionCancelRequested(biglybtc::ui::SubscriptionCommandKey);
   void rssCatalogRequested(biglybtc::ui::RssCatalogRequest);
   void rssFetchRequested(biglybtc::ui::RssFetchCommand);
   void rssCancelRequested(biglybtc::ui::RssFetchKey);
@@ -244,6 +255,8 @@ private:
   void showMyShares();
   void showStatistics();
   void showDownloadHistory();
+  void showSubscriptions();
+  bool onSubscriptionsPage()const;
   void showRssSources();
   bool onRssSourcesPage()const;
   bool onDownloadHistoryPage()const;
@@ -318,6 +331,8 @@ private:
   QPointer<SavedHostingPage> hostingPage_;
   QPointer<SavedSharesPage> sharesPage_;
   QPointer<StatisticsPage> statisticsPage_;
+  QPointer<SubscriptionsPage> subscriptionsPage_;
+  QAction* subscriptionsAction_=nullptr;
   QPointer<RssSourcesPage> rssPage_;
   QAction* rssAction_=nullptr;
   QPointer<DownloadHistoryPage> downloadHistoryPage_;

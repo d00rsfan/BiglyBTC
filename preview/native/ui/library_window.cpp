@@ -4,6 +4,7 @@
 #include "library_window.hpp"
 #include "download_history_page.hpp"
 #include "rss_sources_page.hpp"
+#include "subscriptions_page.hpp"
 #include <atomic>
 #include "options_dialog.hpp"
 #include "scheduler_dialog.hpp"
@@ -420,6 +421,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   myTorrents->setShortcut(QKeySequence(QStringLiteral("Ctrl+1")));
   myTorrents->setShortcutContext(Qt::WindowShortcut);
   connect(myTorrents, &QAction::triggered, this, &LibraryWindow::showMyTorrents);
+  subscriptionsAction_=view->addAction(tr("Subscriptions"));subscriptionsAction_->setObjectName(QStringLiteral("classic-subscriptions"));connect(subscriptionsAction_,&QAction::triggered,this,&LibraryWindow::showSubscriptions);
   rssAction_=view->addAction(tr("RSS Sources"));rssAction_->setObjectName(QStringLiteral("classic-rss-sources"));
   connect(rssAction_,&QAction::triggered,this,&LibraryWindow::showRssSources);
   downloadHistoryAction_=view->addAction(tr("Download &History"));
@@ -442,7 +444,6 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   unavailable(view, tr("Transfers Bar"), QStringLiteral("transfer-bar"), QStyle::SP_ArrowUp);
   unavailable(view, tr("Client Stats"), QStringLiteral("client-statistics"), QStyle::SP_FileDialogDetailedView);
   unavailable(view, tr("Remote Pairing…"), QStringLiteral("remote-pairing"), QStyle::SP_DriveNetIcon);
-  unavailable(view, tr("Subscriptions"), QStringLiteral("subscriptions"), QStyle::SP_FileDialogListView);
   view->addSeparator();
   view->addMenu(incompleteColumns_->menu());
   view->addMenu(completeColumns_->menu());
@@ -458,6 +459,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   refresh_->setShortcut(QKeySequence(Qt::Key_F5));
   connect(refresh_, &QAction::triggered, this, [this] {
     if (closing_) { return; }
+    if(onSubscriptionsPage()){subscriptionsPage_->refresh();return;}
     if(onRssSourcesPage()){rssPage_->refreshSources();return;}
     if(onDownloadHistoryPage()){downloadHistoryPage_->reload();return;}
     if (onStatisticsPage()) {
@@ -581,6 +583,7 @@ void LibraryWindow::showMyShares() {
 }
 #include "download_history_window.inc"
 #include "rss_sources_window.inc"
+#include "subscriptions_window.inc"
 StatisticsPage* LibraryWindow::statisticsPage() const { return statisticsPage_.data(); }
 bool LibraryWindow::onStatisticsPage() const {
   return statisticsPage_ && mainTabs_->currentWidget() == statisticsPage_.data();
@@ -1009,6 +1012,7 @@ void LibraryWindow::closePage(int index) {
   if (!retainedLibrary) {
     if (page == hostingPage_.data()) { hostingPage_.clear(); }
     else if (page == sharesPage_.data()) { sharesPage_.clear(); }
+    else if(page==subscriptionsPage_.data()){const auto old=subscriptionsPage_;subscriptionsPage_.clear();old->invalidateSession();if(!guard||!page){return;}}
     else if(page==rssPage_.data()){const auto old=rssPage_;rssPage_.clear();old->invalidateSession();if(!guard||!page){return;}}
     else if(page==downloadHistoryPage_.data()){downloadHistoryPage_->invalidateSession();downloadHistoryPage_.clear();pendingDownloadHistoryCommand_.reset();}
     else if (page == statisticsPage_.data()) {
@@ -1096,6 +1100,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
+  if(subscriptionsPage_){const auto id=subscriptionsPage_->page()?subscriptionsPage_->page():reserveRssUiIdentity();subscriptionsPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
   if(rssPage_){const auto id=rssPage_->page()?rssPage_->page():reserveRssUiIdentity();rssPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
   pendingDownloadHistoryCommand_.reset();if(downloadHistoryPage_){downloadHistoryPage_->beginSession(session);if(!guard){return;}}
   latestI2p_.reset();
@@ -1332,6 +1337,7 @@ void LibraryWindow::setColumnLayoutSaved(ColumnLayoutSavePresentation packet) {
 void LibraryWindow::setOfflinePreview(bool offline) {
   offlinePreview_ = offline;
   QPointer<LibraryWindow> guard(this);
+  if(subscriptionsPage_){subscriptionsPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(rssPage_){rssPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   previewStatus_->setText(offline ? tr("Offline preview") : tr("Local test"));
   if (guard) { queueDownloadActions(); }
@@ -1416,10 +1422,10 @@ void LibraryWindow::updateActions() {
   const auto target = actionTarget();
   continue_->setEnabled(!busy_ && !closing_ && target && model_->canContinue(*target));
   cancel_->setEnabled(busy_ && !closing_);
-  refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (!busy_&&(onDownloadHistoryPage()||onRssSourcesPage()||mainTabs_->currentWidget()==torrentsPage_))));
+  refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (!busy_&&(onDownloadHistoryPage()||onRssSourcesPage()||onSubscriptionsPage()||mainTabs_->currentWidget()==torrentsPage_))));
   files_->setEnabled(!busy_ && !closing_ && target.has_value());
   padding_->setEnabled(!closing_ && mainTabs_->currentWidget() == torrentsPage_);
-  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || onDownloadHistoryPage() || onRssSourcesPage()));
+  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage() || onDownloadHistoryPage() || onRssSourcesPage() || onSubscriptionsPage()));
   saveColumns_->setEnabled(!closing_ && !busy_ && columnSaveAvailable_ && columnSession_ != 0
       && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_ && !activeStatisticsRequest_
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());
@@ -1433,6 +1439,7 @@ void LibraryWindow::updateActions() {
   if (optionsAction_) { optionsAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   queueDownloadActions();
   QPointer<LibraryWindow> guard(this);
+  if(subscriptionsAction_){subscriptionsAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
   if(rssAction_){rssAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
   if(downloadHistoryAction_){downloadHistoryAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
   if(downloadHistoryPage_){downloadHistoryPage_->setAvailable(!closing_&&!busy_);if(!guard){return;}}
@@ -1969,6 +1976,7 @@ void LibraryWindow::setBusy(bool value) {
   }
   QPointer<LibraryWindow> guard(this);
   busy_ = value;
+  if(subscriptionsPage_){subscriptionsPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(rssPage_){rssPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if (statisticsPage_) { statisticsPage_->setAccountingBusy(value); }
   if (!guard) { return; }
@@ -2044,6 +2052,7 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
   if (!optionsGuard) { return; }
   pendingOptionsLoad_.reset();
   closing_ = true;
+  if(subscriptionsPage_){subscriptionsPage_->invalidateSession();if(!optionsGuard){return;}}
   if(rssPage_){rssPage_->invalidateSession();if(!optionsGuard){return;}}
   pendingDownloadHistoryCommand_.reset();if(downloadHistoryPage_){downloadHistoryPage_->invalidateSession();if(!optionsGuard){return;}}
   if(categoryDialog_){const auto dialog=categoryDialog_;categoryDialog_.clear();dialog->invalidateSession();if(!optionsGuard){return;}}

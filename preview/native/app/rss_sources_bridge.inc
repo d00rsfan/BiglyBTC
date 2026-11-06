@@ -82,8 +82,11 @@ bool SessionBridge::rssFetch(ui::RssFetchCommand command){
             {static_cast<std::size_t>(command.key.target.sourceIndex),command.key.target.id,command.key.target.uid.toStdString()},command.receiver->get_token());if(opened){provider=std::move(*opened);}}
         // Fresh factory returns an unapproved concrete owner. Recheck catalog
         // after construction, before any poll can approve its first DNS phase.
+        // An injected concrete owner must also retain this exact source/token.
         const auto view=provider?provider->observation():search::RssFetchObservation{};
-        if(!provider||view.phase!=search::RssFetchPhase::BeforeDNS||view.gets||view.resolverSubmissions||view.failure
+        if(!provider||!provider->matchesSavedRssSource(host_->lease,profileDirectory,host_->columnLayoutSession,
+              {static_cast<std::size_t>(command.key.target.sourceIndex),command.key.target.id,command.key.target.uid.toStdString()},command.receiver->get_token())
+            ||view.phase!=search::RssFetchPhase::BeforeDNS||view.gets||view.resolverSubmissions||view.failure
             ||command.receiver->stop_requested()||!host_->rssTargetCurrent(command.key)){
           if(provider){provider->requestCancel();provider->close();}packet->state=command.receiver->stop_requested()?ui::RssFetchState::Cancelled:ui::RssFetchState::Rejected;packet->message=tr("Source validation failed; refresh Sources before retrying.");
         }else{host_->rssFetch=std::move(provider);host_->rssCommand=command;packet->state=ui::RssFetchState::Started;packet->message=tr("Fetching selected source…");}

@@ -76,3 +76,7 @@ target_sources(biglybtc_ui PRIVATE download_history_page.hpp download_history_pa
 if(TARGET biglybtc_ui)
   target_sources(biglybtc_ui PRIVATE rss_sources_presentation.hpp rss_sources_page.hpp rss_sources_page.cpp rss_sources_window.inc)
 endif()
+
+if(TARGET biglybtc_ui)
+  target_sources(biglybtc_ui PRIVATE subscriptions_presentation.hpp subscriptions_page.hpp subscriptions_page.cpp subscriptions_window.inc)
+endif()
