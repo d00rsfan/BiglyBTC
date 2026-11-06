@@ -1,0 +1,98 @@
+{
+  "status": "PASS_SOURCE_ONLY",
+  "manifest": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/manifest.json",
+    "sha256": "77b36dabc978abf6a8d5f06f56c8f60876508cacaf8efb81bda179a3488e0f08",
+    "bytes": 13617
+  },
+  "implementation_basis": "b0493c710397236a0c915ed3f680b24d33719f13",
+  "native_basis_tree": "51bd2d26d3fd7e9b68fe127e3f3e4fb71e96577d",
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "selected_source_paths": {
+    "preview/native/services/CMakeLists.txt": {
+      "before_sha256": "8fe7d18611c5f7adabf3d4478c3ee3801b8cf0ca44ca3890d9f429d57abc2e28",
+      "after_sha256": "4f02bc213ea32c4480eea6ee24f0c5c4e6776b3fb2eaf9efb2663fbeb5d5aed3"
+    },
+    "preview/native/services/search/saved_subscription_result_source.cpp": {
+      "before_sha256": "d176ab975f635b2d5ce4bc69fec1ccc471077e6f529113ac421d304affb577b4",
+      "after_sha256": "3b7de2bf3694d7dcaec9af75b0afcf85820570ded18ce453c9e5cdf8d3d746a9"
+    },
+    "preview/native/services/search/saved_subscription_source.cpp": {
+      "before_sha256": "ffe1033da3de0ceab1702b0e613123bdb316eb043e35c8daa1e598cfa24eecef",
+      "after_sha256": "35d4d0dee31304114cad7696c6257589cddea90ccad05849c8b0a823c63d1a64"
+    },
+    "preview/native/services/search/saved_subscription_source.hpp": {
+      "before_sha256": "ba8c0e76a9de45df07404f1b3e43773e2709a6cfd255bcafb58475f89a2622f2",
+      "after_sha256": "dbb3b1d92794d0a63728a4af65dc659b8bbdb1acf94e4ac3310eb7e8f1184aa5"
+    },
+    "preview/native/services/search/subscription_literal_filter.cpp": {
+      "before_sha256": null,
+      "after_sha256": "148aedbe76fc9314720a92baa5e8e4166835167f7a6788a39dedfb8511e8d76f"
+    },
+    "preview/native/services/search/subscription_literal_filter.hpp": {
+      "before_sha256": null,
+      "after_sha256": "44c3a184934befd1a583af0603d78875c23e1d2b68e234ed772a0c3b378e2298"
+    },
+    "preview/native/services/search/subscription_values.cpp": {
+      "before_sha256": "3e942f3a7a8ba691d460b284ae44695ef65edb79acf06f5608ef9a0a0e78c4fd",
+      "after_sha256": "93194dc7be55b92c2189ea9dcd7b0e7bbdac3a93b1f84a7e0e10abe7c8e11d1c"
+    },
+    "preview/native/services/search/subscription_values.hpp": {
+      "before_sha256": "555f856c7939383520ce0199558a20d19bddeb6f3cf87f861d85b26317a99ef8",
+      "after_sha256": "b0b8468e4d41e8bcb8eefc157ee40a4185ef8381beec407c737308bb54a8a707"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_sha256": "47eb231cc1a9b3cbe0e2f9bd358679eb470c9bcb5dbf4736ca18e25de642e2f2",
+      "after_sha256": "b7c05f56ca6c5584473e437750521898640afceeea505e813372b420620fd5e0"
+    },
+    "preview/native/tests/subscription_literal_filter_tests.cpp": {
+      "before_sha256": null,
+      "after_sha256": "7c88b4673103b2abe3d5ea0e6855368dfb8591f4d778a57af87042b6caabb65f"
+    },
+    "preview/native/tests/subscription_literal_source_tests.cpp": {
+      "before_sha256": null,
+      "after_sha256": "a59db8ceec38460412f642142fef064dafe1a58a285499e990a87cfb619060a0"
+    }
+  },
+  "checks": {
+    "all11_current_preimages_or_absences_afterimages_and_patch_reconstruction": true,
+    "CMake_exact_current_prefix_plus_guarded_fragments": true,
+    "Original_literal_domain": "U+0020-only tokenizer, ASCII lower-case substrings, all includes and any exclude. Letters/digits/underscore/hyphen have equivalent literal contains/Pattern.find behavior in the accepted ASCII-name domain.",
+    "closed_refusal": "Regex/category/tag/control/nonASCII tokens refuse. Active text with a nonASCII result name refuses the complete scan before persistent history/bookkeeping; inactive text retains Unicode names. Null and present-empty name behavior preserved.",
+    "numeric_delegation": "Existing numeric API/helper bytes unchanged. Composite private parse removes only text member slices and retains original nontext lexemes/types; actual raw signed JSON/body is not rewritten.",
+    "source_lifecycle_effects": "Exact source/snapshot current checks and existing auto_dl/notification/dependency/age/category/route/effect guards remain. Fresh text runs before history reconciliation; saved-result text runs in readonly actual-source capture before an acquisition factory can run. Scan failure cannot publish partial local rows.",
+    "tests": "New pure21/source9 cases include actual signed-body/opaque preservation, whole-scan Unicode refusal, zero-provider unsupported policies and both supported/unsupported saved-name rows; existing affected numeric6/service12/result20 cases remain selected. Tests are source-reviewed, not executed here."
+  },
+  "unchanged_numeric_source_sha256": {
+    "preview/native/services/search/subscription_numeric_filter.hpp": "d7e3011db2d78c411f934355691f5523b495b24e853bc7764019e3c718a75bf1",
+    "preview/native/services/search/subscription_numeric_filter.cpp": "10caab99a4701215160a120a32c76239161a15707c7a658375a26efb69a8054e",
+    "preview/native/services/search/subscription_numeric_json.inc": "6d9355dbd40a6915a1eae90a2857340e986901db324d88b11df0b4a4af61dd2c"
+  },
+  "Original_source_sha256": {
+    "core/src/com/biglybt/core/subs/impl/SubscriptionResultFilterImpl.java": "9fecba6840da04fa52fc228b675d9b268614df125a94765ab296e20109e83139",
+    "core/src/com/biglybt/util/MapUtils.java": "78531933cb0e466d78d273dd44dbd8c400f2255ad1e7d824fb2f52bb3912a991",
+    "core/src/com/biglybt/core/subs/impl/SubscriptionDownloader.java": "b1ec49458e757c0e9ecfde276c44bd7778c8b53b8368d8220ec9c63578b21257",
+    "core/src/com/biglybt/core/subs/util/SubscriptionResultFilterable.java": "418476068f676e81056d02eed76f23efbb38d17ed5577d3a44d25ff0e31d778b"
+  },
+  "carried_Original_ASCII20": {
+    "receipt": {
+      "bytes": 11556,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/actual-original-ascii-r1-20261107/result.json",
+      "sha256": "495b9b3cb15a4ded2f89d6296632887fdc42e715f6f2a2bca6c7ced260674930"
+    },
+    "observations": {
+      "bytes": 11856,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/actual-original-ascii-r1-20261107/observations.json",
+      "sha256": "86a40f4b334494c92e23bbeaefc1590babb94b6499e26dda7ad62fba6a4c526b"
+    },
+    "scope": "Actual Original public imported-map ASCII20 values only, one javac/JVM2.001s, zero mismatches, private cleanup; do not rerun; no current Native text acceptance."
+  },
+  "blocking_findings": [],
+  "limits": "Source-only review of this11-leaf frozen candidate. No Native runtime acceptance, Unicode/regex/general filter parity, Original manager/Core/profile runtime, phase projection, broader acquisition policy or P08 completion claim. Predecessor final acceptance/publication remains a separate prerequisite.",
+  "executed": {
+    "compiler": false,
+    "JVM": false,
+    "tests": false,
+    "Native_or_cache_write": false
+  }
+}

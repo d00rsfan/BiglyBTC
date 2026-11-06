@@ -1,0 +1,213 @@
+{
+  "schema": "BIGLYBTC_PUBLIC_ASCII_FILTER_ACTUAL_VALUES_V1",
+  "status": "PASS_ORIGINAL_PUBLIC_ASCII_FILTER_VALUES_ONLY",
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "inputs": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/OriginalAsciiFilterOracle.java",
+      "bytes": 8173,
+      "sha256": "8319774a5f3c0faa557a57820dd8ed4c42ed8e98d5e397eb72bcdaad51a46927"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/oracle-source-descriptor.json",
+      "bytes": 6685,
+      "sha256": "cd31b7b4c9465d63621595017b3731006d2659f343d100aa00f210674987b68a"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/original-ascii-matrix.json",
+      "bytes": 6892,
+      "sha256": "df1307c4a930b8c52facef3a5c78999148f13df46f245533c56043b02103c361"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/run-original-ascii.py",
+      "bytes": 8422,
+      "sha256": "889119f6672b42918139c622d684a579c4c175b5a1e2c5b03fc816f6da6ffb9c"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/qualification-receipt.json",
+      "bytes": 2108,
+      "sha256": "50ea6b211115602560a03f0e7fce3cce40346ab2b5fe9032d2b51c454fafd854"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+      "bytes": 12774623,
+      "sha256": "aec655f549167e22178a75f81e4bbc146a34192a2ff90278d74d98c304d2aec6"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/subs/impl/SubscriptionResultFilterImpl.java",
+      "bytes": 14757,
+      "sha256": "9fecba6840da04fa52fc228b675d9b268614df125a94765ab296e20109e83139"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/metasearch/FilterableResult.java",
+      "bytes": 1104,
+      "sha256": "b543b81e5fa03a8070d8e950101977179fc59907d72ca89b9f1f6813468e6812"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/subs/SubscriptionUtils.java",
+      "bytes": 8674,
+      "sha256": "e51b40794521479dccbad622e315b840beafbc84064d0a82c22de5c5ad829bb1"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/util/MapUtils.java",
+      "bytes": 10391,
+      "sha256": "78531933cb0e466d78d273dd44dbd8c400f2255ad1e7d824fb2f52bb3912a991"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/util/JSONUtils.java",
+      "bytes": 5422,
+      "sha256": "283937038a66eca370b2dd1a35e00f07d5e7ff9e008be4bcdeacae4e9d371624"
+    },
+    {
+      "path": "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "bytes": 14544,
+      "sha256": "0e72dac1212b98b6450d1b17d403680be25002d47465dbdb460d24c45cbbde3c"
+    },
+    {
+      "path": "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "bytes": 14592,
+      "sha256": "ef60c7cfcdbd1313151738e56754e09a4706f7d822899054281d4def617bce1d"
+    },
+    {
+      "path": "/usr/lib/jvm/java-17-openjdk-amd64/release",
+      "bytes": 1228,
+      "sha256": "ec61e7fb37ddd8368f2f07e3c75e23ca1e51e544af5b39c5c297f5cee9917606"
+    },
+    {
+      "path": "/usr/bin/nice",
+      "bytes": 11352352,
+      "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0",
+      "resolved_path": "/usr/lib/cargo/bin/coreutils/nice"
+    },
+    {
+      "bytes": 9107,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/source/socket_deny_exec.c",
+      "sha256": "7a388b8ba7d41010c1a8af43a9e6b64652c2facb92a53820fdfcc203355c997e"
+    },
+    {
+      "bytes": 17120,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+      "sha256": "82970c60379d6076e85e0c77c7f0de0180d3286b652bdfdb24297dc4a895ec79"
+    },
+    {
+      "bytes": 2119,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/compile-receipt.json",
+      "sha256": "e1a27aa61c771e1f0446f3e2ac4e9d484c783fb1b2eec873664a72cdafc7afab"
+    },
+    {
+      "bytes": 396,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/control.json",
+      "sha256": "a1aac51d106c7aab43d0f2fafcae5582ce2323897592fc26b99988694989d46f"
+    },
+    {
+      "bytes": 0,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/control.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "commands": [
+    {
+      "label": "compile",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+        "/usr/bin/nice",
+        "-n",
+        "5",
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+        "-J-XX:ActiveProcessorCount=1",
+        "-J-Duser.home=/tmp/biglybtc-ascii-filter-values-vu0t60xw/home",
+        "-J-Djava.io.tmpdir=/tmp/biglybtc-ascii-filter-values-vu0t60xw/tmp",
+        "-J-Dazureus.config.path=/tmp/biglybtc-ascii-filter-values-vu0t60xw/profile",
+        "-J-Dazureus.install.path=/tmp/biglybtc-ascii-filter-values-vu0t60xw/install",
+        "-J-Djava.awt.headless=true",
+        "--release",
+        "17",
+        "-encoding",
+        "UTF-8",
+        "-cp",
+        "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "-d",
+        "/tmp/biglybtc-ascii-filter-values-vu0t60xw/classes",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/OriginalAsciiFilterOracle.java"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.471,
+      "stdout": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/actual-original-ascii-r1-20261107/compile.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/actual-original-ascii-r1-20261107/compile.stderr.log",
+        "bytes": 140,
+        "sha256": "cddb97d53d72af75aac7d566e5be697bffc863107bac345890a7ab0d1234b970"
+      }
+    },
+    {
+      "label": "values",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=1",
+        "-Duser.home=/tmp/biglybtc-ascii-filter-values-vu0t60xw/home",
+        "-Djava.io.tmpdir=/tmp/biglybtc-ascii-filter-values-vu0t60xw/tmp",
+        "-Dazureus.config.path=/tmp/biglybtc-ascii-filter-values-vu0t60xw/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-ascii-filter-values-vu0t60xw/install",
+        "-Djava.awt.headless=true",
+        "-cp",
+        "/tmp/biglybtc-ascii-filter-values-vu0t60xw/classes:/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "OriginalAsciiFilterOracle",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/original-ascii-matrix.json",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/actual-original-ascii-r1-20261107/observations.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.164,
+      "stdout": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/actual-original-ascii-r1-20261107/values.stdout.log",
+        "bytes": 44,
+        "sha256": "dc32cf29bae6dd9aeb3b9fb315928e0764314b6074347e27bf7683df0d5d8b91"
+      },
+      "stderr": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/actual-original-ascii-r1-20261107/values.stderr.log",
+        "bytes": 140,
+        "sha256": "cddb97d53d72af75aac7d566e5be697bffc863107bac345890a7ab0d1234b970"
+      }
+    }
+  ],
+  "constraint_control_reused_without_rerun": true,
+  "outer_sandbox_owned_unix_pair_preflight": "ALLOWED; pair closed, no network socket",
+  "Core_start_manager_engine_Native_cache_or_real_profile_action": false,
+  "private_root": "/tmp/biglybtc-ascii-filter-values-vu0t60xw",
+  "class_images_recorded_before_cleanup": [
+    {
+      "path": "/tmp/biglybtc-ascii-filter-values-vu0t60xw/classes/OriginalAsciiFilterOracle$Values.class",
+      "bytes": 2340,
+      "sha256": "dc17fbaa23be65c1b6c8f9ec21edefcde8832900964b152bfa40d3fbe048acd3"
+    },
+    {
+      "path": "/tmp/biglybtc-ascii-filter-values-vu0t60xw/classes/OriginalAsciiFilterOracle.class",
+      "bytes": 10167,
+      "sha256": "24ac9385583991d04ab86b6118c215f8c5e3d4c5cd7c0ff601c396e37cad5e7a"
+    }
+  ],
+  "observations": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/actual-original-ascii-r1-20261107/observations.json",
+    "bytes": 11856,
+    "sha256": "86a40f4b334494c92e23bbeaefc1590babb94b6499e26dda7ad62fba6a4c526b"
+  },
+  "actual_case_count": 20,
+  "private_files_recorded_before_cleanup": [
+    {
+      "path": "/tmp/biglybtc-ascii-filter-values-vu0t60xw/classes/OriginalAsciiFilterOracle$Values.class",
+      "bytes": 2340,
+      "sha256": "dc17fbaa23be65c1b6c8f9ec21edefcde8832900964b152bfa40d3fbe048acd3"
+    },
+    {
+      "path": "/tmp/biglybtc-ascii-filter-values-vu0t60xw/classes/OriginalAsciiFilterOracle.class",
+      "bytes": 10167,
+      "sha256": "24ac9385583991d04ab86b6118c215f8c5e3d4c5cd7c0ff601c396e37cad5e7a"
+    }
+  ],
+  "private_temporary_root_removed": true,
+  "elapsed_seconds": 2.001
+}

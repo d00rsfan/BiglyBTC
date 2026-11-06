@@ -1,0 +1,102 @@
+{
+  "Native_expected_scope_for_future_validation": {
+    "Qt_cases_per_lane": 68,
+    "Qt_methods_per_lane": 22,
+    "app_build_only": true,
+    "test_executables_per_lane": 5
+  },
+  "Native_gcc_receipt": {
+    "bytes": 61249,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/cohort/gcc/r1/result-stamped.json",
+    "sha256": "a1ab928867bc770dbb6e33a8a053e8c092f47cc5f87a1547507cddc4f6d9547b"
+  },
+  "Native_implementation_commit": "c2d089eda4df59adeb86d8b5407429bf9f0672be",
+  "Native_independent_acceptance_review": {
+    "bytes": 12253,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/independent-acceptance-review.json",
+    "sha256": "f116d83a82aa1b4f699982ee72ccbaec8415311ffcdccdb3fbca67a20ec2cf16"
+  },
+  "Native_san_receipt": {
+    "bytes": 62253,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/cohort/san/r1/result-stamped.json",
+    "sha256": "d6805121e1992e5dd1d257b06992b09ee4a77aeb6a517f363012b50c90212993"
+  },
+  "Native_tree": "f0301451eb0aa7ef5af891ffa41aec10cfa64430",
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual_Original_ASCII20": {
+    "JVM": 1,
+    "case_count": 20,
+    "elapsed_seconds": 2.001,
+    "javac": 1,
+    "mismatches": 0,
+    "observations": {
+      "copy": {
+        "bytes": 11856,
+        "file": "original-ascii-observations.json",
+        "sha256": "86a40f4b334494c92e23bbeaefc1590babb94b6499e26dda7ad62fba6a4c526b"
+      },
+      "original": {
+        "bytes": 11856,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/actual-original-ascii-r1-20261107/observations.json",
+        "sha256": "86a40f4b334494c92e23bbeaefc1590babb94b6499e26dda7ad62fba6a4c526b"
+      }
+    },
+    "private_cleanup": true,
+    "receipt": {
+      "copy": {
+        "bytes": 11556,
+        "file": "original-ascii-result.json",
+        "sha256": "495b9b3cb15a4ded2f89d6296632887fdc42e715f6f2a2bca6c7ced260674930"
+      },
+      "original": {
+        "bytes": 11556,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/actual-original-ascii-r1-20261107/result.json",
+        "sha256": "495b9b3cb15a4ded2f89d6296632887fdc42e715f6f2a2bca6c7ced260674930"
+      }
+    },
+    "scope": "Actual public imported-map ASCII filter/value APIs only; no Core/manager/Engine/profile/UI/acquisition."
+  },
+  "adopted_cohort_spec_reference_only": {
+    "bytes": 37277,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/cohort/spec.json",
+    "sha256": "bbe5ea6378c6cbdcafa89547ccb7b274b2bf08adc1bb110144a6aa7b24ffb9a1"
+  },
+  "parent_implementation_commit": "b0493c710397236a0c915ed3f680b24d33719f13",
+  "parent_metadata_commit": "dcea02fe511bec9b8958df59772ad0e5d6f45543",
+  "parent_native_tree": "51bd2d26d3fd7e9b68fe127e3f3e4fb71e96577d",
+  "ready_for_publication": true,
+  "required_before_publication": [],
+  "schema": "BIGLYBTC_SUBSCRIPTION_LITERAL_PUBLICATION_SOURCE_SELECTION_DRAFT_V1",
+  "scope_limit": "Supported ASCII literal words only; no wholeP08/global baseline/default-distribution promotion.",
+  "selected_afterimages": {
+    "preview/native/services/CMakeLists.txt": "4f02bc213ea32c4480eea6ee24f0c5c4e6776b3fb2eaf9efb2663fbeb5d5aed3",
+    "preview/native/services/search/saved_subscription_result_source.cpp": "3b7de2bf3694d7dcaec9af75b0afcf85820570ded18ce453c9e5cdf8d3d746a9",
+    "preview/native/services/search/saved_subscription_source.cpp": "35d4d0dee31304114cad7696c6257589cddea90ccad05849c8b0a823c63d1a64",
+    "preview/native/services/search/saved_subscription_source.hpp": "dbb3b1d92794d0a63728a4af65dc659b8bbdb1acf94e4ac3310eb7e8f1184aa5",
+    "preview/native/services/search/subscription_literal_filter.cpp": "148aedbe76fc9314720a92baa5e8e4166835167f7a6788a39dedfb8511e8d76f",
+    "preview/native/services/search/subscription_literal_filter.hpp": "44c3a184934befd1a583af0603d78875c23e1d2b68e234ed772a0c3b378e2298",
+    "preview/native/services/search/subscription_values.cpp": "93194dc7be55b92c2189ea9dcd7b0e7bbdac3a93b1f84a7e0e10abe7c8e11d1c",
+    "preview/native/services/search/subscription_values.hpp": "b0b8468e4d41e8bcb8eefc157ee40a4185ef8381beec407c737308bb54a8a707",
+    "preview/native/tests/CMakeLists.txt": "b7c05f56ca6c5584473e437750521898640afceeea505e813372b420620fd5e0",
+    "preview/native/tests/subscription_literal_filter_tests.cpp": "7c88b4673103b2abe3d5ea0e6855368dfb8591f4d778a57af87042b6caabb65f",
+    "preview/native/tests/subscription_literal_source_tests.cpp": "a59db8ceec38460412f642142fef064dafe1a58a285499e990a87cfb619060a0"
+  },
+  "source_candidate": {
+    "bytes": 13617,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/manifest.json",
+    "sha256": "77b36dabc978abf6a8d5f06f56c8f60876508cacaf8efb81bda179a3488e0f08"
+  },
+  "source_review": {
+    "copy": {
+      "bytes": 7143,
+      "file": "source-review.json",
+      "sha256": "34892cc782bc93261d51dd56b8515dc50c414a1ea4c8bceff5960443a8b30371"
+    },
+    "original": {
+      "bytes": 7143,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-text-filter/source-review.json",
+      "sha256": "34892cc782bc93261d51dd56b8515dc50c414a1ea4c8bceff5960443a8b30371"
+    }
+  },
+  "status": "PASS_SUPPORTED_ASCII_LITERAL_FILTERS_LOCAL_OWNED_GCC_SAN"
+}
