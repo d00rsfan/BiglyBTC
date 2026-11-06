@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "manual_tag_store.hpp"
+#include "file_operations.hpp"
+#include "original_torrent_identity.hpp"
+#include "biglybtc/original_tag_order.hpp"
 #include "file_io.hpp"
 #include <array>
+#include <algorithm>
 #include <cerrno>
 #include <new>
 #include <sys/stat.h>
@@ -11,6 +15,7 @@
 namespace biglybtc::storage {
 namespace {
 constexpr std::array<const char*,3> Names{"tag.config","tag.config.bak","tag.config.saving"};
+constexpr std::array<const char*,3> SettingsNames{"biglybt.config","biglybt.config.bak","biglybt.config.saving"};
 struct Stamp {
   std::uint64_t device, inode, size, mode, links, uid;
   std::int64_t modifiedSeconds, modifiedNanos, changedSeconds, changedNanos;
@@ -42,22 +47,22 @@ Error editError(core::SavedTagEditError error) {
     default: return {ErrorCode::InvalidFormat,"Ambiguous or malformed manual-tag edit/document"};
   }
 }
-std::expected<Candidates,Error> candidates(const ProfileLease& lease,std::stop_token stop) {
+std::expected<Candidates,Error> candidates(const ProfileLease& lease,std::stop_token stop,const std::array<const char*,3>& names=Names) {
   Candidates result;
-  for (std::size_t i=0;i<Names.size();++i) {
+  for (std::size_t i=0;i<names.size();++i) {
     if (stop.stop_requested()) { return std::unexpected(cancelled()); }
     struct stat before{};
-    if (::fstatat(lease.directoryHandle(),Names[i],&before,AT_SYMLINK_NOFOLLOW)!=0) {
+    if (::fstatat(lease.directoryHandle(),names[i],&before,AT_SYMLINK_NOFOLLOW)!=0) {
       if (errno==ENOENT) { continue; }
       return std::unexpected(Error{ErrorCode::Io,"Cannot inspect manual-tag candidate"});
     }
     if (!S_ISREG(before.st_mode)||before.st_nlink!=1||before.st_uid!=::geteuid()) {
       return std::unexpected(Error{ErrorCode::UnsafePath,"Manual-tag candidate must be an owned regular file with one link"});
     }
-    auto bytes=detail::readFile(lease.directoryHandle(),Names[i],core::Limits{}.inputBytes);
+    auto bytes=detail::readFile(lease.directoryHandle(),names[i],core::Limits{}.inputBytes);
     if (!bytes) { return std::unexpected(bytes.error()); }
     struct stat after{};
-    if (!bytes->has_value()||::fstatat(lease.directoryHandle(),Names[i],&after,AT_SYMLINK_NOFOLLOW)!=0
+    if (!bytes->has_value()||::fstatat(lease.directoryHandle(),names[i],&after,AT_SYMLINK_NOFOLLOW)!=0
         ||stamp(before)!=stamp(after)) { return std::unexpected(conflict()); }
     result[i]={stamp(after),std::move(*bytes)};
   }
@@ -94,6 +99,65 @@ std::expected<Loaded,Error> load(const ProfileLease& lease,std::stop_token stop)
   }
   return result;
 }
+Error removalTextError(core::OriginalTagOrderError error){
+  switch(error){
+    case core::OriginalTagOrderError::InvalidUtf8:return {ErrorCode::InvalidFormat,"Removal tag text is malformed UTF-8"};
+    case core::OriginalTagOrderError::ReferenceDifference:return {ErrorCode::Unsupported,"Removal tag Character properties differ between qualified Java17 and Java26"};
+    case core::OriginalTagOrderError::Memory:return {ErrorCode::Io,"Cannot allocate bounded removal tag sort key"};
+    case core::OriginalTagOrderError::Limit:return {ErrorCode::Unsupported,"Removal tag text exceeds original-order bounds"};
+  }
+  return {ErrorCode::Unsupported,"Removal tag original ordering is unavailable"};
+}
+// Ordinary original managers resolve selected20 IDs. Native full32 remains a
+// distinct runtime key; never infer membership by blindly truncating it.
+std::expected<void,Error> unambiguousFull32Inventory(const ProfileLease& lease,const core::TorrentHash& runtime,const core::TorrentHash& selected,bool removed){
+  if(runtime.bytes().size()!=32){return {};}
+  auto bytes=detail::readFile(lease.directoryHandle(),"downloads.config",64U*1024U*1024U);if(!bytes){return std::unexpected(bytes.error());}if(!*bytes){return std::unexpected(conflict());}
+  auto document=core::Document::parse(**bytes,compatibleConfigLimits());if(!document){return std::unexpected(conflict());}auto library=core::readLibrary(*document,{10000,10000});if(!library||!library->issues.empty()){return std::unexpected(conflict());}
+  std::size_t target=0;for(const auto& row:library->downloads){
+    if(!row.hash){return std::unexpected(conflict());}if(*row.hash==runtime){++target;continue;}
+    // Further full32 owners need their own source-bound selector evidence.
+    // Refuse that unproved case rather than treating their prefixes as IDs.
+    if(row.hash->bytes().size()!=20||*row.hash==selected){return std::unexpected(Error{ErrorCode::Unsupported,"Full32 taggable identity is ambiguous with another library owner"});}
+  }
+  if(target!=(removed?0U:1U)){return std::unexpected(conflict());}return {};
+}
+struct RemovalTag {std::string name;core::OriginalTagSortKey nameKey;std::optional<core::OriginalTagSortKey> group;};
+int compareRemoval(const RemovalTag& a,const RemovalTag& b){
+  if(bool(a.group)!=bool(b.group)){return a.group?-1:1;}
+  if(a.group){const auto n=core::compareOriginalTagSortKeys(*a.group,*b.group);if(n){return n;}}
+  return core::compareOriginalTagSortKeys(a.nameKey,b.nameKey);
+}
+std::expected<std::vector<std::string>,Error> removalNames(const core::SavedDownloadTags& source,const core::TorrentHash& hash){
+  if(hash.bytes().size()!=20){return std::unexpected(Error{ErrorCode::Unsupported,"Removal tags need the original20-byte taggable identity"});}
+  if(!source.source||!source.issues.empty()){return std::unexpected(Error{ErrorCode::InvalidFormat,"Incomplete manual namespace cannot supply removal tags"});}
+  const auto* manual=source.source->find("3");if(!manual){return std::vector<std::string>{};}
+  for(std::size_t n=0;n<manual->children.size();n+=2){const auto key=manual->children[n].bytes;if(!key.empty()&&static_cast<unsigned char>(key.front())>=0x80){return std::unexpected(Error{ErrorCode::Unsupported,"Unicode manual tag IDs need original Character classification"});}}
+  std::vector<RemovalTag> selected;
+  for(const auto& tag:source.tags){
+    if(!tag.id||tag.idKey!=std::to_string(*tag.id)){return std::unexpected(Error{ErrorCode::Unsupported,"Manual tag ID alias cannot supply original canonical attributes"});}
+    const auto& stored=manual->children.at(tag.sourceIndex*2+1);
+    if(const auto* props=stored.find("p")){
+      const auto* objects=stored.find("o");const auto count=objects?objects->children.size():0;
+      if(props->type!=core::Node::Type::List||props->children.size()!=count){return std::unexpected(Error{ErrorCode::InvalidFormat,"Incomplete manual membership properties"});}
+      for(const auto& property:props->children){if(property.type!=core::Node::Type::Dictionary){return std::unexpected(Error{ErrorCode::InvalidFormat,"Malformed manual membership property"});}const auto* added=property.find("a");if(added&&added->type!=core::Node::Type::Integer){return std::unexpected(Error{ErrorCode::InvalidFormat,"Malformed manual membership added time"});}}
+    }
+    if(std::find(tag.uniqueHashes.begin(),tag.uniqueHashes.end(),hash)==tag.uniqueHashes.end()){continue;}
+    if(!tag.id||tag.duplicateId||tag.membersMalformed||!tag.rawName||tag.nameMayRequireLocalization){
+      return std::unexpected(Error{ErrorCode::Unsupported,"Removal tag name/localization/namespace is unavailable"});
+    }
+    auto nameKey=core::originalTagSortKey(*tag.rawName);if(!nameKey){return std::unexpected(removalTextError(nameKey.error()));}
+    const auto& record=manual->children.at(tag.sourceIndex*2+1);RemovalTag value{*tag.rawName,std::move(*nameKey),{}};
+    if(const auto* config=record.find("c")){if(config->type!=core::Node::Type::Dictionary){return std::unexpected(Error{ErrorCode::InvalidFormat,"Malformed removal tag configuration"});}if(const auto* group=config->find("gr")){
+      if(group->type!=core::Node::Type::Bytes){return std::unexpected(Error{ErrorCode::Unsupported,"Removal tag group needs supported original text"});}
+      auto groupKey=core::originalTagSortKey(group->bytes);if(!groupKey){return std::unexpected(removalTextError(groupKey.error()));}value.group.emplace(std::move(*groupKey));
+    }}
+    if(selected.size()==256){return std::unexpected(Error{ErrorCode::Unsupported,"Removal tag list exceeds history bound"});}selected.push_back(std::move(value));
+  }
+  std::stable_sort(selected.begin(),selected.end(),[](const auto& a,const auto& b){return compareRemoval(a,b)<0;});
+  for(std::size_t n=1;n<selected.size();++n){if(compareRemoval(selected[n-1],selected[n])==0&&selected[n-1].name!=selected[n].name){return std::unexpected(Error{ErrorCode::Unsupported,"Ambiguous original stable tag order needs a live manager order"});}}
+  std::vector<std::string> names;names.reserve(selected.size());for(auto& tag:selected){names.push_back(std::move(tag.name));}return names;
+}
 } // namespace
 struct ManualTagSnapshot::Data {
   std::uint64_t generation=0;
@@ -102,6 +166,24 @@ struct ManualTagSnapshot::Data {
   Candidates preimage;
   core::SavedDownloadTags tags;
 };
+struct CapturedRemovalTags::Data {
+  std::shared_ptr<const ProfileLease> lease;std::thread::id worker=std::this_thread::get_id();
+  core::TorrentHash coreRuntimeHash;std::optional<OriginalTorrentIdentity> originalIdentity;Candidates preimage;std::vector<std::string> names;
+};
+CapturedRemovalTags::CapturedRemovalTags(std::unique_ptr<Data> data):data_(std::move(data)){}
+CapturedRemovalTags::CapturedRemovalTags(CapturedRemovalTags&&)noexcept=default;
+CapturedRemovalTags& CapturedRemovalTags::operator=(CapturedRemovalTags&&)noexcept=default;
+CapturedRemovalTags::~CapturedRemovalTags()=default;
+std::expected<void,Error> CapturedRemovalTags::current(const ProfileLease& lease,const core::TorrentHash& hash)const{
+  if(!data_||data_->worker!=std::this_thread::get_id()||!data_->lease->sharesOwnership(lease)||data_->coreRuntimeHash!=hash){return std::unexpected(conflict());}
+  auto identity=lease.retain();if(!identity){return std::unexpected(identity.error());}auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
+  const auto now=candidates(lease,{});if(!now){return std::unexpected(now.error());}if(*now!=data_->preimage){return std::unexpected(conflict());}
+  if(!data_->originalIdentity){return std::unexpected(conflict());}if(!data_->names.empty()){return unambiguousFull32Inventory(lease,hash,data_->originalIdentity->originalKey,true);}return {};
+}
+std::expected<void,Error> CapturedRemovalTags::matchesIdentity(const OriginalTorrentIdentity& actual)const{
+  if(!data_||!data_->originalIdentity){return std::unexpected(conflict());}auto relation=compareOriginalTorrentIdentities(*data_->originalIdentity,actual);if(!relation){return std::unexpected(relation.error());}if(*relation!=OriginalIdentityRelation::SameSelected){return std::unexpected(conflict());}return {};
+}
+const std::vector<std::string>& CapturedRemovalTags::names()const{return data_->names;}
 std::uint64_t ManualTagSnapshot::generation() const noexcept { return data_?data_->generation:0; }
 bool ManualTagSnapshot::missing() const noexcept { return data_&&!data_->recovery; }
 bool ManualTagSnapshot::writable() const noexcept { return data_&&data_->writable; }
@@ -153,6 +235,27 @@ std::expected<ManualTagSnapshot,Error> ManualTagStore::reload(std::stop_token st
     if(!latest_||latest_->preimage!=next->preimage){counter_.reset();}
     latest_=std::move(next);++generation_;return ManualTagSnapshot(latest_);
   }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Insufficient memory reading manual tags"});}
+}
+std::expected<bool,Error> ManualTagStore::historyRemovalModeAtOpen(const ProfileLease& lease,std::stop_token stop){
+  try{
+    auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}auto retained=lease.retain();if(!retained){return std::unexpected(retained.error());}
+    const auto before=candidates(lease,stop,SettingsNames);if(!before){return std::unexpected(before.error());}
+    if((*before)[2].bytes||(!(*before)[0].bytes&&(*before)[1].bytes)){return std::unexpected(Error{ErrorCode::Conflict,"Tag manager startup mode needs primary settings or all absent"});}
+    bool enabled=true;if((*before)[0].bytes){auto doc=core::Document::parse(*(*before)[0].bytes);if(!doc||doc->root().type!=core::Node::Type::Dictionary){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid tag manager startup settings"});}if(const auto* value=doc->find("tagmanager.enable")){if(value->type!=core::Node::Type::Integer){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid tag manager enable flag"});}enabled=static_cast<std::uint32_t>(value->integer)!=0;}}
+    const auto after=candidates(lease,stop,SettingsNames);if(!after){return std::unexpected(after.error());}if(*before!=*after){return std::unexpected(conflict());}return enabled;
+  }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot capture tag manager startup mode"});}
+}
+std::expected<CapturedRemovalTags,Error> ManualTagStore::captureHistoryRemovalTags(const ProfileLease& lease,const PreparedFileOperation& prepared,bool enabledAtOpen,std::stop_token stop){
+  try{
+    auto state=current();if(!state){return std::unexpected(state.error());}if(!sharesOwnership(lease)||!latest_){return std::unexpected(conflict());}
+    const auto& hash=prepared.preview().hash;auto binding=prepared.historyRemovalIdentity(lease);if(!binding){return std::unexpected(binding.error());}
+    auto access=lease_->sourceAccess();if(!access){return std::unexpected(access.error());}auto identity=lease_->retain();if(!identity){return std::unexpected(identity.error());}
+    auto loaded=load(*lease_,stop);if(!loaded){return std::unexpected(loaded.error());}if(loaded->candidates!=latest_->preimage||!latest_->writable){return std::unexpected(conflict());}
+    auto names=enabledAtOpen?removalNames(loaded->tags,binding->originalKey):std::expected<std::vector<std::string>,Error>{std::vector<std::string>{}};if(!names){return std::unexpected(names.error());}
+    const auto checked=candidates(*lease_,stop);if(!checked){return std::unexpected(checked.error());}if(*checked!=loaded->candidates){return std::unexpected(conflict());}
+    if(!names->empty()){auto mapping=unambiguousFull32Inventory(lease,hash,binding->originalKey,false);if(!mapping){return std::unexpected(mapping.error());}}
+    auto data=std::make_unique<CapturedRemovalTags::Data>();data->lease=std::move(*identity);data->coreRuntimeHash=hash;data->originalIdentity=std::move(*binding);data->preimage=std::move(loaded->candidates);data->names=std::move(*names);return CapturedRemovalTags(std::move(data));
+  }catch(const std::bad_alloc&){return std::unexpected(Error{ErrorCode::Io,"Cannot capture pre-removal manual tags"});}
 }
 std::expected<ManualTagCommit,Error> ManualTagStore::apply(const ManualTagSnapshot& expected,
     const core::SavedTagEdit& requested,std::stop_token stop) {

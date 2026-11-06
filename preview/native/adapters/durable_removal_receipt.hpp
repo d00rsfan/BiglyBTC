@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "profile.hpp"
+#include "captured_removal_tags.hpp"
 #include "biglybtc/library.hpp"
 #include "biglybtc/saved_download_history.hpp"
 #include <chrono>
@@ -33,19 +34,22 @@ private:
   static std::expected<DurableRemovalReceipt,Error> issue(const ProfileLease&,
       const core::SavedDownload&,std::string_view acceptedBeforeState,
       std::span<const Postimage>,std::array<std::uint64_t,2> activeDirectory,
-      std::int64_t eventMillis,std::chrono::steady_clock::time_point eventEnd);
+      std::int64_t eventMillis,std::chrono::steady_clock::time_point eventEnd,
+      CapturedRemovalTags*);
   std::expected<void,Error> current(const ProfileLease&,bool exactEpoch)const;
   const core::DownloadHistoryNewRecord& record()const;
   bool monitored()const;
+  const std::optional<Error>& tagWarning()const;
   friend class DownloadHistoryStore;
   friend std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease&,
       PreparedFileOperation&&,const FileOperationConfirmation&,
-      void(*)(FileOperationStage),std::stop_token,RemovalHistoryOutcome*);
+      void(*)(FileOperationStage),std::stop_token,RemovalHistoryOutcome*,CapturedRemovalTags*);
 };
 // Optional sink filled only AFTER actual fresh apply/journal cleanup success.
 // Auxiliary issuance/history failure never turns that success into rollback.
 struct RemovalHistoryOutcome {
   std::optional<DurableRemovalReceipt> receipt;
   std::optional<Error> warning;
+  std::optional<Error> tagWarning; // Auxiliary: move remains valid with existing tags.
 };
 } // namespace biglybtc::storage

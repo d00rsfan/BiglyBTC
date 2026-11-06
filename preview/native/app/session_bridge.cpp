@@ -1676,6 +1676,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     host_->normalNetwork = true;host_->i2pOptions=i2pOptions_;
     host_->replacementReviewOnly=reviewOnly;host_->fileRecoveryRequired=reviewOnly;
     if(reviewOnly){ready(host_->query(stop),tr("Profile opened read-only. Select the torrent and review its interrupted file replacement. The uncertain directory will be kept."));return;}
+    host_->initializeHistoryRemovalTags(stop); // Original tagmanager.enable is a startup fact.
     auto inventory = storage::ConfigFile::load(host_->lease, "downloads.config");
     if (!inventory && inventory.error().code == storage::ErrorCode::Missing) {
       static_cast<void>(take(storage::ConfigFile::createMissing(host_->lease, "downloads.config", "d9:downloadslee")));

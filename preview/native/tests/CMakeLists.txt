@@ -2656,3 +2656,10 @@ target_compile_features(biglybtc-saved-search-engines-tests PRIVATE cxx_std_23)
 target_compile_options(biglybtc-saved-search-engines-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME original-saved-search-engine-inventory COMMAND biglybtc-saved-search-engines-tests)
 set_tests_properties(original-saved-search-engine-inventory PROPERTIES TIMEOUT 15 LABELS "unit;search;pure;no-network")
+
+# Pure Unicode value checks; no Java runtime or writer linked into the product.
+add_executable(biglybtc-original-tag-order-tests original_tag_order_tests.cpp)
+target_link_libraries(biglybtc-original-tag-order-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-original-tag-order-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-tag-order COMMAND biglybtc-original-tag-order-tests)
+set_tests_properties(original-tag-order PROPERTIES TIMEOUT 15 LABELS "unit;core;tags")

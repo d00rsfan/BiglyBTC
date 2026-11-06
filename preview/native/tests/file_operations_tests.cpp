@@ -857,6 +857,8 @@ std::string removalHistoryFixture(Fixture& f){
 void changeRemovedPostimage(st::FileOperationStage stage){if(stage==st::FileOperationStage::Completed){auto value=doc(read(mutationPath));put(value,"opaque.external","i9e");write(mutationPath,value.serialize());}}
 void actualRemovalHistoryIsSingleUseAndSourceBound(){
   static_assert(!std::is_default_constructible_v<st::DurableRemovalReceipt>);
+  static_assert(!std::is_default_constructible_v<st::CapturedRemovalTags>);
+  static_assert(!std::is_copy_constructible_v<st::CapturedRemovalTags>);
   static_assert(!std::is_copy_constructible_v<st::DurableRemovalReceipt>);
   for(const auto stage:{st::FileOperationStage::JournalSynced,st::FileOperationStage::InventoryPublished,st::FileOperationStage::StateRemoved}){
     Fixture f;const auto active=removalHistoryFixture(f);auto plan=f.plan(st::FileOperationKind::RemoveKeepData);const auto confirmation=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));st::RemovalHistoryOutcome history;interruptAt=stage;interruptArmed=true;

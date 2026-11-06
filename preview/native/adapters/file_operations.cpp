@@ -132,14 +132,15 @@ void saveJournal(Plan& p){const auto path=p.profile/JournalName;auto old=read(pa
   publish(path,old,journal(p),MaximumJournal);p.journalCreated=true;
   if(p.preview.kind==FileOperationKind::RemoveKeepData){p.ownedRemovalJournal=read(path,MaximumJournal);}
 }
-void hashMatches(const EncodedDocument& doc,const core::TorrentHash& hash){
+OriginalTorrentIdentity fullIdentity(const EncodedDocument& doc,const core::TorrentHash& hash){
   const auto subject=originalTorrentInfoSubject(doc.document());require(subject.has_value(),subject?ErrorCode::Io:subject.error().code,subject?"Original info subject":subject.error().message.c_str());
   const auto* info=doc.document().find("info");OriginalFullInfoHashes full;
   const auto compute=[&](const EVP_MD* algorithm,std::span<std::byte> output){std::array<unsigned char,EVP_MAX_MD_SIZE> digest{};unsigned size=0;require(EVP_Digest(subject->data(),subject->size(),digest.data(),&size,algorithm,nullptr)==1&&size==output.size(),ErrorCode::InvalidFormat,"Cannot compute complete original info digest");std::copy_n(reinterpret_cast<const std::byte*>(digest.data()),output.size(),output.begin());};
   if(info->find("pieces")){full.v1.emplace();compute(EVP_sha1(),*full.v1);}if(info->find("file tree")){full.v2.emplace();compute(EVP_sha256(),*full.v2);}
   const auto identity=selectOriginalTorrentIdentity(doc.document(),{*subject,std::move(full)});require(identity.has_value(),identity?ErrorCode::Io:identity.error().code,identity?"Original selected identity":identity.error().message.c_str());
-  const auto matched=validateOriginalTorrentKey(*identity,hash,true);require(matched.has_value(),matched?ErrorCode::Io:matched.error().code,matched?"Original saved identity":matched.error().message.c_str());
+  const auto matched=validateOriginalTorrentKey(*identity,hash,true);require(matched.has_value(),matched?ErrorCode::Io:matched.error().code,matched?"Original saved identity":matched.error().message.c_str());return *identity;
 }
+void hashMatches(const EncodedDocument& doc,const core::TorrentHash& hash){(void)fullIdentity(doc,hash);}
 EncodedDocument envelope(const Raw& raw){require(raw.bytes.has_value(),ErrorCode::Missing,"Selected active metadata is absent");auto doc=EncodedDocument::parse(*raw.bytes,limits());require(doc&&doc->document().root().type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid original active metadata");return std::move(*doc);}
 void archiveShape(const Plan& p,const Archive& a){
   pathShape(a.path);const auto active=p.profile/"active"/(p.preview.hash.hex()+".dat");
@@ -770,6 +771,16 @@ PreparedFileOperation::PreparedFileOperation(PreparedFileOperation&&) noexcept=d
 PreparedFileOperation& PreparedFileOperation::operator=(PreparedFileOperation&&) noexcept=default;
 PreparedFileOperation::~PreparedFileOperation()=default;
 const FileOperationPreview& PreparedFileOperation::preview()const noexcept{return impl_->plan.preview;}
+std::expected<OriginalTorrentIdentity,Error> PreparedFileOperation::historyRemovalIdentity(const ProfileLease& lease)const{
+  return guarded([&]()->std::expected<OriginalTorrentIdentity,Error>{
+    require(impl_&&impl_->plan.preview.kind==FileOperationKind::RemoveKeepData,ErrorCode::Conflict,"Tag capture needs an actual prepared Keep Data removal");const auto& p=impl_->plan;
+    require(p.preparedLease&&p.preparedLease->sharesOwnership(lease)&&p.preparedWorker==std::this_thread::get_id(),ErrorCode::Conflict,"Tag identity needs the prepared worker/SAME OFD");
+    auto access=expectedValue(lease.sourceAccess());checkRemovalGuards(p);for(const auto& edit:p.edits){check(edit.path,edit.before,MaximumDocument);}
+    auto state=EncodedDocument::parse(p.removalBeforeState,limits());require(state.has_value(),ErrorCode::InvalidFormat,"Prepared removal identity source is unavailable");
+    require(digest(expectedValue(originalTorrentInfoSubject(state->document())))==p.removalInfoSha256,ErrorCode::Conflict,"Prepared full info changed");
+    return fullIdentity(*state,p.preview.hash);
+  });
+}
 std::expected<PreparedFileOperation,Error> prepareFileOperation(const ProfileLease& lease,const FileOperationRequest& request,std::stop_token stop){return guarded([&]()->std::expected<PreparedFileOperation,Error>{require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Recover pending explicit compaction before file operations");return PreparedFileOperation(std::make_unique<PreparedFileOperation::Impl>(prepare(lease,request,stop)));});}
 std::expected<PreparedFileOperation,Error> prepareInterruptedReplacementReview(const ProfileLease& lease,std::stop_token stop){
   return guarded([&]()->std::expected<PreparedFileOperation,Error>{
@@ -795,7 +806,7 @@ std::expected<PreparedFileOperation,Error> prepareInterruptedReplacementReview(c
   });
 }
 std::expected<FileOperationConfirmation,Error> confirmFileOperation(const PreparedFileOperation& p,std::string_view accepted,bool deleteConfirmed,bool archiveConfirmed){return guarded([&]()->std::expected<FileOperationConfirmation,Error>{require(accepted==p.preview().approvalScopeDigest,ErrorCode::Conflict,"File-operation approved scope changed");require(!(deleting(p.preview().kind)||p.preview().kind==FileOperationKind::ReplaceFile)||deleteConfirmed,ErrorCode::Conflict,"Explicit payload deletion confirmation is required");require(!p.preview().torrentArchive||archiveConfirmed,ErrorCode::Conflict,"Explicit reviewed torrent archive confirmation is required");return FileOperationConfirmation{std::string(accepted),deleteConfirmed,archiveConfirmed};});}
-std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease& lease,PreparedFileOperation&& prepared,const FileOperationConfirmation& confirmation,void(*observer)(FileOperationStage),std::stop_token stop,RemovalHistoryOutcome* history){
+std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease& lease,PreparedFileOperation&& prepared,const FileOperationConfirmation& confirmation,void(*observer)(FileOperationStage),std::stop_token stop,RemovalHistoryOutcome* history,CapturedRemovalTags* tags){
   if(history){*history={};}
   return guarded([&]()->std::expected<FileOperationResult,Error>{require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Recover pending explicit compaction before applying file operations");require(bool(prepared.impl_),ErrorCode::Conflict,"Prepared file operation was moved/consumed");auto& p=prepared.impl_->plan;
     // The rvalue reference does not destroy the caller's prepared object. Drop
@@ -822,8 +833,8 @@ std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease& 
         std::vector<DurableRemovalReceipt::Postimage> postimages;
         const auto add=[&](const Control& source){DurableRemovalReceipt::Postimage out;out.name=source.path.lexically_relative(p.profile).generic_string();if(source.before.bytes){out.bytes=*source.before.bytes;}if(source.before.stamp){const auto& v=*source.before.stamp;out.metadata=std::array<std::uint64_t,11>{static_cast<std::uint64_t>(v.st_dev),static_cast<std::uint64_t>(v.st_ino),static_cast<std::uint64_t>(v.st_mode),static_cast<std::uint64_t>(v.st_uid),static_cast<std::uint64_t>(v.st_gid),static_cast<std::uint64_t>(v.st_nlink),static_cast<std::uint64_t>(v.st_size),static_cast<std::uint64_t>(v.st_mtim.tv_sec),static_cast<std::uint64_t>(v.st_mtim.tv_nsec),static_cast<std::uint64_t>(v.st_ctim.tv_sec),static_cast<std::uint64_t>(v.st_ctim.tv_nsec)};}postimages.push_back(std::move(out));};
         for(const auto& source:p.removalPublished){add(source);}
-        auto issued=DurableRemovalReceipt::issue(lease,*p.removalBeforeSaved,p.removalBeforeState,postimages,p.removalActiveDirectory,p.removalEventMillis,p.removalEventEnd);
-        if(issued){history->receipt.emplace(std::move(*issued));}else{history->warning=issued.error();}
+        auto issued=DurableRemovalReceipt::issue(lease,*p.removalBeforeSaved,p.removalBeforeState,postimages,p.removalActiveDirectory,p.removalEventMillis,p.removalEventEnd,tags);
+        if(issued){history->tagWarning=issued->tagWarning();history->receipt.emplace(std::move(*issued));}else{history->warning=issued.error();}
       }catch(const Failure& failure){try{history->warning=failure.error;}catch(...){}}catch(...){try{history->warning=Error{ErrorCode::Io,"Removal committed; history witness unavailable"};}catch(...){}}
     }
     return result;

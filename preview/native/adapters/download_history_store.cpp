@@ -136,9 +136,9 @@ std::expected<DownloadHistoryCommit,Error> DownloadHistoryStore::remove(const Do
   if(found==active->records.end()){return commit(expected,{},stop,end,nullptr,nullptr,nullptr,nullptr,&receipt);}
   require(found->hash==actual.hash&&found->hashV2==actual.hashV2&&found->addTime==actual.addTime,ErrorCode::Conflict,"Removal UID/full identity/add-time conflicts with active history");
   require(std::none_of(dead->records.begin(),dead->records.end(),[&](const auto& row){return row.uid==actual.uid;}),ErrorCode::Conflict,"Removal history UID already occurs in dead history");
-  // Original setRemoved keeps existing tags when no actual live Tag-cache list
-  // is available. Preserve the entire actual active record, including unknowns.
-  const auto removed=core::editSavedDownloadHistory(active->source->originalBytes(),core::DownloadHistorySetRemoved{actual.uid,actual.removeTime,{}});if(!removed){throw projectionError(removed.error());}
+  // Original setRemoved replaces tags only for a nonempty actual pre-removal
+  // capture. Empty/unavailable keeps the existing list and every unknown field.
+  const auto removed=core::editSavedDownloadHistory(active->source->originalBytes(),core::DownloadHistorySetRemoved{actual.uid,actual.removeTime,actual.tags});if(!removed){throw projectionError(removed.error());}
   const auto* records=removed->value.source->find("records");require(records&&found->sourceIndex<records->children.size(),ErrorCode::InvalidFormat,"Removed history record unavailable");const auto& row=records->children[found->sourceIndex];
   const auto rawRecord=removed->value.source->originalBytes().substr(row.begin,row.end-row.begin);
   auto next=core::Document::parse(dead->source->originalBytes());require(bool(next),ErrorCode::InvalidFormat,"Invalid dead history source");std::string rows="l";

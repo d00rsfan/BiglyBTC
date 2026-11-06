@@ -2,11 +2,14 @@
 #pragma once
 #include "biglybtc/saved_download_tag_edits.hpp"
 #include "profile.hpp"
+#include "captured_removal_tags.hpp"
 #include <stop_token>
 #include <thread>
 
+namespace biglybtc::app {class SessionBridge;}
 namespace biglybtc::storage {
 class ManualTagStore;
+class PreparedFileOperation;
 class ManualTagSnapshot final {
 public:
   ManualTagSnapshot() = default;
@@ -66,6 +69,12 @@ public:
       const core::SavedTagEdit&, std::stop_token stop = {});
   std::expected<void, Error> close();
 private:
+  // Trusted Host worker only. The mode is the actual immutable startup config
+  // fact, not a UI permission. Every positive still checks the real namespace.
+  static std::expected<bool,Error> historyRemovalModeAtOpen(const ProfileLease&,std::stop_token);
+  std::expected<CapturedRemovalTags,Error> captureHistoryRemovalTags(
+      const ProfileLease&,const PreparedFileOperation&,bool enabledAtOpen,std::stop_token);
+  friend class biglybtc::app::SessionBridge;
   explicit ManualTagStore(std::shared_ptr<const ProfileLease> lease)
       : lease_(std::move(lease)), worker_(std::this_thread::get_id()) {}
   std::expected<void, Error> current() const;

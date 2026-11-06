@@ -81,3 +81,6 @@ target_sources(biglybtc_core PRIVATE src/saved_download_history.cpp)
 
 # Inert original metasearch.config inventory; no engines or network activated.
 target_sources(biglybtc_core PRIVATE src/saved_search_engines.cpp)
+
+# Value-only original manual-tag/group ordering from measured shared JDK properties.
+target_sources(biglybtc_core PRIVATE src/original_tag_order.cpp)

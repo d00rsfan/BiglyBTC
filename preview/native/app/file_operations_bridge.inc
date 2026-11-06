@@ -117,11 +117,17 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
       take(storage::confirmFileOperation(*host_->filePlan,approved,value.deleteConfirmed,value.archiveConfirmed));
       // Revalidate user-visible scope before stopping anything. Ordinary rates,
       // counts and active-time updates do not change this approval digest.
-      {
-        auto before=take(storage::prepareFileOperation(host_->lease,stored,stop));
-        take(storage::confirmFileOperation(before,approved,value.deleteConfirmed,value.archiveConfirmed));
-      }
+      auto before=take(storage::prepareFileOperation(host_->lease,stored,stop));
+      take(storage::confirmFileOperation(before,approved,value.deleteConfirmed,value.archiveConfirmed));
       host_->filePlan.reset();
+      std::optional<storage::CapturedRemovalTags> removalTags;std::optional<storage::Error> removalTagWarning;
+      if(request.operation==ui::FileOperation::RemoveKeepData&&host_->normalNetwork){
+        // Original will-remove captures before stop destroys the taggable.
+        // This returns with NO source gate held across any SDK/Qt stop wait.
+        auto captured=host_->captureHistoryRemovalTags(before,stop);
+        if(captured){removalTags.emplace(std::move(*captured));}else{removalTagWarning=std::move(captured.error());}
+      }
+      checkpoint(stop);
       bool readmit=false,paused=false,force=false,queued=false;std::uint64_t oldAdmission=0;
       if(host_->engine){
         const auto rows=host_->engine->managedDownloads();
@@ -165,7 +171,8 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
         if(request.operation==ui::FileOperation::RemoveKeepData&&host_->route(stored.hash)!=Host::Route::Public){throw Failure{{storage::ErrorCode::Conflict,"Saved route changed while retiring the Public torrent"}};}
         auto current=take(storage::prepareFileOperation(host_->lease,stored,stop));auto confirmed=take(storage::confirmFileOperation(current,approved,value.deleteConfirmed,value.archiveConfirmed));
         storage::RemovalHistoryOutcome history;
-        auto committed=storage::applyFileOperation(host_->lease,std::move(current),confirmed,nullptr,stop,&history);
+        auto committed=storage::applyFileOperation(host_->lease,std::move(current),confirmed,nullptr,stop,&history,removalTags?&*removalTags:nullptr);
+        if(committed&&removalTagWarning&&!history.tagWarning){history.tagWarning=std::move(removalTagWarning);}
         if(committed){const auto warning=host_->consumeHistoryRemoval(std::move(history),stop);if(!warning.isEmpty()){result->failure=warning;}}
         return committed;
       }();

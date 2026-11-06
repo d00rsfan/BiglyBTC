@@ -1,5 +1,6 @@
 #pragma once
 #include "profile.hpp"
+#include "original_torrent_identity.hpp"
 #include "durable_removal_receipt.hpp"
 #include "biglybtc/library.hpp"
 #include <cstddef>
@@ -87,12 +88,14 @@ public:
   PreparedFileOperation& operator=(const PreparedFileOperation&) = delete;
   const FileOperationPreview& preview() const noexcept;
 private:
+  friend class ManualTagStore;
+  std::expected<OriginalTorrentIdentity,Error> historyRemovalIdentity(const ProfileLease&) const;
   struct Impl;
   explicit PreparedFileOperation(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;
   friend std::expected<PreparedFileOperation,Error> prepareInterruptedReplacementReview(const ProfileLease&,std::stop_token);
   friend std::expected<PreparedFileOperation,Error> prepareFileOperation(const ProfileLease&,const FileOperationRequest&,std::stop_token);
-  friend std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease&,PreparedFileOperation&&,const FileOperationConfirmation&,void(*)(FileOperationStage),std::stop_token,RemovalHistoryOutcome*);
+  friend std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease&,PreparedFileOperation&&,const FileOperationConfirmation&,void(*)(FileOperationStage),std::stop_token,RemovalHistoryOutcome*,CapturedRemovalTags*);
 };
 // Worker-only preparation is read-only. Host may show this scope while live,
 // then must stop/certify/revoke scheduler ownership and reprepare. Confirmation
@@ -113,9 +116,13 @@ std::expected<FileOperationConfirmation,Error> confirmFileOperation(
 // work. Cancellation is observed before the first durable journal only. Errors
 // after mutation require explicit recovery; never retry a consumed plan. Keep
 // Data binds its preparing worker and SAME OFD and is never replayed from disk.
+// Optional pre-stop tags can only come from the actual shared worker Store.
+// They supply history text, never removal/payload authority. Unavailable tags
+// preserve previous history tags while the real removal event remains valid.
+
 std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease&,PreparedFileOperation&&,
     const FileOperationConfirmation&,void(*observer)(FileOperationStage) = nullptr,std::stop_token = {},
-    RemovalHistoryOutcome* = nullptr);
+    RemovalHistoryOutcome* = nullptr,CapturedRemovalTags* = nullptr);
 // Original default true; Boolean tests the low32 integer from held biglybt.config. Read-only;
 // malformed values/errors remain explicit, never materialized or overwritten.
 std::expected<bool,Error> torrentArchiveDeletionPreference(const ProfileLease&,std::stop_token = {});

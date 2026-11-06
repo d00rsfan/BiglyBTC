@@ -39,9 +39,10 @@ std::string raw(const auto& bytes){return {reinterpret_cast<const char*>(bytes.d
 }
 struct DurableRemovalReceipt::Data {
   std::shared_ptr<const ProfileLease> lease;std::thread::id worker=std::this_thread::get_id();
-  std::uint64_t epoch=0;Clock::time_point end;std::vector<Source> sources;
+  std::uint64_t epoch=0;Clock::time_point end;std::vector<Source> sources;core::TorrentHash selected;
   Descriptor active{-1};struct stat activeStamp{};
   core::DownloadHistoryNewRecord record;bool monitored=false;
+  std::optional<CapturedRemovalTags> tags;std::optional<Error> tagWarning;
 };
 DurableRemovalReceipt::DurableRemovalReceipt(std::unique_ptr<Data> data):data_(std::move(data)){}
 DurableRemovalReceipt::DurableRemovalReceipt(DurableRemovalReceipt&&)noexcept=default;
@@ -50,9 +51,9 @@ DurableRemovalReceipt::~DurableRemovalReceipt()=default;
 std::expected<DurableRemovalReceipt,Error> DurableRemovalReceipt::issue(const ProfileLease& lease,
     const core::SavedDownload& captured,std::string_view acceptedBeforeState,
     std::span<const Postimage> committed,std::array<std::uint64_t,2> activeIdentity,
-    std::int64_t eventMillis,Clock::time_point eventEnd){try{
+    std::int64_t eventMillis,Clock::time_point eventEnd,CapturedRemovalTags* tags){try{
   require(captured.hash&&captured.persistent,ErrorCode::Conflict,"Removal needs the actual persistent prepared target");const auto& hash=*captured.hash;
-  auto access=take(lease.sourceAccess());auto value=std::make_unique<Data>();value->lease=take(lease.retain());value->epoch=lease.sourceRevision();value->end=eventEnd;require(eventMillis>0&&Clock::now()<eventEnd,ErrorCode::Conflict,"Actual removal event expired");
+  auto access=take(lease.sourceAccess());auto value=std::make_unique<Data>();value->lease=take(lease.retain());value->epoch=lease.sourceRevision();value->selected=hash;value->end=eventEnd;require(eventMillis>0&&Clock::now()<eventEnd,ErrorCode::Conflict,"Actual removal event expired");
   value->active=Descriptor(::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));
   require(value->active.get()>=0&&::fstat(value->active.get(),&value->activeStamp)==0&&value->activeStamp.st_uid==::geteuid()&&value->activeStamp.st_nlink&&value->activeStamp.st_dev==activeIdentity[0]&&value->activeStamp.st_ino==activeIdentity[1],ErrorCode::Conflict,"Actual prepared active directory changed during removal");
   require(!committed.empty(),ErrorCode::Conflict,"Fresh removal publication proof absent");
@@ -81,11 +82,19 @@ std::expected<DurableRemovalReceipt,Error> DurableRemovalReceipt::issue(const Pr
   const auto digest=[&](const EVP_MD* algorithm,auto& result){unsigned count=0;require(EVP_Digest(info.data(),info.size(),reinterpret_cast<unsigned char*>(result.data()),&count,algorithm,nullptr)==1&&count==result.size(),ErrorCode::Io,"Removal full identity digest failed");};
   if(node&&node->find("pieces")){full.v1.emplace();digest(EVP_sha1(),*full.v1);}if(node&&node->find("file tree")){full.v2.emplace();digest(EVP_sha256(),*full.v2);}
   const auto identity=take(selectOriginalTorrentIdentity(original,{info,std::move(full)}));take(validateOriginalTorrentKey(identity,hash,true));
+  if(hash.bytes().size()==32){
+    // Mapping a Native runtime key is not authority to merge original managers.
+    const auto inventory=std::find_if(value->sources.begin(),value->sources.end(),[](const auto& item){return item.name=="downloads.config";});require(inventory!=value->sources.end()&&inventory->bytes,ErrorCode::Conflict,"Full32 history mapping needs committed inventory");
+    const auto remaining=core::readLibrary(document(*inventory->bytes),{10000,10000});require(remaining&&remaining->issues.empty(),ErrorCode::Conflict,"Full32 history inventory mapping is incomplete");
+    for(const auto& row:remaining->downloads){require(row.hash&&row.hash->bytes().size()==20&&*row.hash!=identity.originalKey,ErrorCode::Conflict,"Another owner aliases or lacks a proven original selected identity");}
+  }
   const auto* attrs=original.find("attributes");const auto* parameters=attrs?attrs->find("parameters"):nullptr;
   value->monitored=core::originalDownloadHistoryMonitored(captured.persistent,static_cast<std::uint64_t>(number(attrs,"flags")));
-  auto& record=value->record;record.uid=core::originalDownloadHistoryUid(raw(hash.bytes()),number(attrs,"stats.download.added.time"));
-  record.hash=identity.full.v1?std::optional<std::string>{raw(*identity.full.v1)}:std::optional<std::string>{raw(hash.bytes())};if(identity.full.v2){record.hashV2=raw(*identity.full.v2);}
+  auto& record=value->record;record.uid=core::originalDownloadHistoryUid(raw(identity.originalKey.bytes()),number(attrs,"stats.download.added.time"));
+  record.hash=identity.full.v1?std::optional<std::string>{raw(*identity.full.v1)}:std::optional<std::string>{raw(identity.originalKey.bytes())};if(identity.full.v2){record.hashV2=raw(*identity.full.v2);}
   record.addTime=number(parameters,"stats.download.added.time");record.removeTime=eventMillis;
+  if(tags){auto current=tags->current(lease,hash);if(current){current=tags->matchesIdentity(identity);}if(current){record.tags=tags->names();value->tags.emplace(std::move(*tags));}else{value->tagWarning=current.error();}}
+
   for(const auto& proof:committed){require(std::any_of(value->sources.begin(),value->sources.end(),[&](const auto& item){return item.name==proof.name;}),ErrorCode::Conflict,"Uncaptured committed removal source");}
   for(const auto& item:value->sources){require(equal(item,capture(lease.directoryHandle(),item.name)),ErrorCode::Conflict,"Removal sources changed while issuing witness");}
   require(Clock::now()<eventEnd,ErrorCode::Conflict,"Removal witness issuance exceeded actual event lifetime");
@@ -96,9 +105,11 @@ std::expected<void,Error> DurableRemovalReceipt::current(const ProfileLease& lea
   require(data_&&data_->worker==std::this_thread::get_id()&&data_->lease->sharesOwnership(lease),ErrorCode::Conflict,"Consumed/foreign-worker/OFD removal witness");(void)take(lease.retain());
   require(Clock::now()<data_->end&&(!exactEpoch||lease.sourceRevision()==data_->epoch),ErrorCode::Conflict,"Removal witness source/deadline changed");
   struct stat held{},named{};require(::fstat(data_->active.get(),&held)==0&&same(held,data_->activeStamp)&&::fstatat(lease.directoryHandle(),"active",&named,AT_SYMLINK_NOFOLLOW)==0&&same(named,data_->activeStamp),ErrorCode::Conflict,"Removal active directory changed before history consumption");
+  if(data_->tags){take(data_->tags->current(lease,data_->selected));}
   for(const auto& item:data_->sources){require(equal(item,capture(lease.directoryHandle(),item.name)),ErrorCode::Conflict,"Removal postimage changed before history consumption");}
   require(::fstat(data_->active.get(),&held)==0&&same(held,data_->activeStamp)&&::fstatat(lease.directoryHandle(),"active",&named,AT_SYMLINK_NOFOLLOW)==0&&same(named,data_->activeStamp)&&Clock::now()<data_->end,ErrorCode::Conflict,"Removal directory/lifetime changed during validation");return {};
 }catch(const Error& error){return std::unexpected(error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot validate removal witness"});}}
 const core::DownloadHistoryNewRecord& DurableRemovalReceipt::record()const{return data_->record;}
 bool DurableRemovalReceipt::monitored()const{return data_->monitored;}
+const std::optional<Error>& DurableRemovalReceipt::tagWarning()const{return data_->tagWarning;}
 } // namespace biglybtc::storage
