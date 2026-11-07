@@ -8,21 +8,30 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <utility>
 namespace biglybtc::search {
 enum class MetasearchValueError {Malformed,Unsupported,Ambiguous,Inactive,Limit,Memory};
-enum class MetasearchRecipeKind {Rss,Json};
+enum class MetasearchRecipeKind {Rss,Json,Regex};
 struct SavedMetasearchSelector {
   std::size_t sourceIndex=0;
   std::int64_t id=0;
   std::string uid; // Exact saved bytes, not display text.
   bool operator==(const SavedMetasearchSelector&)const=default;
 };
-struct MetasearchMapping {std::string name;std::int32_t field=0;};
+struct MetasearchMapping {
+  std::string name;std::int32_t field=0;std::string postFilter;
+  MetasearchMapping(std::string source,std::int32_t target,std::string filter={})
+      :name(std::move(source)),field(target),postFilter(std::move(filter)){}
+};
+struct MetasearchPatternInfo {std::size_t captures=0;bool nullable=false;};
+// Syntax admission only, never an effect permit or an unbounded matcher.
+std::expected<MetasearchPatternInfo,MetasearchValueError> inspectMetasearchPattern(std::string_view);
 struct MetasearchRecipe {
   MetasearchRecipeKind kind=MetasearchRecipeKind::Rss;
-  std::string configuredUrl,resultPath;
+  std::string configuredUrl,resultPath,resultPattern;
   std::vector<MetasearchMapping> mappings; // Original list order is observable.
 };
+std::expected<void,MetasearchValueError> validateMetasearchRecipeQuery(const MetasearchRecipe&,std::string_view);
 struct MetasearchCatalogRow {
   SavedMetasearchSelector selected;
   std::string name;

@@ -428,3 +428,13 @@ endif()
 if(TARGET biglybtc_rss_http_fetch)
   target_link_libraries(biglybtc_rss_http_fetch PUBLIC biglybtc_saved_metasearch_source)
 endif()
+
+
+if(TARGET biglybtc_saved_metasearch_source AND TARGET biglybtc_local_engine)
+  add_library(biglybtc_metasearch_magnet_admission STATIC search/metasearch_magnet_admission.cpp)
+  target_include_directories(biglybtc_metasearch_magnet_admission PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/search")
+  target_link_libraries(biglybtc_metasearch_magnet_admission PUBLIC biglybtc_saved_metasearch_source biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_features(biglybtc_metasearch_magnet_admission PUBLIC cxx_std_23)
+  target_compile_options(biglybtc_metasearch_magnet_admission PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  set_target_properties(biglybtc_metasearch_magnet_admission PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()

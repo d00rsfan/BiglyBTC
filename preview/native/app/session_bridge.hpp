@@ -100,6 +100,7 @@ public:
   bool metasearchQuery(ui::MetasearchQueryCommand);
   void cancelMetasearch(ui::MetasearchQueryKey);
   bool metasearchDownload(ui::MetasearchDownloadCommand);
+  bool confirmMetasearchMagnet(ui::MetasearchMagnetSubmission);
   void cancelMetasearchDownload(ui::MetasearchDownloadKey);
   bool rssCatalog(ui::RssCatalogRequest);
   bool rssFetch(ui::RssFetchCommand);

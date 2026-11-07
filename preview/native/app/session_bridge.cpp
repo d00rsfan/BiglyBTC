@@ -20,6 +20,7 @@
 #include "rss_http_fetch.hpp"
 #include "saved_metasearch_service.hpp"
 #include "metasearch_metainfo_fetch.hpp"
+#include "metasearch_magnet_admission.hpp"
 #include <QTemporaryDir>
 #include <QTemporaryFile>
 #include <QFile>
@@ -1309,7 +1310,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
     : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)), rssFetchFactory_(std::move(rssFactory)), metasearchFetchFactory_(std::move(metasearch)), metasearchMetainfoFactory_(std::move(metasearchMetainfo)), subscriptionFetchFactory_(std::move(subscriptionFactory)), subscriptionAcquisitionFactory_(std::move(acquisitionFactory)), automaticSubscriptionFetchFactory_(std::move(automaticFeed)), automaticSubscriptionAcquisitionFactory_(std::move(automaticMetainfo)) {
   qRegisterMetaType<ui::SubscriptionKey>();qRegisterMetaType<ui::SubscriptionCatalogKey>();qRegisterMetaType<ui::SubscriptionCatalogPresentation>();qRegisterMetaType<ui::SubscriptionCommandKey>();qRegisterMetaType<ui::SubscriptionCommand>();qRegisterMetaType<ui::SubscriptionPresentation>();
   qRegisterMetaType<ui::RssCatalogRequest>();qRegisterMetaType<ui::RssCatalogPresentation>();qRegisterMetaType<ui::RssFetchKey>();qRegisterMetaType<ui::RssFetchCommand>();qRegisterMetaType<ui::RssFetchPresentation>();
-  qRegisterMetaType<ui::MetasearchCatalogKey>();qRegisterMetaType<ui::MetasearchCatalogPresentation>();qRegisterMetaType<ui::MetasearchQueryKey>();qRegisterMetaType<ui::MetasearchQueryCommand>();qRegisterMetaType<ui::MetasearchPresentation>();qRegisterMetaType<ui::MetasearchDownloadKey>();qRegisterMetaType<ui::MetasearchDownloadCommand>();qRegisterMetaType<ui::MetasearchDownloadPresentation>();
+  qRegisterMetaType<ui::MetasearchCatalogKey>();qRegisterMetaType<ui::MetasearchCatalogPresentation>();qRegisterMetaType<ui::MetasearchQueryKey>();qRegisterMetaType<ui::MetasearchQueryCommand>();qRegisterMetaType<ui::MetasearchPresentation>();qRegisterMetaType<ui::MetasearchDownloadKey>();qRegisterMetaType<ui::MetasearchDownloadCommand>();qRegisterMetaType<ui::MetasearchDownloadPresentation>();qRegisterMetaType<ui::MetasearchMagnetSubmission>();
   qRegisterMetaType<ui::I2pPresentation>();
   qRegisterMetaType<ui::DownloadHistoryCommand>();
   qRegisterMetaType<ui::DownloadHistoryCommandPresentation>();
@@ -2728,6 +2729,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
 #include "rss_sources_bridge.inc"
 #include "subscriptions_bridge.inc"
 #include "metasearch_bridge.inc"
+#include "metasearch_magnet_bridge.inc"
 bool SessionBridge::history(quint64 session, quint64 request, core::HistoryDate date) {
   if (session == 0 || request == 0 || session != publishedColumnLayoutSession_
       || !core::validHistoryDate(date)) { return false; }

@@ -3,6 +3,7 @@
 #include "torrent_intake_dialog.hpp"
 #include "library_window.hpp"
 #include "metasearch_page.hpp"
+#include "metasearch_magnet_dialog.hpp"
 #include "download_history_page.hpp"
 #include "rss_sources_page.hpp"
 #include "subscriptions_page.hpp"
@@ -106,7 +107,9 @@ LibraryWindow::~LibraryWindow(){
   if(mainTabs_){mainTabs_->blockSignals(true);}
   const auto page=metasearchPage_;metasearchPage_.clear();
   if(page){QObject::disconnect(page.data(),nullptr,this,nullptr);delete page.data();}
-  pendingMetasearchReview_.reset();metasearchReview_.reset();
+  pendingMetasearchReview_.reset();metasearchReview_.reset();metasearchMagnetReview_.reset();
+  const auto magnet=metasearchMagnetDialog_;metasearchMagnetDialog_.clear();
+  if(magnet){QObject::disconnect(magnet.data(),nullptr,this,nullptr);delete magnet.data();}
   activeIntakePreview_.reset();activeIntakeSubmission_.reset();
   const auto dialog=intakeDialog_;intakeDialog_.clear();
   if(dialog){QObject::disconnect(dialog.data(),nullptr,this,nullptr);delete dialog.data();}
@@ -600,6 +603,7 @@ void LibraryWindow::showMyShares() {
 #include "download_history_window.inc"
 #include "rss_sources_window.inc"
 #include "metasearch_window.inc"
+#include "metasearch_magnet_window.inc"
 #include "subscriptions_window.inc"
 StatisticsPage* LibraryWindow::statisticsPage() const { return statisticsPage_.data(); }
 bool LibraryWindow::onStatisticsPage() const {
@@ -1117,7 +1121,7 @@ void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
 void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
-  columnSession_ = session;pendingMetasearchReview_.reset();
+  columnSession_ = session;pendingMetasearchReview_.reset();invalidateMetasearchMagnetReview();if(!guard){return;}
   if(subscriptionsPage_){const auto id=subscriptionsPage_->page()?subscriptionsPage_->page():reserveRssUiIdentity();subscriptionsPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
   if(rssPage_){const auto id=rssPage_->page()?rssPage_->page():reserveRssUiIdentity();rssPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
   if(metasearchPage_){const auto id=metasearchPage_->page()?metasearchPage_->page():reserveRssUiIdentity();metasearchPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
@@ -2007,6 +2011,7 @@ void LibraryWindow::setBusy(bool value) {
   if(subscriptionsPage_){subscriptionsPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(rssPage_){rssPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(metasearchPage_){metasearchPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
+  if(metasearchMagnetDialog_){metasearchMagnetDialog_->setBusy(busy_);if(!guard){return;}}
   if(!busy_&&pendingMetasearchReview_){const auto review=std::move(pendingMetasearchReview_);pendingMetasearchReview_.reset();setMetasearchDownloadResult(review);if(!guard){return;}}
   if (statisticsPage_) { statisticsPage_->setAccountingBusy(value); }
   if (!guard) { return; }

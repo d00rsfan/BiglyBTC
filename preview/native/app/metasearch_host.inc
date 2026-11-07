@@ -7,6 +7,9 @@
   ui::MetasearchPacket metasearchPacket;
   std::unique_ptr<search::MetasearchMetainfoFetch> metasearchMetadataFetch;
   std::optional<search::SavedMetasearchResultHandle> metasearchResultHandle;
+  std::optional<search::SavedMetasearchMagnetHandle> metasearchMagnetHandle;
+  std::unique_ptr<search::MetasearchMagnetAdmission> metasearchMagnetAdmission;
+  quint64 metasearchMagnetRevision=0;
   std::optional<ui::MetasearchDownloadCommand> metasearchDownloadCommand;
   std::unique_ptr<QTemporaryDir> metasearchTemporary;
   std::unique_ptr<QTemporaryFile> metasearchTemporaryFile;
@@ -30,7 +33,7 @@
     if(revoke&&metasearchDownloadCommand&&metasearchDownloadCommand->receiver){metasearchDownloadCommand->receiver->request_stop();}
     if(metasearchMetadataFetch){metasearchMetadataFetch->requestCancel();metasearchMetadataFetch->close();metasearchMetadataFetch.reset();}
     if(metasearchReviewRequest&&intakeRequest&&intakeRequest->request==*metasearchReviewRequest){intakeMetadata.reset();intakeRequest.reset();}
-    metasearchReviewRequest.reset();metasearchResultHandle.reset();metasearchDownloadCommand.reset();
+    metasearchReviewRequest.reset();metasearchMagnetAdmission.reset();metasearchMagnetHandle.reset();metasearchResultHandle.reset();metasearchDownloadCommand.reset();
     // Owned file first, then its private directory; no persistent intake effects.
     metasearchTemporaryFile.reset();metasearchTemporary.reset();
   }

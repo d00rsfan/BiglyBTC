@@ -114,6 +114,7 @@ int main(int argc, char** argv) {
     QObject::connect(&window,&Window::metasearchCancelRequested,&bridge,&Bridge::cancelMetasearch);
     QObject::connect(&window,&Window::metasearchDownloadRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::MetasearchDownloadCommand command){if(owner&&view&&!owner->metasearchDownload(command)&&view){view->rejectMetasearchDownload(command);}});
     QObject::connect(&window,&Window::metasearchDownloadCancelRequested,&bridge,&Bridge::cancelMetasearchDownload);
+    QObject::connect(&window,&Window::metasearchMagnetConfirmed,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::MetasearchMagnetSubmission command){if(owner&&view&&!owner->confirmMetasearchMagnet(command)&&view){view->rejectMetasearchMagnet(command);}});
     QObject::connect(&bridge,&Bridge::rssCatalogReady,&window,&Window::setRssCatalog);
     QObject::connect(&bridge,&Bridge::rssFetchReady,&window,&Window::setRssFetchResult);
     QObject::connect(&window,&Window::rssCatalogRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::RssCatalogRequest request){if(owner&&view&&!owner->rssCatalog(request)&&view){view->rejectRssCatalog(request);}});

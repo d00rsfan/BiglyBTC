@@ -12,5 +12,5 @@ struct MetasearchDocument {
 // Bounded values only. Input context is the actual configured root/base,
 // deliberately independent of the redirected response URL.
 std::expected<MetasearchDocument,MetasearchDocumentError> parseMetasearchDocument(
-    const MetasearchRecipe&,const QByteArray&,const RssContext&);
+    const MetasearchRecipe&,const QByteArray&,const RssContext&,std::string_view actualQueryUtf8={});
 } // namespace biglybtc::search

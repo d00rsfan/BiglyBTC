@@ -79,7 +79,7 @@ std::expected<std::optional<MetasearchSearchUpdate>,E> SavedMetasearchService::p
   auto fetched=impl_->fetch->poll(caller,session);if(fetched&&!*fetched){return std::optional<MetasearchSearchUpdate>{};}
   if(!fetched){outcome.failure=fetched.error()==RssFetchError::Cancelled?E::Cancelled:E::Fetch;outcome.diagnostic="This search engine did not return a document";return std::optional{impl_->finish(std::move(outcome))};}
   const auto observed=impl_->fetch->observation();if(!observed.joined||(**fetched).session!=session||(**fetched).nonce!=observed.nonce||impl_->lifetime->stop_requested()||!impl_->source->current(caller,session)){outcome.failure=E::Source;outcome.diagnostic="Search results became stale before delivery";return std::optional{impl_->finish(std::move(outcome))};}
-  auto document=parseMetasearchDocument(*impl_->source->description().recipe,(**fetched).bytes,(**fetched).context);
+  auto document=parseMetasearchDocument(*impl_->source->description().recipe,(**fetched).bytes,(**fetched).context,impl_->source->description().query);
   if(!document){outcome.failure=E::Parse;outcome.diagnostic="This engine returned an unsupported or malformed result document";return std::optional{impl_->finish(std::move(outcome))};}
   if(impl_->lifetime->stop_requested()||!impl_->source->current(caller,session)){outcome.failure=E::Source;outcome.diagnostic="Search results became stale while being decoded";return std::optional{impl_->finish(std::move(outcome))};}
   outcome.partial=document->partial;for(auto& row:document->rows){const MetasearchResultKey key{impl_->nonce,impl_->nextRow++};impl_->retained.emplace(key.rowId,Impl::Retained{impl_->source,row});outcome.rows.push_back({key,outcome.engine,std::move(row)});}
@@ -88,6 +88,13 @@ std::expected<std::optional<MetasearchSearchUpdate>,E> SavedMetasearchService::p
 std::expected<SavedMetasearchResultHandle,E> SavedMetasearchService::retainResult(const storage::ProfileLease& caller,std::uint64_t session,MetasearchResultKey key){
   auto valid=impl_->guard(caller,session);if(!valid){return std::unexpected(valid.error());}if(impl_->mode!=MetasearchServiceMode::Normal||!impl_->lifetime||impl_->lifetime->stop_requested()||key.queryNonce!=impl_->nonce){return std::unexpected(E::Source);}const auto found=impl_->retained.find(key.rowId);if(found==impl_->retained.end()){return std::unexpected(E::Source);}
   auto handle=SavedMetasearchResultHandle::mint(caller,session,found->second.source,found->second.row,key,impl_->lifetime);if(!handle){return std::unexpected(E::Unsupported);}return std::move(*handle);
+}
+std::expected<SavedMetasearchMagnetHandle,E> SavedMetasearchService::retainMagnetResult(const storage::ProfileLease& caller,std::uint64_t session,MetasearchResultKey key,std::stop_token receiver){
+  auto valid=impl_->guard(caller,session);if(!valid){return std::unexpected(valid.error());}
+  if(impl_->mode!=MetasearchServiceMode::Normal||!impl_->lifetime||impl_->lifetime->stop_requested()||key.queryNonce!=impl_->nonce){return std::unexpected(E::Source);}
+  const auto found=impl_->retained.find(key.rowId);if(found==impl_->retained.end()){return std::unexpected(E::Source);}
+  auto handle=SavedMetasearchMagnetHandle::mint(caller,session,found->second.source,found->second.row,key,impl_->lifetime,receiver);
+  if(!handle){return std::unexpected(E::Unsupported);}return std::move(*handle);
 }
 bool SavedMetasearchService::active()const noexcept{return impl_&&impl_->running;}
 void SavedMetasearchService::cancel()noexcept{if(impl_&&impl_->worker==std::this_thread::get_id()&&impl_->lifetime){impl_->lifetime->request_stop();}}

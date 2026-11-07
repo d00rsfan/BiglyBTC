@@ -68,6 +68,7 @@ class EngineActivityHistory;
 class NativeActivityHistory;
 
 class TorrentIntakeDialog;
+class MetasearchMagnetDialog;
 
 class LibraryWindow final : public QMainWindow {
   Q_OBJECT
@@ -109,6 +110,7 @@ public:
   void rejectMetasearchCatalog(MetasearchCatalogKey);
   void rejectMetasearchSearch(const MetasearchQueryCommand&);
   void rejectMetasearchDownload(const MetasearchDownloadCommand&);
+  void rejectMetasearchMagnet(const MetasearchMagnetSubmission&);
   RssSourcesPage* rssSourcesPage()const;
   void setRssCatalog(RssCatalogPresentation);
   void setRssFetchResult(RssFetchPresentation);
@@ -190,6 +192,7 @@ signals:
   void metasearchCancelRequested(biglybtc::ui::MetasearchQueryKey);
   void metasearchDownloadRequested(biglybtc::ui::MetasearchDownloadCommand);
   void metasearchDownloadCancelRequested(biglybtc::ui::MetasearchDownloadKey);
+  void metasearchMagnetConfirmed(biglybtc::ui::MetasearchMagnetSubmission);
   void rssCatalogRequested(biglybtc::ui::RssCatalogRequest);
   void rssFetchRequested(biglybtc::ui::RssFetchCommand);
   void rssCancelRequested(biglybtc::ui::RssFetchKey);
@@ -275,6 +278,8 @@ private:
   bool onSubscriptionsPage()const;
   void showRssSources();
   void showMetasearch();
+  void showMetasearchMagnetReview(MetasearchDownloadPresentation);
+  void invalidateMetasearchMagnetReview();
   bool onMetasearchPage()const;
   bool onRssSourcesPage()const;
   bool onDownloadHistoryPage()const;
@@ -461,7 +466,8 @@ private:
   std::optional<int> restoreFileIndex_;
   QPointer<TorrentIntakeDialog> intakeDialog_;
   MetasearchDownloadPresentation pendingMetasearchReview_;
-  std::optional<MetasearchDownloadKey> metasearchReview_;
+  std::optional<MetasearchDownloadKey> metasearchReview_,metasearchMagnetReview_;
+  QPointer<MetasearchMagnetDialog> metasearchMagnetDialog_;
   std::optional<TorrentIntakeRequest> activeIntakePreview_;
   std::optional<TorrentIntakeSubmission> activeIntakeSubmission_;
   bool busy_ = false;

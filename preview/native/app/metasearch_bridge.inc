@@ -43,9 +43,14 @@ void SessionBridge::deliverMetasearch(ui::MetasearchPresentation packet){
   emit metasearchReady(std::move(packet)); // Retain actual query token after completion for Download.
 }
 void SessionBridge::deliverMetasearchDownload(ui::MetasearchDownloadPresentation packet){
-  if(!packet||!guiMetasearchDownload_||packet->key!=guiMetasearchDownload_->key||profileClosed_||packet->key.query.session!=publishedColumnLayoutSession_){return;}
-  if(guiMetasearchDownload_->receiver->stop_requested()&&packet->state!=ui::MetasearchDownloadState::Cancelled&&packet->state!=ui::MetasearchDownloadState::Finished){return;}
-  if(packet->state!=ui::MetasearchDownloadState::Started&&packet->state!=ui::MetasearchDownloadState::ReviewReady){guiMetasearchDownload_.reset();}
+  if(!packet||profileClosed_||packet->key.query.session!=publishedColumnLayoutSession_){return;}
+  if(!guiMetasearchDownload_||packet->key!=guiMetasearchDownload_->key){
+    // A confirmed durable intent can outlive the query/page. Preserve its
+    // session-scoped truth without reopening a stale result/review widget.
+    if(packet->magnetCommitted||packet->magnetUncertain){emit messageReady(packet->message);}return;
+  }
+  if(guiMetasearchDownload_->receiver->stop_requested()&&packet->state!=ui::MetasearchDownloadState::Cancelled&&packet->state!=ui::MetasearchDownloadState::Finished&&packet->state!=ui::MetasearchDownloadState::NeedsReview&&packet->state!=ui::MetasearchDownloadState::Rejected){return;}
+  if(packet->state!=ui::MetasearchDownloadState::Started&&packet->state!=ui::MetasearchDownloadState::ReviewReady&&packet->state!=ui::MetasearchDownloadState::MagnetReviewReady){guiMetasearchDownload_.reset();}
   emit metasearchDownloadReady(std::move(packet));
 }
 void SessionBridge::postMetasearch(ui::MetasearchPresentation packet){QMetaObject::invokeMethod(this,[this,packet=std::move(packet)]{deliverMetasearch(packet);},Qt::QueuedConnection);}
@@ -114,8 +119,8 @@ void SessionBridge::pollMetasearch(){
   else{const auto& u=**update;if(u.queryNonce!=p.queryNonce){host_->metasearch->cancel();p.state=ui::MetasearchState::Rejected;p.message=tr("Search result identity changed.");}
     else{const auto key=metasearchKey(u.engine.engine);for(auto& e:p.engines){if(e.key==key){e.state=u.cancelled?ui::MetasearchEngineState::Cancelled:u.engine.failure?ui::MetasearchEngineState::Failed:ui::MetasearchEngineState::Ready;e.results=u.engine.rows.size();e.message=text(u.engine.diagnostic).left(2048);if(e.message.isEmpty()&&u.engine.failure){e.message=metasearchFailure(*u.engine.failure);}}}
       for(const auto& value:u.engine.rows){if(p.rows.size()==ui::MaximumMetasearchRows){p.truncated=true;break;}const auto& v=value.values;ui::MetasearchResultRow row;row.key={value.key.queryNonce,value.key.rowId};row.engine=metasearchKey(value.engine);row.source=host_->metasearchName(row.engine);const auto str=[](const auto& s){return s?text(*s).left(2048):QString{};};row.title=str(v.title);row.publication=str(v.publicationText);row.link=(v.torrentLink?v.torrentLink:v.downloadButtonLink)?text(*(v.torrentLink?v.torrentLink:v.downloadButtonLink)).left(4096):QString{};row.details=str(v.detailsLink);if(v.size>=0){row.bytes=v.size;}if(v.seeds>=0){row.seeds=v.seeds;}if(v.peers>=0){row.peers=v.peers;}
-        const auto url=QUrl::fromEncoded(row.link.toUtf8(),QUrl::StrictMode);const bool actualRawLink=v.rawTorrentLink&&!v.rawTorrentLink->empty();row.downloadable=actualRawLink&&!v.incomplete&&url.isValid()&&(url.scheme()==QStringLiteral("http")||url.scheme()==QStringLiteral("https"))&&!url.host().isEmpty();
-        row.downloadReason=url.scheme()==QStringLiteral("magnet")?tr("Magnet results remain copyable. This search action needs fetched torrent metadata for a stopped review; magnet intake is not available here."):!actualRawLink?tr("This result has no actual mapped download link; the reconstructed page URL cannot authorize intake."):v.incomplete?tr("This engine result has an uncertain projection and cannot authorize a download."):row.downloadable?QString{}:tr("This result has no supported direct HTTP(S) torrent link. Copy Link remains available.");p.rows.push_back(std::move(row));}
+        const auto url=QUrl::fromEncoded(row.link.toUtf8(),QUrl::StrictMode);const bool actualRawLink=v.rawTorrentLink&&!v.rawTorrentLink->empty();row.downloadable=actualRawLink&&!v.incomplete&&url.isValid()&&(((url.scheme()==QStringLiteral("http")||url.scheme()==QStringLiteral("https"))&&!url.host().isEmpty())||url.scheme()==QStringLiteral("magnet"));
+        row.downloadReason=url.scheme()==QStringLiteral("magnet")?tr("Review this magnet identity, destination and Public network before saving or resolving metadata."):!actualRawLink?tr("This result has no actual mapped download link; the reconstructed page URL cannot authorize intake."):v.incomplete?tr("This engine result has an uncertain projection and cannot authorize a download."):row.downloadable?QString{}:tr("This result has no supported direct HTTP(S) torrent link. Copy Link remains available.");p.rows.push_back(std::move(row));}
       if(!u.done&&!u.cancelled){for(auto& engine:p.engines){if(engine.state==ui::MetasearchEngineState::Queued){engine.state=ui::MetasearchEngineState::Searching;break;}}}
       p.state=u.cancelled?ui::MetasearchState::Cancelled:u.done?ui::MetasearchState::Ready:ui::MetasearchState::Results;p.message=u.cancelled?tr("Search cancelled."):u.done?(u.hadFailures?tr("Search finished with engine failures. Successful source rows are shown above."):tr("Search complete. Select a direct result to review its torrent files.")):tr("%1 of %2 engines finished.").arg(static_cast<qulonglong>(u.completed)).arg(static_cast<qulonglong>(u.total));
     }
@@ -129,6 +134,21 @@ bool SessionBridge::metasearchDownload(ui::MetasearchDownloadCommand command){
     auto p=std::make_shared<ui::MetasearchDownloadPacket>();p->key=command.key;
     try{checkpoint(stop);if(!host_||host_->columnLayoutSession!=command.key.query.session||command.key.request<=host_->metasearchLastRequest||!host_->metasearchCommand||host_->metasearchCommand->key!=command.key.query||host_->metasearchPacket.state!=ui::MetasearchState::Ready||!host_->rssFetchAllowed()||host_->privateOnly()||host_->coexistence()){throw Failure{{storage::ErrorCode::Conflict,"This search result is no longer available for review"}};}
       host_->metasearchLastRequest=command.key.request;if(host_->metasearchProviderActive()||host_->rssFetch||host_->subscriptionAcquisition||(host_->subscriptions&&host_->subscriptions->active())){throw Failure{{storage::ErrorCode::Busy,"Another saved-source operation is active"}};}
+      const auto row=std::ranges::find(host_->metasearchPacket.rows,command.key.result,&ui::MetasearchResultRow::key);
+      if(row==host_->metasearchPacket.rows.end()){throw Failure{{storage::ErrorCode::Conflict,"This result is no longer in the actual completed search"}};}
+      if(QUrl::fromEncoded(row->link.toUtf8(),QUrl::StrictMode).scheme()==QStringLiteral("magnet")){
+        if(!host_->engine||!host_->engine->managedAvailable()||storage::hasPendingOriginalCompaction(host_->lease)||storage::hasPendingTorrentIntake(host_->lease)){throw Failure{{storage::ErrorCode::Unsupported,"Public magnet metadata admission is unavailable until profile recovery and engine startup finish"}};}
+        auto handle=ensureMetasearch().retainMagnetResult(host_->lease,host_->columnLayoutSession,{command.key.result.queryNonce,command.key.result.rowId},command.receiver->get_token());
+        if(!handle){throw Failure{{storage::ErrorCode::Unsupported,"This actual saved result cannot authorize a Public magnet review; its hash, route or source is unsupported or changed"}};}
+        auto prepared=search::MetasearchMagnetAdmission::prepare(host_->lease,std::filesystem::canonical(host_->profile),host_->columnLayoutSession,*handle,host_->networkPolicy,command.receiver->get_token());
+        if(!prepared){throw Failure{prepared.error()};}
+        take(host_->subscriptionTargetAvailable((*prepared)->hash()));
+        const auto library=take(storage::readLibraryView(host_->lease));for(const auto& existing:library.items){if(existing.saved.hash&&*existing.saved.hash==(*prepared)->hash()){throw Failure{{storage::ErrorCode::Conflict,"This magnet is already in the library"}};}}
+        if(host_->metasearchMagnetRevision==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Conflict,"Magnet review identities are exhausted"}};}
+        const auto& review=(*prepared)->description();p->magnetReview=ui::MetasearchMagnetReview{++host_->metasearchMagnetRevision,text(review.identity),text(review.name),host_->metasearchName(metasearchKey(review.engine)),text(review.query)};
+        host_->metasearchMagnetHandle.emplace(std::move(*handle));host_->metasearchMagnetAdmission=std::move(*prepared);host_->metasearchDownloadCommand=command;
+        p->state=ui::MetasearchDownloadState::MagnetReviewReady;p->message=tr("Review this Public magnet before any intent is saved or metadata request starts.");
+      }else{
       auto handle=ensureMetasearch().retainResult(host_->lease,host_->columnLayoutSession,{command.key.result.queryNonce,command.key.result.rowId});if(!handle){throw Failure{{storage::ErrorCode::Conflict,"The selected result or saved source changed; search again"}};}
       const auto profile=std::filesystem::canonical(host_->profile);std::unique_ptr<search::MetasearchMetainfoFetch> fetch;
       if(metasearchMetainfoFactory_){fetch=metasearchMetainfoFactory_(host_->lease,profile,host_->columnLayoutSession,*handle,command.receiver->get_token());}
@@ -138,6 +158,7 @@ bool SessionBridge::metasearchDownload(ui::MetasearchDownloadCommand command){
         if(fetch){fetch->requestCancel();fetch->close();}throw Failure{{storage::ErrorCode::Conflict,"The result owner does not match this query, source, profile and cancellation token"}};
       }
       host_->metasearchResultHandle.emplace(std::move(*handle));host_->metasearchMetadataFetch=std::move(fetch);host_->metasearchDownloadCommand=command;p->state=ui::MetasearchDownloadState::Started;p->message=tr("Fetching selected torrent metadata for a stopped review…");
+      }
     }catch(const Failure& e){p->message=text(e.error.message);}catch(...){p->message=tr("The selected torrent metadata could not be fetched.");}
     QMetaObject::invokeMethod(this,[this,p]{QPointer<SessionBridge> guard(this);finishMetasearchDispatch();if(guard){deliverMetasearchDownload(p);}},Qt::QueuedConnection);
   },false);if(alive&&!accepted){guiMetasearchDownload_.reset();startingMetasearchDownload_.reset();}return accepted;
@@ -146,7 +167,10 @@ void SessionBridge::pollMetasearchDownload(){
   if(!host_||!host_->metasearchDownloadCommand){return;}auto p=std::make_shared<ui::MetasearchDownloadPacket>();p->key=host_->metasearchDownloadCommand->key;
   try{
     const bool stopped=host_->metasearchDownloadCommand->receiver->stop_requested();
-    if(stopped||!host_->rssFetchAllowed()||!host_->metasearchResultHandle||!host_->metasearchResultHandle->current(host_->lease,host_->columnLayoutSession)){p->state=stopped?ui::MetasearchDownloadState::Cancelled:ui::MetasearchDownloadState::Rejected;p->message=stopped?tr("Download cancelled"):tr("The saved engine or query changed; the stopped review was withdrawn.");host_->closeMetasearchDownload(false);postMetasearchDownload(p);return;}
+    const bool sourceCurrent=host_->metasearchMagnetAdmission
+        ?host_->metasearchMagnetHandle&&host_->metasearchMagnetHandle->current(host_->lease,host_->columnLayoutSession).has_value()
+        :host_->metasearchResultHandle&&host_->metasearchResultHandle->current(host_->lease,host_->columnLayoutSession).has_value();
+    if(stopped||!host_->rssFetchAllowed()||!sourceCurrent){p->state=stopped?ui::MetasearchDownloadState::Cancelled:ui::MetasearchDownloadState::Rejected;p->message=stopped?tr("Download cancelled"):tr("The saved engine or query changed; the stopped review was withdrawn.");host_->closeMetasearchDownload(false);postMetasearchDownload(p);return;}
     if(!host_->metasearchMetadataFetch){return;}auto fetched=host_->metasearchMetadataFetch->poll(host_->lease,host_->columnLayoutSession);if(fetched&&!*fetched){return;}
     if(!fetched){p->state=fetched.error()==search::RssFetchError::Cancelled?ui::MetasearchDownloadState::Cancelled:ui::MetasearchDownloadState::Rejected;p->message=rssFetchFailure(fetched.error());host_->closeMetasearchDownload(false);postMetasearchDownload(p);return;}
     const auto& value=**fetched;const auto observation=host_->metasearchMetadataFetch->observation();

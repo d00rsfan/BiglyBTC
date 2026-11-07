@@ -25,8 +25,10 @@ struct MetasearchPacket {MetasearchQueryKey key;quint64 sequence=0,queryNonce=0;
 using MetasearchPresentation=std::shared_ptr<const MetasearchPacket>;
 struct MetasearchDownloadKey {MetasearchQueryKey query;MetasearchResultKey result;quint64 request=0;bool operator==(const MetasearchDownloadKey&)const=default;};
 struct MetasearchDownloadCommand {MetasearchDownloadKey key;std::shared_ptr<std::stop_source> receiver;};
-enum class MetasearchDownloadState {Started,ReviewReady,Finished,Rejected,Cancelled};
-struct MetasearchDownloadPacket {MetasearchDownloadKey key;MetasearchDownloadState state=MetasearchDownloadState::Rejected;QString message;TorrentIntakePresentation review;};
+struct MetasearchMagnetReview {quint64 revision=0;QString identity,name,source,query;};
+struct MetasearchMagnetSubmission {MetasearchDownloadKey key;quint64 revision=0;QString destination;TorrentIntakeNetwork network=TorrentIntakeNetwork::Public;};
+enum class MetasearchDownloadState {Started,ReviewReady,MagnetReviewReady,Finished,NeedsReview,Rejected,Cancelled};
+struct MetasearchDownloadPacket {MetasearchDownloadKey key;MetasearchDownloadState state=MetasearchDownloadState::Rejected;QString message;TorrentIntakePresentation review;std::optional<MetasearchMagnetReview> magnetReview;bool magnetCommitted=false,magnetAdmitted=false,magnetUncertain=false;QString pendingHash;};
 using MetasearchDownloadPresentation=std::shared_ptr<const MetasearchDownloadPacket>;
 inline constexpr std::size_t MaximumMetasearchEngines=256,MaximumMetasearchQueryEngines=8,MaximumMetasearchRows=1000,MaximumMetasearchChars=2048,MaximumMetasearchQueryBytes=1024;
 }
@@ -39,3 +41,5 @@ Q_DECLARE_METATYPE(biglybtc::ui::MetasearchResultKey)
 Q_DECLARE_METATYPE(biglybtc::ui::MetasearchDownloadKey)
 Q_DECLARE_METATYPE(biglybtc::ui::MetasearchDownloadCommand)
 Q_DECLARE_METATYPE(biglybtc::ui::MetasearchDownloadPresentation)
+
+Q_DECLARE_METATYPE(biglybtc::ui::MetasearchMagnetSubmission)

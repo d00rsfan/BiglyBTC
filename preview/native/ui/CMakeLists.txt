@@ -83,3 +83,6 @@ endif()
 
 
 target_sources(biglybtc_ui PRIVATE metasearch_presentation.hpp metasearch_page.hpp metasearch_page.cpp metasearch_window.inc)
+
+
+target_sources(biglybtc_ui PRIVATE metasearch_magnet_dialog.hpp metasearch_magnet_dialog.cpp metasearch_magnet_window.inc)

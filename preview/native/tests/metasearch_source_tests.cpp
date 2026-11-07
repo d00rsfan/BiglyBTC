@@ -24,6 +24,13 @@ private slots:
  void missingConfiguredBaseDoesNotInventOneOrRejectAbsoluteResults(){
   f::Profile area("https://feeds.example.org?q=%s");auto value=s::SavedMetasearchSourceSnapshot::read(*area.lease,area.path.toStdString(),104,area.selector(),"query");QVERIFY(value);QVERIFY(value->description().context.basePage.isEmpty());f::Profile foreign("https://other.example.org/?q=%s");QVERIFY(!value->current(*foreign.lease,104));
  }
+ void actualSavedRegexRecipeRetainsUnknownBytesAndSourceGuard(){
+  f::Profile area("http://feeds.example.org/?q=%s");auto row=core::Document::parse(f::engine("http://feeds.example.org/?q=%s").toStdString());QVERIFY(row);QVERIFY(row->replaceValue("type","i1e"));QVERIFY(row->replaceValue("regex.pattern",f::w::b("<r>(.*?)</r>").toStdString()));QVERIFY(row->replaceValue("web.maps",("l"+f::mapping("1",1)+"e").toStdString()));area.setRows(QByteArray::fromStdString(row->serialize()));const auto before=f::bytes(area.path+"/metasearch.config");auto source=s::SavedMetasearchSourceSnapshot::read(*area.lease,area.path.toStdString(),105,area.selector(),"actual query");QVERIFY(source);QCOMPARE(source->description().recipe->kind,s::MetasearchRecipeKind::Regex);QCOMPARE(source->description().recipe->resultPattern,std::string("<r>(.*?)</r>"));QCOMPARE(f::bytes(area.path+"/metasearch.config"),before);QVERIFY(source->current(*area.lease,105));
+ }
+ void queryDependentPostFilterValidatesActualQueryBeforeAnyProvider(){
+  f::Profile area("http://feeds.example.org/?q=%s");auto row=core::Document::parse(f::engine("http://feeds.example.org/?q=%s").toStdString());QVERIFY(row);QVERIFY(row->replaceValue("web.maps","l"+f::dictionary({{"name",f::w::b("title")},{"field",f::integer(1)},{"post_filter",f::w::b("^%s$")}}).toStdString()+"e"));area.setRows(QByteArray::fromStdString(row->serialize()));const auto before=f::bytes(area.path+"/metasearch.config");auto refused=s::SavedMetasearchSourceSnapshot::read(*area.lease,area.path.toStdString(),106,area.selector(),"μ");QVERIFY(!refused);QCOMPARE(refused.error(),s::SavedRssSourceError::Unsupported);auto supported=s::SavedMetasearchSourceSnapshot::read(*area.lease,area.path.toStdString(),106,area.selector(),"a$b\\E");QVERIFY(supported);QCOMPARE(supported->description().query,std::string("a$b\\E"));QCOMPARE(f::bytes(area.path+"/metasearch.config"),before);
+ }
+
 };
 QTEST_GUILESS_MAIN(MetasearchSourceTests)
 #include "metasearch_source_tests.moc"

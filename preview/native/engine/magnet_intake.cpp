@@ -1,5 +1,6 @@
 #include "original_filename_policy.hpp"
 #include "magnet_intake.hpp"
+#include "source_bound_magnet.hpp"
 #include "../adapters/durable_intake_receipt.hpp"
 #include "../adapters/file_io.hpp"
 #include "../adapters/torrent_intake.hpp"
@@ -485,9 +486,23 @@ std::expected<PendingMagnet, Error> parseMagnetIntent(std::string_view uri, cons
   catch (const Failure& error) { return std::unexpected(error.error); }
   catch (const std::exception&) { return std::unexpected(Error{Code::Io, "Cannot prepare bounded magnet intent"}); }
 }
-std::expected<PendingMagnet, Error> queuePendingMagnet(storage::ProfileLease& lease,
-    const PendingMagnet& supplied, const NetworkPolicy& network,MagnetNetwork context) {
-  try {
+std::expected<PendingMagnet,Error> inspectPublicMagnet(std::string_view uri,const NetworkPolicy& policy){
+  try{return parse(uri,std::nullopt,true,policy,MagnetNetwork::Public);}
+  catch(const Failure& error){return std::unexpected(error.error);}
+  catch(const std::exception&){return std::unexpected(Error{Code::Io,"Cannot inspect bounded Public magnet"});}
+}
+PendingMagnetCommitBoundary::PendingMagnetCommitBoundary(std::shared_ptr<const storage::ProfileLease> lease,
+    std::uint64_t revision,std::stop_token query,std::stop_token receiver,std::stop_token dispatch)
+    :lease_(std::move(lease)),revision_(revision),query_(query),receiver_(receiver),dispatch_(dispatch){}
+struct PendingMagnetCommitAccess {
+  static std::expected<void,Error> current(const PendingMagnetCommitBoundary& boundary,const storage::ProfileLease& lease){
+    if(!boundary.lease_||!lease.sharesOwnership(*boundary.lease_)||lease.sourceRevision()!=boundary.revision_){return std::unexpected(Error{Code::Conflict,"Magnet source revision changed before pending publication"});}
+    if(boundary.query_.stop_requested()||boundary.receiver_.stop_requested()||boundary.dispatch_.stop_requested()){return std::unexpected(Error{Code::Conflict,"Magnet request cancelled before pending publication"});}return {};
+  }
+};
+namespace {
+PendingMagnet queue(storage::ProfileLease& lease,const PendingMagnet& supplied,const NetworkPolicy& network,
+    MagnetNetwork context,const PendingMagnetCommitBoundary* boundary,bool& publicationStarted){
     require(context==MagnetNetwork::PublicAndI2p||supplied.network==context,Code::Conflict,"Pending magnet network context changed");
     auto intent = parse(supplied.uri, supplied.destination, supplied.stopped, network,context);
     require(intent.network==supplied.network&&intent.networks==supplied.networks,Code::Conflict,"Pending supplied network differs from parsed context");
@@ -510,13 +525,32 @@ std::expected<PendingMagnet, Error> queuePendingMagnet(storage::ProfileLease& le
     const auto key = base32(intent.hash);
     require(!map || (!map->find(key) && map->children.size() / 2 < MaximumPending), Code::Conflict, "Magnet is already pending or pending limit reached");
     put(c.doc, Active, mapChange(c, key, entry(intent,submitted?std::optional<std::string_view>{*submitted}:std::nullopt)));
+    if(boundary){take(PendingMagnetCommitAccess::current(*boundary,lease));}
+    publicationStarted=true; // The synchronous save owns completion from here.
     save(c, lease);
     auto saved = load(lease); const auto* savedMap = active(saved);
     const auto* stored = savedMap ? savedMap->find(key) : nullptr;
     require(stored != nullptr, Code::Conflict, "Queued magnet disappeared before acknowledgement");
     return row(saved, *stored, key, network);
-  } catch (const Failure& error) { return std::unexpected(error.error); }
-  catch (const std::exception&) { return std::unexpected(Error{Code::Io, "Pending magnet save may be indeterminate; reload before retry"}); }
+  }
+} // namespace
+std::expected<PendingMagnet, Error> queuePendingMagnet(storage::ProfileLease& lease,
+    const PendingMagnet& supplied,const NetworkPolicy& network,MagnetNetwork context){
+  try{bool started=false;return queue(lease,supplied,network,context,nullptr,started);}
+  catch(const Failure& error){return std::unexpected(error.error);}
+  catch(const std::exception&){return std::unexpected(Error{Code::Io,"Pending magnet save may be indeterminate; reload before retry"});}
+}
+PendingMagnetCommitResult queueSourceBoundPendingMagnet(storage::ProfileLease& lease,
+    const PendingMagnet& supplied,const NetworkPolicy& network,const PendingMagnetCommitBoundary& boundary){
+  bool started=false;
+  try{
+    auto access=take(lease.sourceAccess());require(access.observationsAllowed(),Code::Unsupported,"Source-bound magnet commit requires an unnested source boundary");
+    take(PendingMagnetCommitAccess::current(boundary,lease));take(storage::requireNoPendingSubscriptionAcquisition(lease));
+    auto saved=queue(lease,supplied,network,MagnetNetwork::Public,&boundary,started);
+    // No post-save source/cancel check: the original recovery row is durable.
+    return {PendingMagnetCommitState::Committed,std::move(saved),std::nullopt};
+  }catch(const Failure& error){return {started?PendingMagnetCommitState::Uncertain:PendingMagnetCommitState::Rejected,std::nullopt,error.error};}
+  catch(const std::exception&){return {started?PendingMagnetCommitState::Uncertain:PendingMagnetCommitState::Rejected,std::nullopt,Error{Code::Io,"Source-bound magnet publication failed; review saved candidates before retry"}};}
 }
 std::expected<PendingMagnet, Error> attachPendingMagnetDestination(storage::ProfileLease& lease,
     const PendingMagnet& expected, const fs::path& destination, const NetworkPolicy& network,MagnetNetwork context) {

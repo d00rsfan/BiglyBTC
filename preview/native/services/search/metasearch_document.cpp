@@ -8,7 +8,9 @@
 #include <charconv>
 #include <cmath>
 #include <limits>
+#include <functional>
 #include <map>
+#include <memory>
 #include <new>
 #include <set>
 namespace biglybtc::search {
@@ -122,14 +124,14 @@ std::optional<QString> btih(QString text){
   if(!text.contains(QStringLiteral("magnet:"),Qt::CaseInsensitive)){return {};}const auto match=QRegularExpression(QStringLiteral("(?i)(?:^|[?&])xt=urn:btih:([a-z0-9]+)(?:&|$)")).match(text);if(!match.hasMatch()){return {};}auto value=normalizedHash(match.captured(1));return value&&canonical32(*value)?value:std::nullopt;
 }
 std::optional<std::string> owned(const std::optional<QString>& s){return s?std::optional{s->toUtf8().toStdString()}:std::nullopt;}
-MetasearchRowValues jsonRow(const Json& tree,const JsonNode& entry,const MetasearchRecipe& recipe,const RssContext& context){
-  MetasearchRowValues out;std::optional<QString> title,date,details,torrent,button,hash;std::set<std::int32_t> mapped;
-  for(const auto& mapping:recipe.mappings){
-    const auto found=entry.fields.find(QString::fromStdString(mapping.name));const JsonNode* node=found==entry.fields.end()?nullptr:&tree.nodes[found->second];QString content;bool decimal=false;
-    if(node&&node->kind!=Kind::Null){if(node->kind==Kind::Object||node->kind==Kind::Array){out.incomplete=true;continue;}content=node->scalar;decimal=node->kind==Kind::Number&&(content.contains('.')||content.contains('e')||content.contains('E'));}
-    if(content.isEmpty()&&mapped.contains(mapping.field)){continue;}if(!content.isEmpty()){mapped.insert(mapping.field);}
+#include "metasearch_advanced_document.inc"
+MetasearchRowValues projectedRow(const std::vector<MappedValue>& values,const RssContext& context){
+  MetasearchRowValues out;std::optional<QString> title,date,details,torrent,button,hash;
+  for(const auto& mapped:values){const auto& mapping=*mapped.mapping;const auto& content=mapped.content;const bool decimal=mapped.decimal;
     if(decimal&&mapping.field!=3&&mapping.field!=4&&mapping.field!=5){out.incomplete=true;continue;}
-    const auto setHash=[&](QString value){hash=normalizedHash(std::move(value));if(hash){const auto magnet=QStringLiteral("magnet:?xt=urn:btih:")+*hash;if(!torrent){torrent=magnet;}if(!button){button=magnet;}}};
+    const auto setHash=[&](QString value){hash=normalizedHash(std::move(value));if(hash){QByteArray raw;unsigned bits=0,pending=0;constexpr auto alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";bool valid=canonical32(*hash);
+      if(valid){for(const auto c:*hash){const auto index=QByteArrayView(alphabet).indexOf(static_cast<char>(c.toUpper().unicode()));pending=(pending<<5)|static_cast<unsigned>(index);bits+=5;if(bits>=8){bits-=8;raw+=static_cast<char>((pending>>bits)&255);}}}
+      if(!valid){out.incomplete=true;return;}const auto magnet=QStringLiteral("magnet:?xt=urn:btih:")+QString::fromLatin1(raw.toHex().toUpper());if(!torrent){torrent=magnet;}if(!button){button=magnet;}}};
     switch(mapping.field){
       case 1:title=html(plain(content));if(!title){out.incomplete=true;}break;
       case 2:date=content;break; // Raw publication text only; no epoch/age claim.
@@ -147,20 +149,44 @@ MetasearchRowValues jsonRow(const Json& tree,const JsonNode& entry,const Metasea
   if(details){out.detailsLink=reconstruct(*details,context).toUtf8().toStdString();}if(torrent){out.torrentLink=reconstruct(*torrent,context).toUtf8().toStdString();}
   if(button){out.downloadButtonLink=reconstruct(*button,context).toUtf8().toStdString();}else{out.downloadButtonLink=out.torrentLink;}return out;
 }
+std::optional<MetasearchRowValues> jsonRow(const Json& tree,const JsonNode& entry,const MetasearchRecipe& recipe,const RssContext& context,std::string_view query,PatternBudget& budget){
+  std::vector<MappedValue> values;std::set<std::int32_t> mapped;bool incomplete=false;
+  const auto get=[&](QStringView name)->std::optional<QString>{const auto found=entry.fields.find(name.toString());if(found==entry.fields.end()){return QString{};}const auto& node=tree.nodes[found->second];if(node.kind==Kind::Null){return QString{};}if(node.kind==Kind::Object||node.kind==Kind::Array){incomplete=true;return {};}return node.scalar;};
+  for(const auto& mapping:recipe.mappings){
+    QString content;bool decimal=false;if(mapping.name.find("${")!=mapping.name.npos){content=mappedExpression(mapping.name,get,budget);}else{const auto value=get(QString::fromStdString(mapping.name));if(!value){continue;}content=*value;const auto found=entry.fields.find(QString::fromStdString(mapping.name));if(found!=entry.fields.end()){const auto& node=tree.nodes[found->second];decimal=node.kind==Kind::Number&&(content.contains('.')||content.contains('e')||content.contains('E'));}}
+    if(content.isEmpty()&&mapped.contains(mapping.field)){continue;}if(!postFilter(mapping,content,query,budget)){return {};}
+    if(!content.isEmpty()){mapped.insert(mapping.field);}values.push_back({&mapping,std::move(content),decimal});
+  }auto row=projectedRow(values,context);row.incomplete=row.incomplete||incomplete;return row;
+}
 void bound(const MetasearchRowValues& row,std::size_t& text){
   for(const auto* field:{&row.title,&row.publicationText,&row.detailsLink,&row.torrentLink,&row.downloadButtonLink,&row.hash,&row.uid,&row.rawTorrentLink}){if(*field){require((*field)->size()<=65536&&(*field)->size()<=2*1024*1024-text,E::Limit);text+=(*field)->size();}}
 }
 } // namespace
-std::expected<MetasearchDocument,E> parseMetasearchDocument(const MetasearchRecipe& recipe,const QByteArray& bytes,const RssContext& configured){try{
+std::expected<MetasearchDocument,E> parseMetasearchDocument(const MetasearchRecipe& recipe,const QByteArray& bytes,const RssContext& configured,std::string_view actualQueryUtf8){try{
   require(bytes.size()<=4*1024*1024,E::Limit);require(!bytes.contains('\0'),E::Encoding);const auto unicode=QString::fromUtf8(bytes);require(unicode.toUtf8()==bytes,E::Encoding);RssContext context=configured;
   // Same bounded Original base element behavior as the owned RSS path. The
   // redirected response URL is never substituted for configured root/base.
   const auto base=QRegularExpression(QStringLiteral("<base.*?href=\"([^\"]+)\".*?>"),QRegularExpression::CaseInsensitiveOption).match(unicode);
   if(base.hasMatch()){context.basePage=base.captured(1);}
-  MetasearchDocument out;std::size_t text=0;
+  MetasearchDocument out;std::size_t text=0;PatternBudget budget;
   if(recipe.kind==MetasearchRecipeKind::Rss){
     const auto declaration=QRegularExpression(QStringLiteral("^\\s*<\\?xml[^>]*encoding\\s*=\\s*['\"]([^'\"]+)['\"]"),QRegularExpression::CaseInsensitiveOption).match(unicode);if(declaration.hasMatch()){const auto encoding=declaration.captured(1).toLower();require(encoding=="utf-8"||encoding=="utf8"||encoding=="us-ascii",E::Encoding);}
     auto parsed=parseRssDocument(bytes,context);require(bool(parsed),E::Format);out.partial=!parsed->issues.empty();for(const auto& row:parsed->results){require(out.rows.size()<1000,E::Limit);MetasearchRowValues value;value.title=owned(row.title);value.uid=owned(row.uid);value.publicationText=owned(row.publicationText);value.detailsLink=owned(row.detailsLink);value.torrentLink=owned(row.torrentLink);value.rawTorrentLink=value.torrentLink;value.downloadButtonLink=value.torrentLink;value.hash=owned(row.hash);value.size=row.size.value_or(-1);value.seeds=row.seeds.value_or(-1);value.peers=row.peers.value_or(-1);value.incomplete=out.partial;bound(value,text);out.rows.push_back(std::move(value));}return out;
+  }
+  if(recipe.kind==MetasearchRecipeKind::Regex){
+    patternSubject(unicode);const auto syntax=inspectMetasearchPattern(recipe.resultPattern);require(bool(syntax)&&!syntax->nullable,E::Unsupported);
+    const auto patternText=QString::fromStdString(recipe.resultPattern);
+    for(unsigned pass=0;pass<2&&out.rows.empty();++pass){
+      const auto flags=pass?QRegularExpression::DotMatchesEverythingOption|QRegularExpression::MultilineOption:QRegularExpression::NoPatternOption;const auto& pattern=compiledPattern(budget,patternText,flags);qsizetype offset=0;std::size_t matches=0;
+      while(const auto found=pattern.find(unicode,offset,budget)){
+        require(++matches<=1024&&found->capturedEnd()>found->capturedStart(),E::Limit);offset=found->capturedEnd();std::vector<MappedValue> values;bool accepted=true;
+        const auto get=[&](QStringView key)->std::optional<QString>{bool ok=false;const auto group=key.toInt(&ok);require(ok&&group>0&&group<=pattern.expression.captureCount(),E::Unsupported);if(found->capturedStart(group)<0){return {};}return found->captured(group);};
+        for(const auto& mapping:recipe.mappings){std::optional<QString> content;if(mapping.name.find("${")!=mapping.name.npos){content=mappedExpression(mapping.name,get,budget);}else{content=get(QString::fromStdString(mapping.name));}if(!content){continue;}if(!postFilter(mapping,*content,actualQueryUtf8,budget)){accepted=false;break;}values.push_back({&mapping,std::move(*content),false});}
+        // Intentional correction: a failed post-filter rejects the whole row;
+        // a later mapped hash cannot resurrect it as Original RegexEngine can.
+        if(accepted&&!values.empty()){require(out.rows.size()<1000,E::Limit);auto row=projectedRow(values,context);bound(row,text);out.partial=out.partial||row.incomplete;out.rows.push_back(std::move(row));}
+      }
+    }return out;
   }
   if(bytes.trimmed()=="null"){return out;}QJsonParseError error;const auto checked=QJsonDocument::fromJson(bytes,&error);require(error.error==QJsonParseError::NoError&&(checked.isArray()||checked.isObject()),E::Format);
   Json tree{bytes};auto root=tree.value();tree.space();require(tree.at==static_cast<std::size_t>(bytes.size()),E::Format);
@@ -170,6 +196,6 @@ std::expected<MetasearchDocument,E> parseMetasearchDocument(const MetasearchReci
   }
   if(tree.nodes[root].kind==Kind::Null){return out;}
   require(tree.nodes[root].kind==Kind::Array,E::Format);
-  for(const auto item:tree.nodes[root].items){if(tree.nodes[item].kind!=Kind::Object){continue;}require(out.rows.size()<1000,E::Limit);auto row=jsonRow(tree,tree.nodes[item],recipe,context);bound(row,text);out.partial=out.partial||row.incomplete;out.rows.push_back(std::move(row));}return out;
+  for(const auto item:tree.nodes[root].items){if(tree.nodes[item].kind!=Kind::Object){continue;}require(out.rows.size()<1000,E::Limit);auto row=jsonRow(tree,tree.nodes[item],recipe,context,actualQueryUtf8,budget);if(row){bound(*row,text);out.partial=out.partial||row->incomplete;out.rows.push_back(std::move(*row));}}return out;
 }catch(const Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(E::Memory);}}
 } // namespace biglybtc::search

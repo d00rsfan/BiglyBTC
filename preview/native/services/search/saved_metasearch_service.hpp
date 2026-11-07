@@ -40,6 +40,8 @@ public:
       const storage::ProfileLease&,std::uint64_t);
   std::expected<SavedMetasearchResultHandle,MetasearchServiceError> retainResult(
       const storage::ProfileLease&,std::uint64_t,MetasearchResultKey);
+  std::expected<SavedMetasearchMagnetHandle,MetasearchServiceError> retainMagnetResult(
+      const storage::ProfileLease&,std::uint64_t,MetasearchResultKey,std::stop_token downloadReceiver);
   bool active()const noexcept;
   void cancel()noexcept; // Worker only; GUI uses its shared receiver token.
   std::expected<void,MetasearchServiceError> close();

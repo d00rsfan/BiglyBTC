@@ -223,3 +223,7 @@ endif()
 
 target_sources(biglybtc_desktop_host PRIVATE metasearch_host.inc metasearch_bridge.inc)
 target_link_libraries(biglybtc_desktop_host PUBLIC biglybtc_saved_metasearch_service)
+
+
+target_sources(biglybtc_desktop_host PRIVATE metasearch_magnet_bridge.inc)
+target_link_libraries(biglybtc_desktop_host PUBLIC biglybtc_metasearch_magnet_admission)

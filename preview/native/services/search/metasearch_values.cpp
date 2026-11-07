@@ -22,8 +22,9 @@ std::optional<std::string> text(const N& row,std::string_view key,std::size_t li
 std::int32_t integer(const N& row,std::string_view key,std::int32_t fallback){const auto* n=row.find(key);if(!n){return fallback;}require(n->type==N::Type::Integer,E::Malformed);return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(n->integer));}
 bool emptyText(const N& n,std::string_view key){auto value=text(n,key);return !value||value->empty();}
 bool emptyList(const N& n,std::string_view key){const auto* p=n.find(key);return !p||(p->type==N::Type::List&&p->children.empty());}
+#include "metasearch_pattern_syntax.inc"
 MetasearchRecipe recipe(const N& n){
-  require(n.type==N::Type::Dictionary&&unique(n),E::Malformed);const auto type=integer(n,"type",0);require(type==2||type==4,E::Unsupported,"This engine type is not supported");
+  require(n.type==N::Type::Dictionary&&unique(n),E::Malformed);const auto type=integer(n,"type",0);require(type==1||type==2||type==4,E::Unsupported,"This engine type is not supported");
   require(integer(n,"az_version",5)>=1&&integer(n,"az_version",5)<=5&&integer(n,"version",1)>=1,E::Unsupported,"This engine version is not supported");
   const auto selected=integer(n,"selected",0);require(selected==1||selected==2,E::Inactive,"This saved engine is not enabled");require(integer(n,"source",0)>=0&&integer(n,"source",0)<=3,E::Unsupported);
   require(!integer(n,"web.needs_auth",0)&&emptyText(n,"web.login_page")&&emptyText(n,"web.full_cookies")&&emptyList(n,"web.required_cookies"),E::Unsupported,"Login or cookies are required");
@@ -32,15 +33,32 @@ MetasearchRecipe recipe(const N& n){
   constexpr std::string_view allowed[]{"web.search_url_format","web.maps","web.needs_auth","web.auth_method","web.login_page","web.required_cookies","web.full_cookies","web.auto_date","web.time_zone","web.date_format","web.dl_link_css","web.icon_url"};
   for(std::size_t i=0;i<n.children.size();i+=2){const auto key=n.children[i].bytes;require(!(key.starts_with("web.")&&std::ranges::find(allowed,key)==std::end(allowed))&&key!="headers"&&key!="plugin_id"&&key!="plugin"&&key!="provider",E::Unsupported);}
   auto url=text(n,"web.search_url_format",2048);require(url&&!url->empty(),E::Malformed);auto expanded=expandMetasearchQuery(*url,"value");require(bool(expanded),expanded?E::Malformed:expanded.error(),"This query URL or method is not supported");
-  MetasearchRecipe out;out.configuredUrl=std::move(*url);out.kind=type==2?MetasearchRecipeKind::Json:MetasearchRecipeKind::Rss;
+  MetasearchRecipe out;out.configuredUrl=std::move(*url);out.kind=type==1?MetasearchRecipeKind::Regex:type==2?MetasearchRecipeKind::Json:MetasearchRecipeKind::Rss;
   const auto* maps=n.find("web.maps");require(maps&&maps->type==N::Type::List,E::Malformed);require(maps->children.size()<=64,E::Limit);
   if(type==4){require(maps->children.empty(),E::Unsupported);return out;}
+  std::size_t captures=0;
+  if(type==1){out.resultPattern=text(n,"regex.pattern",2048).value_or("");while(!out.resultPattern.empty()&&static_cast<unsigned char>(out.resultPattern.front())<=32){out.resultPattern.erase(0,1);}while(!out.resultPattern.empty()&&static_cast<unsigned char>(out.resultPattern.back())<=32){out.resultPattern.pop_back();}const auto syntax=inspectMetasearchPattern(out.resultPattern);require(bool(syntax)&&!syntax->nullable,E::Unsupported,"This result pattern is outside the bounded Java subset");captures=syntax->captures;}
   require(emptyText(n,"rank.divisor.path"),E::Unsupported);out.resultPath=text(n,"json.path").value_or("");
   if(!out.resultPath.empty()){std::size_t offset=0;while(offset<out.resultPath.size()){const auto end=out.resultPath.find('.',offset);auto part=std::string_view(out.resultPath).substr(offset,end==std::string::npos?end:end-offset);require(!part.empty(),E::Unsupported);if(part.front()=='['){require(part.size()>2&&part.back()==']'&&std::ranges::all_of(part.substr(1,part.size()-2),[](unsigned char c){return c>='0'&&c<='9';}),E::Unsupported);}offset=end==std::string::npos?out.resultPath.size():end+1;}require(out.resultPath.back()!='.',E::Unsupported);}
   require(!maps->children.empty(),E::Unsupported);
-  for(const auto& m:maps->children){require(m.type==N::Type::Dictionary,E::Malformed);auto name=text(m,"name");const auto field=integer(m,"field",0);require(emptyText(m,"post_filter"),E::Unsupported,"This engine requires result post-filters");if(!name){continue;}require(name->find("${")==std::string::npos,E::Unsupported,"This engine requires mapping expressions");constexpr int fields[]{1,2,3,4,5,102,103,105,200};require(std::ranges::find(fields,field)!=std::end(fields),E::Unsupported,"This engine uses an unsupported result field");out.mappings.push_back({std::move(*name),field});}
+  for(const auto& m:maps->children){require(m.type==N::Type::Dictionary,E::Malformed);auto name=text(m,"name");const auto field=integer(m,"field",0);auto filter=text(m,"post_filter",2048).value_or("");const auto filterSyntax=inspectMetasearchPattern(filter);require(bool(filterSyntax),E::Unsupported,"This post-filter is outside the bounded Java subset");if(!name){continue;}mappingSource(*name,type==1,captures);constexpr int fields[]{1,2,3,4,5,102,103,105,200};require(std::ranges::find(fields,field)!=std::end(fields),E::Unsupported,"This engine uses an unsupported result field");out.mappings.push_back({std::move(*name),field,std::move(filter)});}
   return out;
 }
+}
+std::expected<MetasearchPatternInfo,E> inspectMetasearchPattern(std::string_view value){try{
+  require(value.size()<=2048,E::Limit);require(std::ranges::all_of(value,[](unsigned char c){return c>=32&&c<=126;}),E::Unsupported);PatternSyntax parser{value};const bool nullable=parser.expression();require(parser.at==value.size(),E::Unsupported);return MetasearchPatternInfo{parser.captures,nullable};
+}catch(const Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(E::Memory);}}
+std::expected<void,E> validateMetasearchRecipeQuery(const MetasearchRecipe& recipe,std::string_view query){try{
+  for(const auto& mapping:recipe.mappings){if(mapping.postFilter.find("%s")==mapping.postFilter.npos){continue;}
+    require(std::ranges::all_of(query,[](unsigned char c){return c>=32&&c<127;}),E::Unsupported);std::string escaped;
+    for(const auto c:query){if(!((c>='a'&&c<='z')||(c>='A'&&c<='Z')||(c>='0'&&c<='9')||c=='_')){escaped+='\\';}escaped+=c;}
+    std::string pattern;bool inClass=false;
+    for(std::size_t at=0;at<mapping.postFilter.size();++at){const auto c=mapping.postFilter[at];
+      if(c=='\\'){require(at+1<mapping.postFilter.size()&&mapping.postFilter.substr(at+1,2)!="%s",E::Unsupported);pattern+=c;pattern+=mapping.postFilter[++at];continue;}
+      if(c=='['){inClass=true;}if(c==']'){inClass=false;}if(c=='%'&&mapping.postFilter.substr(at,2)=="%s"){require(!inClass,E::Unsupported);pattern+=escaped;++at;}else{pattern+=c;}
+    }require(bool(inspectMetasearchPattern(pattern)),E::Unsupported);
+  }return {};
+}catch(const Failure& e){return std::unexpected(e.error);}catch(const std::bad_alloc&){return std::unexpected(E::Memory);}
 }
 std::expected<std::string,E> expandMetasearchQuery(std::string_view format,std::string_view query){try{
   require(format.size()<=2048&&query.size()<=1024,E::Limit);require(utf8(query)&&query.find('\0')==query.npos,E::Malformed);require(!query.empty(),E::Unsupported);
