@@ -1,0 +1,112 @@
+{
+  "compiler_exceptions": {
+    "cmake": {
+      "bytes": 1398,
+      "path": "${ORIGINAL_ROOT}/build/existing-library-discovery-startup-20261107/gcc16-optional-diagnostic.cmake",
+      "sha256": "42c8fd571b33b150560e30d620db7307e541f376167094fc4fd98674a358d6ef"
+    },
+    "sources": [
+      "services/i2p_dht/inbound_responder.cpp",
+      "app/session_bridge.cpp",
+      "app/subscription_acquisition.cpp"
+    ],
+    "warning": "Selected GCC16 maybe-uninitialized/free-nonheap-object template diagnostics stay visible and nonfatal in these files only; every other warning remains fatal"
+  },
+  "focused_delta_coverage": {
+    "utf8-direction-mark": 1
+  },
+  "focused_instrumented_units": {
+    "engine/managed_storage.cpp": "f90f2b62d3d94337b7ac4c1c410c79486995b6c17e9e300c7ffb2fa483606402",
+    "engine/network_policy.cpp": "789b42780afc190e21e72f8ebe547bef8ad353a80c4dec457cd780089c38892a",
+    "tests/network_policy_tests.cpp": "b14e233290fd1a44ad9ab1b0aefc6b9024b86c6687a1cfe5d84c71d78b02f5be",
+    "tests/ordinary_daily_host_tests.cpp": "101aa5ae8767d8dc343933fdfa92c9fbc23920241fede9487ecc76799aadff4c"
+  },
+  "focused_san_delta": {
+    "bytes": 18432,
+    "path": "${ORIGINAL_ROOT}/build/existing-library-discovery-startup-20261107/san-delta/r1/result-stamped.json",
+    "sha256": "395342d7b935bdbb85efd43c877f341ed5df98fc4a7624cb6e5d3f8e33a6dd86"
+  },
+  "full_san_predecessor": {
+    "bytes": 36843,
+    "path": "${ORIGINAL_ROOT}/build/existing-library-discovery-startup-20261107/san/final.json",
+    "sha256": "8aa175f07c273398424d4f1964db7c02f33e65d1f0f177e4e37cad0c5c76e3cf"
+  },
+  "full_san_predecessor_coverage": {
+    "classic": 10,
+    "forced-reopen": 2,
+    "large-library": 2,
+    "mainline-capacity": 2,
+    "ordinary-network": 2,
+    "ordinary-recheck": 3,
+    "overall": 20,
+    "readonly-integrity": 9,
+    "resume-disk-scheduling": 9,
+    "short-controls": 1,
+    "single-config-cache": 1,
+    "startup-order": 1,
+    "statistics": 90
+  },
+  "implementation_commit": "6181803356a8bf208bd8cb4602ec0273af04f8dc",
+  "main_package": {
+    "full_san": {
+      "bytes": 36843,
+      "path": "${ORIGINAL_ROOT}/build/existing-library-discovery-startup-20261107/san/final.json",
+      "sha256": "8aa175f07c273398424d4f1964db7c02f33e65d1f0f177e4e37cad0c5c76e3cf"
+    },
+    "implementation_commit": "18fcc1d6b77ed8d2c6b0ffde826bc070312a7305",
+    "native_tree": "1c0f23f0edf368e07c0d19aa4a2c6989121b40e5",
+    "source_map": {
+      "bytes": 191225,
+      "path": "${ORIGINAL_ROOT}/build/existing-library-discovery-startup-20261107/main-package-source.json",
+      "sha256": "016144b35a5cde075eaad1e66a19c9179fd62907ec75da77775f085e58a226fc"
+    }
+  },
+  "native_tree": "ee6d4765f61ea70bea8cc7432d04a5ef5dfad047",
+  "normal": {
+    "bytes": 37137,
+    "path": "${ORIGINAL_ROOT}/build/existing-library-discovery-startup-20261107/gcc/final.json",
+    "sha256": "0693143c7d00504f35616a536e8e9758fca2861c042d918dbd1a81ed4a77c861"
+  },
+  "normal_coverage": {
+    "classic": 10,
+    "forced-reopen": 2,
+    "large-library": 2,
+    "mainline-capacity": 2,
+    "ordinary-network": 3,
+    "ordinary-recheck": 3,
+    "overall": 20,
+    "readonly-integrity": 9,
+    "resume-disk-scheduling": 9,
+    "short-controls": 1,
+    "single-config-cache": 1,
+    "startup-order": 1,
+    "statistics": 90
+  },
+  "normal_distribution_promotion": false,
+  "normal_launcher": {
+    "bytes": 5952,
+    "path": "${ORIGINAL_ROOT}/build/existing-library-discovery-startup-20261107/normal-launch/launch.py",
+    "sha256": "093c4ccc19ab8a49e9b9256df62c41e6e23979cab2c6526deb77eaef21b83958"
+  },
+  "original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "privacy_wire": {
+    "bytes": 30940,
+    "path": "${ORIGINAL_ROOT}/build/existing-library-discovery-startup-20261107/privacy-wire/r1/result-stamped.json",
+    "sha256": "e07a4ab71f90c93528df369e763988c09b844aeeff46a958f454db7cc0b990e1"
+  },
+  "privacy_wire_coverage": {
+    "private-and-public-key-isolation": 8
+  },
+  "private_source_audit": "PASS; local values and pattern fingerprints deliberately excluded",
+  "reviewer": "root; no independent reviewer",
+  "root_review": {
+    "bytes": 2039,
+    "path": "${ORIGINAL_ROOT}/build/existing-library-discovery-startup-20261107/root-review.json",
+    "sha256": "adc30d6258e9126429fbce4d02b7abb3c6e82f0676ba7c494741392b28e01ed4"
+  },
+  "running_preview_preserved": true,
+  "status": "PASS_SCOPED_CRITICAL_FIXES"
+}

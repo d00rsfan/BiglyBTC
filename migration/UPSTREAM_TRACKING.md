@@ -237,3 +237,8 @@ Original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f, implementation c066523d0dfa75
 ## 2026-11-07 original resume and checking policy, scoped SAN result
 
 Original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f, implementation 276d901c4cd353a35ecb21623d6be43e66c2778b, Native subtree bf94ddda0586c937cdd859e84b365764a996e7af. [Scoped review](evidence/20261107-existing-library-resume-checks/REVIEW.md) records imported primary v1 resume, checked partial-map retirement and configured checking limits, with18 actual-owner SAN rows and pure policy cases. GCC application/real-profile integration remains pending at the user's request to keep the old preview running. No component verified state, global integration baseline, launcher replacement or chapter completion is advanced.
+
+
+## 2026-11-08 existing-library critical fixes
+
+Original cb8c6cb9bb97916cbc7e80338a017200ffc3e71f, final implementation 6181803356a8bf208bd8cb4602ec0273af04f8dc, Native subtree ee6d4765f61ea70bea8cc7432d04a5ef5dfad047: [scoped review](evidence/20261108-existing-library-critical-fixes/REVIEW.md) binds final normal regressions, full-SAN main-package predecessor 18fcc1d6b77ed8d2c6b0ffde826bc070312a7305, final focused sanitizer checks and fresh8-case credential/DHT packet capture. GUI details/units/sort, primary-v1 resume/check limits and large-library dispatch are covered within explicit limits. Failed attempts remain failed; retained tests require unchanged executable bytes. The normal development launcher is refreshed without stopping the old preview; the historical san cache now holds Release/O2 with scoped local GCC16 template diagnostics. No global baseline or chapter completion is advanced. Stop after publication.

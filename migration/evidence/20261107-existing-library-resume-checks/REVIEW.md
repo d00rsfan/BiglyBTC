@@ -12,3 +12,7 @@ The configured global checking limit and one-operation-per-filesystem rule are a
 One pure configuration/planner executable and 18 Qt rows passed under ASan/UBSan:9 new owner cases (complete/partial valid resume, invalid resume, changed file, same/different filesystems, concurrent-read opt-out, global cap, cancellation) and9 existing read-only integrity/cancellation cases, including missing/partial/compact/linked/hybrid data. No peers or trackers are enabled in resume tests: actual disk.num_read_ops remains zero for valid complete/partial resume and becomes positive on fallback. Clean partial retirement preserves the exact piece map. Payload size/mtime are retained by explicit rechecks. Only san/r3 is accepted; r1 compiler and r2 fixture-invariant failures remain recorded locally. Temporary owned fixtures are removed after each case and by the runner on failure.
 
 This does not complete the daily-use chapter. Running preview migration, unsanitized application checks, broader mapped/v2 resume coverage, startup Waiting progress and large-library discovery/scrape limits remain open.
+
+## 2026-11-08 normal candidate follow-up
+
+The pending normal application qualification is resolved by 6181803356a8bf208bd8cb4602ec0273af04f8dc / Native ee6d4765f61ea70bea8cc7432d04a5ef5dfad047. See [current critical-fix evidence](../20261108-existing-library-critical-fixes/REVIEW.md). Earlier receipts retain their original scope; conservative resume limitations remain.
