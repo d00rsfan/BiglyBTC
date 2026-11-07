@@ -175,6 +175,7 @@ private slots:
  }
  void normalRestoredSeedAndPartialUseActualDiscoveryAndTrackers_data(){
   QTest::addColumn<bool>("v6");QTest::addColumn<QString>("logicalName");QTest::newRow("IPv4-cold-warm")<<false<<QString{};QTest::newRow("IPv6-cold-warm")<<true<<QString{};
+  QTest::newRow("IPv4-UTF8-direction-mark")<<false<<(QStringLiteral("owned ")+QChar(0x200e)+QStringLiteral(" direction.bin"));
   QTest::newRow("IPv4-Cyrillic")<<false<<QString::fromUtf8("Данные кириллицей.bin");
   QTest::newRow("IPv4-ampersand")<<false<<QStringLiteral("owned & data.bin");
   QTest::newRow("IPv6-Cyrillic-ampersand")<<true<<QString::fromUtf8("Данные & часть.bin");

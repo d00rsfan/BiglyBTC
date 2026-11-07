@@ -551,6 +551,21 @@ int main(int argc, char** argv) {
       }
       auto standard=normal();CHECK(!engine::applyExistingTorrentNetworkPolicy(standard,saved,params));
     });
+    run("existing Public UDP default port preserves private credentials", [] {
+      auto policy=normal();policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;
+      lt::add_torrent_params params;params.ti=metadata();
+      const std::string raw="udp://owned-user:owned-secret@tracker.invalid/announce?passkey=owned-key";
+      params.trackers={"dht:","dht://",raw};params.ti->add_tracker(raw);const auto hashes=params.ti->info_hashes();
+      CHECK(engine::applyExistingTorrentNetworkPolicy(policy,{.publicNetwork=true,.i2p=true,.privateTorrent=true},params));
+      CHECK(params.trackers==std::vector<std::string>{"udp://owned-user:owned-secret@tracker.invalid:80/announce?passkey=owned-key"});
+      CHECK(params.ti->info_hashes()==hashes);CHECK(std::ranges::any_of(params.ti->trackers(),[&](const auto& t){return t.url==raw;}));CHECK(params.flags & lt::torrent_flags::disable_dht);CHECK(params.flags & lt::torrent_flags::disable_pex);
+      auto v6=policy;v6.ipv6=true;lt::add_torrent_params ipv6;ipv6.ti=metadata();ipv6.trackers={"udp://[::1]/announce?passkey=owned-key"};
+      CHECK(engine::applyExistingTorrentNetworkPolicy(v6,{},ipv6));CHECK(ipv6.trackers==std::vector<std::string>{"udp://[::1]:80/announce?passkey=owned-key"});
+      lt::add_torrent_params standard;standard.ti=metadata();standard.trackers={raw};CHECK(!engine::applyTorrentNetworkPolicy(normal(),{},standard));CHECK(standard.trackers==std::vector<std::string>{raw});
+      for(const auto* url:{"udp://tracker.invalid:/announce","udp://tracker.invalid:0/announce","udp://[::1]:/announce"}){
+        lt::add_torrent_params invalid;invalid.ti=metadata();invalid.trackers={url};CHECK(!engine::applyExistingTorrentNetworkPolicy(policy,{},invalid));CHECK(invalid.trackers==std::vector<std::string>{url});
+      }
+    });
     run("existing Public endpoints filter only parsed overlay authorities", [] {
       auto policy=normal();policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;
       lt::add_torrent_params params;params.ti=metadata();

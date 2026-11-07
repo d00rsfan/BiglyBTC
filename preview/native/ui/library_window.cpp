@@ -1,3 +1,4 @@
+#include "classic_sort_header.hpp"
 #include <QProgressBar>
 #include "recheck_dialog.hpp"
 #include "publication_controls.hpp"
@@ -142,6 +143,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   splitter_->setChildrenCollapsible(false);
   splitter_->setHandleWidth(6);
   for (auto* table : {incompleteTable_, completeTable_}) {
+    table->setHorizontalHeader(new ClassicSortHeader(table));
     auto* grouped = new ClassicFilter(table == completeTable_, table);
     grouped->setSourceModel(model_);
     table->setModel(grouped);

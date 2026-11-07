@@ -1,3 +1,5 @@
+#include <QPixmap>
+#include "classic_sort_header.hpp"
 #include "classic_columns.hpp"
 #include "classic_filter.hpp"
 #include "library_window.hpp"
@@ -50,7 +52,13 @@ QAction* resetAction(QTableView& table, bool complete) {
   return table.findChild<QAction*>(prefix(complete) + QStringLiteral("-reset"));
 }
 
+class SortHeaderProbe final : public ui::ClassicSortHeader {
+public:
+  using ui::ClassicSortHeader::ClassicSortHeader;
+  QStyleOptionHeader option(int column)const{QStyleOptionHeader value;initStyleOption(&value);initStyleOptionForIndex(&value,column);return value;}
+};
 void configure(QTableView& table, ui::LibraryModel& model, bool complete, bool customOrder = false) {
+  table.setHorizontalHeader(new SortHeaderProbe(&table));
   auto* filter = new ui::ClassicFilter(complete, &table);
   filter->setSourceModel(&model);
   table.setModel(filter);
@@ -121,6 +129,35 @@ bool containsMenu(const QMenu& root, const QMenu* wanted, int remaining = 8) {
 class ColumnTests final : public QObject {
   Q_OBJECT
 private slots:
+  void everyColumnInBothPanesMatchesAscendingAndDescendingArrow(){
+    Tables fixture;auto rows=sample(2);
+    for(int n=0;n<2;++n){auto copy=rows->items.back();copy.key=copy.hash=QStringLiteral("%1").arg(5+n,40,16,QChar('0')).toUpper();copy.name=QStringLiteral("Owned complete %1").arg(n);rows->items.push_back(copy);}
+    const qint64 sizes[]{1073741824LL,512,3145728,1099511627776LL,1024,32505856};
+    for(std::size_t n=0;n<rows->items.size();++n){auto& item=rows->items[n];const bool complete=n>=3;item.bytes=sizes[n];item.completed=complete?*item.bytes:*item.bytes/2;item.assumedComplete=complete;item.received=static_cast<qint64>(n*31);item.sent=static_cast<qint64>((7-n)*17);item.savedPosition=static_cast<qint64>(9-n);item.savedSelected=ui::SavedSelectedValues{.bytes=item.bytes,.remaining=complete?0:*item.bytes/2,.percentThousandths=complete?1000:500};item.savePath=QStringLiteral("owned/path/%1").arg(n);item.trackerName=QStringLiteral("owned-%1.invalid").arg(n);}
+    QVERIFY(fixture.model.apply(rows));
+    for(int n=0;n<fixture.model.rowCount();++n){const auto target=fixture.model.targetAt(n);QVERIFY(target);QVERIFY(fixture.model.apply(ui::Telemetry{*target,*rows->items[static_cast<std::size_t>(n)].completed,n*13,(7-n)*11,rows->items[static_cast<std::size_t>(n)].state}));}
+    for(auto* table:{&fixture.incomplete,&fixture.complete}){
+      QCOMPARE(table->model()->rowCount(),3);auto* header=dynamic_cast<SortHeaderProbe*>(table->horizontalHeader());QVERIFY(header);
+      for(int column=0;column<ui::LibraryModel::Columns;++column){for(const auto order:{Qt::AscendingOrder,Qt::DescendingOrder}){
+        table->sortByColumn(column,order);QCOMPARE(header->sortIndicatorOrder(),order);QCOMPARE(header->option(column).sortIndicator,order==Qt::AscendingOrder?QStyleOptionHeader::SortUp:QStyleOptionHeader::SortDown);
+        for(int row=1;row<table->model()->rowCount();++row){const auto a=table->model()->index(row-1,column).data(Qt::UserRole),b=table->model()->index(row,column).data(Qt::UserRole);QVERIFY(a.isValid()&&b.isValid());
+          const int comparison=a.metaType().id()==QMetaType::QString?QString::compare(a.toString(),b.toString(),proxy(*table)->sortCaseSensitivity()):(a.toDouble()<b.toDouble()?-1:a.toDouble()>b.toDouble()?1:0);
+          QVERIFY(order==Qt::AscendingOrder?comparison<=0:comparison>=0);
+        }
+      }}
+    }
+    for(auto* table:{&fixture.incomplete,&fixture.complete}){
+      table->show();table->setColumnHidden(2,false);table->sortByColumn(2,Qt::AscendingOrder);QCoreApplication::processEvents();auto* header=table->horizontalHeader();QVERIFY(header->sectionsClickable());
+      const QPoint point(header->sectionViewportPosition(2)+header->sectionSize(2)/2,header->height()/2);
+      QTest::mouseClick(header->viewport(),Qt::LeftButton,Qt::NoModifier,point);QCOMPARE(header->sortIndicatorOrder(),Qt::DescendingOrder);
+      QTest::mouseClick(header->viewport(),Qt::LeftButton,Qt::NoModifier,point);QCOMPARE(header->sortIndicatorOrder(),Qt::AscendingOrder);
+    }
+    const auto evidence=qEnvironmentVariable("BIGLYBTC_UI_EVIDENCE_ROOT");
+    if(!evidence.isEmpty()){
+      for(auto* table:{&fixture.incomplete,&fixture.complete}){table->show();table->setColumnHidden(2,false);for(const auto order:{Qt::AscendingOrder,Qt::DescendingOrder}){table->sortByColumn(2,order);QCoreApplication::processEvents();QVERIFY(table->horizontalHeader()->grab().save(evidence+'/'+(table==&fixture.complete?QStringLiteral("complete"):QStringLiteral("incomplete"))+QStringLiteral("-size-")+(order==Qt::AscendingOrder?QStringLiteral("ascending"):QStringLiteral("descending"))+QStringLiteral(".png")));}}
+    }
+    ui::LibraryWindow window;QVERIFY(dynamic_cast<ui::ClassicSortHeader*>(window.incompleteTable().horizontalHeader()));QVERIFY(dynamic_cast<ui::ClassicSortHeader*>(window.completeTable().horizontalHeader()));
+  }
   void detachedDetailsOpenByDoubleClickStayScopedAndCloseSafely(){
     ui::LibraryWindow window;auto rows=sample();rows->inlineDetails=false;rows->startupDone=3;rows->startupTotal=10;
     window.resize(1200,900);window.setPresentation(rows);window.setBusy(false);window.show();QCoreApplication::processEvents();

@@ -596,10 +596,24 @@ std::expected<void, NetworkPolicyError> applyTorrentNetworkPolicy(
     std::vector<int> tiers;
     for (std::size_t i = 0; i < next.trackers.size(); ++i) {
       if (isolated) { continue; }
-      const auto kind = urlKind(next.trackers[i], "tracker URL", p.ipv6, p.context == NetworkPolicyContext::ExistingLibraryPublic);
+      auto tracker=next.trackers[i];
+      if(p.context==NetworkPolicyContext::ExistingLibraryPublic&&lower(std::string_view(tracker).substr(0,tracker.find(':')))=="dht"){continue;} // Original marker, never a tracker endpoint.
+      if(p.context==NetworkPolicyContext::ExistingLibraryPublic){
+        // Original UDP URL handler defaults to80. Add only the omitted port
+        // to this runtime copy; preserve raw metadata and credentials verbatim.
+        const auto scheme=tracker.find("://");
+        if(scheme!=std::string::npos&&lower(std::string_view(tracker).substr(0,scheme))=="udp"){
+          auto end=tracker.find_first_of("/?#",scheme+3);if(end==std::string::npos){end=tracker.size();}
+          auto host=std::string_view(tracker).substr(scheme+3,end-scheme-3);
+          if(const auto at=host.rfind('@');at!=host.npos){host.remove_prefix(at+1);}
+          const bool omitted=!host.empty()&&(host.front()=='['?host.find(']')==host.size()-1:host.find(':')==host.npos);
+          if(omitted){tracker.insert(end,":80");}
+        }
+      }
+      const auto kind = urlKind(tracker, "tracker URL", p.ipv6, p.context == NetworkPolicyContext::ExistingLibraryPublic);
       if (kind == UrlKind::InactiveOverlay) { continue; }
       if ((kind == UrlKind::Udp && !p.udpTrackers) || (kind != UrlKind::Udp && !p.httpTrackers)) { continue; }
-      trackers.push_back(next.trackers[i]);
+      trackers.push_back(std::move(tracker));
       tiers.push_back(i < next.tracker_tiers.size() ? next.tracker_tiers[i] : 0);
     }
     const auto filterSeeds = [&](auto& seeds) {

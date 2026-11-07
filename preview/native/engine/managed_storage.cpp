@@ -548,7 +548,7 @@ void projectManagedV1Names(const Document& source,const storage::OriginalTorrent
   if(const auto* encoding=source.find("encoding")){
     auto name=text(encoding);
     std::ranges::transform(name,name.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
-    qualifiedNames=qualifiedNames||name=="iso-8859-1"||name=="windows-1251"||name=="cp1251"||name=="cp5347"||name=="ansi-1251"
+    qualifiedNames=qualifiedNames||name=="utf-8"||name=="utf8"||name=="iso-8859-1"||name=="windows-1251"||name=="cp1251"||name=="cp5347"||name=="ansi-1251"
         ||name=="koi8-r"||name=="koi8_r"||name=="koi8"||name=="cskoi8r";
   }
   if(const auto* files=info->find("files")){
@@ -979,7 +979,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     mainline.discover=mainline.discover && selectedNetworks.publicNetwork && selectedNetworks.dhtBackup && (!selectedNetworks.tor||policy.context==NetworkPolicyContext::ExistingLibraryPublic) && (!selectedNetworks.i2p||mixed||policy.context==NetworkPolicyContext::ExistingLibraryPublic);
     mainline.announce=mainline.announce && mainline.discover;
     auto filtered=owned?owned->apply(selectedNetworks,params):mixed?mixed->apply(policy,selectedNetworks,params):applyExistingTorrentNetworkPolicy(policy,selectedNetworks,params);
-    require(filtered.has_value(),"Managed torrent network selection is unsupported by the owner policy");
+    if(!filtered){throw Failure{Error{ErrorCode::Unsupported,"Managed torrent selection is unsupported by the owner policy: "+filtered.error().field}};}
     auto claimPlan=payloadClaimPlan(slots,save,attributes.root(),pending);
     checkManagedClaims(claimPlan.values,claimed);
     // All unsupported geometry/mapping/policy decisions precede state ownership
