@@ -290,6 +290,9 @@ struct SessionBridge::Host {
     auto store=storage::TorrentStateStore::open(lease);if(!store){return Route::Unsupported;}
     auto state=store->loadAttributes(lease,hash);if(!state){return Route::Unsupported;}
     const auto* a=state->document().find("attributes");const auto* n=a?a->find("networks"):nullptr;
+    return classifyRoute(n);
+  }
+  Route classifyRoute(const core::Node* n)const {
     if(!n){return Route::Public;}
     if(n->type!=core::Node::Type::List){return Route::Unsupported;}
     // Existing rows already grant Public. Keep saved overlay selections while
@@ -1160,10 +1163,44 @@ struct SessionBridge::Host {
     }
     readMagnets();
   }
-  ui::Presentation query(std::stop_token stop) {
+  ui::Presentation query(std::stop_token stop, const std::function<void(std::size_t,std::size_t)>& opening = {}) {
     loadVerifiedSeedIntents();
     checkpoint(stop);
-    auto source = take(storage::readLibraryView(lease));
+    auto librarySource = take(storage::readLibrarySource(lease));
+    auto& source = librarySource.view;
+    // A read-only presentation borrows one fresh immutable cache snapshot.
+    // Commands still use route()/loadAttributes and revalidate on actual Start.
+    std::map<std::string,const core::Node*> cachedAttributes;
+    if(librarySource.cacheDocument){
+      if(const auto* entries=librarySource.cacheDocument->document().find("state");entries&&entries->type==core::Node::Type::List){
+        for(const auto& entry:entries->children){
+          const auto* hash=entry.find("hash");
+          if(!hash||hash->type!=core::Node::Type::Bytes||(hash->bytes.size()!=20&&hash->bytes.size()!=32)){continue;}
+          if(const auto id=core::TorrentHash::parse(hash->bytes)){cachedAttributes.insert_or_assign(id->hex(),&entry);}
+        }
+      }
+    }
+    std::optional<storage::TorrentStateStore> primaryStates;
+    bool primaryOpenFailed=false;
+    const auto displayedRoute=[&](const core::TorrentHash& hash){
+      if(source.cacheWarning){return Route::Unsupported;}
+      const auto cached=cachedAttributes.find(hash.hex());
+      if(cached!=cachedAttributes.end()){
+        for(const auto key:{"attributes","azp","azpp"}){
+          if(const auto* section=cached->second->find(key);section&&section->type!=core::Node::Type::Dictionary){return Route::Unsupported;}
+        }
+        if(const auto* attributes=cached->second->find("attributes")){return classifyRoute(attributes->find("networks"));}
+      }
+      if(!primaryStates&&!primaryOpenFailed){
+        auto store=storage::TorrentStateStore::open(lease);
+        if(store){primaryStates.emplace(std::move(*store));}else{primaryOpenFailed=true;}
+      }
+      if(!primaryStates){return Route::Unsupported;}
+      const auto state=primaryStates->load(lease,hash);if(!state){return Route::Unsupported;}
+      const auto* attributes=state->document().find("attributes");
+      return classifyRoute(attributes?attributes->find("networks"):nullptr);
+    };
+    if(opening){opening(0,source.items.size());}
     const auto mainlineEstimates=engine?engine->mainlineScrapeEstimates():std::vector<engine::MainlineScrapeEstimate>{};
     const auto trackerResponses=engine?engine->libraryTrackerResponses():std::vector<engine::LibraryTrackerResponse>{};
     readMagnets();
@@ -1209,7 +1246,10 @@ struct SessionBridge::Host {
     currentHashes.clear();
     pendingTargets.clear();
     result->items.reserve(source.items.size() + pendingIntents.size() + magnets.size());
+    std::size_t presentedCount=0;
     for (const auto& row : source.items) {
+      if((presentedCount%64)==0){checkpoint(stop);if(opening){opening(presentedCount,source.items.size());}}
+      ++presentedCount;
       const auto& saved = row.saved;
       const auto hash = saved.hash ? saved.hash->hex() : std::string{};
       QString name = text(saved.saveFile.value_or(std::filesystem::path(saved.saveDirectory).filename().string()));
@@ -1235,7 +1275,7 @@ struct SessionBridge::Host {
           : size && saved.completedBytes && *saved.completedBytes >= *size ? SessionBridge::tr("Complete")
           : saved.startup == core::StartupState::Queued ? SessionBridge::tr("Queued") : SessionBridge::tr("Waiting");
       const bool unique = !hash.empty() && counts[hash] == 1;
-      const auto selectedRoute=unique?route(*saved.hash):Route::Unsupported;
+      const auto selectedRoute=unique?displayedRoute(*saved.hash):Route::Unsupported;
       if (unique) { currentHashes.insert(hash); }
       const auto key = unique ? hash : hash + ":" + std::to_string(saved.sourceIndex);
       quint16 actions = 0;
@@ -1372,6 +1412,7 @@ struct SessionBridge::Host {
           .actionMask = magnetActions(intent, liveMagnet)});
     }
     lastSnapshot = result;
+    if(opening){opening(source.items.size(),source.items.size());}
     return result;
   }
 };
@@ -1782,6 +1823,9 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
 bool SessionBridge::openNormal(std::filesystem::path profile) {
   return dispatch([this, profile = std::move(profile)](std::stop_token stop) {
     if (host_) { throw Failure{{storage::ErrorCode::Conflict, "A profile is already open"}}; }
+    const auto openingStarted=std::chrono::steady_clock::now();
+    const auto openingStage=[this](QString message){QMetaObject::invokeMethod(this,[this,message=std::move(message)]{if(busy_){emit messageReady(message);}},Qt::QueuedConnection);};
+    openingStage(tr("Opening library — checking saved state…"));
     auto lease = take(storage::ProfileLease::acquire(profile));
     const auto acquisition=recoverSubscriptionAcquisitionBeforeHost(lease,profile);
     if(!acquisition||*acquisition){
@@ -1816,7 +1860,11 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     if (!inventory && inventory.error().code == storage::ErrorCode::Missing) {
       static_cast<void>(take(storage::ConfigFile::createMissing(host_->lease, "downloads.config", "d9:downloadslee")));
     } else if (!inventory) { throw Failure{inventory.error()}; }
-    static_cast<void>(host_->query(stop));
+    const auto countProgress=[&](std::size_t done,std::size_t total){openingStage(tr("Opening library — %1 / %2 torrents").arg(done).arg(total));};
+    const auto initial=host_->query(stop,countProgress);
+    qInfo("Library opening: %zu saved rows read in %lld ms",initial->items.size(),static_cast<long long>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-openingStarted).count()));
+    QMetaObject::invokeMethod(this,[this,initial]{if(busy_){emit snapshotReady(initial);}},Qt::QueuedConnection);
+    openingStage(tr("Opening library — starting network services…"));
     host_->dhtAccounting.emplace(false);
     auto identities=host_->bootstrapNormalI2p(stop);
     if(!identities){
@@ -1853,11 +1901,12 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     }
     host_->bootstrapMagnets(stop);
     host_->scheduleCoexistence();tickScheduler();
-    const auto current=host_->query(stop);host_->constraintNormalReady=true;
+    const auto current=host_->query(stop,countProgress);host_->constraintNormalReady=true;
     ready(current,!identityReview.isEmpty()?tr("I2P identity unavailable; review preserved files and reopen: %1").arg(identityReview):
         host_->admissionFailures.empty()?
           (!host_->i2pOptions?tr("Public network mode. I2P, Tor and Azureus DHT remain inactive; saved settings are preserved."):QString{}):
           tr("Some torrents require attention; saved data was preserved"));
+    qInfo("Library opening: ready after %lld ms",static_cast<long long>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-openingStarted).count()));
     publishI2p();
   });
 }

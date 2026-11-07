@@ -2,6 +2,8 @@
 #include "ordinary_daily_fixture.hpp"
 #include <QApplication>
 #include <chrono>
+#include <zlib.h>
+#include <libtorrent/bdecode.hpp>
 namespace {
 using namespace biglybtc;using namespace biglybtc::test::daily;
 using Action=core::DownloadAction;
@@ -26,6 +28,47 @@ class OrdinaryDailyHostTests final:public QObject {
  Q_OBJECT
 private slots:
  void initTestCase(){QCOMPARE(QGuiApplication::platformName(),QStringLiteral("offscreen"));QApplication::setQuitOnLastWindowClosed(false);}
+ void largeCachedLibraryPublishesRowsAndCountProgressBeforeStartingTransfers(){
+  QTemporaryDir root(QStringLiteral("/tmp/biglybtc-large-library-XXXXXX"));QVERIFY(root.isValid());
+  Trackers trackers(QHostAddress::LocalHost);Profile profile(root.path(),"large",false,true,trackers.url(false),70);
+  const auto decode=[](const QByteArray& bytes){lt::bdecode_node node;lt::error_code error;lt::bdecode(bytes.constData(),bytes.constData()+bytes.size(),node,error);test::require(!error,"Large generated document");return lt::entry(node);};
+  auto state=decode(test::read(profile.state)),inventory=decode(test::read(profile.path+"/downloads.config"));
+  const auto base=inventory["downloads"].list().front();inventory["downloads"].list().clear();
+  lt::entry cache(lt::entry::dictionary_type{});cache["state"]=lt::entry::list_type{};
+  std::vector<QString> hashes;constexpr int Count=5000;
+  for(int index=0;index<Count;++index){
+   auto item=state;item["info"]["name"]="generated-"+std::to_string(index)+".bin";
+   const auto digest=QCryptographicHash::hash(QByteArray::fromStdString(test::encoded(item["info"])),QCryptographicHash::Sha1);
+   const auto hex=QString::fromLatin1(digest.toHex().toUpper());hashes.push_back(hex);
+   test::write(profile.path+"/active/"+hex+".dat",QByteArray::fromStdString(test::encoded(item)));
+   auto row=base;row["torrent_hash"]=digest.toStdString();row["position"]=index+1;inventory["downloads"].list().push_back(row);
+   lt::entry cached(lt::entry::dictionary_type{});cached["hash"]=digest.toStdString();cached["name"]=item["info"]["name"];cached["size"]=Size;cached["fc"]=1;
+   cached["attributes"]["networks"]=lt::entry::list_type{lt::entry(index==0?"I2P":"Public")};cached["opaque.padding"]=std::string(512,'x');
+   if(index==1){cached["attributes"]["networks"]=lt::entry::list_type{lt::entry("Public"),lt::entry("I2P"),lt::entry("Tor")};}
+   if(index==2){cached["attributes"]["networks"]=lt::entry::list_type{lt::entry("Public"),lt::entry("Public")};}
+   if(index==3){cached.dict().erase("attributes");}
+   if(index==4){cached["attributes"]["networks"]=7;}
+   if(index==5){auto first=cached;first["attributes"]["networks"]=lt::entry::list_type{lt::entry("I2P")};cache["state"].list().push_back(first);}
+   cache["state"].list().push_back(cached);
+  }
+  test::write(profile.path+"/downloads.config",QByteArray::fromStdString(test::encoded(inventory)));
+  const auto rawCache=test::encoded(cache);z_stream stream{};QCOMPARE(deflateInit2(&stream,Z_BEST_SPEED,Z_DEFLATED,MAX_WBITS+16,8,Z_DEFAULT_STRATEGY),Z_OK);
+  QByteArray compressed(static_cast<qsizetype>(compressBound(rawCache.size())+64),'\0');stream.next_in=reinterpret_cast<Bytef*>(const_cast<char*>(rawCache.data()));stream.avail_in=rawCache.size();stream.next_out=reinterpret_cast<Bytef*>(compressed.data());stream.avail_out=compressed.size();QCOMPARE(deflate(&stream,Z_FINISH),Z_STREAM_END);compressed.resize(stream.total_out);QCOMPARE(deflateEnd(&stream),Z_OK);test::write(profile.path+"/active/cache.dat",compressed);
+  auto config=document(profile.path+"/biglybt.config");for(const auto* key:{"PluginInfo.mldht.enabled","Peer Source Selection Default.DHT","Peer Source Selection Default.Tracker"}){QVERIFY(config.replaceValue(key,"i0e"));}test::write(profile.path+"/biglybt.config",QByteArray::fromStdString(config.serialize()));
+  Host host({});bool earlyRowsWhileBusy=false;QElapsedTimer startup;startup.start();qint64 firstRows=-1;
+  QObject::connect(&host.bridge,&app::SessionBridge::snapshotReady,&host.bridge,[&](const ui::Presentation& rows){if(firstRows<0&&rows&&rows->items.size()==Count){firstRows=startup.elapsed();earlyRowsWhileBusy=host.bridge.busy();}});
+  profile.releasePorts();QVERIFY(host.bridge.openNormal(profile.native()));
+  QTRY_VERIFY2_WITH_TIMEOUT(firstRows>=0,qPrintable(host.diagnostic()),20000);QVERIFY(earlyRowsWhileBusy);
+  QTRY_VERIFY2_WITH_TIMEOUT(!host.bridge.busy()&&host.snapshot()&&host.snapshot()->items.size()==Count&&host.sample()&&host.sample()->sample,qPrintable(host.diagnostic()),30000);
+  bool counted=false;for(const auto& message:host.messages){if(message[0].toString().contains("5000 / 5000")){counted=true;}}QVERIFY(counted);
+  const auto find=[&](int index)->ui::LibraryItem{for(const auto& row:host.snapshot()->items){if(row.hash==hashes[index]){return row;}}test::require(false,"Actual indexed large-library row");return {};};
+  QVERIFY(!(find(0).actionMask&ui::downloadActionBit(Action::Start)));QVERIFY(find(2).networkStatus.contains("not supported"));QVERIFY(find(4).networkStatus.contains("not supported"));
+  QVERIFY(!find(1).networkStatus.contains("not supported"));QVERIFY(!find(3).networkStatus.contains("not supported"));QVERIFY(!find(5).networkStatus.contains("not supported"));
+  QVERIFY(find(1).actionMask&ui::downloadActionBit(Action::Start));QCOMPARE(host.sample()->sample->counters.payloadSent,std::int64_t{0});
+  qInfo("Large library: %d rows; first presentation %lld ms; ready %lld ms",Count,static_cast<long long>(firstRows),static_cast<long long>(startup.elapsed()));
+  QVERIFY(host.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(host),15000);
+  QCOMPARE(test::read(profile.path+"/active/cache.dat"),compressed);QCOMPARE(test::read(profile.data),profile.body);
+ }
  void normalRestoredSeedAndPartialUseActualDiscoveryAndTrackers_data(){QTest::addColumn<bool>("v6");QTest::newRow("IPv4-cold-warm")<<false;QTest::newRow("IPv6-cold-warm")<<true;}
  void normalRestoredSeedAndPartialUseActualDiscoveryAndTrackers(){
   QFETCH(bool,v6);QTemporaryDir root(QStringLiteral("/tmp/biglybtc-daily-host-XXXXXX"));QVERIFY(root.isValid());const auto address=v6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost;Trackers trackers(address);
