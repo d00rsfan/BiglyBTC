@@ -227,3 +227,11 @@ target_link_libraries(biglybtc_desktop_host PUBLIC biglybtc_saved_metasearch_ser
 
 target_sources(biglybtc_desktop_host PRIVATE metasearch_magnet_bridge.inc)
 target_link_libraries(biglybtc_desktop_host PUBLIC biglybtc_metasearch_magnet_admission)
+
+if(TARGET biglybtc_desktop_host)
+  if(NOT TARGET biglybtc_saved_sharing OR NOT TARGET biglybtc_embedded_tracker)
+    message(FATAL_ERROR "Owned publication Host requires concrete sharing and tracker services")
+  endif()
+  target_sources(biglybtc_desktop_host PRIVATE publication_host.inc publication_bridge.inc)
+  target_link_libraries(biglybtc_desktop_host PUBLIC biglybtc_saved_sharing biglybtc_embedded_tracker)
+endif()

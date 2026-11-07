@@ -26,6 +26,9 @@
 #include <QFile>
 #include <QDir>
 #include "saved_subscription_service.hpp"
+#include "saved_sharing_service.hpp"
+#include "existing_subscription_target.hpp"
+#include "embedded_tracker.hpp"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include "rss_sources_catalog.hpp"
@@ -54,6 +57,7 @@
 #include "biglybtc/saved_dnd.hpp"
 #include "local_session.hpp"
 #include "persistent_session.hpp"
+#include "shared_seed_announce.hpp"
 #include "overall_statistics_service.hpp"
 #include "source_rate_projection.hpp"
 #include "minute_history_writer.hpp"
@@ -244,7 +248,7 @@ template<class Store> std::expected<storage::CategoryCommit,storage::Error> cate
 }
 }
 struct SessionBridge::Host {
-  ~Host(){if(automaticReceiver){automaticReceiver->request_stop();}automaticCandidates.clear();automaticCandidateKeys.clear();if(subscriptionAcquisition){subscriptionAcquisition->cancel();subscriptionAcquisition.reset();}closeRssFetch();closeMetasearch();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
+  ~Host(){if(automaticReceiver){automaticReceiver->request_stop();}automaticCandidates.clear();automaticCandidateKeys.clear();if(subscriptionAcquisition){subscriptionAcquisition->cancel();subscriptionAcquisition.reset();}closeRssFetch();closeMetasearch();closePublications();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
   struct Known { QString name; std::optional<qint64> bytes{}; };
   std::filesystem::path profile;
   unsigned short peerPort;
@@ -620,6 +624,7 @@ struct SessionBridge::Host {
 #include "rss_sources_host.inc"
 #include "subscriptions_host.inc"
 #include "metasearch_host.inc"
+#include "publication_host.inc"
   void beginManualTagRead() {
     if(manualTagEnded||manualTagRevision==std::numeric_limits<quint64>::max()){
       throw Failure{{storage::ErrorCode::Unsupported,"Manual-tag presentation lifetime is exhausted"}};
@@ -1311,6 +1316,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
   qRegisterMetaType<ui::SubscriptionKey>();qRegisterMetaType<ui::SubscriptionCatalogKey>();qRegisterMetaType<ui::SubscriptionCatalogPresentation>();qRegisterMetaType<ui::SubscriptionCommandKey>();qRegisterMetaType<ui::SubscriptionCommand>();qRegisterMetaType<ui::SubscriptionPresentation>();
   qRegisterMetaType<ui::RssCatalogRequest>();qRegisterMetaType<ui::RssCatalogPresentation>();qRegisterMetaType<ui::RssFetchKey>();qRegisterMetaType<ui::RssFetchCommand>();qRegisterMetaType<ui::RssFetchPresentation>();
   qRegisterMetaType<ui::MetasearchCatalogKey>();qRegisterMetaType<ui::MetasearchCatalogPresentation>();qRegisterMetaType<ui::MetasearchQueryKey>();qRegisterMetaType<ui::MetasearchQueryCommand>();qRegisterMetaType<ui::MetasearchPresentation>();qRegisterMetaType<ui::MetasearchDownloadKey>();qRegisterMetaType<ui::MetasearchDownloadCommand>();qRegisterMetaType<ui::MetasearchDownloadPresentation>();qRegisterMetaType<ui::MetasearchMagnetSubmission>();
+  qRegisterMetaType<ui::PublicationCatalogKey>();qRegisterMetaType<ui::PublicationCatalogPresentation>();qRegisterMetaType<ui::PublicationCommand>();qRegisterMetaType<ui::PublicationConfirmation>();qRegisterMetaType<ui::PublicationPresentation>();
   qRegisterMetaType<ui::I2pPresentation>();
   qRegisterMetaType<ui::DownloadHistoryCommand>();
   qRegisterMetaType<ui::DownloadHistoryCommandPresentation>();
@@ -1370,7 +1376,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         emit sessionCloseFailed();
         if (!guard) { return; }
       }
-      rssDispatchInterrupted();if(!guard){return;}subscriptionsDispatchInterrupted();if(!guard){return;}metasearchDispatchInterrupted();if(!guard){return;}
+      rssDispatchInterrupted();if(!guard){return;}subscriptionsDispatchInterrupted();if(!guard){return;}metasearchDispatchInterrupted();if(!guard){return;}publicationDispatchInterrupted();if(!guard){return;}
       if(guiCategoryCommand_){
         auto packet=std::make_shared<ui::CategoryCommandPacket>();
         packet->session=guiCategoryCommand_->session;packet->request=guiCategoryCommand_->request;packet->kind=guiCategoryCommand_->kind;packet->requestedTarget=guiCategoryCommand_->target;
@@ -1427,6 +1433,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
           return {};
         }
         if(host_->i2pOptions){host_->pollI2p();host_->pollMixed();host_->pollPrivateMagnets();}
+        if(!host_->engine){pollPublications();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
           const auto polled=host_->engine->poll();publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop));publishMainlineFailure();
@@ -1438,7 +1445,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             }
             reportIdlePollFailure(session,std::move(detail));reported->store(true);
           }
-          host_->scheduleCoexistence();tickScheduler();tickAccounting();
+          host_->scheduleCoexistence();tickScheduler();tickAccounting();pollPublications();
           auto current = host_->engine->managedDownloads();
           bool changed = host_->coexistence() || current.size() != host_->lastManagedPhases.size();
           for (const auto& item : current) {
@@ -1505,7 +1512,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
   idleMonitor_->start();
 }
 SessionBridge::~SessionBridge() {
-  stopRssReceiver();stopSubscriptionReceiver();stopMetasearchReceiver();
+  stopRssReceiver();stopSubscriptionReceiver();stopMetasearchReceiver();stopPublicationReceiver();
   idleMonitor_->stop();
   if (current_) { current_->cancel(); }
   worker_.requestShutdown();
@@ -1566,7 +1573,7 @@ void SessionBridge::reportIdlePollFailure(quint64 session,QString detail){
 void SessionBridge::failed(QString message) {
   QMetaObject::invokeMethod(this, [this, message = std::move(message)] {
     QPointer<SessionBridge> guard(this);
-    rssDispatchInterrupted();if(!guard){return;}subscriptionsDispatchInterrupted();if(!guard){return;}metasearchDispatchInterrupted();if(!guard){return;}
+    rssDispatchInterrupted();if(!guard){return;}subscriptionsDispatchInterrupted();if(!guard){return;}metasearchDispatchInterrupted();if(!guard){return;}publicationDispatchInterrupted();if(!guard){return;}
     // Dispatch may observe cancellation before entering the command body.
     if(guiDownloadHistoryCommand_){
       auto packet=std::make_shared<ui::DownloadHistoryCommandPacket>();
@@ -2730,6 +2737,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
 #include "subscriptions_bridge.inc"
 #include "metasearch_bridge.inc"
 #include "metasearch_magnet_bridge.inc"
+#include "publication_bridge.inc"
 bool SessionBridge::history(quint64 session, quint64 request, core::HistoryDate date) {
   if (session == 0 || request == 0 || session != publishedColumnLayoutSession_
       || !core::validHistoryDate(date)) { return false; }
@@ -3585,14 +3593,14 @@ bool SessionBridge::closeSessionWithoutCheckpoint(quint64 session){
   return closeSessionImpl(true,session);
 }
 bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSession) {
-  stopRssReceiver();stopSubscriptionReceiver();stopMetasearchReceiver();
+  stopRssReceiver();stopSubscriptionReceiver();stopMetasearchReceiver();stopPublicationReceiver();
   if (busy_ || closingSession_) { return false; }
   closingSession_ = true;
   idleMonitor_->stop();
   QPointer<SessionBridge> guard(this);
   const bool accepted = dispatch([this,withoutCheckpoint,expectedSession](std::stop_token) {
     const auto session = host_ ? host_->columnLayoutSession : quint64{0};
-    closeWorkerRss();closeWorkerSubscriptions();closeWorkerMetasearch();
+    closeWorkerRss();closeWorkerSubscriptions();closeWorkerMetasearch();closeWorkerPublications();
     if(withoutCheckpoint&&(!host_||session!=expectedSession||!host_->recoveryDrainOffered
         ||(!host_->recoveryDrainStarted&&!(storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))))){
       throw Failure{{storage::ErrorCode::Conflict,"Close without checkpoint requires this session's actual pending-journal close refusal"}};
@@ -3687,7 +3695,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       completionMonitor_->stop();
       publishedColumnLayoutSession_ = 0; // Reject old-session requests before releasing busy.
       profileClosed_ = true;
-      guiRssCatalog_.reset();guiRssFetch_.reset();rssStarting_.reset();guiMetasearchCatalog_.reset();guiMetasearch_.reset();guiMetasearchDownload_.reset();startingMetasearch_.reset();startingMetasearchDownload_.reset();
+      guiRssCatalog_.reset();guiRssFetch_.reset();rssStarting_.reset();guiPublicationCatalog_.reset();guiPublication_.reset();startingPublication_=false;guiMetasearchCatalog_.reset();guiMetasearch_.reset();guiMetasearchDownload_.reset();startingMetasearch_.reset();startingMetasearchDownload_.reset();
       busy_ = false;
       emit busyChanged(false); // Keep closingSession_ true through this callback.
       if (!guard) { return; }
@@ -3716,7 +3724,7 @@ void SessionBridge::closeFailed(QString message) {
     if (guard) { emit messageReady(message); }
   }, Qt::QueuedConnection);
 }
-void SessionBridge::cancel() { QPointer<SessionBridge> guard(this);stopMetasearchReceiver();if(!guard){return;} automaticSubscriptionQueueCancelled_.store(true);if(const auto automatic=automaticSubscriptionCancellation_.load()){automatic->request_stop();}if (current_ && !closingSession_) { current_->cancel(); } }
+void SessionBridge::cancel() { QPointer<SessionBridge> guard(this);stopMetasearchReceiver();stopPublicationReceiver();if(!guard){return;} automaticSubscriptionQueueCancelled_.store(true);if(const auto automatic=automaticSubscriptionCancellation_.load()){automatic->request_stop();}if (current_ && !closingSession_) { current_->cancel(); } }
 
 namespace {
 engine::LiveQueueLimits optionQueues(const core::Document& document) {

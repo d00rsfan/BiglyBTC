@@ -86,3 +86,9 @@ target_sources(biglybtc_ui PRIVATE metasearch_presentation.hpp metasearch_page.h
 
 
 target_sources(biglybtc_ui PRIVATE metasearch_magnet_dialog.hpp metasearch_magnet_dialog.cpp metasearch_magnet_window.inc)
+
+if(TARGET biglybtc_ui)
+  target_sources(biglybtc_ui PRIVATE publication_presentation.hpp
+    publication_controls.hpp publication_controls.cpp
+    publication_review_dialog.hpp publication_review_dialog.cpp publication_window.inc)
+endif()

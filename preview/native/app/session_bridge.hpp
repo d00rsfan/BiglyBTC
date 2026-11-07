@@ -14,6 +14,7 @@
 #include "column_layout_presentation.hpp"
 #include "library_model.hpp"
 #include "saved_services_presentation.hpp"
+#include "publication_presentation.hpp"
 #include "statistics_presentation.hpp"
 #include "history_presentation.hpp"
 #include "history_week_presentation.hpp"
@@ -87,6 +88,10 @@ public:
   void cancelTorrentCreation(ui::TorrentCreationRequest);
   bool refresh();
   bool savedServices(quint64 request);
+  bool publicationCatalog(ui::PublicationCatalogKey);
+  bool publicationCommand(ui::PublicationCommand);
+  bool confirmPublication(ui::PublicationConfirmation);
+  void cancelPublication(ui::PublicationCommandKey);
   bool statistics(quint64 session, quint64 request);
   bool markStatistics(quint64 session, bool clear);
   bool manualTagStatistics(quint64 session);
@@ -136,6 +141,8 @@ signals:
   void i2pReady(biglybtc::ui::I2pPresentation);
   void progressReady(biglybtc::ui::Telemetry);
   void detailsReady(biglybtc::ui::Details);
+  void publicationCatalogReady(biglybtc::ui::PublicationCatalogPresentation);
+  void publicationReady(biglybtc::ui::PublicationPresentation);
   void savedServicesReady(biglybtc::ui::SavedServicesPresentation);
   void statisticsReady(biglybtc::ui::StatisticsPresentation);
   // Actual successful saved-history mutations only, scoped to one profile.
@@ -246,6 +253,16 @@ private:
   void deliverMetasearchDownload(ui::MetasearchDownloadPresentation);
   void postMetasearch(ui::MetasearchPresentation);
   void postMetasearchDownload(ui::MetasearchDownloadPresentation);
+  void finishPublicationDispatch();
+  void publicationDispatchInterrupted();
+  void stopPublicationReceiver()noexcept;
+  void closeWorkerPublications();
+  void pollPublications();
+  void notePublicationUncertainty(ui::PublicationPacket&);
+  void deliverPublication(ui::PublicationPresentation);
+  void deliverPublicationCatalog(ui::PublicationCatalogPresentation);
+  void postPublication(ui::PublicationPresentation);
+  ui::PublicationCatalogPresentation readPublicationCatalog(ui::PublicationCatalogKey);
   bool closeSessionImpl(bool withoutCheckpoint,quint64 expectedSession);
   std::unique_ptr<Host> host_;
   std::optional<core::Ticket> current_;
@@ -309,6 +326,9 @@ private:
   std::optional<ui::RssCatalogRequest> guiRssCatalog_;
   std::optional<ui::RssFetchCommand> guiRssFetch_;
   std::optional<ui::RssFetchKey> rssStarting_;
+  std::optional<ui::PublicationCatalogKey> guiPublicationCatalog_;
+  std::optional<ui::PublicationCommand> guiPublication_;
+  bool startingPublication_=false;
   std::optional<ui::FileOperationRequest> guiFileOperation_;
   std::optional<ui::TorrentCreationRequest> guiCreation_;
   ui::TorrentCreationProgressPresentation latestCreationProgress_;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include "torrent_intake.hpp"
+namespace biglybtc::app { class SessionBridge; }
 namespace biglybtc::storage {
 // Disk-only target observation. Actual Host handle/controller exclusion remains
 // the concrete coordinator's responsibility; this class never queries an engine.
@@ -13,6 +14,7 @@ public:
   ExistingStoppedPublicSubscriptionTarget& operator=(const ExistingStoppedPublicSubscriptionTarget&)=delete;
 private:
   friend class biglybtc::app::SavedSubscriptionAcquisition;
+  friend class biglybtc::app::SessionBridge; // Genuine read-only stopped-share validation.
   struct Images {
     core::TorrentHash hash;
     OriginalTorrentIdentity identity;
@@ -27,6 +29,12 @@ private:
   static std::expected<ExistingStoppedPublicSubscriptionTarget,Error> capture(
       const ProfileLease&,const TorrentIntakeMetadata&,const std::filesystem::path& chosenDestination,
       std::uint64_t session,std::stop_token={},std::string_view exactOwnerIntent={});
+  static std::expected<ExistingStoppedPublicSubscriptionTarget,Error> captureSharingVerified(
+      const ProfileLease&,const TorrentIntakeMetadata&,const std::filesystem::path&,
+      std::uint64_t,std::stop_token);
+  static std::expected<ExistingStoppedPublicSubscriptionTarget,Error> captureBound(
+      const ProfileLease&,const TorrentIntakeMetadata&,const std::filesystem::path&,
+      std::uint64_t,std::stop_token,std::string_view,bool sharingVerified);
   static std::expected<ExistingStoppedPublicSubscriptionTarget,Error> captureAutomatic(
       const ProfileLease&,const TorrentIntakeMetadata&,std::uint64_t session,std::stop_token={});
   std::expected<void,Error> prepareAutomatic(FixedSubscriptionDownloadPreparation);

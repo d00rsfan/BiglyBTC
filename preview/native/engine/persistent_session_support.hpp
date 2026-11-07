@@ -18,6 +18,9 @@ class PersistentCall final {
 public:
   PersistentCall(PersistentSession&, const storage::ProfileLease&);
   ~PersistentCall();
+  static std::expected<void,storage::Error> announceSharedSeed(PersistentSession&,
+      const storage::ProfileLease&,const storage::TorrentIntakeMetadata&,
+      const std::filesystem::path&);
   PersistentCall(const PersistentCall&) = delete;
   PersistentCall& operator=(const PersistentCall&) = delete;
 private:

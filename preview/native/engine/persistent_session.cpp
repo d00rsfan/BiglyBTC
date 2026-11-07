@@ -1,4 +1,5 @@
 #include "persistent_session_support.hpp"
+#include "shared_seed_announce.hpp"
 #include "verified_seeding.hpp"
 #include "allocation_intent.hpp"
 #include "torrent_state.hpp"
@@ -1877,7 +1878,7 @@ std::expected<bool,storage::Error> PersistentSession::applyExternalQueue(std::ui
     if(decision.action!=phase){continue;}
     if(phase==core::QueueAction::Preserve){continue;}
     if(!value.checkedAlert||!value.status.checked){settled=false;continue;}
-    const auto actual=value.handle.status();if(actual.errc){settled=false;continue;}const bool paused=bool(actual.flags&lt::torrent_flags::paused);
+    const auto actual=value.handle.status();if(actual.errc){settled=false;continue;}const bool paused=bool(actual.flags & lt::torrent_flags::paused);
     value.handle.unset_flags(lt::torrent_flags::auto_managed);
     if(phase==core::QueueAction::Queue){value.policyHeld=true;
       if(!paused&&!value.externalPausePending){value.externalPauseSettled=false;value.externalPausePending=true;value.handle.pause();}
@@ -2163,7 +2164,7 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
       value.handle.set_flags(lt::torrent_flags::stop_when_ready);value.externalPauseSettled=false;value.externalPausePending=false;value.handle.resume();
       impl_->sampleManaged(value);return {}; // Explicit Resume restarts checking, never a payload Run.
     }
-    if(!(actual.flags&lt::torrent_flags::paused)&&!value.externalPausePending){
+    if(!(actual.flags & lt::torrent_flags::paused)&&!value.externalPausePending){
       value.externalPauseSettled=false;value.externalPausePending=true;value.handle.pause();
     }impl_->sampleManaged(value);return {};
   }
@@ -2200,7 +2201,7 @@ std::expected<void, storage::Error> PersistentSession::queueManaged(const core::
   if(impl_->externalQueue){
     value.handle.unset_flags(lt::torrent_flags::auto_managed);value.policyHeld=true;
     if(!value.checkedAlert||!value.status.checked){impl_->sampleManaged(value);return {};}
-    const auto actual=value.handle.status();if(!(actual.flags&lt::torrent_flags::paused)&&!value.externalPausePending){
+    const auto actual=value.handle.status();if(!(actual.flags & lt::torrent_flags::paused)&&!value.externalPausePending){
       value.externalPauseSettled=false;value.externalPausePending=true;value.handle.pause();
     }impl_->sampleManaged(value);return {};
   }
@@ -2576,6 +2577,66 @@ void PersistentSession::discardHistoryCompletions()noexcept{
     m->historyTaken=true;m->historyCompletionMillis.reset();m->historyCompletionProblem.reset();m->historyLease.reset();}
 }
 
+std::expected<void,storage::Error> PersistentSession::validateSharedSeed(
+    const storage::ProfileLease& lease,const storage::TorrentIntakeMetadata& metadata,
+    const std::filesystem::path& destination) const {
+  using storage::Error;using storage::ErrorCode;
+  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||impl_->closingAdmission
+      ||!impl_->managedLease||!lease.valid()||!lease.sharesOwnership(*impl_->managedLease)){
+    return std::unexpected(Error{ErrorCode::Conflict,"Shared seed owner/profile is unavailable"});
+  }
+  const auto found=impl_->managed.find(metadata.hash().hex());
+  if(found==impl_->managed.end()){
+    return std::unexpected(Error{ErrorCode::Conflict,"Shared torrent has no actual managed seed"});
+  }
+  const auto& value=*found->second;
+  if(!value.token||!value.status.admission||value.token->number!=value.status.admission
+      ||!value.status.retained||value.stop||value.removing||value.status.failure||value.manualPaused||value.policyHeld
+      ||!value.checkedAlert||!value.status.checked||!value.status.complete||!value.status.selectedComplete
+      ||value.status.phase!=ManagedPhase::Seeding||value.status.verificationHeld
+      ||value.status.verifiedSeeding!=VerifiedSeedingPhase::Released||!value.handle.is_valid()
+      ||value.storage.identity().originalKey!=metadata.hash()){
+    return std::unexpected(Error{ErrorCode::Conflict,"Shared torrent is not a live fully verified seed"});
+  }
+  try{
+    const auto actual=value.handle.status();
+    if(!actual.is_seeding||actual.errc||(actual.flags & lt::torrent_flags::paused)){
+      return std::unexpected(Error{ErrorCode::Conflict,"Shared torrent is paused or no longer seeding"});
+    }
+    return value.storage.validateSharedSeedSource(lease,metadata.layout(),destination);
+  }catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Cannot validate shared seed owner"});}
+}
+std::expected<void,storage::Error> detail::PersistentCall::announceSharedSeed(
+    PersistentSession& owner,const storage::ProfileLease& lease,
+    const storage::TorrentIntakeMetadata& metadata,const std::filesystem::path& destination) {
+  const auto verified=owner.validateSharedSeed(lease,metadata,destination);
+  if(!verified){return std::unexpected(verified.error());}
+  auto& impl=*owner.impl_;
+  if(!impl.bindingHealthy()){
+    return std::unexpected(storage::Error{storage::ErrorCode::Io,"Shared seed network binding was lost"});
+  }
+  if(!impl.network||impl.network->mode!=NetworkMode::Normal||!impl.network->httpTrackers
+      ||!metadata.trackers()||!metadata.trackers()->announce.starts_with("http://")){
+    return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Shared tracker is not an admitted HTTP source"});
+  }
+  try{
+    auto& value=*impl.managed.at(metadata.hash().hex());
+    const auto trackers=value.handle.trackers();
+    for(std::size_t index=0;index<trackers.size();++index){
+      if(trackers[index].url==metadata.trackers()->announce){
+        value.handle.force_reannounce(0,static_cast<int>(index),
+            lt::torrent_handle::ignore_min_interval|lt::torrent_handle::high_priority);
+        return {};
+      }
+    }
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Shared tracker is absent from this actual seed admission"});
+  }catch(const std::exception&){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot request shared seed announcement"});}
+}
+std::expected<void,storage::Error> announceSharedSeed(PersistentSession& owner,
+    const storage::ProfileLease& lease,const storage::TorrentIntakeMetadata& metadata,
+    const std::filesystem::path& destination) {
+  return detail::PersistentCall::announceSharedSeed(owner,lease,metadata,destination);
+}
 std::vector<ManagedDownloadStatus> PersistentSession::managedDownloads() const {
   std::vector<ManagedDownloadStatus> result;
   if (!impl_->onWorker()) { return result; }

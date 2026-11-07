@@ -255,7 +255,8 @@ SavedServicePage::SavedServicePage(QString id, QString title, QString footer, QW
   layout->addWidget(table_, 1);
   layout->addWidget(label(std::move(footer), this, QStringLiteral("saved-services-footer")));
 }
-SavedServicePage::~SavedServicePage() = default;
+SavedServicePage::~SavedServicePage(){const auto controls=ownedControls_;ownedControls_.clear();if(controls){delete controls.data();}}
+void SavedServicePage::installOwnedControls(QWidget* controls){if(!controls||controls->parentWidget()!=this||ownedControls_){return;}ownedControls_=controls;if(auto* box=qobject_cast<QVBoxLayout*>(layout())){box->insertWidget(1,controls);}if(auto* footer=findChild<QLabel*>("saved-services-footer")){footer->setText(tr("This table shows Original saved records. Owned controls require explicit normal-session actions; saved status is not a live service."));}}
 void SavedServicePage::installModel(QAbstractItemModel* model) {
   proxy_->setSourceModel(model);
   table_->setModel(proxy_);

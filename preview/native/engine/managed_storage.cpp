@@ -691,6 +691,28 @@ std::expected<void,Error> ManagedStorage::validateExistingSnapshot() const {
     for(const auto& slot:impl_->slots){if(slot.padding||(impl_->purpose==ManagedStoragePurpose::VerifySelectedReadOnly&&slot.data.get()<0)){continue;}const auto proof=validateExistingPayload((impl_->save/slot.actual).lexically_normal(),slot.parent.get(),slot.data.get(),slot.identity);if(!proof){return proof;}}return {};}
   catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Existing-only snapshot validation failed"});}
 }
+std::expected<void,Error> ManagedStorage::validateSharedSeedSource(
+    const storage::ProfileLease& lease,const compat::OriginalLayout& wanted,
+    const fs::path& destination) const {
+  if(!impl_||!impl_->categoryLease||!lease.valid()||!lease.sharesOwnership(*impl_->categoryLease)
+      ||impl_->purpose!=ManagedStoragePurpose::VerifyExistingReadOnly){
+    return std::unexpected(Error{ErrorCode::Conflict,"Sharing requires this profile's full verified-existing admission"});
+  }
+  const auto& actual=impl_->layout;
+  if(!destination.is_absolute()||destination.lexically_normal()!=fs::path(impl_->captured.saveDirectory).lexically_normal()
+      ||!impl_->captured.saveFile||*impl_->captured.saveFile!=wanted.name
+      ||actual.name!=wanted.name||actual.multifile!=wanted.multifile||actual.bytes!=wanted.bytes
+      ||actual.pieceLength!=wanted.pieceLength||actual.files.size()!=wanted.files.size()){
+    return std::unexpected(Error{ErrorCode::Conflict,"Shared seed mapping or geometry differs from its admission"});
+  }
+  for(std::size_t i=0;i<actual.files.size();++i){
+    const auto& a=actual.files[i];const auto& b=wanted.files[i];
+    if(a.path!=b.path||a.offset!=b.offset||a.bytes!=b.bytes||a.padding!=b.padding){
+      return std::unexpected(Error{ErrorCode::Conflict,"Shared seed file geometry differs"});
+    }
+  }
+  return validateExistingSnapshot();
+}
 const ManagedQueueMetadata& ManagedStorage::queueMetadata() const { return impl_->queue; }
 const core::SavedDownload& ManagedStorage::capturedDownload() const { return impl_->captured; }
 std::span<const compat::FilePolicy> ManagedStorage::capturedFilePolicy() const noexcept { return impl_->filePolicies; }

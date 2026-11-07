@@ -3,6 +3,7 @@
 #include <QAbstractTableModel>
 #include <QWidget>
 #include <QString>
+#include <QPointer>
 
 #include <cstddef>
 #include <memory>
@@ -75,6 +76,7 @@ public:
   QTableView& table();
   QString statusText() const;
   QString provenanceText() const;
+  void installOwnedControls(QWidget*);
 protected:
   SavedServicePage(QString id, QString title, QString footer, QWidget* parent);
   void installModel(QAbstractItemModel* model);
@@ -84,6 +86,7 @@ protected:
 private:
   SavedPageState state_ = SavedPageState::NotLoaded;
   quint64 generation_ = 0;
+  QPointer<QWidget> ownedControls_;
   QLabel* status_;
   QLabel* provenance_;
   QTableView* table_;

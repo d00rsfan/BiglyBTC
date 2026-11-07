@@ -11,6 +11,14 @@ std::expected<void,Error> ExistingStoppedPublicSubscriptionTarget::current(const
 }
 std::expected<ExistingStoppedPublicSubscriptionTarget,Error> ExistingStoppedPublicSubscriptionTarget::capture(
     const ProfileLease& lease,const TorrentIntakeMetadata& metadata,const fs::path& destination,std::uint64_t session,std::stop_token stop,std::string_view owner){
+  return captureBound(lease,metadata,destination,session,stop,owner,false);
+}
+std::expected<ExistingStoppedPublicSubscriptionTarget,Error> ExistingStoppedPublicSubscriptionTarget::captureSharingVerified(
+    const ProfileLease& lease,const TorrentIntakeMetadata& metadata,const fs::path& destination,std::uint64_t session,std::stop_token stop){
+  return captureBound(lease,metadata,destination,session,stop,{},true);
+}
+std::expected<ExistingStoppedPublicSubscriptionTarget,Error> ExistingStoppedPublicSubscriptionTarget::captureBound(
+    const ProfileLease& lease,const TorrentIntakeMetadata& metadata,const fs::path& destination,std::uint64_t session,std::stop_token stop,std::string_view owner,bool sharingVerified){
   try{
     require(session&&metadata.data_&&!stop.stop_requested(),ErrorCode::Cancelled,"Existing target capture requires a live session and metadata");
     auto access=take(lease.sourceAccess());if(owner.empty()){noAcquisitionIntent(lease);}else{acquisitionOwnerCurrent(lease,owner);}
@@ -46,7 +54,15 @@ std::expected<ExistingStoppedPublicSubscriptionTarget,Error> ExistingStoppedPubl
     }
     for(const auto& pause:library.paused){require(pause.hash!=subject.hash,ErrorCode::Unsupported,"Paused existing target is unsupported");}
     const Node* row=nullptr;if(library.legacyMap){row=&source.root().children.at(selected->sourceIndex*2+1);}else{const auto* rows=source.find("downloads");require(rows&&rows->type==Node::Type::List,ErrorCode::InvalidFormat,"Existing target rows are missing");row=&rows->children.at(selected->sourceIndex);}
+    if(sharingVerified){
+      const auto intent=take(readVerifiedSeedIntent(lease,subject.hash));
+      require(intent&&intent->goal==core::ExistingVerificationGoal::FullTorrent&&!intent->paused&&!intent->forceStart,ErrorCode::Unsupported,"Existing share needs its genuine full-torrent verified-seeding intent; ordinary stopped downloads are not converted");
+      const auto policies=compat::originalFilePolicy(*row,subject.layout.files.size());require(policies.has_value(),ErrorCode::InvalidFormat,"Existing sharing file policy is malformed");
+      for(std::size_t n=0;n<policies->size();++n){require(subject.layout.files[n].padding||!(*policies)[n].skipped,ErrorCode::Unsupported,"Existing sharing requires every actual non-padding file selected");}
+      for(const auto* key:{AllocationModeKey,AllocationStateKey,AllocationSnapshotKey}){require(!row->find(key),ErrorCode::Unsupported,"Existing sharing refuses allocation controller intent");}
+    }else{
     for(const auto* key:{VerifiedSeedKey,VerifiedSeedGoalKey,AllocationModeKey,AllocationStateKey,AllocationSnapshotKey}){require(!row->find(key),ErrorCode::Unsupported,"Existing target has verification/allocation controller intent");}
+    }
     const auto resolved=take(resolveOriginalSaveRoot(*selected,subject.layout));require(!selected->legacySavePath&&resolved.saveDirectory==destination.native()&&resolved.saveFile&&*resolved.saveFile==subject.layout.name,ErrorCode::Unsupported,"Existing target needs its unchanged canonical default destination");
     const fs::path archivePath=selected->torrentFile;require(archivePath==archives/(subject.hash.hex()+".torrent"),ErrorCode::Unsupported,"Existing target needs its canonical primary profile archive");
     const auto& archive=data->observe(archivePath,MaximumMetadata);const auto& archiveBackup=data->observe(fs::path(archivePath.native()+".bak"),MaximumMetadata);require(archive.has_value(),ErrorCode::Conflict,"Existing target has no primary archive");

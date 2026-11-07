@@ -22,7 +22,7 @@
 #include <optional>
 #include <vector>
 
-namespace biglybtc::storage {struct IntakeHistoryOutcome;}
+namespace biglybtc::storage {struct IntakeHistoryOutcome;class TorrentIntakeMetadata;}
 
 namespace biglybtc::engine {
 
@@ -237,6 +237,10 @@ public:
   std::expected<core::TorrentHash, storage::Error> createHybridCompanion(
       storage::ProfileLease&, const core::TorrentHash&, storage::OriginalSelectedHash, std::stop_token = {},storage::IntakeHistoryOutcome* history=nullptr);
   std::vector<ManagedDownloadStatus> managedDownloads() const;
+  // Worker-only live owner check for genuine saved-share registration. Neither
+  // a copied status nor caller-supplied completion can authorise publication.
+  std::expected<void,storage::Error> validateSharedSeed(const storage::ProfileLease&,
+      const storage::TorrentIntakeMetadata&,const std::filesystem::path& destination) const;
   // Existing worker only, one private actual checkpoint event at a time.
   // No status query, SDK call or startup scan. Consume before next issuance;
   // normal joined close remains readable, poison/NoCP suppress all events.

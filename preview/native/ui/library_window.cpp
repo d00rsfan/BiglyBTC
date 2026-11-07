@@ -1,3 +1,5 @@
+#include "publication_controls.hpp"
+#include "publication_review_dialog.hpp"
 #include "file_operation_dialog.hpp"
 #include "torrent_creation_dialog.hpp"
 #include "torrent_intake_dialog.hpp"
@@ -101,6 +103,8 @@ void applySavedResult(Page& page, quint64 request, const Result& result) {
 
 LibraryWindow::~LibraryWindow(){
   closing_=true;
+  const auto publication=publicationReview_;publicationReview_.clear();
+  if(publication){QObject::disconnect(publication.data(),nullptr,this,nullptr);delete publication.data();}
   // Retire owned signal sources while the derived Window and its members are
   // still alive. QObject's later base teardown is too late for child-destroyed
   // lambdas which access those members; QPointer alone does not fix that gap.
@@ -491,7 +495,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
       else { refreshStatistics(); }
       return;
     }
-    if (onSavedServicePage()) { refreshSavedServices(); return; }
+    if (onSavedServicePage()) { if(columnSession_){refreshPublicationViews();}else{refreshSavedServices();} return; }
     if (mainTabs_->currentWidget() != torrentsPage_ || busy_) { return; }
     suppressAutomaticDetails_ = false;
     detailsRequestedFor_.reset();
@@ -577,31 +581,32 @@ void LibraryWindow::showMyTracker() {
   QPointer<LibraryWindow> guard(this);
   const bool fresh = !hostingPage_;
   if (fresh) {
-    hostingPage_ = new SavedHostingPage(mainTabs_);
+    hostingPage_ = new SavedHostingPage(mainTabs_);installPublicationControls(PublicationKind::Tracker,hostingPage_);
     mainTabs_->addTab(hostingPage_.data(), tr("My Tracker"));
     if (!guard) { return; }
   }
   mainTabs_->setCurrentWidget(hostingPage_.data());
   if (!guard) { return; }
   hostingPage_->table().setFocus(Qt::ShortcutFocusReason);
-  if (guard && fresh) { refreshSavedServices(); }
+  if (guard && fresh) { if(columnSession_){refreshPublicationViews();}else{refreshSavedServices();} }
 }
 void LibraryWindow::showMyShares() {
   if (closing_) { return; }
   QPointer<LibraryWindow> guard(this);
   const bool fresh = !sharesPage_;
   if (fresh) {
-    sharesPage_ = new SavedSharesPage(mainTabs_);
+    sharesPage_ = new SavedSharesPage(mainTabs_);installPublicationControls(PublicationKind::Shares,sharesPage_);
     mainTabs_->addTab(sharesPage_.data(), tr("My Shares"));
     if (!guard) { return; }
   }
   mainTabs_->setCurrentWidget(sharesPage_.data());
   if (!guard) { return; }
   sharesPage_->table().setFocus(Qt::ShortcutFocusReason);
-  if (guard && fresh) { refreshSavedServices(); }
+  if (guard && fresh) { if(columnSession_){refreshPublicationViews();}else{refreshSavedServices();} }
 }
 #include "download_history_window.inc"
 #include "rss_sources_window.inc"
+#include "publication_window.inc"
 #include "metasearch_window.inc"
 #include "metasearch_magnet_window.inc"
 #include "subscriptions_window.inc"
@@ -1031,8 +1036,8 @@ void LibraryWindow::closePage(int index) {
   if (!page) { return; }
   const bool retainedLibrary = page == torrentsPage_;
   if (!retainedLibrary) {
-    if (page == hostingPage_.data()) { hostingPage_.clear(); }
-    else if (page == sharesPage_.data()) { sharesPage_.clear(); }
+    if (page == hostingPage_.data()) { if(trackerControls_){trackerControls_->invalidate();if(!guard||!page){return;}}trackerControls_.clear();hostingPage_.clear(); }
+    else if (page == sharesPage_.data()) { if(sharingControls_){sharingControls_->invalidate();if(!guard||!page){return;}}sharingControls_.clear();sharesPage_.clear(); }
     else if(page==subscriptionsPage_.data()){const auto old=subscriptionsPage_;subscriptionsPage_.clear();old->invalidateSession();if(!guard||!page){return;}}
     else if(page==metasearchPage_.data()){pendingMetasearchReview_.reset();const auto old=metasearchPage_;metasearchPage_.clear();old->invalidateSession();if(!guard||!page){return;}if(metasearchReview_){metasearchReview_.reset();if(intakeDialog_){intakeDialog_->invalidateSession();if(!guard||!page){return;}}}}
     else if(page==rssPage_.data()){const auto old=rssPage_;rssPage_.clear();old->invalidateSession();if(!guard||!page){return;}}
@@ -1111,9 +1116,9 @@ void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
   activeSavedRequest_.reset();
   if (closing_) { return; }
   QPointer<LibraryWindow> guard(this);
-  if (hostingPage_) { applySavedResult(*hostingPage_, packet->request, packet->hosting); }
+  if (hostingPage_&&(!trackerControls_||!columnSession_)) { applySavedResult(*hostingPage_, packet->request, packet->hosting); }
   if (!guard) { return; }
-  if (sharesPage_) { applySavedResult(*sharesPage_, packet->request, packet->sharing); }
+  if (sharesPage_&&(!sharingControls_||!columnSession_)) { applySavedResult(*sharesPage_, packet->request, packet->sharing); }
   if (!guard) { return; }
   queueOptionalViews();
 }
@@ -1122,6 +1127,8 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;pendingMetasearchReview_.reset();invalidateMetasearchMagnetReview();if(!guard){return;}
+  for(const auto& controls:{sharingControls_,trackerControls_}){if(controls){controls->beginSession(session,controls->page()?controls->page():reserveRssUiIdentity());if(!guard||columnSession_!=session){return;}}}
+  if(publicationReview_){publicationReview_->invalidate();if(!guard){return;}}
   if(subscriptionsPage_){const auto id=subscriptionsPage_->page()?subscriptionsPage_->page():reserveRssUiIdentity();subscriptionsPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
   if(rssPage_){const auto id=rssPage_->page()?rssPage_->page():reserveRssUiIdentity();rssPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
   if(metasearchPage_){const auto id=metasearchPage_->page()?metasearchPage_->page():reserveRssUiIdentity();metasearchPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
@@ -1363,6 +1370,7 @@ void LibraryWindow::setOfflinePreview(bool offline) {
   if(subscriptionsPage_){subscriptionsPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(rssPage_){rssPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(metasearchPage_){metasearchPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
+  for(const auto& controls:{sharingControls_,trackerControls_}){if(controls){controls->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}}
   previewStatus_->setText(offline ? tr("Offline preview") : tr("Local test"));
   if (guard) { queueDownloadActions(); }
 }
@@ -2011,6 +2019,7 @@ void LibraryWindow::setBusy(bool value) {
   if(subscriptionsPage_){subscriptionsPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(rssPage_){rssPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(metasearchPage_){metasearchPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
+  for(const auto& controls:{sharingControls_,trackerControls_}){if(controls){controls->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}}
   if(metasearchMagnetDialog_){metasearchMagnetDialog_->setBusy(busy_);if(!guard){return;}}
   if(!busy_&&pendingMetasearchReview_){const auto review=std::move(pendingMetasearchReview_);pendingMetasearchReview_.reset();setMetasearchDownloadResult(review);if(!guard){return;}}
   if (statisticsPage_) { statisticsPage_->setAccountingBusy(value); }

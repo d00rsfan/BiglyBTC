@@ -165,6 +165,12 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge, &Bridge::i2pReady, &window, &Window::setI2p);
     QObject::connect(&bridge, &Bridge::progressReady, &window, &Window::setTelemetry);
     QObject::connect(&bridge, &Bridge::detailsReady, &window, &Window::setDetails);
+    QObject::connect(&bridge,&Bridge::publicationCatalogReady,&window,&Window::setPublicationCatalog);
+    QObject::connect(&bridge,&Bridge::publicationReady,&window,&Window::setPublicationResult);
+    QObject::connect(&window,&Window::publicationCatalogRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::PublicationCatalogKey key){if(owner&&view&&!owner->publicationCatalog(key)&&view){view->rejectPublicationCatalog(key);}});
+    QObject::connect(&window,&Window::publicationRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::PublicationCommand command){if(owner&&view&&!owner->publicationCommand(command)&&view){view->rejectPublication(command);}});
+    QObject::connect(&window,&Window::publicationConfirmed,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::PublicationConfirmation command){if(owner&&view&&!owner->confirmPublication(command)&&view){view->rejectPublicationConfirmation(command);}});
+    QObject::connect(&window,&Window::publicationCancelRequested,&bridge,&Bridge::cancelPublication);
     QObject::connect(&bridge, &Bridge::savedServicesReady, &window, &Window::setSavedServices);
     QObject::connect(&bridge, &Bridge::statisticsReady, &window, &Window::setStatistics);
     QObject::connect(&bridge, &Bridge::historyChanged, &window, &Window::setHistoryRevision);

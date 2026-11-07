@@ -13,6 +13,7 @@
 #include "file_model.hpp"
 #include "torrent_intake_presentation.hpp"
 #include "saved_services_presentation.hpp"
+#include "publication_presentation.hpp"
 #include "column_layout_presentation.hpp"
 #include "statistics_presentation.hpp"
 #include "overall_presentation.hpp"
@@ -68,6 +69,9 @@ class EngineActivityHistory;
 class NativeActivityHistory;
 
 class TorrentIntakeDialog;
+class PublicationControls;
+class PublicationReviewDialog;
+class SavedServicePage;
 class MetasearchMagnetDialog;
 
 class LibraryWindow final : public QMainWindow {
@@ -94,6 +98,12 @@ public:
   void setDetails(const Details&);
   SavedHostingPage* hostingPage() const { return hostingPage_.data(); }
   SavedSharesPage* sharesPage() const { return sharesPage_.data(); }
+  PublicationControls* publicationControls(PublicationKind)const;
+  void setPublicationCatalog(PublicationCatalogPresentation);
+  void setPublicationResult(PublicationPresentation);
+  void rejectPublicationCatalog(PublicationCatalogKey);
+  void rejectPublication(const PublicationCommand&);
+  void rejectPublicationConfirmation(PublicationConfirmation);
   void setSavedServices(SavedServicesPresentation);
   StatisticsPage* statisticsPage() const;
   DownloadHistoryPage* downloadHistoryPage()const;
@@ -213,6 +223,10 @@ signals:
   void torrentIntakeRequested(biglybtc::ui::TorrentIntakeRequest);
   void torrentIntakeSubmitted(biglybtc::ui::TorrentIntakeSubmission);
   void magnetImportRequested(QString uri, QString destination);
+  void publicationCatalogRequested(biglybtc::ui::PublicationCatalogKey);
+  void publicationRequested(biglybtc::ui::PublicationCommand);
+  void publicationConfirmed(biglybtc::ui::PublicationConfirmation);
+  void publicationCancelRequested(biglybtc::ui::PublicationCommandKey);
   void savedServicesRequested(quint64 request);
   void statisticsRequested(quint64 session, quint64 request);
   void manualTagStatisticsRequested(quint64 session);
@@ -297,6 +311,8 @@ private:
   void closePage(int index);
   bool onSavedServicePage() const;
   bool hasLoadingServices(quint64 request) const;
+  void installPublicationControls(PublicationKind,SavedServicePage*);
+  void refreshPublicationViews();
   void refreshSavedServices();
   void queueSavedServices();
   void failSavedServices(quint64 request, const QString& message);
@@ -352,6 +368,8 @@ private:
   QTabWidget* mainTabs_;
   QWidget* torrentsPage_;
   QPointer<SavedHostingPage> hostingPage_;
+  QPointer<PublicationControls> sharingControls_,trackerControls_;
+  QPointer<PublicationReviewDialog> publicationReview_;
   QPointer<SavedSharesPage> sharesPage_;
   QPointer<StatisticsPage> statisticsPage_;
   QPointer<SubscriptionsPage> subscriptionsPage_;

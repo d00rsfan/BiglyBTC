@@ -2,6 +2,7 @@
 
 #include "biglybtc/library.hpp"
 #include "biglybtc/file_policy.hpp"
+#include "biglybtc/torrent_layout.hpp"
 #include "biglybtc/existing_piece_goal.hpp"
 #include "biglybtc/queue_file_priority.hpp"
 #include "profile.hpp"
@@ -104,6 +105,10 @@ public:
   ManagedAllocationProgress allocationProgress() const noexcept;
   std::expected<ManagedAllocationProgress,storage::Error> advanceAllocation(std::size_t byteBudget=4*1024*1024);
   std::expected<void,storage::Error> settleAllocation(const storage::ProfileLease&,bool successful);
+  // Actual read-only checked share geometry and same-OFD payload snapshot.
+  std::expected<void,storage::Error> validateSharedSeedSource(
+      const storage::ProfileLease&,const compat::OriginalLayout&,
+      const std::filesystem::path& destination) const;
   const ManagedQueueMetadata& queueMetadata() const;
   // Captured original mapping for passive same-admission group authority.
   const core::SavedDownload& capturedDownload() const;
