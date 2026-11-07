@@ -1,0 +1,24 @@
+{
+  "binary_copies": 0,
+  "default_distribution_promotion": false,
+  "helper": {
+    "bytes": 7726,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/development-preview/development_preview.py",
+    "sha256": "e1c431dbf55ce60e36c76144228450ebaa60b5c25b35513bc676a7f1f3288994"
+  },
+  "implementation_commit": "a291a4e8e1ceaadb8e0f31d52c57fc10e9c49619",
+  "launches": 0,
+  "native_tree": "7a8de0d0e730c28d6166adf8251fb1620dfd6948",
+  "pins": {
+    "bytes": 4565,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/development-preview/pins.json",
+    "sha256": "785d364092d121b1d5523cdd5001153afb92a8088e55437231c0f252b31e10e6"
+  },
+  "qt_copies": 0,
+  "status": "PASS_READ_ONLY_DEVELOPMENT_PREVIEW_VERIFY",
+  "wrapper": {
+    "bytes": 179,
+    "path": "/home/yurii/Java/BiglyBTC/dist/BiglyBTC-development-preview",
+    "sha256": "abcb45425dd66613573ab03b6a90e4cae13e956eeda0a20e51f242e1a9115513"
+  }
+}

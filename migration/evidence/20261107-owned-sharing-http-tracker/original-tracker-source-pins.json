@@ -1,0 +1,46 @@
+{
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sources": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/tracker/host/TRHostTorrent.java",
+      "sha256": "1babd8a5f4e296f6d8e0db03dfe3899d6bcba15d5cc02b0dd95f234e58d9dd3e"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/tracker/host/impl/TRHostConfigImpl.java",
+      "sha256": "a650b94c61c5085bc549d805222ed49d12e5338ccbf6b2148393c5a4a9198e2e"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/tracker/host/impl/TRHostImpl.java",
+      "sha256": "a0a5655dec49d88f0a4cb242d025c6ba95f67bdc14dde29902751f250d35e415"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/tracker/host/impl/TRHostTorrentHostImpl.java",
+      "sha256": "95ab32672fcd2b7885ffb4f48d4106220af6228f2f5c84d16345fe45794667b9"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/tracker/host/impl/TRHostTorrentPublishImpl.java",
+      "sha256": "74e94c66469f50b3bd4215b7d2ab73e4332abbaacabe665fae215c480ef89b37"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/tracker/server/impl/TRTrackerServerProcessor.java",
+      "sha256": "a56a1d07ec5f259e7e188cdb73ca7e67d84dfe943dbc3ed6ef961556a24830a6"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/tracker/server/impl/tcp/TRTrackerServerProcessorTCP.java",
+      "sha256": "1d02b86ceaa242cabd6ec6c232588d4d0152960c611b0ea90a72124cc29f04bf"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/tracker/server/impl/TRTrackerServerImpl.java",
+      "sha256": "b8c870e1c5e4b3891d107f6fb60d2f042e42a18a8499b882680ddacc557d0215"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/tracker/server/impl/tcp/blocking/TRBlockingServer.java",
+      "sha256": "007f14b9596225f4cbef7924f6d27784e2a11c2300124aab572547300b5d1e1d"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java",
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194"
+    }
+  ],
+  "scope": "Read-only Source facts, no manager/Core/server/JVM instantiation or network subject."
+}

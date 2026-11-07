@@ -1752,3 +1752,8 @@ STOP. Proposed next: Propose original mixed Public+I2P selection for one torrent
 Qualified native source `90f1d3defd31acacb784cb8cda40d8d06ba6d76d`: one mixed torrent/storage/queue owner with genuine Public+I2P contribution, source-bound key0 route, independent controls and original counters/restart. [Review](migration/evidence/20261031-mixed-public-i2p/REVIEW.md). Whole client/P07 remain in progress; discovery beyond tracker/warmed local-cache scope is open.
 
 STOP. Proposed next: Propose I2P peer discovery and magnets beyond tracker-only peers and explicitly warmed known local LS2 caches; do not begin it.
+
+
+### 2026-11-07 — persistent sharing / HTTP tracker local chapter
+
+`a291a4e8e1ceaadb8e0f31d52c57fc10e9c49619` / Native `7a8de0d0e730c28d6166adf8251fb1620dfd6948`: bounded chapter accepted with actual GCC/SAN95Qtrows28methods, owned peer transfer, Source/recovery/classic lifecycle controls. [Scope/remaining work](migration/tasks/P08-04-owned-sharing-http-tracker.md). Whole P08 remains open; next existing-sharing compatibility proposal is **not started**. Stop after publication.

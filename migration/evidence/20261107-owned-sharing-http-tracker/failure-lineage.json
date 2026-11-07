@@ -1,0 +1,505 @@
+{
+  "cohorts": [
+    {
+      "actual_results": [
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            1
+          ],
+          "failure": "AssertionError('Command failed; full diagnostics: /home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/gcc/r1/build.log')",
+          "lane": "gcc",
+          "receipt": {
+            "bytes": 22187,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/gcc/r1/result-raw.json",
+            "sha256": "2d7d909e8a302268e156a0af93f760f84ed8680506521d578ee8e5c19200d7cb"
+          },
+          "seconds": 294.507,
+          "status": "FAIL"
+        },
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            1
+          ],
+          "failure": "AssertionError('Command failed; full diagnostics: /home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/san/r1/build.log')",
+          "lane": "san",
+          "receipt": {
+            "bytes": 22186,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/san/r1/result-raw.json",
+            "sha256": "d96dc7538ec8cb3e0cb64404586cd240166dc94c2bdc77551a3c28fc8fdc0891"
+          },
+          "seconds": 628.16,
+          "status": "FAIL"
+        }
+      ],
+      "cohort": "p08-sharing-tracker-20261107"
+    },
+    {
+      "actual_results": [
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            1
+          ],
+          "failure": "AssertionError('Command failed; full diagnostics: /home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r2/gcc/r1/build.log')",
+          "lane": "gcc",
+          "receipt": {
+            "bytes": 25227,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r2/gcc/r1/result-raw.json",
+            "sha256": "02f91209ef09957947ba6d6906402bc6cd1dee33a8fd73daffc77dc386894129"
+          },
+          "seconds": 530.735,
+          "status": "FAIL"
+        },
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            1
+          ],
+          "failure": "AssertionError('Command failed; full diagnostics: /home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r2/san/r1/build.log')",
+          "lane": "san",
+          "receipt": {
+            "bytes": 25229,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r2/san/r1/result-raw.json",
+            "sha256": "64e62ecc013f847b2ee3213cd17b7e80230f3e888a2f7c641039ffae1ad58cef"
+          },
+          "seconds": 1353.292,
+          "status": "FAIL"
+        }
+      ],
+      "cohort": "cohort-r2"
+    },
+    {
+      "actual_results": [
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            2,
+            0,
+            16,
+            2,
+            0,
+            0,
+            0
+          ],
+          "failure": "AssertionError(['sharing-values', 'real-sharing-tracker-transfer', 'saved-sharing', 'publication-bridge'])",
+          "lane": "gcc",
+          "receipt": {
+            "bytes": 56352,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r3/gcc/r1/result-raw.json",
+            "sha256": "fac01ffd69c2d790dc5648d75ce033cf48e15b499f063bbc93c681c5a3abea06"
+          },
+          "seconds": 46.773,
+          "status": "FAIL"
+        },
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            2,
+            0,
+            16,
+            2,
+            0,
+            0,
+            0
+          ],
+          "failure": "AssertionError(['sharing-values', 'real-sharing-tracker-transfer', 'saved-sharing', 'publication-bridge'])",
+          "lane": "san",
+          "receipt": {
+            "bytes": 56386,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r3/san/r1/result-raw.json",
+            "sha256": "acbe6bf0254335268b3e16eb485a9dcf4bfb5922e3475eebc49704f396ea8f0d"
+          },
+          "seconds": 88.385,
+          "status": "FAIL"
+        }
+      ],
+      "cohort": "cohort-r3"
+    },
+    {
+      "actual_results": [
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -2
+          ],
+          "failure": "AssertionError('Command failed; full diagnostics: /home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r4/gcc/r1/real-sharing-tracker-transfer.log')",
+          "lane": "gcc",
+          "receipt": {
+            "bytes": 51731,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r4/gcc/r1/result-raw.json",
+            "sha256": "86916908bcfe1299fd5fadf7907a262545ccabe098a4cc725f04997a97212941"
+          },
+          "seconds": 215.653,
+          "status": "FAIL"
+        },
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -2
+          ],
+          "failure": "AssertionError('Command failed; full diagnostics: /home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r4/san/r1/real-sharing-tracker-transfer.log')",
+          "lane": "san",
+          "receipt": {
+            "bytes": 51765,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r4/san/r1/result-raw.json",
+            "sha256": "a1c3daa9869f4fcfd0335ea1b6982c41a0d6338e4638558676945eb5247679e7"
+          },
+          "seconds": 271.963,
+          "status": "FAIL"
+        }
+      ],
+      "cohort": "cohort-r4"
+    },
+    {
+      "actual_results": [
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "failure": "AssertionError(['publication-bridge'])",
+          "lane": "gcc",
+          "receipt": {
+            "bytes": 66606,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r5/gcc/r1/result-raw.json",
+            "sha256": "a4664fb0dc4314271ad28e75efca8d4746dfeebb0603bc07f6576da22a58d9bc"
+          },
+          "seconds": 296.094,
+          "status": "FAIL"
+        },
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "failure": "AssertionError(['publication-bridge'])",
+          "lane": "san",
+          "receipt": {
+            "bytes": 66642,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r5/san/r1/result-raw.json",
+            "sha256": "d79750cdd41761330361af8d56858eac0a4d69f79194ab59f33c89d80772811d"
+          },
+          "seconds": 867.983,
+          "status": "FAIL"
+        }
+      ],
+      "cohort": "cohort-r5"
+    },
+    {
+      "actual_results": [
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "failure": "AssertionError(['publication-bridge'])",
+          "lane": "gcc",
+          "receipt": {
+            "bytes": 69481,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r6/gcc/r1/result-raw.json",
+            "sha256": "35b39846142ce2b1ab5b2a7b0fd4d57f62e4099256d9fb43fd95158cdd0b0714"
+          },
+          "seconds": 196.1,
+          "status": "FAIL"
+        },
+        {
+          "lane": "san",
+          "record": {
+            "bytes": 435,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r6/san-not-run.json",
+            "sha256": "9b518b1818ad5f1e3c6fe04be7b97d5765d5bf55b42ba30575c4ce71dcfa7a9a"
+          },
+          "status": "NOT_RUN_GCC_GATE"
+        }
+      ],
+      "cohort": "cohort-r6"
+    },
+    {
+      "actual_results": [
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "failure": "AssertionError(['publication-bridge'])",
+          "lane": "gcc",
+          "receipt": {
+            "bytes": 71823,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r7/gcc/r1/result-raw.json",
+            "sha256": "19d6669bb283b283e6a81a03f3faa24496d0f5b0c531d77df67a001fdeb2c34c"
+          },
+          "seconds": 68.777,
+          "status": "FAIL"
+        },
+        {
+          "lane": "san",
+          "record": {
+            "bytes": 388,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r7/san-not-run.json",
+            "sha256": "2a134701b885135dd474b47ed4e5ba0c30eb3a64ee9502b2cb91fabce719d394"
+          },
+          "status": "NOT_RUN_GCC_GATE"
+        }
+      ],
+      "cohort": "cohort-r7"
+    },
+    {
+      "actual_results": [
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "failure": "AssertionError(['publication-bridge'])",
+          "lane": "gcc",
+          "receipt": {
+            "bytes": 74447,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r8/gcc/r1/result-raw.json",
+            "sha256": "1ce6df5c6e8eee52c44fb3be93bd2c8a7374a08e91d4593a87241bfe29a99726"
+          },
+          "seconds": 186.686,
+          "status": "FAIL"
+        },
+        {
+          "lane": "san",
+          "record": {
+            "bytes": 367,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r8/san-not-run.json",
+            "sha256": "22fada4d11f786ea8b4ff793d4e1be8f47d6f03adfe216d0c9471d55cb080dc3"
+          },
+          "status": "NOT_RUN_GCC_GATE"
+        }
+      ],
+      "cohort": "cohort-r8"
+    },
+    {
+      "actual_results": [
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "failure": null,
+          "lane": "gcc",
+          "receipt": {
+            "bytes": 77995,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/gcc/r1/result-raw.json",
+            "sha256": "4449d2babd5cea142d8d19e4948312969063dca26aafc9f17f1a6c4e5c4b4057"
+          },
+          "seconds": 167.901,
+          "status": "PASS_UNSTAMPED"
+        },
+        {
+          "attempt": "r1",
+          "exit_codes": [
+            130
+          ],
+          "failure": "AssertionError('Command failed; full diagnostics: /home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/san/r1/build.log')",
+          "lane": "san",
+          "receipt": {
+            "bytes": 45112,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/san/r1/result-raw.json",
+            "sha256": "c9dd41a891e506655f2afee1d589f7f4e2cb26218269674ecdc1ea25213d07c8"
+          },
+          "seconds": 93.509,
+          "status": "FAIL"
+        },
+        {
+          "attempt": "r2",
+          "exit_codes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "failure": null,
+          "lane": "san",
+          "receipt": {
+            "bytes": 78029,
+            "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/san/r2/result-raw.json",
+            "sha256": "9f0085891c1d720fc6137b790b14977773ff78f57bad9f9be551c74bf631a401"
+          },
+          "seconds": 466.551,
+          "status": "PASS_UNSTAMPED"
+        }
+      ],
+      "cohort": "cohort-r9"
+    }
+  ],
+  "final_gcc_attempt": "r1",
+  "final_san_attempt": "r2",
+  "status": "HISTORICAL_FAILURES_AND_NON_EXECUTIONS_RETAINED"
+}

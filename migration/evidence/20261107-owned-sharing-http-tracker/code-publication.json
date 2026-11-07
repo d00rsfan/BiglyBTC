@@ -1,0 +1,38 @@
+{
+  "final_cohort": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9",
+  "gcc": {
+    "bytes": 78349,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/gcc/r1/result-stamped.json",
+    "sha256": "b2c63e1dd3601818ea7746e959196802432e653063434895fa537843b55fdd90"
+  },
+  "implementation_commit": "a291a4e8e1ceaadb8e0f31d52c57fc10e9c49619",
+  "native_tree": "7a8de0d0e730c28d6166adf8251fb1620dfd6948",
+  "original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "publisher": {
+    "bytes": 2367,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/commit-code.py",
+    "sha256": "bca89b8e601bdd1bb388ee7735d0de0d01b9a4687f52d90555cd040135ed602d"
+  },
+  "qt_methods_per_lane": 28,
+  "qt_rows_per_lane": 95,
+  "san": {
+    "bytes": 78383,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/san/r2/result-stamped.json",
+    "sha256": "658ebdeb88f2c03226a8f9ff122cffcdf602d2e339123ee07de0017c575e97b3"
+  },
+  "source": {
+    "bytes": 188638,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/source.json",
+    "sha256": "3571d9bc634f0820ece2cb2b0e659162f13487b3c829b0ade5fa3353a5cf5abb"
+  },
+  "source_leaves": 46,
+  "source_selection": {
+    "bytes": 55502,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/source-selection.json",
+    "sha256": "8a56a1ab4d4bb542a5328b9d787960c6cebc0b17d56019a86a08c97c35924712"
+  },
+  "status": "LOCAL_ONLY_CODE_COMMITTED_AND_QUALIFICATION_BOUND"
+}

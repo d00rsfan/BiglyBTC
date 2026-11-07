@@ -1,0 +1,38 @@
+{
+  "build": false,
+  "command": {
+    "argv": [
+      "/usr/bin/cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBTC/preview/native",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/default-core-configure/cache",
+      "-G",
+      "Ninja",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DBIGLYBTC_LOCAL_ENGINE=OFF",
+      "-DBIGLYBTC_DESKTOP=OFF",
+      "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/provider-candidate-r2/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/home/yurii/Java/BiglyBTC/build/dependencies/country/sysroot/usr;/opt/Qt/6.12.0/gcc_64"
+    ],
+    "cwd": "/home/yurii/Java/BiglyBT",
+    "elapsed_seconds": 2.32,
+    "exit_code": 0,
+    "failure": null,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/default-core-configure/configure.log",
+    "log_sha256": "1f7ef9301ae867b19ae51e221682a62c4930d59008af34e7ab553873677d7f7e"
+  },
+  "original_result": {
+    "bytes": 193193,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/default-core-configure/result.json",
+    "sha256": "b7520cc4d882af8170e5ab13b2f82c44395ff06fcfef60faa33f4a51a3ba908a"
+  },
+  "runtime": false,
+  "source": {
+    "bytes": 188638,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/source.json",
+    "sha256": "3571d9bc634f0820ece2cb2b0e659162f13487b3c829b0ade5fa3353a5cf5abb"
+  },
+  "source_files": 1495,
+  "status": "PASS_DEFAULT_CORE_CONFIGURE_ONLY"
+}

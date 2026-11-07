@@ -1,0 +1,154 @@
+{
+  "status": "PASS_OWNED_SHARING_AND_EMBEDDED_HTTP_TRACKER_LOCAL_GCC_SAN_REVIEW",
+  "implementation_commit": "a291a4e8e1ceaadb8e0f31d52c57fc10e9c49619",
+  "native_tree": "7a8de0d0e730c28d6166adf8251fb1620dfd6948",
+  "validation": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/independent-validation.json",
+    "sha256": "e5af7498d7fbcfda4a072ca421df33dfbc0cd0604bce15e4150015b7dd4f4c79",
+    "bytes": 9371
+  },
+  "code_publication": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/code-publication.json",
+    "sha256": "bdec5fd4d315703fcde5a7085fa5f175c294009211771431d88101044174ae8d",
+    "bytes": 1796
+  },
+  "source": {
+    "bytes": 188638,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/source.json",
+    "sha256": "3571d9bc634f0820ece2cb2b0e659162f13487b3c829b0ade5fa3353a5cf5abb"
+  },
+  "source_selection": {
+    "bytes": 55502,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/source-selection.json",
+    "sha256": "8a56a1ab4d4bb542a5328b9d787960c6cebc0b17d56019a86a08c97c35924712"
+  },
+  "raw_receipts": {
+    "gcc": {
+      "bytes": 77995,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/gcc/r1/result-raw.json",
+      "sha256": "4449d2babd5cea142d8d19e4948312969063dca26aafc9f17f1a6c4e5c4b4057"
+    },
+    "san": {
+      "bytes": 78029,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/san/r2/result-raw.json",
+      "sha256": "9f0085891c1d720fc6137b790b14977773ff78f57bad9f9be551c74bf631a401"
+    }
+  },
+  "stamped_receipts": {
+    "gcc": {
+      "bytes": 78349,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/gcc/r1/result-stamped.json",
+      "sha256": "b2c63e1dd3601818ea7746e959196802432e653063434895fa537843b55fdd90"
+    },
+    "san": {
+      "bytes": 78383,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/san/r2/result-stamped.json",
+      "sha256": "658ebdeb88f2c03226a8f9ff122cffcdf602d2e339123ee07de0017c575e97b3"
+    }
+  },
+  "measured": {
+    "current_source_files": 1495,
+    "selected_leaves": 46,
+    "per_lane": {
+      "gcc": {
+        "seconds": 167.901,
+        "commands": 19,
+        "qt_rows": 95,
+        "qt_methods": 28,
+        "images": 9,
+        "archives": 11
+      },
+      "san": {
+        "seconds": 466.551,
+        "commands": 19,
+        "qt_rows": 95,
+        "qt_methods": 28,
+        "images": 9,
+        "archives": 11
+      }
+    },
+    "qt_groups_per_lane": 8,
+    "roles": "Four actual compile macro roles, seven provider fixture symbols split, production no storage wrappers, test-only fsync wrap, two real production/Bridge link exclusions verified.",
+    "sanitizer": "Leak-enabled ASan/UBSan lane passes with no reported finding."
+  },
+  "coverage": [
+    "Genuine file and whole-directory creation, stopped full-data verification, real seed guard, serving registration and independent tracker-only leecher payload/counter checks; stop/reverify/idempotent re-publication.",
+    "Binary HTTP announce/scrape/compact/key/expiry values, real TCP peer/stat/checkpoint behavior, current-source and named-lock withdrawal/no late reply, save uncertainty/no blind retry, joins and last-alias lock reacquisition.",
+    "Actual saved-share source/unknown preservation/cancellation/recovery/foreign-cache tests; real normal Host configure/create/publish/stop/reopen serving checks and UI/navigation lifecycle cases."
+  ],
+  "original_public_values": {
+    "receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/original-broken-md5-oracle/actual-values-r1-20261107/result.json",
+      "sha256": "67ccdb372bd67140b324584eb1bce4980f3f0ba46a954e26c3af308178f97763",
+      "bytes": 9353
+    },
+    "observations": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/original-broken-md5-oracle/actual-values-r1-20261107/observations.json",
+      "bytes": 9505,
+      "sha256": "da42c751616c6095b9738ff04398c97290e04968d1870881a4444c7fbe529ba3"
+    },
+    "actual_cases": 16,
+    "native_comparisons_per_lane": 16,
+    "commands": "One javac and one JVM, qualified reused network-deny constraint; actual public BrokenMd5Hasher values only.",
+    "limit": "Classes/private fixture hashes are recorded-before-cleanup facts; no whole Original manager/profile/tracker handback execution claim."
+  },
+  "original_protection": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "sdk_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "default_core": {
+    "receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/default-core-configure/result.json",
+      "sha256": "b7520cc4d882af8170e5ab13b2f82c44395ff06fcfef60faa33f4a51a3ba908a",
+      "bytes": 193193
+    },
+    "scope": "Configure-only, local-engine and desktop OFF; exact final source map,2.32seconds; no build/runtime. Retained cache pin verified."
+  },
+  "visual": {
+    "receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/visual-review.json",
+      "sha256": "c8f7bcdb936f643ebe860a57aa0cff3d43a586b0dc4f4996d59afea3e1cd345e",
+      "bytes": 751
+    },
+    "image": {
+      "bytes": 83328,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/gcc/r1/actual-owned-sharing.png",
+      "sha256": "a1befc02fb09c0c8b748ab063792e6a77fb5b80c8642ca7e8a110e989e4b7223"
+    },
+    "scope": "Root viewed actual1280x800 GCC offscreen private-fixture capture for layout/plaintext only; no human/general platform/default launch claim."
+  },
+  "cleanup": {
+    "owned_fixtures": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cleanup-result.json",
+      "sha256": "8f5a847b0884dde6b6a6676e97f3a7bd465a0f601666c966e0aa4c73a12d55d0",
+      "bytes": 8849
+    },
+    "diagnostic_images": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/diagnostic-image-cleanup.json",
+      "sha256": "5f890bc381e7761b2497502f0b4d44dc5c980dcd5a5d54a0ad6981978421137d",
+      "bytes": 3052
+    },
+    "scope": "Two exact earlier timed-out private roots and8temporary diagnostic objects removed after joins with recorded pre-cleanup identities/hashes and host-fuser receipts. No removed bytes rehashed; sources/logs/XML/receipts retained, zero known-prefix roots remain."
+  },
+  "lineage": {
+    "selected_attempts": {
+      "gcc": "r1",
+      "san": "r2"
+    },
+    "interrupted_san_r1": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/san/r1/result-raw.json",
+      "sha256": "c9dd41a891e506655f2afee1d589f7f4e2cb26218269674ecdc1ea25213d07c8",
+      "bytes": 45112
+    },
+    "scope": "SANr1 remains FAIL from external signal15 during build before any functional group. Final SANr2 is independently stamped; GCCr1 was not replayed or copied. Earlier failed/not-run scopes remain historical."
+  },
+  "limits": [
+    "Persistent Public pure-v1 file/whole-directory sharing and explicitly reviewed known-only numeric IPv4 HTTP tracker.",
+    "UDP/TLS/auth/IPv6/overlay/NAT probing/public auto-registration/nonpersistent sharing and Published3 remote monitoring remain unsupported.",
+    "Preview/startup are passive; accepted background services survive page close and require actual explicit stop/profile-close joins.",
+    "No public-deployment, whole-P08, full Original manager, default distribution/global baseline/promotion or real Original profile compatibility claim."
+  ],
+  "blocking_findings": [],
+  "reviewer_actions": "Read/hash/XML and existing role/log receipt validation only; no compiler, tests, network subjects, Native/cache or tracked repository writes."
+}

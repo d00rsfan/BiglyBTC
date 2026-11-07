@@ -1,0 +1,204 @@
+{
+  "baseline": {
+    "bytes": 460,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/tmp-baseline.json",
+    "sha256": "281bf011b1f40615307257285caf76a12914410bf867595420816c1967a276a3"
+  },
+  "free_bytes": 6144253952,
+  "no_other_tmp_or_running_original_action": true,
+  "pending_plan": {
+    "bytes": 500,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/tmp-pending-metadata.json",
+    "sha256": "b60b5d8cd78cb90f78cf849f78f7b86441feb950150f78fc471d5231e3ec3591"
+  },
+  "remaining_owned_prefix_roots": [],
+  "removed": [
+    {
+      "files_recorded_before_cleanup": [
+        {
+          "bytes": 356,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/tracker.config",
+          "sha256": "3ad89212a3ec530ea17ff1af492c6510066e5c13d47192a4b88d6eb5435cd53a"
+        },
+        {
+          "bytes": 356,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/tracker.config.bak",
+          "sha256": "a43ec8583d5e631e0ec1db5c49d69376cb3f710e533a4a70f1d020572f80c0ac"
+        },
+        {
+          "bytes": 505,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/downloads.config",
+          "sha256": "7226c941f3e57957a2a02565efe6b2f142d46f39618c10bdddefb0a7c56d562c"
+        },
+        {
+          "bytes": 505,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/downloads.config.bak",
+          "sha256": "9522a796e6a94a469632864fce0c6e13cce8f9d4a70524c72c0101c9c82900d8"
+        },
+        {
+          "bytes": 238,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/sharing.config",
+          "sha256": "95ed0865cecfe8f879fd3a8e8e24facdb8bea532e68ad0908a60fbcf4667011a"
+        },
+        {
+          "bytes": 42,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/sharing.config.bak",
+          "sha256": "3672a7d555aa7146855b459afeb2edf319d1ab7a9611ec07003b0622e8e1dd68"
+        },
+        {
+          "bytes": 161,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/biglybt.config",
+          "sha256": "39528b6a218862bc073b6428d36706125e207ab88dc66938072f6c3d12ff4621"
+        },
+        {
+          "bytes": 157,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/biglybt.config.bak",
+          "sha256": "638e3f8d9c327873821b7ba7628abc306f11ae625791f28c6d0ad1536a2cd094"
+        },
+        {
+          "bytes": 0,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/.azlock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "bytes": 2,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/tables.config",
+          "sha256": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578"
+        },
+        {
+          "bytes": 300,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/shares/cache1/7397236996167147544.torrent",
+          "sha256": "9dc4879241e17dd6265115d4be9d2174dd5d35d0fa78d1f602bccba073bf5770"
+        },
+        {
+          "bytes": 612,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/active/932829727E8A95BD679DF05A79FCA71633EE9C74.dat",
+          "sha256": "d5f8e5c4fc8397ac88ead5d0a6841297fe5fe3122213f6bc6dc02132cf8332d3"
+        },
+        {
+          "bytes": 612,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/active/932829727E8A95BD679DF05A79FCA71633EE9C74.dat.bak",
+          "sha256": "d5f8e5c4fc8397ac88ead5d0a6841297fe5fe3122213f6bc6dc02132cf8332d3"
+        },
+        {
+          "bytes": 300,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/profile/torrents/932829727E8A95BD679DF05A79FCA71633EE9C74.torrent",
+          "sha256": "9dc4879241e17dd6265115d4be9d2174dd5d35d0fa78d1f602bccba073bf5770"
+        },
+        {
+          "bytes": 131072,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/payload/bundle/sub/data.bin",
+          "sha256": "c094f75a988b470c822f157431f2b920bd750803225be7d89374eced4a070147"
+        },
+        {
+          "bytes": 0,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD/other-profile/.azlock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "host_fuser_returncode": 1,
+      "root": {
+        "device": 46,
+        "inode": 2537180,
+        "mode": 16832,
+        "mtime_ns": 1794050398339894172,
+        "path": "/tmp/biglybtc-sharing-tracker-integration-qmDpwD",
+        "uid": 1000
+      }
+    },
+    {
+      "files_recorded_before_cleanup": [
+        {
+          "bytes": 356,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/tracker.config",
+          "sha256": "5749c0ea7de6716d6883ee22e004e7601a3ac7b8554f3299d75b8222c8e709cf"
+        },
+        {
+          "bytes": 356,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/tracker.config.bak",
+          "sha256": "b63a8124cb1389e551f62aa622d36c2c53fb067176135f57c58cd4afa91a116c"
+        },
+        {
+          "bytes": 505,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/downloads.config",
+          "sha256": "33e970aab1c50d7b032613dcb5d2f46ea3f6d259b12ffee66b4c9ce493924734"
+        },
+        {
+          "bytes": 505,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/downloads.config.bak",
+          "sha256": "80e366faf5b07e6a5179458575d8d2f61e1cb6f223223197c6957c8c8cbe7384"
+        },
+        {
+          "bytes": 238,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/sharing.config",
+          "sha256": "fe359ebf31e74f0ffb855eaeca76c9912e4005548941149f64e254f458bffd67"
+        },
+        {
+          "bytes": 42,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/sharing.config.bak",
+          "sha256": "3672a7d555aa7146855b459afeb2edf319d1ab7a9611ec07003b0622e8e1dd68"
+        },
+        {
+          "bytes": 161,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/biglybt.config",
+          "sha256": "a2562a1d2bcf25336c0880822abb7835782c0c37439672f822cac50d755ab793"
+        },
+        {
+          "bytes": 157,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/biglybt.config.bak",
+          "sha256": "638e3f8d9c327873821b7ba7628abc306f11ae625791f28c6d0ad1536a2cd094"
+        },
+        {
+          "bytes": 0,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/.azlock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "bytes": 2,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/tables.config",
+          "sha256": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578"
+        },
+        {
+          "bytes": 300,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/shares/cache1/2240044983046955241.torrent",
+          "sha256": "3ddeca2c51022d5208f1a51965e569c6de3a31769c81870c4c637ccf0b35d0da"
+        },
+        {
+          "bytes": 612,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/active/932829727E8A95BD679DF05A79FCA71633EE9C74.dat",
+          "sha256": "5180a4504cd5836368e824964ba63615f9222bc2f06cfc55cee8425b3ed6ec79"
+        },
+        {
+          "bytes": 612,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/active/932829727E8A95BD679DF05A79FCA71633EE9C74.dat.bak",
+          "sha256": "5180a4504cd5836368e824964ba63615f9222bc2f06cfc55cee8425b3ed6ec79"
+        },
+        {
+          "bytes": 300,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/profile/torrents/932829727E8A95BD679DF05A79FCA71633EE9C74.torrent",
+          "sha256": "3ddeca2c51022d5208f1a51965e569c6de3a31769c81870c4c637ccf0b35d0da"
+        },
+        {
+          "bytes": 131072,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/payload/bundle/sub/data.bin",
+          "sha256": "c094f75a988b470c822f157431f2b920bd750803225be7d89374eced4a070147"
+        },
+        {
+          "bytes": 0,
+          "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd/other-profile/.azlock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "host_fuser_returncode": 1,
+      "root": {
+        "device": 46,
+        "inode": 2537139,
+        "mode": 16832,
+        "mtime_ns": 1794050337339122341,
+        "path": "/tmp/biglybtc-sharing-tracker-integration-eShHmd",
+        "uid": 1000
+      }
+    }
+  ],
+  "status": "PASS_OWNED_FIXTURE_CLEANUP_AFTER_BOTH_LANES_JOINED"
+}

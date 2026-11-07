@@ -1,0 +1,10 @@
+{
+  "image": {
+    "bytes": 83328,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/gcc/r1/actual-owned-sharing.png",
+    "sha256": "a1befc02fb09c0c8b748ab063792e6a77fb5b80c8642ca7e8a110e989e4b7223"
+  },
+  "observation": "1280x800 classic MyTorrents/MyTracker/MyShares tabs; actual populated persistent file row and owned tracker summary; all controls visible, table/text legible, no overlap or clipping observed.",
+  "scope": "Root viewed actual GCC test capture from successful normal-profile create/verify/host workflow. Generated private fixture, not real user data. Layout-only; no human desktop/Wayland review or default app launch.",
+  "status": "PASS_BOUNDED_OFFSCREEN_LAYOUT_REVIEW"
+}

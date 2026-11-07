@@ -1,0 +1,69 @@
+{
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "Native_basis": "b95106d9e5cde1c7ac511760d8fa615b79c03b9b",
+  "Native_tree": "839e8231c0963c066298c7352772ea37446abd6f",
+  "Original": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/pifimpl/local/sharing/ShareConfigImpl.java",
+      "sha256": "d2e5e1668cfa3a7b55413e4106bc31e553e6125035f59601b22a925398793902",
+      "bytes": 2774
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/pifimpl/local/sharing/ShareResourceImpl.java",
+      "sha256": "ed4b39f64affa388cea4c63976c6bd375c1f675a29558ebaf614eabe1b6fa1aa",
+      "bytes": 9642
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/pifimpl/local/sharing/ShareResourceFileOrDirImpl.java",
+      "sha256": "d0e258a9b23003b191382d9374e0642d079dad772c41d76a1fdb7c534a2a7e34",
+      "bytes": 10888
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/pifimpl/local/sharing/ShareItemImpl.java",
+      "sha256": "09c551db5b498a8139d7901cc50eb6aaa2dac9df050e08541e60532841cd2688",
+      "bytes": 3207
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/pifimpl/local/sharing/ShareManagerImpl.java",
+      "sha256": "da32c93c8c403b0c9ace4a026edb1dd751916d39584029229f91c258074afc7e",
+      "bytes": 25313
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/plugin/sharing/hoster/ShareHosterPlugin.java",
+      "sha256": "63bfcb84fe9f12359399a953fd1b40c563be4e14045a69f9d210c5589e95b02d",
+      "bytes": 19254
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/util/BrokenMd5Hasher.java",
+      "sha256": "73a5e2c36756581825decff0bd56e244df1225df9a47f9ce4b226557dbac9526",
+      "bytes": 10793
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/tracker/util/TRTrackerUtils.java",
+      "sha256": "7635ec796fae4b8335fadfc2d54687239a00b11c46dc2b97675bc61c42008274",
+      "bytes": 17532
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java",
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "bytes": 45598
+    }
+  ],
+  "Native": [
+    {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/engine/torrent_creator.hpp",
+      "sha256": "f65e6a10f89f83c921b74a4718efec2ef57b08e41c3bda3a3df0cf2b47b958fa",
+      "bytes": 4894
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/saved_services.hpp",
+      "sha256": "c7ed179ad9d6f3b278e04b47b2889d5ab36db035ff37f4619efae909ad730b75",
+      "bytes": 4402
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/adapters/torrent_intake.hpp",
+      "sha256": "539aab16c4046bd377c1151b2866797c2deb61f836de0b178b42586803888989",
+      "bytes": 13534
+    }
+  ]
+}

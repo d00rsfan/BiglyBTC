@@ -1,0 +1,72 @@
+{
+  "basis": {
+    "native_commit": "b95106d9e5cde1c7ac511760d8fa615b79c03b9b",
+    "native_tree": "839e8231c0963c066298c7352772ea37446abd6f",
+    "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+  },
+  "final": {
+    "gcc": {
+      "bytes": 78349,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/gcc/r1/result-stamped.json",
+      "sha256": "b2c63e1dd3601818ea7746e959196802432e653063434895fa537843b55fdd90"
+    },
+    "implementation_commit": "a291a4e8e1ceaadb8e0f31d52c57fc10e9c49619",
+    "native_tree": "7a8de0d0e730c28d6166adf8251fb1620dfd6948",
+    "qt_methods_per_lane": 28,
+    "qt_rows_per_lane": 95,
+    "san": {
+      "bytes": 78383,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/cohort-r9/san/r2/result-stamped.json",
+      "sha256": "658ebdeb88f2c03226a8f9ff122cffcdf602d2e339123ee07de0017c575e97b3"
+    }
+  },
+  "historical_input_pins_not_final_acceptance": {
+    "POST-CHAPTER-FOLLOWUPS.txt": "35f17710dd7b77e191ab56e638c6ac954a092eb9c85a71595c8b515a09d694cc",
+    "cohort-r5/gcc/r1/result-raw.json": "a4664fb0dc4314271ad28e75efca8d4746dfeebb0603bc07f6576da22a58d9bc",
+    "cohort-r5/san/r1/result-raw.json": "d79750cdd41761330361af8d56858eac0a4d69f79194ab59f33c89d80772811d",
+    "cohort-r5/source-selection.json": "34c4a81788382468714ddf586dad639a9b7597c78bf929b9b3375f5ea98a3015",
+    "host-ui-candidate/manifest.json": "01244ab3e9f65ab17371f3ffc424eada7cd504fa4f60e13afcfe46e876cc0a43",
+    "original-broken-md5-oracle/actual-values-r1-20261107/observations.json": "da42c751616c6095b9738ff04398c97290e04968d1870881a4444c7fbe529ba3",
+    "original-broken-md5-oracle/actual-values-r1-20261107/result.json": "67ccdb372bd67140b324584eb1bce4980f3f0ba46a954e26c3af308178f97763",
+    "share-candidate/SOURCE-PINS.json": "e3e709d9a020070821ea3e4a28f474437d4c833efca735542f97b1f78a587699",
+    "share-candidate/manifest.json": "e03695c8d7262ef3d862e0aae44dbf06cb0af9496fe0267bf54a699564dae7d5",
+    "tracker-candidate/manifest.json": "30852f775076d2c0e9277c58f017f804b9c949aedf5a2f341f29b0f006a2295d"
+  },
+  "limits": [
+    "No implicit sharing scans, watchers, listener or publication at startup/preview",
+    "No nonpersistent/recursive/personal/private/overlay/DHT/V2/hybrid policy conversion",
+    "No unsupported category/tag/property or filename/ignored-leaf conversion",
+    "No zero-total verified-seeding claim",
+    "No tracker TLS/UDP/auth/overlay/NAT probe or remote Published monitoring",
+    "Missing cache or foreign/unsealed recovery remains explicit review",
+    "No Java manager handback, full P08, global baseline or default distribution claim"
+  ],
+  "native_evidence_at_draft": {
+    "cases_passed_per_lane": 94,
+    "cases_total_per_lane": 95,
+    "gcc_aggregate": "FAIL",
+    "remaining": "Host retry final correction; final actual acceptance pending",
+    "revision": "R5",
+    "san_aggregate": "FAIL"
+  },
+  "next_chapter": {
+    "authority": "POST-CHAPTER-FOLLOWUPS.txt",
+    "proposal": "Existing-sharing compatibility",
+    "started": false
+  },
+  "oracle": {
+    "cases": 16,
+    "is_original_bug": false,
+    "scope": "Public BrokenMd5Hasher only; no Core/manager/network/profile",
+    "status": "PASS"
+  },
+  "status": "LOCAL_OWNED_CHAPTER_ACCEPTED_FULL_COMPATIBILITY_OPEN",
+  "supported": [
+    "Explicit persistent file/type1 and whole-directory/type2 Public pure-v1 shares",
+    "Owned numeric IPv4 known-only HTTP tracker endpoint and announce/scrape",
+    "Original sharing.config resource/cache format, unknown root and untouched row byte preservation",
+    "Original intentional BrokenMd5 metadata fingerprint; separate torrent identity",
+    "Actual stopped intake, full existing-data verified seed, explicit publication/stop/remove",
+    "Known-owned-only journal recovery; payload-preserving removal after source changes"
+  ]
+}

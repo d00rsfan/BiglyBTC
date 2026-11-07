@@ -1,0 +1,73 @@
+{
+  "bytes_freed": 56889872,
+  "free_bytes": 6334586880,
+  "no_native_cache_or_running_subject_action": true,
+  "removed": [
+    {
+      "bytes": 8119496,
+      "device": 2066,
+      "host_fuser_returncode": 1,
+      "inode": 5913013,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/focused-catalog-diagnostic/probe",
+      "sha256": "0d49b67fe05f9a29f7b1861a123cfd610e31d8a62cae7a2c76849e1cad9b4780"
+    },
+    {
+      "bytes": 210528,
+      "device": 2066,
+      "host_fuser_returncode": 1,
+      "inode": 5913011,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/focused-catalog-diagnostic/probe.o",
+      "sha256": "67b338ab8244857ed7ab4de38ae11e396735fe9f23b7f1869bc2c3b9fec94f73"
+    },
+    {
+      "bytes": 8105488,
+      "device": 2066,
+      "host_fuser_returncode": 1,
+      "inode": 5913113,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/focused-transfer-diagnostic/r2/probe",
+      "sha256": "408bb76b24991f6b53581f798e71927cd93dcaf7179a73fef1e732fb79751d44"
+    },
+    {
+      "bytes": 235120,
+      "device": 2066,
+      "host_fuser_returncode": 1,
+      "inode": 5913111,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/focused-transfer-diagnostic/r2/probe.o",
+      "sha256": "51fdf426b316ad59057de41b49d8fd405ed26a6c7162a47d5d269cce4be48954"
+    },
+    {
+      "bytes": 19772688,
+      "device": 2066,
+      "host_fuser_returncode": 1,
+      "inode": 5913448,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/focused-host-queue-diagnostic/probe",
+      "sha256": "0ec58155ea5cd78ed6406a3e018b1137ef8d4a49cf5e30f8cbd5bffbcdad8e44"
+    },
+    {
+      "bytes": 336088,
+      "device": 2066,
+      "host_fuser_returncode": 1,
+      "inode": 5913446,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/focused-host-queue-diagnostic/probe.o",
+      "sha256": "fea376453ccc7fdfc8ec84db9f07a3c762caebaee219c932137ec53dddcb7625"
+    },
+    {
+      "bytes": 19772720,
+      "device": 2066,
+      "host_fuser_returncode": 1,
+      "inode": 5913465,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/focused-host-positive-policy-diagnostic/probe",
+      "sha256": "157b253a138ac2a58cfcc37c63c60b8f40ad67caf65a2eb2f4a147d56eddc025"
+    },
+    {
+      "bytes": 337744,
+      "device": 2066,
+      "host_fuser_returncode": 1,
+      "inode": 5913463,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/focused-host-positive-policy-diagnostic/probe.o",
+      "sha256": "64172efc0b7ff694f567703aa88bad2999a777b877a446bb18724c82ad995eab"
+    }
+  ],
+  "retained": "Sources/commands/logs/XML/observations/receipts; recorded diagnostic image hashes are pre-cleanup facts only.",
+  "status": "TEMPORARY_DIAGNOSTIC_OBJECTS_AND_EXECUTABLES_REMOVED_AFTER_THEIR_JOIN"
+}

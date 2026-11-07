@@ -1,0 +1,7 @@
+Proposed following chapter: existing-sharing compatibility. NOT STARTED.
+
+Extend the qualified owned Source/seed/tracker flow to existing Original nonpersistent resources, recursive directory-contents resources, supported categories/tags/property overrides and existing stopped-library targets without a Native verification intent. Keep actual privacy/network selections and require genuine target/verification authority; do not silently convert, relocate or activate a foreign/live target.
+
+DHT/V2/hybrid/personal/private sharing, automatic rescans, tracker protocol variants and the separate external-seed/lightweight-seeding integrations remain later explicit rows, as recorded in POST-CHAPTER-FOLLOWUPS.txt. A real Original ShareManager/TRHost application handback still needs its own actual gate.
+
+Finish and publish the current sharing/tracker chapter, name this proposal, then STOP. No implementation of the proposed chapter is authorised by this note.

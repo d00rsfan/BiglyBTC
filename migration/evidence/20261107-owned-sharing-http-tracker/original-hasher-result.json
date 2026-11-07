@@ -1,0 +1,192 @@
+{
+  "schema": "BIGLYBTC_OFFLINE_METASEARCH_ACTUAL_VALUES_V1",
+  "status": "PASS_ORIGINAL_BROKEN_MD5_PUBLIC_VALUES_ONLY",
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "inputs": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/original-broken-md5-oracle/OriginalBrokenMd5Values.java",
+      "bytes": 2549,
+      "sha256": "9231cb85e325d561f12e8bb3f73bb96b470781a66036906ae90edde18b619138"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/original-broken-md5-oracle/source-pins.json",
+      "bytes": 1309,
+      "sha256": "5d14557d99e688254af34df00de4012c93979b64b799a3554e44529bde70cd98"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/original-broken-md5-oracle/recipe.json",
+      "bytes": 1332,
+      "sha256": "7c0578e0ea54e39c4c199df06cb12663c43fd9dedb7e3e32ecc7eed09f89f6b0"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/original-broken-md5-oracle/run-values.py",
+      "bytes": 8299,
+      "sha256": "a886e7280280fa8bd9c81f0ab7ef14dfaa85da7beb9e49dd81def74bb2d720a7"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/qualification-receipt.json",
+      "bytes": 2108,
+      "sha256": "50ea6b211115602560a03f0e7fce3cce40346ab2b5fe9032d2b51c454fafd854"
+    },
+    {
+      "bytes": 12774623,
+      "path": "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+      "sha256": "aec655f549167e22178a75f81e4bbc146a34192a2ff90278d74d98c304d2aec6"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/.git/index",
+      "bytes": 599153,
+      "sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/util/BrokenMd5Hasher.java",
+      "sha256": "73a5e2c36756581825decff0bd56e244df1225df9a47f9ce4b226557dbac9526",
+      "bytes": 10793
+    },
+    {
+      "path": "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "bytes": 14544,
+      "sha256": "0e72dac1212b98b6450d1b17d403680be25002d47465dbdb460d24c45cbbde3c"
+    },
+    {
+      "path": "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "bytes": 14592,
+      "sha256": "ef60c7cfcdbd1313151738e56754e09a4706f7d822899054281d4def617bce1d"
+    },
+    {
+      "path": "/usr/lib/jvm/java-17-openjdk-amd64/release",
+      "bytes": 1228,
+      "sha256": "ec61e7fb37ddd8368f2f07e3c75e23ca1e51e544af5b39c5c297f5cee9917606"
+    },
+    {
+      "path": "/usr/bin/nice",
+      "bytes": 11352352,
+      "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0",
+      "resolved_path": "/usr/lib/cargo/bin/coreutils/nice"
+    },
+    {
+      "bytes": 9107,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/source/socket_deny_exec.c",
+      "sha256": "7a388b8ba7d41010c1a8af43a9e6b64652c2facb92a53820fdfcc203355c997e"
+    },
+    {
+      "bytes": 17120,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+      "sha256": "82970c60379d6076e85e0c77c7f0de0180d3286b652bdfdb24297dc4a895ec79"
+    },
+    {
+      "bytes": 2119,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/compile-receipt.json",
+      "sha256": "e1a27aa61c771e1f0446f3e2ac4e9d484c783fb1b2eec873664a72cdafc7afab"
+    },
+    {
+      "bytes": 396,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/control.json",
+      "sha256": "a1aac51d106c7aab43d0f2fafcae5582ce2323897592fc26b99988694989d46f"
+    },
+    {
+      "bytes": 0,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/control.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "commands": [
+    {
+      "label": "compile",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+        "/usr/bin/nice",
+        "-n",
+        "5",
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+        "-J-XX:ActiveProcessorCount=1",
+        "-J-Duser.home=/tmp/biglybtc-share-md5-values-7o8aqhvd/home",
+        "-J-Djava.io.tmpdir=/tmp/biglybtc-share-md5-values-7o8aqhvd/tmp",
+        "-J-Dazureus.config.path=/tmp/biglybtc-share-md5-values-7o8aqhvd/profile",
+        "-J-Dazureus.install.path=/tmp/biglybtc-share-md5-values-7o8aqhvd/install",
+        "-J-Djava.awt.headless=true",
+        "--release",
+        "17",
+        "-encoding",
+        "UTF-8",
+        "-cp",
+        "/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "-d",
+        "/tmp/biglybtc-share-md5-values-7o8aqhvd/classes",
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/original-broken-md5-oracle/OriginalBrokenMd5Values.java"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.369,
+      "stdout": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/original-broken-md5-oracle/actual-values-r1-20261107/compile.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/original-broken-md5-oracle/actual-values-r1-20261107/compile.stderr.log",
+        "bytes": 140,
+        "sha256": "cddb97d53d72af75aac7d566e5be697bffc863107bac345890a7ab0d1234b970"
+      }
+    },
+    {
+      "label": "values",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/subscriptions-original-oracle-20261106/amendments/allow-only-owned-unix-stream-pairs/qualification-r1/socket-deny-exec",
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=1",
+        "-Duser.home=/tmp/biglybtc-share-md5-values-7o8aqhvd/home",
+        "-Djava.io.tmpdir=/tmp/biglybtc-share-md5-values-7o8aqhvd/tmp",
+        "-Dazureus.config.path=/tmp/biglybtc-share-md5-values-7o8aqhvd/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-share-md5-values-7o8aqhvd/install",
+        "-Djava.awt.headless=true",
+        "-cp",
+        "/tmp/biglybtc-share-md5-values-7o8aqhvd/classes:/home/yurii/Java/BiglyBT/core/target/biglybt-core-3.4.0.1-SNAPSHOT.jar",
+        "OriginalBrokenMd5Values",
+        "/tmp/biglybtc-share-md5-values-7o8aqhvd/report.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.166,
+      "stdout": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/original-broken-md5-oracle/actual-values-r1-20261107/values.stdout.log",
+        "bytes": 42,
+        "sha256": "a641d803217f0b66080426d54b361e4598a7ea51b35a8f09003948901fe19055"
+      },
+      "stderr": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/original-broken-md5-oracle/actual-values-r1-20261107/values.stderr.log",
+        "bytes": 140,
+        "sha256": "cddb97d53d72af75aac7d566e5be697bffc863107bac345890a7ab0d1234b970"
+      }
+    }
+  ],
+  "constraint_control_reused_without_rerun": true,
+  "Core_start_manager_Native_cache_or_real_profile_action": false,
+  "private_root": "/tmp/biglybtc-share-md5-values-7o8aqhvd",
+  "class_images_recorded_before_cleanup": [
+    {
+      "path": "/tmp/biglybtc-share-md5-values-7o8aqhvd/classes/OriginalBrokenMd5Values.class",
+      "bytes": 4702,
+      "sha256": "77e68bdd2b83e1c215c335b236e41f103b322904765694edf809ce7c68fbc63c"
+    }
+  ],
+  "observations": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-sharing-tracker-20261107/original-broken-md5-oracle/actual-values-r1-20261107/observations.json",
+    "bytes": 9505,
+    "sha256": "da42c751616c6095b9738ff04398c97290e04968d1870881a4444c7fbe529ba3"
+  },
+  "actual_case_count": 16,
+  "actual_public_BrokenMd5Hasher_values": true,
+  "private_files_recorded_before_cleanup": [
+    {
+      "path": "/tmp/biglybtc-share-md5-values-7o8aqhvd/classes/OriginalBrokenMd5Values.class",
+      "bytes": 4702,
+      "sha256": "77e68bdd2b83e1c215c335b236e41f103b322904765694edf809ce7c68fbc63c"
+    },
+    {
+      "path": "/tmp/biglybtc-share-md5-values-7o8aqhvd/report.json",
+      "bytes": 8556,
+      "sha256": "181d18842e71f885f50f8a9a203006f96bbbe59e8806317e55b9113cdb802cf4"
+    }
+  ],
+  "private_temporary_root_removed": true,
+  "elapsed_seconds": 1.945
+}
