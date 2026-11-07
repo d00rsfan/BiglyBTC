@@ -1,0 +1,17 @@
+{
+  "status": "PASS_BOUNDED_OFFSCREEN_RECHECK_LAYOUT_REVIEW",
+  "image": {
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-final/gcc/r1/actual-recheck.png",
+    "bytes": 30557,
+    "sha256": "ffe816d7cc53e50d9009a09afdd55c465f138a319012198c0eb3929fe7b5405c"
+  },
+  "observed": [
+    "Actual completed stopped-corrupt fixture:65536bytes,3verified/1bad/0missing/0unverified",
+    "Resultmap reported saved; stopped/paused preservation visible",
+    "Readable controls and complete progress without clipping"
+  ],
+  "limits": [
+    "Generated private fixture/offscreen layout only",
+    "No human compositor or real-profile runtime claim"
+  ]
+}

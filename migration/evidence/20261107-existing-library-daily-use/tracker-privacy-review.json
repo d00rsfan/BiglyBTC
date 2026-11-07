@@ -1,0 +1,46 @@
+{
+  "lanes": {
+    "gcc": {
+      "elapsed_seconds": 43.91,
+      "receipt": {
+        "bytes": 30752,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/tracker-privacy/gcc/r5/result.json",
+        "sha256": "dd09720ba6f12ac7cc53c691aeb6b6ee55faf02f69e7759f86df16e3d4df86d3"
+      },
+      "rows": 8,
+      "same_qualified_production_archives": true
+    },
+    "san": {
+      "elapsed_seconds": 68.368,
+      "receipt": {
+        "bytes": 31031,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/tracker-privacy/san/r5/result.json",
+        "sha256": "b33bfd03db9445d1db551e6846eabe1af5d3f6ddac73dbfb02a51ef7721e3b85"
+      },
+      "rows": 8,
+      "same_qualified_production_archives": true
+    }
+  },
+  "production_changes": false,
+  "real_profile_access": false,
+  "real_public_tracker_requests": false,
+  "runner": {
+    "bytes": 4828,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/tracker-privacy/run.py",
+    "sha256": "3166610838ef07896ad6739080ca50c54a2701ff984b43c21478c10a5a511d60"
+  },
+  "scope": "Actual ordinary Host, one mixed library, active private=1 and authenticated public torrent separately, Mainline KRPC and public HTTP/UDP over IPv4/IPv6. Positive own-private-credentials receipt, active public DHT announces and joined-close barriers precede absence assertions.",
+  "source": {
+    "bytes": 12535,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/tracker-privacy/tracker_privacy_tests.cpp",
+    "sha256": "3ca2974814608bc09b5e8d1d685bdc1758fb192cebb773ba7c0999957c3e756e"
+  },
+  "specifications": [
+    "https://www.bittorrent.org/beps/bep_0005.html",
+    "https://www.bittorrent.org/beps/bep_0027.html"
+  ],
+  "status": "PASS_PRIVATE_TRACKER_PASSKEY_PUBLIC_WIRE_REVIEW",
+  "implementation_commit": "da80d02f9bd90004203f1f08e41c114ecb6ad582",
+  "native_tree": "2a78e756136f87b1688c90fbc90133ea4194ec07",
+  "production_source_unchanged_since_test": true
+}

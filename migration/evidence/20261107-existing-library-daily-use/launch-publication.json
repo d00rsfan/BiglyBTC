@@ -1,0 +1,35 @@
+{
+  "binary_copies": 0,
+  "default_distribution_promotion": false,
+  "handoff": {
+    "bytes": 17705,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/real-profile-preview/launch.py",
+    "sha256": "13a03829a87fc360d64a211831aae761ac4348d5b45d77bd634ad6f7fb187bde"
+  },
+  "handoff_plan": {
+    "bytes": 635,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/real-profile-preview/pins.json",
+    "sha256": "5d0d445e5303aadd8eb4d85f242616d1bdc4cab31c27ba7be131925cfac8e45f"
+  },
+  "helper": {
+    "bytes": 5913,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/normal-launch/launch.py",
+    "sha256": "265101452e5e85931384786efd62830d5643b33e6a3b4c8d7bba722643071f28"
+  },
+  "implementation_commit": "da80d02f9bd90004203f1f08e41c114ecb6ad582",
+  "native_tree": "2a78e756136f87b1688c90fbc90133ea4194ec07",
+  "plan": {
+    "bytes": 4470,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/normal-launch/pins.json",
+    "sha256": "5708657c15af6cfc95cae31137c44c90ffb66ef023c4633a1aa26237ade11083"
+  },
+  "profile_launches": 0,
+  "qt_copies": 0,
+  "real_profile_access_by_seal": false,
+  "status": "PASS_SEALED_NORMAL_DEVELOPMENT_AND_HANDOFF_VERIFY_ONLY",
+  "wrapper": {
+    "bytes": 124,
+    "path": "/home/yurii/Java/BiglyBTC/dist/BiglyBTC-daily-use",
+    "sha256": "3cfbac709fdae45f74cd0194e2c69bc46ef69a23acfcd9e157252b34f5238d49"
+  }
+}

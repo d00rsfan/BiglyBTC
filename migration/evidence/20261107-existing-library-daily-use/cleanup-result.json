@@ -1,0 +1,12 @@
+{
+  "status": "PASS_JOINED_OWNED_GENERATED_FIXTURE_AND_OBSOLETE_ELF_CLEANUP",
+  "tmp_removed": [
+    "/tmp/biglybtc-tracker-privacy-bJVKso"
+  ],
+  "remaining_privacy_tmp": 0,
+  "obsolete_build_cleanup": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/obsolete-build-cleanup-result.json",
+  "privacy_cleanup": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/tracker-privacy-build-cleanup.json",
+  "free_GiB": 8.815,
+  "current_caches_preserved": true,
+  "private_profile_touched": false
+}

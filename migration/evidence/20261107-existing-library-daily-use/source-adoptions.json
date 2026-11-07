@@ -1,0 +1,113 @@
+{
+  "adoptions": [
+    {
+      "production_changes": false,
+      "receipt": {
+        "bytes": 682,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-final.json",
+        "sha256": "cbb8cac5b229b1c0421908f324ba9b9e46eecbd92498463b28b7bb2fa0d7150a"
+      },
+      "source": {
+        "bytes": 190751,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-final.json",
+        "sha256": "07b7416ce65f2d2d7f2d1aa185b0dd39df35a21b7a4dc623a1c9788754a13f90"
+      },
+      "status": "PRIVATE_RUNTIME_TEST_GATE_ADOPTED"
+    },
+    {
+      "production_changes": null,
+      "receipt": {
+        "bytes": 803,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r1.json",
+        "sha256": "dd76b8600c804ee9f74b67e82ff0bf37db40a22461e25fb309753c30d2eeffbe"
+      },
+      "source": null,
+      "status": "COHESIVE_SOURCE_ADOPTED_EXECUTION_PENDING"
+    },
+    {
+      "production_changes": null,
+      "receipt": {
+        "bytes": 1813,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r2.json",
+        "sha256": "f716e52dcd118461feccf718b73d0cd85ff266adbb579da90fad3225ae8b5b3a"
+      },
+      "source": {
+        "bytes": 190751,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-r2.json",
+        "sha256": "e3f90e60043b6baa55a166a39d89aac08545f0b15967e0487906b8e3ff9a8c4a"
+      },
+      "status": "ACTUAL_QUEUE_FIXTURE_CHILD_ADOPTED"
+    },
+    {
+      "production_changes": false,
+      "receipt": {
+        "bytes": 683,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r3.json",
+        "sha256": "721737c13aae1e8b42cd1fdaa2b1fad7b8f299921de2a28490fc4dbfcd3688ae"
+      },
+      "source": {
+        "bytes": 190751,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-r3.json",
+        "sha256": "619111e3ca94433662a843ba64ddce82b6c513f6f2e75cfbef4ef82b0ff471ee"
+      },
+      "status": "TWO_TEST_COMPILE_CORRECTIONS_ADOPTED"
+    },
+    {
+      "production_changes": null,
+      "receipt": {
+        "bytes": 663,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r4.json",
+        "sha256": "7c67c360c3c4be54cf7b7d4aa287d5680576039d97fcabf6a692ee3f5c429329"
+      },
+      "source": {
+        "bytes": 190751,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-r4.json",
+        "sha256": "b6cf7741a2f10fa3ad8dd393385769a4f25b44168c08aa2587237b97d21d7e6c"
+      },
+      "status": "COHESIVE_FAILURE_FIXES_ADOPTED"
+    },
+    {
+      "production_changes": null,
+      "receipt": {
+        "bytes": 654,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r5.json",
+        "sha256": "b887903f305d48ae153777a6213b1af76fed3d62529a0e81d39b604d1104b4e5"
+      },
+      "source": {
+        "bytes": 190751,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-r5.json",
+        "sha256": "efa86c6e53f97450c1dd5e6451b5a556e0a884e624b0c5cbdb8086e7ed59566f"
+      },
+      "status": "COHESIVE_FAILURE_FIXES_ADOPTED"
+    },
+    {
+      "production_changes": null,
+      "receipt": {
+        "bytes": 654,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r6.json",
+        "sha256": "2d03d274cf98f811c6fd37699add5d9810840ac5262552f90061113491ac53bd"
+      },
+      "source": {
+        "bytes": 190751,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-r6.json",
+        "sha256": "a98350b563ad0516c4d63141a23f13488e26dc1e3d94be1014e1f33628e96789"
+      },
+      "status": "COHESIVE_FAILURE_FIXES_ADOPTED"
+    },
+    {
+      "production_changes": null,
+      "receipt": {
+        "bytes": 653,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r7.json",
+        "sha256": "e6f8c0fec1b305029d0d7fccec1e2e84e9d7acb38f4778a98ece767587d57891"
+      },
+      "source": {
+        "bytes": 190751,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-r7.json",
+        "sha256": "a1d07dcfba4d02cda96d9d929aca7b66be5cfb3ff8f8c71071bb3b979cc3b1aa"
+      },
+      "status": "COHESIVE_FAILURE_FIXES_ADOPTED"
+    }
+  ],
+  "status": "HISTORICAL_SOURCE_ADOPTIONS_RETAINED"
+}

@@ -1,0 +1,239 @@
+{
+  "archives": {
+    "adapters/libbiglybtc_profile.a": {
+      "bytes": 6323656,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/adapters/libbiglybtc_profile.a",
+      "sha256": "c08d7dac14339104721bf845d57542bc303b0503c04f5fb5eac63d1c687cd23a"
+    },
+    "adapters/libbiglybtc_state_codec.a": {
+      "bytes": 16988,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/adapters/libbiglybtc_state_codec.a",
+      "sha256": "e7ec93331e0656c0ad2a79db85ff154ed1deead5af98c3c51c180aa8d5bcd660"
+    },
+    "app/libbiglybtc_desktop_host.a": {
+      "bytes": 6025914,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/app/libbiglybtc_desktop_host.a",
+      "sha256": "8b66977ac32bcdd1375d30c2c6db8394c2b37d19235d5074691a609f5d62d465"
+    },
+    "app/libbiglybtc_overall_service.a": {
+      "bytes": 34954,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/app/libbiglybtc_overall_service.a",
+      "sha256": "4220be23de9f33ce0558e524818f2aeb5ab73b978ae04a3bb30135aa4a3817bc"
+    },
+    "app/libbiglybtc_profile_preflight.a": {
+      "bytes": 40158,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/app/libbiglybtc_profile_preflight.a",
+      "sha256": "14ba89bb2349bc1fd8ce485c5a49a6104c1479e0ec8d5ee20a18f3dae53476c8"
+    },
+    "core/libbiglybtc_core.a": {
+      "bytes": 3291128,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/core/libbiglybtc_core.a",
+      "sha256": "90039b8b59480656cb552778afeeee1a7fcfcf2af53c46c40596e3ce2fda01a1"
+    },
+    "engine/libbiglybtc_local_engine.a": {
+      "bytes": 6111926,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/engine/libbiglybtc_local_engine.a",
+      "sha256": "8a5a5f04e85e9fbaaf1d97e149107fbbe99f02d9af298da019eb83cb72a00829"
+    },
+    "ui/libbiglybtc_ui.a": {
+      "bytes": 6545778,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/ui/libbiglybtc_ui.a",
+      "sha256": "dc380bb10b2fdb317bf44687c07fe0237a2e688e0ebc2a21c943c3fbdd09386b"
+    }
+  },
+  "commands": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+        "-k",
+        "0",
+        "BiglyBTC",
+        "biglybtc-profile-check",
+        "biglybtc-existing-controls-bridge-tests",
+        "biglybtc-existing-controls-ui-tests",
+        "biglybtc-mainline-identity-tests",
+        "biglybtc-managed-download-tests",
+        "biglybtc-managed-storage-tests",
+        "biglybtc-network-policy-tests",
+        "biglybtc-ordinary-daily-host-tests",
+        "biglybtc-overall-accounting-integration-tests"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 28.092,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r8-dualstack/gcc/r1/build.log",
+      "log_sha256": "41cab56a63768a60b826b534cdcedc638b9edde23d7fdd39c2f3579abec2d5b1"
+    },
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-ordinary-daily-host-tests",
+        "normalRestoredSeedAndPartialUseActualDiscoveryAndTrackers:IPv4-cold-warm",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r8-dualstack/gcc/r1/ordinary-v4.xml,xml"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 31.519,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r8-dualstack/gcc/r1/ordinary-v4.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-ordinary-daily-host-tests",
+        "normalRestoredSeedAndPartialUseActualDiscoveryAndTrackers:IPv6-cold-warm",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r8-dualstack/gcc/r1/ordinary-v6.xml,xml"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+      "elapsed_seconds": 30.516,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r8-dualstack/gcc/r1/ordinary-v6.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "coverage": {
+    "ordinary-v4": {
+      "count": 1,
+      "rows": [
+        "normalRestoredSeedAndPartialUseActualDiscoveryAndTrackers:IPv4-cold-warm"
+      ]
+    },
+    "ordinary-v6": {
+      "count": 1,
+      "rows": [
+        "normalRestoredSeedAndPartialUseActualDiscoveryAndTrackers:IPv6-cold-warm"
+      ]
+    }
+  },
+  "dependencies_sha256": {
+    "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3"
+  },
+  "elapsed_seconds": 91.728,
+  "images": {
+    "BiglyBTC": {
+      "bytes": 20127352,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/app/BiglyBTC",
+      "sha256": "6ef3355df782a079a4a1c5ecaa78d0c33039647149ef0053e4a859b8ea08ba84"
+    },
+    "app/biglybtc-profile-check": {
+      "bytes": 191808,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/app/biglybtc-profile-check",
+      "sha256": "4fdd5b6d2ffce34d54b050e19f2dfc4a62d74db6839b71d1e9b4c85b4ddf7eca"
+    },
+    "tests/biglybtc-existing-controls-bridge-tests": {
+      "bytes": 20013984,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-existing-controls-bridge-tests",
+      "sha256": "8464bf87e69cefdd6b083e76bcaff21845a59686505784ecdafd29a8dff5603d"
+    },
+    "tests/biglybtc-existing-controls-ui-tests": {
+      "bytes": 4079352,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-existing-controls-ui-tests",
+      "sha256": "5adcd9b69c37f46e26fdbb0d6616cdabf028a3b473d3579875a016a287d22ba8"
+    },
+    "tests/biglybtc-mainline-identity-tests": {
+      "bytes": 395680,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-mainline-identity-tests",
+      "sha256": "b5ca679902f29473176521c242b3c4d82aa25a83654a7b38f4bfc8cffe91c2c6"
+    },
+    "tests/biglybtc-managed-download-tests": {
+      "bytes": 8221160,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-managed-download-tests",
+      "sha256": "f169762b358a56422f5798fdd44bf000b76d211afafd1cb1d9c23029476665e4"
+    },
+    "tests/biglybtc-managed-storage-tests": {
+      "bytes": 8103440,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-managed-storage-tests",
+      "sha256": "95456b4557b322bfdaeb1f2f73f8d87ad5793407d477e7201529459fe4161ceb"
+    },
+    "tests/biglybtc-network-policy-tests": {
+      "bytes": 604264,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-network-policy-tests",
+      "sha256": "3f8087a7fb2b75bb25be923cc3017612dd606215f917ec666ccb8f8d400716d7"
+    },
+    "tests/biglybtc-ordinary-daily-host-tests": {
+      "bytes": 17095760,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-ordinary-daily-host-tests",
+      "sha256": "80f835a20a718a5e6234969d408e43c311b821493bc2db97eb8373370535839d"
+    },
+    "tests/biglybtc-overall-accounting-integration-tests": {
+      "bytes": 20225744,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-overall-accounting-integration-tests",
+      "sha256": "17e14a5885502a61f716f7e089d44ba5cb67f7ba96473128330d043453f8c8b1"
+    }
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r1.json": "dd76b8600c804ee9f74b67e82ff0bf37db40a22461e25fb309753c30d2eeffbe",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r2.json": "f716e52dcd118461feccf718b73d0cd85ff266adbb579da90fad3225ae8b5b3a",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r3.json": "721737c13aae1e8b42cd1fdaa2b1fad7b8f299921de2a28490fc4dbfcd3688ae",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r4.json": "7c67c360c3c4be54cf7b7d4aa287d5680576039d97fcabf6a692ee3f5c429329",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r5.json": "b887903f305d48ae153777a6213b1af76fed3d62529a0e81d39b604d1104b4e5",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r6.json": "2d03d274cf98f811c6fd37699add5d9810840ac5262552f90061113491ac53bd",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/adoption-r7.json": "e6f8c0fec1b305029d0d7fccec1e2e84e9d7acb38f4778a98ece767587d57891",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/check-preflight.py": "390f2290ef49aba9128577bbaecf9c0fc32f364b3f271fc7c35d6a260612133f",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r8-dualstack/gcc/r1/ordinary-v4.xml": "d6db22178b2a901f007c315c64644faf516364ae361dce1684e2fb208511dbe5",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r8-dualstack/gcc/r1/ordinary-v6.xml": "b2e7b1d19c1013d055c8f65079a706dba6d77ea6a2aae147778e95d5b9f73688",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r8-dualstack/qualify.py": "fe9e494673a73012dc789278b78d9eeabad08a33c4740c1a0555e538cc9efc82",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r8-dualstack/spec.json": "06cc7ed42f126b0dd892d5857bcdb581adf295d087587c2724f85d2c90e18f52",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/configure-mainline-identity-r2.py": "c5a232893a6988f781ea62fd3b402428ec574f365f1427d8a294e4b802c69c85",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/configure-mainline-identity.py": "b6e52b29d587a5543b095d3bc9dc3e0b3dc261969d6496ade3e94d5aa7a1cef5",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/configure-mainline-identity/gcc/result.json": "403fa7a1b13d053514cf7cf3102a2c015c36fa5e2a0c14de6f70e1f718d16eef",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/controls-candidate/manifest.json": "dbece5eddaabb087104778c6a7d6e93695906f4976994a78066376b00ccaa145",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/daily-fixes/distinct-router-identities-r5/manifest.json": "ef21440e232ecda0f4e07b73cdcf0324a571f1cca9596907251e1eae231a8475",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/daily-tests-candidate/amendments/actual-queue-preferences/manifest.json": "1d34eaeb134515f6cff6ce19c16ca26a8d7129ae9563c4f597693f3f0bb520d0",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/daily-tests-candidate/controls-api-peer-review.json": "73c0d492e8dc41e36618cac3c0e1203e02e384f480e21d8955c7d6045a33d5b8",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/daily-tests-candidate/manifest.json": "dd592b2a07e1234686fa7a5baee3278370d3b62549d579561d0177855743b7bc",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/fix-wave-r4/manifest.json": "5576b814be8758114d15a02db01a1fa63e7c375c9041c7b6707f112334500a74",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/fix-wave-r5.json": "30c7f32124ca5648e97b1ddef3b46550939bf65cdb180c3db24b26c412c641b7",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/fix-wave-r7.json": "16f2524c76311428e71146b2441acde3450d27e5201483657a298baf32fd7120",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/fix-wave-r8.json": "8352aac77db1fc8c09e7bea33c31e5f0b68fb5bef049ad786ffb7f7e98f9eeb4",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/historical-input-resolution.json": "6d9a2fc5c06716209ad0c871d452be99df9efd6105af7eb42901bf20fe48796f",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/host-candidate/manifest.json": "9f6d7e9fd0ff4af4208a68de3c7deae345352706fa699cfb1743fb4296a45171",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/host-network-source-review.json": "ffeccf41027e3a3f49e2df852743ddedbdd6d9ad1760d04282ad2370a369a5ba",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/mainline-recheck-isolation/manifest.json": "1ebb166b03a5037e5943102e03b11ba7a90ff495c18e9a5eec9a4e917788db70",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/network-candidate/amendments/inactive-overlay-endpoints/manifest.json": "aab0868cbe012d49f8c91fa8cef706020bae3e8838f4ece36a474a5d6cb90ca8",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/network-candidate/manifest.json": "1f446451c4815aac834fcde760474822a8238463aa2e1c163abc1a5b6bf872c0",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/recheck-candidate/manifest.json": "e05927195ebf1287660e694b35e4b1241b43db62e74c360a34ad187ee7b2234d",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/root-compact-guard-review.json": "796d18242e4e80ab754341cc508cf3e5c0544f843d1bfded376fe0e237cfd89f",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/root-recheck-fixes-review.json": "2d6f4aee70a08f7fbe5cb9f662b2c49f7e543bb06abce4d4a2b9efb0e74cbe6b",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/root-recheck-source-review.json": "c1ea1fbf20d206dd936148dec180711bf886e60bd8e9c7164ae14013485dd887",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-r7.json": "a1d07dcfba4d02cda96d9d929aca7b66be5cfb3ff8f8c71071bb3b979cc3b1aa",
+    "/home/yurii/Java/BiglyBT/build/existing-library-20261107/test-compile-fixes/manifest.json": "679c8a0e0bd76432a7c2ee961cf1751b1191393ec188f5cf33d6f3f10d24da00",
+    "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-tag-history-integration-20261106/common.py": "cb6f3358a27ce0588c2e4c138ae1d1950995ddcb6c807937d8f9422d58d61166",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/CMakeCache.txt": "a512075247171538b7576aebb5a6fdcb8a8f5a75a29fada5272bc9d5cdacd9f0",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/CMakeFiles/rules.ninja": "d7633d413ab30929a1b633432127cba582e4f2caf7577ec99503fa0d10de3aca",
+    "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/build.ninja": "8ebc5d3032980bdf9df0452cd3cdaed2c8e1c033172b9140f0f434e75f5c46be",
+    "/home/yurii/Java/BiglyBTC-plugin-mlDHT/identity.cpp": "37a830751932c28daf8c99ddc17400b0f72cf65b5ad8ee9e406943e600cf74bc",
+    "/home/yurii/Java/BiglyBTC-plugin-mlDHT/identity.hpp": "d1df373ebacb07dddc1736f3a93310c7318a22a33d31179c8b5d31de1e36f6de"
+  },
+  "lane": "gcc",
+  "original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "runner": {
+    "bytes": 10932,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r8-dualstack/qualify.py",
+    "sha256": "fe9e494673a73012dc789278b78d9eeabad08a33c4740c1a0555e538cc9efc82"
+  },
+  "source": {
+    "bytes": 190751,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-r7.json",
+    "sha256": "a1d07dcfba4d02cda96d9d929aca7b66be5cfb3ff8f8c71071bb3b979cc3b1aa"
+  },
+  "source_after_sha256": "a1d07dcfba4d02cda96d9d929aca7b66be5cfb3ff8f8c71071bb3b979cc3b1aa",
+  "source_map_sha256": "a1d07dcfba4d02cda96d9d929aca7b66be5cfb3ff8f8c71071bb3b979cc3b1aa",
+  "spec": {
+    "bytes": 10296,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r8-dualstack/spec.json",
+    "sha256": "06cc7ed42f126b0dd892d5857bcdb581adf295d087587c2724f85d2c90e18f52"
+  },
+  "status": "PASS_UNSTAMPED"
+}

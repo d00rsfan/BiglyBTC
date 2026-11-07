@@ -1,0 +1,88 @@
+{
+  "changed_source_leaves": 48,
+  "gcc": {
+    "bytes": 29477,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-final/gcc/r1/result-stamped.json",
+    "sha256": "15caf858e43d1a47fc5990017c3076a935458c8977533ad818a8954be3ae74eb"
+  },
+  "gcc_rows": {
+    "fresh": 29,
+    "retained_accounting": 1,
+    "retained_network": 2
+  },
+  "implementation_commit": "da80d02f9bd90004203f1f08e41c114ecb6ad582",
+  "native_tree": "2a78e756136f87b1688c90fbc90133ea4194ec07",
+  "original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "parent": "68300e041b5394ebcfa2cc389586f70c42e98279",
+  "paths": [
+    "preview/native/adapters/library_commands.cpp",
+    "preview/native/adapters/mainline_identity.cpp",
+    "preview/native/adapters/mainline_identity.hpp",
+    "preview/native/app/CMakeLists.txt",
+    "preview/native/app/file_operations_bridge.inc",
+    "preview/native/app/main_desktop.cpp",
+    "preview/native/app/profile_preflight.cpp",
+    "preview/native/app/profile_preflight.hpp",
+    "preview/native/app/profile_preflight_main.cpp",
+    "preview/native/app/recheck_bridge.inc",
+    "preview/native/app/recheck_host.inc",
+    "preview/native/app/session_bridge.cpp",
+    "preview/native/app/session_bridge.hpp",
+    "preview/native/core/include/biglybtc/download_action.hpp",
+    "preview/native/engine/mainline_owner.inc",
+    "preview/native/engine/managed_download.hpp",
+    "preview/native/engine/managed_recheck_api.inc",
+    "preview/native/engine/managed_recheck_owner.inc",
+    "preview/native/engine/managed_recheck_storage.inc",
+    "preview/native/engine/managed_storage.cpp",
+    "preview/native/engine/managed_storage.hpp",
+    "preview/native/engine/network_policy.cpp",
+    "preview/native/engine/network_policy.hpp",
+    "preview/native/engine/original_disk_io.cpp",
+    "preview/native/engine/original_disk_io.hpp",
+    "preview/native/engine/persistent_session.cpp",
+    "preview/native/engine/persistent_session.hpp",
+    "preview/native/tests/CMakeLists.txt",
+    "preview/native/tests/existing_controls_bridge_tests.cpp",
+    "preview/native/tests/existing_controls_fixture.hpp",
+    "preview/native/tests/existing_controls_ui_tests.cpp",
+    "preview/native/tests/mainline_identity_tests.cpp",
+    "preview/native/tests/managed_download_tests.cpp",
+    "preview/native/tests/managed_storage_tests.cpp",
+    "preview/native/tests/network_policy_tests.cpp",
+    "preview/native/tests/ordinary_daily_fixture.hpp",
+    "preview/native/tests/ordinary_daily_host_tests.cpp",
+    "preview/native/tests/owned_mainline_krpc.hpp",
+    "preview/native/tests/recheck_fixture.hpp",
+    "preview/native/ui/CMakeLists.txt",
+    "preview/native/ui/library_model.cpp",
+    "preview/native/ui/library_model.hpp",
+    "preview/native/ui/library_window.cpp",
+    "preview/native/ui/library_window.hpp",
+    "preview/native/ui/recheck_dialog.cpp",
+    "preview/native/ui/recheck_dialog.hpp",
+    "preview/native/ui/recheck_presentation.hpp",
+    "preview/native/ui/recheck_window.inc"
+  ],
+  "san": {
+    "bytes": 30794,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-final/san/r3/result-stamped.json",
+    "sha256": "177b011fac7b714b3ccaa6dbb305922eed461d9bfd5973202dd02fb03de337fe"
+  },
+  "san_fresh_rows": 32,
+  "sdk": {
+    "bytes": 10137344,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+    "sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3"
+  },
+  "source": {
+    "bytes": 190751,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-final.json",
+    "sha256": "07b7416ce65f2d2d7f2d1aa185b0dd39df35a21b7a4dc623a1c9788754a13f90"
+  },
+  "source_files": 1513,
+  "status": "LOCAL_CODE_COMMITTED_AND_QUALIFICATION_BOUND"
+}

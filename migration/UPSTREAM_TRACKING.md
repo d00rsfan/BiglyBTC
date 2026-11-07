@@ -222,3 +222,8 @@ Implementation `f458468ba86d30efa08786358a7f7ccd29e1c52b`, Native subtree `839e8
 ### 2026-11-07 — persistent sharing and embedded HTTP tracker
 
 Implementation `a291a4e8e1ceaadb8e0f31d52c57fc10e9c49619`, Native subtree `7a8de0d0e730c28d6166adf8251fb1620dfd6948`, Original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`:46 leaves add actual persistent Public v1 sharing/cache/recovery, full verified seeding and selected post-host SDK announcement, known-only HTTP tracker and classic controls. [Evidence](evidence/20261107-owned-sharing-http-tracker/REVIEW.md) binds GCC r1/SAN r2 each95Qtrows28methods, real tracker-only file/directory transfer and Source/Controller/retry/stop/reopen tests. Actual16 Original fingerprint values, independent image/source/role audit, bounded layout review, default configure-only, scoped cleanup and separately resealed preview are retained. Earlier failures/SAN interruption remain failed; no Java-manager/global-P08/default-distribution claim. Next proposed existing-sharing compatibility is not started; stop.
+
+
+### 2026-11-07 — existing-library daily use
+
+`da80d02f9bd90004203f1f08e41c114ecb6ad582` / Native `2a78e756136f87b1688c90fbc90133ea4194ec07` / Original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`: four requested priorities accepted within [explicit scope](evidence/20261107-existing-library-daily-use/REVIEW.md). GCC29 fresh+3 retained-origin Qt rows, SAN32 fresh, IO9, console37/61; historical failures preserved. Private metadata preflight is separate from generated runtime acceptance. No real-profile payload, global baseline or full-component completion claim. Stop; normal-use feedback/config compatibility is proposed, not started.

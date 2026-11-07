@@ -1,0 +1,26 @@
+{
+  "claim": "Exact qualified inputs, not whole-plugin or global migration completion.",
+  "original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "plugin_source_commit": "92c72c92c7a98efcfd2b29e3fb37a1c12880ea5a",
+  "plugin_source_tree": "9472c2d843aa07bc83023bee9730d15dc8a9763a",
+  "qualified_plugin_inputs": [
+    {
+      "bytes": 5253,
+      "path": "/home/yurii/Java/BiglyBTC-plugin-mlDHT/identity.cpp",
+      "sha256": "37a830751932c28daf8c99ddc17400b0f72cf65b5ad8ee9e406943e600cf74bc"
+    },
+    {
+      "bytes": 1712,
+      "path": "/home/yurii/Java/BiglyBTC-plugin-mlDHT/identity.hpp",
+      "sha256": "d1df373ebacb07dddc1736f3a93310c7318a22a33d31179c8b5d31de1e36f6de"
+    }
+  ],
+  "sdk": {
+    "bytes": 10137344,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+    "sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3"
+  }
+}

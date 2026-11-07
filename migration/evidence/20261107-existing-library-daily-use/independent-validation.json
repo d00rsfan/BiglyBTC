@@ -1,0 +1,374 @@
+{
+  "status": "PASS_INDEPENDENT_EXISTING_LIBRARY_EVIDENCE_VALIDATION",
+  "implementation_commit": "da80d02f9bd90004203f1f08e41c114ecb6ad582",
+  "native_tree": "2a78e756136f87b1688c90fbc90133ea4194ec07",
+  "source": {
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-final.json",
+    "sha256": "07b7416ce65f2d2d7f2d1aa185b0dd39df35a21b7a4dc623a1c9788754a13f90"
+  },
+  "source_files": 1513,
+  "canonical_changed_leaves": 48,
+  "spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-final/spec.json",
+    "sha256": "69537b66178078a0cc1317f2e263657a8c38d9ee2dc1590dffd2233185ac8e2c"
+  },
+  "Original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "plugin_identity": {
+    "commit": "92c72c92c7a98efcfd2b29e3fb37a1c12880ea5a",
+    "sources": [
+      {
+        "bytes": 5253,
+        "path": "/home/yurii/Java/BiglyBTC-plugin-mlDHT/identity.cpp",
+        "sha256": "37a830751932c28daf8c99ddc17400b0f72cf65b5ad8ee9e406943e600cf74bc"
+      },
+      {
+        "bytes": 1712,
+        "path": "/home/yurii/Java/BiglyBTC-plugin-mlDHT/identity.hpp",
+        "sha256": "d1df373ebacb07dddc1736f3a93310c7318a22a33d31179c8b5d31de1e36f6de"
+      }
+    ]
+  },
+  "SDK_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "lanes": {
+    "gcc": {
+      "raw": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-final/gcc/r1/result-raw.json",
+        "sha256": "6ebb408e534ebb13b835bd4057fee053f0520b5185627a4092df95fd6b7aadea"
+      },
+      "stamped": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-final/gcc/r1/result-stamped.json",
+        "sha256": "15caf858e43d1a47fc5990017c3076a935458c8977533ad818a8954be3ae74eb"
+      },
+      "seconds": 61.091,
+      "commands": 10,
+      "fresh_Qt_rows": 29,
+      "fresh_Qt_methods": 13,
+      "Qt_lifecycle_rows": 14,
+      "console_suites": 2,
+      "preflight_IO_cases": 9,
+      "images": 10,
+      "archives": 8,
+      "groups": {
+        "preflight-io-boundaries": {
+          "status": "PASS",
+          "summary": {
+            "cases": 9,
+            "seconds": 0.719,
+            "status": "PASS_READ_ONLY_PREFLIGHT_IO_BOUNDARIES"
+          }
+        },
+        "network-policy-storage": {
+          "suites": [
+            "network-policy",
+            "managed-storage"
+          ],
+          "count": 2
+        },
+        "installed-mainline-directory": {
+          "rows": [
+            "actualInstalledMainlineIdentityUsesExactDirectory:Original-mlDHT-case",
+            "actualInstalledMainlineIdentityUsesExactDirectory:missing-does-not-create",
+            "actualInstalledMainlineIdentityUsesExactDirectory:renamed-external-directory",
+            "actualInstalledMainlineIdentityUsesExactDirectory:symlink-candidate-refuses",
+            "actualInstalledMainlineIdentityUsesExactDirectory:two-runtime-identities-refuse",
+            "actualInstalledMainlineIdentityUsesExactDirectory:wrong-runtime-id-refuses"
+          ],
+          "count": 6,
+          "methods": 1,
+          "lifecycle": 2
+        },
+        "managed-recheck": {
+          "rows": [
+            "clearManagedForceStartPreservesAnActualManualPause",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:compact",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:corrupt",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:hybrid",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:intact",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:linked",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:missing",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:partial",
+            "standaloneRecheckCancellationAfterActualAdmissionJoinsWithoutMapPublication:ordinary-Stop",
+            "standaloneRecheckCancellationAfterActualAdmissionJoinsWithoutMapPublication:receiver-and-explicit-cancel"
+          ],
+          "count": 10,
+          "methods": 3,
+          "lifecycle": 2
+        },
+        "existing-controls-ui": {
+          "rows": [
+            "bulkForceCancellationAndRecheckKeepCurrentTargetIdentity",
+            "cancelForcePreservesStartupPauseAndOpaqueValues:forced-waiting",
+            "cancelForcePreservesStartupPauseAndOpaqueValues:paused-force-restoration-intent",
+            "dialogCancellationReentryCannotCloseReplacementOrTouchDestroyedWindow"
+          ],
+          "count": 4,
+          "methods": 3,
+          "lifecycle": 2
+        },
+        "existing-controls-worker": {
+          "rows": [
+            "ordinaryStoppedRecheckSavesActualMapWithoutRepair:paused-preserves-force-resume-intent",
+            "ordinaryStoppedRecheckSavesActualMapWithoutRepair:stopped-corrupt-piece",
+            "ordinaryStoppedRecheckSavesActualMapWithoutRepair:stopped-missing-payload"
+          ],
+          "count": 3,
+          "methods": 1,
+          "lifecycle": 2
+        },
+        "accounting-failure-isolation": {
+          "rows": [
+            "disabledMinuteRecordingStillPersistsActualOverallOnJoinedClose",
+            "optionalFileFailuresPreserveTransferAndRelease:history-directory-symlink",
+            "optionalFileFailuresPreserveTransferAndRelease:overall-saving-fifo"
+          ],
+          "count": 3,
+          "methods": 2,
+          "lifecycle": 2
+        },
+        "ordinary-managed-regression": {
+          "rows": [
+            "concurrentMixedHandlesRemainControllableUnderOneOwner",
+            "partialStopAndRepeatedHashCheckpointsKeepFreshSavedIntent"
+          ],
+          "count": 2,
+          "methods": 2,
+          "lifecycle": 2
+        },
+        "short-ordinary-controls": {
+          "rows": [
+            "normalStopThenStartWaitsActualActionEligibility"
+          ],
+          "count": 1,
+          "methods": 1,
+          "lifecycle": 2
+        }
+      },
+      "artifacts": {
+        "existing-controls-worker": {
+          "bytes": 30557,
+          "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-final/gcc/r1/actual-recheck.png",
+          "sha256": "ffe816d7cc53e50d9009a09afdd55c465f138a319012198c0eb3929fe7b5405c"
+        }
+      }
+    },
+    "san": {
+      "raw": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-final/san/r3/result-raw.json",
+        "sha256": "c3e8bc09094ae1ef8b9b5bfc6bc710fd5c937fa2a15f6b41c8ccdd9bd3df8168"
+      },
+      "stamped": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-final/san/r3/result-stamped.json",
+        "sha256": "177b011fac7b714b3ccaa6dbb305922eed461d9bfd5973202dd02fb03de337fe"
+      },
+      "seconds": 278.345,
+      "commands": 12,
+      "fresh_Qt_rows": 32,
+      "fresh_Qt_methods": 15,
+      "Qt_lifecycle_rows": 18,
+      "console_suites": 2,
+      "preflight_IO_cases": 9,
+      "images": 10,
+      "archives": 8,
+      "groups": {
+        "preflight-io-boundaries": {
+          "status": "PASS",
+          "summary": {
+            "cases": 9,
+            "seconds": 1.596,
+            "status": "PASS_READ_ONLY_PREFLIGHT_IO_BOUNDARIES"
+          }
+        },
+        "network-policy-storage": {
+          "suites": [
+            "network-policy",
+            "managed-storage"
+          ],
+          "count": 2
+        },
+        "installed-mainline-directory": {
+          "rows": [
+            "actualInstalledMainlineIdentityUsesExactDirectory:Original-mlDHT-case",
+            "actualInstalledMainlineIdentityUsesExactDirectory:missing-does-not-create",
+            "actualInstalledMainlineIdentityUsesExactDirectory:renamed-external-directory",
+            "actualInstalledMainlineIdentityUsesExactDirectory:symlink-candidate-refuses",
+            "actualInstalledMainlineIdentityUsesExactDirectory:two-runtime-identities-refuse",
+            "actualInstalledMainlineIdentityUsesExactDirectory:wrong-runtime-id-refuses"
+          ],
+          "count": 6,
+          "methods": 1,
+          "lifecycle": 2
+        },
+        "managed-recheck": {
+          "rows": [
+            "clearManagedForceStartPreservesAnActualManualPause",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:compact",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:corrupt",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:hybrid",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:intact",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:linked",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:missing",
+            "standaloneReadOnlyRecheckUsesActualPieceHashes:partial",
+            "standaloneRecheckCancellationAfterActualAdmissionJoinsWithoutMapPublication:ordinary-Stop",
+            "standaloneRecheckCancellationAfterActualAdmissionJoinsWithoutMapPublication:receiver-and-explicit-cancel"
+          ],
+          "count": 10,
+          "methods": 3,
+          "lifecycle": 2
+        },
+        "existing-controls-ui": {
+          "rows": [
+            "bulkForceCancellationAndRecheckKeepCurrentTargetIdentity",
+            "cancelForcePreservesStartupPauseAndOpaqueValues:forced-waiting",
+            "cancelForcePreservesStartupPauseAndOpaqueValues:paused-force-restoration-intent",
+            "dialogCancellationReentryCannotCloseReplacementOrTouchDestroyedWindow"
+          ],
+          "count": 4,
+          "methods": 3,
+          "lifecycle": 2
+        },
+        "existing-controls-worker": {
+          "rows": [
+            "ordinaryStoppedRecheckSavesActualMapWithoutRepair:paused-preserves-force-resume-intent",
+            "ordinaryStoppedRecheckSavesActualMapWithoutRepair:stopped-corrupt-piece",
+            "ordinaryStoppedRecheckSavesActualMapWithoutRepair:stopped-missing-payload"
+          ],
+          "count": 3,
+          "methods": 1,
+          "lifecycle": 2
+        },
+        "ordinary-daily-network": {
+          "rows": [
+            "normalRestoredSeedAndPartialUseActualDiscoveryAndTrackers:IPv4-cold-warm",
+            "normalRestoredSeedAndPartialUseActualDiscoveryAndTrackers:IPv6-cold-warm"
+          ],
+          "count": 2,
+          "methods": 1,
+          "lifecycle": 2
+        },
+        "ordinary-daily-accounting": {
+          "rows": [
+            "oneActualIdleMinuteControlsAndJoinedReopenDoNotReplayLifetime"
+          ],
+          "count": 1,
+          "methods": 1,
+          "lifecycle": 2
+        },
+        "accounting-failure-isolation": {
+          "rows": [
+            "disabledMinuteRecordingStillPersistsActualOverallOnJoinedClose",
+            "optionalFileFailuresPreserveTransferAndRelease:history-directory-symlink",
+            "optionalFileFailuresPreserveTransferAndRelease:overall-saving-fifo"
+          ],
+          "count": 3,
+          "methods": 2,
+          "lifecycle": 2
+        },
+        "ordinary-managed-regression": {
+          "rows": [
+            "concurrentMixedHandlesRemainControllableUnderOneOwner",
+            "partialStopAndRepeatedHashCheckpointsKeepFreshSavedIntent"
+          ],
+          "count": 2,
+          "methods": 2,
+          "lifecycle": 2
+        },
+        "short-ordinary-controls": {
+          "rows": [
+            "normalStopThenStartWaitsActualActionEligibility"
+          ],
+          "count": 1,
+          "methods": 1,
+          "lifecycle": 2
+        }
+      },
+      "artifacts": {
+        "existing-controls-worker": {
+          "bytes": 30557,
+          "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-final/san/r3/actual-recheck.png",
+          "sha256": "ffe816d7cc53e50d9009a09afdd55c465f138a319012198c0eb3929fe7b5405c"
+        }
+      }
+    }
+  },
+  "carried_GCC": {
+    "network": {
+      "receipt": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r8-dualstack/gcc/r1/result-raw.json",
+        "sha256": "0f5d02a8db875c29d63d0c57a2a66d342273bd2313cc63d2d5d200fe3b800523"
+      },
+      "Qt_rows": 2,
+      "same_current_test_image": true
+    },
+    "accounting": {
+      "receipt": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r6-accounting/gcc/r1/result-raw.json",
+        "sha256": "6f6f2eaa7478625e9ca392b4e5870302d7d43ae35b91e6dff879c927c04c3cec"
+      },
+      "review": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/retained-accounting-review.json",
+        "sha256": "5b9d53ddbdd8629f627464cb2a749f951d69e89e5f9fa346651264c4850d9d19"
+      },
+      "Qt_rows": 1,
+      "source_origin": "Source5",
+      "same_current_production_closure": true,
+      "same_current_test_image": false
+    }
+  },
+  "historical_failures_preserved": [
+    {
+      "receipt": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r1/gcc/r1/result-raw.json",
+        "sha256": "ff98bad7333ae682c355730f285b0b1a5dd37082aa1fc97e5a2b06833c10629e"
+      },
+      "failure": "AssertionError('Command failed; full diagnostics: /home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r1/gcc/r1/build.log')"
+    },
+    {
+      "receipt": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r2/gcc/r1/result-raw.json",
+        "sha256": "78ca31aa6f1271e86c5a35218a83d6cd5eb323939dd4a8d4f98346717f849c7e"
+      },
+      "failure": "AssertionError('Command failed; full diagnostics: /home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r2/gcc/r1/build.log')"
+    },
+    {
+      "receipt": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r3/gcc/r1/result-raw.json",
+        "sha256": "aeb67c40ab54c2dded807e0387d6eda06eb5b11e3fc2fa5a7c2a77ef3e54d774"
+      },
+      "failure": "AssertionError(['network-policy-storage', 'managed-recheck', 'existing-controls-worker', 'ordinary-daily-network', 'ordinary-daily-accounting'])"
+    },
+    {
+      "receipt": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r4-focused/gcc/r1/result-raw.json",
+        "sha256": "cdba643b3150aac430006240ccd1736c73d473ede140ecc20de9d6f80cb4f111"
+      },
+      "failure": "AssertionError(['managed-recheck', 'ordinary-daily-network'])"
+    },
+    {
+      "receipt": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r5-focused/gcc/r1/result-raw.json",
+        "sha256": "45db8f0f8e1eee97c8cc9af698fb3b83314a8ac85ae5d3133705f629ee3ceb3d"
+      },
+      "failure": "AssertionError(['ordinary-daily-network'])"
+    },
+    {
+      "receipt": {
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r7-dht-v4/gcc/r1/result-raw.json",
+        "sha256": "9fcaf3687a894caaf84dd45d8c069c30085c97659d3a456fa2c16ba01130a1c7"
+      },
+      "failure": "AssertionError(['ordinary-daily-network'])"
+    }
+  ],
+  "supplements": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/visual-review.json",
+      "sha256": "e429b0de0890580db4e89c4ef79780e8581cc59fbb8194d699436701539ff5b4"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cleanup-result.json",
+      "sha256": "3dca1bed79d078af456be905b0d9aa0700a1098cbd2ab5f7bdb26d014f393032"
+    }
+  ]
+}

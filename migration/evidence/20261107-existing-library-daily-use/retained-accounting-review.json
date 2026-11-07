@@ -1,0 +1,151 @@
+{
+  "status": "PASS_RETAINED_GCC_ACCOUNTING_PRODUCTION_CLOSURE_WITH_EXPLICIT_TEST_FIXTURE_DELTA",
+  "origin": {
+    "receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r6-accounting/gcc/r1/result-raw.json",
+      "sha256": "6f6f2eaa7478625e9ca392b4e5870302d7d43ae35b91e6dff879c927c04c3cec"
+    },
+    "status": "PASS_UNSTAMPED",
+    "source": {
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-r5.json",
+      "sha256": "efa86c6e53f97450c1dd5e6451b5a556e0a884e624b0c5cbdb8086e7ed59566f"
+    },
+    "test_xml": {
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-r6-accounting/gcc/r1/ordinary-daily-accounting.xml",
+      "sha256": "044c6b33acf7f7b60527b425242ff61e1f44eccafc255a81de73b4e78d91189e"
+    },
+    "test_elf_recorded_at_origin": {
+      "bytes": 17083424,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-ordinary-daily-host-tests",
+      "sha256": "930dad7b0e6b8646a2f350160067e6a4ca0734e420c5f7f205a220b7055022b9"
+    },
+    "runtime_command_seconds": 73.496,
+    "actual_rows": 1,
+    "method": "oneActualIdleMinuteControlsAndJoinedReopenDoNotReplayLifetime",
+    "idle_interval_millis_at_least": 65000
+  },
+  "comparison_sources": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-r5.json",
+      "sha256": "efa86c6e53f97450c1dd5e6451b5a556e0a884e624b0c5cbdb8086e7ed59566f"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-r6.json",
+      "sha256": "a98350b563ad0516c4d63141a23f13488e26dc1e3d94be1014e1f33628e96789"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/source-r7.json",
+      "sha256": "a1d07dcfba4d02cda96d9d929aca7b66be5cfb3ff8f8c71071bb3b979cc3b1aa"
+    }
+  ],
+  "source_maps": {
+    "files_each": 1513,
+    "source5_to_source6": {
+      "preview/native/tests/ordinary_daily_host_tests.cpp": {
+        "before": "3ab9d5bb0d16c866b7a6674cd78cfc49b7b8b8bb14dc09bae82ed625ec74e5a2",
+        "after": "c13a4840a6560c42b99e1b87195b5556be810f1336c5902187d527188bd1ecfc"
+      },
+      "preview/native/tests/owned_mainline_krpc.hpp": {
+        "before": "bb2491b89c53ff46f079cdbaa8477d90726d5e3ce7f6799ada2c5050917d9ccb",
+        "after": "0237790116b6c7b143f65ad9cd03ee471db9ddda82e83c7cbb8266c47611fb74"
+      }
+    },
+    "source6_to_source7": {
+      "preview/native/tests/ordinary_daily_host_tests.cpp": {
+        "before": "c13a4840a6560c42b99e1b87195b5556be810f1336c5902187d527188bd1ecfc",
+        "after": "637d35d9f9f8a95414d1de5f94880c210f7904d6ea8b87b3695dd0207592df33"
+      }
+    },
+    "all_current_source7_files_rehashed": true,
+    "all_production_and_CMake_sources_unchanged": true
+  },
+  "unchanged_accounting_inputs": {
+    "original_TU": {
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/daily-fixes/runtime-r3/source/preview/native/tests/ordinary_daily_host_tests.cpp",
+      "sha256": "3ab9d5bb0d16c866b7a6674cd78cfc49b7b8b8bb14dc09bae82ed625ec74e5a2"
+    },
+    "method_sha256": "26eacd9662a274d73cc62516c0f0c9134138524492b33267ff1fa6ad6087629a",
+    "method_byte_exact_to_current": true,
+    "all_TU_helpers_before_test_class_sha256": "b5847b620f2b70e36dcfce72ccae2f2e44a4fe254746f1702179b603104d5dc3",
+    "Host_command_joinedFinal_finalTotals_helpers_byte_exact": true,
+    "ordinary_profile_trackers_Host_fixture": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/ordinary_daily_fixture.hpp",
+      "sha256": "dfcb6626654cfbc287ce65d3e64b6de075436f8551c73a69cee8cfad19544918"
+    }
+  },
+  "explicit_DHT_test_helper_delta": {
+    "origin": {
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/daily-fixes/issued-token-r4/source/preview/native/tests/owned_mainline_krpc.hpp",
+      "sha256": "bb2491b89c53ff46f079cdbaa8477d90726d5e3ce7f6799ada2c5050917d9ccb"
+    },
+    "current": {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/owned_mainline_krpc.hpp",
+      "sha256": "0237790116b6c7b143f65ad9cd03ee471db9ddda82e83c7cbb8266c47611fb74"
+    },
+    "byte_identical": false,
+    "analysis": "Accounting creates one default-ID20K router with allowWithoutPeers. New optional per-router identity defaults to exactly the old20K; only dual-family discovery test passes new distinct IDs. Issued-token generation/storage and256-scope bound were already present in Source5 and remain byte-exact. Current helper adds optional validated per-router IDs defaulting to old20K, passive evidence accessors and failure-only diagnostics. Accounting method/query hash/no-peer offer/production settings and assertions are unchanged. These are discovery-fixture changes, not production counter/admission code. This carry supports the observed accounting behavior on unchanged production images, not fresh execution or full identical test inputs."
+  },
+  "same_current_production_artifacts": {
+    "BiglyBTC": {
+      "sha256": "6ef3355df782a079a4a1c5ecaa78d0c33039647149ef0053e4a859b8ea08ba84",
+      "bytes": 20127352,
+      "same_as_origin": true
+    },
+    "adapters/libbiglybtc_profile.a": {
+      "sha256": "c08d7dac14339104721bf845d57542bc303b0503c04f5fb5eac63d1c687cd23a",
+      "bytes": 6323656,
+      "same_as_origin": true
+    },
+    "adapters/libbiglybtc_state_codec.a": {
+      "sha256": "e7ec93331e0656c0ad2a79db85ff154ed1deead5af98c3c51c180aa8d5bcd660",
+      "bytes": 16988,
+      "same_as_origin": true
+    },
+    "app/libbiglybtc_desktop_host.a": {
+      "sha256": "8b66977ac32bcdd1375d30c2c6db8394c2b37d19235d5074691a609f5d62d465",
+      "bytes": 6025914,
+      "same_as_origin": true
+    },
+    "app/libbiglybtc_overall_service.a": {
+      "sha256": "4220be23de9f33ce0558e524818f2aeb5ab73b978ae04a3bb30135aa4a3817bc",
+      "bytes": 34954,
+      "same_as_origin": true
+    },
+    "app/libbiglybtc_profile_preflight.a": {
+      "sha256": "14ba89bb2349bc1fd8ce485c5a49a6104c1479e0ec8d5ee20a18f3dae53476c8",
+      "bytes": 40158,
+      "same_as_origin": true
+    },
+    "core/libbiglybtc_core.a": {
+      "sha256": "90039b8b59480656cb552778afeeee1a7fcfcf2af53c46c40596e3ce2fda01a1",
+      "bytes": 3291128,
+      "same_as_origin": true
+    },
+    "engine/libbiglybtc_local_engine.a": {
+      "sha256": "8a5a5f04e85e9fbaaf1d97e149107fbbe99f02d9af298da019eb83cb72a00829",
+      "bytes": 6111926,
+      "same_as_origin": true
+    },
+    "ui/libbiglybtc_ui.a": {
+      "sha256": "dc380bb10b2fdb317bf44687c07fe0237a2e688e0ebc2a21c943c3fbdd09386b",
+      "bytes": 6545778,
+      "same_as_origin": true
+    }
+  },
+  "same_runtime_dependencies": {
+    "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3"
+  },
+  "current_test_elf_observation": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-ordinary-daily-host-tests",
+    "sha256_observed": "80f835a20a718a5e6234969d408e43c311b821493bc2db97eb8373370535839d",
+    "same_as_origin": false,
+    "claim": "Informational read only; original receipt owns Source5 execution. No current Source7 test execution or ELF equivalence is inferred from source-body equality."
+  },
+  "retention_scope": "Retain actual GCC65-second idle +force/unforce/pause/resume/stop/start +joined close/reopen accounting assertions on the unchanged production app/archives/SDK. Root will run the current full SAN group separately. Source5 origin stays historical PASS_UNSTAMPED; no receipt/source hash restamped and no new runtime subject.",
+  "exclusions": [
+    "No fresh current test-ELF execution claim.",
+    "No carry of changed dual-stack DHT discovery assertions.",
+    "No statement that Mainline DHT wire bytes are included in Overall; accounting domains stay as implemented.",
+    "No global/default distribution or real-profile runtime claim."
+  ]
+}

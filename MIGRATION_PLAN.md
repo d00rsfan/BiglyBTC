@@ -1757,3 +1757,8 @@ STOP. Proposed next: Propose I2P peer discovery and magnets beyond tracker-only 
 ### 2026-11-07 — persistent sharing / HTTP tracker local chapter
 
 `a291a4e8e1ceaadb8e0f31d52c57fc10e9c49619` / Native `7a8de0d0e730c28d6166adf8251fb1620dfd6948`: bounded chapter accepted with actual GCC/SAN95Qtrows28methods, owned peer transfer, Source/recovery/classic lifecycle controls. [Scope/remaining work](migration/tasks/P08-04-owned-sharing-http-tracker.md). Whole P08 remains open; next existing-sharing compatibility proposal is **not started**. Stop after publication.
+
+
+### 2026-11-07 — existing-library daily-use chapter
+
+`da80d02f9bd90004203f1f08e41c114ecb6ad582` / Native `2a78e756136f87b1688c90fbc90133ea4194ec07`: bounded normal-library network/controls/recheck/accounting chapter accepted. [Scope and remaining limits](migration/tasks/P04-EXISTING-LIBRARY-DAILY-USE.md). Public-permitted saved overlays remain inactive; Mainline first, Azureus deferred unchanged. No whole-P04/P06/P08 or distribution promotion. Stop after publication.

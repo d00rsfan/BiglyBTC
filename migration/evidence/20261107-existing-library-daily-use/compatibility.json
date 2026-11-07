@@ -1,0 +1,60 @@
+{
+  "code_commit": "da80d02f9bd90004203f1f08e41c114ecb6ad582",
+  "evidence": {
+    "gcc": {
+      "console_families": [
+        37,
+        61
+      ],
+      "fresh_qt_rows": 29,
+      "io_cases": 9,
+      "path": "cohort-final/gcc/r1/result-raw.json",
+      "retained_accounting_rows": 1,
+      "retained_network_rows": 2,
+      "sha256": "6ebb408e534ebb13b835bd4057fee053f0520b5185627a4092df95fd6b7aadea",
+      "stamp": {
+        "bytes": 29477,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-final/gcc/r1/result-stamped.json",
+        "sha256": "15caf858e43d1a47fc5990017c3076a935458c8977533ad818a8954be3ae74eb"
+      },
+      "status": "PASS_STAMPED"
+    },
+    "san": {
+      "bytes": 30794,
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cohort-final/san/r3/result-stamped.json",
+      "sha256": "177b011fac7b714b3ccaa6dbb305922eed461d9bfd5973202dd02fb03de337fe"
+    },
+    "source": {
+      "path": "source-final.json",
+      "sha256": "07b7416ce65f2d2d7f2d1aa185b0dd39df35a21b7a4dc623a1c9788754a13f90"
+    },
+    "spec": {
+      "path": "cohort-final/spec.json",
+      "sha256": "69537b66178078a0cc1317f2e263657a8c38d9ee2dc1590dffd2233185ac8e2c"
+    }
+  },
+  "final_qa": {
+    "bytes": 1779,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/independent-acceptance-review.json",
+    "sha256": "359d769a0882a5ec09ca69d030e8aa133c91a62c1ad6137136002db4aec5808a"
+  },
+  "inactive": [
+    "Azureus DHT",
+    "I2P",
+    "Tor"
+  ],
+  "native_tree": "2a78e756136f87b1688c90fbc90133ea4194ec07",
+  "next_chapter_started": false,
+  "not_qualified": [
+    "Standalone pure-v2",
+    "Arbitrary layouts/conversions",
+    "Public swarm deployment",
+    "Real-profile payload runtime",
+    "Full Java accounting equivalence"
+  ],
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "preservation": "Saved network fields, paths, metadata and opaque values remain preserved within qualified operations.",
+  "private_preflight": "Separately retained; no user configuration, identities or hashes copied here.",
+  "san": "PASS_32_FRESH_QT_ROWS",
+  "status": "LOCAL_SCOPED_DAILY_USE_ACCEPTED"
+}

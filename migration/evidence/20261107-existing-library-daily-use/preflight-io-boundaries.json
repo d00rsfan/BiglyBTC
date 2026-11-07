@@ -1,0 +1,187 @@
+{
+  "status": "PASS_READ_ONLY_PREFLIGHT_IO_BOUNDARIES",
+  "binary": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/app/biglybtc-profile-check",
+    "sha256": "4fdd5b6d2ffce34d54b050e19f2dfc4a62d74db6839b71d1e9b4c85b4ddf7eca"
+  },
+  "cases": [
+    {
+      "name": "owned-original-modes",
+      "exit": 0,
+      "summary": {
+        "status": "METADATA_READABLE",
+        "rows": 1,
+        "readable": 1,
+        "issues": 0,
+        "public": 0,
+        "public_with_inactive_overlays": 1,
+        "overlay_only": 0,
+        "v1": 1,
+        "hybrid": 0,
+        "v2": 0,
+        "linked": 0,
+        "tcp_port": 51413,
+        "udp_port": 51413,
+        "ipv6": true,
+        "statistics": "MISSING",
+        "metadata_bytes": 421,
+        "payload_reads": 0,
+        "writes": 0,
+        "profile_lock_acquired": false,
+        "cross_file_snapshot": false,
+        "payload_and_runtime_compatibility": "NOT_CHECKED"
+      }
+    },
+    {
+      "name": "another-process-holds-original-lock",
+      "exit": 0,
+      "summary": {
+        "status": "METADATA_READABLE",
+        "rows": 1,
+        "readable": 1,
+        "issues": 0,
+        "public": 0,
+        "public_with_inactive_overlays": 1,
+        "overlay_only": 0,
+        "v1": 1,
+        "hybrid": 0,
+        "v2": 0,
+        "linked": 0,
+        "tcp_port": 51413,
+        "udp_port": 51413,
+        "ipv6": true,
+        "statistics": "MISSING",
+        "metadata_bytes": 421,
+        "payload_reads": 0,
+        "writes": 0,
+        "profile_lock_acquired": false,
+        "cross_file_snapshot": false,
+        "payload_and_runtime_compatibility": "NOT_CHECKED"
+      }
+    },
+    {
+      "name": "symlink-profile",
+      "exit": 2,
+      "summary": {
+        "status": "PREFLIGHT_UNAVAILABLE",
+        "payload_reads": 0,
+        "writes": 0,
+        "profile_lock_acquired": false
+      }
+    },
+    {
+      "name": "symlink-inventory",
+      "exit": 2,
+      "summary": {
+        "status": "PREFLIGHT_UNAVAILABLE",
+        "payload_reads": 0,
+        "writes": 0,
+        "profile_lock_acquired": false
+      }
+    },
+    {
+      "name": "fifo-does-not-block",
+      "exit": 2,
+      "summary": {
+        "status": "PREFLIGHT_UNAVAILABLE",
+        "payload_reads": 0,
+        "writes": 0,
+        "profile_lock_acquired": false
+      }
+    },
+    {
+      "name": "missing-state-review",
+      "exit": 1,
+      "summary": {
+        "status": "REVIEW_REQUIRED",
+        "rows": 1,
+        "readable": 0,
+        "issues": 1,
+        "public": 0,
+        "public_with_inactive_overlays": 0,
+        "overlay_only": 0,
+        "v1": 0,
+        "hybrid": 0,
+        "v2": 0,
+        "linked": 0,
+        "tcp_port": 51413,
+        "udp_port": 51413,
+        "ipv6": true,
+        "statistics": "MISSING",
+        "metadata_bytes": 281,
+        "payload_reads": 0,
+        "writes": 0,
+        "profile_lock_acquired": false,
+        "cross_file_snapshot": false,
+        "payload_and_runtime_compatibility": "NOT_CHECKED"
+      }
+    },
+    {
+      "name": "malformed-state-review",
+      "exit": 1,
+      "summary": {
+        "status": "REVIEW_REQUIRED",
+        "rows": 1,
+        "readable": 0,
+        "issues": 1,
+        "public": 0,
+        "public_with_inactive_overlays": 0,
+        "overlay_only": 0,
+        "v1": 0,
+        "hybrid": 0,
+        "v2": 0,
+        "linked": 0,
+        "tcp_port": 51413,
+        "udp_port": 51413,
+        "ipv6": true,
+        "statistics": "MISSING",
+        "metadata_bytes": 292,
+        "payload_reads": 0,
+        "writes": 0,
+        "profile_lock_acquired": false,
+        "cross_file_snapshot": false,
+        "payload_and_runtime_compatibility": "NOT_CHECKED"
+      }
+    },
+    {
+      "name": "invalid-config-root",
+      "exit": 2,
+      "summary": {
+        "status": "PREFLIGHT_UNAVAILABLE",
+        "payload_reads": 0,
+        "writes": 0,
+        "profile_lock_acquired": false
+      }
+    },
+    {
+      "name": "large-library-no-write",
+      "exit": 0,
+      "summary": {
+        "status": "METADATA_READABLE",
+        "rows": 4616,
+        "readable": 4616,
+        "issues": 0,
+        "public": 0,
+        "public_with_inactive_overlays": 4616,
+        "overlay_only": 0,
+        "v1": 4616,
+        "hybrid": 0,
+        "v2": 0,
+        "linked": 0,
+        "tcp_port": 51413,
+        "udp_port": 51413,
+        "ipv6": true,
+        "statistics": "MISSING",
+        "metadata_bytes": 1292621,
+        "payload_reads": 0,
+        "writes": 0,
+        "profile_lock_acquired": false,
+        "cross_file_snapshot": false,
+        "payload_and_runtime_compatibility": "NOT_CHECKED"
+      }
+    }
+  ],
+  "count": 9,
+  "seconds": 0.719,
+  "fixture_cleanup": true
+}

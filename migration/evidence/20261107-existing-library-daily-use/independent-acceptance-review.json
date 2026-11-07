@@ -1,0 +1,28 @@
+{
+  "status": "PASS_EXISTING_LIBRARY_DAILY_USE_LOCAL_GCC_SAN_REVIEW",
+  "implementation_commit": "da80d02f9bd90004203f1f08e41c114ecb6ad582",
+  "native_tree": "2a78e756136f87b1688c90fbc90133ea4194ec07",
+  "validation": {
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/independent-validation.json",
+    "sha256": "6a6b3226b6728a9a3bb227cd6acc3acb45e012ebc23c0d05e7630f091f9a168a"
+  },
+  "measured": "GCC29Qt rows fresh +2same-current-image network rows +1Source5 accounting row; SAN32Qt rows fresh. Each lane9read-only IO cases,2console suites,10ELF images,8archives. Full actual commands/log/XML/artifact/source/input/dependency hashes checked; no skips or sanitizer diagnostics.",
+  "scope": "Existing-library Public first with preserved inactive Tor/I2P selections, actual normal route/discovery/transfer, read-only v1-selected L/C/link/hybrid recheck, force/pause controls and exact joined accounting. Source5 accounting remains historical, never restamped as current test execution.",
+  "limits": [
+    "No pure-v2 or all-plugin compatibility claim.",
+    "No Azureus DHT wire/Overall aggregation or active overlay claim.",
+    "PNG is an owned fixture layout capture; any Root visual receipt is layout sanity only.",
+    "No real-profile runtime, global baseline or default distribution promotion."
+  ],
+  "historical_failures_remain_failed": true,
+  "supplements": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/visual-review.json",
+      "sha256": "e429b0de0890580db4e89c4ef79780e8581cc59fbb8194d699436701539ff5b4"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/existing-library-20261107/cleanup-result.json",
+      "sha256": "3dca1bed79d078af456be905b0d9aa0700a1098cbd2ab5f7bdb26d014f393032"
+    }
+  ]
+}
