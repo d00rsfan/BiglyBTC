@@ -1,0 +1,15 @@
+# Advanced metasearch and source-bound magnet review
+
+Implementation `f458468ba86d30efa08786358a7f7ccd29e1c52b`, Native subtree `839e8231c0963c066298c7352772ea37446abd6f`, Original `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`. Accepted local scope: 148 Qt rows in 46 methods per lane, plus the existing magnet-intake CTest. GCC 141.504s; ASan/UBSan 169.03s. The final independent review binds the actual source, executable/archive images, production/fixture roles and reference observations.
+
+Saved Regex templates and ordinary JSON expressions now use the existing source-owned search service and classic results page. Supported capture mappings, bounded replacements, ASCII case operations, UTF8 URL decoding and post-filters retain mapping order and the configured root/base. Regex first tries normal matching, then DOTALL/MULTILINE only when no rows survive. RSS, plain JSON and exact first-GET query encoding remain in scope.
+
+Matching uses fixed PCRE limits with JIT disabled, explicit anchored attempts, shared work budgets and a bounded per-document compiled-pattern cache. Unsupported Java constructs, Unicode folding, locale-sensitive case conversion, zero-width main/replacement patterns, category/content remappers, authentication/context/proxy modes and date arithmetic are explicitly limited. Publication dates remain raw text.
+
+An actual retained result can open a destination/Public-network review for **Resolve Metadata and Add Stopped**. UI URIs/hashes cannot mint authority. Confirmation rechecks the real source, query, receiver, session/OFD, policy and duplicate/recovery state before saving the existing Original-format pending magnet row. A committed row and metadata-engine admission are distinct outcomes. Uncertain saves require recovery/review and perform no admission or blind retry; late cancellation cannot erase durable truth. Full-v2/hybrid identity parsing does not establish Original manager restore parity or remote metadata/payload completion.
+
+One approved offline Original javac/JVM measured 26 values in 2.542 seconds; one bounded Qt probe confirmed limit errors are distinguishable from ordinary non-matches. Native intentionally corrects query-filter quoting, Regex row resurrection after filter failure and interpolation replacement interpretation. The unchanged observations and [GB English report](ORIGINAL-BUG-REPORT.txt) document these differences.
+
+Actual profiles and source-owned queries exercise review, cancellation, pending persistence, source revocation and uncertain-write handling. One populated review capture was inspected for layout/plain-text sanity; no user visual acceptance is claimed. Owned inactive test leftovers were removed after identity/content and host-reference checks. The Original client was not interrupted and its Git HEAD/index remain unchanged. Earlier failed runs remain failed evidence. Whole P08, full Original-manager parity and default-distribution promotion remain open. The separate development preview was verified without app/Qt copies or app launch.
+
+Next proposed chapter: owned sharing and embedded-tracker publication (P08-04). Not started. Stop after this publication.

@@ -1,0 +1,431 @@
+{
+  "case_count": 26,
+  "schema": "BIGLYBT_ORIGINAL_ADVANCED_TEMPLATE_VALUES_V1",
+  "cases": [
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>",
+      "kind": "regex",
+      "label": "ordinary-captures-two-rows",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "First",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "Second",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>First</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h><r>Second</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>",
+      "kind": "regex",
+      "label": "normal-first-does-not-add-fallback-only-rows",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "Single",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>Single</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h><r>one\ntwo</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>",
+      "kind": "regex",
+      "label": "fallback-dotall-LF",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "one\ntwo",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>one\ntwo</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "^<r>(.+)</r><h>([A-Z2-7]+)</h>$",
+      "kind": "regex",
+      "label": "fallback-multiline-CRLF",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "Title",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "prefix\r\n<r>Title</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>\r\nsuffix"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>",
+      "kind": "regex",
+      "label": "unicode-capture",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "μ 😀",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>μ 😀</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>",
+      "kind": "regex",
+      "label": "capture-interpolation",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "Prefix Alpha suffix",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>Alpha</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>",
+      "kind": "regex",
+      "label": "capture-literal-replace",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "Alpha_Beta",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>Alpha-Beta</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>",
+      "kind": "regex",
+      "label": "capture-uppercase",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "ALPHA",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>alpha</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>",
+      "kind": "regex",
+      "label": "capture-lowercase",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "alpha",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>ALPHA</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>",
+      "kind": "regex",
+      "label": "capture-url-decode",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "Alpha Beta/name",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>Alpha+Beta%2Fname</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>",
+      "kind": "regex",
+      "label": "literal-postfilter-casefold",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "ALPHA",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>ALPHA</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>",
+      "kind": "regex",
+      "label": "failed-postfilter-before-later-field",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>Value</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>",
+      "kind": "regex",
+      "label": "failed-postfilter-after-last-field",
+      "query": "needle",
+      "actual_rows": [],
+      "page": "<r>Value</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>()",
+      "kind": "regex",
+      "label": "later-empty-capture-overwrites",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>First</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "pattern": "<r>(.*?)</r><h>([A-Z2-7]+)</h>(optional)?",
+      "kind": "regex",
+      "label": "later-unmatched-capture-is-skipped",
+      "query": "needle",
+      "actual_rows": [
+        {
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "magnet:?xt=urn:btih:0000000000000000000000000000000000000000",
+          "peers": -1,
+          "name": "First",
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "page": "<r>First</r><h>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h>"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "json-interpolation",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "Prefix Alpha suffix",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"a\":\"Alpha\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "json-replace",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "Alpha_Beta",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"a\":\"Alpha-Beta\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "json-urldecode",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "Alpha Beta/name",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"a\":\"Alpha+Beta%2Fname\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "json-missing-substitution",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "json-failed-filter-stays-rejected",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"a\":\"Value\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    },
+    {
+      "native_unsupported_observation_only": true,
+      "kind": "json",
+      "label": "replacement-dollar-is-observation-only",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "${a}",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"a\":\"$1\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    },
+    {
+      "kind": "query-postfilter",
+      "matches_Q_query_E": true,
+      "query": "word",
+      "filter": "^%s$",
+      "matches_query": false,
+      "actual_pattern": "^QwordE$"
+    },
+    {
+      "kind": "query-postfilter",
+      "matches_Q_query_E": false,
+      "query": "a+b",
+      "filter": "^%s$",
+      "matches_query": false,
+      "actual_pattern": "^Qa+bE$"
+    },
+    {
+      "query": "x\\E",
+      "filter": "^%s$",
+      "kind": "query-postfilter",
+      "actual_error": "PatternSyntaxException"
+    },
+    {
+      "query": "a$b",
+      "filter": "^%s$",
+      "kind": "query-postfilter",
+      "actual_error": "IllegalArgumentException"
+    },
+    {
+      "kind": "zero-width-observation-only",
+      "subject": "μ😀",
+      "actual_utf16_offsets": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+}

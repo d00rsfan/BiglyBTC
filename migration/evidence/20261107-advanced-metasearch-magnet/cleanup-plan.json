@@ -1,0 +1,83 @@
+{
+  "schema": "BIGLYBTC_ADVANCED_METASEARCH_OWNED_TMP_CLEANUP_PLAN_V1",
+  "status": "NO_MATCHING_CURRENT_CHAPTER_FIXTURE_TEMPS_FOUND",
+  "checked_utc": "2026-11-07T09:27:44.787981+00:00",
+  "uid": 1000,
+  "supervisor_state": "Root reports all advanced-chapter qualification/oracle subjects joined; read-only inventory launched no subject or process inspection.",
+  "scope": "Exact temporary prefixes from the current advanced chapter Qt test executable names, generated metainfo review directory, bounded Original value helper and legacy magnet-intake fixture only. No broad /tmp enumeration, real Original/profile/live preview inspection or Source/cache mutation.",
+  "prefixes_inspected": [
+    "/tmp/BiglyBTC-search-",
+    "/tmp/biglybtc-magnet-intake-",
+    "/tmp/biglybtc-metasearch-advanced-service-tests-",
+    "/tmp/biglybtc-metasearch-advanced-tests-",
+    "/tmp/biglybtc-metasearch-bridge-tests-",
+    "/tmp/biglybtc-metasearch-document-tests-",
+    "/tmp/biglybtc-metasearch-magnet-bridge-tests-",
+    "/tmp/biglybtc-metasearch-magnet-tests-",
+    "/tmp/biglybtc-metasearch-magnet-ui-tests-",
+    "/tmp/biglybtc-metasearch-service-tests-",
+    "/tmp/biglybtc-metasearch-source-tests-",
+    "/tmp/biglybtc-metasearch-transport-tests-",
+    "/tmp/biglybtc-metasearch-ui-tests-",
+    "/tmp/biglybtc-metasearch-values-",
+    "/tmp/biglybtc-metasearch-values-tests-"
+  ],
+  "candidates": [],
+  "candidate_directories": 0,
+  "candidate_entries": 0,
+  "candidate_regular_file_bytes": 0,
+  "all_candidate_file_hashes": {},
+  "expected_fixture_contents_if_present": {
+    "qt_profiles": "rss_fixture::Profile QTemporaryDir root with profile/metasearch.config, biglybt.config, .azlock; normal Host cases may add empty payload/, Original-format downloads/tables and genuine pending magnet config rows. Actual inactive candidates would require complete named-file hashes and owner/mode/inode proof before removal.",
+    "metadata_review": "BiglyBTC-search-* private directory containing only owned result-*.torrent until current source-bound review completes/cancels.",
+    "ordinary_intake": "biglybtc-magnet-intake-* generated config/metainfo/owned fixture tree; no session/network/Java inside that legacy test.",
+    "original_value_helper": "biglybtc-metasearch-values-* TemporaryDirectory with bounded generated value oracle inputs/classes; helper finally cleans it."
+  },
+  "provenance": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/spec.json",
+      "sha256": "d58bd41b55302e487394b6d1a81bd5e1c18f8f1f168bbac2001b2102f418bcbd",
+      "bytes": 47075
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/gcc/r1/result-raw.json",
+      "sha256": "8be45f893ea4ca2dec9e50b9a95b80a307471f649faa61dd37160295a356666f",
+      "bytes": 76166
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/san/r1/result-raw.json",
+      "sha256": "16ce536ed3e1655fcd125e1ed12436483afcb6da783c773a2ade7c641a26e9b3",
+      "bytes": 76204
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/host-ui-candidate/source/preview/native/tests/metasearch_magnet_bridge_tests.cpp",
+      "sha256": "1c0697435b8a5f85df45583720b32cfb2db8f118ae686de199e64d5af458d78a",
+      "bytes": 18002
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/original-template-oracle/run-values.py",
+      "sha256": "1a96c025eb2b56e5257d4b63b7145f0c77190497c29bcae2959729707041e811",
+      "bytes": 8414
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/rss_http_fetch_fixture.hpp",
+      "sha256": "7f91881d10d2568aa5807ba3bad9ffa6fff97b17e94775a55198c1ee99fce7e5",
+      "bytes": 11953
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/magnet_intake_tests.cpp",
+      "sha256": "ae339f2dc973769e913846c529efd39cc4c1c5d67bf338d4441ca645d6c73005",
+      "bytes": 38460
+    }
+  ],
+  "actions_performed": [
+    "Read fixture prefix declarations and final cohort result metadata.",
+    "Check only exact prefix-filtered names under /tmp.",
+    "Write this cleanup-plan.json."
+  ],
+  "process_scans_or_signals": false,
+  "deletions": 0,
+  "subjects_executed": false,
+  "native_cache_source_changes": false,
+  "root_next_action": "No deletion is proposed. If any matching directory appears later, inventory it afresh and require actual host cwd/maps/open-FD checks and exact owned-file validation before deletion."
+}

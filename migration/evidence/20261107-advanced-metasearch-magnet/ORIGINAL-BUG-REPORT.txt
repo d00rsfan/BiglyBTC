@@ -1,0 +1,20 @@
+Metasearch post-filters can quote search text incorrectly or keep a rejected result
+
+Original baseline: cb8c6cb9bb97916cbc7e80338a017200ffc3e71f.
+Observed offline with the genuine saved-map RegexEngine/JSONEngine parsers and public FieldMapping API, JDK 17. No Core, manager, application UI or network was started.
+
+1. Query-dependent post-filter quoting
+
+FieldMapping.getPostFilterPattern replaces %s with Pattern.quote(searchQuery) through String.replaceAll. The replacement string itself is interpreted, so quote backslashes disappear. A filter ^%s$ and search text word actually compile as ^QwordE$: word is rejected and QwordE is accepted. Search text containing a dollar sign can instead throw IllegalArgumentException; the measured backslash/E case throws PatternSyntaxException.
+
+Expected behaviour: insert the search text literally into the regular expression, preserving dollar signs and backslashes as data. Matcher.quoteReplacement(Pattern.quote(searchQuery)) is the relevant distinction if String.replaceAll remains the replacement mechanism.
+
+2. Regex result resurrection after a failed post-filter
+
+RegexEngine.searchSupport sets fields_matched to zero on post-filter failure, then continues processing later mappings. A later valid hash mapping increments that counter and adds the rejected row. The same title filter placed last drops the row. JSONEngine keeps its addResult=false flag and does not resurrect it.
+
+Measured example: title Value, title filter never, then a valid hash field returns one Regex result with a null name. Moving the rejected title mapping after the hash returns no results.
+
+Expected behaviour: any failed result post-filter rejects that result regardless of mapping order.
+
+Evidence: original-template-oracle/actual-values-r1-20261107/observations.json, SHA256 1de27eb2365d0bb1fdddc60e77b2b288a067fafa766a21d4398cf01454ac303d. Exactly one javac and one JVM; result.json SHA256 db4395f9404a4694bc805d495e191a6fe7b908b92c62a8ca60e9a97f648f7ef7. The Native candidate deliberately corrects these two behaviours and labels those differential cases as corrections, rather than claiming Original parity. Original sources were not changed.

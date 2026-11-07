@@ -1,0 +1,209 @@
+{
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "acceptance": {
+    "default_distribution_promotion": false,
+    "gcc": {
+      "bytes": 76524,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/gcc/r1/result-stamped.json",
+      "sha256": "caa1c85c3404f5d66738b6f48d6d3c90c0cf8958da4356731cf2724db8ab1732"
+    },
+    "human_visual_acceptance": false,
+    "ordinary_magnet_ctest": true,
+    "qt_methods_per_lane": 46,
+    "qt_rows_per_lane": 148,
+    "review": {
+      "bytes": 6635,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/independent-acceptance-review.json",
+      "sha256": "f61d1d10eb00e81014812fadff4bf9ecbdcb02a4729b525e5c3c6f9f83ff5bc8"
+    },
+    "san": {
+      "bytes": 76562,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/san/r1/result-stamped.json",
+      "sha256": "0daa04a58d8ade66b205bb44f559b9f6e019cacf5338c0f56ea35e895a864287"
+    }
+  },
+  "basis_commit": "7ebafc8e1830c42618f86b9be542f701014b12e7",
+  "basis_native_tree": "8bf077b64fee57396e5098f5bf1eb2daa2bac138",
+  "cleanup_and_runtime_obligations": [
+    "Close/join real query/binary owners, revoke stale handles and stop receivers before release.",
+    "Release ConfigFile/handle/service profile aliases before actual lock reacquisition, including closed wrappers kept alive.",
+    "Preserve durable committed/uncertain rows on late cancellation, admission failure and profile close; no cleanup that erases recovery truth.",
+    "Record actual private-profile cleanup, sanitizer and UI evidence only after cohort results."
+  ],
+  "evidence": {
+    "Original_bug_report": {
+      "bytes": 2177,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/template-candidate/ORIGINAL-BUG-REPORT.txt",
+      "sha256": "d011904e60a3f643af1e1587d2d0234c124a4b5f737f805b262d04a62922354d"
+    },
+    "Original_result": {
+      "bytes": 12986,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/original-template-oracle/actual-values-r1-20261107/result.json",
+      "sha256": "db4395f9404a4694bc805d495e191a6fe7b908b92c62a8ca60e9a97f648f7ef7"
+    },
+    "Original_source_pins": {
+      "bytes": 1767,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/template-candidate/ORIGINAL-PINS.json",
+      "sha256": "63dc821341edfb553d564935fb4db4a05603cafdfd68f8033c387d7332dc02ee"
+    },
+    "Original_values": {
+      "bytes": 13357,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/original-template-oracle/actual-values-r1-20261107/observations.json",
+      "sha256": "1de27eb2365d0bb1fdddc60e77b2b288a067fafa766a21d4398cf01454ac303d"
+    },
+    "Qt_limit_probe": {
+      "bytes": 3954,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/qt-pattern-limit-probe/result.json",
+      "sha256": "7e7af27be0236d94e534c3ceb4f9503861e279bea335902295cc6a8b2092b140"
+    },
+    "host_ui_component": {
+      "bytes": 13247,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/host-ui-candidate/manifest.json",
+      "sha256": "4d1670b7a6061e0d44c32ae7f73e8bea5a8697d1407028b0c5fed2df77229629"
+    },
+    "magnet_component": {
+      "bytes": 5959,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/magnet-candidate/manifest.json",
+      "sha256": "f2a0753fa2b8cececa668a52fa420a88c876aa1717a25fccc1fd65f801381554"
+    },
+    "real_integration_source_review": {
+      "bytes": 2709,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/integration/peer-source-review.json",
+      "sha256": "bb7d7aec623561f801c54043bb10c1e1886d2c5c4697c25e67283c0cc3dc5260"
+    },
+    "source_selection": {
+      "bytes": 38307,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/source-selection.json",
+      "sha256": "196f23e61a0c17dbc5f2b06a790763af86acc912372217a31634c3d4af44e958"
+    },
+    "template_compatibility": {
+      "bytes": 2446,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/template-candidate/COMPATIBILITY.txt",
+      "sha256": "ae04e8ff723bb42539f9939ea07ac04bc5088ef6cdaf26c8d799ed8027c05596"
+    },
+    "template_component": {
+      "bytes": 12269,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/template-candidate/manifest.json",
+      "sha256": "3e835a778d34d7b47ef4d244af04642038d5a21609bc76d95827119f10a86eb4"
+    }
+  },
+  "implementation_commit": "f458468ba86d30efa08786358a7f7ccd29e1c52b",
+  "intentional_Original_corrections": [
+    {
+      "Native": "Literal actual-query insertion with safe escaping; visible ASCII supported query validated before DNS.",
+      "Original_measured": "^%s$ and word compile as ^QwordE$; dollars/backslash can throw.",
+      "case": "Query-dependent post-filter %s"
+    },
+    {
+      "Native": "Any failed post-filter rejects the whole row.",
+      "Original_measured": "A later valid field can resurrect a result rejected by an earlier filter.",
+      "case": "Regex post-filter order"
+    },
+    {
+      "Native": "Captured/interpolated text is inserted literally; no replacement-string authority.",
+      "Original_measured": "Unquoted replaceFirst interprets replacement syntax; $1 can leave ${a} unchanged.",
+      "case": "Mapping interpolation replacement"
+    }
+  ],
+  "magnet_domain": {
+    "authority": "Only real service-completed key can mint private move-only handle retaining actual parsed row, source snapshot, query lifetime and fresh receiver. No UI URI/hash/SID grant.",
+    "cancellation": "Final boundary owns durable completion; late stop cannot relabel committed truth. Old source action cohort withdrawn after config save.",
+    "consumption": "Actual source/current/query/receiver/worker/session/SAMEOFD, live policy equality, duplicates and pending recovery checked immediately before synchronous save under source gate.",
+    "identity": "Existing parser validates v1/full-v2/hybrid and supported hints; mapped v1 must agree; incomplete/zero/unsupported identities refuse.",
+    "limits": [
+      "Normal direct Public only; I2P/Mixed and automatic/force starts not claimed.",
+      "Full-v2/hybrid URI parsing is not Original full32 manager restore qualification.",
+      "Owned metadata-engine admission is not remote metadata completion or payload transfer acceptance."
+    ],
+    "outcomes": {
+      "Committed": "Actual saved row read back; metadata admission is separate and may fail without deleting intent.",
+      "Rejected": "No save attempted.",
+      "Uncertain": "Save boundary entered without proven outcome; explicit recovery/review, no admission and no blind retry."
+    },
+    "persistence": "Existing MagnetPlugin.active.magnets/other_metadata Original format with stopped=true; unknown config/map bytes preserved. No invented subscription association/history.",
+    "review": "Explicit existing destination and direct Public route; fixed Resolve Metadata and Add Stopped."
+  },
+  "measured_reference_scope": {
+    "Original": {
+      "JVM_commands": 1,
+      "cases": 26,
+      "javac_commands": 1,
+      "scope": "Genuine saved-map Regex/JSON offline parsing and public FieldMapping/Matcher values; explicit hashes avoid manager-sensitive inference; no Core/manager/UI/network runtime.",
+      "seconds": 2.542
+    },
+    "Qt": {
+      "cases": 6,
+      "compile_commands": 1,
+      "scope": "Installed Qt6.12 fixed limit compilation, ordinary valid no-match, anchored/unanchored catastrophic invalid-match and normal/fallback captures; no throughput benchmark.",
+      "seconds": 3.883,
+      "value_runs": 1
+    }
+  },
+  "native_tree": "839e8231c0963c066298c7352772ea37446abd6f",
+  "next_chapter": {
+    "name": "Owned sharing and embedded-tracker publication (P08-04)",
+    "plan_reference": "MIGRATION_PLAN.md:284\u2013292",
+    "status": "PROPOSAL_ONLY_NOT_STARTED"
+  },
+  "not_claimed": [
+    "Whole P08/global baseline completion",
+    "Default distribution/runtime promotion",
+    "Full Java Pattern/Unicode/locale/provider compatibility",
+    "Original manager/Core/application runtime",
+    "Unrestricted external network or remote metadata/payload success"
+  ],
+  "schema": "BIGLYBTC_ADVANCED_METASEARCH_MAGNET_COMPATIBILITY_V1",
+  "source_leaf_count": 43,
+  "source_selection": {
+    "bytes": 44976,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/source-selection.json",
+    "sha256": "06d36a74b6467296fc05a2af352061c4a0a99d8eb1020c0c67b254cb8d9dace3"
+  },
+  "status": "COMPLETE_CURRENT_CHAPTER_WITH_EXPLICIT_LIMITS",
+  "stop": "Finish and publish only the current authorised chapter, then stop. No next implementation started.",
+  "template_domain": {
+    "configured_bytes": "Read-only actual saved-engine catalog; unknown and raw definition bytes retained. Configured root/base remains distinct from final response URL.",
+    "explicit_limits": [
+      "ASCII common Java/PCRE syntax only: no backreferences/lookaround/inline flags/verbs/atomic or possessive forms/Unicode properties/class intersections.",
+      "Zero-width main/replacement patterns refuse; actual Java empty find can split a UTF16 surrogate.",
+      "NEL and Unicode line/paragraph separators refuse in advanced pattern subjects; LF/CRLF/ordinary Unicode captures covered.",
+      "Post-filter field content uses ASCII fold only. Query %s is visible ASCII, outside escaped/character-class contexts.",
+      "Case transformations refuse non-ASCII and locale-sensitive i-upcase/I-downcase. Invalid percent/UTF8 URL decode refuses.",
+      "Numeric date/age/rank and broader result mappings not claimed; publication text remains raw.",
+      "Engine l1/l2 category/content remappers, unsupported transformations, login/cookies/custom headers/proxy/context/provider modes refuse."
+    ],
+    "mapping_targets": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      102,
+      103,
+      105,
+      200
+    ],
+    "matcher": {
+      "backend": "Qt6.12 PCRE, JIT disabled",
+      "compiled_cache": "At most256 exact pattern+flags entries per document, no global/source cache.",
+      "depth_limit": 64,
+      "document_attempt_budget": 10000,
+      "document_scanned_character_budget": 8388608,
+      "failure": "Invalid match or work exhaustion is Limit, never empty success.",
+      "heap_limit_KiB": 1024,
+      "input_bytes": 4194304,
+      "match_limit": 10000,
+      "maximum_captures_and_nesting": 32,
+      "maximum_pattern_characters": 2048,
+      "rows": 1000
+    },
+    "recipes": [
+      "Existing RSS and plain JSON",
+      "Saved Regex type1",
+      "Ordered direct/capture/ordinary expression mappings",
+      "replace, ASCII ucase/lcase, UTF8 form urldecode",
+      "Literal and actual-query post-filters"
+    ],
+    "regex_order": "Normal first; DOTALL|MULTILINE fallback only if no rows survive."
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "status": "PASS_ADVANCED_METASEARCH_AND_SOURCE_BOUND_MAGNET_LOCAL_GCC_SAN_REVIEW",
+  "implementation_commit": "f458468ba86d30efa08786358a7f7ccd29e1c52b",
+  "native_tree": "839e8231c0963c066298c7352772ea37446abd6f",
+  "spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/spec.json",
+    "bytes": 47075,
+    "sha256": "d58bd41b55302e487394b6d1a81bd5e1c18f8f1f168bbac2001b2102f418bcbd"
+  },
+  "source_selection": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/source-selection.json",
+    "bytes": 44976,
+    "sha256": "06d36a74b6467296fc05a2af352061c4a0a99d8eb1020c0c67b254cb8d9dace3"
+  },
+  "source_map": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/source.json",
+    "bytes": 185207,
+    "sha256": "80e09b67a696db31351a5006af68a57385b711ab076a1baba4c5d25a2647bc44"
+  },
+  "validation": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/independent-validation.json",
+    "bytes": 26721,
+    "sha256": "6de0220e0698e1656ee6ea4daf736ebc8500036bc53f3f9580fc731b1cba55d5"
+  },
+  "code_publication": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/code-publication.json",
+    "bytes": 1485,
+    "sha256": "efa10c1ee0a2ffe2f7d65bffc62b5e680091555f23b5f4ce46e80bdefd20548a"
+  },
+  "raw_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/gcc/r1/result-raw.json",
+      "bytes": 76166,
+      "sha256": "8be45f893ea4ca2dec9e50b9a95b80a307471f649faa61dd37160295a356666f"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/san/r1/result-raw.json",
+      "bytes": 76204,
+      "sha256": "16ce536ed3e1655fcd125e1ed12436483afcb6da783c773a2ade7c641a26e9b3"
+    }
+  },
+  "stamped_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/gcc/r1/result-stamped.json",
+      "bytes": 76524,
+      "sha256": "caa1c85c3404f5d66738b6f48d6d3c90c0cf8958da4356731cf2724db8ab1732"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/san/r1/result-stamped.json",
+      "bytes": 76562,
+      "sha256": "0daa04a58d8ade66b205bb44f559b9f6e019cacf5338c0f56ea35e895a864287"
+    }
+  },
+  "measured": {
+    "gcc": {
+      "elapsed_seconds": 141.504,
+      "build_seconds": 72.057,
+      "commands": 23,
+      "ELF_images": 14,
+      "archives": 12,
+      "Qt_groups": 12,
+      "Qt_rows": 148,
+      "Qt_methods": 46,
+      "ordinary_magnet_ctest": 1,
+      "role_checks": {
+        "compile": 4,
+        "factory_symbols_absent_production_archive_and_APP_present_fixture": 7,
+        "storage_wrappers_absent_APP_present_unit_ELF": 2,
+        "fixture_bridge_final_link_excludes_production_host_service_provider": true
+      }
+    },
+    "san": {
+      "elapsed_seconds": 169.03,
+      "build_seconds": 80.179,
+      "commands": 23,
+      "ELF_images": 14,
+      "archives": 12,
+      "Qt_groups": 12,
+      "Qt_rows": 148,
+      "Qt_methods": 46,
+      "ordinary_magnet_ctest": 1,
+      "role_checks": {
+        "compile": 4,
+        "factory_symbols_absent_production_archive_and_APP_present_fixture": 7,
+        "storage_wrappers_absent_APP_present_unit_ELF": 2,
+        "fixture_bridge_final_link_excludes_production_host_service_provider": true
+      }
+    }
+  },
+  "source_findings": {
+    "blocking": [],
+    "reviewed": "Genuine retained query/result/source/session/OFD/receiver magnet handle; reviewed Public destination before persistence/metadata; fresh current policy/revision/cancellation at pre-save boundary; actual Committed/Uncertain classification and separate truthful admission result; old cohort withdrawn after save; normal stopped pending restart and scoped cleanup. Dialog cancellation-reentry fix and derived-owned dialog teardown are covered. Remaining pre-runtime compile/test expectation failures were corrected in scoped reviewed overlays."
+  },
+  "scope": {
+    "qualified": "Bounded saved Regex/advanced JSON transformations and explicit corrected filters; actual source-owned Public magnet review/save/metadata admission with eventual stopped import. Both final lanes freshly ran148Qt rows46methods plus ordinary magnet-intakeCTest. Current full source,14ELFs/12archives,23commands/lane and fixture isolation independently verified.",
+    "Original_cases": {
+      "parity": 19,
+      "intentional_corrections": 6,
+      "unsupported_observation": 1
+    },
+    "no_claims": [
+      "Full JavaPattern equivalence or all transforms/auth/proxy/overlays",
+      "Remote magnet metadata completion, payload transfer or full-v2 Original-manager restore",
+      "Whole P08/global baseline/default distribution promotion",
+      "Human/general-platform visual acceptance; Root PNG review is bounded fixture layout/plaintext sanity",
+      "Historical failures reclassified as passing, runtime replay of old timer/JVM controls, or retained ELF backups"
+    ],
+    "historical_failures": "Initial/r2/r3 compile FAILs and r4 two test expectation FAILs preserved verbatim; finalr5freshPASSis separate.",
+    "Original_head_index_unchanged": true,
+    "SDK_unchanged": true,
+    "SAN_findings": 0
+  },
+  "Original_value_receipt": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/original-template-oracle/actual-values-r1-20261107/result.json",
+    "bytes": 12986,
+    "sha256": "db4395f9404a4694bc805d495e191a6fe7b908b92c62a8ca60e9a97f648f7ef7"
+  },
+  "Qt_resource_probe": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/qt-pattern-limit-probe/result.json",
+    "bytes": 3954,
+    "sha256": "7e7af27be0236d94e534c3ceb4f9503861e279bea335902295cc6a8b2092b140"
+  },
+  "visual_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/visual-review.json",
+    "bytes": 955,
+    "sha256": "5949f598131b8dc2e02cef078f27df7a27a73c454af301aa69115bc970f11d38"
+  },
+  "cleanup": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cleanup-result.json",
+    "bytes": 580,
+    "sha256": "a182cadde4e37db2b9cc39ce101f8f36a00cd0d850f4b8ebdce6f1bfa41f59db"
+  },
+  "reviewer_no_subject_or_Native_cache_mutations": true
+}

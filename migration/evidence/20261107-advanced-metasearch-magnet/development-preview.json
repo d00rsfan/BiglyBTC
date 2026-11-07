@@ -1,0 +1,24 @@
+{
+  "binary_copies": 0,
+  "default_distribution_promotion": false,
+  "helper": {
+    "bytes": 7726,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/development-preview/development_preview.py",
+    "sha256": "57650ead0281efc1c444c6aec75970b7b8ef1238096f66461a804530ed73a47d"
+  },
+  "implementation_commit": "f458468ba86d30efa08786358a7f7ccd29e1c52b",
+  "launches": 0,
+  "native_tree": "839e8231c0963c066298c7352772ea37446abd6f",
+  "pins": {
+    "bytes": 4581,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/development-preview/pins.json",
+    "sha256": "3d27f2f89d916b4293ff0d85ccd343a2fb8cfbaa5c4875b9396a2706ce062eef"
+  },
+  "qt_copies": 0,
+  "status": "PASS_READ_ONLY_DEVELOPMENT_PREVIEW_VERIFY",
+  "wrapper": {
+    "bytes": 183,
+    "path": "/home/yurii/Java/BiglyBTC/dist/BiglyBTC-development-preview",
+    "sha256": "936247b9a25721361fbe6f294dfac007f7b0befea0873e68ffa2e6ea7c3e5000"
+  }
+}

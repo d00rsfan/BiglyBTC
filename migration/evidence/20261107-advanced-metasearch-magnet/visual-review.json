@@ -1,0 +1,20 @@
+{
+  "author": "Root",
+  "human_visual_acceptance": false,
+  "image": {
+    "bytes": 42633,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cohort-r5/gcc/r1/magnet-review.png",
+    "sha256": "69ef0a0a2b51f4f93692718606bb0cb1b00b0f812066d7c7b27633073d8f8f2f"
+  },
+  "implementation_commit": "f458468ba86d30efa08786358a7f7ccd29e1c52b",
+  "native_tree": "839e8231c0963c066298c7352772ea37446abd6f",
+  "observations": [
+    "Actual populated source-bound review shows identity/name/source/query",
+    "Public-only network and destination visible",
+    "Resolve Metadata and Add Stopped plus Cancel actions visible",
+    "Pre-confirm zero-effect and stopped-after-metadata wording readable",
+    "Plain-text layout and Unicode glyphs visibly intact"
+  ],
+  "scope": "Owned actual integration fixture screenshot; no human acceptance or normal distribution claim",
+  "status": "PASS_ROOT_VISUAL_LAYOUT_SANITY"
+}

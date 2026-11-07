@@ -1,0 +1,14 @@
+{
+  "candidates": 0,
+  "deletion_or_process_actions": false,
+  "other_tmp_or_original_touched": false,
+  "plan": {
+    "bytes": 4661,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-advanced-metasearch-20261107/cleanup-plan.json",
+    "sha256": "ca87337a3683eb77d2ccba74ce376db6c188e9bf9e5feb06cc98f58009a8e8f1"
+  },
+  "removed_bytes": 0,
+  "removed_directories": 0,
+  "scope": "All final subjects joined; independent bounded inventory across exact current fixture prefixes found nothing to remove.",
+  "status": "PASS_NO_OWNED_CHAPTER_FIXTURE_LEFTOVERS"
+}
