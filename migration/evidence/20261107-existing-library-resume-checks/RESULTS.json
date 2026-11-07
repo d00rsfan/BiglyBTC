@@ -1,0 +1,161 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+        "-k",
+        "0",
+        "tests/biglybtc-check-scheduler-tests",
+        "tests/biglybtc-check-scheduler-owner-tests",
+        "tests/biglybtc-managed-download-tests"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 30.517,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/existing-library-check-scheduling-20261107/san/r3/build.log",
+      "log_sha256": "78785c9f628394b8c4893eeaa05979af675befa80e37623b7ceb4039224d12ad"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "10",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-check-scheduler-tests"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 0.033,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/existing-library-check-scheduling-20261107/san/r3/policy.log",
+      "log_sha256": "338b913add7e1254e375b2cdb80c81bb90b81b4c8be2ae7d2a6d02462ac9128a"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "10",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-check-scheduler-owner-tests",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/existing-library-check-scheduling-20261107/san/r3/actual-scheduling-and-resume.xml,xml"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 18.224,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/existing-library-check-scheduling-20261107/san/r3/actual-scheduling-and-resume.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "10",
+        "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-managed-download-tests",
+        "standaloneReadOnlyRecheckUsesActualPieceHashes",
+        "standaloneRecheckCancellationAfterActualAdmissionJoinsWithoutMapPublication",
+        "-o",
+        "/home/yurii/Java/BiglyBT/build/existing-library-check-scheduling-20261107/san/r3/existing-readonly-integrity.xml,xml"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san",
+      "elapsed_seconds": 4.524,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/existing-library-check-scheduling-20261107/san/r3/existing-readonly-integrity.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "coverage": {
+    "actual-scheduling-and-resume": {
+      "rows": [
+        "originalResumeAvoidsHashReadsAndKeepsCleanPartialMaps:original-complete",
+        "originalResumeAvoidsHashReadsAndKeepsCleanPartialMaps:original-partial",
+        "originalResumeAvoidsHashReadsAndKeepsCleanPartialMaps:invalid-resume-falls-back",
+        "originalResumeAvoidsHashReadsAndKeepsCleanPartialMaps:changed-data-falls-back",
+        "actualChecksUseOriginalFilesystemAndGlobalLimits:same-filesystem-serial",
+        "actualChecksUseOriginalFilesystemAndGlobalLimits:different-filesystems-parallel",
+        "actualChecksUseOriginalFilesystemAndGlobalLimits:concurrent-read-opt-out",
+        "actualChecksUseOriginalFilesystemAndGlobalLimits:global-one-overrides-different-filesystems",
+        "actualChecksUseOriginalFilesystemAndGlobalLimits:cancel-drains-before-next-check"
+      ],
+      "xml": {
+        "bytes": 2020,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-check-scheduling-20261107/san/r3/actual-scheduling-and-resume.xml",
+        "sha256": "bff9d25ba2ccf55f7d94a1a829a361bc49f6b580bd7c8d031eaf485bbad57b01"
+      }
+    },
+    "existing-readonly-integrity": {
+      "rows": [
+        "standaloneReadOnlyRecheckUsesActualPieceHashes:intact",
+        "standaloneReadOnlyRecheckUsesActualPieceHashes:corrupt",
+        "standaloneReadOnlyRecheckUsesActualPieceHashes:partial",
+        "standaloneReadOnlyRecheckUsesActualPieceHashes:missing",
+        "standaloneReadOnlyRecheckUsesActualPieceHashes:compact",
+        "standaloneReadOnlyRecheckUsesActualPieceHashes:linked",
+        "standaloneReadOnlyRecheckUsesActualPieceHashes:hybrid",
+        "standaloneRecheckCancellationAfterActualAdmissionJoinsWithoutMapPublication:receiver-and-explicit-cancel",
+        "standaloneRecheckCancellationAfterActualAdmissionJoinsWithoutMapPublication:ordinary-Stop"
+      ],
+      "xml": {
+        "bytes": 1893,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-check-scheduling-20261107/san/r3/existing-readonly-integrity.xml",
+        "sha256": "fa3a6f63dd99773e6d13eca0c751e14b79d380a3dcbbbc5477556a4ec249ff13"
+      }
+    },
+    "policy": {
+      "log": {
+        "bytes": 62,
+        "path": "/home/yurii/Java/BiglyBT/build/existing-library-check-scheduling-20261107/san/r3/policy.log",
+        "sha256": "338b913add7e1254e375b2cdb80c81bb90b81b4c8be2ae7d2a6d02462ac9128a"
+      }
+    }
+  },
+  "images": {
+    "tests/biglybtc-check-scheduler-owner-tests": {
+      "bytes": 163863088,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-check-scheduler-owner-tests",
+      "sha256": "1b96b04ee83cff01be372592887fabd8da124d5ec308ec63ea8dda81edff8f94"
+    },
+    "tests/biglybtc-check-scheduler-tests": {
+      "bytes": 2449568,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-check-scheduler-tests",
+      "sha256": "2e91cdf049b34d0ee3be952d9b4a8f9fb273a402dce2828e9d310e983b574220"
+    },
+    "tests/biglybtc-managed-download-tests": {
+      "bytes": 176879272,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/san/tests/biglybtc-managed-download-tests",
+      "sha256": "f7efd287af61b3c2d83d16aa8b1010b9ed9bdb3b2b95a6facf12f34721268276"
+    }
+  },
+  "implementation_commit": "276d901c4cd353a35ecb21623d6be43e66c2778b",
+  "known_limits": [
+    "Fast import is currently restricted to linear unmapped pure-v1 layouts, valid exact 0/1 piece map, existing sufficient file sizes, and payload mtime no newer than original primary metadata. Other cases keep full checks.",
+    "Per-filesystem cap is conservative across actual authenticated device IDs; Original uses FileStore identities.",
+    "Running checks keep granted slots until drained; smallest-first applies to waiting work.",
+    "Checker policy is captured at owner bind; hot policy changes not implemented in this slice.",
+    "Partial-block hints are preserved in original metadata but are not imported into LT unfinished-block state yet."
+  ],
+  "native_tree": "bf94ddda0586c937cdd859e84b365764a996e7af",
+  "normal_distribution_promoted": false,
+  "original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "running_preview_updated": false,
+  "san_receipt": {
+    "bytes": 8176,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-check-scheduling-20261107/san/r3/result-associated.json",
+    "sha256": "cc3cccc4915c737aaf7c0184378debd098128b24daa6d69879d8cff0dcd8c66f"
+  },
+  "source_map": {
+    "bytes": 191112,
+    "path": "/home/yurii/Java/BiglyBT/build/existing-library-check-scheduling-20261107/source.json",
+    "sha256": "0c974028282fd378344a75efd7ce38f54e91d1ea41a1ce97e04d68bccfc836c1"
+  },
+  "status": "IMPLEMENTED_SAN_SCOPED_GCC_PREVIEW_PENDING"
+}
