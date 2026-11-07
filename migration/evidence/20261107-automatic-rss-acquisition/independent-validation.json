@@ -1,0 +1,109 @@
+{
+  "schema": "BiglyBTC.AutomaticRssIndependentValidation.V1",
+  "status": "PASS_RELEVANT_RECEIPTS_AND_CURRENT_SOURCE",
+  "spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/spec.json",
+    "bytes": 149442,
+    "sha256": "ec01f40de7c0e21225785d2dcdf1a231d5e8fdf9f81d44739e71667406e32423"
+  },
+  "source_map": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/source.json",
+    "bytes": 179696,
+    "sha256": "c285d37e62693110340bdc09351d8b0fae99fb86ee3defb166a18fe1eef7ed6f"
+  },
+  "lanes": {
+    "gcc": {
+      "raw": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/gcc/r1/result-raw.json",
+        "bytes": 107465,
+        "sha256": "9b2e63831d764f264003874b1d6aaf2a27c0df1198952b0d158bb0a456e97987"
+      },
+      "stamped": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/gcc/r1/result-stamped.json",
+        "bytes": 107925,
+        "sha256": "4037131a4dd2a81a2600a2a94cb8934c2c4620e8f1d27051485dc6e8b00c88fc"
+      },
+      "seconds": 258.884,
+      "fresh_rows": 44,
+      "carried_rows": 111,
+      "images": 11,
+      "archives": 17
+    },
+    "san": {
+      "raw": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/san/r1/result-raw.json",
+        "bytes": 107641,
+        "sha256": "e78b6fec3aa4422cb03178b8a2841a7b195583497cd581e2e99865241100d7d1"
+      },
+      "stamped": {
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/san/r1/result-stamped.json",
+        "bytes": 108101,
+        "sha256": "b8a24804c89d851598e4a80b906a3fdcbe7004f30a2f52ec7b326d50f3524870"
+      },
+      "seconds": 354.665,
+      "fresh_rows": 44,
+      "carried_rows": 111,
+      "images": 11,
+      "archives": 17
+    }
+  },
+  "checks": {
+    "sealed_spec": 1,
+    "pinned_file": 329,
+    "source_counts": 1,
+    "current_source": 1423,
+    "selected_source": 38,
+    "protected_Original": 1,
+    "SDK": 1,
+    "default_core_cleanup": 1,
+    "successful_command": 32,
+    "command_log": 32,
+    "raw_PASS": 2,
+    "raw_Original": 2,
+    "command_image_archive_counts": 2,
+    "inputs_sha256": 524,
+    "dependencies_sha256": 42,
+    "source_before_after": 4,
+    "raw_SourceMap": 2,
+    "Qt_XML": 20,
+    "Qt_pass": 350,
+    "Qt_exact_rows_methods": 20,
+    "Qt_raw_XML_agreement": 20,
+    "fresh44": 2,
+    "parent_FAIL_preserved": 2,
+    "parent_command_log": 90,
+    "carried_archive_SDK": 36,
+    "unchanged_carried_image": 20,
+    "CTest_PASS": 4,
+    "intake_exact_marker": 4,
+    "carried66_45": 2,
+    "two_compile_one_fixture_macro": 6,
+    "production_no_fixture_symbols": 2,
+    "private_fault_hooks": 2,
+    "actual_link_isolation": 22,
+    "legacy_PASS": 1,
+    "legacy2_0_14": 1,
+    "legacy_closed_fact": 5,
+    "legacy_SourceMap": 1
+  },
+  "unique_hashed_files": 1828,
+  "legacy": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/legacy-v2-upgrade/r1/result.json",
+    "bytes": 5406,
+    "sha256": "a63591bfeac70d1249c815dcd6563552dc74e8647d283aa43b8c8b4e9c4175dd"
+  },
+  "counts": {
+    "selected_leaves": 38,
+    "source_closure": 1423,
+    "fresh_Qt_per_lane": 44,
+    "carried_Qt_per_lane": 111,
+    "combined_Qt_per_lane": 155,
+    "combined_methods": 45,
+    "fresh_legacy_process_rows": 24,
+    "fresh_V3_process_rows": 20,
+    "carried_intake_families": 14,
+    "carried_intake_assertions": 632,
+    "carried_pending_guards": 8
+  },
+  "reviewer_executed_subjects": false
+}

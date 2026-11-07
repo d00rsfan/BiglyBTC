@@ -1,0 +1,41 @@
+{
+  "schema": "BiglyBTC.AutomaticRssLegacyV2UpgradeCodeAssociation.V1",
+  "status": "ASSOCIATED_AFTER_ALL_ACTUAL_CHECKS_PASSED",
+  "implementation_commit": "2ac30ffbe665ff1b628ea7d044168b34f73690d8",
+  "native_tree": "a017f8ac1a03b791746fbcb42c2ca7ac7304a0dd",
+  "source_map": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/source.json",
+    "bytes": 179696,
+    "sha256": "c285d37e62693110340bdc09351d8b0fae99fb86ee3defb166a18fe1eef7ed6f"
+  },
+  "legacy_raw_receipt": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/legacy-v2-upgrade/r1/result.json",
+    "bytes": 5406,
+    "sha256": "a63591bfeac70d1249c815dcd6563552dc74e8647d283aa43b8c8b4e9c4175dd"
+  },
+  "legacy_raw_preserved": true,
+  "raw_precommit_basis": "470fe57ed95d304893d252ba60601bc3cf8839db",
+  "qualified_GCC_image": {
+    "bytes": 18589104,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-subscription-acquisition-recovery-tests",
+    "sha256": "4f8388b77574e33eb9c55fddada8a2a84de59721b89edcca0655cacd3d3f3802"
+  },
+  "qualification_stamps": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/gcc/r1/result-stamped.json",
+      "bytes": 107925,
+      "sha256": "4037131a4dd2a81a2600a2a94cb8934c2c4620e8f1d27051485dc6e8b00c88fc"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/san/r1/result-stamped.json",
+      "bytes": 108101,
+      "sha256": "b8a24804c89d851598e4a80b906a3fdcbe7004f30a2f52ec7b326d50f3524870"
+    }
+  },
+  "old_in_place_manifest": {
+    "bytes": 20709,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/legacy-v2-fixture/manifest.json",
+    "sha256": "c515b1f397c1018727d373f6bb5ba5c2b124aa38a1986c362982a7a9258c5abb"
+  },
+  "scope": "One actual same-host manual V2 upgrade through two preview startups;14 file identities verified before consumption, zero providers/import/SID duplication, history disabled, owned fixture/temp removed. Original raw source_commit remains null; no journal rewriting or old-ELF copy."
+}

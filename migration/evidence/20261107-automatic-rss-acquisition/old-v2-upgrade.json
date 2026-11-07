@@ -1,0 +1,95 @@
+{
+  "basis_commit": "470fe57ed95d304893d252ba60601bc3cf8839db",
+  "command": {
+    "argv": [
+      "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-subscription-acquisition-recovery-tests",
+      "--legacy-v2-upgrade"
+    ],
+    "cwd": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc",
+    "elapsed_seconds": 0.265,
+    "exit_code": 0,
+    "failure": null,
+    "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/legacy-v2-upgrade/r1/upgrade.log",
+    "log_sha256": "0bb3d59daa6a0f618e81a375ba98acf5bb557525cf33d1a4caa59de3f9a2e8fa"
+  },
+  "elapsed_seconds": 0.265,
+  "fixture_consumed_once": true,
+  "image": {
+    "bytes": 18589104,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-subscription-acquisition-recovery-tests",
+    "sha256": "4f8388b77574e33eb9c55fddada8a2a84de59721b89edcca0655cacd3d3f3802"
+  },
+  "inputs": [
+    {
+      "bytes": 20709,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/legacy-v2-fixture/manifest.json",
+      "sha256": "c515b1f397c1018727d373f6bb5ba5c2b124aa38a1986c362982a7a9258c5abb"
+    },
+    {
+      "bytes": 4706,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/legacy-v2-upgrade/run.py",
+      "sha256": "43b443f617286e9fc0721fab8991a2187c880cff86bcf78202c8522e9697a7ce"
+    },
+    {
+      "bytes": 149442,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/spec.json",
+      "sha256": "ec01f40de7c0e21225785d2dcdf1a231d5e8fdf9f81d44739e71667406e32423"
+    },
+    {
+      "bytes": 179696,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/source.json",
+      "sha256": "c285d37e62693110340bdc09351d8b0fae99fb86ee3defb166a18fe1eef7ed6f"
+    },
+    {
+      "bytes": 18589104,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-provider-attachment-20261029/native-followup-20261030/caches/gcc/tests/biglybtc-subscription-acquisition-recovery-tests",
+      "sha256": "4f8388b77574e33eb9c55fddada8a2a84de59721b89edcca0655cacd3d3f3802"
+    },
+    {
+      "bytes": 10137344,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3"
+    },
+    {
+      "bytes": 107465,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/gcc/r1/result-raw.json",
+      "sha256": "9b2e63831d764f264003874b1d6aaf2a27c0df1198952b0d158bb0a456e97987"
+    },
+    {
+      "bytes": 107641,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/san/r1/result-raw.json",
+      "sha256": "e78b6fec3aa4422cb03178b8a2841a7b195583497cd581e2e99865241100d7d1"
+    }
+  ],
+  "observation": {
+    "external_temporary_cleanup": true,
+    "factory_calls": 0,
+    "history_was_disabled": true,
+    "no_duplicate_SID": true,
+    "no_reimport": true,
+    "old_manifest_sha256": "c515b1f397c1018727d373f6bb5ba5c2b124aa38a1986c362982a7a9258c5abb",
+    "preview_startups": 2,
+    "profile_cleanup": true,
+    "profile_files_verified_before_consumption": 14,
+    "schema": "BiglyBTC.LocalQualifiedLegacyV2Upgrade.V1",
+    "status": "PASS_LOCAL_QUALIFIED_V2_UPGRADE"
+  },
+  "old_manifest": {
+    "bytes": 20709,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/legacy-v2-fixture/manifest.json",
+    "sha256": "c515b1f397c1018727d373f6bb5ba5c2b124aa38a1986c362982a7a9258c5abb"
+  },
+  "scope": "One old same-host V2 manual journal, two preview startups, no providers or new import/history. No automatic V3 or full Java-manager parity claim.",
+  "sdk": {
+    "bytes": 10137344,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-multi-20261030/provider/candidate-r1/install/lib/libtorrent-rasterbar.so.2.0.12",
+    "sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3"
+  },
+  "source_commit": null,
+  "source_map": {
+    "bytes": 179696,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/source.json",
+    "sha256": "c285d37e62693110340bdc09351d8b0fae99fb86ee3defb166a18fe1eef7ed6f"
+  },
+  "status": "PASS_ACTUAL_OLD_V2_SINGLE_UPGRADE"
+}

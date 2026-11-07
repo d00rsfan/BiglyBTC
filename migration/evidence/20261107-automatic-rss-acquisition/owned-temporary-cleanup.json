@@ -1,0 +1,249 @@
+{
+  "status": "REMOVED_ONLY_OWNED_INACTIVE_CURRENT_TEST_FIXTURES",
+  "paths": [
+    {
+      "path": "/tmp/biglybtc-sub-acq-gS3k6J",
+      "device": 46,
+      "inode": 2497780,
+      "bytes": 112,
+      "files": [
+        {
+          "path": "metadata.torrent",
+          "sha256": "1361698f0d9c73fcabcd7306ffda2e519baa2845cf2102bf1db22db66bf0a841",
+          "bytes": 112
+        }
+      ]
+    },
+    {
+      "path": "/tmp/biglybtc-subscription-automatic-bridge-tests-skSWVg",
+      "device": 46,
+      "inode": 2497760,
+      "bytes": 12840,
+      "files": [
+        {
+          "path": "named-torrents/Owned.torrent",
+          "sha256": "1361698f0d9c73fcabcd7306ffda2e519baa2845cf2102bf1db22db66bf0a841",
+          "bytes": 112
+        },
+        {
+          "path": "profile/BiglyBTC.subscription-acquire",
+          "sha256": "ed1b36ccefbacc498297abc4df4b7518ece25514996da50a259fe54e7543b378",
+          "bytes": 8437
+        },
+        {
+          "path": "profile/downloads.config",
+          "sha256": "f740ee82661d48b994902e6fed0d9e21d599682218cd52e0277d13b2b2cf851f",
+          "bytes": 476
+        },
+        {
+          "path": "profile/downloads.config.bak",
+          "sha256": "cf1bae27474d29d5e50375a494c73239c6634bda7eb02aa2c548bab9095d074a",
+          "bytes": 28
+        },
+        {
+          "path": "profile/subscriptions.config",
+          "sha256": "30a78e17db28f235d9bc0bde1907eca95ec624ef20f68340f8f42ae088f786db",
+          "bytes": 482
+        },
+        {
+          "path": "profile/subscriptions.config.bak",
+          "sha256": "0bc47daa3928b2e52dc0e153e15d2f2d74aaf19627ef491632e260d3a50b82ed",
+          "bytes": 482
+        },
+        {
+          "path": "profile/tables.config",
+          "sha256": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578",
+          "bytes": 2
+        },
+        {
+          "path": "profile/biglybt.config",
+          "sha256": "5dffbaad48539a11c0e89d67dbfb00ad8d8888e3a90abd041e3c3e54e21c678a",
+          "bytes": 1005
+        },
+        {
+          "path": "profile/biglybt.config.bak",
+          "sha256": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578",
+          "bytes": 2
+        },
+        {
+          "path": "profile/.azlock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "profile/torrents/6665CFEC8F24FA603B940C76DC00DA9E2609F322.torrent",
+          "sha256": "1361698f0d9c73fcabcd7306ffda2e519baa2845cf2102bf1db22db66bf0a841",
+          "bytes": 112
+        },
+        {
+          "path": "profile/active/6665CFEC8F24FA603B940C76DC00DA9E2609F322.dat",
+          "sha256": "cacb549bb4386d2c261beae58fa1477c5de1a30a207a18549d35158110369e24",
+          "bytes": 447
+        },
+        {
+          "path": "profile/subs/2A67447FCE01591561E2.results",
+          "sha256": "683776bfc521cc2cfb2e1aeaf8b9bb3ed61e38092f39699e2ba42c5c12e9acda",
+          "bytes": 257
+        },
+        {
+          "path": "profile/subs/2A67447FCE01591561E2.results.bak",
+          "sha256": "76cb6b396a9116e082749eb3f1ef9d937bb2120194f4c7076779286756c38ae5",
+          "bytes": 257
+        },
+        {
+          "path": "profile/subs/2A67447FCE01591561E2.biglybt",
+          "sha256": "71275e9d22bbf4b4b107a37de7fb055d0fdcf80aea7c426dfb877b7edd9c471a",
+          "bytes": 716
+        },
+        {
+          "path": "profile/stats/2026/11/07.dat",
+          "sha256": "cb39d6a8fa0d85304f08fa82b28fea604610a8becc65f8eaa97f6d63587d6687",
+          "bytes": 25
+        }
+      ]
+    },
+    {
+      "path": "/tmp/biglybtc-sub-acq-IluRlP",
+      "device": 46,
+      "inode": 2497728,
+      "bytes": 112,
+      "files": [
+        {
+          "path": "metadata.torrent",
+          "sha256": "1361698f0d9c73fcabcd7306ffda2e519baa2845cf2102bf1db22db66bf0a841",
+          "bytes": 112
+        }
+      ]
+    },
+    {
+      "path": "/tmp/biglybtc-sub-acq-GsHdzC",
+      "device": 46,
+      "inode": 2496869,
+      "bytes": 112,
+      "files": [
+        {
+          "path": "metadata.torrent",
+          "sha256": "1361698f0d9c73fcabcd7306ffda2e519baa2845cf2102bf1db22db66bf0a841",
+          "bytes": 112
+        }
+      ]
+    },
+    {
+      "path": "/tmp/biglybtc-subscription-automatic-bridge-tests-rZyLby",
+      "device": 46,
+      "inode": 2496848,
+      "bytes": 12843,
+      "files": [
+        {
+          "path": "named-torrents/Owned.torrent",
+          "sha256": "1361698f0d9c73fcabcd7306ffda2e519baa2845cf2102bf1db22db66bf0a841",
+          "bytes": 112
+        },
+        {
+          "path": "profile/BiglyBTC.subscription-acquire",
+          "sha256": "689cc5ba0f38fe06e9c59c54591f2748df72ba0ab788df38306cf1bdcbaa7969",
+          "bytes": 8440
+        },
+        {
+          "path": "profile/downloads.config",
+          "sha256": "c65b8debac53e68cf4a5fa8eddf515ec9a4fab1d391d3b0302cf00139af156ab",
+          "bytes": 476
+        },
+        {
+          "path": "profile/downloads.config.bak",
+          "sha256": "cf1bae27474d29d5e50375a494c73239c6634bda7eb02aa2c548bab9095d074a",
+          "bytes": 28
+        },
+        {
+          "path": "profile/subscriptions.config",
+          "sha256": "7f81d167e302db24cf7386e859d6781ac5f59889a56578cd2b7464152038e80b",
+          "bytes": 482
+        },
+        {
+          "path": "profile/subscriptions.config.bak",
+          "sha256": "ee583927770e54d39522b46a14c6871bf2110ed4e5946c4ac7bc1606bf89d7e6",
+          "bytes": 482
+        },
+        {
+          "path": "profile/tables.config",
+          "sha256": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578",
+          "bytes": 2
+        },
+        {
+          "path": "profile/biglybt.config",
+          "sha256": "d61da3d06f1f4baf3fa4f3c24929389e6d1ac033670430f767d9f866f6dcfa92",
+          "bytes": 1005
+        },
+        {
+          "path": "profile/biglybt.config.bak",
+          "sha256": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578",
+          "bytes": 2
+        },
+        {
+          "path": "profile/.azlock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "profile/torrents/6665CFEC8F24FA603B940C76DC00DA9E2609F322.torrent",
+          "sha256": "1361698f0d9c73fcabcd7306ffda2e519baa2845cf2102bf1db22db66bf0a841",
+          "bytes": 112
+        },
+        {
+          "path": "profile/active/6665CFEC8F24FA603B940C76DC00DA9E2609F322.dat",
+          "sha256": "a65a3e368e3918fce71b6c4a13f764c8a321137472e4b2ced1d176a7abab5026",
+          "bytes": 447
+        },
+        {
+          "path": "profile/subs/43F08D594D15FB1107AC.results",
+          "sha256": "870edddeac192bc6c96dd7178ae25d2f2ba7cad46f5a1d29f4bd5973e2b6d6b1",
+          "bytes": 257
+        },
+        {
+          "path": "profile/subs/43F08D594D15FB1107AC.results.bak",
+          "sha256": "aff4ae17e157ed93c4420129d62325bb4cff30c18242e85aa67330c920d779b7",
+          "bytes": 257
+        },
+        {
+          "path": "profile/subs/43F08D594D15FB1107AC.biglybt",
+          "sha256": "e1ff08baa2b17471dfab31917b6dbf4187b9d73ff25f0539b90571182c5ec05f",
+          "bytes": 716
+        },
+        {
+          "path": "profile/stats/2026/11/07.dat",
+          "sha256": "e9fb3e5e8b29b769c869692773dd269e7227db9c955daf9e229e8e506a9ab3b0",
+          "bytes": 25
+        }
+      ]
+    },
+    {
+      "path": "/tmp/biglybtc-sub-acq-ixPlqa",
+      "device": 46,
+      "inode": 2496811,
+      "bytes": 112,
+      "files": [
+        {
+          "path": "metadata.torrent",
+          "sha256": "1361698f0d9c73fcabcd7306ffda2e519baa2845cf2102bf1db22db66bf0a841",
+          "bytes": 112
+        }
+      ]
+    },
+    {
+      "path": "/tmp/biglybtc-sub-acq-R3jHuV",
+      "device": 46,
+      "inode": 2496777,
+      "bytes": 112,
+      "files": [
+        {
+          "path": "metadata.torrent",
+          "sha256": "1361698f0d9c73fcabcd7306ffda2e519baa2845cf2102bf1db22db66bf0a841",
+          "bytes": 112
+        }
+      ]
+    }
+  ],
+  "qualified_metainfo_sha256": "1361698f0d9c73fcabcd7306ffda2e519baa2845cf2102bf1db22db66bf0a841",
+  "protected_old_fixture_consumed": true,
+  "all_removed": true
+}

@@ -1,0 +1,116 @@
+{
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "amendment_reviews": [
+    {
+      "bytes": 4443,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/runtime-amendment-association-purpose-r1/peer-source-review.json",
+      "sha256": "90b7f7b6f6bbd26e67d4fff0436b9f892d29de18ee0b5f10578b93d3a517b5e4"
+    },
+    {
+      "bytes": 2696,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/runtime-amendment-host-terminal-wait-r1/peer-source-review.json",
+      "sha256": "306a7639cd2c9a523fae346f816e48dca43af31f623a68f2a3268400ad321069"
+    },
+    {
+      "bytes": 1066,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/runtime-amendment-recovery-phase-order-r2/root-source-review.json",
+      "sha256": "3b00f41ea4af1b5d9e53d358828a00025d5b893b700eded5bdd7cb878f74b2f7"
+    }
+  ],
+  "basis_commit": "470fe57ed95d304893d252ba60601bc3cf8839db",
+  "basis_native_tree": "652fb06a7908f99aa528cb9bea09c80093d3c2af",
+  "component_reviews": [
+    {
+      "bytes": 3473,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/source-policy-candidate/source-review.json",
+      "sha256": "44837e8c66aae736671f833e7d4b0540cbfd5c7a735f23017222c0abd0597441"
+    },
+    {
+      "bytes": 16425,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/M2-peer-source-review.json",
+      "sha256": "93d8dab622b9a44e8021482f0d611d97dec4a99d1d02a0aff46c27bc4f6538ac"
+    },
+    {
+      "bytes": 2527,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/amendments/intake-history-observer-scope/peer-source-review.json",
+      "sha256": "e883bff556a59700c29eac0578a439110b650e087f52dc2d622a411e5649f91f"
+    },
+    {
+      "bytes": 1342,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/recovery-candidate/root-source-review.json",
+      "sha256": "887400611c07dfe616595350acc0cff006c9e2793d0d5decc35211dcb961441a"
+    }
+  ],
+  "full_originals": "Durable R component/source/cohort paths are referenced by hash; no raw log/spec/whole SourceMap bundle copied.",
+  "implementation_commit": "2ac30ffbe665ff1b628ea7d044168b34f73690d8",
+  "initial_joint_manifest": {
+    "bytes": 84830,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/integration/manifest.json",
+    "sha256": "064700a94e2f1fe83a37075a2f989946a16366a9afd2dd1238aebbaa7d61b8b5"
+  },
+  "initial_joint_source_review": {
+    "bytes": 2469,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/integration/root-source-review.json",
+    "sha256": "e57ffe825a8268b182b732573918a62e694bc3c6a98ed44924f0e41819d68233"
+  },
+  "joint_manifest": {
+    "bytes": 89734,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/source-manifest.json",
+    "sha256": "6848a7bddfbf1842aa4609452f7b3dfbc4ede3bdc2da7bb26c68911988f13a0d"
+  },
+  "joint_source_review": {
+    "bytes": 1724,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/source-review.json",
+    "sha256": "4f73c91fa3b013fe866e8fac79b5113195b9aa708f08f9f87f45643756ba5d3f"
+  },
+  "native_tree": "a017f8ac1a03b791746fbcb42c2ca7ac7304a0dd",
+  "qualified_implementation_basis": "af45fbab82d3e4f7e3c438ae06aea4e5d0e2bf2f",
+  "qualified_whole_source_map": {
+    "bytes": 179696,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/source.json",
+    "sha256": "c285d37e62693110340bdc09351d8b0fae99fb86ee3defb166a18fe1eef7ed6f"
+  },
+  "schema": "BIGLYBTC_AUTOMATIC_RSS_PUBLICATION_SOURCE_SELECTION_V1",
+  "selected_after_sha256": {
+    "preview/native/adapters/CMakeLists.txt": "e5c32ee1dc960e3710ac3b16613b6919f029300f90d0f6d344abdc56fb763814",
+    "preview/native/adapters/existing_subscription_target.hpp": "875e0953e32fcfb5a58236c34b5c77de88461f56705293c730f3fc4e3f122822",
+    "preview/native/adapters/existing_subscription_target.inc": "d6be7d223b9f0c8edf3e6107b391a55f006b36368f31395128f4b73c66d86e26",
+    "preview/native/adapters/subscription_automatic_intake.inc": "56a8a09a0efbb3cebe056298d33baa39c19cae7bc9d560eab01676d1bd003b1e",
+    "preview/native/adapters/torrent_intake.cpp": "926adf82bee780ca71633d016e862e7684a3cd8b314a76209d2bcb8119867565",
+    "preview/native/adapters/torrent_intake.hpp": "539aab16c4046bd377c1151b2866797c2deb61f836de0b178b42586803888989",
+    "preview/native/app/rss_sources_bridge.inc": "02ea9d272848604788c8458af624394a2d055eb2d2daeecbe07176c5449174a9",
+    "preview/native/app/session_bridge.cpp": "c39432023c88454da38f01bd29f31bc437dd3532ab02db99bc22f734294661bf",
+    "preview/native/app/session_bridge.hpp": "a774a6f8e6d0fd22b9a896bebd919d3c2f172290bd91959d78e3e5c8277bcfb4",
+    "preview/native/app/subscription_acquisition.cpp": "2eaaf422b6ca464d1cf021ce37582beeee0ee2171380e1aa03611174e8eac11c",
+    "preview/native/app/subscription_acquisition.hpp": "884164eb65a55bb56ec8307c6ab28f5e88e84740601ad3beae92093fb693c077",
+    "preview/native/app/subscription_acquisition_io.inc": "c8a291f04eb1be0b20dbefcca8d1a81f62f747fca2ec34b830400fa7e8d4c92b",
+    "preview/native/app/subscription_acquisition_values.inc": "c742a13af18f1ad4a410d9ba9ebdb51575c8bd96e01bbfed44f4fba4596e9b0c",
+    "preview/native/app/subscriptions_bridge.inc": "9eb69d4be0de112b14e5751680fe2e096effd4fd62a15faf33457c882a3212d0",
+    "preview/native/app/subscriptions_host.inc": "ab9f30f4ce0fed3c07e6ad0cba3a4054f303bda600af402bc37095f5d8dca974",
+    "preview/native/services/CMakeLists.txt": "77078cd2d174a2e790ad472445d8f65910626d1258af6180d77b7ffc021fd4c9",
+    "preview/native/services/search/rss_http_fetch.cpp": "ae83fe802ce17af8c518f6210a43d23ba5674ac4280756398f4d6b2eb4b2becf",
+    "preview/native/services/search/rss_http_fetch.hpp": "b5386f5b8b6916670bf6baabc1cae0a3fbf9b24a6afe59baeb982c9ab5536383",
+    "preview/native/services/search/saved_subscription_result_source.cpp": "3b00c73ce4a686161659ca7e87e0185a32f717b5db7fe9e9c5b308afddae940a",
+    "preview/native/services/search/saved_subscription_result_source.hpp": "562ab68b3ae831ad92a278981150465b164d066f2bb9d168e9b6e969c69f038c",
+    "preview/native/services/search/saved_subscription_service.cpp": "ce4409b8f4751db75633e0ff1c9a84ca37157abe44072c06c0e6f6b14f80859b",
+    "preview/native/services/search/saved_subscription_service.hpp": "22b4d775bf0a497c1507d38edd150a4faeac4f2b28cfafa762cbb1703f7c9118",
+    "preview/native/services/search/saved_subscription_source.cpp": "aa9b8fb08cfb6f052c99759dc29dbb41813d73cfd46f7a028af2b495f1e096e2",
+    "preview/native/services/search/saved_subscription_source.hpp": "aa188945bee857c92fb3a14a0bff9bfc41d705742bc47d5cf67f1dd9f930b204",
+    "preview/native/services/search/subscription_automatic_values.cpp": "85e18388ef0bb286f3c8f7f6f583d2d04507e56472d724a0439d6bf81697202f",
+    "preview/native/services/search/subscription_automatic_values.hpp": "cf8718b5f31df735a5d4ee70415512f96426cf59b75219619e400bcd78942ac0",
+    "preview/native/services/search/subscription_metainfo_fetch.hpp": "282826af94d90cea4aab03cef547cd8a34edbe847cdb11a902e4203d621354b8",
+    "preview/native/services/search/subscription_store_internal.inc": "d0fe6a7d2ac62f7df763598cdf8acb7a4cedcb3ddcbe3b2824fbfc1bc4b5fb00",
+    "preview/native/services/search/subscription_values.cpp": "95ae4068e0c68dcb31f4fb42092a30324e270ee1dc9d311baca8118963bbb20e",
+    "preview/native/services/search/subscription_values.hpp": "0142c8b356ea33c20c754bc0c5b700ae254f09c537a092acb75a21806389f57e",
+    "preview/native/tests/CMakeLists.txt": "b5bd692a7c7d9c821cb1d35fb73b1785c5a6475c51846e6e5107f185712efcaa",
+    "preview/native/tests/subscription_acquisition_recovery_tests.cpp": "eb433da18086680ca51fdc0e9f76e1da3b3444c1c02bda4dce3d0ea0f72d7dad",
+    "preview/native/tests/subscription_automatic_bridge_tests.cpp": "b3397567dd24c09c840957f690b858d247fe4e1784b9a058c872f3290bd798a6",
+    "preview/native/tests/subscription_automatic_fixture.hpp": "6610fd1c658557544b824a91eb6b5fa7e2e65bbbb2e6a9b50771f33a7b4e5f3e",
+    "preview/native/tests/subscription_automatic_host_fixture.hpp": "f2a09cca0fa81242cd8585d7729810d459dd204aa32f261ba895193cd532d737",
+    "preview/native/tests/subscription_automatic_metainfo_tests.cpp": "c0e803810cee162ed4f0f88f2a5568eca1257d6eca71aa923f37e168b7fbf9d5",
+    "preview/native/tests/subscription_automatic_service_tests.cpp": "bedd689b3a2ac24b83c61cd561cbcc54c6d68b6fb8a4b5cb05cf2d293769de26",
+    "preview/native/tests/subscription_automatic_values_tests.cpp": "50546e5d437adf4d6730221767af765cf9eeb1fb1887aad7b3dc55b4532f25ac"
+  },
+  "selected_leaf_count": 38,
+  "status": "ACTUAL_QUALIFIED_INDEPENDENT_ACCEPTANCE_PENDING"
+}

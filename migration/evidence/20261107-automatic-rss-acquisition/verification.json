@@ -1,0 +1,193 @@
+{
+  "Original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "actual": {
+    "default_core_configure": {
+      "bytes": 3573,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-preparation/core-config/r1/result.json",
+      "sha256": "d16454f0ed8007b44483a0e99347f5e92495905b4f16ae2ba0c9175d767a333b"
+    },
+    "gcc_raw": {
+      "bytes": 107465,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/gcc/r1/result-raw.json",
+      "sha256": "9b2e63831d764f264003874b1d6aaf2a27c0df1198952b0d158bb0a456e97987"
+    },
+    "gcc_stamped": {
+      "bytes": 107925,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/gcc/r1/result-stamped.json",
+      "sha256": "4037131a4dd2a81a2600a2a94cb8934c2c4620e8f1d27051485dc6e8b00c88fc"
+    },
+    "independent_acceptance_review": null,
+    "old_V2_upgrade": {
+      "bytes": 5406,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/legacy-v2-upgrade/r1/result.json",
+      "sha256": "a63591bfeac70d1249c815dcd6563552dc74e8647d283aa43b8c8b4e9c4175dd"
+    },
+    "san_raw": {
+      "bytes": 107641,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/san/r1/result-raw.json",
+      "sha256": "e78b6fec3aa4422cb03178b8a2841a7b195583497cd581e2e99865241100d7d1"
+    },
+    "san_stamped": {
+      "bytes": 108101,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/san/r1/result-stamped.json",
+      "sha256": "b8a24804c89d851598e4a80b906a3fdcbe7004f30a2f52ec7b326d50f3524870"
+    }
+  },
+  "cohort_runner": {
+    "bytes": 20727,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/runner.py",
+    "sha256": "b599c141ef9fad9091d1da2b54ac7d0cf32609fbcf8d5408987def389c126f50"
+  },
+  "cohort_spec": {
+    "bytes": 149442,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/spec.json",
+    "sha256": "ec01f40de7c0e21225785d2dcdf1a231d5e8fdf9f81d44739e71667406e32423"
+  },
+  "declared_source_cohort": {
+    "ELFs_per_lane": 11,
+    "Original_replays": 0,
+    "Qt_methods_per_lane": 2,
+    "Qt_rows_per_lane": 44,
+    "V3_process_rows_per_lane": 20,
+    "app_launches": 0,
+    "carried_M1_methods_per_lane": 16,
+    "carried_M1_rows_per_lane": 45,
+    "carried_Qt_methods_per_lane": 43,
+    "carried_Qt_rows_per_lane": 111,
+    "carried_intake_families_per_lane": 14,
+    "carried_intake_pending_guards_per_lane": 8,
+    "carried_r1_M1_rows_per_lane": 45,
+    "carried_r2_rows_per_lane": 66,
+    "combined_Qt_methods_per_lane": 45,
+    "combined_Qt_rows_per_lane": 155,
+    "default_core_configure_only_shared": 0,
+    "fresh_ELFs_per_lane": 1,
+    "fresh_build_targets_per_lane": 1,
+    "full_intake_families_per_lane": 0,
+    "intake_pending_guards_per_lane": 0,
+    "legacy_V1_V2_process_rows_per_lane": 24,
+    "parent_default_core_configure_only_carried": 1,
+    "production_or_library_builds_requested": 0,
+    "test_groups_per_lane": 2,
+    "unchanged_ELFs_checked_per_lane": 10
+  },
+  "implementation_commit": "2ac30ffbe665ff1b628ea7d044168b34f73690d8",
+  "independent_acceptance_review": {
+    "bytes": 8400,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/independent-acceptance-review.json",
+    "sha256": "98395611b1acb9c99bdfaf1db8377681c2f067591173ef385f7a6c0b1c295f21"
+  },
+  "joint_source_manifest": {
+    "bytes": 89734,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/source-manifest.json",
+    "sha256": "6848a7bddfbf1842aa4609452f7b3dfbc4ede3bdc2da7bb26c68911988f13a0d"
+  },
+  "legacy_V2_fixture_manifest": {
+    "bytes": 20709,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/legacy-v2-fixture/manifest.json",
+    "sha256": "c515b1f397c1018727d373f6bb5ba5c2b124aa38a1986c362982a7a9258c5abb"
+  },
+  "legacy_mutable_files_or_old_image_are_global_inputs": false,
+  "measured_scope": {
+    "Original_runtime_replays": 0,
+    "application_launches": 0,
+    "carried_M1_from_r1": 45,
+    "carried_Qt_rows_per_lane": 111,
+    "carried_other_from_r2": 66,
+    "combined_Qt_rows_per_lane": 155,
+    "default_core_configure_only_seconds": 1.194,
+    "default_core_full_build_claimed": false,
+    "fresh_recovery_methods_per_lane": 2,
+    "fresh_recovery_rows_per_lane": 44,
+    "intake_pending_guards_carried": 8,
+    "lane_seconds": {
+      "gcc": {
+        "r3_build": 36.233,
+        "r3_total": 258.884
+      },
+      "san": {
+        "r3_build": 71.638,
+        "r3_total": 354.665
+      }
+    },
+    "old_V2": {
+      "external_temporary_cleanup": true,
+      "factory_calls": 0,
+      "history_was_disabled": true,
+      "no_duplicate_SID": true,
+      "no_reimport": true,
+      "old_manifest_sha256": "c515b1f397c1018727d373f6bb5ba5c2b124aa38a1986c362982a7a9258c5abb",
+      "preview_startups": 2,
+      "profile_cleanup": true,
+      "profile_files_verified_before_consumption": 14,
+      "schema": "BiglyBTC.LocalQualifiedLegacyV2Upgrade.V1",
+      "status": "PASS_LOCAL_QUALIFIED_V2_UPGRADE"
+    },
+    "old_V2_ran_before_commit_on_exact_qualified_source_map": true,
+    "old_V2_seconds": 0.265,
+    "old_V2_source_map": {
+      "bytes": 179696,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/source.json",
+      "sha256": "c285d37e62693110340bdc09351d8b0fae99fb86ee3defb166a18fe1eef7ed6f"
+    },
+    "ordinary_intake_assertions_carried": 632,
+    "ordinary_intake_families_carried": 14,
+    "role_source_image_archive_carry": {
+      "bytes": 79165,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/carried-prior.json",
+      "sha256": "29167a8418d8339be011290c7d4afcfafcb835f2d6885146eef1e9591bc247a7"
+    },
+    "screenshots": 0
+  },
+  "native_tree": "a017f8ac1a03b791746fbcb42c2ca7ac7304a0dd",
+  "prior_failures": [
+    {
+      "amendment": {
+        "bytes": 6628,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/runtime-amendment-association-purpose-r1/manifest.json",
+        "sha256": "48df15e23d27684fee95d1bfb4312657abe85ad2c6a3667e3f2737e448914ff2"
+      },
+      "attempt": "r1",
+      "cause": "Actual automatic association was parsed with Manual purpose; fixed by reviewed private typed purpose. Ten data-row waits caused the outer timeout; no deadlock established.",
+      "gcc": {
+        "bytes": 129459,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-preparation/gcc/r1/result-raw.json",
+        "sha256": "6240e2c04f374a56fd0856ee94172189a6a9665a04ba857116ef7cf4f79fc468"
+      },
+      "san": {
+        "bytes": 130342,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-preparation/san/r1/result-raw.json",
+        "sha256": "b548b1d7761abc34167fc2e65217ab343cdc9c73cf7d70cd6b2c9a76eae23faa"
+      }
+    },
+    {
+      "amendment": {
+        "bytes": 8075,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/runtime-amendment-recovery-phase-order-r2/manifest.json",
+        "sha256": "ce7477143e7bf17aeb701757ff9f06c72d17ae8a8f07671ef51f3710585c369d"
+      },
+      "attempt": "r2",
+      "cause": "Only six V3 test phase expectations per lane failed; production Host17 and remaining groups passed. Recovery phase/history/artifact expectations corrected; same-mode foreign identity assertion sharpened.",
+      "gcc": {
+        "bytes": 156855,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r2/gcc/r1/result-raw.json",
+        "sha256": "408ea8e050c3ae4b6d0ee393e4c403312f7d10700ea8540d5fd181f5ef55e759"
+      },
+      "san": {
+        "bytes": 158527,
+        "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r2/san/r1/result-raw.json",
+        "sha256": "2e3e2aa122a252ff879e1ba070a3a59471e6bce8e3f9397d937cfac6b96a418e"
+      }
+    }
+  ],
+  "publication_authorized_now": true,
+  "schema": "BIGLYBTC_AUTOMATIC_RSS_PUBLICATION_VERIFICATION_DRAFT_V1",
+  "scope_note": "Actual raw/stamp/source/legacy results are filled; independent acceptance review alone remains null. Parent FAIL aggregates remain FAIL. Root applies metadata only after independent review. Authentic old-V2 had history disabled and claims no Java-manager or V3 parity.",
+  "sdk_sha256": "dfe077249c82e550cd0fd82cd7bfb14841a303bba17c90b74e7d9025b7ce14d3",
+  "source_review": {
+    "bytes": 1724,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-r3/source-review.json",
+    "sha256": "4f73c91fa3b013fe866e8fac79b5113195b9aa708f08f9f87f45643756ba5d3f"
+  },
+  "status": "PASS_AUTOMATIC_RSS_ACQUISITION_LOCAL_OWNED_GCC_SAN_REVIEW"
+}

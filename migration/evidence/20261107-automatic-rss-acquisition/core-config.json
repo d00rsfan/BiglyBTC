@@ -1,0 +1,80 @@
+{
+  "cmake_cache": {
+    "bytes": 18976,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-preparation/core-config/r1/CMakeCache.txt",
+    "sha256": "5cee87a8fcfd4de6a22c5d871ed27f1ed6f68fa41ffb989a4efb3c3c80735ea8"
+  },
+  "commands": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBTC/preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBT/build/.rss-cmake-u83umcjo",
+        "-G",
+        "Ninja",
+        "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+        "-DBIGLYBTC_LOCAL_ENGINE=OFF",
+        "-DBIGLYBTC_DESKTOP=OFF"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT",
+      "elapsed_seconds": 1.016,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-preparation/core-config/r1/configure.log",
+      "log_sha256": "54904332bd7a784d51565f247c64600b02ef54fe6fdfc01911501d8dcea9516e"
+    },
+    {
+      "argv": [
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/.rss-cmake-u83umcjo",
+        "-t",
+        "query",
+        "adapters/libbiglybtc_profile.a"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT",
+      "elapsed_seconds": 0.016,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-preparation/core-config/r1/query-profile.log",
+      "log_sha256": "8eeeb61c70e87b308d163c224274c30b21e00ce2c3f25bed51fe6e61cef807fb"
+    },
+    {
+      "argv": [
+        "ninja",
+        "-C",
+        "/home/yurii/Java/BiglyBT/build/.rss-cmake-u83umcjo",
+        "-t",
+        "query",
+        "adapters/libbiglybtc_subscription_automatic_values.a"
+      ],
+      "cwd": "/home/yurii/Java/BiglyBT",
+      "elapsed_seconds": 0.008,
+      "exit_code": 0,
+      "failure": null,
+      "log": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-preparation/core-config/r1/query-automatic-values.log",
+      "log_sha256": "01e1e31d04c9ff1fba83fbe9dfc2a957ba8e87fde21c16bbd6796c2d70243b60"
+    }
+  ],
+  "compiler_probes_may_run": true,
+  "elapsed_seconds": 1.194,
+  "full_build_or_runtime": false,
+  "source": {
+    "bytes": 179696,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-preparation/source.json",
+    "sha256": "9c39cd797299e2305319e98f78d685154b6ab93c9ccf1cc9e7b5757fda229481"
+  },
+  "spec": {
+    "bytes": 127437,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-rss-fetch-20261106/next-subscriptions-20261106/acquisition-source-20261106/next-existing-download-study/next-automatic-acquisition/cohort-preparation/spec.json",
+    "sha256": "bbd225902b2db8a2717e7bcfe486df30ec32ae9834c4ab100d02eda52e73e370"
+  },
+  "status": "PASS_DEFAULT_CORE_CONFIGURATION",
+  "temporary_cache": "/home/yurii/Java/BiglyBT/build/.rss-cmake-u83umcjo",
+  "temporary_cache_removed": true
+}

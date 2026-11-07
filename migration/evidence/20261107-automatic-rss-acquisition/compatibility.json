@@ -1,0 +1,50 @@
+{
+  "compatibility_evidence_scope": "Current selected positive/refusal cases plus preserved source guards; this is not exhaustive domain qualification.",
+  "explicit_refusals": [
+    {
+      "behavior": "Refuse unsupported geometry; do not invent platform paths or create arbitrary external directories.",
+      "case": "Missing explicit Default save path or uncaptured/non-owned directory geometry"
+    },
+    {
+      "behavior": "Refuse before DNS/bookkeeping; Delete Original Torrent Files alone remains allowed.",
+      "case": "Save Torrent Files=false, Delete Saved Torrent Files=true, positive failure-age mark-read days"
+    },
+    {
+      "behavior": "Remain unsupported until exact Original engine/effect boundary is qualified.",
+      "case": "Atom/no-channel automatic scan; hashed-feed global mark-library-read"
+    },
+    {
+      "behavior": "Existing closed source guards remain; no partial automatic write or hidden route fallback.",
+      "case": "Active regex/non-ASCII literal-filter domain, age/dependency/tag/network/auth/proxy/anonymous/unknown effects"
+    },
+    {
+      "behavior": "Keep bounded stopped Public pure-v1/canonical existing-target support; no hash-only authority.",
+      "case": "Hybrid/v2-only metainfo, active/private/alias/cache-only/backup-only/renamed existing target"
+    },
+    {
+      "behavior": "NeedsReview with retained evidence; never infer ownership from bytes/mode or overwrite a stranger.",
+      "case": "Unrecorded artifact stage, foreign same-byte inode, unknown writer/backup tuple"
+    }
+  ],
+  "implementation_commit": "2ac30ffbe665ff1b628ea7d044168b34f73690d8",
+  "native_tree": "a017f8ac1a03b791746fbcb42c2ca7ac7304a0dd",
+  "next_proposal": "Metasearch and its classic results UI",
+  "next_proposal_started": false,
+  "not_claimed": [
+    "Original subscription-manager runtime or Java recovery equivalence.",
+    "Original cross-file atomicity/effect ordering.",
+    "Full scheduler, all automatic subscription policies, global P08 completion or default distribution promotion.",
+    "UI screenshot/application launch; the new tests exercise actual public Host behavior."
+  ],
+  "schema": "BIGLYBTC_AUTOMATIC_RSS_COMPATIBILITY_V1",
+  "status": "BOUNDED_ACTUAL_QUALIFICATION_INDEPENDENT_ACCEPTANCE_PENDING",
+  "stop_after_current_chapter": true,
+  "supported_scope": [
+    "Committed scan and changed MarkUnread events; first-scan/no-op suppression and bounded worker FIFO/dedup.",
+    "Actual saved automatic source, signed body, settings/trust, selector/session/SAMEOFD/worker/receiver and typed transport phase fences.",
+    "Core-only Original configuration narrowing, inclusive size decision and first multiply wrap; converted name/hash geometry.",
+    "Global default-stopped and conditional general pause; queue admission and persistent startup restoration.",
+    "Fresh stopped Public pure-v1 intake or compatible existing stopped canonical/default-leaf target; fixed cache/SID/association/read updates.",
+    "Mandatory named .torrent artifact with exact preexisting-file preservation or durable created-inode ownership; V3 closed recovery and retained V1/V2 decoding."
+  ]
+}
