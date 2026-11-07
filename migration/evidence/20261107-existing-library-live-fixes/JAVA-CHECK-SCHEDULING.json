@@ -1,0 +1,32 @@
+{
+  "native_gap": "Current Native admission/checking uses libtorrent scheduling and does not consume these Original hashchecking/file-system scheduling keys.",
+  "next": [
+    "Finish immutable current UI/column QA and publish main.",
+    "Implement config-controlled check admission/release by authenticated filesystem identities, including cancellation/Stop/close and manual-vs-startup checks.",
+    "Test same filesystem serialization, different filesystem parallel permission, config opt-out, global limit, fairness and callback release.",
+    "Separately fix avoidable checking after clean Java Exit with validated Original resume import; preserve corruption fallback."
+  ],
+  "original_behavior": [
+    "DiskManagerRecheckScheduler global maxactive<=0 means unlimited; otherwise maxactive eligible nonpaused checks.",
+    "DiskManagerOperationScheduler enabled by one.op.per.fs uses MAX_ACTIVE_PER_FS=1 and pauses competing checks.",
+    "Concurrent read option bypasses file-system contention for checking; false in this profile.",
+    "CoreOperationTask default affected systems are FileUtil.getFileStoreNames(dm.getAbsoluteSaveLocation()); this means Java FileStore identity rather than physical spindle identity.",
+    "Smallest-first sorts remaining bytes, with low-priority checks later; active real-time tasks defer low-priority checks."
+  ],
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sources": [
+    "core/src/com/biglybt/core/disk/impl/DiskManagerRecheckScheduler.java",
+    "core/src/com/biglybt/core/disk/impl/DiskManagerOperationScheduler.java",
+    "core/src/com/biglybt/core/CoreOperationTask.java",
+    "core/src/com/biglybt/core/util/FileUtil.java",
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java"
+  ],
+  "status": "SOURCE_AND_USER_CONFIG_CONFIRMED_NATIVE_GAP",
+  "user_saved_config": {
+    "diskmanager.hashchecking.maxactive": 0,
+    "diskmanager.hashchecking.smallestfirst": "absent; Original default true",
+    "diskmanager.hashchecking.strategy": 0,
+    "diskmanager.one.op.per.fs": 1,
+    "diskmanager.one.op.per.fs.conc.read": "absent; Original default false"
+  }
+}
