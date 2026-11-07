@@ -132,13 +132,16 @@ public:
   // removal fence. Totals are this admission's actual payload byte deltas;
   // they are checked and added to the captured saved cumulative counters.
   // allComplete must be actual is_seeding, never selected-files is_finished.
+  // mapClassified additionally requires this admission's checked alert and a
+  // current checked piece map; an interrupted check must leave unknown pieces.
   std::expected<void,storage::Error> checkpoint(const storage::ProfileLease&,
       std::span<const std::uint8_t> verifiedPieces,bool allComplete,
       std::int64_t downloaded,std::int64_t uploaded,
       std::int64_t secondsDownloading = 0, std::int64_t secondsSeeding = 0,
       std::optional<std::int32_t> secondsSinceUpload = {},
       std::optional<ManagedBadPayloadBytes> badPayloadBytes = {},
-      bool badPayloadComplete = true,std::optional<ManagedHistoryCompletionEvent> historyEvent = {});
+      bool badPayloadComplete = true,std::optional<ManagedHistoryCompletionEvent> historyEvent = {},
+      bool mapClassified = false);
 private:
   static std::expected<ManagedStorage,storage::Error> prepareImpl(
       const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,

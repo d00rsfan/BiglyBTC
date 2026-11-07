@@ -17,6 +17,7 @@
 #include "effective_rate_limits.hpp"
 #include "peer_payload_observer.hpp"
 #include "managed_storage.hpp"
+#include "check_scheduler.hpp"
 #include "mixed_i2p_source.hpp"
 #include "mixed_i2p_transport.hpp"
 #include "library_commands.hpp"
@@ -131,6 +132,7 @@ struct PersistentSession::Impl {
     Clock::time_point mainlineNext{};
     bool policyHeld = false, completedTransition = false, completionHandled = false;
     bool externalPauseSettled=false,externalPausePending=false,checkedAlert=false;
+    bool checkPermit=false,checkingHeld=false,checkPauseDrained=false;
     std::shared_ptr<const storage::ProfileLease> historyLease;
     std::optional<bool> historyPreviousComplete;
     bool historySawIncomplete=false,historyEventComplete=false;
@@ -210,6 +212,8 @@ struct PersistentSession::Impl {
   std::optional<NetworkBinding> networkBinding;
   std::optional<LiveQueueLimits> liveQueueLimits;
   std::optional<core::QueuePolicy> queuePolicy;
+  std::optional<detail::CheckPolicy> checkPolicy;
+  bool checkPolicyRead=false;
   bool externalQueue=false,externalSnapshotValid=false;
   std::uint64_t externalQueueSequence=0;
   std::optional<core::SessionRateLimits> externalRates;
@@ -537,7 +541,7 @@ struct PersistentSession::Impl {
       }
       if(lt::alert_cast<lt::torrent_checked_alert>(alert)){value.checkedAlert=true;}
       if (const auto* paused = lt::alert_cast<lt::torrent_paused_alert>(alert)) {
-        value.externalPauseSettled=true;value.externalPausePending=false;
+        value.externalPauseSettled=true;value.externalPausePending=false;value.checkPauseDrained=true;
         value.advanceTimeline(paused->timestamp()); value.timelinePaused=true;
       }
       if (const auto* resumed = lt::alert_cast<lt::torrent_resumed_alert>(alert)) {
@@ -658,6 +662,13 @@ struct PersistentSession::Impl {
     if(libraryRegularTrackerMode()){
       if(regularTrackerLease){detail::require(lease.sharesOwnership(*regularTrackerLease),"Regular tracker profile ownership changed",storage::ErrorCode::Conflict);}
       else{auto retained=lease.retain();detail::require(retained.has_value(),"Regular tracker profile retention failed",storage::ErrorCode::Conflict);regularTrackerLease=std::move(*retained);}
+    }
+    if(!checkPolicyRead&&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic&&!externalQueue){
+      auto config=storage::ConfigFile::load(lease,"biglybt.config");
+      detail::require(config.has_value()||config.error().code==storage::ErrorCode::Missing,"Cannot read original checking policy",storage::ErrorCode::Io);
+      auto policy=config?detail::readCheckPolicy(config->document().root()):std::expected<detail::CheckPolicy,const char*>{detail::CheckPolicy{}};
+      detail::require(policy.has_value(),"Unsupported original checking policy",storage::ErrorCode::Unsupported);
+      checkPolicy=*policy;checkPolicyRead=true;
     }
     mainlineLease=mainlineOriginalLease?mainlineOriginalLease.get():(regularTrackerLease?regularTrackerLease.get():&lease);
     detail::require(bindingHealthy(), "Explicit network binding was lost", storage::ErrorCode::Io);
@@ -1297,6 +1308,39 @@ struct PersistentSession::Impl {
 
   #include "managed_recheck_owner.inc"
 
+  void applyChecks() {
+    if(!checkPolicy||externalQueue||closingAdmission||poisoned){return;}
+    std::vector<detail::CheckRequest> requests;
+    for(auto& [key,entry]:managed){
+      static_cast<void>(key);auto& value=*entry;
+      if(value.checkPermit&&((value.checkedAlert&&value.status.checked&&!value.stop)||!value.status.retained
+          ||(value.manualPaused&&value.checkPauseDrained&&!value.stop))){value.checkPermit=false;}
+      const bool pending=value.handle.is_valid()&&value.status.retained&&!value.status.checked&&!value.allocationIntent;
+      const bool eligible=pending&&!value.stop&&!value.status.failure&&!value.manualPaused;
+      if(!eligible&&!value.checkPermit){continue;}
+      detail::CheckRequest request;request.admission=value.status.admission;request.retainedPermit=value.checkPermit;request.eligible=eligible;
+      const auto progress=value.status.checkingProgressPpm.value_or(0);
+      request.remainingBytes=value.status.bytes-(value.status.bytes/1000000*progress+(value.status.bytes%1000000)*progress/1000000);
+      for(const auto& claim:value.storage.claims()){if(claim.inode){request.filesystems.push_back(claim.device);}}
+      std::ranges::sort(request.filesystems);request.filesystems.erase(std::unique(request.filesystems.begin(),request.filesystems.end()),request.filesystems.end());
+      requests.push_back(std::move(request));
+    }
+    const auto permitted=detail::scheduleChecks(*checkPolicy,requests);
+    for(auto& [key,entry]:managed){
+      static_cast<void>(key);auto& value=*entry;
+      if(!value.handle.is_valid()||!value.status.retained||value.status.checked||value.allocationIntent||value.stop||value.status.failure||value.manualPaused){continue;}
+      if(permitted.contains(value.status.admission)){
+        const bool resume=!value.checkPermit||value.checkingHeld;
+        value.checkPermit=true;value.checkingHeld=false;
+        if(resume){value.checkPauseDrained=false;value.handle.resume();}
+      }else if(!value.checkingHeld){value.checkingHeld=true;value.checkPauseDrained=false;value.handle.pause();}
+    }
+  }
+  void resumeAfterCheckGate(Managed& value) {
+    if(checkPolicy&&!externalQueue&&!value.status.checked){applyChecks();if(!value.checkPermit){return;}}
+    value.checkPauseDrained=false;value.handle.resume();
+  }
+
   void advanceManaged() {
     for (auto& [key, entry] : managed) {
       static_cast<void>(key);
@@ -1340,7 +1384,7 @@ struct PersistentSession::Impl {
               value.idleCheckpoint&&value.idleCheckpoint->second==value.status.sent
                   ?std::optional<std::int32_t>{value.idleCheckpoint->first}:std::nullopt,value.badPayloadBytes,
               value.status.discardedBytes.has_value()&&value.status.hashFailedBytes.has_value(),
-              value.historyCompletionMillis?std::optional<detail::ManagedHistoryCompletionEvent>{detail::ManagedHistoryCompletionEvent{*value.historyCompletionMillis,value.historyEventComplete,value.historySawIncomplete}}:std::nullopt);});
+              value.historyCompletionMillis?std::optional<detail::ManagedHistoryCompletionEvent>{detail::ManagedHistoryCompletionEvent{*value.historyCompletionMillis,value.historyEventComplete,value.historySawIncomplete}}:std::nullopt,value.checkedAlert&&value.status.checked&&value.storage.purpose()==detail::ManagedStoragePurpose::Download&&network&&network->mode==NetworkMode::Normal&&network->context==NetworkPolicyContext::ExistingLibraryPublic);});
           if (!saved) { value.status.failure = saved.error(); }
           else if(historyConsumerLease){
             value.historyCheckpointed=true;value.historyCheckpointEnd=Clock::now()+std::chrono::seconds(30);
@@ -1372,6 +1416,7 @@ struct PersistentSession::Impl {
         removalLost = true; transferError = true;
       }
     }
+    applyChecks();
     if (queuePolicy && !closingAdmission && !registered && !poisoned) { applyQueue(); }
     if (!registered && !managedActive() && !magnetActive() && !closed && !poisoned) { phase = AccountingState::Idle; }
     if (network && session && !poisoned && !externalQueue) {
@@ -2184,7 +2229,7 @@ std::expected<void, storage::Error> PersistentSession::startManagedImpl(
     impl_->queuePositionsPending=true;impl_->queuePositionsUnavailable=true;
     impl_->phase = AccountingState::Active;
     if(recheck){slot->second->handle.force_recheck();}
-    if (!impl_->externalQueue&&(impl_->queuePolicy || options.manuallyPaused || intent || recheck || !options.queued || options.forceStart)) { slot->second->handle.resume(); }
+    if (!impl_->externalQueue&&(impl_->queuePolicy || options.manuallyPaused || intent || recheck || !options.queued || options.forceStart)) { impl_->resumeAfterCheckGate(*slot->second); }
     // stop_when_ready atomically pauses at the end of checking, before payload
     // transfer; the sole owner poll then applies the selected original rule.
     impl_->session->resume();
@@ -2228,10 +2273,11 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
   if (paused) {
     impl_->forgetTrackerDhtAuthority(hash);
     if(value.mainlinePort){value.mainlinePort->advertised.store(0,std::memory_order_release);}
-    value.handle.unset_flags(lt::torrent_flags::auto_managed); value.handle.pause();
+    value.handle.unset_flags(lt::torrent_flags::auto_managed);value.checkPauseDrained=false; value.handle.pause();
     if (impl_->queuePolicy) { impl_->sampleManaged(value); }
   }
   else {
+    if(impl_->checkPolicy&&!value.status.checked){impl_->resumeAfterCheckGate(value);impl_->sampleManaged(value);return {};}
     if (!impl_->queuePolicy) { value.handle.unset_flags(lt::torrent_flags::stop_when_ready); }
     if (!value.forceStart && !impl_->queuePolicy && !value.seedIntent) { value.handle.set_flags(lt::torrent_flags::auto_managed); }
     if (impl_->queuePolicy) {
@@ -2263,6 +2309,7 @@ std::expected<void, storage::Error> PersistentSession::queueManaged(const core::
     }impl_->sampleManaged(value);return {};
   }
   if (!impl_->queuePolicy) { value.handle.unset_flags(lt::torrent_flags::stop_when_ready); }
+  if(impl_->checkPolicy&&!value.status.checked){value.handle.unset_flags(lt::torrent_flags::auto_managed);impl_->resumeAfterCheckGate(value);impl_->sampleManaged(value);return {};}
   if (forceStart) { value.handle.unset_flags(lt::torrent_flags::auto_managed); value.handle.resume(); }
   else if (impl_->queuePolicy) {
     value.handle.unset_flags(lt::torrent_flags::auto_managed);

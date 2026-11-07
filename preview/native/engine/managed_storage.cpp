@@ -634,14 +634,21 @@ void writeLinks(storage::TorrentStateFile& state, const std::vector<Slot>& slots
   put(attributes,"filelinks2",list+'e'); done(state.replaceSection("attributes",attributes.serialize()));
 }
 void writeProgress(storage::TorrentStateFile& state, const std::vector<std::int64_t>& counts,
-    std::size_t pieces, bool complete) {
+    std::span<const std::uint8_t> pieces, bool complete, bool classified) {
   auto resume=dictionary(state.document().find("resume")); auto data=dictionary(resume.find("data"));
-  put(data,"resume data",stringValue(std::string(pieces,complete?'\1':'\2'))); put(data,"valid",complete?"i1e":"i0e"); put(data,"blocks","de");
+  std::string bitmap(pieces.size(),'\2');
+  if(complete||classified){for(std::size_t i=0;i<pieces.size();++i){bitmap[i]=pieces[i]?1:0;}}
+  put(data,"resume data",stringValue(bitmap)); put(data,"valid",complete||classified?"i1e":"i0e"); put(data,"blocks","de");
   put(resume,"data",data.serialize()); done(state.replaceSection("resume",resume.serialize()));
   auto attributes=dictionary(state.document().find("attributes")); put(attributes,"resumecomplete",complete?"i2e":"i1e");
   auto downloaded=dictionary(attributes.find("filedownloaded")); std::string list="l";
   for (const auto value:counts) { list+=intValue(value); } put(downloaded,"downloaded",list+'e'); put(attributes,"filedownloaded",downloaded.serialize());
   done(state.replaceSection("attributes",attributes.serialize()));
+}
+void writeProgress(storage::TorrentStateFile& state,const std::vector<std::int64_t>& counts,
+    std::size_t pieces,bool complete){
+  const std::vector<std::uint8_t> flags(pieces,complete?1:0);
+  writeProgress(state,counts,flags,complete,false);
 }
 } // namespace
 
@@ -777,6 +784,7 @@ std::expected<void,Error> ManagedStorage::rebaseCategory(const storage::ProfileL
 std::string_view ManagedStorage::categoryStateSnapshot()const noexcept{return impl_?std::string_view(impl_->categorySnapshot):std::string_view{};}
 std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned,const MixedPublicPolicy* mixed,std::stop_token stop) {
   try {
+    auto sourceAccess=take(lease.sourceAccess(true));
     auto categoryLease=take(lease.retain());
     require(purpose==ManagedStoragePurpose::Download||purpose==ManagedStoragePurpose::VerifyExistingReadOnly||purpose==ManagedStoragePurpose::VerifySelectedReadOnly||purpose==ManagedStoragePurpose::RecheckReadOnly||purpose==ManagedStoragePurpose::AllocateOnly,"Unknown managed preparation purpose",ErrorCode::InvalidFormat);
     const bool allocationOnly=purpose==ManagedStoragePurpose::AllocateOnly;
@@ -977,6 +985,9 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     // All unsupported geometry/mapping/policy decisions precede state ownership
     // and payload mutation. beginUpdate hydrates the same last cached sections.
     require(!stop.stop_requested(),"Read-only check cancelled before saved preparation",ErrorCode::Cancelled);
+    Descriptor resumeDirectory(::openat(lease.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW));
+    struct stat resumePrimary{};
+    const bool resumePrimaryKnown=resumeDirectory.get()>=0&&::fstatat(resumeDirectory.get(),(hash.hex()+".dat").c_str(),&resumePrimary,AT_SYMLINK_NOFOLLOW)==0&&S_ISREG(resumePrimary.st_mode);
     auto state=take(store.beginUpdate(lease,hash)); auto actual=dictionary(state.document().find("attributes"));
     require(core::originalDownloadFlags(state.document().find("attributes"))==flags,
         "Original sequential flags changed during preparation",ErrorCode::Conflict);
@@ -1005,12 +1016,48 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     // Cache values are copied before their backing state is relinquished.
     auto rechecked=owned?owned->apply(networks(state.document(),actual.root()),params):mixed?mixed->apply(policy,networks(state.document(),actual.root()),params):applyExistingTorrentNetworkPolicy(policy,networks(state.document(),actual.root()),params);
     require(rechecked.has_value(),"Authoritative torrent network policy changed",ErrorCode::Conflict);
-    // Before any payload write, Java must recheck after an interrupted owner.
+    // Original RDResumeHandler restores DONE pieces from a valid saved map.
+    // Read the actual primary map before native invalidation; presentation
+    // completion and cached resumecomplete flags never grant this fast path.
+    std::optional<std::string> importedResume,importedBlocks;
+    if(purpose==ManagedStoragePurpose::Download&&!mapped&&!owned&&!mixed
+        &&policy.mode==NetworkMode::Normal&&policy.context==NetworkPolicyContext::ExistingLibraryPublic
+        &&identity.selected==storage::OriginalSelectedHash::V1&&!info->info_hashes().has_v2()
+        &&!original.recoveredBackup()&&!state.recoveredBackup()){
+      const auto uniqueDictionary=[](const Node* node){
+        if(!node||node->type!=Node::Type::Dictionary||node->children.size()%2){return false;}
+        std::set<std::string_view> keys;
+        for(std::size_t i=0;i<node->children.size();i+=2){if(node->children[i].type!=Node::Type::Bytes||!keys.insert(node->children[i].bytes).second){return false;}}
+        return true;
+      };
+      const auto* outer=source.find("resume");const auto* data=outer?outer->find("data"):nullptr;
+      const auto* valid=data?data->find("valid"):nullptr;const auto* bitmap=data?data->find("resume data"):nullptr;const auto* blocks=data?data->find("blocks"):nullptr;
+      bool acceptable=uniqueDictionary(outer)&&uniqueDictionary(data)&&valid&&valid->type==Node::Type::Integer&&valid->integer==1
+          &&bitmap&&bitmap->type==Node::Type::Bytes&&bitmap->bytes.size()==static_cast<std::size_t>(info->num_pieces())
+          &&std::ranges::all_of(bitmap->bytes,[](char value){return value==0||value==1;})&&(!blocks||uniqueDictionary(blocks));
+      acceptable=acceptable&&resumePrimaryKnown;
+      for(const auto& slot:slots){
+        if(!acceptable||slot.padding){continue;}struct stat current{};
+        acceptable=slot.parent.get()>=0&&slot.identity.st_ino&&::fstatat(slot.parent.get(),slot.actual.filename().c_str(),&current,AT_SYMLINK_NOFOLLOW)==0
+            &&S_ISREG(current.st_mode)&&sameFile(current,slot.identity)&&current.st_size>=slot.bytes
+            &&(current.st_mtim.tv_sec<resumePrimary.st_mtim.tv_sec||(current.st_mtim.tv_sec==resumePrimary.st_mtim.tv_sec&&current.st_mtim.tv_nsec<=resumePrimary.st_mtim.tv_nsec));
+      }
+      if(acceptable&&bitmap){
+        importedResume=std::string(bitmap->bytes);if(blocks){importedBlocks=encoded(*blocks);}params.have_pieces.resize(info->num_pieces(),false);
+        for(int i=0;i<info->num_pieces();++i){if((*importedResume)[static_cast<std::size_t>(i)]==1){params.have_pieces.set_bit(lt::piece_index_t{i});}}
+      }
+    }
+    // Preserve original checked pieces. Newly written/unfinished pieces remain
+    // RECHECK_REQUIRED after a crash; explicit recheck and unsupported mappings
+    // keep their existing full validation path. LT counters still start at zero.
     auto resume=dictionary(state.document().find("resume"));auto resumeData=dictionary(resume.find("data"));
-    put(resumeData,"valid","i0e");put(resumeData,"resume data",stringValue(std::string(static_cast<std::size_t>(info->num_pieces()),'\2')));put(resumeData,"blocks","de");
+    auto durablePieces=importedResume.value_or(std::string(static_cast<std::size_t>(info->num_pieces()),'\2'));
+    const bool completeImported=importedResume&&std::ranges::all_of(durablePieces,[](char value){return value==1;});
+    if(importedResume){for(auto& piece:durablePieces){if(piece==0){piece=2;}}if(importedBlocks){put(resumeData,"blocks",*importedBlocks);}}else{put(resumeData,"blocks","de");}
+    put(resumeData,"valid",completeImported?"i1e":"i0e");put(resumeData,"resume data",stringValue(durablePieces));
     put(resume,"data",resumeData.serialize());done(state.replaceSection("resume",resume.serialize()));
     done(storage::applyOriginalStorageDefaults(actual,storageDefaults));
-    put(actual,"resumecomplete","i1e");done(state.replaceSection("attributes",actual.serialize()));
+    put(actual,"resumecomplete",completeImported?"i2e":"i1e");done(state.replaceSection("attributes",actual.serialize()));
     require(!stop.stop_requested(),"Read-only check cancelled before resume invalidation",ErrorCode::Cancelled);
     if(!rechecking){writeLinks(state,slots,save,false);} done(store.save(lease,state));
     if(rawSaved.saveDirectory!=saved.saveDirectory||rawSaved.saveFile!=saved.saveFile||rawSaved.legacySavePath) {
@@ -1121,7 +1168,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
 std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease& lease,std::span<const std::uint8_t> verified,
     bool complete,std::int64_t received,std::int64_t sent,
     std::int64_t secondsDownloading,std::int64_t secondsSeeding,std::optional<std::int32_t> secondsSinceUpload,
-    std::optional<ManagedBadPayloadBytes> badPayloadBytes,bool badPayloadComplete,std::optional<ManagedHistoryCompletionEvent> historyEvent) {
+    std::optional<ManagedBadPayloadBytes> badPayloadBytes,bool badPayloadComplete,std::optional<ManagedHistoryCompletionEvent> historyEvent,bool mapClassified) {
   try {
     require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict); auto& owner=*impl_;
     require(owner.purpose!=ManagedStoragePurpose::AllocateOnly,"Allocation cannot publish verified piece progress",ErrorCode::Conflict);
@@ -1252,7 +1299,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       }catch(const Failure& f){owner.historyProblem=f.error.code;}
       catch(...){owner.historyProblem=ErrorCode::Io;}
     }
-    writeProgress(owner.state,counts,verified.size(),complete); done(owner.store.save(lease,owner.state));
+    writeProgress(owner.state,counts,verified,complete,mapClassified); done(owner.store.save(lease,owner.state));
     const bool completedFiles=!owner.pending.empty()||std::ranges::any_of(owner.slots,[&](const auto& slot){return !slot.padding&&counts[slot.index]==slot.bytes;});
     if (completedFiles) {
       auto attributes=dictionary(owner.state.document().find("attributes")); const auto suffix=attributes.find("incompfilesuffix")?text(attributes.find("incompfilesuffix")):std::string{};
