@@ -1,0 +1,318 @@
+{
+  "schema": "BIGLYBT_OFFLINE_METASEARCH_VALUE_OBSERVATIONS_V1",
+  "case_count": 18,
+  "cases": [
+    {
+      "actual_GeneralUtils_replaceAll": "https://search.invalid/api/alpha+beta?q=alpha+beta&fixed=%2F",
+      "kind": "query",
+      "label": "query-0",
+      "query": "alpha beta",
+      "template": "https://search.invalid/api/%s?q=%s&fixed=%2F",
+      "actual_URLEncoder": "alpha+beta"
+    },
+    {
+      "actual_GeneralUtils_replaceAll": "https://search.invalid/api/x%2By%2F%25s?q=x%2By%2F%25s&fixed=%2F",
+      "kind": "query",
+      "label": "query-1",
+      "query": "x+y/%s",
+      "template": "https://search.invalid/api/%s?q=%s&fixed=%2F",
+      "actual_URLEncoder": "x%2By%2F%25s"
+    },
+    {
+      "actual_GeneralUtils_replaceAll": "https://search.invalid/api/%CE%BC+%E9%9B%AA?q=%CE%BC+%E9%9B%AA&fixed=%2F",
+      "kind": "query",
+      "label": "query-2",
+      "query": "μ 雪",
+      "template": "https://search.invalid/api/%s?q=%s&fixed=%2F",
+      "actual_URLEncoder": "%CE%BC+%E9%9B%AA"
+    },
+    {
+      "actual_GeneralUtils_replaceAll": "https://search.invalid/api/*%7E.-_?q=*%7E.-_&fixed=%2F",
+      "kind": "query",
+      "label": "query-3",
+      "query": "*~.-_",
+      "template": "https://search.invalid/api/%s?q=%s&fixed=%2F",
+      "actual_URLEncoder": "*%7E.-_"
+    },
+    {
+      "actual_GeneralUtils_replaceAll": "https://search.invalid/api/a%26b%3Dc%3F%23?q=a%26b%3Dc%3F%23&fixed=%2F",
+      "kind": "query",
+      "label": "query-4",
+      "query": "a&b=c?#",
+      "template": "https://search.invalid/api/%s?q=%s&fixed=%2F",
+      "actual_URLEncoder": "a%26b%3Dc%3F%23"
+    },
+    {
+      "actual_GeneralUtils_replaceAll": "https://search.invalid/api/%25s%25s?q=%25s%25s&fixed=%2F",
+      "kind": "query",
+      "label": "query-5",
+      "query": "%s%s",
+      "template": "https://search.invalid/api/%s?q=%s&fixed=%2F",
+      "actual_URLEncoder": "%25s%25s"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "plain-values",
+      "path": "data.rows",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": 1024,
+          "seeds": 7,
+          "torrent_link_raw": "",
+          "peers": 3,
+          "search_query": "needle μ",
+          "name": "Title & μ",
+          "published_epoch_millis": 1577923200000,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "{\"data\":{\"rows\":[{\"a\":\"<b>Title &amp; μ</b>\",\"size\":\"1024\",\"seeds\":\"7\",\"peers\":3,\"date\":\"2020-01-02\",\"id\":\"not-a-UID\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]}}"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "later-empty-keeps-first",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "First",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"a\":\"First\",\"b\":\"\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "later-nonempty-overwrites",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "Last",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"a\":\"First\",\"b\":\"Last\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "null-missing-fields",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"a\":null,\"size\":null,\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "html-units-and-signed-counts",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": 1572864,
+          "seeds": 1234,
+          "torrent_link_raw": "",
+          "peers": -2,
+          "search_query": "needle μ",
+          "name": "Units",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"a\":\"Units\",\"size\":\"1.5 MiB\",\"seeds\":\"1, 234\",\"peers\":\"-2\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "relative-raw-link",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": 1,
+          "seeds": -1,
+          "torrent_link_raw": "/files/a.torrent?x=1&y=2",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "Relative",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"a\":\"Relative\",\"size\":1.5,\"download\":\"/files/a.torrent?x=1&amp;y=2\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "singleton-array-unwrap",
+      "path": "data.rows",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "Singleton",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"data\":{\"rows\":[{\"a\":\"Singleton\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]}}]"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "indexed-result-path",
+      "path": "[0].rows",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "Indexed",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"rows\":[{\"a\":\"Indexed\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]}]"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "non-object-results-skipped",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "Only object",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[5,null,{\"a\":\"Only object\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"},[\"x\"]]"
+    },
+    {
+      "native_unsupported_observation_only": false,
+      "kind": "json",
+      "label": "invalid-indexed-path",
+      "path": "[1].rows",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_error": "SearchException",
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[]"
+    },
+    {
+      "native_unsupported_observation_only": true,
+      "kind": "json",
+      "label": "post-filter-explicitly-unsupported",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"a\":\"Value\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    },
+    {
+      "native_unsupported_observation_only": true,
+      "kind": "json",
+      "label": "mapping-expression-explicitly-unsupported",
+      "path": "",
+      "actual_engine_uid": "AAAAABYAAAAAAAAA",
+      "query": "needle μ",
+      "actual_rows": [
+        {
+          "uid": null,
+          "size": -1,
+          "seeds": -1,
+          "torrent_link_raw": "",
+          "peers": -1,
+          "search_query": "needle μ",
+          "name": "Value",
+          "published_epoch_millis": null,
+          "hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ],
+      "actual_root_page": "https://search.invalid:8443",
+      "actual_base_page": "https://search.invalid:8443/dir/search?q=%s&fixed=a/",
+      "page": "[{\"a\":\"Value\",\"hash\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]"
+    }
+  ]
+}

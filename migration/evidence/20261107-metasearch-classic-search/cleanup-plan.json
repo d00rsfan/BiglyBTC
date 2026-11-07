@@ -1,0 +1,338 @@
+{
+  "schema": "BIGLYBTC_METASEARCH_OWNED_TMP_CLEANUP_PLAN_V1",
+  "status": "READ_ONLY_CANDIDATES_ROOT_MUST_REVALIDATE_AFTER_ACTIVE_COHORT_JOINS",
+  "created_utc": "2026-11-07T05:57:53Z",
+  "current_uid": 1000,
+  "scope": "Only exact metasearch test temporary root left by actual R2 SAN first Host method teardown failure. No user profile, running Original, live development preview, source, caches, SDK or unrelated temporary path is proposed.",
+  "prefixes_inspected": [
+    "/tmp/biglybtc-metasearch-{values,document,source,service,transport,ui,bridge}-tests-XXXXXX",
+    "/tmp/BiglyBTC-search-XXXXXX"
+  ],
+  "candidates": [
+    {
+      "path": "/tmp/biglybtc-metasearch-bridge-tests-XNBQuk",
+      "root_identity": {
+        "uid": 1000,
+        "gid": 1000,
+        "mode": "0o700",
+        "type": "directory",
+        "device": 46,
+        "inode": 2517037,
+        "size": 80,
+        "mtime_ns": 1794030243857641052,
+        "ctime_ns": 1794030243857641052
+      },
+      "reason": "Matches Qt test application QTemporaryDir prefix, actual three-engine first Host fixture and exact generated pure-v1 torrent; R2 SAN abort during Window teardown precedes Profile root destructor.",
+      "observations": {
+        "catalog_rows": 3,
+        "catalog_uids": [
+          "owned-json",
+          "other-rss",
+          "unsupported"
+        ],
+        "catalog_types": [
+          2,
+          4,
+          1
+        ],
+        "bind_ip": "127.0.0.1",
+        "enforce_bind": true,
+        "listener_ports": {
+          "TCP.Listen.Port": 45035,
+          "UDP.Listen.Port": 45035,
+          "UDP.NonData.Listen.Port": 45035
+        },
+        "default_save_path": "/tmp/biglybtc-metasearch-bridge-tests-XNBQuk/payload",
+        "inventory_rows": 1,
+        "expected_fixture_infohash_v1": "59505bfa6ed5a481d5c08ceef3e8303abcb13657",
+        "expected_fixture_torrent_sha256": "7151f535447560e7c6f47c657a368079eef556ef9cf6a3ea25c704680dad5cb8",
+        "exact_fixture_torrent_matches": [
+          "profile/torrents/59505BFA6ED5A481D5C08CEEF3E8303ABCB13657.torrent"
+        ],
+        "payload_entries": 0,
+        "inventory_key_names": [
+          "completedbytes",
+          "downloaded",
+          "file_priorities",
+          "file_priorities_c",
+          "forceStart",
+          "maxdl",
+          "maxul",
+          "persistent",
+          "position",
+          "save_dir",
+          "save_file",
+          "state",
+          "torrent",
+          "torrent_hash",
+          "uploaded"
+        ]
+      },
+      "entries": [
+        {
+          "relative_path": "payload",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o775",
+          "type": "directory",
+          "device": 46,
+          "inode": 2517042,
+          "size": 40,
+          "mtime_ns": 1794030243857641052,
+          "ctime_ns": 1794030243857641052
+        },
+        {
+          "relative_path": "profile",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o775",
+          "type": "directory",
+          "device": 46,
+          "inode": 2517038,
+          "size": 260,
+          "mtime_ns": 1794030256156825724,
+          "ctime_ns": 1794030256156825724
+        },
+        {
+          "relative_path": "profile/.azlock",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o600",
+          "type": "regular",
+          "device": 46,
+          "inode": 2517041,
+          "size": 0,
+          "mtime_ns": 1794030243855834295,
+          "ctime_ns": 1794030243855834295,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "relative_path": "profile/BiglyBT.statistics",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o600",
+          "type": "regular",
+          "device": 46,
+          "inode": 2517084,
+          "size": 213,
+          "mtime_ns": 1794030256155650182,
+          "ctime_ns": 1794030256156825724,
+          "sha256": "65c1645a368a816b0f7b5646687c9c33b8bbb65842f851e01df9a23547e7db3b"
+        },
+        {
+          "relative_path": "profile/active",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o700",
+          "type": "directory",
+          "device": 46,
+          "inode": 2517078,
+          "size": 60,
+          "mtime_ns": 1794030256030744142,
+          "ctime_ns": 1794030256030744142
+        },
+        {
+          "relative_path": "profile/biglybt.config",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o664",
+          "type": "regular",
+          "device": 46,
+          "inode": 2517043,
+          "size": 592,
+          "mtime_ns": 1794030243858641053,
+          "ctime_ns": 1794030243858641053,
+          "sha256": "75421f2bcbc0f7bf84e378d302eac63dc18ddb2aba6f97fbe5dde902d7108b05"
+        },
+        {
+          "relative_path": "profile/biglybt.config.bak",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o664",
+          "type": "regular",
+          "device": 46,
+          "inode": 2517040,
+          "size": 2,
+          "mtime_ns": 1794030243855834295,
+          "ctime_ns": 1794030243858641053,
+          "sha256": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578"
+        },
+        {
+          "relative_path": "profile/downloads.config",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o600",
+          "type": "regular",
+          "device": 46,
+          "inode": 2517083,
+          "size": 447,
+          "mtime_ns": 1794030256032724152,
+          "ctime_ns": 1794030256032796352,
+          "sha256": "1ed8fb05d83a3dba36af9fba5fdd1d2ab0621daab6c5b42f5390a31787054017"
+        },
+        {
+          "relative_path": "profile/downloads.config.bak",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o600",
+          "type": "regular",
+          "device": 46,
+          "inode": 2517082,
+          "size": 15,
+          "mtime_ns": 1794030256031650090,
+          "ctime_ns": 1794030256032724152,
+          "sha256": "981272d7d1aa9b1a00af33a5d46fbfaa2d39840d7632a232b19a5238a374637c"
+        },
+        {
+          "relative_path": "profile/metasearch.config",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o664",
+          "type": "regular",
+          "device": 46,
+          "inode": 2517039,
+          "size": 1157,
+          "mtime_ns": 1794030243857347419,
+          "ctime_ns": 1794030243857347419,
+          "sha256": "926cc5b654d219be8035e8fb14a981b7b0e66095ff956cf7fb564c24170c283b"
+        },
+        {
+          "relative_path": "profile/stats",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o700",
+          "type": "directory",
+          "device": 46,
+          "inode": 2517046,
+          "size": 60,
+          "mtime_ns": 1794030245968883543,
+          "ctime_ns": 1794030245968883543
+        },
+        {
+          "relative_path": "profile/tables.config",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o600",
+          "type": "regular",
+          "device": 46,
+          "inode": 2517045,
+          "size": 2,
+          "mtime_ns": 1794030243859756355,
+          "ctime_ns": 1794030243859784450,
+          "sha256": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578"
+        },
+        {
+          "relative_path": "profile/torrents",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o700",
+          "type": "directory",
+          "device": 46,
+          "inode": 2517079,
+          "size": 60,
+          "mtime_ns": 1794030256030781120,
+          "ctime_ns": 1794030256030781120
+        },
+        {
+          "relative_path": "profile/torrents/59505BFA6ED5A481D5C08CEEF3E8303ABCB13657.torrent",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o600",
+          "type": "regular",
+          "device": 46,
+          "inode": 2517081,
+          "size": 121,
+          "mtime_ns": 1794030256030781120,
+          "ctime_ns": 1794030256031486737,
+          "sha256": "7151f535447560e7c6f47c657a368079eef556ef9cf6a3ea25c704680dad5cb8"
+        },
+        {
+          "relative_path": "profile/active/59505BFA6ED5A481D5C08CEEF3E8303ABCB13657.dat",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o600",
+          "type": "regular",
+          "device": 46,
+          "inode": 2517080,
+          "size": 420,
+          "mtime_ns": 1794030256030744142,
+          "ctime_ns": 1794030256030781120,
+          "sha256": "9f5206efa8ef46f5119eb462d81b798dc4e78be6f84a6b5c61fb73bc23cf7f37"
+        },
+        {
+          "relative_path": "profile/stats/2026",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o700",
+          "type": "directory",
+          "device": 46,
+          "inode": 2517047,
+          "size": 60,
+          "mtime_ns": 1794030245968883543,
+          "ctime_ns": 1794030245968883543
+        },
+        {
+          "relative_path": "profile/stats/2026/11",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o700",
+          "type": "directory",
+          "device": 46,
+          "inode": 2517048,
+          "size": 60,
+          "mtime_ns": 1794030245968920520,
+          "ctime_ns": 1794030245968920520
+        },
+        {
+          "relative_path": "profile/stats/2026/11/07.dat",
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0o600",
+          "type": "regular",
+          "device": 46,
+          "inode": 2517049,
+          "size": 50,
+          "mtime_ns": 1794030256155650182,
+          "ctime_ns": 1794030256155650182,
+          "sha256": "28433bfc5b6398a012cf7001b4e22d659677ca0cdbc67182cd09995dae2721a5"
+        }
+      ],
+      "regular_file_bytes": 3019
+    }
+  ],
+  "no_remaining_binary_metadata_tmp_found": true,
+  "provenance": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r2/san/r1/classic-metasearch-owned-worker.log",
+      "sha256": "af981cbfb7ecb270aa60a67065fef0973c96ba18a5d6d468bae4c92942eada1c",
+      "bytes": 4885
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/host-ui-candidate/source/preview/native/tests/metasearch_bridge_tests.cpp",
+      "sha256": "d63adc48f2a021e0b6ed107d5c391c9b186e5401839883741c424036cb896049",
+      "bytes": 22144
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/source-candidate/source/preview/native/tests/metasearch_fixture.hpp",
+      "sha256": "5d8f4c92e1290650b9bd6fcd076053a95744e68ea5682bb3512740118cd3a78a",
+      "bytes": 2993
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/rss_http_fetch_fixture.hpp",
+      "sha256": "7f91881d10d2568aa5807ba3bad9ffa6fff97b17e94775a55198c1ee99fce7e5",
+      "bytes": 11953
+    }
+  ],
+  "required_before_any_deletion": [
+    "Wait until the active R3 cohort and any owned diagnostic has joined.",
+    "Verify exact root device/inode/uid/mode and all entries; preserve on changes, aliases or unexpected contents.",
+    "Verify no live process cwd/root/exe/maps/open descriptor references this root using actual host visibility; this read-only audit made no process inactivity claim.",
+    "Root alone deletes this exact inactive owned test root and records disposal/space gain."
+  ],
+  "filesystem_mutations_performed": [
+    "chapterRoot/cleanup-plan.json only"
+  ],
+  "process_scans_or_signals": false,
+  "subjects_executed": false,
+  "native_or_cache_mutated": false
+}

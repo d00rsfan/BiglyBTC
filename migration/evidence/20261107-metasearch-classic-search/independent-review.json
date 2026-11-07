@@ -1,0 +1,130 @@
+{
+  "schema": "BiglyBTC.MetasearchClassicResultsIndependentAcceptanceReview.V1",
+  "status": "PASS_METASEARCH_CLASSIC_RESULTS_LOCAL_OWNED_GCC_SAN_REVIEW",
+  "reviewed_utc": "2026-11-07T06:18:15.116700+00:00",
+  "implementation_commit": "63376b561829d8205e540df41cc89ce06ae7cb7a",
+  "native_tree": "8bf077b64fee57396e5098f5bf1eb2daa2bac138",
+  "code_association": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/code-publication.json",
+    "bytes": 1416,
+    "sha256": "d50c51674e14573f14f615dcf1a353724f773aca96e64db2636136100fd2bf7a"
+  },
+  "spec": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r4/spec.json",
+    "bytes": 44993,
+    "sha256": "37f9e9943cfaf0b9a38dc679f2a90e3c97d67bc0c1bdb1e1507fd08d7325e7d0"
+  },
+  "source_map": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r4/source.json",
+    "bytes": 183298,
+    "sha256": "690f7a784d0943ed2055349d40056e67c8253f59e7dc198c50e1e9d8946b4aa5"
+  },
+  "source_selection": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r4/source-selection.json",
+    "bytes": 46368,
+    "sha256": "ccb5e76d432514ebe1148c608ca5394d34ba3c7c7e4311d1d498352e5fdbef3c"
+  },
+  "validation": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/independent-validation-r4.json",
+    "bytes": 12036,
+    "sha256": "600b414c9df85e46d9d0c5d93b4fe90a8045722aa10e9db32cc58ca1e9abc01b"
+  },
+  "raw_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r4/gcc/r1/result-raw.json",
+      "bytes": 64925,
+      "sha256": "ce0b677a74bba441e1f577f094f0fb8c0adcf40b8d69746a15316ea846e14efa"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r4/san/r1/result-raw.json",
+      "bytes": 64954,
+      "sha256": "86f501ca2b91a522904f0ba1169151067f6dd6b24d2f75871ee486650a485f8d"
+    }
+  },
+  "stamped_receipts": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r4/gcc/r1/result-stamped.json",
+      "bytes": 65274,
+      "sha256": "e742f43c08f9385b637fbe848c341f4a98f22a907deccd22b3f183584e22fffb"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r4/san/r1/result-stamped.json",
+      "bytes": 65303,
+      "sha256": "a1e47c5d81f85366264aa407e63f6d8c478cdb880af52c601376620f1e0cc05b"
+    }
+  },
+  "measured": {
+    "gcc_seconds": 77.861,
+    "san_seconds": 106.966,
+    "build_seconds": {
+      "gcc": 17.272,
+      "san": 30.465
+    },
+    "successful_commands_per_lane": 17,
+    "fresh_Qt_data_rows_per_lane": 129,
+    "fresh_Qt_methods_per_lane": 47,
+    "fresh_Qt_groups_per_lane": 9,
+    "Original_reference_comparisons_per_lane": 18,
+    "explicit_unsupported_reference_cases": 2,
+    "ELFs_per_lane": 10,
+    "archives_per_lane": 10,
+    "current_Source_closure": 1452,
+    "canonical_selected_leaves": 44,
+    "defined_fixture_symbols_checked_per_variant": 7,
+    "compile_role_checks_per_lane": 4,
+    "final_Bridge_link_role_checks_per_lane": 1
+  },
+  "evidence": {
+    "source": "All130 final spec inputs, selected afterimages and1452 current Source hashes verified. The2/10/1 corrected-leaf chain retains all44 canonical preimages. Final stamped maps match63376b561829d8205e540df41cc89ce06ae7cb7a /8bf077b64fee57396e5098f5bf1eb2daa2bac138 and the committed Native source; protected Original HEAD/index and exactSDK digest remain unchanged.",
+    "actual_runtime": "Every selected command exits0; all XML incidents pass with exact unique case/method inventories. Real saved-source query/federation/current/cancel paths, retained completed-result handle, literal Java-form GET spelling, TLS/source revocation, exact decoded gzip boundary/Http rejection, classic plain-text filtering/sorting, genuine stopped intake review and owned close/cleanup are covered. App is build-only; all profile/network subjects are private owned fixtures.",
+    "roles": "Actual defined-only nm logs split all7 fixture factories correctly; actual compile commands confirm production/fixture provider+Host macros, and the final Bridge link contains only required fixture archives with production provider/service/Host exclusions. SAN instrumentation/leak-enabled runner inputs are retained; no sanitizer diagnostics appear in selected actual logs.",
+    "lineage": "R1 compile FAILs, R2 runtime FAILs and R3 two test-precision FAILs remain historical FAIL receipts. R4 freshly reruns all129 rows; no failed parent is relabelled or credited as a whole passing cohort. Unchanged30s no-approval timer singleton is excluded and has no new runtime claim.",
+    "review_boundary": "Reviewer authored transport fixtures and Original value adapter; their source was independently reviewed by Root/peers. This review independently validates actual receipts, hashes, role logs, Source/code association and counts."
+  },
+  "Original_values": {
+    "receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/original-value-oracle/protected-context-accessors-r2/actual-values-r2-20261107/result.json",
+      "bytes": 14293,
+      "sha256": "82527be5a70de9b3f366365137e41b42a3b9914eb546e5ba3d65f3a0e2964cd4"
+    },
+    "observations": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/original-value-oracle/protected-context-accessors-r2/actual-values-r2-20261107/observations.json",
+      "bytes": 11055,
+      "sha256": "d8bbf52fbc2ddfc308fc6c0bace8c0164ae7ef896d1b0f97a7b316abda913ac2"
+    },
+    "scope": "One corrected javac/JVM offline actual JSONEngine parser/getter sequence;18 observations (6query/12JSON), including invalid-path error and2 explicit Native refusals. Failed first protected-access compiler attempt is preserved. Acquisition was substituted; no Original HTTP manager/Core/fullsearch execution or numeric-date parity claim. Recorded-before-cleanup class/private pins are not claimed rehashed after removal."
+  },
+  "layout": {
+    "capture": {
+      "bytes": 86302,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r4/gcc/r1/classic-search.png",
+      "sha256": "53e56046a3ec9fb7a1bb995d02b0889bce7430346f4af806ab73100780c7e0b1"
+    },
+    "Root_R3_GCC_capture": {
+      "bytes": 86302,
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r3/gcc/r1/classic-search.png",
+      "sha256": "53e56046a3ec9fb7a1bb995d02b0889bce7430346f4af806ab73100780c7e0b1"
+    },
+    "final_GCC_and_SAN_capture_identical": true,
+    "R3_App_UI_Host_ELFs_and_archives_identical_to_final": true,
+    "scope": "Root reported a bounded readable-layout/plain-text check of the real R3 synthetic fixture PNG, now byte-identical to both final captures. No human usability review or Original SWT visual-parity claim."
+  },
+  "owned_cleanup": {
+    "receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cleanup-result.json",
+      "bytes": 578,
+      "sha256": "dfc3494d4a2dc4ef5258059fbb93266edc0fac30b30da44bcb7c4ded44b78287"
+    },
+    "status": "PASS_OWNED_INACTIVE_CHAPTER_FIXTURE_CLEANUP",
+    "entries_removed": 18,
+    "regular_bytes": 3019,
+    "scope": "Root recorded exact owned inactive R2 abort-fixture identity/content/no-FD checks and removal after all subjects joined. Other temporary paths and Original were untouched. Deleted candidate contents were not re-read by this reviewer."
+  },
+  "limits": [
+    "Saved selected RSS/plain-JSON engines and directHTTP(S) metadata only; bounded serial federation8 and stopped Public intake review.",
+    "Regex/script/plugin/POST/auth/cookies/proxy/overlay, transforms/postfilters/remappers/advanced templates and uncertain result actions remain explicit unsupported cases. Magnets remain visible/copyable with no pending/start-path reuse.",
+    "Raw publication text has no epoch/age/sort parity. No Original manager/fullScheduler/fullP08/global compatibility baseline, public Internet transfer or default distribution/promotion claim."
+  ],
+  "blocking_findings": [],
+  "reviewer_new_subjects_source_cache_mutations": false
+}

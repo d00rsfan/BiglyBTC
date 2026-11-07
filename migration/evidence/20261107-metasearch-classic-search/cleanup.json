@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "entries": 18,
+      "exact_identities_and_content_verified": true,
+      "host_fuser_exit": 1,
+      "path": "/tmp/biglybtc-metasearch-bridge-tests-XNBQuk",
+      "regular_bytes": 3019,
+      "removed": true
+    }
+  ],
+  "other_tmp_or_original_touched": false,
+  "plan": {
+    "bytes": 11441,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cleanup-plan.json",
+    "sha256": "e3dc2c3a4865afa4e042992f0735df361afc5cf6c3a86a16ef7724040d6786f0"
+  },
+  "status": "PASS_OWNED_INACTIVE_CHAPTER_FIXTURE_CLEANUP"
+}

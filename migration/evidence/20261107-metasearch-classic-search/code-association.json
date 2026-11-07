@@ -1,0 +1,32 @@
+{
+  "gcc": {
+    "bytes": 65274,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r4/gcc/r1/result-stamped.json",
+    "sha256": "e742f43c08f9385b637fbe848c341f4a98f22a907deccd22b3f183584e22fffb"
+  },
+  "implementation_commit": "63376b561829d8205e540df41cc89ce06ae7cb7a",
+  "native_tree": "8bf077b64fee57396e5098f5bf1eb2daa2bac138",
+  "original": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "qt_methods_per_lane": 47,
+  "qt_rows_per_lane": 129,
+  "san": {
+    "bytes": 65303,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r4/san/r1/result-stamped.json",
+    "sha256": "a1e47c5d81f85366264aa407e63f6d8c478cdb880af52c601376620f1e0cc05b"
+  },
+  "source": {
+    "bytes": 183298,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r4/source.json",
+    "sha256": "690f7a784d0943ed2055349d40056e67c8253f59e7dc198c50e1e9d8946b4aa5"
+  },
+  "source_leaves": 44,
+  "source_selection": {
+    "bytes": 46368,
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-discovery-20261101/p08-metasearch-20261107/cohort-r4/source-selection.json",
+    "sha256": "ccb5e76d432514ebe1148c608ca5394d34ba3c7c7e4311d1d498352e5fdbef3c"
+  },
+  "status": "QUALIFIED_SOURCE_COMMITTED_LOCAL_ONLY"
+}
