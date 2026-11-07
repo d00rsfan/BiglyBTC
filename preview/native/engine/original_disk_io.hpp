@@ -8,12 +8,13 @@
 #include <libtorrent/torrent_info.hpp>
 #include <memory>
 #include <atomic>
+#include <mutex>
 #include <span>
 #include <vector>
 
 namespace biglybtc::engine::detail {
 
-enum class OriginalDiskAccess { ReadWrite, ReadOnly, SelectedReadOnly };
+enum class OriginalDiskAccess { ReadWrite, ReadOnly, SelectedReadOnly, RecheckReadOnly };
 struct OriginalDiskFile {
   storage::detail::Descriptor descriptor;
   storage::OriginalFileIo io;
@@ -42,6 +43,10 @@ public:
   std::expected<void, storage::Error> finishComplete(std::span<const std::uint8_t>);
   std::optional<storage::Error> failure() const;
   void recordFailure();
+  // Actual private disk-hash outcomes:0unobserved,1readable,2missing,3error.
+  void recordRecheckHash(int piece,std::uint8_t outcome,std::int64_t readableBytes) noexcept;
+  std::vector<std::uint8_t> recheckHashOutcomes() const;
+  std::int64_t recheckScannedBytes() const;
   DiskLatency& diskLatency() noexcept { return diskLatency_; }
   const DiskLatency& diskLatency() const noexcept { return diskLatency_; }
 private:
@@ -51,6 +56,9 @@ private:
   std::optional<storage::Error> failure_;
   std::atomic_bool failedException_ = false;
   DiskLatency diskLatency_;
+  mutable std::mutex recheckMutex_;
+  std::vector<std::uint8_t> recheckOutcomes_;
+  std::vector<std::int64_t> recheckBytes_;
 };
 
 // Caller provides the path registry lookup; an expired reserved admission must

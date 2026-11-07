@@ -61,6 +61,23 @@ qsizetype descriptors() { return QDir("/proc/self/fd").entryList(QDir::AllEntrie
 class MainlineIdentityTests final : public QObject {
   Q_OBJECT
 private slots:
+  void actualInstalledMainlineIdentityUsesExactDirectory_data() {
+    QTest::addColumn<int>("mode");
+    QTest::newRow("Original-mlDHT-case")<<0;QTest::newRow("renamed-external-directory")<<1;
+    QTest::newRow("two-runtime-identities-refuse")<<2;QTest::newRow("symlink-candidate-refuses")<<3;
+    QTest::newRow("missing-does-not-create")<<4;QTest::newRow("wrong-runtime-id-refuses")<<5;
+  }
+  void actualInstalledMainlineIdentityUsesExactDirectory() {
+    QFETCH(int,mode);Profile p;const auto directory=mode==1?QStringLiteral("external-mainline"):QStringLiteral("mlDHT");
+    if(mode!=4){write(p.path+"/plugins/"+directory+"/plugin.properties",mode==5?QByteArray("plugin.id=other\n"):QByteArray("# Original plugin\r\nplugin.id = mldht\r\nplugin.version=2.6.12\n"));write(p.leaf(directory),Root+'\n');}
+    if(mode==2){write(p.path+"/plugins/other-name/plugin.properties","plugin.id:mldht\n");}
+    if(mode==3){QVERIFY(QDir(p.path+"/plugins/mlDHT").rename(p.path+"/plugins/mlDHT",p.path+"/plugins/real-plugin"));QVERIFY(QFile::link(p.path+"/plugins/real-plugin",p.path+"/plugins/mlDHT"));}
+    if(mode<2){QVERIFY(::chmod(p.path.toUtf8().constData(),0777)==0);QVERIFY(::chmod((p.path+"/plugins").toUtf8().constData(),0777)==0);QVERIFY(::chmod((p.path+"/plugins/"+directory).toUtf8().constData(),0777)==0);QVERIFY(::chmod((p.path+"/plugins/"+directory+"/plugin.properties").toUtf8().constData(),0664)==0);}
+    const auto found=storage::discoverOriginalMainlineDirectory(*p.lease);
+    if(mode>=2){QVERIFY(!found);if(mode==4){QCOMPARE(found.error().code,storage::ErrorCode::Missing);QVERIFY(!QFileInfo::exists(p.path+"/plugins"));}return;}
+    QVERIFY2(found,found?"":found.error().message.c_str());QCOMPARE(*found,directory.toStdString());
+    auto loaded=Source::load(*p.lease,*found);QVERIFY(loaded&&loaded->validate(*p.lease));QCOMPARE(loaded->snapshot().originalBytes,(Root+'\n').toStdString());QVERIFY(!QFileInfo::exists(p.path+"/plugins/mldht"));
+  }
   void absentSourceNeverCreatesOrFallsBackToInventedBackup() {
     Profile p; auto missing = Source::load(*p.lease, "mldht"); QVERIFY(missing);
     QCOMPARE(missing->snapshot().state, State::Missing); QVERIFY(!missing->snapshot().root);

@@ -141,6 +141,9 @@ std::optional<Target> LibraryModel::targetAt(int row) const {
 bool LibraryModel::canContinue(const Target& target) const {
   return accepts(target) && rows_[static_cast<std::size_t>(rowFor(target.hash))].item.canContinue;
 }
+bool LibraryModel::canRecheck(const Target& target) const {
+  return accepts(target)&&rows_[static_cast<std::size_t>(rowFor(target.hash))].item.canRecheck;
+}
 quint16 LibraryModel::permittedActionsAt(int row) const {
   return row >= 0 && row < rowCount() ? rows_[static_cast<std::size_t>(row)].item.actionMask : quint16{0};
 }

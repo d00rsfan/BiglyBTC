@@ -212,7 +212,7 @@ std::expected<OriginalBindSource,storage::Error> originalBindSource() const {
   auto empty=core::Document::parse("de");
   if(!empty){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot read original Mainline bind defaults"});}
   const auto& document=*config?(**config).document():*empty;
-  auto policy=readNetworkPolicy(&document,{.mode=NetworkMode::Normal,.socks4Capability=network->socks4Capability,.mldhtDirectory=network->mainlineDirectory});
+  auto policy=readNetworkPolicy(&document,{.mode=NetworkMode::Normal,.socks4Capability=network->socks4Capability,.mldhtDirectory=network->mainlineDirectory,.context=network->context});
   if(!policy){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Original Mainline bind source is no longer supported"});}
   auto settings=storage::readOriginalMldhtSettings(document,network->mainlineDirectory);
   if(!settings){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Invalid original Mainline plugin binding"});}
@@ -221,7 +221,7 @@ std::expected<OriginalBindSource,storage::Error> originalBindSource() const {
   return OriginalBindSource{std::move(*policy),std::move(*options)};
 }
 bool sameOriginalBindPolicy(const NetworkPolicy& fresh) const {
-  return network&&fresh.mode==network->mode&&fresh.dht==network->dht
+  return network&&fresh.mode==network->mode&&fresh.context==network->context&&fresh.dht==network->dht
       &&fresh.proxy.kind==NetworkProxyKind::None&&network->proxy.kind==NetworkProxyKind::None
       &&fresh.mainlineOriginalBindPlan&&fresh.bindAddresses==network->bindAddresses
       &&fresh.listenPort==network->listenPort&&fresh.mainlineDirectory==network->mainlineDirectory
@@ -376,7 +376,7 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrape
     if(!sameMainlineProfileLease()||!value.token||value.token->number!=value.status.admission
         ||!value.status.admission||value.storage.identity().originalKey!=value.status.hash
         ||!value.status.retained||!value.status.checked||value.status.failure
-        ||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld
+        ||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld||value.status.recheck
         ||value.seedIntent||value.allocationIntent||!value.handle.is_valid()
         ||(value.trackerResponse&&!value.trackerResponse->sole())
         ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){continue;}
@@ -625,7 +625,7 @@ void persistMainline() noexcept {
 }
 bool discoverable(const Managed& value) const {
   return value.status.retained && !value.stop && !value.removing && !value.manualPaused
-      && !value.policyHeld && !value.status.verificationHeld && value.handle.is_valid()
+      && !value.policyHeld && !value.status.verificationHeld && !value.status.recheck && value.handle.is_valid()
       && (value.status.phase==ManagedPhase::Downloading || value.status.phase==ManagedPhase::Seeding)
       && value.storage.mainlinePolicy().discover
       && (!network->mainlineBackupOnly || !value.mainlineTrackerHealthy);

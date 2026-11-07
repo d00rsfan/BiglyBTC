@@ -144,7 +144,7 @@ static std::expected<LibraryCommandResult,Error> applyLibraryCommandImpl(const P
   bool saving = false;
   try {
     auto allowed=requireNoPendingSubscriptionAcquisition(lease);if(!allowed){return std::unexpected(allowed.error());}
-    if (static_cast<unsigned>(action) > static_cast<unsigned>(Action::MoveBottom)) {
+    if (static_cast<unsigned>(action) > static_cast<unsigned>(Action::CancelForceStart)) {
       return failure(ErrorCode::Unsupported,"Unknown saved-download action");
     }
     auto file = ConfigFile::load(lease,"downloads.config");
@@ -157,7 +157,7 @@ static std::expected<LibraryCommandResult,Error> applyLibraryCommandImpl(const P
     LibraryCommandResult result{action,*found,*found,pauseFor(*saved,hash),pauseFor(*saved,hash),{},false,file->recoverySource()};
     std::unordered_map<std::size_t,std::int64_t> positions;
     const auto beforeState = result.before.startup;
-    if (clearForceOnly) { result.after.forceStart = false; }
+    if (clearForceOnly || action == Action::CancelForceStart) { result.after.forceStart = false; }
     else if (moveAction(action)) {
       if (auto moved = reorder(*saved,hash,action,pools,result,positions); !moved) { return std::unexpected(moved.error()); }
     } else if (action == Action::Pause) {

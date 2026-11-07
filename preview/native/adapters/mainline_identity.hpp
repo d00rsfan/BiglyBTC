@@ -13,6 +13,10 @@
 
 namespace biglybtc::storage {
 
+// Read-only installed-plugin discovery. Exact external directory spelling is
+// independent from runtime plugin.id; ambiguity/unsafe candidates fail closed.
+std::expected<std::string, Error> discoverOriginalMainlineDirectory(const ProfileLease&);
+
 using MainlineIdentityKey = std::array<std::uint8_t, 20>;
 enum class OriginalMainlineIdentityState { Disabled, Missing, Imported };
 // Owned source observation only. This is not a live wire ID or a reservation.

@@ -13,6 +13,9 @@
 namespace biglybtc::engine {
 
 enum class NetworkMode { IsolatedLoopback, Normal };
+// Existing saved Public routes may run while their saved overlay legs are inactive.
+// This does not change default/new-intake policy or rewrite saved selections.
+enum class NetworkPolicyContext { Standard, ExistingLibraryPublic };
 enum class NetworkPolicyErrorCode { InvalidConfiguration, Unsupported, Limit, Memory, BindingUnavailable };
 struct NetworkPolicyError {
   NetworkPolicyErrorCode code;
@@ -43,6 +46,7 @@ struct NetworkPolicyOptions {
   std::shared_ptr<const VerifiedSocks4Capability> socks4Capability{};
   // Original external-plugin directory basename, independent of runtime ID.
   std::string mldhtDirectory = "mldht";
+  NetworkPolicyContext context = NetworkPolicyContext::Standard;
 };
 struct NetworkPolicy {
   NetworkMode mode = NetworkMode::IsolatedLoopback;
@@ -81,6 +85,7 @@ struct NetworkPolicy {
   bool mainlineOriginalBindPlan = false;
   bool mainlineOriginalAutostart4 = true, mainlineOriginalAutostart6 = true;
   bool mainlineMultihoming4 = false, mainlineMultihoming6 = true;
+  NetworkPolicyContext context = NetworkPolicyContext::Standard;
 };
 struct TorrentNetworkSelection {
   bool publicNetwork = true, tor = false, i2p = false;
@@ -112,6 +117,10 @@ std::expected<libtorrent::settings_pack, NetworkPolicyError> makeNetworkSettings
 // Explicit override flags prevent removed metadata/resume sources reappearing.
 // No mutation on failure; unrelated params/flags remain unchanged. Subsequent
 // tracker/webseed mutations must go through the same policy boundary.
+// Only for actual saved selections read by managed storage; no Public
+// remains refused. Known I2P/Tor legs stay saved but inactive. Standard applyTorrentNetworkPolicy stays strict for intake.
+std::expected<void, NetworkPolicyError> applyExistingTorrentNetworkPolicy(
+    const NetworkPolicy&, const TorrentNetworkSelection&, libtorrent::add_torrent_params&);
 std::expected<void, NetworkPolicyError> applyTorrentNetworkPolicy(
     const NetworkPolicy&, const TorrentNetworkSelection&, libtorrent::add_torrent_params&);
 

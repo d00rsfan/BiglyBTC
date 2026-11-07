@@ -239,6 +239,13 @@ public:
   std::vector<ManagedDownloadStatus> managedDownloads() const;
   // Worker-only live owner check for genuine saved-share registration. Neither
   // a copied status nor caller-supplied completion can authorise publication.
+  // Full read-only check of an actual retired library member; never a Native
+  // verified-seed grant, network admission, payload create/repair or restart.
+  std::expected<void,storage::Error> startManagedRecheck(const storage::ProfileLease&,
+      const core::TorrentHash&,std::stop_token = {});
+  std::expected<void,storage::Error> cancelManagedRecheck(const core::TorrentHash&);
+  // Clear only the force flag; preserve the current manual pause and intent.
+  std::expected<void,storage::Error> clearManagedForceStart(const core::TorrentHash&);
   std::expected<void,storage::Error> validateSharedSeed(const storage::ProfileLease&,
       const storage::TorrentIntakeMetadata&,const std::filesystem::path& destination) const;
   // Existing worker only, one private actual checkpoint event at a time.
@@ -328,6 +335,8 @@ public:
 private:
   friend class detail::PersistentCall;
   friend class detail::PersistentOperation;
+  std::expected<void,storage::Error> startManagedImpl(const storage::ProfileLease&,
+      const ManagedDownloadOptions&,const RetainedPayloads&,bool,std::stop_token);
   struct Impl;
   explicit PersistentSession(std::unique_ptr<Impl>) noexcept;
   std::unique_ptr<Impl> impl_;

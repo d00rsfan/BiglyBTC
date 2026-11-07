@@ -59,6 +59,7 @@
 #include "persistent_session.hpp"
 #include "shared_seed_announce.hpp"
 #include "overall_statistics_service.hpp"
+#include "mainline_identity.hpp"
 #include "source_rate_projection.hpp"
 #include "minute_history_writer.hpp"
 #include "saved_service_view.hpp"
@@ -214,7 +215,7 @@ QString managedState(engine::ManagedPhase state) {
 }
 constexpr quint16 actionBit(core::DownloadAction value) {
   const auto ordinal = static_cast<unsigned int>(value);
-  return ordinal < 10 ? static_cast<quint16>(1U << ordinal) : quint16{0};
+  return ordinal < core::DownloadActionCount ? static_cast<quint16>(1U << ordinal) : quint16{0};
 }
 core::TorrentHash identity(const ui::Target& target) {
   const auto hex = target.hash.toLatin1();
@@ -248,7 +249,7 @@ template<class Store> std::expected<storage::CategoryCommit,storage::Error> cate
 }
 }
 struct SessionBridge::Host {
-  ~Host(){if(automaticReceiver){automaticReceiver->request_stop();}automaticCandidates.clear();automaticCandidateKeys.clear();if(subscriptionAcquisition){subscriptionAcquisition->cancel();subscriptionAcquisition.reset();}closeRssFetch();closeMetasearch();closePublications();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
+  ~Host(){if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->request_stop();}if(automaticReceiver){automaticReceiver->request_stop();}automaticCandidates.clear();automaticCandidateKeys.clear();if(subscriptionAcquisition){subscriptionAcquisition->cancel();subscriptionAcquisition.reset();}closeRssFetch();closeMetasearch();closePublications();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
   struct Known { QString name; std::optional<qint64> bytes{}; };
   std::filesystem::path profile;
   unsigned short peerPort;
@@ -291,6 +292,18 @@ struct SessionBridge::Host {
     const auto* a=state->document().find("attributes");const auto* n=a?a->find("networks"):nullptr;
     if(!n){return Route::Public;}
     if(n->type!=core::Node::Type::List){return Route::Unsupported;}
+    // Existing rows already grant Public. Keep saved overlay selections while
+    // the explicitly selected Public-only application mode leaves them inactive.
+    if(normalNetwork&&!i2pOptions){
+      bool publicSelected=false;std::set<std::string> names;
+      for(const auto& item:n->children){
+        if(item.type!=core::Node::Type::Bytes
+            ||(item.bytes!="Public"&&item.bytes!="I2P"&&item.bytes!="Tor")
+            ||!names.insert(std::string(item.bytes)).second){return Route::Unsupported;}
+        publicSelected|=item.bytes=="Public";
+      }
+      if(publicSelected){return Route::Public;}
+    }
     if(n->children.size()==2&&n->children[0].type==core::Node::Type::Bytes&&n->children[1].type==core::Node::Type::Bytes
         &&((n->children[0].bytes=="Public"&&n->children[1].bytes=="I2P")||(n->children[0].bytes=="I2P"&&n->children[1].bytes=="Public"))){return Route::Mixed;}
     if(n->children.size()!=1||n->children[0].type!=core::Node::Type::Bytes){return Route::Unsupported;}
@@ -348,7 +361,7 @@ struct SessionBridge::Host {
         "The subscription target is still controlled by a live or pending operation"});};
     if(i2p||mixed||fileRecoveryRequired||recoveryDrainStarted){return refused();}
     const auto key=hash.hex();
-    if(pendingIntents.contains(key)||pendingTargets.contains(key)||privateImports.contains(key)
+    if(recheckTargets.contains(key)||pendingIntents.contains(key)||pendingTargets.contains(key)||privateImports.contains(key)
         ||allocationPending.contains(key)||verifiedSeedPending.contains(key)){return refused();}
     if(engine){
       // managedAvailable also rejects legacy registrations and poisoned owners;
@@ -546,6 +559,51 @@ struct SessionBridge::Host {
   }
 
   engine::NetworkPolicy networkPolicy; // Member defaults keep this isolated until configure succeeds.
+  std::string normalMainlineDirectory="mldht";
+  std::vector<core::TorrentHash> startupQueue;
+  std::size_t startupNext=0;
+  std::set<std::string> startupWithdrawn;
+  bool advanceStartup(std::stop_token stop) {
+    if(!normalNetwork||i2pOptions||!engine||startupNext>=startupQueue.size()){return false;}
+    // Bound one worker turn; a large restored library must leave commands and
+    // close responsive. Re-read saved intent once for this batch, not per row.
+    const auto source=take(storage::readLibraryView(lease));
+    std::map<std::string,const core::SavedDownload*> saved;
+    std::set<std::string> duplicates,paused;
+    for(const auto& item:source.items){if(item.saved.hash){const auto key=item.saved.hash->hex();
+      if(!saved.emplace(key,&item.saved).second){duplicates.insert(key);}}}
+    for(const auto& item:source.pauses){paused.insert(item.hash.hex());}
+    std::set<std::string> retained;
+    for(const auto& item:engine->managedDownloads()){if(item.retained){retained.insert(item.hash.hex());}}
+    const auto started=std::chrono::steady_clock::now();
+    std::size_t attempted=0;bool changed=false;
+    while(startupNext<startupQueue.size()&&attempted<32
+        &&std::chrono::steady_clock::now()-started<std::chrono::milliseconds{250}){
+      checkpoint(stop);const auto hash=startupQueue[startupNext++];const auto key=hash.hex();++attempted;
+      const auto current=saved.find(key);
+      if(current==saved.end()||duplicates.contains(key)||startupWithdrawn.contains(key)
+          ||paused.contains(key)||retained.contains(key)||!current->second->persistent
+          ||current->second->startup==core::StartupState::Stopped){continue;}
+      const auto& value=*current->second;
+      const auto admitted=startSaved(hash,value.forceStart,value.startup==core::StartupState::Queued);
+      if(admitted){admissionFailures.erase(key);}else{admissionFailures.insert_or_assign(key,admitted.error());}
+      changed=true;
+    }
+    if(startupNext==startupQueue.size()){startupQueue.clear();startupNext=0;startupWithdrawn.clear();}
+    return changed;
+  }
+  engine::NetworkPolicyOptions normalNetworkOptions(const core::Document* config=nullptr)const {
+    engine::NetworkPolicyOptions options;options.mode=engine::NetworkMode::Normal;
+    options.socks4Capability=networkPolicy.socks4Capability;
+    options.mldhtDirectory=normalMainlineDirectory;
+    const auto proxyEnabled=[&](std::string_view key){const auto* node=config?config->find(key):nullptr;
+      return node&&(node->type!=core::Node::Type::Integer||node->integer!=0);};
+    // Normal profile ownership explicitly permits its configured router mapping.
+    // Proxy routes retain their existing no-direct-mapping boundary.
+    options.portMapping=normalNetwork&&!proxyEnabled("Enable.Proxy")&&!proxyEnabled("Proxy.Data.Enable");
+    if(normalNetwork&&!i2pOptions){options.context=engine::NetworkPolicyContext::ExistingLibraryPublic;}
+    return options;
+  }
   std::optional<std::pair<storage::ErrorCode,std::string>> reportedMainlineFailure;
   QString mainlineNotice() {
     if(!engine){return {};}const auto observed=engine->mainlineDiscovery();
@@ -625,6 +683,7 @@ struct SessionBridge::Host {
 #include "subscriptions_host.inc"
 #include "metasearch_host.inc"
 #include "publication_host.inc"
+#include "recheck_host.inc"
   void beginManualTagRead() {
     if(manualTagEnded||manualTagRevision==std::numeric_limits<quint64>::max()){
       throw Failure{{storage::ErrorCode::Unsupported,"Manual-tag presentation lifetime is exhausted"}};
@@ -711,6 +770,7 @@ struct SessionBridge::Host {
     verifiedSeedIntentsLoaded=true;
   }
   bool verifiedSeedBlocked(const std::string& key,const std::vector<engine::ManagedDownloadStatus>& active) {
+    if(recheckTargets.contains(key)){return true;}
     loadVerifiedSeedIntents();
     for(const auto& item:active){if(item.hash.hex()==key&&item.allocationMode!=core::TorrentAllocationMode::None){
       if(item.allocationComplete&&!item.failure){allocationPending.erase(key);}else{allocationPending.insert_or_assign(key,item.allocationMode);}
@@ -878,6 +938,7 @@ struct SessionBridge::Host {
     }
   }
   bool compactionReady() const {
+    if(recheckWork){return false;}
     if (i2p || fileRecoveryRequired || storage::hasPendingFileOperation(lease)
         || storage::hasPendingOriginalCompaction(lease)) { return false; }
     if (!engine) { return true; } // Offline/unbound: no engine was created.
@@ -1219,6 +1280,7 @@ struct SessionBridge::Host {
         if (!paused && !stopped) { actions |= actionBit(core::DownloadAction::Pause); }
         if (paused) { actions |= actionBit(core::DownloadAction::Resume); }
         if (!saved.forceStart) { actions |= actionBit(core::DownloadAction::ForceStart); }
+        else if(selectedRoute==Route::Public&&(active==live.end()||(!active->second.verificationHeld&&active->second.phase!=engine::ManagedPhase::Checking&&active->second.phase!=engine::ManagedPhase::Allocating))){actions|=actionBit(core::DownloadAction::CancelForceStart);}
         actions |= actionBit(core::DownloadAction::Queue);
         if (!movePools.empty()) {
           actions |= actionBit(core::DownloadAction::MoveTop) | actionBit(core::DownloadAction::MoveUp)
@@ -1255,6 +1317,9 @@ struct SessionBridge::Host {
           .received = received, .sent = sent,
           .canContinue = !guardedFileReview && peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained && !magnetRetained && !i2pOptions && selectedRoute==Route::Public,
           .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions});
+      result->items.back().canRecheck=normalNetwork&&!coexistence()&&!privateOnly()&&engine&&engine->managedAvailable()&&unique&&saved.persistent&&saved.hash->bytes().size()==20&&selectedRoute==Route::Public&&!fileRecoveryRequired&&!recoveryDrainStarted&&!pendingTargets.contains(hash)&&!pendingIntents.contains(hash)&&!verifiedSeedPending.contains(hash)&&!allocationPending.contains(hash)&&!recheckTargets.contains(hash)
+          &&(active==live.end()||(!active->second.verificationHeld&&!active->second.recheck&&active->second.allocationMode==core::TorrentAllocationMode::None&&active->second.phase!=engine::ManagedPhase::Checking&&active->second.phase!=engine::ManagedPhase::Stopping));
+      if(recheckTargets.contains(hash)){result->items.back().canContinue=false;result->items.back().actionMask=0;result->items.back().state=tr("Force Recheck");}
       if(retained){result->items.back().providerAdmission=active->second.admission;result->items.back().providerGeneration=columnLayoutSession;}
       if(i2pRow&&i2pFacts.contains(hash)){result->items.back().providerAdmission=i2pFacts.at(hash).admission;result->items.back().providerGeneration=i2pFacts.at(hash).generation;}
       if(i2pRow){result->items.back().networkStatus=SessionBridge::tr("Network: I2P only");
@@ -1311,11 +1376,13 @@ struct SessionBridge::Host {
   }
 };
 
-SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions, RssFetchFactory rssFactory, SubscriptionFetchFactory subscriptionFactory, SubscriptionAcquisitionFactory acquisitionFactory, SubscriptionFetchFactory automaticFeed, SubscriptionAcquisitionFactory automaticMetainfo, MetasearchFetchFactory metasearch, MetasearchMetainfoFactory metasearchMetainfo)
+SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions, RssFetchFactory rssFactory, SubscriptionFetchFactory subscriptionFactory, SubscriptionAcquisitionFactory acquisitionFactory, SubscriptionFetchFactory automaticFeed, SubscriptionAcquisitionFactory automaticMetainfo, MetasearchFetchFactory metasearch, MetasearchMetainfoFactory metasearchMetainfo, std::vector<std::pair<std::string,int>> mainlineBootstrap)
     : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)), rssFetchFactory_(std::move(rssFactory)), metasearchFetchFactory_(std::move(metasearch)), metasearchMetainfoFactory_(std::move(metasearchMetainfo)), subscriptionFetchFactory_(std::move(subscriptionFactory)), subscriptionAcquisitionFactory_(std::move(acquisitionFactory)), automaticSubscriptionFetchFactory_(std::move(automaticFeed)), automaticSubscriptionAcquisitionFactory_(std::move(automaticMetainfo)) {
+  mainlineBootstrap_=std::move(mainlineBootstrap);
   qRegisterMetaType<ui::SubscriptionKey>();qRegisterMetaType<ui::SubscriptionCatalogKey>();qRegisterMetaType<ui::SubscriptionCatalogPresentation>();qRegisterMetaType<ui::SubscriptionCommandKey>();qRegisterMetaType<ui::SubscriptionCommand>();qRegisterMetaType<ui::SubscriptionPresentation>();
   qRegisterMetaType<ui::RssCatalogRequest>();qRegisterMetaType<ui::RssCatalogPresentation>();qRegisterMetaType<ui::RssFetchKey>();qRegisterMetaType<ui::RssFetchCommand>();qRegisterMetaType<ui::RssFetchPresentation>();
   qRegisterMetaType<ui::MetasearchCatalogKey>();qRegisterMetaType<ui::MetasearchCatalogPresentation>();qRegisterMetaType<ui::MetasearchQueryKey>();qRegisterMetaType<ui::MetasearchQueryCommand>();qRegisterMetaType<ui::MetasearchPresentation>();qRegisterMetaType<ui::MetasearchDownloadKey>();qRegisterMetaType<ui::MetasearchDownloadCommand>();qRegisterMetaType<ui::MetasearchDownloadPresentation>();qRegisterMetaType<ui::MetasearchMagnetSubmission>();
+  qRegisterMetaType<ui::RecheckKey>();qRegisterMetaType<ui::RecheckRequest>();qRegisterMetaType<ui::RecheckPresentation>();
   qRegisterMetaType<ui::PublicationCatalogKey>();qRegisterMetaType<ui::PublicationCatalogPresentation>();qRegisterMetaType<ui::PublicationCommand>();qRegisterMetaType<ui::PublicationConfirmation>();qRegisterMetaType<ui::PublicationPresentation>();
   qRegisterMetaType<ui::I2pPresentation>();
   qRegisterMetaType<ui::DownloadHistoryCommand>();
@@ -1436,7 +1503,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         if(!host_->engine){pollPublications();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
-          const auto polled=host_->engine->poll();publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop));publishMainlineFailure();
+          const auto polled=host_->engine->poll();pollRecheck();publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop));publishMainlineFailure();
           if(!polled&&!host_->engine->managedAvailable()){
             auto detail=QStringLiteral("Engine owner unavailable (poll %1)").arg(static_cast<int>(polled.error()));
             if(const auto listener=host_->engine->lastListenerFailure()){
@@ -1445,9 +1512,10 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             }
             reportIdlePollFailure(session,std::move(detail));reported->store(true);
           }
+          const bool startupChanged=host_->advanceStartup(stop);
           host_->scheduleCoexistence();tickScheduler();tickAccounting();pollPublications();
           auto current = host_->engine->managedDownloads();
-          bool changed = host_->coexistence() || current.size() != host_->lastManagedPhases.size();
+          bool changed = startupChanged || host_->coexistence() || current.size() != host_->lastManagedPhases.size();
           for (const auto& item : current) {
             const Host::ManagedStamp stamp{item.phase,item.queueReason,
                 item.firstPriority,item.unavailableQueueInputs,item.forceStart,item.allocationBytes,item.allocationComplete};
@@ -1771,16 +1839,25 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
       const auto& saved = item.saved;
       if (!saved.hash || !saved.persistent || saved.startup == core::StartupState::Stopped
           || paused.contains(saved.hash->hex()) || !host_->currentHashes.contains(saved.hash->hex())) { continue; }
+      if(!host_->i2pOptions){host_->startupQueue.push_back(*saved.hash);continue;}
       auto started = host_->startSaved(*saved.hash,saved.forceStart,saved.startup==core::StartupState::Queued);
       if (!started) { host_->admissionFailures.insert_or_assign(saved.hash->hex(), started.error());
         if(host_->i2pOptions){host_->i2pPacket.hash=text(saved.hash->hex());host_->i2pPacket.state=tr("Error — I2P");host_->i2pPacket.failure=text(started.error().message);}
       }
     }
+    if(!host_->startupQueue.empty()){
+      std::map<std::string,std::pair<bool,bool>> priority;
+      for(const auto& item:source.items){if(item.saved.hash){priority.emplace(item.saved.hash->hex(),
+          std::pair{!item.saved.forceStart,item.saved.startup==core::StartupState::Queued});}}
+      std::ranges::stable_sort(host_->startupQueue,[&](const auto& a,const auto& b){return priority.at(a.hex())<priority.at(b.hex());});
+    }
     host_->bootstrapMagnets(stop);
     host_->scheduleCoexistence();tickScheduler();
     const auto current=host_->query(stop);host_->constraintNormalReady=true;
     ready(current,!identityReview.isEmpty()?tr("I2P identity unavailable; review preserved files and reopen: %1").arg(identityReview):
-        host_->admissionFailures.empty()?QString{}:tr("Some torrents require attention; saved data was preserved"));
+        host_->admissionFailures.empty()?
+          (!host_->i2pOptions?tr("Public network mode. I2P, Tor and Azureus DHT remain inactive; saved settings are preserved."):QString{}):
+          tr("Some torrents require attention; saved data was preserved"));
     publishI2p();
   });
 }
@@ -1839,6 +1916,9 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
     for(const auto& hash:hashes){host_->engine->revokeMainlineScrape(hash);}
     // Withdraw EVERY accepted selected ticket before the first target's IO.
     // A failure for A must not leave selected B authorized to auto-publish.
+    if(action==core::DownloadAction::Stop||action==core::DownloadAction::Pause){
+      for(const auto& hash:hashes){host_->startupWithdrawn.insert(hash.hex());}
+    }
     std::set<std::string> cancelledVerification,cancelledAllocation;
     const auto admissions=host_->engine?host_->engine->managedDownloads():std::vector<engine::ManagedDownloadStatus>{};
     for(const auto& hash:hashes){if(std::ranges::any_of(admissions,[&](const auto& item){return item.hash==hash&&item.verificationHeld;})){
@@ -1876,7 +1956,7 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
       }
       auto beforeControl=host_->engine->managedDownloads();
       const bool wasChecking=cancelledVerification.contains(hash.hex());
-      const bool manual=static_cast<unsigned>(action)<=static_cast<unsigned>(core::DownloadAction::ForceStart)||wasChecking;
+      const bool manual=static_cast<unsigned>(action)<=static_cast<unsigned>(core::DownloadAction::ForceStart)||action==core::DownloadAction::CancelForceStart||wasChecking;
       if(manual){
         auto& revision=host_->manualRevisions[hash.hex()];
         if(revision==std::numeric_limits<std::uint64_t>::max()){throw Failure{{storage::ErrorCode::Conflict,"Manual action revision exhausted"}};}
@@ -1927,6 +2007,8 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
       const bool active = live != states.end() && live->retained;
       switch (action) {
         case core::DownloadAction::Stop: controlled = host_->engine->stopManaged(hash); break;
+        case core::DownloadAction::CancelForceStart:
+          if(active){controlled=host_->engine->clearManagedForceStart(hash);}break;
         case core::DownloadAction::Pause:
           if (active) { controlled = host_->engine->pauseManaged(hash, true); } break;
         case core::DownloadAction::Start: case core::DownloadAction::Resume:
@@ -2173,6 +2255,7 @@ bool SessionBridge::magnetImport(QString uri, QString destination) {
 bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int priority, bool skipped) {
   if (profileClosed_ || selected.empty()) { return false; }
   return dispatch([this, target = std::move(target), selected = std::move(selected), priority, skipped](std::stop_token stop) {
+    if(host_&&host_->recheckTargets.contains(target.hash.toStdString())){throw Failure{{storage::ErrorCode::Busy,"Wait for the actual recheck to retire before changing file policy"}};}
     if(host_){host_->requireI2pIdle();}
     if (!host_ || !host_->engine || !host_->engine->managedAvailable()) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
@@ -2738,6 +2821,7 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
 #include "metasearch_bridge.inc"
 #include "metasearch_magnet_bridge.inc"
 #include "publication_bridge.inc"
+#include "recheck_bridge.inc"
 bool SessionBridge::history(quint64 session, quint64 request, core::HistoryDate date) {
   if (session == 0 || request == 0 || session != publishedColumnLayoutSession_
       || !core::validHistoryDate(date)) { return false; }
@@ -3173,6 +3257,11 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     throw Failure{{storage::ErrorCode::Io, "Cannot create the native engine owner"}};
   }
   if (host_->normalNetwork) {
+#if defined(BIGLYBTC_HOST_MAINLINE_IDENTITY)
+    const auto directory=storage::discoverOriginalMainlineDirectory(host_->lease);
+    if(directory){host_->normalMainlineDirectory=*directory;}
+    else if(directory.error().code!=storage::ErrorCode::Missing){throw Failure{directory.error()};}
+#endif
     if (!host_->socks4CapabilityChecked) {
       // Retain actual provider proof before parsing any possibly invalid saved
       // setting. Options can then repair that setting without starting routes.
@@ -3182,7 +3271,7 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     auto config = storage::ConfigFile::load(host_->lease, "biglybt.config");
     if (!config && config.error().code != storage::ErrorCode::Missing) { throw Failure{config.error()}; }
     auto policy = (host_->mixedCapable()?engine::readMixedNetworkPolicy:engine::readNetworkPolicy)(config ? &config->document() : nullptr,
-        {.mode = engine::NetworkMode::Normal, .socks4Capability = host_->networkPolicy.socks4Capability});
+        host_->normalNetworkOptions(config ? &config->document() : nullptr));
     if (!policy) { throw Failure{{storage::ErrorCode::Unsupported, "Unsupported network setting: " + policy.error().field}}; }
     auto queues = core::readQueuePolicy(config ? &config->document() : nullptr);
     if (!queues) { throw Failure{{storage::ErrorCode::InvalidFormat,
@@ -3212,6 +3301,7 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
       [this](const core::TorrentHash& hash,const auto& f){return host_->publishTarget(hash,f);},
       [this](const auto& f){return host_->publishPositions(f);}));
   }
+  if(!mainlineBootstrap_.empty()){take((*owner)->configureMainlineBootstrap(mainlineBootstrap_));}
   if (!(*owner)->startIdle(host_->lease)) {
     throw Failure{{storage::ErrorCode::Io, "Cannot initialize the native idle session"}};
   }
@@ -3593,14 +3683,14 @@ bool SessionBridge::closeSessionWithoutCheckpoint(quint64 session){
   return closeSessionImpl(true,session);
 }
 bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSession) {
-  stopRssReceiver();stopSubscriptionReceiver();stopMetasearchReceiver();stopPublicationReceiver();
+  stopRssReceiver();stopSubscriptionReceiver();stopMetasearchReceiver();stopPublicationReceiver();stopRecheckReceiver();
   if (busy_ || closingSession_) { return false; }
   closingSession_ = true;
   idleMonitor_->stop();
   QPointer<SessionBridge> guard(this);
   const bool accepted = dispatch([this,withoutCheckpoint,expectedSession](std::stop_token) {
     const auto session = host_ ? host_->columnLayoutSession : quint64{0};
-    closeWorkerRss();closeWorkerSubscriptions();closeWorkerMetasearch();closeWorkerPublications();
+    closeWorkerRecheck();closeWorkerRss();closeWorkerSubscriptions();closeWorkerMetasearch();closeWorkerPublications();
     if(withoutCheckpoint&&(!host_||session!=expectedSession||!host_->recoveryDrainOffered
         ||(!host_->recoveryDrainStarted&&!(storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))))){
       throw Failure{{storage::ErrorCode::Conflict,"Close without checkpoint requires this session's actual pending-journal close refusal"}};
@@ -3695,7 +3785,7 @@ bool SessionBridge::closeSessionImpl(bool withoutCheckpoint,quint64 expectedSess
       completionMonitor_->stop();
       publishedColumnLayoutSession_ = 0; // Reject old-session requests before releasing busy.
       profileClosed_ = true;
-      guiRssCatalog_.reset();guiRssFetch_.reset();rssStarting_.reset();guiPublicationCatalog_.reset();guiPublication_.reset();startingPublication_=false;guiMetasearchCatalog_.reset();guiMetasearch_.reset();guiMetasearchDownload_.reset();startingMetasearch_.reset();startingMetasearchDownload_.reset();
+      guiRecheck_.reset();guiRecheckSequence_=0;guiRssCatalog_.reset();guiRssFetch_.reset();rssStarting_.reset();guiPublicationCatalog_.reset();guiPublication_.reset();startingPublication_=false;guiMetasearchCatalog_.reset();guiMetasearch_.reset();guiMetasearchDownload_.reset();startingMetasearch_.reset();startingMetasearchDownload_.reset();
       busy_ = false;
       emit busyChanged(false); // Keep closingSession_ true through this callback.
       if (!guard) { return; }
@@ -3724,7 +3814,7 @@ void SessionBridge::closeFailed(QString message) {
     if (guard) { emit messageReady(message); }
   }, Qt::QueuedConnection);
 }
-void SessionBridge::cancel() { QPointer<SessionBridge> guard(this);stopMetasearchReceiver();stopPublicationReceiver();if(!guard){return;} automaticSubscriptionQueueCancelled_.store(true);if(const auto automatic=automaticSubscriptionCancellation_.load()){automatic->request_stop();}if (current_ && !closingSession_) { current_->cancel(); } }
+void SessionBridge::cancel() { QPointer<SessionBridge> guard(this);stopRecheckReceiver();if(!guard){return;}stopMetasearchReceiver();stopPublicationReceiver();if(!guard){return;} automaticSubscriptionQueueCancelled_.store(true);if(const auto automatic=automaticSubscriptionCancellation_.load()){automatic->request_stop();}if (current_ && !closingSession_) { current_->cancel(); } }
 
 namespace {
 engine::LiveQueueLimits optionQueues(const core::Document& document) {
@@ -3797,7 +3887,7 @@ bool SessionBridge::loadOptions(ui::OptionsRequest request) {
         bool restart = !host_->engine;
         if (read->source) {
           const auto policy = (host_->mixedCapable()?engine::readMixedNetworkPolicy:engine::readNetworkPolicy)(read->source.get(),
-              {.mode = engine::NetworkMode::Normal, .socks4Capability = host_->networkPolicy.socks4Capability});
+              host_->normalNetworkOptions(read->source.get()));
           if (policy) {
             auto live = engine::prepareLiveSettings(host_->networkPolicy, *policy);
             restart = restart || !live || live->restartFields != 0;
@@ -3837,7 +3927,7 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
       if (!prepared) { packet->failure = text(prepared.error().message); }
       else {
         auto policy = (host_->mixedCapable()?engine::readMixedNetworkPolicy:engine::readNetworkPolicy)(&prepared->document(),
-            {.mode = engine::NetworkMode::Normal, .socks4Capability = host_->networkPolicy.socks4Capability});
+            host_->normalNetworkOptions(&prepared->document()));
         if (!policy) { packet->failure = tr("Unsupported or invalid setting: %1").arg(text(policy.error().field)); }
         else {
           const auto queuePolicy = core::readQueuePolicy(&prepared->document());
@@ -4064,7 +4154,7 @@ void SessionBridge::tickScheduler() noexcept {
       if(plan.downloadKiB){edits.push_back({core::SettingId::DownloadLimit,std::int64_t{*plan.downloadKiB}});}
       auto prepared=take(storage::prepareApplicationSettings(source,edits));
       auto requested=(host_->mixedCapable()?engine::readMixedNetworkPolicy:engine::readNetworkPolicy)(&prepared.document(),
-          {.mode=engine::NetworkMode::Normal,.socks4Capability=host_->networkPolicy.socks4Capability});
+          host_->normalNetworkOptions(&prepared.document()));
       if(!requested){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid saved routing while applying scheduled rates"}};}
       auto safe=take(engine::prepareLiveSettings(host_->networkPolicy,*requested));
       static_cast<void>(take(storage::saveApplicationSettings(host_->lease,source,prepared)));

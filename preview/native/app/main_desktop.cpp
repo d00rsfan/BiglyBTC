@@ -13,8 +13,11 @@
 #include <clocale>
 #include <iostream>
 #include <stdexcept>
+#include "profile_preflight.hpp"
+#include <iostream>
 
 int main(int argc, char** argv) {
+  if(argc==3&&std::string_view(argv[1])=="--check-profile"){return biglybtc::app::checkExistingProfile(argv[2],std::cout);}
   const bool normal = argc >= 2 && std::string_view(argv[1]) == "--profile";
   const bool local = argc >= 2 && std::string_view(argv[1]) == "--experimental-local";
   if ((!normal && !local) || (normal && argc < 3) || (local && argc < 4)) {
@@ -167,6 +170,9 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge, &Bridge::detailsReady, &window, &Window::setDetails);
     QObject::connect(&bridge,&Bridge::publicationCatalogReady,&window,&Window::setPublicationCatalog);
     QObject::connect(&bridge,&Bridge::publicationReady,&window,&Window::setPublicationResult);
+    QObject::connect(&bridge,&Bridge::recheckReady,&window,&Window::setRecheckProgress);
+    QObject::connect(&window,&Window::recheckRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::RecheckRequest request){if(owner&&view&&!owner->forceRecheck(request)&&view){view->rejectRecheck(request.key);}});
+    QObject::connect(&window,&Window::recheckCancelRequested,&bridge,&Bridge::cancelRecheck);
     QObject::connect(&window,&Window::publicationCatalogRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::PublicationCatalogKey key){if(owner&&view&&!owner->publicationCatalog(key)&&view){view->rejectPublicationCatalog(key);}});
     QObject::connect(&window,&Window::publicationRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::PublicationCommand command){if(owner&&view&&!owner->publicationCommand(command)&&view){view->rejectPublication(command);}});
     QObject::connect(&window,&Window::publicationConfirmed,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::PublicationConfirmation command){if(owner&&view&&!owner->confirmPublication(command)&&view){view->rejectPublicationConfirmation(command);}});

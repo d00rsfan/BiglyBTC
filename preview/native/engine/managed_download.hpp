@@ -15,6 +15,15 @@
 namespace biglybtc::engine {
 enum class ManagedPhase { Checking, Queued, Downloading, Seeding, Paused, Stopping, Stopped, Failed, Allocating };
 enum class VerifiedSeedingPhase { None, Checking, Released, Cancelled, Failed };
+enum class ManagedRecheckPhase { Checking, Retiring, Finished, Cancelled, Failed };
+struct ManagedRecheckProgress {
+  ManagedRecheckPhase phase=ManagedRecheckPhase::Checking;
+  // Actual readable bytes fed into the v1 hasher (virtual padding included),
+  // never SDK progress scaling or missing zero-fill; total is logical extent.
+  std::int64_t scannedBytes=0,totalBytes=0;
+  int goodPieces=0,badPieces=0,missingPieces=0,unknownPieces=0;
+  bool pieceMapSaved=false,saveUncertain=false;
+};
 struct ManagedDownloadStatus {
   core::TorrentHash hash;
   std::uint64_t admission = 0;
@@ -56,6 +65,7 @@ struct ManagedDownloadStatus {
   core::TorrentAllocationMode allocationMode=core::TorrentAllocationMode::None;
   std::int64_t allocationBytes=0,allocationTotalBytes=0;
   bool allocationComplete=false;
+  std::optional<ManagedRecheckProgress> recheck{};
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };
 struct PendingMagnetStatus {

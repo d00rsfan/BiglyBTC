@@ -20,10 +20,10 @@ struct Target {
 };
 using DownloadTargets = std::vector<Target>;
 using FileIndices = std::vector<int>;
-inline constexpr quint16 AllDownloadActions = (quint16{1} << 10) - 1;
+inline constexpr quint16 AllDownloadActions = (quint16{1} << core::DownloadActionCount) - 1;
 constexpr quint16 downloadActionBit(core::DownloadAction action) noexcept {
   const auto ordinal = static_cast<unsigned>(action);
-  return ordinal < 10 ? static_cast<quint16>(quint16{1} << ordinal) : quint16{0};
+  return ordinal < core::DownloadActionCount ? static_cast<quint16>(quint16{1} << ordinal) : quint16{0};
 }
 
 struct FileItem {
@@ -73,6 +73,7 @@ struct LibraryItem {
   QString networkStatus{};
   // Passive current provider binding, never UI command authority.
   quint64 providerAdmission=0,providerGeneration=0;
+  bool canRecheck=false;
 };
 struct LibraryPresentation {
   quint64 revision = 0;
@@ -113,6 +114,7 @@ public:
   int rowFor(const QString& hash) const;
   bool accepts(const Target& target) const;
   bool canContinue(const Target& target) const;
+  bool canRecheck(const Target& target) const;
   bool hasDetails(const Target& target) const;
   quint64 revision() const noexcept { return revision_; }
   quint16 permittedActions(const Target&) const;

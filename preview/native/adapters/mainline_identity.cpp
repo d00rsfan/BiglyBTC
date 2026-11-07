@@ -5,6 +5,7 @@
 
 #include <cerrno>
 #include <cstdio>
+#include <dirent.h>
 #include <new>
 #include <utility>
 
@@ -78,6 +79,50 @@ std::expected<std::string, Error> contents(int fd, const struct stat& stamp) {
   return result;
 }
 } // namespace
+
+std::expected<std::string,Error> discoverOriginalMainlineDirectory(const ProfileLease& lease) {
+  try {
+    auto root=profile(lease);if(!root){return std::unexpected(root.error());}
+    auto access=lease.sourceAccess();if(!access){return std::unexpected(access.error());}
+    struct stat pluginsStamp{};auto plugins=directory(lease.directoryHandle(),"plugins",pluginsStamp);
+    if(!plugins){return std::unexpected(plugins.error());}
+    if(plugins->get()<0){return error(ErrorCode::Missing,"No installed Mainline plugin directory");}
+    detail::Descriptor copy(::dup(plugins->get()));if(copy.get()<0){return error(ErrorCode::Io,"Cannot enumerate installed plugins");}
+    DIR* raw=::fdopendir(copy.get());if(!raw){return error(ErrorCode::Io,"Cannot enumerate installed plugins");}copy.release();
+    struct Close {void operator()(DIR* value)const noexcept{::closedir(value);}};std::unique_ptr<DIR,Close> stream(raw);
+    std::optional<std::string> selected;std::size_t entries=0;errno=0;
+    while(auto* entry=::readdir(raw)) {
+      const std::string name(entry->d_name);if(name=="."||name==".."){continue;}
+      if(++entries>1024){return error(ErrorCode::Unsupported,"Installed plugin directory limit");}
+      std::string folded=name;for(auto& c:folded){if(c>='A'&&c<='Z'){c=static_cast<char>(c-'A'+'a');}}
+      struct stat label{};if(::fstatat(plugins->get(),name.c_str(),&label,AT_SYMLINK_NOFOLLOW)!=0){return error(ErrorCode::Conflict,"Installed plugin directory changed");}
+      if(!S_ISDIR(label.st_mode)){if(folded=="mldht"){return error(ErrorCode::UnsafePath,"Mainline plugin directory is not a direct owned directory");}errno=0;continue;}
+      struct stat childStamp{};auto child=directory(plugins->get(),name.c_str(),childStamp);if(!child){return std::unexpected(child.error());}
+      detail::Descriptor properties(::openat(child->get(),"plugin.properties",O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK));
+      if(properties.get()<0){if(errno!=ENOENT){return error(ErrorCode::UnsafePath,"Cannot inspect installed plugin identity safely");}if(folded=="mldht"){return error(ErrorCode::Missing,"Mainline plugin identity metadata is missing");}errno=0;continue;}
+      struct stat before{},named{};if(::fstat(properties.get(),&before)!=0||!S_ISREG(before.st_mode)||before.st_nlink!=1||before.st_uid!=::geteuid()||before.st_size<0||before.st_size>65536||::fstatat(child->get(),"plugin.properties",&named,AT_SYMLINK_NOFOLLOW)!=0||!sameFile(before,named)){return error(ErrorCode::UnsafePath,"Installed plugin identity metadata is not an exact owned regular file");}
+      auto data=contents(properties.get(),before);if(!data){return std::unexpected(data.error());}
+      std::optional<std::string_view> id;std::size_t at=0,lines=0;
+      const auto trim=[](std::string_view text){while(!text.empty()&&(text.front()==' '||text.front()=='\t'||text.front()=='\f'||text.front()=='\r')){text.remove_prefix(1);}while(!text.empty()&&(text.back()==' '||text.back()=='\t'||text.back()=='\f'||text.back()=='\r')){text.remove_suffix(1);}return text;};
+      while(at<data->size()) {
+        if(++lines>4096){return error(ErrorCode::Unsupported,"Installed plugin identity line limit");}
+        const auto end=data->find('\n',at);auto line=trim(std::string_view(*data).substr(at,end==data->npos?end:end-at));at=end==data->npos?data->size():end+1;
+        if(line.empty()||line.front()=='#'||line.front()=='!'){continue;}
+        const auto split=line.find_first_of("=: \t\f");if(split==line.npos||line.substr(0,split)!="plugin.id"){continue;}
+        if(id){return error(ErrorCode::Conflict,"Installed plugin has duplicate runtime identity");}
+        auto value=trim(line.substr(split));if(!value.empty()&&(value.front()=='='||value.front()==':')){value=trim(value.substr(1));}
+        if(value.find('\\')!=value.npos||value.find('\0')!=value.npos){return error(ErrorCode::Unsupported,"Escaped installed plugin runtime identity requires review");}id=value;
+      }
+      struct stat after{};if(::fstat(properties.get(),&after)!=0||!sameFile(before,after)||::fstatat(child->get(),"plugin.properties",&named,AT_SYMLINK_NOFOLLOW)!=0||!sameFile(after,named)||!currentDirectory(plugins->get(),name.c_str(),child->get(),childStamp)){return error(ErrorCode::Conflict,"Installed plugin identity changed while reading");}
+      if(id&&*id=="mldht"){if(selected){return error(ErrorCode::Conflict,"Multiple installed Mainline plugin directories");}selected=name;}
+      else if(folded=="mldht"){return error(ErrorCode::Conflict,"Mainline directory runtime identity does not match");}
+      errno=0;
+    }
+    if(errno!=0){return error(ErrorCode::Io,"Installed plugin enumeration failed");}
+    struct stat after{};if(::fstat(plugins->get(),&after)!=0||!currentDirectory(lease.directoryHandle(),"plugins",plugins->get(),pluginsStamp)||after.st_mtim.tv_sec!=pluginsStamp.st_mtim.tv_sec||after.st_mtim.tv_nsec!=pluginsStamp.st_mtim.tv_nsec||after.st_ctim.tv_sec!=pluginsStamp.st_ctim.tv_sec||after.st_ctim.tv_nsec!=pluginsStamp.st_ctim.tv_nsec){return error(ErrorCode::Conflict,"Installed plugin set changed while discovering Mainline");}
+    if(!selected){return error(ErrorCode::Missing,"No installed Mainline runtime identity");}return *selected;
+  }catch(const std::bad_alloc&){return error(ErrorCode::Io,"Mainline plugin discovery memory limit");}
+}
 
 struct OriginalMainlineIdentity::Impl {
   OriginalMainlineIdentitySnapshot source;

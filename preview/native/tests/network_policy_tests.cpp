@@ -531,6 +531,53 @@ int main(int argc, char** argv) {
       CHECK(root);
       rejected(*root, Code::InvalidConfiguration);
     });
+    run("existing library Public projection preserves inactive saved overlays", [] {
+      auto document=config({{"Network Selection Default.Public",integer(0)},
+          {"Network Selection Default.I2P",integer(1)},{"Network Selection Default.Tor",integer(1)}});
+      const auto before=document.originalBytes();rejected(document,Code::Unsupported);
+      auto existing=engine::readNetworkPolicy(&document,{.mode=engine::NetworkMode::Normal,
+          .context=engine::NetworkPolicyContext::ExistingLibraryPublic});
+      CHECK(existing&&existing->context==engine::NetworkPolicyContext::ExistingLibraryPublic);
+      const engine::TorrentNetworkSelection saved{.publicNetwork=true,.tor=true,.i2p=true};
+      lt::add_torrent_params params;params.ti=metadata();
+      CHECK(!engine::applyTorrentNetworkPolicy(*existing,saved,params));
+      CHECK(engine::applyExistingTorrentNetworkPolicy(*existing,saved,params));
+      CHECK(saved.publicNetwork&&saved.tor&&saved.i2p&&document.serialize()==before);
+      for(const auto denied: {engine::TorrentNetworkSelection{.publicNetwork=false,.tor=false,.i2p=true},
+          engine::TorrentNetworkSelection{.publicNetwork=false,.tor=true,.i2p=false}}) {
+        lt::add_torrent_params blocked;blocked.ti=metadata();blocked.trackers={"https://tracker.example/announce"};
+        CHECK(!engine::applyExistingTorrentNetworkPolicy(*existing,denied,blocked));
+        CHECK(blocked.trackers.size()==1);
+      }
+      auto standard=normal();CHECK(!engine::applyExistingTorrentNetworkPolicy(standard,saved,params));
+    });
+    run("existing Public endpoints filter only parsed overlay authorities", [] {
+      auto policy=normal();policy.context=engine::NetworkPolicyContext::ExistingLibraryPublic;
+      lt::add_torrent_params params;params.ti=metadata();
+      params.flags|=lt::torrent_flags::override_trackers|lt::torrent_flags::override_web_seeds;
+      params.trackers={"https://user.onion@public.example/contains.i2p","http://actual.i2p/announce","udp://actual.ONION.:80/announce","https://public.example/path.onion"};
+      params.tracker_tiers={0,1,2,3};params.url_seeds={"https://actual.onion/file","https://public.example/actual.i2p"};
+      params.http_seeds={"https://user.i2p@actual.onion/file","https://public.example/data"};
+      const auto originals=params.trackers;
+      CHECK(engine::applyExistingTorrentNetworkPolicy(policy,{.publicNetwork=true,.tor=true,.i2p=true},params));
+      CHECK(params.trackers==std::vector<std::string>({originals[0],originals[3]}));
+      CHECK(params.tracker_tiers==std::vector<int>({0,3}));
+      CHECK(params.url_seeds==std::vector<std::string>({"https://public.example/actual.i2p"}));
+      CHECK(params.http_seeds==std::vector<std::string>({"https://public.example/data"}));
+      lt::add_torrent_params meta;meta.ti=metadata();meta.ti->add_url_seed("http://actual.i2p/data","inactive-secret");
+      CHECK(engine::applyExistingTorrentNetworkPolicy(policy,{},meta));CHECK(meta.url_seeds.empty());
+      lt::add_torrent_params auth;auth.ti=metadata();auth.ti->add_url_seed("https://public.example/data","secret");
+      CHECK(!engine::applyExistingTorrentNetworkPolicy(policy,{},auth));
+      auto strict=normal();lt::add_torrent_params denied;denied.ti=metadata();denied.trackers=originals;
+      CHECK(!engine::applyExistingTorrentNetworkPolicy(strict,{},denied));CHECK(denied.trackers==originals);
+      denied.trackers={"https://actual%2eonion/announce"};CHECK(!engine::applyExistingTorrentNetworkPolicy(policy,{},denied));
+    });
+    run("existing library context still rejects malformed defaults", [] {
+      auto malformed=config({{"Network Selection Default.I2P",bytes("true")}});
+      const auto before=malformed.originalBytes();auto denied=engine::readNetworkPolicy(&malformed,
+          {.mode=engine::NetworkMode::Normal,.context=engine::NetworkPolicyContext::ExistingLibraryPublic});
+      CHECK(!denied&&denied.error().code==Code::InvalidConfiguration&&malformed.serialize()==before);
+    });
     run("mixed defaults need an explicit reader and never grant torrent routing", [] {
       auto document=config({{"Network Selection Default.Public",integer(1)},
           {"Network Selection Default.I2P",integer(1)}});

@@ -3207,3 +3207,43 @@ target_compile_options(biglybtc-sharing-values-tests PRIVATE -Wall -Wextra -Wped
 add_test(NAME sharing-values COMMAND biglybtc-sharing-values-tests)
 set_tests_properties(sharing-values PROPERTIES TIMEOUT 30 LABELS "unit;sharing")
 endif()
+
+
+if(TARGET biglybtc_ui AND TARGET biglybtc_profile AND TARGET Qt6::Test)
+  add_executable(biglybtc-existing-controls-ui-tests existing_controls_ui_tests.cpp)
+  set_target_properties(biglybtc-existing-controls-ui-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-existing-controls-ui-tests PRIVATE biglybtc_ui biglybtc_profile Qt6::Test)
+  target_compile_features(biglybtc-existing-controls-ui-tests PRIVATE cxx_std_23)
+  target_compile_options(biglybtc-existing-controls-ui-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME existing-library-force-recheck-ui COMMAND biglybtc-existing-controls-ui-tests)
+  set_tests_properties(existing-library-force-recheck-ui PROPERTIES TIMEOUT 60 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;existing-library;force;recheck")
+endif()
+if(TARGET biglybtc_desktop_host AND TARGET Qt6::Test AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-existing-controls-bridge-tests existing_controls_bridge_tests.cpp existing_controls_fixture.hpp)
+  set_target_properties(biglybtc-existing-controls-bridge-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-existing-controls-bridge-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine biglybtc_profile Qt6::Test)
+  target_compile_features(biglybtc-existing-controls-bridge-tests PRIVATE cxx_std_23)
+  target_compile_options(biglybtc-existing-controls-bridge-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME existing-library-owned-recheck-worker COMMAND biglybtc-existing-controls-bridge-tests)
+  set_tests_properties(existing-library-owned-recheck-worker PROPERTIES TIMEOUT 150 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "integration;ui;owned-profile;existing-library;recheck")
+endif()
+
+
+if(TARGET biglybtc_desktop_host AND TARGET biglybtc_local_engine AND Qt6Test_FOUND
+    AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-ordinary-daily-host-tests ordinary_daily_host_tests.cpp)
+  set_target_properties(biglybtc-ordinary-daily-host-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-ordinary-daily-host-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+  target_compile_features(biglybtc-ordinary-daily-host-tests PRIVATE cxx_std_23)
+  target_compile_options(biglybtc-ordinary-daily-host-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME ordinary-normal-daily-discovery COMMAND biglybtc-ordinary-daily-host-tests normalRestoredSeedAndPartialUseActualDiscoveryAndTrackers)
+  add_test(NAME ordinary-normal-daily-idle-accounting COMMAND biglybtc-ordinary-daily-host-tests oneActualIdleMinuteControlsAndJoinedReopenDoNotReplayLifetime)
+  set_tests_properties(ordinary-normal-daily-discovery PROPERTIES TIMEOUT 180 LABELS "ordinary-library;owned-loopback;mainline;trackers")
+  set_tests_properties(ordinary-normal-daily-idle-accounting PROPERTIES TIMEOUT 180 LABELS "ordinary-library;owned-loopback;accounting")
+endif()
+
+
+if(TARGET biglybtc-ordinary-daily-host-tests)
+  add_test(NAME ordinary-normal-daily-control-retirement COMMAND biglybtc-ordinary-daily-host-tests normalStopThenStartWaitsActualActionEligibility)
+  set_tests_properties(ordinary-normal-daily-control-retirement PROPERTIES TIMEOUT 90 LABELS "ordinary-library;owned-loopback;controls")
+endif()

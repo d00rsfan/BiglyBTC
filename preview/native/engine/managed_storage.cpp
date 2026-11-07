@@ -329,6 +329,19 @@ std::expected<void,Error> validateExistingPayload(const fs::path& path,int paren
   }catch(const Failure& failure){return std::unexpected(failure.error);}
   catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Cannot validate existing-only named payload"});}
 }
+std::vector<std::pair<std::uint64_t,std::uint64_t>> missingPayloadSnapshot(const fs::path& path){
+  require(path.is_absolute()&&path.lexically_normal()==path,"Unsafe missing recheck path",ErrorCode::UnsafePath);
+  Descriptor parent(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));struct stat stamp{};require(parent.get()>=0&&::fstat(parent.get(),&stamp)==0,"Cannot observe missing recheck root",ErrorCode::Io);
+  std::vector<std::pair<std::uint64_t,std::uint64_t>> out{{stamp.st_dev,stamp.st_ino}};
+  for(const auto& part:path.relative_path()){
+    struct stat named{};if(::fstatat(parent.get(),part.c_str(),&named,AT_SYMLINK_NOFOLLOW)!=0){require(errno==ENOENT,"Cannot observe missing recheck path",ErrorCode::UnsafePath);return out;}
+    require(S_ISDIR(named.st_mode),"Previously missing recheck payload appeared or path is unsafe",ErrorCode::Conflict);
+    Descriptor next(::openat(parent.get(),part.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));require(next.get()>=0&&::fstat(next.get(),&stamp)==0&&S_ISDIR(stamp.st_mode)&&stamp.st_dev==named.st_dev&&stamp.st_ino==named.st_ino,"Missing recheck ancestor changed",ErrorCode::Conflict);out.emplace_back(stamp.st_dev,stamp.st_ino);parent=std::move(next);
+  }throw Failure{{ErrorCode::Conflict,"Missing recheck payload unexpectedly exists"}};
+}
+std::function<std::expected<void,Error>()> missingPayloadProof(const fs::path& path){
+  auto expected=missingPayloadSnapshot(path);return [path,expected=std::move(expected)]()->std::expected<void,Error>{try{require(missingPayloadSnapshot(path)==expected,"Missing recheck path/ancestor changed",ErrorCode::Conflict);return {};}catch(const Failure& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot validate missing recheck path"});}};
+}
 std::function<std::expected<void,Error>()> existingPayloadProof(const Slot& slot,const fs::path& save,int descriptor) {
   auto parent=std::make_shared<Descriptor>(::fcntl(slot.parent.get(),F_DUPFD_CLOEXEC,3));
   require(parent->get()>=0,"Cannot retain existing-only parent",ErrorCode::Io);
@@ -656,6 +669,7 @@ struct ManagedStorage::Impl {
   ManagedStoragePurpose purpose=ManagedStoragePurpose::Download;
   std::vector<storage::VerifiedExistingScope::Proof> approvedProofs;
   bool attempted=false;
+  std::string recheckInventoryRow;
   bool historyRecorded=false;std::optional<storage::ErrorCode> historyProblem;std::optional<std::int64_t> historyBytes;
   bool progressFromPieces=false;
   std::unique_ptr<AllocationWork> allocation;
@@ -680,8 +694,8 @@ ManagedMainlinePolicy ManagedStorage::mainlinePolicy() const noexcept { return i
 ManagedStoragePurpose ManagedStorage::purpose() const noexcept {return impl_?impl_->purpose:ManagedStoragePurpose::Download;}
 std::span<const std::uint8_t> ManagedStorage::existingVerificationPieces()const noexcept{return impl_?std::span<const std::uint8_t>{impl_->requiredPieces}:std::span<const std::uint8_t>{};}
 std::expected<void,Error> ManagedStorage::validateExistingSnapshot() const {
-  if(!impl_||(impl_->purpose!=ManagedStoragePurpose::VerifyExistingReadOnly&&impl_->purpose!=ManagedStoragePurpose::VerifySelectedReadOnly)){return std::unexpected(Error{ErrorCode::Unsupported,"No existing-only snapshot authority"});}
-  try{if(impl_->purpose==ManagedStoragePurpose::VerifySelectedReadOnly){
+  if(!impl_||(impl_->purpose!=ManagedStoragePurpose::VerifyExistingReadOnly&&impl_->purpose!=ManagedStoragePurpose::VerifySelectedReadOnly&&impl_->purpose!=ManagedStoragePurpose::RecheckReadOnly)){return std::unexpected(Error{ErrorCode::Unsupported,"No existing-only snapshot authority"});}
+  try{if(impl_->purpose==ManagedStoragePurpose::RecheckReadOnly){for(const auto& proof:impl_->approvedProofs){done(proof());}return {};}if(impl_->purpose==ManagedStoragePurpose::VerifySelectedReadOnly){
       require(impl_->selectedLease&&impl_->selectedScope,"Selected-existing scope authority is absent",ErrorCode::Conflict);
       std::vector<fs::path> paths(impl_->slots.size());std::vector<storage::OriginalStorageKind> kinds;
       for(const auto& slot:impl_->slots){kinds.push_back(slot.kind);if(!slot.padding){paths[slot.index]=(impl_->save/slot.actual).lexically_normal();}}
@@ -732,8 +746,8 @@ std::shared_ptr<OriginalDiskFiles> ManagedStorage::mappedFiles() const { return 
 std::span<const ManagedPayloadClaim> ManagedStorage::claims() const noexcept { return impl_?std::span<const ManagedPayloadClaim>(impl_->payloadClaims):std::span<const ManagedPayloadClaim>{}; }
 const storage::OriginalTorrentIdentity& ManagedStorage::identity() const {return impl_->selectedIdentity;}
 
-std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose) {
-  return prepareImpl(lease,hash,policy,claimed,retainedIdentities,std::move(swarmBridge),purpose,nullptr);
+std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,std::stop_token stop) {
+  return prepareImpl(lease,hash,policy,claimed,retainedIdentities,std::move(swarmBridge),purpose,nullptr,nullptr,stop);
 }
 std::expected<ManagedStorage,Error> ManagedStorage::prepareOwnedI2p(const storage::ProfileLease& lease,const core::TorrentHash& hash,const OwnedI2pPolicy& owned,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> identities){
   if(!owned.matches(lease,hash)){return std::unexpected(Error{ErrorCode::Conflict,"Owned I2P storage needs SAME lease/hash"});}
@@ -761,16 +775,17 @@ std::expected<void,Error> ManagedStorage::rebaseCategory(const storage::ProfileL
 }
 
 std::string_view ManagedStorage::categoryStateSnapshot()const noexcept{return impl_?std::string_view(impl_->categorySnapshot):std::string_view{};}
-std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned,const MixedPublicPolicy* mixed) {
+std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge,ManagedStoragePurpose purpose,const OwnedI2pPolicy* owned,const MixedPublicPolicy* mixed,std::stop_token stop) {
   try {
     auto categoryLease=take(lease.retain());
-    require(purpose==ManagedStoragePurpose::Download||purpose==ManagedStoragePurpose::VerifyExistingReadOnly||purpose==ManagedStoragePurpose::VerifySelectedReadOnly||purpose==ManagedStoragePurpose::AllocateOnly,"Unknown managed preparation purpose",ErrorCode::InvalidFormat);
+    require(purpose==ManagedStoragePurpose::Download||purpose==ManagedStoragePurpose::VerifyExistingReadOnly||purpose==ManagedStoragePurpose::VerifySelectedReadOnly||purpose==ManagedStoragePurpose::RecheckReadOnly||purpose==ManagedStoragePurpose::AllocateOnly,"Unknown managed preparation purpose",ErrorCode::InvalidFormat);
     const bool allocationOnly=purpose==ManagedStoragePurpose::AllocateOnly;
+    const bool rechecking=purpose==ManagedStoragePurpose::RecheckReadOnly;
     const auto allocationIntent=take(storage::readAllocationIntent(lease,hash));
     require(!allocationOnly||(allocationIntent&&allocationIntent->state!=storage::AllocationState::Complete),"No current allocation authority",ErrorCode::Conflict);
     require(allocationOnly||!allocationIntent||allocationIntent->state==storage::AllocationState::Complete,"Pending allocation requires its typed owner",ErrorCode::Conflict);
     const bool selectedOnly=purpose==ManagedStoragePurpose::VerifySelectedReadOnly;
-    const bool existingOnly=purpose==ManagedStoragePurpose::VerifyExistingReadOnly||selectedOnly;
+    const bool existingOnly=purpose==ManagedStoragePurpose::VerifyExistingReadOnly||selectedOnly||rechecking;
     require(!storage::hasPendingOriginalCompaction(lease),"Recover pending explicit compaction with all profile handles retired before admission",ErrorCode::Conflict);
     require(claimed.size()<=MaximumManagedPayloadClaims,"Retained payload claim bound exceeded",ErrorCode::Unsupported);
     require(retainedIdentities.size()<=MaximumManagedPayloadClaims,"Retained identity bound exceeded",ErrorCode::Unsupported);
@@ -868,7 +883,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       const auto intent=take(storage::readVerifiedSeedIntent(lease,hash));require(intent&&intent->goal==core::ExistingVerificationGoal::SelectedFiles,"Selected read-only storage requires its current typed saved intent",ErrorCode::Conflict);
       const auto* scope=row.find(storage::VerifiedSelectedScopeKey);require(scope,"Selected-existing scope disappeared",ErrorCode::Conflict);selectedScope=take(storage::SelectedExistingScope::decode(*scope));
     }
-    if(existingOnly&&!selectedOnly){
+    if(existingOnly&&!selectedOnly&&!rechecking){
       if(const auto* scope=row.find(storage::VerifiedExistingScopeKey)){approvedScope=take(storage::VerifiedExistingScope::decode(*scope));
         const auto paths=approvedScope->mapped()?existingMappedPaths(saved,layout,attributes.root(),save):std::vector<fs::path>{};
         done(approvedScope->validate(lease,source,layout,identity,save,saved.saveFile.value_or(""),paths));}
@@ -889,7 +904,17 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
           "Existing-only verification cannot recover/convert original storage controls");
       existingOnlyAttributes(attributes.root(),layout.multifile,layout.files.size(),approvedScope&&approvedScope->mapped());
     }
+    if(rechecking){
+      require(identity.selected==storage::OriginalSelectedHash::V1,"Standalone recheck currently requires a full selected-v1 identity",ErrorCode::Unsupported);
+      require(pending.empty(),"Recheck cannot recover pending completion controls",ErrorCode::Conflict);
+      // Ordinary fmfile*.dat/.bak are authenticated physical C controls, not
+      // pending conversion. The resolver already refuses .saving cuts; retain
+      // requested==actual so read-only checking never changes storage family.
+      require(storageDefaults.requested==storageDefaults.actual,"Recheck cannot convert original physical storage kinds",ErrorCode::Conflict);
+    }
     auto slots=plan(saved,attributes.root(),layout,*parsedPolicy,save,pending,profilePath,existingOnly);
+    if(rechecking){for(const auto& slot:slots){require(slot.padding||(!slot.expanding&&(slot.kind==storage::OriginalStorageKind::Linear||slot.kind==storage::OriginalStorageKind::Compact)),"Read-only recheck supports ordinary linear/compact storage",ErrorCode::Unsupported);}}
+
     std::unique_ptr<AllocationWork> allocation;
     if(allocationOnly){
       require(pending.empty()&&storageDefaults.markers.empty()&&slots.size()<=4096,"Allocation does not convert/recover nonlinear or completion controls",ErrorCode::Unsupported);
@@ -902,7 +927,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
         done(storage::validateAllocationTargets(lease,*allocationIntent,source,paths));
       }
     }
-    if(existingOnly&&!selectedOnly){for(const auto& slot:slots){if(slot.padding){continue;}require(slot.kind==storage::OriginalStorageKind::Linear&&!slot.expanding&&(slot.actual==slot.base||(approvedScope&&approvedScope->mapped()))
+    if(existingOnly&&!selectedOnly&&!rechecking){for(const auto& slot:slots){if(slot.padding){continue;}require(slot.kind==storage::OriginalStorageKind::Linear&&!slot.expanding&&(slot.actual==slot.base||(approvedScope&&approvedScope->mapped()))
           &&slot.data.get()>=0&&slot.identity.st_size==slot.bytes&&slot.identity.st_nlink==1,
           "Existing-only verification requires every complete original linear leaf",ErrorCode::Missing);}}
     std::vector<std::uint8_t> requiredPieces;
@@ -918,7 +943,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     for (const auto& slot:slots) {
       if(slot.padding||slot.kind==storage::OriginalStorageKind::Linear||slot.data.get()<0){continue;}
       auto control=take(OriginalControl::open(lease,hash.hex(),slot.index,slot.kind,false));
-      auto io=take(storage::OriginalFileIo::open(slot.data.get(),slot.geometry,slot.kind,control?take(selectedOnly?control->loadValidated(slot.geometry):control->load()):std::nullopt,{},!existingOnly,slot.expanding&&slot.kind==storage::OriginalStorageKind::Compact,static_cast<unsigned>(slot.identity.st_nlink)));
+      auto io=take(storage::OriginalFileIo::open(slot.data.get(),slot.geometry,slot.kind,control?take((selectedOnly||rechecking)?control->loadValidated(slot.geometry):control->load()):std::nullopt,{},!existingOnly,slot.expanding&&slot.kind==storage::OriginalStorageKind::Compact,static_cast<unsigned>(slot.identity.st_nlink)));
       require(!existingOnly||!io.recoveryPending(),"Read-only existing data requires unresolved original recovery");
     }
     struct rlimit limit{}; std::size_t budget=8192;
@@ -926,6 +951,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     const auto files=static_cast<std::size_t>(std::ranges::count_if(slots,[](const auto& slot) { return !slot.padding; }));
     require(files<=budget,"Managed payload exceeds descriptor budget");
     params.save_path=save.string(); params.file_priorities=priorities(*parsedPolicy,layout);
+    if(rechecking){std::fill(params.file_priorities.begin(),params.file_priorities.end(),lt::default_priority);}
     params.file_priorities.resize(static_cast<std::size_t>(info->num_files()),lt::download_priority_t{0});
     for (auto [key,target]:{std::pair{"maxdl",&params.download_limit},{"maxul",&params.upload_limit}}) {
       const auto value=integer(row.find(key)); require(value>=0&&value<=std::numeric_limits<int>::max(),"Unsupported disabled/overflowed per-torrent rate limit");
@@ -942,14 +968,15 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
           "Mixed storage needs exactly saved Public and I2P networks",ErrorCode::Unsupported);
     }
     auto mainline=originalMainlinePolicy(policy,attributes.root(),info->priv());
-    mainline.discover=mainline.discover && selectedNetworks.publicNetwork && selectedNetworks.dhtBackup && !selectedNetworks.tor && (!selectedNetworks.i2p||mixed);
+    mainline.discover=mainline.discover && selectedNetworks.publicNetwork && selectedNetworks.dhtBackup && (!selectedNetworks.tor||policy.context==NetworkPolicyContext::ExistingLibraryPublic) && (!selectedNetworks.i2p||mixed||policy.context==NetworkPolicyContext::ExistingLibraryPublic);
     mainline.announce=mainline.announce && mainline.discover;
-    auto filtered=owned?owned->apply(selectedNetworks,params):mixed?mixed->apply(policy,selectedNetworks,params):applyTorrentNetworkPolicy(policy,selectedNetworks,params);
+    auto filtered=owned?owned->apply(selectedNetworks,params):mixed?mixed->apply(policy,selectedNetworks,params):applyExistingTorrentNetworkPolicy(policy,selectedNetworks,params);
     require(filtered.has_value(),"Managed torrent network selection is unsupported by the owner policy");
     auto claimPlan=payloadClaimPlan(slots,save,attributes.root(),pending);
     checkManagedClaims(claimPlan.values,claimed);
     // All unsupported geometry/mapping/policy decisions precede state ownership
     // and payload mutation. beginUpdate hydrates the same last cached sections.
+    require(!stop.stop_requested(),"Read-only check cancelled before saved preparation",ErrorCode::Cancelled);
     auto state=take(store.beginUpdate(lease,hash)); auto actual=dictionary(state.document().find("attributes"));
     require(core::originalDownloadFlags(state.document().find("attributes"))==flags,
         "Original sequential flags changed during preparation",ErrorCode::Conflict);
@@ -961,7 +988,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     require(recheckedRoot.saveDirectory==saved.saveDirectory&&recheckedRoot.saveFile==saved.saveFile,
         "Original save-root interpretation changed during preparation",ErrorCode::Conflict);
     done(storage::applyOriginalStorageDefaults(actual,storageDefaults,true));
-    if(existingOnly){existingOnlyAttributes(actual.root(),layout.multifile,layout.files.size(),selectedOnly||(approvedScope&&approvedScope->mapped()));}
+    if(existingOnly&&!rechecking){existingOnlyAttributes(actual.root(),layout.multifile,layout.files.size(),selectedOnly||(approvedScope&&approvedScope->mapped()));}
     {
       auto check=plan(saved,actual.root(),layout,*parsedPolicy,save,journals(actual.root(),layout.multifile,layout.files.size()),profilePath,existingOnly);
       require(check.size()==slots.size(),"Managed mapping changed during preparation",ErrorCode::Conflict);
@@ -976,7 +1003,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       }
     }
     // Cache values are copied before their backing state is relinquished.
-    auto rechecked=owned?owned->apply(networks(state.document(),actual.root()),params):mixed?mixed->apply(policy,networks(state.document(),actual.root()),params):applyTorrentNetworkPolicy(policy,networks(state.document(),actual.root()),params);
+    auto rechecked=owned?owned->apply(networks(state.document(),actual.root()),params):mixed?mixed->apply(policy,networks(state.document(),actual.root()),params):applyExistingTorrentNetworkPolicy(policy,networks(state.document(),actual.root()),params);
     require(rechecked.has_value(),"Authoritative torrent network policy changed",ErrorCode::Conflict);
     // Before any payload write, Java must recheck after an interrupted owner.
     auto resume=dictionary(state.document().find("resume"));auto resumeData=dictionary(resume.find("data"));
@@ -984,7 +1011,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     put(resume,"data",resumeData.serialize());done(state.replaceSection("resume",resume.serialize()));
     done(storage::applyOriginalStorageDefaults(actual,storageDefaults));
     put(actual,"resumecomplete","i1e");done(state.replaceSection("attributes",actual.serialize()));
-    writeLinks(state,slots,save,false); done(store.save(lease,state));
+    require(!stop.stop_requested(),"Read-only check cancelled before resume invalidation",ErrorCode::Cancelled);
+    if(!rechecking){writeLinks(state,slots,save,false);} done(store.save(lease,state));
     if(rawSaved.saveDirectory!=saved.saveDirectory||rawSaved.saveFile!=saved.saveFile||rawSaved.legacySavePath) {
       // Capture the original first-load interpretation before creating parents:
       // their later existence must not change a legacy path's meaning.
@@ -1005,7 +1033,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
       const auto journal=std::find_if(pending.begin(),pending.end(),[&](const auto& value) { return value.index==slot.index; });
       const auto* intent=journal==pending.end()?nullptr:&*journal;
       if (!inspect(slot,save,intent,true,existingOnly)) {
-        if(selectedOnly){params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}]=slot.actual.string();continue;}
+        if(selectedOnly||rechecking){if(rechecking){approvedProofs.push_back(missingPayloadProof((save/slot.actual).lexically_normal()));}params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}]=slot.actual.string();continue;}
         require(!existingOnly,"Existing-only payload disappeared; no creation is authorized",ErrorCode::Conflict);
         slot.parent=parentDirectory((save/slot.actual).parent_path(),true);
         slot.allocationCreated=allocationOnly;
@@ -1024,7 +1052,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
         require(mappedDescriptor.get()>=0,"Cannot retain mapped payload descriptor",ErrorCode::Io);
         std::shared_ptr<OriginalControl> control;
         if(slot.kind!=storage::OriginalStorageKind::Linear||slot.expanding) {control=take(OriginalControl::open(lease,hash.hex(),slot.index,slot.expanding?storage::OriginalStorageKind::Compact:slot.kind,!existingOnly));}
-        const auto rawControl=control?take(selectedOnly?control->loadValidated(slot.geometry):control->load()):std::nullopt;
+        const auto rawControl=control?take((selectedOnly||rechecking)?control->loadValidated(slot.geometry):control->load()):std::nullopt;
         auto io=take(storage::OriginalFileIo::open(mappedDescriptor.get(),slot.geometry,slot.kind,rawControl,!existingOnly&&control?control->publisher():storage::OriginalControlPublisher{},!existingOnly,slot.expanding&&slot.kind==storage::OriginalStorageKind::Compact,static_cast<unsigned>(slot.identity.st_nlink)));
         if(existingOnly){require(!io.recoveryPending(),"Read-only existing data cannot recover original controls");}
         else if(io.recoveryPending()){done(io.recover());}
@@ -1050,7 +1078,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
           for(std::size_t i=0;i<slots.size();++i){stores+=i==slot.index?"1:R":encoded(old->children[i]);}put(attrs,"storetypes",stores+'e');done(state.replaceSection("attributes",attrs.serialize()));done(store.save(lease,state));
         }
         std::function<std::expected<void,Error>()> validate;
-        if(selectedOnly){
+        if(selectedOnly||rechecking){
           auto leaf=selectedPayloadProof(slot,save,mappedDescriptor.get());const auto geometry=slot.geometry;
           validate=[leaf=std::move(leaf),control,geometry,rawControl]() -> std::expected<void,Error>{const auto checked=leaf();if(!checked){return checked;}if(control){const auto current=control->loadValidated(geometry);if(!current){return std::unexpected(current.error());}if(*current!=rawControl){return std::unexpected(Error{ErrorCode::Conflict,"Selected original control changed"});}}return {};};approvedProofs.push_back(validate);
         }else if(existingOnly){
@@ -1065,7 +1093,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     for(std::size_t i=0;i<claimPlan.values.size();++i){const auto& id=slots[claimPlan.indices[i]].identity;claimPlan.values[i].device=static_cast<std::uint64_t>(id.st_dev);claimPlan.values[i].inode=static_cast<std::uint64_t>(id.st_ino);}
     auto checkedMainline=originalMainlinePolicy(policy,actual.root(),info->priv());
     const auto actualNetworks=networks(state.document(),actual.root());
-    checkedMainline.discover=checkedMainline.discover && actualNetworks.publicNetwork && actualNetworks.dhtBackup && !actualNetworks.tor && (!actualNetworks.i2p||mixed);
+    checkedMainline.discover=checkedMainline.discover && actualNetworks.publicNetwork && actualNetworks.dhtBackup && (!actualNetworks.tor||policy.context==NetworkPolicyContext::ExistingLibraryPublic) && (!actualNetworks.i2p||mixed||policy.context==NetworkPolicyContext::ExistingLibraryPublic);
     checkedMainline.announce=checkedMainline.announce && checkedMainline.discover;
     require(mainline==checkedMainline,"Original Mainline source selection changed during preparation",ErrorCode::Conflict);
     auto result=std::make_unique<Impl>(hash,std::move(identity),saved,std::move(store),std::move(state),std::move(layout),std::move(params),save,
@@ -1077,15 +1105,18 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepareImpl(const storage::P
     // Capture after authoritative cache hydration, defaults and conversions;
     // later classification cannot authorize a newly relinked physical map.
     result->queueMappingScope=take(storage::originalQueueMappingScope(result->state.document()));
-    if(mapped){result->mapped=std::make_shared<OriginalDiskFiles>(info,std::move(mappedFiles),selectedOnly?OriginalDiskAccess::SelectedReadOnly:existingOnly?OriginalDiskAccess::ReadOnly:OriginalDiskAccess::ReadWrite);}
+    if(mapped){result->mapped=std::make_shared<OriginalDiskFiles>(info,std::move(mappedFiles),rechecking?OriginalDiskAccess::RecheckReadOnly:selectedOnly?OriginalDiskAccess::SelectedReadOnly:existingOnly?OriginalDiskAccess::ReadOnly:OriginalDiskAccess::ReadWrite);}
     result->allocation=std::move(allocation);
-    ManagedStorage prepared(std::move(result));if(selectedOnly){done(prepared.validateExistingSnapshot());}
+    result->recheckInventoryRow=rechecking?encoded(entryFor(inventory.document(),saved,!inventory.document().find("downloads"))):std::string{};
+    ManagedStorage prepared(std::move(result));if(selectedOnly||rechecking){done(prepared.validateExistingSnapshot());}
     if(allocationOnly){done(prepared.beginAllocation(lease));}return prepared;
   } catch (const Failure& error) { return std::unexpected(error.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io,"Managed storage preparation failed; prepared state may require recheck"}); }
 }
 
 #include "managed_allocation.inc"
+
+#include "managed_recheck_storage.inc"
 
 std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease& lease,std::span<const std::uint8_t> verified,
     bool complete,std::int64_t received,std::int64_t sent,

@@ -1,5 +1,9 @@
 #pragma once
+#include <string>
+#include <utility>
+#include <vector>
 #include "file_operation_presentation.hpp"
+#include "recheck_presentation.hpp"
 #include "owned_i2p_service.hpp"
 #include "i2p_presentation.hpp"
 #include "options_presentation.hpp"
@@ -63,11 +67,13 @@ public:
   using SubscriptionAcquisitionFactory=std::function<std::unique_ptr<search::SubscriptionMetainfoFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::SubscriptionKey&,const QByteArray&,std::stop_token)>;
   using MetasearchFetchFactory=std::function<std::unique_ptr<search::MetasearchHttpFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::MetasearchEngineKey&,const QString&,std::stop_token)>;
   using MetasearchMetainfoFactory=std::function<std::unique_ptr<search::MetasearchMetainfoFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const search::SavedMetasearchResultHandle&,std::stop_token)>;
-  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {}, RssFetchFactory = {}, SubscriptionFetchFactory = {}, SubscriptionAcquisitionFactory = {}, SubscriptionFetchFactory automaticFeed = {}, SubscriptionAcquisitionFactory automaticMetainfo = {}, MetasearchFetchFactory metasearch = {}, MetasearchMetainfoFactory metasearchMetainfo = {});
+  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {}, RssFetchFactory = {}, SubscriptionFetchFactory = {}, SubscriptionAcquisitionFactory = {}, SubscriptionFetchFactory automaticFeed = {}, SubscriptionAcquisitionFactory automaticMetainfo = {}, MetasearchFetchFactory metasearch = {}, MetasearchMetainfoFactory metasearchMetainfo = {}, std::vector<std::pair<std::string,int>> mainlineBootstrap = {});
   ~SessionBridge() override;
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool openNormal(std::filesystem::path profile);
   bool downloadAction(ui::DownloadTargets, core::DownloadAction);
+  bool forceRecheck(ui::RecheckRequest);
+  void cancelRecheck(ui::RecheckKey);
   bool torrentImport(QString metadata, QString destination, bool start);
   bool createHybridCompanion(ui::Target source, bool selectV2);
   bool previewTorrentIntake(ui::TorrentIntakeRequest);
@@ -126,6 +132,7 @@ public:
 signals:
   void fileOperationPrepared(biglybtc::ui::FileOperationPlanPresentation);
   void fileOperationFinished(biglybtc::ui::FileOperationResultPresentation);
+  void recheckReady(biglybtc::ui::RecheckPresentation);
   void torrentCreationProgress(biglybtc::ui::TorrentCreationProgressPresentation);
   void torrentCreated(biglybtc::ui::TorrentCreationResultPresentation);
   void torrentIntakeReady(biglybtc::ui::TorrentIntakePresentation);
@@ -198,6 +205,11 @@ private:
   void observeNative(const engine::ApplicationPeerObservation&) noexcept;
   void refreshDhtAccounting(bool ending = false) noexcept;
   void tickAccounting(bool force = false, bool ending = false) noexcept;
+  void pollRecheck();
+  void stopRecheckReceiver()noexcept;
+  void closeWorkerRecheck();
+  void deliverRecheck(ui::RecheckPresentation);
+  void postRecheck(ui::RecheckPresentation);
   void publishOverall(bool closed = false);
   void publishHistoryChange() noexcept;
   void publishRuntimeMetrics(const engine::ApplicationPeerObservation&);
@@ -308,6 +320,7 @@ private:
   RssFetchFactory rssFetchFactory_;
   MetasearchFetchFactory metasearchFetchFactory_;
   MetasearchMetainfoFactory metasearchMetainfoFactory_;
+  std::vector<std::pair<std::string,int>> mainlineBootstrap_; // Untrusted discovery hints; empty retains standard routers.
   std::optional<ui::MetasearchCatalogKey> guiMetasearchCatalog_;
   std::optional<ui::MetasearchQueryCommand> guiMetasearch_;
   std::optional<ui::MetasearchDownloadCommand> guiMetasearchDownload_;
@@ -329,6 +342,8 @@ private:
   std::optional<ui::PublicationCatalogKey> guiPublicationCatalog_;
   std::optional<ui::PublicationCommand> guiPublication_;
   bool startingPublication_=false;
+  std::optional<ui::RecheckRequest> guiRecheck_;
+  quint64 guiRecheckSequence_=0;
   std::optional<ui::FileOperationRequest> guiFileOperation_;
   std::optional<ui::TorrentCreationRequest> guiCreation_;
   ui::TorrentCreationProgressPresentation latestCreationProgress_;

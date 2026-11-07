@@ -4,6 +4,8 @@
 #include "allocation_intent.hpp"
 #include "torrent_state.hpp"
 #include <libtorrent/announce_entry.hpp>
+#include <libtorrent/extensions.hpp>
+#include <libtorrent/peer_connection_handle.hpp>
 #include "managed_payload_counters.hpp"
 #include "managed_queue_observations.hpp"
 #include "managed_tracker_responses.hpp"
@@ -104,6 +106,13 @@ bool subtract(const core::EngineCounters& value, const core::EngineCounters& bas
 }
 } // namespace
 
+#if !defined(TORRENT_DISABLE_EXTENSIONS)
+namespace { class RecheckPeerGate final:public lt::torrent_plugin {
+  std::shared_ptr<lt::peer_plugin> new_connection(const lt::peer_connection_handle& connection) override {
+    auto peer=connection;peer.disconnect(lt::error_code(lt::errors::torrent_paused),lt::operation_t::bittorrent);return {};
+  }
+}; }
+#endif
 struct PersistentSession::Impl {
   struct MainlinePortQueue;
   struct OperationToken { std::uint64_t number = 0; } token;
@@ -183,6 +192,7 @@ struct PersistentSession::Impl {
     std::vector<std::uint8_t> verified;
     std::optional<storage::VerifiedSeedIntent> seedIntent;
     std::optional<storage::AllocationIntent> allocationIntent;
+    std::stop_token recheckStop;bool recheckChecked=false,recheckCancelled=false;
     bool allocationAttempted=false;
     bool seedAttempted=false,seedPiecesExact=false;
     Clock::time_point seedDeadline{};
@@ -767,7 +777,7 @@ struct PersistentSession::Impl {
     }
     const bool originalProgress=value.storage.originalProgressRequiresPieces();
     const bool priorityObservation=queuePolicy&&queuePolicy->downloadOrder==core::QueueDownloadOrder::FilePriority;
-    const bool needPieces=pieces||originalProgress||priorityObservation||value.status.verificationHeld;
+    const bool needPieces=pieces||originalProgress||priorityObservation||value.status.verificationHeld||value.status.recheck.has_value();
     value.filePriority.reset();value.status.queueFilePriority.reset();
     value.status.combinedReceived.reset();value.status.combinedSent.reset();
     value.status.queueTargetStatistics.reset();
@@ -919,6 +929,9 @@ struct PersistentSession::Impl {
         && sample.state != lt::torrent_status::checking_resume_data
         && sample.state != lt::torrent_status::downloading_metadata;
     value.status.selectedComplete = sample.is_finished;
+    if(value.status.recheck){auto& progress=*value.status.recheck;progress.totalBytes=value.storage.originalBytes();
+      progress.scannedBytes=value.storage.recheckScannedBytes();}
+
     // Neither startup checking nor an already-complete saved/zero-size row is
     // a new completion event. Require two actual accepted checked observations.
     if(value.checkedAlert&&value.status.checked&&!value.stop&&!value.status.failure
@@ -943,6 +956,10 @@ struct PersistentSession::Impl {
       for (int i = 0; i < sample.pieces.size() && i < value.status.totalPieces; ++i) {
         value.verified[static_cast<std::size_t>(i)] = sample.pieces[lt::piece_index_t{i}] ? 1 : 0;
       }
+    }
+    if(value.status.recheck){sampleManagedRecheckCounts(value);
+      // Local checksum/missing outcomes are not peer bad-payload traffic.
+      value.badPayloadBytes.reset();value.status.discardedBytes.reset();value.status.hashFailedBytes.reset();
     }
     if(priorityObservation&&value.status.checked&&sample.pieces.size()==value.status.totalPieces) {
       const auto priority=value.storage.filePriorityStatistics(value.verified);
@@ -1051,7 +1068,7 @@ struct PersistentSession::Impl {
     for (const auto& [key, entry] : managed) {
       static_cast<void>(key);
       const auto& value = *entry;
-      if (!value.handle.is_valid() || value.removing || value.stop || value.status.failure || value.status.verificationHeld) { continue; }
+      if (!value.handle.is_valid() || value.removing || value.stop || value.status.failure || value.status.verificationHeld || value.status.recheck) { continue; }
       const auto& saved = value.storage.queueMetadata();
       core::QueueTorrentFacts item;
       item.token = value.status.admission;
@@ -1193,7 +1210,7 @@ struct PersistentSession::Impl {
         const auto found = targets.find(decision.token);
         if (found == targets.end()) { continue; }
         auto& value = *found->second;
-        if (!value.handle.is_valid() || value.stop || value.removing || value.status.failure || value.status.verificationHeld) { continue; }
+        if (!value.handle.is_valid() || value.stop || value.removing || value.status.failure || value.status.verificationHeld || value.status.recheck) { continue; }
         value.activity = decision.activity;
         value.status.staleRankOffset=decision.staleRankOffset;
         value.status.queueReason = decision.reason;
@@ -1276,6 +1293,8 @@ struct PersistentSession::Impl {
 
   #include "managed_allocation_owner.inc"
 
+  #include "managed_recheck_owner.inc"
+
   void advanceManaged() {
     for (auto& [key, entry] : managed) {
       static_cast<void>(key);
@@ -1284,6 +1303,7 @@ struct PersistentSession::Impl {
       if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());}
       if(value.allocationIntent){advanceAllocation(value);continue;}
       sampleManaged(value);
+      advanceManagedRecheck(value);
       try{advanceVerifiedSeed(value);}
       catch(...){value.status.failure=storage::Error{storage::ErrorCode::Io,"Verified-seeding release did not finish; explicit recovery required"};requestStop(value);value.status.phase=ManagedPhase::Failed;}
       if (!value.stop || (!value.handle.is_valid() && !value.removing)) { continue; }
@@ -1305,6 +1325,14 @@ struct PersistentSession::Impl {
           // stopped callback has settled the monotone source epoch already.
           if(value.queueObservations){if(const auto times=value.queueObservations->settledDurations()){
             value.secondsDownloading=times->downloading;value.secondsSeeding=times->seeding;}}
+          if(value.status.recheck){
+            auto& checked=*value.status.recheck;
+            value.recheckCancelled=value.recheckCancelled||closingAdmission||value.recheckStop.stop_requested();
+            if(value.recheckChecked&&!value.recheckCancelled){
+              auto saved=publishTarget(value.status.hash,[&](){return value.storage.checkpointRecheck(*managedLease,value.verified,value.status.complete);});
+              if(!saved){value.status.failure=saved.error();checked.saveUncertain=value.storage.recheckSaveAttempted();}else{checked.pieceMapSaved=true;checked.saveUncertain=false;}
+            }
+          }else{
           auto saved = publishTarget(value.status.hash,[&](){return value.storage.checkpoint(*managedLease, value.verified, value.status.complete,
               value.status.received, value.status.sent, value.secondsDownloading, value.secondsSeeding,
               value.idleCheckpoint&&value.idleCheckpoint->second==value.status.sent
@@ -1322,7 +1350,9 @@ struct PersistentSession::Impl {
               }catch(...){value.historyCompletionProblem=storage::ErrorCode::Io;}
             }
           }
+          }
         }
+        if(value.status.recheck){finishManagedRecheck(value);}
         value.status.retained = false;
         if(value.mmapLatency){value.mmapLatency->retire();}
         value.queueSource={};value.smoothedUpload.reset();value.sendSmoothing.reset();value.sendFirstMillis.reset();
@@ -1916,7 +1946,12 @@ std::expected<void,storage::Error> PersistentSession::applyExternalRateLimits(co
 }
 
 std::expected<void, storage::Error> PersistentSession::startManaged(
-    const storage::ProfileLease& lease, const ManagedDownloadOptions& options,const RetainedPayloads& external) {
+    const storage::ProfileLease& lease,const ManagedDownloadOptions& options,const RetainedPayloads& external){
+  return startManagedImpl(lease,options,external,false,{});
+}
+std::expected<void, storage::Error> PersistentSession::startManagedImpl(
+    const storage::ProfileLease& lease,const ManagedDownloadOptions& options,const RetainedPayloads& external,
+    bool recheck,std::stop_token recheckStop) {
   if (!impl_->onWorker() || impl_->call || impl_->registered || impl_->closed || impl_->poisoned) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Managed admission is unavailable"});
   }
@@ -1925,7 +1960,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Original-rule queue capacity exceeded"});
   }
   if(!core::validTorrentAllocationMode(options.allocationMode)){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Invalid managed allocation mode"});}
-  if(impl_->externalQueue&&(options.verifyExisting||options.allocationMode!=core::TorrentAllocationMode::None)){
+  if(impl_->externalQueue&&(recheck||options.verifyExisting||options.allocationMode!=core::TorrentAllocationMode::None)){
     return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"External queue admits ordinary downloads only"});
   }
   if(impl_->historyConsumerLease&&!impl_->historyConsumerLease->sharesOwnership(lease)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Managed history consumer profile OFD differs"});}
@@ -1985,6 +2020,10 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
         &&!options.verifyExisting&&!options.forceStart&&!options.queued&&!options.manuallyPaused&&!options.ownedLoopbackPeerPort),"Allocation requires its exact stopped/unforced durable intent",storage::ErrorCode::Conflict);
     detail::require(allocating||!allocation||allocation->state==storage::AllocationState::Complete,"Pending allocation requires an explicit allocation retry",storage::ErrorCode::Conflict);
     const auto intent=detail::take(storage::readVerifiedSeedIntent(lease,options.hash));
+    detail::require(!recheck||(!intent&&!allocation&&!options.mixedNetworks&&!options.verifyExisting&&!recheckStop.stop_requested()),"Standalone recheck refuses overlapping typed intent or cancellation",storage::ErrorCode::Conflict);
+#if defined(TORRENT_DISABLE_EXTENSIONS)
+    detail::require(!recheck,"Standalone recheck requires the fixed per-admission peer refusal gate",storage::ErrorCode::Unsupported);
+#endif
     detail::require(!impl_->externalQueue||!intent,"Existing verified-seeding intent is unavailable in the external queue",storage::ErrorCode::Unsupported);
     detail::require(!options.verifyExisting||intent.has_value(),"No durable verified-seeding intent",storage::ErrorCode::Conflict);
     if(intent){
@@ -2010,7 +2049,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     detail::done(impl_->publishTarget(options.hash,[&]()->std::expected<void,storage::Error>{
       auto prepared=mixedPolicy?detail::ManagedStorage::prepareMixedPublic(lease,options.hash,*impl_->network,*mixedPolicy,claimed,retainedIdentities,payloadBridge,detail::ManagedStoragePurpose::Download)
           :detail::ManagedStorage::prepare(lease,options.hash,*impl_->network,claimed,retainedIdentities,payloadBridge,
-            allocating?detail::ManagedStoragePurpose::AllocateOnly:intent?(intent->goal==core::ExistingVerificationGoal::SelectedFiles?detail::ManagedStoragePurpose::VerifySelectedReadOnly:detail::ManagedStoragePurpose::VerifyExistingReadOnly):detail::ManagedStoragePurpose::Download);
+            recheck?detail::ManagedStoragePurpose::RecheckReadOnly:allocating?detail::ManagedStoragePurpose::AllocateOnly:intent?(intent->goal==core::ExistingVerificationGoal::SelectedFiles?detail::ManagedStoragePurpose::VerifySelectedReadOnly:detail::ManagedStoragePurpose::VerifyExistingReadOnly):detail::ManagedStoragePurpose::Download,recheckStop);
       if(!prepared){return std::unexpected(prepared.error());}
       if(mixedPolicy){
         mixedPrepared=std::make_unique<Impl::Managed>(++impl_->operation,std::move(*prepared),options.hash);
@@ -2023,6 +2062,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
       return {};
     }));
     detail::require(preparedStorage.has_value()||bool(mixedPrepared),"Source publication did not execute storage preparation",storage::ErrorCode::Conflict);
+    detail::require(!recheck||!recheckStop.stop_requested(),"Recheck cancelled after safe preparation; resume remains invalid",storage::ErrorCode::Cancelled);
     // A certified same-hash restart replaces its own old claim only after the
     // new read-only collision gate and complete preparation succeeded.
     if(previous!=impl_->managed.end()){if(previous->second->trackerResponse){static_cast<void>(previous->second->trackerResponse->drain());}impl_->managedByHandle.erase(previous->second->handle);impl_->managed.erase(previous);}
@@ -2036,6 +2076,8 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
       impl_->managedLease=&lease;impl_->phase=AccountingState::Active;impl_->publish();impl_->call=false;return {};
     }
     value->seedIntent=intent;
+    if(recheck){value->status.recheck.emplace();value->recheckStop=recheckStop;}
+
     if(intent){value->status.verificationHeld=true;value->status.verifiedSeeding=VerifiedSeedingPhase::Checking;
       value->seedDeadline=options.verificationDeadline.value_or(Clock::now()+std::chrono::minutes{5});}
     value->manualPaused = options.manuallyPaused||(intent&&intent->state==storage::VerifiedSeedState::Released
@@ -2070,6 +2112,16 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     }
     value->status.totalPieces = parameters.ti->num_pieces();
     value->status.bytes = parameters.ti->total_size();
+    if(recheck){
+      parameters.trackers.clear();parameters.tracker_tiers.clear();parameters.url_seeds.clear();parameters.http_seeds.clear();
+      parameters.peers.clear();parameters.banned_peers.clear();parameters.dht_nodes.clear();parameters.have_pieces.clear();parameters.verified_pieces.clear();
+      parameters.flags|=lt::torrent_flags::override_trackers|lt::torrent_flags::override_web_seeds|lt::torrent_flags::disable_dht
+          |lt::torrent_flags::disable_lsd|lt::torrent_flags::disable_pex|lt::torrent_flags::upload_mode|lt::torrent_flags::stop_when_ready;
+      parameters.flags&=~(lt::torrent_flags::seed_mode|lt::torrent_flags::auto_managed);
+#if !defined(TORRENT_DISABLE_EXTENSIONS)
+      parameters.extensions.push_back([](const lt::torrent_handle&,lt::client_data_t){return std::make_shared<RecheckPeerGate>();});
+#endif
+    }
     if(intent){
       value->seedNetwork=parameters;
       parameters.trackers.clear();parameters.tracker_tiers.clear();parameters.url_seeds.clear();parameters.http_seeds.clear();
@@ -2092,14 +2144,14 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     }catch(...){value->queueObservations.reset();} // Optional policy facts cannot fail storage admission.
     detail::require(detail::attachManagedPayloadCounters(parameters, value->payloadCounters, payloadBridge,value->queueObservations),
         "Exact managed transfer counters require the approved source ABI", storage::ErrorCode::Unsupported);
-    if(!intent){value->trackerResponse=detail::attachManagedTrackerResponse(parameters,lease,
+    if(!intent&&!recheck){value->trackerResponse=detail::attachManagedTrackerResponse(parameters,lease,
         value->storage.identity(),value->status.admission,impl_->trackerResponses,
         impl_->libraryRegularTrackerMode()?&detail::libraryHttpAnnounceScrapeDeadline:nullptr);}
     detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, impl_->operation);
-    if(value->storage.mainlinePolicy().discover){value->mainlinePort=impl_->attachMainlinePort(parameters,value->status.admission,
+    if(!recheck&&value->storage.mainlinePolicy().discover){value->mainlinePort=impl_->attachMainlinePort(parameters,value->status.admission,
         value->storage.identity().originalKey,value->storage.identity().selected==storage::OriginalSelectedHash::V1?1u:2u);}
     parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;
-    if (impl_->queuePolicy || options.manuallyPaused || intent || impl_->externalQueue) {
+    if (impl_->queuePolicy || options.manuallyPaused || intent || recheck || impl_->externalQueue) {
       parameters.flags &= ~lt::torrent_flags::auto_managed;
       parameters.flags |= lt::torrent_flags::stop_when_ready;
     }
@@ -2129,7 +2181,8 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     impl_->managedLease = &lease;
     impl_->queuePositionsPending=true;impl_->queuePositionsUnavailable=true;
     impl_->phase = AccountingState::Active;
-    if (!impl_->externalQueue&&(impl_->queuePolicy || options.manuallyPaused || intent || !options.queued || options.forceStart)) { slot->second->handle.resume(); }
+    if(recheck){slot->second->handle.force_recheck();}
+    if (!impl_->externalQueue&&(impl_->queuePolicy || options.manuallyPaused || intent || recheck || !options.queued || options.forceStart)) { slot->second->handle.resume(); }
     // stop_when_ready atomically pauses at the end of checking, before payload
     // transfer; the sole owner poll then applies the selected original rule.
     impl_->session->resume();
@@ -2143,6 +2196,8 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
   } catch (const detail::Failure& failure) { impl_->call = false; return std::unexpected(failure.error); }
   catch (...) { impl_->call = false; return std::unexpected(storage::Error{storage::ErrorCode::Io, "Managed admission failed"}); }
 }
+#include "managed_recheck_api.inc"
+
 std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::TorrentHash& hash, bool paused) {
   revokeMainlineScrape(hash);
   if (!impl_->onWorker() || impl_->call || impl_->closed || impl_->poisoned) {
@@ -2154,7 +2209,7 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Torrent is not active"});
   }
   auto& value = *found->second;
-  if(value.status.verificationHeld){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Verification is held; cancel or wait for actual completion"});}
+  if(value.status.recheck||value.status.verificationHeld){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Verification is held; cancel or wait for actual completion"});}
   value.manualPaused = paused;impl_->externalSnapshotValid=false;
   if(impl_->externalQueue){
     if(paused){impl_->forgetTrackerDhtAuthority(hash);if(value.mainlinePort){value.mainlinePort->advertised.store(0,std::memory_order_release);}}
@@ -2196,7 +2251,7 @@ std::expected<void, storage::Error> PersistentSession::queueManaged(const core::
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Torrent is not active"});
   }
   auto& value = *found->second;
-  if(value.status.verificationHeld){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Verification is held; queue commands cannot release it"});}
+  if(value.status.recheck||value.status.verificationHeld){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Verification is held; queue commands cannot release it"});}
   value.manualPaused = false; value.forceStart = forceStart;impl_->externalSnapshotValid=false;
   if(impl_->externalQueue){
     value.handle.unset_flags(lt::torrent_flags::auto_managed);value.policyHeld=true;
@@ -2252,7 +2307,7 @@ std::expected<void, storage::Error> PersistentSession::stopManaged(const core::T
   }
   const auto found = impl_->managed.find(hash.hex());
   if (found == impl_->managed.end()) { return {}; }
-  try { impl_->forgetTrackerDhtAuthority(hash); impl_->requestStop(*found->second); return {}; }
+  try { if(found->second->status.recheck&&found->second->status.retained){found->second->recheckCancelled=true;found->second->status.recheck->phase=ManagedRecheckPhase::Retiring;} impl_->forgetTrackerDhtAuthority(hash); impl_->requestStop(*found->second); return {}; }
   catch (...) { return std::unexpected(storage::Error{storage::ErrorCode::Io, "Cannot request torrent flush"}); }
 }
 std::expected<void, storage::Error> PersistentSession::forgetManaged(const core::TorrentHash& hash, bool removePeerHints) {

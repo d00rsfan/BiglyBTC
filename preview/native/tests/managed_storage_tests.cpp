@@ -854,6 +854,30 @@ int main() {
     require(!fs::exists(c.save)&&read(statePath)==before,"aggregate bound fails before payload or state effects");
   });
 
+  runCase("existing saved Public leg preserves all enabled overlay attributes",[] {
+    for(const auto& selected: {std::string("l6:Publice"),std::string("l6:Public3:I2Pe"),std::string("l6:Public3:I2P3:Tore")}) {
+      Fixture f;auto state=f.state();auto attrs=core::Document::parse(f.attrs);require(attrs&&attrs->replaceValue("networks",selected).has_value(),"Actual saved networks");
+      require(state.replaceValue("attributes",attrs->serialize()).has_value(),"Actual selected attribute source");const auto before=state.serialize();write(f.profile/"active"/(f.hash.hex()+".dat"),before);f.fullPayload();
+      auto policy=engine::readNetworkPolicy(nullptr,{.mode=engine::NetworkMode::Normal,.context=engine::NetworkPolicyContext::ExistingLibraryPublic});require(policy.has_value(),"Existing Public context");
+      {auto admitted=Storage::prepare(*f.lease,f.hash,*policy);require(admitted.has_value(),admitted?"Existing public admission":admitted.error().message);require(admitted->parameters().trackers.size()==1,"Actual permitted external tracker retained");}
+      const auto baseline=core::Document::parse(before);const auto after=f.state();require(baseline.has_value(),"Actual baseline state parses");
+      const auto sameRaw=[&](const core::Node* oldValue,const core::Node* newValue){require(oldValue&&newValue,"Expected preserved state subtree");return baseline->originalBytes().substr(oldValue->begin,oldValue->end-oldValue->begin)==after.originalBytes().substr(newValue->begin,newValue->end-newValue->begin);};
+      const auto* oldAttrs=baseline->find("attributes"),*newAttrs=after.find("attributes");require(oldAttrs&&newAttrs,"Actual attributes remain present");
+      require(sameRaw(oldAttrs->find("networks"),newAttrs->find("networks"))&&sameRaw(oldAttrs->find("unknown"),newAttrs->find("unknown")),"Original network selection and opaque attribute bytes unchanged by effective Public projection");
+      require(sameRaw(baseline->find("info"),after.find("info"))&&sameRaw(baseline->find("announce"),after.find("announce"))&&sameRaw(baseline->find("azureus_properties"),after.find("azureus_properties")),"Original metainfo tracker and privacy bytes retained");
+      const auto* resume=after.find("resume");const auto* data=resume?resume->find("data"):nullptr;const auto* valid=data?data->find("valid"):nullptr;const auto* pieces=data?data->find("resume data"):nullptr;
+      require(valid&&valid->type==core::Node::Type::Integer&&valid->integer==0&&pieces&&pieces->type==core::Node::Type::Bytes&&pieces->bytes==std::string(2,'\2'),"Ordinary preparation truthfully invalidates unchecked resume before payload ownership");
+      require(read(f.path())==f.body,"Actual existing payload unchanged");
+    }
+  });
+  runCase("existing Public context never opens pure overlay payload",[] {
+    for(const auto& selected: {std::string("l3:I2Pe"),std::string("l3:Tore")}) {
+      Fixture f;auto state=f.state();auto attrs=core::Document::parse(f.attrs);require(attrs&&attrs->replaceValue("networks",selected).has_value(),"Actual pure overlay networks");
+      require(state.replaceValue("attributes",attrs->serialize()).has_value(),"Actual pure overlay source");const auto before=state.serialize();write(f.profile/"active"/(f.hash.hex()+".dat"),before);
+      auto policy=engine::readNetworkPolicy(nullptr,{.mode=engine::NetworkMode::Normal,.context=engine::NetworkPolicyContext::ExistingLibraryPublic});require(policy.has_value(),"Existing Public context");
+      const auto denied=Storage::prepare(*f.lease,f.hash,*policy);require(!denied,"Pure overlay remains refused");require(!fs::exists(f.save)&&read(f.profile/"active"/(f.hash.hex()+".dat"))==before,"No pure-overlay payload or state effects");
+    }
+  });
   runCase("authoritative-cache-policy-is-preflighted-without-mutation",[] {
     Fixture f; auto attrs=core::Document::parse(f.attrs); require(attrs.has_value(),"fixture cache attributes"); require(attrs->replaceValue("networks","l3:I2Pe").has_value(),"fixture cache network");
     const auto hash=f.hash.bytes(); const std::string raw(reinterpret_cast<const char*>(hash.data()),hash.size());

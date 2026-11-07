@@ -92,3 +92,8 @@ if(TARGET biglybtc_ui)
     publication_controls.hpp publication_controls.cpp
     publication_review_dialog.hpp publication_review_dialog.cpp publication_window.inc)
 endif()
+
+
+if(TARGET biglybtc_ui)
+  target_sources(biglybtc_ui PRIVATE recheck_presentation.hpp recheck_dialog.hpp recheck_dialog.cpp recheck_window.inc)
+endif()

@@ -54,6 +54,7 @@ bool SessionBridge::prepareFileOperation(ui::FileOperationRequest request) {
     auto failure=std::make_shared<ui::FileOperationPlanPacket>();failure->request=request;ui::FileOperationPlanPresentation result=failure;
     try{
       if(!host_||host_->columnLayoutSession!=request.session){throw Failure{{storage::ErrorCode::Conflict,"This file-operation session is closed"}};}
+      if(host_->recheckTargets.contains(request.target.hash.toStdString())){throw Failure{{storage::ErrorCode::Busy,"Wait for the actual recheck to retire before changing its files"}};}
       host_->filePlan.reset();host_->filePlanPacket.reset();
       if(request.operation==ui::FileOperation::ReviewReplacement){
         if(!host_->replacementReviewOnly||!host_->fileRecoveryRequired||host_->engine||host_->azureus||request.originalIndex!=-1||!request.destinationParent.isEmpty()||request.deleteTorrentFile.value_or(false)||request.recyclePayload.value_or(false)){throw Failure{{storage::ErrorCode::Conflict,"Reopen the profile read-only before reviewing an interrupted replacement"}};}
@@ -93,6 +94,7 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
     const auto request=value.plan->request;auto result=std::make_shared<ui::FileOperationResultPacket>();result->request=request;
     try{
       if(!host_||host_->columnLayoutSession!=request.session||!host_->filePlan||!host_->filePlanPacket||!sameFilePlan(*host_->filePlanPacket,*value.plan)){throw Failure{{storage::ErrorCode::Conflict,"This file-operation plan was replaced; prepare it again"}};}
+      if(host_->recheckTargets.contains(request.target.hash.toStdString())){throw Failure{{storage::ErrorCode::Busy,"Wait for the actual recheck to retire before changing its files"}};}
       if(request.operation==ui::FileOperation::ReviewReplacement){
         host_->requireI2pIdle(true);
         if(storage::hasPendingCategoryDeletion(host_->lease)){throw Failure{{storage::ErrorCode::Conflict,"Category recovery prevents file replacement review"}};}

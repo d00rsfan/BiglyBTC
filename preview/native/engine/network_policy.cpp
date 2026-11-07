@@ -56,9 +56,9 @@ std::string numericAddress(std::string_view value, std::string_view field) {
   require(::inet_ntop(family, storage, output, sizeof(output)) != nullptr, Code::InvalidConfiguration, field);
   return output;
 }
-void hostName(std::string_view host, std::string_view field) {
+void hostName(std::string_view host, std::string_view field, bool inactiveOverlay = false) {
   require(!host.empty() && host.size() <= 253 && printable(host), Code::InvalidConfiguration, field);
-  require(!alternativeNetwork(host), Code::Unsupported, field);
+  require(inactiveOverlay || !alternativeNetwork(host), Code::Unsupported, field);
   if (host.find(':') != std::string_view::npos) { (void)numericAddress(host, field); return; }
   require(std::ranges::all_of(host, [](unsigned char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '.' || c == '-';
@@ -243,8 +243,8 @@ void validate(const NetworkPolicy& p) {
         && proxy.kind == NetworkProxyKind::None, Code::InvalidConfiguration, "isolated policy");
   }
 }
-enum class UrlKind { Http, Https, Udp };
-UrlKind urlKind(std::string_view url, std::string_view field, bool ipv6 = true) {
+enum class UrlKind { Http, Https, Udp, InactiveOverlay };
+UrlKind urlKind(std::string_view url, std::string_view field, bool ipv6 = true, bool inactiveOverlay = false) {
   require(!url.empty() && url.size() <= MaximumText && printable(url)
       && url.find(' ') == std::string_view::npos && url.find('\\') == std::string_view::npos,
       Code::InvalidConfiguration, field);
@@ -275,10 +275,10 @@ UrlKind urlKind(std::string_view url, std::string_view field, bool ipv6 = true) 
     const auto colon = authority.find(':');
     host = authority.substr(0, colon);
     if (colon != std::string_view::npos) { port = authority.substr(colon + 1); (void)portNumber(port, field); }
-    hostName(host, field);
+    hostName(host, field, inactiveOverlay);
   }
   require(kind != UrlKind::Udp || !port.empty(), Code::InvalidConfiguration, field);
-  return kind;
+  return inactiveOverlay && alternativeNetwork(host) ? UrlKind::InactiveOverlay : kind;
 }
 } // namespace
 
@@ -291,11 +291,13 @@ static std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicyImpl(
     if (options.mode == NetworkMode::IsolatedLoopback) { return p; }
     const Config c(configuration);
     p.mode = NetworkMode::Normal;
+    p.context = options.context;
     p.socks4Capability = std::move(options.socks4Capability);
     const bool defaultI2p=c.boolean("Network Selection Default.I2P", false);
-    require(c.boolean("Network Selection Default.Public", true)
-        && !c.boolean("Network Selection Default.Tor", false)
-        && (mixedDefaults || !defaultI2p),
+    const bool defaultPublic=c.boolean("Network Selection Default.Public", true);
+    const bool defaultTor=c.boolean("Network Selection Default.Tor", false);
+    require(options.context == NetworkPolicyContext::ExistingLibraryPublic
+        || (defaultPublic && !defaultTor && (mixedDefaults || !defaultI2p)),
         Code::Unsupported, "Network Selection Default");
     p.ipv6 = c.boolean("IPV6 Enable Support", false);
     const bool tcp = c.boolean("peercontrol.tcp.public.enable", true);
@@ -537,6 +539,16 @@ std::expected<libtorrent::settings_pack, NetworkPolicyError> makeNetworkSettings
   catch (const std::bad_alloc&) { return std::unexpected(NetworkPolicyError{Code::Memory, "network settings"}); }
 }
 
+std::expected<void, NetworkPolicyError> applyExistingTorrentNetworkPolicy(
+    const NetworkPolicy& p, const TorrentNetworkSelection& selection, libtorrent::add_torrent_params& params) {
+  auto publicLeg = selection;
+  if (p.context == NetworkPolicyContext::ExistingLibraryPublic && selection.publicNetwork) {
+    publicLeg.i2p = false;
+    publicLeg.tor = false;
+  }
+  return applyTorrentNetworkPolicy(p, publicLeg, params);
+}
+
 std::expected<void, NetworkPolicyError> applyTorrentNetworkPolicy(
     const NetworkPolicy& p, const TorrentNetworkSelection& selection, libtorrent::add_torrent_params& params) {
   try {
@@ -569,6 +581,8 @@ std::expected<void, NetworkPolicyError> applyTorrentNetworkPolicy(
         for (const auto& seed : params.ti->web_seeds()) {
           // add_torrent_params string vectors cannot preserve these metadata
           // extensions. Reject rather than discard authentication/headers.
+          if (!isolated && p.webSeeds && selection.webSeeds && p.context == NetworkPolicyContext::ExistingLibraryPublic
+              && urlKind(seed.url,"webseed URL",p.ipv6,true) == UrlKind::InactiveOverlay) { continue; }
           require(isolated || !p.webSeeds || !selection.webSeeds || (seed.auth.empty() && seed.extra_headers.empty()),
               Code::Unsupported, "webseed authentication extensions");
           auto& seeds = seed.type == libtorrent::web_seed_entry::url_seed ? next.url_seeds : next.http_seeds;
@@ -582,7 +596,8 @@ std::expected<void, NetworkPolicyError> applyTorrentNetworkPolicy(
     std::vector<int> tiers;
     for (std::size_t i = 0; i < next.trackers.size(); ++i) {
       if (isolated) { continue; }
-      const auto kind = urlKind(next.trackers[i], "tracker URL", p.ipv6);
+      const auto kind = urlKind(next.trackers[i], "tracker URL", p.ipv6, p.context == NetworkPolicyContext::ExistingLibraryPublic);
+      if (kind == UrlKind::InactiveOverlay) { continue; }
       if ((kind == UrlKind::Udp && !p.udpTrackers) || (kind != UrlKind::Udp && !p.httpTrackers)) { continue; }
       trackers.push_back(next.trackers[i]);
       tiers.push_back(i < next.tracker_tiers.size() ? next.tracker_tiers[i] : 0);
@@ -594,10 +609,11 @@ std::expected<void, NetworkPolicyError> applyTorrentNetworkPolicy(
       // this source family. The same pinned provider handle stays alive.
       require(seeds.empty() || !p.proxy.peers || p.proxy.kind != NetworkProxyKind::Socks4a
           || verifiedSocks4WebSeeds(p.socks4Capability), Code::Unsupported, "SOCKS4a webseed provider");
-      for (const auto& seed : seeds) {
-        require(urlKind(seed, "webseed URL", p.ipv6) != UrlKind::Udp,
-            Code::Unsupported, "webseed URL");
-      }
+      std::erase_if(seeds,[&](const auto& seed) {
+        const auto kind=urlKind(seed,"webseed URL",p.ipv6,p.context == NetworkPolicyContext::ExistingLibraryPublic);
+        require(kind != UrlKind::Udp,Code::Unsupported,"webseed URL");
+        return kind == UrlKind::InactiveOverlay;
+      });
     };
     filterSeeds(next.url_seeds);
     filterSeeds(next.http_seeds);
@@ -610,11 +626,13 @@ std::expected<void, NetworkPolicyError> applyTorrentNetworkPolicy(
       next.flags |= libtorrent::torrent_flags::disable_dht;
       next.dht_nodes.clear();
     } else {
-      for (const auto& [host, port] : next.dht_nodes) {
-        hostName(host, "DHT node");
-        require(p.ipv6 || host.find(':') == std::string::npos, Code::Unsupported, "DHT node / IPv6 disabled");
-        require(port >= 1 && port <= 65535, Code::InvalidConfiguration, "DHT node port");
-      }
+      std::erase_if(next.dht_nodes,[&](const auto& node) {
+        const auto& [host,port]=node;
+        hostName(host,"DHT node",p.context == NetworkPolicyContext::ExistingLibraryPublic);
+        require(p.ipv6 || host.find(':') == std::string::npos,Code::Unsupported,"DHT node / IPv6 disabled");
+        require(port >= 1 && port <= 65535,Code::InvalidConfiguration,"DHT node port");
+        return p.context == NetworkPolicyContext::ExistingLibraryPublic && alternativeNetwork(host);
+      });
     }
     if (isolated || privateTorrent || !p.pex) { next.flags |= libtorrent::torrent_flags::disable_pex; }
     if (isolated || privateTorrent || !p.lsd) { next.flags |= libtorrent::torrent_flags::disable_lsd; }

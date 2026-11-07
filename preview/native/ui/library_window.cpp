@@ -1,3 +1,4 @@
+#include "recheck_dialog.hpp"
 #include "publication_controls.hpp"
 #include "publication_review_dialog.hpp"
 #include "file_operation_dialog.hpp"
@@ -103,6 +104,8 @@ void applySavedResult(Page& page, quint64 request, const Result& result) {
 
 LibraryWindow::~LibraryWindow(){
   closing_=true;
+  if(activeRecheck_&&activeRecheck_->receiver){activeRecheck_->receiver->request_stop();}activeRecheck_.reset();
+  const auto recheck=recheckDialog_;recheckDialog_.clear();if(recheck){QObject::disconnect(recheck.data(),nullptr,this,nullptr);delete recheck.data();}
   const auto publication=publicationReview_;publicationReview_.clear();
   if(publication){QObject::disconnect(publication.data(),nullptr,this,nullptr);delete publication.data();}
   // Retire owned signal sources while the derived Window and its members are
@@ -350,6 +353,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   command(core::DownloadAction::Resume, tr("Resume"), QStringLiteral("resume"), QStyle::SP_MediaPlay);
   command(core::DownloadAction::Queue, tr("Queue"), QStringLiteral("queue"), QStyle::SP_ArrowDown);
   command(core::DownloadAction::ForceStart, tr("Force Start"), QStringLiteral("force-start"), QStyle::SP_MediaPlay);
+  command(core::DownloadAction::CancelForceStart, tr("Cancel Force Start"), QStringLiteral("cancel-force-start"), QStyle::SP_MediaStop);
+  forceRecheck_=torrent->addAction(style()->standardIcon(QStyle::SP_BrowserReload),tr("Force Recheck"));forceRecheck_->setObjectName("classic-force-recheck");forceRecheck_->setEnabled(false);connect(forceRecheck_,&QAction::triggered,this,&LibraryWindow::requestRecheck);
   toolbar->addSeparator();
   startStop_ = torrent->addAction(style()->standardIcon(QStyle::SP_MediaPlay), tr("Start / Stop"));
   startStop_->setObjectName(QStringLiteral("classic-start-stop"));
@@ -546,7 +551,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     if (!busy_ && !closing_ && target && model_->canContinue(*target)) { emit continueRequested(*target); }
   });
   connect(cancel_, &QAction::triggered, this, [this] {
-    suppressAutomaticDetails_ = true;
+    suppressAutomaticDetails_ = true;QPointer<LibraryWindow> alive(this);cancelRecheckView();if(!alive){return;}
     emit cancelRequested();
   });
   connect(model_, &QAbstractItemModel::dataChanged, this, [this] {
@@ -607,6 +612,7 @@ void LibraryWindow::showMyShares() {
 #include "download_history_window.inc"
 #include "rss_sources_window.inc"
 #include "publication_window.inc"
+#include "recheck_window.inc"
 #include "metasearch_window.inc"
 #include "metasearch_magnet_window.inc"
 #include "subscriptions_window.inc"
@@ -1126,6 +1132,7 @@ void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
 void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
+  const auto previousSession=columnSession_;cancelRecheckView();if(!guard||columnSession_!=previousSession){return;}if(recheckDialog_){recheckDialog_->invalidate();if(!guard||columnSession_!=previousSession){return;}}activeRecheck_.reset();
   columnSession_ = session;pendingMetasearchReview_.reset();invalidateMetasearchMagnetReview();if(!guard){return;}
   for(const auto& controls:{sharingControls_,trackerControls_}){if(controls){controls->beginSession(session,controls->page()?controls->page():reserveRssUiIdentity());if(!guard||columnSession_!=session){return;}}}
   if(publicationReview_){publicationReview_->invalidate();if(!guard){return;}}
@@ -1366,7 +1373,7 @@ void LibraryWindow::setColumnLayoutSaved(ColumnLayoutSavePresentation packet) {
 
 void LibraryWindow::setOfflinePreview(bool offline) {
   offlinePreview_ = offline;
-  QPointer<LibraryWindow> guard(this);
+  QPointer<LibraryWindow> guard(this);if(offline){cancelRecheckView();if(!guard){return;}}
   if(subscriptionsPage_){subscriptionsPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(rssPage_){rssPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
   if(metasearchPage_){metasearchPage_->setAvailable(!busy_&&!closing_,offlinePreview_);if(!guard){return;}}
@@ -1453,7 +1460,7 @@ void LibraryWindow::updateGeneral() {
 void LibraryWindow::updateActions() {
   const auto target = actionTarget();
   continue_->setEnabled(!busy_ && !closing_ && target && model_->canContinue(*target));
-  cancel_->setEnabled(busy_ && !closing_);
+  cancel_->setEnabled((busy_||activeRecheck_.has_value()) && !closing_);
   refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (!busy_&&(onDownloadHistoryPage()||onRssSourcesPage()||onSubscriptionsPage()||onMetasearchPage()||mainTabs_->currentWidget()==torrentsPage_))));
   files_->setEnabled(!busy_ && !closing_ && target.has_value());
   padding_->setEnabled(!closing_ && mainTabs_->currentWidget() == torrentsPage_);
@@ -1597,7 +1604,7 @@ void LibraryWindow::updateDownloadActions() {
     return guard && guard->downloadActionRevision_ == revision
         && guard->model_->revision() == modelRevision && guard->filesModel_->presentation() == fileSource;
   };
-  std::array<bool, 10> enabled{};
+  std::array<bool, core::DownloadActionCount> enabled{};
   for (std::size_t i = 0; i < enabled.size(); ++i) {
     enabled[i] = downloadTargets(static_cast<core::DownloadAction>(i), false).has_value();
   }
@@ -1609,6 +1616,7 @@ void LibraryWindow::updateDownloadActions() {
       ? std::optional{core::DownloadAction::Pause}
       : enabled[static_cast<std::size_t>(core::DownloadAction::Resume)]
           ? std::optional{core::DownloadAction::Resume} : std::nullopt;
+  const bool recheckAllowed=recheckTargets().has_value();
   const bool startAll = downloadTargets(core::DownloadAction::Start, true).has_value();
   const bool stopAll = downloadTargets(core::DownloadAction::Stop, true).has_value();
   const bool filesEditable = filePolicySelection().has_value();
@@ -1622,6 +1630,7 @@ void LibraryWindow::updateDownloadActions() {
     if (item) { item->setEnabled(enabled[i]); }
     if (!current()) { return; }
   }
+  if(forceRecheck_){forceRecheck_->setEnabled(recheckAllowed);}if(!current()){return;}
   if (startAll_) { startAll_->setEnabled(startAll); }
   if (!current()) { return; }
   if (stopAll_) { stopAll_->setEnabled(stopAll); }

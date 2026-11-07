@@ -127,7 +127,7 @@ public:
       boost::asio::post(context_, [slot, handler = std::move(handler), piece]() mutable { handler(piece, {}, diskError(lt::operation_t::file_read)); });
     };
     enqueue(slot, [this, slot, piece, hashes, flags, handler = std::move(handler)] {
-      lt::storage_error error; lt::sha1_hash result;
+      lt::storage_error error; lt::sha1_hash result;std::int64_t readableBytes=0;
       const auto& files = slot.files->metadata().files();
       if (static_cast<int>(piece) < 0 || static_cast<int>(piece) >= files.num_pieces()) { error = diskError(lt::operation_t::file_read, EINVAL); }
       else {
@@ -145,7 +145,7 @@ public:
                 std::span<char>(block).first(static_cast<std::size_t>(length)),&failedFile), lt::operation_t::file_read);
             if(error.ec&&static_cast<int>(failedFile)>=0){error.file(failedFile);}
             if (!error.ec) {
-              if (length1) { h.update({block.data(), length1}); }
+              if (length1) { h.update({block.data(), length1});readableBytes+=length1; }
               if (length2) { hashes[start / lt::default_block_size] = lt::hasher256(lt::span<const char>(block.data(), length2)).final(); }
             }
           }
@@ -159,6 +159,14 @@ public:
           if(error.ec){std::fill(hashes.begin(),hashes.end(),lt::sha256_hash{});}
           if (!error.ec && bool(flags & flush_piece)) { error = translated(slot.files->flush(), lt::operation_t::file_write); }
         }
+      }
+      const auto outcome=static_cast<std::uint8_t>(!error.ec?1:error.ec.value()==ENOENT?2:3);
+      slot.files->recordRecheckHash(static_cast<int>(piece),outcome,readableBytes);
+      if(outcome==2&&slot.files->access()==OriginalDiskAccess::RecheckReadOnly){
+        // ENOENT normally lets LT skip the remaining file. A local full check
+        // must also hash later readable compact/partial fragments. Preserve the
+        // actual missing witness, force a nonmatching v1 result and continue.
+        result=slot.files->metadata().hash_for_piece(piece);result[0]^=0xff;error={};
       }
       boost::asio::post(context_, [slot, handler = std::move(handler), piece, result, error] { handler(piece, result, error); });
     }, std::move(failed));
@@ -321,13 +329,14 @@ private:
 OriginalDiskFiles::OriginalDiskFiles(std::shared_ptr<lt::torrent_info> metadata,
     std::vector<std::optional<OriginalDiskFile>> files,OriginalDiskAccess access) : access_(access),metadata_(std::move(metadata)), files_(std::move(files)) {
   if (!metadata_ || files_.size() != static_cast<std::size_t>(metadata_->num_files())) { throw std::invalid_argument("Original storage file count differs"); }
-  if(access_!=OriginalDiskAccess::ReadWrite&&access_!=OriginalDiskAccess::ReadOnly&&access_!=OriginalDiskAccess::SelectedReadOnly){throw std::invalid_argument("Unknown original disk access policy");}
+  if(access_!=OriginalDiskAccess::ReadWrite&&access_!=OriginalDiskAccess::ReadOnly&&access_!=OriginalDiskAccess::SelectedReadOnly&&access_!=OriginalDiskAccess::RecheckReadOnly){throw std::invalid_argument("Unknown original disk access policy");}
+  if(access_==OriginalDiskAccess::RecheckReadOnly){recheckOutcomes_.resize(static_cast<std::size_t>(metadata_->num_pieces()));recheckBytes_.resize(recheckOutcomes_.size());}
   if(access_==OriginalDiskAccess::ReadOnly){for(int n=0;n<metadata_->num_files();++n){const auto index=lt::file_index_t{n};if(metadata_->files().pad_file_at(index)){continue;}const auto& file=files_[static_cast<std::size_t>(n)];struct stat stamp{};const int flags=file?::fcntl(file->descriptor.get(),F_GETFL):-1;
     if(!file||flags<0||(flags&O_ACCMODE)!=O_RDONLY
         ||::fstat(file->descriptor.get(),&stamp)!=0||!S_ISREG(stamp.st_mode)||stamp.st_uid!=::geteuid()||stamp.st_nlink!=1||stamp.st_size!=metadata_->files().file_size(index)){
       throw std::invalid_argument("Read-only original storage requires complete owned read-only descriptors");}
   }}
-  if(access_==OriginalDiskAccess::SelectedReadOnly){for(int n=0;n<metadata_->num_files();++n){
+  if(access_==OriginalDiskAccess::SelectedReadOnly||access_==OriginalDiskAccess::RecheckReadOnly){for(int n=0;n<metadata_->num_files();++n){
     const auto index=lt::file_index_t{n};if(metadata_->files().pad_file_at(index)){continue;}
     const auto& file=files_[static_cast<std::size_t>(n)];if(!file){continue;}struct stat stamp{};
     const int flags=::fcntl(file->descriptor.get(),F_GETFL);
@@ -336,6 +345,16 @@ OriginalDiskFiles::OriginalDiskFiles(std::shared_ptr<lt::torrent_info> metadata,
         ||stamp.st_uid!=::geteuid()||stamp.st_nlink!=1||stamp.st_size<0){
       throw std::invalid_argument("Selected read-only storage requires authenticated owned O_RDONLY leaves");}
   }}
+}
+void OriginalDiskFiles::recordRecheckHash(int piece,std::uint8_t outcome,std::int64_t readableBytes) noexcept {
+  if(access_!=OriginalDiskAccess::RecheckReadOnly||piece<0||outcome<1||outcome>3){return;}
+  std::lock_guard lock(recheckMutex_);if(static_cast<std::size_t>(piece)<recheckOutcomes_.size()){recheckOutcomes_[static_cast<std::size_t>(piece)]=outcome;recheckBytes_[static_cast<std::size_t>(piece)]=std::max(recheckBytes_[static_cast<std::size_t>(piece)],readableBytes);}
+}
+std::vector<std::uint8_t> OriginalDiskFiles::recheckHashOutcomes() const {
+  std::lock_guard lock(recheckMutex_);return recheckOutcomes_;
+}
+std::int64_t OriginalDiskFiles::recheckScannedBytes() const {
+  std::lock_guard lock(recheckMutex_);std::int64_t total=0;for(const auto value:recheckBytes_){total+=value;}return total;
 }
 bool OriginalDiskFiles::matches(const lt::storage_params& params) const {
   const auto& files = metadata_->files();

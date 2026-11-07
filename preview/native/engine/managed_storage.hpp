@@ -17,6 +17,7 @@
 #include <vector>
 #include <span>
 #include <string>
+#include <stop_token>
 
 namespace biglybtc::engine {
 struct NetworkPolicy;
@@ -50,7 +51,7 @@ struct ManagedQueueMetadata {
 // Storage prerequisite only: the future owner must independently hold checking
 // until actual all-piece verification and fresh saved-intent CAS. This is not
 // seed_mode, verified resume, permission to auto-resume or an engine admission.
-enum class ManagedStoragePurpose { Download, VerifyExistingReadOnly, VerifySelectedReadOnly, AllocateOnly };
+enum class ManagedStoragePurpose { Download, VerifyExistingReadOnly, VerifySelectedReadOnly, RecheckReadOnly, AllocateOnly };
 struct ManagedAllocationProgress { std::int64_t completedBytes=0,totalBytes=0;bool complete=false; };
 // Retained actual matched checked-state event, independent of later final
 // piece status at stop. Internal metadata input, never a GUI/payload grant.
@@ -65,7 +66,7 @@ public:
       std::span<const ManagedPayloadClaim> claimed={},
       std::span<const storage::OriginalTorrentIdentity> retainedIdentities={},
       std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge={},
-      ManagedStoragePurpose purpose=ManagedStoragePurpose::Download);
+      ManagedStoragePurpose purpose=ManagedStoragePurpose::Download,std::stop_token = {});
   // Separate minted I2P-only policy; ordinary prepare/global policy unchanged.
   static std::expected<ManagedStorage,storage::Error> prepareOwnedI2p(
       const storage::ProfileLease&,const core::TorrentHash&,const OwnedI2pPolicy&,
@@ -100,6 +101,11 @@ public:
   // Owner-thread pure named-fd snapshot check, safe alongside read-only disk
   // jobs. No codec/failure-cache access, queue release or verified-piece proof.
   std::expected<void,storage::Error> validateExistingSnapshot() const;
+  std::vector<std::uint8_t> recheckHashOutcomes() const;
+  std::int64_t recheckScannedBytes() const;
+  bool recheckSaveAttempted() const noexcept;
+  std::expected<void,storage::Error> checkpointRecheck(const storage::ProfileLease&,
+      std::span<const std::uint8_t> verifiedPieces,bool allComplete);
   // Existing worker only, bounded real zero/read work. No LT handle or piece
   // authority; read-only purposes reject these entry points before any IO.
   ManagedAllocationProgress allocationProgress() const noexcept;
@@ -137,7 +143,7 @@ private:
   static std::expected<ManagedStorage,storage::Error> prepareImpl(
       const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,
       std::span<const ManagedPayloadClaim>,std::span<const storage::OriginalTorrentIdentity>,
-      std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose,const OwnedI2pPolicy*,const MixedPublicPolicy* = nullptr);
+      std::shared_ptr<const ManagedPayloadCounterBridge>,ManagedStoragePurpose,const OwnedI2pPolicy*,const MixedPublicPolicy* = nullptr,std::stop_token = {});
   std::expected<void,storage::Error> beginAllocation(const storage::ProfileLease&);
   struct Impl;
   explicit ManagedStorage(std::unique_ptr<Impl>);

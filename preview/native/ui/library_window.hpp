@@ -1,6 +1,7 @@
 #pragma once
 #include "i2p_presentation.hpp"
 #include "file_operation_presentation.hpp"
+#include "recheck_presentation.hpp"
 #include "file_operation_sequence.hpp"
 #include "options_presentation.hpp"
 #include "scheduler_presentation.hpp"
@@ -53,6 +54,7 @@ class QMenu;
 namespace biglybtc::ui {
 
 class FileOperationDialog;
+class RecheckDialog;
 class TorrentCreationDialog;
 class OptionsDialog;
 class SchedulerDialog;
@@ -174,6 +176,8 @@ public:
   void rejectOptionsSave(const OptionsSubmission&);
   void setFileOperationPlan(FileOperationPlanPresentation);
   void setFileOperationResult(FileOperationResultPresentation);
+  void setRecheckProgress(RecheckPresentation);
+  void rejectRecheck(RecheckKey);
   void setTorrentCreationProgress(TorrentCreationProgressPresentation);
   void setTorrentCreationResult(TorrentCreationResultPresentation);
   void rejectFileOperationRequest(FileOperationRequest);
@@ -208,6 +212,8 @@ signals:
   void rssCancelRequested(biglybtc::ui::RssFetchKey);
   void fileOperationSequenceFinished(biglybtc::ui::FileOperationSequencePresentation);
   void fileOperationPlanRequested(biglybtc::ui::FileOperationRequest);
+  void recheckRequested(biglybtc::ui::RecheckRequest);
+  void recheckCancelRequested(biglybtc::ui::RecheckKey);
   void fileOperationExecuteRequested(biglybtc::ui::FileOperationSubmission);
   void fileOperationCancelRequested(biglybtc::ui::FileOperationRequest);
   void torrentCreateRequested(biglybtc::ui::TorrentCreationRequest);
@@ -258,6 +264,9 @@ private:
   std::optional<DownloadTargets> downloadTargets(core::DownloadAction, bool all) const;
   void dispatchDownload(core::DownloadAction, bool all = false);
   void dispatchDownloadAlias(bool pauseResume);
+  void requestRecheck();
+  std::optional<DownloadTargets> recheckTargets()const;
+  void cancelRecheckView();
   void bindDownloadMenu(QMenu*);
   void openCategories();
   bool sendCategoryCommand(CategoryCommand);
@@ -323,6 +332,11 @@ private:
   void openFileMapping(FileOperation);
   void openTorrentCreation();
   QPointer<FileOperationDialog> fileOperationDialog_;
+  QPointer<RecheckDialog> recheckDialog_;
+  std::optional<RecheckRequest> activeRecheck_;
+  quint64 recheckSequence_=0;
+  bool recheckCancelSent_=false;
+  QPointer<QAction> forceRecheck_;
   QPointer<FileOperationSequence> fileOperationSequence_;
   QPointer<TorrentCreationDialog> torrentCreationDialog_;
   std::array<QPointer<QAction>,4> fileOperationActions_;
@@ -457,7 +471,7 @@ private:
   QAction* refresh_;
   QAction* files_;
   QAction* padding_;
-  std::array<QPointer<QAction>, 10> downloadActions_;
+  std::array<QPointer<QAction>, core::DownloadActionCount> downloadActions_;
   QPointer<QAction> startStop_;
   QPointer<QAction> pauseResume_;
   QPointer<QAction> startAll_;

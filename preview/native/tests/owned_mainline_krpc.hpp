@@ -4,6 +4,7 @@
 #include <QTcpServer>
 #include <QUdpSocket>
 #include <map>
+#include <QStringList>
 #include <optional>
 #include <set>
 #include <vector>
@@ -15,7 +16,7 @@ inline QByteArray dictionary(const std::map<QByteArray,QByteArray>& values){QByt
 inline QByteArray list(const std::vector<QByteArray>& values){QByteArray result("l");for(const auto& value:values){result+=value;}return result+'e';}
 inline QByteArray hashBytes(const lt::sha1_hash& hash){return {hash.data(),20};}
 inline const core::Node* field(const core::Node& value,std::string_view key,core::Node::Type type){const auto* found=value.find(key);return found&&found->type==type?found:nullptr;}
-inline QByteArray compact(unsigned short port){QByteArray result;result.append(char(127));result.append(char(0));result.append(char(0));result.append(char(1));result.append(static_cast<char>(port>>8));result.append(static_cast<char>(port&255));return result;}
+inline QByteArray compact(unsigned short port,const QHostAddress& address=QHostAddress::LocalHost){QByteArray result;if(address.protocol()==QAbstractSocket::IPv6Protocol){const auto value=address.toIPv6Address();for(int i=0;i<16;++i){result.append(static_cast<char>(value[i]));}result.append(static_cast<char>(port>>8));result.append(static_cast<char>(port));return result;}result.append(char(127));result.append(char(0));result.append(char(0));result.append(char(1));result.append(static_cast<char>(port>>8));result.append(static_cast<char>(port&255));return result;}
 // Independent KRPC wire fixture. The production service supplies neither its
 // bencode nor its expected hash/token/port. Local IDs use LT's unchanged BEP42
 // local-address exemption (kademlia/node_id.cpp), not a relaxed DHT setting.
@@ -23,7 +24,7 @@ class OwnedKrpc final {
   struct Request { QByteArray transaction,hash; QHostAddress address; unsigned short port=0; bool scrape=false; };
   QUdpSocket socket_;
   QTcpServer decoy_;
-  const QByteArray nodeId_=QByteArray(20,'K');
+  const QByteArray nodeId_;
   std::set<QByteArray> allowed_,noPeers_;
   std::vector<Request> heldPings_;
   std::optional<unsigned short> announcePort_;
@@ -34,6 +35,8 @@ class OwnedKrpc final {
   std::vector<Request> held_;
   QByteArray heldHash_;
   unsigned short peerPort_;
+  QHostAddress peerAddress_;
+  std::set<unsigned short> allowedAnnouncePorts_;
   bool noise_=false;
   QByteArray scrapeSeedKey_="BFse";
   bool scrapeZero_=false,scrapeWrongId_=false;
@@ -67,10 +70,19 @@ class OwnedKrpc final {
       const auto reply=response(request,fields);
       send(request,reply);if(duplicateScrapes_){send(request,reply);}return;
     }
-    const auto token=QCryptographicHash::hash(tokenKey(request),QCryptographicHash::Sha1).first(8);
-    tokens_[tokenKey(request)]=token;
+    const QByteArray scope=tokenKey(request);
+    auto issued=tokens_.find(scope);
+    if(issued==tokens_.end()){
+      if(tokens_.size()>=256){fail("Owned KRPC issued-token scope limit");return;}
+      const QByteArray digest=QCryptographicHash::hash(scope,QCryptographicHash::Sha1);
+      if(digest.size()<8){fail("Owned KRPC token generation failed");return;}
+      // Keep the FIRST actually returned owning credential for this exact
+      // source/hash. Concurrent lookups cannot replace an in-flight token.
+      issued=tokens_.emplace(scope,QByteArray(digest.constData(),8)).first;
+    }
+    const QByteArray token=issued->second;
     std::vector<QByteArray> peers;
-    if(!noPeers_.contains(request.hash)){peers.push_back(string(compact(peerPort_)));}
+    if(!noPeers_.contains(request.hash)){peers.push_back(string(compact(peerPort_,peerAddress_)));}
     if (noise_) {
       // Unsolicited and malformed packets precede a valid owned progress
       // barrier. An unrequested hash in a reply is never lookup authority.
@@ -136,9 +148,21 @@ class OwnedKrpc final {
           const auto* implied=args->find("implied_port");
           const auto issued=tokens_.find(tokenKey(request));
           if (!allowed_.contains(request.hash) || !token || issued==tokens_.end() || bytes(token->bytes)!=issued->second
-              || !port || port->integer!=announcePort_.value_or(peerPort_) || announcePort_.value_or(peerPort_)==request.port
+              || !port || (allowedAnnouncePorts_.empty()?port->integer!=announcePort_.value_or(peerPort_):!allowedAnnouncePorts_.contains(static_cast<unsigned short>(port->integer))) || port->integer<1 || port->integer>65535 || port->integer==request.port
               || (implied && (implied->type!=core::Node::Type::Integer || implied->integer!=0))) {
-            fail("announce_peer did not use the issued hash/source token and explicit TCP peer port"); continue;
+            if(failure.isEmpty()){
+              QStringList expected;for(const auto value:allowedAnnouncePorts_){expected.push_back(QString::number(value));}if(expected.empty()){expected.push_back(QString::number(announcePort_.value_or(peerPort_)));}
+              const auto impliedText=!implied?QStringLiteral("absent"):implied->type==core::Node::Type::Integer?QString::number(static_cast<qlonglong>(implied->integer)):QStringLiteral("wrong-type");
+              failure=QStringLiteral("announce_peer rejected: hashAllowed=%1 tokenPresent=%2 tokenIssued=%3 tokenMatches=%4 tokenLength=%5 portPresent=%6 observedTCP=%7 allowedTCP=%8 sourceDHT=%9 implied=%10 family=%11")
+                .arg(allowed_.contains(request.hash)?1:0).arg(token?1:0).arg(issued!=tokens_.end()?1:0).arg(token&&issued!=tokens_.end()&&bytes(token->bytes)==issued->second?1:0)
+                .arg(token?static_cast<qlonglong>(token->bytes.size()):-1).arg(port?1:0).arg(port?static_cast<qlonglong>(port->integer):qlonglong{-1}).arg(expected.join(','))
+                .arg(request.port).arg(impliedText).arg(packet.senderAddress().protocol()==QAbstractSocket::IPv6Protocol?6:4);
+              failure+=QStringLiteral(" scopeID=%1 expectedTokenHex=%2 receivedTokenHex=%3 remoteRouterID=%4 routerFamily=%5")
+                .arg(QString::fromLatin1(QCryptographicHash::hash(tokenKey(request),QCryptographicHash::Sha1).toHex()))
+                .arg(issued==tokens_.end()?QStringLiteral("none"):QString::fromLatin1(issued->second.toHex()))
+                .arg(token?QString::fromLatin1(bytes(token->bytes).toHex()):QStringLiteral("none"))
+                .arg(QString::fromLatin1(nodeId_.toHex())).arg(socket_.localAddress().protocol()==QAbstractSocket::IPv6Protocol?6:4);
+            }continue;
           }
           clientIds_[request.hash].insert(bytes(id->bytes)); ++announces_[request.hash]; send(request,response(request,{{"id",string(nodeId_)}}));
         }
@@ -146,10 +170,16 @@ class OwnedKrpc final {
     }
   }
 public:
+  const QByteArray& routerId()const noexcept{return nodeId_;}
+  QString issuedEvidence()const{
+    QStringList entries;for(const auto& [scope,token]:tokens_){if(entries.size()==8){entries.push_back(QStringLiteral("bounded-tail"));break;}entries.push_back(QString::fromLatin1(QCryptographicHash::hash(scope,QCryptographicHash::Sha1).toHex())+'='+QString::fromLatin1(token.toHex()));}
+    return QStringLiteral(" [routerID=%1 family=%2 issuedScopeTokens=%3]").arg(QString::fromLatin1(nodeId_.toHex())).arg(socket_.localAddress().protocol()==QAbstractSocket::IPv6Protocol?6:4).arg(entries.join(','));
+  }
   QString failure;
   int bootstrapQueries=0,noiseReplies=0;
   std::set<unsigned short> sourcePorts;
-  explicit OwnedKrpc(unsigned short peerPort,QHostAddress address=QHostAddress::LocalHost) : peerPort_(peerPort) {
+  explicit OwnedKrpc(unsigned short peerPort,QHostAddress address=QHostAddress::LocalHost,QByteArray routerId=QByteArray(20,'K')) : nodeId_(std::move(routerId)),peerPort_(peerPort),peerAddress_(address) {
+    test::require(nodeId_.size()==20&&nodeId_!=QByteArray(20,'\0'),"Owned KRPC needs an actual nonzero20byte router identity");
     test::require(peerPort_!=0,"Owned KRPC fixture needs a real TCP peer");
     test::require(socket_.bind(address,0,QUdpSocket::DontShareAddress),"Cannot bind owned KRPC fixture");
     test::require(decoy_.listen(QHostAddress::LocalHost,0),"Cannot bind owned decoy endpoint");
@@ -162,6 +192,7 @@ public:
   }
   void allow(const lt::sha1_hash& value) { allowed_.insert(hashBytes(value)); }
   void allowWithoutPeers(const lt::sha1_hash& value){allow(value);noPeers_.insert(hashBytes(value));}
+  void allowAnnouncePort(unsigned short value){test::require(value!=0,"Actual owner port required");allowedAnnouncePorts_.insert(value);}
   void announcePort(unsigned short value){test::require(value!=0,"Actual owner port required");announcePort_=value;}
   void holdPings(bool value){holdPings_=value;}
   void releasePings(){holdPings_=false;auto rows=std::move(heldPings_);heldPings_.clear();for(const auto& row:rows){send(row,response(row,{{"id",string(nodeId_)}}));}}

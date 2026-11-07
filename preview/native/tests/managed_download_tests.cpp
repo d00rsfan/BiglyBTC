@@ -1,4 +1,5 @@
 #include "persistent_session.hpp"
+#include "recheck_fixture.hpp"
 #include "allocation_fixture.hpp"
 #include "managed_storage.hpp"
 #include "managed_payload_counters.hpp"
@@ -116,6 +117,42 @@ std::int64_t integer(const core::Node& node, std::string_view key) {
 class ManagedDownloadTests final : public QObject {
   Q_OBJECT
 private slots:
+  void standaloneReadOnlyRecheckUsesActualPieceHashes_data(){
+    QTest::addColumn<QString>("mode");for(const auto* mode:{"intact","corrupt","partial","missing","compact","linked","hybrid"}){QTest::newRow(mode)<<QString::fromLatin1(mode);}
+  }
+  void standaloneReadOnlyRecheckUsesActualPieceHashes(){
+    QFETCH(QString,mode);test::recheck::Fixture fixture(mode);auto service=owner();
+    const auto beforeInventory=parse(test::recheck::read(fixture.profile+"/downloads.config"));
+    const auto control=fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+"/fmfile0.dat";const auto controlBytes=mode=="compact"?test::recheck::read(control):QByteArray{};struct stat controlBefore{};if(mode=="compact"){QVERIFY(::stat(control.toStdString().c_str(),&controlBefore)==0);}
+    struct stat before{};const bool present=::stat(fixture.file.toStdString().c_str(),&before)==0;
+    const auto started=service->startManagedRecheck(*fixture.lease,fixture.hash);const auto failure=started?QString{}:QString::fromStdString(started.error().message);QVERIFY2(started,qPrintable(failure));
+    const auto terminal=[&]{static_cast<void>(service->poll());const auto actual=status(*service,fixture.hash);return actual&&!actual->retained;};QTRY_VERIFY_WITH_TIMEOUT(terminal(),30000);
+    const auto actual=status(*service,fixture.hash);QVERIFY(actual&&actual->recheck);const auto message=actual->failure?QString::fromStdString(actual->failure->message):QString{};
+    QVERIFY2(!actual->failure,qPrintable(message));QCOMPARE(actual->recheck->phase,engine::ManagedRecheckPhase::Finished);QVERIFY(actual->recheck->pieceMapSaved&&!actual->recheck->saveUncertain);QCOMPARE(actual->received,std::int64_t{0});QCOMPARE(actual->sent,std::int64_t{0});
+    const auto missing=mode=="missing"?3:mode=="partial"?2:mode=="compact"?2:0;const auto bad=mode=="corrupt"?1:0;
+    QCOMPARE(actual->recheck->missingPieces,missing);QCOMPARE(actual->recheck->badPieces,bad);QCOMPARE(actual->recheck->goodPieces,3-missing-bad);QCOMPARE(actual->recheck->unknownPieces,0);
+    QVERIFY(actual->recheck->scannedBytes>=0&&actual->recheck->scannedBytes<=actual->recheck->totalBytes);
+    if(present){struct stat after{};QVERIFY(::stat(fixture.file.toStdString().c_str(),&after)==0);QCOMPARE(after.st_dev,before.st_dev);QCOMPARE(after.st_ino,before.st_ino);QCOMPARE(after.st_size,before.st_size);QCOMPARE(after.st_mtim.tv_sec,before.st_mtim.tv_sec);QCOMPARE(after.st_mtim.tv_nsec,before.st_mtim.tv_nsec);QCOMPARE(test::recheck::read(fixture.file),fixture.originalPayload);}else{QVERIFY(!QFileInfo::exists(fixture.file));}
+    if(mode=="compact"){struct stat after{};QVERIFY(::stat(control.toStdString().c_str(),&after)==0);QCOMPARE(after.st_dev,controlBefore.st_dev);QCOMPARE(after.st_ino,controlBefore.st_ino);QCOMPARE(after.st_size,controlBefore.st_size);QCOMPARE(after.st_mtim.tv_sec,controlBefore.st_mtim.tv_sec);QCOMPARE(after.st_mtim.tv_nsec,controlBefore.st_mtim.tv_nsec);QCOMPARE(test::recheck::read(control),controlBytes);}
+    const auto saved=parse(test::recheck::read(fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat"));const auto* resume=saved.find("resume")->find("data");QCOMPARE(resume->find("valid")->integer,std::int64_t{1});const auto bits=resume->find("resume data")->bytes;QCOMPARE(bits.size(),std::size_t{3});
+    for(std::size_t i=0;i<bits.size();++i){const bool good=mode=="missing"?false:mode=="partial"?i==0:mode=="compact"?i==2:mode=="corrupt"?i!=1:true;QCOMPARE(bits[i],good?'\1':'\0');}
+    const auto inventory=parse(test::recheck::read(fixture.profile+"/downloads.config"));const auto& row=firstEntry(inventory);QCOMPARE(integer(row,"state"),std::int64_t{70});QCOMPARE(integer(row,"forceStart"),std::int64_t{0});QCOMPARE(integer(row,"downloaded"),std::int64_t{9});QCOMPARE(integer(row,"uploaded"),std::int64_t{11});QCOMPARE(encoded(*inventory.find("opaque")),encoded(*beforeInventory.find("opaque")));QCOMPARE(saved.find("opaque")->bytes,std::string_view("root-unknown"));
+    QVERIFY(service->forgetManaged(fixture.hash));const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);fixture.lease.reset();QVERIFY(storage::ProfileLease::acquire(fixture.profile.toStdString()));
+  }
+  void standaloneRecheckCancellationAfterActualAdmissionJoinsWithoutMapPublication_data(){
+    QTest::addColumn<bool>("ordinaryStop");QTest::newRow("receiver-and-explicit-cancel")<<false;QTest::newRow("ordinary-Stop")<<true;
+  }
+  void standaloneRecheckCancellationAfterActualAdmissionJoinsWithoutMapPublication(){
+    QFETCH(bool,ordinaryStop);test::recheck::Fixture fixture("corrupt");auto service=owner();std::stop_source stop;QVERIFY(service->startManagedRecheck(*fixture.lease,fixture.hash,stop.get_token()));
+    const auto pause=service->pauseManaged(fixture.hash,true),queue=service->queueManaged(fixture.hash,true,false);QVERIFY(!pause&&!queue);QCOMPARE(pause.error().code,storage::ErrorCode::Conflict);QCOMPARE(queue.error().code,storage::ErrorCode::Conflict);
+    if(ordinaryStop){QVERIFY(service->stopManaged(fixture.hash));}else{stop.request_stop();QVERIFY(service->cancelManagedRecheck(fixture.hash));}
+    const auto terminal=[&]{static_cast<void>(service->poll());const auto actual=status(*service,fixture.hash);return actual&&!actual->retained;};QTRY_VERIFY_WITH_TIMEOUT(terminal(),15000);const auto actual=status(*service,fixture.hash);QVERIFY(actual&&actual->recheck);QCOMPARE(actual->recheck->phase,engine::ManagedRecheckPhase::Cancelled);QVERIFY(!actual->recheck->pieceMapSaved&&!actual->recheck->saveUncertain);QCOMPARE(test::recheck::read(fixture.file),fixture.originalPayload);
+    const auto saved=parse(test::recheck::read(fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat"));QCOMPARE(saved.find("resume")->find("data")->find("valid")->integer,std::int64_t{0});QVERIFY(service->forgetManaged(fixture.hash));const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);fixture.lease.reset();QVERIFY(storage::ProfileLease::acquire(fixture.profile.toStdString()));
+  }
+  void clearManagedForceStartPreservesAnActualManualPause(){
+    test::recheck::Fixture fixture("intact");auto service=owner();QVERIFY(service->startManaged(*fixture.lease,{.hash=fixture.hash,.forceStart=true,.manuallyPaused=true}));
+    const auto paused=[&]{static_cast<void>(service->poll());const auto actual=status(*service,fixture.hash);return actual&&actual->checked&&actual->phase==engine::ManagedPhase::Paused;};QTRY_VERIFY_WITH_TIMEOUT(paused(),15000);QVERIFY(service->clearManagedForceStart(fixture.hash));const auto actual=status(*service,fixture.hash);QVERIFY(actual&&!actual->forceStart&&actual->manuallyPaused&&actual->phase==engine::ManagedPhase::Paused);QCOMPARE(actual->received,std::int64_t{0});QCOMPARE(actual->sent,std::int64_t{0});QVERIFY(service->stopManaged(fixture.hash));const auto retired=[&]{static_cast<void>(service->poll());const auto current=status(*service,fixture.hash);return current&&!current->retained;};QTRY_VERIFY_WITH_TIMEOUT(retired(),15000);QVERIFY(service->forgetManaged(fixture.hash));QVERIFY(service->close(std::chrono::steady_clock::now()+5s).sessionJoined);
+  }
   void actualCategoryAssignmentRetainsOneOwnerThroughCheckpointAndJoinedClose_data(){
     QTest::addColumn<bool>("mixed");QTest::newRow("Public")<<false;QTest::newRow("Mixed-seal")<<true;
   }
