@@ -8,6 +8,7 @@
 #include "biglybtc/torrent_layout.hpp"
 #include "profile.hpp"
 #include "subscription_download_preparation.hpp"
+#include "subscription_automatic_values.hpp"
 #include "original_torrent_identity.hpp"
 
 #include <expected>
@@ -92,6 +93,22 @@ private:
       const TorrentIntakeMetadata&,const std::filesystem::path& destination,
       std::optional<std::int64_t> derivedScrapeCache,std::stop_token={},
       std::optional<FixedSubscriptionDownloadPreparation> preparation={});
+  static std::expected<PreparedStoppedPublicIntake,Error> prepareAutomatic(ProfileLease&,
+      const TorrentIntakeMetadata&,FixedSubscriptionDownloadPreparation,std::stop_token={});
+  // Passive views of a storage-derived automatic plan. No caller may supply
+  // replacement geometry, queue bytes or a permission flag.
+  const search::detail::SubscriptionAutomaticPolicyValues* automaticPolicy()const noexcept;
+  const search::detail::SubscriptionAutomaticGeometry* automaticGeometry()const noexcept;
+  std::string_view queuedInventory()const noexcept;
+  std::optional<std::string_view> automaticInventoryBackup()const noexcept;
+  std::expected<bool,Error> automaticArtifactPresent(ProfileLease&,std::string_view)const;
+  std::expected<void,Error> prepareAutomaticArtifacts(ProfileLease&,std::string_view exactOwnerIntent);
+  std::expected<void,Error> publishAutomaticArtifact(ProfileLease&,std::string_view exactOwnerIntent);
+  std::expected<void,Error> rollbackAutomaticArtifact(ProfileLease&,std::string_view exactOwnerIntent);
+  std::filesystem::path automaticInventoryPath()const;
+  std::expected<void,Error> publishAutomaticQueue(ProfileLease&,std::string_view exactOwnerIntent,
+      void(*observer)(SubscriptionDownloadStateStage)=nullptr);
+  std::expected<void,Error> rollbackAutomaticQueue(ProfileLease&,std::string_view exactOwnerIntent);
   static std::expected<PreparedStoppedPublicIntake,Error> restore(ProfileLease&,
       std::string frozenJournal);
   std::string_view frozenJournal()const noexcept;

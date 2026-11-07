@@ -23,6 +23,10 @@ public:
       const storage::ProfileLease&,const std::filesystem::path& canonicalProfile,
       std::uint64_t session,SavedSubscriptionSelector,std::string exactResultKey,
       std::stop_token receiverStop={});
+  static std::expected<std::unique_ptr<SubscriptionMetainfoFetch>,RssFetchError> openAutomaticOneShot(
+      const storage::ProfileLease&,const std::filesystem::path& canonicalProfile,
+      std::uint64_t session,SavedSubscriptionSelector,std::string exactResultKey,
+      std::stop_token receiverStop={});
   ~SubscriptionMetainfoFetch();
   SubscriptionMetainfoFetch(const SubscriptionMetainfoFetch&)=delete;
   std::expected<std::optional<SubscriptionMetainfoCompletion>,RssFetchError> poll(
@@ -36,11 +40,18 @@ public:
       const storage::ProfileLease&,const std::filesystem::path&,std::uint64_t,
       SavedSubscriptionSelector,std::string exactResultKey,RssHttpFetch::PrivateEndpointFixture,
       std::stop_token receiverStop={});
+  static std::expected<std::unique_ptr<SubscriptionMetainfoFetch>,RssFetchError> openAutomaticFixture(
+      const storage::ProfileLease&,const std::filesystem::path&,std::uint64_t,
+      SavedSubscriptionSelector,std::string exactResultKey,RssHttpFetch::PrivateEndpointFixture,
+      std::stop_token receiverStop={});
 #endif
 private:
   friend class ::biglybtc::app::SavedSubscriptionAcquisition;
   // Identity-only predicate for a real returned owner, never phase permission.
   bool matchesSubscriptionResultSource(const storage::ProfileLease&,const std::filesystem::path&,
+      std::uint64_t,const SavedSubscriptionSelector&,std::string_view exactResultKey,
+      std::stop_token)const noexcept;
+  bool matchesAutomaticSubscriptionResultSource(const storage::ProfileLease&,const std::filesystem::path&,
       std::uint64_t,const SavedSubscriptionSelector&,std::string_view exactResultKey,
       std::stop_token)const noexcept;
   explicit SubscriptionMetainfoFetch(std::unique_ptr<RssHttpFetch::Impl>);

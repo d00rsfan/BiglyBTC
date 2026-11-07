@@ -47,6 +47,9 @@ public:
   static std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> openSubscriptionOneShot(
       const storage::ProfileLease&,const std::filesystem::path& profileDirectory,
       std::uint64_t profileSession,SavedSubscriptionSelector,std::stop_token receiverStop={});
+  static std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> openAutomaticSubscriptionOneShot(
+      const storage::ProfileLease&,const std::filesystem::path& profileDirectory,
+      std::uint64_t profileSession,SavedSubscriptionSelector,std::stop_token receiverStop={});
   ~RssHttpFetch();
   RssHttpFetch(const RssHttpFetch&)=delete;
   std::expected<std::optional<RssFetchCompletion>,RssFetchError> poll(
@@ -74,6 +77,9 @@ public:
   static std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> openSubscriptionFixture(
       const storage::ProfileLease&,const std::filesystem::path&,std::uint64_t,
       SavedSubscriptionSelector,PrivateEndpointFixture,std::stop_token receiverStop={});
+  static std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> openAutomaticSubscriptionFixture(
+      const storage::ProfileLease&,const std::filesystem::path&,std::uint64_t,
+      SavedSubscriptionSelector,PrivateEndpointFixture,std::stop_token receiverStop={});
 #endif
 private:
   friend class SubscriptionMetainfoFetch;
@@ -84,6 +90,8 @@ private:
   bool matchesSavedRssSource(const storage::ProfileLease&,const std::filesystem::path&,
       std::uint64_t,const SavedRssSelector&,std::stop_token)const noexcept;
   bool matchesSubscriptionSource(const storage::ProfileLease&,const std::filesystem::path&,
+      std::uint64_t,const SavedSubscriptionSelector&,std::stop_token)const noexcept;
+  bool matchesAutomaticSubscriptionSource(const storage::ProfileLease&,const std::filesystem::path&,
       std::uint64_t,const SavedSubscriptionSelector&,std::stop_token)const noexcept;
   struct Impl;
   explicit RssHttpFetch(std::unique_ptr<Impl>);

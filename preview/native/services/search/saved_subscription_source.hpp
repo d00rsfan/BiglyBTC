@@ -21,6 +21,8 @@ struct SubscriptionRssDescription : RssGetDescription {
 };
 class SavedSubscriptionService;
 class SavedSubscriptionResultSnapshot;
+class RssHttpFetch;
+namespace detail {struct SubscriptionAutomaticPolicyValues;}
 struct SubscriptionNumericFilter;
 struct SubscriptionLiteralFilter;
 struct SubscriptionHistoryCommit;
@@ -50,7 +52,14 @@ public:
       const storage::ProfileLease& callerHeldSameOFD,std::uint64_t currentSession)const;
 private:
   friend class SavedSubscriptionService;
+  friend class RssHttpFetch;
   friend class SavedSubscriptionResultSnapshot;
+  enum class Purpose {Manual,Automatic};
+  static std::expected<SavedSubscriptionSourceSnapshot,SavedRssSourceError> readAutomatic(
+      const storage::ProfileLease&,const std::filesystem::path&,std::uint64_t,SavedSubscriptionSelector);
+  static std::expected<SavedSubscriptionSourceSnapshot,SavedRssSourceError> readImpl(
+      const storage::ProfileLease&,const std::filesystem::path&,std::uint64_t,SavedSubscriptionSelector,Purpose);
+  const detail::SubscriptionAutomaticPolicyValues* automaticPolicy()const noexcept;
   struct Impl;
   explicit SavedSubscriptionSourceSnapshot(std::unique_ptr<Impl>)noexcept;
   std::unique_ptr<Impl> impl_;

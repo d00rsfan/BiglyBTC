@@ -93,6 +93,42 @@ std::expected<ExistingStoppedPublicSubscriptionTarget,Error> ExistingStoppedPubl
 }
 
 
+std::expected<ExistingStoppedPublicSubscriptionTarget,Error> ExistingStoppedPublicSubscriptionTarget::captureAutomatic(
+    const ProfileLease& lease,const TorrentIntakeMetadata& metadata,std::uint64_t session,std::stop_token stop){
+  try{
+    require(metadata.data_&&!stop.stop_requested(),ErrorCode::Cancelled,"Automatic existing capture needs actual metainfo");fs::path destination;
+    {
+      auto access=take(lease.sourceAccess());noAcquisitionIntent(lease);const auto primary=read(lease.directoryHandle(),"downloads.config",Data::DocumentBytes),backup=read(lease.directoryHandle(),"downloads.config.bak",Data::DocumentBytes);
+      if(!primary){require(!backup,ErrorCode::Conflict,"Automatic existing target has backup-only inventory");return std::unexpected(Error{ErrorCode::Missing,"No matching actual inventory row"});}
+      const auto source=parse(primary->bytes,Data::DocumentBytes);const auto library=core::readLibrary(source,{Data::MaximumRows,Data::MaximumRows});require(library&&library->issues.empty(),ErrorCode::InvalidFormat,"Automatic existing inventory is malformed");
+      const core::SavedDownload* selected=nullptr;for(const auto& row:library->downloads){if(row.hash&&*row.hash==metadata.hash()){require(!selected,ErrorCode::Conflict,"Automatic existing target is duplicated");selected=&row;}}
+      if(!selected){return std::unexpected(Error{ErrorCode::Missing,"No matching actual inventory row"});}
+      const auto resolved=take(resolveOriginalSaveRoot(*selected,metadata.layout()));destination=resolved.saveDirectory;
+    }
+    auto target=take(capture(lease,metadata,destination,session,stop));
+    const auto subject=metadataSubject(metadata.data_->input.bytes,metadata.filenameConversions(),metadata.decoderShowAll());
+    target.data_->automatic=AutomaticIntakeContext::capture(lease,subject,std::string(target.images().archive),metadata.filenameConversions());
+    target.data_->verify(lease,session,{});return target;
+  }catch(const Failure& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Conflict,"Cannot capture actual retained automatic target"});}
+}
+std::expected<void,Error> ExistingStoppedPublicSubscriptionTarget::prepareAutomatic(FixedSubscriptionDownloadPreparation preparation){
+  if(!data_||!data_->automatic){return std::unexpected(Error{ErrorCode::Conflict,"Actual automatic target context missing"});}return prepare(std::move(preparation));
+}
+const search::detail::SubscriptionAutomaticPolicyValues* ExistingStoppedPublicSubscriptionTarget::automaticPolicy()const noexcept{return data_&&data_->automatic?&data_->automatic->policy:nullptr;}
+const search::detail::SubscriptionAutomaticGeometry* ExistingStoppedPublicSubscriptionTarget::automaticGeometry()const noexcept{return data_&&data_->automatic?&data_->automatic->geometry:nullptr;}
+std::expected<void,Error> ExistingStoppedPublicSubscriptionTarget::prepareAutomaticArtifacts(const ProfileLease& lease,std::uint64_t session,std::string_view owner){
+  try{require(data_&&data_->automatic&&data_->preparation,ErrorCode::Conflict,"Automatic existing target is not sealed");data_->verify(lease,session,owner,true,true);data_->automatic->stageOwned(lease,owner);if(!data_->automatic->copyParentScope){data_->automatic->copyParentScope=automaticDirectoryStamp(data_->automatic->copyPath.parent_path());}data_->recipe=data_->encodeRecipe();require(data_->recipe.size()<=MaximumJournal,ErrorCode::Unsupported,"Automatic target created-inode recipe exceeds bound");return {};}catch(const Failure& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Conflict,"Automatic existing artifact preparation requires review"});}
+}
+std::expected<bool,Error> ExistingStoppedPublicSubscriptionTarget::automaticArtifactPresent(const ProfileLease& lease,std::uint64_t session,std::string_view owner)const{
+  try{require(data_&&data_->automatic,ErrorCode::Conflict,"Automatic existing context missing");data_->verify(lease,session,owner,false,true);return data_->automatic->artifactPresent(lease);}catch(const Failure& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Conflict,"Cannot observe automatic existing artifact"});}
+}
+std::expected<void,Error> ExistingStoppedPublicSubscriptionTarget::publishAutomaticArtifact(const ProfileLease& lease,std::uint64_t session,std::string_view owner){
+  try{require(data_&&data_->automatic,ErrorCode::Conflict,"Automatic existing context missing");data_->verify(lease,session,owner,true,true);automaticOwnerRecipe(owner,data_->recipe);data_->automatic->publish(lease,owner);return {};}catch(const Failure& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Conflict,"Automatic existing artifact needs review"});}
+}
+std::expected<void,Error> ExistingStoppedPublicSubscriptionTarget::rollbackAutomaticArtifact(const ProfileLease& lease,std::uint64_t session,std::string_view owner){
+  try{require(data_&&data_->automatic,ErrorCode::Conflict,"Automatic existing context missing");data_->verify(lease,session,owner,false,true);automaticOwnerRecipe(owner,data_->recipe);data_->automatic->rollback(lease,owner);return {};}catch(const Failure& error){return std::unexpected(error.error);}catch(...){return std::unexpected(Error{ErrorCode::Conflict,"Automatic existing artifact rollback needs review"});}
+}
+
 std::expected<void,Error> ExistingStoppedPublicSubscriptionTarget::prepare(FixedSubscriptionDownloadPreparation preparation){
   try{
     require(data_&&!data_->preparation,ErrorCode::Conflict,"Existing-target preparation is absent or already sealed");auto access=take(data_->lease->sourceAccess());data_->verify(*data_->lease,data_->session,{});
@@ -137,7 +173,16 @@ std::expected<ExistingStoppedPublicSubscriptionTarget,Error> ExistingStoppedPubl
     const ProfileLease& lease,const TorrentIntakeMetadata& metadata,const fs::path& destination,std::uint64_t session,std::string recipe,std::string_view owner){
   try{
     require(session&&metadata.data_&&!recipe.empty()&&recipe.size()<=MaximumJournal,ErrorCode::InvalidFormat,"Existing target recovery inputs are missing or unbounded");auto access=take(lease.sourceAccess());existingReadonlyOwner(lease,owner);
-    const auto record=parse(recipe,MaximumJournal);uniqueKeys(record.root());require(record.root().children.size()==18,ErrorCode::InvalidFormat,"Unknown existing target recipe field");
+    const auto wrapper=parse(recipe,MaximumJournal);uniqueKeys(wrapper.root());
+    if(const auto* schema=wrapper.find("schema");schema&&schema->type==Node::Type::Bytes&&schema->bytes=="BiglyBTC.ExistingStoppedSubscriptionTarget.V2"){
+      require(wrapper.root().children.size()==6,ErrorCode::InvalidFormat,"Unknown automatic existing target wrapper");
+      const auto ordinary=text(wrapper.find("target")),context=text(wrapper.find("automatic"));
+      auto target=take(restore(lease,metadata,destination,session,ordinary,owner));
+      const auto subject=metadataSubject(target.data_->independence.metadata,target.data_->independence.filenameConversions?std::optional<std::string_view>{*target.data_->independence.filenameConversions}:std::nullopt,target.data_->independence.decoderShowAll.value_or(false));
+      target.data_->automatic=AutomaticIntakeContext::restore(lease,subject,std::string(target.images().archive),target.data_->independence.filenameConversions.value_or(std::string(compat::OriginalDefaultFilenameConversions)),context);
+      target.data_->recipe=target.data_->encodeRecipe();require(target.data_->recipe==recipe,ErrorCode::InvalidFormat,"Automatic existing target recipe is not canonical");return target;
+    }
+    const auto& record=wrapper;require(record.root().children.size()==18,ErrorCode::InvalidFormat,"Unknown existing target recipe field");
     const auto textField=[&](std::string_view key){const auto* value=record.find(key);require(value&&value->type==Node::Type::Bytes,ErrorCode::InvalidFormat,"Existing target recipe field missing");return std::string(value->bytes);};
     require(textField("schema")=="BiglyBTC.ExistingStoppedSubscriptionTarget.V1",ErrorCode::Unsupported,"Unknown existing-target recipe version");
     auto data=std::make_unique<Data>();data->lease=take(lease.retain());data->session=session;data->profile=profilePath(lease);require(textField("profile")==data->profile.native()&&textField("destination")==destination.native(),ErrorCode::Conflict,"Existing target recovery path changed");pathShape(destination);std::error_code pathError;require(fs::canonical(destination,pathError)==destination&&!pathError,ErrorCode::Conflict,"Existing target destination changed");

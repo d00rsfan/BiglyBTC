@@ -6,6 +6,7 @@
 #include <cstddef>
 namespace biglybtc::app {class SavedSubscriptionAcquisition;}
 namespace biglybtc::search {
+struct SubscriptionResultValue;
 struct SavedSubscriptionResultSelector {
   SavedSubscriptionSelector subscription;
   std::string resultKey; // Exact raw10 key from the actual saved result row.
@@ -45,6 +46,16 @@ public:
       const storage::ProfileLease& callerHeldSameOFD,std::uint64_t currentSession)const;
 private:
   friend class ::biglybtc::app::SavedSubscriptionAcquisition;
+  friend class RssHttpFetch;
+  friend class SavedSubscriptionService;
+  static std::expected<bool,SavedRssSourceError> automaticResultFiltered(
+      const SavedSubscriptionSourceSnapshot&,const SubscriptionResultValue&);
+  enum class Purpose {Manual,Automatic};
+  static std::expected<SavedSubscriptionResultSnapshot,SavedRssSourceError> readAutomatic(
+      const storage::ProfileLease&,const std::filesystem::path&,std::uint64_t,SavedSubscriptionResultSelector);
+  static std::expected<SavedSubscriptionResultSnapshot,SavedRssSourceError> readImpl(
+      const storage::ProfileLease&,const std::filesystem::path&,std::uint64_t,SavedSubscriptionResultSelector,Purpose);
+  const detail::SubscriptionAutomaticPolicyValues* automaticPolicy()const noexcept;
   std::expected<std::string,SavedRssSourceError> freezeAcquisitionSource(const storage::ProfileLease&,std::uint64_t)const;
   // Pure frozen-row scalars for private recovery binding; no profile/effect grant.
   static std::expected<detail::SubscriptionRawScrapeCounts,SavedRssSourceError> frozenRawScrapeCounts(std::string_view);

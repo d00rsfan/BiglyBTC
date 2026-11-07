@@ -76,6 +76,7 @@ bool SessionBridge::rssFetch(ui::RssFetchCommand command){
         if(host_->rssFetch){throw Failure{{storage::ErrorCode::Busy,"RSS fetch is still closing"}};}
         std::error_code pathError;const auto profileDirectory=std::filesystem::canonical(host_->profile,pathError);
         if(pathError){throw Failure{{storage::ErrorCode::UnsafePath,"RSS profile directory changed"}};}
+        if(host_->subscriptionAcquisition||(host_->subscriptions&&host_->subscriptions->active())){throw Failure{{storage::ErrorCode::Busy,"A saved-source fetch is already active"}};}
         std::unique_ptr<search::RssHttpFetch> provider;
         if(rssFetchFactory_){provider=rssFetchFactory_(host_->lease,profileDirectory,host_->columnLayoutSession,command.key.target,command.receiver->get_token());}
         else{auto opened=search::RssHttpFetch::openOneShot(host_->lease,profileDirectory,host_->columnLayoutSession,

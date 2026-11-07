@@ -76,6 +76,7 @@
 #include <array>
 #include <QStringList>
 #include <map>
+#include <deque>
 #include <set>
 #include <tuple>
 #include <stdexcept>
@@ -236,7 +237,7 @@ template<class Store> std::expected<storage::CategoryCommit,storage::Error> cate
 }
 }
 struct SessionBridge::Host {
-  ~Host(){if(subscriptionAcquisition){subscriptionAcquisition->cancel();subscriptionAcquisition.reset();}closeRssFetch();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
+  ~Host(){if(automaticReceiver){automaticReceiver->request_stop();}automaticCandidates.clear();automaticCandidateKeys.clear();if(subscriptionAcquisition){subscriptionAcquisition->cancel();subscriptionAcquisition.reset();}closeRssFetch();if(subscriptions){subscriptions->cancel();subscriptions.reset();}if(engine){engine->clearMagnetCompletionHook();}if(constraintWorker){constraintWorker->close();}mixed.reset();i2p.reset();} // Immediate no-throw fallback joins before the held lease.
   struct Known { QString name; std::optional<qint64> bytes{}; };
   std::filesystem::path profile;
   unsigned short peerPort;
@@ -1297,8 +1298,8 @@ struct SessionBridge::Host {
   }
 };
 
-SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions, RssFetchFactory rssFactory, SubscriptionFetchFactory subscriptionFactory, SubscriptionAcquisitionFactory acquisitionFactory)
-    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)), rssFetchFactory_(std::move(rssFactory)), subscriptionFetchFactory_(std::move(subscriptionFactory)), subscriptionAcquisitionFactory_(std::move(acquisitionFactory)) {
+SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory, std::optional<I2pServiceOptions> i2pOptions, RssFetchFactory rssFactory, SubscriptionFetchFactory subscriptionFactory, SubscriptionAcquisitionFactory acquisitionFactory, SubscriptionFetchFactory automaticFeed, SubscriptionAcquisitionFactory automaticMetainfo)
+    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), i2pOptions_(std::move(i2pOptions)), schedulerFactory_(std::move(schedulerFactory)), rssFetchFactory_(std::move(rssFactory)), subscriptionFetchFactory_(std::move(subscriptionFactory)), subscriptionAcquisitionFactory_(std::move(acquisitionFactory)), automaticSubscriptionFetchFactory_(std::move(automaticFeed)), automaticSubscriptionAcquisitionFactory_(std::move(automaticMetainfo)) {
   qRegisterMetaType<ui::SubscriptionKey>();qRegisterMetaType<ui::SubscriptionCatalogKey>();qRegisterMetaType<ui::SubscriptionCatalogPresentation>();qRegisterMetaType<ui::SubscriptionCommandKey>();qRegisterMetaType<ui::SubscriptionCommand>();qRegisterMetaType<ui::SubscriptionPresentation>();
   qRegisterMetaType<ui::RssCatalogRequest>();qRegisterMetaType<ui::RssCatalogPresentation>();qRegisterMetaType<ui::RssFetchKey>();qRegisterMetaType<ui::RssFetchCommand>();qRegisterMetaType<ui::RssFetchPresentation>();
   qRegisterMetaType<ui::I2pPresentation>();
@@ -1406,7 +1407,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
       const auto session=host_?host_->columnLayoutSession:quint64{0};
       try{
       if (!stop.stop_requested() && host_) {
-        pollSubscriptionAcquisition();take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));pollRssFetch();pollSubscriptions();
+        pollSubscriptionAcquisition();take(storage::requireNoPendingSubscriptionAcquisition(host_->lease));pollRssFetch();pollAutomaticSubscriptionQueue();if(!host_->subscriptionAcquisition){pollSubscriptions();}
         if(host_->recoveryDrainStarted){throw Failure{{storage::ErrorCode::Busy,"Explicit close without checkpoint is incomplete; retained owners may remain live"}};}
         if((storage::hasPendingCategoryDeletion(host_->lease)||storage::hasPendingFileOperation(host_->lease))){
           // Poll may complete metadata imports or write retirement checkpoints.
@@ -3678,7 +3679,7 @@ void SessionBridge::closeFailed(QString message) {
     if (guard) { emit messageReady(message); }
   }, Qt::QueuedConnection);
 }
-void SessionBridge::cancel() { if (current_ && !closingSession_) { current_->cancel(); } }
+void SessionBridge::cancel() { automaticSubscriptionQueueCancelled_.store(true);if(const auto automatic=automaticSubscriptionCancellation_.load()){automatic->request_stop();}if (current_ && !closingSession_) { current_->cancel(); } }
 
 namespace {
 engine::LiveQueueLimits optionQueues(const core::Document& document) {

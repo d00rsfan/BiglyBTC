@@ -146,3 +146,14 @@ target_sources(biglybtc_profile PRIVATE history_reconstruction_receipt.cpp)
 
 # Private one-shot fresh Keep Data history witness; no SDK/provider dependency.
 target_sources(biglybtc_profile PRIVATE durable_removal_receipt.cpp)
+
+
+if(NOT TARGET biglybtc_subscription_automatic_values)
+  add_library(biglybtc_subscription_automatic_values STATIC ../services/search/subscription_automatic_values.cpp)
+  target_include_directories(biglybtc_subscription_automatic_values PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../services/search")
+  target_link_libraries(biglybtc_subscription_automatic_values PUBLIC BiglyBTC::Core)
+  target_compile_features(biglybtc_subscription_automatic_values PUBLIC cxx_std_23)
+  target_compile_options(biglybtc_subscription_automatic_values PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  set_target_properties(biglybtc_subscription_automatic_values PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
+target_link_libraries(biglybtc_profile PUBLIC biglybtc_subscription_automatic_values)

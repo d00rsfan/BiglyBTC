@@ -397,3 +397,8 @@ endif()
 if(TARGET biglybtc_saved_subscription_source)
   target_sources(biglybtc_saved_subscription_source PRIVATE search/subscription_literal_filter.cpp)
 endif()
+
+
+if(TARGET biglybtc_saved_subscription_source)
+  target_link_libraries(biglybtc_saved_subscription_source PUBLIC biglybtc_subscription_automatic_values)
+endif()

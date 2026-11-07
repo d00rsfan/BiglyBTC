@@ -34,13 +34,16 @@
 #include <filesystem>
 #include <functional>
 #include <atomic>
+#include <memory>
+#include <vector>
+#include <stop_token>
 #include <mutex>
 #include <map>
 
 class QTimer;
 
 namespace biglybtc::engine { struct ApplicationPeerObservation; }
-namespace biglybtc::search { class RssHttpFetch; class SavedSubscriptionService; class SubscriptionMetainfoFetch; }
+namespace biglybtc::search {struct SavedSubscriptionResultSelector; class RssHttpFetch; class SavedSubscriptionService; class SubscriptionMetainfoFetch; }
 namespace biglybtc::storage { class ProfileLease; class CountryProvider; class SchedulerService; }
 
 namespace biglybtc::app {
@@ -56,7 +59,7 @@ public:
   using RssFetchFactory=std::function<std::unique_ptr<search::RssHttpFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::RssSourceKey&,std::stop_token)>;
   using SubscriptionFetchFactory=std::function<std::unique_ptr<search::RssHttpFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::SubscriptionKey&,std::stop_token)>;
   using SubscriptionAcquisitionFactory=std::function<std::unique_ptr<search::SubscriptionMetainfoFetch>(const storage::ProfileLease&,const std::filesystem::path&,quint64,const ui::SubscriptionKey&,const QByteArray&,std::stop_token)>;
-  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {}, RssFetchFactory = {}, SubscriptionFetchFactory = {}, SubscriptionAcquisitionFactory = {});
+  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {}, std::optional<I2pServiceOptions> = {}, RssFetchFactory = {}, SubscriptionFetchFactory = {}, SubscriptionAcquisitionFactory = {}, SubscriptionFetchFactory automaticFeed = {}, SubscriptionAcquisitionFactory automaticMetainfo = {});
   ~SessionBridge() override;
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool openNormal(std::filesystem::path profile);
@@ -193,6 +196,9 @@ private:
   void closeFailed(QString);
   search::SavedSubscriptionService& ensureSubscriptions();
   void pollSubscriptions();
+  void enqueueAutomaticSubscriptions(const std::vector<search::SavedSubscriptionResultSelector>&);
+  void pollAutomaticSubscriptionQueue();
+  void automaticSubscriptionNotice(QString);
   void pollSubscriptionAcquisition();
   void closeWorkerSubscriptionAcquisition();
   void finishWorkerSubscriptionAcquisition(QString failure = {});
@@ -261,6 +267,10 @@ private:
   RssFetchFactory rssFetchFactory_;
   SubscriptionFetchFactory subscriptionFetchFactory_;
   SubscriptionAcquisitionFactory subscriptionAcquisitionFactory_;
+  std::atomic<std::shared_ptr<std::stop_source>> automaticSubscriptionCancellation_;
+  std::atomic_bool automaticSubscriptionQueueCancelled_{false};
+  SubscriptionFetchFactory automaticSubscriptionFetchFactory_;
+  SubscriptionAcquisitionFactory automaticSubscriptionAcquisitionFactory_;
   std::optional<ui::SubscriptionCatalogKey> guiSubscriptionCatalog_;
   std::optional<ui::SubscriptionCommand> guiSubscription_;
   std::optional<ui::SubscriptionCommandKey> startingSubscription_;

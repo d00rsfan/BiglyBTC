@@ -49,6 +49,22 @@ DownloadStateObserver downloadStateObserver()noexcept{
 #endif
   return nullptr;
 }
+void automaticCancelAt(std::stop_source& receiver,std::string_view stage){
+#if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
+  const char* wanted=std::getenv("BIGLYBTC_SUBSCRIPTION_ACQUISITION_CANCEL_AT");if(wanted&&stage==wanted&&stage=="AutomaticQueuedPublished"){receiver.request_stop();}
+#else
+  (void)receiver;(void)stage;
+#endif
+}
+#if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
+void automaticQueueStage(storage::SubscriptionDownloadStateStage stage){if(stage==storage::SubscriptionDownloadStateStage::SavingSynced){crashCheckpoint("AutomaticQueueSavingSynced");}}
+#endif
+DownloadStateObserver automaticQueueObserver()noexcept{
+#if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
+  const char* wanted=std::getenv("BIGLYBTC_SUBSCRIPTION_ACQUISITION_CRASH_AT");if(wanted&&std::string_view(wanted)=="AutomaticQueueSavingSynced"){return automaticQueueStage;}
+#endif
+  return nullptr;
+}
 std::int64_t nowMillis(){return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();}
 std::string resultsName(const search::SavedSubscriptionResultSelector& selected){return hex(selected.subscription.shortId)+".results";}
 void sameValues(const AssociationReadValues& a,const AssociationReadValues& b){require(a.association==b.association&&a.results==b.results&&a.finalConfiguration==b.finalConfiguration,storage::ErrorCode::Conflict,"Acquisition subscription postimages do not match the owned attempt");}
@@ -71,7 +87,7 @@ struct SavedSubscriptionAcquisition::Impl {
   std::string ownerBytes,tempDirectory,tempScope,tempHash;
   std::optional<core::TorrentHash> hash;
   Outcome result;RuntimeTargetCheck runtimeTargetCheck;
-  bool ready=false,terminal=false,closed=false;
+  bool ready=false,terminal=false,closed=false,automatic=false;
 
   void guard(const storage::ProfileLease& caller,std::uint64_t current)const {
     require(!closed&&lease&&worker==std::this_thread::get_id()&&session==current&&current&&lease->sharesOwnership(caller),storage::ErrorCode::Conflict,"Acquisition worker, session or held profile changed");
@@ -85,12 +101,16 @@ struct SavedSubscriptionAcquisition::Impl {
     require((plan||existing)&&intent,storage::ErrorCode::Conflict,"Acquisition plan is absent");
     require(field(frozen,"schema")=="BiglyBTC.Subscription.Acquisition.Source.V1"&&field(frozen,"profile")==profile.string(),storage::ErrorCode::Conflict,"Acquisition profile binding changed");
     require(selectedBytes(selected)==intent->selection,storage::ErrorCode::Conflict,"Acquisition result identity changed");
-    if(intent->mode!=IntentMode::LegacyFresh){require(intentTarget(*intent)==target()&&intent->newAssociation==associationIsNew(field(frozen,"configuration"),selected,target())&&intent->stateBaseSha256==digest(plan?plan->images().afterState:existing->images().state),storage::ErrorCode::Conflict,"V2 fixed preparation does not match its source and storage base");}
+    if(intent->mode!=IntentMode::LegacyFresh){require(intentTarget(*intent)==target()&&intent->newAssociation==associationIsNew(field(frozen,"configuration"),selected,target(),automaticMode(intent->mode)?search::SubscriptionIndexPurpose::AutomaticAcquisition:search::SubscriptionIndexPurpose::Manual)&&intent->stateBaseSha256==digest(plan?plan->images().afterState:existing->images().state),storage::ErrorCode::Conflict,"V2 fixed preparation does not match its source and storage base");}
     if(intent->mode!=IntentMode::LegacyFresh){
       auto rows=search::parseSubscriptionResults(field(frozen,"results"));require(rows.has_value(),storage::ErrorCode::InvalidFormat,"Frozen subscription results malformed");const auto row=std::ranges::find(rows->rows,selected.resultKey,&search::SubscriptionResultValue::key);require(row!=rows->rows.end()&&!row->read&&!row->deleted,storage::ErrorCode::Conflict,"Frozen selected result is not unread/live");
       auto raw=search::SavedSubscriptionResultSnapshot::frozenRawScrapeCounts(row->json);require(raw.has_value(),storage::ErrorCode::InvalidFormat,"Frozen saved raw scrape counts malformed");const auto* preparation=plan?plan->fixedPreparation():existing->fixedPreparation();require(preparation&&preparation->rawShortId==selected.subscription.shortId&&preparation->newAssociation==intent->newAssociation&&preparation->rawCounts.seeds==raw->seeds&&preparation->rawCounts.peers==raw->peers,storage::ErrorCode::Conflict,"Storage recipe differs from the actual frozen SID/membership/raw counts");
     }
-    if(intent->values){require(intent->when.has_value(),storage::ErrorCode::InvalidFormat,"Acquisition time missing");sameValues(*intent->values,associationRead(field(frozen,"configuration"),field(frozen,"results"),selected,target(),*intent->when));}
+    if(automaticMode(intent->mode)){
+      const auto* roots=frozen.find("roots");const auto* settings=roots?roots->find("biglybt.config"):nullptr;require(settings&&settings->type==core::Node::Type::Dictionary,storage::ErrorCode::Conflict,"Automatic frozen settings witness missing");
+      auto actual=search::detail::readSubscriptionAutomaticPolicy(document(field(*settings,"bytes")),profile.string());const auto* policy=plan?plan->automaticPolicy():existing->automaticPolicy();require(actual&&policy&&*actual==*policy,storage::ErrorCode::Conflict,"Automatic storage policy differs from the actual frozen source");
+    }
+    if(intent->values){require(intent->when.has_value(),storage::ErrorCode::InvalidFormat,"Acquisition time missing");sameValues(*intent->values,associationRead(field(frozen,"configuration"),field(frozen,"results"),selected,target(),*intent->when,automaticMode(intent->mode)?search::SubscriptionIndexPurpose::AutomaticAcquisition:search::SubscriptionIndexPurpose::Manual));}
   }
   // Called only after storage independently proves all three exact postimages.
   Outcome settleLegacy(storage::ProfileLease& caller,bool allowNewValues) {
@@ -150,47 +170,63 @@ struct SavedSubscriptionAcquisition::Impl {
     if(plan){(void)take(plan->inspectAssociationState(caller,ownerBytes));}
     else{require(existing.has_value(),storage::ErrorCode::Conflict,"Existing target witness missing");(void)take(existing->inspectState(caller,session,ownerBytes));}
   }
+  void automaticArtifacts(storage::ProfileLease& caller,bool sourceCurrent){
+    if(!intent||!automaticMode(intent->mode)){return;}
+    if(intent->done){auto access=take(caller.sourceAccess());require(access.observationsAllowed(),storage::ErrorCode::Conflict,"Nested completed artifact observation");require(plan?take(plan->automaticArtifactPresent(caller,ownerBytes)):take(existing->automaticArtifactPresent(caller,session,ownerBytes)),storage::ErrorCode::Conflict,"Done automatic artifact changed");return;}
+    if(intent->stopped||stopped->stop_requested()||!sourceCurrent){return;}
+    auto frozen=document(intent->source);auto child=sourceDirectory(caller,frozen.root());
+    auto access=take(caller.sourceAccess(true));require(access.observationsAllowed(),storage::ErrorCode::Conflict,"Nested automatic artifact publication");if(!staticBindings(caller.directoryHandle(),child.get(),frozen.root())){return;}
+    if(plan){take(plan->prepareAutomaticArtifacts(caller,ownerBytes));intent->plan=plan->frozenJournal();}
+    else{take(existing->prepareAutomaticArtifacts(caller,session,ownerBytes));intent->plan=existing->frozenRecipe();}
+    if(encodeIntent(*intent)!=ownerBytes){crashCheckpoint("AutomaticArtifactStaged");publishIntent(caller.directoryHandle(),ownerBytes,*intent);ownerBytes=encodeIntent(*intent);}crashCheckpoint("AutomaticArtifactRecorded");
+    // The new inode is now part of the durable exact owner recipe. No body-only
+    // inference may publish/delete it, including after rename-before-progress.
+    if(plan){take(plan->publishAutomaticArtifact(caller,ownerBytes));}else{take(existing->publishAutomaticArtifact(caller,session,ownerBytes));}crashCheckpoint("AutomaticArtifactPublished");
+  }
   Outcome settle(storage::ProfileLease& caller,bool sourceCurrent){
     if(intent&&intent->mode==IntentMode::LegacyFresh){return settleLegacy(caller,sourceCurrent);}
-    storageCurrent(caller);result.hash=target();hash=result.hash;result.imported=plan.has_value();
+    automaticArtifacts(caller,sourceCurrent);storageCurrent(caller);result.hash=target();hash=result.hash;result.imported=plan.has_value();
     require(intent.has_value(),storage::ErrorCode::Conflict,"V2 owner absent");auto frozen=document(intent->source);validateValues(frozen.root());auto child=sourceDirectory(caller,frozen.root());
     storage::detail::Descriptor active(::openat(caller.directoryHandle(),"active",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));struct stat directory{};require(active.get()>=0&&::fstat(active.get(),&directory)==0&&S_ISDIR(directory.st_mode)&&directory.st_uid==::geteuid(),storage::ErrorCode::Conflict,"V2 active directory changed");
     const auto configBefore=field(frozen.root(),"configuration"),resultsBefore=field(frozen.root(),"results"),name=resultsName(selected),stateName=target().hex()+".dat";
     const auto configBackup=optionalField(frozen.root(),"configuration_backup"),resultsBackup=optionalField(frozen.root(),"results_backup");
     const bool oldTarget=existing.has_value();const auto stateBase=plan?plan->images().afterState:existing->images().state;const auto prepared=plan?plan->images().afterState:existing->images().statePrepared;const auto associated=plan?plan->images().afterAssociationState:existing->images().stateAfterAssociation;const auto backup=plan?std::optional<std::string_view>{}:existing->images().stateBackup;
+    const std::optional<AutomaticQueueImages> queue=automaticMode(intent->mode)&&plan?std::optional<AutomaticQueueImages>{AutomaticQueueImages{plan->images().afterInventory,plan->queuedInventory(),plan->automaticInventoryBackup()}}:std::nullopt;
     if(!intent->values){
       // Only source membership is sealed before intake/cache. Freeze w and the
       // read/retention values once at the actual association commit boundary.
       {auto access=take(caller.sourceAccess());require(access.observationsAllowed(),storage::ErrorCode::Conflict,"Nested V2 preparation observation");
         require(contents(readFile(caller.directoryHandle(),"subscriptions.config"))==std::optional{configBefore}&&contents(readFile(caller.directoryHandle(),"subscriptions.config.bak"))==configBackup&&!readFile(caller.directoryHandle(),"subscriptions.config.saving").present&&contents(readFile(child.get(),name))==std::optional{resultsBefore}&&contents(readFile(child.get(),name+".bak"))==resultsBackup&&!readFile(child.get(),name+".saving").present,storage::ErrorCode::Conflict,"Subscription changed before first V2 association write");
         const auto primary=readFile(active.get(),stateName,16*1024*1024),staged=readFile(active.get(),stateName+".saving",16*1024*1024),oldBackup=readFile(active.get(),stateName+".bak",16*1024*1024);require(primary.present&&(primary.bytes==stateBase||(oldTarget&&primary.bytes==prepared))&&(!staged.present||(oldTarget&&staged.bytes==prepared))&&contents(oldBackup)==(backup?std::optional<std::string>{std::string(*backup)}:std::nullopt),storage::ErrorCode::Conflict,"V2 callback state appeared before its association plan");}
-      intent->when=nowMillis();intent->values=associationRead(configBefore,resultsBefore,selected,target(),*intent->when);require(intent->values->newAssociation==intent->newAssociation,storage::ErrorCode::Conflict,"Association membership changed");persisted(caller);
+      intent->when=nowMillis();intent->values=associationRead(configBefore,resultsBefore,selected,target(),*intent->when,automaticMode(intent->mode)?search::SubscriptionIndexPurpose::AutomaticAcquisition:search::SubscriptionIndexPurpose::Manual);require(intent->values->newAssociation==intent->newAssociation,storage::ErrorCode::Conflict,"Association membership changed");persisted(caller);
     }
     {
       auto access=take(caller.sourceAccess(true));require(access.observationsAllowed(),storage::ErrorCode::Conflict,"Nested V2 acquisition write");if(runtimeTargetCheck){take(runtimeTargetCheck(target()));}storageCurrent(caller);
-      const auto progress=logicalCallbackProgress(caller.directoryHandle(),child.get(),active.get(),name,stateName,configBefore,configBackup,resultsBefore,resultsBackup,stateBase,prepared,associated,backup,*intent->values,oldTarget,intent->stopped,intent->done);
+      const auto progress=logicalCallbackProgress(caller.directoryHandle(),child.get(),active.get(),name,stateName,configBefore,configBackup,resultsBefore,resultsBackup,stateBase,prepared,associated,backup,*intent->values,oldTarget,intent->stopped,intent->done,queue);
       const auto persistHere=[&]{publishIntent(caller.directoryHandle(),ownerBytes,*intent);ownerBytes=encodeIntent(*intent);};
       const auto revoked=[&]{if(runtimeTargetCheck){take(runtimeTargetCheck(target()));}return stopped->stop_requested()||!sourceCurrent||!staticBindings(caller.directoryHandle(),child.get(),frozen.root());};
-      const auto rollback=[&]{intent->stopped=true;persistHere();writeValue(caller.directoryHandle(),"subscriptions.config",configBefore);writeValue(child.get(),name,resultsBefore);if(plan){take(plan->rollbackAssociationState(caller,ownerBytes));}else{take(existing->rollbackState(caller,session,ownerBytes));}storageCurrent(caller);require(logicalCallbackProgress(caller.directoryHandle(),child.get(),active.get(),name,stateName,configBefore,configBackup,resultsBefore,resultsBackup,stateBase,prepared,associated,backup,*intent->values,oldTarget,true,false)==0&&readFile(caller.directoryHandle(),"subscriptions.config").bytes==configBefore&&readFile(child.get(),name).bytes==resultsBefore&&readFile(active.get(),stateName,16*1024*1024).bytes==stateBase,storage::ErrorCode::Conflict,"V2 rollback remains incomplete");};
-      const auto actions=callbackActions(oldTarget);
+      const auto artifactCurrent=[&]{if(automaticMode(intent->mode)){require(plan?take(plan->automaticArtifactPresent(caller,ownerBytes)):take(existing->automaticArtifactPresent(caller,session,ownerBytes)),storage::ErrorCode::Conflict,"Automatic named artifact changed before durable completion");}};
+      const auto rollback=[&]{intent->stopped=true;persistHere();if(automaticMode(intent->mode)){crashCheckpoint("AutomaticCancellationRecorded");}if(queue){take(plan->rollbackAutomaticQueue(caller,ownerBytes));}writeValue(caller.directoryHandle(),"subscriptions.config",configBefore);writeValue(child.get(),name,resultsBefore);if(plan){take(plan->rollbackAssociationState(caller,ownerBytes));}else{take(existing->rollbackState(caller,session,ownerBytes));}storageCurrent(caller);require(logicalCallbackProgress(caller.directoryHandle(),child.get(),active.get(),name,stateName,configBefore,configBackup,resultsBefore,resultsBackup,stateBase,prepared,associated,backup,*intent->values,oldTarget,true,false,queue)==0&&readFile(caller.directoryHandle(),"subscriptions.config").bytes==configBefore&&readFile(child.get(),name).bytes==resultsBefore&&readFile(active.get(),stateName,16*1024*1024).bytes==stateBase,storage::ErrorCode::Conflict,"V2 rollback remains incomplete");if(automaticMode(intent->mode)){if(plan){take(plan->rollbackAutomaticArtifact(caller,ownerBytes));}else{take(existing->rollbackAutomaticArtifact(caller,session,ownerBytes));}}};
+      const auto actions=callbackActions(oldTarget,queue.has_value());
       if(!intent->done){
         if(intent->stopped||revoked()){rollback();}
         else{
           for(unsigned n=progress;n<actions.size();++n){
             if(revoked()){rollback();break;}
-            switch(actions[n]){
+            artifactCurrent();switch(actions[n]){
               case CallbackAction::PrepareCache:take(existing->publishPreparedState(caller,session,ownerBytes));crashCheckpoint("ExistingCachePublished");break;
               case CallbackAction::Association:writeValue(caller.directoryHandle(),"subscriptions.config",intent->values->association);crashCheckpoint("AssociationPublished");break;
               case CallbackAction::DownloadState:if(plan){take(plan->publishAssociationState(caller,ownerBytes,downloadStateObserver()));}else{take(existing->publishAssociationState(caller,session,ownerBytes,downloadStateObserver()));}crashCheckpoint("DownloadStatePublished");break;
               case CallbackAction::Read:writeValue(child.get(),name,intent->values->results);crashCheckpoint("ReadPublished");break;
+              case CallbackAction::Queue:take(plan->publishAutomaticQueue(caller,ownerBytes,automaticQueueObserver()));automaticCancelAt(*stopped,"AutomaticQueuedPublished");crashCheckpoint("AutomaticQueuedPublished");break;
               case CallbackAction::Final:writeValue(caller.directoryHandle(),"subscriptions.config",intent->values->finalConfiguration);crashCheckpoint("FinalPublished");break;
             }
             storageCurrent(caller);
           }
-          if(!intent->stopped){if(revoked()){rollback();}else{require(logicalCallbackProgress(caller.directoryHandle(),child.get(),active.get(),name,stateName,configBefore,configBackup,resultsBefore,resultsBackup,stateBase,prepared,associated,backup,*intent->values,oldTarget,false,true)==actions.size(),storage::ErrorCode::Conflict,"V2 final postimages changed");intent->done=true;persistHere();crashCheckpoint("Done");}}
+          if(!intent->stopped){if(revoked()){rollback();}else{artifactCurrent();require(logicalCallbackProgress(caller.directoryHandle(),child.get(),active.get(),name,stateName,configBefore,configBackup,resultsBefore,resultsBackup,stateBase,prepared,associated,backup,*intent->values,oldTarget,false,true,queue)==actions.size(),storage::ErrorCode::Conflict,"V2 final postimages changed");intent->done=true;persistHere();crashCheckpoint("Done");}}
         }
-      }else{require(progress==actions.size(),storage::ErrorCode::Conflict,"V2 Done lacks its final postimages");}
-      result.associated=intent->done;result.read=intent->done;result.alreadyPresent=oldTarget&&intent->done;result.cancelled=intent->stopped&&stopped->stop_requested();
+      }else{artifactCurrent();require(progress==actions.size(),storage::ErrorCode::Conflict,"V2 Done lacks its final postimages");}
+      result.automatic=automaticMode(intent->mode);result.queued=result.automatic&&plan&&plan->automaticGeometry()->queued&&intent->done;result.paused=result.automatic&&plan&&plan->automaticGeometry()->paused&&intent->done;result.associated=intent->done;result.read=intent->done;result.alreadyPresent=oldTarget&&intent->done;result.cancelled=intent->stopped&&stopped->stop_requested();
       if(intent->stopped){result.warning=plan?QStringLiteral("Torrent saved stopped; the subscription result remains unread."):QStringLiteral("The existing torrent and subscription result were left unchanged.");}
       cleanupTemporary(*intent);tempDirectory.clear();intent->tempRetired=true;persistHere();crashCheckpoint("TemporaryRetired");removeIntent(caller.directoryHandle(),ownerBytes);
     }
@@ -201,15 +237,17 @@ struct SavedSubscriptionAcquisition::Impl {
 
 SavedSubscriptionAcquisition::SavedSubscriptionAcquisition(std::unique_ptr<Impl> value):impl_(std::move(value)){}
 SavedSubscriptionAcquisition::~SavedSubscriptionAcquisition(){if(impl_){try{(void)close();}catch(...){}}}
-std::expected<std::unique_ptr<SavedSubscriptionAcquisition>,storage::Error> SavedSubscriptionAcquisition::begin(const storage::ProfileLease& caller,std::filesystem::path profile,std::uint64_t session,search::SavedSubscriptionResultSelector selected,std::filesystem::path destination,std::stop_token receiver,Factory factory,RuntimeTargetCheck runtimeTargetCheck){try{
+std::expected<std::unique_ptr<SavedSubscriptionAcquisition>,storage::Error> SavedSubscriptionAcquisition::begin(const storage::ProfileLease& caller,std::filesystem::path profile,std::uint64_t session,search::SavedSubscriptionResultSelector selected,std::filesystem::path destination,std::stop_token receiver,Factory factory,RuntimeTargetCheck target){return beginImpl(caller,std::move(profile),session,std::move(selected),std::move(destination),receiver,std::move(factory),std::move(target),false);}
+std::expected<std::unique_ptr<SavedSubscriptionAcquisition>,storage::Error> SavedSubscriptionAcquisition::beginAutomatic(const storage::ProfileLease& caller,std::filesystem::path profile,std::uint64_t session,search::SavedSubscriptionResultSelector selected,std::stop_token receiver,Factory factory,RuntimeTargetCheck target){return beginImpl(caller,std::move(profile),session,std::move(selected),{},receiver,std::move(factory),std::move(target),true);}
+std::expected<std::unique_ptr<SavedSubscriptionAcquisition>,storage::Error> SavedSubscriptionAcquisition::beginImpl(const storage::ProfileLease& caller,std::filesystem::path profile,std::uint64_t session,search::SavedSubscriptionResultSelector selected,std::filesystem::path destination,std::stop_token receiver,Factory factory,RuntimeTargetCheck runtimeTargetCheck,bool automatic){try{
   require(bool(runtimeTargetCheck),storage::ErrorCode::Unsupported,"Actual Host target admission is required");
   require(session!=0&&!receiver.stop_requested(),storage::ErrorCode::Cancelled,"Acquisition was cancelled");profileCurrent(caller,profile);take(storage::requireNoPendingSubscriptionAcquisition(caller));
-  std::error_code error;require(destination.is_absolute()&&std::filesystem::canonical(destination,error)==destination&&!error,storage::ErrorCode::UnsafePath,"Choose an existing canonical save directory");auto ownedDestination=checkedDirectory(destination);(void)ownedDestination;
-  auto source=search::SavedSubscriptionResultSnapshot::read(caller,profile,session,selected);require(bool(source),storage::ErrorCode::Unsupported,"Saved subscription result is not supported for acquisition");
-  auto value=std::make_unique<Impl>();value->lease=take(caller.retain());value->profile=std::move(profile);value->destination=std::move(destination);value->session=session;value->selected=std::move(selected);value->runtimeTargetCheck=std::move(runtimeTargetCheck);value->source.emplace(std::move(*source));
-  const auto token=value->stopped->get_token();if(factory){value->fetch=factory(caller,value->profile,session,value->selected,token);}else{auto fetch=search::SubscriptionMetainfoFetch::openOneShot(caller,value->profile,session,value->selected.subscription,value->selected.resultKey,token);require(bool(fetch),storage::ErrorCode::Unsupported,"Metainfo fetch could not be opened");value->fetch=std::move(*fetch);}
+  std::error_code error;if(!automatic){require(destination.is_absolute()&&std::filesystem::canonical(destination,error)==destination&&!error,storage::ErrorCode::UnsafePath,"Choose an existing canonical save directory");auto ownedDestination=checkedDirectory(destination);(void)ownedDestination;}
+  auto source=automatic?search::SavedSubscriptionResultSnapshot::readAutomatic(caller,profile,session,selected):search::SavedSubscriptionResultSnapshot::read(caller,profile,session,selected);require(bool(source),storage::ErrorCode::Unsupported,"Saved subscription result is not supported for acquisition");
+  auto value=std::make_unique<Impl>();value->lease=take(caller.retain());value->profile=std::move(profile);value->destination=std::move(destination);value->session=session;value->selected=std::move(selected);value->runtimeTargetCheck=std::move(runtimeTargetCheck);value->source.emplace(std::move(*source));value->automatic=automatic;value->result.automatic=automatic;
+  const auto token=value->stopped->get_token();if(factory){value->fetch=factory(caller,value->profile,session,value->selected,token);}else{auto fetch=automatic?search::SubscriptionMetainfoFetch::openAutomaticOneShot(caller,value->profile,session,value->selected.subscription,value->selected.resultKey,token):search::SubscriptionMetainfoFetch::openOneShot(caller,value->profile,session,value->selected.subscription,value->selected.resultKey,token);require(bool(fetch),storage::ErrorCode::Unsupported,"Metainfo fetch could not be opened");value->fetch=std::move(*fetch);}
   require(bool(value->fetch),storage::ErrorCode::Conflict,"Metainfo factory returned no actual owner");const auto observation=value->fetch->observation();
-  require(value->fetch->matchesSubscriptionResultSource(caller,value->profile,session,value->selected.subscription,value->selected.resultKey,token)&&observation.phase==search::RssFetchPhase::BeforeDNS&&!observation.gets&&!observation.resolverSubmissions&&!observation.failure&&value->source->current(caller,session).has_value(),storage::ErrorCode::Conflict,"Metainfo owner does not match this saved result and receiver");
+  require((automatic?value->fetch->matchesAutomaticSubscriptionResultSource(caller,value->profile,session,value->selected.subscription,value->selected.resultKey,token):value->fetch->matchesSubscriptionResultSource(caller,value->profile,session,value->selected.subscription,value->selected.resultKey,token))&&observation.phase==search::RssFetchPhase::BeforeDNS&&!observation.gets&&!observation.resolverSubmissions&&!observation.failure&&value->source->current(caller,session).has_value(),storage::ErrorCode::Conflict,"Metainfo owner does not match this saved result and receiver");
   std::weak_ptr<std::stop_source> weak=value->stopped;value->receiver.emplace(receiver,[weak]{if(auto live=weak.lock()){live->request_stop();}});
   return std::unique_ptr<SavedSubscriptionAcquisition>(new SavedSubscriptionAcquisition(std::move(value)));
 }catch(const AcquisitionFailure& error){return std::unexpected(error.error);}catch(const std::bad_alloc&){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Acquisition allocation failed"});}}
@@ -224,12 +262,13 @@ std::expected<std::optional<SavedSubscriptionAcquisition::Outcome>,storage::Erro
   auto context=take(storage::readOriginalFilenameContext(caller));auto metadata=take(storage::inspectTorrentIntake(std::filesystem::path(pattern)/"metadata.torrent",impl_->stopped->get_token(),context.conversions,context.decoderShowAll));
   const auto expected=impl_->source->description().result.expectedV1Hash;if(expected){require(metadata.hash().bytes().size()==expected->size()&&std::equal(expected->begin(),expected->end(),metadata.hash().bytes().begin()),storage::ErrorCode::Conflict,"Fetched metainfo does not match the saved result hash");}
   take(impl_->runtimeTargetCheck(metadata.hash()));
-  auto frozen=impl_->source->freezeAcquisitionSource(caller,session);require(bool(frozen),storage::ErrorCode::Conflict,"Source changed before fixed preparation");impl_->preparedSource=std::move(*frozen);auto before=document(impl_->preparedSource);impl_->newAssociation=associationIsNew(field(before.root(),"configuration"),impl_->selected,metadata.hash());
+  auto frozen=impl_->source->freezeAcquisitionSource(caller,session);require(bool(frozen),storage::ErrorCode::Conflict,"Source changed before fixed preparation");impl_->preparedSource=std::move(*frozen);auto before=document(impl_->preparedSource);impl_->newAssociation=associationIsNew(field(before.root(),"configuration"),impl_->selected,metadata.hash(),impl_->automatic?search::SubscriptionIndexPurpose::AutomaticAcquisition:search::SubscriptionIndexPurpose::Manual);
   storage::FixedSubscriptionDownloadPreparation fixed{impl_->selected.subscription.shortId,impl_->newAssociation,impl_->source->description().result.rawScrapeCounts};
-  auto fresh=storage::PreparedStoppedPublicIntake::prepare(caller,metadata,impl_->destination,impl_->source->description().result.initialScrapeCache,impl_->stopped->get_token(),fixed);
+  auto fresh=impl_->automatic?storage::PreparedStoppedPublicIntake::prepareAutomatic(caller,metadata,fixed,impl_->stopped->get_token()):storage::PreparedStoppedPublicIntake::prepare(caller,metadata,impl_->destination,impl_->source->description().result.initialScrapeCache,impl_->stopped->get_token(),fixed);
   if(fresh){impl_->plan.emplace(std::move(*fresh));}else{
-    auto target=storage::ExistingStoppedPublicSubscriptionTarget::capture(caller,metadata,impl_->destination,session,impl_->stopped->get_token());if(!target){if(target.error().code==storage::ErrorCode::Missing){throw AcquisitionFailure{fresh.error()};}throw AcquisitionFailure{target.error()};}take(target->prepare(std::move(fixed)));impl_->existing.emplace(std::move(*target));
+    auto target=impl_->automatic?storage::ExistingStoppedPublicSubscriptionTarget::captureAutomatic(caller,metadata,session,impl_->stopped->get_token()):storage::ExistingStoppedPublicSubscriptionTarget::capture(caller,metadata,impl_->destination,session,impl_->stopped->get_token());if(!target){if(target.error().code==storage::ErrorCode::Missing){throw AcquisitionFailure{fresh.error()};}throw AcquisitionFailure{target.error()};}if(impl_->automatic){take(target->prepareAutomatic(std::move(fixed)));}else{take(target->prepare(std::move(fixed)));}impl_->existing.emplace(std::move(*target));
   }
+  if(impl_->automatic){impl_->destination=impl_->plan?std::filesystem::path(impl_->plan->automaticGeometry()->destinationDirectory):impl_->existing->images().destination;const auto* storagePolicy=impl_->plan?impl_->plan->automaticPolicy():impl_->existing->automaticPolicy();require(storagePolicy&&impl_->source->automaticPolicy()&&*storagePolicy==*impl_->source->automaticPolicy(),storage::ErrorCode::Conflict,"Automatic policy changed before private plan");}
   impl_->metadata.emplace(std::move(metadata));impl_->hash=impl_->target();
   require(impl_->source->current(caller,session).has_value()&&!impl_->stopped->stop_requested(),storage::ErrorCode::Cancelled,"Acquisition cancelled before intake preparation");impl_->ready=true;return std::optional<Outcome>{};
 }catch(const AcquisitionFailure& error){impl_->closeFetch();impl_->result.needsReview=!impl_->ownerBytes.empty();return std::unexpected(error.error);}catch(const std::bad_alloc&){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Acquisition allocation failed"});}}
@@ -240,7 +279,7 @@ std::expected<void,storage::Error> SavedSubscriptionAcquisition::saveIntake(stor
   impl_->guard(caller,session);require(impl_->ready&&(impl_->plan||impl_->existing)&&impl_->source&&impl_->metadata&&!impl_->intent,storage::ErrorCode::Conflict,"Acquisition is not ready for stopped intake");require(!impl_->stopped->stop_requested(),storage::ErrorCode::Cancelled,"Acquisition cancelled before intake");
   take(impl_->runtimeTargetCheck(*impl_->hash));
   auto source=impl_->source->freezeAcquisitionSource(caller,session);require(source&&*source==impl_->preparedSource,storage::ErrorCode::Conflict,"Acquisition source changed before intake");
-  Intent intent;intent.source=std::move(*source);intent.selection=selectedBytes(impl_->selected);intent.mode=impl_->plan?IntentMode::Fresh:IntentMode::Existing;intent.plan=impl_->plan?impl_->plan->frozenJournal():impl_->existing->frozenRecipe();intent.destination=impl_->destination.string();intent.ownerSession=std::to_string(session);const auto key=impl_->target().bytes();intent.targetHash.assign(reinterpret_cast<const char*>(key.data()),key.size());intent.filenameConversions=impl_->metadata->filenameConversions();intent.decoderShowAll=impl_->metadata->decoderShowAll();intent.newAssociation=impl_->newAssociation;intent.stateBaseSha256=digest(impl_->plan?impl_->plan->images().afterState:impl_->existing->images().state);intent.nonce=std::to_string(QRandomGenerator::system()->generate64());intent.tempDirectory=impl_->tempDirectory;intent.tempScope=impl_->tempScope;intent.tempHash=impl_->tempHash;impl_->intent=std::move(intent);
+  Intent intent;intent.source=std::move(*source);intent.selection=selectedBytes(impl_->selected);intent.mode=impl_->automatic?(impl_->plan?IntentMode::AutomaticFresh:IntentMode::AutomaticExisting):(impl_->plan?IntentMode::Fresh:IntentMode::Existing);intent.plan=impl_->plan?impl_->plan->frozenJournal():impl_->existing->frozenRecipe();intent.destination=impl_->destination.string();intent.ownerSession=std::to_string(session);const auto key=impl_->target().bytes();intent.targetHash.assign(reinterpret_cast<const char*>(key.data()),key.size());intent.filenameConversions=impl_->metadata->filenameConversions();intent.decoderShowAll=impl_->metadata->decoderShowAll();intent.newAssociation=impl_->newAssociation;intent.stateBaseSha256=digest(impl_->plan?impl_->plan->images().afterState:impl_->existing->images().state);intent.nonce=std::to_string(QRandomGenerator::system()->generate64());intent.tempDirectory=impl_->tempDirectory;intent.tempScope=impl_->tempScope;intent.tempHash=impl_->tempHash;impl_->intent=std::move(intent);
   {auto frozen=document(impl_->intent->source);impl_->validateValues(frozen.root());}
   // The owner marker is published only here, inside Host::publishTarget.
   if(impl_->existing){
@@ -252,7 +291,7 @@ std::expected<void,storage::Error> SavedSubscriptionAcquisition::saveIntake(stor
     // publisher consumes exactly the storage-built plan frozen above.
     crashCheckpoint("BeforeIntake");
 #if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
-    if(const char* fault=std::getenv("BIGLYBTC_SUBSCRIPTION_ACQUISITION_CRASH_AT");fault&&*fault){committed=impl_->plan->commit(caller,impl_->ownerBytes,impl_->stopped->get_token(),crashIntakeStage,nullptr);}else
+    if(const char* fault=std::getenv("BIGLYBTC_SUBSCRIPTION_ACQUISITION_CRASH_AT");fault&&(std::string_view(fault)=="JournalSynced"||std::string_view(fault)=="StatePublished"||std::string_view(fault)=="ArchivePublished"||std::string_view(fault)=="InventoryPublished")){committed=impl_->plan->commit(caller,impl_->ownerBytes,impl_->stopped->get_token(),crashIntakeStage,nullptr);}else
 #endif
     {committed=impl_->plan->commit(caller,impl_->ownerBytes,impl_->stopped->get_token(),nullptr,history);}
   }
@@ -264,6 +303,16 @@ std::expected<void,storage::Error> SavedSubscriptionAcquisition::saveIntake(stor
   require(take(impl_->plan->inspect(caller,impl_->ownerBytes))==storage::PreparedStoppedPublicIntake::State::Committed,storage::ErrorCode::Conflict,"Stopped intake postimages are incomplete");impl_->result.imported=true;impl_->result.hash=*committed;impl_->hash=*committed;return {};
 }catch(const AcquisitionFailure& error){impl_->result.needsReview=!impl_->ownerBytes.empty();return std::unexpected(error.error);}catch(const std::bad_alloc&){impl_->result.needsReview=!impl_->ownerBytes.empty();return std::unexpected(storage::Error{storage::ErrorCode::Io,"Acquisition intent allocation failed"});}}
 std::expected<SavedSubscriptionAcquisition::Outcome,storage::Error> SavedSubscriptionAcquisition::finishSubscription(storage::ProfileLease& caller,std::uint64_t session){try{impl_->guard(caller,session);take(impl_->runtimeTargetCheck(*impl_->hash));require(impl_->intent.has_value(),storage::ErrorCode::Conflict,"Acquisition intake has no owned intent");const bool current=impl_->source&&impl_->source->current(caller,session).has_value();return impl_->settle(caller,current);}catch(const AcquisitionFailure& error){impl_->result.needsReview=!impl_->ownerBytes.empty();return std::unexpected(error.error);}catch(const std::bad_alloc&){impl_->result.needsReview=true;return std::unexpected(storage::Error{storage::ErrorCode::Io,"Acquisition completion allocation failed"});}}
+std::expected<void,storage::Error> SavedSubscriptionAcquisition::abort(storage::ProfileLease& caller,std::uint64_t session){try{
+  impl_->guard(caller,session);cancel();impl_->closeFetch();
+  if(impl_->terminal){return {};}
+  if(!impl_->intent){impl_->cleanupTemp();impl_->result.cancelled=true;impl_->ready=false;impl_->terminal=true;return {};}
+  if(impl_->plan){const bool committed=impl_->plan->inspectAssociationState(caller,impl_->ownerBytes).has_value();const auto phase=committed?storage::PreparedStoppedPublicIntake::State::Committed:take(impl_->plan->inspect(caller,impl_->ownerBytes));
+    if(phase==storage::PreparedStoppedPublicIntake::State::Before){cleanupTemporary(*impl_->intent);auto access=take(caller.sourceAccess(true));removeIntent(caller.directoryHandle(),impl_->ownerBytes);impl_->intent.reset();impl_->ownerBytes.clear();impl_->result.cancelled=true;impl_->result.needsReview=false;impl_->terminal=true;impl_->ready=false;return {};}
+    if(phase==storage::PreparedStoppedPublicIntake::State::Pending){take(impl_->plan->commit(caller,impl_->ownerBytes));}
+  }
+  (void)impl_->settle(caller,false);return {};
+}catch(const AcquisitionFailure& error){impl_->result.needsReview=!impl_->ownerBytes.empty();return std::unexpected(error.error);}catch(...){impl_->result.needsReview=!impl_->ownerBytes.empty();return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Cancelled acquisition requires owned recovery"});}}
 void SavedSubscriptionAcquisition::cancel()noexcept{if(impl_){impl_->stopped->request_stop();}}
 std::expected<void,storage::Error> SavedSubscriptionAcquisition::close(){
   if(!impl_||impl_->closed){return {};}
@@ -283,7 +332,8 @@ std::expected<std::optional<SavedSubscriptionAcquisition::Outcome>,storage::Erro
   profileCurrent(caller,profile);auto primary=readFile(caller.directoryHandle(),std::string(OwnerName)),saving=readFile(caller.directoryHandle(),std::string(OwnerName)+".saving"),backup=readFile(caller.directoryHandle(),std::string(OwnerName)+".bak");require(!backup.present,storage::ErrorCode::Conflict,"Unknown acquisition backup requires review");if(!primary.present&&!saving.present){return std::optional<Outcome>{};}
   std::optional<Intent> previous;if(primary.present){previous=parseIntent(primary.bytes);}auto intent=saving.present?parseIntent(saving.bytes):*previous;if(previous&&saving.present){require(extends(*previous,intent),storage::ErrorCode::Conflict,"Acquisition saving is not a monotone owned state");}
   auto value=std::make_unique<Impl>();value->profile=profile;value->runtimeTargetCheck=runtimeTargetCheck;value->selected=selectedFrom(intent.selection);value->intent=std::move(intent);value->ownerBytes=encodeIntent(*value->intent);
-  if(value->intent->mode==IntentMode::Existing){
+  value->automatic=automaticMode(value->intent->mode);value->result.automatic=value->automatic;
+  if(existingMode(value->intent->mode)){
     value->session=attemptSession(*value->intent);const auto hash=intentTarget(*value->intent);if(runtimeTargetCheck){take(runtimeTargetCheck(hash));}
     const auto archive=profile/"torrents"/(hash.hex()+".torrent");auto metadata=take(storage::inspectTorrentIntake(archive,{},value->intent->filenameConversions,value->intent->decoderShowAll));
     value->existing.emplace(take(storage::ExistingStoppedPublicSubscriptionTarget::restore(caller,metadata,value->intent->destination,value->session,value->intent->plan,value->ownerBytes)));value->metadata.emplace(std::move(metadata));

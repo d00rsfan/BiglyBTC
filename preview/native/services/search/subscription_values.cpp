@@ -75,12 +75,12 @@ std::expected<std::string,V> mergeJson(const std::string& old,const std::map<std
   for(const auto& [key,value]:changed){if(used.contains(key)){continue;}if(out.size()>1){out+=',';}out+=quote(QString::fromUtf8(key.data(),static_cast<qsizetype>(key.size())))+":"+value;}out+='}';if(out.size()>Limits.inputBytes){return std::unexpected(V::Limit);}return out;
 }
 std::expected<std::string,V> replaceRow(const core::Document& d,std::string_view listName,std::size_t index,const std::string& row){const auto* list=d.find(listName);if(!list||list->type!=core::Node::Type::List||index>=list->children.size()){return std::unexpected(V::Malformed);}std::string value="l";for(std::size_t i=0;i<list->children.size();++i){value+=i==index?row:encoded(list->children[i]);}value+='e';return replace(d.originalBytes(),{{std::string(listName),std::move(value)}});}
-std::expected<SubscriptionHistoryCommit,V> commitValues(const SubscriptionIndex& index,std::size_t selected,const SubscriptionResults& prior,const std::vector<SubscriptionResultValue>& rows,std::optional<std::int64_t> scan,std::int64_t newest,std::int64_t now){
+std::expected<SubscriptionHistoryCommit,V> commitValues(const SubscriptionIndex& index,std::size_t selected,const SubscriptionResults& prior,const std::vector<SubscriptionResultValue>& rows,std::optional<std::int64_t> scan,std::int64_t newest,std::int64_t now,std::optional<bool> automaticSupported=std::nullopt){
   const auto* list=index.source->find("subs");if(!list||selected>=list->children.size()){return std::unexpected(V::Malformed);}const auto& sub=list->children[selected];const auto* history=sub.find("history");
   std::vector<SubscriptionResultValue> finalized=rows,saved,aged;const auto day=now/86400000;for(auto& row:finalized){if(row.deleted&&row.deletedLastSeenDay==0){auto encoded=tombstone(row.encoded,day);if(!encoded){return std::unexpected(encoded.error());}row.encoded=std::move(*encoded);row.deletedLastSeenDay=day;}if(row.deleted&&row.deletedLastSeenDay>0&&day-row.deletedLastSeenDay>14){aged.push_back(std::move(row));}else{saved.push_back(std::move(row));}}if(aged.size()>10000){std::stable_sort(aged.begin(),aged.end(),[](const auto& a,const auto& b){return a.deletedLastSeenDay>b.deletedLastSeenDay;});aged.resize(5000);}for(auto& row:aged){saved.push_back(std::move(row));}
   std::int64_t read=0,unread=0;std::string resultList="l";for(const auto& row:saved){resultList+=row.encoded;if(!row.deleted){if(row.read){++read;}else{++unread;}}}resultList+='e';
   auto resultBytes=replace(prior.source->originalBytes(),{{"results",std::move(resultList)}});if(!resultBytes){return std::unexpected(resultBytes.error());}
-  std::map<std::string,std::string> fields{{"num_read",bi(read)},{"num_unread",bi(unread)}};if(scan){fields["last_scan"]=bi(*scan);fields["last_new"]=bi(newest);}
+  std::map<std::string,std::string> fields{{"num_read",bi(read)},{"num_unread",bi(unread)}};if(scan){fields["last_scan"]=bi(*scan);fields["last_new"]=bi(newest);}if(automaticSupported){fields["auto_dl_supported"]=bi(*automaticSupported?1:0);}
   auto nextHistory=replace(history?encoded(*history):"de",fields);if(!nextHistory){return std::unexpected(nextHistory.error());}auto nextRow=replace(encoded(sub),{{"history",std::move(*nextHistory)}});if(!nextRow){return std::unexpected(nextRow.error());}auto config=replaceRow(*index.source,"subs",selected,*nextRow);if(!config){return std::unexpected(config.error());}
   return SubscriptionHistoryCommit{std::move(*resultBytes),std::move(*config),scan.value_or(0)};
 }
@@ -93,7 +93,7 @@ std::expected<std::int64_t,V> publication(const RssDocument& doc,const RssResult
 }
 } // namespace
 
-std::expected<SubscriptionIndex,V> parseSubscriptionIndex(std::string raw){try{
+std::expected<SubscriptionIndex,V> parseSubscriptionIndex(std::string raw,SubscriptionIndexPurpose purpose){try{
   auto source=document(std::move(raw));if(!source){return std::unexpected(source.error());}const auto* list=(*source)->find("subs");if(!list||list->type!=core::Node::Type::List){return std::unexpected(V::Malformed);}if(list->children.size()>4096){return std::unexpected(V::Limit);}SubscriptionIndex out;out.source=*source;std::map<std::string,std::size_t> ids;
   for(std::size_t i=0;i<list->children.size();++i){const auto& node=list->children[i];SubscriptionSavedRow row;row.selected.sourceIndex=i;const auto pk=bytes(node,"public_key"),name=bytes(node,"name");const auto* singleton=node.find("sin_details");const auto singletonKey=singleton?bytes(*singleton,"key",2048):std::nullopt;
     // Index every usable path identity BEFORE checking version/name/support.
@@ -106,7 +106,7 @@ std::expected<SubscriptionIndex,V> parseSubscriptionIndex(std::string raw){try{
     if(!subscribed||!anonymous||!enabled||!automatic||!scan||!last||!over||!maximum||!notification||h.type!=core::Node::Type::Dictionary||(*subscribed!=0&&*subscribed!=1)||(*anonymous!=0&&*anonymous!=1)||(*enabled!=0&&*enabled!=1)||(*automatic!=0&&*automatic!=1)||*scan<0||*last<0){row.issue=V::Malformed;}
     else{row.subscribed=*subscribed==1;row.enabled=*enabled==1;row.autoDownload=*automatic==1;row.anonymous=*anonymous==1;row.lastScan=*scan;row.lastNew=*last;row.intervalOverride=*over;row.maxResults=*maximum;if(*notification!=0){row.issue=V::Unsupported;}}
     const auto readCount=number(h,"num_read",0),unreadCount=number(h,"num_unread",0);if(!readCount||!unreadCount||*readCount<0||*unreadCount<0){row.issue=V::Malformed;}else{row.readCount=*readCount;row.unreadCount=*unreadCount;}
-    if(row.autoDownload||row.anonymous||!empty(node,"dep")||!empty(node,"eonr")){row.issue=V::Unsupported;}if(const auto* nets=h.find("nets");nets&&(nets->type!=core::Node::Type::Bytes||(!nets->bytes.empty()&&nets->bytes!="Public"))){row.issue=V::Unsupported;}if(const auto age=number(h,"max_age_secs",-1);!age||*age>0){row.issue=V::Unsupported;}if(collision){row.issue=V::Ambiguous;}out.rows.push_back(std::move(row));
+    if((row.autoDownload&&purpose!=SubscriptionIndexPurpose::AutomaticAcquisition)||row.anonymous||!empty(node,"dep")||!empty(node,"eonr")){row.issue=V::Unsupported;}if(const auto* nets=h.find("nets");nets&&(nets->type!=core::Node::Type::Bytes||(!nets->bytes.empty()&&nets->bytes!="Public"))){row.issue=V::Unsupported;}if(const auto age=number(h,"max_age_secs",-1);!age||*age>0){row.issue=V::Unsupported;}if(collision){row.issue=V::Ambiguous;}out.rows.push_back(std::move(row));
   }return out;
 }catch(const std::bad_alloc&){return std::unexpected(V::Memory);}}
 
@@ -139,7 +139,7 @@ std::int64_t subscriptionNextScan(std::int64_t last,std::int64_t over,std::int64
 }
 std::int64_t subscriptionRetryTime(std::int64_t failed,unsigned count)noexcept{std::int64_t delay=600000;for(unsigned i=1;i<count&&delay<28800000;++i){delay=std::min<std::int64_t>(delay*2,28800000);}return failed>std::numeric_limits<std::int64_t>::max()-delay?std::numeric_limits<std::int64_t>::max():failed+delay;}
 
-std::expected<SubscriptionHistoryCommit,V> reconcileSubscriptionResults(const SubscriptionIndex& index,std::size_t selected,const SubscriptionResults& prior,const RssDocument& incoming,std::int64_t engineId,std::int64_t now,const SubscriptionNumericFilter* numericFilter,const SubscriptionLiteralFilter* literalFilter){try{
+std::expected<SubscriptionHistoryCommit,V> reconcileSubscriptionResults(const SubscriptionIndex& index,std::size_t selected,const SubscriptionResults& prior,const RssDocument& incoming,std::int64_t engineId,std::int64_t now,const SubscriptionNumericFilter* numericFilter,const SubscriptionLiteralFilter* literalFilter,std::optional<bool> automaticSupported){try{
   if(selected>=index.rows.size()||index.rows[selected].issue||now<0||incoming.results.size()>4096||!incoming.issues.empty()){return std::unexpected(V::Unsupported);}const auto& sub=index.rows[selected];auto rows=prior.rows;std::map<std::string,std::size_t> primary,secondary;for(std::size_t i=0;i<rows.size();++i){primary.emplace(rows[i].key,i);if(rows[i].secondaryKey&&!secondary.emplace(*rows[i].secondaryKey,i).second){return std::unexpected(V::Ambiguous);}}
   std::int64_t newest=sub.lastNew;const auto day=now/86400000;
   for(const auto& result:incoming.results){
@@ -157,7 +157,7 @@ std::expected<SubscriptionHistoryCommit,V> reconcileSubscriptionResults(const Su
     }else{if(rows.size()==16384){return std::unexpected(V::Limit);}SubscriptionResultValue row;row.key=key;row.secondaryKey=uid;row.read=sub.lastScan==0;row.timeFoundSeconds=now/1000;row.json=jsonObject(fields);std::map<std::string,std::string> bfields{{"key",bs(key)},{"read",bi(row.read?1:0)},{"result_json",bs(row.json)},{"tz",bi(now/1000)}};if(uid){bfields["key2"]=bs(*uid);}row.encoded="d";for(const auto& [k,v]:bfields){row.encoded+=bs(k)+v;}row.encoded+='e';primary.emplace(key,rows.size());if(uid){secondary.emplace(*uid,rows.size());}rows.push_back(std::move(row));newest=now;}
   }
   if(sub.maxResults>0){auto live=std::ranges::count_if(rows,[](const auto& r){return !r.deleted;});for(auto& row:rows){if(live<=sub.maxResults){break;}if(!row.deleted){auto changed=tombstone(row.encoded,day);if(!changed){return std::unexpected(changed.error());}row.encoded=std::move(*changed);row.deleted=true;row.deletedLastSeenDay=day;--live;}}}
-  return commitValues(index,selected,prior,rows,now,newest,now);
+  return commitValues(index,selected,prior,rows,now,newest,now,automaticSupported);
 }catch(const std::bad_alloc&){return std::unexpected(V::Memory);}}
 
 std::expected<SubscriptionHistoryCommit,V> changeSubscriptionResultState(const SubscriptionIndex& index,std::size_t selected,const SubscriptionResults& prior,const std::vector<std::string>& keys,bool read,bool deleted,std::int64_t now){try{

@@ -11,7 +11,7 @@ class SessionBridge;
 // to the actual bridge; no URL/hash/receipt/serialized-plan grant is accepted.
 class SavedSubscriptionAcquisition final {
 public:
-  struct Outcome {bool imported=false,associated=false,read=false,cancelled=false,needsReview=false;std::optional<core::TorrentHash> hash;QString warning;bool alreadyPresent=false;};
+  struct Outcome {bool imported=false,associated=false,read=false,cancelled=false,needsReview=false;std::optional<core::TorrentHash> hash;QString warning;bool alreadyPresent=false,automatic=false,queued=false,paused=false;};
   ~SavedSubscriptionAcquisition();
   SavedSubscriptionAcquisition(const SavedSubscriptionAcquisition&)=delete;
   void cancel()noexcept;
@@ -23,9 +23,16 @@ private:
   static std::expected<std::unique_ptr<SavedSubscriptionAcquisition>,storage::Error> begin(
       const storage::ProfileLease&,std::filesystem::path,std::uint64_t,search::SavedSubscriptionResultSelector,
       std::filesystem::path destination,std::stop_token receiver,Factory={},RuntimeTargetCheck={});
+  static std::expected<std::unique_ptr<SavedSubscriptionAcquisition>,storage::Error> beginAutomatic(
+      const storage::ProfileLease&,std::filesystem::path,std::uint64_t,search::SavedSubscriptionResultSelector,
+      std::stop_token receiver,Factory={},RuntimeTargetCheck={});
+  static std::expected<std::unique_ptr<SavedSubscriptionAcquisition>,storage::Error> beginImpl(
+      const storage::ProfileLease&,std::filesystem::path,std::uint64_t,search::SavedSubscriptionResultSelector,
+      std::filesystem::path,std::stop_token,Factory,RuntimeTargetCheck,bool automatic);
   // Null outcome: pending network or ready for private stopped intake. No effect
   // is imported by poll; Host::publishTarget must surround saveIntake.
   std::expected<std::optional<Outcome>,storage::Error> poll(storage::ProfileLease&,std::uint64_t);
+  std::expected<void,storage::Error> abort(storage::ProfileLease&,std::uint64_t);
   bool readyForIntake()const noexcept;
   const Outcome& outcome()const noexcept;
   const core::TorrentHash& intakeHash()const noexcept;

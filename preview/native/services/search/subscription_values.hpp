@@ -45,14 +45,17 @@ struct SubscriptionHistoryCommit {
   std::int64_t scanMillis=0;
 };
 // Pure bounded codecs/policy only; no profile, effect, authority or network.
-std::expected<SubscriptionIndex,SubscriptionValueError> parseSubscriptionIndex(std::string);
+enum class SubscriptionIndexPurpose {Manual,AutomaticAcquisition};
+std::expected<SubscriptionIndex,SubscriptionValueError> parseSubscriptionIndex(std::string,
+    SubscriptionIndexPurpose=SubscriptionIndexPurpose::Manual);
 std::expected<SubscriptionDefinition,SubscriptionValueError> parseSubscriptionDefinition(
     std::string body,const SubscriptionSavedRow&,const core::Document* actualCatalog);
 std::expected<SubscriptionResults,SubscriptionValueError> parseSubscriptionResults(std::string);
 std::expected<SubscriptionHistoryCommit,SubscriptionValueError> reconcileSubscriptionResults(
     const SubscriptionIndex&,std::size_t,const SubscriptionResults&,const RssDocument&,
     std::int64_t engineId,std::int64_t nowMillis,const SubscriptionNumericFilter* numericFilter=nullptr,
-    const SubscriptionLiteralFilter* literalFilter=nullptr);
+    const SubscriptionLiteralFilter* literalFilter=nullptr,
+    std::optional<bool> automaticSupported=std::nullopt);
 std::expected<SubscriptionHistoryCommit,SubscriptionValueError> changeSubscriptionResultState(
     const SubscriptionIndex&,std::size_t,const SubscriptionResults&,
     const std::vector<std::string>& exactKeys,bool read,bool deleted,std::int64_t nowMillis);

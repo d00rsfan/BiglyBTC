@@ -27,6 +27,15 @@ private:
   static std::expected<ExistingStoppedPublicSubscriptionTarget,Error> capture(
       const ProfileLease&,const TorrentIntakeMetadata&,const std::filesystem::path& chosenDestination,
       std::uint64_t session,std::stop_token={},std::string_view exactOwnerIntent={});
+  static std::expected<ExistingStoppedPublicSubscriptionTarget,Error> captureAutomatic(
+      const ProfileLease&,const TorrentIntakeMetadata&,std::uint64_t session,std::stop_token={});
+  std::expected<void,Error> prepareAutomatic(FixedSubscriptionDownloadPreparation);
+  const search::detail::SubscriptionAutomaticPolicyValues* automaticPolicy()const noexcept;
+  const search::detail::SubscriptionAutomaticGeometry* automaticGeometry()const noexcept;
+  std::expected<bool,Error> automaticArtifactPresent(const ProfileLease&,std::uint64_t,std::string_view)const;
+  std::expected<void,Error> prepareAutomaticArtifacts(const ProfileLease&,std::uint64_t,std::string_view exactOwnerIntent);
+  std::expected<void,Error> publishAutomaticArtifact(const ProfileLease&,std::uint64_t,std::string_view exactOwnerIntent);
+  std::expected<void,Error> rollbackAutomaticArtifact(const ProfileLease&,std::uint64_t,std::string_view exactOwnerIntent);
   // Pure preparation only; no filesystem effect. Methods below are private to
   // the real coordinator and accept only fixed recipe inputs, never postimages.
   std::expected<void,Error> prepare(FixedSubscriptionDownloadPreparation);

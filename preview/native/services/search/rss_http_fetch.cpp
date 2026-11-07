@@ -354,7 +354,9 @@ struct RssHttpFetch::Impl {
   std::shared_ptr<const storage::ProfileLease> lease;
   // Closed owning source set. No virtual/callback source can mint a phase.
   using Source=std::variant<SavedRssSourceSnapshot,SavedSubscriptionSourceSnapshot,SavedSubscriptionResultSnapshot>;
-  using Selected=std::variant<SavedRssSelector,SavedSubscriptionSelector,SavedSubscriptionResultSelector>;
+  struct AutomaticSubscription {SavedSubscriptionSelector selected;};
+  struct AutomaticResult {SavedSubscriptionResultSelector selected;};
+  using Selected=std::variant<SavedRssSelector,SavedSubscriptionSelector,SavedSubscriptionResultSelector,AutomaticSubscription,AutomaticResult>;
   std::optional<Source> source;
   BodyKind bodyKind=BodyKind::RssDocument;
   std::filesystem::path profile;
@@ -375,6 +377,9 @@ struct RssHttpFetch::Impl {
   const RssGetDescription& description()const{
     return std::visit([](const auto& saved)->const RssGetDescription&{return saved.description();},*source);
   }
+  bool automatic()const{
+    return std::visit([](const auto& saved){using T=std::remove_cvref_t<decltype(saved)>;if constexpr(std::is_same_v<T,SavedRssSourceSnapshot>){return false;}else{return saved.automaticPolicy()!=nullptr;}},*source);
+  }
   std::expected<std::uint64_t,SavedRssSourceError> sourceCurrent(
       const storage::ProfileLease& caller,std::uint64_t currentSession)const{
     return std::visit([&](const auto& saved){return saved.current(caller,currentSession);},*source);
@@ -391,9 +396,13 @@ struct RssHttpFetch::Impl {
         auto saved=SavedSubscriptionSourceSnapshot::read(caller,path,session,std::move(identity));
         if(!saved){return std::unexpected(Error::Source);}
         return Source{std::in_place_type<SavedSubscriptionSourceSnapshot>,std::move(*saved)};
+      }else if constexpr(std::is_same_v<Identity,AutomaticSubscription>){
+        auto saved=SavedSubscriptionSourceSnapshot::readAutomatic(caller,path,session,std::move(identity.selected));
+        if(!saved){return std::unexpected(Error::Source);}
+        return Source{std::in_place_type<SavedSubscriptionSourceSnapshot>,std::move(*saved)};
       }else{
-        static_assert(std::is_same_v<Identity,SavedSubscriptionResultSelector>);
-        auto saved=SavedSubscriptionResultSnapshot::read(caller,path,session,std::move(identity));
+        static_assert(std::is_same_v<Identity,SavedSubscriptionResultSelector>||std::is_same_v<Identity,AutomaticResult>);
+        auto saved=[&]{if constexpr(std::is_same_v<Identity,AutomaticResult>){return SavedSubscriptionResultSnapshot::readAutomatic(caller,path,session,std::move(identity.selected));}else{return SavedSubscriptionResultSnapshot::read(caller,path,session,std::move(identity));}}();
         if(!saved){return std::unexpected(Error::Source);}
         return Source{std::in_place_type<SavedSubscriptionResultSnapshot>,std::move(*saved)};
       }
@@ -491,6 +500,12 @@ std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> RssHttpFetch::openSub
   try{return std::unique_ptr<RssHttpFetch>(new RssHttpFetch(std::move(*value)));}
   catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
 }
+std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> RssHttpFetch::openAutomaticSubscriptionOneShot(
+    const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,SavedSubscriptionSelector selected,std::stop_token stop){
+  auto value=Impl::make(lease,path,session,Impl::AutomaticSubscription{std::move(selected)},stop);if(!value){return std::unexpected(value.error());}
+  try{return std::unique_ptr<RssHttpFetch>(new RssHttpFetch(std::move(*value)));}
+  catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
+}
 #if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
 std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> RssHttpFetch::openFixture(
     const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,SavedRssSelector selected,PrivateEndpointFixture fixture,std::stop_token stop){
@@ -501,6 +516,12 @@ std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> RssHttpFetch::openFix
 std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> RssHttpFetch::openSubscriptionFixture(
     const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,SavedSubscriptionSelector selected,PrivateEndpointFixture fixture,std::stop_token stop){
   auto value=Impl::make(lease,path,session,std::move(selected),stop,std::move(fixture));if(!value){return std::unexpected(value.error());}
+  try{return std::unique_ptr<RssHttpFetch>(new RssHttpFetch(std::move(*value)));}
+  catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
+}
+std::expected<std::unique_ptr<RssHttpFetch>,RssFetchError> RssHttpFetch::openAutomaticSubscriptionFixture(
+    const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,SavedSubscriptionSelector selected,PrivateEndpointFixture fixture,std::stop_token stop){
+  auto value=Impl::make(lease,path,session,Impl::AutomaticSubscription{std::move(selected)},stop,std::move(fixture));if(!value){return std::unexpected(value.error());}
   try{return std::unique_ptr<RssHttpFetch>(new RssHttpFetch(std::move(*value)));}
   catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
 }
@@ -519,7 +540,16 @@ bool RssHttpFetch::matchesSubscriptionSource(const storage::ProfileLease& caller
     const std::filesystem::path& profile,std::uint64_t session,const SavedSubscriptionSelector& selected,std::stop_token receiver)const noexcept{
   try{
     if(!impl_||impl_->closed||std::this_thread::get_id()!=impl_->worker||!impl_->lease||!impl_->source
-        ||!caller.sharesOwnership(*impl_->lease)||impl_->profile!=profile||impl_->session!=session||impl_->receiverToken!=receiver){return false;}
+        ||impl_->automatic()||!caller.sharesOwnership(*impl_->lease)||impl_->profile!=profile||impl_->session!=session||impl_->receiverToken!=receiver){return false;}
+    const auto* saved=std::get_if<SavedSubscriptionSourceSnapshot>(&*impl_->source);
+    return saved&&saved->description().selected==selected;
+  }catch(...){return false;}
+}
+bool RssHttpFetch::matchesAutomaticSubscriptionSource(const storage::ProfileLease& caller,
+    const std::filesystem::path& profile,std::uint64_t session,const SavedSubscriptionSelector& selected,std::stop_token receiver)const noexcept{
+  try{
+    if(!impl_||impl_->closed||std::this_thread::get_id()!=impl_->worker||!impl_->lease||!impl_->source
+        ||!impl_->automatic()||!caller.sharesOwnership(*impl_->lease)||impl_->profile!=profile||impl_->session!=session||impl_->receiverToken!=receiver){return false;}
     const auto* saved=std::get_if<SavedSubscriptionSourceSnapshot>(&*impl_->source);
     return saved&&saved->description().selected==selected;
   }catch(...){return false;}
@@ -613,11 +643,27 @@ std::expected<std::unique_ptr<SubscriptionMetainfoFetch>,RssFetchError> Subscrip
   try{return std::unique_ptr<SubscriptionMetainfoFetch>(new SubscriptionMetainfoFetch(std::move(*value)));}
   catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
 }
+std::expected<std::unique_ptr<SubscriptionMetainfoFetch>,RssFetchError> SubscriptionMetainfoFetch::openAutomaticOneShot(
+    const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,
+    SavedSubscriptionSelector selected,std::string resultKey,std::stop_token stop){
+  auto value=RssHttpFetch::Impl::make(lease,path,session,RssHttpFetch::Impl::AutomaticResult{SavedSubscriptionResultSelector{std::move(selected),std::move(resultKey)}},stop);
+  if(!value){return std::unexpected(value.error());}
+  try{return std::unique_ptr<SubscriptionMetainfoFetch>(new SubscriptionMetainfoFetch(std::move(*value)));}
+  catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
+}
 #if defined(BIGLYBTC_RSS_FETCH_TEST_FIXTURE)
 std::expected<std::unique_ptr<SubscriptionMetainfoFetch>,RssFetchError> SubscriptionMetainfoFetch::openFixture(
     const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,
     SavedSubscriptionSelector selected,std::string resultKey,RssHttpFetch::PrivateEndpointFixture fixture,std::stop_token stop){
   auto value=RssHttpFetch::Impl::make(lease,path,session,SavedSubscriptionResultSelector{std::move(selected),std::move(resultKey)},stop,std::move(fixture));
+  if(!value){return std::unexpected(value.error());}
+  try{return std::unique_ptr<SubscriptionMetainfoFetch>(new SubscriptionMetainfoFetch(std::move(*value)));}
+  catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
+}
+std::expected<std::unique_ptr<SubscriptionMetainfoFetch>,RssFetchError> SubscriptionMetainfoFetch::openAutomaticFixture(
+    const storage::ProfileLease& lease,const std::filesystem::path& path,std::uint64_t session,
+    SavedSubscriptionSelector selected,std::string resultKey,RssHttpFetch::PrivateEndpointFixture fixture,std::stop_token stop){
+  auto value=RssHttpFetch::Impl::make(lease,path,session,RssHttpFetch::Impl::AutomaticResult{SavedSubscriptionResultSelector{std::move(selected),std::move(resultKey)}},stop,std::move(fixture));
   if(!value){return std::unexpected(value.error());}
   try{return std::unique_ptr<SubscriptionMetainfoFetch>(new SubscriptionMetainfoFetch(std::move(*value)));}
   catch(const std::bad_alloc&){return std::unexpected(Error::Memory);}
@@ -628,7 +674,19 @@ bool SubscriptionMetainfoFetch::matchesSubscriptionResultSource(const storage::P
     std::string_view resultKey,std::stop_token receiver)const noexcept{
   try{
     if(!impl_||impl_->closed||std::this_thread::get_id()!=impl_->worker||!impl_->lease||!impl_->source
-        ||impl_->bodyKind!=BodyKind::TorrentMetainfo||!caller.sharesOwnership(*impl_->lease)
+        ||impl_->automatic()||impl_->bodyKind!=BodyKind::TorrentMetainfo||!caller.sharesOwnership(*impl_->lease)
+        ||impl_->profile!=profile||impl_->session!=session||impl_->receiverToken!=receiver){return false;}
+    const auto* saved=std::get_if<SavedSubscriptionResultSnapshot>(&*impl_->source);if(!saved){return false;}
+    const auto& actual=saved->description().selected;
+    return actual.subscription==selected&&std::string_view(actual.resultKey)==resultKey;
+  }catch(...){return false;}
+}
+bool SubscriptionMetainfoFetch::matchesAutomaticSubscriptionResultSource(const storage::ProfileLease& caller,
+    const std::filesystem::path& profile,std::uint64_t session,const SavedSubscriptionSelector& selected,
+    std::string_view resultKey,std::stop_token receiver)const noexcept{
+  try{
+    if(!impl_||impl_->closed||std::this_thread::get_id()!=impl_->worker||!impl_->lease||!impl_->source
+        ||!impl_->automatic()||impl_->bodyKind!=BodyKind::TorrentMetainfo||!caller.sharesOwnership(*impl_->lease)
         ||impl_->profile!=profile||impl_->session!=session||impl_->receiverToken!=receiver){return false;}
     const auto* saved=std::get_if<SavedSubscriptionResultSnapshot>(&*impl_->source);if(!saved){return false;}
     const auto& actual=saved->description().selected;
