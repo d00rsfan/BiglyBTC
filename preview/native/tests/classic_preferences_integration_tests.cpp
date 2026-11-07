@@ -169,10 +169,10 @@ private slots:
     Profile p; core::ClassicPreferences expected;
     core::ClassicPanePreferences* panes[] = {&expected.incomplete, &expected.complete};
     for (int pane = 0; pane < 2; ++pane) {
-      for (int logical = 0; logical < 13; ++logical) {
+      for (int logical = 0; logical < ui::LibraryModel::Columns; ++logical) {
         panes[pane]->columns[logical].visible = (logical + pane) % 3 != 0;
         if (logical != 0) { panes[pane]->columns[logical].width = 150 + pane * 120 + logical * 23; }
-        panes[pane]->order[logical] = core::ClassicPreferenceIds[(logical + 5 + pane) % 13];
+        panes[pane]->order[logical] = core::ClassicPreferenceIds[(logical + 5 + pane) % core::ClassicPreferenceIds.size()];
       }
       panes[pane]->sortId = core::ClassicPreferenceIds[pane == 0 ? 12 : 2];
       panes[pane]->ascending = pane != 0;
@@ -185,12 +185,12 @@ private slots:
       QTableView* tables[] = {&w.incompleteTable(), &w.completeTable()};
       for (int pane = 0; pane < 2; ++pane) {
         auto* table = tables[pane]; auto* header = table->horizontalHeader();
-        for (int logical = 0; logical < 13; ++logical) {
+        for (int logical = 0; logical < ui::LibraryModel::Columns; ++logical) {
           if (logical != 0) { header->resizeSection(logical, *panes[pane]->columns[logical].width); }
           table->setColumnHidden(logical, !panes[pane]->columns[logical].visible);
         }
-        for (int visual = 0; visual < 13; ++visual) {
-          const int logical = (visual + 5 + pane) % 13;
+        for (int visual = 0; visual < ui::LibraryModel::Columns; ++visual) {
+          const int logical = (visual + 5 + pane) % ui::LibraryModel::Columns;
           header->moveSection(header->visualIndex(logical), visual);
         }
         table->sortByColumn(pane == 0 ? 12 : 2, panes[pane]->ascending ? Qt::AscendingOrder : Qt::DescendingOrder);

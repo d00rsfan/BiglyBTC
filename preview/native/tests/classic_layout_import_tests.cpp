@@ -158,6 +158,55 @@ private slots:
     QApplication::setQuitOnLastWindowClosed(false);
   }
 
+  void completeAndDndRowsStayInSeedsWhileCheckingAndPathsKeepUnicode(){
+    ui::LibraryWindow window;auto rows=sample();
+    rows->items[0].completed=0;rows->items[0].state="Checking 36.5%";rows->items[0].assumedComplete=true;rows->items[0].savedPosition=601;
+    rows->items[0].savePath=QString::fromUtf8("/generated/Папка & часть/файл.bin");rows->items[0].trackerName="tracker.example";
+    rows->items[1].completed=400;rows->items[1].assumedComplete=true;rows->items[1].savedPosition=600;
+    rows->items[2].assumedComplete=false;rows->items[2].savedPosition=1;
+    window.setPresentation(rows);window.show();QCoreApplication::processEvents();
+    QCOMPARE(window.incompleteTable().model()->rowCount(),1);QCOMPARE(window.completeTable().model()->rowCount(),3);
+    QCOMPARE(window.model().data(window.model().index(0,9),Qt::UserRole).toLongLong(),qint64{601});
+    QCOMPARE(window.model().data(window.model().index(0,13),Qt::DisplayRole).toString(),rows->items[0].savePath);
+    QCOMPARE(window.model().data(window.model().index(0,14),Qt::DisplayRole).toString(),QStringLiteral("tracker.example"));
+    QCOMPARE(window.model().completionAt(0),std::optional<bool>{true});
+    QCOMPARE(window.model().data(window.model().index(0,1),Qt::DisplayRole).toString(),QStringLiteral("Checking 36.5%"));
+    QCOMPARE(window.model().data(window.model().index(0,3),Qt::DisplayRole).toString(),QStringLiteral("100.0%"));
+    auto after=std::make_shared<ui::LibraryPresentation>(*rows);after->revision=2;after->items[0].assumedComplete=false;after->items[0].state="Downloading";after->items[0].completed=500;
+    window.setPresentation(after);QCOMPARE(window.incompleteTable().model()->rowCount(),2);QCOMPARE(window.completeTable().model()->rowCount(),2);
+  }
+
+  void originalRankColumnRestoresBothQueues_data(){
+    QTest::addColumn<bool>("visible");QTest::addColumn<bool>("ascending");
+    QTest::newRow("visible-ascending")<<true<<true;QTest::newRow("visible-descending")<<true<<false;
+    QTest::newRow("hidden-ascending")<<false<<true;QTest::newRow("hidden-descending")<<false<<false;
+  }
+  void originalRankColumnRestoresBothQueues(){
+    QFETCH(bool,visible);QFETCH(bool,ascending);
+    ui::LibraryWindow window;prepare(window);bindBusyOwner(window);
+    auto rows=sample(2);rows->items[0].savedPosition=10;rows->items[1].savedPosition=2;rows->items[2].savedPosition=1;window.setPresentation(rows);
+    QSignalSpy requests(&window,&ui::LibraryWindow::columnLayoutsRequested);QVERIFY(start(window,requests));
+    const auto direction=ascending?1:0;
+    deliver(window,41,requestAt(requests),tables(
+        d({{"Column.#",col(visible?1:0,0,53,direction)},{"Column.name",col(1,1,600)},{"Column.savepath",col(1,6,352)},{"Column.trackername",col(1,9,120)},{"SortColumns",l({b("#")})}}),
+        d({{"Column.#",col(visible?1:0,0,67,direction)},{"Column.name",col(1,1,600)},{"Column.savepath",col(1,11,621)},{"Column.trackername",col(1,9,98)},{"SortColumns",l({b("#")})}})));
+    for(const bool completed:{false,true}){
+      auto& table=completed?window.completeTable():window.incompleteTable();auto* header=table.horizontalHeader();
+      QCOMPARE(header->logicalIndex(0),9);QCOMPARE(table.isColumnHidden(9),!visible);
+      QCOMPARE(header->sortIndicatorSection(),9);QCOMPARE(header->sortIndicatorOrder(),ascending?Qt::AscendingOrder:Qt::DescendingOrder);
+      QCOMPARE(table.model()->headerData(9,Qt::Horizontal).toString(),QStringLiteral("Order"));
+      if(visible){QCOMPARE(header->sectionSize(9),completed?67:53);}
+      QVERIFY(!table.isColumnHidden(13));QVERIFY(!table.isColumnHidden(14));
+      QCOMPARE(header->sectionSize(13),completed?621:352);QCOMPARE(header->sectionSize(14),completed?98:120);
+      QCOMPARE(table.model()->headerData(13,Qt::Horizontal).toString(),QStringLiteral("Save Path"));
+      QCOMPARE(table.model()->headerData(14,Qt::Horizontal).toString(),QStringLiteral("Tracker Name"));
+    }
+    const auto& table=window.incompleteTable();
+    QCOMPARE(table.model()->index(0,9).data(Qt::UserRole).toLongLong(),ascending?qint64{1}:qint64{10});
+    QCOMPARE(table.model()->index(1,9).data(Qt::UserRole).toLongLong(),qint64{2});
+    QCOMPARE(rows->items[0].savedPosition,std::optional<qint64>{10});
+  }
+
   void whitelistExclusionsAndNameStretch() {
     ui::LibraryWindow window; prepare(window); bindBusyOwner(window);
     QSignalSpy requests(&window, &ui::LibraryWindow::columnLayoutsRequested);
@@ -167,7 +216,7 @@ private slots:
     for (const auto* id : {"name", "status", "downspeed", "upspeed", "up", "torrenthash"}) {
       fields.emplace_back(std::string("Column.") + id, col(1, -1, 401));
     }
-    for (const auto* id : {"size", "remaining", "done", "down", "#", "Name", "state", "plugin.name"}) {
+    for (const auto* id : {"not-a-column", "Name", "state", "plugin.name", "down"}) {
       fields.emplace_back(std::string("Column.") + id, col(0, 0, 707));
     }
     fields.emplace_back("Column." + std::string("name\0alias", 10), col(0, 0, 707));

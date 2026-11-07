@@ -145,7 +145,7 @@ core::ClassicPreferences preferences(bool second = false) {
     for (std::size_t logical = 0; logical < core::ClassicPreferenceIds.size(); ++logical) {
       value.columns[logical].visible = (logical + pane + (second ? 1 : 0)) % 3 != 0;
       if (logical != 0) { value.columns[logical].width = static_cast<int>(120 + logical * 13 + pane * 73 + (second ? 250 : 0)); }
-      value.order[logical] = core::ClassicPreferenceIds[(logical + pane * 5 + (second ? 3 : 0)) % 13];
+      value.order[logical] = core::ClassicPreferenceIds[(logical + pane * 5 + (second ? 3 : 0)) % core::ClassicPreferenceIds.size()];
     }
     value.sortId = core::ClassicPreferenceIds[second ? pane + 10 : pane + 2];
     value.ascending = (pane == 0) != second;

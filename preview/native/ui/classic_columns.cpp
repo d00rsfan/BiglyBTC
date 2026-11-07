@@ -16,9 +16,9 @@
 namespace biglybtc::ui {
 namespace {
 struct Correspondence { std::string_view id; int logical; };
-constexpr std::array<Correspondence, 6> Whitelist{{
+constexpr std::array<Correspondence, 13> Whitelist{{
     {"name", 0}, {"status", 1}, {"downspeed", 4},
-    {"upspeed", 5}, {"up", 7}, {"torrenthash", 8}}};
+    {"upspeed", 5}, {"up", 7}, {"torrenthash", 8}, {"#", 9}, {"savepath", 13}, {"trackername", 14}, {"size", 10}, {"sizewithdnd", 2}, {"done", 3}, {"remaining", 11}}};
 std::optional<std::size_t> matching(const core::ColumnLayoutText& text) {
   if (!text.validUtf8 || text.embeddedNul) { return std::nullopt; }
   for (std::size_t i = 0; i < Whitelist.size(); ++i) {
@@ -36,7 +36,7 @@ std::optional<qint32> numeric(const core::ColumnLayoutInteger& field) {
 }
 struct PlannedColumn { std::optional<bool> visible; std::optional<int> width; };
 struct Plan {
-  std::array<PlannedColumn, 6> columns{};
+  std::array<PlannedColumn, Whitelist.size()> columns{};
   std::vector<int> order;
   std::optional<int> sort;
   Qt::SortOrder direction = Qt::AscendingOrder;
@@ -52,8 +52,8 @@ std::optional<Plan> plan(const core::SavedTableLayout& saved, const QTableView& 
   const int count = header->count();
   if (count < 0 || count > 1024) { return std::nullopt; }
   Plan result;
-  std::array<const core::SavedColumnLayout*, 6> records{};
-  std::array<bool, 6> duplicate{};
+  std::array<const core::SavedColumnLayout*, Whitelist.size()> records{};
+  std::array<bool, Whitelist.size()> duplicate{};
   for (const auto& column : saved.columns) {
     const auto match = matching(column.id);
     if (!match) { continue; }

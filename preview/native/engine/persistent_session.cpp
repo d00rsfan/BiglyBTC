@@ -929,6 +929,8 @@ struct PersistentSession::Impl {
         && sample.state != lt::torrent_status::checking_resume_data
         && sample.state != lt::torrent_status::downloading_metadata;
     value.status.selectedComplete = sample.is_finished;
+    value.status.checkingProgressPpm.reset();
+    if(sample.state==lt::torrent_status::checking_files&&sample.progress_ppm>=0&&sample.progress_ppm<=1000000){value.status.checkingProgressPpm=sample.progress_ppm;}
     if(value.status.recheck){auto& progress=*value.status.recheck;progress.totalBytes=value.storage.originalBytes();
       progress.scannedBytes=value.storage.recheckScannedBytes();}
 

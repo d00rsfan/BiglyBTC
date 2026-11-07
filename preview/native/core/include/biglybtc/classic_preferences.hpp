@@ -10,10 +10,10 @@
 
 namespace biglybtc::core {
 
-inline constexpr std::array<std::string_view, 13> ClassicPreferenceIds{
+inline constexpr std::array<std::string_view, 15> ClassicPreferenceIds{
     "name", "state", "size", "progress", "download-rate", "upload-rate",
     "received", "sent", "hash", "saved-queue-position", "saved-selected-size",
-    "saved-selected-remaining", "saved-selected-done"};
+    "saved-selected-remaining", "saved-selected-done", "save-path", "tracker-name"};
 
 struct ClassicColumnPreference {
   bool visible = false;
@@ -23,8 +23,8 @@ struct ClassicColumnPreference {
   bool operator==(const ClassicColumnPreference&) const = default;
 };
 struct ClassicPanePreferences {
-  std::array<ClassicColumnPreference, 13> columns{}; // Logical catalog order.
-  std::array<std::string, 13> order{}; // Exactly the known IDs, once each.
+  std::array<ClassicColumnPreference, ClassicPreferenceIds.size()> columns{}; // Logical catalog order.
+  std::array<std::string, ClassicPreferenceIds.size()> order{}; // Exactly the known IDs, once each.
   std::string sortId;
   bool ascending = true;
   bool operator==(const ClassicPanePreferences&) const = default;
@@ -38,6 +38,8 @@ enum class ClassicPreferenceError { Invalid, Unsupported, Limit, Memory, EditedD
 
 std::expected<void, ClassicPreferenceError> validateClassicPreferences(const ClassicPreferences&);
 
+// The original13-column schema is accepted and upgraded with a hidden300px
+// save-path and hidden120px tracker-name columns appended; existing IDs/ordinals and original Java fields stay intact.
 // Native-only schema under BiglyBTC.ClassicColumns.v1; original Java layout
 // keys are never interpreted or edited. Missing namespace is a successful
 // nullopt, not default preferences. Any other root key beginning with

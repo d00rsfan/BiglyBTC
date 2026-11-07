@@ -164,7 +164,7 @@ bool boolean(const Node& node, std::string_view name) {
   return value == 1;
 }
 void validatePane(const ClassicPanePreferences& pane) {
-  std::array<bool, 13> seen{};
+  std::array<bool, ClassicPreferenceIds.size()> seen{};
   for (const auto& value : pane.order) {
     const auto index = id(value);
     if (!index || seen[*index]) { fail(Error::Invalid); }
@@ -183,8 +183,10 @@ ClassicPanePreferences pane(const Node& node) {
   for (std::size_t i = 0; i < columns.children.size(); i += 2) {
     if (!id(columns.children[i].bytes)) { fail(Error::Unsupported); }
   }
-  if (columns.children.size() != 2 * ClassicPreferenceIds.size()) { fail(Error::Invalid); }
-  for (std::size_t i = 0; i < ClassicPreferenceIds.size(); ++i) {
+  const bool legacy=columns.children.size()==26&&!columns.find("save-path");
+  if (!legacy&&columns.children.size()!=2*ClassicPreferenceIds.size()) { fail(Error::Invalid); }
+  const auto supplied=legacy?std::size_t{13}:ClassicPreferenceIds.size();
+  for (std::size_t i = 0; i < supplied; ++i) {
     const auto& column = required(columns, ClassicPreferenceIds[i], Node::Type::Dictionary);
     if (i == 0) { fields(column, {"visible"}); }
     else { fields(column, {"visible", "width"}); }
@@ -196,11 +198,12 @@ ClassicPanePreferences pane(const Node& node) {
     }
   }
   const auto& order = required(node, "order", Node::Type::List);
-  if (order.children.size() != ClassicPreferenceIds.size()) { fail(Error::Invalid); }
+  if (order.children.size() != supplied) { fail(Error::Invalid); }
   for (std::size_t i = 0; i < order.children.size(); ++i) {
     if (order.children[i].type != Node::Type::Bytes) { fail(Error::Invalid); }
     result.order[i] = order.children[i].bytes;
   }
+  if(legacy){result.columns[13]={false,300};result.order[13]="save-path";result.columns[14]={false,120};result.order[14]="tracker-name";}
   const auto& sort = required(node, "sort", Node::Type::Dictionary);
   fields(sort, {"id", "ascending"});
   result.sortId = required(sort, "id", Node::Type::Bytes).bytes;

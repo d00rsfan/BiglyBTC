@@ -48,11 +48,11 @@ Document doc(std::string raw, Limits limits = {}) {
 }
 ClassicPreferences preferences() {
   ClassicPreferences result;
-  for (std::size_t n = 0; n < 13; ++n) {
+  for (std::size_t n = 0; n < ClassicPreferenceIds.size(); ++n) {
     result.incomplete.columns[n] = {n % 2 == 0, n ? std::optional<int>{100 + static_cast<int>(n)} : std::nullopt};
     result.complete.columns[n] = {n % 2 != 0, n ? std::optional<int>{300 + static_cast<int>(n)} : std::nullopt};
-    result.incomplete.order[n] = ClassicPreferenceIds[12 - n];
-    result.complete.order[n] = ClassicPreferenceIds[(n + 4) % 13];
+    result.incomplete.order[n] = ClassicPreferenceIds[ClassicPreferenceIds.size() - 1 - n];
+    result.complete.order[n] = ClassicPreferenceIds[(n + 4) % ClassicPreferenceIds.size()];
   }
   result.incomplete.sortId = "saved-selected-done"; result.incomplete.ascending = false;
   result.complete.sortId = "state"; result.complete.ascending = true;
@@ -67,7 +67,7 @@ Pairs columnFields(std::size_t index) {
 Pairs paneFields() {
   Pairs columns;
   std::vector<std::string> order;
-  for (std::size_t n = 0; n < 13; ++n) {
+  for (std::size_t n = 0; n < ClassicPreferenceIds.size(); ++n) {
     columns.emplace_back(ClassicPreferenceIds[n], d(columnFields(n)));
     order.push_back(b(ClassicPreferenceIds[n]));
   }
@@ -117,16 +117,28 @@ std::vector<std::pair<std::string, std::string>> opaque(const Document& input) {
 
 int main() {
   try {
-    run("fixed13IDcatalog", [] {
-      const std::array<std::string_view, 13> expected{"name", "state", "size", "progress", "download-rate", "upload-rate",
-          "received", "sent", "hash", "saved-queue-position", "saved-selected-size", "saved-selected-remaining", "saved-selected-done"};
+    run("fixed15IDcatalog", [] {
+      const std::array<std::string_view, 15> expected{"name", "state", "size", "progress", "download-rate", "upload-rate",
+          "received", "sent", "hash", "saved-queue-position", "saved-selected-size", "saved-selected-remaining", "saved-selected-done", "save-path", "tracker-name"};
       check(ClassicPreferenceIds == expected, "Private stable-ID catalog changed");
+    });
+    run("legacy13ColumnPreferencesUpgradeWithoutDroppingChoices", [] {
+      Pairs columns;std::vector<std::string> order;
+      for(std::size_t index=0;index<13;++index){columns.emplace_back(ClassicPreferenceIds[index],d(columnFields(index)));order.push_back(b(ClassicPreferenceIds[index]));}
+      const auto oldPane=d({{"sort",d({{"ascending",i(1)},{"id",b("saved-queue-position")}})},{"order",l(order)},{"columns",d(columns)}});
+      const auto input=doc(root(privateValue(oldPane,oldPane)));const auto result=readClassicPreferences(input);check(result&&*result,"Existing13-column namespace must upgrade");
+      for(const auto* pane:{&(**result).incomplete,&(**result).complete}){
+        for(std::size_t index=0;index<13;++index){check(pane->order[index]==ClassicPreferenceIds[index],"Existing order changed");check(pane->columns[index].visible==(index%2==0),"Existing visibility changed");}
+        check(pane->order[13]=="save-path"&&pane->order[14]=="tracker-name","New IDs must append");check(!pane->columns[13].visible&&!pane->columns[14].visible,"New private columns default hidden");
+        check(pane->columns[13].width==300&&pane->columns[14].width==120,"New requested widths missing");
+      }
+      auto updated=input;check(bool(writeClassicPreferences(updated,**result)),"Upgraded preferences save failed");const auto reopened=readClassicPreferences(doc(updated.serialize()));check(reopened&&*reopened&&**reopened==**result,"Upgraded roundtrip changed choices");
     });
     run("missingIsNotDefaults", [] {
       const auto input = doc("de"); const auto value = readClassicPreferences(input);
       check(value && !*value, "Missing namespace fabricated preferences");
     });
-    run("bothPanesAll13RoundtripOwned", [] {
+    run("bothPanesAll15RoundtripOwned", [] {
       auto input = doc("de"); auto prefs = preferences(); const auto expected = prefs;
       check(validateClassicPreferences(prefs).has_value(), "Valid snapshot rejected");
       check(writeClassicPreferences(input, prefs).has_value(), "Valid write failed");
@@ -139,7 +151,7 @@ int main() {
     run("allHiddenAndWidthEndpoints", [] {
       auto prefs = preferences();
       for (auto* pane : {&prefs.incomplete, &prefs.complete}) {
-        for (std::size_t n = 0; n < 13; ++n) { pane->columns[n].visible = false; if (n) { pane->columns[n].width = n % 2 ? 16 : 8192; } }
+        for (std::size_t n = 0; n < ClassicPreferenceIds.size(); ++n) { pane->columns[n].visible = false; if (n) { pane->columns[n].width = n % 2 ? 16 : 8192; } }
       }
       auto input = doc("de"); check(writeClassicPreferences(input, prefs).has_value(), "All hidden/endpoints rejected");
       auto output = doc(input.serialize()); const auto read = readClassicPreferences(output);
@@ -194,7 +206,7 @@ int main() {
       invalid(root(d({{"version", i(1)}, {"incomplete", d(paneFields())}, {"complete", d(paneFields())}, {"future", "de"}})), Error::Unsupported);
       auto fields = paneFields(); fields.emplace_back("future", i(1)); invalidPane(fields, Error::Unsupported);
       fields = paneFields(); Pairs columns;
-      for (std::size_t n = 0; n < 13; ++n) { auto c = columnFields(n); if (n == 2) { c.emplace_back("future", i(1)); } columns.emplace_back(ClassicPreferenceIds[n], d(c)); }
+      for (std::size_t n = 0; n < ClassicPreferenceIds.size(); ++n) { auto c = columnFields(n); if (n == 2) { c.emplace_back("future", i(1)); } columns.emplace_back(ClassicPreferenceIds[n], d(c)); }
       replace(fields, "columns", d(columns)); invalidPane(fields, Error::Unsupported);
       fields = paneFields(); replace(fields, "sort", d({{"id", b("name")}, {"ascending", i(1)}, {"future", i(1)}})); invalidPane(fields, Error::Unsupported);
     });
@@ -207,7 +219,7 @@ int main() {
     run("columnSetMustBeExactAndTyped", [] {
       for (int mode = 0; mode < 4; ++mode) {
         Pairs columns;
-        for (std::size_t n = 0; n < 13; ++n) { if (mode == 0 && n == 12) { continue; } columns.emplace_back(ClassicPreferenceIds[n], mode == 1 && n == 1 ? i(1) : d(columnFields(n))); }
+        for (std::size_t n = 0; n < ClassicPreferenceIds.size(); ++n) { if (mode == 0 && n == 12) { continue; } columns.emplace_back(ClassicPreferenceIds[n], mode == 1 && n == 1 ? i(1) : d(columnFields(n))); }
         if (mode == 2) { columns.emplace_back("foreign", d({{"visible", i(1)}, {"width", i(100)}})); }
         if (mode == 3) { columns[2].first = "Size"; }
         auto fields = paneFields(); replace(fields, "columns", d(columns)); invalidPane(fields, mode >= 2 ? Error::Unsupported : Error::Invalid);
@@ -216,23 +228,23 @@ int main() {
     run("strictBooleanAndWidthIntegers", [] {
       for (const auto& bad : {i(-1), i(2), b("1"), std::string{"le"}}) {
         Pairs columns;
-        for (std::size_t n = 0; n < 13; ++n) { auto c = columnFields(n); if (n == 1) { replace(c, "visible", bad); } columns.emplace_back(ClassicPreferenceIds[n], d(c)); }
+        for (std::size_t n = 0; n < ClassicPreferenceIds.size(); ++n) { auto c = columnFields(n); if (n == 1) { replace(c, "visible", bad); } columns.emplace_back(ClassicPreferenceIds[n], d(c)); }
         auto fields = paneFields(); replace(fields, "columns", d(columns)); invalidPane(fields);
       }
       for (const auto& bad : {i(15), i(8193), i(std::numeric_limits<std::int64_t>::max()), i(std::numeric_limits<std::int64_t>::min()), b("100")}) {
         Pairs columns;
-        for (std::size_t n = 0; n < 13; ++n) { auto c = columnFields(n); if (n == 1) { replace(c, "width", bad); } columns.emplace_back(ClassicPreferenceIds[n], d(c)); }
+        for (std::size_t n = 0; n < ClassicPreferenceIds.size(); ++n) { auto c = columnFields(n); if (n == 1) { replace(c, "width", bad); } columns.emplace_back(ClassicPreferenceIds[n], d(c)); }
         auto fields = paneFields(); replace(fields, "columns", d(columns)); invalidPane(fields);
       }
     });
     run("nameWidthIsUnsupportedAndOtherWidthRequired", [] {
       for (const bool name : {false, true}) {
         Pairs columns;
-        for (std::size_t n = 0; n < 13; ++n) { auto c = columnFields(n); if (name && n == 0) { c.emplace_back("width", i(100)); } if (!name && n == 1) { c.pop_back(); } columns.emplace_back(ClassicPreferenceIds[n], d(c)); }
+        for (std::size_t n = 0; n < ClassicPreferenceIds.size(); ++n) { auto c = columnFields(n); if (name && n == 0) { c.emplace_back("width", i(100)); } if (!name && n == 1) { c.pop_back(); } columns.emplace_back(ClassicPreferenceIds[n], d(c)); }
         auto fields = paneFields(); replace(fields, "columns", d(columns)); invalidPane(fields, name ? Error::Unsupported : Error::Invalid);
       }
     });
-    run("orderIs13UniqueKnownByteIds", [] {
+    run("orderIs15UniqueKnownByteIds", [] {
       for (int mode = 0; mode < 5; ++mode) {
         std::vector<std::string> values; for (const auto key : ClassicPreferenceIds) { values.push_back(b(key)); }
         if (mode == 0) { values.pop_back(); } if (mode == 1) { values.push_back(b("name")); }

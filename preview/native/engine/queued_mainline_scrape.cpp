@@ -152,12 +152,20 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
         return error(Code::Conflict,"Ambiguous managed Mainline scrape observation");
       }
     }
+    auto sourceAccess=lease.sourceAccess();if(!sourceAccess){return std::unexpected(sourceAccess.error());}
     struct stat profile{};
     if(!lease.valid()||::fstat(lease.directoryHandle(),&profile)!=0||!S_ISDIR(profile.st_mode)){return error(Code::Conflict,"Saved scrape profile lease is unavailable");}
     auto inventory=storage::ConfigFile::load(lease,"downloads.config");
     if(!inventory){return std::unexpected(inventory.error());}
     if(inventory->recoverySource()!=storage::RecoverySource::Primary){return error(Code::Conflict,"Recover saved inventory before Mainline scraping");}
-    auto library=storage::readLibraryView(lease);if(!library){return std::unexpected(library.error());}
+    auto librarySource=storage::readLibrarySource(lease);if(!librarySource){return std::unexpected(librarySource.error());}
+    const auto* library=&librarySource->view;
+    std::map<std::string_view,const Node*,std::less<>> cachedAttributes;
+    if(librarySource->cacheDocument){
+      if(const auto* entries=librarySource->cacheDocument->document().find("state");entries&&entries->type==Node::Type::List){
+        for(const auto& entry:entries->children){const auto* hash=entry.find("hash");if(hash&&hash->type==Node::Type::Bytes){cachedAttributes.insert_or_assign(hash->bytes,&entry);}}
+      }
+    }
     if(!library->inventoryIssues.empty()||!library->cacheIssues.empty()||library->cacheWarning){return error(Code::InvalidFormat,"Ambiguous saved Mainline scrape authority");}
     std::set<std::string> paused,seen;
     for(const auto& pause:library->pauses){if(!paused.insert(pause.hash.hex()).second){return error(Code::Conflict,"Duplicate saved Mainline pause");}}
@@ -188,9 +196,20 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       // Actual native intake intent belongs to downloads.config, not attrs.
       // Pending/released verification and allocation remain separate consumers.
       if(savedRow->find("BiglyBTC.verifiedSeeding")||savedRow->find("BiglyBTC.allocationMode")){continue;}
-      auto state=store->loadAttributes(lease,key);if(!state){return std::unexpected(state.error());}
+      auto state=store->load(lease,key);if(!state){return std::unexpected(state.error());}
       if(state->recoveredBackup()){continue;}
-      const auto& doc=state->document();const auto* info=doc.find("info");const auto* attrs=doc.find("attributes");
+      auto doc=state->document();
+      const auto keyBytes=key.bytes();const auto cached=cachedAttributes.find(std::string_view(reinterpret_cast<const char*>(keyBytes.data()),keyBytes.size()));
+      if(cached!=cachedAttributes.end()){
+        for(const auto& [from,to]:{std::pair{"attributes","attributes"},std::pair{"azp","azureus_properties"},std::pair{"azpp","azureus_private_properties"}}){
+          if(const auto* section=cached->second->find(from)){
+            if(section->type!=Node::Type::Dictionary){return error(Code::InvalidFormat,"Invalid cached state properties");}
+            const auto& bytes=librarySource->cacheDocument->document().originalBytes();
+            if(!doc.replaceValue(to,bytes.substr(section->begin,section->end-section->begin))){return error(Code::InvalidFormat,"Cached attributes exceed edit limits");}
+          }
+        }
+      }
+      const auto* info=doc.find("info");const auto* attrs=doc.find("attributes");
       if(!unique(doc.root())||!info||!unique(*info)||!attrs||!unique(*attrs)){return error(Code::InvalidFormat,"Invalid saved Mainline metadata/attributes");}
       if(const auto* privateFlag=info->find("private")){if(privateFlag->type!=Node::Type::Integer||(!regular&&privateFlag->integer!=0)){continue;}}
       if(!validList(attrs->find("networks"))||!validList(attrs->find("peersources"))||!validList(attrs->find("peersourcesdenied"))){return error(Code::InvalidFormat,"Invalid saved Mainline permission list");}

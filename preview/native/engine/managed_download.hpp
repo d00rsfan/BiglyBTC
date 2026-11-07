@@ -66,6 +66,8 @@ struct ManagedDownloadStatus {
   std::int64_t allocationBytes=0,allocationTotalBytes=0;
   bool allocationComplete=false;
   std::optional<ManagedRecheckProgress> recheck{};
+  // Actual SDK hashing progress; absent while only validating resume metadata.
+  std::optional<int> checkingProgressPpm{};
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };
 struct PendingMagnetStatus {

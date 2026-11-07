@@ -74,6 +74,9 @@ struct LibraryItem {
   // Passive current provider binding, never UI command authority.
   quint64 providerAdmission=0,providerGeneration=0;
   bool canRecheck=false;
+  QString savePath{};
+  std::optional<bool> assumedComplete{};
+  QString trackerName{};
 };
 struct LibraryPresentation {
   quint64 revision = 0;
@@ -97,7 +100,7 @@ struct Details {
 class LibraryModel final : public QAbstractTableModel {
   Q_OBJECT
 public:
-  static constexpr int Columns = 13;
+  static constexpr int Columns = 15;
   static constexpr int KeyRole = Qt::UserRole + 1;
   static constexpr int CompletionRole = Qt::UserRole + 2;
   static constexpr std::size_t MaximumRows = 100000;

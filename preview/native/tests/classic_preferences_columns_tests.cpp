@@ -30,14 +30,14 @@ core::ClassicPanePreferences requested() {
 }
 
 struct Fixture {
-  QStandardItemModel model{3, 13};
+  QStandardItemModel model{3, static_cast<int>(core::ClassicPreferenceIds.size())};
   QSortFilterProxyModel proxy;
   std::unique_ptr<QTableView> table = std::make_unique<QTableView>();
   QPointer<ui::ClassicColumns> columns;
 
   explicit Fixture(bool complete = false) {
     for (int row = 0; row < 3; ++row) {
-      for (int logical = 0; logical < 13; ++logical) {
+      for (int logical = 0; logical < static_cast<int>(core::ClassicPreferenceIds.size()); ++logical) {
         model.setData(model.index(row, logical), (row + 1) * (logical + 1));
       }
     }
@@ -50,9 +50,9 @@ struct Fixture {
     header->setSectionsMovable(true);
     header->setMinimumSectionSize(16);
     header->setSectionResizeMode(QHeaderView::Interactive);
-    for (int logical = 0; logical < 13; ++logical) { header->resizeSection(logical, 96 + logical * 11); }
+    for (int logical = 0; logical < static_cast<int>(core::ClassicPreferenceIds.size()); ++logical) { header->resizeSection(logical, 96 + logical * 11); }
     header->setSectionResizeMode(0, QHeaderView::Stretch);
-    for (int logical = 10; logical < 13; ++logical) { table->setColumnHidden(logical, true); }
+    for (int logical = 10; logical < static_cast<int>(core::ClassicPreferenceIds.size()); ++logical) { table->setColumnHidden(logical, true); }
     columns = new ui::ClassicColumns(*table, complete);
     table->resize(1400, 240);
     table->show();
@@ -79,12 +79,12 @@ private slots:
     QApplication::setQuitOnLastWindowClosed(false);
   }
 
-  void captureRestoreAllThirteen_data() {
+  void captureRestoreAllColumns_data() {
     QTest::addColumn<bool>("complete");
     QTest::newRow("incomplete") << false;
     QTest::newRow("complete") << true;
   }
-  void captureRestoreAllThirteen() {
+  void captureRestoreAllColumns() {
     QFETCH(bool, complete);
     Fixture fixture(complete);
     const auto preferences = requested();
@@ -95,10 +95,10 @@ private slots:
     QVERIFY(equalCaptured(*fixture.columns, preferences));
     auto* header = fixture.table->horizontalHeader();
     QCOMPARE(header->sectionResizeMode(0), QHeaderView::Stretch);
-    for (int logical = 0; logical < 13; ++logical) {
+    for (int logical = 0; logical < static_cast<int>(core::ClassicPreferenceIds.size()); ++logical) {
       const auto index = static_cast<std::size_t>(logical);
       QCOMPARE(fixture.table->isColumnHidden(logical), !preferences.columns[index].visible);
-      QCOMPARE(header->logicalIndex(logical), 12 - logical);
+      QCOMPARE(header->logicalIndex(logical), static_cast<int>(core::ClassicPreferenceIds.size()) - 1 - logical);
       QVERIFY(choice(fixture, complete, logical));
       QCOMPARE(choice(fixture, complete, logical)->isChecked(), preferences.columns[index].visible);
     }
@@ -142,7 +142,7 @@ private slots:
     preferences.columns[8].width = 719;
     QVERIFY(fixture.columns->applyPreferences(preferences, *fixture.columns->editRevision()));
     QVERIFY(equalCaptured(*fixture.columns, preferences));
-    for (int logical = 0; logical < 13; ++logical) { QVERIFY(fixture.table->isColumnHidden(logical)); }
+    for (int logical = 0; logical < static_cast<int>(core::ClassicPreferenceIds.size()); ++logical) { QVERIFY(fixture.table->isColumnHidden(logical)); }
     auto* hash = choice(fixture, false, 8);
     QVERIFY(hash);
     const auto revision = fixture.columns->editRevision();
@@ -262,8 +262,8 @@ private slots:
   void unsupportedHeaderCountsFailClosed_data() {
     QTest::addColumn<int>("count");
     QTest::newRow("empty") << 0;
-    QTest::newRow("missing") << 12;
-    QTest::newRow("extra") << 14;
+    QTest::newRow("missing") << 14;
+    QTest::newRow("extra") << 16;
   }
   void unsupportedHeaderCountsFailClosed() {
     QFETCH(int, count);
