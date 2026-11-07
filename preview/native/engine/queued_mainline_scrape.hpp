@@ -8,6 +8,8 @@
 #include <vector>
 
 namespace biglybtc::engine {
+inline constexpr std::size_t MaximumSavedScrapeTargets=8192;
+inline constexpr std::size_t MaximumSavedTrackerResponses=MaximumSavedScrapeTargets*8;
 namespace detail {class ManagedStorage;}
 // Borrowed only during this synchronous metadata authentication call. The sole
 // owner supplies SAME-lease storage/token and its accepted checked active

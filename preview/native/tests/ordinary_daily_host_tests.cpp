@@ -83,14 +83,38 @@ private slots:
   QVERIFY(!(find(0).actionMask&ui::downloadActionBit(Action::Start)));QVERIFY(find(2).networkStatus.contains("not supported"));QVERIFY(find(4).networkStatus.contains("not supported"));
   QVERIFY(!find(1).networkStatus.contains("not supported"));QVERIFY(!find(3).networkStatus.contains("not supported"));QVERIFY(!find(5).networkStatus.contains("not supported"));
   QVERIFY(find(1).actionMask&ui::downloadActionBit(Action::Start));QCOMPARE(host.sample()->sample->counters.payloadSent,std::int64_t{0});
+  QVERIFY(host.snapshot()&&!host.snapshot()->inlineDetails);
   qInfo("Large library: %d rows; first presentation %lld ms; ready %lld ms",Count,static_cast<long long>(firstRows),static_cast<long long>(startup.elapsed()));
   QVERIFY(host.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(host),15000);
   if(!coldCache){QCOMPARE(test::read(profile.path+"/active/cache.dat"),compressed);}else{QVERIFY(!QFileInfo::exists(profile.path+"/active/cache.dat"));}QCOMPARE(test::read(profile.data),profile.body);
  }
+ void startupAdmitsAnIncompleteTorrentBeforeAnOlderSeedPrefix(){
+  QTemporaryDir root(QStringLiteral("/tmp/biglybtc-startup-order-XXXXXX"));QVERIFY(root.isValid());Trackers trackers(QHostAddress::LocalHost);Profile profile(root.path(),"order",false,true,trackers.url(false),0);
+  auto baseState=decodeEntry(test::read(profile.state));auto inventory=decodeEntry(test::read(profile.path+"/downloads.config"));const auto base=inventory["downloads"].list().front();inventory["downloads"].list().clear();
+  QString expected;std::set<QByteArray> primaryNames;
+  for(int i=0;i<65;++i){
+    const bool seed=i<64;const auto name=QStringLiteral("startup-%1.bin").arg(i);auto state=baseState;
+    state["info"]=lt::entry::dictionary_type{};state["info"]["length"]=1;state["info"]["name"]=name.toStdString();state["info"]["piece length"]=16384;state["info"]["pieces"]=QCryptographicHash::hash("a",QCryptographicHash::Sha1).toStdString();
+    const auto hash=QCryptographicHash::hash(QByteArray::fromStdString(test::encoded(state["info"])),QCryptographicHash::Sha1);const auto hex=hash.toHex().toUpper();const auto path=profile.path+"/active/"+QString::fromLatin1(hex)+".dat";
+    state["announce"]=("dht://"+hex+".dht/announce").toStdString();state["attributes"]["networks"]=lt::entry::list_type{lt::entry("Public")};state["attributes"]["resumecomplete"]=seed?2:1;state["resume"]["data"]["valid"]=1;state["resume"]["data"]["resume data"]=std::string(1,seed?'\1':'\0');
+    test::write(path,QByteArray::fromStdString(test::encoded(state)));test::write(QFileInfo(profile.data).absolutePath()+'/'+name,seed?QByteArray("a"):QByteArray("x"));
+    auto row=base;row["torrent_hash"]=hash.toStdString();row["torrent"]=path.toStdString();row["save_file"]=name.toStdString();row["state"]=0;row["position"]=seed?i+1:1;row["completedbytes"]=seed?1:0;row["downloaded"]=seed?1:0;row["uploaded"]=0;inventory["downloads"].list().push_back(row);
+    primaryNames.insert(hex+".dat");if(!seed){expected=QString::fromLatin1(hex)+".dat";}
+  }
+  test::write(profile.path+"/downloads.config",QByteArray::fromStdString(test::encoded(inventory)));
+  const int notify=::inotify_init1(IN_CLOEXEC|IN_NONBLOCK);QVERIFY(notify>=0);const auto cleanup=qScopeGuard([&]{::close(notify);});QVERIFY(::inotify_add_watch(notify,(profile.path+"/active").toUtf8().constData(),IN_MOVED_TO)>=0);
+  Host host({});profile.releasePorts();QVERIFY(host.bridge.openNormal(profile.native()));QString first;QElapsedTimer elapsed;elapsed.start();
+  while(first.isEmpty()&&elapsed.elapsed()<15000){
+    QCoreApplication::processEvents();alignas(inotify_event) std::array<char,32768> bytes{};const auto count=::read(notify,bytes.data(),bytes.size());
+    for(std::size_t offset=0;count>0&&offset<static_cast<std::size_t>(count);){const auto* event=reinterpret_cast<const inotify_event*>(bytes.data()+offset);const QByteArray name(event->len?event->name:"");if((event->mask&IN_MOVED_TO)&&primaryNames.contains(name)&&first.isEmpty()){first=QString::fromLatin1(name);}offset+=sizeof(inotify_event)+event->len;}
+    QTest::qWait(2);
+  }
+  QCOMPARE(first,expected);QVERIFY(host.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(host),15000);
+ }
  void queuedTrackerPermissionScanReadsOneFreshGlobalCache(){
   QTemporaryDir root(QStringLiteral("/tmp/biglybtc-batch-scrape-XXXXXX"));QVERIFY(root.isValid());Trackers trackers(QHostAddress::LocalHost);Profile profile(root.path(),"scan",false,true,trackers.url(false),75);
   auto baseState=decodeEntry(test::read(profile.state));auto inventory=decodeEntry(test::read(profile.path+"/downloads.config"));const auto base=inventory["downloads"].list().front();inventory["downloads"].list().clear();lt::entry cache(lt::entry::dictionary_type{});cache["state"]=lt::entry::list_type{};
-  constexpr int Count=64;
+  constexpr int Count=300;
   for(int index=0;index<Count;++index){
     auto state=baseState;state["info"]["name"]="queued-"+std::to_string(index)+".bin";const auto digest=QCryptographicHash::hash(QByteArray::fromStdString(test::encoded(state["info"])),QCryptographicHash::Sha1);const auto hex=digest.toHex().toUpper();state["announce"]=("dht://"+hex+".dht/announce").toStdString();state["encoding"]="UTF-8";
     state["attributes"]["parameters"]["dndflags"]=2;state["attributes"]["skipfss"]=0;state["attributes"]["skipbdl"]=0;
@@ -100,10 +124,11 @@ private slots:
   }
   test::write(profile.path+"/downloads.config",QByteArray::fromStdString(test::encoded(inventory)));const auto cachePath=profile.path+"/active/cache.dat";test::write(cachePath,gzipEntry(cache));
   const int notify=::inotify_init1(IN_CLOEXEC|IN_NONBLOCK);QVERIFY(notify>=0);const auto cleanup=qScopeGuard([&]{::close(notify);});const int watch=::inotify_add_watch(notify,cachePath.toUtf8().constData(),IN_OPEN|IN_CLOSE_NOWRITE);QVERIFY(watch>=0);
+  const int configWatch=::inotify_add_watch(notify,(profile.path+"/biglybt.config").toUtf8().constData(),IN_OPEN|IN_CLOSE_NOWRITE);QVERIFY(configWatch>=0);
   auto lease=storage::ProfileLease::acquire(profile.native());QVERIFY(lease);const auto targets=engine::readSavedMainlineScrapeTargets(*lease);QVERIFY2(targets,qPrintable(targets?QString{}:QString::fromStdString(targets.error().message)));QCOMPARE(targets->size(),std::size_t{Count});
-  alignas(inotify_event) std::array<char,16384> events{};int opened=0;
-  for(;;){const auto received=::read(notify,events.data(),events.size());if(received<=0){break;}std::size_t offset=0;while(offset<static_cast<std::size_t>(received)){QVERIFY(static_cast<std::size_t>(received)-offset>=sizeof(inotify_event));const auto* event=reinterpret_cast<const inotify_event*>(events.data()+offset);QVERIFY(sizeof(inotify_event)+event->len<=static_cast<std::size_t>(received)-offset);if(event->mask&IN_OPEN){++opened;}offset+=sizeof(inotify_event)+event->len;}}
-  QCOMPARE(opened,1);QCOMPARE(::inotify_rm_watch(notify,watch),0);
+  alignas(inotify_event) std::array<char,16384> events{};int opened=0,configOpened=0;
+  for(;;){const auto received=::read(notify,events.data(),events.size());if(received<=0){break;}std::size_t offset=0;while(offset<static_cast<std::size_t>(received)){QVERIFY(static_cast<std::size_t>(received)-offset>=sizeof(inotify_event));const auto* event=reinterpret_cast<const inotify_event*>(events.data()+offset);QVERIFY(sizeof(inotify_event)+event->len<=static_cast<std::size_t>(received)-offset);if(event->mask&IN_OPEN){if(event->wd==watch){++opened;}if(event->wd==configWatch){++configOpened;}}offset+=sizeof(inotify_event)+event->len;}}
+  QCOMPARE(opened,1);QCOMPARE(configOpened,1);QCOMPARE(::inotify_rm_watch(notify,watch),0);QCOMPARE(::inotify_rm_watch(notify,configWatch),0);
   // A second call must read changed authoritative attributes, rather than
   // retaining the earlier permission snapshot across operations.
   auto denied=cache["state"].list().front();denied["attributes"]["networks"]=lt::entry::list_type{lt::entry("I2P")};cache["state"].list().push_back(denied);const auto changed=gzipEntry(cache);test::write(cachePath,changed);
@@ -180,6 +205,19 @@ private slots:
   Host warm(bootstrap);QVERIFY(warm.bridge.openNormal(seed.native()));QTRY_VERIFY2_WITH_TIMEOUT(warm.ready(seed)&&router4.gets(seed.wireHash())>beforeGets4&&router6.gets(seed.wireHash())>beforeGets6&&router4.announced(seed.wireHash())>beforeAnnounce4&&router6.announced(seed.wireHash())>beforeAnnounce6,qPrintable(warm.diagnostic()+router4.failure+router6.failure),30000);
   QCOMPARE(warm.sample()->sample->counters.payloadReceived,std::int64_t{0});QCOMPARE(test::read(seed.path+"/plugins/mlDHT/baseID.config"),rootIdentity);QVERIFY(warm.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(warm),15000);assertFinalTotals(warm,seed,savedDown,savedUp);QVERIFY(seedSeconds(seed)>=genuineWarmSeconds);QVERIFY2(router4.failure.isEmpty()&&router6.failure.isEmpty(),qPrintable(router4.failure+router6.failure));QVERIFY2(trackers.failure.isEmpty(),qPrintable(trackers.failure));
   auto released=storage::ProfileLease::acquire(seed.native());QVERIFY(released);QVERIFY(unknownAndNetworksPreserved(seed));
+ }
+ void savedForceStartControlsActualStatusAndSurvivesReopen_data(){QTest::addColumn<bool>("complete");QTest::newRow("seeding")<<true;QTest::newRow("downloading")<<false;}
+ void savedForceStartControlsActualStatusAndSurvivesReopen(){
+  QFETCH(bool,complete);QTemporaryDir root(QStringLiteral("/tmp/biglybtc-daily-forced-XXXXXX"));QVERIFY(root.isValid());Trackers trackers(QHostAddress::LocalHost);Profile profile(root.path(),"forced",false,complete,trackers.url(false),0);trackers.allow(profile,profile);
+  auto config=document(profile.path+"/biglybt.config");QVERIFY(config.replaceValue("Peer Source Selection Default.DHT","i0e"));test::write(profile.path+"/biglybt.config",QByteArray::fromStdString(config.serialize()));
+  auto inventory=decodeEntry(test::read(profile.path+"/downloads.config"));inventory["downloads"].list().front()["forceStart"]=1;test::write(profile.path+"/downloads.config",QByteArray::fromStdString(test::encoded(inventory)));
+  const auto phase=complete?QStringLiteral("Seeding"):QStringLiteral("Downloading");
+  Host host({});profile.releasePorts();QVERIFY(host.bridge.openNormal(profile.native()));QTRY_VERIFY2_WITH_TIMEOUT(host.ready(profile)&&host.row(profile)&&host.row(profile)->state.startsWith("Forced ")&&host.row(profile)->state.contains(phase),qPrintable(host.diagnostic()),15000);QVERIFY(forced(profile));
+  QVERIFY2(command(host,profile,Action::CancelForceStart),qPrintable(host.diagnostic()));QTRY_VERIFY_WITH_TIMEOUT(host.row(profile)&&host.row(profile)->state.contains(phase)&&!host.row(profile)->state.startsWith("Forced "),15000);QVERIFY(!forced(profile));
+  QVERIFY2(command(host,profile,Action::ForceStart),qPrintable(host.diagnostic()));QTRY_VERIFY_WITH_TIMEOUT(host.row(profile)&&host.row(profile)->state.startsWith("Forced ")&&host.row(profile)->state.contains(phase),15000);QVERIFY(forced(profile));
+  QVERIFY(host.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(host),15000);QVERIFY(forced(profile));
+  Host reopened({});QVERIFY(reopened.bridge.openNormal(profile.native()));QTRY_VERIFY2_WITH_TIMEOUT(reopened.ready(profile)&&reopened.row(profile)&&reopened.row(profile)->state.startsWith("Forced ")&&reopened.row(profile)->state.contains(phase),qPrintable(reopened.diagnostic()),15000);QVERIFY(forced(profile));
+  QVERIFY2(command(reopened,profile,Action::Stop),qPrintable(reopened.diagnostic()));QVERIFY(reopened.bridge.closeSession());QTRY_VERIFY_WITH_TIMEOUT(joinedFinal(reopened),15000);QVERIFY(unknownAndNetworksPreserved(profile));
  }
  void normalStopThenStartWaitsActualActionEligibility(){
   QTemporaryDir root(QStringLiteral("/tmp/biglybtc-daily-control-XXXXXX"));QVERIFY(root.isValid());Trackers trackers(QHostAddress::LocalHost);Profile profile(root.path(),"control",false,true,trackers.url(false),70);trackers.allow(profile,profile);

@@ -70,7 +70,7 @@ struct MainlineDhtStatus {
 // creates an unused TCP acceptor. Proxied DHT is unsupported without fallback.
 class MainlineDhtService final {
 public:
-  static constexpr std::size_t MaximumActiveHashes = 256;
+  static constexpr std::size_t MaximumActiveHashes = 8192;
   static constexpr std::size_t MaximumPeers = 128;
   static constexpr std::size_t MaximumNodes = 64;
   static constexpr std::size_t MaximumStateBytes = 1024 * 1024;

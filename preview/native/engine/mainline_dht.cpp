@@ -303,7 +303,20 @@ struct MainlineDhtService::Impl {
   // Declared before session: retained source/lease/provider survive its join.
   std::unique_ptr<OriginalWireIdentity> originalIdentity;
   std::unique_ptr<lt::session> session;
-  std::map<lt::sha1_hash, Request> requests;
+  struct DispersedHashOrder {
+    bool operator()(const lt::sha1_hash& a,const lt::sha1_hash& b)const noexcept{
+      // Sorting by suffix spreads neighbouring dispatches across Kademlia
+      // prefixes. The actual info hash sent on the wire is unchanged.
+      for(std::size_t i=20;i-->0;){const auto x=static_cast<unsigned char>(a.data()[i]),y=static_cast<unsigned char>(b.data()[i]);if(x!=y){return x<y;}}
+      return false;
+    }
+  };
+  std::map<lt::sha1_hash, Request,DispersedHashOrder> requests;
+  // Bound registrations independently from paced network work. Round-robin
+  // prevents newly rearmed early hashes starving a large library's tail.
+  std::optional<lt::sha1_hash> requestCursor;
+  unsigned requestCredits=1;
+  std::chrono::steady_clock::time_point requestRefill{};
   std::set<Node> nodes;
   std::vector<Node> pendingNodes;
   // Map entries are never erased/reused before session join. Their stable
@@ -683,7 +696,14 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
         impl_->session->dht_direct_request(probe.endpoint,ping,lt::client_data_t(&probe));
         probe.issued=true;
       }
-      for (auto& [hash, request] : impl_->requests) {
+      const auto dispatchNow=std::chrono::steady_clock::now();
+      if(dispatchNow>=impl_->requestRefill){impl_->requestCredits=1;impl_->requestRefill=dispatchNow+std::chrono::milliseconds{125};}
+      auto next=impl_->requestCursor?impl_->requests.upper_bound(*impl_->requestCursor):impl_->requests.begin();
+      for(std::size_t visited=0;visited<impl_->requests.size()&&impl_->requestCredits;++visited){
+        if(next==impl_->requests.end()){next=impl_->requests.begin();}
+        auto& [hash,request]=*next++;impl_->requestCursor=hash;
+        if((!request.lookup||request.lookupIssued)&&(request.port==0||request.announceIssued)){continue;}
+        --impl_->requestCredits;
         if (request.lookup && !request.lookupIssued) {
           if (!available(impl_->status.lookups)) { return impl_->fail("Mainline DHT request counter overflow", true); }
           impl_->session->dht_get_peers(hash); request.lookupIssued = true; ++impl_->status.lookups;

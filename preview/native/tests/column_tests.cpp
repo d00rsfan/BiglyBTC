@@ -13,6 +13,8 @@
 #include <QSignalSpy>
 #include <QSortFilterProxyModel>
 #include <QTableView>
+#include <QTabWidget>
+#include <QProgressBar>
 #include <QtTest>
 
 #include <memory>
@@ -119,6 +121,35 @@ bool containsMenu(const QMenu& root, const QMenu* wanted, int remaining = 8) {
 class ColumnTests final : public QObject {
   Q_OBJECT
 private slots:
+  void detachedDetailsOpenByDoubleClickStayScopedAndCloseSafely(){
+    ui::LibraryWindow window;auto rows=sample();rows->inlineDetails=false;rows->startupDone=3;rows->startupTotal=10;
+    window.resize(1200,900);window.setPresentation(rows);window.setBusy(false);window.show();QCoreApplication::processEvents();
+    auto* tabs=window.findChild<QTabWidget*>("classic-main-tabs");auto* inspector=window.findChild<QTabWidget*>("torrent-details");auto* progress=window.findChild<QProgressBar*>("classic-startup-progress");QVERIFY(tabs&&inspector&&progress);
+    auto* library=tabs->currentWidget();QVERIFY(!inspector->isVisible());QVERIFY(progress->isVisible());QCOMPARE(progress->value(),3);QCOMPARE(progress->maximum(),10);
+    QSignalSpy requests(&window,&ui::LibraryWindow::detailsRequested);
+    auto& table=window.incompleteTable();const auto index=table.model()->index(0,0);QVERIFY(index.isValid());const auto point=table.visualRect(index).center();
+    QTest::mouseClick(table.viewport(),Qt::LeftButton,Qt::NoModifier,point);QCOMPARE(requests.size(),0);
+    const auto firstHash=table.model()->index(0,8).data().toString();
+    QTest::mouseDClick(table.viewport(),Qt::LeftButton,Qt::NoModifier,point);QCoreApplication::processEvents();
+    QCOMPARE(tabs->count(),2);QCOMPARE(tabs->currentWidget()->property("BiglyBTC.torrentDetailsHash").toString(),firstHash);QCOMPARE(inspector->parentWidget(),tabs->currentWidget());QVERIFY(inspector->isVisible());
+    QCOMPARE(requests.size(),0);inspector->setCurrentIndex(1);QCOMPARE(requests.size(),1);
+    tabs->setCurrentWidget(library);QCoreApplication::processEvents();QVERIFY(!inspector->isVisible());
+    auto& complete=window.completeTable();const auto otherIndex=complete.model()->index(0,0);const auto otherPoint=complete.visualRect(otherIndex).center();
+    QTest::mouseClick(complete.viewport(),Qt::LeftButton,Qt::NoModifier,otherPoint);QTest::mouseDClick(complete.viewport(),Qt::LeftButton,Qt::NoModifier,otherPoint);QCoreApplication::processEvents();
+    QCOMPARE(tabs->count(),3);const auto secondHash=tabs->currentWidget()->property("BiglyBTC.torrentDetailsHash").toString();QVERIFY(secondHash!=firstHash);
+    tabs->setCurrentIndex(1);QCOMPARE(tabs->currentWidget()->property("BiglyBTC.torrentDetailsHash").toString(),firstHash);
+    QPointer<QTabWidget> retained(inspector);const int closing=tabs->currentIndex();QVERIFY(QMetaObject::invokeMethod(tabs,"tabCloseRequested",Qt::DirectConnection,Q_ARG(int,closing)));QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);QVERIFY(retained);QCOMPARE(tabs->count(),2);
+    tabs->setCurrentWidget(library);QVERIFY(!inspector->isVisible());
+    auto done=std::make_shared<ui::LibraryPresentation>(*rows);done->revision=2;done->startupDone=10;window.setPresentation(done);QVERIFY(!progress->isVisible());QVERIFY(!inspector->isVisible());
+  }
+  void humanSizesKeepNumericRolesAndOriginalUnitChoices(){
+    QCOMPARE(ui::transferUptime(366LL*86400+3661),QStringLiteral("1y 1d 1h 1m 1s"));
+    QCOMPARE(ui::transferUptime(60),QStringLiteral("0d 0h 1m 0s"));
+    ui::LibraryModel model;auto rows=sample();rows->items[0].bytes=1099511627776LL;QVERIFY(model.apply(rows));
+    QCOMPARE(model.index(0,2).data(Qt::UserRole).toLongLong(),qint64{1099511627776LL});QVERIFY(model.index(0,2).data().toString().contains("TB"));QVERIFY(!model.headerData(2,Qt::Horizontal,Qt::DisplayRole).toString().contains("bytes"));
+    rows->revision=2;rows->units.siLabels=true;rows->units.rateBits=true;QVERIFY(model.apply(rows));QVERIFY(model.index(0,2).data().toString().contains("TiB"));
+    const auto target=model.targetAt(0);QVERIFY(target);QVERIFY(model.apply(ui::Telemetry{*target,0,1024,1024,"Downloading"}));QCOMPARE(model.index(0,5).data(Qt::UserRole).toLongLong(),qint64{1024});QVERIFY(model.index(0,5).data().toString().contains("Kibit/s"));
+  }
   void initTestCase() {
     QCOMPARE(QGuiApplication::platformName(), QStringLiteral("offscreen"));
     QApplication::setQuitOnLastWindowClosed(false);

@@ -73,7 +73,7 @@ class OwnedKrpc final {
     const QByteArray scope=tokenKey(request);
     auto issued=tokens_.find(scope);
     if(issued==tokens_.end()){
-      if(tokens_.size()>=256){fail("Owned KRPC issued-token scope limit");return;}
+      if(tokens_.size()>=1024){fail("Owned KRPC issued-token scope limit");return;}
       const QByteArray digest=QCryptographicHash::hash(scope,QCryptographicHash::Sha1);
       if(digest.size()<8){fail("Owned KRPC token generation failed");return;}
       // Keep the FIRST actually returned owning credential for this exact

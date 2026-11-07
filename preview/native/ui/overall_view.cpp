@@ -1,4 +1,5 @@
 #include "overall_view.hpp"
+#include "transfer_duration.hpp"
 #include "overall_transfer_summary.hpp"
 #include <QDateTime>
 #include <bit>
@@ -30,8 +31,8 @@ OverallView::OverallView(QWidget* parent) : QWidget(parent),
   auto* layout = new QVBoxLayout(this); layout->addWidget(status_);
   auto* form = new QFormLayout;
   const std::array<QString, 11> names{tr("Downloaded (payload + protocol):"), tr("Uploaded (payload + protocol):"),
-      tr("Uptime (seconds):"), tr("Mark date:"), tr("Downloaded since mark:"), tr("Uploaded since mark:"),
-      tr("Uptime since mark (seconds):"), tr("DHT downloaded / uploaded:"),
+      tr("Uptime:"), tr("Mark date:"), tr("Downloaded since mark:"), tr("Uploaded since mark:"),
+      tr("Uptime since mark:"), tr("DHT downloaded / uploaded:"),
       tr("Average download / upload (bytes/s):"), tr("Average download / upload since mark (bytes/s):"),
       tr("Share ratio / since mark:")};
   for (std::size_t i = 0; i < names.size(); ++i) {
@@ -62,7 +63,7 @@ void OverallView::render() {
   QPointer<OverallView> guard(this); const auto packet = packet_; const bool busy = busy_;
   const auto current = [&] { return guard && guard->packet_ == packet && guard->busy_ == busy
       && guard->isVisible() && !guard->window()->isMinimized(); };
-  struct Fact { QPointer<QLabel> target; QString text; };
+  struct Fact { QPointer<QLabel> target; QString text; QString tooltip{}; };
   std::array<Fact, 13> facts{};
   facts[0] = {status_, !packet ? tr("Accounting starts with a qualified transfer session")
       : packet->closed ? (packet->finalCounters ? tr("Closed; peer counters settled") : tr("Closed; last observed peer counters"))
@@ -73,6 +74,7 @@ void OverallView::render() {
       : tr("Current values saved")};
   if (packet && !packet->historyFailure.isEmpty()) { facts[1].text += tr("\nHistory: %1").arg(packet->historyFailure); }
   std::array<QString, 11> texts; texts.fill(tr("Unavailable"));
+  std::array<QString, 11> tooltips;
   if (packet && packet->available) {
     const auto& v = packet->values;
     using S = core::SavedStatistic;
@@ -80,24 +82,27 @@ void OverallView::render() {
     // Match Java long subtraction and the original clamp of a future mark.
     const auto difference = [&](std::int64_t total, std::int64_t mark) {
       if (mark > total) { mark = total; }
-      return QString::number(std::bit_cast<std::int64_t>(static_cast<std::uint64_t>(total) - static_cast<std::uint64_t>(mark)));
+      return std::bit_cast<std::int64_t>(static_cast<std::uint64_t>(total) - static_cast<std::uint64_t>(mark));
     };
-    texts = {QString::number(down), QString::number(up), QString::number(uptime),
+    texts = {QString::number(down), QString::number(up), transferUptime(uptime),
         field(v, S::MarkTime) ? QDateTime::fromMSecsSinceEpoch(field(v, S::MarkTime)).toString(Qt::ISODate) : tr("No mark"),
-        difference(down, field(v, S::MarkDownloaded)), difference(up, field(v, S::MarkUploaded)),
-        difference(uptime, field(v, S::MarkUptime)),
+        QString::number(difference(down, field(v, S::MarkDownloaded))), QString::number(difference(up, field(v, S::MarkUploaded))),
+        transferUptime(difference(uptime, field(v, S::MarkUptime))),
         tr("%1 / %2 bytes (separate)").arg(field(v, S::DhtDownloaded)).arg(field(v, S::DhtUploaded))};
+    tooltips[2]=tr("%1 seconds").arg(uptime);tooltips[6]=tr("%1 seconds").arg(difference(uptime,field(v,S::MarkUptime)));
     const auto summary = overallTransferSummary(v);
     texts[8] = summary ? tr("%1 / %2").arg(summary->averageDownload).arg(summary->averageUpload) : tr("Unavailable");
     texts[9] = summary ? tr("%1 / %2").arg(summary->sinceMarkAverageDownload).arg(summary->sinceMarkAverageUpload) : tr("Unavailable");
     texts[10] = summary ? tr("%1 / %2").arg(QString::fromStdString(overallShareRatioText(summary->shareRatioThousandths)))
         .arg(QString::fromStdString(overallShareRatioText(summary->sinceMarkShareRatioThousandths))) : tr("Unavailable");
   }
-  for (std::size_t i = 0; i < texts.size(); ++i) { facts[i + 2] = {values_[i], texts[i]}; }
+  for (std::size_t i = 0; i < texts.size(); ++i) { facts[i + 2] = {values_[i], texts[i],tooltips[i]}; }
   dirty_ = false;
   for (const auto& fact : facts) {
     if (!current() || !fact.target) { if (guard) { guard->dirty_ = true; } return; }
     fact.target->setText(fact.text);
+    if (!current() || !fact.target) { if (guard) { guard->dirty_ = true; } return; }
+    fact.target->setToolTip(fact.tooltip);
   }
   const bool enabled = packet && packet->writable && !packet->closed && !busy;
   if (!current() || !mark_) { return; } mark_->setEnabled(enabled);

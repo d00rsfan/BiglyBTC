@@ -291,7 +291,7 @@ detail::LibraryTrackerResponses trackerResponses;
 std::map<std::string,std::int64_t> trackerSelectionSeeds;
 std::optional<std::int64_t> trackerSelectionSeed(const core::TorrentHash& hash){
   const auto found=trackerSelectionSeeds.find(hash.hex());if(found!=trackerSelectionSeeds.end()){return found->second;}
-  if(trackerSelectionSeeds.size()>=256){return {};}
+  if(trackerSelectionSeeds.size()>=MaximumSavedScrapeTargets){return {};}
   const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
   trackerSelectionSeeds.emplace(hash.hex(),wall);return wall;
 }

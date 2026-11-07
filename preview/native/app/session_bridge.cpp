@@ -221,7 +221,10 @@ QString managedState(engine::ManagedPhase state) {
 }
 QString managedState(const engine::ManagedDownloadStatus& value){
   if(value.phase==engine::ManagedPhase::Checking&&value.checkingProgressPpm){return SessionBridge::tr("Checking %1%").arg(static_cast<double>(*value.checkingProgressPpm)/10000.0,0,'f',1);}
-  return managedState(value.phase);
+  auto result=managedState(value.phase);
+  if(value.phase==engine::ManagedPhase::Seeding&&value.firstPriority){result=SessionBridge::tr("Seeding — first priority");}
+  if(value.forceStart&&(value.phase==engine::ManagedPhase::Seeding||value.phase==engine::ManagedPhase::Downloading)){result=SessionBridge::tr("Forced %1").arg(result);}
+  return result;
 }
 constexpr quint16 actionBit(core::DownloadAction value) {
   const auto ordinal = static_cast<unsigned int>(value);
@@ -589,7 +592,7 @@ struct SessionBridge::Host {
   engine::NetworkPolicy networkPolicy; // Member defaults keep this isolated until configure succeeds.
   std::string normalMainlineDirectory="mldht";
   std::vector<core::TorrentHash> startupQueue;
-  std::size_t startupNext=0;
+  std::size_t startupNext=0,startupDone=0,startupTotal=0;
   std::set<std::string> startupWithdrawn;
   bool advanceStartup(std::stop_token stop) {
     if(!normalNetwork||i2pOptions||!engine||startupNext>=startupQueue.size()){return false;}
@@ -617,6 +620,7 @@ struct SessionBridge::Host {
       if(admitted){admissionFailures.erase(key);}else{admissionFailures.insert_or_assign(key,admitted.error());}
       changed=true;
     }
+    startupDone=startupNext;
     if(startupNext==startupQueue.size()){startupQueue.clear();startupNext=0;startupWithdrawn.clear();}
     return changed;
   }
@@ -1207,7 +1211,14 @@ struct SessionBridge::Host {
       }
     }
     QStringList preferredTrackerHosts;
+    ui::TransferDisplaySettings displayUnits;
+    bool inlineDetails=false,detailsOnDoubleClick=true;
     if(const auto settings=storage::ConfigFile::load(lease,"biglybt.config")){
+      const auto boolean=[&](std::string_view key,bool fallback){const auto* value=settings->document().find(key);return value&&value->type==core::Node::Type::Integer?static_cast<std::uint32_t>(value->integer)!=0:fallback;};
+      inlineDetails=boolean("Library.ShowTabsInTorrentView",false);
+      if(const auto* mode=settings->document().find("list.dm.dblclick");mode&&mode->type==core::Node::Type::Bytes&&!mode->bytes.empty()){detailsOnDoubleClick=mode->bytes=="1";}
+      displayUnits.siLabels=boolean("config.style.useSIUnits",false);displayUnits.forceBinary=boolean("config.style.forceSIValues",true);
+      displayUnits.rateBits=boolean("config.style.useUnitsRateBits",false);displayUnits.stopAtMegabytes=boolean("config.style.doNotUseGB",false);
       if(const auto* value=settings->document().find("mtv.trackername.pref.hosts");value&&value->type==core::Node::Type::Bytes){
         for(const auto& host:text(std::string(value->bytes)).split(';')){if(!host.trimmed().isEmpty()){preferredTrackerHosts.push_back(host.trimmed());}}
       }
@@ -1276,7 +1287,7 @@ struct SessionBridge::Host {
     readMagnets();
     checkpoint(stop);
     const bool guardedFileReview=fileRecoveryRequired||storage::hasPendingFileOperation(lease);
-    auto result = std::make_shared<ui::LibraryPresentation>();
+    auto result = std::make_shared<ui::LibraryPresentation>();result->units=displayUnits;result->inlineDetails=inlineDetails;result->detailsOnDoubleClick=detailsOnDoubleClick;result->startupDone=startupDone;result->startupTotal=startupTotal;
     result->revision = revision = reserveLibraryRevision();
     std::map<std::string, int> counts;
     std::set<std::string> pauses;
@@ -1404,8 +1415,6 @@ struct SessionBridge::Host {
             case core::QueueReason::UnknownFacts: state = tr("Queued — rule observations unavailable"); break;
             default: break;
           }
-        } else if (active->second.phase == engine::ManagedPhase::Seeding && active->second.firstPriority) {
-          state = tr("Seeding — first priority");
         }
       }
       if (admissionFailures.contains(hash) || (active != live.end() && active->second.failure)) { state = SessionBridge::tr("Error"); }
@@ -1652,6 +1661,8 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         if(!host_->engine){pollPublications();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
+          const auto startupBefore=host_->startupDone;const bool startupChanged=host_->advanceStartup(stop);
+          const bool startupProgressed=startupBefore!=host_->startupDone;
           const auto polled=host_->engine->poll();pollRecheck();publishDownloadHistoryCompletionNotice(host_->consumeHistoryCompletions(stop));publishMainlineFailure();
           if(!polled&&!host_->engine->managedAvailable()){
             auto detail=QStringLiteral("Engine owner unavailable (poll %1)").arg(static_cast<int>(polled.error()));
@@ -1661,10 +1672,9 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             }
             reportIdlePollFailure(session,std::move(detail));reported->store(true);
           }
-          const bool startupChanged=host_->advanceStartup(stop);
           host_->scheduleCoexistence();tickScheduler();tickAccounting();pollPublications();
           auto current = host_->engine->managedDownloads();
-          bool changed = startupChanged || host_->coexistence() || current.size() != host_->lastManagedPhases.size();
+          bool changed = startupChanged || startupProgressed || host_->coexistence() || current.size() != host_->lastManagedPhases.size();
           for (const auto& item : current) {
             const Host::ManagedStamp stamp{item.phase,item.queueReason,
                 item.firstPriority,item.unavailableQueueInputs,item.forceStart,item.allocationBytes,item.allocationComplete};
@@ -2002,10 +2012,13 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
       }
     }
     if(!host_->startupQueue.empty()){
-      std::map<std::string,std::pair<bool,bool>> priority;
-      for(const auto& item:source.items){if(item.saved.hash){priority.emplace(item.saved.hash->hex(),
-          std::pair{!item.saved.forceStart,item.saved.startup==core::StartupState::Queued});}}
+      using StartupPriority=std::tuple<bool,bool,bool,std::int64_t,std::size_t>;
+      std::map<std::string,StartupPriority> priority;
+      for(const auto& item:source.items){if(item.saved.hash){const auto key=item.saved.hash->hex();const auto known=host_->known.find(key);
+        const bool complete=known==host_->known.end()||known->second.assumedComplete.value_or(true);
+        priority.emplace(key,StartupPriority{!item.saved.forceStart,item.saved.startup==core::StartupState::Queued,complete,item.saved.position.value_or(INT64_MAX),item.saved.sourceIndex});}}
       std::ranges::stable_sort(host_->startupQueue,[&](const auto& a,const auto& b){return priority.at(a.hex())<priority.at(b.hex());});
+      host_->startupTotal=host_->startupQueue.size();host_->startupDone=0;
     }
     host_->bootstrapMagnets(stop);
     host_->scheduleCoexistence();tickScheduler();

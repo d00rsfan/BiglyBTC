@@ -217,7 +217,7 @@ private slots:
     QTcpServer peer;QVERIFY(peer.listen(QHostAddress::LocalHost,0));
     const auto wanted=lt::sha1_hash(reinterpret_cast<const char*>(saved.hash->bytes().data())),other=hash('L');
     OwnedKrpc fixture(peer.serverPort());fixture.allow(wanted);fixture.allow(other);
-    auto opts=options(fixture,peer.serverPort());opts.bootstrapNodes.clear();auto created=engine::MainlineDhtService::create(localPolicy(),opts);QVERIFY(created);auto actual=std::move(*created);Observations observed;
+    auto opts=options(fixture,peer.serverPort());opts.bootstrapNodes.clear();auto created=engine::MainlineDhtService::create(localPolicy(),opts);QVERIFY2(created,created?"":created.error().message.c_str());auto actual=std::move(*created);Observations observed;
     QVERIFY(actual->addNode({"127.0.0.1",fixture.port()}));QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),fixture.bootstrapQueries>0),15000);QVERIFY(actual->lookup(wanted));
     QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),observed.contains(wanted,peer.serverPort())||!observed.failure.isEmpty()||!fixture.failure.isEmpty()),15000);
     QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));
@@ -500,6 +500,41 @@ private slots:
     target.scope=std::string(64,'b');QVERIFY(queue.reconcile(std::span(&target,1),99999999,0));QVERIFY(queue.due(INT64_MAX));
     engine::QueuedMainlineScrapes beforeLoad;beforeLoad.revoke(*key);QVERIFY(beforeLoad.reconcile(std::span(&target,1),0,0));QVERIFY(!beforeLoad.due(INT64_MAX));
     beforeLoad.settled(*key);QVERIFY(beforeLoad.reconcile(std::span(&target,1),0,0));QVERIFY(beforeLoad.due(60000));
+  }
+  void pacedRegistrationBeyond256HashesReachesTheWholeOwnedSet(){
+    QTcpServer peer;QVERIFY(peer.listen(QHostAddress::LocalHost,0));
+    constexpr int Count=300,Nodes=64;std::vector<lt::sha1_hash> wanted;
+    for(int i=0;i<Count;++i){const auto raw=QCryptographicHash::hash("owned-capacity-"+QByteArray::number(i),QCryptographicHash::Sha1);wanted.emplace_back(raw.constData());}
+    // Preserve the production per-IP DoS guard. Public DHT responses are
+    // distributed across routers; one fake IP for the whole library is a flood.
+    std::vector<std::unique_ptr<OwnedKrpc>> routers;engine::MainlineDhtOptions opts;
+    opts.port=dhtPort(peer.serverPort());opts.ipv4=true;opts.ipv6=false;opts.bootstrapNodes.clear();
+    for(int i=0;i<Nodes;++i){
+      const auto address=QStringLiteral("127.0.%1.1").arg(i);const auto id=QCryptographicHash::hash("owned-router-"+QByteArray::number(i),QCryptographicHash::Sha1);
+      auto router=std::make_unique<OwnedKrpc>(peer.serverPort(),QHostAddress(address),id);
+      for(const auto& value:wanted){router->allowWithoutPeers(value);}
+      opts.bootstrapNodes.emplace_back(address.toStdString(),router->port());routers.push_back(std::move(router));
+    }
+    auto created=engine::MainlineDhtService::create(localPolicy(),opts);QVERIFY(created);auto actual=std::move(*created);Observations observed;
+    const auto canary=hash('Z');for(const auto& router:routers){router->allow(canary);}
+    QVERIFY(actual->lookup(canary));QElapsedTimer bootstrap;bootstrap.start();
+    while(!observed.contains(canary,peer.serverPort())&&observed.failure.isEmpty()&&bootstrap.elapsed()<5000){observed.pump(*actual);QTest::qWait(10);}
+    QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY(observed.contains(canary,peer.serverPort()));QVERIFY(actual->forget(canary));
+    // Announce performs the actual token-bearing get_peers/announce_peer pair.
+    for(const auto& value:wanted){QVERIFY(actual->announce(value,peer.serverPort()));}
+    QCOMPARE(actual->status().activeHashes,std::size_t{Count});
+    QElapsedTimer elapsed,firstDispatch;elapsed.start();bool boundedBurst=true;int finished=0;int nextReport=10000;
+    const auto complete=[&]{observed.pump(*actual);const auto count=actual->status().announces;
+      if(count&&!firstDispatch.isValid()){firstDispatch.start();boundedBurst=count<=8;}
+      if(firstDispatch.isValid()&&((firstDispatch.elapsed()<100&&count>1)||(firstDispatch.elapsed()<900&&count>8))){boundedBurst=false;}
+      if(!observed.failure.isEmpty()||std::ranges::any_of(routers,[](const auto& router){return !router->failure.isEmpty();})){return true;}
+      finished=static_cast<int>(std::ranges::count_if(wanted,[&](const auto& value){return std::ranges::any_of(routers,[&](const auto& router){return router->gets(value)>0&&router->announced(value)>0;});}));
+      if(elapsed.elapsed()>=nextReport){qInfo("DHT capacity: issued=%llu completed=%d/%d",static_cast<unsigned long long>(count),finished,Count);nextReport+=10000;}
+      return finished==Count;};
+    bool done=complete();while(!done&&elapsed.elapsed()<90000){QTest::qWait(20);done=complete();}
+    QVERIFY2(done,qPrintable(QStringLiteral("DHT capacity timed out: issued=%1 completed=%2/%3").arg(actual->status().announces).arg(finished).arg(Count)));
+    for(const auto& router:routers){QVERIFY2(router->failure.isEmpty(),qPrintable(router->failure));}QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));
+    QCOMPARE(finished,Count);QVERIFY(firstDispatch.isValid()&&boundedBurst);QCOMPARE(actual->status().announces,std::uint64_t{Count});QVERIFY(actual->close());
   }
   void lookupAndTokenAnnounceUseActualDistinctPeerPort() {
     QTcpServer peer; QVERIFY(peer.listen(QHostAddress::LocalHost,0));

@@ -1,3 +1,4 @@
+#include <QProgressBar>
 #include "recheck_dialog.hpp"
 #include "publication_controls.hpp"
 #include "publication_review_dialog.hpp"
@@ -235,9 +236,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   auto* form = new QFormLayout(general);
   form->addRow(tr("Name:"), generalName_);
   form->addRow(tr("State:"), generalState_);
-  form->addRow(tr("Size (bytes):"), generalSize_);
+  form->addRow(tr("Size:"), generalSize_);
   form->addRow(tr("Progress:"), generalProgress_);
-  form->addRow(tr("Received / sent (bytes):"), generalReceived_);
+  form->addRow(tr("Received / sent:"), generalReceived_);
   form->addRow(tr("Hash:"), generalHash_);
   detailTabs_->addTab(general, tr("General"));
   detailTabs_->addTab(filesTable_, tr("Files"));
@@ -268,11 +269,13 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   filter_->setMaximumWidth(340);
   header->addWidget(filterLabel);
   header->addWidget(filter_);
+  startupProgress_=new QProgressBar(library);startupProgress_->setObjectName(QStringLiteral("classic-startup-progress"));startupProgress_->setAccessibleName(tr("Restoring transfers"));
+  startupProgress_->setMaximumWidth(220);startupProgress_->setFormat(tr("Restoring transfers: %v / %m"));startupProgress_->hide();header->addWidget(startupProgress_);
   layout->addLayout(header);
-  auto* content = new QSplitter(Qt::Vertical, library);
+  auto* content = new QSplitter(Qt::Vertical, library);detailsHome_=content;
   content->setChildrenCollapsible(false);
   content->addWidget(splitter_);
-  content->addWidget(detailTabs_);
+  content->addWidget(detailTabs_);detailTabs_->hide();
   content->setStretchFactor(0, 3);
   content->setStretchFactor(1, 1);
   content->setSizes({540, 200});
@@ -503,7 +506,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
       return;
     }
     if (onSavedServicePage()) { if(columnSession_){refreshPublicationViews();}else{refreshSavedServices();} return; }
-    if (mainTabs_->currentWidget() != torrentsPage_ || busy_) { return; }
+    if (!torrentContextActive() || busy_) { return; }
     suppressAutomaticDetails_ = false;
     detailsRequestedFor_.reset();
     emit refreshRequested();
@@ -541,12 +544,12 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   toolbar->addAction(refresh_);
   connect(files_, &QAction::triggered, this, [this] {
     if (!actionTarget()) { return; }
-    const bool showing = detailTabs_->currentIndex() == 1;
-    suppressAutomaticDetails_ = false;
-    if (!showing) { detailsRequestedFor_.reset(); }
-    QPointer<LibraryWindow> guard(this);
-    detailTabs_->setCurrentIndex(1);
-    if (guard) { requestDetails(showing); }
+    const auto target=actionTarget();if(!target){return;}
+    if(inlineDetails_&&mainTabs_->currentWidget()==torrentsPage_){
+      const bool showing=detailTabs_->currentIndex()==1;suppressAutomaticDetails_=false;if(!showing){detailsRequestedFor_.reset();}
+      QPointer<LibraryWindow> guard(this);detailTabs_->setCurrentIndex(1);if(guard){requestDetails(showing);}return;
+    }
+    suppressAutomaticDetails_=false;detailsRequestedFor_.reset();openTorrentDetails(*target,1);
   });
   connect(continue_, &QAction::triggered, this, [this] {
     const auto target = actionTarget();
@@ -561,10 +564,17 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   });
   connect(mainTabs_, &QTabWidget::tabCloseRequested, this, &LibraryWindow::closePage);
   connect(mainTabs_, &QTabWidget::currentChanged, this, [this] {
-    QPointer<LibraryWindow> guard(this);
+    QPointer<LibraryWindow> guard(this);detailsRequestedFor_.reset();suppressAutomaticDetails_=false;placeDetailTabs();if(!guard){return;}
     updateActions();
-    if (guard && mainTabs_->currentWidget() == torrentsPage_) { selectionChanged(); }
+    if (guard && torrentContextActive()) { selectionChanged(); }
   });
+  for(auto* table:{incompleteTable_,completeTable_}){
+    connect(table,&QTableView::doubleClicked,this,[this,table](const QModelIndex& index){
+      if(busy_||closing_){return;}if(!detailsOnDoubleClick_){setMessage(tr("The configured double-click action is not available yet"));return;}
+      activate(table);const auto source=proxy(table)->mapToSource(index);const auto target=source.isValid()?model_->targetAt(source.row()):std::nullopt;
+      if(target){openTorrentDetails(*target);}
+    });
+  }
   updateActions();
   updateGeneral();
   updateCounts();
@@ -1043,6 +1053,11 @@ void LibraryWindow::closePage(int index) {
   QPointer<QWidget> page(mainTabs_->widget(index));
   if (!page) { return; }
   const bool retainedLibrary = page == torrentsPage_;
+  const bool detailPage=!page->property("BiglyBTC.torrentDetailsHash").toString().isEmpty();
+  if(detailPage&&detailTabs_->parentWidget()==page){
+    detailTabs_->hide();if(!guard||!page){return;}
+    detailTabs_->setParent(torrentsPage_);if(!guard||!page){return;}
+  }
   if (!retainedLibrary) {
     if (page == hostingPage_.data()) { if(trackerControls_){trackerControls_->invalidate();if(!guard||!page){return;}}trackerControls_.clear();hostingPage_.clear(); }
     else if (page == sharesPage_.data()) { if(sharingControls_){sharingControls_->invalidate();if(!guard||!page){return;}}sharingControls_.clear();sharesPage_.clear(); }
@@ -1060,7 +1075,7 @@ void LibraryWindow::closePage(int index) {
       } else { rememberedStatisticsNavigation_.reset(); }
       statisticsPage_.clear(); pendingStatisticsRequest_.reset(); pendingHistoryRequest_.reset(); pendingManualTagRead_.clear(); pendingCountryRead_.clear();
     }
-    else { return; }
+    else if(!detailPage) { return; }
   }
   mainTabs_->removeTab(mainTabs_->indexOf(page));
   if (!guard) { return; }
@@ -1134,6 +1149,8 @@ void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
 void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
+  const auto sessionBeforeDetails=columnSession_;
+  for(int i=mainTabs_->count()-1;i>=0;--i){auto* page=mainTabs_->widget(i);if(page&&!page->property("BiglyBTC.torrentDetailsHash").toString().isEmpty()){closePage(i);if(!guard||columnSession_!=sessionBeforeDetails){return;}}}
   const auto previousSession=columnSession_;cancelRecheckView();if(!guard||columnSession_!=previousSession){return;}if(recheckDialog_){recheckDialog_->invalidate();if(!guard||columnSession_!=previousSession){return;}}activeRecheck_.reset();
   columnSession_ = session;pendingMetasearchReview_.reset();invalidateMetasearchMagnetReview();if(!guard){return;}
   for(const auto& controls:{sharingControls_,trackerControls_}){if(controls){controls->beginSession(session,controls->page()?controls->page():reserveRssUiIdentity());if(!guard||columnSession_!=session){return;}}}
@@ -1399,6 +1416,10 @@ void LibraryWindow::activate(QTableView* table) {
   other->selectionModel()->clear();
 }
 std::optional<Target> LibraryWindow::selected() const {
+  if(const auto* page=mainTabs_->currentWidget()){
+    const auto hash=page->property("BiglyBTC.torrentDetailsHash").toString();
+    if(!hash.isEmpty()){const auto row=model_->rowFor(hash);return row>=0?model_->targetAt(row):std::nullopt;}
+  }
   const auto rows = activeTable_->selectionModel()->selectedRows(0);
   const auto current = activeTable_->currentIndex();
   if (rows.size() != 1 || !current.isValid() || current.row() != rows.front().row()) { return std::nullopt; }
@@ -1406,7 +1427,7 @@ std::optional<Target> LibraryWindow::selected() const {
   return source.isValid() ? model_->targetAt(source.row()) : std::nullopt;
 }
 std::optional<Target> LibraryWindow::actionTarget() const {
-  if (mainTabs_->currentWidget() != torrentsPage_) { return std::nullopt; }
+  if (!torrentContextActive()) { return std::nullopt; }
   const auto target = selected();
   return contextOpen_ && target != contextTarget_ ? std::nullopt : target;
 }
@@ -1497,7 +1518,8 @@ void LibraryWindow::updateActions() {
   }}
 }
 std::optional<DownloadTargets> LibraryWindow::selectedDownloadTargets() const {
-  if (mainTabs_->currentWidget() != torrentsPage_) { return std::nullopt; }
+  if (!torrentContextActive()) { return std::nullopt; }
+  if(mainTabs_->currentWidget()!=torrentsPage_){const auto target=selected();return target?std::optional<DownloadTargets>{DownloadTargets{*target}}:std::nullopt;}
   const auto selectedRows = activeTable_->selectionModel()->selectedRows(0);
   if (selectedRows.isEmpty()) { return std::nullopt; }
   std::vector<int> rows;
@@ -1664,8 +1686,8 @@ void LibraryWindow::updateDownloadActions() {
 }
 
 std::optional<LibraryWindow::FilePolicySelection> LibraryWindow::filePolicySelection(bool forCompaction) const {
-  if (busy_ || closing_ || offlinePreview_ || updating_ || mainTabs_->currentWidget() != torrentsPage_
-      || detailTabs_->currentIndex() != 1) { return std::nullopt; }
+  if (busy_ || closing_ || offlinePreview_ || updating_ || !torrentContextActive()
+      || (mainTabs_->currentWidget()==torrentsPage_&&!inlineDetails_) || detailTabs_->currentIndex() != 1) { return std::nullopt; }
   const auto target = selected();
   const auto source = filesModel_->presentation();
   if (!target || !model_->accepts(*target) || !source || !(forCompaction ? source->canCompact : source->canEdit) || source->target != *target
@@ -1909,6 +1931,39 @@ void LibraryWindow::rejectTorrentIntakeSubmission(const TorrentIntakeSubmission&
   const auto copied=submission;activeIntakeSubmission_.reset();if(intakeDialog_){intakeDialog_->rejectSubmission(copied);}
 }
 
+bool LibraryWindow::torrentContextActive() const {
+  const auto* page=mainTabs_->currentWidget();return page&&(page==torrentsPage_||!page->property("BiglyBTC.torrentDetailsHash").toString().isEmpty());
+}
+void LibraryWindow::placeDetailTabs(){
+  QPointer<LibraryWindow> guard(this);auto* old=detailTabs_->parentWidget();
+  if(old&&!old->property("BiglyBTC.torrentDetailsHash").toString().isEmpty()){old->setProperty("BiglyBTC.detailsSubtab",detailTabs_->currentIndex());if(!guard){return;}}
+  auto* page=mainTabs_->currentWidget();
+  if(page&&!page->property("BiglyBTC.torrentDetailsHash").toString().isEmpty()){
+    const int subtab=page->property("BiglyBTC.detailsSubtab").toInt();
+    if(auto* layout=qobject_cast<QVBoxLayout*>(page->layout())){layout->addWidget(detailTabs_);if(!guard){return;}}
+    detailTabs_->show();if(guard&&subtab>=0&&subtab<detailTabs_->count()){detailTabs_->setCurrentIndex(subtab);}
+  }else{
+    detailTabs_->hide();if(!guard){return;}
+    if(inlineDetails_&&detailsHome_){detailsHome_->insertWidget(1,detailTabs_);if(!guard){return;}detailTabs_->show();}
+    else{detailTabs_->setParent(torrentsPage_);}
+  }
+}
+void LibraryWindow::openTorrentDetails(const Target& target,int subtab){
+  if(closing_||!model_->accepts(target)){return;}
+  QPointer<LibraryWindow> guard(this);QWidget* page=nullptr;
+  for(int i=0;i<mainTabs_->count();++i){auto* candidate=mainTabs_->widget(i);if(candidate->property("BiglyBTC.torrentDetailsHash").toString()==target.hash){page=candidate;break;}}
+  if(!page){
+    page=new QWidget(mainTabs_);page->setObjectName(QStringLiteral("torrent-details-page-" )+target.hash);page->setProperty("BiglyBTC.torrentDetailsHash",target.hash);page->setProperty("BiglyBTC.detailsSubtab",0);
+    auto* layout=new QVBoxLayout(page);layout->setContentsMargins(0,0,0,0);
+    auto name=model_->data(model_->index(model_->rowFor(target.hash),0),Qt::DisplayRole).toString();name.replace('&',QStringLiteral("&&"));
+    mainTabs_->addTab(page,name);
+  }
+  if(subtab>=0){page->setProperty("BiglyBTC.detailsSubtab",subtab);}
+  detailsRequestedFor_.reset();suppressAutomaticDetails_=false;
+  mainTabs_->setCurrentWidget(page);if(!guard){return;}placeDetailTabs();if(!guard){return;}
+  if(subtab>=0&&subtab<detailTabs_->count()){detailTabs_->setCurrentIndex(subtab);if(!guard){return;}}
+  selectionChanged();
+}
 void LibraryWindow::selectionChanged() {
   if (updating_) { return; }
   updateActions();
@@ -1925,7 +1980,7 @@ void LibraryWindow::selectionChanged() {
   if (target && (detailTabs_->currentIndex() == 1 || !model_->hasDetails(*target))) { requestDetails(); }
 }
 void LibraryWindow::requestDetails(bool force) {
-  if (mainTabs_->currentWidget() != torrentsPage_ || busy_ || closing_ || (suppressAutomaticDetails_ && !force)) { return; }
+  if (!torrentContextActive() || (mainTabs_->currentWidget()==torrentsPage_&&!inlineDetails_) || busy_ || closing_ || (suppressAutomaticDetails_ && !force)) { return; }
   const auto target = selected();
   if (!target || (!force && detailsRequestedFor_ == target)) { return; }
   detailsRequestedFor_ = target;
@@ -1941,6 +1996,11 @@ void LibraryWindow::setPresentation(const Presentation& snapshot) {
   if (applied) { restoreSelection(hashes, !presented_); presented_ = true; }
   updating_ = false;
   if (!applied) { return; }
+  inlineDetails_=snapshot->inlineDetails;detailsOnDoubleClick_=snapshot->detailsOnDoubleClick;
+  QPointer<LibraryWindow> placementGuard(this);placeDetailTabs();if(!placementGuard){return;}
+  const bool restoring=snapshot->startupTotal>0&&snapshot->startupDone<snapshot->startupTotal&&snapshot->startupTotal<=LibraryModel::MaximumRows;
+  startupProgress_->setRange(0,restoring?static_cast<int>(snapshot->startupTotal):1);if(!placementGuard){return;}
+  startupProgress_->setValue(restoring?static_cast<int>(snapshot->startupDone):1);if(!placementGuard){return;}startupProgress_->setVisible(restoring);if(!placementGuard){return;}
   if (hashes.size() == 1 && selected() && hashes.front() == selected()->hash && fileIndex) { restoreFileIndex_ = fileIndex; }
   setMessage(model_->rowCount() == 1 ? tr("1 torrent") : tr("%1 torrents").arg(model_->rowCount()));
   QPointer<LibraryWindow> guard(this);

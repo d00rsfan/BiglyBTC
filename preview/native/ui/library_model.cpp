@@ -41,10 +41,13 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
   if (role == Qt::ToolTipRole && index.column()==13) { return row.item.savePath; }
   if (role == Qt::ToolTipRole) { return index.column() >= 10 && index.column()<=12 ? QVariant{savedSelectedTooltip()} : QVariant{}; }
   if (role != Qt::DisplayRole && role != Qt::UserRole && role != Qt::AccessibleTextRole) { return {}; }
+  const auto bytes=[&](std::optional<qint64> value,bool rate=false)->QVariant{
+    if(!value||role==Qt::UserRole){return number(value,role);}return transferBytes(*value,units_,rate);
+  };
   switch (index.column()) {
     case 0: return row.item.name;
     case 1: return row.item.state;
-    case 2: return number(row.item.bytes, role);
+    case 2: return bytes(row.item.bytes);
     case 3: {
       if(row.item.assumedComplete.value_or(false)){return role==Qt::UserRole?QVariant{100.0}:QVariant{QStringLiteral("100.0%")};}
       if(row.item.savedSelected&&row.item.savedSelected->percentThousandths){const auto percent=static_cast<double>(*row.item.savedSelected->percentThousandths)/10.0;return role==Qt::UserRole?QVariant{percent}:QVariant{QString::number(percent,'f',1)+'%'};}
@@ -53,14 +56,14 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
           : std::clamp(100.0 * static_cast<double>(*row.item.completed) / static_cast<double>(*row.item.bytes), 0.0, 100.0);
       return role == Qt::UserRole ? QVariant{percent} : QVariant{QString::number(percent, 'f', 1) + '%'};
     }
-    case 4: return number(row.down, role);
-    case 5: return number(row.up, role);
-    case 6: return number(row.item.received, role);
-    case 7: return number(row.item.sent, role);
+    case 4: return bytes(row.down,true);
+    case 5: return bytes(row.up,true);
+    case 6: return bytes(row.item.received);
+    case 7: return bytes(row.item.sent);
     case 8: return row.item.hash;
     case 9: return number(row.item.savedPosition, role);
-    case 10: return number(row.item.savedSelected ? row.item.savedSelected->bytes : std::optional<qint64>{}, role);
-    case 11: return number(row.item.savedSelected ? row.item.savedSelected->remaining : std::optional<qint64>{}, role);
+    case 10: return bytes(row.item.savedSelected ? row.item.savedSelected->bytes : std::optional<qint64>{});
+    case 11: return bytes(row.item.savedSelected ? row.item.savedSelected->remaining : std::optional<qint64>{});
     case 13: return row.item.savePath;
     case 14: return row.item.trackerName;
     case 12: {
@@ -80,9 +83,9 @@ QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int 
   if (role == Qt::ToolTipRole && section == 14) { return tr("Tracker host; account credentials and URL path are omitted"); }
   if (role == Qt::ToolTipRole && section >= 10 && section <= 12) { return savedSelectedTooltip(); }
   if (role != Qt::DisplayRole) { return {}; }
-  const QStringList names{tr("Name"), tr("State"), tr("Total Size (bytes)"), tr("Done"),
-      tr("Down (B/s)"), tr("Up (B/s)"), tr("Received (bytes)"), tr("Sent (bytes)"), tr("Hash"), tr("Order"),
-      tr("Size (bytes)"), tr("Saved selected remaining (bytes)"), tr("Saved selected done"), tr("Save Path"), tr("Tracker Name")};
+  const QStringList names{tr("Name"), tr("State"), tr("Total Size"), tr("Done"),
+      tr("Down Speed"), tr("Up Speed"), tr("Received"), tr("Sent"), tr("Hash"), tr("Order"),
+      tr("Size"), tr("Remaining"), tr("Selected Done"), tr("Save Path"), tr("Tracker Name")};
   return names[section];
 }
 
@@ -127,7 +130,7 @@ bool LibraryModel::apply(const Presentation& snapshot) {
   }
   rows_ = std::move(replacement);
   byHash_ = std::move(hashes);
-  revision_ = snapshot->revision;
+  revision_ = snapshot->revision;units_=snapshot->units;
   if (!sameRows) { endResetModel(); }
   else if (!rows_.empty()) { emit dataChanged(index(0, 0), index(rowCount() - 1, Columns - 1)); }
   return true;

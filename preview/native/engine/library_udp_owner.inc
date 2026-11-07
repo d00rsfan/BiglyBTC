@@ -51,7 +51,7 @@ bool prepareLibraryUdp(SavedMainlineScrapeTarget& target,std::int64_t now,std::s
   const auto configuration=detail::libraryUdpRouteScope(*route,config);
   auto found=trackerResponses.find(target.trackerResponseKey);
   if(found==trackerResponses.end()){
-    if(trackerResponses.size()>=256){return false;}
+    if(trackerResponses.size()>=MaximumSavedTrackerResponses){return false;}
     found=trackerResponses.emplace(target.trackerResponseKey,std::make_shared<core::QueueOriginalTrackerResponse>()).first;
   }
   if(dispatch&&(regularPoll?found->second->regularPollDue(now):found->second->regularDue(now))&&!libraryUdp.active()&&!libraryHttp.active()){

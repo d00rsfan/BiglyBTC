@@ -1,3 +1,4 @@
+#include "transfer_duration.hpp"
 #include "statistics_page.hpp"
 
 #include "engine_activity_history.hpp"
@@ -49,8 +50,7 @@ QLabel* label(QString text, const QString& id, QWidget* parent) {
   return value;
 }
 QString seconds(qint64 value) {
-  return QObject::tr("%1d %2h %3m %4s").arg(value / 86400).arg((value % 86400) / 3600)
-      .arg((value % 3600) / 60).arg(value % 60);
+  return transferUptime(value);
 }
 QString sourceName(StatisticsReadSource source) {
   switch (source) {

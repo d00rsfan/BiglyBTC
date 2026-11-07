@@ -1,4 +1,5 @@
 #pragma once
+class QProgressBar;
 #include "i2p_presentation.hpp"
 #include "file_operation_presentation.hpp"
 #include "recheck_presentation.hpp"
@@ -363,6 +364,9 @@ private:
   void updateActions();
   void selectionChanged();
   void requestDetails(bool force = false);
+  bool torrentContextActive() const;
+  void placeDetailTabs();
+  void openTorrentDetails(const Target&,int subtab=-1);
   void popup(QTableView*, const QPoint&);
   QAction* schedulerAction_ = nullptr;
   QPointer<SchedulerDialog> schedulerDialog_;
@@ -448,6 +452,9 @@ private:
   std::optional<ColumnRequest> activeColumnSave_;
 
   QTabWidget* detailTabs_;
+  QSplitter* detailsHome_=nullptr;
+  QProgressBar* startupProgress_=nullptr;
+  bool inlineDetails_=false,detailsOnDoubleClick_=true;
   QLineEdit* filter_;
   QSplitter* splitter_;
   QLabel* incompleteCount_;

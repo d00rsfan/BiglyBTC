@@ -140,7 +140,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
   try{
     if(purpose!=SavedTrackerPurpose::MainlineBackup&&purpose!=SavedTrackerPurpose::RegularHttp&&purpose!=SavedTrackerPurpose::RegularUdp&&purpose!=SavedTrackerPurpose::RegularSavedTiers&&purpose!=SavedTrackerPurpose::ActiveSingleUdpTier){return error(Code::InvalidFormat,"Invalid saved tracker purpose");}
     const bool regular=purpose!=SavedTrackerPurpose::MainlineBackup;
-    if(observations.size()>256){return error(Code::Unsupported,"Active Mainline scrape target bound");}
+    if(observations.size()>MaximumSavedScrapeTargets){return error(Code::Unsupported,"Active Mainline scrape target bound");}
     std::map<std::string,const ManagedMainlineScrapeObservation*> active;
     std::set<std::uint64_t> admissions;
     for(const auto& observation:observations){
@@ -171,6 +171,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
     for(const auto& pause:library->pauses){if(!paused.insert(pause.hash.hex()).second){return error(Code::Conflict,"Duplicate saved Mainline pause");}}
     auto store=storage::TorrentStateStore::open(lease);if(!store){return std::unexpected(store.error());}
     std::vector<SavedMainlineScrapeTarget> result;
+    std::optional<storage::OriginalFilenameContext> filenameContext;
     for(const auto& row:library->items){
       if(!row.saved.hash){continue;}const auto& key=*row.saved.hash;
       if(!seen.insert(key.hex()).second){return error(Code::Conflict,"Duplicate saved Mainline identity");}
@@ -184,7 +185,7 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
         if(row.saved.originalState!=0&&row.saved.originalState!=50
             &&row.saved.originalState!=60&&row.saved.originalState!=75){continue;}
       }else if(row.saved.startup!=core::StartupState::Queued||row.saved.originalState!=75||row.saved.forceStart){continue;}
-      if(result.size()==256){return error(Code::Unsupported,"Saved Mainline scrape target bound");}
+      if(result.size()==MaximumSavedScrapeTargets){return error(Code::Unsupported,"Saved Mainline scrape target bound");}
       const Node* savedRow=nullptr;
       if(row.saved.legacyKey){
         const auto index=row.saved.sourceIndex*2+1;
@@ -247,7 +248,9 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
       auto identity=storage::originalTorrentIdentityFromLibtorrent(doc,metadata);
       if(!identity){return std::unexpected(identity.error());}
       auto bound=storage::validateOriginalTorrentKey(*identity,key,true);if(!bound){return std::unexpected(bound.error());}
-      auto layout=storage::readOriginalLayout(lease,doc);if(!layout){return std::unexpected(layout.error());}
+      if(!filenameContext){auto context=storage::readOriginalFilenameContext(lease);if(!context){return std::unexpected(context.error());}filenameContext=std::move(*context);}
+      auto layout=compat::originalLayout(doc,100000,filenameContext->conversions,filenameContext->decoderShowAll);
+      if(!layout){return std::unexpected(storage::Error{Code::Unsupported,layout.error().message});}
       bool noSeeds=false;
       std::string mapping;
       if(observation){
@@ -339,7 +342,7 @@ bool QueuedMainlineScrapes::checkDue(std::int64_t now)noexcept{
 }
 std::expected<void,storage::Error> QueuedMainlineScrapes::reconcile(std::span<const SavedMainlineScrapeTarget> targets,
     std::int64_t now,std::uint32_t random){
-  if(targets.size()>256||now<0){return error(Code::InvalidFormat,"Invalid saved scrape target inventory");}
+  if(targets.size()>MaximumSavedScrapeTargets||now<0){return error(Code::InvalidFormat,"Invalid saved scrape target inventory");}
   std::set<std::string> incoming;
   for(const auto& target:targets){if(target.hash.bytes().size()!=20||target.scope.size()!=64||!incoming.insert(target.hash.hex()).second){return error(Code::InvalidFormat,"Ambiguous saved scrape target");}}
   // Eligible-target absence is not a manual acknowledgement: it may just
@@ -389,7 +392,7 @@ void QueuedMainlineScrapes::completed(std::uint64_t round,const std::optional<Ma
 void QueuedMainlineScrapes::revoke(const core::TorrentHash& hash)noexcept{
   try{
     const auto key=hash.hex();const auto row=rows_.find(key);
-    if(!revoked_.contains(key)&&revoked_.size()==256){revokedOverflow_=true;rows_.clear();return;}
+    if(!revoked_.contains(key)&&revoked_.size()==MaximumSavedScrapeTargets){revokedOverflow_=true;rows_.clear();return;}
     revoked_.insert_or_assign(key,row==rows_.end()?"*":row->second.target.scope);
     if(row!=rows_.end()){rows_.erase(row);}
     if(activeKey_==key){active_.reset();activeKey_.clear();activeScope_.clear();}

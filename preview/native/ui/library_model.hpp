@@ -1,4 +1,5 @@
 #pragma once
+#include "transfer_duration.hpp"
 
 #include <biglybtc/download_action.hpp>
 
@@ -81,6 +82,9 @@ struct LibraryItem {
 struct LibraryPresentation {
   quint64 revision = 0;
   std::vector<LibraryItem> items;
+  TransferDisplaySettings units{};
+  bool inlineDetails=true,detailsOnDoubleClick=true;
+  std::size_t startupDone=0,startupTotal=0;
 };
 using Presentation = std::shared_ptr<const LibraryPresentation>;
 struct Telemetry {
@@ -131,6 +135,7 @@ private:
   std::vector<Row> rows_;
   QHash<QString, int> byHash_;
   quint64 revision_ = 0;
+  TransferDisplaySettings units_{};
 };
 } // namespace biglybtc::ui
 

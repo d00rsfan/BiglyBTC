@@ -267,7 +267,7 @@ private slots:
     QCOMPARE(value(view, 3).text(), QStringLiteral("No mark"));
     QCOMPARE(value(view, 4).text(), QStringLiteral("-9223372036854775808"));
     QCOMPARE(value(view, 5).text(), QStringLiteral("0"));
-    QCOMPARE(value(view, 6).text(), QStringLiteral("0"));
+    QCOMPARE(value(view, 6).text(), QStringLiteral("0d 0h 0m 0s"));
     QCOMPARE(value(view, 7).text(), QStringLiteral("19 / 23 bytes (separate)"));
     auto failed = packet(2); failed->writable = false; failed->failure = QStringLiteral("<b>disk & rename</b>");
     failed->historyFailure = QStringLiteral("<i>history</i>"); view.setPresentation(failed);

@@ -32,8 +32,12 @@ int main(){
   require(scheduleChecks(policy,zero)==std::set<std::uint64_t>{1},"Unknown device cannot bypass another filesystem");
   auto defaults=core::Document::parse("de");require(bool(defaults),"Default fixture parse");
   auto parsed=engine::detail::readCheckPolicy(defaults->root());require(parsed&&parsed->maximumActive==1&&!parsed->onePerFilesystem&&!parsed->concurrentReads&&parsed->smallestFirst,"Original defaults");
-  auto user=core::Document::parse("d34:diskmanager.hashchecking.maxactivei0e25:diskmanager.one.op.per.fsi1ee");require(bool(user),"User fixture parse");
+  auto user=core::Document::parse("d34:diskmanager.hashchecking.maxactivei0e38:diskmanager.hashchecking.smallestfirsti1e25:diskmanager.one.op.per.fsi1ee");require(bool(user),"User fixture parse");
   parsed=engine::detail::readCheckPolicy(user->root());require(parsed&&scheduleChecks(*parsed,requests)==std::set<std::uint64_t>({2,3}),"Actual user settings");
+  require(user->setInteger("diskmanager.hashchecking.smallestfirst",0),"Configured addition-order fixture");
+  parsed=engine::detail::readCheckPolicy(user->root());require(parsed&&!parsed->smallestFirst&&scheduleChecks(*parsed,requests)==std::set<std::uint64_t>({1,3}),"Configured smallest-first disabled selects admission order");
+  require(user->setInteger("diskmanager.hashchecking.smallestfirst",1),"Configured smallest-first fixture");
+  parsed=engine::detail::readCheckPolicy(user->root());require(parsed&&parsed->smallestFirst&&scheduleChecks(*parsed,requests)==std::set<std::uint64_t>({2,3}),"Configured smallest-first selects smaller waiting check");
   require(user->setInteger("diskmanager.hashchecking.maxactive",-1),"Negative unlimited fixture");
   parsed=engine::detail::readCheckPolicy(user->root());require(parsed&&parsed->maximumActive==0,"Original negative means unlimited");
   require(user->setInteger("diskmanager.hashchecking.maxactive",4294967297LL),"Java int narrowing fixture");
